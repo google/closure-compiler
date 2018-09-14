@@ -43,14 +43,13 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Replaces goog.provide calls, removes goog.require calls, verifies that
- * goog.require has a corresponding goog.provide and some closure specific
+ * Replaces goog.provide calls, removes goog.{require,requireType} calls, verifies that each
+ * goog.{require,requireType} has a corresponding goog.provide, and performs some Closure-pecific
  * simplifications.
  *
  * @author chrisn@google.com (Chris Nokleberg)
  */
-class ProcessClosurePrimitives extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotSwapCompilerPass {
 
   static final DiagnosticType NULL_ARGUMENT_ERROR = DiagnosticType.error(
       "JSC_NULL_ARGUMENT_ERROR",
@@ -208,17 +207,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
     if (requiresLevel.isOn()) {
       for (UnrecognizedRequire r : unrecognizedRequires) {
-        DiagnosticType error;
-        ProvidedName expectedName = providedNames.get(r.namespace);
-        if (expectedName != null && expectedName.firstNode != null) {
-          // The namespace ended up getting provided after it was required.
-          error = LATE_PROVIDE_ERROR;
-        } else {
-          error = MISSING_PROVIDE_ERROR;
-        }
-
-        compiler.report(JSError.make(
-            r.requireNode, requiresLevel, error, r.namespace));
+        checkForLateOrMissingProvide(r);
       }
     }
 
@@ -229,6 +218,23 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     for (Node liveNode : maybeTemporarilyLiveNodes) {
       compiler.reportChangeToEnclosingScope(liveNode);
     }
+  }
+
+  private void checkForLateOrMissingProvide(UnrecognizedRequire r) {
+    // Both goog.require and goog.requireType must have a matching goog.provide.
+    // However, goog.require must match an earlier goog.provide, while goog.requireType is allowed
+    // to match a later goog.provide.
+    DiagnosticType error;
+    ProvidedName expectedName = providedNames.get(r.namespace);
+    if (expectedName != null && expectedName.firstNode != null) {
+      if (r.isRequireType) {
+        return;
+      }
+      error = LATE_PROVIDE_ERROR;
+    } else {
+      error = MISSING_PROVIDE_ERROR;
+    }
+    compiler.report(JSError.make(r.requireNode, requiresLevel, error, r.namespace));
   }
 
   private Node getAnyValueOfType(JSDocInfo jsdoc) {
@@ -296,6 +302,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                 }
                 break;
               case "require":
+              case "requireType":
                 if (validPrimitiveCall(t, n)) {
                   processRequireCall(t, n, parent);
                 }
@@ -440,17 +447,16 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
   }
 
-  /**
-   * Handles a goog.require call.
-   */
+  /** Handles a goog.require or goog.requireType call. */
   private void processRequireCall(NodeTraversal t, Node n, Node parent) {
     Node left = n.getFirstChild();
     Node arg = left.getNext();
+    String method = left.getFirstChild().getNext().getString();
     if (verifyLastArgumentIsString(t, left, arg)) {
       String ns = arg.getString();
       ProvidedName provided = providedNames.get(ns);
       if (provided == null || !provided.isExplicitlyProvided()) {
-        unrecognizedRequires.add(new UnrecognizedRequire(n, ns));
+        unrecognizedRequires.add(new UnrecognizedRequire(n, ns, method.equals("requireType")));
       } else {
         JSModule providedModule = provided.explicitModule;
 
@@ -459,7 +465,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           checkNotNull(providedModule, n);
 
           JSModule module = t.getModule();
-          if (module != providedModule && !moduleGraph.dependsOn(module, providedModule)) {
+          // A cross-chunk goog.require must match a goog.provide in an earlier chunk. However, a
+          // cross-chunk goog.requireType is allowed to match a goog.provide in a later chunk.
+          if (module != providedModule
+              && !moduleGraph.dependsOn(module, providedModule)
+              && !method.equals("requireType")) {
             compiler.report(
                 t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
                     providedModule.getName(),
@@ -1686,10 +1696,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private static class UnrecognizedRequire {
     final Node requireNode;
     final String namespace;
+    final boolean isRequireType;
 
-    UnrecognizedRequire(Node requireNode, String namespace) {
+    UnrecognizedRequire(Node requireNode, String namespace, boolean isRequireType) {
       this.requireNode = requireNode;
       this.namespace = namespace;
+      this.isRequireType = isRequireType;
     }
   }
 }
