@@ -60,9 +60,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       "JSC_EXPECTED_OBJECTLIT_ERROR",
       "method \"{0}\" expected an object literal argument");
 
-  static final DiagnosticType EXPECTED_STRING_ERROR = DiagnosticType.error(
-      "JSC_EXPECTED_STRING_ERROR",
-      "method \"{0}\" expected an object string argument");
+  static final DiagnosticType EXPECTED_STRING_ERROR =
+      DiagnosticType.error(
+          "JSC_EXPECTED_STRING_ERROR", "method \"{0}\" expected a string argument");
 
   static final DiagnosticType INVALID_ARGUMENT_ERROR = DiagnosticType.error(
       "JSC_INVALID_ARGUMENT_ERROR",
