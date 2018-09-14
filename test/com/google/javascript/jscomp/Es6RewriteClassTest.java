@@ -2441,6 +2441,39 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     assertThat(getLastCompiler().injected).isEmpty();
   }
 
+  public void testClassInsideCast() {
+    test(
+        "const Foo = /** @type {?} */ (class {});",
+        lines(
+            "/** @struct @constructor */ const testcode$classdecl$var0=function(){};",
+            "const Foo= /** @type {?} */ (testcode$classdecl$var0)"));
+  }
+
+  public void testClassWithSuperclassInsideCast() {
+    test(
+        lines(
+            "function mixin(baseClass) {",
+            "  return /** @type {?} */ (class extends baseClass {",
+            "    constructor() {",
+            "      super();",
+            "    }",
+            "  });",
+            "}"),
+        lines(
+            "function mixin(baseClass){",
+            "  /**",
+            "   * @struct",
+            "   * @constructor",
+            "   * @extends {baseClass}",
+            "   */",
+            "  const testcode$classdecl$var0 = function(){",
+            "    return baseClass.call(this) || this",
+            "  };",
+            "  $jscomp.inherits(testcode$classdecl$var0, baseClass);",
+            "  return /** @type {?} */ (testcode$classdecl$var0);",
+            "}"));
+  }
+
   /**
    * Tests that we have reasonable source information on the transpiled nodes.
    *

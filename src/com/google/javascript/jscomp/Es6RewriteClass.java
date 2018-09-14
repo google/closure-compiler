@@ -186,6 +186,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       } else if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detach().setJSType(classNode.getJSType());
+        constructor.setJSTypeBeforeCast(classNode.getJSTypeBeforeCast());
         if (!metadata.isAnonymous()) {
           // Turns class Foo { constructor: function() {} } into function Foo() {},
           // i.e. attaches the name to the ctor function.
@@ -202,6 +203,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         visitMethod(member, metadata);
       }
     }
+    checkNotNull(
+        constructor,
+        "Es6RewriteClasses expects all classes to have (possibly synthetic) constructors");
 
     if (metadata.getDefinePropertiesObjForPrototype().hasChildren()) {
       compiler.ensureLibraryInjected("util/global", false);
@@ -226,9 +230,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       definePropsCall.useSourceInfoIfMissingFromForTree(classNode);
       metadata.insertNodeAndAdvance(definePropsCall);
     }
-
-    checkNotNull(constructor);
-
     JSDocInfo classJSDoc = NodeUtil.getBestJSDocInfo(classNode);
     JSDocInfoBuilder newInfo = JSDocInfoBuilder.maybeCopyFrom(classJSDoc);
 

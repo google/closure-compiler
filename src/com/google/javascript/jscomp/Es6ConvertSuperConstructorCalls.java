@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -520,11 +519,16 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
 
   private JSType getTypeOfThisForConstructor(Node constructor) {
     checkArgument(constructor.isFunction(), constructor);
-    final FunctionType constructorType = JSType.toMaybeFunctionType(constructor.getJSType());
-
-    return (constructorType != null)
-        ? constructorType.getTypeOfThis()
-        : null; // Type checking passes must not have run.
+    // If typechecking has run, all function nodes should have a JSType. Nodes that were in a CAST
+    // will also have the TYPE_BEFORE_CAST property, which is null for other nodes.
+    final JSType constructorTypeBeforeCast = constructor.getJSTypeBeforeCast();
+    final JSType constructorType =
+        constructorTypeBeforeCast != null ? constructorTypeBeforeCast : constructor.getJSType();
+    if (constructorType == null) {
+      return null; // Type checking passes must not have run.
+    }
+    checkState(constructorType.isFunctionType());
+    return constructorType.toMaybeFunctionType().getTypeOfThis();
   }
 
   private Node getSuperClassQNameNode(Node constructor) {

@@ -1079,6 +1079,13 @@ public class Node implements Serializable {
   }
 
   /**
+   * Sets the type of this node before casting.
+   */
+  public final void setJSTypeBeforeCast(JSType type) {
+    putProp(TYPE_BEFORE_CAST, type);
+  }
+
+  /**
    * Returns the type of this node before casting. This annotation will only exist on the first
    * child of a CAST node after type checking.
    */

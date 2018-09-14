@@ -74,7 +74,8 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     Node classMembers = classNode.getLastChild();
     Node memberDef;
     if (superClass.isEmpty()) {
-      Node function = astFactory.createEmptyFunction(classNode.getJSType());
+      // use the pre-cast type because createEmptyFunction expects a FunctionType
+      Node function = astFactory.createEmptyFunction(getTypeBeforeCast(classNode));
       compiler.reportChangeToChangeScope(function);
       memberDef = astFactory.createMemberFunctionDef("constructor", function);
     } else {
@@ -125,6 +126,13 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     compiler.reportChangeToChangeScope(memberDef.getOnlyChild());
     // report change to scope containing the class
     compiler.reportChangeToEnclosingScope(memberDef);
+  }
+
+  /** Returns the node's pre-CAST type, if is has one. Otherwise just returns node.getJSType() */
+  private static JSType getTypeBeforeCast(Node node) {
+    JSType typeBeforeCast = node.getJSTypeBeforeCast();
+    // might still return null if node.getJSType() is null (i.e. typechecking hasn't run)
+    return typeBeforeCast != null ? typeBeforeCast : node.getJSType();
   }
 
   private boolean isInterface(Node classNode) {
