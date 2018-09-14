@@ -474,6 +474,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.angularPass = config.angularPass;
     options.instrumentationTemplateFile = config.instrumentationTemplateFile;
 
+    if (!config.jsonWarningsFile.isEmpty()) {
+      options.addReportGenerator(
+          new JsonErrorReportGenerator(new PrintStream(config.jsonWarningsFile), compiler));
+    }
+
     if (config.errorFormat == CommandLineConfig.ErrorFormatOption.JSON) {
       JsonErrorReportGenerator errorGenerator =
           new JsonErrorReportGenerator(getErrorPrintStream(), compiler);
@@ -2741,6 +2746,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     public CommandLineConfig setErrorFormat(ErrorFormatOption errorFormat) {
       this.errorFormat = errorFormat;
+      return this;
+    }
+
+    private String jsonWarningsFile = "";
+
+    public CommandLineConfig setJsonWarningsFile(String jsonWarningsFile) {
+      this.jsonWarningsFile = jsonWarningsFile;
       return this;
     }
   }

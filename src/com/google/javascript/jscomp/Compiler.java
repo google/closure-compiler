@@ -35,6 +35,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
+import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
 import com.google.javascript.jscomp.deps.BrowserModuleResolver;
 import com.google.javascript.jscomp.deps.BrowserWithTransformedPrefixesModuleResolver;
 import com.google.javascript.jscomp.deps.JsFileParser;
@@ -337,10 +338,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         setErrorManager(
             new LoggerErrorManager(createMessageFormatter(), logger));
       } else {
-        PrintStreamErrorReportGenerator printer =
+        ImmutableSet.Builder<ErrorReportGenerator> builder = ImmutableSet.builder();
+        builder.add(
             new PrintStreamErrorReportGenerator(
-                createMessageFormatter(), this.outStream, options.summaryDetailLevel);
-        setErrorManager(new SortingErrorManager(ImmutableSet.of(printer)));
+                createMessageFormatter(), this.outStream, options.summaryDetailLevel));
+        builder.addAll(options.getExtraReportGenerators());
+        setErrorManager(new SortingErrorManager(builder.build()));
       }
     }
 

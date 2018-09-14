@@ -1071,6 +1071,17 @@ public class CompilerOptions implements Serializable {
   /** The output path for the created externs file. */
   String externExportsPath;
 
+  private final List<SortingErrorManager.ErrorReportGenerator> extraReportGenerators =
+      new ArrayList<>();
+
+  List<SortingErrorManager.ErrorReportGenerator> getExtraReportGenerators() {
+    return extraReportGenerators;
+  }
+
+  void addReportGenerator(SortingErrorManager.ErrorReportGenerator generator) {
+    extraReportGenerators.add(generator);
+  }
+
   //--------------------------------
   // Debugging Options
   //--------------------------------
@@ -1745,7 +1756,6 @@ public class CompilerOptions implements Serializable {
   public boolean shouldColorizeErrorOutput() {
     return colorizeErrorOutput;
   }
-
 
   /**
    * Enable run-time type checking, which adds JS type assertions for debugging.
