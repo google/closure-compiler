@@ -48,7 +48,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 /**
  * A {@link JSModule} dependency graph that assigns a depth to each module and can answer
@@ -199,7 +198,7 @@ public final class JSModuleGraph implements Serializable {
   int getInputCount() {
     int count = 0;
     for (JSModule module : modules) {
-      count += module.getInputCount();
+      count += module.getInputs().size();
     }
     return count;
   }
@@ -209,21 +208,6 @@ public final class JSModuleGraph implements Serializable {
    */
   Iterable<JSModule> getAllModules() {
     return Arrays.asList(modules);
-  }
-
-  /**
-   * Gets a single module by name.
-   *
-   * @return The module, or null if no such module exists.
-   */
-  @Nullable
-  JSModule getModuleByName(String name) {
-    for (JSModule m : modules) {
-      if (m.getName().equals(name)) {
-        return m;
-      }
-    }
-    return null;
   }
 
   /**
