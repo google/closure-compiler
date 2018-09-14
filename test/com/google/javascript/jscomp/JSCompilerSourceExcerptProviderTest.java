@@ -15,19 +15,22 @@
  */
 package com.google.javascript.jscomp;
 
-
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- */
+@RunWith(JUnit4.class)
 public final class JSCompilerSourceExcerptProviderTest extends TestCase {
   private SourceExcerptProvider provider;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     SourceFile foo = SourceFile.fromCode("foo",
         "foo:first line\nfoo:second line\nfoo:third line\n");
     SourceFile bar = SourceFile.fromCode("bar",
@@ -43,7 +46,8 @@ public final class JSCompilerSourceExcerptProviderTest extends TestCase {
     this.provider = compiler;
   }
 
-  public void testExcerptOneLine() throws Exception {
+  @Test
+  public void testExcerptOneLine() {
     assertEquals("foo:first line", provider.getSourceLine("foo", 1));
     assertEquals("foo:second line", provider.getSourceLine("foo", 2));
     assertEquals("foo:third line", provider.getSourceLine("foo", 3));
@@ -53,27 +57,31 @@ public final class JSCompilerSourceExcerptProviderTest extends TestCase {
     assertEquals("bar:fourth line", provider.getSourceLine("bar", 4));
   }
 
-  public void testExcerptLineFromInexistentSource() throws Exception {
+  @Test
+  public void testExcerptLineFromInexistentSource() {
     assertEquals(null, provider.getSourceLine("inexistent", 1));
     assertEquals(null, provider.getSourceLine("inexistent", 7));
     assertEquals(null, provider.getSourceLine("inexistent", 90));
   }
 
-  public void testExcerptInexistentLine() throws Exception {
+  @Test
+  public void testExcerptInexistentLine() {
     assertEquals(null, provider.getSourceLine("foo", 0));
     assertEquals(null, provider.getSourceLine("foo", 4));
     assertEquals(null, provider.getSourceLine("bar", 0));
     assertEquals(null, provider.getSourceLine("bar", 5));
   }
 
-  public void testExceptNoNewLine() throws Exception {
+  @Test
+  public void testExceptNoNewLine() {
     assertEquals("foo2:first line", provider.getSourceLine("foo2", 1));
     assertEquals("foo2:second line", provider.getSourceLine("foo2", 2));
     assertEquals("foo2:third line", provider.getSourceLine("foo2", 3));
     assertEquals(null, provider.getSourceLine("foo2", 4));
   }
 
-  public void testExcerptRegion() throws Exception {
+  @Test
+  public void testExcerptRegion() {
     assertRegionWellFormed("foo", 1);
     assertRegionWellFormed("foo", 2);
     assertRegionWellFormed("foo", 3);
@@ -83,13 +91,15 @@ public final class JSCompilerSourceExcerptProviderTest extends TestCase {
     assertRegionWellFormed("bar", 4);
   }
 
-  public void testExcerptRegionFromInexistentSource() throws Exception {
+  @Test
+  public void testExcerptRegionFromInexistentSource() {
     assertNull(provider.getSourceRegion("inexistent", 0));
     assertNull(provider.getSourceRegion("inexistent", 6));
     assertNull(provider.getSourceRegion("inexistent", 90));
   }
 
-  public void testExcerptInexistentRegion() throws Exception {
+  @Test
+  public void testExcerptInexistentRegion() {
     assertNull(provider.getSourceRegion("foo", 0));
     assertNull(provider.getSourceRegion("foo", 4));
     assertNull(provider.getSourceRegion("bar", 0));

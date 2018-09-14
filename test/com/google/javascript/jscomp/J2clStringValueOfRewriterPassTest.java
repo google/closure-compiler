@@ -15,6 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+@RunWith(JUnit4.class)
 public final class J2clStringValueOfRewriterPassTest extends CompilerTestCase {
 
   @Override
@@ -29,6 +34,7 @@ public final class J2clStringValueOfRewriterPassTest extends CompilerTestCase {
     return compiler;
   }
 
+  @Test
   public void testRemoveStringValueOf() {
     test("module$exports$java$lang$String$impl.m_valueOf__java_lang_Object('')", "String('')");
     test(
