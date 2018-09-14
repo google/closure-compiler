@@ -36,6 +36,10 @@ import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for {@link ExpressionDecomposer}
@@ -43,6 +47,7 @@ import junit.framework.TestCase;
  * @author johnlenz@google.com (John Lenz)
  */
 // Note: functions "foo" and "goo" are external functions in the helper.
+@RunWith(JUnit4.class)
 public final class ExpressionDecomposerTest extends TestCase {
   private boolean allowMethodCallDecomposing;
   private final Set<String> knownConstants = new HashSet<>();
@@ -52,6 +57,7 @@ public final class ExpressionDecomposerTest extends TestCase {
   private boolean shouldTestTypes;
 
   @Override
+  @Before
   public void setUp() {
     allowMethodCallDecomposing = false;
     knownConstants.clear();
@@ -62,6 +68,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     shouldTestTypes = true;
   }
 
+  @Test
   public void testCanExposeExpression1() {
     // Can't move or decompose some classes of expressions.
     helperCanExposeExpression(
@@ -87,6 +94,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         DecompositionType.UNDECOMPOSABLE, "switch(1){case foo():;}", "foo");
   }
 
+  @Test
   public void testCanExposeExpression2() {
     helperCanExposeExpression(
         DecompositionType.MOVABLE, "foo()", "foo");
@@ -120,6 +128,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "function f(){ throw foo();}", "foo");
   }
 
+  @Test
   public void testCanExposeExpression3() {
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "x = 0 && foo()", "foo");
@@ -157,39 +166,46 @@ public final class ExpressionDecomposerTest extends TestCase {
         "function f(){ return goo() && foo();}", "foo");
   }
 
+  @Test
   public void testCanExposeExpression4a() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "if (goo.a(1, foo()));", "foo");
   }
 
+  @Test
   public void testCanExposeExpression4b() {
     allowMethodCallDecomposing = true;
     helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "if (goo.a(1, foo()));", "foo");
   }
 
+  @Test
   public void testCanExposeExpression5a() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "if (goo['a'](foo()));", "foo");
   }
 
+  @Test
   public void testCanExposeExpression5b() {
     allowMethodCallDecomposing = true;
     helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "if (goo['a'](foo()));", "foo");
   }
 
+  @Test
   public void testCanExposeExpression6a() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "z:if (goo.a(1, foo()));", "foo");
   }
 
+  @Test
   public void testCanExposeExpression6b() {
     allowMethodCallDecomposing = true;
     helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "z:if (goo.a(1, foo()));", "foo");
   }
 
+  @Test
   public void testCanExposeExpression7() {
     // Verify calls to function expressions are movable.
     helperCanExposeFunctionExpression(
@@ -205,6 +221,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         2);
   }
 
+  @Test
   public void testCanExposeExpression8() {
     // Can it be decompose?
     helperCanExposeExpression(
@@ -254,6 +271,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "}"));
   }
 
+  @Test
   public void testCanExposeExpression9() {
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE,
@@ -261,6 +279,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "yield");
   }
 
+  @Test
   public void testCanExposeExpression10() {
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE,
@@ -268,6 +287,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "yield");
   }
 
+  @Test
   public void testCanExposeExpression11() {
     // expressions in parameter lists
     helperCanExposeExpression(DecompositionType.UNDECOMPOSABLE, "function f(x = foo()) {}", "foo");
@@ -282,6 +302,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         DecompositionType.UNDECOMPOSABLE, "(function ({[foo()]: x}) {})()", "foo");
   }
 
+  @Test
   public void testCanExposeExpression12() {
     // Test destructuring rhs is evaluated before the lhs
     shouldTestTypes = false;
@@ -312,11 +333,13 @@ public final class ExpressionDecomposerTest extends TestCase {
         DecompositionType.DECOMPOSABLE, "const result = `${foo()} ${goo()}`;", "goo");
   }
 
+  @Test
   public void testMoveExpression1() {
     // There isn't a reason to do this, but it works.
     helperMoveExpression("foo()", "foo", "var result$jscomp$0 = foo(); result$jscomp$0;");
   }
 
+  @Test
   public void testMoveExpression2() {
     helperMoveExpression(
         "x = foo()",
@@ -324,6 +347,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); x = result$jscomp$0;");
   }
 
+  @Test
   public void testMoveExpression3() {
     helperMoveExpression(
         "var x = foo()",
@@ -331,6 +355,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); var x = result$jscomp$0;");
   }
 
+  @Test
   public void testMoveExpression4() {
     shouldTestTypes = false;
     helperMoveExpression(
@@ -339,7 +364,8 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); const x = result$jscomp$0;");
   }
 
-    public void testMoveExpression5() {
+  @Test
+  public void testMoveExpression5() {
     shouldTestTypes = false;
     helperMoveExpression(
         "let x = foo()",
@@ -347,6 +373,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); let x = result$jscomp$0;");
   }
 
+  @Test
   public void testMoveExpression6() {
     helperMoveExpression(
         "if(foo()){}",
@@ -354,6 +381,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); if (result$jscomp$0);");
   }
 
+  @Test
   public void testMoveExpression7() {
     helperMoveExpression(
         "switch(foo()){}",
@@ -361,6 +389,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); switch(result$jscomp$0){}");
   }
 
+  @Test
   public void testMoveExpression8() {
     helperMoveExpression(
         "switch(1 + foo()){}",
@@ -368,6 +397,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); switch(1 + result$jscomp$0){}");
   }
 
+  @Test
   public void testMoveExpression9() {
     helperMoveExpression(
         "function f(){ return foo();}",
@@ -375,6 +405,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "function f(){ var result$jscomp$0 = foo(); return result$jscomp$0;}");
   }
 
+  @Test
   public void testMoveExpression10() {
     helperMoveExpression(
         "x = foo() && 1",
@@ -382,6 +413,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); x = result$jscomp$0 && 1");
   }
 
+  @Test
   public void testMoveExpression11() {
     helperMoveExpression(
         "x = foo() || 1",
@@ -389,6 +421,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); x = result$jscomp$0 || 1");
   }
 
+  @Test
   public void testMoveExpression12() {
     helperMoveExpression(
         "x = foo() ? 0 : 1",
@@ -396,6 +429,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); x = result$jscomp$0 ? 0 : 1");
   }
 
+  @Test
   public void testMoveExpression13() {
     shouldTestTypes = false;
     helperMoveExpression(
@@ -404,6 +438,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); const {a, b} = result$jscomp$0;");
   }
 
+  @Test
   public void testMoveExpression14() {
     shouldTestTypes = false;
     helperMoveExpression(
@@ -412,6 +447,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); ({a, b} = result$jscomp$0);");
   }
 
+  @Test
   public void testMoveExpression15() {
     // TODO(b/73902507): fix this test. we can't just unilaterally call foo() before the
     // the destructuring, since foo() is conditionally evaluated.
@@ -427,6 +463,7 @@ public final class ExpressionDecomposerTest extends TestCase {
 
   /* Decomposition tests. */
 
+  @Test
   public void testExposeExpression1() {
     helperExposeExpression(
         "x = 0 && foo()",
@@ -434,6 +471,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var temp$jscomp$0; if (temp$jscomp$0 = 0) temp$jscomp$0 = foo(); x = temp$jscomp$0;");
   }
 
+  @Test
   public void testExposeExpression2() {
     helperExposeExpression(
         "x = 1 || foo()",
@@ -441,6 +479,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var temp$jscomp$0; if (temp$jscomp$0 = 1); else temp$jscomp$0=foo(); x = temp$jscomp$0;");
   }
 
+  @Test
   public void testExposeExpression3() {
     helperExposeExpression(
         "var x = 1 ? foo() : 0",
@@ -449,6 +488,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             + " if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;var x = temp$jscomp$0;");
   }
 
+  @Test
   public void testExposeExpression4() {
     shouldTestTypes = false;
     helperExposeExpression(
@@ -458,6 +498,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             + " if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;const x = temp$jscomp$0;");
   }
 
+  @Test
   public void testExposeExpression5() {
     shouldTestTypes = false;
     helperExposeExpression(
@@ -467,6 +508,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             + " if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;let x = temp$jscomp$0;");
   }
 
+  @Test
   public void testExposeExpression6() {
     helperExposeExpression(
         "goo() && foo()",
@@ -474,6 +516,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "if (goo()) foo();");
   }
 
+  @Test
   public void testExposeExpression7() {
     helperExposeExpression(
         "x = goo() && foo()",
@@ -481,6 +524,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo(); x = temp$jscomp$0;");
   }
 
+  @Test
   public void testExposeExpression8() {
     helperExposeExpression(
         "var x = 1 + (goo() && foo())",
@@ -489,6 +533,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             + "var x = 1 + temp$jscomp$0;");
   }
 
+  @Test
   public void testExposeExpression9() {
     shouldTestTypes = false;
     helperExposeExpression(
@@ -498,6 +543,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             + "const x = 1 + temp$jscomp$0;");
   }
 
+  @Test
   public void testExposeExpression10() {
     shouldTestTypes = false;
     helperExposeExpression(
@@ -507,6 +553,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             + "let x = 1 + temp$jscomp$0;");
   }
 
+  @Test
   public void testExposeExpression11() {
     helperExposeExpression(
         "if(goo() && foo());",
@@ -517,6 +564,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "if(temp$jscomp$0);"));
   }
 
+  @Test
   public void testExposeExpression12() {
     helperExposeExpression(
         "switch(goo() && foo()){}",
@@ -527,6 +575,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "switch(temp$jscomp$0){}"));
   }
 
+  @Test
   public void testExposeExpression13() {
     helperExposeExpression(
         "switch(1 + goo() + foo()){}",
@@ -534,6 +583,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var temp_const$jscomp$0 = 1 + goo(); switch(temp_const$jscomp$0 + foo()){}");
   }
 
+  @Test
   public void testExposeExpression14() {
     helperExposeExpression(
         "function f(){ return goo() && foo();}",
@@ -545,6 +595,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "}"));
   }
 
+  @Test
   public void testExposeExpression15() {
     // TODO(johnlenz): We really want a constant marking pass.
     // The value "goo" should be constant, but it isn't known to be so.
@@ -559,6 +610,7 @@ public final class ExpressionDecomposerTest extends TestCase {
           "if (temp_const$jscomp$1(1, temp_const$jscomp$0, temp$jscomp$2));"));
   }
 
+  @Test
   public void testExposeExpression16() {
     helperExposeExpression(
         "throw bar() && foo();",
@@ -566,6 +618,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var temp$jscomp$0; if (temp$jscomp$0 = bar()) temp$jscomp$0=foo(); throw temp$jscomp$0;");
   }
 
+  @Test
   public void testExposeExpression17() {
     allowMethodCallDecomposing = true;
     helperExposeExpression(
@@ -577,6 +630,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "temp_const$jscomp$0.call(temp_const$jscomp$1, y());"));
   }
 
+  @Test
   public void testExposeExpression18() {
     allowMethodCallDecomposing = true;
     shouldTestTypes = false;
@@ -595,6 +649,8 @@ public final class ExpressionDecomposerTest extends TestCase {
             "}",
             "const {a, b, c} = temp$jscomp$0;"));
   }
+
+  @Test
   public void testMoveClass1() {
     shouldTestTypes = false;
     helperMoveExpression(
@@ -603,6 +659,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = class X {}; alert(result$jscomp$0);");
   }
 
+  @Test
   public void testMoveClass2() {
     shouldTestTypes = false;
     helperMoveExpression(
@@ -611,6 +668,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = class X {}; console.log(1, 2, result$jscomp$0);");
   }
 
+  @Test
   public void testMoveYieldExpression1() {
     helperMoveExpression(
         "function *f() { return { a: yield 1, c: foo(yield 2, yield 3) }; }",
@@ -640,6 +698,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "}"));
   }
 
+  @Test
   public void testMoveYieldExpression2() {
     helperMoveExpression(
         "function *f() { return (yield 1) || (yield 2); }",
@@ -651,6 +710,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "}"));
   }
 
+  @Test
   public void testMoveYieldExpression3() {
     helperMoveExpression(
         "function *f() { return x.y(yield 1); }",
@@ -662,6 +722,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "}"));
   }
 
+  @Test
   public void testExposeYieldExpression1() {
     helperExposeExpression(
         "function *f(x) { return x || (yield 2); }",
@@ -674,6 +735,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "}"));
   }
 
+  @Test
   public void testExposeYieldExpression2() {
     allowMethodCallDecomposing = true;
     helperExposeExpression(
@@ -687,6 +749,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "}"));
   }
 
+  @Test
   public void testExposeYieldExpression3() {
     allowMethodCallDecomposing = true;
     String before = "function *f() { return g.call(yield 1); }";
@@ -704,6 +767,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(before, "yield", after);
   }
 
+  @Test
   public void testExposeYieldExpression4() {
     allowMethodCallDecomposing = true;
     helperExposeExpression(
@@ -718,6 +782,7 @@ public final class ExpressionDecomposerTest extends TestCase {
   }
 
   // Simple name on LHS of assignment-op.
+  @Test
   public void testExposePlusEquals1() {
     helperExposeExpression(
         "var x = 0; x += foo() + 1",
@@ -731,6 +796,7 @@ public final class ExpressionDecomposerTest extends TestCase {
   }
 
   // Structure on LHS of assignment-op.
+  @Test
   public void testExposePlusEquals2() {
     helperExposeExpression(
         "var x = {}; x.a += foo() + 1",
@@ -750,6 +816,7 @@ public final class ExpressionDecomposerTest extends TestCase {
   }
 
   // Constant object on LHS of assignment-op.
+  @Test
   public void testExposePlusEquals3() {
     helperExposeExpression(
         "/** @const */ var XX = {}; XX.a += foo() + 1",
@@ -765,6 +832,7 @@ public final class ExpressionDecomposerTest extends TestCase {
   }
 
   // Function all on LHS of assignment-op.
+  @Test
   public void testExposePlusEquals4() {
     helperExposeExpression(
         "var x = {}; goo().a += foo() + 1",
@@ -786,6 +854,7 @@ public final class ExpressionDecomposerTest extends TestCase {
   }
 
   // Test multiple levels
+  @Test
   public void testExposePlusEquals5() {
     helperExposeExpression(
         "var x = {}; goo().a.b += foo() + 1",
@@ -806,6 +875,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "y = (temp_const$jscomp$0.b = temp_const$jscomp$1 + foo()) + goo().a"));
   }
 
+  @Test
   public void testExposeObjectLit1() {
     // Validate that getter and setters methods are seen as side-effect
     // free and that values can move past them.  We don't need to be
@@ -843,22 +913,27 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = foo(); ` ${ result$jscomp$0 }  ${ goo() } `;");
   }
 
+  @Test
   public void testFindExpressionRoot1() {
     assertNode(findExpressionRoot("var x = f()", "f")).hasType(Token.VAR);
   }
 
+  @Test
   public void testFindExpressionRoot2() {
     assertNode(findExpressionRoot("foo(bar(f()));", "f")).hasType(Token.EXPR_RESULT);
   }
 
+  @Test
   public void testFindExpressionRoot3() {
     assertThat(findExpressionRoot("for (let x of f()) {}", "f")).isNull();
   }
 
+  @Test
   public void testFindExpressionRoot4() {
     assertThat(findExpressionRoot("for (let x in f()) {}", "f")).isNull();
   }
 
+  @Test
   public void testFindExpressionRoot5() {
     assertNode(findExpressionRoot("for (let x = f();;) {}", "f")).hasType(Token.FOR);
   }

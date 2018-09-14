@@ -26,12 +26,17 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7_MODULES
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test cases for ES6 transpilation.
  *
  * <p>This class actually tests several transpilation passes together. See {@link #getProcessor}.
  */
+@RunWith(JUnit4.class)
 public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   private static final String EXTERNS_BASE =
@@ -90,6 +95,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
@@ -149,16 +155,19 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testObjectLiteralStringKeysWithNoValue() {
     test("var x = {a, b};", "var x = {a: a, b: b};");
     assertThat(getLastCompiler().injected).isEmpty();
   }
 
+  @Test
   public void testSpreadLibInjection() {
     test("var x = [...a];", "var x=[].concat($jscomp.arrayFromIterable(a))");
     assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
   }
 
+  @Test
   public void testObjectLiteralMemberFunctionDef() {
     test(
         "var x = {/** @return {number} */ a() { return 0; } };",
@@ -166,6 +175,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     assertThat(getLastCompiler().injected).isEmpty();
   }
 
+  @Test
   public void testClassStatement() {
     test("class C { }", "/** @constructor @struct */ var C = function() {};");
     test(
@@ -236,6 +246,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testClassWithNgInject() {
     test(
         "class A { /** @ngInject */ constructor($scope) {} }",
@@ -246,6 +257,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         "/** @constructor @struct @ngInject */ var A = function($scope) {}");
   }
 
+  @Test
   public void testAnonymousSuper() {
     test(
         "f(class extends D { f() { super.g() } })",
@@ -262,11 +274,13 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "f(testcode$classdecl$var0)"));
   }
 
+  @Test
   public void testNewTarget() {
     testError("function Foo() { new.target; }", CANNOT_CONVERT_YET);
     testError("class Example { foo() { new.target; } }", CANNOT_CONVERT_YET);
   }
 
+  @Test
   public void testClassWithJsDoc() {
     test("class C { }", "/** @constructor @struct */ var C = function() { };");
 
@@ -291,6 +305,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         "/** @constructor @struct @private */ var C = function() {};");
   }
 
+  @Test
   public void testInterfaceWithJsDoc() {
     test(
         lines(
@@ -319,6 +334,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "Converter.prototype.convert = function(x) {};"));
   }
 
+  @Test
   public void testRecordWithJsDoc() {
     test(
         lines(
@@ -345,6 +361,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "Converter.prototype.convert = function(x) {};"));
   }
 
+  @Test
   public void testCtorWithJsDoc() {
     test(
         "class C { /** @param {boolean} b */ constructor(b) {} }",
@@ -417,6 +434,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var C = function() {};"));
   }
 
+  @Test
   public void testMemberWithJsDoc() {
     test(
         "class C { /** @param {boolean} b */ foo(b) {} }",
@@ -431,6 +449,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "C.prototype.foo = function(b) {};"));
   }
 
+  @Test
   public void testClassStatementInsideIf() {
     test(
         "if (foo) { class C { } }",
@@ -442,9 +461,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   }
 
-  /**
-   * Class expressions that are the RHS of a 'var' statement.
-   */
+  /** Class expressions that are the RHS of a 'var' statement. */
+  @Test
   public void testClassExpressionInVar() {
     test("var C = class { }",
         "/** @constructor @struct */ var C = function() {}");
@@ -473,9 +491,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var C = testcode$classdecl$var0;"));
   }
 
-  /**
-   * Class expressions that are the RHS of an assignment.
-   */
+  /** Class expressions that are the RHS of an assignment. */
+  @Test
   public void testClassExpressionInAssignment() {
     test("goog.example.C = class { }",
         "/** @constructor @struct */ goog.example.C = function() {}");
@@ -487,6 +504,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "goog.example.C.prototype.foo = function() {};"));
   }
 
+  @Test
   public void testClassExpressionInAssignment_getElem() {
     test(
         "window['MediaSource'] = class {};",
@@ -496,6 +514,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "window['MediaSource'] = testcode$classdecl$var0;"));
   }
 
+  @Test
   public void testClassExpression() {
     test(
         "var C = new (class {})();",
@@ -511,6 +530,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "(condition ? obj1 : obj2).prop = testcode$classdecl$var0;"));
   }
 
+  @Test
   public void testAbstractClass() {
     enableTypeCheck();
 
@@ -524,10 +544,12 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
    * We don't bother transpiling this case because the transpiled code will be very difficult to
    * typecheck.
    */
+  @Test
   public void testClassExpression_cannotConvert() {
     testError("var C = new (foo || (foo = class { }))();", CANNOT_CONVERT);
   }
 
+  @Test
   public void testExtends() {
     test(
         "class D {} class C extends D {}",
@@ -590,6 +612,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var C = function(var_args) {};"));
   }
 
+  @Test
   public void testExtendNonNativeError() {
     test(
         lines(
@@ -641,6 +664,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "$jscomp.inherits(C, Error);"));
   }
 
+  @Test
   public void testExtendNativeError() {
     test(
         "class C extends Error {}", // autogenerated constructor
@@ -681,12 +705,14 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "$jscomp.inherits(C, Error);"));
   }
 
+  @Test
   public void testInvalidExtends() {
     testError("class C extends foo() {}", DYNAMIC_EXTENDS_TYPE);
     testError("class C extends function(){} {}", DYNAMIC_EXTENDS_TYPE);
     testError("class A {}; class B {}; class C extends (foo ? A : B) {}", DYNAMIC_EXTENDS_TYPE);
   }
 
+  @Test
   public void testExtendsInterface() {
     test(
         lines(
@@ -710,6 +736,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "C.prototype.g = function() {};"));
   }
 
+  @Test
   public void testExtendsRecord() {
     test(
         lines(
@@ -733,6 +760,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "C.prototype.g = function() {};"));
   }
 
+  @Test
   public void testImplementsInterface() {
     test(
         lines(
@@ -753,6 +781,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "C.prototype.f = function() {console.log('hi');};"));
   }
 
+  @Test
   public void testSuperCallInExterns() {
     // Drop super() calls in externs.
     testExternChanges(
@@ -773,6 +802,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var C = function() {};"));
   }
 
+  @Test
   public void testSuperCall() {
     test(
         "class D {} class C extends D { constructor() { super(); } }",
@@ -856,6 +886,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperKnownNotToChangeThis() {
     test(
         lines(
@@ -899,6 +930,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
   }
 
+  @Test
   public void testSuperMightChangeThis() {
     // Class D is unknown, so we must assume its constructor could change `this`.
     test(
@@ -922,6 +954,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
   }
 
+  @Test
   public void testAlternativeSuperCalls() {
     test(
         lines(
@@ -994,6 +1027,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
   }
 
+  @Test
   public void testComputedSuper() {
     test(
         lines(
@@ -1016,6 +1050,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "Bar.prototype['m'] = function () { return Foo.prototype['m'].call(this) + 1; };"));
   }
 
+  @Test
   public void testSuperMethodInGetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -1057,6 +1092,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testSuperMethodInSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -1098,6 +1134,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testExtendFunction() {
     // Function and other native classes cannot be correctly extended in transpiled form.
     // Test both explicit and automatically generated constructors.
@@ -1117,6 +1154,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         CANNOT_CONVERT);
   }
 
+  @Test
   public void testExtendObject() {
     // Object can be correctly extended in transpiled form, but we don't want or need to call
     // the `Object()` constructor in place of `super()`. Just replace `super()` with `this` instead.
@@ -1153,6 +1191,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "$jscomp.inherits(Foo, Object);"));
   }
 
+  @Test
   public void testExtendNonNativeObject() {
     // TODO(sdh): If a normal Object extern is found, then this test fails because
     // the pass adds extra handling for super() possibly changing 'this'.  Does setting
@@ -1212,6 +1251,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "$jscomp.inherits(Foo, Object);")));
   }
 
+  @Test
   public void testMultiNameClass() {
     test(
         "var F = class G {}",
@@ -1228,6 +1268,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "F = testcode$classdecl$var0;"));
   }
 
+  @Test
   public void testClassNested() {
     test(
         "class C { f() { class D {} } }",
@@ -1256,6 +1297,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperGet() {
     test(
         "class D { d() {} } class C extends D { f() {var i = super.d;} }",
@@ -1398,6 +1440,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperAccessToGettersAndSetters() {
     // Getters cannot be transpiled to ES3
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -1463,6 +1506,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         CANNOT_CONVERT_YET);
   }
 
+  @Test
   public void testStaticThis() {
     test(
         "class F { static f() { return this; } }",
@@ -1471,6 +1515,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "/** @this {?} */ F.f = function() { return this; };"));
   }
 
+  @Test
   public void testStaticMethods() {
     test("class C { static foo() {} }",
         "/** @constructor @struct */ var C = function() {}; C.foo = function() {};");
@@ -1494,6 +1539,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "C.prototype.bar = function() { C.foo(); };"));
   }
 
+  @Test
   public void testStaticInheritance() {
 
     test(
@@ -1553,6 +1599,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "C.prototype.g = function() {};"));
   }
 
+  @Test
   public void testInheritFromExterns() {
     test(
         externs(
@@ -1572,6 +1619,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "$jscomp.inherits(CodeClass,ExternsClass)")));
   }
 
+  @Test
   public void testMockingInFunction() {
     // Classes cannot be reassigned in function scope.
     testError("function f() { class C {} C = function() {};}", CLASS_REASSIGNMENT);
@@ -1579,6 +1627,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   // Make sure we don't crash on this code.
   // https://github.com/google/closure-compiler/issues/752
+  @Test
   public void testGithub752() {
     test(
         "function f() { var a = b = class {};}",
@@ -1600,6 +1649,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testInvalidClassUse() {
     enableTypeCheck();
 
@@ -1652,9 +1702,10 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   }
 
   /**
-   * Getters and setters are supported, both in object literals and in classes, but only
-   * if the output language is ES5.
+   * Getters and setters are supported, both in object literals and in classes, but only if the
+   * output language is ES5.
    */
+  @Test
   public void testEs5GettersAndSettersClasses() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -1765,6 +1816,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   }
 
+  @Test
   public void testEs5GettersAndSettersOnClassesWithClassSideInheritance() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -1802,9 +1854,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "});"));
   }
 
-  /**
-   * Check that the types from the getter/setter are copied to the declaration on the prototype.
-   */
+  /** Check that the types from the getter/setter are copied to the declaration on the prototype. */
+  @Test
   public void testEs5GettersAndSettersClassesWithTypes() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -1861,6 +1912,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         CONFLICTING_GETTER_SETTER_TYPE);
   }
 
+  @Test
   public void testClassEs5GetterSetterIncorrectTypes() {
     enableTypeCheck();
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -1902,9 +1954,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
-  /**
-   * @bug 20536614
-   */
+  /** @bug 20536614 */
+  @Test
   public void testStaticGetterSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -1950,6 +2001,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "$jscomp.inherits(Sub, C)"));
   }
 
+  @Test
   public void testStaticSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -1969,6 +2021,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testInitSymbol() {
     test("let a = alert(Symbol.thimble);", "$jscomp.initSymbol(); var a = alert(Symbol.thimble)");
     assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
@@ -2024,6 +2077,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         "alert(Symbol.thimble)");
   }
 
+  @Test
   public void testInitSymbolIterator() {
     test(
         "var x = {[Symbol.iterator]: function() { return this; }};",
@@ -2035,6 +2089,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "         $jscomp$compprop0)"));
   }
 
+  @Test
   public void testClassComputedPropGetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -2062,6 +2117,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     testError("class C { get [add + expr]() {} }", CANNOT_CONVERT);
   }
 
+  @Test
   public void testClassComputedPropSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -2088,6 +2144,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     testError("class C { get [sub - expr]() {} }", CANNOT_CONVERT);
   }
 
+  @Test
   public void testClassStaticComputedProps() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -2095,6 +2152,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     testError("/** @unrestricted */ class C { static get [foo]() {}}", CANNOT_CONVERT_YET);
   }
 
+  @Test
   public void testClassComputedPropGetterAndSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -2142,23 +2200,22 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         CONFLICTING_GETTER_SETTER_TYPE);
   }
 
-  /**
-   * ES5 getters and setters should report an error if the languageOut is ES3.
-   */
+  /** ES5 getters and setters should report an error if the languageOut is ES3. */
+  @Test
   public void testEs5GettersAndSetters_es3() {
     testError("let x = { get y() {} };", CANNOT_CONVERT);
     testError("let x = { set y(value) {} };", CANNOT_CONVERT);
   }
 
-  /**
-   * ES5 getters and setters on object literals should be left alone if the languageOut is ES5.
-   */
+  /** ES5 getters and setters on object literals should be left alone if the languageOut is ES5. */
+  @Test
   public void testEs5GettersAndSettersObjLit_es5() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     testSame("var x = { get y() {} };");
     testSame("var x = { set y(value) {} };");
   }
 
+  @Test
   public void testForOf() {
     // Iteration var shadows an outer var ()
     test(
@@ -2176,6 +2233,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "alert(i);"));
   }
 
+  @Test
   public void testForOfRedeclaredVar() {
     test(
         lines(
@@ -2193,6 +2251,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testArgumentsEscaped() {
     test(
         lines(
@@ -2205,6 +2264,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testMethodInObject() {
     test("var obj = { f() {alert(1); } };",
         "var obj = { f: function() {alert(1); } };");
@@ -2214,6 +2274,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         "var obj = { f: function() { alert(1); }, x: x };");
   }
 
+  @Test
   public void testComputedPropertiesWithMethod() {
     test(
         "var obj = { ['f' + 1]: 1, m() {}, ['g' + 1]: 1, };",
@@ -2224,6 +2285,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "     ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0)));"));
   }
 
+  @Test
   public void testComputedProperties() {
     test(
         "var obj = { ['f' + 1] : 1, ['g' + 1] : 1 };",
@@ -2310,6 +2372,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"));
   }
 
+  @Test
   public void testComputedPropGetterSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -2328,6 +2391,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var obj = ($jscomp$compprop0['a' + 'b'] = 2, $jscomp$compprop0);"));
   }
 
+  @Test
   public void testComputedPropClass() {
     test(
         "class C { [foo]() { alert(1); } }",
@@ -2344,16 +2408,19 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "C[foo] = function() { alert(2); };"));
   }
 
+  @Test
   public void testComputedPropCannotConvert() {
     testError("var o = { get [foo]() {}}", CANNOT_CONVERT_YET);
     testError("var o = { set [foo](val) {}}", CANNOT_CONVERT_YET);
   }
 
+  @Test
   public void testNoComputedProperties() {
     testSame("({'a' : 1})");
     testSame("({'a' : 1, f : 1, b : 1})");
   }
 
+  @Test
   public void testUntaggedTemplateLiteral() {
     test("``", "''");
     test("`\"`", "'\\\"'");
@@ -2381,6 +2448,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test("`hello ${a ? b : c}${a * b}`", "'hello ' + (a ? b : c) + (a * b)");
   }
 
+  @Test
   public void testTaggedTemplateLiteral() {
     test(
         "tag``",
@@ -2449,12 +2517,14 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "tag($jscomp$templatelit$0, x);"));
   }
 
+  @Test
   public void testUnicodeEscapes() {
     test("var \\u{73} = \'\\u{2603}\'", "var s = \'\u2603\'");  // ☃
     test("var \\u{63} = \'\\u{1f42a}\'", "var c = \'\uD83D\uDC2A\'");  // 🐪
     test("var str = `begin\\u{2026}end`", "var str = 'begin\\u2026end'");
   }
 
+  @Test
   public void testObjectLiteralShorthand() {
     test(
         lines(
