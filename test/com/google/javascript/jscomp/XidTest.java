@@ -19,21 +19,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Unit test for {@link Xid}.
- */
+/** Unit test for {@link Xid}. */
+@RunWith(JUnit4.class)
 public class XidTest extends TestCase {
-  public XidTest(String name) {
-    super(name);
-  }
 
   /**
-   * Verifies that {@link Xid#toString} generates unique
-   * strings for the integers close to zero, {@code Integer.MIN_VALUE}, and
-   * {@code Integer.MAX_VALUE}.
+   * Verifies that {@link Xid#toString} generates unique strings for the integers close to zero,
+   * {@code Integer.MIN_VALUE}, and {@code Integer.MAX_VALUE}.
    */
-  public void testUniqueness() throws Exception {
+  @Test
+  public void testUniqueness() {
     Map<String, Integer> map = new HashMap<>();
     helpTestUniqueness(map, -1000, 1000);
     helpTestUniqueness(map, Integer.MIN_VALUE, Integer.MIN_VALUE + 1000);
@@ -49,11 +48,9 @@ public class XidTest extends TestCase {
     }
   }
 
-  /**
-   * Verifies that {@link Xid#toString} generates strings
-   * with lengths between 1 and 6.
-   */
-  public void testLength() throws Exception {
+  /** Verifies that {@link Xid#toString} generates strings with lengths between 1 and 6. */
+  @Test
+  public void testLength() {
     helpTestLength(0);
     helpTestLength(1);
     helpTestLength(-1);
@@ -73,6 +70,7 @@ public class XidTest extends TestCase {
     assertTrue("Empty value for " + i + ": " + key, key.length() > 0);
   }
 
+  @Test
   public void testToString() {
     assertEquals("z6ArXc", Xid.toString(1));
     assertEquals("A6ArXc", Xid.toString(2));
@@ -81,6 +79,7 @@ public class XidTest extends TestCase {
     assertEquals("tTaYp", Xid.toString(-1951591049));
   }
 
+  @Test
   public void testGet() {
     Xid dummyMap = new Xid();
     assertEquals("nZzm6c", dummyMap.get("today"));
