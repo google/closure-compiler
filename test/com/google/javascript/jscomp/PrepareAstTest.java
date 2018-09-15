@@ -19,18 +19,24 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.rhino.Node;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for PrepareAst.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public final class PrepareAstTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return null; // unused
   }
 
-  public void testFreeCall1() throws Exception {
+  @Test
+  public void testFreeCall1() {
     Node root = parseExpectedJs("foo();");
     Node script = root.getFirstChild();
     checkState(script.isScript());
@@ -41,7 +47,8 @@ public final class PrepareAstTest extends CompilerTestCase {
     assertTrue(call.getBooleanProp(Node.FREE_CALL));
   }
 
-  public void testFreeCall2() throws Exception {
+  @Test
+  public void testFreeCall2() {
     Node root = parseExpectedJs("x.foo();");
     Node script = root.getFirstChild();
     checkState(script.isScript());

@@ -19,14 +19,19 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link RecordFunctionInformation}
  *
  */
 
+@RunWith(JUnit4.class)
 public final class RecordFunctionInformationTest extends TestCase {
 
+  @Test
   public void testFunction() {
     String g = "function g(){}";
     String fAndG = "function f(){" + g + "}";
@@ -59,6 +64,7 @@ public final class RecordFunctionInformationTest extends TestCase {
     test(js, expected);
   }
 
+  @Test
   public void testMotionPreservesOriginalSourceName() {
     String f = "function f(){}";
     String g = "function g(){}";
