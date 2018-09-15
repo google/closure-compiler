@@ -21,18 +21,24 @@ import static com.google.javascript.jscomp.ScopeSubject.assertScope;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link SyntacticScopeCreator}.
  *
  */
+@RunWith(JUnit4.class)
 public final class SyntacticScopeCreatorTest extends TestCase {
 
   private Compiler compiler;
   private SyntacticScopeCreator scopeCreator;
 
   @Override
-  protected void setUp() {
+  @Before
+  public void setUp() {
     compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     compiler.initOptions(options);
@@ -52,6 +58,7 @@ public final class SyntacticScopeCreatorTest extends TestCase {
     return root;
   }
 
+  @Test
   public void testFunctionScope() {
     compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     Scope scope = getScope("function foo() {}\n" +
@@ -71,6 +78,7 @@ public final class SyntacticScopeCreatorTest extends TestCase {
     assertScope(scope).doesNotDeclare("");
   }
 
+  @Test
   public void testNestedFunctionScope() {
     Node root = getRoot("function f(x) { function g(y) {} }");
     Scope globalScope = (Scope) scopeCreator.createScope(root, null);
@@ -85,6 +93,7 @@ public final class SyntacticScopeCreatorTest extends TestCase {
     assertScope(innerFScope).declares("y").directly();
   }
 
+  @Test
   public void testScopeRootNode() {
     Node root = getRoot("function foo() { var x = 10; }");
 
@@ -98,6 +107,7 @@ public final class SyntacticScopeCreatorTest extends TestCase {
     assertScope(fooScope).declares("x").directly();
   }
 
+  @Test
   public void testFunctionExpressionInForLoopInitializer() {
     Node root = getRoot("for (function foo() {};;) {}");
     Scope globalScope = (Scope) scopeCreator.createScope(root, null);
