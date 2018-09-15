@@ -33,11 +33,17 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for PolymerPass
+ *
  * @author jlklein@google.com (Jeremy Klein)
  */
+@RunWith(JUnit4.class)
 public class PolymerPassTest extends CompilerTestCase {
   private static final String EXTERNS_PREFIX =
       lines(
@@ -129,6 +135,7 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
@@ -143,6 +150,7 @@ public class PolymerPassTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testVarTarget() {
     test(
         lines(
@@ -175,6 +183,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testLetTarget() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
@@ -211,6 +220,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testConstTarget() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
@@ -236,6 +246,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testDefaultTypeNameTarget() {
     test(
         lines(
@@ -254,6 +265,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testPathAssignmentTarget() {
     test(
         lines(
@@ -290,6 +302,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testComputedPropName() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
     // TypeCheck cannot grab a name from a complicated computedPropName
@@ -308,10 +321,10 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   /**
-   * Since 'x' is a global name, the type system understands
-   * 'x.Z' as a type name, so there is no need to extract the
-   * type to the global namespace.
+   * Since 'x' is a global name, the type system understands 'x.Z' as a type name, so there is no
+   * need to extract the type to the global namespace.
    */
+  @Test
   public void testIIFEExtractionInGlobalNamespace() {
     test(
         lines(
@@ -360,10 +373,10 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   /**
-   * The definition of XElement is placed in the global namespace,
-   * outside the IIFE so that the type system will understand that
-   * XElement is a type.
+   * The definition of XElement is placed in the global namespace, outside the IIFE so that the type
+   * system will understand that XElement is a type.
    */
+  @Test
   public void testIIFEExtractionNoAssignmentTarget() {
     test(
         lines(
@@ -410,10 +423,10 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   /**
-   * The definition of FooThing is placed in the global namespace,
-   * outside the IIFE so that the type system will understand that
-   * FooThing is a type.
+   * The definition of FooThing is placed in the global namespace, outside the IIFE so that the type
+   * system will understand that FooThing is a type.
    */
+  @Test
   public void testIIFEExtractionVarTarget() {
     test(
         1,
@@ -439,6 +452,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "})()"));
   }
 
+  @Test
   public void testConstructorExtraction() {
     test(
         lines(
@@ -463,6 +477,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testShorthandConstructorExtraction() {
     test(
         lines(
@@ -488,6 +503,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testOtherKeysIgnored() {
     test(
         lines(
@@ -538,6 +554,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testListenersAndHostAttributeKeysQuoted() {
     test(
         lines(
@@ -580,6 +597,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testNativeElementExtension() {
     String js = lines(
         "Polymer({",
@@ -603,6 +621,7 @@ public class PolymerPassTest extends CompilerTestCase {
     testExternChanges(EXTERNS, js, INPUT_EXTERNS);
   }
 
+  @Test
   public void testExtendNonExistentElement() {
     polymerVersion = 1;
     String js = lines(
@@ -614,6 +633,7 @@ public class PolymerPassTest extends CompilerTestCase {
     testError(js, POLYMER_INVALID_EXTENDS);
   }
 
+  @Test
   public void testNativeElementExtensionExternsNotDuplicated() {
     String js =
         lines(
@@ -634,6 +654,7 @@ public class PolymerPassTest extends CompilerTestCase {
     testExternChanges(EXTERNS, js, newExterns);
   }
 
+  @Test
   public void testPropertiesAddedToPrototype() {
     test(
         lines(
@@ -734,6 +755,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.thingToDo;"));
   }
 
+  @Test
   public void testPropertiesDefaultValueFunctions() {
     test(
         lines(
@@ -846,6 +868,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.name;"));
   }
 
+  @Test
   public void testPropertiesDefaultValueShortHandFunction() {
     test(
         lines(
@@ -942,6 +965,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.name;"));
   }
 
+  @Test
   public void testReadOnlyPropertySetters() {
     String js =
         lines(
@@ -1086,6 +1110,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "A.prototype._setPets = function(pets) {};"));
   }
 
+  @Test
   public void testReflectToAttributeProperties() {
     String js =
         lines(
@@ -1180,6 +1205,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "Polymera_BInterface.prototype.name;"));
   }
 
+  @Test
   public void testPolymerClassObserversTyped() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
@@ -1202,6 +1228,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testShorthandFunctionDefinition() {
     test(
         lines(
@@ -1227,6 +1254,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testArrowFunctionDefinition() {
     test(
         lines(
@@ -1248,6 +1276,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testShorthandLifecycleCallbacks() {
     test(
         lines(
@@ -1274,6 +1303,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testShorthandFunctionDefinitionWithReturn() {
     test(
         lines(
@@ -1299,6 +1329,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testThisTypeAddedToFunctions() {
     test(
         lines(
@@ -1387,6 +1418,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDollarSignPropsConvertedToBrackets() {
     test(
         lines(
@@ -1522,6 +1554,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "Foo.prototype.propName;"));
   }
 
+  @Test
   public void testDollarSignPropsInShorthandFunctionConvertedToBrackets() {
     test(
         lines(
@@ -1558,6 +1591,7 @@ public class PolymerPassTest extends CompilerTestCase {
   /**
    * Test that behavior property types are copied correctly to multiple elements. See b/21929103.
    */
+  @Test
   public void testBehaviorForMultipleElements() {
     test(
         lines(
@@ -1636,6 +1670,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testSimpleBehavior() {
     test(
         srcs(lines(
@@ -1740,6 +1775,7 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   /** Check that we can resolve behaviors through a chain of identifiers. */
+  @Test
   public void testIndirectBehaviorAssignment() {
     test(
         srcs(
@@ -1793,6 +1829,7 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   /** If a behavior method is {@code @protected} there is no visibility warning. */
+  @Test
   public void testBehaviorWithProtectedMethod() {
     enableCheckAccessControls();
     for (int i = 1; i <= 2; i++) {
@@ -1848,6 +1885,7 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   /** If a behavior method is {@code @private} there is a visibility warning. */
+  @Test
   public void testBehaviorWithPrivateMethod() {
     enableCheckAccessControls();
     testWarning(
@@ -1874,6 +1912,7 @@ public class PolymerPassTest extends CompilerTestCase {
    * Test that if a behavior function is implemented by the Element, the function from the behavior
    * is not copied to the prototype of the Element.
    */
+  @Test
   public void testBehaviorFunctionOverriddenByElement() {
     test(
         lines(
@@ -1930,6 +1969,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testBehaviorShorthandFunctionOverriddenByElement() {
     test(
         lines(
@@ -1980,6 +2020,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testBehaviorDefaultValueSuppression() {
     test(
         lines(
@@ -2048,6 +2089,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testArrayBehavior() {
     test(
         lines(
@@ -2169,6 +2211,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testInlineLiteralBehavior() {
     test(
         lines(
@@ -2265,6 +2308,7 @@ public class PolymerPassTest extends CompilerTestCase {
    * If an element has two or more behaviors which define the same function, only the last
    * behavior's function should be copied over to the element's prototype.
    */
+  @Test
   public void testBehaviorFunctionOverriding() {
     test(
         lines(
@@ -2372,6 +2416,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testBehaviorShorthandFunctionOverriding() {
     test(
         lines(
@@ -2480,6 +2525,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testBehaviorReadOnlyProp() {
     String js =
         lines(
@@ -2585,9 +2631,11 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   /**
-   * Behaviors whose declarations are not in the global scope may contain references to
-   * symbols which do not exist in the element's scope. Only copy a function stub.
+   * Behaviors whose declarations are not in the global scope may contain references to symbols
+   * which do not exist in the element's scope. Only copy a function stub.
+   *
    */
+  @Test
   public void testBehaviorInIIFE() {
     test(
         lines(
@@ -2680,6 +2728,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testDuplicatedBehaviorsAreCopiedOnce() {
     test(
         lines(
@@ -2778,6 +2827,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testInvalid1() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
@@ -2803,6 +2853,7 @@ public class PolymerPassTest extends CompilerTestCase {
         POLYMER_CLASS_PROPERTIES_NOT_STATIC);
   }
 
+  @Test
   public void testInvalidProperties() {
     testError(
         lines(
@@ -2885,6 +2936,7 @@ public class PolymerPassTest extends CompilerTestCase {
         POLYMER_INVALID_PROPERTY);
   }
 
+  @Test
   public void testInvalidBehavior() {
     testError(
         lines(
@@ -2937,6 +2989,7 @@ public class PolymerPassTest extends CompilerTestCase {
         POLYMER_UNQUALIFIED_BEHAVIOR);
   }
 
+  @Test
   public void testUnannotatedBehavior() {
     testError(
         lines(
@@ -2951,6 +3004,7 @@ public class PolymerPassTest extends CompilerTestCase {
         POLYMER_UNANNOTATED_BEHAVIOR);
   }
 
+  @Test
   public void testInvalidTypeAssignment() {
     test(
         lines(
@@ -2982,6 +3036,7 @@ public class PolymerPassTest extends CompilerTestCase {
         warning(TYPE_MISMATCH_WARNING));
   }
 
+  @Test
   public void testFeaturesInFunctionBody() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
@@ -3021,6 +3076,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testPolymerElementAnnotation1() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
@@ -3074,6 +3130,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "Foo.prototype.thingToDo;"));
   }
 
+  @Test
   public void testPolymerElementAnnotation2() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
@@ -3129,6 +3186,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.thingToDo;"));
   }
 
+  @Test
   public void testPolymerElementAnnotation3() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
@@ -3184,6 +3242,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.other;"));
   }
 
+  @Test
   public void testObjectReflectionAddedToConfigProperties1() {
     propertyRenamingEnabled = true;
     test(
@@ -3287,6 +3346,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.thingToDo;"));
   }
 
+  @Test
   public void testObjectReflectionAddedToConfigProperties2() {
     propertyRenamingEnabled = true;
     test(
@@ -3386,6 +3446,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "A.prototype.thingToDo;"));
   }
 
+  @Test
   public void testObjectReflectionAddedToConfigProperties3() {
     propertyRenamingEnabled = true;
     test(
@@ -3494,6 +3555,7 @@ public class PolymerPassTest extends CompilerTestCase {
    * inherited from Polymer Behaviors. Ensure that each method is included on the interface only
    * once, even when it is implemented in multiple places.
    */
+  @Test
   public void testExportAllOnlyExportsEachMethodOnce() {
     polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
 

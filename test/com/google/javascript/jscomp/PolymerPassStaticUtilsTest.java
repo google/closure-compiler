@@ -19,9 +19,14 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.rhino.IR;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class PolymerPassStaticUtilsTest extends TestCase {
 
+  @Test
   public void testGetPolymerElementType_noNativeElement() {
     PolymerClassDefinition def =
         new PolymerClassDefinition(
@@ -39,6 +44,7 @@ public final class PolymerPassStaticUtilsTest extends TestCase {
     assertThat(PolymerPassStaticUtils.getPolymerElementType(def)).isEqualTo("PolymerElement");
   }
 
+  @Test
   public void testGetPolymerElementType_inputBaseElement() {
     PolymerClassDefinition def =
         new PolymerClassDefinition(

@@ -29,11 +29,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link PhaseOptimizer}.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public final class PhaseOptimizerTest extends TestCase {
   private final List<String> passesRun = new ArrayList<>();
   private Node dummyExternsRoot;
@@ -44,6 +50,7 @@ public final class PhaseOptimizerTest extends TestCase {
   private PerformanceTracker tracker;
 
   @Override
+  @Before
   public void setUp() {
     passesRun.clear();
     dummyExternsRoot = new Node(Token.ROOT);
@@ -56,23 +63,27 @@ public final class PhaseOptimizerTest extends TestCase {
     compiler.setPhaseOptimizer(optimizer);
   }
 
+  @Test
   public void testOneRun() {
     addOneTimePass("x");
     assertPasses("x");
   }
 
+  @Test
   public void testLoop1() {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", 0);
     assertPasses("x");
   }
 
+  @Test
   public void testLoop2() {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", 3);
     assertPasses("x", "x", "x", "x");
   }
 
+  @Test
   public void testSchedulingOfLoopablePasses() {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", 3);
@@ -81,6 +92,7 @@ public final class PhaseOptimizerTest extends TestCase {
     assertPasses("x", "y", "x", "y", "x", "x", "y");
   }
 
+  @Test
   public void testCapLoopIterations() {
     CompilerOptions options = compiler.getOptions();
     options.optimizationLoopMaxIterations = 1;
@@ -90,6 +102,7 @@ public final class PhaseOptimizerTest extends TestCase {
     assertPasses(PassNames.PEEPHOLE_OPTIMIZATIONS);
   }
 
+  @Test
   public void testNotInfiniteLoop() {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", PhaseOptimizer.MAX_LOOPS - 2);
@@ -97,6 +110,7 @@ public final class PhaseOptimizerTest extends TestCase {
     assertEquals("There should be no errors.", 0, compiler.getErrorCount());
   }
 
+  @Test
   public void testInfiniteLoop() {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", PhaseOptimizer.MAX_LOOPS + 1);
@@ -109,6 +123,7 @@ public final class PhaseOptimizerTest extends TestCase {
     }
   }
 
+  @Test
   public void testSchedulingOfAnyKindOfPasses1() {
     addOneTimePass("a");
     Loop loop = optimizer.addFixedPointLoop();
@@ -118,6 +133,7 @@ public final class PhaseOptimizerTest extends TestCase {
     assertPasses("a", "x", "y", "x", "y", "x", "x", "y", "z");
   }
 
+  @Test
   public void testSchedulingOfAnyKindOfPasses2() {
     optimizer.consume(
         ImmutableList.of(
@@ -132,6 +148,7 @@ public final class PhaseOptimizerTest extends TestCase {
     assertPasses("a", "b", "c", "d", "b", "c", "d", "c", "b", "d", "e", "f");
   }
 
+  @Test
   public void testSchedulingOfAnyKindOfPasses3() {
     optimizer.consume(
         ImmutableList.of(
@@ -141,6 +158,7 @@ public final class PhaseOptimizerTest extends TestCase {
     assertPasses("a", "a", "a", "b", "c", "c");
   }
 
+  @Test
   public void testSchedulingOfAnyKindOfPasses4() {
     optimizer.consume(
         ImmutableList.of(
@@ -150,6 +168,7 @@ public final class PhaseOptimizerTest extends TestCase {
     assertPasses("a", "b", "c");
   }
 
+  @Test
   public void testDuplicateLoop() {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", 1);
@@ -161,6 +180,7 @@ public final class PhaseOptimizerTest extends TestCase {
     }
   }
 
+  @Test
   public void testPassOrdering() {
     Loop loop = optimizer.addFixedPointLoop();
     List<String> optimalOrder = new ArrayList<>(
@@ -174,6 +194,7 @@ public final class PhaseOptimizerTest extends TestCase {
     assertEquals(PhaseOptimizer.OPTIMAL_ORDER, passesRun);
   }
 
+  @Test
   public void testProgress() {
     final List<Double> progressList = new ArrayList<>();
     compiler = new Compiler() {

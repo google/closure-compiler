@@ -28,16 +28,21 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.regex.Pattern;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for PerformanceTracker.
  *
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
+@RunWith(JUnit4.class)
 public final class PerformanceTrackerTest extends TestCase {
   private final Node emptyExternRoot = new Node(Token.BLOCK);
   private final Node emptyJsRoot = new Node(Token.BLOCK);
 
+  @Test
   public void testStatsCalculation() {
     PerformanceTracker tracker =
         new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL, null);
@@ -102,6 +107,7 @@ public final class PerformanceTrackerTest extends TestCase {
     assertEquals(0, st.changes);
   }
 
+  @Test
   public void testOutputFormat() {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     try (PrintStream outstream = new PrintStream(output)) {

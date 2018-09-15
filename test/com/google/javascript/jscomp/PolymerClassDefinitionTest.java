@@ -20,12 +20,18 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
 
   private Node polymerCall;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     polymerCall = null;
@@ -33,6 +39,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
 
   // TODO(jlklein): Add more complex test cases and verify behaviors and descriptors.
 
+  @Test
   public void testSimpleBehavior() {
     PolymerClassDefinition def =
         parseAndExtractClassDefFromCall(
@@ -81,6 +88,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
     assertThat(def.props).hasSize(3);
   }
 
+  @Test
   public void testBasicClass() {
     compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     PolymerClassDefinition def =
@@ -110,6 +118,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
     assertThat(def.props).hasSize(2);
   }
 
+  @Test
   public void testDynamicDescriptor() {
     PolymerClassDefinition def = parseAndExtractClassDefFromCall(
         lines(
@@ -120,6 +129,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
     assertEquals("A", def.target.getString());
   }
 
+  @Test
   public void testDynamicDescriptor1() {
     PolymerClassDefinition def = parseAndExtractClassDefFromCall(
         lines(
@@ -130,6 +140,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
     assertEquals("XElement", def.target.getString());
   }
 
+  @Test
   public void testDynamicDescriptor2() {
     PolymerClassDefinition def = parseAndExtractClassDefFromCall(
         lines(
@@ -140,6 +151,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
     assertEquals("Foo$barElement", def.target.getString());
   }
 
+  @Test
   public void testDynamicDescriptor3() {
     PolymerClassDefinition def = parseAndExtractClassDefFromCall(
         lines(

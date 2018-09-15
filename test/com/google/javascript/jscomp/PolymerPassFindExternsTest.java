@@ -19,7 +19,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class PolymerPassFindExternsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
@@ -73,6 +78,7 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
@@ -86,6 +92,7 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testFindsPolymerElementRoot() {
     testSame("");
     Node polymerElementNode = findExternsCallback.getPolymerElementExterns();
@@ -95,6 +102,7 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
     assertTrue(polymerElementNode.getFirstChild().matchesQualifiedName("PolymerElement"));
   }
 
+  @Test
   public void testFindsPolymerElementProps() {
     testSame("");
     final ImmutableList<String> expectedProps = ImmutableList.of(

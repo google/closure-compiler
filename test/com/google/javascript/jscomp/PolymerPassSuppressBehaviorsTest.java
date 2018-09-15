@@ -17,10 +17,13 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for {@link PolymerPassSuppressBehaviors}
- */
+/** Unit tests for {@link PolymerPassSuppressBehaviors} */
+@RunWith(JUnit4.class)
 public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
@@ -73,6 +76,7 @@ public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
@@ -87,6 +91,7 @@ public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testPropertyTypeRemoval() {
     test(
         lines(
@@ -127,6 +132,7 @@ public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testDefaultValueSuppression() {
     test(
         lines(
@@ -170,6 +176,7 @@ public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testConstBehaviours() {
     disableTypeCheck();
 
@@ -185,6 +192,7 @@ public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testLetBehaviours() {
     disableTypeCheck();
 
