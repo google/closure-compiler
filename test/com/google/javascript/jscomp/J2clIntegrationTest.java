@@ -16,9 +16,15 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 
+@RunWith(JUnit4.class)
 public final class J2clIntegrationTest extends IntegrationTestCase {
+  @Test
   public void testStripNoSideEffectsClinit() {
     String source =
         LINE_JOINER.join(
@@ -44,6 +50,7 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
     test(createCompilerOptions(), source, "alert('hello')");
   }
 
+  @Test
   public void testFoldJ2clClinits() {
     String code =
         LINE_JOINER.join(
@@ -58,6 +65,7 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
   }
 
   @Override
+  @Before
   public void setUp() {
     super.setUp();
     inputFileNameSuffix = ".java.js";

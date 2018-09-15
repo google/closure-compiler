@@ -26,6 +26,7 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Before;
 
 /**
  * Framework for end-to-end test cases.
@@ -320,6 +321,7 @@ abstract class IntegrationTestCase extends TestCase {
   protected String inputFileNameSuffix;
 
   @Override
+  @Before
   public void setUp() {
     externs = DEFAULT_EXTERNS;
     lastCompiler = null;

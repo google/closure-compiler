@@ -15,6 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+@RunWith(JUnit4.class)
 public class J2clConstantHoisterPassTest extends CompilerTestCase {
 
   @Override
@@ -29,6 +34,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
     return compiler;
   }
 
+  @Test
   public void testHoistClinitConstantAssignments() {
     test(
         lines(
@@ -52,6 +58,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
             "var someClass$buzz = function(){ return someClass$bar; };"));
   }
 
+  @Test
   public void testHoistClinitConstantAssignments_assignmentAfterInit() {
     test(
         LINE_JOINER.join(
@@ -75,6 +82,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testHoistClinitConstantAssignments_stubInit() {
     test(
         LINE_JOINER.join(
@@ -98,6 +106,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
             "var someClass$buzz = function(){ return someClass$bar; };"));
   }
 
+  @Test
   public void testHoistClinitConstantAssignments_avoidUnsafe() {
     testSame(
         lines(
@@ -123,6 +132,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
   /**
    * Tests that hoisting works as expected when encountering a clinit that has been devirtualized.
    */
+  @Test
   public void testHoistClinitConstantAssignments_devirtualized() {
     test(
         lines(
@@ -144,6 +154,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
             "var someClass$shouldNotHoist = null;"));
   }
 
+  @Test
   public void testHoistClinitConstantAssignments_avoidUnsafeFunc() {
     testSame(
         lines(
