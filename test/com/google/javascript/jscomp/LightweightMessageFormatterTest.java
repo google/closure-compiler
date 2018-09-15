@@ -18,9 +18,12 @@ package com.google.javascript.jscomp;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFormatter;
 import com.google.javascript.rhino.Node;
-
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class LightweightMessageFormatterTest extends TestCase {
   private static final DiagnosticType FOO_TYPE =
       DiagnosticType.error("TEST_FOO", "error description here");
@@ -31,48 +34,57 @@ public final class LightweightMessageFormatterTest extends TestCase {
       .setColumnPosition(15)
       .build();
 
-  public void testNull() throws Exception {
+  @Test
+  public void testNull() {
     assertNull(format(null));
   }
 
-  public void testOneLineRegion() throws Exception {
+  @Test
+  public void testOneLineRegion() {
     assertEquals("  5| hello world", format(region(5, 5, "hello world")));
   }
 
-  public void testTwoLineRegion() throws Exception {
+  @Test
+  public void testTwoLineRegion() {
     assertEquals("  5| hello world\n" +
             "  6| foo bar", format(region(5, 6, "hello world\nfoo bar")));
   }
 
-  public void testThreeLineRegionAcrossNumberRange() throws Exception {
+  @Test
+  public void testThreeLineRegionAcrossNumberRange() {
     String region = format(region(9, 11, "hello world\nfoo bar\nanother one"));
     assertEquals("   9| hello world\n" +
             "  10| foo bar\n" +
             "  11| another one", region);
   }
 
-  public void testThreeLineRegionEmptyLine() throws Exception {
+  @Test
+  public void testThreeLineRegionEmptyLine() {
     String region = format(region(7, 9, "hello world\n\nanother one"));
     assertEquals("  7| hello world\n" +
             "  8| \n" +
             "  9| another one", region);
   }
 
-  public void testOnlyOneEmptyLine() throws Exception {
+  @Test
+  public void testOnlyOneEmptyLine() {
     assertNull(format(region(7, 7, "")));
   }
 
-  public void testTwoEmptyLines() throws Exception {
+  @Test
+  public void testTwoEmptyLines() {
     assertEquals("  7| ", format(region(7, 8, "\n")));
   }
 
-  public void testThreeLineRemoveLastEmptyLine() throws Exception {
+  @Test
+  public void testThreeLineRemoveLastEmptyLine() {
     String region = format(region(7, 9, "hello world\nfoobar\n"));
     assertEquals("  7| hello world\n" +
             "  8| foobar", region);
   }
 
-  public void testFormatErrorSpaces() throws Exception {
+  @Test
+  public void testFormatErrorSpaces() {
     Node n = Node.newString("foobar", 5, 8);
     n.setLength("foobar".length());
     n.setSourceFileForTesting("javascript/complex.js");
@@ -83,7 +95,8 @@ public final class LightweightMessageFormatterTest extends TestCase {
         "        ^^^^^^\n", formatter.formatError(error));
   }
 
-  public void testFormatErrorTabs() throws Exception {
+  @Test
+  public void testFormatErrorTabs() {
     Node n = Node.newString("foobar", 5, 6);
     n.setLength("foobar".length());
     n.setSourceFileForTesting("javascript/complex.js");
@@ -94,7 +107,8 @@ public final class LightweightMessageFormatterTest extends TestCase {
         "\t\t    ^^^^^^\n", formatter.formatError(error));
   }
 
-  public void testFormatErrorSpaceEndOfLine1() throws Exception {
+  @Test
+  public void testFormatErrorSpaceEndOfLine1() {
     JSError error = JSError.make("javascript/complex.js",
         1, 10, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("assert (1;");
@@ -103,7 +117,8 @@ public final class LightweightMessageFormatterTest extends TestCase {
         "          ^\n", formatter.formatError(error));
   }
 
-  public void testFormatErrorSpaceEndOfLine2() throws Exception {
+  @Test
+  public void testFormatErrorSpaceEndOfLine2() {
     JSError error = JSError.make("javascript/complex.js",
         6, 7, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("if (foo");
@@ -112,7 +127,8 @@ public final class LightweightMessageFormatterTest extends TestCase {
         "       ^\n", formatter.formatError(error));
   }
 
-  public void testFormatErrorOriginalSource() throws Exception {
+  @Test
+  public void testFormatErrorOriginalSource() {
     Node n = Node.newString("foobar", 5, 8);
     n.setLength("foobar".length());
     n.setSourceFileForTesting("javascript/complex.js");

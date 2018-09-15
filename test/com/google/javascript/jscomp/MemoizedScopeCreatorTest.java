@@ -18,15 +18,17 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * A tests for {@link MemoizedScopeCreator}.
- */
+/** A tests for {@link MemoizedScopeCreator}. */
+@RunWith(JUnit4.class)
 public final class MemoizedScopeCreatorTest extends TestCase {
 
-  public void testMemoization() throws Exception {
+  @Test
+  public void testMemoization() {
     Node root1 = new Node(Token.ROOT);
     Node root2 = new Node(Token.ROOT);
     Compiler compiler = new Compiler();
@@ -37,7 +39,8 @@ public final class MemoizedScopeCreatorTest extends TestCase {
     assertNotSame(scopeA, creator.createScope(root2, null));
   }
 
-  public void testPreconditionCheck() throws Exception {
+  @Test
+  public void testPreconditionCheck() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
     Node root = new Node(Token.ROOT);

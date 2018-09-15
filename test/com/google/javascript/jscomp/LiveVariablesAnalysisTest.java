@@ -26,17 +26,22 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link LiveVariablesAnalysis}. Test cases are snippets of a function and assertions
- * are made at the instruction labeled with {@code X}.
+ * Tests for {@link LiveVariablesAnalysis}. Test cases are snippets of a function and assertions are
+ * made at the instruction labeled with {@code X}.
  *
  * @author simranarora@google.com (Simran Arora)
  */
+@RunWith(JUnit4.class)
 public final class LiveVariablesAnalysisTest extends TestCase {
 
   private LiveVariablesAnalysis liveness = null;
 
+  @Test
   public void testStraightLine() {
     // A sample of simple straight line of code with different liveness changes.
     assertNotLiveBeforeX("X:var a;", "a");
@@ -60,6 +65,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveBeforeX("var a,b;X:a,b=1", "a");
   }
 
+  @Test
   public void testProperties() {
     // Reading property of a local variable makes that variable live.
     assertLiveBeforeX("var a,b;X:a.P;", "a");
@@ -74,6 +80,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveBeforeX("var a,b;X:b.P.Q=a;", "a");
   }
 
+  @Test
   public void testConditions() {
     // Reading the condition makes the variable live.
     assertLiveBeforeX("var a,b;X:if(a){}", "a");
@@ -95,6 +102,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveBeforeX("var a,b;a();X:while(a&&(a=b)){}a()", "a");
   }
 
+  @Test
   public void testArrays() {
     assertLiveBeforeX("var a;X:a[1]", "a");
     assertLiveBeforeX("var a,b;X:b[a]", "a");
@@ -106,6 +114,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveBeforeX("var a;X:a[1]=1", "a");
   }
 
+  @Test
   public void testTwoPaths() {
     // Both Paths.
     assertLiveBeforeX("var a,b;X:if(b){b(a)}else{b(a)};", "a");
@@ -133,6 +142,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertNotLiveAfterX("X:var a;do{a=1}while(param1);a()", "a");
   }
 
+  @Test
   public void testThreePaths() {
     assertLiveBeforeX("var a;X:if(1){}else if(2){}else{a()};", "a");
     assertLiveBeforeX("var a;X:if(1){}else if(2){a()}else{};", "a");
@@ -140,6 +150,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveBeforeX("var a;X:if(1){}else if(2){}else{};a()", "a");
   }
 
+  @Test
   public void testHooks() {
     assertLiveBeforeX("var a;X:1?a=1:1;a()", "a");
 
@@ -149,6 +160,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveBeforeX("var a,b;X:b=1?a:2", "a");
   }
 
+  @Test
   public void testForLoops() {
     // Induction variable should not be live after the loop.
     assertNotLiveBeforeX("var a,b;for(a=0;a<9;a++){b(a)};X:b", "a");
@@ -174,18 +186,21 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertNotLiveBeforeX("var a,b;X:a;for(b=a;;){b()};b();", "b");
   }
 
+  @Test
   public void testForOfLoopsVar() {
     assertLiveBeforeX("var a; for (a of [1, 2, 3]) {X:{}}", "a");
     assertLiveAfterX("for (var a of [1, 2, 3]) {X:{}}", "a");
     assertLiveBeforeX("var a,b; for (var y of a = [0, 1, 2]) { X:a[y] }", "a");
   }
 
+  @Test
   public void testForOfLoopsDestructuring() {
     assertLiveBeforeX("var key, value; X:for ([key, value] of arr) {value;} value;", "value");
     assertLiveBeforeX("let x = 3; X:for (var [y = x] of arr) { y; }", "x");
     assertLiveBeforeX("for (let [key, value] in arr) { X: key; value; }", "key");
   }
 
+  @Test
   public void testNestedLoops() {
     assertLiveBeforeX("var a;X:while(1){while(1){a()}}", "a");
     assertLiveBeforeX("var a;X:while(1){while(1){while(1){a()}}}", "a");
@@ -195,6 +210,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertNotLiveBeforeX("var a;X:1;do{do{do{a=1;}while(1)}while(1)}while(1);a()", "a");
   }
 
+  @Test
   public void testSwitches() {
     assertLiveBeforeX("var a,b;X:switch(a){}", "a");
     assertLiveBeforeX("var a,b;X:switch(b){case(a):break;}", "a");
@@ -204,6 +220,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveBeforeX("var a,b;X:switch(b){default:a();break;}", "a");
   }
 
+  @Test
   public void testAssignAndReadInCondition() {
     // BUG #1358904
     // Technically, this isn't exactly true....but we haven't model control flow
@@ -213,6 +230,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertNotLiveBeforeX("var a; X: a = 1, a = 1;", "a");
   }
 
+  @Test
   public void testParam() {
     // Unused parameter should not be live.
     assertNotLiveAfterX("var a;X:a()", "param1");
@@ -220,10 +238,12 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertNotLiveAfterX("var a;X:a();a(param2)", "param1");
   }
 
+  @Test
   public void testExpressionInForIn() {
     assertLiveBeforeX("var a = [0]; X:for (a[1] in foo) { }", "a");
   }
 
+  @Test
   public void testArgumentsArray() {
     // Check that use of arguments forces the parameters into the
     // escaped set.
@@ -245,6 +265,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
 
   }
 
+  @Test
   public void testTryCatchFinally() {
     assertLiveAfterX("var a; try {X:a=1} finally {a}", "a");
     assertLiveAfterX("var a; try {a()} catch(e) {X:a=1} finally {a}", "a");
@@ -254,6 +275,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveAfterX("var a; while(1) { try {X:a=1;break} finally {a}}", "a");
   }
 
+  @Test
   public void testForInAssignment() {
     assertLiveBeforeX("var a,b; for (var y in a = b) { X:a[y] }", "a");
     // No one refers to b after the first iteration.
@@ -262,12 +284,14 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveAfterX("var a,b; for (var y in a = b) { a[y]; X: y();}", "a");
   }
 
+  @Test
   public void testExceptionThrowingAssignments() {
     assertLiveBeforeX("try{var a; X:a=foo();a} catch(e) {e()}", "a");
     assertLiveBeforeX("try{X:var a=foo();a} catch(e) {e()}", "a");
     assertLiveBeforeX("try{X:var a=foo()} catch(e) {e(a)}", "a");
   }
 
+  @Test
   public void testInnerFunctions() {
     assertLiveBeforeX("function a() {}; X: a()", "a");
     assertNotLiveBeforeX("X:; function a() {}", "a");
@@ -278,6 +302,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertNotLiveBeforeX("X: a = function(){}; function a() {}; a()", "a");
   }
 
+  @Test
   public void testEscaped() {
     assertEscaped("var a;function b(){a()}", "a");
     assertEscaped("var a;function b(){param1()}", "param1");
@@ -295,18 +320,22 @@ public final class LiveVariablesAnalysisTest extends TestCase {
 
   // ES6 does not require separate handling for catch because the catch block is already recognized
   // by the scope creator
+  @Test
   public void testNotEscapedWithCatch() {
     assertEscaped("try{} catch(e){}", "e");
   }
 
+  @Test
   public void testEscapedLiveness() {
     assertNotLiveBeforeX("var a;X:a();function b(){a()}", "a");
   }
 
+  @Test
   public void testBug1449316() {
     assertLiveBeforeX("try {var x=[]; X:var y=x[0]} finally {foo()}", "x");
   }
 
+  @Test
   public void testSimpleLet() {
     // a is defined after X and not used
     assertNotLiveBeforeX("X:let a;", "a");
@@ -330,10 +359,12 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertNotLiveAfterX("X:a();let a=1;a()", "a");
   }
 
+  @Test
   public void testLetInnerBlock() {
     assertNotLiveAfterX("let x; { X:x = 2; let y; }", "x");
   }
 
+  @Test
   public void testSimpleConst() {
     // a is defined after X and not used
     assertLiveBeforeX("const a = 4; X:a;", "a");
@@ -342,6 +373,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertNotLiveAfterX("X:const a = 1;", "a");
   }
 
+  @Test
   public void testArrayDestructuring() {
     assertLiveBeforeX("var [a, b] = [1, 2]; X:a;", "a");
     assertNotLiveBeforeX("X: var [...a] = f();", "a");
@@ -354,6 +386,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveBeforeX("var x = []; X: const [c] = x;", "x");
   }
 
+  @Test
   public void testObjectDestructuring() {
     assertLiveBeforeX("var {a: x, b: y} = g(); X:x", "x");
     assertNotLiveBeforeX("X: var {a: x, b: y} = g();", "y");
@@ -365,6 +398,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveBeforeX("var x = {}; X: const {c} = x;", "x");
   }
 
+  @Test
   public void testComplexDestructuringPattern() {
     assertLiveBeforeX("var x = 3; X: var [y = x] = [];", "x");
     assertLiveBeforeX("var x = 3, y; X: [y = x] = [];", "x");
@@ -374,6 +408,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveBeforeX("var x = 3; X: const {[x + x]: x} = obj; x;", "x");
   }
 
+  @Test
   public void testComplicatedDeclaration() {
     assertNotEscaped("var a = 1, {b: b} = f(), c = g()", "a");
     assertNotEscaped("var a = 1, {b: b} = f(), c = g()", "b");

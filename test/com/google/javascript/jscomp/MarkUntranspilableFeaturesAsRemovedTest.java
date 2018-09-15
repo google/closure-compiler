@@ -19,13 +19,19 @@ import static com.google.javascript.jscomp.CheckRegExp.MALFORMED_REGEXP;
 import static com.google.javascript.jscomp.MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
 
   private LanguageMode languageIn;
   private LanguageMode languageOut;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     languageIn = LanguageMode.ECMASCRIPT_NEXT;
@@ -53,6 +59,7 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
         compiler, languageIn.toFeatureSet(), languageOut.toFeatureSet());
   }
 
+  @Test
   public void testEs2018RegexFlagS() {
     languageIn = LanguageMode.ECMASCRIPT_2018;
     languageOut = LanguageMode.ECMASCRIPT_2018;
@@ -77,10 +84,12 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
             + "Either remove feature \"RegExp flag 's'\" or raise output level to ECMASCRIPT2018.");
   }
 
+  @Test
   public void testInvalidRegExpReportsWarning() {
     testWarning("const a = /([0-9a-zA-Z_\\-]{20,}/", MALFORMED_REGEXP);
   }
 
+  @Test
   public void testEs2018RegexLookbehind() {
     languageIn = LanguageMode.ECMASCRIPT_2018;
     languageOut = LanguageMode.ECMASCRIPT_2018;
@@ -105,6 +114,7 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
             + "");
   }
 
+  @Test
   public void testEs2018RegexUnicodePropertyEscape() {
     languageIn = LanguageMode.ECMASCRIPT_2018;
     languageOut = LanguageMode.ECMASCRIPT_2018;
@@ -131,6 +141,7 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
             + "output level to ECMASCRIPT2018.");
   }
 
+  @Test
   public void testRegExpConstructorCalls() {
     languageIn = LanguageMode.ECMASCRIPT_2018;
     languageOut = LanguageMode.ECMASCRIPT_2017;

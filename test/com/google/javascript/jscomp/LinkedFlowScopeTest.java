@@ -21,12 +21,18 @@ import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for LinkedFlowScope.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
 
+@RunWith(JUnit4.class)
 public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
   private final Node functionNode = new Node(Token.FUNCTION);
@@ -40,6 +46,7 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
   private FlowScope localEntry;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
 
@@ -55,6 +62,7 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
     localEntry = LinkedFlowScope.createEntryLattice(localScope);
   }
 
+  @Test
   public void testJoin1() {
     FlowScope childA = localEntry.inferSlotType("localB", getNativeNumberType());
     FlowScope childAB = childA.inferSlotType("localB", getNativeStringType());
@@ -80,6 +88,7 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
         join(childB, childAB), join(childAB, childB));
   }
 
+  @Test
   public void testJoin2() {
     FlowScope childA = localEntry.inferSlotType("localA", getNativeStringType());
     FlowScope childB = localEntry.inferSlotType("globalB", getNativeBooleanType());
@@ -100,6 +109,7 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
         join(childB, childA), join(childA, childB));
   }
 
+  @Test
   public void testJoin3() {
     localScope.declare("localC", null, getNativeStringType(), null);
     localScope.declare("localD", null, getNativeStringType(), null);
@@ -128,6 +138,7 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
   }
 
   /** Create a long chain of flow scopes. */
+  @Test
   public void testLongChain() {
     FlowScope chainA = localEntry;
     FlowScope chainB = localEntry;
@@ -170,6 +181,7 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
     assertScopesDiffer(chainB, joined);
   }
 
+  @Test
   public void testDiffer1() {
     FlowScope childA = localEntry.inferSlotType("localB", getNativeNumberType());
     FlowScope childAB = childA.inferSlotType("localB", getNativeStringType());
@@ -189,6 +201,7 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
     assertScopesDiffer(childA, childBC);
   }
 
+  @Test
   public void testDiffer2() {
     FlowScope childA = localEntry.inferSlotType("localA", getNativeNumberType());
     FlowScope childB = localEntry.inferSlotType("localA", getNativeNoType());

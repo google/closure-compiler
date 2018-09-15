@@ -22,11 +22,15 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link MarkNoSideEffectCalls}
  *
  */
+@RunWith(JUnit4.class)
 public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
   List<String> noSideEffectCalls = new ArrayList<>();
 
@@ -59,7 +63,8 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
     noSideEffectCalls.clear();
   }
 
-  public void testFunctionAnnotation() throws Exception {
+  @Test
+  public void testFunctionAnnotation() {
     testMarkCalls("/**@nosideeffects*/function f(){}", "f()",
                   ImmutableList.of("f"));
     testMarkCalls("/**@nosideeffects*/var f = function(){};", "f()",
@@ -82,7 +87,8 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
                   ImmutableList.of("f"));
   }
 
-  public void testNamespaceAnnotation() throws Exception {
+  @Test
+  public void testNamespaceAnnotation() {
     testMarkCalls("var o = {}; o.f = /**@nosideeffects*/function(){};",
         "o.f()", ImmutableList.of("o.f"));
     testMarkCalls("var o = {}; o.f = /**@nosideeffects*/function(){};",
@@ -91,7 +97,8 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
                   Collections.<String>emptyList());
   }
 
-  public void testConstructorAnnotation() throws Exception {
+  @Test
+  public void testConstructorAnnotation() {
     testMarkCalls("/**@nosideeffects*/function c(){};", "new c",
                   ImmutableList.of("c"));
     testMarkCalls("var c = /**@nosideeffects*/function(){};", "new c",
@@ -101,7 +108,8 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
     testMarkCalls("function c(){}; new c", Collections.<String>emptyList());
   }
 
-  public void testMultipleDefinition() throws Exception {
+  @Test
+  public void testMultipleDefinition() {
     testMarkCalls("/**@nosideeffects*/function f(){}" +
                   "/**@nosideeffects*/f = function(){};",
                   "f()",
@@ -116,14 +124,16 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
                   Collections.<String>emptyList());
   }
 
-  public void testAssignNoFunction() throws Exception {
+  @Test
+  public void testAssignNoFunction() {
     testMarkCalls("/**@nosideeffects*/function f(){}", "f = 1; f()",
                   ImmutableList.of("f"));
     testMarkCalls("/**@nosideeffects*/function f(){}", "f = 1 || 2; f()",
                   Collections.<String>emptyList());
   }
 
-  public void testPrototype() throws Exception {
+  @Test
+  public void testPrototype() {
     testMarkCalls("function c(){};" +
                   "/**@nosideeffects*/c.prototype.g = function(){};",
                   "var o = new c; o.g()",
@@ -160,7 +170,8 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
                   Collections.<String>emptyList());
   }
 
-  public void testAnnotationInExterns() throws Exception {
+  @Test
+  public void testAnnotationInExterns() {
     testMarkCalls("externSef1()", Collections.<String>emptyList());
     testMarkCalls("externSef2()", Collections.<String>emptyList());
     testMarkCalls("externNsef1()", ImmutableList.of("externNsef1"));
@@ -168,7 +179,8 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
     testMarkCalls("externNsef3()", ImmutableList.of("externNsef3"));
   }
 
-  public void testNamespaceAnnotationInExterns() throws Exception {
+  @Test
+  public void testNamespaceAnnotationInExterns() {
     testMarkCalls("externObj.sef1()", Collections.<String>emptyList());
     testMarkCalls("externObj.sef2()", Collections.<String>emptyList());
     testMarkCalls("externObj.nsef1()", ImmutableList.of("externObj.nsef1"));
@@ -177,7 +189,8 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
     testMarkCalls("externObj.nsef3()", ImmutableList.of("externObj.nsef3"));
   }
 
-  public void testOverrideDefinitionInSource() throws Exception {
+  @Test
+  public void testOverrideDefinitionInSource() {
     // both have side effects.
     testMarkCalls("var obj = {}; obj.sef1 = function(){}; obj.sef1()",
                   Collections.<String>emptyList());
@@ -199,31 +212,36 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
                   ImmutableList.of("obj.nsef1"));
   }
 
-  public void testApply1() throws Exception {
+  @Test
+  public void testApply1() {
     testMarkCalls("/**@nosideeffects*/ var f = function() {}",
                   "f.apply()",
                   ImmutableList.of("f.apply"));
   }
 
-  public void testApply2() throws Exception {
+  @Test
+  public void testApply2() {
     testMarkCalls("var f = function() {}",
                   "f.apply()",
                   ImmutableList.<String>of());
   }
 
-  public void testCall1() throws Exception {
+  @Test
+  public void testCall1() {
     testMarkCalls("/**@nosideeffects*/ var f = function() {}",
                   "f.call()",
                   ImmutableList.of("f.call"));
   }
 
-  public void testCall2() throws Exception {
+  @Test
+  public void testCall2() {
     testMarkCalls("var f = function() {}",
                   "f.call()",
                   ImmutableList.<String>of());
   }
 
-  public void testCallNumber() throws Exception {
+  @Test
+  public void testCallNumber() {
     testMarkCalls("", "var x = 1; x();",
                   ImmutableList.<String>of());
   }
