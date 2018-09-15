@@ -23,13 +23,16 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Test class for the default {@link CodingConvention}.
- */
+/** Test class for the default {@link CodingConvention}. */
+@RunWith(JUnit4.class)
 public final class DefaultCodingConventionTest extends TestCase {
   private final CodingConvention conv = CodingConventions.getDefault();
 
+  @Test
   public void testVarAndOptionalParams() {
     Node args = IR.paramList(
         IR.name("a"),
@@ -54,6 +57,7 @@ public final class DefaultCodingConventionTest extends TestCase {
     assertFalse(conv.isOptionalParameter(rest.getFirstChild()));
   }
 
+  @Test
   public void testInlineName() {
     assertFalse(conv.isConstant("a"));
     assertFalse(conv.isConstant("XYZ123_"));
@@ -72,6 +76,7 @@ public final class DefaultCodingConventionTest extends TestCase {
     assertFalse(conv.isConstant("$"));
   }
 
+  @Test
   public void testExportedName() {
     assertFalse(conv.isExported("_a"));
     assertFalse(conv.isExported("_a_"));
@@ -82,12 +87,14 @@ public final class DefaultCodingConventionTest extends TestCase {
     assertTrue(conv.isExported("$super"));
   }
 
+  @Test
   public void testPrivateName() {
     assertFalse(conv.isPrivate("a_"));
     assertFalse(conv.isPrivate("a"));
     assertFalse(conv.isPrivate("_a_"));
   }
 
+  @Test
   public void testEnumKey() {
     assertTrue(conv.isValidEnumKey("A"));
     assertTrue(conv.isValidEnumKey("123"));
@@ -98,59 +105,73 @@ public final class DefaultCodingConventionTest extends TestCase {
     assertTrue(conv.isValidEnumKey("_FOO_BAR"));
   }
 
+  @Test
   public void testInheritanceDetection1() {
     assertNotClassDefining("goog.foo(A, B);");
   }
 
+  @Test
   public void testInheritanceDetection2() {
     assertNotClassDefining("goog.inherits(A, B);");
   }
 
+  @Test
   public void testInheritanceDetection3() {
     assertNotClassDefining("A.inherits(B);");
   }
 
+  @Test
   public void testInheritanceDetection4() {
     assertNotClassDefining("goog.inherits(goog.A, goog.B);");
   }
 
+  @Test
   public void testInheritanceDetection5() {
     assertNotClassDefining("goog.A.inherits(goog.B);");
   }
 
+  @Test
   public void testInheritanceDetection6() {
     assertNotClassDefining("A.inherits(this.B);");
   }
 
+  @Test
   public void testInheritanceDetection7() {
     assertNotClassDefining("this.A.inherits(B);");
   }
 
+  @Test
   public void testInheritanceDetection8() {
     assertNotClassDefining("goog.inherits(A, B, C);");
   }
 
+  @Test
   public void testInheritanceDetection9() {
     assertNotClassDefining("A.mixin(B.prototype);");
   }
 
+  @Test
   public void testInheritanceDetection10() {
     assertNotClassDefining("goog.mixin(A.prototype, B.prototype);");
   }
 
+  @Test
   public void testInheritanceDetection11() {
     assertDefinesClasses("$jscomp.inherits(A, B)", "A", "B");
   }
 
+  @Test
   public void testInheritanceDetection12() {
     assertDefinesClasses("$jscomp$inherits(A, B)", "A", "B");
   }
 
+  @Test
   public void testInheritanceDetectionPostCollapseProperties() {
     assertNotClassDefining("goog$inherits(A, B);");
     assertNotClassDefining("goog$inherits(A);");
   }
 
+  @Test
   public void testFunctionBind() {
     assertNotFunctionBind("goog.bind(f)");
     assertNotFunctionBind("goog$bind(f)");
@@ -166,6 +187,7 @@ public final class DefaultCodingConventionTest extends TestCase {
     assertFunctionBind("Function.prototype.bind.call(obj, p1)");
   }
 
+  @Test
   public void testPackageNames() {
     assertPackageName("foo.js", "");
     assertPackageName("foo/bar.js", "foo");

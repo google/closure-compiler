@@ -21,7 +21,11 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class DefaultNameGeneratorTest extends TestCase {
 
   private static final ImmutableSet<String> RESERVED_NAMES = ImmutableSet.of("ba", "xba");
@@ -38,6 +42,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     return result;
   }
 
+  @Test
   public void testNameGeneratorInvalidPrefixes() throws Exception {
     try {
       new DefaultNameGenerator(Collections.<String>emptySet(), "123abc", null);
@@ -57,6 +62,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     }
   }
 
+  @Test
   public void testGenerate() throws Exception {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
@@ -83,6 +89,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     assertEquals("xca", result[66]);
   }
 
+  @Test
   public void testReserve() throws Exception {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", new char[] {'$'});
@@ -97,6 +104,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     assertEquals("ab", result[103]);
   }
 
+  @Test
   public void testGenerateWithPriority1() throws Exception {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
@@ -125,6 +133,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     assertEquals("d", result[3]);
   }
 
+  @Test
   public void testGenerateWithPriority2() throws Exception {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
@@ -165,6 +174,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     assertEquals("cn", result[54]);
   }
 
+  @Test
   public void testGenerateWithPriority3() throws Exception {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
