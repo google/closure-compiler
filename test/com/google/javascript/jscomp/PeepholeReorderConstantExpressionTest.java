@@ -16,10 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
  * Unit test for {@link ReorderConstantExpression}
  *
  */
+@RunWith(JUnit4.class)
 public final class PeepholeReorderConstantExpressionTest extends CompilerTestCase {
 
   @Override
@@ -28,6 +33,7 @@ public final class PeepholeReorderConstantExpressionTest extends CompilerTestCas
         compiler, getName(), new PeepholeReorderConstantExpression());
   }
 
+  @Test
   public void testSymmetricOperations() throws Exception {
     set1Tests("==");
     set2Tests("==");
@@ -50,6 +56,7 @@ public final class PeepholeReorderConstantExpressionTest extends CompilerTestCas
     set3Tests("*");
   }
 
+  @Test
   public void testRelationalOperations() throws Exception {
     set1Tests(">", "<");
     set3Tests(">");
@@ -114,6 +121,7 @@ public final class PeepholeReorderConstantExpressionTest extends CompilerTestCas
     testSame("a " + op + " b");
   }
 
+  @Test
   public void testReorderConstantDoesntAddParens() {
     testSame("a % b * 4");
     testSame("a * b * 4");

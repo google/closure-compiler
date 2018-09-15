@@ -16,6 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+@RunWith(JUnit4.class)
 public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCase {
 
   @Override
@@ -24,6 +29,7 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
         compiler, getName(), new PeepholeCollectPropertyAssignments());
   }
 
+  @Test
   public void test36122565a() {
     testSame(
         lines(
