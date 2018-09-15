@@ -27,9 +27,14 @@ import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 @GwtIncompatible("Conformance")
+@RunWith(JUnit4.class)
 public class ConformanceWhitelisterTest extends TestCase {
+  @Test
   public void testConformanceWhitelistAddNew() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
@@ -49,6 +54,7 @@ public class ConformanceWhitelisterTest extends TestCase {
         .containsExactly("/entry.js", 2);
   }
 
+  @Test
   public void testConformanceWhitelistRemove() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
@@ -68,6 +74,7 @@ public class ConformanceWhitelisterTest extends TestCase {
     assertThat(testConformanceWhitelister(sources.build(), requirement)).isEmpty();
   }
 
+  @Test
   public void testConformanceWhitelistPreserve() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
@@ -91,6 +98,7 @@ public class ConformanceWhitelisterTest extends TestCase {
   // TODO(bangert): Evaluate if this is always the best behaviour.
   // The current behaviour pushes the behaviour of how to cluster the whitelist to the program
   // driving ConformanceWhitelister.
+  @Test
   public void testConformanceWhitelistBreaksDownFolder() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 

@@ -47,14 +47,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
+/** @author johnlenz@google.com (John Lenz) */
 
+@RunWith(JUnit4.class)
 public final class CompilerTest extends TestCase {
 
   // Verify the line and column information is maintained after a reset
+  @Test
   public void testCodeBuilderColumnAfterReset() {
     Compiler.CodeBuilder cb = new Compiler.CodeBuilder();
     String js = "foo();\ngoo();";
@@ -70,6 +73,7 @@ public final class CompilerTest extends TestCase {
     assertEquals(6, cb.getColumnIndex());
   }
 
+  @Test
   public void testCodeBuilderAppend() {
     Compiler.CodeBuilder cb = new Compiler.CodeBuilder();
     cb.append("foo();");
@@ -88,6 +92,7 @@ public final class CompilerTest extends TestCase {
     assertEquals(6, cb.getColumnIndex());
   }
 
+  @Test
   public void testCyclicalDependencyInInputs() {
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode(
@@ -110,6 +115,7 @@ public final class CompilerTest extends TestCase {
     assertEquals(3, jsRoot.getChildCount());
   }
 
+  @Test
   public void testPrintExterns() {
     List<SourceFile> externs =
         ImmutableList.of(SourceFile.fromCode("extern", "/** @externs */ function alert(x) {}"));
@@ -123,7 +129,8 @@ public final class CompilerTest extends TestCase {
     assertThat(compiler.toSource()).isEqualTo("/** @externs */ function alert(x){};");
   }
 
-  public void testLocalUndefined() throws Exception {
+  @Test
+  public void testLocalUndefined() {
     // Some JavaScript libraries like to create a local instance of "undefined",
     // to ensure that other libraries don't try to overwrite it.
     //
@@ -145,6 +152,7 @@ public final class CompilerTest extends TestCase {
     return path.replace(File.separator, "/");
   }
 
+  @Test
   public void testInputSourceMaps() throws Exception {
     FilePosition originalSourcePosition = new FilePosition(17, 25);
     ImmutableMap<String, SourceMapInput> inputSourceMaps = ImmutableMap.of(
@@ -200,7 +208,8 @@ public final class CompilerTest extends TestCase {
   private static final String BASE64_ENCODED_SOURCE_MAP =
       "data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
 
-  public void testInputSourceMapInline() throws Exception {
+  @Test
+  public void testInputSourceMapInline() {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=" + BASE64_ENCODED_SOURCE_MAP;
@@ -229,7 +238,8 @@ public final class CompilerTest extends TestCase {
   private static final String BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT =
       "data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vdGVzdC9mb28udHMiXSwic291cmNlc0NvbnRlbnQiOlsidmFyIEEgPSAoZnVuY3Rpb24gKCkge1xuICAgIGZ1bmN0aW9uIEEoaW5wdXQpIHtcbiAgICAgICAgdGhpcy5hID0gaW5wdXQ7XG4gICAgfVxuICAgIHJldHVybiBBO1xufSgpKTtcbmNvbnNvbGUubG9nKG5ldyBBKDEpKTsiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7SUFHRSxXQUFZLEtBQWE7UUFDdkIsSUFBSSxDQUFDLENBQUMsR0FBRyxLQUFLLENBQUM7SUFDakIsQ0FBQztJQUNILFFBQUM7QUFBRCxDQUFDLEFBTkQsSUFNQztBQUVELE9BQU8sQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyJ9";
 
-  public void testInputSourceMapInlineContent() throws Exception {
+  @Test
+  public void testInputSourceMapInlineContent() {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     String code =
@@ -242,6 +252,7 @@ public final class CompilerTest extends TestCase {
     assertThat(sourceMap.getOriginalSourcesContent()).containsExactly(SOURCE_MAP_TEST_CONTENT);
   }
 
+  @Test
   public void testResolveRelativeSourceMap() throws Exception {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
@@ -264,6 +275,7 @@ public final class CompilerTest extends TestCase {
   }
 
   // Make sure that the sourcemap resolution can find a sourcemap in a relative directory.
+  @Test
   public void testResolveRelativeDirSourceMap() throws Exception {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
@@ -287,6 +299,7 @@ public final class CompilerTest extends TestCase {
     }
   }
 
+  @Test
   public void testMissingSourceMapFile() throws Exception {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
@@ -309,6 +322,7 @@ public final class CompilerTest extends TestCase {
     assertEquals(1, errorManager.getWarningCount());
   }
 
+  @Test
   public void testNoWarningMissingAbsoluteSourceMap() throws Exception {
     TestErrorManager errorManager = new TestErrorManager();
     Compiler compiler = new Compiler(errorManager);
@@ -327,6 +341,7 @@ public final class CompilerTest extends TestCase {
     assertEquals(0, errorManager.getWarningCount());
   }
 
+  @Test
   public void testApplyInputSourceMaps() throws Exception {
     FilePosition originalSourcePosition = new FilePosition(17, 25);
     ImmutableMap<String, SourceMapInput> inputSourceMaps = ImmutableMap.of(
@@ -361,6 +376,7 @@ public final class CompilerTest extends TestCase {
     assertNull(consumer.getOriginalSourcesContent());
   }
 
+  @Test
   public void testKeepInputSourceMapsSourcesContent() throws Exception {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
@@ -383,7 +399,8 @@ public final class CompilerTest extends TestCase {
     assertThat(consumer.getOriginalSourcesContent()).containsExactly(SOURCE_MAP_TEST_CONTENT);
   }
 
-  public void testNoSourceMapIsGeneratedWithoutPath() throws Exception {
+  @Test
+  public void testNoSourceMapIsGeneratedWithoutPath() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.applyInputSourceMaps = true;
@@ -400,10 +417,11 @@ public final class CompilerTest extends TestCase {
       ImmutableList.of(SourceFile.fromCode("externs", ""));
 
   /**
-   * Ensure that the printInputDelimiter option adds a "// Input #" comment
-   * at the start of each "script" in the compiled output.
+   * Ensure that the printInputDelimiter option adds a "// Input #" comment at the start of each
+   * "script" in the compiled output.
    */
-  public void testInputDelimiters() throws Exception {
+  @Test
+  public void testInputDelimiters() {
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
     options.setPrintInputDelimiter(true);
@@ -421,10 +439,8 @@ public final class CompilerTest extends TestCase {
     assertEquals("// Input 0\n// Input 1\n", outputSource);
   }
 
-  /**
-   * Make sure that non-standard JSDoc annotation is not a hard error
-   * unless it is specified.
-   */
+  /** Make sure that non-standard JSDoc annotation is not a hard error unless it is specified. */
+  @Test
   public void testBug2176967Default() {
     final String badJsDoc = "/** @XYZ */\n var x";
     Compiler compiler = new Compiler();
@@ -439,9 +455,9 @@ public final class CompilerTest extends TestCase {
   }
 
   /**
-   * Make sure that non-standard JSDoc annotation is not a hard error nor
-   * warning when it is off.
+   * Make sure that non-standard JSDoc annotation is not a hard error nor warning when it is off.
    */
+  @Test
   public void testBug2176967Off() {
     final String badJsDoc = "/** @XYZ */\n var x";
     Compiler compiler = new Compiler();
@@ -457,9 +473,10 @@ public final class CompilerTest extends TestCase {
   }
 
   /**
-   * Make sure the non-standard JSDoc diagnostic group gives out an error
-   * when it is set to check level error.
+   * Make sure the non-standard JSDoc diagnostic group gives out an error when it is set to check
+   * level error.
    */
+  @Test
   public void testBug2176967Error() {
     final String badJsDoc = "/** @XYZ */\n var x";
     Compiler compiler = new Compiler();
@@ -474,6 +491,7 @@ public final class CompilerTest extends TestCase {
     assertEquals(1, compiler.getErrorCount());
   }
 
+  @Test
   public void testNormalInputs() {
     CompilerOptions options = new CompilerOptions();
     Compiler compiler = new Compiler();
@@ -487,6 +505,7 @@ public final class CompilerTest extends TestCase {
     assertFalse(compiler.getInput(new InputId("in2")).isExtern());
   }
 
+  @Test
   public void testRebuildInputsFromModule() {
     List<JSModule> modules = ImmutableList.of(
         new JSModule("m1"), new JSModule("m2"));
@@ -503,7 +522,8 @@ public final class CompilerTest extends TestCase {
     assertNotNull(compiler.getInput(new InputId("in3")));
   }
 
-  public void testMalformedFunctionInExterns() throws Exception {
+  @Test
+  public void testMalformedFunctionInExterns() {
     // Just verify that no exceptions are thrown (see bug 910619).
     new Compiler().compile(
         ImmutableList.of(SourceFile.fromCode("externs", "function f {}")),
@@ -511,7 +531,8 @@ public final class CompilerTest extends TestCase {
         new CompilerOptions());
   }
 
-  public void testGetSourceInfoInExterns() throws Exception {
+  @Test
+  public void testGetSourceInfoInExterns() {
     // Just verify that no exceptions are thrown (see bug 910619).
     Compiler compiler = new Compiler();
     compiler.compile(
@@ -523,7 +544,8 @@ public final class CompilerTest extends TestCase {
     assertEquals(null, compiler.getSourceLine("bar", 1));
   }
 
-  public void testFileoverviewTwice() throws Exception {
+  @Test
+  public void testFileoverviewTwice() {
     List<SourceFile> input = ImmutableList.of(
         SourceFile.fromCode("foo",
             "/** @fileoverview */ var x; /** @fileoverview */ var y;"));
@@ -533,7 +555,8 @@ public final class CompilerTest extends TestCase {
   }
 
   // Make sure we correctly output license text.
-  public void testImportantCommentOutput() throws Exception {
+  @Test
+  public void testImportantCommentOutput() {
     test(
         "/*! Your favorite license goes here */ var x;",
         "/*\n Your favorite license goes here */\n",
@@ -541,7 +564,8 @@ public final class CompilerTest extends TestCase {
   }
 
   // Make sure we output license text even if followed by @fileoverview.
-  public void testImportantCommentAndOverviewDirectiveWarning() throws Exception {
+  @Test
+  public void testImportantCommentAndOverviewDirectiveWarning() {
     List<SourceFile> input =
         ImmutableList.of(
             SourceFile.fromCode(
@@ -556,7 +580,8 @@ public final class CompilerTest extends TestCase {
   }
 
   // Text for the opposite order - @fileoverview, then @license.
-  public void testOverviewAndImportantCommentOutput() throws Exception {
+  @Test
+  public void testOverviewAndImportantCommentOutput() {
     test(
         "/** @fileoverview This is my favorite file! */\n"
             + "/*! Your favorite license goes here */\n"
@@ -567,7 +592,8 @@ public final class CompilerTest extends TestCase {
 
   // Test for sequence of @license and @fileoverview, and make sure
   // all the licenses get copied over.
-  public void testImportantCommentOverviewImportantComment() throws Exception {
+  @Test
+  public void testImportantCommentOverviewImportantComment() {
     test(
         "/*! Another license */\n"
             + "/** @fileoverview This is my favorite file! */\n"
@@ -579,7 +605,8 @@ public final class CompilerTest extends TestCase {
 
   // Make sure things work even with @license and @fileoverview in the
   // same comment.
-  public void testCombinedImportantCommentOverviewDirectiveOutput() throws Exception {
+  @Test
+  public void testCombinedImportantCommentOverviewDirectiveOutput() {
     test(
         "/*! Your favorite license goes here\n"
             + " * @fileoverview This is my favorite file! */\n"
@@ -589,7 +616,8 @@ public final class CompilerTest extends TestCase {
   }
 
   // Does the presence of @author change anything with the license?
-  public void testCombinedImportantCommentAuthorDirectiveOutput() throws Exception {
+  @Test
+  public void testCombinedImportantCommentAuthorDirectiveOutput() {
     test(
         "/*! Your favorite license goes here\n" + " * @author Robert */\n" + "var x;",
         "/*\n Your favorite license goes here\n @author Robert */\n",
@@ -597,21 +625,24 @@ public final class CompilerTest extends TestCase {
   }
 
   // Make sure we concatenate licenses the same way.
-  public void testMultipleImportantCommentDirectiveOutput() throws Exception {
+  @Test
+  public void testMultipleImportantCommentDirectiveOutput() {
     test(
         "/*! Your favorite license goes here */\n" + "/*! Another license */\n" + "var x;",
         "/*\n Your favorite license goes here  Another license */\n",
         null);
   }
 
-  public void testImportantCommentLicenseDirectiveOutput() throws Exception {
+  @Test
+  public void testImportantCommentLicenseDirectiveOutput() {
     test(
         "/*! Your favorite license goes here */\n" + "/** @license Another license */\n" + "var x;",
         "/*\n Another license  Your favorite license goes here */\n",
         null);
   }
 
-  public void testLicenseImportantCommentDirectiveOutput() throws Exception {
+  @Test
+  public void testLicenseImportantCommentDirectiveOutput() {
     test(
         "/** @license Your favorite license goes here */\n" + "/*! Another license */\n" + "var x;",
         "/*\n Your favorite license goes here  Another license */\n",
@@ -620,14 +651,16 @@ public final class CompilerTest extends TestCase {
 
   // Do we correctly handle the license if it's not at the top level, but
   // inside another declaration?
-  public void testImportantCommentInTree() throws Exception {
+  @Test
+  public void testImportantCommentInTree() {
     test(
         "var a = function() {\n +" + "/*! Your favorite license goes here */\n" + " 1;};\n",
         "/*\n Your favorite license goes here */\n",
         null);
   }
 
-  public void testMultipleUniqueImportantComments() throws Exception {
+  @Test
+  public void testMultipleUniqueImportantComments() {
     String js1 = "/*! One license here */\n" + "var x;";
     String js2 = "/*! Another license here */\n" + "var y;";
     String expected = "/*\n One license here */\n" + "/*\n Another license here */\n";
@@ -643,7 +676,8 @@ public final class CompilerTest extends TestCase {
     assertEquals(expected, compiler.toSource());
   }
 
-  public void testMultipleIdenticalImportantComments() throws Exception {
+  @Test
+  public void testMultipleIdenticalImportantComments() {
     String js1 = "/*! Identical license here */\n" + "var x;";
     String js2 = "/*! Identical license here */\n" + "var y;";
     String expected = "/*\n Identical license here */\n";
@@ -660,7 +694,8 @@ public final class CompilerTest extends TestCase {
   }
 
   // Make sure we correctly output license text.
-  public void testLicenseDirectiveOutput() throws Exception {
+  @Test
+  public void testLicenseDirectiveOutput() {
     test(
         "/** @license Your favorite license goes here */ var x;",
         "/*\n Your favorite license goes here */\n",
@@ -668,7 +703,8 @@ public final class CompilerTest extends TestCase {
   }
 
   // Make sure we output license text even if followed by @fileoverview.
-  public void testLicenseAndOverviewDirectiveWarning() throws Exception {
+  @Test
+  public void testLicenseAndOverviewDirectiveWarning() {
     List<SourceFile> input =
         ImmutableList.of(
             SourceFile.fromCode(
@@ -681,7 +717,8 @@ public final class CompilerTest extends TestCase {
   }
 
   // Text for the opposite order - @fileoverview, then @license.
-  public void testOverviewAndLicenseDirectiveOutput() throws Exception {
+  @Test
+  public void testOverviewAndLicenseDirectiveOutput() {
     test(
         "/** @fileoverview This is my favorite file! */\n"
             + "/** @license Your favorite license goes here */\n"
@@ -692,7 +729,8 @@ public final class CompilerTest extends TestCase {
 
   // Test for sequence of @license and @fileoverview, and make sure
   // all the licenses get copied over.
-  public void testLicenseOverviewLicense() throws Exception {
+  @Test
+  public void testLicenseOverviewLicense() {
     test(
         "/** @license Another license */\n"
             + "/** @fileoverview This is my favorite file! */\n"
@@ -704,7 +742,8 @@ public final class CompilerTest extends TestCase {
 
   // Make sure things work even with @license and @fileoverview in the
   // same comment.
-  public void testCombinedLicenseOverviewDirectiveOutput() throws Exception {
+  @Test
+  public void testCombinedLicenseOverviewDirectiveOutput() {
     test(
         "/** @license Your favorite license goes here\n"
             + " * @fileoverview This is my favorite file! */\n"
@@ -714,7 +753,8 @@ public final class CompilerTest extends TestCase {
   }
 
   // Does the presence of @author change anything with the license?
-  public void testCombinedLicenseAuthorDirectiveOutput() throws Exception {
+  @Test
+  public void testCombinedLicenseAuthorDirectiveOutput() {
     test(
         "/** @license Your favorite license goes here\n" + " * @author Robert */\n" + "var x;",
         "/*\n Your favorite license goes here\n @author Robert */\n",
@@ -722,7 +762,8 @@ public final class CompilerTest extends TestCase {
   }
 
   // Make sure we concatenate licenses the same way.
-  public void testMultipleLicenseDirectiveOutput() throws Exception {
+  @Test
+  public void testMultipleLicenseDirectiveOutput() {
     test(
         lines(
             "/** @license Your favorite license goes here */",
@@ -733,7 +774,8 @@ public final class CompilerTest extends TestCase {
   }
 
   // Same thing, two @licenses in the same comment.
-  public void testTwoLicenseInSameComment() throws Exception {
+  @Test
+  public void testTwoLicenseInSameComment() {
     test(
         lines(
             "/** @license Your favorite license goes here ",
@@ -745,7 +787,8 @@ public final class CompilerTest extends TestCase {
 
   // Do we correctly handle the license if it's not at the top level, but
   // inside another declaration?
-  public void testLicenseInTree() throws Exception {
+  @Test
+  public void testLicenseInTree() {
     test(
         lines(
             "var a = function() {",
@@ -755,7 +798,8 @@ public final class CompilerTest extends TestCase {
         null);
   }
 
-  public void testMultipleUniqueLicenses() throws Exception {
+  @Test
+  public void testMultipleUniqueLicenses() {
     String js1 = "/** @license One license here */\n"
                  + "var x;";
     String js2 = "/** @license Another license here */\n"
@@ -774,7 +818,8 @@ public final class CompilerTest extends TestCase {
     assertEquals(expected, compiler.toSource());
   }
 
-  public void testMultipleIdenticalLicenses() throws Exception {
+  @Test
+  public void testMultipleIdenticalLicenses() {
     String js1 = "/** @license Identical license here */\n"
                  + "var x;";
     String js2 = "/** @license Identical license here */\n"
@@ -796,7 +841,8 @@ public final class CompilerTest extends TestCase {
     assertEquals(expected, compiler.toSource());
   }
 
-  public void testIdenticalLicenseAndImportantComment() throws Exception {
+  @Test
+  public void testIdenticalLicenseAndImportantComment() {
     String js1 = "/** @license Identical license here */\n" + "var x;";
     String js2 = "/*! Identical license here */\n" + "var y;";
     String expected = "/*\n Identical license here */\n";
@@ -812,13 +858,15 @@ public final class CompilerTest extends TestCase {
     assertEquals(expected, compiler.toSource());
   }
 
-  public void testDefineNoOverriding() throws Exception {
+  @Test
+  public void testDefineNoOverriding() {
     Map<String, Node> emptyMap = new HashMap<>();
     List<String> defines = new ArrayList<>();
     assertDefineOverrides(emptyMap, defines);
   }
 
-  public void testDefineOverriding1() throws Exception {
+  @Test
+  public void testDefineOverriding1() {
     List<String> defines =
         ImmutableList.of(
             "COMPILED",
@@ -835,31 +883,36 @@ public final class CompilerTest extends TestCase {
     assertDefineOverrides(expected, defines);
   }
 
-  public void testDefineOverriding2() throws Exception {
+  @Test
+  public void testDefineOverriding2() {
     List<String> defines = ImmutableList.of("DEF_STRING='='");
     Map<String, Node> expected = ImmutableMap.of(
         "DEF_STRING", Node.newString("="));
     assertDefineOverrides(expected, defines);
   }
 
-  public void testDefineOverriding3() throws Exception {
+  @Test
+  public void testDefineOverriding3() {
     List<String> defines = ImmutableList.of("a.DEBUG");
     Map<String, Node> expected = ImmutableMap.of(
         "a.DEBUG", new Node(Token.TRUE));
     assertDefineOverrides(expected, defines);
   }
 
-  public void testBadDefineOverriding1() throws Exception {
+  @Test
+  public void testBadDefineOverriding1() {
     List<String> defines = ImmutableList.of("DEF_STRING=");
     assertCreateDefinesThrowsException(defines);
   }
 
-  public void testBadDefineOverriding2() throws Exception {
+  @Test
+  public void testBadDefineOverriding2() {
     List<String> defines = ImmutableList.of("=true");
     assertCreateDefinesThrowsException(defines);
   }
 
-  public void testBadDefineOverriding3() throws Exception {
+  @Test
+  public void testBadDefineOverriding3() {
     List<String> defines = ImmutableList.of("DEF_STRING='''");
     assertCreateDefinesThrowsException(defines);
   }
@@ -913,6 +966,7 @@ public final class CompilerTest extends TestCase {
     return result;
   }
 
+  @Test
   public void testConsecutiveSemicolons() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -925,6 +979,7 @@ public final class CompilerTest extends TestCase {
     assertEquals(js, cb.toString());
   }
 
+  @Test
   public void testWarningsFiltering() {
     // Warnings and errors are left alone when no filtering is used
     assertTrue(hasOutput(
@@ -955,6 +1010,7 @@ public final class CompilerTest extends TestCase {
         CheckLevel.ERROR));
   }
 
+  @Test
   public void testExportSymbolReservesNamesForRenameVars() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -971,6 +1027,7 @@ public final class CompilerTest extends TestCase {
     assertThat(compiler.toSource()).isEqualTo("var b;var c;b.exportSymbol(\"a\",c);");
   }
 
+  @Test
   public void testGenerateExportsReservesNames() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -1060,6 +1117,7 @@ public final class CompilerTest extends TestCase {
     return errorManager.output;
   }
 
+  @Test
   public void testIdeModeSkipsOptimizations() {
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
@@ -1091,6 +1149,7 @@ public final class CompilerTest extends TestCase {
     assertFalse(after[0]);  // but not these
   }
 
+  @Test
   public void testAdditionalReplacementsForClosure() {
     CompilerOptions options = createNewFlagBasedOptions();
     options.setLocale("it_IT");
@@ -1102,6 +1161,7 @@ public final class CompilerTest extends TestCase {
     assertEquals("it_IT", replacements.get("goog.LOCALE").getString());
   }
 
+  @Test
   public void testInputSerialization() throws Exception {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
@@ -1112,6 +1172,7 @@ public final class CompilerTest extends TestCase {
     assertTrue(ast.isEquivalentTo(newInput.getAstRoot(compiler)));
   }
 
+  @Test
   public void testExternsDependencySorting() {
     List<SourceFile> inputs =
         ImmutableList.of(
@@ -1134,7 +1195,7 @@ public final class CompilerTest extends TestCase {
     assertExternIndex(compiler, 2, "leaf");
   }
 
-
+  @Test
   public void testCheckSaveRestoreOptimize() throws Exception {
     Compiler compiler = new Compiler(new TestErrorManager());
 
@@ -1184,6 +1245,7 @@ public final class CompilerTest extends TestCase {
 
   }
 
+  @Test
   public void testStrictnessWithNonStrictOutputLanguage() {
     Compiler compiler = new Compiler(new TestErrorManager());
 
@@ -1202,6 +1264,7 @@ public final class CompilerTest extends TestCase {
     assertEquals("console.log(0);", source);
   }
 
+  @Test
   public void testStrictnessWithStrictOutputLanguage() {
     Compiler compiler = new Compiler(new TestErrorManager());
 
@@ -1220,6 +1283,7 @@ public final class CompilerTest extends TestCase {
     assertEquals("'use strict';console.log(0);", source);
   }
 
+  @Test
   public void testStrictnessWithNonStrictInputLanguage() {
     Compiler compiler = new Compiler(new TestErrorManager());
 
@@ -1237,6 +1301,7 @@ public final class CompilerTest extends TestCase {
     assertEquals("console.log(0);", source);
   }
 
+  @Test
   public void testStrictnessWithStrictInputLanguage() {
     Compiler compiler = new Compiler(new TestErrorManager());
 
@@ -1255,6 +1320,7 @@ public final class CompilerTest extends TestCase {
     assertEquals("'use strict';console.log(0);", source);
   }
 
+  @Test
   public void testStrictnessWithNonStrictInputLanguageAndNoTranspileOutput() {
     Compiler compiler = new Compiler(new TestErrorManager());
 
@@ -1276,6 +1342,7 @@ public final class CompilerTest extends TestCase {
     assertEquals("console.log(0);", source);
   }
 
+  @Test
   public void testStrictnessWithStrictInputLanguageAndNoTranspileOutput() {
     Compiler compiler = new Compiler(new TestErrorManager());
 
@@ -1297,6 +1364,7 @@ public final class CompilerTest extends TestCase {
     assertEquals("'use strict';console.log(0);", source);
   }
 
+  @Test
   public void testExternsDependencyPruning() {
     List<SourceFile> inputs =
         ImmutableList.of(
@@ -1324,6 +1392,7 @@ public final class CompilerTest extends TestCase {
         .isSameAs(compiler.getInput(new InputId(name)).getAstRoot(compiler));
   }
 
+  @Test
   public void testEs6ModuleEntryPoint() throws Exception {
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("/index.js", "import foo from './foo.js'; foo('hello');"),
@@ -1351,6 +1420,7 @@ public final class CompilerTest extends TestCase {
   }
 
   // https://github.com/google/closure-compiler/issues/2692
+  @Test
   public void testGoogNamespaceEntryPoint() throws Exception {
     List<SourceFile> inputs =
         ImmutableList.of(
@@ -1381,6 +1451,7 @@ public final class CompilerTest extends TestCase {
     assertThat(result.errors).isEmpty();
   }
 
+  @Test
   public void testEs6ModulePathWithOddCharacters() throws Exception {
     // Note that this is not yet compatible with transpilation, since the generated goog.provide
     // statements are not valid identifiers.
@@ -1407,11 +1478,13 @@ public final class CompilerTest extends TestCase {
     assertThat(result.errors).isEmpty();
   }
 
+  @Test
   public void testGetEmptyResult() {
     Result result = new Compiler().getResult();
     assertThat(result.errors).isEmpty();
   }
 
+  @Test
   public void testAnnotation() {
     Compiler compiler = new Compiler();
 
@@ -1422,6 +1495,7 @@ public final class CompilerTest extends TestCase {
         .isEqualTo(Boolean.TRUE);
   }
 
+  @Test
   public void testSetAnnotationTwice() {
     Compiler compiler = new Compiler();
 
@@ -1434,6 +1508,7 @@ public final class CompilerTest extends TestCase {
     }
   }
 
+  @Test
   public void testReportChangeNoScopeFails() {
     Compiler compiler = new Compiler();
 
@@ -1447,6 +1522,7 @@ public final class CompilerTest extends TestCase {
     }
   }
 
+  @Test
   public void testReportChangeWithScopeSucceeds() {
     Compiler compiler = new Compiler();
 
@@ -1461,6 +1537,7 @@ public final class CompilerTest extends TestCase {
    * See TimelineTest.java for the many timeline behavior tests that don't make sense to duplicate
    * here.
    */
+  @Test
   public void testGetChangesAndDeletions_baseline() {
     Compiler compiler = new Compiler();
 
@@ -1469,6 +1546,7 @@ public final class CompilerTest extends TestCase {
     assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).isNull();
   }
 
+  @Test
   public void testGetChangesAndDeletions_changeReportsVisible() {
     Compiler compiler = new Compiler();
     Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
@@ -1489,6 +1567,7 @@ public final class CompilerTest extends TestCase {
     assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).isEmpty();
   }
 
+  @Test
   public void testGetChangesAndDeletions_deleteOverridesChange() {
     Compiler compiler = new Compiler();
     Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
@@ -1511,6 +1590,7 @@ public final class CompilerTest extends TestCase {
     assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).containsExactly(function2);
   }
 
+  @Test
   public void testGetChangesAndDeletions_changeDoesntOverrideDelete() {
     Compiler compiler = new Compiler();
     Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
@@ -1533,6 +1613,7 @@ public final class CompilerTest extends TestCase {
     assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).containsExactly(function2);
   }
 
+  @Test
   public void testGetChangesAndDeletions_onlySeesChangesSinceLastRequest() {
     Compiler compiler = new Compiler();
     Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
@@ -1558,6 +1639,7 @@ public final class CompilerTest extends TestCase {
     assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).isEmpty();
   }
 
+  @Test
   public void testAddIndexProvider_ThenGetIndex() {
     Compiler compiler = new Compiler();
 
@@ -1592,6 +1674,7 @@ public final class CompilerTest extends TestCase {
     assertThat(compiler.getIndex(Object.class)).isNull();
   }
 
+  @Test
   public void testAddIndexProviderTwice_isException() {
     Compiler compiler = new Compiler();
 
@@ -1655,6 +1738,7 @@ public final class CompilerTest extends TestCase {
     return obj;
   }
 
+  @Test
   public void testProperEs6ModuleOrdering() throws Exception {
     List<SourceFile> sources = new ArrayList<>();
     sources.add(
@@ -1716,6 +1800,7 @@ public final class CompilerTest extends TestCase {
         .inOrder();
   }
 
+  @Test
   public void testProperEs6ModuleOrderingWithExport() throws Exception {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
     sources.add(
@@ -1761,6 +1846,7 @@ public final class CompilerTest extends TestCase {
         .inOrder();
   }
 
+  @Test
   public void testProperGoogBaseOrdering() throws Exception {
     List<SourceFile> sources = new ArrayList<>();
     sources.add(SourceFile.fromCode("test.js", "goog.setTestOnly()"));
@@ -1813,6 +1899,7 @@ public final class CompilerTest extends TestCase {
     }
   }
 
+  @Test
   public void testDynamicImportOrdering() throws Exception {
     List<SourceFile> sources = new ArrayList<>();
     sources.add(SourceFile.fromCode("/entry.js", "__webpack_require__(2);"));
@@ -1856,6 +1943,7 @@ public final class CompilerTest extends TestCase {
     assertThat(orderedInputs).containsExactly("/a.js", "/entry.js", "/c.js", "/b.js").inOrder();
   }
 
+  @Test
   public void testDynamicImportOrdering2() throws Exception {
     List<SourceFile> sources = new ArrayList<>();
     sources.add(SourceFile.fromCode("/entry.js", "__webpack_require__(2);"));
