@@ -146,6 +146,7 @@ public class DiagnosticGroups {
           + "newCheckTypes, "
           + "nonStandardJsDocs, "
           + "missingSourcesWarnings, "
+          + "polymer,"
           + "reportUnknownTypes, "
           + "suspiciousCode, "
           + "strictCheckTypes, "
@@ -674,6 +675,9 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup MISSING_POLYFILL =
       DiagnosticGroups.registerGroup(
           "missingPolyfill", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
+
+  public static final DiagnosticGroup POLYMER =
+      DiagnosticGroups.registerGroup("polymer", PolymerPassErrors.POLYMER_DESCRIPTOR_NOT_VALID);
 
   // For internal use only, so there are no constants for these groups.
   static {
