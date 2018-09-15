@@ -29,10 +29,15 @@ import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 
+@RunWith(JUnit4.class)
 public final class SourceFileTest extends TestCase {
 
+  @Test
   public void testSourceKind() {
     SourceFile sf1 = SourceFile.fromCode("test1.js", "1");
     assertThat(sf1.isStrong()).isTrue();
@@ -55,7 +60,8 @@ public final class SourceFileTest extends TestCase {
     assertThat(sf2.isExtern()).isTrue();
   }
 
-  public void testLineOffset() throws Exception {
+  @Test
+  public void testLineOffset() {
     SourceFile sf = SourceFile.fromCode("test.js", "'1';\n'2';\n'3'\n");
     assertThat(sf.getLineOffset(1)).isEqualTo(0);
     assertThat(sf.getLineOffset(2)).isEqualTo(5);
@@ -67,6 +73,7 @@ public final class SourceFileTest extends TestCase {
     assertThat(sf.getLineOffset(3)).isEqualTo(14);
   }
 
+  @Test
   public void testCachingFile() throws IOException {
     // Setup environment.
     String expectedContent = "// content content content";
@@ -86,6 +93,7 @@ public final class SourceFileTest extends TestCase {
     assertEquals(newExpectedContent, sourceFile.getCode());
   }
 
+  @Test
   public void testCachingZipFile() throws IOException {
     // Setup environment.
     String expectedContent = "// content content content";
@@ -112,6 +120,7 @@ public final class SourceFileTest extends TestCase {
     assertEquals(newExpectedContent, zipSourceFile.getCode());
   }
 
+  @Test
   public void testSourceFileResolvesZipEntries() throws IOException {
     // Setup environment.
     String expectedContent = "// <program goes here>";

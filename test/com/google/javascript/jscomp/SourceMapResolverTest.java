@@ -17,9 +17,14 @@ package com.google.javascript.jscomp;
 
 import com.google.common.io.BaseEncoding;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class SourceMapResolverTest extends TestCase {
 
+  @Test
   public void testResolveBase64Inline() throws Exception {
     String sourceMap = "{map: 'asdfasdf'}";
     String encoded = BaseEncoding.base64().encode(sourceMap.getBytes("UTF-8"));
@@ -38,6 +43,7 @@ public final class SourceMapResolverTest extends TestCase {
     assertNull(noInline);
   }
 
+  @Test
   public void testResolveBase64WithCharsetInline() throws Exception {
     String sourceMap = "{map: 'asdfasdf'}";
     String encoded = BaseEncoding.base64().encode(sourceMap.getBytes("UTF-8"));
@@ -58,6 +64,7 @@ public final class SourceMapResolverTest extends TestCase {
     assertNull(result);
   }
 
+  @Test
   public void testAbsolute() {
     SourceFile jsFile = SourceFile.fromCode("somePath/hello.js", "console.log(1)");
     // We cannot reslove absolute urls.
@@ -73,6 +80,7 @@ public final class SourceMapResolverTest extends TestCase {
     assertNotNull(SourceMapResolver.extractSourceMap(jsFile, "not/.././a/js/file.txt", true));
   }
 
+  @Test
   public void testRelativePaths() {
     assertEquals(
         "basefile.js.map",
@@ -98,6 +106,7 @@ public final class SourceMapResolverTest extends TestCase {
         SourceMapResolver.getRelativePath("baz/bam/qux.js", "../foo/bar.js").getOriginalPath());
   }
 
+  @Test
   public void testIntegration() {
     String url = "relative/path/to/sourcemap/hello.js.map";
     SourceFile s =
