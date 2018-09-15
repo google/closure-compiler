@@ -26,14 +26,20 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CompilerOptions}.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public final class CompilerOptionsTest extends TestCase {
 
-  public void testDefines() throws Exception {
+  @Test
+  public void testDefines() {
     CompilerOptions options = new CompilerOptions();
     options.setDefineToBooleanLiteral("trueVar", true);
     options.setDefineToBooleanLiteral("falseVar", false);
@@ -51,6 +57,7 @@ public final class CompilerOptionsTest extends TestCase {
     assertTrue(a.isEquivalentTo(b));
   }
 
+  @Test
   public void testLanguageModeFromString() {
     assertEquals(LanguageMode.ECMASCRIPT3, LanguageMode.fromString("ECMASCRIPT3"));
     // Whitespace should be trimmed, characters converted to uppercase and leading 'ES' replaced
@@ -59,6 +66,7 @@ public final class CompilerOptionsTest extends TestCase {
     assertNull(LanguageMode.fromString("junk"));
   }
 
+  @Test
   public void testEmitUseStrictWorksInEs3() {
     CompilerOptions options = new CompilerOptions();
     options.setEmitUseStrict(true);
@@ -67,6 +75,7 @@ public final class CompilerOptionsTest extends TestCase {
     assertTrue(options.shouldEmitUseStrict());
   }
 
+  @Test
   public void testSerialization() throws Exception {
     CompilerOptions options = new CompilerOptions();
     options.setDefineToBooleanLiteral("trueVar", true);

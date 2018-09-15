@@ -18,11 +18,15 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CollectFunctionNames}
  *
  */
+@RunWith(JUnit4.class)
 public final class CollectFunctionNamesTest extends CompilerTestCase {
   private FunctionNames functionNames;
 
@@ -37,14 +41,17 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
     return pass;
   }
 
+  @Test
   public void testAnonymous1() {
     testFunctionNamesAndIds("(function() {})", "<anonymous>");
   }
 
+  @Test
   public void testAnonymous2() {
     testFunctionNamesAndIds("goog.array.map(arr, function(){});", "<anonymous>");
   }
 
+  @Test
   public void testNestedFunctions() {
     testFunctionNamesAndIds(
         lines(
@@ -66,17 +73,20 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testObjectLiteral1() {
     testFunctionNamesAndIds(
         "literal = {f1 : function(){}, f2 : function(){}};",
         new String[] {"literal.f1", "literal.f2"});
   }
 
+  @Test
   public void testObjectLiteral2() {
     // TODO(lharker): should we output an actual name?
     testFunctionNamesAndIds("var declaredLiteral = {f: function() {}};", "<anonymous>");
   }
 
+  @Test
   public void testNestedObjectLiteral() {
     testFunctionNamesAndIds(
         lines(
@@ -88,10 +98,12 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testObjectLiteralWithNumericKey1() {
     testFunctionNamesAndIds("numliteral = {1 : function(){}};", "numliteral.__0");
   }
 
+  @Test
   public void testObjectLiteralWithNumericKey2() {
     testFunctionNamesAndIds(
         lines(
@@ -101,51 +113,60 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
         new String[] {"numliteral1.__0", "numliteral2.__1", "recnumliteral.__2.a"});
   }
 
+  @Test
   public void testNamedFunctionExpression1() {
     testFunctionNamesAndIds("goog.array.map(arr, function named(){});", "named");
   }
 
-
+  @Test
   public void testNamedFunctionExpression2() {
     testFunctionNamesAndIds("named_twice = function quax(){};", "quax");
   }
 
+  @Test
   public void testComputedProperty() {
     testFunctionNamesAndIds("computedPropLiteral = {['c1']: function() {}}", "<anonymous>");
   }
 
+  @Test
   public void testClassDeclaration() {
     testFunctionNamesAndIds(
         "class Klass{ constructor(){} method(){}}",
         new String[] {"Klass.constructor", "Klass.method"});
   }
 
+  @Test
   public void testClassExpression1() {
     testFunctionNamesAndIds(
         "KlassExpression = class{ constructor(){} method(){} }",
         new String[] {"KlassExpression.constructor", "KlassExpression.method"});
   }
 
+  @Test
   public void testClassExpression2() {
     testFunctionNamesAndIds(
         "var KlassExpressionToVar = class{ constructor(){} method(){} }",
         new String[] {"KlassExpressionToVar.constructor", "KlassExpressionToVar.method"});
   }
 
+  @Test
   public void testClassWithStaticMethod() {
     testFunctionNamesAndIds(
         "class KlassWithStaticMethod{ static staticMethod(){} }",
         "KlassWithStaticMethod.staticMethod");
   }
 
+  @Test
   public void testArrowFunctions1() {
     testFunctionNamesAndIds("() => {};", "<anonymous>");
   }
 
+  @Test
   public void testArrowFunctions2() {
     testFunctionNamesAndIds("var arrowFn1 = () => {};", "arrowFn1");
   }
 
+  @Test
   public void testArrowFunctions3() {
     testFunctionNamesAndIds(
         lines(
@@ -160,6 +181,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testObjectLiteralWithMethodShorthand() {
     // TODO(lharker) should we output an actual name?
     testFunctionNamesAndIds(

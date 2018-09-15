@@ -18,6 +18,9 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for type-checking across commonjs modules.
@@ -25,7 +28,9 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
  * @author nicholas.j.santos@gmail.com (Nick Santos)
  */
 
+@RunWith(JUnit4.class)
 public final class CommonJSIntegrationTest extends IntegrationTestCase {
+  @Test
   public void testCrossModuleCtorCall() {
     test(
         createCompilerOptions(),
@@ -39,6 +44,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         });
   }
 
+  @Test
   public void testCrossModuleCtorCall2() {
     test(createCompilerOptions(),
          new String[] {
@@ -51,6 +57,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
          TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
+  @Test
   public void testCrossModuleTypeAnnotation() {
     test(
         createCompilerOptions(),
@@ -64,6 +71,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
             "var hello$$module$i0 = new module$i0.default();"));
   }
 
+  @Test
   public void testCrossModuleTypeAnnotation2() {
     test(
         createCompilerOptions(),
@@ -79,6 +87,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         });
   }
 
+  @Test
   public void testCrossModuleTypeAnnotation3() {
     test(
         createCompilerOptions(),
@@ -89,6 +98,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  @Test
   public void testCrossModuleSubclass1() {
     test(
         createCompilerOptions(),
@@ -114,6 +124,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         });
   }
 
+  @Test
   public void testCrossModuleSubclass2() {
     test(
         createCompilerOptions(),
@@ -139,6 +150,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         });
   }
 
+  @Test
   public void testCrossModuleSubclass3() {
     test(
         createCompilerOptions(),
@@ -166,6 +178,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         });
   }
 
+  @Test
   public void testCrossModuleSubclass4() {
     test(
         createCompilerOptions(),
@@ -193,6 +206,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         });
   }
 
+  @Test
   public void testCrossModuleSubclass5() {
     test(
         createCompilerOptions(),
@@ -220,6 +234,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         });
   }
 
+  @Test
   public void testCrossModuleSubclass6() {
     test(
         createCompilerOptions(),

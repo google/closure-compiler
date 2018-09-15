@@ -16,13 +16,19 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
  * Tests for variable declaration collapsing.
  *
  */
+@RunWith(JUnit4.class)
 public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
 
-  public void testCollapsing() throws Exception {
+  @Test
+  public void testCollapsing() {
     // Basic collapsing
     test("var a;var b;",
          "var a,b;");
@@ -50,22 +56,26 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
         "var x = 2; foo(x); x = 3; x = 1; var y = 2, z = 4; x = 5");
   }
 
-  public void testIssue820() throws Exception {
+  @Test
+  public void testIssue820() {
     // Don't redeclare function parameters, this is incompatible with
     // strict mode.
     testSame("function f(a){ var b=1; a=2; var c; }");
   }
 
-  public void testIfElseVarDeclarations() throws Exception {
+  @Test
+  public void testIfElseVarDeclarations() {
     testSame("if (x) var a = 1; else var b = 2;");
   }
 
+  @Test
   public void testAggressiveRedeclarationInFor() {
     testSame("for(var x = 1; x = 2; x = 3) {x = 4}");
     testSame("for(var x = 1; y = 2; z = 3) {var a = 4}");
     testSame("var x; for(x = 1; x = 2; z = 3) {x = 4}");
   }
 
+  @Test
   public void testIssue397() {
     test("var x; var y = 3; x = 5;",
          "var x, y = 3; x = 5;");
@@ -79,12 +89,14 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
          "var a = 1, x, y = 3; x = 5;");
   }
 
+  @Test
   public void testArgumentsAssignment() {
     testSame("function f() {arguments = 1;}");
   }
 
   // ES6 Tests
-  public void testCollapsingLetConst() throws Exception {
+  @Test
+  public void testCollapsingLetConst() {
     // Basic collapsing
     test("let a;let b;",
          "let a,b;");
@@ -111,16 +123,19 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
     testSame("let a = 1; const b = 2;");
   }
 
-  public void testIfElseVarDeclarationsLet() throws Exception {
+  @Test
+  public void testIfElseVarDeclarationsLet() {
     testSame("if (x) { let a = 1; } else { let b = 2; }");
   }
 
+  @Test
   public void testAggressiveRedeclarationOfLetInFor() {
     testSame("for(let x = 1; x = 2; x = 3) {x = 4}");
     testSame("for(let x = 1; y = 2; z = 3) {let a = 4}");
     testSame("let x; for(x = 1; x = 2; z = 3) {x = 4}");
   }
 
+  @Test
   public void testRedeclarationLetInFunction() {
     test(
         "function f() { let x = 1; let y = 2; let z = 3; x + y + z; }",
@@ -136,6 +151,7 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
     testSame("function f(x) { let y = 3; x = 4; x + y; }");
   }
 
+  @Test
   public void testArrowFunction() {
     test("() => {let x = 1; let y = 2; x + y; }",
          "() => {let x = 1, y = 2; x + y; }");
@@ -145,12 +161,14 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
     testSame("(x) => {x = 4; let y = 2; x + y; }");
   }
 
+  @Test
   public void testUncollapsableDeclarations() {
     testSame("let x = 1; var y = 2; const z = 3");
 
     testSame("let x = 1; var y = 2; let z = 3;");
   }
 
+  @Test
   public void testMixedDeclarationTypes() {
     //lets, vars, const declarations consecutive
 

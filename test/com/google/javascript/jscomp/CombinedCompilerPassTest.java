@@ -28,10 +28,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- */
-public final class CombinedCompilerPassTest extends TestCase  {
+@RunWith(JUnit4.class)
+public final class CombinedCompilerPassTest extends TestCase {
 
   private Compiler compiler;
 
@@ -81,6 +84,7 @@ public final class CombinedCompilerPassTest extends TestCase  {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     compiler = new Compiler();
@@ -180,6 +184,7 @@ public final class CombinedCompilerPassTest extends TestCase  {
     return tests;
   }
 
+  @Test
   public void testIndividualPasses() {
     for (TestHelper test : createStringTests()) {
       CombinedCompilerPass pass =
@@ -189,6 +194,7 @@ public final class CombinedCompilerPassTest extends TestCase  {
     }
   }
 
+  @Test
   public void testCombinedPasses() {
     List<TestHelper> tests  = createStringTests();
     Callback[] callbacks = new Callback[tests.size()];
@@ -241,6 +247,7 @@ public final class CombinedCompilerPassTest extends TestCase  {
 
   }
 
+  @Test
   public void testScopes() {
     Node root =
         compiler.parseTestCode("var y = function() { var x = function() { };}");
