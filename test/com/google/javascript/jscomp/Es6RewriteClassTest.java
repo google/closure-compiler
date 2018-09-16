@@ -34,7 +34,12 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class Es6RewriteClassTest extends CompilerTestCase {
 
   private static final String EXTERNS_BASE =
@@ -79,6 +84,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
@@ -126,6 +132,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testSimpleClassStatement() {
     test("class C { }", "/** @constructor @struct */ let C = function() {};");
 
@@ -145,6 +152,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     assertType(cName.getJSType()).isEqualTo(classCConstructorType);
   }
 
+  @Test
   public void testClassStatementWithConstructor() {
     test(
         "class C { constructor() {} }",
@@ -166,6 +174,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     assertType(cName.getJSType()).isEqualTo(classCConstructorType);
   }
 
+  @Test
   public void testClassStatementWithMethod() {
     test(
         "class C { method() {}; }",
@@ -203,12 +212,14 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     assertType(function.getJSType()).isEqualTo(methodType);
   }
 
+  @Test
   public void testClassStatementWithConstructorReferencingThis() {
     test(
         "class C { constructor(a) { this.a = a; } }",
         "/** @constructor @struct */ let C = function(a) { this.a = a; };");
   }
 
+  @Test
   public void testClassStatementWithConstructorAndMethod() {
     test(
         "class C { constructor() {} foo() {} }",
@@ -218,6 +229,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.foo = function() {};"));
   }
 
+  @Test
   public void testClassStatementWithConstructorAndMethods() {
     test(
         "class C { constructor() {}; foo() {}; bar() {} }",
@@ -228,6 +240,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.bar = function() {};"));
   }
 
+  @Test
   public void testClassStatementWithTwoMethods() {
     test(
         "class C { foo() {}; bar() {} }",
@@ -238,6 +251,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.bar = function() {};"));
   }
 
+  @Test
   public void testClassStatementWithNonEmptyConstructorAndMethods() {
     test(
         lines(
@@ -255,6 +269,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.bar = function() { alert(this.a); };"));
   }
 
+  @Test
   public void testClassStatementsInDifferentBlockScopes() {
     test(
         lines(
@@ -273,18 +288,21 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testClassWithNgInjectOnConstructor() {
     test(
         "class A { /** @ngInject */ constructor($scope) {} }",
         "/** @constructor @struct @ngInject */ let A = function($scope) {}");
   }
 
+  @Test
   public void testClassWithNgInjectOnClass() {
     test(
         "/** @ngInject */ class A { constructor($scope) {} }",
         "/** @constructor @struct @ngInject */ let A = function($scope) {}");
   }
 
+  @Test
   public void testAnonymousWithSuper() {
     enableClosurePass();
     ignoreWarnings(FunctionTypeBuilder.RESOLVED_TAG_EMPTY, TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
@@ -305,44 +323,52 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "f(testcode$classdecl$var0)"));
   }
 
+  @Test
   public void testNewTarget() {
     testError("function Foo() { new.target; }", CANNOT_CONVERT_YET);
   }
 
+  @Test
   public void testClassWithNoJsDoc() {
     test("class C { }", "/** @constructor @struct */ let C = function() { };");
   }
 
+  @Test
   public void testClassWithDeprecatedJsDoc() {
     test(
         "/** @deprecated */ class C { }",
         "/** @constructor @struct @deprecated */ let C = function() {};");
   }
 
+  @Test
   public void testClassWithDictJsDoc() {
     test(
         "/** @dict */ class C { }",
         "/** @constructor @dict */ let C = function() {};");
   }
 
+  @Test
   public void testClassWithTemplateJsDoc() {
     test(
         "/** @template T */ class C { }",
         "/** @constructor @struct @template T */ let C = function() {};");
   }
 
+  @Test
   public void testClassWithFinalJsDoc() {
     test(
         "/** @final */ class C { }",
         "/** @constructor @struct @final */ let C = function() {};");
   }
 
+  @Test
   public void testClassWithPrivateJsDoc() {
     test(
         "/** @private */ class C { }",
         "/** @constructor @struct @private */ let C = function() {};");
   }
 
+  @Test
   public void testInterfaceWithJsDoc() {
     enableClosurePass();
     test(
@@ -374,6 +400,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "Converter.prototype.convert = function(x) {};"));
   }
 
+  @Test
   public void testNoTypeForParam() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -408,6 +435,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         ));
   }
 
+  @Test
   public void testParamNameMismatch() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     ignoreWarnings(FunctionTypeBuilder.INEXISTENT_PARAM);
@@ -443,6 +471,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         ));
   }
 
+  @Test
   public void testParamNameMismatchAndNoParamType() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     ignoreWarnings(FunctionTypeBuilder.INEXISTENT_PARAM);
@@ -473,6 +502,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         ));
   }
 
+  @Test
   public void testRecordWithJsDoc() {
     enableClosurePass();
     test(
@@ -502,6 +532,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "Converter.prototype.convert = function(x) {};"));
   }
 
+  @Test
   public void testCtorWithParameterJsDoc() {
     test(
         "class C { /** @param {boolean} b */ constructor(b) {} }",
@@ -514,6 +545,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let C = function(b) {};"));
   }
 
+  @Test
   public void testCtorWithThrowsJsDoc() {
     test(
         "class C { /** @throws {Error} */ constructor() {} }",
@@ -526,6 +558,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let C = function() {};"));
   }
 
+  @Test
   public void testCtorWithPrivateJsDoc() {
     test(
         "class C { /** @private */ constructor() {} }",
@@ -538,6 +571,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let C = function() {};"));
   }
 
+  @Test
   public void testCtorWithDeprecatedJsDoc() {
     test(
         "class C { /** @deprecated */ constructor() {} }",
@@ -550,6 +584,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let C = function() {};"));
   }
 
+  @Test
   public void testCtorWithTemplateJsDoc() {
     test(
         "class C { /** @template T */ constructor() {} }",
@@ -562,6 +597,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let C = function() {};"));
   }
 
+  @Test
   public void testCtorAndClassWithTemplateJsDoc() {
     test(
         "/** @template S */ class C { /** @template T */ constructor() {} }",
@@ -574,6 +610,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let C = function() {};"));
   }
 
+  @Test
   public void testCtorAndClassWithMultipleTemplateJsDoc() {
     test(
         "/** @template S */ class C { /** @template T, U */ constructor() {} }",
@@ -586,6 +623,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let C = function() {};"));
   }
 
+  @Test
   public void testMemberWithJsDoc() {
     test(
         "class C { /** @param {boolean} b */ foo(b) {} }",
@@ -600,12 +638,14 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.foo = function(b) {};"));
   }
 
+  @Test
   public void testClassStatementInsideIf() {
     test(
         "if (foo) { class C { } }",
         "if (foo) { /** @constructor @struct */ let C = function() {}; }");
   }
 
+  @Test
   public void testClassStatementInsideBlocklessIf() {
     test(
         "if (foo) class C {}",
@@ -613,11 +653,13 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   /** Class expressions that are the RHS of a 'var' statement. */
+  @Test
   public void testClassExpressionInVar() {
     test("var C = class { }",
         "/** @constructor @struct */ var C = function() {}");
   }
 
+  @Test
   public void testClassExpressionInVarWithMethod() {
     test(
         "var C = class { foo() {} }",
@@ -627,6 +669,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.foo = function() {}"));
   }
 
+  @Test
   public void testNamedClassExpressionInVar() {
     test(
         "var C = class C { }",
@@ -636,6 +679,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "var C = testcode$classdecl$var0;"));
   }
 
+  @Test
   public void testNamedClassExpressionInVarWithMethod() {
     test(
         "var C = class C { foo() {} }",
@@ -648,6 +692,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   /** Class expressions that are the RHS of an assignment. */
+  @Test
   public void testClassExpressionInAssignment() {
     test(
         lines(
@@ -658,6 +703,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "/** @constructor @struct */ goog.example.C = function() {}"));
   }
 
+  @Test
   public void testClassExpressionInAssignmentWithMethod() {
     test(
         lines(
@@ -669,6 +715,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "goog.example.C.prototype.foo = function() {};"));
   }
 
+  @Test
   public void testClassExpressionInAssignment_getElem() {
     test(
         "window['MediaSource'] = class {};",
@@ -678,6 +725,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "window['MediaSource'] = testcode$classdecl$var0;"));
   }
 
+  @Test
   public void testClassExpressionImmediatelyInstantiated() {
     test(
         "var C = new (class {})();",
@@ -687,6 +735,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "var C=new testcode$classdecl$var0"));
   }
 
+  @Test
   public void testClassExpressionAssignedToComplexLhs() {
     test(
         "(condition ? obj1 : obj2).prop = class C { };",
@@ -700,10 +749,12 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
    * We don't bother transpiling this case because the transpiled code will be very difficult to
    * typecheck.
    */
+  @Test
   public void testClassExpression_cannotConvert() {
     testError("var C = new (foo || (foo = class { }))();", CANNOT_CONVERT);
   }
 
+  @Test
   public void testExtendsWithImplicitConstructor() {
     test(
         srcs("class D {} class C extends D {}"),
@@ -720,6 +771,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         expectRuntimeLibraries("es6/util/inherits"));
   }
 
+  @Test
   public void testExtendsWithExplicitSuperCall() {
     test(
         "class D {} class C extends D { constructor() { super(); } }",
@@ -733,6 +785,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
   }
 
+  @Test
   public void testExtendsWithExplicitSuperCallWithArguments() {
     test(
         lines(
@@ -748,6 +801,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
   }
 
+  @Test
   public void testExtendsExternsClass() {
     test(
         externs("const ns = {}; /** @constructor */ ns.D = function() {};"),
@@ -764,6 +818,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
                 "$jscomp.inherits(C, ns.D);")));
   }
 
+  @Test
   public void testExtendsInExterns() {
     // Don't inject $jscomp.inherits() or apply() for externs
     testExternChanges(
@@ -778,6 +833,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let C = function(var_args) {};"));
   }
 
+  @Test
   public void testExtendForwardDeclaredClass() {
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
     enableClosurePass();
@@ -798,6 +854,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         warning(FunctionTypeBuilder.RESOLVED_TAG_EMPTY));
   }
 
+  @Test
   public void testImplementForwardDeclaredInterface() {
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
     enableClosurePass();
@@ -814,6 +871,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         warning(FunctionTypeBuilder.RESOLVED_TAG_EMPTY));
   }
 
+  @Test
   public void testExtendForwardDeclaredInterface() {
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
     enableClosurePass();
@@ -829,6 +887,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         warning(FunctionTypeBuilder.RESOLVED_TAG_EMPTY));
   }
 
+  @Test
   public void testExtendNonNativeErrorWithAutogeneratedConstructor() {
     test(
         lines(
@@ -854,6 +913,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, Error);"));
   }
 
+  @Test
   public void testExtendNonNativeErrorWithExplicitSuperCall() {
     test(
         lines(
@@ -883,6 +943,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, Error);"));
   }
 
+  @Test
   public void testExtendNativeErrorWithAutogeneratedConstructor() {
     ignoreWarnings(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
     test(
@@ -902,6 +963,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, Error);"));
   }
 
+  @Test
   public void testExtendNativeErrorExplicitSuperCall() {
     ignoreWarnings(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
     test(
@@ -928,18 +990,22 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, Error);"));
   }
 
+  @Test
   public void testInvalidExtends_call() {
     testError("class C extends foo() {}", DYNAMIC_EXTENDS_TYPE);
   }
 
+  @Test
   public void testInvalidExtends_functionExpression() {
     testError("class C extends function(){} {}", DYNAMIC_EXTENDS_TYPE);
   }
 
+  @Test
   public void testInvalidExtends_logicalExpression() {
     testError("class A {}; class B {}; class C extends (foo ? A : B) {}", DYNAMIC_EXTENDS_TYPE);
   }
 
+  @Test
   public void testExtendsInterface() {
     test(
         lines(
@@ -963,6 +1029,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.g = function() {};"));
   }
 
+  @Test
   public void testExtendsRecord() {
     test(
         lines(
@@ -986,6 +1053,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.g = function() {};"));
   }
 
+  @Test
   public void testImplementsInterface() {
     test(
         lines(
@@ -1006,6 +1074,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.f = function() {console.log('hi');};"));
   }
 
+  @Test
   public void testSuperCallInExterns() {
     // Drop super() calls in externs.
     testExternChanges(
@@ -1026,6 +1095,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let C = function() {};"));
   }
 
+  @Test
   public void testSuperCall() {
     test(
         lines(
@@ -1071,6 +1141,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     assertType(thisNode.getJSType()).isEqualTo(classCInstanceType);
   }
 
+  @Test
   public void testSuperCall_withArgument() {
     ignoreWarnings(TypeCheck.WRONG_ARGUMENT_COUNT);
     test(
@@ -1085,6 +1156,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
   }
 
+  @Test
   public void testSuperCall_withArgumentAndSubsequentCode() {
     ignoreWarnings(TypeCheck.WRONG_ARGUMENT_COUNT);
     test(
@@ -1100,6 +1172,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
   }
 
+  @Test
   public void testSuperMethodCall() {
     ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
     test(
@@ -1120,6 +1193,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testSuperMethodCall_withArgument() {
     ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
     test(
@@ -1140,6 +1214,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testSuperCall_inSubclassInsideMethod() {
     test(
         "class C { method() { class D extends C { constructor() { super(); }}}}",
@@ -1155,6 +1230,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperKnownNotToChangeThis() {
     test(
         lines(
@@ -1200,6 +1276,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
   }
 
+  @Test
   public void testSuperMightChangeThis() {
     // Class D is unknown, so we must assume its constructor could change `this`.
     enableClosurePass();
@@ -1226,6 +1303,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
   }
 
+  @Test
   public void testAlternativeSuperCalls_withExplicitSuperclassCtor() {
     test(
         lines(
@@ -1267,6 +1345,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
   }
 
+  @Test
   public void testAlternativeSuperCalls_withUnknkownSuperclass() {
     // Class being extended is unknown, so we must assume super() could change the value of `this`.
     enableClosurePass();
@@ -1303,6 +1382,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
   }
 
+  @Test
   public void testComputedSuper() {
     test(
         lines(
@@ -1367,6 +1447,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     assertType(thisNode.getJSType()).isEqualTo(classBarInstanceType);
   }
 
+  @Test
   public void testSuperMethodInGetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -1408,6 +1489,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testOverrideOfGetterFromInterface() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -1453,6 +1535,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testSuperMethodInSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -1495,6 +1578,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testExtendFunction_withExplicitConstructor() {
     // Function and other native classes cannot be correctly extended in transpiled form.
     // Test both explicit and automatically generated constructors.
@@ -1510,6 +1594,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         CANNOT_CONVERT);
   }
 
+  @Test
   public void testExtendFunction_withImplicitConstructor() {
     disableTypeInfoValidation(); // type info is incorrect because transpilation did not finish
     testError(
@@ -1517,6 +1602,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         CANNOT_CONVERT);
   }
 
+  @Test
   public void testExtendObject_replaceSuperCallWithThis() {
     // Object can be correctly extended in transpiled form, but we don't want or need to call
     // the `Object()` constructor in place of `super()`. Just replace `super()` with `this` instead.
@@ -1542,6 +1628,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(Foo, Object);"));
   }
 
+  @Test
   public void testExtendObject_withImplicitConstructor() {
     test(
         "class Foo extends Object {}",
@@ -1556,6 +1643,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(Foo, Object);"));
   }
 
+  @Test
   public void testExtendNonNativeObject_withSuperCall() {
     // No special handling when Object is redefined.
     ignoreWarnings(TypeCheck.ES5_CLASS_EXTENDING_ES6_CLASS, FunctionTypeBuilder.TYPE_REDEFINITION);
@@ -1586,6 +1674,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(Foo, Object);"));
   }
 
+  @Test
   public void testExtendNonNativeObject_withImplicitConstructor() {
     ignoreWarnings(TypeCheck.ES5_CLASS_EXTENDING_ES6_CLASS, FunctionTypeBuilder.TYPE_REDEFINITION);
     test(
@@ -1608,6 +1697,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(Foo, Object);"));
   }
 
+  @Test
   public void testMultiNameClass_inVarDeclaration() {
     test(
         "var F = class G {}",
@@ -1617,6 +1707,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "var F = testcode$classdecl$var0;"));
   }
 
+  @Test
   public void testMultiNameClass_inAssignment() {
     test(
         "F = class G {}",
@@ -1626,6 +1717,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "F = testcode$classdecl$var0;"));
   }
 
+  @Test
   public void testClassNested() {
     test(
         "class C { f() { class D {} } }",
@@ -1638,6 +1730,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testClassNestedWithSuperclass() {
     test(
         "class C { f() { class D extends C {} } }",
@@ -1656,6 +1749,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperGetProp() {
     test(
         "class D { d() {} } class C extends D { f() {var i = super.d;} }",
@@ -1676,6 +1770,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperGetElem() {
     test(
         lines(
@@ -1700,6 +1795,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperGetPropInStaticMethod() {
     // NOTE: super.d refers to a *static* property D.d (which is not defined), rather than the
     // instance propery D.prototype.d, which is defined.
@@ -1725,6 +1821,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperGetElemInStaticMethod() {
     test(
         lines(
@@ -1749,6 +1846,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperGetProp_returnUndefinedProperty() {
     ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
     test(
@@ -1771,6 +1869,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperGetProp_useUndefinedPropInCall() {
     ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
     test(
@@ -1793,6 +1892,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperGetProp_dereferenceUndefinedProperty() {
     ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
     test(
@@ -1815,6 +1915,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testSuperGet_dereferenceUndefinedPropertyInStaticMethod() {
     ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
     test(
@@ -1837,6 +1938,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testStaticThis() {
     test(
         "class F { static f() { return this; } }",
@@ -1845,11 +1947,13 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "/** @this {?} */ F.f = function() { return this; };"));
   }
 
+  @Test
   public void testStaticMethods() {
     test("class C { static foo() {} }",
         "/** @constructor @struct */ let C = function() {}; C.foo = function() {};");
   }
 
+  @Test
   public void testStaticMethods_withSameNamedInstanceMethod() {
     test("class C { static foo() {}; foo() {} }",
         lines(
@@ -1861,6 +1965,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.foo = function() {};"));
   }
 
+  @Test
   public void testStaticMethods_withCallInsideInstanceMethod() {
     test("class C { static foo() {}; bar() { C.foo(); } }",
         lines(
@@ -1872,6 +1977,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.bar = function() { C.foo(); };"));
   }
 
+  @Test
   public void testStaticInheritance() {
     test(
         lines(
@@ -1890,6 +1996,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.f();"));
   }
 
+  @Test
   public void testStaticInheritance_withSameNamedInstanceMethod() {
     test(
         lines(
@@ -1912,6 +2019,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.f();"));
   }
 
+  @Test
   public void testStaticInheritance_overrideStaticMethod() {
     test(
         lines(
@@ -1934,6 +2042,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype.g = function() {};"));
   }
 
+  @Test
   public void testInheritFromExterns() {
     test(
         externs(
@@ -1953,6 +2062,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
                 "$jscomp.inherits(CodeClass,ExternsClass)")));
   }
 
+  @Test
   public void testMockingInFunction() {
     // Classes cannot be reassigned in function scope.
     testError("function f() { class C {} C = function() {};}", CLASS_REASSIGNMENT);
@@ -1960,6 +2070,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
 
   // Make sure we don't crash on this code.
   // https://github.com/google/closure-compiler/issues/752
+  @Test
   public void testGithub752() {
     test(
         "function f() { var a = b = class {};}",
@@ -1971,6 +2082,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testGithub752b() {
     test(
         "var ns = {}; function f() { var self = ns.Child = class {};}",
@@ -1987,6 +2099,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
    * Getters and setters are supported, both in object literals and in classes, but only if the
    * output language is ES5.
    */
+  @Test
   public void testEs5GettersAndSettersClasses_withSingleGetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2008,6 +2121,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testEs5GettersAndSettersClasses_withSingleSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2029,6 +2143,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testEs5GettersAndSettersClasses_withGetterSetterPair() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2063,6 +2178,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testEs5GettersAndSettersClasses_withTwoGetters() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2105,6 +2221,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
 
   }
 
+  @Test
   public void testEs5GettersAndSettersOnClassesWithClassSideInheritance() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2143,6 +2260,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   /** Check that the types from the getter/setter are copied to the declaration on the prototype. */
+  @Test
   public void testEs5GettersAndSettersClassesWithTypes_withSingleGetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2168,6 +2286,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testEs5GettersAndSettersClassesWithTypes_withSingleSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2190,6 +2309,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testEs5GettersAndSettersClassesWithTypes_withConflictingGetterSetterType() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     testError(
@@ -2204,6 +2324,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         CONFLICTING_GETTER_SETTER_TYPE);
   }
 
+  @Test
   public void testEs5GetterWithExport() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2235,6 +2356,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testEs5SetterWithExport() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2267,6 +2389,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   /** @bug 20536614 */
+  @Test
   public void testStaticGetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2286,6 +2409,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "})"));
   }
 
+  @Test
   public void testStaticGetter_withClassSideInheritance() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2316,6 +2440,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "$jscomp.inherits(Sub, C)"));
   }
 
+  @Test
   public void testStaticSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2335,16 +2460,19 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testClassStaticComputedProps_withSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     testError("/** @unrestricted */ class C { static set [foo](val) {}}", CANNOT_CONVERT_YET);
   }
 
+  @Test
   public void testClassStaticComputedProps_withGetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     testError("/** @unrestricted */ class C { static get [foo]() {}}", CANNOT_CONVERT_YET);
   }
 
+  @Test
   public void testClassComputedPropGetterAndSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
@@ -2381,6 +2509,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "  });"));
   }
 
+  @Test
   public void testClassComputedPropGetterAndSetter_withConflictingGetterSetterType() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     testError(
@@ -2395,6 +2524,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         CONFLICTING_GETTER_SETTER_TYPE);
   }
 
+  @Test
   public void testComputedPropClass() {
     test(
         "/** @unrestricted */ class C { [foo]() { alert(1); } }",
@@ -2404,6 +2534,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype[foo] = function() { alert(1); };"));
   }
 
+  @Test
   public void testStaticComputedPropClass() {
     test(
         "/** @unrestricted */ class C { static [foo]() { alert(2); } }",
@@ -2413,6 +2544,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C[foo] = function() { alert(2); };"));
   }
 
+  @Test
   public void testComputedPropGeneratorMethods() {
     test(
         "/** @unrestricted */ class C { *[foo]() { yield 1; } }",
@@ -2422,6 +2554,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C.prototype[foo] = function*() { yield 1; };"));
   }
 
+  @Test
   public void testStaticComputedPropGeneratorMethods() {
     test(
         "/** @unrestricted */ class C { static *[foo]() { yield 2; } }",
@@ -2431,6 +2564,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C[foo] = function*() { yield 2; };"));
   }
 
+  @Test
   public void testClassGenerator() {
     test(
         "class C { *foo() { yield 1; } }",
