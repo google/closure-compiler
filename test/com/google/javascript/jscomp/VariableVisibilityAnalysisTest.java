@@ -23,12 +23,16 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallbackInterface;
 import com.google.javascript.jscomp.VariableVisibilityAnalysis.VariableVisibility;
 import com.google.javascript.rhino.Node;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests of {@link VariableVisibilityAnalysis}.
  *
  * @author dcc@google.com (Devin Coughlin)
  */
+@RunWith(JUnit4.class)
 public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
   private VariableVisibilityAnalysis lastAnalysis;
 
@@ -39,6 +43,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
     return lastAnalysis;
   }
 
+  @Test
   public void testCapturedVariables() {
     String source =
         "global:var global;\n" +
@@ -56,6 +61,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
     assertIsUncapturedLocal("notcaptured");
   }
 
+  @Test
   public void testGlobals() {
     String source =
       "global:var global;";
@@ -65,6 +71,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
     assertIsGlobal("global");
   }
 
+  @Test
   public void testParameters() {
     String source =
       "function A(a,b,c) {\n" +
@@ -77,6 +84,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
     assertIsParameter("c");
   }
 
+  @Test
   public void testFunctions() {
     String source =
         "function global() {\n" +

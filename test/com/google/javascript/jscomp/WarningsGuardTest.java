@@ -32,12 +32,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Testcase for WarningsGuard and its implementations.
  *
  * @author anatol@google.com (Anatol Pomazau)
  */
+@RunWith(JUnit4.class)
 public final class WarningsGuardTest extends TestCase {
   private static final DiagnosticType BAR_WARNING =
       DiagnosticType.warning("BAR", "Bar description");
@@ -50,6 +54,7 @@ public final class WarningsGuardTest extends TestCase {
       new DiagnosticGroupWarningsGuard(
           DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING);
 
+  @Test
   public void testShowByPathGuard_Restrict() {
     WarningsGuard includeGuard = new ShowByPathWarningsGuard("/foo/",
         ShowType.INCLUDE);
@@ -66,6 +71,7 @@ public final class WarningsGuardTest extends TestCase {
     assertFalse(includeGuard.disables(DiagnosticGroups.DEPRECATED));
   }
 
+  @Test
   public void testShowByPathGuard_Suppress() {
     WarningsGuard excludeGuard = new ShowByPathWarningsGuard(
         new String[] { "/foo/", "/bar/" }, ShowType.EXCLUDE);
@@ -88,6 +94,7 @@ public final class WarningsGuardTest extends TestCase {
     assertFalse(excludeGuard.disables(DiagnosticGroups.DEPRECATED));
   }
 
+  @Test
   public void testStrictGuard() {
     WarningsGuard guard = new StrictWarningsGuard();
 
@@ -98,6 +105,7 @@ public final class WarningsGuardTest extends TestCase {
     assertFalse(guard.disables(DiagnosticGroups.DEPRECATED));
   }
 
+  @Test
   public void testByPathGuard() {
     WarningsGuard strictGuard = ByPathWarningsGuard
         .forPath(ImmutableList.of("/foo/"), ERROR);
@@ -114,6 +122,7 @@ public final class WarningsGuardTest extends TestCase {
     assertFalse(strictGuard.disables(DiagnosticGroups.DEPRECATED));
   }
 
+  @Test
   public void testComposeGuard() {
     WarningsGuard g1 = new WarningsGuard() {
       private static final long serialVersionUID = 1L;
@@ -154,6 +163,7 @@ public final class WarningsGuardTest extends TestCase {
     assertTrue(guard.disables(DiagnosticGroups.DEPRECATED));
   }
 
+  @Test
   public void testComposeGuard2() {
     WarningsGuard pathGuard = new ShowByPathWarningsGuard("/foo/");
     WarningsGuard strictGuard = new StrictWarningsGuard();
@@ -172,6 +182,7 @@ public final class WarningsGuardTest extends TestCase {
         ERROR, guard.level(makeError("asasasd/foo/hello.js", WARNING)));
   }
 
+  @Test
   public void testComposeGuard3() {
     // Confirm that explicit diagnostic groups override the promotion of
     // warnings to errors done by StrictWarningGuard.
@@ -190,6 +201,7 @@ public final class WarningsGuardTest extends TestCase {
         JSError.make("example.js", 1, 0, CheckAccessControls.DEPRECATED_NAME)));
   }
 
+  @Test
   public void testComposeGuardOrdering() {
     WarningsGuard pathGuard1 = new ShowByPathWarningsGuard("/foo/");
     WarningsGuard pathGuard2 = new ShowByPathWarningsGuard("/bar/");
@@ -212,6 +224,7 @@ public final class WarningsGuardTest extends TestCase {
     }
   }
 
+  @Test
   public void testComposeGuardOrdering2() {
     // Ensure that guards added later always override, when two guards
     // have the same priority.
@@ -231,6 +244,7 @@ public final class WarningsGuardTest extends TestCase {
     assertFalse(guardB.enables(DiagnosticGroups.ACCESS_CONTROLS));
   }
 
+  @Test
   public void testComposeGuardOrdering3() {
     ComposeWarningsGuard guardA = new ComposeWarningsGuard();
     guardA.addGuard(
@@ -250,6 +264,7 @@ public final class WarningsGuardTest extends TestCase {
     assertTrue(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS));
   }
 
+  @Test
   public void testComposeGuardOrdering4() {
     ComposeWarningsGuard guardA = new ComposeWarningsGuard();
     guardA.addGuard(visibilityWarning);
@@ -263,6 +278,7 @@ public final class WarningsGuardTest extends TestCase {
     assertTrue(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS));
   }
 
+  @Test
   public void testEmergencyComposeGuard1() {
     ComposeWarningsGuard guard = new ComposeWarningsGuard();
     guard.addGuard(new StrictWarningsGuard());
@@ -273,6 +289,7 @@ public final class WarningsGuardTest extends TestCase {
             makeErrorWithLevel(WARNING)));
   }
 
+  @Test
   public void testEmergencyComposeGuard2() {
     ComposeWarningsGuard guard = new ComposeWarningsGuard();
     guard.addGuard(
@@ -285,6 +302,7 @@ public final class WarningsGuardTest extends TestCase {
             makeErrorWithType(VISIBILITY_MISMATCH)));
   }
 
+  @Test
   public void testEmergencyComposeGuard3() {
     ComposeWarningsGuard guard = new ComposeWarningsGuard();
     guard.addGuard(
@@ -300,6 +318,7 @@ public final class WarningsGuardTest extends TestCase {
             makeErrorWithType(VISIBILITY_MISMATCH)));
   }
 
+  @Test
   public void testDiagnosticGuard1() {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.CHECK_TYPES, ERROR);
@@ -312,6 +331,7 @@ public final class WarningsGuardTest extends TestCase {
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
   }
 
+  @Test
   public void testDiagnosticGuard3() {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.CHECK_TYPES, OFF);
@@ -322,6 +342,7 @@ public final class WarningsGuardTest extends TestCase {
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
   }
 
+  @Test
   public void testDiagnosticGuard4() {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.DEPRECATED, OFF);
@@ -336,6 +357,7 @@ public final class WarningsGuardTest extends TestCase {
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
   }
 
+  @Test
   public void testSuppressGuard1() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
@@ -356,6 +378,7 @@ public final class WarningsGuardTest extends TestCase {
             findNameNode(code, "b"), BAR_WARNING)));
   }
 
+  @Test
   public void testSuppressGuard2() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
@@ -375,6 +398,7 @@ public final class WarningsGuardTest extends TestCase {
             findNameNode(code, "b"), BAR_WARNING)));
   }
 
+  @Test
   public void testSuppressGuard3() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
@@ -389,6 +413,7 @@ public final class WarningsGuardTest extends TestCase {
             findNameNode(code, "a"), BAR_WARNING)));
   }
 
+  @Test
   public void testSuppressGuard4() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
@@ -404,6 +429,7 @@ public final class WarningsGuardTest extends TestCase {
             findNameNode(code, "a"), BAR_WARNING)));
   }
 
+  @Test
   public void testSuppressGuard5() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
@@ -421,6 +447,7 @@ public final class WarningsGuardTest extends TestCase {
             findNameNode(code, "a"), BAR_WARNING)));
   }
 
+  @Test
   public void testSuppressGuard6() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
@@ -451,6 +478,7 @@ public final class WarningsGuardTest extends TestCase {
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
 
+  @Test
   public void testComposeGuardCycle() {
     ComposeWarningsGuard guard = new ComposeWarningsGuard(
         visibilityOff, visibilityWarning);

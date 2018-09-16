@@ -21,14 +21,18 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author nicksantos@google.com (Nick Santos)
- */
+/** @author nicksantos@google.com (Nick Santos) */
+@RunWith(JUnit4.class)
 public final class ValidityCheckTest extends CompilerTestCase {
 
   private CompilerPass otherPass = null;
 
+  @Before
   @Override
   public void setUp() throws Exception {
     super.setUp();
@@ -48,7 +52,8 @@ public final class ValidityCheckTest extends CompilerTestCase {
     };
   }
 
-  public void testUnnormalizeNodeTypes() throws Exception {
+  @Test
+  public void testUnnormalizeNodeTypes() {
     otherPass = new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         AbstractCompiler compiler = getLastCompiler();
@@ -67,7 +72,8 @@ public final class ValidityCheckTest extends CompilerTestCase {
     }
   }
 
-  public void testUnnormalized() throws Exception {
+  @Test
+  public void testUnnormalized() {
     otherPass = new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         getLastCompiler().setLifeCycleStage(LifeCycleStage.NORMALIZED);
@@ -82,7 +88,8 @@ public final class ValidityCheckTest extends CompilerTestCase {
     }
   }
 
-  public void testConstantAnnotationMismatch() throws Exception {
+  @Test
+  public void testConstantAnnotationMismatch() {
     otherPass = new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         AbstractCompiler compiler = getLastCompiler();

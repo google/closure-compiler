@@ -20,20 +20,23 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableMap;
-
-import junit.framework.TestCase;
-
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link VariableMap}.
  *
  */
+@RunWith(JUnit4.class)
 public final class VariableMapTest extends TestCase {
 
+  @Test
   public void testCycle1() throws ParseException {
     cycleTest(ImmutableMap.of("AAA", "a", "BBB", "b"));
     cycleTest(ImmutableMap.of("AA:AA", "a", "BB:BB", "b"));
@@ -56,6 +59,7 @@ public final class VariableMapTest extends TestCase {
     }
   }
 
+  @Test
   public void testToBytes() {
     VariableMap vm = new VariableMap(ImmutableMap.of("AAA", "a", "BBB", "b"));
     String serialized = new String(vm.toBytes(), UTF_8);
@@ -67,6 +71,7 @@ public final class VariableMapTest extends TestCase {
     assertThat(lines).contains("BBB:b");
   }
 
+  @Test
   public void testFromBytes() throws ParseException {
     VariableMap vm = VariableMap.fromBytes("AAA:a\nBBB:b\n".getBytes(UTF_8));
     assertThat(vm.getOriginalNameToNewNameMap()).hasSize(2);
@@ -76,11 +81,13 @@ public final class VariableMapTest extends TestCase {
     assertEquals("BBB", vm.lookupSourceName("b"));
   }
 
+  @Test
   public void testFromBytesWithEmptyValue() throws ParseException {
     VariableMap vm = VariableMap.fromBytes("AAA:".getBytes(UTF_8));
     assertThat(vm.lookupNewName("AAA")).isEmpty();
   }
 
+  @Test
   public void testFileFormat1() {
     assertEqual(
         new VariableMap(ImmutableMap.of("x\ny", "a")).toBytes(), "x\\ny:a\n".getBytes(UTF_8));
@@ -103,6 +110,7 @@ public final class VariableMapTest extends TestCase {
     assertEqual(new VariableMap(ImmutableMap.of("\\", "a")).toBytes(), "\\\\:a\n".getBytes(UTF_8));
   }
 
+  @Test
   public void testFromBytesComplex1() throws ParseException {
     // Verify we get out what we put in.
     cycleTest(ImmutableMap.of("AAA[':f']", "a"));
@@ -112,6 +120,7 @@ public final class VariableMapTest extends TestCase {
     assertEqual(in.toBytes(), "AAA['\\:f']:a\n".getBytes(UTF_8));
   }
 
+  @Test
   public void testFromBytesComplex2() throws ParseException {
     VariableMap vm = VariableMap.fromBytes("AAA['\\:f']:a\n".getBytes(UTF_8));
 
@@ -131,6 +140,7 @@ public final class VariableMapTest extends TestCase {
     }
   }
 
+  @Test
   public void testReverseThrowsErrorOnDuplicate() {
     try {
       new VariableMap(ImmutableMap.of("AA", "b", "BB", "b"));
@@ -139,6 +149,7 @@ public final class VariableMapTest extends TestCase {
     }
   }
 
+  @Test
   public void testReverseLookupOfNullFindsNoName() {
     VariableMap vm = new VariableMap(ImmutableMap.of("AA", "a", "BB", "b"));
     assertNull(vm.lookupSourceName(null));
