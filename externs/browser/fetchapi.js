@@ -254,6 +254,9 @@ RequestInit.prototype.integrity;
 /** @type {(undefined|!AbortSignal)} */
 RequestInit.prototype.signal;
 
+/** @type {(undefined|boolean)} */
+RequestInit.prototype.keepalive;
+
 /** @type {(undefined|null)} */
 RequestInit.prototype.window;
 
