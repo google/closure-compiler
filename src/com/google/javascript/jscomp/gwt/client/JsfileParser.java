@@ -29,10 +29,11 @@ import com.google.javascript.jscomp.BasicErrorManager;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.GatherModuleMetadata;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.ModuleMetadata;
-import com.google.javascript.jscomp.ModuleMetadata.Module;
+import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.gwt.client.Util.JsArray;
 import com.google.javascript.jscomp.gwt.client.Util.JsObject;
 import com.google.javascript.jscomp.gwt.client.Util.JsRegExp;
@@ -41,6 +42,8 @@ import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -272,10 +275,14 @@ public class JsfileParser {
         parseComment(comment, info);
       }
     }
-    ModuleMetadata moduleMetadata = new ModuleMetadata(compiler);
-    moduleMetadata.hotSwapScript(parsed.ast);
+    GatherModuleMetadata gatherModuleMetadata =
+        new GatherModuleMetadata(
+            compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER);
+    gatherModuleMetadata.process(new Node(Token.ROOT), parsed.ast);
     compiler.generateReport();
-    Module module = Iterables.getOnlyElement(moduleMetadata.getModulesByPath().values());
+    ModuleMetadata module =
+        Iterables.getOnlyElement(
+            compiler.getModuleMetadataMap().getModulesByPath().values());
     if (module.isEs6Module()) {
       info.loadFlags.add(JsArray.of("module", "es6"));
     } else if (module.isGoogModule()) {

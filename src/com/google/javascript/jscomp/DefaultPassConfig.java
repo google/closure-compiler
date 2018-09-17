@@ -153,6 +153,8 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(convertEs6TypedToEs6);
     }
 
+    passes.add(gatherModuleMetadataPass);
+
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       passes.add(rewriteGoogJsImports);
       switch (options.getEs6ModuleTranspilation()) {
@@ -266,6 +268,8 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.needsTranspilationFrom(TYPESCRIPT)) {
       checks.add(convertEs6TypedToEs6);
     }
+
+    checks.add(gatherModuleMetadataPass);
 
     if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
       checks.add(lintChecks);
@@ -3449,6 +3453,20 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new Es6RewriteScriptsToModules(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES_NEXT;
+        }
+      };
+
+  private final PassFactory gatherModuleMetadataPass =
+      new PassFactory(PassNames.GATHER_MODULE_METADATA, /* isOneTimePass= */ true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new GatherModuleMetadata(
+              compiler, options.processCommonJSModules, options.moduleResolutionMode);
         }
 
         @Override

@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_ERROR;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_DESTRUCTURING_FORWARD_DECLARE;
@@ -34,10 +35,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
-import com.google.javascript.jscomp.ModuleMetadata.Module;
+import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
-import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -138,7 +138,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   private Set<String> typedefs;
 
-  private final ModuleMetadata moduleMetadata;
+  private final ModuleMetadataMap moduleMetadataMap;
 
   /**
    * Creates a new Es6RewriteModules instance which can be used to rewrite ES6 modules to a
@@ -146,12 +146,11 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    */
   public Es6RewriteModules(
       AbstractCompiler compiler,
-      @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
-      boolean processCommonJsModules,
-      ResolutionMode moduleResolutionMode) {
+      @Nullable PreprocessorSymbolTable preprocessorSymbolTable) {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
-    moduleMetadata = new ModuleMetadata(compiler, processCommonJsModules, moduleResolutionMode);
+    this.moduleMetadataMap = compiler.getModuleMetadataMap();
+    checkNotNull(this.moduleMetadataMap);
   }
 
   /**
@@ -169,7 +168,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   public void process(Node externs, Node root) {
     checkArgument(externs.isRoot(), externs);
     checkArgument(root.isRoot(), root);
-    moduleMetadata.process(externs, root);
     for (Node file : Iterables.concat(externs.children(), root.children())) {
       checkState(file.isScript(), file);
       hotSwapScript(file, null);
@@ -179,7 +177,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   @Override
   public void hotSwapScript(Node scriptNode, Node originalRoot) {
-    moduleMetadata.hotSwapScript(scriptNode);
     if (isEs6ModuleRoot(scriptNode)) {
       processFile(scriptNode);
     } else {
@@ -250,9 +247,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           }
 
           String name = n.getLastChild().getString();
-          Module data = moduleMetadata.getModulesByGoogNamespace().get(name);
+          ModuleMetadata moduleMetadata = moduleMetadataMap.getModulesByGoogNamespace().get(name);
 
-          if (data == null || !data.isEs6Module()) {
+          if (moduleMetadata == null || !moduleMetadata.isEs6Module()) {
             return;
           }
 
@@ -282,7 +279,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
                     IR.constNode(
                         IR.name(child.getFirstChild().getString()),
                         IR.getprop(
-                            IR.name(data.getGlobalName(name)), IR.string(child.getString())));
+                            IR.name(ModuleRenaming.getGlobalName(moduleMetadata, name)),
+                            IR.string(child.getString())));
                 constNode.useSourceInfoFromForTree(child);
                 statementNode.getParent().addChildBefore(constNode, statementNode);
               }
@@ -294,7 +292,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
                   forwardDeclareRenameTable.put(
                       t.getScopeRoot(),
                       statementNode.getFirstChild().getString(),
-                      data.getGlobalName(name));
+                      ModuleRenaming.getGlobalName(moduleMetadata, name));
                   statementNode.detach();
                   t.reportCodeChange();
                 } else {
@@ -303,13 +301,16 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
               } else {
                 //   const module = goog.require('an.es6.namespace');
                 //   const module = module$es6;
-                n.replaceWith(IR.name(data.getGlobalName(name)).useSourceInfoFromForTree(n));
+                n.replaceWith(
+                    IR.name(ModuleRenaming.getGlobalName(moduleMetadata, name))
+                        .useSourceInfoFromForTree(n));
                 t.reportCodeChange();
               }
             }
           } else {
             if (isForwardDeclare) {
-              forwardDeclareRenameTable.put(t.getScopeRoot(), name, data.getGlobalName(name));
+              forwardDeclareRenameTable.put(
+                  t.getScopeRoot(), name, ModuleRenaming.getGlobalName(moduleMetadata, name));
             }
             if (parent.isExprResult()) {
               parent.detach();
@@ -359,12 +360,12 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       //   import ... from 'goog:my.ns.Object'.
       String namespace = importName.substring("goog:".length());
       moduleName = namespace;
-      Module m = moduleMetadata.getModulesByGoogNamespace().get(namespace);
+      ModuleMetadata m = moduleMetadataMap.getModulesByGoogNamespace().get(namespace);
 
       if (m == null) {
         t.report(importDecl, MISSING_MODULE_OR_PROVIDE, namespace);
       } else {
-        moduleName = m.getGlobalName(namespace);
+        moduleName = ModuleRenaming.getGlobalName(m, namespace);
         checkState(m.isEs6Module() || m.isGoogModule() || m.isGoogProvide());
       }
     } else {
@@ -772,7 +773,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       compiler.report(JSError.make(parent.getParent(), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST));
     }
 
-    Module m = moduleMetadata.getModulesByGoogNamespace().get(namespace);
+    ModuleMetadata m = moduleMetadataMap.getModulesByGoogNamespace().get(namespace);
 
     if (m == null) {
       t.report(requireCall, MISSING_MODULE_OR_PROVIDE, namespace);
@@ -791,15 +792,16 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
               checkState(child.getFirstChild().isName());
               namesToInlineByAlias.put(
                   child.getFirstChild().getString(),
-                  m.getGlobalName(namespace) + "." + child.getString());
+                  ModuleRenaming.getGlobalName(m, namespace) + "." + child.getString());
             } else {
               checkState(child.isName());
               namesToInlineByAlias.put(
-                  child.getString(), m.getGlobalName(namespace) + "." + child.getString());
+                  child.getString(),
+                  ModuleRenaming.getGlobalName(m, namespace) + "." + child.getString());
             }
           }
         } else if (parent.isName()) {
-          namesToInlineByAlias.put(parent.getString(), m.getGlobalName(namespace));
+          namesToInlineByAlias.put(parent.getString(), ModuleRenaming.getGlobalName(m, namespace));
           toDetach = parent.getParent();
         } else {
           checkState(parent.isExprResult());
@@ -808,7 +810,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         toDetach.detach();
       } else {
         Node replacement =
-            NodeUtil.newQName(compiler, m.getGlobalName(namespace)).srcrefTree(requireCall);
+            NodeUtil.newQName(compiler, ModuleRenaming.getGlobalName(m, namespace))
+                .srcrefTree(requireCall);
         parent.replaceChild(requireCall, replacement);
       }
     } else {

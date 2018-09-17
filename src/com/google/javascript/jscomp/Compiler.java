@@ -3653,6 +3653,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return moduleTypesByName.get(moduleName);
   }
 
+  private ModuleMetadataMap moduleMetadataMap;
+
+  @Override
+  public ModuleMetadataMap getModuleMetadataMap() {
+    return moduleMetadataMap;
+  }
+
+  @Override
+  public void setModuleMetadataMap(ModuleMetadataMap moduleMetadataMap) {
+    this.moduleMetadataMap = moduleMetadataMap;
+  }
+
   /**
    * Simplistic implementation of the java.nio.file.Path resolveSibling method that works
    * with GWT.

@@ -541,6 +541,16 @@ class ForwardingCompiler extends AbstractCompiler {
   }
 
   @Override
+  public ModuleMetadataMap getModuleMetadataMap() {
+    return abstractCompiler.getModuleMetadataMap();
+  }
+
+  @Override
+  public void setModuleMetadataMap(ModuleMetadataMap moduleMetadataMap) {
+    abstractCompiler.setModuleMetadataMap(moduleMetadataMap);
+  }
+
+  @Override
   public String getSourceLine(String sourceName, int lineNumber) {
     return abstractCompiler.getSourceLine(sourceName, lineNumber);
   }

@@ -57,11 +57,12 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es6RewriteModules(
-        compiler,
-        /* preprocessorSymbolTable= */ null,
-        /* processCommonJsModules= */ false,
-        ResolutionMode.BROWSER);
+    return (externs, root) -> {
+      new GatherModuleMetadata(
+              compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER)
+          .process(externs, root);
+      new Es6RewriteModules(compiler, /* preprocessorSymbolTable= */ null).process(externs, root);
+    };
   }
 
   @Override

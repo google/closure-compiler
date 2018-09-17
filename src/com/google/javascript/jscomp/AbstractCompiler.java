@@ -675,4 +675,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
         ? AstFactory.createFactoryWithTypes(getTypeRegistry())
         : AstFactory.createFactoryWithoutTypes();
   }
+
+  public abstract ModuleMetadataMap getModuleMetadataMap();
+
+  public abstract void setModuleMetadataMap(ModuleMetadataMap moduleMetadataMap);
 }

@@ -32,6 +32,7 @@ import com.google.common.truth.Correspondence;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
@@ -1806,9 +1807,23 @@ public abstract class CompilerTestCase extends TestCase {
 
   private static void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
     List<PassFactory> factories = new ArrayList<>();
+    CompilerOptions options = compiler.getOptions();
+    GatherModuleMetadata gatherModuleMetadata =
+        new GatherModuleMetadata(
+            compiler, options.processCommonJSModules, options.moduleResolutionMode);
+    factories.add(new PassFactory(PassNames.GATHER_MODULE_METADATA, /* isOneTimePass= */ true) {
+      @Override
+      protected CompilerPass create(AbstractCompiler compiler) {
+        return gatherModuleMetadata;
+      }
+
+      @Override
+      protected FeatureSet featureSet() {
+        return FeatureSet.ES_NEXT;
+      }
+    });
     TranspilationPasses.addEs6ModulePass(
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
-    CompilerOptions options = compiler.getOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     TranspilationPasses.addPreTypecheckTranspilationPasses(factories, options, false);
