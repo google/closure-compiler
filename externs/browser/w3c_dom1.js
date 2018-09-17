@@ -195,7 +195,7 @@ Node.prototype.parentNode;
 Node.prototype.previousSibling;
 
 /**
- * @param {Node} newChild
+ * @param {!Node} newChild
  * @return {!Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-appendChild
  */
@@ -217,7 +217,7 @@ Node.prototype.cloneNode = function(deep) {};
 Node.prototype.hasChildNodes = function() {};
 
 /**
- * @param {Node} newChild
+ * @param {!Node} newChild
  * @param {Node} refChild
  * @return {!Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-insertBefore
@@ -225,15 +225,15 @@ Node.prototype.hasChildNodes = function() {};
 Node.prototype.insertBefore = function(newChild, refChild) {};
 
 /**
- * @param {Node} oldChild
+ * @param {!Node} oldChild
  * @return {!Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-removeChild
  */
 Node.prototype.removeChild = function(oldChild) {};
 
 /**
- * @param {Node} newChild
- * @param {Node} oldChild
+ * @param {!Node} newChild
+ * @param {!Node} oldChild
  * @return {!Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-replaceChild
  */
