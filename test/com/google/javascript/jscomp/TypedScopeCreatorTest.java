@@ -3882,6 +3882,73 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAliasTypeFromClass() {
+    testSame(
+        lines(
+            "class Foo {};",
+            "/** @enum {number} */ Foo.E = {A: 1};",
+            "const F = Foo;",
+            "const E = F.E;"));
+    assertEquals("enum{Foo.E}", findNameType("E", globalScope).toString());
+  }
+
+  @Test
+  public void testAliasTypeFromNamespace() {
+    testSame(
+        lines(
+            "const Foo = {};",
+            "/** @enum {number} */ Foo.E = {A: 1};",
+            "const F = Foo;",
+            "const E = F.E;"));
+    assertEquals("enum{Foo.E}", findNameType("E", globalScope).toString());
+  }
+
+  @Test
+  public void testAliasTypeFromClassPrototype() {
+    // This is very weird but falls out of how we module types.
+    testSame(
+        lines(
+            "class Foo {}",
+            "/** @enum {number} */ Foo.prototype.E = {A: 1};",
+            "const F = new Foo();",
+            "const E = F.E;"));
+    assertEquals("enum{Foo.prototype.E}", findNameType("E", globalScope).toString());
+  }
+
+  @Test
+  public void testAliasTypedef() {
+    testSame(
+        lines(
+            "/** @typedef {number} */ let Foo;", //
+            "const E = Foo;",
+            "/** @type {E} */ let x;"));
+    assertEquals("number", findNameType("x", globalScope).toString());
+  }
+
+  @Test
+  public void testAliasTypedefFromNamespace() {
+    testSame(
+        lines(
+            "const Foo = {};",
+            "/** @typedef {number} */ Foo.E;",
+            "const E = Foo.E;",
+            "/** @type {E} */ let x;"));
+    assertEquals("number", findNameType("x", globalScope).toString());
+  }
+
+  public void disable_testAliasTypedefFromNamespaceAlias() {
+    // TODO(johnlenz): support typedef aliases.
+    testSame(
+        lines(
+            "const Foo = {};",
+            "/** @typedef {number} */ Foo.E;",
+            "const F = Foo;",
+            "const E = F.E;",
+            "/** @type {E} */ let x;"));
+    assertEquals("number", findNameType("x", globalScope).toString());
+  }
+
+  @Test
   public void testMemoization() {
     Node root1 = createEmptyRoot();
     Node root2 = createEmptyRoot();

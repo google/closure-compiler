@@ -1862,6 +1862,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * as a type name, depending on what other.name is defined to be.
      */
     private void maybeDeclareAliasType(Node lValue, Node rValue, JSType rValueType) {
+      // NOTE: this allows some strange patterns such allowing instance properties
+      // to be aliases of constructors, and then creating a local alias of that to be
+      // used as a type name.  Consider restricting this.
+
       // TODO(b/77597706): handle destructuring here
       if (!lValue.isQualifiedName() || !rValue.isQualifiedName()) {
         return;
@@ -1969,7 +1973,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       } else if (n.isGetProp()) {
         JSType type = lookupQualifiedName(n.getFirstChild());
-        if (type != null && type.isRecordType()) {
+        // NOTE: The scope only contains declared types at this
+        // point so any property we find is a value type
+        // to look up properties on.
+        if (type != null) {
           JSType propType = type.findPropertyType(
              n.getLastChild().getString());
           return propType;

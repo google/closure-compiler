@@ -21901,10 +21901,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: null"));
   }
 
+  @Test
   public void testTypeofType_notInScope() {
     testTypes("var /** typeof ns */ x;", "Parse error. Not in scope: ns");
   }
 
+  @Test
   public void testTypeofType_namespace() {
     testTypes(
         lines(
@@ -21912,6 +21914,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var /** typeof ns */ x = ns;"));
   }
 
+  @Test
   public void testTypeofType_namespaceMismatch() {
     testTypes(
         lines(
@@ -21923,6 +21926,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: {}"));
   }
 
+  @Test
   public void testTypeofType_constructor() {
     testTypesWithExterns(
         new TestExternsBuilder().addArray().build(),
@@ -21932,6 +21936,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "x.push(Foo);"));
   }
 
+  @Test
   public void testTypeofType_constructorMismatch1() {
     testTypesWithExterns(
         new TestExternsBuilder().addArray().build(),
@@ -21945,6 +21950,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: function(new:Foo): undefined"));
   }
 
+  @Test
   public void testTypeofType_constructorMismatch2() {
     testTypesWithExterns(
         new TestExternsBuilder().addArray().build(),
@@ -21959,6 +21965,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: Foo"));
   }
 
+  @Test
   public void testTypeofType_enum() {
     testTypes(
         lines(
@@ -21966,6 +21973,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var /** typeof Foo */ x = Foo;"));
   }
 
+  @Test
   public void testTypeofType_enumMismatch1() {
     testTypes(
         lines("/** @enum */ var Foo = {A: 1}", "var /** typeof Foo */ x = Foo.A;"),
@@ -21975,6 +21983,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: enum{Foo}"));
   }
 
+  @Test
   public void testTypeofType_enumMismatch2() {
     testTypes(
         lines(
@@ -21987,6 +21996,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: enum{Foo}"));
   }
 
+  @Test
   public void testTypeofType_castNamespaceIncludesPropertiesFromTypeofType() {
     testTypes(
         lines(
@@ -22003,6 +22013,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: null"));
   }
 
+  @Test
   public void testTypeofType_castNamespaceDoesNotIncludeOwnProperties() {
     testTypes(
         lines(
@@ -22016,6 +22027,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "Property foo never defined on ns");
   }
 
+  @Test
   public void testTypeofType_namespaceTypeIsAnAliasNotACopy() {
     testTypes(
         lines(
@@ -22033,6 +22045,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: null"));
   }
 
+  @Test
   public void testTypeofType_namespacedTypeNameResolves() {
     testTypes(
         lines(
@@ -22046,6 +22059,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: ns1.Foo"));
   }
 
+  @Test
   public void testTypeofType_withGlobalDeclaredVariableWithHoistedFunction() {
     // TODO(sdh): fix this.  This is another form of problems with partially constructed scopes.
     // "x" is in scope but because "g" is hoisted its type is created before "x" is introduced
@@ -22060,6 +22074,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines("Parse error. Not in scope: x"));
   }
 
+  @Test
   public void testTypeofType_withGlobalDeclaredVariableWithFunction() {
     testTypes(
         lines(
@@ -22074,6 +22089,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: (number|string)"));
   }
 
+  @Test
   public void testTypeofType_withGlobalInferredVariableWithFunctionExpression() {
     testTypes(
         lines(
@@ -22084,6 +22100,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines("Parse error. No type for: x"));
   }
 
+  @Test
   public void testTypeofType_withLocalInferredVariableInHoistedFunction() {
     // TODO(sdh): fix this.  This is another form of problems with partially constructed scopes.
     // "x" is in scope but because "g" is hoisted its type is created before "x" is introduced
@@ -22099,6 +22116,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines("Parse error. Not in scope: x"));
   }
 
+  @Test
   public void testTypeofType_withLocalDeclaredVariableWithHoistedFunction() {
     // TODO(sdh): fix this.  This is another form of problems with partially constructed scopes.
     // "x" is in scope but because "g" is hoisted its type is created before "x" is introduced
@@ -22115,6 +22133,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines("Parse error. Not in scope: x"));
   }
 
+  @Test
   public void testTypeofType_withLocalInferredVariableWithFunctionExpression() {
     testTypes(
         lines(
@@ -22127,6 +22146,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines("Parse error. No type for: x"));
   }
 
+  @Test
   public void testTypeofType_withLocalDeclaredVariableWithFunctionExpression() {
     testTypes(
         lines(
@@ -22143,6 +22163,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: (number|string)"));
   }
 
+  @Test
   public void testTypeofType_withLocalInferredVariable() {
     testTypes(
         lines(
@@ -22155,6 +22176,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines("Parse error. No type for: x"));
   }
 
+  @Test
   public void testTypeofType_withLocalDeclaredVariable1() {
     testTypes(
         lines(
@@ -22171,6 +22193,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: (number|string)"));
   }
 
+  @Test
   public void testTypeofType_withLocalDeclaredVariableAfterReassignment() {
     testTypes(
         lines(
@@ -22187,6 +22210,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: (number|string)"));
   }
 
+  @Test
   public void testTypeofType_withLocalDeclaredVariableAfterTightening() {
     testTypes(
         lines(
@@ -22202,6 +22226,23 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "initializing variable", //
             "found   : null",
             "required: (number|string)"));
+  }
+
+  @Test
+  public void testTypeNameAliasOnAliasedNamespace() {
+    testTypes(
+        lines(
+            "class Foo {};",
+            "/** @enum {number} */ Foo.E = {A: 1};",
+            "const F = Foo;",
+            "const E = F.E;",
+            "/** @type {E} */ let e = undefined;",
+            ""),
+        lines(
+            "initializing variable", //
+            "found   : undefined",
+            // TODO(johnlenz): this should not be nullable
+            "required: (Foo.E<number>|null)"));
   }
 
   @Test

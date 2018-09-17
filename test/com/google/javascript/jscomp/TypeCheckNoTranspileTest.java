@@ -5002,6 +5002,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: string"));
   }
 
+  @Test
   public void testMixinWithUnknownTemplatedSupertypeDoesntCauseWarning() {
     // Although in general we warn when we can't resolve the superclass type in an extends clause,
     // we allow this when the superclass type is a template type in order to support mixins.
@@ -5016,6 +5017,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "}"));
   }
 
+  @Test
   public void testMixinImplementingInterfaceAndUnknownTemplatedSuperclass() {
     testTypes(
         lines(
@@ -5041,5 +5043,50 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @return {number} */",
             "  method() {}",
             "}"));
+  }
+
+  @Test
+  public void testTypeNameAliasOnAliasedNamespace() {
+    testTypes(
+        lines(
+            "class Foo {};",
+            "/** @enum {number} */ Foo.E = {A: 1};",
+            "const F = Foo;",
+            "const E = F.E;",
+            "/** @type {E} */ let e = undefined;"),
+        lines(
+            "initializing variable", //
+            "found   : undefined",
+            // TODO(johnlenz): this should not be nullable
+            "required: (Foo.E<number>|null)"));
+  }
+
+  @Test
+  public void testTypedefNameAliasOnAliasedNamespace() {
+    testTypes(
+        lines(
+            "class Foo {};",
+            "/** @typedef {number|string} */ Foo.E;",
+            "const F = Foo;",
+            "const E = F.E;",
+            "/** @type {E} */ let e = undefined;"),
+        lines("Bad type annotation. Unknown type E"));
+  }
+
+  @Test
+  public void testTypeNameAliasOnAliasedClassSideNamespace() {
+    testTypes(
+        lines(
+            "class Foo {};",
+            "/** @enum {number} */ Foo.E = {A: 1};",
+            "class Bar extends Foo {};",
+            "const B = Bar;",
+            "const E = B.E;",
+            "/** @type {E} */ let e = undefined;"),
+        lines(
+            "initializing variable", //
+            "found   : undefined",
+            // TODO(johnlenz): this should not be nullable
+            "required: (Foo.E<number>|null)"));
   }
 }
