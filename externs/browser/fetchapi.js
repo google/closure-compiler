@@ -211,6 +211,9 @@ Request.prototype.integrity;
 /** @type {boolean} */
 Request.prototype.isHistoryNavigation;
 
+/** @type {(undefined|boolean)} */
+Request.prototype.keepalive;
+
 /** @return {!Request} */
 Request.prototype.clone = function() {};
 
