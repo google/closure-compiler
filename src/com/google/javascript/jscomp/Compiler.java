@@ -461,7 +461,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Initializes the instance state needed for a compile job. */
   public final <T1 extends SourceFile, T2 extends SourceFile> void init(
       List<T1> externs, List<T2> sources, CompilerOptions options) {
-    JSModule module = new JSModule(JSModule.SINGLETON_MODULE_NAME);
+    JSModule module = new JSModule(JSModule.STRONG_MODULE_NAME);
     for (SourceFile source : sources) {
       module.add(new CompilerInput(source));
     }
@@ -481,6 +481,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     initOptions(options);
 
     checkFirstModule(modules);
+    modules = moveWeakSources(modules);
     fillEmptyModules(modules);
 
     this.externs = makeExternInputs(externs);
@@ -564,6 +565,52 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  /** Moves all weak sources into a separate weak module that depends on every other module. */
+  private List<JSModule> moveWeakSources(List<JSModule> modules) {
+    // Collect weak sources.
+    List<CompilerInput> weakInputs = new ArrayList<>();
+    for (JSModule module : modules) {
+      if (module.getName().equals(JSModule.WEAK_MODULE_NAME)) {
+        // Skip an already existing weak module - see below.
+        continue;
+      }
+      for (int i = 0; i < module.getInputCount(); ) {
+        CompilerInput input = module.getInput(i);
+        if (input.getSourceFile().isWeak()) {
+          module.remove(input);
+          weakInputs.add(input);
+        } else {
+          i++;
+        }
+      }
+    }
+
+    // If a weak module already exists (e.g. in a stage 2 compilation), make sure it contains all
+    // weak sources, but leave the module graph otherwise untouched.
+    if (moduleGraph != null
+        && moduleGraph.getModuleByName(JSModule.WEAK_MODULE_NAME) != null
+        && !weakInputs.isEmpty()) {
+      throw new RuntimeException(
+          "A weak module already exists but weak sources were found in other modules.");
+    }
+
+    // Create the weak module and make it depend on every other module.
+    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+    for (JSModule module : modules) {
+      weakModule.addDependency(module);
+    }
+
+    // Move the weak sources.
+    for (CompilerInput input : weakInputs) {
+      weakModule.add(input);
+    }
+
+    // Make a copy in case the original list is immutable.
+    modules = ImmutableList.<JSModule>builder().addAll(modules).add(weakModule).build();
+
+    return modules;
+  }
+
   /**
    * Empty modules get an empty "fill" file, so that we can move code into
    * an empty module.
@@ -587,9 +634,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Fill any empty modules with a place holder file. It makes any cross module motion easier. */
   private static void fillEmptyModules(Iterable<JSModule> modules) {
     for (JSModule module : modules) {
-      if (module.getInputs().isEmpty()) {
-        module.add(SourceFile.fromCode(
-            createFillFileName(module.getName()), ""));
+      if (!module.getName().equals(JSModule.WEAK_MODULE_NAME) && module.getInputs().isEmpty()) {
+        module.add(SourceFile.fromCode(createFillFileName(module.getName()), ""));
       }
     }
   }
@@ -1421,10 +1467,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     CompilerInput newInput = new CompilerInput(ast);
 
     // TODO(tylerg): handle this for multiple modules at some point.
-    Iterable<JSModule> modules = getModules();
-    if (Iterables.size(modules) == 1) {
-      // singleton module
-      JSModule firstModule = Iterables.getFirst(modules, null);
+    JSModule firstModule = Iterables.getFirst(getModules(), null);
+    if (firstModule.getName().equals(JSModule.STRONG_MODULE_NAME)) {
       firstModule.add(newInput);
     }
 

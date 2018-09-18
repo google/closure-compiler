@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
@@ -927,10 +926,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @return A map from module name to module wrapper. Modules with no wrapper will have the empty
    *     string as their value in this map.
    */
-  public static Map<String, String> parseModuleWrappers(List<String> specs, List<JSModule> chunks) {
+  public static Map<String, String> parseModuleWrappers(
+      List<String> specs, Iterable<JSModule> chunks) {
     checkState(specs != null);
 
-    Map<String, String> wrappers = Maps.newHashMapWithExpectedSize(chunks.size());
+    Map<String, String> wrappers = new HashMap<>();
 
     // Prepopulate the map with module names.
     for (JSModule c : chunks) {
@@ -1372,7 +1372,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           outputSourceMap(options, config.jsOutputFile);
         }
       } else {
-        DiagnosticType error = outputModuleBinaryAndSourceMaps(modules, options);
+        DiagnosticType error = outputModuleBinaryAndSourceMaps(compiler.getModules(), options);
         if (error != null) {
           compiler.report(JSError.make(error));
           return 1;
@@ -1475,7 +1475,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   @GwtIncompatible("Unnecessary")
-  private DiagnosticType outputModuleBinaryAndSourceMaps(List<JSModule> modules, B options)
+  private DiagnosticType outputModuleBinaryAndSourceMaps(Iterable<JSModule> modules, B options)
       throws IOException {
     parsedModuleWrappers = parseModuleWrappers(
         config.moduleWrapper, modules);
