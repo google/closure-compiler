@@ -448,6 +448,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     testParseType("(number|?)", "?");
   }
 
+  public void testParseUnknownType_undefined() {
+    testParseType("(undefined|?)", "(?|undefined)");
+  }
+
+  public void testParseUnknownType_null() {
+    testParseType("(null|?)", "?");
+  }
+
   public void testParseTemplatizedUnknown1() {
     parse("@ type {?<?>} */", "illegal use of unknown JSDoc tag \"\"; ignoring it");
   }

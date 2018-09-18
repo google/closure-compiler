@@ -1375,13 +1375,19 @@ public final class ConformanceRules {
           Node typeExprNode = expr.getRoot();
           if (typeExprNode.getToken() == Token.QMARK && !typeExprNode.hasChildren()) {
             return true;
+          } else if (typeExprNode.getToken() == Token.PIPE) {
+            // Might be a union type including ? that's collapsed during checking.
+            for (Node child : typeExprNode.children()) {
+              if (child.getToken() == Token.QMARK) {
+                return true;
+              }
+            }
           }
         }
       }
       return false;
     }
   }
-
 
   /**
    * Banned accessing properties from objects that are unresolved

@@ -1497,6 +1497,23 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCustomBanUnknownProp_unionUndefined() {
+    configuration = config(rule("BanUnknownTypedClassPropsReferences"), "My rule message");
+
+    testNoWarning(
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "if (false) {",
+            "  /** @type {(null|?)} */",
+            "  Foo.prototype.prop;",
+            "}",
+            "function f() {",
+            "  return new Foo().prop;",
+            "}"));
+  }
+
+  @Test
   public void testCustomBanUnknownInterfaceProp1() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
