@@ -24,54 +24,54 @@
  * @see https://github.com/domenic/sinon-chai/tree/2.7.0
  */
 
-/** @type {!ExpectChain} */ ExpectChain.prototype.always;
-/** @type {!ExpectChain} */ ExpectChain.prototype.called;
-/** @type {!ExpectChain} */ ExpectChain.prototype.calledOnce;
-/** @type {!ExpectChain} */ ExpectChain.prototype.calledTwice;
-/** @type {!ExpectChain} */ ExpectChain.prototype.calledThrice;
-/** @type {!ExpectChain} */ ExpectChain.prototype.calledWithNew;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.always;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.called;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.calledOnce;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.calledTwice;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.calledThrice;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.calledWithNew;
 
 /**
  * @param {number} n
  */
-ExpectChain.prototype.callCount = function(n) {};
+chai.Assertion.prototype.callCount = function(n) {};
 
 /**
  * @param {!SinonSpy} spy
  */
-ExpectChain.prototype.calledBefore = function(spy) {};
+chai.Assertion.prototype.calledBefore = function(spy) {};
 
 /**
  * @param {!SinonSpy} spy
  */
-ExpectChain.prototype.calledAfter = function(spy) {};
+chai.Assertion.prototype.calledAfter = function(spy) {};
 
 /**
  * @param {*} context
  */
-ExpectChain.prototype.calledOn = function(context) {};
+chai.Assertion.prototype.calledOn = function(context) {};
 
 /**
  * @param {...*} args
  */
-ExpectChain.prototype.calledWith = function(args) {};
+chai.Assertion.prototype.calledWith = function(args) {};
 
 /**
  * @param {...*} args
  */
-ExpectChain.prototype.calledWithExactly = function(args) {};
+chai.Assertion.prototype.calledWithExactly = function(args) {};
 
 /**
  * @param {...*} args
  */
-ExpectChain.prototype.calledWithMatch = function(args) {};
+chai.Assertion.prototype.calledWithMatch = function(args) {};
 
 /**
  * @param {*} obj
  */
-ExpectChain.prototype.returned = function(obj) {};
+chai.Assertion.prototype.returned = function(obj) {};
 
 /**
  * @param {*=} obj
  */
-ExpectChain.prototype.thrown = function(obj) {};
+chai.Assertion.prototype.thrown = function(obj) {};
