@@ -72,4 +72,9 @@ public class ThreadSafeDelegatingErrorManager implements ErrorManager {
     return delegated.getTypedPercent();
   }
 
+  @Override
+  public synchronized boolean shouldReportConformanceViolation(
+      Requirement requirement, JSError diagnostic) {
+    return delegated.shouldReportConformanceViolation(requirement, diagnostic);
+  }
 }

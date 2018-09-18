@@ -83,4 +83,12 @@ public interface ErrorManager extends ErrorHandler {
     }
     return false;
   }
+
+  /**
+   * Return true if the conformance violation should be reported. This is called before checking the
+   * whitelist inside {@code requirement}, so it can be used to log whitelisted violations.
+   */
+  default boolean shouldReportConformanceViolation(Requirement requirement, JSError diagnostic) {
+    return true;
+  }
 }

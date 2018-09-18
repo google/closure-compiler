@@ -128,6 +128,7 @@ public final class ConformanceRules {
     @Nullable final Pattern onlyApplyToRegexp;
     final boolean reportLooseTypeViolations;
     final TypeMatchingStrategy typeMatchingStrategy;
+    final Requirement requirement;
 
     public AbstractRule(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -149,6 +150,7 @@ public final class ConformanceRules {
           requirement.getOnlyApplyToRegexpList());
       reportLooseTypeViolations = requirement.getReportLooseTypeViolations();
       typeMatchingStrategy = getTypeMatchingStrategy(requirement);
+      this.requirement = requirement;
     }
 
     private static TypeMatchingStrategy getTypeMatchingStrategy(Requirement requirement) {
@@ -200,10 +202,10 @@ public final class ConformanceRules {
         NodeTraversal t, Node n);
 
     /**
-     * @return Whether the specified Node should be checked for conformance,
-     *     according to this rule's whitelist configuration.
+     * @return Whether the specified Node should be checked for conformance, according to this
+     *     rule's whitelist configuration.
      */
-    protected final boolean shouldCheckConformance(Node n) {
+    protected final boolean isWhitelistedByRequirement(Node n) {
       String srcfile = NodeUtil.getSourceName(n);
       if (srcfile == null) {
         return true;
@@ -229,19 +231,18 @@ public final class ConformanceRules {
     @Override
     public final void check(NodeTraversal t, Node n) {
       ConformanceResult result = checkConformance(t, n);
-      if (result.level != ConformanceLevel.CONFORMANCE
-          && shouldCheckConformance(n)) {
-        report(t, n, result);
+      if (result.level != ConformanceLevel.CONFORMANCE) {
+        report(n, result);
       }
     }
 
     /**
      * Report a conformance warning for the given node.
+     *
      * @param n The node representing the violating code.
      * @param result The result representing the confidence of the violation.
      */
-    protected void report(
-        NodeTraversal t, Node n, ConformanceResult result) {
+    protected void report(Node n, ConformanceResult result) {
       DiagnosticType msg;
       if (severity == Severity.ERROR) {
         // Always report findings that are errors, even if the types are too loose to be certain.
@@ -258,7 +259,14 @@ public final class ConformanceRules {
       String separator = (result.note.isEmpty())
           ? ""
           : "\n";
-      t.report(n, msg, message, separator, result.note);
+      JSError err = JSError.make(n, msg, message, separator, result.note);
+
+      // Note that shouldReportConformanceViolation has to be called first; this allows
+      // logging violations that would otherwise be whitelisted.
+      if (compiler.getErrorManager().shouldReportConformanceViolation(requirement, err)
+          && isWhitelistedByRequirement(n)) {
+        compiler.report(err);
+      }
     }
   }
 
