@@ -77,9 +77,7 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
   public void visit(NodeTraversal t, Node n, Node parent) {
     JSDocInfo info = n.getJSDocInfo();
     if (info != null) {
-      for (String typeName : info.getTemplateTypeNames()) {
-        templateTypeNames.add(typeName);
-      }
+      templateTypeNames.addAll(info.getTemplateTypeNames());
       if (info.hasType()) {
         visitTypeExpression(info.getType(), false);
       }

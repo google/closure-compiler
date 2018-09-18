@@ -205,10 +205,8 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
 
   public void testMultipleFiles() {
     checkMissingWarning(
-        new String[] {
-          "/** @param {T} x @return {T} @template T */ function f(x){}",
-          "/** @param {T} x */ function g(x){}"
-        });
+        "/** @param {T} x @return {T} @template T */ function f(x){}",
+        "/** @param {T} x */ function g(x){}");
   }
 
   private void checkNoWarning(String... js) {
