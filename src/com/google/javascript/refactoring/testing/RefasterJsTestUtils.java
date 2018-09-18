@@ -21,8 +21,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.google.common.truth.Correspondence;
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.refactoring.ApplySuggestedFixes;
 import com.google.javascript.refactoring.RefactoringDriver;
 import com.google.javascript.refactoring.RefasterJsScanner;
@@ -69,9 +71,13 @@ public final class RefasterJsTestUtils {
     }
     final ImmutableList<String> expectedCode = expectedCodeBuilder.build();
 
+    CompilerOptions options = RefactoringDriver.getCompilerOptions();
+    // turn off lint checks for the tests
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.OFF);
     RefactoringDriver.Builder driverBuilder =
         new RefactoringDriver.Builder()
-            .addExterns(CommandLineRunner.getBuiltinExterns(CompilerOptions.Environment.BROWSER));
+            .addExterns(CommandLineRunner.getBuiltinExterns(CompilerOptions.Environment.BROWSER))
+            .withCompilerOptions(options);
 
     for (String additionalSource : additionalSourceFiles) {
       driverBuilder.addInputsFromFile(testDataPathPrefix + File.separator + additionalSource);
