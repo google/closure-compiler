@@ -171,6 +171,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private static final Node GOOG_MODULE_GET = IR.getprop(GOOG_MODULE.cloneTree(), IR.string("get"));
   private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), IR.string("provide"));
   private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), IR.string("require"));
+  private static final Node GOOG_REQUIRETYPE =
+      IR.getprop(IR.name("goog"), IR.string("requireType"));
 
   private final AbstractCompiler compiler;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
@@ -372,7 +374,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           } else if (method.matchesQualifiedName(GOOG_PROVIDE)) {
             recordGoogProvide(t, n);
           } else if (method.matchesQualifiedName(GOOG_REQUIRE)) {
-            recordGoogRequire(t, n, true /** mustBeOrdered */);
+            recordGoogRequire(t, n, /* mustBeOrdered= */ true);
+          } else if (method.matchesQualifiedName(GOOG_REQUIRETYPE)) {
+            recordGoogRequire(t, n, /* mustBeOrdered= */ false);
           } else if (method.matchesQualifiedName(GOOG_FORWARDDECLARE) && !parent.isExprResult()) {
             recordGoogForwardDeclare(t, n);
           } else if (method.matchesQualifiedName(GOOG_MODULE_GET)) {
@@ -451,7 +455,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             updateGoogModule(n);
           } else if (method.matchesQualifiedName(GOOG_MODULE_DECLARELEGACYNAMESPACE)) {
             updateGoogDeclareLegacyNamespace(n);
-          } else if (method.matchesQualifiedName(GOOG_REQUIRE)) {
+          } else if (method.matchesQualifiedName(GOOG_REQUIRE)
+              || method.matchesQualifiedName(GOOG_REQUIRETYPE)) {
             updateGoogRequire(t, n);
           } else if (method.matchesQualifiedName(GOOG_FORWARDDECLARE) && !parent.isExprResult()) {
             updateGoogForwardDeclare(t, n);
@@ -1251,7 +1256,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         && nameNode.getParent().isStringKey()
         && nameNode.getGrandparent().isObjectPattern()) {
       Node destructuringLhsNode = nameNode.getGrandparent().getParent();
-      if (isCallTo(destructuringLhsNode.getLastChild(), GOOG_REQUIRE)) {
+      if (isCallTo(destructuringLhsNode.getLastChild(), GOOG_REQUIRE)
+          || isCallTo(destructuringLhsNode.getLastChild(), GOOG_REQUIRETYPE)) {
         return;
       }
     }
