@@ -4937,6 +4937,32 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testStubMethodDeclarationDoesntBlockTypecheckingOfGetter() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo {}",
+            "/** @return {number} */",
+            "Foo.prototype.num;",
+            "/** @implements {Foo} */",
+            "class Bar {",
+            "  /** @override */",
+            "  get num() { return 1; }",
+            "}",
+            "var /** string */ x = (new Bar).num;"),
+        new String[] {
+          lines(
+              "inconsistent return type",
+              "found   : number",
+              "required: function(this:Foo): number"),
+          lines(
+              "initializing variable", //
+              "found   : function(this:Foo): number",
+              "required: string")
+        });
+  }
+
+  @Test
   public void testOverrideSupertypeOnAnonymousClass() {
     // Test that we infer the supertype of a class not assigned to an lvalue
     testTypes(

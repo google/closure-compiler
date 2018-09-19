@@ -3841,21 +3841,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testStubMethodDeclarationDoesntBlockTypechecking_4() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @interface */",
-            "class Foo {}",
-            "/** @return {number} */",
-            "Foo.prototype.num;",
-            "/** @implements {Foo} */",
-            "class Bar {",
-            "  get num() { return 1; }",
-            "}",
-            "var /** string */ x = (new Bar).num;"));
-  }
-
-  @Test
   public void testNestedFunctionInference1() {
     String nestedAssignOfFooAndBar =
         "/** @constructor */ function f() {};" +
