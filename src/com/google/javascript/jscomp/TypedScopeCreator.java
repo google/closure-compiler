@@ -1877,10 +1877,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         FunctionType functionType = rValueType.toMaybeFunctionType();
         typeRegistry.declareType(
             currentScope, lValue.getQualifiedName(), functionType.getInstanceType());
+      } else if (rValueType != null && rValueType.isEnumType()) {
+        String qName = lValue.getQualifiedName();
+        JSType elementType = rValueType.toMaybeEnumType().getElementsType();
+        typeRegistry.identifyNonNullableName(qName);
+        typeRegistry.declareType(currentScope, qName, elementType);
       } else {
         // Also infer a type name for aliased @typedef
         JSType rhsNamedType = typeRegistry.getType(currentScope, rValue.getQualifiedName());
         if (rhsNamedType != null) {
+          // TODO(johnlenz): Typedefs should be non-nullable.
+          //     typeRegistry.identifyNonNullableName(lValue.getQualifiedName());
           typeRegistry.declareType(currentScope, lValue.getQualifiedName(), rhsNamedType);
         }
       }
