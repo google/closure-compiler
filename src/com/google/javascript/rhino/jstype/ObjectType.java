@@ -97,10 +97,6 @@ public abstract class ObjectType extends JSType implements Serializable {
     super(registry, templateTypeMap);
   }
 
-  public final ObjectType getParentScope() {
-    return getImplicitPrototype();
-  }
-
   /**
    * Returns the property map that manages the set of properties for an object.
    */

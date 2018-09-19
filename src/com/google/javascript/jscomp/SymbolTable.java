@@ -981,7 +981,7 @@ public final class SymbolTable {
       return;
     }
 
-    ObjectType proto = type.getParentScope();
+    ObjectType proto = type.getImplicitPrototype();
     if (proto != null && proto != type && proto.getConstructor() != null) {
       Symbol parentSymbol = getSymbolForInstancesOf(proto.getConstructor());
       if (parentSymbol != null) {

@@ -3019,7 +3019,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (toStringProperty != null) {
       return toStringProperty.getType().isFunctionType();
     }
-    ObjectType parent = type.getParentScope();
+    ObjectType parent = type.getImplicitPrototype();
     if (parent != null && !parent.isNativeObjectType()) {
       return classHasToString(parent);
     }
