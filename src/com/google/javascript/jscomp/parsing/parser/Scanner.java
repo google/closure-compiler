@@ -791,7 +791,9 @@ public class Scanner {
   private static boolean isIdentifierStart(char ch) {
     // Most code is written in pure ASCII create a fast path here.
     if (ch <= 127) {
-      return ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch == '_' || ch == '$'));
+      return ((ch >= 'A' & ch <= 'Z')
+          | (ch >= 'a' & ch <= 'z')
+          | (ch == '_' | ch == '$'));
     }
 
     // Workaround b/36459436
@@ -805,10 +807,10 @@ public class Scanner {
   private static boolean isIdentifierPart(char ch) {
     // Most code is written in pure ASCII create a fast path here.
     if (ch <= 127) {
-      return ((ch >= 'A' && ch <= 'Z')
-          || (ch >= 'a' && ch <= 'z')
-          || (ch >= '0' && ch <= '9')
-          || (ch == '_' || ch == '$')); // _ or $
+      return ((ch >= 'A' & ch <= 'Z')
+          | (ch >= 'a' & ch <= 'z')
+          | (ch >= '0' & ch <= '9')
+          | (ch == '_' | ch == '$')); // _ or $
     }
     // TODO: identifier part character classes
     // CombiningMark
