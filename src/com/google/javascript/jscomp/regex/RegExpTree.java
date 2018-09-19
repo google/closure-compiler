@@ -105,6 +105,7 @@ public abstract class RegExpTree {
     NEGATIVE_LOOKAHEAD,
     POSITIVE_LOOKBEHIND,
     NEGATIVE_LOOKBEHIND,
+    NAMED_GROUPS,
   }
 
   /**
@@ -249,6 +250,7 @@ public abstract class RegExpTree {
         int start = pos;
         ++pos;
         ParentheticalType type;
+        String captureName = null;
         if (pos < limit && pattern.charAt(pos) == '?') {
           if (pos + 1 < limit) {
             char ch = pattern.charAt(pos + 1);
@@ -269,7 +271,7 @@ public abstract class RegExpTree {
                 type = ParentheticalType.NEGATIVE_LOOKAHEAD;
                 break;
 
-                // (?<=...) and (?<!...) Lookbehind Assertions
+                // (?<=...) and (?<!...) Lookbehind Assertions, (?<name>) named groups
               case '<':
                 if (pos + 2 < limit && pattern.charAt(pos + 2) == '=') {
                   pos += 3;
@@ -279,8 +281,12 @@ public abstract class RegExpTree {
                   pos += 3;
                   type = ParentheticalType.NEGATIVE_LOOKBEHIND;
                   break;
+                } else {
+                  pos += 2;
+                  captureName = scanNamedGroupName();
+                  type = ParentheticalType.NAMED_GROUPS;
+                  break;
                 }
-                // fall through if not '!' or '='
               default:
                 throw new IllegalArgumentException(
                     "Malformed parenthetical: " + pattern.substring(start));
@@ -315,8 +321,88 @@ public abstract class RegExpTree {
             return new LookbehindAssertion(body, true);
           case NEGATIVE_LOOKBEHIND:
             return new LookbehindAssertion(body, false);
+
+          case NAMED_GROUPS:
+            if (captureName != null) {
+              ++numCapturingGroups;
+              return new NamedCaptureGroup(body, captureName);
+            } else {
+              throw new IllegalArgumentException(
+                  "Malformed named capture group: " + pattern.substring(start));
+            }
         }
         throw new AssertionError("Unrecognized ParentheticalType " + type);
+      }
+
+      /**
+       * Helper that scans the pattern for a named group name (?<name>) Assumes that {@code pos}
+       * points to the character after '<'
+       *
+       * @return the group name
+       */
+      private String scanNamedGroupName() {
+        int start = pos;
+        int end = pos;
+        if (!isIdentifierStart(pattern.charAt(start))) {
+          throw new IllegalArgumentException(
+              "Malformed named capture group: (?<" + pattern.substring(start));
+        }
+        ++end;
+        while (end < limit) {
+          if (pattern.charAt(end) == '>') {
+            pos = end + 1;
+            return pattern.substring(start, end);
+          } else if (isIdentifierPart(pattern.charAt(end))) {
+            ++end;
+          } else {
+            throw new IllegalArgumentException(
+                "Malformed named capture group: (?<" + pattern.substring(start));
+          }
+        }
+        throw new IllegalArgumentException(
+            "Malformed named capture group: (?<" + pattern.substring(start));
+      }
+
+      /**
+       * @param ch the character
+       * @return true if the character is a valid Javascript identifier start character.
+       */
+      private boolean isIdentifierStart(char ch) {
+        // TODO(yitingwang) This and the one in Scanner.java should share the same implementation
+        // Most code is written in pure ASCII create a fast path here.
+        if (ch <= 127) {
+          return ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch == '_' || ch == '$'));
+        }
+
+        // Workaround b/36459436
+        // When running under GWT, Character.isLetter only handles ASCII
+        // Angular relies heavily on U+0275 (Latin Barred O)
+        return ch == 0x0275
+            // TODO: UnicodeLetter also includes Letter Number (NI)
+            || Character.isLetter(ch);
+      }
+
+      /**
+       * @param ch the character
+       * @return true if the character is allowed in Javascript identifiers.
+       */
+      private boolean isIdentifierPart(char ch) {
+        // TODO(yitingwang) This and the one in Scanner.java should share the same implementation
+        // Most code is written in pure ASCII create a fast path here.
+        if (ch <= 127) {
+          return ((ch >= 'A' && ch <= 'Z')
+              || (ch >= 'a' && ch <= 'z')
+              || (ch >= '0' && ch <= '9')
+              || (ch == '_' || ch == '$')); // _ or $
+        }
+        // TODO: identifier part character classes
+        // CombiningMark
+        //   Non-Spacing mark (Mn)
+        //   Combining spacing mark(Mc)
+        // Connector punctuation (Pc)
+        // Zero Width Non-Joiner
+        // Zero Width Joiner
+        return isIdentifierStart(ch) || Character.isDigit(ch);
       }
 
       /**
@@ -1396,7 +1482,7 @@ public abstract class RegExpTree {
 
     @Override
     public int numCapturingGroups() {
-      return 1;
+      return 1 + body.numCapturingGroups();
     }
 
     @Override
@@ -1425,6 +1511,68 @@ public abstract class RegExpTree {
     @Override
     public int hashCode() {
       return 0x55781738 ^ body.hashCode();
+    }
+  }
+
+  /** Represents a named capture group */
+  public static final class NamedCaptureGroup extends RegExpTree {
+    final RegExpTree body;
+    final String name;
+
+    NamedCaptureGroup(RegExpTree body, String name) {
+      this.body = body;
+      this.name = name;
+    }
+
+    @Override
+    public RegExpTree simplify(String flags) {
+      return new NamedCaptureGroup(body.simplify(flags), name);
+    }
+
+    @Override
+    public boolean isCaseSensitive() {
+      return body.isCaseSensitive();
+    }
+
+    @Override
+    public boolean containsAnchor() {
+      return body.containsAnchor();
+    }
+
+    @Override
+    public int numCapturingGroups() {
+      return 1 + body.numCapturingGroups();
+    }
+
+    @Override
+    public ImmutableList<? extends RegExpTree> children() {
+      return ImmutableList.of(body);
+    }
+
+    @Override
+    protected void appendSourceCode(StringBuilder sb) {
+      sb.append("(?<");
+      sb.append(name);
+      sb.append('>');
+      body.appendSourceCode(sb);
+      sb.append(')');
+    }
+
+    @Override
+    protected void appendDebugInfo(StringBuilder sb) {
+      sb.append(" name=" + name);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      return o instanceof NamedCaptureGroup
+          && name.equals(((NamedCaptureGroup) o).name)
+          && body.equals(((NamedCaptureGroup) o).body);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name) ^ body.hashCode();
     }
   }
 

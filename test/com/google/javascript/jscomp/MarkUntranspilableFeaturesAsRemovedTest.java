@@ -156,4 +156,52 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
     // TODO(bradfordcsmith): report errors from RegExp in this form
     testSame("const a = new RegExp('asdf', 'gs');");
   }
+
+  @Test
+  public void testEs2018RegexNamedCaptureGroups() {
+    languageIn = LanguageMode.ECMASCRIPT_2018;
+    languageOut = LanguageMode.ECMASCRIPT_2018;
+    testSame("const a = /(?<name>)/u;");
+
+    languageIn = LanguageMode.ECMASCRIPT_2018;
+    languageOut = LanguageMode.ECMASCRIPT_2017;
+    testError(
+        "const a = /(?<name>)/;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        "Cannot convert ECMASCRIPT_2018 feature \"RegExp named groups\" "
+            + "to targeted output language. "
+            + "Either remove feature \"RegExp named groups\" "
+            + "or raise output level to ECMASCRIPT_2018.");
+    testError(
+        "const a = /(?<$var>).*/u;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        "Cannot convert ECMASCRIPT_2018 feature \"RegExp named groups\" "
+            + "to targeted output language. "
+            + "Either remove feature \"RegExp named groups\" "
+            + "or raise output level to ECMASCRIPT_2018.");
+    // test valid regex with '<' or '>' that is not named capture group
+    testSame("const a = /(<name>)/;");
+    testSame("const a = /(>.>)/u;");
+  }
+
+  @Test
+  public void testEs2018RegexNamedCaptureGroupsBackReferencing() {
+    languageIn = LanguageMode.ECMASCRIPT_2018;
+    languageOut = LanguageMode.ECMASCRIPT_2018;
+    testSame("const a = /^(?<half>.*).\\k<half>$/u;");
+
+    languageIn = LanguageMode.ECMASCRIPT_2018;
+    languageOut = LanguageMode.ECMASCRIPT_2017;
+    testError(
+        "const a = /^(?<half>.*).\\k<half>$/u;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        "Cannot convert ECMASCRIPT_2018 feature \"RegExp named groups\" "
+            + "to targeted output language. "
+            + "Either remove feature \"RegExp named groups\" "
+            + "or raise output level to ECMASCRIPT_2018.");
+
+    // test that in named groups backreferencing, the backslash is not removed
+    // TODO(b/116048051): reference to undefined named capture group should be an error.
+    testSame("const a = /.\\k<half>$/u;");
+  }
 }

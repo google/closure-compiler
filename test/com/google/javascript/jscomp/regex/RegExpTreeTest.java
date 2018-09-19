@@ -61,7 +61,7 @@ public class RegExpTreeTest extends TestCase {
   public void testInvalidEs2018LookbehindAssertions() {
     assertRegexThrowsExceptionThat("(?<asdf)", "")
         .hasMessageThat()
-        .isEqualTo("Malformed parenthetical: (?<asdf)");
+        .isEqualTo("Malformed named capture group: (?<asdf)");
   }
 
   public void testValidEs2018UnicodePropertyEscapes() {
@@ -97,5 +97,35 @@ public class RegExpTreeTest extends TestCase {
     assertRegexThrowsExceptionThat("\\P{}", "u")
         .hasMessageThat()
         .isEqualTo("unicode property escape value cannot be empty");
+  }
+
+  public void testValidEs2018RegexNamedCaptureGroups() {
+    assertRegexCompilesToSame("(?<name>)", "");
+    assertRegexCompilesToSame("(?<h$h1h_>)", "u");
+    assertRegexCompilesToSame("(?<$var_name>blah)", "");
+    assertRegexCompilesToSame("(?<_var_name>>>>)", "");
+  }
+
+  public void testInvalidEs2018RegexNamedCaptureGroups() {
+    assertRegexThrowsExceptionThat("(?<name)", "")
+        .hasMessageThat()
+        .isEqualTo("Malformed named capture group: (?<name)");
+    assertRegexThrowsExceptionThat("(?<1b>)", "")
+        .hasMessageThat()
+        .isEqualTo("Malformed named capture group: (?<1b>)");
+    assertRegexThrowsExceptionThat("(?<>)", "")
+        .hasMessageThat()
+        .isEqualTo("Malformed named capture group: (?<>)");
+    assertRegexThrowsExceptionThat("(?<.name>)", "")
+        .hasMessageThat()
+        .isEqualTo("Malformed named capture group: (?<.name>)");
+  }
+
+  public void testNumCapturingGroups() {
+    assertRegexCompilesToSame("(h(i))\\2", "");
+    // TODO(b/116048051): reference to non-existent capture group should be an error.
+    assertRegexCompilesTo("(h(i))\\3", "", "(h(i))\\x03");
+
+    assertRegexCompilesToSame("(?<foo>.*(?<bar>))", "");
   }
 }
