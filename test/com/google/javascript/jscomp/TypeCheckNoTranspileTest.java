@@ -5083,7 +5083,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "initializing variable", //
             "found   : undefined",
-            "required: Foo.E<number>"));
+            // TODO(johnlenz): this should not be nullable
+            "required: (Foo.E<number>|null)"));
   }
 
   @Test
@@ -5111,6 +5112,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "initializing variable", //
             "found   : undefined",
-            "required: Foo.E<number>"));
+            // TODO(johnlenz): this should not be nullable
+            "required: (Foo.E<number>|null)"));
   }
 }

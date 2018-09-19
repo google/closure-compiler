@@ -11977,19 +11977,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNamespacedConstructor() {
-    Node root =
-        parseAndTypeCheck(
-            lines(
-                "var goog = {};",
-                "/** @constructor */ goog.MyClass = function() {};",
-                "/** @return {!goog.MyClass} */",
-                "function foo() { return new goog.MyClass(); }"));
+    Node root = parseAndTypeCheck(
+        "var goog = {};" +
+        "/** @constructor */ goog.MyClass = function() {};" +
+        "/** @return {!goog.MyClass} */ " +
+        "function foo() { return new goog.MyClass(); }");
 
     JSType typeOfFoo = root.getLastChild().getJSType();
-    assertThat(typeOfFoo).isInstanceOf(FunctionType.class);
+    assert(typeOfFoo instanceof FunctionType);
 
     JSType retType = ((FunctionType) typeOfFoo).getReturnType();
-    assertThat(retType).isInstanceOf(ObjectType.class);
+    assert(retType instanceof ObjectType);
     assertEquals("goog.MyClass", ((ObjectType) retType).getReferenceName());
   }
 
@@ -22228,7 +22226,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "initializing variable", //
             "found   : undefined",
-            "required: Foo.E<number>"));
+            // TODO(johnlenz): this should not be nullable
+            "required: (Foo.E<number>|null)"));
   }
 
   @Test
