@@ -1125,6 +1125,13 @@ public final class DefaultPassConfig extends PassConfig {
 
     assertPassOrder(optimizations, removeSuperMethodsPass, devirtualizePrototypeMethods,
         "RemoveSuperMethodsPass must run before DevirtualizePrototypeMethods.");
+
+    assertPassOrder(
+        optimizations,
+        processDefines,
+        j2clUtilGetDefineRewriterPass,
+        "J2CL define re-writing should be done after processDefines since it relies on "
+            + "collectDefines which has side effects.");
   }
 
   /** Checks that all constructed classes are goog.require()d. */
