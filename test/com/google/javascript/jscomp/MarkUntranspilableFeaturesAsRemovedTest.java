@@ -75,13 +75,17 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
     testError(
         "const a = /asdf/s;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT2018 feature \"RegExp flag 's'\" to targeted output language. "
-            + "Either remove feature \"RegExp flag 's'\" or raise output level to ECMASCRIPT2018.");
+        "Cannot convert ECMASCRIPT_2018 feature "
+            + "\"RegExp flag 's'\" to targeted output language. "
+            + "Either remove feature \"RegExp flag 's'\" "
+            + "or raise output level to ECMASCRIPT_2018.");
     testError(
         "const a = /asdf/gs;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT2018 feature \"RegExp flag 's'\" to targeted output language. "
-            + "Either remove feature \"RegExp flag 's'\" or raise output level to ECMASCRIPT2018.");
+        "Cannot convert ECMASCRIPT_2018 feature "
+            + "\"RegExp flag 's'\" to targeted output language. "
+            + "Either remove feature \"RegExp flag 's'\" "
+            + "or raise output level to ECMASCRIPT_2018.");
   }
 
   @Test
@@ -103,15 +107,17 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
     testError(
         "const a = /(?<=asdf)/;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT2018 feature \"RegExp Lookbehind\" to targeted output language. "
-            + "Either remove feature \"RegExp Lookbehind\" or raise output level to ECMASCRIPT2018."
-            + "");
+        "Cannot convert ECMASCRIPT_2018 feature "
+            + "\"RegExp Lookbehind\" to targeted output language. "
+            + "Either remove feature \"RegExp Lookbehind\" or "
+            + "raise output level to ECMASCRIPT_2018.");
     testError(
         "const a = /(?<!asdf)/;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT2018 feature \"RegExp Lookbehind\" to targeted output language. "
-            + "Either remove feature \"RegExp Lookbehind\" or raise output level to ECMASCRIPT2018."
-            + "");
+        "Cannot convert ECMASCRIPT_2018 feature "
+            + "\"RegExp Lookbehind\" to targeted output language. "
+            + "Either remove feature \"RegExp Lookbehind\" or "
+            + "raise output level to ECMASCRIPT_2018.");
   }
 
   @Test
@@ -130,15 +136,17 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
     testError(
         "const a = /\\p{Script=Greek}/u;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT2018 feature \"RegExp unicode property escape\" to targeted "
+        "Cannot convert ECMASCRIPT_2018 feature "
+            + "\"RegExp unicode property escape\" to targeted "
             + "output language. Either remove feature \"RegExp unicode property escape\" or raise "
-            + "output level to ECMASCRIPT2018.");
+            + "output level to ECMASCRIPT_2018.");
     testError(
         "const a = /\\P{Script=Greek}/u;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT2018 feature \"RegExp unicode property escape\" to targeted "
+        "Cannot convert ECMASCRIPT_2018 feature "
+            + "\"RegExp unicode property escape\" to targeted "
             + "output language. Either remove feature \"RegExp unicode property escape\" or raise "
-            + "output level to ECMASCRIPT2018.");
+            + "output level to ECMASCRIPT_2018.");
   }
 
   @Test

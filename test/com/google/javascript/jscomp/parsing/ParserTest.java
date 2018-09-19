@@ -3628,7 +3628,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   /** New RegExp flag 's' added in ES2018. */
   public void testES2018RegExpFlagS() {
     expectFeatures(Feature.REGEXP_FLAG_S);
-    mode = LanguageMode.ECMASCRIPT2018;
+    mode = LanguageMode.ECMASCRIPT_2018;
     parse("/a/s");
 
     mode = LanguageMode.ECMASCRIPT6;
@@ -4611,7 +4611,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   private static String getRequiresEs2018Message(Feature feature) {
-    return requiresLanguageModeMessage(LanguageMode.ECMASCRIPT2018, feature);
+    return requiresLanguageModeMessage(LanguageMode.ECMASCRIPT_2018, feature);
   }
 
   private static String requiresLanguageModeMessage(LanguageMode languageMode, Feature feature) {
