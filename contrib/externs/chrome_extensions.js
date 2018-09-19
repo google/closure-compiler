@@ -10773,7 +10773,7 @@ chrome.downloads.pause = function(id, opt_callback) {};
 
 
 /**
- * @param {string} id
+ * @param {number} id
  * @param {function()=} opt_callback
  *
  * @see https://developer.chrome.com/extensions/downloads#method-resume
