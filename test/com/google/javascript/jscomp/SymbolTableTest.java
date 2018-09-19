@@ -15,9 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -30,6 +33,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -40,7 +44,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author nicksantos@google.com (Nick Santos) */
+/**
+ * An integration test for symbol table creation
+ *
+ * @author nicksantos@google.com (Nick Santos)
+ */
 
 @RunWith(JUnit4.class)
 public final class SymbolTableTest extends TestCase {
@@ -419,9 +427,11 @@ public final class SymbolTableTest extends TestCase {
     Symbol bar = getGlobalVar(table, "Bar");
     Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
     Symbol fn = getGlobalVar(table, "Function");
-    assertEquals(ImmutableList.of(foo, bar), table.getAllSymbolsForTypeOf(x));
-    assertEquals(ImmutableList.of(fn), table.getAllSymbolsForTypeOf(foo));
-    assertEquals(ImmutableList.of(foo), table.getAllSymbolsForTypeOf(fooPrototype));
+    assertThat(table.getAllSymbolsForTypeOf(x))
+        .containsExactlyElementsIn(ImmutableList.of(foo, bar));
+    assertThat(table.getAllSymbolsForTypeOf(foo)).containsExactlyElementsIn(ImmutableList.of(fn));
+    assertThat(table.getAllSymbolsForTypeOf(fooPrototype))
+        .containsExactlyElementsIn(ImmutableList.of(foo));
     assertEquals(foo, table.getSymbolDeclaredBy(foo.getType().toMaybeFunctionType()));
   }
 
@@ -1320,6 +1330,41 @@ public final class SymbolTableTest extends TestCase {
     assertEquals(foo, bazFunctionScope.getRootNode());
   }
 
+  @Test
+  public void testSymbolSuperclassStaticInheritance() {
+    // set this option so that typechecking sees untranspiled classes.
+    // TODO(b/76025401): remove this option after class transpilation is always post-typechecking
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setSkipUnsupportedPasses(false);
+
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "class Bar { static staticMethod() {} }",
+                "class Foo extends Bar {",
+                "  act() { Foo.staticMethod(); }",
+                "}"));
+
+    Symbol foo = getGlobalVar(table, "Foo");
+    Symbol bar = getGlobalVar(table, "Bar");
+
+    FunctionType barType = checkNotNull(bar.getType().toMaybeFunctionType());
+    FunctionType fooType = checkNotNull(foo.getType().toMaybeFunctionType());
+
+    FunctionType superclassCtorType = fooType.getSuperClassConstructor();
+
+    assertType(superclassCtorType).isEqualTo(barType);
+    Symbol superSymbol = table.getSymbolDeclaredBy(superclassCtorType);
+    assertThat(superSymbol).isEqualTo(bar);
+
+    Symbol barStaticMethod = getGlobalVar(table, "Bar.staticMethod");
+    ImmutableList<Reference> barStaticMethodRefs = table.getReferenceList(barStaticMethod);
+    assertThat(barStaticMethodRefs).hasSize(2);
+    assertThat(barStaticMethodRefs.get(0)).isEqualTo(barStaticMethod.getDeclaration());
+    // We recognize that the call to Foo.staticMethod() is actually a call to Bar.staticMethod().
+    assertNode(barStaticMethodRefs.get(1).getNode()).matchesQualifiedName("Foo.staticMethod");
+  }
+
   private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertEquals(0, ordering.compare(first, first));
     assertEquals(0, ordering.compare(second, second));
@@ -1363,12 +1408,7 @@ public final class SymbolTableTest extends TestCase {
   }
 
   private SymbolTable createSymbolTable(String input) {
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", input));
-    List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs1", EXTERNS));
-
-    Compiler compiler = new Compiler(new BlackHoleErrorManager());
-    compiler.compile(externs, inputs, options);
-    return assertSymbolTableValid(compiler.buildKnownSymbolTable());
+    return createSymbolTable(input, EXTERNS);
   }
 
   private SymbolTable createSymbolTable(String input, String externsCode) {

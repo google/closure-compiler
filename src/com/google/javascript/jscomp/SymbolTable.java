@@ -974,22 +974,18 @@ public final class SymbolTable {
       return;
     }
 
-    SymbolScope parentPropertyScope = null;
-
     ObjectType type = getType(s) == null ? null : getType(s).toObjectType();
     if (type == null) {
       return;
     }
 
-    ObjectType proto = type.getImplicitPrototype();
-    if (proto != null && proto != type && proto.getConstructor() != null) {
-      Symbol parentSymbol = getSymbolForInstancesOf(proto.getConstructor());
-      if (parentSymbol != null) {
-        createPropertyScopeFor(parentSymbol);
-        parentPropertyScope = parentSymbol.getPropertyScope();
-      }
-    }
+    // Create an empty property scope for the given symbol, maybe with a parent scope if it has
+    // an implicit prototype.
+    SymbolScope parentPropertyScope = maybeGetParentPropertyScope(type);
+    s.setPropertyScope(new SymbolScope(null, parentPropertyScope, type, s));
 
+    // If this symbol represents some 'a.b.c.prototype', add any instance properties of a.b.c
+    // into the symbol scope.
     ObjectType instanceType = type;
     Iterable<String> propNames = type.getOwnPropertyNames();
     if (instanceType.isFunctionPrototypeType()) {
@@ -1001,7 +997,7 @@ public final class SymbolTable {
       }
     }
 
-    s.setPropertyScope(new SymbolScope(null, parentPropertyScope, type, s));
+    // Add all declared properties in propNames into the property scope
     for (String propName : propNames) {
       StaticSlot newProp = instanceType.getSlot(propName);
       if (newProp.getDeclaration() == null) {
@@ -1042,6 +1038,46 @@ public final class SymbolTable {
         removeSymbol(oldProp);
       }
     }
+  }
+
+  /**
+   * If this type has an implicit prototype set, returns the SymbolScope corresponding to the
+   * properties of the implicit prototype. Otherwise returns null.
+   *
+   * <p>Note that currently we only handle cases where the implicit prototype is a) a class or b) is
+   * an instance object.
+   */
+  @Nullable
+  private SymbolScope maybeGetParentPropertyScope(ObjectType symbolObjectType) {
+    ObjectType proto = symbolObjectType.getImplicitPrototype();
+    if (proto == null || proto == symbolObjectType) {
+      return null;
+    }
+    final Symbol parentSymbol;
+    if (isEs6ClassConstructor(proto)) {
+      // given `class Foo {} class Bar extends Foo {}`, `Foo` is the implicit prototype of `Bar`.
+      parentSymbol = getSymbolDeclaredBy(proto.toMaybeFunctionType());
+    } else if (proto.getConstructor() != null) {
+      // given
+      //   /** @constructor */ function Foo() {}
+      //   /** @constructor */ function Bar() {}
+      //   goog.inherits(Bar, Foo);
+      // the implicit prototype of Bar.prototype is the instance of Foo.
+      parentSymbol = getSymbolForInstancesOf(proto.getConstructor());
+    } else {
+      return null;
+    }
+    if (parentSymbol == null) {
+      return null;
+    }
+    createPropertyScopeFor(parentSymbol);
+    return parentSymbol.getPropertyScope();
+  }
+
+  private boolean isEs6ClassConstructor(JSType type) {
+    return type.isFunctionType()
+        && type.toMaybeFunctionType().getSource() != null
+        && type.toMaybeFunctionType().getSource().isClass();
   }
 
   /** Fill in references to "this" variables. */

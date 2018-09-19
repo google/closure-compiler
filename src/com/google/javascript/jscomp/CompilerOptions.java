@@ -120,6 +120,14 @@ public class CompilerOptions implements Serializable {
   private Optional<Boolean> languageOutIsDefaultStrict = Optional.absent();
 
   /**
+   * Skips passes (logging a warning) whose PassFactory feature set doesn't include some features
+   * currently in the AST.
+   *
+   * <p>At the moment, this should only ever be set to false for testing.
+   */
+  private boolean skipUnsupportedPasses = true;
+
+  /**
    * The builtin set of externs to be used
    */
   private Environment environment;
@@ -1983,6 +1991,24 @@ public class CompilerOptions implements Serializable {
 
     // Backwards compatibility for those that predate language out.
     return languageIn.toFeatureSet();
+  }
+
+  /**
+   * Sets the behavior of PhaseOptimizer when given a pass that can't handle features in the current
+   * AST.
+   *
+   * <p>Currently the only options are either to run the pass anyway, and see what happens, or to
+   * skip the pass and log a warning. Only test code should do the former.
+   *
+   * <p>In the future we may make this option public. We may also make it into an enum, and add an
+   * option to throw runtime errors upon seeing unsupported passses.
+   */
+  void setSkipUnsupportedPasses(boolean skipUnsupportedPasses) {
+    this.skipUnsupportedPasses = skipUnsupportedPasses;
+  }
+
+  boolean shouldSkipUnsupportedPasses() {
+    return skipUnsupportedPasses;
   }
 
   public boolean needsTranspilationFrom(FeatureSet languageLevel) {

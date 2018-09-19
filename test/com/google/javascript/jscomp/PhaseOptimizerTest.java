@@ -217,6 +217,20 @@ public final class PhaseOptimizerTest extends TestCase {
     assertEquals(100, Math.round(progressList.get(3)));
   }
 
+  @Test
+  public void testSetSkipUnsupportedPasses() {
+    compiler.getOptions().setSkipUnsupportedPasses(true);
+    addUnsupportedPass("testPassFactory");
+    assertPasses();
+  }
+
+  @Test
+  public void testSetDontSkipUnsupportedPasses() {
+    compiler.getOptions().setSkipUnsupportedPasses(false);
+    addUnsupportedPass("testPassFactory");
+    assertPasses("testPassFactory");
+  }
+
   public void assertPasses(String ... names) {
     optimizer.process(null, dummyRoot);
     assertEquals(ImmutableList.copyOf(names), passesRun);
@@ -232,6 +246,13 @@ public final class PhaseOptimizerTest extends TestCase {
         createPassFactory(name, numChanges, false));
   }
 
+  /** Adds a pass with the given name that does not support some of the features used in the AST. */
+  private void addUnsupportedPass(String name) {
+    compiler.setFeatureSet(FeatureSet.latest());
+    optimizer.addOneTimePass(
+        createPassFactory(name, createPass(name, 0), true, FeatureSet.BARE_MINIMUM));
+  }
+
   private PassFactory createPassFactory(
       String name, int numChanges, boolean isOneTime) {
     return createPassFactory(name, createPass(name, numChanges), isOneTime);
@@ -239,6 +260,11 @@ public final class PhaseOptimizerTest extends TestCase {
 
   private PassFactory createPassFactory(
       String name, final CompilerPass pass, boolean isOneTime) {
+    return createPassFactory(name, pass, isOneTime, FeatureSet.latest());
+  }
+
+  private PassFactory createPassFactory(
+      String name, final CompilerPass pass, boolean isOneTime, FeatureSet featureSet) {
     return new PassFactory(name, isOneTime) {
       @Override
       protected CompilerPass create(AbstractCompiler compiler) {
@@ -247,7 +273,7 @@ public final class PhaseOptimizerTest extends TestCase {
 
       @Override
       public FeatureSet featureSet() {
-        return FeatureSet.latest();
+        return featureSet;
       }
     };
   }
