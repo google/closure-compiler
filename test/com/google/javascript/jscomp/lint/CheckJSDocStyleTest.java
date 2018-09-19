@@ -27,7 +27,6 @@ import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_HAVE_TRAILING_UNDERSCORE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.PREFER_BACKTICKS_TO_AT_SIGN_CODE;
-import static com.google.javascript.jscomp.lint.CheckJSDocStyle.WARN_EXCESSIVE_AT_SUPPRESS;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.WRONG_NUMBER_OF_PARAMS;
 
 import com.google.javascript.jscomp.CheckLevel;
@@ -1076,27 +1075,5 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testWarning(
         "/** blah blah {@code blah blah} blah blah */ function f() {}",
         PREFER_BACKTICKS_TO_AT_SIGN_CODE);
-  }
-
-  public void testAtCodeInFileOverview() {
-    testWarning(
-        "/** @fileoverview {@code code} */ /** @const */ var example;",
-        PREFER_BACKTICKS_TO_AT_SIGN_CODE);
-  }
-
-  public void testAtSuppressDetectedForFunction() {
-    testWarning("/** @suppress {underscore} */ function f() {}", WARN_EXCESSIVE_AT_SUPPRESS);
-  }
-
-  public void testAtSuppressDetectedWithinFunction() {
-    testWarning(
-        "/** blah */ function f() { /** @suppress {underscore} @private */ obj.private = f; }",
-        WARN_EXCESSIVE_AT_SUPPRESS);
-  }
-
-  public void testAtSuppressInFileOverview() {
-    testWarning(
-        "/** @fileoverview  @suppress {visibility} */ /** @const */ var example;",
-        WARN_EXCESSIVE_AT_SUPPRESS);
   }
 }
