@@ -297,6 +297,80 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDontCollapseObjectLiteralVarDeclarationInsideLoop() {
+    // See https://github.com/google/closure-compiler/issues/3050
+    // Another solution to the issue would be to explicitly initialize obj.val to undefined at the
+    // start of the loop, but that requires some more refactoring of CollapseProperties.
+    testSame(
+        lines(
+            "for (var i = 0; i < 2; i++) {",
+            "  var obj = {};",
+            "  if (i == 0) {",
+            "    obj.val = 1;",
+            "  }",
+            "  alert(obj.val);",
+            "}"));
+  }
+
+  @Test
+  public void testDontCollapseObjectLiteralPropertyDeclarationInsideLoop() {
+    // we can collapse `obj.x` but not `obj.x.val`
+    test(
+        lines(
+            "var obj = {};",
+            "for (var i = 0; i < 2; i++) {",
+            "  obj.x = {};",
+            "  if (i == 0) {",
+            "    obj.x.val = 1;",
+            "  }",
+            "  alert(obj.x.val);",
+            "}"),
+        lines(
+            "for (var i = 0; i < 2; i++) {",
+            "  var obj$x = {};",
+            "  if (i == 0) {",
+            "    obj$x.val = 1;",
+            "  }",
+            "  alert(obj$x.val);",
+            "}"));
+  }
+
+  @Test
+  public void testDontCollapseConstructorDeclarationInsideLoop() {
+    testSame(
+        lines(
+            "for (var i = 0; i < 2; i++) {",
+            "  /** @constructor */",
+            "  var Foo = function () {}",
+            "  if (i == 0) {",
+            "    Foo.val = 1;",
+            "  }",
+            "  alert(Foo.val);",
+            "}"));
+  }
+
+  @Test
+  public void testDoCollapsePropertiesDeclaredInsideLoop() {
+    // It's okay that this property is declared inside a loop as long as the object it's on is not.
+    test(
+        lines(
+            "var obj = {};",
+            "for (var i = 0; i < 2; i++) {",
+            "  if (i == 0) {",
+            "    obj.val = 1;",
+            "  }",
+            "  alert(obj.val);",
+            "}"),
+        lines(
+            "for (var i = 0; i < 2; i++) {",
+            "  if (i == 0) {",
+            "    var obj$val = 1;",
+            "  }",
+            "  alert(obj$val);",
+            "}"));
+  }
+
+  @Test
   public void testAliasCreatedForObjectDepth1_2() {
     testSame("var a = {b: 0}; f(a); a.b;");
   }

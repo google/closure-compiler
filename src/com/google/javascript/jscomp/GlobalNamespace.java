@@ -1385,6 +1385,17 @@ class GlobalNamespace
       return false;
     }
 
+    private boolean isSetInLoop() {
+      Ref ref = this.getDeclaration();
+      if (ref != null) {
+        Node n = ref.getNode();
+        if (n != null) {
+          return NodeUtil.isWithinLoop(n);
+        }
+      }
+      return false;
+    }
+
     boolean isGetOrSetDefinition() {
       return this.type == Type.GET_SET;
     }
@@ -1404,6 +1415,10 @@ class GlobalNamespace
       }
 
       if (isCollapsingExplicitlyDenied()) {
+        return false;
+      }
+
+      if (isSetInLoop()) {
         return false;
       }
 
