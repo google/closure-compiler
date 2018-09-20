@@ -788,12 +788,13 @@ public class Scanner {
     return value;
   }
 
+  @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
   private static boolean isIdentifierStart(char ch) {
     // Most code is written in pure ASCII create a fast path here.
     if (ch <= 127) {
-      return ((ch >= 'A' & ch <= 'Z')
-          | (ch >= 'a' & ch <= 'z')
-          | (ch == '_' | ch == '$'));
+      // Intentionally avoiding short circuiting behavior of "||" and "&&".
+      // This minimizes branches in this code which minimizes branch prediction misses.
+      return ((ch >= 'A' & ch <= 'Z') | (ch >= 'a' & ch <= 'z') | (ch == '_' | ch == '$'));
     }
 
     // Workaround b/36459436
@@ -804,6 +805,7 @@ public class Scanner {
         || Character.isLetter(ch);
   }
 
+  @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
   private static boolean isIdentifierPart(char ch) {
     // Most code is written in pure ASCII create a fast path here.
     if (ch <= 127) {
