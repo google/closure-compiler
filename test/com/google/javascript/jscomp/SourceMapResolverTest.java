@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.io.BaseEncoding;
 import junit.framework.TestCase;
 import org.junit.Test;
@@ -27,7 +29,7 @@ public final class SourceMapResolverTest extends TestCase {
   @Test
   public void testResolveBase64Inline() throws Exception {
     String sourceMap = "{map: 'asdfasdf'}";
-    String encoded = BaseEncoding.base64().encode(sourceMap.getBytes("UTF-8"));
+    String encoded = BaseEncoding.base64().encode(sourceMap.getBytes(UTF_8));
     String url = "data:application/json;base64," + encoded;
     String code = "console.log('asdf')\n//# sourceMappingURL=" + url;
     SourceFile s =
@@ -46,7 +48,7 @@ public final class SourceMapResolverTest extends TestCase {
   @Test
   public void testResolveBase64WithCharsetInline() throws Exception {
     String sourceMap = "{map: 'asdfasdf'}";
-    String encoded = BaseEncoding.base64().encode(sourceMap.getBytes("UTF-8"));
+    String encoded = BaseEncoding.base64().encode(sourceMap.getBytes(UTF_8));
     String url = "data:application/json;charset=utf-8;base64," + encoded;
     String code = "console.log('asdf')\n//# sourceMappingURL=" + url;
     SourceFile s =

@@ -1560,7 +1560,7 @@ public abstract class RegExpTree {
 
     @Override
     protected void appendDebugInfo(StringBuilder sb) {
-      sb.append(" name=" + name);
+      sb.append(" name=").append(name);
     }
 
     @Override
@@ -1572,7 +1572,7 @@ public abstract class RegExpTree {
 
     @Override
     public int hashCode() {
-      return Objects.hash(name) ^ body.hashCode();
+      return Objects.hashCode(name) ^ body.hashCode();
     }
   }
 

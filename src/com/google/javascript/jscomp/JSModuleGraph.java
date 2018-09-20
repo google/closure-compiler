@@ -191,8 +191,7 @@ public final class JSModuleGraph implements Serializable {
 
   /** Gets an iterable over all input source files in dependency order. */
   Iterable<CompilerInput> getAllInputs() {
-    return Iterables.concat(
-        Iterables.transform(Arrays.asList(modules), (module) -> module.getInputs()));
+    return Iterables.concat(Iterables.transform(Arrays.asList(modules), JSModule::getInputs));
   }
 
   /** Gets the total number of input source files. */

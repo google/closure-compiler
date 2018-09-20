@@ -427,11 +427,9 @@ public final class SymbolTableTest extends TestCase {
     Symbol bar = getGlobalVar(table, "Bar");
     Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
     Symbol fn = getGlobalVar(table, "Function");
-    assertThat(table.getAllSymbolsForTypeOf(x))
-        .containsExactlyElementsIn(ImmutableList.of(foo, bar));
-    assertThat(table.getAllSymbolsForTypeOf(foo)).containsExactlyElementsIn(ImmutableList.of(fn));
-    assertThat(table.getAllSymbolsForTypeOf(fooPrototype))
-        .containsExactlyElementsIn(ImmutableList.of(foo));
+    assertThat(table.getAllSymbolsForTypeOf(x)).containsExactly(foo, bar);
+    assertThat(table.getAllSymbolsForTypeOf(foo)).containsExactly(fn);
+    assertThat(table.getAllSymbolsForTypeOf(fooPrototype)).containsExactly(foo);
     assertEquals(foo, table.getSymbolDeclaredBy(foo.getType().toMaybeFunctionType()));
   }
 
