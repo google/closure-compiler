@@ -185,7 +185,7 @@ public class J2clPass implements CompilerPass {
 
         // Otherwise inline the call.
         Node inlinedCall =
-            injector.inline(
+            injector.unsafeInline(
                 new Reference(n, t.getScope(), t.getModule(), inliningMode), fnName, fnImpl);
         t.getCompiler().reportChangeToEnclosingScope(inlinedCall);
       }
