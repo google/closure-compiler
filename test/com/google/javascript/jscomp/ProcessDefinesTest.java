@@ -268,7 +268,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
     Name def = namespace.getNameIndex().get("DEF");
     assertThat(def.getRefs()).hasSize(1);
-    assertEquals(1, def.globalSets);
+    assertEquals(1, def.getGlobalSets());
     assertNotNull(def.getDeclaration());
   }
 
@@ -337,7 +337,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
     Name def = namespace.getNameIndex().get("DEF");
     assertThat(def.getRefs()).hasSize(2);
-    assertEquals(1, def.globalSets);
+    assertEquals(1, def.getGlobalSets());
     assertNotNull(def.getDeclaration());
   }
 
@@ -378,7 +378,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
     Name aDotB = namespace.getNameIndex().get("a.B");
     assertThat(aDotB.getRefs()).hasSize(1);
-    assertEquals(1, aDotB.globalSets);
+    assertEquals(1, aDotB.getGlobalSets());
     assertNotNull(aDotB.getDeclaration());
   }
 

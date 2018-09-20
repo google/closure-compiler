@@ -147,15 +147,15 @@ class CollapseProperties implements CompilerPass {
   }
 
   /**
-   * Runs through all namespaces (prefixes of classes and enums), and checks if
-   * any of them have been used in an unsafe way.
+   * Runs through all namespaces (prefixes of classes and enums), and checks if any of them have
+   * been used in an unsafe way.
    */
   private void checkNamespaces() {
     for (Name name : nameMap.values()) {
       if (name.isNamespaceObjectLit()
-          && (name.aliasingGets > 0
-              || name.localSets + name.globalSets > 1
-              || name.deleteProps > 0)) {
+          && (name.getAliasingGets() > 0
+              || name.getLocalSets() + name.getGlobalSets() > 1
+              || name.getDeleteProps() > 0)) {
         boolean initialized = name.getDeclaration() != null;
         for (Ref ref : name.getRefs()) {
           if (ref == name.getDeclaration()) {

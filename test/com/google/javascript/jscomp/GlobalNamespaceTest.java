@@ -43,13 +43,13 @@ public final class GlobalNamespaceTest extends TestCase {
     n.addRef(set2);
 
     assertEquals(set1, n.getDeclaration());
-    assertEquals(2, n.globalSets);
+    assertEquals(2, n.getGlobalSets());
     assertThat(n.getRefs()).hasSize(2);
 
     n.removeRef(set1);
 
     assertEquals(set2, n.getDeclaration());
-    assertEquals(1, n.globalSets);
+    assertEquals(1, n.getGlobalSets());
     assertThat(n.getRefs()).hasSize(1);
   }
 
@@ -63,14 +63,14 @@ public final class GlobalNamespaceTest extends TestCase {
     n.addRef(set2);
 
     assertEquals(set1, n.getDeclaration());
-    assertEquals(1, n.globalSets);
-    assertEquals(1, n.localSets);
+    assertEquals(1, n.getGlobalSets());
+    assertEquals(1, n.getLocalSets());
     assertThat(n.getRefs()).hasSize(2);
 
     n.removeRef(set1);
 
     assertNull(n.getDeclaration());
-    assertEquals(0, n.globalSets);
+    assertEquals(0, n.getGlobalSets());
   }
 
   private Ref createNodelessRef(Ref.Type type) {

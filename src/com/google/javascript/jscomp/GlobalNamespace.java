@@ -201,11 +201,13 @@ class GlobalNamespace
 
     @Override
     public boolean equals(Object obj) {
-      checkState(obj instanceof AstChange);
-      AstChange other = (AstChange) obj;
-      return Objects.equals(this.module, other.module)
-          && Objects.equals(this.scope, other.scope)
-          && Objects.equals(this.node, other.node);
+      if (obj instanceof AstChange) {
+        AstChange other = (AstChange) obj;
+        return Objects.equals(this.module, other.module)
+            && Objects.equals(this.scope, other.scope)
+            && Objects.equals(this.node, other.node);
+      }
+      return false;
     }
 
     @Override
@@ -1048,8 +1050,8 @@ class GlobalNamespace
    * traversal proceeds, we'll discover that some names correspond to JavaScript objects whose
    * properties we should consider collapsing.
    */
-  static class Name implements StaticTypedSlot {
-    enum Type {
+  static final class Name implements StaticTypedSlot {
+    private enum Type {
       CLASS, // class C {}
       OBJECTLIT, // var x = {};
       FUNCTION, // function f() {}
@@ -1058,7 +1060,7 @@ class GlobalNamespace
     }
 
     private final String baseName;
-    final Name parent;
+    private final Name parent;
 
     // The children of this name. Must be null if there are no children.
     @Nullable
@@ -1073,21 +1075,18 @@ class GlobalNamespace
     /** All Es6 subclasses of a name that is an Es6 class. Must be null if not an ES6 class. */
     @Nullable List<Name> subclasses;
 
-    // TODO(lharker): make this private. No users of GlobalNamespace should need to set it.
-    // Ideally it would be final, too, but that might not work for names that are referenced/created
-    // before being initialized.
-    Type type;
+    private Type type; // not final to handle forward references to names
     private boolean declaredType = false;
     private boolean isDeclared = false;
     private boolean isModuleProp = false;
     private boolean usedHasOwnProperty = false;
-    int globalSets = 0;
-    int localSets = 0;
-    int localSetsWithNoCollapse = 0;
-    int aliasingGets = 0;
-    int totalGets = 0;
-    int callGets = 0;
-    int deleteProps = 0;
+    private int globalSets = 0;
+    private int localSets = 0;
+    private int localSetsWithNoCollapse = 0;
+    private int aliasingGets = 0;
+    private int totalGets = 0;
+    private int callGets = 0;
+    private int deleteProps = 0;
     private final SourceKind sourceKind;
 
     JSDocInfo docInfo = null;
@@ -1157,6 +1156,38 @@ class GlobalNamespace
     @Override
     public JSType getType() {
       return null;
+    }
+
+    boolean isFunction() {
+      return this.type == Type.FUNCTION;
+    }
+
+    boolean isClass() {
+      return this.type == Type.CLASS;
+    }
+
+    boolean isObjectLiteral() {
+      return this.type == Type.OBJECTLIT;
+    }
+
+    int getAliasingGets() {
+      return aliasingGets;
+    }
+
+    int getLocalSets() {
+      return localSets;
+    }
+
+    int getGlobalSets() {
+      return globalSets;
+    }
+
+    int getDeleteProps() {
+      return deleteProps;
+    }
+
+    Name getParent() {
+      return parent;
     }
 
     @Override
@@ -1256,7 +1287,7 @@ class GlobalNamespace
       return refs == null ? ImmutableList.of() : refs;
     }
 
-    void addRefInternal(Ref ref) {
+    private void addRefInternal(Ref ref) {
       if (refs == null) {
         refs = new ArrayList<>();
       }
@@ -1552,7 +1583,7 @@ class GlobalNamespace
       DELETE_PROP,
     }
 
-    Node node;
+    Node node; // Not final because CollapseProperties needs to update the namespace in-place.
     final JSModule module;
     final Name name;
     final Type type;

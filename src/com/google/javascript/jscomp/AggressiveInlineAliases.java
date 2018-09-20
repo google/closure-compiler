@@ -161,9 +161,9 @@ class AggressiveInlineAliases implements CompilerPass {
       }
 
       if (!name.inExterns()
-          && name.globalSets == 1
-          && name.localSets == 0
-          && name.aliasingGets > 0) {
+          && name.getGlobalSets() == 1
+          && name.getLocalSets() == 0
+          && name.getAliasingGets() > 0) {
         // {@code name} meets condition (b). Find all of its local aliases
         // and try to inline them.
         List<Ref> refs = new ArrayList<>(name.getRefs());
@@ -187,7 +187,7 @@ class AggressiveInlineAliases implements CompilerPass {
         }
       }
 
-      if (!name.inExterns() && name.type == Name.Type.CLASS) {
+      if (!name.inExterns() && name.isClass()) {
         List<Name> subclasses = name.subclasses;
         if (subclasses != null && name.props != null) {
           for (Name subclass : subclasses) {
@@ -202,10 +202,8 @@ class AggressiveInlineAliases implements CompilerPass {
       // local-alias-inlining above.
       // TODO(lharker): we should really check that the name only has one global set before inlining
       // property aliases, but doing so breaks some things relying on inlining (b/73263419).
-      if ((name.type == Name.Type.OBJECTLIT
-              || name.type == Name.Type.FUNCTION
-              || name.type == Name.Type.CLASS)
-          && name.aliasingGets == 0
+      if ((name.isObjectLiteral() || name.isFunction() || name.isClass())
+          && name.getAliasingGets() == 0
           && !isUnsafelyReassigned(name)
           && name.props != null) {
         // All of {@code name}'s children meet condition (a), so they can be
@@ -244,7 +242,7 @@ class AggressiveInlineAliases implements CompilerPass {
     // This may also back off on cases where the subclass first accesses the parent property, then
     // shadows it.
     if (subclassPropNameObj != null
-        && (subclassPropNameObj.localSets > 0 || subclassPropNameObj.globalSets > 0)) {
+        && (subclassPropNameObj.getLocalSets() > 0 || subclassPropNameObj.getGlobalSets() > 0)) {
       return false;
     }
 
