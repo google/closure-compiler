@@ -220,6 +220,42 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testTypedefOfPropertyInBlock() {
+    disableStrictMissingPropertyChecks();
+    testTypesWithExterns(
+        "/** @interface */ function Foo() {}",
+        lines(
+            "/** @constructor */",
+            "function Bar(/** !Foo */ foo) {",
+            "  /** @type {!Foo} */",
+            "  this.foo = foo;",
+            "  {",
+            "    /** @typedef {boolean} */",
+            "    this.foo.bar;",
+            "    (() => this.foo.bar)();",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testTypedefOfPropertyInFunctionScope() {
+    disableStrictMissingPropertyChecks();
+    testTypesWithExterns(
+        "/** @interface */ function Foo() {}",
+        lines(
+            "/** @constructor */",
+            "function Bar(/** !Foo */ foo) {",
+            "  /** @type {!Foo} */",
+            "  this.foo = foo;",
+            "  /** @typedef {boolean} */",
+            "  this.foo.bar;",
+            "  {",
+            "    (() => this.foo.bar)();",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testArrayLitSpread() {
     // TODO(bradfordcsmith): check spread in array literal
     // Note that there's not much point in doing such a check until we check array literal

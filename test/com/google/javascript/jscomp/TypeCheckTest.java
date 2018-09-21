@@ -22515,44 +22515,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testTypedefOfPropertyInBlock() {
-    // TODO(b/111216910): this should issue the same warning as the case below
-    disableStrictMissingPropertyChecks();
-    testTypesWithExterns(
-        "/** @interface */ function Foo() {}",
-        lines(
-            "/** @constructor */",
-            "function Bar(/** !Foo */ foo) {",
-            "  /** @type {!Foo} */",
-            "  this.foo = foo;",
-            "  {",
-            "    /** @typedef {boolean} */",
-            "    this.foo.bar;",
-            "    (() => this.foo.bar)();",
-            "  }",
-            "}"));
-  }
-
-  @Test
-  public void testTypedefOfPropertyInFunctionScope() {
-    disableStrictMissingPropertyChecks();
-    testTypesWithExterns(
-        "/** @interface */ function Foo() {}",
-        lines(
-            "/** @constructor */",
-            "function Bar(/** !Foo */ foo) {",
-            "  /** @type {!Foo} */",
-            "  this.foo = foo;",
-            "  /** @typedef {boolean} */",
-            "  this.foo.bar;",
-            "  {",
-            "    (() => this.foo.bar)();",
-            "  }",
-            "}"),
-        "Property bar never defined on Foo");
-  }
-
-  @Test
   public void testTypeCheckingDoesntCrashOnDebuggerStatement() {
     testTypes("var x = 1; debugger; x = 2;");
   }
