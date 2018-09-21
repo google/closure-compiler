@@ -44,35 +44,43 @@ import com.google.javascript.rhino.Node.NodeMismatch;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.TestErrorReporter;
-
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class NodeTest extends TestCase {
-  public void testMergeExtractNormal() throws Exception {
+  @Test
+  public void testMergeExtractNormal() {
     testMergeExtract(5, 6);
     testMergeExtract(456, 3423);
     testMergeExtract(0, 0);
   }
 
-  public void testMergeExtractErroneous() throws Exception {
+  @Test
+  public void testMergeExtractErroneous() {
     assertEquals(-1, Node.mergeLineCharNo(-5, 90));
     assertEquals(-1, Node.mergeLineCharNo(0, -1));
     assertEquals(-1, Node.extractLineno(-1));
     assertEquals(-1, Node.extractCharno(-1));
   }
 
-  public void testMergeOverflowGraciously() throws Exception {
+  @Test
+  public void testMergeOverflowGraciously() {
     int linecharno = Node.mergeLineCharNo(89, 4096);
     assertEquals(89, Node.extractLineno(linecharno));
     assertEquals(4095, Node.extractCharno(linecharno));
   }
 
+  @Test
   public void testCheckTreeEqualsImplSame() {
     Node node1 = new Node(Token.LET, new Node(Token.VAR));
     Node node2 = new Node(Token.LET, new Node(Token.VAR));
     assertEquals(null, node1.checkTreeEqualsImpl(node2));
   }
 
+  @Test
   public void testCheckTreeEqualsImplDifferentType() {
     Node node1 = new Node(Token.LET, new Node(Token.VAR));
     Node node2 = new Node(Token.VAR, new Node(Token.VAR));
@@ -80,6 +88,7 @@ public class NodeTest extends TestCase {
         node1.checkTreeEqualsImpl(node2));
   }
 
+  @Test
   public void testCheckTreeEqualsImplDifferentChildCount() {
     Node node1 = new Node(Token.LET, new Node(Token.VAR));
     Node node2 = new Node(Token.LET);
@@ -87,6 +96,7 @@ public class NodeTest extends TestCase {
         node1.checkTreeEqualsImpl(node2));
   }
 
+  @Test
   public void testCheckTreeEqualsImplDifferentChild() {
     Node child1 = new Node(Token.LET);
     Node child2 = new Node(Token.VAR);
@@ -96,28 +106,33 @@ public class NodeTest extends TestCase {
         node1.checkTreeEqualsImpl(node2));
   }
 
+  @Test
   public void testCheckTreeEqualsSame() {
     Node node1 = new Node(Token.LET);
     assertEquals(null, node1.checkTreeEquals(node1));
   }
 
+  @Test
   public void testCheckTreeEqualsStringDifferent() {
     Node node1 = new Node(Token.ADD);
     Node node2 = new Node(Token.SUB);
     assertNotNull(node1.checkTreeEquals(node2));
   }
 
+  @Test
   public void testCheckTreeEqualsBooleanSame() {
     Node node1 = new Node(Token.LET);
     assertEquals(true, node1.isEquivalentTo(node1));
   }
 
+  @Test
   public void testCheckTreeEqualsBooleanDifferent() {
     Node node1 = new Node(Token.LET);
     Node node2 = new Node(Token.VAR);
     assertEquals(false, node1.isEquivalentTo(node2));
   }
 
+  @Test
   public void testCheckTreeEqualsSlashVDifferent() {
     Node node1 = Node.newString("\u000B");
     node1.putBooleanProp(Node.SLASH_V, true);
@@ -125,6 +140,7 @@ public class NodeTest extends TestCase {
     assertEquals(false, node1.isEquivalentTo(node2));
   }
 
+  @Test
   public void testCheckTreeEqualsImplDifferentIncProp() {
     Node node1 = new Node(Token.INC);
     node1.putBooleanProp(Node.INCRDECR_PROP, true);
@@ -132,6 +148,7 @@ public class NodeTest extends TestCase {
     assertNotNull(node1.checkTreeEqualsImpl(node2));
   }
 
+  @Test
   public void testCheckTreeTypeAwareEqualsSame() {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, null);
     JSTypeRegistry registry = new JSTypeRegistry(testErrorReporter);
@@ -142,12 +159,14 @@ public class NodeTest extends TestCase {
     assertTrue(node1.isEquivalentToTyped(node2));
   }
 
+  @Test
   public void testCheckTreeTypeAwareEqualsSameNull() {
     Node node1 = Node.newString(Token.NAME, "f");
     Node node2 = Node.newString(Token.NAME, "f");
     assertTrue(node1.isEquivalentToTyped(node2));
   }
 
+  @Test
   public void testCheckTreeTypeAwareEqualsDifferent() {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, null);
     JSTypeRegistry registry = new JSTypeRegistry(testErrorReporter);
@@ -158,6 +177,7 @@ public class NodeTest extends TestCase {
     assertFalse(node1.isEquivalentToTyped(node2));
   }
 
+  @Test
   public void testCheckTreeTypeAwareEqualsDifferentNull() {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, null);
     JSTypeRegistry registry = new JSTypeRegistry(testErrorReporter);
@@ -167,16 +187,19 @@ public class NodeTest extends TestCase {
     assertFalse(node1.isEquivalentToTyped(node2));
   }
 
+  @Test
   public void testVarArgs1() {
     assertFalse(new Node(Token.LET).isVarArgs());
   }
 
+  @Test
   public void testVarArgs2() {
     Node n = new Node(Token.LET);
     n.setVarArgs(false);
     assertFalse(n.isVarArgs());
   }
 
+  @Test
   public void testVarArgs3() {
     Node n = new Node(Token.LET);
     n.setVarArgs(true);
@@ -189,6 +212,7 @@ public class NodeTest extends TestCase {
     assertEquals(charno, Node.extractCharno(linecharno));
   }
 
+  @Test
   public void testIsQualifiedName() {
     assertTrue(IR.name("a").isQualifiedName());
     assertTrue(IR.name("$").isQualifiedName());
@@ -225,10 +249,12 @@ public class NodeTest extends TestCase {
     assertFalse(new Node(Token.INC, IR.name("x")).isQualifiedName());
   }
 
+  @Test
   public void testMatchesQualifiedNameX() {
     assertTrue(qname("this.b").matchesQualifiedName("this.b"));
   }
 
+  @Test
   public void testMatchesQualifiedName1() {
     assertTrue(IR.name("a").matchesQualifiedName("a"));
     assertFalse(IR.name("a").matchesQualifiedName("ab"));
@@ -287,6 +313,7 @@ public class NodeTest extends TestCase {
     assertFalse(new Node(Token.INC, IR.name("x")).matchesQualifiedName("x"));
   }
 
+  @Test
   public void testMatchesQualifiedName2() {
     assertTrue(IR.name("a").matchesQualifiedName(qname("a")));
     assertFalse(IR.name("a").matchesQualifiedName(qname("a.b")));
@@ -363,6 +390,7 @@ public class NodeTest extends TestCase {
     return node;
   }
 
+  @Test
   public void testCloneAnnontations() {
     Node n = getVarRef("a");
     n.setLength(1);
@@ -375,6 +403,7 @@ public class NodeTest extends TestCase {
     assertThat(nodeClone.getLength()).isEqualTo(1);
   }
 
+  @Test
   public void testSharedProps1() {
     Node n = getVarRef("A");
     n.putIntProp(Node.SIDE_EFFECT_FLAGS, 5);
@@ -385,6 +414,7 @@ public class NodeTest extends TestCase {
     assertEquals(5, m.getIntProp(Node.SIDE_EFFECT_FLAGS));
   }
 
+  @Test
   public void testSharedProps2() {
     Node n = getVarRef("A");
     n.putIntProp(Node.SIDE_EFFECT_FLAGS, 5);
@@ -402,6 +432,7 @@ public class NodeTest extends TestCase {
     assertEquals(7, m.getIntProp(Node.SIDE_EFFECT_FLAGS));
   }
 
+  @Test
   public void testSharedProps3() {
     Node n = getVarRef("A");
     n.putIntProp(Node.SIDE_EFFECT_FLAGS, 2);
@@ -414,6 +445,7 @@ public class NodeTest extends TestCase {
     assertEquals(2, m.getIntProp(Node.SIDE_EFFECT_FLAGS));
   }
 
+  @Test
   public void testBooleanProp() {
     Node n = getVarRef("a");
 
@@ -434,6 +466,7 @@ public class NodeTest extends TestCase {
   }
 
   // Verify that annotations on cloned nodes are properly handled.
+  @Test
   public void testCloneAnnontations2() {
     Node n = getVarRef("a");
     n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
@@ -447,6 +480,7 @@ public class NodeTest extends TestCase {
     assertTrue(nodeClone.getBooleanProp(Node.IS_CONSTANT_NAME));
   }
 
+  @Test
   public void testGetIndexOfChild() {
     Node assign = getAssignExpr("b", "c");
     assertEquals(2, assign.getChildCount());
@@ -460,6 +494,7 @@ public class NodeTest extends TestCase {
     assertEquals(-1, assign.getIndexOfChild(assign));
   }
 
+  @Test
   public void testUseSourceInfoIfMissingFrom() {
     Node assign = getAssignExpr("b", "c");
     assign.setSourceEncodedPosition(99);
@@ -477,6 +512,7 @@ public class NodeTest extends TestCase {
     assertEquals("foo.js", lhs.getSourceFileName());
   }
 
+  @Test
   public void testUseSourceInfoFrom() {
     Node assign = getAssignExpr("b", "c");
     assign.setSourceEncodedPosition(99);
@@ -494,6 +530,7 @@ public class NodeTest extends TestCase {
     assertEquals("bar.js", lhs.getSourceFileName());
   }
 
+  @Test
   public void testInvalidSourceOffset() {
     Node string = Node.newString("a");
 
@@ -504,6 +541,7 @@ public class NodeTest extends TestCase {
     assertTrue(string.getSourceOffset() < 0);
   }
 
+  @Test
   public void testQualifiedName() {
     assertNull(IR.name("").getQualifiedName());
     assertEquals("a", IR.name("a").getQualifiedName());
@@ -515,6 +553,7 @@ public class NodeTest extends TestCase {
         IR.getprop(IR.call(IR.name("a")), IR.string("b")).getQualifiedName());
   }
 
+  @Test
   public void testJSDocInfoClone() {
     Node original = IR.var(IR.name("varName"));
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
@@ -544,6 +583,7 @@ public class NodeTest extends TestCase {
         clone.getFirstChild().getJSDocInfo().getType().getRoot());
   }
 
+  @Test
   public void testAddChildToFrontWithSingleNode() {
     Node root = new Node(Token.SCRIPT);
     Node nodeToAdd = new Node(Token.SCRIPT);
@@ -557,6 +597,7 @@ public class NodeTest extends TestCase {
     assertNull(nodeToAdd.next);
   }
 
+  @Test
   public void testAddChildToFrontWithLargerTree() {
     Node left = Node.newString("left");
     Node m1 = Node.newString("m1");
@@ -575,6 +616,7 @@ public class NodeTest extends TestCase {
     assertEquals(nodeToAdd, left.previous);
   }
 
+  @Test
   public void testDetach1() {
     Node left = Node.newString("left");
     Node mid = Node.newString("mid");

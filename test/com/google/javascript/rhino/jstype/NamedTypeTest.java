@@ -47,16 +47,20 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
 import javax.annotation.Nullable;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author nicksantos@google.com (Nick Santos)
- */
+/** @author nicksantos@google.com (Nick Santos) */
+@RunWith(JUnit4.class)
 public class NamedTypeTest extends BaseJSTypeTestCase {
 
   private FunctionType fooCtorType; // The type of the constructor of "Foo".
   private ObjectType fooType; // A realized type with the canonical name "Foo".
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
 
@@ -65,6 +69,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     fooType = forceResolutionOf(fooCtorType.getInstanceType());
   }
 
+  @Test
   public void testResolutionPropagatesNamedTypePropertiesToResolvedType() {
     // Given
     StaticTypedScope fooToFooScope = new MapBasedScope(ImmutableMap.of("Foo", fooCtorType));
@@ -82,6 +87,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(NUMBER_TYPE, fooType.getPropertyType("myProperty"));
   }
 
+  @Test
   public void testStateOfForwardDeclaredType_Unresolved() {
     // Given
     NamedType type = new NamedTypeBuilder().setName(FORWARD_DECLARED_TYPE_NAME).build();
@@ -93,6 +99,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(UNKNOWN_TYPE, type.getReferencedType());
   }
 
+  @Test
   public void testStateOfForwardDeclaredType_UnsuccesfullyResolved() {
     // Given
     NamedType type = new NamedTypeBuilder().setName(FORWARD_DECLARED_TYPE_NAME).build();
@@ -105,6 +112,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     assertFalse(type.isUnknownType());
   }
 
+  @Test
   public void testStateOfForwardDeclaredType_SuccessfullyResolved() {
     // Given
     StaticTypedScope fooToFooScope = new MapBasedScope(ImmutableMap.of("Foo", fooCtorType));
@@ -118,6 +126,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(namedFooType, fooType);
   }
 
+  @Test
   public void testEquality() {
     // Given
     ObjectType barType = createNominalType("Bar");
@@ -152,6 +161,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
         .testEquals();
   }
 
+  @Test
   public void testForwardDeclaredNamedType() {
     NamedType a = new NamedTypeBuilder().setName("Unresolvable").build();
 
@@ -161,6 +171,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(CHECKED_UNKNOWN_TYPE, CHECKED_UNKNOWN_TYPE.getLeastSupertype(a));
   }
 
+  @Test
   public void testActiveXObjectResolve() {
     MapBasedScope scope = new MapBasedScope(ImmutableMap.of("ActiveXObject", NO_OBJECT_TYPE));
     NamedType activeXObject =

@@ -40,15 +40,20 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
-
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for FunctionParamBuilder.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public class FunctionParamBuilderTest extends BaseJSTypeTestCase {
 
-  public void testBuild() throws Exception {
+  @Test
+  public void testBuild() {
     FunctionParamBuilder builder = new FunctionParamBuilder(registry);
     assertTrue(builder.addRequiredParams(NUMBER_TYPE));
     assertTrue(builder.addOptionalParams(BOOLEAN_TYPE));

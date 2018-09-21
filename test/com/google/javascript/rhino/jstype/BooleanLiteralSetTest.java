@@ -44,13 +44,18 @@ import static com.google.javascript.rhino.jstype.BooleanLiteralSet.FALSE;
 import static com.google.javascript.rhino.jstype.BooleanLiteralSet.TRUE;
 
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests {@link BooleanLiteralSet}.
  *
  */
+@RunWith(JUnit4.class)
 public class BooleanLiteralSetTest extends TestCase {
 
+  @Test
   public void testIntersection() {
     assertEquals(EMPTY, EMPTY.intersection(EMPTY));
     assertEquals(EMPTY, EMPTY.intersection(TRUE));
@@ -70,6 +75,7 @@ public class BooleanLiteralSetTest extends TestCase {
     assertEquals(BOTH, BOTH.intersection(BOTH));
   }
 
+  @Test
   public void testUnion() {
     assertEquals(EMPTY, EMPTY.union(EMPTY));
     assertEquals(TRUE, EMPTY.union(TRUE));
@@ -89,11 +95,13 @@ public class BooleanLiteralSetTest extends TestCase {
     assertEquals(BOTH, BOTH.union(BOTH));
   }
 
+  @Test
   public void testGet() {
     assertEquals(TRUE, BooleanLiteralSet.get(true));
     assertEquals(FALSE, BooleanLiteralSet.get(false));
   }
 
+  @Test
   public void testContains() {
     assertFalse(EMPTY.contains(true));
     assertFalse(EMPTY.contains(false));

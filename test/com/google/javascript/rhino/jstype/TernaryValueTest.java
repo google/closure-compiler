@@ -43,23 +43,28 @@ import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Tests the behavior of {@link TernaryValue} by verifying the truth tables
- * of the operations {@link TernaryValue#and(TernaryValue)},
- * {@link TernaryValue#not()}, {@link TernaryValue#or(TernaryValue)}
- * and {@link TernaryValue#xor(TernaryValue)} as well as the
- * {@link TernaryValue#toBoolean(boolean)} method.
+ * Tests the behavior of {@link TernaryValue} by verifying the truth tables of the operations {@link
+ * TernaryValue#and(TernaryValue)}, {@link TernaryValue#not()}, {@link
+ * TernaryValue#or(TernaryValue)} and {@link TernaryValue#xor(TernaryValue)} as well as the {@link
+ * TernaryValue#toBoolean(boolean)} method.
  *
  */
+@RunWith(JUnit4.class)
 public class TernaryValueTest extends TestCase {
-  public void testOrdinal() throws Exception {
+  @Test
+  public void testOrdinal() {
     assertEquals(0, FALSE.ordinal());
     assertEquals(1, TRUE.ordinal());
     assertEquals(2, UNKNOWN.ordinal());
   }
 
-  public void testAnd() throws Exception {
+  @Test
+  public void testAnd() {
     assertEquals(TRUE, TRUE.and(TRUE));
     assertEquals(FALSE, TRUE.and(FALSE));
     assertEquals(UNKNOWN, TRUE.and(UNKNOWN));
@@ -73,13 +78,15 @@ public class TernaryValueTest extends TestCase {
     assertEquals(UNKNOWN, UNKNOWN.and(UNKNOWN));
   }
 
-  public void testNot() throws Exception {
+  @Test
+  public void testNot() {
     assertEquals(FALSE, TRUE.not());
     assertEquals(TRUE, FALSE.not());
     assertEquals(UNKNOWN, UNKNOWN.not());
   }
 
-  public void testOr() throws Exception {
+  @Test
+  public void testOr() {
     assertEquals(TRUE, TRUE.or(TRUE));
     assertEquals(TRUE, TRUE.or(FALSE));
     assertEquals(TRUE, TRUE.or(UNKNOWN));
@@ -93,7 +100,8 @@ public class TernaryValueTest extends TestCase {
     assertEquals(UNKNOWN, UNKNOWN.or(UNKNOWN));
   }
 
-  public void testXor() throws Exception {
+  @Test
+  public void testXor() {
     assertEquals(FALSE, TRUE.xor(TRUE));
     assertEquals(TRUE, TRUE.xor(FALSE));
     assertEquals(UNKNOWN, TRUE.xor(UNKNOWN));
@@ -107,7 +115,8 @@ public class TernaryValueTest extends TestCase {
     assertEquals(UNKNOWN, UNKNOWN.xor(UNKNOWN));
   }
 
-  public void testToBoolean() throws Exception {
+  @Test
+  public void testToBoolean() {
     assertTrue(TRUE.toBoolean(true));
     assertTrue(TRUE.toBoolean(false));
 
@@ -118,6 +127,7 @@ public class TernaryValueTest extends TestCase {
     assertFalse(UNKNOWN.toBoolean(false));
   }
 
+  @Test
   public void testToString() {
     assertEquals("true", TRUE.toString());
     assertEquals("false", FALSE.toString());

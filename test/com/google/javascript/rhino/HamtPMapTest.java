@@ -47,9 +47,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeSet;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link HamtPMap}. */
+@RunWith(JUnit4.class)
 public class HamtPMapTest extends TestCase {
+  @Test
   public void testEmpty() {
     PMap<String, Integer> map = HamtPMap.empty();
     assertThat(map.get("foo")).isNull();
@@ -57,6 +62,7 @@ public class HamtPMapTest extends TestCase {
     assertThat(map.isEmpty()).isTrue();
   }
 
+  @Test
   public void testPlus() {
     PMap<String, Integer> empty = HamtPMap.empty();
     PMap<String, Integer> map = empty.plus("foo", 42);
@@ -65,12 +71,14 @@ public class HamtPMapTest extends TestCase {
     assertThat(map.isEmpty()).isFalse();
   }
 
+  @Test
   public void testPlus_alreadyExistsReturnsSame() {
     PMap<String, Integer> empty = HamtPMap.empty();
     PMap<String, Integer> map = empty.plus("foo", 42);
     assertThat(map.plus("foo", 42)).isSameAs(map);
   }
 
+  @Test
   public void testPlus_updatesExistingKey() {
     PMap<String, Integer> empty = HamtPMap.empty();
     PMap<String, Integer> map = empty.plus("foo", 42).plus("foo", 23);
@@ -79,6 +87,7 @@ public class HamtPMapTest extends TestCase {
     assertThat(map.isEmpty()).isFalse();
   }
 
+  @Test
   public void testMinus() {
     PMap<String, Integer> map = HamtPMap.<String, Integer>empty().plus("foo", 42);
     PMap<String, Integer> empty = map.minus("foo");
@@ -87,12 +96,14 @@ public class HamtPMapTest extends TestCase {
     assertThat(empty.isEmpty()).isTrue();
   }
 
+  @Test
   public void testMinus_nonexistentKeyReturnsSame() {
     PMap<String, Integer> empty = HamtPMap.empty();
     PMap<String, Integer> map = empty.plus("foo", 42);
     assertThat(map.minus("bar")).isSameAs(map);
   }
 
+  @Test
   public void testPlusAndMinus() {
     PMap<String, Integer> empty = HamtPMap.empty();
     PMap<String, Integer> map = empty.plus("foo", 42).plus("bar", 19).plus("baz", 12);
@@ -121,6 +132,7 @@ public class HamtPMapTest extends TestCase {
     assertThat(map.isEmpty()).isTrue();
   }
 
+  @Test
   public void testReconcile_customJoiner() {
     PMap<Integer, String> empty = HamtPMap.<Integer, String>empty();
     PMap<Integer, String> left =
@@ -141,6 +153,7 @@ public class HamtPMapTest extends TestCase {
     expectations.verify();
   }
 
+  @Test
   public void testReconcile_emptyMaps() {
     PMap<Integer, String> empty = HamtPMap.<Integer, String>empty();
     PMap<Integer, String> map =
@@ -165,6 +178,7 @@ public class HamtPMapTest extends TestCase {
     assertThat(joined.equivalent(map, Objects::equals)).isTrue();
   }
 
+  @Test
   public void testReconcile_differentSizes() {
     PMap<Integer, Integer> left = build(1, 6, 2, 19, 4, 23, 5, 8, 42, 12, 18, 33);
     PMap<Integer, Integer> right =
@@ -177,6 +191,7 @@ public class HamtPMapTest extends TestCase {
     assertThat(joined.equivalent(expected, Objects::equals)).isTrue();
   }
 
+  @Test
   public void testReconcile_delete() {
     PMap<Integer, Integer> left = build(1, 3, 5, 7);
     PMap<Integer, Integer> right = build(2, 4, 6, 8);
@@ -186,6 +201,7 @@ public class HamtPMapTest extends TestCase {
     assertThat(joined.isEmpty()).isTrue();
   }
 
+  @Test
   public void testEquivalent_equivalent() {
     PMap<Integer, Integer> left = build(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024);
     PMap<Integer, Integer> right = build(2, 512, 32, 8, 1024, 1, 64, 4, 16, 256, 128);
@@ -194,6 +210,7 @@ public class HamtPMapTest extends TestCase {
     assertThat(right.equivalent(left, Objects::equals)).isTrue();
   }
 
+  @Test
   public void testEquivalent_oneDifferentValue() {
     // Insertion order doesn't matter
     PMap<Integer, Integer> left1 = build(1, 3, 5, 7);
@@ -211,6 +228,7 @@ public class HamtPMapTest extends TestCase {
     assertThat(right2.equivalent(left2, Objects::equals)).isFalse();
   }
 
+  @Test
   public void testEquivalent_oneDifferentKey() {
     PMap<Integer, Integer> left1 = build().plus(2, 1).plus(3, 3).plus(5, 5).plus(7, 7);
     PMap<Integer, Integer> left2 = build(1, 3, 5).plus(7, 8);
@@ -222,6 +240,7 @@ public class HamtPMapTest extends TestCase {
     assertThat(right.equivalent(left2, Objects::equals)).isFalse();
   }
 
+  @Test
   public void testEquivalent_oneMissingKey() {
     PMap<Integer, Integer> left = build(1, 5, 4, 3, 9);
     PMap<Integer, Integer> right = build(1, 5, 3, 9);
@@ -230,6 +249,7 @@ public class HamtPMapTest extends TestCase {
     assertThat(right.equivalent(left, Objects::equals)).isFalse();
   }
 
+  @Test
   public void testEquivalent_equalsWithCustomEquivalence() {
     PMap<String, String> empty = HamtPMap.empty();
     PMap<String, String> left = empty.plus("abc", "AAa").plus("def", "Ddd").plus("ghi", "ggG");
@@ -243,6 +263,7 @@ public class HamtPMapTest extends TestCase {
     }));
   }
 
+  @Test
   public void testEquivalent_notEquivalentShortCircuits() {
     PMap<Integer, String> empty = HamtPMap.empty();
     PMap<Integer, String> left = empty.plus(1, "1").plus(2, "2");
@@ -282,6 +303,7 @@ public class HamtPMapTest extends TestCase {
     }
   }
 
+  @Test
   public void testIntegration() {
     TreeSet<Integer> ref = new TreeSet<>();
     PMap<Integer, String> map = HamtPMap.empty();

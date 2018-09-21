@@ -57,6 +57,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import junit.framework.TestCase;
+import org.junit.Before;
 
 public abstract class BaseJSTypeTestCase extends TestCase {
   protected static final String FORWARD_DECLARED_TYPE_NAME = "forwardDeclared";
@@ -110,7 +111,8 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   protected int NATIVE_PROPERTIES_COUNT;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     errorReporter = new TestErrorReporter(null, null);
     registry = new JSTypeRegistry(errorReporter, ImmutableSet.of(FORWARD_DECLARED_TYPE_NAME));

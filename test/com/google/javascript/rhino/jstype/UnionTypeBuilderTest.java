@@ -40,12 +40,17 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test for {@link UnionTypeBuilder}.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
 
   private static final MapBasedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
@@ -54,6 +59,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
   private ObjectType sub;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     FunctionType baseCtor = new FunctionBuilder(registry).forConstructor().withName("Base").build();
@@ -67,6 +73,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     this.sub = subCtor.getInstanceType();
   }
 
+  @Test
   public void testAllType() {
     assertUnion("*", ALL_TYPE);
     assertUnion("*", NUMBER_TYPE, ALL_TYPE);
@@ -74,11 +81,13 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     assertUnion("*", ALL_TYPE, NUMBER_TYPE, NO_TYPE);
   }
 
+  @Test
   public void testEmptyUnion() {
     assertUnion("None");
     assertUnion("None", NO_TYPE, NO_TYPE);
   }
 
+  @Test
   public void testUnionTypes() {
     JSType union = registry.createUnionType(STRING_TYPE, OBJECT_TYPE);
 
@@ -94,6 +103,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     assertUnion("(Object|string)", union, STRING_OBJECT_TYPE);
   }
 
+  @Test
   public void testUnknownTypes() {
     JSType unresolvedNameA1 = new NamedType(EMPTY_SCOPE, registry, "not.resolved.A", null, -1, -1);
     JSType unresolvedNameA2 = new NamedType(EMPTY_SCOPE, registry, "not.resolved.A", null, -1, -1);
@@ -115,12 +125,14 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     assertUnion("(Object|not.resolved.A)", unresolvedNameA1, OBJECT_TYPE);
   }
 
+  @Test
   public void testRemovalOfDupes() {
     JSType stringAndObject = registry.createUnionType(STRING_TYPE, OBJECT_TYPE);
     assertUnion("(Object|string)", stringAndObject, STRING_OBJECT_TYPE);
     assertUnion("(Object|string)", STRING_OBJECT_TYPE, stringAndObject);
   }
 
+  @Test
   public void testRemovalOfDupes2() {
     JSType union =
         registry.createUnionType(
@@ -131,6 +143,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     assertEquals("(Base|function(): Base)", union.toString());
   }
 
+  @Test
   public void testRemovalOfDupes3() {
     JSType union =
         registry.createUnionType(
@@ -141,6 +154,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     assertEquals("(Base|function(): Base)", union.toString());
   }
 
+  @Test
   public void testRemovalOfDuplicateRecordTypes1() {
     UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
 
@@ -150,6 +164,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     assertEquals(1, builder.getAlternatesCount());
   }
 
+  @Test
   public void testRemovalOfDuplicateRecordTypes2() {
     UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
 

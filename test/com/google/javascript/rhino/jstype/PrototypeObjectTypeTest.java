@@ -39,9 +39,14 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class PrototypeObjectTypeTest extends BaseJSTypeTestCase {
 
+  @Test
   public void testToString() {
     ObjectType type = registry.createAnonymousObjectType(null);
     assertEquals("{}", type.toString());

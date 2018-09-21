@@ -57,7 +57,11 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.util.Collection;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class JSDocInfoTest extends TestCase {
   private final TestErrorReporter errorReporter = new TestErrorReporter(null, null);
   private final JSTypeRegistry registry = new JSTypeRegistry(errorReporter);
@@ -66,10 +70,8 @@ public class JSDocInfoTest extends TestCase {
     return registry.getNativeType(typeId);
   }
 
-  /**
-   * Tests the assigned ordinal of the elements of the
-   * {@link JSDocInfo.Visibility} enum.
-   */
+  /** Tests the assigned ordinal of the elements of the {@link JSDocInfo.Visibility} enum. */
+  @Test
   public void testVisibilityOrdinal() {
     assertEquals(0, PRIVATE.ordinal());
     assertEquals(1, PACKAGE.ordinal());
@@ -77,6 +79,7 @@ public class JSDocInfoTest extends TestCase {
     assertEquals(3, PUBLIC.ordinal());
   }
 
+  @Test
   public void testSetType() {
     JSDocInfo info = new JSDocInfo();
     info.setType(fromString("string"));
@@ -94,6 +97,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isHidden());
   }
 
+  @Test
   public void testSetTypeAndVisibility() {
     JSDocInfo info = new JSDocInfo();
     info.setType(fromString("string"));
@@ -112,6 +116,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isHidden());
   }
 
+  @Test
   public void testSetReturnType() {
     JSDocInfo info = new JSDocInfo();
     info.setReturnType(fromString("string"));
@@ -129,6 +134,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isHidden());
   }
 
+  @Test
   public void testSetReturnTypeAndBaseType() {
     JSDocInfo info = new JSDocInfo();
     info.setBaseType(
@@ -150,6 +156,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isHidden());
   }
 
+  @Test
   public void testSetEnumParameterType() {
     JSDocInfo info = new JSDocInfo();
     info.setEnumParameterType(fromString("string"));
@@ -168,6 +175,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isHidden());
   }
 
+  @Test
   public void testMultipleSetType() {
     JSDocInfo info = new JSDocInfo();
     info.setType(fromString("number"));
@@ -200,6 +208,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.hasType());
   }
 
+  @Test
   public void testMultipleSetType2() {
     JSDocInfo info = new JSDocInfo();
 
@@ -233,6 +242,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.hasType());
   }
 
+  @Test
   public void testMultipleSetType3() {
     JSDocInfo info = new JSDocInfo();
     info.setEnumParameterType(fromString("boolean"));
@@ -265,6 +275,7 @@ public class JSDocInfoTest extends TestCase {
         .isStructurallyEqualTo(getNativeType(BOOLEAN_TYPE));
   }
 
+  @Test
   public void testSetTypedefType() {
     JSDocInfo info = new JSDocInfo();
     info.declareTypedefType(fromString("boolean"));
@@ -276,6 +287,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.hasReturnType());
   }
 
+  @Test
   public void testSetConstant() {
     JSDocInfo info = new JSDocInfo();
     info.setConstant(true);
@@ -287,6 +299,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isHidden());
   }
 
+  @Test
   public void testSetConstructor() {
     JSDocInfo info = new JSDocInfo();
     info.setConstructor(true);
@@ -297,6 +310,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isHidden());
   }
 
+  @Test
   public void testSetDefine() {
     JSDocInfo info = new JSDocInfo();
     info.setDefine(true);
@@ -307,6 +321,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isHidden());
   }
 
+  @Test
   public void testSetHidden() {
     JSDocInfo info = new JSDocInfo();
     info.setHidden(true);
@@ -318,6 +333,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isHidden());
   }
 
+  @Test
   public void testSetOverride() {
     JSDocInfo info = new JSDocInfo();
     info.setOverride(true);
@@ -326,6 +342,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isOverride());
   }
 
+  @Test
   public void testSetExport() {
     JSDocInfo info = new JSDocInfo();
     info.setExport(true);
@@ -333,6 +350,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isExport());
   }
 
+  @Test
   public void testSetPolymerBehavior() {
     JSDocInfo info = new JSDocInfo();
     assertFalse(info.isPolymerBehavior());
@@ -341,6 +359,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isPolymerBehavior());
   }
 
+  @Test
   public void testSetPolymer() {
     JSDocInfo info = new JSDocInfo();
     assertFalse(info.isPolymer());
@@ -349,6 +368,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isPolymer());
   }
 
+  @Test
   public void testSetCustomElement() {
     JSDocInfo info = new JSDocInfo();
     assertFalse(info.isCustomElement());
@@ -357,6 +377,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isCustomElement());
   }
 
+  @Test
   public void testSetMixinClass() {
     JSDocInfo info = new JSDocInfo();
     assertFalse(info.isMixinClass());
@@ -365,6 +386,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isMixinClass());
   }
 
+  @Test
   public void testSetMixinFunction() {
     JSDocInfo info = new JSDocInfo();
     assertFalse(info.isMixinFunction());
@@ -373,6 +395,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isMixinFunction());
   }
 
+  @Test
   public void testSetNoAlias() {
     JSDocInfo info = new JSDocInfo();
 
@@ -380,6 +403,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isOverride());
   }
 
+  @Test
   public void testSetDeprecated() {
     JSDocInfo info = new JSDocInfo();
     info.setDeprecated(true);
@@ -388,6 +412,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isDeprecated());
   }
 
+  @Test
   public void testMultipleSetFlags1() {
     JSDocInfo info = new JSDocInfo();
     info.setConstant(true);
@@ -423,6 +448,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isHidden());
   }
 
+  @Test
   public void testDescriptionContainsAtSignCode() {
     JSDocInfo info = new JSDocInfo(true);
     info.setOriginalCommentString("Blah blah {@code blah blah} blah blah.");
@@ -430,6 +456,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isAtSignCodePresent());
   }
 
+  @Test
   public void testDescriptionDoesNotContainAtSignCode() {
     JSDocInfo info = new JSDocInfo(true);
     info.setOriginalCommentString("Blah blah `blah blah` blah blah.");
@@ -437,6 +464,7 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isAtSignCodePresent());
   }
 
+  @Test
   public void testClone() {
     JSDocInfo info = new JSDocInfo();
     info.setDescription("The source info");
@@ -476,6 +504,7 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isHidden());
   }
 
+  @Test
   public void testCloneTypeExpressions1() {
     JSDocInfo info = new JSDocInfo();
     info.setDescription("The source info");
@@ -501,6 +530,7 @@ public class JSDocInfoTest extends TestCase {
         .isStructurallyEqualTo(getNativeType(STRING_TYPE));
   }
 
+  @Test
   public void testCloneTypeExpressions2() {
     JSDocInfo info = new JSDocInfo();
     info.declareParam(null, "a");
@@ -509,24 +539,28 @@ public class JSDocInfoTest extends TestCase {
     assertNull(cloned.getParameterType("a"));
   }
 
+  @Test
   public void testSetFileOverviewWithDocumentationOff() {
     JSDocInfo info = new JSDocInfo();
     info.documentFileOverview("hi bob");
     assertNull(info.getFileOverview());
   }
 
+  @Test
   public void testSetFileOverviewWithDocumentationOn() {
     JSDocInfo info = new JSDocInfo(true);
     info.documentFileOverview("hi bob");
     assertEquals("hi bob", info.getFileOverview());
   }
 
+  @Test
   public void testSetSuppressions() {
     JSDocInfo info = new JSDocInfo(true);
     info.addSuppressions(ImmutableSet.of("sam", "bob"));
     assertEquals(ImmutableSet.of("bob", "sam"), info.getSuppressions());
   }
 
+  @Test
   public void testSetModifies() {
     JSDocInfo info = new JSDocInfo(true);
     info.setModifies(ImmutableSet.of("this"));
@@ -537,14 +571,16 @@ public class JSDocInfoTest extends TestCase {
     assertEquals(ImmutableSet.of("arguments"), info.getModifies());
   }
 
-  public void testAddSingleTemplateTypeName(){
+  @Test
+  public void testAddSingleTemplateTypeName() {
     JSDocInfo info = new JSDocInfo(true);
     ImmutableList<String> typeNames = ImmutableList.of("T");
     assertTrue(info.declareTemplateTypeName("T"));
     assertEquals(typeNames, info.getTemplateTypeNames());
   }
 
-  public void testAddMultipleTemplateTypeName(){
+  @Test
+  public void testAddMultipleTemplateTypeName() {
     JSDocInfo info = new JSDocInfo(true);
     ImmutableList<String> typeNames = ImmutableList.of("T", "R");
     info.declareTemplateTypeName("T");
@@ -552,12 +588,14 @@ public class JSDocInfoTest extends TestCase {
     assertEquals(typeNames, info.getTemplateTypeNames());
   }
 
-  public void testFailToAddTemplateTypeName(){
+  @Test
+  public void testFailToAddTemplateTypeName() {
     JSDocInfo info = new JSDocInfo(true);
     info.declareTemplateTypeName("T");
     assertFalse(info.declareTemplateTypeName("T"));
   }
 
+  @Test
   public void testGetThrowsDescription() {
     JSDocInfo info = new JSDocInfo(true);
 
@@ -574,6 +612,7 @@ public class JSDocInfoTest extends TestCase {
   }
 
   // https://github.com/google/closure-compiler/issues/2328
+  @Test
   public void testIssue2328() {
     JSDocInfo info = new JSDocInfo();
 

@@ -58,44 +58,54 @@ import static com.google.javascript.rhino.testing.TypeSubject.types;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests {@link JSTypeRegistry}.
  *
  */
+@RunWith(JUnit4.class)
 public class JSTypeRegistryTest extends TestCase {
   // TODO(user): extend this class with more tests, as JSTypeRegistry is
   // now much larger
+  @Test
   public void testGetBuiltInType_boolean() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     assertType(typeRegistry.getType(null, "boolean"))
         .isStructurallyEqualTo(typeRegistry.getNativeType(JSTypeNative.BOOLEAN_TYPE));
   }
 
+  @Test
   public void testGetBuiltInType_iterable() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     assertType(typeRegistry.getGlobalType("Iterable"))
         .isStructurallyEqualTo(typeRegistry.getNativeType(ITERABLE_TYPE));
   }
 
+  @Test
   public void testGetBuiltInType_iterator() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     assertType(typeRegistry.getGlobalType("Iterator"))
         .isStructurallyEqualTo(typeRegistry.getNativeType(ITERATOR_TYPE));
   }
 
+  @Test
   public void testGetBuiltInType_generator() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     assertType(typeRegistry.getGlobalType("Generator"))
         .isStructurallyEqualTo(typeRegistry.getNativeType(GENERATOR_TYPE));
   }
 
+  @Test
   public void testGetBuildInType_iTemplateArray() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     assertType(typeRegistry.getGlobalType("ITemplateArray"))
         .isStructurallyEqualTo(typeRegistry.getNativeType(I_TEMPLATE_ARRAY_TYPE));
   }
 
+  @Test
   public void testGetBuiltInType_Promise() {
     JSTypeRegistry registry = new JSTypeRegistry(null);
     ObjectType promiseType = registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE);
@@ -113,6 +123,7 @@ public class JSTypeRegistryTest extends TestCase {
         paramType.toString());
   }
 
+  @Test
   public void testGetDeclaredType() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     JSType type = typeRegistry.createAnonymousObjectType(null);
@@ -126,6 +137,7 @@ public class JSTypeRegistryTest extends TestCase {
     assertType(typeRegistry.getType(null, name)).isStructurallyEqualTo(type);
   }
 
+  @Test
   public void testPropertyOnManyTypes() {
     // Given
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
@@ -147,6 +159,7 @@ public class JSTypeRegistryTest extends TestCase {
     }
   }
 
+  @Test
   public void testReadableTypeName() {
     JSTypeRegistry registry = new JSTypeRegistry(null);
 

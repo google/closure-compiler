@@ -39,14 +39,19 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
-
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for EnumElementTypes.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public class EnumElementTypeTest extends BaseJSTypeTestCase {
-  public void testSubtypeRelation() throws Exception {
+  @Test
+  public void testSubtypeRelation() {
     EnumElementType typeA = registry.createEnumType(
         "typeA", null, NUMBER_TYPE).getElementsType();
     EnumElementType typeB = registry.createEnumType(
@@ -62,7 +67,8 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
     assertTrue(typeB.isSubtype(NUMBER_TYPE));
   }
 
-  public void testMeet() throws Exception {
+  @Test
+  public void testMeet() {
     EnumElementType typeA = registry.createEnumType(
         "typeA", null, createUnionType(NUMBER_TYPE, STRING_TYPE))
         .getElementsType();

@@ -41,17 +41,21 @@ package com.google.javascript.rhino;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
+/** @author johnlenz@google.com (John Lenz) */
+@RunWith(JUnit4.class)
 public class IRTest extends TestCase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
+  @Test
   public void testEmpty() {
     testIR(IR.empty(), "EMPTY\n");
   }
 
+  @Test
   public void testFunction() {
     testIR(IR.function(IR.name("hi"), IR.paramList(), IR.block()),
         "FUNCTION hi\n" +
@@ -60,12 +64,14 @@ public class IRTest extends TestCase {
         "    BLOCK\n");
   }
 
+  @Test
   public void testArrowFunction() {
     testIR(
         IR.arrowFunction(IR.name("hi"), IR.paramList(), IR.block()),
         "FUNCTION hi [arrow_fn: 1]\n" + "    NAME hi\n" + "    PARAM_LIST\n" + "    BLOCK\n");
   }
 
+  @Test
   public void testParamList() {
     testIR(IR.paramList(),
         "PARAM_LIST\n");
@@ -76,6 +82,7 @@ public class IRTest extends TestCase {
         "    NAME b\n");
   }
 
+  @Test
   public void testBlock() {
     testIR(IR.block(),
         "BLOCK\n");
@@ -91,6 +98,7 @@ public class IRTest extends TestCase {
         "    EMPTY\n");
   }
 
+  @Test
   public void testScript() {
     testIR(IR.script(),
         "SCRIPT\n");
@@ -106,6 +114,7 @@ public class IRTest extends TestCase {
         "    EMPTY\n");
   }
 
+  @Test
   public void testScriptThrows() {
     boolean caught = false;
     try {
@@ -116,6 +125,7 @@ public class IRTest extends TestCase {
     assertTrue("expected exception was not seen", caught);
   }
 
+  @Test
   public void testVar() {
     testIR(IR.var(IR.name("a")),
         "VAR\n" +
@@ -127,6 +137,7 @@ public class IRTest extends TestCase {
         "        TRUE\n");
   }
 
+  @Test
   public void testReturn() {
     testIR(IR.returnNode(),
         "RETURN\n");
@@ -136,18 +147,21 @@ public class IRTest extends TestCase {
         "    NAME a\n");
   }
 
+  @Test
   public void testThrow() {
     testIR(IR.throwNode(IR.name("a")),
         "THROW\n" +
         "    NAME a\n");
   }
 
+  @Test
   public void testExprResult() {
     testIR(IR.exprResult(IR.name("a")),
         "EXPR_RESULT\n" +
         "    NAME a\n");
   }
 
+  @Test
   public void testIf() {
     testIR(IR.ifNode(IR.name("a"), IR.block()),
         "IF\n" +
@@ -161,6 +175,7 @@ public class IRTest extends TestCase {
         "    BLOCK\n");
   }
 
+  @Test
   public void testIssue727_1() {
     testIR(
         IR.tryFinally(
@@ -172,6 +187,7 @@ public class IRTest extends TestCase {
         "    BLOCK\n");
   }
 
+  @Test
   public void testIssue727_2() {
     testIR(
         IR.tryCatch(
@@ -187,6 +203,7 @@ public class IRTest extends TestCase {
         "            BLOCK\n");
   }
 
+  @Test
   public void testIssue727_3() {
     testIR(
         IR.tryCatchFinally(
@@ -202,6 +219,7 @@ public class IRTest extends TestCase {
         "    BLOCK\n");
   }
 
+  @Test
   public void testAdd() {
     testIR(
         IR.add(
@@ -214,6 +232,7 @@ public class IRTest extends TestCase {
 
   }
 
+  @Test
   public void testVarWithTemplateLitOnRHS() {
     testIR(
         IR.var(IR.name("x"), new Node(Token.TEMPLATELIT, IR.string(""))),

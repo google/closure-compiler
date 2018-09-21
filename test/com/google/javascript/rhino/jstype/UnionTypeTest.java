@@ -43,7 +43,12 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class UnionTypeTest extends BaseJSTypeTestCase {
   private static final MapBasedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
 
@@ -54,6 +59,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   private ObjectType sub3;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     unresolvedNamedType =
@@ -91,11 +97,10 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     assertTrue(type.isSubtypeOf(type));
   }
 
-  /**
-   * Tests the behavior of variants type.
-   */
+  /** Tests the behavior of variants type. */
   @SuppressWarnings("checked")
-  public void testUnionType() throws Exception {
+  @Test
+  public void testUnionType() {
     UnionType nullOrString =
         (UnionType) createUnionType(NULL_TYPE, STRING_OBJECT_TYPE);
     UnionType stringOrNull =
@@ -136,27 +141,24 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     Asserts.assertResolvesToSame(nullOrString);
   }
 
-  /**
-   * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
-   */
+  /** Tests {@link JSType#getGreatestSubtype(JSType)} on union types. */
+  @Test
   public void testGreatestSubtypeUnionTypes1() {
     assertType(createNullableType(STRING_TYPE).getGreatestSubtype(createNullableType(NUMBER_TYPE)))
         .isStructurallyEqualTo(NULL_TYPE);
   }
 
-  /**
-   * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
-   */
+  /** Tests {@link JSType#getGreatestSubtype(JSType)} on union types. */
   @SuppressWarnings("checked")
+  @Test
   public void testGreatestSubtypeUnionTypes2() {
     UnionType subUnion = (UnionType) createUnionType(sub1, sub2);
     assertType(subUnion.getGreatestSubtype(base)).isStructurallyEqualTo(subUnion);
   }
 
-  /**
-   * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
-   */
+  /** Tests {@link JSType#getGreatestSubtype(JSType)} on union types. */
   @SuppressWarnings("checked")
+  @Test
   public void testGreatestSubtypeUnionTypes3() {
     // (number,undefined,null)
     UnionType nullableOptionalNumber =
@@ -170,27 +172,24 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
         .isStructurallyEqualTo(nullUndefined);
   }
 
-  /**
-   * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
-   */
-  public void testGreatestSubtypeUnionTypes4() throws Exception {
+  /** Tests {@link JSType#getGreatestSubtype(JSType)} on union types. */
+  @Test
+  public void testGreatestSubtypeUnionTypes4() {
     UnionType union = (UnionType) createUnionType(NULL_TYPE, sub1, sub2);
     assertType(union.getGreatestSubtype(base)).isStructurallyEqualTo(createUnionType(sub1, sub2));
   }
 
-  /**
-   * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
-   */
-  public void testGreatestSubtypeUnionTypes5() throws Exception {
+  /** Tests {@link JSType#getGreatestSubtype(JSType)} on union types. */
+  @Test
+  public void testGreatestSubtypeUnionTypes5() {
     JSType subUnion = createUnionType(sub1, sub2);
     assertType(subUnion.getGreatestSubtype(STRING_OBJECT_TYPE))
         .isStructurallyEqualTo(NO_OBJECT_TYPE);
   }
 
-  /**
-   * Tests subtyping of union types.
-   */
-  public void testSubtypingUnionTypes() throws Exception {
+  /** Tests subtyping of union types. */
+  @Test
+  public void testSubtypingUnionTypes() {
     // subtypes
     assertTrue(BOOLEAN_TYPE.
         isSubtypeOf(createUnionType(BOOLEAN_TYPE, STRING_TYPE)));
@@ -234,12 +233,12 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   }
 
   /**
-   * Tests that special union types can assign to other types.  Unions
-   * containing the unknown type should be able to assign to any other
-   * type.
+   * Tests that special union types can assign to other types. Unions containing the unknown type
+   * should be able to assign to any other type.
    */
   @SuppressWarnings("checked")
-  public void testSpecialUnionCanAssignTo() throws Exception {
+  @Test
+  public void testSpecialUnionCanAssignTo() {
     // autoboxing quirks
     UnionType numbers = (UnionType) createUnionType(NUMBER_TYPE, NUMBER_OBJECT_TYPE);
     assertFalse(numbers.isSubtype(NUMBER_TYPE));
@@ -267,12 +266,10 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     assertFalse(stringDate.isSubtype(DATE_TYPE));
   }
 
-  /**
-   * Tests the factory method
-   * {@link JSTypeRegistry#createUnionType(JSType...)}.
-   */
+  /** Tests the factory method {@link JSTypeRegistry#createUnionType(JSType...)}. */
   @SuppressWarnings("checked")
-  public void testCreateUnionType() throws Exception {
+  @Test
+  public void testCreateUnionType() {
     // number
     UnionType optNumber =
         (UnionType) registry.createUnionType(NUMBER_TYPE, DATE_TYPE);
@@ -288,28 +285,32 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     assertTrue(optUnion.contains(REGEXP_TYPE));
   }
 
-
-  public void testUnionWithUnknown() throws Exception {
+  @Test
+  public void testUnionWithUnknown() {
     assertTrue(createUnionType(UNKNOWN_TYPE, NULL_TYPE).isUnknownType());
   }
 
-  public void testGetRestrictedUnion1() throws Exception {
+  @Test
+  public void testGetRestrictedUnion1() {
     UnionType numStr = (UnionType) createUnionType(NUMBER_TYPE, STRING_TYPE);
     assertType(numStr.getRestrictedUnion(NUMBER_TYPE)).isStructurallyEqualTo(STRING_TYPE);
   }
 
-  public void testGetRestrictedUnion2() throws Exception {
+  @Test
+  public void testGetRestrictedUnion2() {
     UnionType numStr = (UnionType) createUnionType(NULL_TYPE, sub1, sub2);
     assertType(numStr.getRestrictedUnion(base)).isStructurallyEqualTo(NULL_TYPE);
   }
 
+  @Test
   public void testIsEquivalentTo() {
     UnionType type = (UnionType) createUnionType(NUMBER_TYPE, STRING_TYPE);
     assertFalse(type.equals(null));
     assertTrue(type.isEquivalentTo(type));
   }
 
-  public void testProxyUnionType() throws Exception {
+  @Test
+  public void testProxyUnionType() {
     UnionType stringOrNumber =
         (UnionType) createUnionType(NUMBER_TYPE, STRING_TYPE);
     UnionType stringOrBoolean =
@@ -374,6 +375,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
             stringOrBooleanProxy).typeA.toString());
   }
 
+  @Test
   public void testCollapseUnion1() {
     assertEquals(
         "*",
@@ -381,6 +383,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
         .collapseUnion().toString());
   }
 
+  @Test
   public void testCollapseUnion2() {
     assertEquals(
         "?",
@@ -392,6 +395,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
         .collapseUnion().toString());
   }
 
+  @Test
   public void testCollapseUnion3() {
     assertEquals(
         "Object",
@@ -410,6 +414,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
         registry.createUnionType(sub1, sub2, sub3).collapseUnion().toString());
   }
 
+  @Test
   public void testCollapseUnion4() {
     assertEquals(
         "*",
@@ -421,12 +426,14 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
         .collapseUnion().toString());
   }
 
+  @Test
   public void testCollapseProxyUnion() {
     // Make sure we don't unbox the proxy.
     ProxyObjectType type = new ProxyObjectType(registry, OBJECT_TYPE);
     assertTrue(type == type.collapseUnion());
   }
 
+  @Test
   public void testShallowEquality() {
     assertTrue(
         registry.createUnionType(ARRAY_TYPE, STRING_TYPE)
