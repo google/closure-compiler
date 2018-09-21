@@ -20,13 +20,19 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Unit tests for {@link ConvertToTypedInterface} when running after type-checking.
- * This is only really useful for checking the wording of the CONST_WITH_SUGGESTION diagnostic.
+ * Unit tests for {@link ConvertToTypedInterface} when running after type-checking. This is only
+ * really useful for checking the wording of the CONST_WITH_SUGGESTION diagnostic.
  */
+@RunWith(JUnit4.class)
 public final class SuggestConstTypesTest extends CompilerTestCase {
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     allowExternsChanges();
@@ -50,6 +56,7 @@ public final class SuggestConstTypesTest extends CompilerTestCase {
         warning(ConvertToTypedInterface.CONSTANT_WITH_SUGGESTED_TYPE).withMessageContaining(type));
   }
 
+  @Test
   public void testSimpleSuggestConstJsdoc() {
     suggests("/** @const */ var x = cond ? true : 5;", "{(boolean|number)}");
     suggests("/** @constructor */ function Foo() {} /** @const */ var x = new Foo;", "{!Foo}");
