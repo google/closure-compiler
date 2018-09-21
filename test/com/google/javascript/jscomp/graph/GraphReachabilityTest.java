@@ -16,20 +16,21 @@
 
 package com.google.javascript.jscomp.graph;
 
-import com.google.javascript.jscomp.graph.GraphReachability;
-import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-import com.google.javascript.jscomp.graph.DiGraph;
-
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link GraphReachability}.
+ * Tests for {@link com.google.javascript.jscomp.graph.GraphReachability}.
  *
  */
+@RunWith(JUnit4.class)
 public final class GraphReachabilityTest extends TestCase {
   GraphReachability<String, String> reachability = null;
   DiGraph<String, String> graph = null;
 
+  @Test
   public void testSimple() {
     graph = LinkedDirectedGraph.create();
     graph.createNode("A");

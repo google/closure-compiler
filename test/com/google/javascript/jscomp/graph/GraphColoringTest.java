@@ -25,13 +25,18 @@ import com.google.javascript.jscomp.graph.GraphColoring.Color;
 import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
 import java.util.Comparator;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link com.google.javascript.jscomp.graph.GraphColoring}.
  *
  */
+@RunWith(JUnit4.class)
 public final class GraphColoringTest extends TestCase {
 
+  @Test
   public void testNoEdge() {
     Graph<String, String> graph = LinkedUndirectedGraph.create();
     for (int i = 0; i < 5; i++) {
@@ -47,6 +52,7 @@ public final class GraphColoringTest extends TestCase {
     }
   }
 
+  @Test
   public void testTwoNodesConnected() {
     Graph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("A");
@@ -60,6 +66,7 @@ public final class GraphColoringTest extends TestCase {
     assertThat(coloring.getPartitionSuperNode("B")).isEqualTo("B");
   }
 
+  @Test
   public void testGreedy() {
     Graph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("A");
@@ -78,6 +85,7 @@ public final class GraphColoringTest extends TestCase {
     assertThat(coloring.getPartitionSuperNode("C")).isEqualTo("C");
   }
 
+  @Test
   public void testFullyConnected() {
     final int count = 100;
     Graph<String, String> graph = LinkedUndirectedGraph.create();
@@ -99,6 +107,7 @@ public final class GraphColoringTest extends TestCase {
     }
   }
 
+  @Test
   public void testAllConnectedToOneNode() {
     final int count = 10;
     Graph<String, String> graph = LinkedUndirectedGraph.create();
@@ -117,6 +126,7 @@ public final class GraphColoringTest extends TestCase {
     }
   }
 
+  @Test
   public void testTwoFullyConnected() {
     final int count = 100;
     // A graph with two disconnected disjunct cliques.
@@ -148,6 +158,7 @@ public final class GraphColoringTest extends TestCase {
     validateColoring(graph);
   }
 
+  @Test
   public void testDeterministic() {
     // A pentagon.
     Graph<String, String> graph = LinkedUndirectedGraph.create();
