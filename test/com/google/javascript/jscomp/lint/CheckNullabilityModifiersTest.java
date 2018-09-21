@@ -21,8 +21,12 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Unit tests for {@link CheckNullabilityModifiers}. */
+@RunWith(JUnit4.class)
 public final class CheckNullabilityModifiersTest extends CompilerTestCase {
 
   @Override
@@ -37,6 +41,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     return options;
   }
 
+  @Test
   public void testPrimitiveType() {
     checkRedundantWarning("/** @type {!boolean} */ var x;");
     checkRedundantWarning("/** @type {!number} */ var x;");
@@ -49,6 +54,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @type {boolean} */ var x;");
   }
 
+  @Test
   public void testReferenceType() {
     checkMissingWarning("/** @type {Object} */ var x;");
     checkMissingWarning("/** @type {Function} */ var x;");
@@ -58,6 +64,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @type {!Object} */ var x;");
   }
 
+  @Test
   public void testRecordType() {
     checkRedundantWarning("/** @type {!{foo: string}} */ var x;");
     checkRedundantWarning("/** @type {{foo: !string}} */ var x;");
@@ -71,6 +78,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @type {{foo: ?Object}} */ var x;");
   }
 
+  @Test
   public void testFunctionType() {
     checkRedundantWarning("/** @type {!function()} */ function f(){}");
     checkRedundantWarning("/** @type {function(!string)} */ function f(x){}");
@@ -87,6 +95,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @type {function(this:Object)} */ function f(){}");
   }
 
+  @Test
   public void testUnionType() {
     checkRedundantWarning("/** @type {!Object|!string} */ var x;");
 
@@ -96,6 +105,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @type {!Object|string} */ var x;");
   }
 
+  @Test
   public void testEnumType() {
     checkRedundantWarning("/** @enum {!boolean} */ var x;");
     checkRedundantWarning("/** @enum {!number} */ var x;");
@@ -109,6 +119,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @enum {!Object} */ var x;");
   }
 
+  @Test
   public void testTemplateDefinitionType() {
     checkNoWarning("/** @param {T} x @template T */", "function f(x){}");
     checkNoWarning("/** @param {S} x @return {T} @template S,T */", "function f(x){}");
@@ -118,6 +129,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
             "/** @param {T} x */ Foo.prototype.bar = function(x){};"));
   }
 
+  @Test
   public void testTemplateInstantiationType() {
     checkRedundantWarning("/** @type {!Array<!string>} */ var x;");
 
@@ -130,6 +142,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @type {!Array<!Object>} */ var x;");
   }
 
+  @Test
   public void testParamType() {
     checkRedundantWarning("/** @param {!string} x */ function f(x){}");
 
@@ -141,10 +154,12 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @param {!Object} x */ function f(x){}");
   }
 
+  @Test
   public void testParamMissingType() {
     checkNoWarning("/** @param x */ function f(x){}");
   }
 
+  @Test
   public void testReturnType() {
     checkRedundantWarning("/** @return {!string} */ function f(){}");
 
@@ -156,6 +171,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @return {!Object} */ function f(){}");
   }
 
+  @Test
   public void testTypedefType() {
     checkRedundantWarning("/** @typedef {!string} */ var x;");
 
@@ -167,6 +183,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @typedef {!Object} */ var x;");
   }
 
+  @Test
   public void testThisType() {
     checkRedundantWarning("/** @this {!string} */ function f(){}");
 
@@ -177,11 +194,13 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @this {!Object} */ function f(){}");
   }
 
+  @Test
   public void testBaseType() {
     checkNoWarning("/** @extends {Object} */ function f(){}");
     checkNoWarning("/** @implements {Object} */ function f(){}");
   }
 
+  @Test
   public void testThrowsType() {
     // TODO(tjgq): The style guide forbids throwing anything other than Error subclasses, so an
     // @throws should never contain a primitive type. Should we suppress the warning in this case?
@@ -195,6 +214,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @throws {!Object} */ function f(){}");
   }
 
+  @Test
   public void testEndPosition() {
     checkRedundantWarning("/** @type {string!} */ var x;");
 
@@ -203,6 +223,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @type {Object?} */ var x;");
   }
 
+  @Test
   public void testMultipleFiles() {
     checkMissingWarning(
         "/** @param {T} x @return {T} @template T */ function f(x){}",
