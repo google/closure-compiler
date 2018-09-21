@@ -21,7 +21,11 @@ import static com.google.javascript.jscomp.lint.CheckNoMutatedEs6Exports.MUTATED
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class CheckNoMutatedEs6ExportsTest extends CompilerTestCase {
 
   @Override
@@ -29,19 +33,23 @@ public class CheckNoMutatedEs6ExportsTest extends CompilerTestCase {
     return new CheckNoMutatedEs6Exports(compiler);
   }
 
+  @Test
   public void testNeverMutatedExportIsOk() {
     testSame("export let x = 0;");
   }
 
+  @Test
   public void testLocalWithExportedNameCanBeMutated() {
     testSame("export let x = 0; () => { let x = 0; x++; }");
   }
 
+  @Test
   public void testMutatedDuringInitializationIsOk() {
     testSame("export let x = 0; x++;");
     testSame("let x = 0; export {x as y}; x++;");
   }
 
+  @Test
   public void testMutatedInInnerScopeIsError() {
     testWarning("export let x = 0; () => x++;", MUTATED_EXPORT);
     testWarning("let x = 0; export {x as y}; () => x++;", MUTATED_EXPORT);

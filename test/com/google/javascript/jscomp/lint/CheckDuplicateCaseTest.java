@@ -21,16 +21,19 @@ import static com.google.javascript.jscomp.lint.CheckDuplicateCase.DUPLICATE_CAS
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link CheckDuplicateCase}.
- */
+/** Test case for {@link CheckDuplicateCase}. */
+@RunWith(JUnit4.class)
 public final class CheckDuplicateCaseTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckDuplicateCase(compiler);
   }
 
+  @Test
   public void testCheckDuplicateCase_noWarning() {
     testSame("switch (foo) { case 1: break; case 2: break; }");
     testSame("switch (foo) { case 1: break; case '1': break; }");
@@ -38,6 +41,7 @@ public final class CheckDuplicateCaseTest extends CompilerTestCase {
     testSame("switch (foo) { case 1: break; } switch (bar) { case 1: break; }");
   }
 
+  @Test
   public void testCheckDuplicateCase_warning() {
     testWarning("switch (foo) { case 1: var a = 3; case 1: break; }", DUPLICATE_CASE);
     testWarning("switch (foo) { case 1: break; case 2: break; case 1: break; }", DUPLICATE_CASE);

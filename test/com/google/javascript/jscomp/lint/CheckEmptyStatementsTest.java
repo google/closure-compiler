@@ -21,10 +21,12 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link CheckEmptyStatements}.
- */
+/** Test case for {@link CheckEmptyStatements}. */
+@RunWith(JUnit4.class)
 public class CheckEmptyStatementsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -42,20 +44,24 @@ public class CheckEmptyStatementsTest extends CompilerTestCase {
     testWarning(js, CheckEmptyStatements.USELESS_EMPTY_STATEMENT);
   }
 
+  @Test
   public void testWarning() {
     testWarning("function f() {};");
     testWarning("var x;;");
     testWarning("alert(1);;");
   }
 
+  @Test
   public void testWarning_withES6Modules01() {
     testWarning("export function f() {};;");
   }
 
+  @Test
   public void testWarning_withES6Modules02() {
     testWarning("export var x;;");
   }
 
+  @Test
   public void testNoWarning() {
     testSame("function f() {}");
     testSame("var x;");
@@ -63,10 +69,12 @@ public class CheckEmptyStatementsTest extends CompilerTestCase {
     testSame("if (x); y;");
   }
 
+  @Test
   public void testNoWarning_withES6Modules01() {
     testSame("export function f() {}");
   }
 
+  @Test
   public void testNoWarning_withES6Modules02() {
     testSame("export var x;");
   }

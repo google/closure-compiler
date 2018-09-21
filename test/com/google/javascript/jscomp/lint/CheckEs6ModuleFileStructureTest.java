@@ -21,7 +21,11 @@ import static com.google.javascript.jscomp.lint.CheckEs6ModuleFileStructure.MUST
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class CheckEs6ModuleFileStructureTest extends CompilerTestCase {
 
   @Override
@@ -29,6 +33,7 @@ public class CheckEs6ModuleFileStructureTest extends CompilerTestCase {
     return new CheckEs6ModuleFileStructure(compiler);
   }
 
+  @Test
   public void testImportsMustBeFirstIfPresent() {
     testSame("var notAModule;");
     testSame("export let noImports;");
@@ -36,6 +41,7 @@ public class CheckEs6ModuleFileStructureTest extends CompilerTestCase {
     testWarning("let first; import notFirst from 'file';", MUST_COME_BEFORE);
   }
 
+  @Test
   public void testDeclareNamespaceAfterImportsIfPresent() {
     testSame("import noDeclareNamespace from 'file';");
     testSame("goog.module.declareNamespace('name.space'); export let noImports;");
@@ -46,6 +52,7 @@ public class CheckEs6ModuleFileStructureTest extends CompilerTestCase {
         MUST_COME_BEFORE);
   }
 
+  @Test
   public void testGoogRequireAfterImportsAndDeclareNamesButBeforeOthers() {
     testSame("const bar = goog.require('bar');");
     testSame("const bar = goog.require('bar'); let notAModule;");

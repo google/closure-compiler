@@ -22,7 +22,11 @@ import static com.google.javascript.jscomp.lint.CheckEs6Modules.NO_DEFAULT_EXPOR
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class CheckEs6ModulesTest extends CompilerTestCase {
 
   @Override
@@ -30,12 +34,14 @@ public class CheckEs6ModulesTest extends CompilerTestCase {
     return new CheckEs6Modules(compiler);
   }
 
+  @Test
   public void testDuplicateImports() {
     testSame("import singleImport from 'file';");
     testSame("import first from 'first'; import second from 'second';");
     testWarning("import * as first from 'file'; import {second} from 'file';", DUPLICATE_IMPORT);
   }
 
+  @Test
   public void testNoDefaultExport() {
     testWarning("export default 0", NO_DEFAULT_EXPORT);
   }
