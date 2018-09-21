@@ -28,15 +28,20 @@ import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathResolver;
 import javax.annotation.Nullable;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link ModuleLoader}. */
 
+@RunWith(JUnit4.class)
 public final class ModuleLoaderTest extends TestCase {
   private final ImmutableMap<String, String> packageJsonMainEntries =
       ImmutableMap.of(
           "/B/package.json", "/B/lib/b",
           "/node_modules/B/package.json", "/node_modules/B/lib/b.js");
 
+  @Test
   public void testWindowsAddresses() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -48,6 +53,7 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("js/b.js", loader.resolve("js\\a.js").resolveJsModule("./b"));
   }
 
+  @Test
   public void testJsExtensionNode() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -61,7 +67,8 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("js/b.js", loader.resolve("js/a.js").resolveJsModule("./b.js"));
   }
 
-  public void testLocateJsNode() throws Exception {
+  @Test
+  public void testLocateJsNode() {
     ModuleLoader loader =
         new ModuleLoader(
             null,
@@ -83,7 +90,8 @@ public final class ModuleLoaderTest extends TestCase {
     assertNull(loader.resolve("folder/app.js").resolveJsModule("index"));
   }
 
-  public void testLocateNodeModuleNode() throws Exception {
+  @Test
+  public void testLocateNodeModuleNode() {
     ImmutableList<CompilerInput> compilerInputs =
         inputs(
             "/A/index.js",
@@ -126,6 +134,7 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("/node_modules/B/lib/b.js", loader.resolve("/app.js").resolveJsModule("B"));
   }
 
+  @Test
   public void testJsExtensionBrowser() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -138,7 +147,8 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("js/b.js", loader.resolve("js/a.js").resolveJsModule("./b.js"));
   }
 
-  public void testLocateJsBrowser() throws Exception {
+  @Test
+  public void testLocateJsBrowser() {
     ModuleLoader loader =
         new ModuleLoader(
             null,
@@ -164,7 +174,8 @@ public final class ModuleLoaderTest extends TestCase {
     assertNull(loader.resolve("folder/app.js").resolveJsModule("index"));
   }
 
-  public void testLocateNodeModuleBrowser() throws Exception {
+  @Test
+  public void testLocateNodeModuleBrowser() {
     ImmutableList<CompilerInput> compilerInputs =
         inputs(
             "/A/index.js",
@@ -204,7 +215,8 @@ public final class ModuleLoaderTest extends TestCase {
     assertNull(loader.resolve("/app.js").resolveJsModule("B"));
   }
 
-  public void testNormalizeUris() throws Exception {
+  @Test
+  public void testNormalizeUris() {
     ModuleLoader loader =
         new ModuleLoader(
             null,
@@ -219,7 +231,8 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("foo%20bar.js", loader.resolve("foo bar.js"));
   }
 
-  public void testDuplicateUris() throws Exception {
+  @Test
+  public void testDuplicateUris() {
     try {
       new ModuleLoader(
           null,
@@ -232,7 +245,8 @@ public final class ModuleLoaderTest extends TestCase {
     }
   }
 
-  public void testCanonicalizePath() throws Exception {
+  @Test
+  public void testCanonicalizePath() {
     assertEquals("a/b/c", ModuleNames.canonicalizePath("a/b/c"));
     assertEquals("a/c", ModuleNames.canonicalizePath("a/b/../c"));
     assertEquals("b/c", ModuleNames.canonicalizePath("a/b/../../b/c"));
@@ -243,6 +257,7 @@ public final class ModuleLoaderTest extends TestCase {
     assertEquals("/", ModuleNames.canonicalizePath("/a/.."));
   }
 
+  @Test
   public void testEscapePath() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -259,6 +274,7 @@ public final class ModuleLoaderTest extends TestCase {
         .isEqualTo("/has-special-chars.js");
   }
 
+  @Test
   public void testDoNoEscapePath() {
     // : is a character that is escaped
     ModuleLoader loader =
@@ -283,7 +299,8 @@ public final class ModuleLoaderTest extends TestCase {
     return builder.build();
   }
 
-  public void testLocateNodeModulesNoLeadingSlash() throws Exception {
+  @Test
+  public void testLocateNodeModulesNoLeadingSlash() {
     ImmutableList<CompilerInput> compilerInputs =
         inputs(
             "/A/index.js",
@@ -325,7 +342,8 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("/node_modules/B/lib/b.js", loader.resolve("/app.js").resolveJsModule("B"));
   }
 
-  public void testLocateNodeModulesBrowserFieldAdvancedUsage() throws Exception {
+  @Test
+  public void testLocateNodeModulesBrowserFieldAdvancedUsage() {
     // case where the package.json looks like the following:
     //   {"main": "server.js",
     //    "browser": {"server.js": "client.js",
@@ -375,7 +393,8 @@ public final class ModuleLoaderTest extends TestCase {
         loader.resolve("/node_modules/mymodule/client.js").resolveJsModule("./exclude/this.js"));
   }
 
-  public void testWebpack() throws Exception {
+  @Test
+  public void testWebpack() {
     ImmutableMap<String, String> webpackModulesById =
         ImmutableMap.of(
             "1", "A/index.js",
@@ -410,6 +429,7 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("A/index.js", loader.resolve("app.js").resolveJsModule("./A/index"));
   }
 
+  @Test
   public void testBrowserWithPrefixReplacement() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -432,6 +452,7 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("/app.js", loader.resolve("fake.js").resolveJsModule("@root/app.js"));
   }
 
+  @Test
   public void testBrowserWithPrefixReplacementResolveModuleAsPath() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -456,6 +477,7 @@ public final class ModuleLoaderTest extends TestCase {
         loader.resolve("fake.js").resolveModuleAsPath("@not/a/root/index.js"));
   }
 
+  @Test
   public void testBrowserWithPrefixReplacementAppliedMostSpecificToLeast() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -480,6 +502,7 @@ public final class ModuleLoaderTest extends TestCase {
         loader.resolve("fake.js").resolveJsModule("0/1/2/file.js"));
   }
 
+  @Test
   public void testCustomResolution() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -516,6 +539,7 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("A/index.js", loader.resolve("folder/app.js").resolveJsModule("@custom/A/index.js"));
   }
 
+  @Test
   public void testRootsAppliedMostSpecificFirst() {
     ModuleLoader loader =
         new ModuleLoader(
