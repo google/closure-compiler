@@ -462,10 +462,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass(PassNames.AFTER_STANDARD_CHECKS));
 
-    if (!options.checksOnly && options.j2clPassMode.shouldAddJ2clPasses()) {
-      checks.add(j2clPass);
-    }
-
     if (!options.checksOnly) {
       // At this point all checks have been done.
       // There's no need to complete transpilation if we're only running checks.
@@ -522,7 +518,10 @@ public final class DefaultPassConfig extends PassConfig {
     // optimizing passes.
     passes.add(gatherExternProperties);
 
+    // Should be run before runtimeTypeCheck and instrumentForCoverage as they rewrite code that
+    // this pass expects to see.
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      passes.add(j2clPass);
       passes.add(j2clUtilGetDefineRewriterPass);
     }
 
@@ -1112,12 +1111,6 @@ public final class DefaultPassConfig extends PassConfig {
         removeSuperMethodsPass,
         "Super-call method removal must run after closure code removal, because "
             + "removing assertions may make more super calls eligible to be stripped.");
-
-    assertPassOrder(
-        checks,
-        j2clPass,
-        TranspilationPasses.rewriteGenerators,
-        "J2CL normalization should be done before generator re-writing.");
   }
 
   /**
