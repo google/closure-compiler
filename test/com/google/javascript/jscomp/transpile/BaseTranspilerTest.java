@@ -24,11 +24,16 @@ import com.google.javascript.jscomp.bundle.TranspilationException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link BaseTranspiler}. */
 
+@RunWith(JUnit4.class)
 public final class BaseTranspilerTest extends TestCase {
 
   private Transpiler transpiler;
@@ -48,6 +53,7 @@ public final class BaseTranspilerTest extends TestCase {
   }
 
   @Override
+  @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
     transpiler = new BaseTranspiler(mockCompiler, "es6_runtime");
@@ -56,6 +62,7 @@ public final class BaseTranspilerTest extends TestCase {
 
   // Tests for BaseTranspiler
 
+  @Test
   public void testTranspiler_transpile() {
     when(mockCompiler.compile(FOO_JS, "bar"))
         .thenReturn(new BaseTranspiler.CompileResult("result", true, "srcmap"));
@@ -63,6 +70,7 @@ public final class BaseTranspilerTest extends TestCase {
         .isEqualTo(new TranspileResult(FOO_JS, "bar", "result", "srcmap"));
   }
 
+  @Test
   public void testTranspiler_noTranspilation() {
     when(mockCompiler.compile(FOO_JS, "bar"))
         .thenReturn(new BaseTranspiler.CompileResult("result", false, "srcmap"));
@@ -70,6 +78,7 @@ public final class BaseTranspilerTest extends TestCase {
         .isEqualTo(new TranspileResult(FOO_JS, "bar", "bar", ""));
   }
 
+  @Test
   public void testTranspiler_runtime() {
     when(mockCompiler.runtime("es6_runtime")).thenReturn("$jscomp.es6();");
     assertThat(transpiler.runtime()).isEqualTo("$jscomp.es6();");
@@ -77,6 +86,7 @@ public final class BaseTranspilerTest extends TestCase {
 
   // Tests for CompilerSupplier
 
+  @Test
   public void testCompilerSupplier_compileChanged() {
     BaseTranspiler.CompileResult result = compiler.compile(SOURCE_JS, "const x = () => 42;");
     assertThat(result.source).isEqualTo("var x = function() {\n  return 42;\n};\n");
@@ -85,6 +95,7 @@ public final class BaseTranspilerTest extends TestCase {
         .contains("\"mappings\":\"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA,SAAA,EAAA;AAAA,CAAhB;;\"");
   }
 
+  @Test
   public void testCompilerSupplier_compileNoChange() {
     BaseTranspiler.CompileResult result = compiler.compile(SOURCE_JS, "var x = 42;");
     assertThat(result.source).isEqualTo("var x = 42;\n");
@@ -92,6 +103,7 @@ public final class BaseTranspilerTest extends TestCase {
     assertThat(result.sourceMap).isEmpty();
   }
 
+  @Test
   public void testCompilerSupplier_error() {
     try {
       compiler.compile(SOURCE_JS, "cons x = () => 42;");
@@ -99,6 +111,7 @@ public final class BaseTranspilerTest extends TestCase {
     } catch (TranspilationException expected) {}
   }
 
+  @Test
   public void testCompilerSupplier_runtime() {
     String runtime = compiler.runtime("es6_runtime");
     assertThat(runtime).contains("$jscomp.polyfill(\"Map\"");
