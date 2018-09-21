@@ -25,14 +25,18 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.Arrays;
 import java.util.Collection;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-public final class SemanticReverseAbstractInterpreterTest
-    extends CompilerTypeTestCase {
+@RunWith(JUnit4.class)
+public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTestCase {
 { new GoogleCodingConvention(); }  private ReverseAbstractInterpreter interpreter;
   private TypedScope functionScope;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
 

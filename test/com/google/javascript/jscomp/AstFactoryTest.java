@@ -32,14 +32,20 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class AstFactoryTest extends TestCase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private Compiler compiler;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     compiler = new Compiler();
   }
@@ -93,6 +99,7 @@ public class AstFactoryTest extends TestCase {
     return scopeCreator.createScope(root, null);
   }
 
+  @Test
   public void testStringLiteral() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -102,6 +109,7 @@ public class AstFactoryTest extends TestCase {
     assertType(stringLiteral.getJSType()).isString();
   }
 
+  @Test
   public void testNumberLiteral() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -111,6 +119,7 @@ public class AstFactoryTest extends TestCase {
     assertType(numberLiteral.getJSType()).isNumber();
   }
 
+  @Test
   public void testBooleanLiteral() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -123,6 +132,7 @@ public class AstFactoryTest extends TestCase {
     assertType(falseNode.getJSType()).isBoolean();
   }
 
+  @Test
   public void testCreateArgumentsReference() {
     // Make sure the compiler's type registry includes the standard externs definition for
     // Arguments.
@@ -135,6 +145,7 @@ public class AstFactoryTest extends TestCase {
     assertType(argumentsNode.getJSType()).isEqualTo(getRegistry().getGlobalType("Arguments"));
   }
 
+  @Test
   public void testCreateNameWithJSType() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -144,6 +155,7 @@ public class AstFactoryTest extends TestCase {
     assertType(x.getJSType()).isString();
   }
 
+  @Test
   public void testCreateNameWithNativeType() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -153,6 +165,7 @@ public class AstFactoryTest extends TestCase {
     assertType(x.getJSType()).isString();
   }
 
+  @Test
   public void testCreateNameFromScope() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -165,6 +178,7 @@ public class AstFactoryTest extends TestCase {
     assertType(x.getJSType()).isString();
   }
 
+  @Test
   public void testCreateThisReference() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -173,6 +187,7 @@ public class AstFactoryTest extends TestCase {
     assertType(x.getJSType()).isString();
   }
 
+  @Test
   public void testCreateGetpropJscompGlobal() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -191,6 +206,7 @@ public class AstFactoryTest extends TestCase {
     assertType(jscompDotGlobal.getJSType()).isEqualTo(getNativeType(JSTypeNative.GLOBAL_THIS));
   }
 
+  @Test
   public void testCreateGetpropForObjectToString() {
     // It's convenient to use Object.toString for testing, since it's a native type we can just
     // look up without having to parse code.
@@ -211,6 +227,7 @@ public class AstFactoryTest extends TestCase {
     assertType(objDotToString.getJSType()).isEqualTo(nativeObjectType.getPropertyType("toString"));
   }
 
+  @Test
   public void testCreateStringKey() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -223,6 +240,7 @@ public class AstFactoryTest extends TestCase {
     assertType(stringKeyNode.getJSType()).isNumber();
   }
 
+  @Test
   public void testCreateComputedProperty() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -237,6 +255,7 @@ public class AstFactoryTest extends TestCase {
     assertType(computedPropertyNode.getJSType()).isNumber();
   }
 
+  @Test
   public void testCreateGetElem() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -251,6 +270,7 @@ public class AstFactoryTest extends TestCase {
     assertType(getElemNode.getJSType()).isUnknown();
   }
 
+  @Test
   public void testCreateComma() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -263,6 +283,7 @@ public class AstFactoryTest extends TestCase {
     assertType(commaNode.getJSType()).isNumber();
   }
 
+  @Test
   public void testCreateCommas() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -292,6 +313,7 @@ public class AstFactoryTest extends TestCase {
     assertType(stringNumber.getJSType()).isNumber();
   }
 
+  @Test
   public void testCreateIn() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -303,6 +325,7 @@ public class AstFactoryTest extends TestCase {
     assertThat(n.children()).containsExactly(prop, obj).inOrder();
   }
 
+  @Test
   public void testCreateAnd() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -315,6 +338,7 @@ public class AstFactoryTest extends TestCase {
     assertType(andNode.getJSType()).toStringIsEqualTo("(number|string)");
   }
 
+  @Test
   public void testCreateAndWithAlwaysFalsyLhs() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -328,6 +352,7 @@ public class AstFactoryTest extends TestCase {
     assertType(andNode.getJSType()).toStringIsEqualTo("null");
   }
 
+  @Test
   public void testCreateAndWithAlwaysTruthyLhs() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -341,6 +366,7 @@ public class AstFactoryTest extends TestCase {
     assertType(andNode.getJSType()).toStringIsEqualTo("string");
   }
 
+  @Test
   public void testCreateOr() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -353,6 +379,7 @@ public class AstFactoryTest extends TestCase {
     assertType(andNode.getJSType()).toStringIsEqualTo("(number|string)");
   }
 
+  @Test
   public void testCreateOrWithAlwaysFalsyLhs() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -366,6 +393,7 @@ public class AstFactoryTest extends TestCase {
     assertType(andNode.getJSType()).toStringIsEqualTo("string");
   }
 
+  @Test
   public void testCreateOrWithAlwaysTruthyLhs() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -379,6 +407,7 @@ public class AstFactoryTest extends TestCase {
     assertType(andNode.getJSType()).toStringIsEqualTo("Object");
   }
 
+  @Test
   public void testCreateFreeCall() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -406,6 +435,7 @@ public class AstFactoryTest extends TestCase {
     assertType(callNode.getJSType()).isString();
   }
 
+  @Test
   public void testCreateMethodCall() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -435,6 +465,7 @@ public class AstFactoryTest extends TestCase {
     assertType(callNode.getJSType()).isString();
   }
 
+  @Test
   public void testCreateStaticMethodCall() {
     // NOTE: This method is testing both createCall() and createQName()
     AstFactory astFactory = createTestAstFactory();
@@ -464,6 +495,7 @@ public class AstFactoryTest extends TestCase {
     assertType(callNode.getJSType()).isString();
   }
 
+  @Test
   public void testCreateStaticMethodCallDotCall() {
     // NOTE: This method is testing both createCall() and createQName()
     AstFactory astFactory = createTestAstFactory();
@@ -494,6 +526,7 @@ public class AstFactoryTest extends TestCase {
     assertType(callNode.getJSType()).isString();
   }
 
+  @Test
   public void testCreateConstructorCall() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -522,6 +555,7 @@ public class AstFactoryTest extends TestCase {
     assertType(callNode.getJSType()).isEqualTo(classBInstanceType);
   }
 
+  @Test
   public void testCreateEmptyFunction() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -537,6 +571,7 @@ public class AstFactoryTest extends TestCase {
     assertType(emptyFunction.getJSType()).isEqualTo(functionType);
   }
 
+  @Test
   public void testCreateFunction() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -560,6 +595,7 @@ public class AstFactoryTest extends TestCase {
         .inOrder();
   }
 
+  @Test
   public void testCreateMemberFunctionDef() {
     AstFactory astFactory = createTestAstFactory();
 

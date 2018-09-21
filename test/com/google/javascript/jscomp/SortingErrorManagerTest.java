@@ -23,11 +23,15 @@ import com.google.javascript.jscomp.SortingErrorManager.LeveledJSErrorComparator
 import java.util.ArrayList;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests {@link SortingErrorManager}.
  *
  */
+@RunWith(JUnit4.class)
 public final class SortingErrorManagerTest extends TestCase {
   private static final String NULL_SOURCE = null;
 
@@ -41,45 +45,52 @@ public final class SortingErrorManagerTest extends TestCase {
   private static final DiagnosticType JOO_TYPE =
       DiagnosticType.error("TEST_JOO", "Joo");
 
-  public void testOrderingBothNull() throws Exception {
+  @Test
+  public void testOrderingBothNull() {
     assertEquals(0, comparator.compare(null, null));
   }
 
-  public void testOrderingSourceName1() throws Exception {
+  @Test
+  public void testOrderingSourceName1() {
     JSError e1 = JSError.make(NULL_SOURCE, -1, -1, FOO_TYPE);
     JSError e2 = JSError.make("a", -1, -1, FOO_TYPE);
 
     assertSmaller(error(e1), error(e2));
   }
 
-  public void testOrderingSourceName2() throws Exception {
+  @Test
+  public void testOrderingSourceName2() {
     JSError e1 = JSError.make("a", -1, -1, FOO_TYPE);
     JSError e2 = JSError.make("b", -1, -1, FOO_TYPE);
 
     assertSmaller(error(e1), error(e2));
   }
 
-  public void testOrderingLineno1() throws Exception {
+  @Test
+  public void testOrderingLineno1() {
     JSError e1 = JSError.make(NULL_SOURCE, -1, -1, FOO_TYPE);
     JSError e2 = JSError.make(NULL_SOURCE, 2, -1, FOO_TYPE);
 
     assertSmaller(error(e1), error(e2));
   }
 
-  public void testOrderingLineno2() throws Exception {
+  @Test
+  public void testOrderingLineno2() {
     JSError e1 = JSError.make(NULL_SOURCE, 8, -1, FOO_TYPE);
     JSError e2 = JSError.make(NULL_SOURCE, 56, -1, FOO_TYPE);
     assertSmaller(error(e1), error(e2));
   }
 
-  public void testOrderingCheckLevel() throws Exception {
+  @Test
+  public void testOrderingCheckLevel() {
     JSError e1 = JSError.make(NULL_SOURCE, -1, -1, FOO_TYPE);
     JSError e2 = JSError.make(NULL_SOURCE, -1, -1, FOO_TYPE);
 
     assertSmaller(warning(e1), error(e2));
   }
 
-  public void testOrderingCharno1() throws Exception {
+  @Test
+  public void testOrderingCharno1() {
     JSError e1 = JSError.make(NULL_SOURCE, 5, -1, FOO_TYPE);
     JSError e2 = JSError.make(NULL_SOURCE, 5, 2, FOO_TYPE);
 
@@ -88,7 +99,8 @@ public final class SortingErrorManagerTest extends TestCase {
     assertSmaller(warning(e1), error(e2));
   }
 
-  public void testOrderingCharno2() throws Exception {
+  @Test
+  public void testOrderingCharno2() {
     JSError e1 = JSError.make(NULL_SOURCE, 8, 7, FOO_TYPE);
     JSError e2 = JSError.make(NULL_SOURCE, 8, 5, FOO_TYPE);
 
@@ -97,13 +109,15 @@ public final class SortingErrorManagerTest extends TestCase {
     assertSmaller(warning(e2), error(e1));
   }
 
-  public void testOrderingDescription() throws Exception {
+  @Test
+  public void testOrderingDescription() {
     JSError e1 = JSError.make(NULL_SOURCE, -1, -1, FOO_TYPE);
     JSError e2 = JSError.make(NULL_SOURCE, -1, -1, JOO_TYPE);
 
     assertSmaller(error(e1), error(e2));
   }
 
+  @Test
   public void testDeduplicatedErrors() {
     final List<JSError> printedErrors = new ArrayList<>();
     BasicErrorManager manager = new BasicErrorManager() {
@@ -124,6 +138,7 @@ public final class SortingErrorManagerTest extends TestCase {
   }
 
   // This test is testing a "feature" that seems bogus and should likely be forbidden.
+  @Test
   public void testGenerateReportCausesMoreWarnings() {
     BasicErrorManager manager =
         new BasicErrorManager() {

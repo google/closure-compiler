@@ -31,6 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
 /**
  * Test cases for a transpilation pass that rewrites most usages of `super` syntax.
  *
