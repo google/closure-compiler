@@ -462,11 +462,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         Node rhs = lhs.getFirstChild();
         if (rhs != null
             && (NodeUtil.isCallTo(rhs, "goog.forwardDeclare")
+                || NodeUtil.isCallTo(rhs, "goog.requireType")
                 || NodeUtil.isCallTo(rhs, "goog.require")
                 || rhs.isQualifiedName())) {
-          // No warning. goog.{require,forwardDeclare} and import will be caught by the
-          // unused-require check, and if the right side is a qualified name then this is
-          // likely an alias used in type annotations.
+          // No warning. module imports will be caught by the unused-require check, and if the
+          // right side is a qualified name then this is likely an alias used in type annotations.
           return;
         }
       }

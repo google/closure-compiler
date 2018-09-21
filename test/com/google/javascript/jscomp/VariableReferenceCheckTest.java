@@ -805,6 +805,12 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogModule_requireType() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("goog.module('example'); var X = goog.requireType('foo.X');");
+  }
+
+  @Test
   public void testGoogModule_usedInTypeAnnotation() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning(
