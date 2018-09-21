@@ -20,13 +20,18 @@ import com.google.common.testing.EqualsTester;
 import java.util.BitSet;
 import java.util.Random;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class CharRangesTest extends TestCase {
 
   static final long SEED = Long.parseLong(System.getProperty(
       "junit.random.seed", "" + System.currentTimeMillis()));
 
-  public final void testAgainstRegularImplementation() {
+  @Test
+  public void testAgainstRegularImplementation() {
     Random rnd = new Random(SEED);
 
     for (int run = 10; --run >= 0;) {
@@ -52,7 +57,8 @@ public final class CharRangesTest extends TestCase {
     }
   }
 
-  public final void testEmptyCharRanges() {
+  @Test
+  public void testEmptyCharRanges() {
     CharRanges sbs = CharRanges.EMPTY;
     for (int i = -1000; i < 1000; ++i) {
       assertFalse(sbs.contains(i));
@@ -60,7 +66,8 @@ public final class CharRangesTest extends TestCase {
     assertEquals("[]", sbs.toString());
   }
 
-  public final void testCharRangesFactories() {
+  @Test
+  public void testCharRangesFactories() {
     CharRanges isbs = CharRanges.withMembers(0, 1, 4, 9);
     CharRanges isbs2 = CharRanges.withMembers(0, 1, 4, 9);
     assertEquals("[0x0-0x1 0x4 0x9]", isbs.toString());
@@ -77,7 +84,8 @@ public final class CharRangesTest extends TestCase {
     assertFalse(isbs.hashCode() == esbs.hashCode());
   }
 
-  public final void testRangeConstructor() {
+  @Test
+  public void testRangeConstructor() {
     try {
       CharRanges.withRanges(1);
       fail("Mismatched ranges");
@@ -107,7 +115,8 @@ public final class CharRangesTest extends TestCase {
     }
   }
 
-  public final void testDupeMembers() {
+  @Test
+  public void testDupeMembers() {
     CharRanges sbs1 = CharRanges.withMembers(0, 1, 4, 9);
     assertEquals(sbs1.toString(), "[0x0-0x1 0x4 0x9]", sbs1.toString());
 
@@ -121,7 +130,8 @@ public final class CharRangesTest extends TestCase {
     }
   }
 
-  public final void testDifference() {
+  @Test
+  public void testDifference() {
     //                     1               2               3
     //     0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0
     // b-a  DD         DD DDD        D      DDD
@@ -177,7 +187,8 @@ public final class CharRangesTest extends TestCase {
     assertTrue(d.containsAll(d));
   }
 
-  public final void testUnion() {
+  @Test
+  public void testUnion() {
     //                 1               2               3
     // 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0
     //    AAAAAAAAA      A A A A   A AAA   AAA A A

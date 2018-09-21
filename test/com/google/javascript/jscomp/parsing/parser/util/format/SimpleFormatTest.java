@@ -17,30 +17,39 @@
 package com.google.javascript.jscomp.parsing.parser.util.format;
 
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Basic tests for {@code SimpleFormat}
  *
  * @author zhoumotongxue008@gmail.com (Michael Zhou)
  */
+@RunWith(JUnit4.class)
 public final class SimpleFormatTest extends TestCase {
 
+  @Test
   public void testCharacter() {
     assertEquals("c is a character", SimpleFormat.format("%c is a character", 'c'));
   }
 
+  @Test
   public void testInteger() {
     assertEquals("1 + 41 = 42", SimpleFormat.format("%d + %d = %d", 1, 41, 42));
   }
 
+  @Test
   public void testString() {
     assertEquals("This is foo", SimpleFormat.format("This is %s", "foo"));
   }
 
+  @Test
   public void testArgumentIndex() {
     assertEquals("one 2 3.0", SimpleFormat.format("%1$s %2$d %3$f", "one", 2, 3.0));
   }
 
+  @Test
   public void testPrecision() {
     assertEquals("003", SimpleFormat.format("%03d", 3));
     assertEquals("+3", SimpleFormat.format("%+d", 3));

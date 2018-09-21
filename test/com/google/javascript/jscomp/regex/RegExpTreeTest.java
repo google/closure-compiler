@@ -19,7 +19,11 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.truth.ThrowableSubject;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class RegExpTreeTest extends TestCase {
 
   private String parseRegExpAndPrintPattern(String regex, String flags) {
@@ -51,6 +55,7 @@ public class RegExpTreeTest extends TestCase {
     assertRegexCompilesTo(regex, flags, regex);
   }
 
+  @Test
   public void testValidEs2018LookbehindAssertions() {
     assertRegexCompilesToSame("(?<=asdf)", "");
     assertRegexCompilesToSame("(?<!asdf)", "");
@@ -58,12 +63,14 @@ public class RegExpTreeTest extends TestCase {
     assertRegexCompilesToSame("(?<=(?<!asdf))", "");
   }
 
+  @Test
   public void testInvalidEs2018LookbehindAssertions() {
     assertRegexThrowsExceptionThat("(?<asdf)", "")
         .hasMessageThat()
         .isEqualTo("Malformed named capture group: (?<asdf)");
   }
 
+  @Test
   public void testValidEs2018UnicodePropertyEscapes() {
     assertRegexCompilesToSame("\\p{Script=Greek}", "u");
     assertRegexCompilesToSame("\\P{Script=Greek}", "u");
@@ -73,6 +80,7 @@ public class RegExpTreeTest extends TestCase {
     assertRegexCompilesTo("\\P", "", "P");
   }
 
+  @Test
   public void testInvalidEs2018UnicodePropertyEscapes() {
     assertRegexThrowsExceptionThat("\\p{", "u")
         .hasMessageThat()
