@@ -27,11 +27,13 @@ import com.google.javascript.jscomp.transpile.Transpiler;
 import java.io.IOException;
 import java.net.URI;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
-/**
- * Tests for ClosureBundler
- */
+/** Tests for ClosureBundler */
+@RunWith(JUnit4.class)
 public final class ClosureBundlerTest extends TestCase {
 
   private static final DependencyInfo MODULE =
@@ -40,6 +42,7 @@ public final class ClosureBundlerTest extends TestCase {
   private static final DependencyInfo TRADITIONAL =
       SimpleDependencyInfo.builder("", "").build();
 
+  @Test
   public void testGoogModule() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler().appendTo(sb, MODULE, "\"a string\"");
@@ -49,6 +52,7 @@ public final class ClosureBundlerTest extends TestCase {
             + ";return exports;});\n");
   }
 
+  @Test
   public void testGoogModuleWithSourceURL() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler()
@@ -59,6 +63,7 @@ public final class ClosureBundlerTest extends TestCase {
         .isEqualTo("goog.loadModule(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");\n");
   }
 
+  @Test
   public void testGoogModuleWithEval() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler()
@@ -67,6 +72,7 @@ public final class ClosureBundlerTest extends TestCase {
     assertThat(sb.toString()).isEqualTo("goog.loadModule(\"\\x22a string\\x22\");\n");
   }
 
+  @Test
   public void testGoogModuleWithEvalWithURL() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler()
@@ -77,12 +83,14 @@ public final class ClosureBundlerTest extends TestCase {
         .isEqualTo("goog.loadModule(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");\n");
   }
 
+  @Test
   public void testTraditional() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler().appendTo(sb, TRADITIONAL, "\"a string\"");
     assertThat(sb.toString()).isEqualTo("\"a string\"");
   }
 
+  @Test
   public void testTraditionalWithSourceURL() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler()
@@ -93,6 +101,7 @@ public final class ClosureBundlerTest extends TestCase {
             + "//# sourceURL=URL\n");
   }
 
+  @Test
   public void testTraditionalWithEval() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler()
@@ -101,6 +110,7 @@ public final class ClosureBundlerTest extends TestCase {
     assertThat(sb.toString()).isEqualTo("eval(\"\\x22a string\\x22\");\n");
   }
 
+  @Test
   public void testTraditionalWithEvalWithSourceUrl() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler()
@@ -111,6 +121,7 @@ public final class ClosureBundlerTest extends TestCase {
         .isEqualTo("eval(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");\n");
   }
 
+  @Test
   public void testTranspilation() throws Exception {
     String input = "goog.module('Foo');\nclass Foo {}";
     URI uri = new URI("foo.js");
@@ -138,6 +149,7 @@ public final class ClosureBundlerTest extends TestCase {
             + ";return exports;});\n");
   }
 
+  @Test
   public void testEs6Module() throws IOException {
     String input =
         "import {x} from './other.js';\n"
@@ -173,6 +185,7 @@ public final class ClosureBundlerTest extends TestCase {
                 + "}, \"nested/path/foo.js\", [\"nested/path/other.js\"]);\n");
   }
 
+  @Test
   public void testPassThroughIfNoTranspilationNeeded() throws Exception {
     String input = "/** Hello Comments! */ const s = 0;\n  let intended;";
     ClosureBundler bundler = new ClosureBundler(BaseTranspiler.LATEST_TRANSPILER);
@@ -184,6 +197,7 @@ public final class ClosureBundlerTest extends TestCase {
     assertThat(sb.toString()).isEqualTo(input);
   }
 
+  @Test
   public void testCommentsAndFormattingRemovedWithTranspilation() throws Exception {
     String input = "/** Hello Comments! */ const s = 0;\n  let intended;";
     ClosureBundler bundler = new ClosureBundler(BaseTranspiler.ES5_TRANSPILER);
@@ -195,6 +209,7 @@ public final class ClosureBundlerTest extends TestCase {
     assertThat(sb.toString()).isEqualTo("var s = 0;\nvar intended;\n");
   }
 
+  @Test
   public void testFullWidthLowLineWithDefaultTranspilerIsOkay() throws Exception {
     // The last character is something the compiler doesn't handle correctly
     String input = "var ａｅｓｔｈｅｔｉｃ＿";
@@ -209,6 +224,7 @@ public final class ClosureBundlerTest extends TestCase {
 
   // TODO(johnplaisted): If / when the compiler can parse full width low line in identifiers
   // this should be okay to be transpiled.
+  @Test
   public void testFullWidthLowLineInTranspiledCodeIsError() throws Exception {
     // The last character is something the compiler doesn't handle correctly
     String input = "let ａｅｓｔｈｅｔｉｃ＿";

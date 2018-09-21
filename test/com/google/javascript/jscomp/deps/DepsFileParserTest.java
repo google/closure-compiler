@@ -25,12 +25,17 @@ import com.google.javascript.jscomp.PrintStreamErrorManager;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link DepsFileParser}.
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
+@RunWith(JUnit4.class)
 public final class DepsFileParserTest extends TestCase {
 
   private DepsFileParser parser;
@@ -38,6 +43,7 @@ public final class DepsFileParserTest extends TestCase {
   private static final String SRC_PATH = "/path/1.js";
 
   @Override
+  @Before
   public void setUp() {
     errorManager = new PrintStreamErrorManager(System.err);
     parser = new DepsFileParser(errorManager);
@@ -46,12 +52,16 @@ public final class DepsFileParserTest extends TestCase {
 
   /**
    * Tests:
-   *  -Parsing of comments,
-   *  -Parsing of different styles of quotes,
-   *  -Parsing of empty arrays,
-   *  -Parsing of non-empty arrays,
-   *  -Correct recording of what was parsed.
+   *
+   * <ul>
+   *   <li>Parsing of comments,
+   *   <li>Parsing of different styles of quotes,
+   *   <li>Parsing of empty arrays,
+   *   <li>Parsing of non-empty arrays,
+   *   <li>Correct recording of what was parsed.
+   * </ul>
    */
+  @Test
   public void testGoodParse() {
     final String contents =
         "/*"
@@ -85,36 +95,42 @@ public final class DepsFileParserTest extends TestCase {
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
+  @Test
   public void testTooFewArgs() {
     parser.parseFile(SRC_PATH, "goog.addDependency('a', []);");
     assertThat(errorManager.getErrorCount()).isEqualTo(1);
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
+  @Test
   public void testTooManyArgs1() {
     parser.parseFile(SRC_PATH, "goog.addDependency('a', [], [], []);");
     assertThat(errorManager.getErrorCount()).isEqualTo(1);
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
+  @Test
   public void testTooManyArgs2() {
     parser.parseFile(SRC_PATH, "goog.addDependency('a', [], [], false, []);");
     assertThat(errorManager.getErrorCount()).isEqualTo(1);
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
+  @Test
   public void testTooManyArgs3() {
     parser.parseFile(SRC_PATH, "goog.addDependency('a', [], [], {}, []);");
     assertThat(errorManager.getErrorCount()).isEqualTo(1);
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
+  @Test
   public void testBadLoadFlagsSyntax() {
     parser.parseFile(SRC_PATH, "goog.addDependency('a', [], [], {module: 'goog'});");
     assertThat(errorManager.getErrorCount()).isEqualTo(1);
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
+  @Test
   public void testGoogModule() {
     List<DependencyInfo> result = parser.parseFile(SRC_PATH,
         "goog.addDependency('yes1', [], [], true);\n" +
@@ -126,6 +142,7 @@ public final class DepsFileParserTest extends TestCase {
     assertThat(result).isEqualTo(expected);
   }
 
+  @Test
   public void testEs6Module() {
     List<DependencyInfo> result =
         parser.parseFile(
@@ -147,6 +164,7 @@ public final class DepsFileParserTest extends TestCase {
     assertThat(result).isEqualTo(expected);
   }
 
+  @Test
   public void testLoadFlags() {
     List<DependencyInfo> result = parser.parseFile(SRC_PATH, ""
         + "goog.addDependency('yes1', [], [], {'module': 'goog'});\n"
@@ -164,6 +182,7 @@ public final class DepsFileParserTest extends TestCase {
     assertThat(result).isEqualTo(expected);
   }
 
+  @Test
   public void testShortcutMode() {
     List<DependencyInfo> result = parser.parseFile(SRC_PATH,
         "goog.addDependency('yes1', [], []); \n" +
@@ -175,6 +194,7 @@ public final class DepsFileParserTest extends TestCase {
     assertThat(result).isEqualTo(expected);
   }
 
+  @Test
   public void testNoShortcutMode() {
     parser.setShortcutMode(false);
     List<DependencyInfo> result = parser.parseFile(SRC_PATH,

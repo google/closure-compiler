@@ -28,21 +28,28 @@ import com.google.javascript.jscomp.SourceFile;
 import java.util.ArrayList;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link DepsGenerator}. */
+@RunWith(JUnit4.class)
 public final class DepsGeneratorTest extends TestCase {
 
   private static final Joiner LINE_JOINER = Joiner.on("\n");
   private ErrorManager errorManager;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     errorManager = new PrintStreamErrorManager(System.err);
   }
 
   // TODO(johnplaisted): This should eventually be an error. For now people are relying on this
   // behavior for interop / ordering. Until we have official channels for these allow this behavior,
   // but don't encourage it.
+  @Test
   public void testEs6ModuleWithGoogProvide() throws Exception {
     List<SourceFile> srcs = new ArrayList<>();
     srcs.add(
@@ -83,6 +90,7 @@ public final class DepsGeneratorTest extends TestCase {
     assertEquals(expected, output);
   }
 
+  @Test
   public void testEs6Modules() throws Exception {
     List<SourceFile> srcs = new ArrayList<>();
     srcs.add(SourceFile.fromCode("/base/javascript/foo/foo.js", "import '../closure/goog/es6';"));
@@ -118,6 +126,7 @@ public final class DepsGeneratorTest extends TestCase {
     assertEquals(expected, output);
   }
 
+  @Test
   public void testEs6ModuleDeclareNamespace() throws Exception {
     List<SourceFile> srcs = new ArrayList<>();
     srcs.add(
@@ -163,6 +172,7 @@ public final class DepsGeneratorTest extends TestCase {
   }
 
   // Unit test for an issue run into by https://github.com/google/closure-compiler/pull/3026
+  @Test
   public void testEs6ModuleScanDeps() throws Exception {
     // Simple ES6 modules
     ImmutableList<SourceFile> srcs =
@@ -209,6 +219,7 @@ public final class DepsGeneratorTest extends TestCase {
    * Ensures that deps files are handled correctly both when listed as deps and when listed as
    * sources.
    */
+  @Test
   public void testWithDepsAndSources() throws Exception {
     final SourceFile depsFile1 =
         SourceFile.fromCode(
@@ -325,6 +336,7 @@ public final class DepsGeneratorTest extends TestCase {
    * Ensures that everything still works when both a deps.js and a deps-runfiles.js file are
    * included. Also uses real files.
    */
+  @Test
   public void testDepsAsSrcs() throws Exception {
     final SourceFile depsFile1 =
         SourceFile.fromCode(
@@ -370,6 +382,7 @@ public final class DepsGeneratorTest extends TestCase {
     assertNoWarnings();
   }
 
+  @Test
   public void testMergeStrategyAlways() throws Exception {
     String result = testMergeStrategyHelper(DepsGenerator.InclusionStrategy.ALWAYS);
     assertContains("['a']", result);
@@ -378,6 +391,7 @@ public final class DepsGeneratorTest extends TestCase {
     assertContains("d.js", result);
   }
 
+  @Test
   public void testMergeStrategyWhenInSrcs() throws Exception {
     String result = testMergeStrategyHelper(DepsGenerator.InclusionStrategy.WHEN_IN_SRCS);
     assertNotContains("['a']", result);
@@ -386,6 +400,7 @@ public final class DepsGeneratorTest extends TestCase {
     assertNotContains("d.js", result);
   }
 
+  @Test
   public void testMergeStrategyDoNotDuplicate() throws Exception {
     String result = testMergeStrategyHelper(DepsGenerator.InclusionStrategy.DO_NOT_DUPLICATE);
     assertNotContains("['a']", result);
@@ -457,6 +472,7 @@ public final class DepsGeneratorTest extends TestCase {
     }
   }
 
+  @Test
   public void testDuplicateProvides() throws Exception {
     SourceFile dep1 = SourceFile.fromCode("dep1.js",
         "goog.addDependency('a.js', ['a'], []);\n");
@@ -467,9 +483,8 @@ public final class DepsGeneratorTest extends TestCase {
         "Namespace \"a\" is already provided in other file dep1.js");
   }
 
-  /**
-   * Ensures that an error is thrown when the closure_path flag is set incorrectly.
-   */
+  /** Ensures that an error is thrown when the closure_path flag is set incorrectly. */
+  @Test
   public void testDuplicateProvidesErrorThrownIfBadClosurePathSpecified() throws Exception {
     // Create a stub Closure Library.
     SourceFile fauxClosureDeps =
@@ -490,6 +505,7 @@ public final class DepsGeneratorTest extends TestCase {
   }
 
   /** Ensures that DepsGenerator deduplicates dependencies from custom Closure Library branches. */
+  @Test
   public void testDuplicateProvidesIgnoredIfInClosureDirectory() throws Exception {
     // Create a stub Closure Library.
     SourceFile fauxClosureDeps =
@@ -520,6 +536,7 @@ public final class DepsGeneratorTest extends TestCase {
     assertNoWarnings();
   }
 
+  @Test
   public void testDuplicateProvidesSameFile() throws Exception {
     SourceFile dep1 = SourceFile.fromCode("dep1.js",
         "goog.addDependency('a.js', ['a'], []);\n");
@@ -531,6 +548,7 @@ public final class DepsGeneratorTest extends TestCase {
         "Multiple calls to goog.provide(\"b\")");
   }
 
+  @Test
   public void testDuplicateRequire() throws Exception {
     SourceFile dep1 = SourceFile.fromCode("dep1.js",
         "goog.addDependency('a.js', ['a'], []);\n");
@@ -542,6 +560,7 @@ public final class DepsGeneratorTest extends TestCase {
         "Namespace \"a\" is required multiple times");
   }
 
+  @Test
   public void testSameFileProvideRequire() throws Exception {
     SourceFile dep1 = SourceFile.fromCode("dep1.js",
         "goog.addDependency('a.js', ['a'], []);\n");
@@ -553,6 +572,7 @@ public final class DepsGeneratorTest extends TestCase {
         "Namespace \"b\" is both required and provided in the same file.");
   }
 
+  @Test
   public void testUnknownNamespace() throws Exception {
     SourceFile dep1 = SourceFile.fromCode("dep1.js",
         "goog.addDependency('a.js', ['a'], []);\n");
@@ -563,6 +583,7 @@ public final class DepsGeneratorTest extends TestCase {
         "Namespace \"b\" is required but never provided.");
   }
 
+  @Test
   public void testNoDepsInDepsFile() throws Exception {
     SourceFile dep1 = SourceFile.fromCode("dep1.js", "");
 
@@ -570,6 +591,7 @@ public final class DepsGeneratorTest extends TestCase {
         "No dependencies found in file");
   }
 
+  @Test
   public void testUnknownEs6Module() throws Exception {
     SourceFile src1 = SourceFile.fromCode("src1.js", "import './missing.js';\n");
 

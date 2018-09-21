@@ -20,63 +20,77 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
-
-import junit.framework.TestCase;
-
 import java.io.StringReader;
+import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link JsFileLineParser}.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public final class JsFileLineParserTest extends TestCase {
 
   TestParser parser;
   private ErrorManager errorManager;
 
   @Override
+  @Before
   public void setUp() {
     errorManager = new PrintStreamErrorManager(System.err);
     parser = new TestParser(errorManager);
   }
 
+  @Test
   public void testSingleLine1() {
     assertStrip("2", "// 1\n2");
   }
 
+  @Test
   public void testSingleLine2() {
     assertStrip("2 ", "// 1\n2 // 3 // 4 \n");
   }
 
+  @Test
   public void testMultiLine1() {
     assertStrip("1", "/* hi */\n1");
   }
 
+  @Test
   public void testMultiLine2() {
     assertStrip("123", "1/* hi */2\n3");
   }
 
+  @Test
   public void testMultiLine3() {
     assertStrip("14", "1/* hi 2\n3*/4");
   }
 
+  @Test
   public void testMultiLine4() {
     assertStrip("15", "1/* hi x\ny\nz*/5");
   }
 
+  @Test
   public void testMultiLine5() {
     assertStrip("1234", "1/* hi */2/**/3/*\n/** bye */4");
   }
 
+  @Test
   public void testMultiLine6() {
     assertStrip("12", "1/*** hi *** 3 **/2");
   }
 
+  @Test
   public void testMixedLine1() {
     assertStrip("14", "1// /** 2 **/ 3\n4");
   }
 
+  @Test
   public void testMixedLine2() {
     assertStrip("1 34", "1/** // 2 **/ 3\n4");
   }

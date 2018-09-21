@@ -22,18 +22,24 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link Es6SortedDependencies}
+ *
  * @author nicksantos@google.com (Nick Santos)
  * @author stalcup@google.com (John Stalcup)
  */
+@RunWith(JUnit4.class)
 public class Es6SortedDependenciesTest extends TestCase {
   private static SortedDependencies<SimpleDependencyInfo> createSortedDependencies(
       List<SimpleDependencyInfo> shuffled) {
     return new Es6SortedDependencies<>(shuffled);
   }
 
+  @Test
   public void testSort() throws Exception {
     SimpleDependencyInfo a =
         SimpleDependencyInfo.builder("a", "a")
@@ -91,6 +97,7 @@ public class Es6SortedDependenciesTest extends TestCase {
     } catch (IllegalArgumentException expected) {}
   }
 
+  @Test
   public void testSort2() throws Exception {
     SimpleDependencyInfo ab =
         SimpleDependencyInfo.builder("ab", "ab")
@@ -133,6 +140,7 @@ public class Es6SortedDependenciesTest extends TestCase {
         ImmutableList.of(d, hi));
   }
 
+  @Test
   public void testSort3() {
     SimpleDependencyInfo a =
         SimpleDependencyInfo.builder("a", "a")
@@ -154,6 +162,7 @@ public class Es6SortedDependenciesTest extends TestCase {
         ImmutableList.of(a, b, c), ImmutableList.of(b, c, a));
   }
 
+  @Test
   public void testSort4() throws Exception {
     // Check the degenerate case.
     SimpleDependencyInfo a =
@@ -167,7 +176,8 @@ public class Es6SortedDependenciesTest extends TestCase {
         ImmutableList.of(a));
   }
 
-  public void testSort5() throws Exception {
+  @Test
+  public void testSort5() {
     SimpleDependencyInfo a = SimpleDependencyInfo.builder("a", "a")
         .setProvides("a")
         .build();
@@ -186,6 +196,7 @@ public class Es6SortedDependenciesTest extends TestCase {
         ImmutableList.of(c, b, a));
   }
 
+  @Test
   public void testSort6() {
     SimpleDependencyInfo a =
         SimpleDependencyInfo.builder("gin", "gin")
@@ -211,6 +222,7 @@ public class Es6SortedDependenciesTest extends TestCase {
     assertOrder(ImmutableList.of(a, b, c, d), ImmutableList.of(c, b, a, d));
   }
 
+  @Test
   public void testSort7() {
     SimpleDependencyInfo a =
         SimpleDependencyInfo.builder("gin", "gin")
@@ -237,6 +249,7 @@ public class Es6SortedDependenciesTest extends TestCase {
         ImmutableList.of(a, b, c, d), ImmutableList.of(b, a, c, d));
   }
 
+  @Test
   public void testSort8() {
     SimpleDependencyInfo a =
         SimpleDependencyInfo.builder("A", "A")
@@ -263,6 +276,7 @@ public class Es6SortedDependenciesTest extends TestCase {
         ImmutableList.of(a, b, c, d), ImmutableList.of(d, c, b, a));
   }
 
+  @Test
   public void testSort9() {
     SimpleDependencyInfo a =
         SimpleDependencyInfo.builder("A", "A")
@@ -309,7 +323,8 @@ public class Es6SortedDependenciesTest extends TestCase {
         ImmutableList.of(c, b, a, g, f, e, a2, d));
   }
 
-  public void testSort10() throws Exception {
+  @Test
+  public void testSort10() {
     SimpleDependencyInfo a =
         SimpleDependencyInfo.builder("A", "A")
             .setProvides("A")
@@ -329,7 +344,7 @@ public class Es6SortedDependenciesTest extends TestCase {
   }
 
   private static void assertSortedInputs(
-      List<SimpleDependencyInfo> expected, List<SimpleDependencyInfo> shuffled) throws Exception {
+      List<SimpleDependencyInfo> expected, List<SimpleDependencyInfo> shuffled) {
     SortedDependencies<SimpleDependencyInfo> sorted = createSortedDependencies(shuffled);
     assertThat(sorted.getSortedList()).isEqualTo(expected);
   }
