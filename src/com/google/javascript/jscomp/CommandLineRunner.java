@@ -1340,8 +1340,16 @@ public class CommandLineRunner extends
       }
 
       @Override public void addValue(String value) throws CmdLineException {
-        proxy.addValue(value);
-        entries.add(new FlagEntry<>(flag, value));
+        // On windows, some quoted values seem to preserve the quotes as part of the value.
+        String normalizedValue = value;
+        if (value != null
+            && value.length() > 0
+            && (value.substring(0, 1).equals("'") || value.substring(0, 1).equals("\""))
+            && value.substring(value.length() - 1).equals(value.substring(0, 1))) {
+          normalizedValue = value.substring(1, value.length() - 1);
+        }
+        proxy.addValue(normalizedValue);
+        entries.add(new FlagEntry<>(flag, normalizedValue));
       }
 
       @Override public FieldSetter asFieldSetter() {
