@@ -5062,9 +5062,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     while (!deque.isEmpty()) {
       node = deque.remove();
 
-      assertWithMessage(
-              String.format(
-                  "Source information must be present on %s", node.toString(true, true, true)))
+      assertWithMessage("Source information must be present on %s", node)
           .that(node.getLineno() >= 0)
           .isTrue();
 
