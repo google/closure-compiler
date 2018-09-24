@@ -383,6 +383,11 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(injectRuntimeLibraries);
+
+    if (options.needsTranspilationFrom(ES6)) {
+      checks.add(convertStaticInheritance);
+    }
+
     checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
     addTypeCheckerPasses(checks, options);
@@ -461,15 +466,6 @@ public final class DefaultPassConfig extends PassConfig {
       // At this point all checks have been done.
       // There's no need to complete transpilation if we're only running checks.
       TranspilationPasses.addPostCheckTranspilationPasses(checks, options);
-
-      if (options.needsTranspilationFrom(ES6)) {
-        // This pass used to be necessary to make the typechecker happy with class-side inheritance.
-        // It's not necessary for typechecking now that class transpilation is post-typechecking,
-        // but it turned out to be necessary to avoid CollapseProperties breaking static inheritance
-        // TODO(lharker): try to only run this pass when property collapsing is enabled and during
-        // the optimizations. Even better, find a way to get rid of this pass completely.
-        checks.add(convertStaticInheritance);
-      }
     }
 
     assertAllOneTimePasses(checks);
