@@ -107,9 +107,9 @@ public final class SymbolTableTest extends TestCase {
 
   @Test
   public void testGlobalThisReferences() {
-    SymbolTable table = createSymbolTable(
-        "var x = this; function f() { return this + this + this; }",
-        /* externsCode= */ "");
+    SymbolTable table =
+        createSymbolTable(
+            "var x = this; function f() { return this + this + this; }", /* externsCode= */ "");
 
     Symbol global = getGlobalVar(table, "*global*");
     assertNotNull(global);
@@ -1379,6 +1379,27 @@ public final class SymbolTableTest extends TestCase {
     assertThat(table.getReferenceList(typedefSymbol)).hasSize(2);
   }
 
+  @Test
+  public void testSuperKeywords() {
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "class Parent { doFoo() {} }",
+                "class Child extends Parent {",
+                "  constructor() { super(); }",
+                "  doFoo() { super.doFoo(); }",
+                "}"));
+
+    Symbol parentClass = getGlobalVar(table, "Parent");
+    long numberOfSuperReferences =
+        table.getReferenceList(parentClass).stream()
+            .filter((Reference ref) -> ref.getNode().isSuper())
+            .count();
+    // TODO(b/112359882): change number of refs to 2 once Es6ConvertSuper pass is moved after type
+    // checks.
+    assertThat(numberOfSuperReferences).isEqualTo(1);
+  }
+
   private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertEquals(0, ordering.compare(first, first));
     assertEquals(0, ordering.compare(second, second));
@@ -1464,8 +1485,11 @@ public final class SymbolTableTest extends TestCase {
       Symbol scope = table.getSymbolForScope(table.getScope(sym));
       assertTrue(
           "The symbol's scope is a zombie scope that shouldn't exist.\n"
-              + "Symbol: " + sym + "\n"
-              + "Scope: " + table.getScope(sym),
+              + "Symbol: "
+              + sym
+              + "\n"
+              + "Scope: "
+              + table.getScope(sym),
           scope == null || allSymbols.contains(scope));
     }
 

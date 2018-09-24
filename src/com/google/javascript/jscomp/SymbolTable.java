@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Table;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
@@ -1108,6 +1109,25 @@ public final class SymbolTable {
   /** Fill in references to "this" variables. */
   void fillThisReferences(Node externs, Node root) {
     (new ThisRefCollector()).process(externs, root);
+  }
+
+  /** Fill in references to "super" variables. */
+  void fillSuperReferences(Node externs, Node root) {
+    NodeTraversal.Callback collectSuper =
+        new AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            // Process only 'super' nodes with types.
+            if (!n.isSuper() || n.getJSType() == null) {
+              return;
+            }
+            Symbol classSymbol = getSymbolForTypeHelper(n.getJSType(), /* linkToCtor= */ false);
+            if (classSymbol != null) {
+              classSymbol.defineReferenceAt(n);
+            }
+          }
+        };
+    NodeTraversal.traverseRoots(compiler, collectSuper, externs, root);
   }
 
   private boolean isSymbolGeneratedAndShouldNotBeIndexed(Symbol symbol) {
