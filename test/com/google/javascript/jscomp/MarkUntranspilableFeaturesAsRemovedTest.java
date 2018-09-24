@@ -201,7 +201,6 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
             + "or raise output level to ECMASCRIPT_2018.");
 
     // test that in named groups backreferencing, the backslash is not removed
-    // TODO(b/116048051): reference to undefined named capture group should be an error.
     testSame("const a = /.\\k<half>$/u;");
   }
 }

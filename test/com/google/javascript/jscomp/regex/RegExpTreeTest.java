@@ -67,7 +67,7 @@ public class RegExpTreeTest extends TestCase {
   public void testInvalidEs2018LookbehindAssertions() {
     assertRegexThrowsExceptionThat("(?<asdf)", "")
         .hasMessageThat()
-        .isEqualTo("Malformed named capture group: (?<asdf)");
+        .isEqualTo("Invalid capture group name: <asdf)");
   }
 
   @Test
@@ -117,16 +117,16 @@ public class RegExpTreeTest extends TestCase {
   public void testInvalidEs2018RegexNamedCaptureGroups() {
     assertRegexThrowsExceptionThat("(?<name)", "")
         .hasMessageThat()
-        .isEqualTo("Malformed named capture group: (?<name)");
+        .isEqualTo("Invalid capture group name: <name)");
     assertRegexThrowsExceptionThat("(?<1b>)", "")
         .hasMessageThat()
-        .isEqualTo("Malformed named capture group: (?<1b>)");
+        .isEqualTo("Invalid capture group name: <1b>)");
     assertRegexThrowsExceptionThat("(?<>)", "")
         .hasMessageThat()
-        .isEqualTo("Malformed named capture group: (?<>)");
+        .isEqualTo("Invalid capture group name: <>)");
     assertRegexThrowsExceptionThat("(?<.name>)", "")
         .hasMessageThat()
-        .isEqualTo("Malformed named capture group: (?<.name>)");
+        .isEqualTo("Invalid capture group name: <.name>)");
   }
 
   public void testNumCapturingGroups() {
@@ -135,5 +135,55 @@ public class RegExpTreeTest extends TestCase {
     assertRegexCompilesTo("(h(i))\\3", "", "(h(i))\\x03");
 
     assertRegexCompilesToSame("(?<foo>.*(?<bar>))", "");
+  }
+
+  public void testValidEs2018CaptureNameBackreferencing() {
+    assertRegexCompilesToSame("(?<name>)\\k<name>", "");
+    // Note that (?: ) only used for printing purposes to
+    // indicate the nesting structure of Concatenation nodes.
+    // It is not actually what the compiler prints out as source code.
+    assertRegexCompilesTo(
+        "(?<foo>(?<bar>))\\k<foo>\\k<bar>", "", "(?:(?<foo>(?<bar>))\\k<foo>)\\k<bar>");
+    assertRegexCompilesTo(
+        "(?<foo>(?<bar>)\\k<bar>)\\k<foo>", "", "(?<foo>(?<bar>)\\k<bar>)\\k<foo>");
+
+    // The below examples where the backreference comes before the definition of named groups is
+    // allowed syntactically, although it is not able to reference the original group semantically
+    assertRegexCompilesToSame("\\k<foo>(?<foo>)", "");
+    assertRegexCompilesToSame("\\k<foo>(?<foo>\\k<bar>(?<bar>))", "");
+
+    // Backreferencing the name in the group it is defined is also allowed
+    assertRegexCompilesToSame("(?<foo>\\k<foo>)", "");
+  }
+
+  public void testInvalidEs2018CaptureNameBackreferencing() {
+    assertRegexThrowsExceptionThat("(?<foo>)\\k<bar>", "")
+        .hasMessageThat()
+        .isEqualTo("Invalid named capture referenced: \\k<bar>");
+    assertRegexThrowsExceptionThat("(?<foo>)\\k<foo", "")
+        .hasMessageThat()
+        .isEqualTo("Malformed named capture group: <foo");
+    assertRegexThrowsExceptionThat("\\k<1b>(?<foo>)", "")
+        .hasMessageThat()
+        .isEqualTo("Invalid capture group name: <1b>(?<foo>)");
+
+    // Even though enclosed in (?<>), 'foo' not a capture name definition
+    assertRegexThrowsExceptionThat("[(?<foo>)](?<bar>)\\k<foo>", "")
+        .hasMessageThat()
+        .isEqualTo("Invalid named capture referenced: \\k<foo>");
+  }
+
+  public void testBackreferencingTreatedAsStringIfNoGroup() {
+    // Backreferencing without named group definitions is just treated as normal string
+    assertRegexCompilesTo("\\k<foo>", "", "k<foo>");
+
+    // Note that the (?: ) that is wrapped around "k<" at expected output is only used for printing
+    // purposes to indicate the nesting structure of Concatenation nodes.
+    // It is not actually what the compiler prints out as source code.
+    assertRegexCompilesTo("\\k<.", "", "(?:k<).");
+
+    // Even though enclosed in (?<>), 'foo' not a capture name definition
+    // (?: ) in expected output serves same purpose as above test
+    assertRegexCompilesTo("[(?<foo>)]\\k<foo>", "", "(?:[()<>?fo]k)<foo>");
   }
 }

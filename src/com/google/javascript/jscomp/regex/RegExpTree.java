@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -122,13 +123,32 @@ public abstract class RegExpTree {
       /** The number of characters in pattern consumed. */
       int pos;
       /** The number of capturing groups seen so far. */
-      int numCapturingGroups = 0;
+      int numCapturingGroups;
+      /** The names of capturing groups in the regex expression */
+      Set<String> capturingGroupNames = new HashSet<>();
       /** The length of pattern. */
       final int limit = pattern.length();
+      /** Boolean indicating whether we should look for named capture group backreferences */
+      boolean lookForNamedCaptureBackreferences;
 
       RegExpTree parseTopLevel() {
+        // First assume there are no named capture backreferences,
+        // because the spec says they should only be recognized
+        // if the pattern contains at least one named capture group.
         this.pos = 0;
+        this.numCapturingGroups = 0;
+        this.lookForNamedCaptureBackreferences = false;
         RegExpTree out = parse();
+
+        // If there were named capture groups, we must parse the pattern string again
+        // so we can check for any backreferences to them.
+        if (!capturingGroupNames.isEmpty()) {
+          this.pos = 0;
+          this.numCapturingGroups = 0;
+          this.lookForNamedCaptureBackreferences = true;
+          out = parse();
+        }
+
         if (pos < limit) {  // Unmatched closed paren maybe.
           throw new IllegalArgumentException(pattern.substring(pos));
         }
@@ -284,6 +304,7 @@ public abstract class RegExpTree {
                 } else {
                   pos += 2;
                   captureName = scanNamedGroupName();
+                  capturingGroupNames.add(captureName);
                   type = ParentheticalType.NAMED_GROUPS;
                   break;
                 }
@@ -335,8 +356,8 @@ public abstract class RegExpTree {
       }
 
       /**
-       * Helper that scans the pattern for a named group name (?<name>) Assumes that {@code pos}
-       * points to the character after '<'
+       * Helper that scans the pattern for a named group name. Assumes that {@code pos} points to
+       * the character after '<'
        *
        * @return the group name
        */
@@ -345,7 +366,7 @@ public abstract class RegExpTree {
         int end = pos;
         if (!isIdentifierStart(pattern.charAt(start))) {
           throw new IllegalArgumentException(
-              "Malformed named capture group: (?<" + pattern.substring(start));
+              "Invalid capture group name: <" + pattern.substring(start));
         }
         ++end;
         while (end < limit) {
@@ -356,53 +377,11 @@ public abstract class RegExpTree {
             ++end;
           } else {
             throw new IllegalArgumentException(
-                "Malformed named capture group: (?<" + pattern.substring(start));
+                "Invalid capture group name: <" + pattern.substring(start));
           }
         }
         throw new IllegalArgumentException(
-            "Malformed named capture group: (?<" + pattern.substring(start));
-      }
-
-      /**
-       * @param ch the character
-       * @return true if the character is a valid Javascript identifier start character.
-       */
-      private boolean isIdentifierStart(char ch) {
-        // TODO(yitingwang) This and the one in Scanner.java should share the same implementation
-        // Most code is written in pure ASCII create a fast path here.
-        if (ch <= 127) {
-          return ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch == '_' || ch == '$'));
-        }
-
-        // Workaround b/36459436
-        // When running under GWT, Character.isLetter only handles ASCII
-        // Angular relies heavily on U+0275 (Latin Barred O)
-        return ch == 0x0275
-            // TODO: UnicodeLetter also includes Letter Number (NI)
-            || Character.isLetter(ch);
-      }
-
-      /**
-       * @param ch the character
-       * @return true if the character is allowed in Javascript identifiers.
-       */
-      private boolean isIdentifierPart(char ch) {
-        // TODO(yitingwang) This and the one in Scanner.java should share the same implementation
-        // Most code is written in pure ASCII create a fast path here.
-        if (ch <= 127) {
-          return ((ch >= 'A' && ch <= 'Z')
-              || (ch >= 'a' && ch <= 'z')
-              || (ch >= '0' && ch <= '9')
-              || (ch == '_' || ch == '$')); // _ or $
-        }
-        // TODO: identifier part character classes
-        // CombiningMark
-        //   Non-Spacing mark (Mn)
-        //   Combining spacing mark(Mc)
-        // Connector punctuation (Pc)
-        // Zero Width Non-Joiner
-        // Zero Width Joiner
-        return isIdentifierStart(ch) || Character.isDigit(ch);
+            "Malformed named capture group: <" + pattern.substring(start));
       }
 
       /**
@@ -601,6 +580,21 @@ public abstract class RegExpTree {
             return new Text(Character.toString(
               possibleGroupIndex <= 7 ? (char) possibleGroupIndex : ch));
           }
+        } else if (lookForNamedCaptureBackreferences
+            && ch == 'k'
+            && pos + 1 < limit
+            && pattern.charAt(pos + 1) == '<'
+            // According to the spec
+            // https://github.com/tc39/proposal-regexp-named-groups#backwards-compatibility-of-new-syntax
+            // we want to treat \k as a normal string if there are no named capturing groups present
+            && !capturingGroupNames.isEmpty()) {
+          pos += 2;
+          String potentialName = scanNamedGroupName();
+          if (!capturingGroupNames.contains(potentialName)) {
+            throw new IllegalArgumentException(
+                "Invalid named capture referenced: " + pattern.substring(start));
+          }
+          return new NamedBackReference(potentialName);
         } else {
           CharRanges charGroup = NAMED_CHAR_GROUPS.get(ch);
           if (charGroup != null) {  // Handle \d, etc.
@@ -716,6 +710,47 @@ public abstract class RegExpTree {
     return new Parser().parseTopLevel();
   }
 
+  /**
+   * @param ch the character
+   * @return true if the character is a valid Javascript identifier start character.
+   */
+  private static boolean isIdentifierStart(char ch) {
+    // TODO(yitingwang) This and the one in Scanner.java should share the same implementation
+    // Most code is written in pure ASCII create a fast path here.
+    if (ch <= 127) {
+      return ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch == '_' || ch == '$'));
+    }
+
+    // Workaround b/36459436
+    // When running under GWT, Character.isLetter only handles ASCII
+    // Angular relies heavily on U+0275 (Latin Barred O)
+    return ch == 0x0275
+        // TODO: UnicodeLetter also includes Letter Number (NI)
+        || Character.isLetter(ch);
+  }
+
+  /**
+   * @param ch the character
+   * @return true if the character is allowed in Javascript identifiers.
+   */
+  private static boolean isIdentifierPart(char ch) {
+    // TODO(yitingwang) This and the one in Scanner.java should share the same implementation
+    // Most code is written in pure ASCII create a fast path here.
+    if (ch <= 127) {
+      return ((ch >= 'A' && ch <= 'Z')
+          || (ch >= 'a' && ch <= 'z')
+          || (ch >= '0' && ch <= '9')
+          || (ch == '_' || ch == '$')); // _ or $
+    }
+    // TODO: identifier part character classes
+    // CombiningMark
+    //   Non-Spacing mark (Mn)
+    //   Combining spacing mark(Mc)
+    // Connector punctuation (Pc)
+    // Zero Width Non-Joiner
+    // Zero Width Joiner
+    return isIdentifierStart(ch) || Character.isDigit(ch);
+  }
 
   /**
    * True if, but not necessarily always when the, given regular expression
@@ -891,6 +926,41 @@ public abstract class RegExpTree {
     @Override
     public int hashCode() {
       return 0xff072663 ^ groupIndex;
+    }
+  }
+
+  /** Represents a reference to a previous named group */
+  public static final class NamedBackReference extends RegExpTreeAtom {
+    final String groupName;
+
+    NamedBackReference(String groupName) {
+      this.groupName = groupName;
+    }
+
+    @Override
+    public RegExpTree simplify(String flags) {
+      return this;
+    }
+
+    @Override
+    protected void appendSourceCode(StringBuilder sb) {
+      sb.append("\\k<").append(groupName).append('>');
+    }
+
+    @Override
+    protected void appendDebugInfo(StringBuilder sb) {
+      sb.append(groupName);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      return o instanceof NamedBackReference
+          && groupName.equals(((NamedBackReference) o).groupName);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(groupName);
     }
   }
 
