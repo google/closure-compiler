@@ -447,7 +447,8 @@ $jscomp.polyfill('Promise',
 
   PolyfillPromise['race'] = function(thenablesOrValues) {
     return new PolyfillPromise(function(resolve, reject) {
-      var iterator = $jscomp.makeIterator(thenablesOrValues);
+      var /** !Iterator<*> */ iterator =
+          $jscomp.makeIterator(thenablesOrValues);
       for (var /** !IIterableResult<*> */ iterRec = iterator.next();
            !iterRec.done;
            iterRec = iterator.next()) {
@@ -464,7 +465,7 @@ $jscomp.polyfill('Promise',
 
 
   PolyfillPromise['all'] = function(thenablesOrValues) {
-    var iterator = $jscomp.makeIterator(thenablesOrValues);
+    var /** !Iterator<*> */ iterator = $jscomp.makeIterator(thenablesOrValues);
     var /** !IIterableResult<*> */ iterRec = iterator.next();
 
     if (iterRec.done) {
