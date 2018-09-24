@@ -153,6 +153,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(convertEs6TypedToEs6);
     }
 
+    passes.add(checkVariableReferencesForTranspileOnly);
     passes.add(gatherModuleMetadataPass);
 
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
@@ -174,7 +175,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.add(checkSuper);
-    passes.add(checkVariableReferencesForTranspileOnly);
 
     // It's important that the Dart super accessors pass run *before* es6ConvertSuper,
     // which is a "late" ES6 pass. This is enforced in the assertValidOrder method.
@@ -285,12 +285,13 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkRequires);
     }
 
+    checks.add(checkVariableReferences);
+
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       checks.add(rewriteGoogJsImports);
       TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
     }
 
-    checks.add(checkVariableReferences);
     checks.add(checkStrictMode);
 
     if (options.closurePass) {

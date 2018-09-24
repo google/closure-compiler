@@ -1405,6 +1405,13 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
     assertRedeclareError("import {x} from 'whatever'; let [x] = [];");
 
+    assertRedeclareError("import {x, x} from 'whatever';");
+    assertRedeclareError("import {x, y as x} from 'whatever';");
+    assertRedeclareError("import {z as x, y as x} from 'whatever';");
+    assertRedeclareError("import {x} from 'first'; import {x} from 'second';");
+    assertRedeclareError("import {x} from 'first'; import {a as x} from 'second';");
+    assertRedeclareError("import {b as x} from 'first'; import {a as x} from 'second';");
+
     testSame("import {x} from 'whatever'; function f() { let x = 0; }");
 
     testSame("import {x as x} from 'whatever'; function f() { let x = 0; }");
