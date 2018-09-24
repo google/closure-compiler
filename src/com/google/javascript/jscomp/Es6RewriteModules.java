@@ -146,11 +146,12 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    */
   public Es6RewriteModules(
       AbstractCompiler compiler,
+      ModuleMetadataMap moduleMetadataMap,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable) {
+    checkNotNull(moduleMetadataMap);
     this.compiler = compiler;
+    this.moduleMetadataMap = moduleMetadataMap;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
-    this.moduleMetadataMap = compiler.getModuleMetadataMap();
-    checkNotNull(this.moduleMetadataMap);
   }
 
   /**

@@ -48,6 +48,7 @@ public class TranspilationPasses {
             preprocessorTableFactory.maybeInitialize(compiler);
             return new Es6RewriteModules(
                 compiler,
+                compiler.getModuleMetadataMap(),
                 preprocessorTableFactory.getInstanceOrNull());
           }
 

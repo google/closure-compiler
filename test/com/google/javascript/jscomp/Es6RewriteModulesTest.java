@@ -61,7 +61,9 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
       new GatherModuleMetadata(
               compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER)
           .process(externs, root);
-      new Es6RewriteModules(compiler, /* preprocessorSymbolTable= */ null).process(externs, root);
+      new Es6RewriteModules(
+              compiler, compiler.getModuleMetadataMap(), /* preprocessorSymbolTable= */ null)
+          .process(externs, root);
     };
   }
 
