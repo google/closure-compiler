@@ -718,6 +718,7 @@ public final class SymbolTable {
     // be processed first. See explanation below.
     List<Symbol> types = new ArrayList<>();
     List<Symbol> googModuleExportTypes = new ArrayList<>();
+    List<Symbol> moduleTypes = new ArrayList<>();
 
     // Create a property scope for each named type and each anonymous object,
     // and populate it with that object's properties.
@@ -727,8 +728,11 @@ public final class SymbolTable {
     // where x is just an instance of another type.
     for (Symbol sym : getAllSymbols()) {
       if (needsPropertyScope(sym)) {
-        if (sym.getName().startsWith("module$exports")) {
+        String name = sym.getName();
+        if (name.startsWith("module$exports")) {
           googModuleExportTypes.add(sym);
+        } else if (name.startsWith("module$")) {
+          moduleTypes.add(sym);
         } else {
           types.add(sym);
         }
@@ -762,12 +766,12 @@ public final class SymbolTable {
     // If we order them in reverse lexicographical order symbols x.y and x will be processed before
     // foo. This is wrong as foo is in fact property of x.y namespace. So we must process all
     // module$exports$ symbols first. That's why we collected them in a separate list.
-    //
     Collections.sort(types, getNaturalSymbolOrdering().reverse());
     Collections.sort(googModuleExportTypes, getNaturalSymbolOrdering().reverse());
-    Iterable<Symbol> allTypes = Iterables.concat(googModuleExportTypes, types);
+    Collections.sort(moduleTypes, getNaturalSymbolOrdering().reverse());
+    Iterable<Symbol> allTypes = Iterables.concat(googModuleExportTypes, types, moduleTypes);
 
-    // If you though we are done with tricky case - you were wrong. There is another one!
+    // If you thought we are done with tricky case - you were wrong. There is another one!
     // The problem with the same property scope appearing several times. For example when using
     // aliases:
     //
@@ -782,6 +786,27 @@ public final class SymbolTable {
     // type we need to process only one of them. To do that we build a "type => root symbol" map.
     // In this case the map will be {one: 1} => OBJ. Using this map will skip 'alias' when creating
     // property scopes.
+    //
+    // Another similar case is NodeJs modules. Consider following setup:
+    //
+    // foo.js:
+    // exports.one = 1;
+    //
+    // bar.js:
+    // const foo = require('./foo.js');
+    // foo.one;
+    //
+    // In this setup foo.js transpiled to:
+    // module$foo.default = {};
+    // module$foo.default.one = 1;
+    //
+    // and bar.js transpiled to:
+    // const foo = module$foo.default;
+    // foo.one;
+    //
+    // So here 'foo' becomes alias of 'module$foo.default' and we get the same issue of having 2
+    // symbols with the same type and we need to make sure that 'module$foo.default' becomes the
+    // root symbol. That's why all module symbols (moduleTypes list) processed last.
     //
     // NOTE: we are using IdentityHashMap to compare types using == because we need to find symbols
     // that point to the exact same type instance.

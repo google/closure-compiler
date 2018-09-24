@@ -1363,6 +1363,22 @@ public final class SymbolTableTest extends TestCase {
     assertNode(barStaticMethodRefs.get(1).getNode()).matchesQualifiedName("Foo.staticMethod");
   }
 
+  @Test
+  public void testTypedefInNodeJsModule() {
+    options.setProcessCommonJSModules(true);
+    SymbolTable table =
+        createSymbolTableFromTwoSources(
+            lines("/** @typedef {number} */", "exports.MyTypedef;"),
+            lines(
+                "const file1 = require('./file1.js');",
+                "/** @const {!file1.MyTypedef} */",
+                "const one = 1;"));
+
+    Symbol typedefSymbol = getGlobalVar(table, "module$file1.default.MyTypedef");
+    assertThat(typedefSymbol).isNotNull();
+    assertThat(table.getReferenceList(typedefSymbol)).hasSize(2);
+  }
+
   private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertEquals(0, ordering.compare(first, first));
     assertEquals(0, ordering.compare(second, second));
@@ -1412,6 +1428,17 @@ public final class SymbolTableTest extends TestCase {
   private SymbolTable createSymbolTable(String input, String externsCode) {
     List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", input));
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs1", externsCode));
+
+    Compiler compiler = new Compiler(new BlackHoleErrorManager());
+    compiler.compile(externs, inputs, options);
+    return assertSymbolTableValid(compiler.buildKnownSymbolTable());
+  }
+
+  private SymbolTable createSymbolTableFromTwoSources(String input1, String input2) {
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("file1.js", input1), SourceFile.fromCode("file2.js", input2));
+    List<SourceFile> externs = ImmutableList.of();
 
     Compiler compiler = new Compiler(new BlackHoleErrorManager());
     compiler.compile(externs, inputs, options);
