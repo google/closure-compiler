@@ -2004,7 +2004,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         return null;
       }
 
-      if (NodeUtil.isFunctionExpression(rValue) || NodeUtil.isClassExpression(rValue)) {
+      if (NodeUtil.isFunctionExpression(rValue)) {
+        return rValue.getFirstChild();
+      }
+
+      if (NodeUtil.isClassExpression(rValue) && rValue.getFirstChild() == qNameBase) {
         return rValue.getFirstChild();
       }
 
