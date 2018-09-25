@@ -792,8 +792,12 @@ Element.prototype.blur = function() {};
 /** @return {undefined} */
 Element.prototype.click = function() {};
 
-/** @return {undefined} */
-Element.prototype.focus = function() {};
+/**
+ * @param {{preventScroll: boolean}=} focusOption
+ * @return {undefined}
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#focus-management-apis
+ */
+Element.prototype.focus = function(focusOption) {};
 
 /** @type {number} */
 HTMLInputElement.prototype.selectionStart;
