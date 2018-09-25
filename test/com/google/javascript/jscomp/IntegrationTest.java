@@ -6308,4 +6308,33 @@ public final class IntegrationTest extends IntegrationTestCase {
               "var module$contents$ns$from$other_usingExterns = null;"),
         });
   }
+
+  @Test
+  public void testRestDoesntBlockPropertyDisambiguation() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                SourceFile.fromCode(
+                    "extra_ex.js",
+                    "/** @return {!Object} */ Object.assign = function(target, var_args) {}"))
+            .build();
+
+    // TODO(b/116532470): the compiler should compile this down to nothing.
+    test(
+        options,
+        lines(
+            "class C { f() {} }",
+            "(new C()).f();",
+            "const obj = {f: 3};",
+            "const {f, ...rest} = obj;"),
+        lines(
+            "function a() {}",
+            "a.prototype.a = function() {};",
+            "(new a).a();",
+            "delete Object.assign({}, {a: 3}).a"));
+  }
 }
