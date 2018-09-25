@@ -46,6 +46,9 @@ public final class MultiPassTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     enableNormalize();
     enableGatherExternProperties();
+    enableTypeCheck();
+    // TODO(b/77597706): enable type info validation
+    // enableTypeInfoValidation();
   }
 
   @Override
@@ -155,16 +158,8 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDestructuringAndArrowFunction() {
-    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
-    disableNormalize();
-    allowExternsChanges();
-
-    passes = new ArrayList<>();
-    addRenameVariablesInParamListsPass();
-    addSplitVariableDeclarationsPass();
-    addDestructuringPass();
-    addArrowFunctionPass();
+  public void testDestructuringResultOfArrowFunction() {
+    setDestructuringArrowFunctionOptions();
 
     test(
         lines(
@@ -179,95 +174,154 @@ public final class MultiPassTest extends CompilerTestCase {
             "   return foo('v', value);",
             "};",
             "f({key:'v'})"));
+  }
+
+  @Test
+  public void testArrayDestructuringAssign() {
+    setDestructuringArrowFunctionOptions();
 
     test(
-        lines("var x, a, b;", "x = ([a,b] = [1,2])"),
-        lines(
-            "var x, a, b;",
-            "x = function () {",
-            "   let $jscomp$destructuring$var0 = [1,2];",
-            "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
-            "   a = $jscomp$destructuring$var1.next().value;",
-            "   b = $jscomp$destructuring$var1.next().value;",
-            "   return $jscomp$destructuring$var0;",
-            "} ();"));
+        externs(MINIMAL_EXTERNS),
+        srcs(lines("var x, a, b;", "x = ([a,b] = [1,2])")),
+        expected(
+            lines(
+                "var x, a, b;",
+                "x = function () {",
+                "   let $jscomp$destructuring$var0 = [1,2];",
+                "   var $jscomp$destructuring$var1 = ",
+                "       $jscomp.makeIterator($jscomp$destructuring$var0);",
+                "   a = $jscomp$destructuring$var1.next().value;",
+                "   b = $jscomp$destructuring$var1.next().value;",
+                "   return $jscomp$destructuring$var0;",
+                "} ();")));
+  }
+
+  @Test
+  public void testDestructuringInsideArrowFunction() {
+    setDestructuringArrowFunctionOptions();
 
     test(
-        lines("var x, a, b;", "x = (() => {console.log(); return [a,b] = [1,2];})()"),
-        lines(
-            "var x, a, b;",
-            "x = function () {",
-            "   console.log();",
-            "   return function () {",
-            "       let $jscomp$destructuring$var0 = [1,2];",
-            "       var $jscomp$destructuring$var1 = ",
-            "$jscomp.makeIterator($jscomp$destructuring$var0);",
-            "       a = $jscomp$destructuring$var1.next().value;",
-            "       b = $jscomp$destructuring$var1.next().value;",
-            "       return $jscomp$destructuring$var0;",
-            "       } ();",
-            "} ();"));
+        externs(MINIMAL_EXTERNS + "var console = {log(s) {}};"),
+        srcs(lines("var x, a, b;", "x = (() => {console.log(); return [a,b] = [1,2];})()")),
+        expected(
+            lines(
+                "var x, a, b;",
+                "x = function () {",
+                "   console.log();",
+                "   return function () {",
+                "       let $jscomp$destructuring$var0 = [1,2];",
+                "       var $jscomp$destructuring$var1 = ",
+                "$jscomp.makeIterator($jscomp$destructuring$var0);",
+                "       a = $jscomp$destructuring$var1.next().value;",
+                "       b = $jscomp$destructuring$var1.next().value;",
+                "       return $jscomp$destructuring$var0;",
+                "       } ();",
+                "} ();")));
+  }
+
+  @Test
+  public void testDestructuringInsideVanillaFunction() {
+    setDestructuringArrowFunctionOptions();
 
     test(
-        lines(
-            "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();"),
-        lines(
-            "var foo = function () {",
-            "var x, a, b;",
-            " x = function () {",
-            "   let $jscomp$destructuring$var0 = [1,2];",
-            "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
-            "   a = $jscomp$destructuring$var1.next().value;",
-            "   b = $jscomp$destructuring$var1.next().value;",
-            "   return $jscomp$destructuring$var0;",
-            " } ();",
-            "}",
-            "foo();"));
+        externs(MINIMAL_EXTERNS),
+        srcs(
+            lines(
+                "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();")),
+        expected(
+            lines(
+                "var foo = function () {",
+                "var x, a, b;",
+                " x = function () {",
+                "   let $jscomp$destructuring$var0 = [1,2];",
+                "   var $jscomp$destructuring$var1 = ",
+                "       $jscomp.makeIterator($jscomp$destructuring$var0);",
+                "   a = $jscomp$destructuring$var1.next().value;",
+                "   b = $jscomp$destructuring$var1.next().value;",
+                "   return $jscomp$destructuring$var0;",
+                " } ();",
+                "}",
+                "foo();")));
+  }
+
+  @Test
+  public void testDestructuringInForLoopHeader() {
+    setDestructuringArrowFunctionOptions();
 
     test(
-        lines("var prefix;", "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){", "}"),
-        lines(
-            "var prefix;",
-            "for (;;function () {",
-            "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
-            "   var $jscomp$destructuring$var1 = ",
-            "$jscomp.makeIterator($jscomp$destructuring$var0);",
-            "   $jscomp$destructuring$var1.next();",
-            "   prefix = $jscomp$destructuring$var1.next().value;",
-            "   return $jscomp$destructuring$var0;",
-            " }()){",
-            "}"));
+        externs(MINIMAL_EXTERNS),
+        srcs(
+            lines(
+                "var prefix;",
+                "for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){",
+                "}")),
+        expected(
+            lines(
+                "var prefix;",
+                "for (;;function () {",
+                "   let $jscomp$destructuring$var0 = ",
+                "       /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix));",
+                "   var $jscomp$destructuring$var1 = ",
+                "$jscomp.makeIterator($jscomp$destructuring$var0);",
+                "   $jscomp$destructuring$var1.next();",
+                "   prefix = $jscomp$destructuring$var1.next().value;",
+                "   return $jscomp$destructuring$var0;",
+                " }()){",
+                "}")));
+  }
+
+  @Test
+  public void testDestructuringInForLoopHeaderUsedInBody() {
+    setDestructuringArrowFunctionOptions();
 
     test(
-        lines(
-            "var prefix;",
-            "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){",
-            "   console.log(prefix);",
-            "}"),
-        lines(
-            "var prefix;",
-            "for (;;function () {",
-            "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
-            "   var $jscomp$destructuring$var1 = ",
-            "$jscomp.makeIterator($jscomp$destructuring$var0);",
-            "   $jscomp$destructuring$var1.next();",
-            "   prefix = $jscomp$destructuring$var1.next().value;",
-            "   return $jscomp$destructuring$var0;",
-            " } ()){",
-            " console.log(prefix);",
-            "}"));
+        externs(MINIMAL_EXTERNS + " const console = {log(s) {}}"),
+        srcs(
+            lines(
+                "var prefix;",
+                "for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){",
+                "   console.log(prefix);",
+                "}")),
+        expected(
+            lines(
+                "var prefix;",
+                "for (;;function () {",
+                "   let $jscomp$destructuring$var0 = ",
+                "       /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))",
+                "   var $jscomp$destructuring$var1 = ",
+                "$jscomp.makeIterator($jscomp$destructuring$var0);",
+                "   $jscomp$destructuring$var1.next();",
+                "   prefix = $jscomp$destructuring$var1.next().value;",
+                "   return $jscomp$destructuring$var0;",
+                " } ()){",
+                " console.log(prefix);",
+                "}")));
+  }
+
+  @Test
+  public void testDestructuringInForLoopHeaderWithInitializer() {
+    setDestructuringArrowFunctionOptions();
 
     test(
-        lines("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}"),
-        lines(
-            "for (var x = 1; x < 3; function () {",
-            "   let $jscomp$destructuring$var0 = [3,4]",
-            "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
-            "   x = $jscomp$destructuring$var1.next().value;",
-            "   return $jscomp$destructuring$var0;",
-            " } ()){",
-            "console.log(x);",
-            "}"));
+        externs(MINIMAL_EXTERNS + " const console = {log(s) {}}"),
+        srcs(lines("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}")),
+        expected(
+            lines(
+                "for (var x = 1; x < 3; function () {",
+                "   let $jscomp$destructuring$var0 = [3,4]",
+                "   var $jscomp$destructuring$var1 = ",
+                "       $jscomp.makeIterator($jscomp$destructuring$var0);",
+                "   x = $jscomp$destructuring$var1.next().value;",
+                "   return $jscomp$destructuring$var0;",
+                " } ()){",
+                "console.log(x);",
+                "}")));
+  }
+
+  @Test
+  public void testObjectDestructuringNestedAssign() {
+    setDestructuringArrowFunctionOptions();
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
     test(
         "var x = ({a: b, c: d} = foo());",
@@ -279,17 +333,12 @@ public final class MultiPassTest extends CompilerTestCase {
             "   d = $jscomp$destructuring$var1.c;",
             "   return $jscomp$destructuring$var0;",
             "} ();"));
+  }
 
-    test(
-        "var x = ({a: b, c: d} = foo());",
-        lines(
-            "var x = function () {",
-            "   let $jscomp$destructuring$var0 = foo();",
-            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "   b = $jscomp$destructuring$var1.a;",
-            "   d = $jscomp$destructuring$var1.c;",
-            "   return $jscomp$destructuring$var0;",
-            "} ();"));
+  @Test
+  public void testObjectDestructuringNestedAssignAndDeclaration() {
+    setDestructuringArrowFunctionOptions();
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
     test(
         "var x; var y = ({a: x} = foo());",
@@ -301,6 +350,12 @@ public final class MultiPassTest extends CompilerTestCase {
             "   x = $jscomp$destructuring$var1.a;",
             "   return $jscomp$destructuring$var0;",
             "} ();"));
+  }
+
+  @Test
+  public void testArrowFunctionWithDestructuringInsideDeclaration() {
+    setDestructuringArrowFunctionOptions();
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
     test(
         "var x; var y = (() => {return {a,b} = foo();})();",
@@ -315,6 +370,18 @@ public final class MultiPassTest extends CompilerTestCase {
             "       return $jscomp$destructuring$var0;",
             "   } ();",
             "} ();"));
+  }
+
+  private void setDestructuringArrowFunctionOptions() {
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
+    disableNormalize();
+    allowExternsChanges();
+
+    passes = new ArrayList<>();
+    addRenameVariablesInParamListsPass();
+    addSplitVariableDeclarationsPass();
+    addDestructuringPass();
+    addArrowFunctionPass();
   }
 
   private void addCollapseObjectLiterals() {

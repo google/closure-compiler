@@ -4554,6 +4554,25 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testValidArrayPatternInForInInitializer() {
+    testTypes(
+        lines(
+            "function f(/** !Object<string, number> */ obj) {",
+            "  for (const [/** string */ a, /** string */ b] in obj) {}",
+            "}"));
+  }
+
+  @Test
+  public void testArrayPatternInForInInitializerWithTypeMismatch() {
+    // TODO(b/77903996): this should cause a type mismatch warning
+    testTypes(
+        lines(
+            "function f(/** !Object<string, number> */ obj) {",
+            "  for (const [/** number */ a, /** number */ b] in obj) {}",
+            "}"));
+  }
+
+  @Test
   public void testBadDefaultValueInCatchCausesWarning() {
     testTypes(
         "try { throw {x: undefined}; } catch ({/** string */ x = 3 + 4}) {}",

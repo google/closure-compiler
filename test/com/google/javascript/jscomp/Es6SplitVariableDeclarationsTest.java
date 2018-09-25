@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -24,6 +25,19 @@ public final class Es6SplitVariableDeclarationsTest extends CompilerTestCase {
 
   public Es6SplitVariableDeclarationsTest() {
     super();
+  }
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    enableTypeCheck();
+    enableTypeInfoValidation();
+
+    // there are a lot of 'property x never defined on ?' warnings caused by object destructuring
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+    ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
+    ignoreWarnings(TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
   @Override

@@ -882,8 +882,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case TEMPLATELIT_SUB:
       case REST:
       case DESTRUCTURING_LHS:
-      case ARRAY_PATTERN:
         typeable = false;
+        break;
+
+      case ARRAY_PATTERN:
+        ensureTyped(n);
         break;
 
       case OBJECT_PATTERN:
@@ -907,6 +910,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                 t, n, getJSType(n), target.getStringKey(), getJSType(target.getNode()));
           }
         }
+        ensureTyped(n);
         break;
 
       case DEFAULT_VALUE:
@@ -1993,7 +1997,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   private void visitVar(NodeTraversal t, Node n) {
     // Handle var declarations in for-of loops separately from regular var declarations.
-    if (n.getParent().isForOf()) {
+    if (n.getParent().isForOf() || n.getParent().isForIn()) {
       return;
     }
 

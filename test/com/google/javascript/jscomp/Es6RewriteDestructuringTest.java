@@ -35,8 +35,12 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
-    disableTypeCheck();
-    enableRunTypeCheckAfterProcessing();
+    enableTypeCheck();
+    // TODO(b/77597706): enable type info validation
+    // enableTypeInfoValidation();
+
+    // there are a lot of 'property x never defined on ?' warnings caused by object dsetructuring
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
   }
 
   @Override
@@ -238,6 +242,8 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "  var y = $jscomp$destructuring$var2.next().value;",
             "  var z = $jscomp$destructuring$var2.next().value;",
             "}"));
+    // TODO(b/77597706): inject this runtime library in Es6InjectRuntimeLibraries, so it will happen
+    // before typechecking.
     assertThat(getLastCompiler().injected).containsExactly("es6/util/makeiterator");
 
     test(
@@ -355,16 +361,18 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var c=$jscomp$destructuring$var0.next().value"));
 
     test(
-        "var a; [[a] = ['b']] = [];",
-        lines(
-            "var a;",
-            "var $jscomp$destructuring$var0 = $jscomp.makeIterator([]);",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
-            "var $jscomp$destructuring$var2 = $jscomp.makeIterator(",
-            "    $jscomp$destructuring$var1 === undefined",
-            "        ? ['b']",
-            "        : $jscomp$destructuring$var1);",
-            "a = $jscomp$destructuring$var2.next().value"));
+        externs(MINIMAL_EXTERNS),
+        srcs("var a; [[a] = ['b']] = [];"),
+        expected(
+            lines(
+                "var a;",
+                "var $jscomp$destructuring$var0 = $jscomp.makeIterator([]);",
+                "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
+                "var $jscomp$destructuring$var2 = $jscomp.makeIterator(",
+                "    $jscomp$destructuring$var1 === undefined",
+                "        ? ['b']",
+                "        : $jscomp$destructuring$var1);",
+                "a = $jscomp$destructuring$var2.next().value")));
   }
 
   @Test
@@ -432,18 +440,20 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testArrayDestructuringMixedRest() {
     test(
-        "let [first, ...[re, st, ...{length: num_left}]] = f();",
-        lines(
-            "var $jscomp$destructuring$var0 = $jscomp.makeIterator(f());",
-            "let first = $jscomp$destructuring$var0.next().value;",
-            "var $jscomp$destructuring$var1 = "
-                + "$jscomp.makeIterator("
-                + "$jscomp.arrayFromIterator($jscomp$destructuring$var0));",
-            "let re = $jscomp$destructuring$var1.next().value;",
-            "let st = $jscomp$destructuring$var1.next().value;",
-            "var $jscomp$destructuring$var2 = "
-                + "$jscomp.arrayFromIterator($jscomp$destructuring$var1);",
-            "let num_left = $jscomp$destructuring$var2.length;"));
+        externs(MINIMAL_EXTERNS),
+        srcs("let [first, ...[re, st, ...{length: num_left}]] = f();"),
+        expected(
+            lines(
+                "var $jscomp$destructuring$var0 = $jscomp.makeIterator(f());",
+                "let first = $jscomp$destructuring$var0.next().value;",
+                "var $jscomp$destructuring$var1 = ",
+                "    $jscomp.makeIterator(",
+                "        $jscomp.arrayFromIterator($jscomp$destructuring$var0));",
+                "let re = $jscomp$destructuring$var1.next().value;",
+                "let st = $jscomp$destructuring$var1.next().value;",
+                "var $jscomp$destructuring$var2 = ",
+                "    $jscomp.arrayFromIterator($jscomp$destructuring$var1);",
+                "let num_left = $jscomp$destructuring$var2.length;")));
   }
 
   @Test
@@ -494,15 +504,18 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testDestructuringForOfWithShadowing() {
     test(
-        "for (const [value] of []) { const value = 0; }",
-        lines(
-            "for (const $jscomp$destructuring$var0 of []) {",
-            "  var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
-            "  const value = $jscomp$destructuring$var1.next().value;",
-            "  {",
-            "    const value = 0;",
-            "  }",
-            "}"));
+        externs(MINIMAL_EXTERNS),
+        srcs("for (const [value] of []) { const value = 0; }"),
+        expected(
+            lines(
+                "for (const $jscomp$destructuring$var0 of []) {",
+                "  var $jscomp$destructuring$var1 =",
+                "      $jscomp.makeIterator($jscomp$destructuring$var0);",
+                "  const value = $jscomp$destructuring$var1.next().value;",
+                "  {",
+                "    const value = 0;",
+                "  }",
+                "}")));
   }
 
   @Test
@@ -689,8 +702,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
                 "function Foo() {}",
                 "",
                 "Foo.prototype.bar = function({a}) {};")),
-        srcs("(new Foo).bar({b: 0});"),
-        warning(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY));
+        srcs("(new Foo).bar({b: 0});"));
     // TODO(sdh): figure out what's going on here
   }
 
@@ -714,77 +726,98 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testDestructuringArrayNotInExprResult() {
     test(
-        lines("var x, a, b;", "x = ([a,b] = [1,2])"),
-        lines(
-            "var x,a,b;",
-            "x = (()=>{",
-            "   let $jscomp$destructuring$var0 = [1,2];",
-            "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
-            "   a = $jscomp$destructuring$var1.next().value;",
-            "   b = $jscomp$destructuring$var1.next().value;",
-            "   return $jscomp$destructuring$var0;",
-            "})();"));
+        externs(MINIMAL_EXTERNS),
+        srcs(lines("var x, a, b;", "x = ([a,b] = [1,2])")),
+        expected(
+            lines(
+                "var x,a,b;",
+                "x = (()=>{",
+                "   let $jscomp$destructuring$var0 = [1,2];",
+                "   var $jscomp$destructuring$var1 =",
+                "       $jscomp.makeIterator($jscomp$destructuring$var0);",
+                "   a = $jscomp$destructuring$var1.next().value;",
+                "   b = $jscomp$destructuring$var1.next().value;",
+                "   return $jscomp$destructuring$var0;",
+                "})();")));
 
     test(
-        lines(
-            "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();"),
-        lines(
-            "var foo = function () {",
-            " var x, a, b;",
-            " x = (()=>{",
-            "   let $jscomp$destructuring$var0 = [1,2];",
-            "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
-            "   a = $jscomp$destructuring$var1.next().value;",
-            "   b = $jscomp$destructuring$var1.next().value;",
-            "   return $jscomp$destructuring$var0;",
-            " })();",
-            "}",
-            "foo();"));
+        externs(MINIMAL_EXTERNS),
+        srcs(
+            lines(
+                "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();")),
+        expected(
+            lines(
+                "var foo = function () {",
+                " var x, a, b;",
+                " x = (()=>{",
+                "   let $jscomp$destructuring$var0 = [1,2];",
+                "   var $jscomp$destructuring$var1 =",
+                "       $jscomp.makeIterator($jscomp$destructuring$var0);",
+                "   a = $jscomp$destructuring$var1.next().value;",
+                "   b = $jscomp$destructuring$var1.next().value;",
+                "   return $jscomp$destructuring$var0;",
+                " })();",
+                "}",
+                "foo();")));
 
     test(
-        lines("var prefix;", "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){", "}"),
-        lines(
-            "var prefix;",
-            "for (;;(() => {",
-            "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
-            "   var $jscomp$destructuring$var1 = ",
-            "$jscomp.makeIterator($jscomp$destructuring$var0);",
-            "   $jscomp$destructuring$var1.next();",
-            "   prefix = $jscomp$destructuring$var1.next().value;",
-            "   return $jscomp$destructuring$var0;",
-            " })()){",
-            "}"));
+        externs(MINIMAL_EXTERNS),
+        srcs(
+            lines(
+                "var prefix;",
+                "for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){",
+                "}")),
+        expected(
+            lines(
+                "var prefix;",
+                "for (;;(() => {",
+                "   let $jscomp$destructuring$var0 =",
+                "       /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix));",
+                "   var $jscomp$destructuring$var1 = ",
+                "       $jscomp.makeIterator($jscomp$destructuring$var0);",
+                "   $jscomp$destructuring$var1.next();",
+                "   prefix = $jscomp$destructuring$var1.next().value;",
+                "   return $jscomp$destructuring$var0;",
+                " })()){",
+                "}")));
 
     test(
-        lines(
-            "var prefix;",
-            "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){",
-            "   console.log(prefix);",
-            "}"),
-        lines(
-            "var prefix;",
-            "for (;;(() => {",
-            "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
-            "   var $jscomp$destructuring$var1 = ",
-            "$jscomp.makeIterator($jscomp$destructuring$var0);",
-            "   $jscomp$destructuring$var1.next();",
-            "   prefix = $jscomp$destructuring$var1.next().value;",
-            "   return $jscomp$destructuring$var0;",
-            " })()){",
-            " console.log(prefix);",
-            "}"));
+        externs(MINIMAL_EXTERNS),
+        srcs(
+            lines(
+                "var prefix;",
+                "for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){",
+                "   console.log(prefix);",
+                "}")),
+        expected(
+            lines(
+                "var prefix;",
+                "for (;;(() => {",
+                "   let $jscomp$destructuring$var0 =",
+                "       /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix));",
+                "   var $jscomp$destructuring$var1 = ",
+                "$jscomp.makeIterator($jscomp$destructuring$var0);",
+                "   $jscomp$destructuring$var1.next();",
+                "   prefix = $jscomp$destructuring$var1.next().value;",
+                "   return $jscomp$destructuring$var0;",
+                " })()){",
+                " console.log(prefix);",
+                "}")));
 
     test(
-        lines("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}"),
-        lines(
-            "for (var x = 1; x < 3; (()=>{",
-            "   let $jscomp$destructuring$var0 = [3,4]",
-            "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
-            "   x = $jscomp$destructuring$var1.next().value;",
-            "   return $jscomp$destructuring$var0;",
-            " })()){",
-            "console.log(x);",
-            "}"));
+        externs(MINIMAL_EXTERNS),
+        srcs(lines("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}")),
+        expected(
+            lines(
+                "for (var x = 1; x < 3; (()=>{",
+                "   let $jscomp$destructuring$var0 = [3,4]",
+                "   var $jscomp$destructuring$var1 = ",
+                "       $jscomp.makeIterator($jscomp$destructuring$var0);",
+                "   x = $jscomp$destructuring$var1.next().value;",
+                "   return $jscomp$destructuring$var0;",
+                " })()){",
+                "console.log(x);",
+                "}")));
   }
 
   @Test
@@ -840,34 +873,40 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testNestedDestructuring() {
     test(
-        "var [[x]] = [[1]];",
-        lines(
-            "var $jscomp$destructuring$var0 = $jscomp.makeIterator([[1]]);",
-            "var $jscomp$destructuring$var1 = ",
-            "$jscomp.makeIterator($jscomp$destructuring$var0.next().value);",
-            "var x = $jscomp$destructuring$var1.next().value;"));
+        externs(MINIMAL_EXTERNS),
+        srcs("var [[x]] = [[1]];"),
+        expected(
+            lines(
+                "var $jscomp$destructuring$var0 = $jscomp.makeIterator([[1]]);",
+                "var $jscomp$destructuring$var1 = ",
+                "$jscomp.makeIterator($jscomp$destructuring$var0.next().value);",
+                "var x = $jscomp$destructuring$var1.next().value;")));
 
     test(
-        "var [[x,y],[z]] = [[1,2],[3]];",
-        lines(
-            "var $jscomp$destructuring$var0 = $jscomp.makeIterator([[1,2],[3]]);",
-            "var $jscomp$destructuring$var1 = ",
-            "$jscomp.makeIterator($jscomp$destructuring$var0.next().value);",
-            "var x = $jscomp$destructuring$var1.next().value;",
-            "var y = $jscomp$destructuring$var1.next().value;",
-            "var $jscomp$destructuring$var2 = ",
-            "$jscomp.makeIterator($jscomp$destructuring$var0.next().value);",
-            "var z = $jscomp$destructuring$var2.next().value;"));
+        externs(MINIMAL_EXTERNS),
+        srcs("var [[x,y],[z]] = [[1,2],[3]];"),
+        expected(
+            lines(
+                "var $jscomp$destructuring$var0 = $jscomp.makeIterator([[1,2],[3]]);",
+                "var $jscomp$destructuring$var1 = ",
+                "$jscomp.makeIterator($jscomp$destructuring$var0.next().value);",
+                "var x = $jscomp$destructuring$var1.next().value;",
+                "var y = $jscomp$destructuring$var1.next().value;",
+                "var $jscomp$destructuring$var2 = ",
+                "$jscomp.makeIterator($jscomp$destructuring$var0.next().value);",
+                "var z = $jscomp$destructuring$var2.next().value;")));
 
     test(
-        "var [[x,y],z] = [[1,2],3];",
-        lines(
-            "var $jscomp$destructuring$var0 = $jscomp.makeIterator([[1,2],3]);",
-            "var $jscomp$destructuring$var1 = ",
-            "$jscomp.makeIterator($jscomp$destructuring$var0.next().value);",
-            "var x = $jscomp$destructuring$var1.next().value;",
-            "var y = $jscomp$destructuring$var1.next().value;",
-            "var z = $jscomp$destructuring$var0.next().value;"));
+        externs(MINIMAL_EXTERNS),
+        srcs("var [[x,y],z] = [[1,2],3];"),
+        expected(
+            lines(
+                "var $jscomp$destructuring$var0 = $jscomp.makeIterator([[1,2],3]);",
+                "var $jscomp$destructuring$var1 = ",
+                "$jscomp.makeIterator($jscomp$destructuring$var0.next().value);",
+                "var x = $jscomp$destructuring$var1.next().value;",
+                "var y = $jscomp$destructuring$var1.next().value;",
+                "var z = $jscomp$destructuring$var0.next().value;")));
   }
 
   @Test
