@@ -960,7 +960,7 @@ public abstract class RegExpTree {
 
     @Override
     public int hashCode() {
-      return Objects.hash(groupName);
+      return Objects.hashCode(groupName);
     }
   }
 
