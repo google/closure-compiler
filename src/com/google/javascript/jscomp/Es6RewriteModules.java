@@ -77,10 +77,15 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   static final DiagnosticType DUPLICATE_EXPORT =
       DiagnosticType.error("JSC_DUPLICATE_EXPORT", "Duplicate export ''{0}''.");
 
-  static final DiagnosticType FORWARD_DECLARE_IN_ES6_SHOULD_BE_CONST =
+  static final DiagnosticType FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST =
       DiagnosticType.error(
-          "JSC_FORWARD_DECLARE_IN_ES6_SHOULD_BE_CONST",
-          "Aliases of goog.forwardDeclare() in an ES6 module should be const.");
+          "JSC_FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST",
+          "goog.forwardDeclare alias for ES6 module should be const.");
+
+  static final DiagnosticType SHOULD_IMPORT_ES6_MODULE =
+      DiagnosticType.warning(
+          "JSC_SHOULD_IMPORT_ES6_MODULE",
+          "ES6 modules should import other ES6 modules rather than goog.require them.");
 
   private final AbstractCompiler compiler;
 
@@ -178,10 +183,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   @Override
   public void hotSwapScript(Node scriptNode, Node originalRoot) {
+    new RewriteRequiresForEs6Modules().rewrite(scriptNode);
     if (isEs6ModuleRoot(scriptNode)) {
       processFile(scriptNode);
-    } else {
-      new RewriteRequiresForEs6Modules().rewrite(scriptNode);
     }
   }
 
@@ -254,6 +258,17 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             return;
           }
 
+          // TODO(johnplaisted): Once we have an alternative to forwardDeclare / requireType that
+          // doesn't require Closure Library warn about those too.
+          // TODO(johnplaisted): Once we have import() support warn about goog.module.get.
+          if (isRequire) {
+            ModuleMetadata currentModuleMetadata =
+                moduleMetadataMap.getModulesByPath().get(t.getInput().getPath().toString());
+            if (currentModuleMetadata != null && currentModuleMetadata.isEs6Module()) {
+              t.report(n, SHOULD_IMPORT_ES6_MODULE);
+            }
+          }
+
           if (isGet && t.inGlobalHoistScope()) {
             t.report(n, INVALID_GET_CALL_SCOPE);
             return;
@@ -297,7 +312,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
                   statementNode.detach();
                   t.reportCodeChange();
                 } else {
-                  t.report(statementNode, FORWARD_DECLARE_IN_ES6_SHOULD_BE_CONST);
+                  t.report(statementNode, FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST);
                 }
               } else {
                 //   const module = goog.require('an.es6.namespace');
@@ -312,11 +327,16 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             if (isForwardDeclare) {
               forwardDeclareRenameTable.put(
                   t.getScopeRoot(), name, ModuleRenaming.getGlobalName(moduleMetadata, name));
+              statementNode.detach();
+            } else {
+              if (statementNode.isExprResult() && statementNode.getFirstChild() == n) {
+                statementNode.detach();
+              } else {
+                n.replaceWith(
+                    IR.name(ModuleRenaming.getGlobalName(moduleMetadata, name))
+                        .useSourceInfoFromForTree(n));
+              }
             }
-            if (parent.isExprResult()) {
-              parent.detach();
-            }
-            n.detach();
             t.reportCodeChange();
           }
 
