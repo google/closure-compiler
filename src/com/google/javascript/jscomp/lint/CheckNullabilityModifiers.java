@@ -166,7 +166,10 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
           // Whether the node is the type in function(new:T) or function(this:T).
           boolean isNewOrThis = parent != null && (parent.isNew() || parent.isThis());
 
-          if (isReference && !hasBang && !hasQmark && !isNewOrThis) {
+          // Whether the node is the type name in a typeof expression.
+          boolean isTypeOfType = parent != null && parent.isTypeOf();
+
+          if (isReference && !hasBang && !hasQmark && !isNewOrThis && !isTypeOfType) {
             missingCandidates.add(node);
           } else if (isPrimitiveOrLiteral && hasNonArtificialBang) {
             redundantCandidates.add(node);

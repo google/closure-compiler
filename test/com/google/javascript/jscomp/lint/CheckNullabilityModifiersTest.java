@@ -215,6 +215,11 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTypeOf() {
+    checkNoWarning("/** @type {typeof Object} */ var x;");
+  }
+
+  @Test
   public void testEndPosition() {
     checkRedundantWarning("/** @type {string!} */ var x;");
 
