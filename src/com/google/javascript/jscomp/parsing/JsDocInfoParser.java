@@ -2122,8 +2122,8 @@ public final class JsDocInfoParser {
   }
 
   /**
-   * BasicTypeExpression := '*' | 'null' | 'undefined' | TypeName
-   *     | FunctionType | UnionType | RecordType
+   * BasicTypeExpression := '*' | 'null' | 'undefined' | TypeName | FunctionType | UnionType |
+   * RecordType | TypeofType
    */
   private Node parseBasicTypeExpression(JsDocToken token) {
     if (token == JsDocToken.STAR) {
