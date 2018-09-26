@@ -6361,12 +6361,14 @@ chrome.system.display.DisplayLayout;
  * @typedef {!{
  *   isUnified: (boolean|undefined),
  *   mirroringSourceId: (string|undefined),
+ *   mirroringDestinationIds: (!Array<string>|undefined),
  *   isPrimary: (boolean|undefined),
  *   overscan: (!chrome.system.display.Insets|undefined),
  *   rotation: (number|undefined),
  *   boundsOriginX: (number|undefined),
  *   boundsOriginY: (number|undefined),
  *   displayMode: (!chrome.system.display.DisplayMode|undefined),
+ *   availableDisplayZoomFactors: (!Array<number>|undefined),
  *   displayZoomFactor: (number|undefined)
  * }}
  * @see https://developer.chrome.com/extensions/system.display#type-DisplayProperties
@@ -6427,6 +6429,10 @@ chrome.system.display.DisplayUnitInfo.prototype.edid;
 chrome.system.display.DisplayUnitInfo.prototype.mirroringSourceId;
 
 
+/** @type {!Array<string>} */
+chrome.system.display.DisplayUnitInfo.prototype.mirroringDestinationIds;
+
+
 /** @type {boolean} */
 chrome.system.display.DisplayUnitInfo.prototype.isPrimary;
 
@@ -6469,6 +6475,14 @@ chrome.system.display.DisplayUnitInfo.prototype.modes;
 
 /** @type {boolean} */
 chrome.system.display.DisplayUnitInfo.prototype.hasTouchSupport;
+
+
+/** @type {!Array<number>} */
+chrome.system.display.DisplayUnitInfo.prototype.availableDisplayZoomFactors;
+
+
+/** @type {number} */
+chrome.system.display.DisplayUnitInfo.prototype.displayZoomFactor;
 
 
 /**
