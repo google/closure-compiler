@@ -357,6 +357,9 @@ public final class JSDocInfoPrinter {
       sb.append("}");
     } else if (typeNode.isVoid()) {
       sb.append("void");
+    } else if (typeNode.isTypeOf()) {
+      sb.append("typeof ");
+      appendTypeNode(sb, typeNode.getFirstChild());
     } else {
       if (typeNode.hasChildren()) {
         sb.append(typeNode.getString())

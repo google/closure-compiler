@@ -166,6 +166,14 @@ public final class JSDocInfoPrinterTest extends TestCase {
   }
 
   @Test
+  public void testTypeof() {
+    builder.recordType(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("typeof foo"), "<testTypeof>"));
+    JSDocInfo info = builder.buildAndReset();
+    assertEquals("/** @type {typeof foo} */ ", jsDocInfoPrinter.print(info));
+  }
+
+  @Test
   public void testTypes() {
     builder.recordReturnType(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("number|string"), "<testTypes>"));
