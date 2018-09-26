@@ -293,47 +293,22 @@ public class TemplateTypeMap implements Serializable {
         || (eqMatch == EquivalenceMatch.NO_KEY_MATCH && eqMethod != EquivalenceMethod.INVARIANT);
   }
 
-  private ImmutableList<JSType> normalize(ImmutableList<JSType> values, int keyCount) {
-    int missing = keyCount - values.size();
-    if (missing > 0) {
-      ImmutableList.Builder<JSType> builder = ImmutableList.builder();
-      builder.addAll(values);
-      for (int i = 0; i < missing; i++) {
-        builder.add(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
-      }
-      return builder.build();
-    }
-    return values;
+  /**
+   * Extends this TemplateTypeMap with the contents of the specified map. UNKNOWN_TYPE will be used
+   * as the value for any missing values in the specified map.
+   */
+  TemplateTypeMap extend(TemplateTypeMap other) {
+    ImmutableList<JSType> resizedOtherValues = other.resizedToMatchKeys(other.templateValues);
+    return registry.createTemplateTypeMap(
+        concatImmutableLists(other.templateKeys, templateKeys),
+        concatImmutableLists(resizedOtherValues, templateValues));
   }
 
-  /**
-   * Extends this TemplateTypeMap with the contents of the specified map.
-   * UNKNOWN_TYPE will be used as the value for any missing values in the
-   * specified map.
-   */
-  TemplateTypeMap extend(TemplateTypeMap thatMap) {
-    ImmutableList<JSType> thatNormalizedValues = normalize(
-        thatMap.templateValues, thatMap.templateKeys.size());
-
-    return registry.createTemplateTypeMap(
-        concatImmutableLists(thatMap.templateKeys, templateKeys),
-        concatImmutableLists(thatNormalizedValues, templateValues));
-  }
-
-  /**
-   * Returns a new TemplateTypeMap whose values have been extended with the
-   * specified list.
-   */
-  TemplateTypeMap addValues(ImmutableList<JSType> newValues) {
-    // Ignore any new template values that will not align with an existing
-    // template key.
-    int numUnfilledKeys = numUnfilledTemplateKeys();
-    if (numUnfilledKeys < newValues.size()) {
-      newValues = newValues.subList(0, numUnfilledKeys);
-    }
-
-    return registry.createTemplateTypeMap(
-        templateKeys, concatImmutableLists(templateValues, newValues));
+  /** Returns a new TemplateTypeMap whose values have been extended with the specified list. */
+  TemplateTypeMap copyFilledWithValues(ImmutableList<JSType> additionalValues) {
+    ImmutableList<JSType> finalValues =
+        resizedToMatchKeys(concatImmutableLists(templateValues, additionalValues));
+    return registry.createTemplateTypeMap(templateKeys, finalValues);
   }
 
   /**
@@ -350,25 +325,6 @@ public class TemplateTypeMap implements Serializable {
       }
     }
     return registry.createTemplateTypeMap(keys.build(), templateValues);
-  }
-
-  /**
-   * Concatenates two ImmutableList instances. If either input is empty, the
-   * other is returned; otherwise, a new ImmutableList instance is created that
-   * contains the contents of both arguments.
-   */
-  private <T> ImmutableList<T> concatImmutableLists(
-    ImmutableList<T> first, ImmutableList<T> second) {
-    if (first.isEmpty()) {
-      return second;
-    }
-    if (second.isEmpty()) {
-      return first;
-    }
-    ImmutableList.Builder<T> builder = ImmutableList.builder();
-    builder.addAll(first);
-    builder.addAll(second);
-    return builder.build();
   }
 
   boolean hasAnyTemplateTypesInternal() {
@@ -402,5 +358,37 @@ public class TemplateTypeMap implements Serializable {
     s += "}";
 
     return s;
+  }
+
+  private ImmutableList<JSType> resizedToMatchKeys(ImmutableList<JSType> values) {
+    if (values.size() == templateKeys.size()) {
+      return values;
+    } else if (values.size() > templateKeys.size()) {
+      return values.subList(0, templateKeys.size());
+    } else {
+      ImmutableList.Builder<JSType> builder = ImmutableList.builder();
+      builder.addAll(values);
+      for (int i = values.size(); i < templateKeys.size(); i++) {
+        builder.add(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+      }
+      return builder.build();
+    }
+  }
+
+  /**
+   * Concatenates two ImmutableList instances. If either input is empty, the other is returned;
+   * otherwise, a new ImmutableList instance is created that contains the contents of both
+   * arguments.
+   */
+  private static <T> ImmutableList<T> concatImmutableLists(
+      ImmutableList<T> first, ImmutableList<T> second) {
+    if (first.isEmpty()) {
+      return second;
+    }
+    if (second.isEmpty()) {
+      return first;
+    }
+
+    return ImmutableList.<T>builder().addAll(first).addAll(second).build();
   }
 }

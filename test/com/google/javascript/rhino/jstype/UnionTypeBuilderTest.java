@@ -38,6 +38,9 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
+
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
 import org.junit.Before;
@@ -162,6 +165,23 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     addRecordType(builder, false);
 
     assertEquals(1, builder.getAlternatesCount());
+  }
+
+  public void testDifferentTemplateSpecializations_whenUnioned_doNotLeakRawType() {
+    // Given
+    JSType arrayOfString = registry.createTemplatizedType(ARRAY_TYPE, STRING_TYPE);
+    JSType arrayOfNumber = registry.createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE);
+    JSType arrayOfUnknown = registry.createTemplatizedType(ARRAY_TYPE, UNKNOWN_TYPE);
+
+    UnionTypeBuilder builder =
+        UnionTypeBuilder.create(registry).addAlternate(arrayOfString).addAlternate(arrayOfNumber);
+
+    // When
+    JSType result = builder.build();
+
+    // Then
+    assertType(result).isEqualTo(arrayOfUnknown);
+    assertThat(result.getTemplateTypeMap().numUnfilledTemplateKeys()).isEqualTo(0);
   }
 
   @Test

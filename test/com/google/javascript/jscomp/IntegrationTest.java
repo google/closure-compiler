@@ -6337,4 +6337,50 @@ public final class IntegrationTest extends IntegrationTestCase {
             "(new a).a();",
             "delete Object.assign({}, {a: 3}).a"));
   }
+
+  @Test
+  public void testStructuralSubtypeCheck_doesNotInfinitlyRecurse_onRecursiveTemplatizedTypes() {
+    // See: https://github.com/google/closure-compiler/issues/3067.
+
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+
+    testNoWarnings(
+        options,
+        lines(
+            // We need two templated structural types that might match (i.e. `RecordA` and
+            // `RecordB`).
+            "/**",
+            " * @record",
+            " * @template PARAM_A",
+            " */",
+            "var RecordA = function() {};",
+            "",
+            "/**",
+            " * @record",
+            " * @template PARAM_B",
+            " */",
+            "var RecordB = function() {};",
+            "",
+            // Then we need to give them both a property that:
+            //  - could match
+            //  - templates on one of the two types (Notice they can be mixed-and-matched since they
+            //    might be structurally equal)
+            //  - is a nested template (i.e. `Array<X>`) (This is what would explode the recursion)
+            //  - uses each type's template parameter (So there's a variable to recur on)
+            "/** @type {!RecordA<!Array<PARAM_A>>} */",
+            "RecordA.prototype.prop;",
+            "",
+            "/** @type {!RecordB<!Array<PARAM_B>>} */",
+            "RecordB.prototype.prop;",
+            "",
+            // Finally, we need to create a union that:
+            //  - generated a raw-type for one of the structural template types (i.e. `RecordA')
+            //    (`RecordA<number>` and `RecordA<boolean>` were being smooshed into a raw-type)
+            //  - attempts a structural match on that raw-type against the other record type
+            // For some reason this also needs to be a property of a forward referenced type, which
+            // is why we omit the declaration of `Union`.
+            "/** @type {(!RecordA<number>|!RecordA<boolean>)|!RecordB<string>} */",
+            "Union.anything;"));
+  }
 }

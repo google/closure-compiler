@@ -5332,12 +5332,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         "(Array|Object<string,?>)",
         JSType.getLeastSupertype(ARRAY_TYPE, objectOfString).toString());
 
-    assertEquals(
-        "Array",
-        JSType.getLeastSupertype(arrayOfString, arrayOfNumber).toString());
-    assertEquals(
-        "Array",
-        JSType.getLeastSupertype(arrayOfNumber, arrayOfString).toString());
+    assertType(JSType.getLeastSupertype(arrayOfString, arrayOfNumber))
+        .toStringIsEqualTo("Array<?>");
+    assertType(JSType.getLeastSupertype(arrayOfNumber, arrayOfString))
+        .toStringIsEqualTo("Array<?>");
+
     assertTypeEquals(
         arrayOfString,
         JSType.getLeastSupertype(arrayOfString, arrayOfString));

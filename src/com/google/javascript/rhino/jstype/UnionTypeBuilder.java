@@ -255,20 +255,20 @@ public final class UnionTypeBuilder implements Serializable {
 
             if (alternate.isTemplatizedType() || current.isTemplatizedType()) {
               // Cases:
-              // 1) alternate:Array.<string> and current:Object ==> Object
-              // 2) alternate:Array.<string> and current:Array ==> Array
+              // 1) alternate:Array<string> and current:Object ==> Object
+              // 2) alternate:Array<string> and current:Array ==> Array
               // 3) alternate:Object.<string> and
-              //    current:Array ==> Array|Object.<string>
-              // 4) alternate:Object and current:Array.<string> ==> Object
-              // 5) alternate:Array and current:Array.<string> ==> Array
+              //    current:Array ==> Array|Object<string>
+              // 4) alternate:Object and current:Array<string> ==> Object
+              // 5) alternate:Array and current:Array<string> ==> Array
               // 6) alternate:Array and
-              //    current:Object.<string> ==> Array|Object.<string>
-              // 7) alternate:Array.<string> and
-              //    current:Array.<number> ==> Array.<?>
-              // 8) alternate:Array.<string> and
-              //    current:Array.<string> ==> Array.<string>
-              // 9) alternate:Array.<string> and
-              //    current:Object.<string> ==> Object.<string>|Array.<string>
+              //    current:Object<string> ==> Array|Object<string>
+              // 7) alternate:Array<string> and
+              //    current:Array<number> ==> Array<?>
+              // 8) alternate:Array<string> and
+              //    current:Array<string> ==> Array<string>
+              // 9) alternate:Array<string> and
+              //    current:Object<string> ==> Object<string>|Array<string>
 
               if (!current.isTemplatizedType()) {
                 if (isSubtype(alternate, current)) {
@@ -295,13 +295,11 @@ public final class UnionTypeBuilder implements Serializable {
                     // case 8
                     return this;
                   } else {
-                    // TODO(johnlenz): should we leave both types?
-                    // case 7: add a merged alternate
-                    // We currently merge to the templatized types to "unknown"
-                    // which is equivalent to the raw type.
-                    JSType merged = templatizedCurrent
-                        .getReferencedObjTypeInternal();
-                    return addAlternate(merged);
+                    // case 7: replace with a merged alternate specialized on `?`.
+                    ObjectType rawType = templatizedCurrent.getReferencedObjTypeInternal();
+                    // Providing no type-parameter values specializes `rawType` on `?` by default.
+                    alternate = registry.createTemplatizedType(rawType, ImmutableList.of());
+                    removeCurrent = true;
                   }
                 }
                 // case 9: leave current, add alternate
