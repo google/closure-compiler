@@ -35,9 +35,10 @@ import javax.annotation.Nullable;
 final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompilerPass {
 
   public static final DiagnosticType MISPLACED_MSG_ANNOTATION =
-      DiagnosticType.disabled("JSC_MISPLACED_MSG_ANNOTATION",
+      DiagnosticType.disabled(
+          "JSC_MISPLACED_MSG_ANNOTATION",
           "Misplaced message annotation. @desc, @hidden, and @meaning annotations should only "
-                  + "be on message nodes.");
+              + "be on message nodes.\nMessage constants must be prefixed with 'MSG_'.");
 
   public static final DiagnosticType MISPLACED_ANNOTATION =
       DiagnosticType.warning("JSC_MISPLACED_ANNOTATION",
