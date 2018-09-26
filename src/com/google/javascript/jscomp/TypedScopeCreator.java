@@ -224,6 +224,21 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
   }
 
+  /** Stores the type and qualified name for a destructuring rvalue, which has no AST node */
+  private static class RValueInfo {
+    @Nullable final JSType type;
+    @Nullable final String qualifiedName;
+
+    private RValueInfo(JSType type, String qualifiedName) {
+      this.type = type;
+      this.qualifiedName = qualifiedName;
+    }
+
+    private static RValueInfo empty() {
+      return new RValueInfo(null, null);
+    }
+  }
+
   TypedScopeCreator(AbstractCompiler compiler) {
     this(compiler, compiler.getCodingConvention());
   }
@@ -860,15 +875,24 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         defineDestructuringPatternInVarDeclaration(
             pattern,
             scope,
-            // Note that value will be null if we are in an enhanced for loop
-            //   for (const {x, y} of data) {
-            () -> value != null ? getDeclaredRValueType(/* lValue= */ null, value) : unknownType);
+            () ->
+                // Note that value will be null if we are in an enhanced for loop
+                //   for (const {x, y} of data) {
+                value != null
+                    ? new RValueInfo(
+                        getDeclaredRValueType(/* lValue= */ null, value), value.getQualifiedName())
+                    : new RValueInfo(unknownType, /* qualifiedName= */ null));
       }
     }
 
-    @Nullable
-    private JSType inferTypeForDestructuredTarget(
-        DestructuredTarget target, Supplier<JSType> patternTypeSupplier) {
+    /**
+     * Returns information about the qualified name and type of the target, if it exists.
+     *
+     * <p>Never returns null, but will return an RValueInfo with null `type` and `qualifiedName`
+     * slots.
+     */
+    private RValueInfo inferTypeForDestructuredTarget(
+        DestructuredTarget target, Supplier<RValueInfo> patternTypeSupplier) {
       // Currently we only do type inference for string key nodes in object patterns here, to
       // handle aliasing types. e.g
       //   const {Foo} = ns;
@@ -878,29 +902,30 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // and only return a non-null type here if we are accessing a declared property on a known
       // type.
       if (!target.hasStringKey() || target.hasDefaultValue()) {
-        return null;
+        return RValueInfo.empty();
       }
-      JSType patternType = patternTypeSupplier.get();
-      if (patternType == null || patternType.isUnknownType() || !patternType.isObjectType()) {
-        // TypeCheck should emit an error later if this is not an object type.
-        return null;
-      }
-      ObjectType patternObjectType = patternType.toMaybeObjectType();
+      RValueInfo rvalue = patternTypeSupplier.get();
+      JSType patternType = rvalue.type;
       String propertyName = target.getStringKey().getString();
-      if (patternObjectType.hasProperty(propertyName)
-          && !patternObjectType.isPropertyTypeInferred(propertyName)) {
-        return patternObjectType.getPropertyType(propertyName);
+      String qualifiedName =
+          rvalue.qualifiedName != null ? rvalue.qualifiedName + "." + propertyName : null;
+      if (patternType == null || patternType.isUnknownType()) {
+        return new RValueInfo(null, qualifiedName);
       }
-      return null;
+      if (patternType.hasProperty(propertyName)) {
+        JSType type = patternType.findPropertyType(propertyName);
+        return new RValueInfo(type, qualifiedName);
+      }
+      return new RValueInfo(null, qualifiedName);
     }
 
     void defineDestructuringPatternInVarDeclaration(
-        Node pattern, TypedScope scope, Supplier<JSType> patternTypeSupplier) {
+        Node pattern, TypedScope scope, Supplier<RValueInfo> patternTypeSupplier) {
       for (DestructuredTarget target :
           DestructuredTarget.createAllNonEmptyTargetsInPattern(
-              typeRegistry, patternTypeSupplier, pattern)) {
+              typeRegistry, () -> patternTypeSupplier.get().type, pattern)) {
 
-        Supplier<JSType> typeSupplier =
+        Supplier<RValueInfo> typeSupplier =
             () -> inferTypeForDestructuredTarget(target, patternTypeSupplier);
 
         if (target.getNode().isDestructuringPattern()) {
@@ -1809,7 +1834,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         JSDocInfo info,
         Node lValue,
         @Nullable Node rValue,
-        @Nullable Supplier<JSType> declaredRValueTypeSupplier) {
+        @Nullable Supplier<RValueInfo> declaredRValueTypeSupplier) {
       if (info != null && info.hasType()) {
         return getDeclaredTypeInAnnotation(lValue, info);
       } else if (rValue != null
@@ -1835,16 +1860,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (NodeUtil.isConstantDeclaration(compiler.getCodingConvention(), info, lValue)) {
         if (rValue != null) {
           JSType rValueType = getDeclaredRValueType(lValue, rValue);
-          maybeDeclareAliasType(lValue, rValue, rValueType);
+          maybeDeclareAliasType(lValue, rValue.getQualifiedName(), rValueType);
           if (rValueType != null) {
             return rValueType;
           }
         } else if (declaredRValueTypeSupplier != null) {
-          JSType rValueType = declaredRValueTypeSupplier.get();
-          // TODO(b/77597706): make this work for destructuring?
-          // maybeDeclareAliasType(lValue, rValue, rValueType);
-          if (rValueType != null) {
-            return rValueType;
+          RValueInfo rvalueInfo = declaredRValueTypeSupplier.get();
+          if (rvalueInfo != null) {
+            maybeDeclareAliasType(lValue, rvalueInfo.qualifiedName, rvalueInfo.type);
+            if (rvalueInfo.type != null) {
+              return rvalueInfo.type;
+            }
           }
         }
       }
@@ -1858,16 +1884,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * For a const alias, like `const alias = other.name`, this may declare `alias`
-     * as a type name, depending on what other.name is defined to be.
+     * For a const alias, like `const alias = other.name`, this may declare `alias` as a type name,
+     * depending on what other.name is defined to be.
+     *
+     * @param rvalueName the rvalue's qualified name if it exists, null otherwise
      */
-    private void maybeDeclareAliasType(Node lValue, Node rValue, JSType rValueType) {
+    private void maybeDeclareAliasType(Node lValue, String rvalueName, JSType rValueType) {
       // NOTE: this allows some strange patterns such allowing instance properties
       // to be aliases of constructors, and then creating a local alias of that to be
       // used as a type name.  Consider restricting this.
 
-      // TODO(b/77597706): handle destructuring here
-      if (!lValue.isQualifiedName() || !rValue.isQualifiedName()) {
+      if (!lValue.isQualifiedName() || (rvalueName == null)) {
         return;
       }
       // Treat @const-annotated aliases like @constructor/@interface if RHS has instance type
@@ -1879,7 +1906,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             currentScope, lValue.getQualifiedName(), functionType.getInstanceType());
       } else {
         // Also infer a type name for aliased @typedef
-        JSType rhsNamedType = typeRegistry.getType(currentScope, rValue.getQualifiedName());
+        JSType rhsNamedType = typeRegistry.getType(currentScope, rvalueName);
         if (rhsNamedType != null) {
           typeRegistry.declareType(currentScope, lValue.getQualifiedName(), rhsNamedType);
         }
@@ -2737,12 +2764,21 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         if (target.getNode().isDestructuringPattern()) {
           declareDestructuringParameter(isInferred, target.getNode(), inferredType);
         } else {
-          checkState(
-              target.getNode().isName(),
-              "Expected all parameters to be names, got %s",
-              target.getNode());
+          Node paramName = target.getNode();
+          checkState(paramName.isName(), "Expected all parameters to be names, got %s", paramName);
 
-          declareSingleParameterName(isInferred, target.getNode(), inferredType);
+          if ((inferredType == null || inferredType.isUnknownType())
+              && paramName.getJSDocInfo() != null
+              && paramName.getJSDocInfo().hasType()) {
+            // see if the parameter has its own inline JSDoc
+            // TODO(b/112651122): this should happen inside FunctionTypeBuilder, so that we can
+            // check that calls to the function match the inline JSDoc.
+            inferredType =
+                typeRegistry.evaluateTypeExpression(
+                    paramName.getJSDocInfo().getType(), currentScope);
+            isInferred = false;
+          }
+          declareSingleParameterName(isInferred, paramName, inferredType);
         }
       }
     }

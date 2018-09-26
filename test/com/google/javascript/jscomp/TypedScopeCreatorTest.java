@@ -277,6 +277,26 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstDeclarationObjectPatternInfersType_forAliasedTypedef() {
+    testSame(
+        lines(
+            "const ns = {};",
+            "/** @typedef {string} */ ns.Foo;",
+            "const {Foo} = ns;",
+            "let /** !Foo */ f = 'bar';"));
+
+    TypedVar fooVar = checkNotNull(globalScope.getVar("Foo"));
+    assertType(fooVar.getType()).toStringIsEqualTo("None");
+
+    JSType fooType = registry.getGlobalType("Foo");
+    assertType(fooType).isEqualTo(getNativeType(JSTypeNative.STRING_TYPE));
+
+    TypedVar fooInstanceVar = checkNotNull(globalScope.getVar("f"));
+    assertType(fooInstanceVar.getType()).toStringIsEqualTo("string");
+    assertFalse(fooInstanceVar.isTypeInferred());
+  }
+
+  @Test
   public void testConstDeclarationObjectPatternInfersTypeAsDeclared() {
     testSame(
         lines(
@@ -941,31 +961,106 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testObjectPatternParameterWithInlineJSDoc() {
     testSame("function f({/** number */ x}) {}");
 
-    // TODO(lharker): infer that f takes {x: number}
+    // TODO(b/112651122): infer that f takes {x: number}
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
     assertType(fVar.getType()).toStringIsEqualTo("function(?): undefined");
     assertFalse(fVar.isTypeInferred());
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("number");
+    assertFalse(xVar.isTypeInferred());
   }
 
   @Test
   public void testArrayPatternParameterWithInlineJSDoc() {
     testSame("function f([/** number */ x]) {}");
 
-    // TODO(lharker): either forbid this case or infer that f takes an !Iterable<number>
+    // TODO(b/112651122): either forbid this case or infer that f takes an !Iterable<number>
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
     assertType(fVar.getType()).toStringIsEqualTo("function(?): undefined");
     assertFalse(fVar.isTypeInferred());
+    assertFalse(fVar.isTypeInferred());
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("number");
+    assertFalse(xVar.isTypeInferred());
   }
 
   @Test
   public void testArrayPatternParametersWithDifferingInlineJSDoc() {
     testSame("function f([/** number */ x, /** string */ y]) {}");
 
-    // TODO(lharker): forbid this case, as there's not a good way to type the function without
+    // TODO(b/112651122): forbid this case, as there's not a good way to type the function without
     // having tuple types.
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
     assertType(fVar.getType()).toStringIsEqualTo("function(?): undefined");
     assertFalse(fVar.isTypeInferred());
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("number");
+    assertFalse(xVar.isTypeInferred());
+
+    TypedVar yVar = checkNotNull(lastFunctionScope.getVar("y"));
+    assertType(yVar.getType()).toStringIsEqualTo("string");
+    assertFalse(yVar.isTypeInferred());
+  }
+
+  @Test
+  public void testObjectPatternCanAliasUnionTypeProperty() {
+    // tests that we can get properties off the union type `{objA|objB}` even though it's not
+    // represented as an ObjectType. (this used to crash in TypedScopeCreator)
+    testSame(
+        lines(
+            "const ns = {}; ",
+            "",
+            "/** @typedef {{propA: number}} */",
+            "let objA;",
+            "/** @typedef {{propB: string}} */",
+            "let objB;",
+            "",
+            "/** @type {objA|objB} */",
+            "ns.ctor;",
+            "",
+            "const {propA, propB} = ns.ctor;"));
+
+    TypedVar propAVar = checkNotNull(globalScope.getVar("propA"));
+    assertType(propAVar.getType()).isEqualTo(getNativeType(JSTypeNative.NUMBER_TYPE));
+    assertFalse(propAVar.isTypeInferred());
+
+    TypedVar propBVar = checkNotNull(globalScope.getVar("propB"));
+    assertType(propBVar.getType()).isEqualTo(getNativeType(JSTypeNative.STRING_TYPE));
+    assertFalse(propBVar.isTypeInferred());
+  }
+
+  @Test
+  public void testConstNestedObjectPatternInArrayPattern() {
+    // regression test for a TypedScopeCreator crash
+    disableTypeInfoValidation();
+    testSame(
+        lines(
+            "const /** !Array<{b: string}> */ a = [{b: 'bbb'}];", //
+            "const [{b}] = a;"));
+
+    TypedVar b = checkNotNull(globalScope.getVar("b"));
+    assertType(b.getType()).isUnknown();
+    assertTrue(b.isTypeInferred()); // b is inferred but not treated as declared
+  }
+
+  @Test
+  public void testConstNestedObjectPatternWithComputedPropertyIsUnknown() {
+    // regression test for a TypedScopeCreator crash
+    disableTypeInfoValidation(); // fails on a['foo'].b = function() {};
+    testSame(
+        lines(
+            "const a = {};",
+            "/** @const */ a['foo'] = {};",
+            "/** @const */ a['foo'].b = function() {};",
+            "",
+            "const {['foo']: {b}} = a;"));
+
+    TypedVar b = checkNotNull(globalScope.getVar("b"));
+    assertType(b.getType()).isUnknown();
+    assertTrue(b.isTypeInferred());
   }
 
   @Test
