@@ -42,11 +42,21 @@ public class CheckEs6ModuleFileStructureTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDeclareNamespaceAfterImportsIfPresent() {
+  public void testDeclareModuleIdAfterImportsIfPresent() {
     testSame("import noDeclareNamespace from 'file';");
+
+    testSame("goog.declareModuleId('name.space'); export let noImports;");
     testSame("goog.module.declareNamespace('name.space'); export let noImports;");
+
+    testSame("import first from 'file'; goog.declareModuleId('name.space');");
     testSame("import first from 'file'; goog.module.declareNamespace('name.space');");
+
+    testWarning("export let first; goog.declareModuleId('name.space');", MUST_COME_BEFORE);
     testWarning("export let first; goog.module.declareNamespace('name.space');", MUST_COME_BEFORE);
+
+    testWarning(
+        "import first from 'file'; let second; goog.declareModuleId('name.space');",
+        MUST_COME_BEFORE);
     testWarning(
         "import first from 'file'; let second; goog.module.declareNamespace('name.space');",
         MUST_COME_BEFORE);

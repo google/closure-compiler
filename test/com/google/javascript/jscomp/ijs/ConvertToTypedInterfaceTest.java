@@ -734,6 +734,11 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEs6ModulesDeclareModuleId() {
+    testSame(lines("goog.declareModuleId('foo');", "/** @type {number} */ export var x;"));
+  }
+
+  @Test
   public void testEs6ModulesDeclareNamespace() {
     testSame(
         lines(

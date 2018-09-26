@@ -208,6 +208,20 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   public void testGoogModuleGetForEs6Module() {
     test(
         srcs(
+            SourceFile.fromCode("es6.js", "export{}; goog.declareModuleId('es6');"),
+            SourceFile.fromCode(
+                "closure.js",
+                "goog.module('my.module'); function f() { const y = goog.module.get('es6'); }")),
+        expected(
+            SourceFile.fromCode("es6.js", "/** @const */ var module$es6 = {};"),
+            SourceFile.fromCode(
+                "closure.js", "goog.module('my.module'); function f() { const y = module$es6; }")));
+  }
+
+  @Test
+  public void testGoogModuleGetForEs6ModuleDeclaresNamespace() {
+    test(
+        srcs(
             SourceFile.fromCode("es6.js", "export{}; goog.module.declareNamespace('es6');"),
             SourceFile.fromCode(
                 "closure.js",
@@ -216,6 +230,21 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
             SourceFile.fromCode("es6.js", "/** @const */ var module$es6 = {};"),
             SourceFile.fromCode(
                 "closure.js", "goog.module('my.module'); function f() { const y = module$es6; }")));
+  }
+
+  @Test
+  public void testDeclareModuleId() {
+    test(
+        srcs(
+            SourceFile.fromCode("es6.js", "export var x; goog.declareModuleId('my.es6');"),
+            SourceFile.fromCode("goog.js", "const es6 = goog.require('my.es6'); use(es6, es6.x);")),
+        expected(
+            SourceFile.fromCode(
+                "es6.js",
+                lines(
+                    "var x$$module$es6;/** @const */ var module$es6={};",
+                    "/** @const */ module$es6.x=x$$module$es6;")),
+            SourceFile.fromCode("goog.js", "const es6 = module$es6; use(es6, es6.x);")));
   }
 
   @Test
@@ -231,6 +260,25 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
                     "var x$$module$es6;/** @const */ var module$es6={};",
                     "/** @const */ module$es6.x=x$$module$es6;")),
             SourceFile.fromCode("goog.js", "const es6 = module$es6; use(es6, es6.x);")));
+  }
+
+  @Test
+  public void testDestructureDeclareModuleId() {
+    test(
+        srcs(
+            SourceFile.fromCode("es6.js", "export var x, z; goog.declareModuleId('my.es6');"),
+            SourceFile.fromCode("goog.js", "const {x, z: y} = goog.require('my.es6'); use(x, y);")),
+        expected(
+            SourceFile.fromCode(
+                "es6.js",
+                lines(
+                    "var x$$module$es6, z$$module$es6;",
+                    "/** @const */ var module$es6={};",
+                    "/** @const */ module$es6.x=x$$module$es6;",
+                    "/** @const */ module$es6.z=z$$module$es6;")),
+            SourceFile.fromCode(
+                "goog.js",
+                lines("const x = module$es6.x;", "const y = module$es6.z;", "use(x, y);"))));
   }
 
   @Test
@@ -382,7 +430,55 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
             "/** @const */ module$testcode.value = value$$module$testcode;"));
   }
 
+  @Test
   public void testForwardDeclareEs6Module() {
+    test(
+        srcs(
+            SourceFile.fromCode("es6.js", "export{}; goog.declareModuleId('es6');"),
+            SourceFile.fromCode(
+                "closure.js",
+                lines(
+                    "goog.module('my.module');",
+                    "const alias = goog.forwardDeclare('es6');",
+                    "let /** !alias.Type */ x;",
+                    "alias;"))),
+        expected(
+            SourceFile.fromCode("es6.js", "/** @const */ var module$es6 = {};"),
+            SourceFile.fromCode(
+                "closure.js",
+                lines("goog.module('my.module');", "let /** !module$es6.Type */ x;", "alias;"))));
+
+    test(
+        srcs(
+            SourceFile.fromCode("es6.js", "export{}; goog.declareModuleId('es6');"),
+            SourceFile.fromCode(
+                "closure.js",
+                lines(
+                    "goog.module('my.module');",
+                    "goog.forwardDeclare('es6');",
+                    "let /** !es6.Type */ x;",
+                    "es6;"))),
+        expected(
+            SourceFile.fromCode("es6.js", "/** @const */ var module$es6 = {};"),
+            SourceFile.fromCode(
+                "closure.js",
+                lines("goog.module('my.module');", "let /** !module$es6.Type */ x;", "es6;"))));
+
+    testError(
+        ImmutableList.of(
+            SourceFile.fromCode("es6.js", "export{}; goog.declareModuleId('es6');"),
+            SourceFile.fromCode(
+                "closure.js",
+                lines(
+                    "goog.module('my.module');",
+                    "let alias = goog.forwardDeclare('es6');",
+                    "let /** !alias.Type */ x;",
+                    "alias = goog.modle.get('es6');"))),
+        FORWARD_DECLARE_IN_ES6_SHOULD_BE_CONST);
+  }
+
+  @Test
+  public void testForwardDeclareEs6ModuleDeclareNamespace() {
     test(
         srcs(
             SourceFile.fromCode("es6.js", "export{}; goog.module.declareNamespace('es6');"),

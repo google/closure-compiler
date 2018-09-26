@@ -52,7 +52,8 @@ public final class JsFileParser extends JsFileLineParser {
       // but fails to match without "use strict"; since we look for semicolon, not open brace.
       Pattern.compile(
           "(?:^|;)(?:[a-zA-Z0-9$_,:{}\\s]+=)?\\s*"
-              + "goog\\.(?<func>provide|module|require|requireType|addDependency)"
+              + "goog\\.(?<func>provide|module|require|requireType|addDependency|declareModuleId)"
+              // TODO(johnplaisted): Remove declareNamespace.
               + "(?<subfunc>\\.declareNamespace)?\\s*\\((?<args>.*?)\\)");
 
   /**
@@ -260,7 +261,8 @@ public final class JsFileParser extends JsFileLineParser {
     if (line.contains("provide")
         || line.contains("require")
         || line.contains("module")
-        || line.contains("addDependency")) {
+        || line.contains("addDependency")
+        || line.contains("declareModuleId")) {
       // Iterate over the provides/requires.
       googMatcher.reset(line);
       while (googMatcher.find()) {
@@ -274,7 +276,8 @@ public final class JsFileParser extends JsFileLineParser {
         // See if it's a require or provide.
         String methodName = googMatcher.group("func");
         char firstChar = methodName.charAt(0);
-        boolean isDeclareModuleNamespace = firstChar == 'm' && googMatcher.group("subfunc") != null;
+        boolean isDeclareModuleNamespace =
+            firstChar == 'd' || (firstChar == 'm' && googMatcher.group("subfunc") != null);
         boolean isModule = !isDeclareModuleNamespace && firstChar == 'm';
         boolean isProvide = firstChar == 'p';
         boolean providesNamespace = isProvide || isModule || isDeclareModuleNamespace;

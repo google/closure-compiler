@@ -118,7 +118,7 @@ public final class ModuleMetadataMap {
 
     /**
      * Closure namespaces that this file is associated with. Created by goog.provide, goog.module,
-     * and goog.module.declareNamespace.
+     * and goog.declareModuleId.
      */
     public abstract ImmutableMultiset<String> googNamespaces();
 

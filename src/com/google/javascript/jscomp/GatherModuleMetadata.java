@@ -41,20 +41,20 @@ public final class GatherModuleMetadata implements CompilerPass {
   static final DiagnosticType MIXED_MODULE_TYPE =
       DiagnosticType.error("JSC_MIXED_MODULE_TYPE", "A file cannot be both {0} and {1}.");
 
-  static final DiagnosticType INVALID_DECLARE_NAMESPACE_CALL =
+  static final DiagnosticType INVALID_DECLARE_MODULE_ID_CALL =
       DiagnosticType.error(
           "JSC_INVALID_DECLARE_NAMESPACE_CALL",
-          "goog.module.declareNamespace parameter must be a string literal.");
+          "goog.declareModuleId parameter must be a string literal.");
 
-  static final DiagnosticType DECLARE_MODULE_NAMESPACE_OUTSIDE_ES6_MODULE =
+  static final DiagnosticType DECLARE_MODULE_ID_OUTSIDE_ES6_MODULE =
       DiagnosticType.error(
           "JSC_DECLARE_MODULE_NAMESPACE_OUTSIDE_ES6_MODULE",
-          "goog.module.declareNamespace can only be called within ES6 modules.");
+          "goog.declareModuleId can only be called within ES6 modules.");
 
   static final DiagnosticType MULTIPLE_DECLARE_MODULE_NAMESPACE =
       DiagnosticType.error(
           "JSC_MULTIPLE_DECLARE_MODULE_NAMESPACE",
-          "goog.module.declareNamespace can only be called once per ES6 module.");
+          "goog.declareModuleId can only be called once per ES6 module.");
 
   static final DiagnosticType INVALID_REQUIRE_TYPE =
       DiagnosticType.error(
@@ -74,6 +74,10 @@ public final class GatherModuleMetadata implements CompilerPass {
       IR.getprop(IR.name("goog"), IR.string("setTestOnly"));
   private static final Node GOOG_MODULE_DECLARELEGACYNAMESPACE =
       IR.getprop(GOOG_MODULE.cloneTree(), IR.string("declareLegacyNamespace"));
+  private static final Node GOOG_DECLARE_MODULE_ID =
+      IR.getprop(IR.name("goog"), IR.string("declareModuleId"));
+
+  // TODO(johnplaisted): Remove once clients have migrated to declareModuleId
   private static final Node GOOG_MODULE_DECLARNAMESPACE =
       IR.getprop(GOOG_MODULE.cloneTree(), IR.string("declareNamespace"));
 
@@ -117,7 +121,7 @@ public final class GatherModuleMetadata implements CompilerPass {
 
   private class ModuleMetadataBuilder {
     private boolean ambiguous;
-    private Node declaresNamespace;
+    private Node declaredModuleId;
     private Node declaresLegacyNamespace;
     private final Node rootNode;
     final ModuleMetadata.Builder metadataBuilder;
@@ -145,8 +149,8 @@ public final class GatherModuleMetadata implements CompilerPass {
       t.report(n, MIXED_MODULE_TYPE, metadataBuilder.moduleType().description, type.description);
     }
 
-    void recordDeclareNamespace(Node declaresNamespace) {
-      this.declaresNamespace = declaresNamespace;
+    void recordDeclareModuleId(Node declaredModuleId) {
+      this.declaredModuleId = declaredModuleId;
     }
 
     void recordDeclareLegacyNamespace(Node declaresLegacyNamespace) {
@@ -160,9 +164,8 @@ public final class GatherModuleMetadata implements CompilerPass {
     ModuleMetadata build() {
       metadataBuilder.googNamespacesBuilder().addAll(googNamespaces);
       if (!ambiguous) {
-        if (declaresNamespace != null && metadataBuilder.moduleType() != ModuleType.ES6_MODULE) {
-          compiler.report(
-              JSError.make(declaresNamespace, DECLARE_MODULE_NAMESPACE_OUTSIDE_ES6_MODULE));
+        if (declaredModuleId != null && metadataBuilder.moduleType() != ModuleType.ES6_MODULE) {
+          compiler.report(JSError.make(declaredModuleId, DECLARE_MODULE_ID_OUTSIDE_ES6_MODULE));
         }
 
         if (declaresLegacyNamespace != null) {
@@ -340,16 +343,17 @@ public final class GatherModuleMetadata implements CompilerPass {
         }
       } else if (getprop.matchesQualifiedName(GOOG_MODULE_DECLARELEGACYNAMESPACE)) {
         currentModule.recordDeclareLegacyNamespace(n);
-      } else if (getprop.matchesQualifiedName(GOOG_MODULE_DECLARNAMESPACE)) {
-        if (currentModule.declaresNamespace != null) {
+      } else if (getprop.matchesQualifiedName(GOOG_DECLARE_MODULE_ID)
+          || getprop.matchesQualifiedName(GOOG_MODULE_DECLARNAMESPACE)) {
+        if (currentModule.declaredModuleId != null) {
           t.report(n, MULTIPLE_DECLARE_MODULE_NAMESPACE);
         }
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
-          currentModule.recordDeclareNamespace(n);
+          currentModule.recordDeclareModuleId(n);
           String namespace = n.getLastChild().getString();
           addNamespace(currentModule, namespace, t, n);
         } else {
-          t.report(n, INVALID_DECLARE_NAMESPACE_CALL);
+          t.report(n, INVALID_DECLARE_MODULE_ID_CALL);
         }
       } else if (getprop.matchesQualifiedName(GOOG_REQUIRE)) {
         if (n.hasTwoChildren() && n.getLastChild().isString()) {

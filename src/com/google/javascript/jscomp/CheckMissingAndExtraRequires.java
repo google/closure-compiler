@@ -318,7 +318,9 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
         // check for them explicitly.
         || namespace.equals("goog.module.get")
         || namespace.equals("goog.module.declareLegacyNamespace")
-        || namespace.equals("goog.module.declareNamespace")) {
+        // TODO(johnplaisted): Consolidate on declareModuleId.
+        || namespace.equals("goog.module.declareNamespace")
+        || namespace.equals("goog.declareModuleId")) {
       return false;
     }
 

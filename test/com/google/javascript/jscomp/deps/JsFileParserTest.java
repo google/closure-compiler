@@ -365,6 +365,26 @@ public final class JsFileParserTest extends TestCase {
   }
 
   @Test
+  public void testEs6ModuleWithDeclareModuleId() {
+    ModuleLoader loader =
+        new ModuleLoader(
+            null, ImmutableList.of("/foo"), ImmutableList.of(), BrowserModuleResolver.FACTORY);
+
+    String contents = "goog.declareModuleId('my.namespace');\nexport {};";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder("../bar/baz.js", "/foo/js/bar/baz.js")
+            .setProvides(ImmutableList.of("my.namespace", "module$js$bar$baz"))
+            .setLoadFlags(ImmutableMap.of("module", "es6"))
+            .build();
+
+    DependencyInfo result =
+        parser.setModuleLoader(loader).parseFile("/foo/js/bar/baz.js", "../bar/baz.js", contents);
+
+    assertDeps(expected, result);
+  }
+
+  @Test
   public void testEs6ModuleWithBrowserTransformedPrefixResolver() {
     ModuleLoader loader =
         new ModuleLoader(

@@ -156,6 +156,16 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEs6ModuleDeclareModuleId() {
+    testSame("export var x; goog.declareModuleId('my.module');");
+    assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("my.module");
+    ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("my.module");
+    assertThat(m.googNamespaces()).containsExactly("my.module");
+    assertThat(m.isEs6Module()).isTrue();
+    assertThat(m.isGoogModule()).isFalse();
+  }
+
+  @Test
   public void testEs6ModuleDeclareNamespace() {
     testSame("export var x; goog.module.declareNamespace('my.module');");
     assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("my.module");

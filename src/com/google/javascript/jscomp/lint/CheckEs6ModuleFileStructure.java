@@ -37,7 +37,7 @@ public final class CheckEs6ModuleFileStructure extends AbstractPreOrderCallback
   /** Statements that must appear in a certain order within ES6 modules (for the sake of style). */
   private enum OrderedStatement {
     IMPORT("import statements"),
-    DECLARE_NAMESPACE("a call to goog.module.declareNamespace()"),
+    DECLARE_MODULE_ID("a call to goog.declareModuleId()"),
     GOOG_REQUIRE("calls to goog.require()"),
     OTHER("other statements");
 
@@ -98,8 +98,10 @@ public final class CheckEs6ModuleFileStructure extends AbstractPreOrderCallback
   private boolean visitExprResult(NodeTraversal t, Node exprResult, Node parent) {
     if (parent.isModuleBody() && exprResult.getFirstChild().isCall()) {
       Node call = exprResult.getFirstChild();
-      if (call.getFirstChild().matchesQualifiedName("goog.module.declareNamespace")) {
-        checkOrder(t, call, OrderedStatement.DECLARE_NAMESPACE);
+      // TODO(johnplaisted): Remove declareNamespace.
+      if (call.getFirstChild().matchesQualifiedName("goog.module.declareNamespace")
+          || call.getFirstChild().matchesQualifiedName("goog.declareModuleId")) {
+        checkOrder(t, call, OrderedStatement.DECLARE_MODULE_ID);
         return false;
       } else if (call.getFirstChild().matchesQualifiedName("goog.require")) {
         checkOrder(t, call, OrderedStatement.GOOG_REQUIRE);

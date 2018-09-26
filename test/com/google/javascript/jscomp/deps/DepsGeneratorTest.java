@@ -127,6 +127,50 @@ public final class DepsGeneratorTest extends TestCase {
   }
 
   @Test
+  public void testEs6ModuleDeclareModuleId() throws Exception {
+    List<SourceFile> srcs = new ArrayList<>();
+    srcs.add(
+        SourceFile.fromCode(
+            "/base/javascript/foo/foo.js", "goog.declareModuleId('my.namespace');\nexport {};"));
+    srcs.add(
+        SourceFile.fromCode(
+            "/base/javascript/closure/goog/googmodule.js",
+            LINE_JOINER.join(
+                "goog.module('my.goog.module');",
+                "const namespace = goog.require('my.namespace');")));
+    DepsGenerator depsGenerator =
+        new DepsGenerator(
+            ImmutableList.of(),
+            srcs,
+            DepsGenerator.InclusionStrategy.ALWAYS,
+            "/base/javascript/closure",
+            errorManager,
+            new ModuleLoader(
+                null,
+                ImmutableList.of("/base/"),
+                ImmutableList.of(),
+                BrowserModuleResolver.FACTORY,
+                ModuleLoader.PathResolver.ABSOLUTE));
+    String output = depsGenerator.computeDependencyCalls();
+
+    assertNoWarnings();
+
+    // Write the output.
+    assertWithMessage("There should be output").that(output).isNotEmpty();
+
+    // Write the expected output.
+    String expected =
+        LINE_JOINER.join(
+            "goog.addDependency('../foo/foo.js', ['my.namespace'], "
+                + "[], {'lang': 'es6', 'module': 'es6'});",
+            "goog.addDependency('goog/googmodule.js', ['my.goog.module'], ['my.namespace'], "
+                + "{'lang': 'es6', 'module': 'goog'});",
+            "");
+
+    assertEquals(expected, output);
+  }
+
+  @Test
   public void testEs6ModuleDeclareNamespace() throws Exception {
     List<SourceFile> srcs = new ArrayList<>();
     srcs.add(
