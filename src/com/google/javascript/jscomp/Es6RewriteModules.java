@@ -234,115 +234,123 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isCall()) {
-        boolean isRequire = n.getFirstChild().matchesQualifiedName("goog.require");
-        boolean isGet = n.getFirstChild().matchesQualifiedName("goog.module.get");
-        boolean isForwardDeclare = n.getFirstChild().matchesQualifiedName("goog.forwardDeclare");
+      if (!n.isCall()) {
+        return;
+      }
 
-        if (isRequire || isGet || isForwardDeclare) {
-          if (!n.hasTwoChildren() || !n.getLastChild().isString()) {
-            if (isRequire) {
-              t.report(n, INVALID_REQUIRE_NAMESPACE);
-            } else if (isGet) {
-              t.report(n, INVALID_GET_NAMESPACE);
-            } else {
-              t.report(n, INVALID_FORWARD_DECLARE_NAMESPACE);
-            }
-            return;
-          }
+      boolean isRequire = n.getFirstChild().matchesQualifiedName("goog.require");
+      boolean isGet = n.getFirstChild().matchesQualifiedName("goog.module.get");
+      boolean isForwardDeclare = n.getFirstChild().matchesQualifiedName("goog.forwardDeclare");
 
-          String name = n.getLastChild().getString();
-          ModuleMetadata moduleMetadata = moduleMetadataMap.getModulesByGoogNamespace().get(name);
+      if (!isRequire && !isGet && !isForwardDeclare) {
+        return;
+      }
 
-          if (moduleMetadata == null || !moduleMetadata.isEs6Module()) {
-            return;
-          }
+      if (!n.hasTwoChildren() || !n.getLastChild().isString()) {
+        if (isRequire) {
+          t.report(n, INVALID_REQUIRE_NAMESPACE);
+        } else if (isGet) {
+          t.report(n, INVALID_GET_NAMESPACE);
+        } else {
+          t.report(n, INVALID_FORWARD_DECLARE_NAMESPACE);
+        }
+        return;
+      }
 
-          // TODO(johnplaisted): Once we have an alternative to forwardDeclare / requireType that
-          // doesn't require Closure Library warn about those too.
-          // TODO(johnplaisted): Once we have import() support warn about goog.module.get.
-          if (isRequire) {
-            ModuleMetadata currentModuleMetadata =
-                moduleMetadataMap.getModulesByPath().get(t.getInput().getPath().toString());
-            if (currentModuleMetadata != null && currentModuleMetadata.isEs6Module()) {
-              t.report(n, SHOULD_IMPORT_ES6_MODULE);
-            }
-          }
+      String name = n.getLastChild().getString();
+      ModuleMetadata moduleMetadata = moduleMetadataMap.getModulesByGoogNamespace().get(name);
 
-          if (isGet && t.inGlobalHoistScope()) {
-            t.report(n, INVALID_GET_CALL_SCOPE);
-            return;
-          }
+      if (moduleMetadata == null || !moduleMetadata.isEs6Module()) {
+        return;
+      }
 
-          Node statementNode = NodeUtil.getEnclosingStatement(n);
-          boolean importHasAlias = NodeUtil.isNameDeclaration(statementNode);
-          if (importHasAlias) {
-            if (statementNode.getFirstChild().isDestructuringLhs()) {
-              if (isForwardDeclare) {
-                t.report(n, INVALID_DESTRUCTURING_FORWARD_DECLARE);
-                return;
-              }
-              // Work around a bug in the type checker where destructing can create
-              // too many layers of aliases and confuse the type checker. b/112061124.
-
-              //   const {a, c:b} = goog.require('an.es6.namespace');
-              //   const a = module$es6.a;
-              //   const b = module$es6.c;
-              for (Node child : statementNode.getFirstFirstChild().children()) {
-                checkState(child.isStringKey());
-                checkState(child.getFirstChild().isName());
-                Node constNode =
-                    IR.constNode(
-                        IR.name(child.getFirstChild().getString()),
-                        IR.getprop(
-                            IR.name(ModuleRenaming.getGlobalName(moduleMetadata, name)),
-                            IR.string(child.getString())));
-                constNode.useSourceInfoFromForTree(child);
-                statementNode.getParent().addChildBefore(constNode, statementNode);
-              }
-              statementNode.detach();
-              t.reportCodeChange();
-            } else {
-              if (isForwardDeclare) {
-                if (statementNode.isConst()) {
-                  forwardDeclareRenameTable.put(
-                      t.getScopeRoot(),
-                      statementNode.getFirstChild().getString(),
-                      ModuleRenaming.getGlobalName(moduleMetadata, name));
-                  statementNode.detach();
-                  t.reportCodeChange();
-                } else {
-                  t.report(statementNode, FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST);
-                }
-              } else {
-                //   const module = goog.require('an.es6.namespace');
-                //   const module = module$es6;
-                n.replaceWith(
-                    IR.name(ModuleRenaming.getGlobalName(moduleMetadata, name))
-                        .useSourceInfoFromForTree(n));
-                t.reportCodeChange();
-              }
-            }
-          } else {
-            if (isForwardDeclare) {
-              forwardDeclareRenameTable.put(
-                  t.getScopeRoot(), name, ModuleRenaming.getGlobalName(moduleMetadata, name));
-              statementNode.detach();
-            } else {
-              if (statementNode.isExprResult() && statementNode.getFirstChild() == n) {
-                statementNode.detach();
-              } else {
-                n.replaceWith(
-                    IR.name(ModuleRenaming.getGlobalName(moduleMetadata, name))
-                        .useSourceInfoFromForTree(n));
-              }
-            }
-            t.reportCodeChange();
-          }
-
-          transpiled = true;
+      // TODO(johnplaisted): Once we have an alternative to forwardDeclare / requireType that
+      // doesn't require Closure Library warn about those too.
+      // TODO(johnplaisted): Once we have import() support warn about goog.module.get.
+      if (isRequire) {
+        ModuleMetadata currentModuleMetadata =
+            moduleMetadataMap.getModulesByPath().get(t.getInput().getPath().toString());
+        if (currentModuleMetadata != null && currentModuleMetadata.isEs6Module()) {
+          t.report(n, SHOULD_IMPORT_ES6_MODULE);
         }
       }
+
+      if (isGet && t.inGlobalHoistScope()) {
+        t.report(n, INVALID_GET_CALL_SCOPE);
+        return;
+      }
+
+      Node statementNode = NodeUtil.getEnclosingStatement(n);
+      boolean importHasAlias = NodeUtil.isNameDeclaration(statementNode);
+
+      if (importHasAlias) {
+        if (statementNode.getFirstChild().isDestructuringLhs()) {
+          if (isForwardDeclare) {
+            t.report(n, INVALID_DESTRUCTURING_FORWARD_DECLARE);
+            return;
+          }
+          // Work around a bug in the type checker where destructing can create
+          // too many layers of aliases and confuse the type checker. b/112061124.
+
+          //   const {a, c:b} = goog.require('an.es6.namespace');
+          //   const a = module$es6.a;
+          //   const b = module$es6.c;
+          for (Node child : statementNode.getFirstFirstChild().children()) {
+            checkState(child.isStringKey());
+            checkState(child.getFirstChild().isName());
+            Node constNode =
+                IR.constNode(
+                    IR.name(child.getFirstChild().getString()),
+                    IR.getprop(
+                        IR.name(ModuleRenaming.getGlobalName(moduleMetadata, name)),
+                        IR.string(child.getString())));
+            constNode.useSourceInfoFromForTree(child);
+            statementNode.getParent().addChildBefore(constNode, statementNode);
+          }
+          statementNode.detach();
+          t.reportCodeChange();
+        } else {
+          if (isForwardDeclare) {
+            if (!statementNode.isConst()) {
+              t.report(statementNode, FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST);
+              return;
+            }
+            // const namespace = goog.forwardDeclare('an.es6.namespace');
+            forwardDeclareRenameTable.put(
+                t.getScopeRoot(),
+                statementNode.getFirstChild().getString(),
+                ModuleRenaming.getGlobalName(moduleMetadata, name));
+            statementNode.detach();
+            t.reportCodeChange();
+          } else {
+            // const module = goog.require('an.es6.namespace');
+            // const module = module$es6;
+            n.replaceWith(
+                IR.name(ModuleRenaming.getGlobalName(moduleMetadata, name))
+                    .useSourceInfoFromForTree(n));
+            t.reportCodeChange();
+          }
+        }
+      } else {
+        if (isForwardDeclare) {
+          // goog.forwardDeclare('an.es6.namespace')
+          forwardDeclareRenameTable.put(
+              t.getScopeRoot(), name, ModuleRenaming.getGlobalName(moduleMetadata, name));
+          statementNode.detach();
+        } else {
+          // goog.require('an.es6.namespace')
+          if (statementNode.isExprResult() && statementNode.getFirstChild() == n) {
+            statementNode.detach();
+          } else {
+            n.replaceWith(
+                IR.name(ModuleRenaming.getGlobalName(moduleMetadata, name))
+                    .useSourceInfoFromForTree(n));
+          }
+        }
+        t.reportCodeChange();
+      }
+
+      transpiled = true;
     }
   }
 
