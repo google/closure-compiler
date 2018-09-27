@@ -228,6 +228,30 @@ public class AstFactoryTest extends TestCase {
   }
 
   @Test
+  public void testCreateGetpropForTemplatizedType() {
+    AstFactory astFactory = createTestAstFactory();
+
+    // get the Bar<number> type
+    Node root =
+        parseAndAddTypes(
+            lines(
+                "/** @interface @template T */ function Bar() {} ",
+                "/** @type {T} */ Bar.prototype.property;",
+                "var /** !Bar<number> */ b;"));
+    Node bName = root.getFirstChild().getLastChild().getOnlyChild();
+    assertNode(bName).matchesQualifiedName("b");
+    JSType barOfNumber = bName.getJSType();
+
+    Node barName = astFactory.createName("bar", barOfNumber);
+    assertType(barName.getJSType()).toStringIsEqualTo("Bar<number>");
+
+    Node propertyAccess = astFactory.createGetProp(barName, "property");
+    assertNode(propertyAccess).hasToken(Token.GETPROP);
+    // Verify that the property is typed as `number` instead of `?` or `T`
+    assertType(propertyAccess.getJSType()).isEqualTo(getNativeType(JSTypeNative.NUMBER_TYPE));
+  }
+
+  @Test
   public void testCreateStringKey() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -614,5 +638,83 @@ public class AstFactoryTest extends TestCase {
     assertNode(memberFunctionDef).hasToken(Token.MEMBER_FUNCTION_DEF);
     assertThat(memberFunctionDef.getString()).isEqualTo("bar");
     assertType(memberFunctionDef.getJSType()).isEqualTo(functionType);
+  }
+
+  @Test
+  public void testCreateZeroArgFunction() {
+    AstFactory astFactory = createTestAstFactory();
+
+    // just a quick way to get a valid function type
+    Node root = parseAndAddTypes("/** @return {number} */ function foo() {}");
+    JSType functionType =
+        root.getFirstChild() // script
+            .getFirstChild() // function
+            .getJSType();
+
+    Node body = IR.block();
+    JSType returnType = getNativeType(JSTypeNative.NUMBER_TYPE);
+    Node functionNode = astFactory.createZeroArgFunction("bar", body, returnType);
+
+    assertType(functionNode.getJSType()).isEqualTo(functionType);
+    assertNode(functionNode).hasToken(Token.FUNCTION);
+  }
+
+  @Test
+  public void testCreateEmptyObjectLit() {
+    AstFactory astFactory = createTestAstFactory();
+
+    // just a quick way to get a valid object literal type
+    Node root = parseAndAddTypes("({})");
+    JSType objectLitType =
+        root.getFirstChild() // script
+            .getFirstChild() // expression result
+            .getOnlyChild() // object literal
+            .getJSType();
+
+    Node objectLit = astFactory.createEmptyObjectLit();
+
+    assertType(objectLit.getJSType()).toStringIsEqualTo("{}");
+    assertThat(objectLit.getJSType()).isInstanceOf(objectLitType.getClass());
+    assertNode(objectLit).hasToken(Token.OBJECTLIT);
+    assertNode(objectLit).hasChildren(false);
+  }
+
+  @Test
+  public void testCreateDelProp() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node getprop = IR.getprop(IR.name("obj"), IR.string("prop"));
+
+    Node delprop = astFactory.createDelProp(getprop);
+    assertNode(delprop).hasToken(Token.DELPROP);
+    assertType(delprop.getJSType()).isEqualTo(getNativeType(JSTypeNative.BOOLEAN_TYPE));
+    assertNode(delprop).hasChildren(true);
+  }
+
+  @Test
+  public void testCreateSheq() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node left = IR.string("left");
+    Node right = IR.number(0);
+
+    Node sheq = astFactory.createSheq(left, right);
+    assertNode(sheq).hasToken(Token.SHEQ);
+    assertType(sheq.getJSType()).isEqualTo(getNativeType(JSTypeNative.BOOLEAN_TYPE));
+  }
+
+  @Test
+  public void testCreateHook() {
+    AstFactory astFactory = createTestAstFactory();
+    JSType stringType = getNativeType(JSTypeNative.STRING_TYPE);
+    JSType numberType = getNativeType(JSTypeNative.NUMBER_TYPE);
+
+    Node condition = IR.falseNode();
+    Node left = IR.name("left").setJSType(stringType);
+    Node right = IR.number(0).setJSType(numberType);
+
+    Node hook = astFactory.createHook(condition, left, right);
+    assertNode(hook).hasToken(Token.HOOK);
+    assertType(hook.getJSType()).isEqualTo(getRegistry().createUnionType(stringType, numberType));
   }
 }
