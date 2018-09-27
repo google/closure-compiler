@@ -629,7 +629,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "}"),
         lines(
             "class Child$$module$testcode extends module$other.Parent {",
-            "  /** @param {Parent$$module$other} parent */",
+            "  /** @param {module$other.Parent} parent */",
             "  useParent(parent) {}",
             "}",
             "/** @const */ var module$testcode = {};"));
@@ -643,7 +643,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "}"),
         lines(
             "class Child$$module$testcode extends module$other.Parent {",
-            "  /** @param {Parent$$module$other} parent */",
+            "  /** @param {module$other.Parent} parent */",
             "  useParent(parent) {}",
             "}",
             "/** @const */ var module$testcode = {};",
@@ -850,5 +850,26 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
         this,
         "var x; export {x}; export {y as x} from './other.js';",
         Es6RewriteModules.DUPLICATE_EXPORT);
+  }
+
+  @Test
+  public void testImportAliasInTypeNode() {
+    test(
+        srcs(
+            SourceFile.fromCode("a.js", "export class A {}"),
+            SourceFile.fromCode(
+                "b.js", lines("import {A as B} from './a.js';", "const /** !B */ b = new B();"))),
+        expected(
+            SourceFile.fromCode(
+                "a.js",
+                lines(
+                    "class A$$module$a {}",
+                    "/** @const */ var module$a = {};",
+                    "/** @const */ module$a.A = A$$module$a;")),
+            SourceFile.fromCode(
+                "b.js",
+                lines(
+                    "const /** !module$a.A */ b$$module$b = new module$a.A();",
+                    "/** @const */ var module$b = {};"))));
   }
 }

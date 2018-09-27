@@ -961,7 +961,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           if (pair.originalName.isEmpty()) {
             maybeSetNewName(t, typeNode, name, pair.module + rest);
           } else {
-            maybeSetNewName(t, typeNode, name, baseName + "$$" + pair.module + rest);
+            maybeSetNewName(t, typeNode, name, pair.module + "." + pair.originalName + rest);
           }
 
           if (preprocessorSymbolTable != null) {
