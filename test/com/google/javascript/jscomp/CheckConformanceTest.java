@@ -1745,8 +1745,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
     assertThat(requirements).hasSize(1);
     Requirement requirement = requirements.get(0);
-    assertEquals(2, requirement.getWhitelistCount());
-    assertEquals(2, requirement.getWhitelistRegexpCount());
+    assertThat(requirement.getWhitelistCount()).isEqualTo(2);
+    assertThat(requirement.getWhitelistRegexpCount()).isEqualTo(2);
   }
 
   @Test
@@ -1758,8 +1758,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
     builder.addRequirementBuilder().addWhitelist("x").addWhitelist("x");
     List<Requirement> requirements =
         CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
-    assertEquals(1, requirements.get(0).getWhitelistCount());
-    assertEquals(0, errorManager.getErrorCount());
+    assertThat(requirements.get(0).getWhitelistCount()).isEqualTo(1);
+    assertThat(errorManager.getErrorCount()).isEqualTo(0);
   }
 
   @Test

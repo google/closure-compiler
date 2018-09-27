@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.AstValidator.ViolationHandler;
@@ -614,7 +615,7 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   private void valid(String code) {
     testSame(code);
-    assertTrue(lastCheckWasValid);
+    assertThat(lastCheckWasValid).isTrue();
   }
 
   private enum Check {
@@ -640,11 +641,11 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   private void expectInvalid(Node n, Check level) {
-    assertFalse(doCheck(n, level));
+    assertThat(doCheck(n, level)).isFalse();
   }
 
   private void expectValid(Node n, Check level) {
-    assertTrue(doCheck(n, level));
+    assertThat(doCheck(n, level)).isTrue();
   }
 
   /**
@@ -660,7 +661,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     // Remove `feature` from the SCRIPT node's feature set, checking that it was originally present,
     // and then validate that AstValidator errors because it expects `feature` to be present.
     FeatureSet currentFeatures = NodeUtil.getFeatureSetOfScript(script);
-    assertTrue(currentFeatures.contains(feature));
+    assertThat(currentFeatures.contains(feature)).isTrue();
 
     script.putProp(Node.FEATURE_SET, currentFeatures.without(feature));
     expectInvalid(script, Check.SCRIPT);

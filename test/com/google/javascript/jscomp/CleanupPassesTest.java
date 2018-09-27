@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import java.util.List;
 import junit.framework.TestCase;
 import org.junit.Test;
@@ -36,15 +38,17 @@ public final class CleanupPassesTest extends TestCase {
 
     List<PassFactory> checks = config.getChecks();
 
-    assertTrue("Pass 0 should be a FieldCleanupPass",
-        checks.get(0).create(compiler) instanceof FieldCleanupPass);
+    assertWithMessage("Pass 0 should be a FieldCleanupPass")
+        .that(checks.get(0).create(compiler) instanceof FieldCleanupPass)
+        .isTrue();
   }
 
   @Test
   public void testNoOptimizations() {
     CompilerOptions options = new CompilerOptions();
     CleanupPasses config = new CleanupPasses(options);
-    assertTrue("Cleanup Passes unexpectedly contain optimization passes",
-        config.getOptimizations().isEmpty());
+    assertWithMessage("Cleanup Passes unexpectedly contain optimization passes")
+        .that(config.getOptimizations().isEmpty())
+        .isTrue();
   }
 }

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.graph.DiGraph;
@@ -212,16 +214,22 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     g.connect("b", "-", "d");
     g.connect("c", "-", "d");
 
-    assertTrue(createTest(g, "a", "d", Predicates.equalTo("b"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertTrue(createTest(g, "a", "d", Predicates.equalTo("c"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertTrue(createTest(g, "a", "d", Predicates.equalTo("a"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertTrue(createTest(g, "a", "d", Predicates.equalTo("d"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertFalse(createTest(g, "a", "d", Predicates.equalTo("NONE"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
+    assertThat(
+            createTest(g, "a", "d", Predicates.equalTo("b"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isTrue();
+    assertThat(
+            createTest(g, "a", "d", Predicates.equalTo("c"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isTrue();
+    assertThat(
+            createTest(g, "a", "d", Predicates.equalTo("a"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isTrue();
+    assertThat(
+            createTest(g, "a", "d", Predicates.equalTo("d"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isTrue();
+    assertThat(
+            createTest(g, "a", "d", Predicates.equalTo("NONE"), ALL_EDGE)
+                .somePathsSatisfyPredicate())
+        .isFalse();
   }
 
   @Test
@@ -231,12 +239,15 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     g.createDirectedGraphNode("a");
     g.createDirectedGraphNode("b");
 
-    assertFalse(createTest(g, "a", "b", Predicates.equalTo("b"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertFalse(createTest(g, "a", "b", Predicates.equalTo("d"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertTrue(createTest(g, "a", "b", Predicates.equalTo("a"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
+    assertThat(
+            createTest(g, "a", "b", Predicates.equalTo("b"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isFalse();
+    assertThat(
+            createTest(g, "a", "b", Predicates.equalTo("d"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isFalse();
+    assertThat(
+            createTest(g, "a", "b", Predicates.equalTo("a"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isTrue();
   }
 
   @Test
@@ -261,11 +272,10 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     CountingPredicate<String> p =
       new CountingPredicate<>(Predicates.equalTo("4a"));
 
-    assertTrue(createTest(g, "1", "5", p, ALL_EDGE)
-        .somePathsSatisfyPredicate());
+    assertThat(createTest(g, "1", "5", p, ALL_EDGE).somePathsSatisfyPredicate()).isTrue();
 
     // Make sure we are not doing more traversals than we have to.
-    assertEquals(4, p.count);
+    assertThat(p.count).isEqualTo(4);
   }
 
   @Test
@@ -277,20 +287,26 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     g.createDirectedGraphNode("c");
     g.connect("a", "-", "b");
     g.connect("b", "-", "c");
-    assertFalse(createNonInclusiveTest(g, "a", "b",
-        Predicates.equalTo("a"), ALL_EDGE).somePathsSatisfyPredicate());
-    assertFalse(createNonInclusiveTest(g, "a", "b",
-        Predicates.equalTo("b"), ALL_EDGE).somePathsSatisfyPredicate());
-    assertTrue(createNonInclusiveTest(g, "a", "c",
-        Predicates.equalTo("b"), ALL_EDGE).somePathsSatisfyPredicate());
+    assertThat(
+            createNonInclusiveTest(g, "a", "b", Predicates.equalTo("a"), ALL_EDGE)
+                .somePathsSatisfyPredicate())
+        .isFalse();
+    assertThat(
+            createNonInclusiveTest(g, "a", "b", Predicates.equalTo("b"), ALL_EDGE)
+                .somePathsSatisfyPredicate())
+        .isFalse();
+    assertThat(
+            createNonInclusiveTest(g, "a", "c", Predicates.equalTo("b"), ALL_EDGE)
+                .somePathsSatisfyPredicate())
+        .isTrue();
   }
 
   private static <N, E> void assertGood(CheckPathsBetweenNodes<N, E> test) {
-    assertTrue(test.allPathsSatisfyPredicate());
+    assertThat(test.allPathsSatisfyPredicate()).isTrue();
   }
 
   private static <N, E> void assertBad(CheckPathsBetweenNodes<N, E> test) {
-    assertFalse(test.allPathsSatisfyPredicate());
+    assertThat(test.allPathsSatisfyPredicate()).isFalse();
   }
 
   private static CheckPathsBetweenNodes<String, String> createTest(

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,7 +51,7 @@ public final class CheckRegExpTest extends CompilerTestCase {
     } else {
       testSame(code);
     }
-    assertEquals(expected, last.isGlobalRegExpPropertiesUsed());
+    assertThat(last.isGlobalRegExpPropertiesUsed()).isEqualTo(expected);
   }
 
   @Test

@@ -211,7 +211,6 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
 
   protected void assertErrorType(JSError e, DiagnosticType type, int lineNumber) {
     assertError(e).hasType(type);
-    assertEquals(e.lineNumber, lineNumber);
+    assertThat(lineNumber).isEqualTo(e.lineNumber);
   }
-
 }

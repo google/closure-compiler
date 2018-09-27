@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -67,7 +68,7 @@ public final class ChangeVerifierTest extends TestCase {
 
     try {
       verifier.checkRecordedChanges("test2", script);
-      fail("exception expected");
+      assertWithMessage("exception expected").fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().contains("changed scope not marked as changed");
     }
@@ -93,7 +94,7 @@ public final class ChangeVerifierTest extends TestCase {
 
     try {
       verifier.checkRecordedChanges("test2", script);
-      fail("exception expected");
+      assertWithMessage("exception expected").fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().contains("deleted scope was not reported");
     }
@@ -124,7 +125,7 @@ public final class ChangeVerifierTest extends TestCase {
 
     try {
       verifier.checkRecordedChanges("test2", script);
-      fail("exception expected");
+      assertWithMessage("exception expected").fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().contains("existing scope is improperly marked as deleted");
     }
@@ -147,7 +148,7 @@ public final class ChangeVerifierTest extends TestCase {
 
     try {
       verifier.checkRecordedChanges(main);
-      fail("method should throw");
+      assertWithMessage("method should throw").fail();
     } catch (IllegalStateException e) {
       // ensure that e was thrown from the right code-path
       // especially important if it's something as frequent

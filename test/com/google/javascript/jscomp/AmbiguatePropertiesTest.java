@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
@@ -625,7 +627,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     answerMap.put("x", "b");
     answerMap.put("y", "c");
     answerMap.put("z", "a");
-    assertEquals(answerMap, lastPass.getRenamingMap());
+    assertThat(lastPass.getRenamingMap()).isEqualTo(answerMap);
   }
 
   @Test
