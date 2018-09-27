@@ -511,7 +511,7 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
 
   void checkDefinitions(String externs, String source, Set<String> expected) {
     testSame(externs(externs), srcs(source));
-    assertEquals(expected, found);
+    assertThat(found).isEqualTo(expected);
     found.clear();
   }
 

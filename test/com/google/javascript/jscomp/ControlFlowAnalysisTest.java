@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -168,8 +169,9 @@ public final class ControlFlowAnalysisTest extends TestCase {
    */
   private static void assertDownEdge(ControlFlowGraph<Node> cfg,
       Token startToken, Token endToken, Branch type) {
-    assertTrue("No down edge found",
-        0 != getAllDownEdges(cfg, startToken, endToken, type).size());
+    assertWithMessage("No down edge found")
+        .that(getAllDownEdges(cfg, startToken, endToken, type))
+        .isNotEmpty();
   }
 
   /**
@@ -193,7 +195,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
     int numDownEdges = getAllDownEdges(cfg, startToken, endToken, type).size();
     int numUpEdges = getAllDownEdges(cfg, endToken, startToken, type).size();
     int numEdges = getAllEdges(cfg, startToken, endToken, type).size();
-    assertTrue("No cross edges found", numDownEdges + numUpEdges < numEdges);
+    assertWithMessage("No cross edges found").that(numDownEdges + numUpEdges).isLessThan(numEdges);
   }
 
   /**
@@ -211,7 +213,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
       }
     }
 
-    fail("No return edge found");
+    assertWithMessage("No return edge found").fail();
   }
 
   /**
@@ -225,8 +227,13 @@ public final class ControlFlowAnalysisTest extends TestCase {
       Node source = edge.getSource().getValue();
       DiGraphNode<Node, Branch> dest = edge.getDestination();
       if (source.getToken() == startToken) {
-        assertFalse("Token " + startToken + " should not have an out going"
-            + " edge to the implicit return", cfg.isImplicitReturn(dest));
+        assertWithMessage(
+                "Token "
+                    + startToken
+                    + " should not have an out going"
+                    + " edge to the implicit return")
+            .that(cfg.isImplicitReturn(dest))
+            .isFalse();
         return;
       }
     }
@@ -1398,8 +1405,8 @@ public final class ControlFlowAnalysisTest extends TestCase {
     cfa.process(null, script1);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
 
-    assertNotNull(cfg.getNode(script1));
-    assertNull(cfg.getNode(script2));
+    assertThat(cfg.getNode(script1)).isNotNull();
+    assertThat(cfg.getNode(script2)).isNull();
   }
 
   @Test
@@ -1619,15 +1626,17 @@ public final class ControlFlowAnalysisTest extends TestCase {
 
     // IMPLICIT RETURN must always be last.
     Node implicitReturn = cfgNodes.remove(cfgNodes.size() - 1).getValue();
-    assertNull(implicitReturn == null ? "null" : implicitReturn.toStringTree(),
-        implicitReturn);
+    assertWithMessage(implicitReturn == null ? "null" : implicitReturn.toStringTree())
+        .that(implicitReturn)
+        .isNull();
 
-    assertEquals("Wrong number of CFG nodes",
-        nodeTypes.size(), cfgNodes.size());
+    assertWithMessage("Wrong number of CFG nodes")
+        .that(cfgNodes.size())
+        .isEqualTo(nodeTypes.size());
     for (int i = 0; i < cfgNodes.size(); i++) {
       Token expectedType = nodeTypes.get(i);
       Token actualType = cfgNodes.get(i).getValue().getToken();
-      assertEquals("node type mismatch at " + i, expectedType, actualType);
+      assertWithMessage("node type mismatch at " + i).that(actualType).isEqualTo(expectedType);
     }
   }
 }

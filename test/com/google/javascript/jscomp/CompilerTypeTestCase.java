@@ -119,7 +119,7 @@ abstract class CompilerTypeTestCase extends TestCase {
       }
     }
     if (warnings.length > 0) {
-      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
+      assertWithMessage("unexpected warnings(s):\n" + LINE_JOINER.join(warnings)).fail();
     }
   }
 

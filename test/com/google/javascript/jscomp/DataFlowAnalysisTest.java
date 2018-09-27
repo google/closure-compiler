@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static java.util.Comparator.comparingInt;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -654,17 +655,17 @@ public final class DataFlowAnalysisTest extends TestCase {
 
   @Test
   public void testLatticeArrayMinimizationWhenMidpointIsEven() {
-    assertEquals(6, JoinOp.BinaryJoinOp.computeMidPoint(12));
+    assertThat(JoinOp.BinaryJoinOp.computeMidPoint(12)).isEqualTo(6);
   }
 
   @Test
   public void testLatticeArrayMinimizationWhenMidpointRoundsDown() {
-    assertEquals(8, JoinOp.BinaryJoinOp.computeMidPoint(18));
+    assertThat(JoinOp.BinaryJoinOp.computeMidPoint(18)).isEqualTo(8);
   }
 
   @Test
   public void testLatticeArrayMinimizationWithTwoElements() {
-    assertEquals(1, JoinOp.BinaryJoinOp.computeMidPoint(2));
+    assertThat(JoinOp.BinaryJoinOp.computeMidPoint(2)).isEqualTo(1);
   }
 
   // tests for computeEscaped method
@@ -892,7 +893,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     DummyConstPropagation constProp = new DummyConstPropagation(cfg);
     try {
       constProp.analyze(MAX_STEP);
-      fail("Expected MaxIterationsExceededException to be thrown.");
+      assertWithMessage("Expected MaxIterationsExceededException to be thrown.").fail();
     } catch (MaxIterationsExceededException e) {
       assertThat(e)
           .hasMessageThat()

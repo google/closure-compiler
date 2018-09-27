@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,7 +34,6 @@ public final class DiagnosticGroupTest extends TestCase {
   @Test
   public void testRegistration() {
     DiagnosticGroups dg = new DiagnosticGroups();
-    assertEquals(DiagnosticGroups.DEPRECATED,
-        dg.forName("deprecated"));
+    assertThat(dg.forName("deprecated")).isEqualTo(DiagnosticGroups.DEPRECATED);
   }
 }

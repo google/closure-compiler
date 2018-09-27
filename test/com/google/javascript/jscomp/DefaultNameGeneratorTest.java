@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
@@ -36,7 +37,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     for (int i = 0; i < num; i++) {
       result[i] = ng.generateNextName();
       if (!result[i].startsWith(prefix)) {
-        fail("Error: " + result[i]);
+        assertWithMessage("Error: " + result[i]).fail();
       }
     }
     return result;
@@ -46,8 +47,9 @@ public final class DefaultNameGeneratorTest extends TestCase {
   public void testNameGeneratorInvalidPrefixes() throws Exception {
     try {
       new DefaultNameGenerator(Collections.<String>emptySet(), "123abc", null);
-      fail("Constructor should throw exception when the first char of prefix "
-          + "is invalid");
+      assertWithMessage(
+              "Constructor should throw exception when the first char of prefix is invalid")
+          .fail();
     } catch (IllegalArgumentException ex) {
       // The error messages should contain meaningful information.
       assertThat(ex).hasMessageThat().contains("W, X, Y, Z, $]");
@@ -55,8 +57,9 @@ public final class DefaultNameGeneratorTest extends TestCase {
 
     try {
       new DefaultNameGenerator(Collections.<String>emptySet(), "abc%", null);
-      fail("Constructor should throw exception when one of prefix characters "
-          + "is invalid");
+      assertWithMessage(
+              "Constructor should throw exception when one of prefix characters is invalid")
+          .fail();
     } catch (IllegalArgumentException ex) {
       assertThat(ex).hasMessageThat().contains("W, X, Y, Z, _, 0, 1");
     }

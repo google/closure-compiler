@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.rhino.Node;
@@ -112,10 +113,11 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
 
     JSType number = fooResultType;
     JSType receiver = fooType.getTypeOfThis();
-    assertTrue("Expected number: " + number, number.isNumberValueType());
+    assertWithMessage("Expected number: " + number).that(number.isNumberValueType()).isTrue();
     // NOTE: The type checker has the receiver as unknown
-    assertTrue(
-        "Expected null or unknown: " + receiver, receiver == null || receiver.isUnknownType());
+    assertWithMessage("Expected null or unknown: " + receiver)
+        .that(receiver == null || receiver.isUnknownType())
+        .isTrue();
     assertThat(barResultType).isEqualTo(number);
 
     // Check that foo's type is {function(A): number}
@@ -135,11 +137,12 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     // TODO(sdh): NTI currently fails to infer the result of the baz() call (b/37351897)
     // so we handle it more carefully.  When methods are deferred, this should be changed
     // to check that it's exactly unknown.
-    assertTrue(
-        "Expected undefined or unknown: " + bazResultType,
-        bazResultType.isVoidType() || bazResultType.isUnknownType());
-    assertTrue(
-        "Expected undefined: " + bazType.getReturnType(), bazType.getReturnType().isVoidType());
+    assertWithMessage("Expected undefined or unknown: " + bazResultType)
+        .that(bazResultType.isVoidType() || bazResultType.isUnknownType())
+        .isTrue();
+    assertWithMessage("Expected undefined: " + bazType.getReturnType())
+        .that(bazType.getReturnType().isVoidType())
+        .isTrue();
   }
 
   private JSType getTypeAtPosition(int... indices) {

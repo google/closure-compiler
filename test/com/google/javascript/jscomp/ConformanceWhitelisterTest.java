@@ -132,7 +132,7 @@ public class ConformanceWhitelisterTest extends TestCase {
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
     Compiler compiler = new Compiler();
     Result result = compiler.compile(externs, sources, options);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     ImmutableMultimap.Builder<String, Integer> errors = ImmutableMultimap.builder();
     for (Node node :
