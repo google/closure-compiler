@@ -96,7 +96,6 @@ $jscomp.polyfill('Map',
   }
 
   // We depend on Symbol.iterator, so ensure it's loaded.
-  $jscomp.initSymbol();
   $jscomp.initSymbolIterator();
 
 
