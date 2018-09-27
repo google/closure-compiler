@@ -2431,6 +2431,14 @@ public final class CommandLineRunnerTest extends TestCase {
         "var Foo, x = '\\${Foo}'+Foo;");
   }
 
+  /** windows shells can add extra quotes to an argument */
+  @Test
+  public void testWarningGuardQuotedValue() {
+    args.add("--jscomp_error='\"*\"'");
+    args.add("--jscomp_warning=\"'*'\"");
+    args.add("--jscomp_off='\"*\"'");
+    testSame("alert('hello world')");
+  }
 
   /* Helper functions */
 
