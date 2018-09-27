@@ -568,22 +568,21 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   private void assertArgMapHasKeys(String code, String fnName, ImmutableSet<String> expectedKeys) {
     Node n = parse(code);
     Node fn = findFunction(n, fnName);
-    assertNotNull(fn);
+    assertThat(fn).isNotNull();
     Node call = findCall(n, fnName);
-    assertNotNull(call);
-    ImmutableMap<String, Node> actualMap =
-        getFunctionCallParameterMap(fn, call, getNameSupplier());
+    assertThat(call).isNotNull();
+    ImmutableMap<String, Node> actualMap = getFunctionCallParameterMap(fn, call, getNameSupplier());
     assertThat(actualMap.keySet()).isEqualTo(expectedKeys);
   }
 
   private void testNeededTemps(String code, String fnName, ImmutableSet<String> expectedTemps) {
     Node n = parse(code);
     Node fn = findFunction(n, fnName);
-    assertNotNull(fn);
+    assertThat(fn).isNotNull();
     Node call = findCall(n, fnName);
-    assertNotNull(call);
-    ImmutableMap<String, Node> args = ImmutableMap.copyOf(
-        getFunctionCallParameterMap(fn, call, getNameSupplier()));
+    assertThat(call).isNotNull();
+    ImmutableMap<String, Node> args =
+        ImmutableMap.copyOf(getFunctionCallParameterMap(fn, call, getNameSupplier()));
 
     Set<String> actualTemps = new HashSet<>();
     maybeAddTempsForCallArguments(fn, args, actualTemps, new ClosureCodingConvention());

@@ -639,10 +639,10 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node root = getRoot(js);
 
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertEquals(root, globalScope.getRootNode());
-    assertFalse(globalScope.isBlockScope());
-    assertEquals(globalScope, globalScope.getClosestHoistScope());
-    assertTrue(globalScope.isHoistScope());
+    assertThat(globalScope.getRootNode()).isEqualTo(root);
+    assertThat(globalScope.isBlockScope()).isFalse();
+    assertThat(globalScope.getClosestHoistScope()).isEqualTo(globalScope);
+    assertThat(globalScope.isHoistScope()).isTrue();
 
     Node function = root.getFirstChild();
     checkState(function.isFunction(), function);
@@ -650,10 +650,10 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
     Node fooBlockNode = NodeUtil.getFunctionBody(function);
     Scope fooScope = scopeCreator.createScope(fooBlockNode, functionScope);
-    assertEquals(fooBlockNode, fooScope.getRootNode());
-    assertTrue(fooScope.isBlockScope());
-    assertEquals(fooScope, fooScope.getClosestHoistScope());
-    assertTrue(fooScope.isHoistScope());
+    assertThat(fooScope.getRootNode()).isEqualTo(fooBlockNode);
+    assertThat(fooScope.isBlockScope()).isTrue();
+    assertThat(fooScope.getClosestHoistScope()).isEqualTo(fooScope);
+    assertThat(fooScope.isHoistScope()).isTrue();
     assertScope(fooScope).declares("x").directly();
   }
 
@@ -841,9 +841,9 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node function = root.getFirstChild();
     checkState(function.isFunction(), function);
     Scope fScope = scopeCreator.createScope(function, global);
-    assertFalse(fScope.hasSlot("this"));
+    assertThat(fScope.hasSlot("this")).isFalse();
     Var thisVar = fScope.getVar("this");
-    assertTrue(thisVar.isThis());
+    assertThat(thisVar.isThis()).isTrue();
 
     Node fBlock = NodeUtil.getFunctionBody(function);
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);

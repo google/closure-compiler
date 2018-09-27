@@ -16,6 +16,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
@@ -1310,7 +1312,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     Node yieldFn = callNode.getFirstChild();
     Node jscompGeneratorContext = yieldFn.getFirstChild();
-    assertTrue(yieldFn.getJSType().isFunctionType());
+    assertThat(yieldFn.getJSType().isFunctionType()).isTrue();
     assertEquals(
         "$jscomp.generator.Context<number>", jscompGeneratorContext.getJSType().toString());
 
@@ -1341,7 +1343,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     Node yieldAllFn = callNode.getFirstChild();
     checkState(yieldAllFn.isGetProp());
-    assertTrue(yieldAllFn.getJSType().isFunctionType());
+    assertThat(yieldAllFn.getJSType().isFunctionType()).isTrue();
 
     // Check that the original types on "[1, 2]" are still present after transpilation
     Node yieldedValue = callNode.getSecondChild(); // [1, 2]
@@ -1401,7 +1403,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     assertEquals("(null|string)", lhs.getFirstChild().getJSType().toString());
     assertEquals("(null|string)", lhs.getSecondChild().getJSType().toString());
     Node getNextFn = lhs.getSecondChild().getFirstChild();
-    assertTrue(getNextFn.getJSType().isFunctionType());
+    assertThat(getNextFn.getJSType().isFunctionType()).isTrue();
 
     Node rhs = ne.getSecondChild();
     checkState(rhs.isNull(), rhs);
@@ -1447,7 +1449,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     Node enterCatchBlockFn = eAssign.getSecondChild().getFirstChild();
     checkState(enterCatchBlockFn.isGetProp());
-    assertTrue(enterCatchBlockFn.getJSType().isFunctionType());
+    assertThat(enterCatchBlockFn.getJSType().isFunctionType()).isTrue();
   }
 
   @Test
@@ -1501,15 +1503,19 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     checkState(callNode.isCall(), callNode);
 
     Node createGenerator = callNode.getFirstChild();
-    assertTrue(createGenerator.getJSType().isFunctionType()); // $jscomp.generator.createGenerator
+    assertThat(createGenerator.getJSType().isFunctionType())
+        .isTrue(); // $jscomp.generator.createGenerator
     assertEquals(
         "Generator<number>",
         createGenerator.getJSType().toMaybeFunctionType().getReturnType().toString());
 
     Node program = createGenerator.getNext().getNext();
 
-    assertTrue("Expected function: " + program.getJSType(), program.getJSType().isFunctionType());
-    assertEquals("(undefined|{value: number})",
+    assertWithMessage("Expected function: " + program.getJSType())
+        .that(program.getJSType().isFunctionType())
+        .isTrue();
+    assertEquals(
+        "(undefined|{value: number})",
         program.getJSType().toMaybeFunctionType().getReturnType().toString());
     return program;
   }

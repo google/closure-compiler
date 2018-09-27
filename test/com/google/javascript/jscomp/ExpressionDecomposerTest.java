@@ -965,17 +965,17 @@ public final class ExpressionDecomposerTest extends TestCase {
         compiler, compiler.getUniqueNameIdSupplier(),
         knownConstants, newScope(), allowMethodCallDecomposing);
     Node tree = parse(compiler, code);
-    assertNotNull(tree);
+    assertThat(tree).isNotNull();
 
     Node externsRoot = parse(compiler, "function goo() {} function foo() {}");
-    assertNotNull(externsRoot);
+    assertThat(externsRoot).isNotNull();
 
     Node callSite = findCall(tree, null, call);
-    assertNotNull("Call " + call + " was not found.", callSite);
+    assertWithMessage("Call " + call + " was not found.").that(callSite).isNotNull();
 
     compiler.resetUniqueNameId();
     DecompositionType result = decomposer.canExposeExpression(callSite);
-    assertEquals(expectedResult, result);
+    assertThat(result).isEqualTo(expectedResult);
   }
 
   private void helperCanExposeExpression(
@@ -987,17 +987,17 @@ public final class ExpressionDecomposerTest extends TestCase {
         compiler, compiler.getUniqueNameIdSupplier(),
         knownConstants, newScope(), allowMethodCallDecomposing);
     Node tree = parse(compiler, code);
-    assertNotNull(tree);
+    assertThat(tree).isNotNull();
 
     Node externsRoot = parse(compiler, "function goo() {} function foo() {}");
-    assertNotNull(externsRoot);
+    assertThat(externsRoot).isNotNull();
 
     Node callSite = findCall(tree, fnName);
-    assertNotNull("Call to " + fnName + " was not found.", callSite);
+    assertWithMessage("Call to " + fnName + " was not found.").that(callSite).isNotNull();
 
     compiler.resetUniqueNameId();
     DecompositionType result = decomposer.canExposeExpression(callSite);
-    assertEquals(expectedResult, result);
+    assertThat(result).isEqualTo(expectedResult);
   }
 
   private void helperExposeExpression(
@@ -1020,7 +1020,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     Node expectedRoot = parse(compiler, expectedResult);
     Node tree = parse(compiler, code);
     Node originalTree = tree.cloneTree();
-    assertNotNull(tree);
+    assertThat(tree).isNotNull();
 
     if (shouldTestTypes) {
       processForTypecheck(compiler, tree);
@@ -1030,7 +1030,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     assertWithMessage("Expected node was not found.").that(expr).isNotNull();
 
     DecompositionType result = decomposer.canExposeExpression(expr);
-    assertEquals(DecompositionType.DECOMPOSABLE, result);
+    assertThat(result).isEqualTo(DecompositionType.DECOMPOSABLE);
 
     compiler.resetUniqueNameId();
     for (int i = 0; i < times; i++) {
@@ -1038,9 +1038,15 @@ public final class ExpressionDecomposerTest extends TestCase {
     }
     validateSourceInfo(compiler, tree);
     String explanation = expectedRoot.checkTreeEquals(tree);
-    assertNull("\nExpected: " + compiler.toSource(expectedRoot)
-        + "\nResult:   " + compiler.toSource(tree)
-        + "\n" + explanation, explanation);
+    assertWithMessage(
+            "\nExpected: "
+                + compiler.toSource(expectedRoot)
+                + "\nResult:   "
+                + compiler.toSource(tree)
+                + "\n"
+                + explanation)
+        .that(explanation)
+        .isNull();
 
     if (shouldTestTypes) {
       Node trueExpr = nodeFinder.apply(originalTree);
@@ -1076,7 +1082,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     Node expectedRoot = parse(compiler, expectedResult);
     Node tree = parse(compiler, code);
     Node originalTree = tree.cloneTree();
-    assertNotNull(tree);
+    assertThat(tree).isNotNull();
 
     if (shouldTestTypes) {
       processForTypecheck(compiler, tree);
@@ -1091,9 +1097,15 @@ public final class ExpressionDecomposerTest extends TestCase {
     }
     validateSourceInfo(compiler, tree);
     String explanation = expectedRoot.checkTreeEquals(tree);
-    assertNull("\nExpected: " + compiler.toSource(expectedRoot)
-        + "\nResult:   " + compiler.toSource(tree)
-        + "\n" + explanation, explanation);
+    assertWithMessage(
+            "\nExpected: "
+                + compiler.toSource(expectedRoot)
+                + "\nResult:   "
+                + compiler.toSource(tree)
+                + "\n"
+                + explanation)
+        .that(explanation)
+        .isNull();
 
     if (shouldTestTypes) {
       // find a basis for comparison:
@@ -1114,7 +1126,9 @@ public final class ExpressionDecomposerTest extends TestCase {
     JSType actualType = rootActual.getJSType();
 
     if (expectedType == null || actualType == null) {
-      assertEquals("Expected " + rootExpected + " but got " + rootActual, expectedType, actualType);
+      assertWithMessage("Expected " + rootExpected + " but got " + rootActual)
+          .that(actualType)
+          .isEqualTo(expectedType);
     } else if (expectedType.isUnknownType() && actualType.isUnknownType()) {
       // continue
     } else {
@@ -1215,7 +1229,7 @@ public final class ExpressionDecomposerTest extends TestCase {
       for (JSError err : compiler.getErrors()) {
         msg += err + "\n";
       }
-      assertEquals(msg, 0, compiler.getErrorCount());
+      assertWithMessage(msg).that(compiler.getErrorCount()).isEqualTo(0);
     }
   }
 

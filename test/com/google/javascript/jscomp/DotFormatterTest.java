@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
@@ -29,11 +31,11 @@ public final class DotFormatterTest extends TestCase {
   @Test
   public void testKeyAssignementSequential() throws Exception {
     DotFormatter dot = DotFormatter.newInstanceForTesting();
-    assertEquals(0, dot.key(new Node(Token.BLOCK)));
-    assertEquals(1, dot.key(new Node(Token.BLOCK)));
-    assertEquals(2, dot.key(new Node(Token.BLOCK)));
-    assertEquals(3, dot.key(new Node(Token.BLOCK)));
-    assertEquals(4, dot.key(new Node(Token.BLOCK)));
+    assertThat(dot.key(new Node(Token.BLOCK))).isEqualTo(0);
+    assertThat(dot.key(new Node(Token.BLOCK))).isEqualTo(1);
+    assertThat(dot.key(new Node(Token.BLOCK))).isEqualTo(2);
+    assertThat(dot.key(new Node(Token.BLOCK))).isEqualTo(3);
+    assertThat(dot.key(new Node(Token.BLOCK))).isEqualTo(4);
   }
 
   /** Tests that keys are assigned once per node. */
@@ -44,12 +46,12 @@ public final class DotFormatterTest extends TestCase {
     Node node1 = new Node(Token.BLOCK);
     Node node2 = new Node(Token.BLOCK);
 
-    assertEquals(0, dot.key(node0));
-    assertEquals(1, dot.key(node1));
-    assertEquals(2, dot.key(node2));
-    assertEquals(0, dot.key(node0));
-    assertEquals(1, dot.key(node1));
-    assertEquals(2, dot.key(node2));
+    assertThat(dot.key(node0)).isEqualTo(0);
+    assertThat(dot.key(node1)).isEqualTo(1);
+    assertThat(dot.key(node2)).isEqualTo(2);
+    assertThat(dot.key(node0)).isEqualTo(0);
+    assertThat(dot.key(node1)).isEqualTo(1);
+    assertThat(dot.key(node2)).isEqualTo(2);
   }
 
   /** Tests the formatting (simple tree). */

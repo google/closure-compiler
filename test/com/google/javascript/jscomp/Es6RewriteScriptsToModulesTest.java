@@ -60,7 +60,7 @@ public final class Es6RewriteScriptsToModulesTest extends CompilerTestCase {
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     getProcessor(compiler).process(externsRoot, mainRoot);
-    assertTrue(mainRoot.getFirstFirstChild().isModuleBody());
+    assertThat(mainRoot.getFirstFirstChild().isModuleBody()).isTrue();
   }
 
   @Test
