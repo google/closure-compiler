@@ -601,15 +601,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
     testModules(
         "test.js",
-        lines(
-            "module.exports = class Foo {",
-            "  /** @this {Foo} */",
-            "  bar() { return 'bar'; }",
-            "};"),
+        "module.exports = class { bar() { return 'bar'; }};",
         lines(
             "/** @const */ var module$test = {};",
             "/** @const */ module$test.default = class {",
-            "  /** @this {module$test.default} */",
             "  bar() { return 'bar'; }",
             "};"));
   }
@@ -1510,5 +1505,37 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "    && {} !== null && !{}.nodeType && {};",
             "console.log(freeExports$$module$test, freeModule$$module$test);",
             "module$test.default = true;"));
+  }
+
+  /** @see https://github.com/google/closure-compiler/issues/3051 */
+  @Test
+  public void testIssue3051() {
+    testModules(
+        "test.js",
+        lines(
+            "class Base {}",
+            "exports.Base = Base;",
+            "",
+            "class Impl extends exports.Base {",
+            "    getString() {",
+            "        return \"test\";",
+            "    }",
+            "}",
+            "exports.Impl = Impl;",
+            "",
+            "const w = new exports.Impl(\"a\")",
+            "console.log(w.getString());"),
+        lines(
+            "/** @const */ var module$test = {",
+            "    /** @const */ default: {}",
+            "};",
+            "module$test.default.Base = class {};",
+            "module$test.default.Impl = class extends module$test.default.Base {",
+            "    getString() {",
+            "        return \"test\"",
+            "    }",
+            "};",
+            "const w$$module$test = new module$test.default.Impl(\"a\");",
+            "console.log(w$$module$test.getString());"));
   }
 }
