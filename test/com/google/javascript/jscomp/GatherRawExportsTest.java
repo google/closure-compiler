@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 import org.junit.Before;
@@ -174,6 +176,6 @@ public final class GatherRawExportsTest extends CompilerTestCase {
   private void assertExported(String js, String ... names) {
     Set<String> setNames = ImmutableSet.copyOf(names);
     testSame(js);
-    assertEquals(setNames, last.getExportedVariableNames());
+    assertThat(last.getExportedVariableNames()).isEqualTo(setNames);
   }
 }

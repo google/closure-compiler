@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -41,66 +43,66 @@ public final class GoogleCodingConventionTest extends TestCase {
     Node rest = IR.paramList(
         IR.rest(IR.name("more")));
 
-    assertFalse(conv.isVarArgsParameter(args.getFirstChild()));
-    assertFalse(conv.isVarArgsParameter(args.getLastChild()));
-    assertFalse(conv.isVarArgsParameter(optArgs.getFirstChild()));
-    assertFalse(conv.isVarArgsParameter(optArgs.getLastChild()));
+    assertThat(conv.isVarArgsParameter(args.getFirstChild())).isFalse();
+    assertThat(conv.isVarArgsParameter(args.getLastChild())).isFalse();
+    assertThat(conv.isVarArgsParameter(optArgs.getFirstChild())).isFalse();
+    assertThat(conv.isVarArgsParameter(optArgs.getLastChild())).isFalse();
 
-    assertFalse(conv.isOptionalParameter(args.getFirstChild()));
-    assertFalse(conv.isOptionalParameter(args.getLastChild()));
-    assertTrue(conv.isOptionalParameter(optArgs.getFirstChild()));
-    assertTrue(conv.isOptionalParameter(optArgs.getLastChild()));
+    assertThat(conv.isOptionalParameter(args.getFirstChild())).isFalse();
+    assertThat(conv.isOptionalParameter(args.getLastChild())).isFalse();
+    assertThat(conv.isOptionalParameter(optArgs.getFirstChild())).isTrue();
+    assertThat(conv.isOptionalParameter(optArgs.getLastChild())).isTrue();
 
-    assertTrue(conv.isVarArgsParameter(rest.getLastChild()));
-    assertFalse(conv.isOptionalParameter(rest.getFirstChild()));
+    assertThat(conv.isVarArgsParameter(rest.getLastChild())).isTrue();
+    assertThat(conv.isOptionalParameter(rest.getFirstChild())).isFalse();
   }
 
   @Test
   public void testInlineName() {
-    assertFalse(conv.isConstant("a"));
-    assertTrue(conv.isConstant("XYZ123_"));
-    assertTrue(conv.isConstant("ABC"));
-    assertFalse(conv.isConstant("ABCdef"));
-    assertFalse(conv.isConstant("aBC"));
-    assertFalse(conv.isConstant("A"));
-    assertFalse(conv.isConstant("_XYZ123"));
-    assertTrue(conv.isConstant("a$b$XYZ123_"));
-    assertTrue(conv.isConstant("a$b$ABC_DEF"));
-    assertTrue(conv.isConstant("a$b$A"));
-    assertFalse(conv.isConstant("a$b$a"));
-    assertFalse(conv.isConstant("a$b$ABCdef"));
-    assertFalse(conv.isConstant("a$b$aBC"));
-    assertFalse(conv.isConstant("a$b$"));
-    assertFalse(conv.isConstant("$"));
+    assertThat(conv.isConstant("a")).isFalse();
+    assertThat(conv.isConstant("XYZ123_")).isTrue();
+    assertThat(conv.isConstant("ABC")).isTrue();
+    assertThat(conv.isConstant("ABCdef")).isFalse();
+    assertThat(conv.isConstant("aBC")).isFalse();
+    assertThat(conv.isConstant("A")).isFalse();
+    assertThat(conv.isConstant("_XYZ123")).isFalse();
+    assertThat(conv.isConstant("a$b$XYZ123_")).isTrue();
+    assertThat(conv.isConstant("a$b$ABC_DEF")).isTrue();
+    assertThat(conv.isConstant("a$b$A")).isTrue();
+    assertThat(conv.isConstant("a$b$a")).isFalse();
+    assertThat(conv.isConstant("a$b$ABCdef")).isFalse();
+    assertThat(conv.isConstant("a$b$aBC")).isFalse();
+    assertThat(conv.isConstant("a$b$")).isFalse();
+    assertThat(conv.isConstant("$")).isFalse();
   }
 
   @Test
   public void testExportedName() {
-    assertTrue(conv.isExported("_a"));
-    assertTrue(conv.isExported("_a_"));
-    assertFalse(conv.isExported("a"));
+    assertThat(conv.isExported("_a")).isTrue();
+    assertThat(conv.isExported("_a_")).isTrue();
+    assertThat(conv.isExported("a")).isFalse();
 
-    assertFalse(conv.isExported("$super", false));
-    assertTrue(conv.isExported("$super", true));
-    assertTrue(conv.isExported("$super"));
+    assertThat(conv.isExported("$super", false)).isFalse();
+    assertThat(conv.isExported("$super", true)).isTrue();
+    assertThat(conv.isExported("$super")).isTrue();
   }
 
   @Test
   public void testPrivateName() {
-    assertTrue(conv.isPrivate("a_"));
-    assertFalse(conv.isPrivate("a"));
-    assertFalse(conv.isPrivate("_a_"));
+    assertThat(conv.isPrivate("a_")).isTrue();
+    assertThat(conv.isPrivate("a")).isFalse();
+    assertThat(conv.isPrivate("_a_")).isFalse();
   }
 
   @Test
   public void testEnumKey() {
-    assertTrue(conv.isValidEnumKey("A"));
-    assertTrue(conv.isValidEnumKey("123"));
-    assertTrue(conv.isValidEnumKey("FOO_BAR"));
+    assertThat(conv.isValidEnumKey("A")).isTrue();
+    assertThat(conv.isValidEnumKey("123")).isTrue();
+    assertThat(conv.isValidEnumKey("FOO_BAR")).isTrue();
 
-    assertFalse(conv.isValidEnumKey("a"));
-    assertFalse(conv.isValidEnumKey("someKeyInCamelCase"));
-    assertFalse(conv.isValidEnumKey("_FOO_BAR"));
+    assertThat(conv.isValidEnumKey("a")).isFalse();
+    assertThat(conv.isValidEnumKey("someKeyInCamelCase")).isFalse();
+    assertThat(conv.isValidEnumKey("_FOO_BAR")).isFalse();
   }
 
   @Test
@@ -194,7 +196,7 @@ public final class GoogleCodingConventionTest extends TestCase {
 
   private void assertNotClassDefining(String code) {
     Node n = parseTestCode(code);
-    assertNull(conv.getClassesDefinedByCall(n.getFirstChild()));
+    assertThat(conv.getClassesDefinedByCall(n.getFirstChild())).isNull();
   }
 
   private void assertDefinesClasses(String code, String subclassName,
@@ -202,7 +204,7 @@ public final class GoogleCodingConventionTest extends TestCase {
     Node n = parseTestCode(code);
     SubclassRelationship classes =
         conv.getClassesDefinedByCall(n.getFirstChild());
-    assertNotNull(classes);
+    assertThat(classes).isNotNull();
     assertEquals(subclassName, classes.subclassName);
     assertEquals(superclassName, classes.superclassName);
   }

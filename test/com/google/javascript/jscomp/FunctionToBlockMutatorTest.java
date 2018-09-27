@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -298,17 +299,23 @@ public final class FunctionToBlockMutatorTest extends TestCase {
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
     // inline tester
-    Method tester = (NodeTraversal t, Node n, Node parent) -> {
-      Node result = mutator.mutate(
-          fnName, fnNode, n, resultName,
-          needsDefaultResult, isCallInLoop);
-      validateSourceInfo(compiler, result);
-      String explanation = expected.checkTreeEquals(result);
-      assertNull("\nExpected: " + compiler.toSource(expected)
-          + "\nResult:   " + compiler.toSource(result)
-          + "\n" + explanation, explanation);
-      return true;
-    };
+    Method tester =
+        (NodeTraversal t, Node n, Node parent) -> {
+          Node result =
+              mutator.mutate(fnName, fnNode, n, resultName, needsDefaultResult, isCallInLoop);
+          validateSourceInfo(compiler, result);
+          String explanation = expected.checkTreeEquals(result);
+          assertWithMessage(
+                  "\nExpected: "
+                      + compiler.toSource(expected)
+                      + "\nResult:   "
+                      + compiler.toSource(result)
+                      + "\n"
+                      + explanation)
+              .that(explanation)
+              .isNull();
+          return true;
+        };
 
     compiler.resetUniqueNameId();
     TestCallback test = new TestCallback(fnName, tester);
@@ -347,7 +354,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
       }
 
       if (parent == null) {
-        assertTrue(complete);
+        assertThat(complete).isTrue();
       }
     }
   }
@@ -371,7 +378,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
 
   private static Node parse(Compiler compiler, String js) {
     Node n = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrorCount()).isEqualTo(0);
     return n;
   }
 }

@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.GetReplacementSideEffectSubexpressions;
 import com.google.javascript.rhino.Node;
@@ -46,7 +49,7 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
     try {
       checkKeepSimplifiedShortCircuitExpr(nameNode,
                                           ImmutableList.<String>of());
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalArgumentException e) {
       // ignore
     }
@@ -58,7 +61,7 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
     try {
       checkKeepSimplifiedShortCircuitExpr(andNode,
                                           ImmutableList.<String>of());
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalArgumentException e) {
       // ignore
     }
@@ -82,7 +85,7 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
                                   true,
                                   true,
                                   ImmutableList.<String>of());
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalArgumentException e) {
       // ignore
     }
@@ -96,7 +99,7 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
                                   true,
                                   true,
                                   ImmutableList.<String>of());
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalArgumentException e) {
       // ignore
     }
@@ -110,7 +113,7 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
                                   false,
                                   false,
                                   ImmutableList.<String>of());
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalArgumentException e) {
       // ignore
     }
@@ -181,7 +184,7 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
     for (Node replacement : replacements) {
       actual.add(compiler.toSource(replacement));
     }
-    assertEquals(expected, actual);
+    assertThat(actual).isEqualTo(expected);
   }
 
   private void checkKeepSimplifiedHookExpr(Node root,
@@ -202,6 +205,6 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
     for (Node replacement : replacements) {
       actual.add(compiler.toSource(replacement));
     }
-    assertEquals(expected, actual);
+    assertThat(actual).isEqualTo(expected);
   }
 }

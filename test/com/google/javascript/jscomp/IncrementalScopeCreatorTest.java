@@ -49,18 +49,18 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     Node root1 = compiler.getRoot();
 
     Scope scopeA = creator.createScope(root1, null);
-    assertSame(scopeA, creator.createScope(root1, null));
+    assertThat(creator.createScope(root1, null)).isSameAs(scopeA);
 
     IncrementalScopeCreator.getInstance(compiler).thaw();
 
     IncrementalScopeCreator.getInstance(compiler).freeze();
 
-    assertSame(scopeA, creator.createScope(root1, null));
+    assertThat(creator.createScope(root1, null)).isSameAs(scopeA);
 
     try {
       Node root2 = IR.root();
       creator.createScope(root2, null);
-      fail();
+      throw new AssertionError();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
           .hasMessageThat()
@@ -98,10 +98,10 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     removeFirstDecl(compiler, compiler.getRoot(), "a");
 
     Scope globalScope2 = creator.createScope(compiler.getRoot(), null);
-    assertSame(globalScope, globalScope2);
+    assertThat(globalScope2).isSameAs(globalScope);
     // unchanged local scopes should be preserved
-    assertSame(globalFunction, creator.createScope(fnFoo, globalScope));
-    assertSame(inside, globalFunction.getVar("inside"));
+    assertThat(creator.createScope(fnFoo, globalScope)).isSameAs(globalFunction);
+    assertThat(globalFunction.getVar("inside")).isSameAs(inside);
 
     assertScope(globalScope2).declares("a"); // still declared, scope creator is frozen
     assertScope(globalScope2).declares("b");
@@ -116,10 +116,10 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     IncrementalScopeCreator.getInstance(compiler).freeze();
 
     Scope globalScope3 = creator.createScope(compiler.getRoot(), null);
-    assertSame(globalScope, globalScope3);
+    assertThat(globalScope3).isSameAs(globalScope);
     // unchanged local scopes should be preserved
-    assertSame(globalFunction, creator.createScope(fnFoo, globalScope));
-    assertSame(inside, globalFunction.getVar("inside"));
+    assertThat(creator.createScope(fnFoo, globalScope)).isSameAs(globalFunction);
+    assertThat(globalFunction.getVar("inside")).isSameAs(inside);
 
     assertScope(globalScope3).doesNotDeclare("a"); // no declared, scope creator has refreshed
     assertScope(globalScope3).declares("b");
@@ -229,7 +229,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     IncrementalScopeCreator.getInstance(compiler).freeze();
 
     Scope globalScope2 = creator.createScope(compiler.getRoot(), null);
-    assertSame(globalScope, globalScope2);
+    assertThat(globalScope2).isSameAs(globalScope);
 
     assertScope(globalScope2).declares("a"); // still declared in second file
     assertScope(globalScope2).doesNotDeclare("b");
@@ -258,8 +258,8 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     Scope globalScope1 = creator.createScope(root, null);
     Scope blockScope1 = creator.createScope(block, globalScope1);
     Scope fnScope1 = creator.createScope(fnFoo, blockScope1);
-    assertSame(blockScope1.getDepth() + 1, fnScope1.getDepth());
-    assertSame(blockScope1, fnScope1.getParent());
+    assertThat(fnScope1.getDepth()).isSameAs(blockScope1.getDepth() + 1);
+    assertThat(fnScope1.getParent()).isSameAs(blockScope1);
 
     // When refreshing a local scope, the Scope object is preserved but the Var objects are
     // recreated, so we need to inspect a Var in the scope to see if it has been freshed or not.
@@ -274,10 +274,10 @@ public final class IncrementalScopeCreatorTest extends TestCase {
 
     Scope globalScope2 = creator.createScope(root, null);
     Scope fnScope2 = creator.createScope(fnFoo, globalScope2);
-    assertSame(fnScope1, fnScope2);
-    assertSame(globalScope2, fnScope2.getParent());
-    assertSame(globalScope2.getDepth() + 1, fnScope2.getDepth());
-    assertSame(inside1, fnScope2.getVar("inside"));
+    assertThat(fnScope2).isSameAs(fnScope1);
+    assertThat(fnScope2.getParent()).isSameAs(globalScope2);
+    assertThat(fnScope2.getDepth()).isSameAs(globalScope2.getDepth() + 1);
+    assertThat(fnScope2.getVar("inside")).isSameAs(inside1);
 
     IncrementalScopeCreator.getInstance(compiler).thaw();
   }

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
@@ -67,44 +68,53 @@ public final class FunctionInjectorTest extends TestCase {
 
   @Test
   public void testIsSimpleFunction1() {
-    assertTrue(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function f(){}")));
+    assertThat(getInjector().isDirectCallNodeReplacementPossible(prep("function f(){}"))).isTrue();
   }
 
   @Test
   public void testIsSimpleFunction2() {
-    assertTrue(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function f(){return 0;}")));
+    assertThat(getInjector().isDirectCallNodeReplacementPossible(prep("function f(){return 0;}")))
+        .isTrue();
   }
 
   @Test
   public void testIsSimpleFunction3() {
-    assertTrue(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function f(){return x ? 0 : 1}")));
+    assertThat(
+            getInjector()
+                .isDirectCallNodeReplacementPossible(prep("function f(){return x ? 0 : 1}")))
+        .isTrue();
   }
 
   @Test
   public void testIsSimpleFunction4() {
-    assertFalse(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function f(){return;}")));
+    assertThat(getInjector().isDirectCallNodeReplacementPossible(prep("function f(){return;}")))
+        .isFalse();
   }
 
   @Test
   public void testIsSimpleFunction5() {
-    assertFalse(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function f(){return 0; return 0;}")));
+    assertThat(
+            getInjector()
+                .isDirectCallNodeReplacementPossible(prep("function f(){return 0; return 0;}")))
+        .isFalse();
   }
 
   @Test
   public void testIsSimpleFunction6() {
-    assertFalse(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function f(){var x=true;return x ? 0 : 1}")));
+    assertThat(
+            getInjector()
+                .isDirectCallNodeReplacementPossible(
+                    prep("function f(){var x=true;return x ? 0 : 1}")))
+        .isFalse();
   }
 
   @Test
   public void testIsSimpleFunction7() {
-    assertFalse(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function f(){if (x) return 0; else return 1}")));
+    assertThat(
+            getInjector()
+                .isDirectCallNodeReplacementPossible(
+                    prep("function f(){if (x) return 0; else return 1}")))
+        .isFalse();
   }
 
   @Test
@@ -1661,15 +1671,18 @@ public final class FunctionInjectorTest extends TestCase {
 
   @Test
   public void testArgumentsReferenceInArrowFunction() {
-    assertFalse(
-        doesFunctionMeetMinimumRequirements("function foo() { return () => arguments; }", "foo"));
+    assertThat(
+            doesFunctionMeetMinimumRequirements(
+                "function foo() { return () => arguments; }", "foo"))
+        .isFalse();
   }
 
   @Test
   public void testArgumentsReferenceInNestedVanillaFunction() {
-    assertTrue(
-        doesFunctionMeetMinimumRequirements(
-            "function foo() { return function() { return arguments; }; }", "foo"));
+    assertThat(
+            doesFunctionMeetMinimumRequirements(
+                "function foo() { return function() { return arguments; }; }", "foo"))
+        .isTrue();
   }
 
   /**
@@ -1700,18 +1713,22 @@ public final class FunctionInjectorTest extends TestCase {
         ImmutableSet.copyOf(FunctionArgumentInjector.findModifiedParameters(fnNode));
 
     // can-inline tester
-    Method tester = new Method() {
-      @Override
-      public boolean call(NodeTraversal t, Node n, Node parent) {
-        Reference ref = new Reference(n, t.getScope(), t.getModule(), mode);
-        CanInlineResult result = injector.canInlineReferenceToFunction(
-            ref, fnNode, unsafe,
-            NodeUtil.referencesThis(fnNode),
-            NodeUtil.containsFunction(NodeUtil.getFunctionBody(fnNode)));
-        assertEquals(expectedResult, result);
-        return true;
-      }
-    };
+    Method tester =
+        new Method() {
+          @Override
+          public boolean call(NodeTraversal t, Node n, Node parent) {
+            Reference ref = new Reference(n, t.getScope(), t.getModule(), mode);
+            CanInlineResult result =
+                injector.canInlineReferenceToFunction(
+                    ref,
+                    fnNode,
+                    unsafe,
+                    NodeUtil.referencesThis(fnNode),
+                    NodeUtil.containsFunction(NodeUtil.getFunctionBody(fnNode)));
+            assertThat(result).isEqualTo(expectedResult);
+            return true;
+          }
+        };
 
     compiler.resetUniqueNameId();
     TestCallback test = new TestCallback(fnName, tester);
@@ -1726,7 +1743,7 @@ public final class FunctionInjectorTest extends TestCase {
       for (JSError err : compiler.getErrors()) {
         msg += err + "\n";
       }
-      assertEquals(msg, 0, compiler.getErrorCount());
+      assertWithMessage(msg).that(compiler.getErrorCount()).isEqualTo(0);
     }
   }
 
@@ -1749,8 +1766,8 @@ public final class FunctionInjectorTest extends TestCase {
     Node parseRoot = compiler.parseInputs();
     Node externsRoot = parseRoot.getFirstChild();
     final Node tree = parseRoot.getLastChild();
-    assertNotNull(tree);
-    assertTrue(tree != externsRoot);
+    assertThat(tree).isNotNull();
+    assertThat(tree != externsRoot).isTrue();
 
     final Node expectedRoot = parseExpected(new Compiler(), expectedResult);
 
@@ -1763,48 +1780,58 @@ public final class FunctionInjectorTest extends TestCase {
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
     final Node fnNode = findFunction(tree, fnName);
-    assertNotNull(fnNode);
+    assertThat(fnNode).isNotNull();
     final ImmutableSet<String> unsafe =
         ImmutableSet.copyOf(FunctionArgumentInjector.findModifiedParameters(fnNode));
-    assertNotNull(fnNode);
+    assertThat(fnNode).isNotNull();
 
     // inline tester
-    Method tester = new Method() {
-      @Override
-      public boolean call(NodeTraversal t, Node n, Node parent) {
-        Reference ref = new Reference(n, t.getScope(), t.getModule(), mode);
-        CanInlineResult canInline = injector.canInlineReferenceToFunction(
-            ref, fnNode, unsafe,
-            NodeUtil.referencesThis(fnNode),
-            NodeUtil.containsFunction(NodeUtil.getFunctionBody(fnNode)));
-        assertWithMessage("canInlineReferenceToFunction should not be CAN_NOT_INLINE")
-            .that(canInline)
-            .isNotEqualTo(CanInlineResult.NO);
-        if (allowDecomposition) {
-          assertSame(
-              "canInlineReferenceToFunction should be CAN_INLINE_AFTER_DECOMPOSITION",
-              canInline,
-              CanInlineResult.AFTER_PREPARATION);
+    Method tester =
+        new Method() {
+          @Override
+          public boolean call(NodeTraversal t, Node n, Node parent) {
+            Reference ref = new Reference(n, t.getScope(), t.getModule(), mode);
+            CanInlineResult canInline =
+                injector.canInlineReferenceToFunction(
+                    ref,
+                    fnNode,
+                    unsafe,
+                    NodeUtil.referencesThis(fnNode),
+                    NodeUtil.containsFunction(NodeUtil.getFunctionBody(fnNode)));
+            assertWithMessage("canInlineReferenceToFunction should not be CAN_NOT_INLINE")
+                .that(canInline)
+                .isNotEqualTo(CanInlineResult.NO);
+            if (allowDecomposition) {
+              assertWithMessage(
+                      "canInlineReferenceToFunction should be CAN_INLINE_AFTER_DECOMPOSITION")
+                  .that(CanInlineResult.AFTER_PREPARATION)
+                  .isSameAs(canInline);
 
-          Set<String> knownConstants = new HashSet<>();
-          injector.setKnownConstants(knownConstants);
-          injector.maybePrepareCall(ref);
+              Set<String> knownConstants = new HashSet<>();
+              injector.setKnownConstants(knownConstants);
+              injector.maybePrepareCall(ref);
 
-          assertWithMessage("canInlineReferenceToFunction should be CAN_INLINE")
-              .that(canInline)
-              .isNotEqualTo(CanInlineResult.YES);
-        }
+              assertWithMessage("canInlineReferenceToFunction should be CAN_INLINE")
+                  .that(canInline)
+                  .isNotEqualTo(CanInlineResult.YES);
+            }
 
-        Node result = injector.inline(ref, fnName, fnNode);
-        validateSourceInfo(compiler, result);
-        String explanation = expectedRoot.checkTreeEquals(tree.getFirstChild());
-        assertNull(""
-            + "\nExpected: " + toSource(expectedRoot)
-            + "\nResult:   " + toSource(tree.getFirstChild())
-            + "\n" + explanation, explanation);
-        return true;
-      }
-    };
+            Node result = injector.inline(ref, fnName, fnNode);
+            validateSourceInfo(compiler, result);
+            String explanation = expectedRoot.checkTreeEquals(tree.getFirstChild());
+            assertWithMessage(
+                    ""
+                        + "\nExpected: "
+                        + toSource(expectedRoot)
+                        + "\nResult:   "
+                        + toSource(tree.getFirstChild())
+                        + "\n"
+                        + explanation)
+                .that(explanation)
+                .isNull();
+            return true;
+          }
+        };
 
     compiler.resetUniqueNameId();
 
@@ -1871,7 +1898,7 @@ public final class FunctionInjectorTest extends TestCase {
       }
 
       if (parent == null) {
-        assertTrue(complete);
+        assertThat(complete).isTrue();
       }
     }
   }
@@ -1896,13 +1923,13 @@ public final class FunctionInjectorTest extends TestCase {
   private static Node prep(String js) {
     Compiler compiler = new Compiler();
     Node n = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrorCount()).isEqualTo(0);
     return n.getFirstChild();
   }
 
   private static Node parse(Compiler compiler, String js) {
     Node n = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrorCount()).isEqualTo(0);
     return n;
   }
 
@@ -1913,7 +1940,7 @@ public final class FunctionInjectorTest extends TestCase {
     for (JSError element : errs) {
       message += "\n" + element;
     }
-    assertEquals(message, 0, compiler.getErrorCount());
+    assertWithMessage(message).that(compiler.getErrorCount()).isEqualTo(0);
     return n;
   }
 

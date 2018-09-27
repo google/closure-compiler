@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES;
 
 import com.google.common.collect.ImmutableList;
@@ -176,7 +177,7 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
       String typeName = type.getInstanceType().toString();
       FunctionType typeInRegistry = ((ObjectType) getLastCompiler()
           .getTypeRegistry().getGlobalType(typeName)).getConstructor();
-      assertSame(type, typeInRegistry);
+      assertThat(typeInRegistry).isSameAs(type);
     }
   }
 }
