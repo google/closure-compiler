@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
@@ -93,17 +94,17 @@ public final class JSCompilerSourceExcerptProviderTest extends TestCase {
 
   @Test
   public void testExcerptRegionFromInexistentSource() {
-    assertNull(provider.getSourceRegion("inexistent", 0));
-    assertNull(provider.getSourceRegion("inexistent", 6));
-    assertNull(provider.getSourceRegion("inexistent", 90));
+    assertThat(provider.getSourceRegion("inexistent", 0)).isNull();
+    assertThat(provider.getSourceRegion("inexistent", 6)).isNull();
+    assertThat(provider.getSourceRegion("inexistent", 90)).isNull();
   }
 
   @Test
   public void testExcerptInexistentRegion() {
-    assertNull(provider.getSourceRegion("foo", 0));
-    assertNull(provider.getSourceRegion("foo", 4));
-    assertNull(provider.getSourceRegion("bar", 0));
-    assertNull(provider.getSourceRegion("bar", 5));
+    assertThat(provider.getSourceRegion("foo", 0)).isNull();
+    assertThat(provider.getSourceRegion("foo", 4)).isNull();
+    assertThat(provider.getSourceRegion("bar", 0)).isNull();
+    assertThat(provider.getSourceRegion("bar", 5)).isNull();
   }
 
   /**
@@ -113,20 +114,21 @@ public final class JSCompilerSourceExcerptProviderTest extends TestCase {
    */
   private void assertRegionWellFormed(String sourceName, int lineNumber) {
     Region region = provider.getSourceRegion(sourceName, lineNumber);
-    assertNotNull(region);
+    assertThat(region).isNotNull();
     String sourceRegion = region.getSourceExcerpt();
-    assertNotNull(sourceRegion);
+    assertThat(sourceRegion).isNotNull();
     if (lineNumber == 1) {
-      assertEquals(1, region.getBeginningLineNumber());
+      assertThat(region.getBeginningLineNumber()).isEqualTo(1);
     } else {
       assertThat(region.getBeginningLineNumber()).isAtMost(lineNumber);
     }
     assertThat(lineNumber).isAtMost(region.getEndingLineNumber());
-    assertNotSame(sourceRegion, 0, sourceRegion.length());
-    assertNotSame(sourceRegion, '\n', sourceRegion.charAt(0));
-    assertNotSame(sourceRegion,
-        '\n', sourceRegion.charAt(sourceRegion.length() - 1));
+    assertWithMessage(sourceRegion).that(sourceRegion.length()).isNotSameAs(0);
+    assertWithMessage(sourceRegion).that(sourceRegion.charAt(0)).isNotSameAs('\n');
+    assertWithMessage(sourceRegion)
+        .that(sourceRegion.charAt(sourceRegion.length() - 1))
+        .isNotSameAs('\n');
     String line = provider.getSourceLine(sourceName, lineNumber);
-    assertTrue(sourceRegion, sourceRegion.contains(line));
+    assertWithMessage(sourceRegion).that(sourceRegion.contains(line)).isTrue();
   }
 }

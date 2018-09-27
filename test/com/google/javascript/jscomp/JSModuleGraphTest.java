@@ -112,12 +112,12 @@ public final class JSModuleGraphTest extends TestCase {
 
   @Test
   public void testModuleDepth() {
-    assertEquals("A should have depth 0", 0, A.getDepth());
-    assertEquals("B should have depth 1", 1, B.getDepth());
-    assertEquals("C should have depth 1", 1, C.getDepth());
-    assertEquals("D should have depth 2", 2, D.getDepth());
-    assertEquals("E should have depth 2", 2, E.getDepth());
-    assertEquals("F should have depth 3", 3, F.getDepth());
+    assertWithMessage("A should have depth 0").that(A.getDepth()).isEqualTo(0);
+    assertWithMessage("B should have depth 1").that(B.getDepth()).isEqualTo(1);
+    assertWithMessage("C should have depth 1").that(C.getDepth()).isEqualTo(1);
+    assertWithMessage("D should have depth 2").that(D.getDepth()).isEqualTo(2);
+    assertWithMessage("E should have depth 2").that(E.getDepth()).isEqualTo(2);
+    assertWithMessage("F should have depth 3").that(F.getDepth()).isEqualTo(3);
   }
 
   @Test
@@ -219,7 +219,8 @@ public final class JSModuleGraphTest extends TestCase {
     assertInputs(C); // no inputs
     assertInputs(E, "c1", "e1", "e2");
 
-    assertEquals(ImmutableList.of("a1", "a3", "a2", "b2", "c1", "e1", "e2"), sourceNames(results));
+    assertThat(sourceNames(results))
+        .isEqualTo(ImmutableList.of("a1", "a3", "a2", "b2", "c1", "e1", "e2"));
   }
 
   @Test
@@ -236,8 +237,8 @@ public final class JSModuleGraphTest extends TestCase {
     assertInputs(C, "c1", "c2");
     assertInputs(E, "e1", "e2");
 
-    assertEquals(
-        ImmutableList.of("a1", "a3", "a2", "b2", "c1", "c2", "e1", "e2"), sourceNames(results));
+    assertThat(sourceNames(results))
+        .isEqualTo(ImmutableList.of("a1", "a3", "a2", "b2", "c1", "c2", "e1", "e2"));
   }
 
   @Test
@@ -273,9 +274,8 @@ public final class JSModuleGraphTest extends TestCase {
     assertInputs(C, "c1", "c2");
     assertInputs(E, "e1", "e2");
 
-    assertEquals(
-        ImmutableList.of("a1", "a2", "a3", "b1", "b2", "c1", "c2", "e1", "e2"),
-        sourceNames(results));
+    assertThat(sourceNames(results))
+        .isEqualTo(ImmutableList.of("a1", "a2", "a3", "b1", "b2", "c1", "c2", "e1", "e2"));
   }
 
   // NOTE: The newline between the @provideGoog comment and the var statement is required.
@@ -314,18 +314,18 @@ public final class JSModuleGraphTest extends TestCase {
   @Test
   public void testToJson() {
     JsonArray modules = graph.toJson();
-    assertEquals(6, modules.size());
+    assertThat(modules.size()).isEqualTo(6);
     for (int i = 0; i < modules.size(); i++) {
       JsonObject m = modules.get(i).getAsJsonObject();
-      assertNotNull(m.get("name"));
-      assertNotNull(m.get("dependencies"));
-      assertNotNull(m.get("transitive-dependencies"));
-      assertNotNull(m.get("inputs"));
+      assertThat(m.get("name")).isNotNull();
+      assertThat(m.get("dependencies")).isNotNull();
+      assertThat(m.get("transitive-dependencies")).isNotNull();
+      assertThat(m.get("inputs")).isNotNull();
     }
     JsonObject m = modules.get(3).getAsJsonObject();
     assertEquals("D", m.get("name").getAsString());
     assertEquals("[\"B\"]", m.get("dependencies").getAsJsonArray().toString());
-    assertEquals(2, m.get("transitive-dependencies").getAsJsonArray().size());
+    assertThat(m.get("transitive-dependencies").getAsJsonArray().size()).isEqualTo(2);
     assertEquals("[]", m.get("inputs").getAsJsonArray().toString());
   }
 
@@ -458,7 +458,7 @@ public final class JSModuleGraphTest extends TestCase {
   }
 
   private void assertInputs(JSModule module, String... sourceNames) {
-    assertEquals(ImmutableList.copyOf(sourceNames), sourceNames(module.getInputs()));
+    assertThat(sourceNames(module.getInputs())).isEqualTo(ImmutableList.copyOf(sourceNames));
   }
 
   private List<String> sourceNames(List<CompilerInput> inputs) {
@@ -534,13 +534,14 @@ public final class JSModuleGraphTest extends TestCase {
             ? graph.getDeepestCommonDependencyInclusive(m1, m2)
             : graph.getDeepestCommonDependency(m1, m2);
     if (actual != expected) {
-      fail(
-          String.format(
-              "Deepest common dep of %s and %s should be %s but was %s",
-              m1.getName(),
-              m2.getName(),
-              expected == null ? "null" : expected.getName(),
-              actual == null ? "null" : actual.getName()));
+      assertWithMessage(
+              String.format(
+                  "Deepest common dep of %s and %s should be %s but was %s",
+                  m1.getName(),
+                  m2.getName(),
+                  expected == null ? "null" : expected.getName(),
+                  actual == null ? "null" : actual.getName()))
+          .fail();
     }
   }
 

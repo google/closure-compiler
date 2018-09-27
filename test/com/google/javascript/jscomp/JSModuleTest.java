@@ -69,15 +69,14 @@ public final class JSModuleTest extends TestCase {
   @Test
   public void testDependencies() {
     assertThat(mod1.getAllDependencies()).isEmpty();
-    assertEquals(ImmutableSet.of(mod1), mod2.getAllDependencies());
-    assertEquals(ImmutableSet.of(mod1), mod3.getAllDependencies());
-    assertEquals(ImmutableSet.of(mod1, mod2, mod3), mod4.getAllDependencies());
+    assertThat(mod2.getAllDependencies()).isEqualTo(ImmutableSet.of(mod1));
+    assertThat(mod3.getAllDependencies()).isEqualTo(ImmutableSet.of(mod1));
+    assertThat(mod4.getAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod2, mod3));
 
-    assertEquals(ImmutableSet.of(mod1), mod1.getThisAndAllDependencies());
-    assertEquals(ImmutableSet.of(mod1, mod2), mod2.getThisAndAllDependencies());
-    assertEquals(ImmutableSet.of(mod1, mod3), mod3.getThisAndAllDependencies());
-    assertEquals(ImmutableSet.of(mod1, mod2, mod3, mod4),
-                 mod4.getThisAndAllDependencies());
+    assertThat(mod1.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1));
+    assertThat(mod2.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod2));
+    assertThat(mod3.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod3));
+    assertThat(mod4.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod2, mod3, mod4));
   }
 
   @Test
@@ -142,6 +141,6 @@ public final class JSModuleTest extends TestCase {
     compiler.initCompilerOptionsIfTesting();
     mod.sortInputsByDeps(compiler);
 
-    assertEquals(expected, mod.getInputs());
+    assertThat(mod.getInputs()).isEqualTo(expected);
   }
 }

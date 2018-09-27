@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -423,7 +424,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertThat(input).startsWith("/**");
     String contents = input.substring("/**".length());
     JSDocInfo info = parser.apply(contents);
-    assertNotNull("Parse error on parsing JSDoc: " + input, info);
+    assertWithMessage("Parse error on parsing JSDoc: " + input).that(info).isNotNull();
     assertThat(jsDocInfoPrinter.print(info)).isEqualTo(output);
   }
 }

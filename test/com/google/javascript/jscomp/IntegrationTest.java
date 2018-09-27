@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISPLACED_PROPERTY_JSDOC;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -1704,8 +1705,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "function getCss() {\n"
         + "  return 'bar';"
         + "}");
-    assertEquals(
-        ImmutableMap.of("foo", 1), lastCompiler.getCssNames());
+    assertThat(lastCompiler.getCssNames()).isEqualTo(ImmutableMap.of("foo", 1));
   }
 
   @Test
@@ -3011,11 +3011,11 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.MAPPED);
     test(options, code, "var f = function $() {}");
-    assertNotNull(lastCompiler.getResult().namedAnonFunctionMap);
+    assertThat(lastCompiler.getResult().namedAnonFunctionMap).isNotNull();
 
     options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED);
     test(options, code, "var f = function $f$() {}");
-    assertNull(lastCompiler.getResult().namedAnonFunctionMap);
+    assertThat(lastCompiler.getResult().namedAnonFunctionMap).isNull();
   }
 
   @Test
@@ -3033,13 +3033,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code,
         "var f = function longName() {}; var g = function $() {};"
         + "var i = function longerName(){};");
-    assertNotNull(lastCompiler.getResult().namedAnonFunctionMap);
+    assertThat(lastCompiler.getResult().namedAnonFunctionMap).isNotNull();
 
     options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED);
     test(options, code,
         "var f = function longName() {}; var g = function $g$() {};"
         + "var i = function longerName(){};");
-    assertNull(lastCompiler.getResult().namedAnonFunctionMap);
+    assertThat(lastCompiler.getResult().namedAnonFunctionMap).isNull();
   }
 
   @Test
@@ -4420,17 +4420,16 @@ public final class IntegrationTest extends IntegrationTestCase {
           @Override
           public void process(Node externs, Node root) {
             Node var = root.getLastChild().getFirstChild();
-            assertEquals(Token.VAR, var.getToken());
+            assertThat(var.getToken()).isEqualTo(Token.VAR);
             var.detach();
           }
         });
-
 
     try {
       test(options,
            "var x = 3; function f() { return x + z; }",
            "function f() { return x + z; }");
-      fail("Expected run-time exception");
+      assertWithMessage("Expected run-time exception").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasMessageThat().contains("Unexpected variable x");
     }
@@ -4576,7 +4575,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     String code = "var x = f; function f() { return 3; }";
     testSame(options, code);
-    assertFalse(options.moveFunctionDeclarations);
+    assertThat(options.moveFunctionDeclarations).isFalse();
     options.setRenamePrefixNamespace("_");
     test(options, code, "_.f = function() { return 3; }; _.x = _.f;");
   }
@@ -4906,8 +4905,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         "/** @constructor */\n" +
         "ns.C = function () {this.someProperty = 1}\n" +
         "alert(new ns.C().someProperty + new ns.C().someProperty);\n";
-    assertTrue(options.shouldInlineProperties());
-    assertTrue(options.shouldCollapseProperties());
+    assertThat(options.shouldInlineProperties()).isTrue();
+    assertThat(options.shouldCollapseProperties()).isTrue();
     // CollapseProperties used to prevent inlining this property.
     test(options, code, "alert(2);");
   }
@@ -4927,8 +4926,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         "  constructor: function () {this.someProperty = 1}\n" +
         "});\n" +
         "alert(new ns.C().someProperty + new ns.C().someProperty);\n";
-    assertTrue(options.shouldInlineProperties());
-    assertTrue(options.shouldCollapseProperties());
+    assertThat(options.shouldInlineProperties()).isTrue();
+    assertThat(options.shouldCollapseProperties()).isTrue();
     // CollapseProperties used to prevent inlining this property.
     test(options, code, "alert(2);");
   }
@@ -4947,8 +4946,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         "  constructor: function () {this.someProperty = 1}\n" +
         "});\n" +
         "alert(new C().someProperty + new C().someProperty);\n";
-    assertTrue(options.shouldInlineProperties());
-    assertTrue(options.shouldCollapseProperties());
+    assertThat(options.shouldInlineProperties()).isTrue();
+    assertThat(options.shouldCollapseProperties()).isTrue();
     // CollapseProperties used to prevent inlining this property.
     test(options, code, "alert(2);");
   }
@@ -4973,8 +4972,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         "});" +
         "var x = new C();\n" +
         "x.someMethod(x.someProperty);\n";
-    assertTrue(options.shouldInlineProperties());
-    assertTrue(options.shouldCollapseProperties());
+    assertThat(options.shouldInlineProperties()).isTrue();
+    assertThat(options.shouldCollapseProperties()).isTrue();
     // CollapseProperties used to prevent inlining this property.
     test(options, code, TypeValidator.TYPE_MISMATCH_WARNING);
   }
@@ -5299,10 +5298,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRemoveUnusedPrototypeProperties(false);
     try {
       test(options, "", "");
-      fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
+      assertWithMessage("Expected CompilerOptionsPreprocessor.InvalidOptionsException").fail();
     } catch (RuntimeException e) {
       if (!(e instanceof CompilerOptionsPreprocessor.InvalidOptionsException)) {
-        fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
+        assertWithMessage("Expected CompilerOptionsPreprocessor.InvalidOptionsException").fail();
       }
     }
   }
@@ -5314,10 +5313,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setMaxFunctionSizeAfterInlining(1);
     try {
       test(options, "", "");
-      fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
+      assertWithMessage("Expected CompilerOptionsPreprocessor.InvalidOptionsException").fail();
     } catch (RuntimeException e) {
       if (!(e instanceof CompilerOptionsPreprocessor.InvalidOptionsException)) {
-        fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
+        assertWithMessage("Expected CompilerOptionsPreprocessor.InvalidOptionsException").fail();
       }
     }
   }
@@ -5330,7 +5329,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = new CompilerOptions();
     Node out1 = parse(input1, options, false);
     Node out2 = parse(input2, options, false);
-    assertFalse(out1.isEquivalentTo(out2));
+    assertThat(out1.isEquivalentTo(out2)).isFalse();
   }
 
   @Test
@@ -5687,20 +5686,20 @@ public final class IntegrationTest extends IntegrationTestCase {
     }
 
     Compiler compiler = compile(options, sb.toString());
-    assertEquals(
-        "Expected no warnings or errors\n"
-            + "Errors: \n"
-            + Joiner.on("\n").join(compiler.getErrors())
-            + "\n"
-            + "Warnings: \n"
-            + Joiner.on("\n").join(compiler.getWarnings()),
-        0,
-        compiler.getErrors().length + compiler.getWarnings().length);
+    assertWithMessage(
+            "Expected no warnings or errors\n"
+                + "Errors: \n"
+                + Joiner.on("\n").join(compiler.getErrors())
+                + "\n"
+                + "Warnings: \n"
+                + Joiner.on("\n").join(compiler.getWarnings()))
+        .that(compiler.getErrors().length + compiler.getWarnings().length)
+        .isEqualTo(0);
 
     Node root = compiler.getRoot().getLastChild();
-    assertNotNull(root);
+    assertThat(root).isNotNull();
     Node script = root.getFirstChild();
-    assertNotNull(script);
+    assertThat(script).isNotNull();
     ImmutableSet<Character> restrictedChars =
         ImmutableSet.copyOf(Chars.asList(CompilerOptions.ANGULAR_PROPERTY_RESERVED_FIRST_CHARS));
     for (Node expr : script.children()) {
