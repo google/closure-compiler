@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -90,7 +91,7 @@ public final class StandardUnionFindTest extends TestCase {
 
     try {
       union.find("Z");
-      fail("find() on unknown element should not be allowed.");
+      assertWithMessage("find() on unknown element should not be allowed.").fail();
     } catch (IllegalArgumentException expected) {
     }
   }
@@ -126,7 +127,7 @@ public final class StandardUnionFindTest extends TestCase {
 
     try {
       union.findAll("Z");
-      fail("findAll() on unknown element should not be allowed.");
+      assertWithMessage("findAll() on unknown element should not be allowed.").fail();
     } catch (IllegalArgumentException expected) {
     }
   }
@@ -203,7 +204,7 @@ public final class StandardUnionFindTest extends TestCase {
     assertThat(copy.findAll("X")).containsExactly("X", "Y");
     try {
       union.findAll("D");
-      fail("D has been inserted to the original collection");
+      assertWithMessage("D has been inserted to the original collection").fail();
     } catch (IllegalArgumentException e) {
       // Expected.
     }
@@ -218,7 +219,7 @@ public final class StandardUnionFindTest extends TestCase {
     assertThat(union.areEquivalent("C", "B")).isFalse();
     try {
       union.areEquivalent("A", "F");
-      fail();
+      throw new AssertionError();
     } catch (IllegalArgumentException e) {
       // Expected.
     }

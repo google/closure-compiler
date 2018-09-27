@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -816,33 +817,34 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseTypeofType1() {
     Node node = parse("@type {typeof Foo}*/").getType().getRoot();
-    assertEquals(Token.TYPEOF, node.getToken());
-    assertEquals(1, node.getChildCount());
-    assertEquals(Token.STRING, node.getFirstChild().getToken());
+    assertThat(node.getToken()).isEqualTo(Token.TYPEOF);
+    assertThat(node.getChildCount()).isEqualTo(1);
+    assertThat(node.getFirstChild().getToken()).isEqualTo(Token.STRING);
     assertEquals("Foo", node.getFirstChild().getString());
   }
 
   @Test
   public void testParseTypeofType2() {
     Node node = parse("@type {(typeof Foo)}*/").getType().getRoot();
-    assertEquals(Token.TYPEOF, node.getToken());
-    assertEquals(1, node.getChildCount());
-    assertEquals(Token.STRING, node.getFirstChild().getToken());
+    assertThat(node.getToken()).isEqualTo(Token.TYPEOF);
+    assertThat(node.getChildCount()).isEqualTo(1);
+    assertThat(node.getFirstChild().getToken()).isEqualTo(Token.STRING);
     assertEquals("Foo", node.getFirstChild().getString());
   }
 
   @Test
   public void testParseTypeofType3() {
     Node node = parse("@type {typeof Foo|Bar<typeof Baz>}*/").getType().getRoot();
-    assertEquals(Token.PIPE, node.getToken());
-    assertEquals(Token.TYPEOF, node.getFirstChild().getToken());
-    assertEquals(Token.STRING, node.getFirstFirstChild().getToken());
+    assertThat(node.getToken()).isEqualTo(Token.PIPE);
+    assertThat(node.getFirstChild().getToken()).isEqualTo(Token.TYPEOF);
+    assertThat(node.getFirstFirstChild().getToken()).isEqualTo(Token.STRING);
     assertEquals("Foo", node.getFirstFirstChild().getString());
-    assertEquals(Token.STRING, node.getLastChild().getToken());
+    assertThat(node.getLastChild().getToken()).isEqualTo(Token.STRING);
     assertEquals("Bar", node.getLastChild().getString());
-    assertEquals(Token.BLOCK, node.getLastChild().getFirstChild().getToken());
-    assertEquals(Token.TYPEOF, node.getLastChild().getFirstFirstChild().getToken());
-    assertEquals(Token.STRING, node.getLastChild().getFirstFirstChild().getFirstChild().getToken());
+    assertThat(node.getLastChild().getFirstChild().getToken()).isEqualTo(Token.BLOCK);
+    assertThat(node.getLastChild().getFirstFirstChild().getToken()).isEqualTo(Token.TYPEOF);
+    assertThat(node.getLastChild().getFirstFirstChild().getFirstChild().getToken())
+        .isEqualTo(Token.STRING);
     assertEquals("Baz", node.getLastChild().getFirstFirstChild().getFirstChild().getString());
   }
 
@@ -1755,13 +1757,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseAbstract_abstractAndNotPrivate() {
     JSDocInfo info1 = parse("* @public \n * @abstract */");
-    assertTrue(info1.isAbstract());
+    assertThat(info1.isAbstract()).isTrue();
 
     JSDocInfo info2 = parse("* @protected \n * @abstract */");
-    assertTrue(info2.isAbstract());
+    assertThat(info2.isAbstract()).isTrue();
 
     JSDocInfo info3 = parse("* @package \n * @abstract */");
-    assertTrue(info3.isAbstract());
+    assertThat(info3.isAbstract()).isTrue();
   }
 
   @Test
@@ -2952,8 +2954,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Ignore
   public void testNoParseFileOverview() {
     JSDocInfo jsdoc = parseFileOverviewWithoutDoc("@fileoverview Hi mom! */");
-    assertNull(jsdoc.getFileOverview());
-    assertTrue(jsdoc.hasFileOverview());
+    assertThat(jsdoc.getFileOverview()).isNull();
+    assertThat(jsdoc.hasFileOverview()).isTrue();
   }
 
   @Test
@@ -5529,7 +5531,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
       }
     }
 
-    fail("No marker found");
+    assertWithMessage("No marker found").fail();
     return null;
   }
 

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.TypeDeclarationsIR.anyType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.arrayType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.booleanType;
@@ -312,7 +313,7 @@ public final class TypeSyntaxTest extends TestCase {
     Node ast = parse("var x: string | number[] | Array<Foo>;");
     TypeDeclarationNode union = (TypeDeclarationNode)
         (ast.getFirstFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
-    assertEquals(3, union.getChildCount());
+    assertThat(union.getChildCount()).isEqualTo(3);
   }
 
   @Test
@@ -862,7 +863,7 @@ public final class TypeSyntaxTest extends TestCase {
 
   private static void assertTreeEquals(String message, Node expected, Node actual) {
     String treeDiff = expected.checkTreeEquals(actual);
-    assertNull(message + ": " + treeDiff, treeDiff);
+    assertWithMessage(message + ": " + treeDiff).that(treeDiff).isNull();
   }
 
   private Node parse(String source, String expected, LanguageMode languageIn) {
@@ -881,8 +882,10 @@ public final class TypeSyntaxTest extends TestCase {
     Node script = compiler.parse(SourceFile.fromCode("[test]", source));
 
     // Verifying that all warnings were seen
-    assertTrue("Missing an error", testErrorManager.hasEncounteredAllErrors());
-    assertTrue("Missing a warning", testErrorManager.hasEncounteredAllWarnings());
+    assertWithMessage("Missing an error").that(testErrorManager.hasEncounteredAllErrors()).isTrue();
+    assertWithMessage("Missing a warning")
+        .that(testErrorManager.hasEncounteredAllWarnings())
+        .isTrue();
 
     if (script != null && testErrorManager.getErrorCount() == 0) {
       // if it can be parsed, it should round trip.

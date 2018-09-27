@@ -1573,7 +1573,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private static void assertNodeEquality(Node expected, Node found) {
     String message = expected.checkTreeEquals(found);
     if (message != null) {
-      fail(message);
+      assertWithMessage(message).fail();
     }
   }
 
@@ -4894,7 +4894,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     code += "\'end\';n";
     try {
       parse(code);
-      fail();
+      throw new AssertionError();
     } catch (RuntimeException e) {
       // expected exception
       assertThat(e).hasMessageThat().contains("Exception parsing");

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.graph.Graph.GraphEdge;
 import java.util.Collections;
@@ -358,7 +359,7 @@ public final class GraphTest extends TestCase {
 
     try {
       subGraph.addNode("d");
-      fail("SubGraph should not allow add for node that is not in graph.");
+      assertWithMessage("SubGraph should not allow add for node that is not in graph.").fail();
     } catch (IllegalArgumentException e) {
       // exception expected
     }
