@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.javascript.jscomp.NodeIterators.FunctionlessLocalScope;
 import com.google.javascript.jscomp.NodeIterators.LocalVarMotion;
 import com.google.javascript.rhino.Node;
@@ -190,7 +193,7 @@ public final class NodeIteratorsTest extends TestCase {
       }
     }
 
-    assertTrue("Variable X not found! " + root.toStringTree(), found);
+    assertWithMessage("Variable X not found! " + root.toStringTree()).that(found).isTrue();
 
     List<Node> currentAncestors = searchIt.currentAncestors();
     assert(currentAncestors.size() >= 3);
@@ -203,6 +206,6 @@ public final class NodeIteratorsTest extends TestCase {
       actualTokens.add(moveIt.next().getToken());
     }
 
-    assertEquals(expectedTokens, actualTokens);
+    assertThat(actualTokens).isEqualTo(expectedTokens);
   }
 }

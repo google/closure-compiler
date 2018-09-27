@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -153,25 +156,25 @@ public final class MustBeReachingVariableDefTest extends TestCase {
   @Test
   public void testFunctionParams1() {
     computeDefUse("if (param2) { D: param1 = 1; U: param1 }");
-    assertSame(def, defUse.getDefNode("param1", use));
+    assertThat(defUse.getDefNode("param1", use)).isSameAs(def);
   }
 
   @Test
   public void testFunctionParams2() {
     computeDefUse("if (param2) { D: param1 = 1} U: param1");
-    assertNotSame(def, defUse.getDefNode("param1", use));
+    assertThat(defUse.getDefNode("param1", use)).isNotSameAs(def);
   }
 
   @Test
   public void testArgumentsObjectModifications() {
     computeDefUse("D: param1 = 1; arguments[0] = 2; U: param1");
-    assertNotSame(def, defUse.getDefNode("param1", use));
+    assertThat(defUse.getDefNode("param1", use)).isNotSameAs(def);
   }
 
   @Test
   public void testArgumentsObjectEscaped() {
     computeDefUse("D: param1 = 1; var x = arguments; x[0] = 2; U: param1");
-    assertNotSame(def, defUse.getDefNode("param1", use));
+    assertThat(defUse.getDefNode("param1", use)).isNotSameAs(def);
   }
 
   @Test
@@ -215,7 +218,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
    */
   private void assertMatch(String src) {
     computeDefUse(src);
-    assertSame(def, defUse.getDefNode("x", use));
+    assertThat(defUse.getDefNode("x", use)).isSameAs(def);
   }
 
   /**
@@ -223,7 +226,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
    */
   private void assertNotMatch(String src) {
     computeDefUse(src);
-    assertNotSame(def, defUse.getDefNode("x", use));
+    assertThat(defUse.getDefNode("x", use)).isNotSameAs(def);
   }
 
   /**
@@ -242,7 +245,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     Node script = compiler.parseTestCode(src);
     Node root = script.getFirstChild();
     Node functionBlock = root.getLastChild();
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrorCount()).isEqualTo(0);
     Scope globalScope = scopeCreator.createScope(script, null);
     Scope functionScope = scopeCreator.createScope(root, globalScope);
     Scope funcBlockScope = scopeCreator.createScope(functionBlock, functionScope);
@@ -254,8 +257,8 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     def = null;
     use = null;
     NodeTraversal.traverse(compiler, root, new LabelFinder());
-    assertNotNull("Code should have an instruction labeled D", def);
-    assertNotNull("Code should have an instruction labeled U", use);
+    assertWithMessage("Code should have an instruction labeled D").that(def).isNotNull();
+    assertWithMessage("Code should have an instruction labeled U").that(use).isNotNull();
   }
 
   /**

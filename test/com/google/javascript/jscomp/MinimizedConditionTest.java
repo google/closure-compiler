@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -45,7 +46,9 @@ public final class MinimizedConditionTest extends TestCase {
     List<SourceFile> externs = new ArrayList<>();
     compiler.init(externs, input, new CompilerOptions());
     Node root = compiler.parseInputs();
-    assertNotNull("Unexpected parse error(s): " + Joiner.on("\n").join(compiler.getErrors()), root);
+    assertWithMessage("Unexpected parse error(s): " + Joiner.on("\n").join(compiler.getErrors()))
+        .that(root)
+        .isNotNull();
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     Node script = mainRoot.getFirstChild();
@@ -71,18 +74,30 @@ public final class MinimizedConditionTest extends TestCase {
     Node negativeResult =
         result2.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT).buildReplacement();
     if (!positiveResult.isEquivalentTo(positiveNode)) {
-      fail("Not equal:" +
-          "\nExpected: " + positive +
-          "\nBut was : " + (new Compiler()).toSource(positiveResult) +
-          "\nExpected tree:\n" + positiveNode.toStringTree() +
-          "\nActual tree:\n" + positiveResult.toStringTree());
+      assertWithMessage(
+              "Not equal:"
+                  + "\nExpected: "
+                  + positive
+                  + "\nBut was : "
+                  + new Compiler().toSource(positiveResult)
+                  + "\nExpected tree:\n"
+                  + positiveNode.toStringTree()
+                  + "\nActual tree:\n"
+                  + positiveResult.toStringTree())
+          .fail();
     }
     if (!negativeResult.isEquivalentTo(negativeNode)) {
-      fail("Not equal:" +
-          "\nExpected: " + negative +
-          "\nBut was : " + (new Compiler()).toSource(negativeResult) +
-          "\nExpected tree:\n" + negativeNode.toStringTree() +
-          "\nActual tree:\n" + negativeResult.toStringTree());
+      assertWithMessage(
+              "Not equal:"
+                  + "\nExpected: "
+                  + negative
+                  + "\nBut was : "
+                  + new Compiler().toSource(negativeResult)
+                  + "\nExpected tree:\n"
+                  + negativeNode.toStringTree()
+                  + "\nActual tree:\n"
+                  + negativeResult.toStringTree())
+          .fail();
     }
   }
 

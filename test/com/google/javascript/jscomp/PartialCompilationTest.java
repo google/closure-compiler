@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -84,7 +85,7 @@ public class PartialCompilationTest extends TestCase {
     List<JSError> errors = Arrays.asList(compiler.getErrors());
     for (JSError error : errors) {
       if (!DiagnosticGroups.MISSING_SOURCES_WARNINGS.matches(error)) {
-        fail("Unexpected error " + error);
+        assertWithMessage("Unexpected error " + error).fail();
       }
     }
   }

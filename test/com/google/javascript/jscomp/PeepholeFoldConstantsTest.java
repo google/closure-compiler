@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1713,10 +1715,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   private void assertNotSameResults(String exprA, String exprB) {
-    assertFalse(
-        "Expressions folded the same\nexprA: " +
-        exprA + "\nexprB: " + exprB,
-        process(exprA).equals(process(exprB)));
+    assertWithMessage("Expressions folded the same\nexprA: " + exprA + "\nexprB: " + exprB)
+        .that(process(exprA).equals(process(exprB)))
+        .isFalse();
   }
 
   private String process(String js) {
@@ -1731,8 +1732,13 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         ImmutableList.of(SourceFile.fromCode("testcode", js)),
         options);
     Node root = compiler.parseInputs();
-    assertNotNull("Unexpected parse error(s): " + Joiner.on("\n").join(compiler.getErrors())
-        + "\nEXPR: " + js, root);
+    assertWithMessage(
+            "Unexpected parse error(s): "
+                + Joiner.on("\n").join(compiler.getErrors())
+                + "\nEXPR: "
+                + js)
+        .that(root)
+        .isNotNull();
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     if (runProcessor) {

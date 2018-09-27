@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -145,18 +147,14 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
   @Test
   public void testContainsUnicodeEscape() {
-    assertFalse(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(""));
-    assertFalse(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo"));
-    assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
-        "\u2028"));
-    assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
-        "\\u2028"));
-    assertTrue(
-        PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo\\u2028"));
-    assertFalse(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
-        "foo\\\\u2028"));
-    assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
-        "foo\\\\u2028bar\\u2028"));
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("")).isFalse();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo")).isFalse();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("\u2028")).isTrue();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("\\u2028")).isTrue();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo\\u2028")).isTrue();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo\\\\u2028")).isFalse();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo\\\\u2028bar\\u2028"))
+        .isTrue();
   }
 
   @Test

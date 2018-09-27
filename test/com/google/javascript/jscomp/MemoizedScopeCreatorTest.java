@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
@@ -35,8 +37,8 @@ public final class MemoizedScopeCreatorTest extends TestCase {
     compiler.initOptions(new CompilerOptions());
     ScopeCreator creator = new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
     Scope scopeA = (Scope) creator.createScope(root1, null);
-    assertSame(scopeA, creator.createScope(root1, null));
-    assertNotSame(scopeA, creator.createScope(root2, null));
+    assertThat(creator.createScope(root1, null)).isSameAs(scopeA);
+    assertThat(creator.createScope(root2, null)).isNotSameAs(scopeA);
   }
 
   @Test
@@ -53,6 +55,6 @@ public final class MemoizedScopeCreatorTest extends TestCase {
     } catch (IllegalStateException e) {
       handled = true;
     }
-    assertTrue(handled);
+    assertThat(handled).isTrue();
   }
 }

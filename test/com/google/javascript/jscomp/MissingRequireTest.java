@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE;
 import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_STRICT_WARNING;
 import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING;
@@ -913,7 +914,7 @@ public final class MissingRequireTest extends CompilerTestCase {
 
     Result result = compiler.compile(ImmutableList.<SourceFile>of(), ImmutableList.of(input), opts);
     JSError[] warnings = result.warnings;
-    assertNotNull(warnings);
+    assertThat(warnings).isNotNull();
     assertThat(warnings).isNotEmpty();
 
     String expectation = "missing require: 'foo.bar.goo'";
@@ -924,7 +925,7 @@ public final class MissingRequireTest extends CompilerTestCase {
       }
     }
 
-    fail("Could not find the following warning:" + expectation);
+    assertWithMessage("Could not find the following warning:" + expectation).fail();
   }
 
   @Test

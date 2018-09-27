@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -49,10 +50,10 @@ public final class NodeTraversalTest extends TestCase {
       new PruningCallback(ImmutableSet.of(Token.SCRIPT, Token.VAR), true);
 
     Node script = new Node(Token.SCRIPT);
-    assertTrue(include.shouldTraverse(null, script, null));
-    assertTrue(include.shouldTraverse(null, new Node(Token.VAR), null));
-    assertFalse(include.shouldTraverse(null, new Node(Token.NAME), null));
-    assertFalse(include.shouldTraverse(null, new Node(Token.ADD), null));
+    assertThat(include.shouldTraverse(null, script, null)).isTrue();
+    assertThat(include.shouldTraverse(null, new Node(Token.VAR), null)).isTrue();
+    assertThat(include.shouldTraverse(null, new Node(Token.NAME), null)).isFalse();
+    assertThat(include.shouldTraverse(null, new Node(Token.ADD), null)).isFalse();
   }
 
   @Test
@@ -61,10 +62,10 @@ public final class NodeTraversalTest extends TestCase {
       new PruningCallback(ImmutableSet.of(Token.SCRIPT, Token.VAR), false);
 
     Node script = new Node(Token.SCRIPT);
-    assertFalse(include.shouldTraverse(null, script, null));
-    assertFalse(include.shouldTraverse(null, new Node(Token.VAR), null));
-    assertTrue(include.shouldTraverse(null, new Node(Token.NAME), null));
-    assertTrue(include.shouldTraverse(null, new Node(Token.ADD), null));
+    assertThat(include.shouldTraverse(null, script, null)).isFalse();
+    assertThat(include.shouldTraverse(null, new Node(Token.VAR), null)).isFalse();
+    assertThat(include.shouldTraverse(null, new Node(Token.NAME), null)).isTrue();
+    assertThat(include.shouldTraverse(null, new Node(Token.ADD), null)).isTrue();
   }
 
   /**
@@ -124,7 +125,7 @@ public final class NodeTraversalTest extends TestCase {
       String code = "function foo() {}";
       Node tree = parse(compiler, code);
       NodeTraversal.traversePostOrder(compiler, tree, cb);
-      fail("Expected RuntimeException");
+      assertWithMessage("Expected RuntimeException").fail();
     } catch (RuntimeException e) {
       assertThat(e)
           .hasMessageThat()
@@ -730,7 +731,7 @@ public final class NodeTraversalTest extends TestCase {
 
     try {
       NodeTraversal.traversePostOrder(compiler, tree, countingCallback);
-      fail("Expected a RuntimeException;");
+      assertWithMessage("Expected a RuntimeException;").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasCauseThat().hasCauseThat().isInstanceOf(InterruptedException.class);
     }
@@ -796,7 +797,7 @@ public final class NodeTraversalTest extends TestCase {
     }
 
     private void assertEntered() {
-      assertTrue(entered);
+      assertThat(entered).isTrue();
     }
 
     @Override
