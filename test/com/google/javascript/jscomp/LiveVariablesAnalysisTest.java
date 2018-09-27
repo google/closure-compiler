@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -417,34 +418,34 @@ public final class LiveVariablesAnalysisTest extends TestCase {
 
   private void assertLiveBeforeX(String src, String var) {
     FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
-    assertNotNull(src + " should contain a label 'X:'", state);
-    assertTrue(
-        "Variable" + var + " should be live before X",
-        state.getIn().isLive(liveness.getVarIndex(var)));
+    assertWithMessage(src + " should contain a label 'X:'").that(state).isNotNull();
+    assertWithMessage("Variable" + var + " should be live before X")
+        .that(state.getIn().isLive(liveness.getVarIndex(var)))
+        .isTrue();
   }
 
   private void assertLiveAfterX(String src, String var) {
     FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
-    assertNotNull("Label X should be in the input program.", state);
-    assertTrue(
-        "Variable" + var + " should be live after X",
-        state.getOut().isLive(liveness.getVarIndex(var)));
+    assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
+    assertWithMessage("Variable" + var + " should be live after X")
+        .that(state.getOut().isLive(liveness.getVarIndex(var)))
+        .isTrue();
   }
 
   private void assertNotLiveAfterX(String src, String var) {
     FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
-    assertNotNull("Label X should be in the input program.", state);
-    assertFalse(
-        "Variable" + var + " should not be live after X",
-        state.getOut().isLive(liveness.getVarIndex(var)));
+    assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
+    assertWithMessage("Variable" + var + " should not be live after X")
+        .that(state.getOut().isLive(liveness.getVarIndex(var)))
+        .isFalse();
   }
 
   private void assertNotLiveBeforeX(String src, String var) {
     FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
-    assertNotNull("Label X should be in the input program.", state);
-    assertFalse(
-        "Variable" + var + " should not be live before X",
-        state.getIn().isLive(liveness.getVarIndex(var)));
+    assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
+    assertWithMessage("Variable" + var + " should not be live before X")
+        .that(state.getIn().isLive(liveness.getVarIndex(var)))
+        .isFalse();
   }
 
   private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(String src) {
@@ -474,7 +475,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
         return;
       }
     }
-    fail("Variable " + name + " should be in the escaped local list.");
+    assertWithMessage("Variable " + name + " should be in the escaped local list.").fail();
   }
 
   private static void assertNotEscaped(String src, String name) {

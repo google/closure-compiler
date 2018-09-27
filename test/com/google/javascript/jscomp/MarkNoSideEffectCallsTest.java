@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -253,7 +255,7 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
   void testMarkCalls(
       String extraExterns, String source, List<String> expected) {
     testSame(externs(EXTERNS + extraExterns), srcs(source));
-    assertEquals(expected, noSideEffectCalls);
+    assertThat(noSideEffectCalls).isEqualTo(expected);
     noSideEffectCalls.clear();
   }
 

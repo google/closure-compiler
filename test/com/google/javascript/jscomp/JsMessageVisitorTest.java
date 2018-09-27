@@ -465,10 +465,12 @@ public final class JsMessageVisitorTest extends TestCase {
     JsMessage msg = messages.get(0);
     assertEquals("MSG_HUGE", msg.getKey());
     assertEquals("A message with lots of stuff.", msg.getDesc());
-    assertTrue(msg.isHidden());
-    assertEquals("{$startLink_1}Google{$endLink}{$startLink_2}blah{$endLink}" +
-        "{$boo}{$foo_001}{$boo}{$foo_002}{$xxx_001}{$image}" +
-        "{$image_001}{$xxx_002}", msg.toString());
+    assertThat(msg.isHidden()).isTrue();
+    assertEquals(
+        "{$startLink_1}Google{$endLink}{$startLink_2}blah{$endLink}"
+            + "{$boo}{$foo_001}{$boo}{$foo_002}{$xxx_001}{$image}"
+            + "{$image_001}{$xxx_002}",
+        msg.toString());
   }
 
   @Test
@@ -511,7 +513,7 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(compiler.getErrors()).hasLength(1);
     JSError error = compiler.getErrors()[0];
-    assertEquals(JsMessageVisitor.MESSAGE_HAS_NO_VALUE, error.getType());
+    assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_HAS_NO_VALUE);
   }
 
   @Test
@@ -580,7 +582,7 @@ public final class JsMessageVisitorTest extends TestCase {
     assertEquals("MSG_SILLY", msg.getKey());
     assertEquals("{$adjective} {$someNoun}", msg.toString());
     assertEquals("A message that demonstrates placeholders", msg.getDesc());
-    assertTrue(msg.isHidden());
+    assertThat(msg.isHidden()).isTrue();
   }
 
   @Test
@@ -601,7 +603,7 @@ public final class JsMessageVisitorTest extends TestCase {
     assertEquals("MSG_SILLY", msg.getKey());
     assertEquals("{$adjective} {$someNoun}", msg.toString());
     assertEquals("A message that demonstrates placeholders", msg.getDesc());
-    assertTrue(msg.isHidden());
+    assertThat(msg.isHidden()).isTrue();
   }
 
   @Test
@@ -610,7 +612,7 @@ public final class JsMessageVisitorTest extends TestCase {
         "/** @desc External */ var MSG_EXTERNAL = goog.getMsg('External');");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
-    assertFalse(messages.get(0).isExternal());
+    assertThat(messages.get(0).isExternal()).isFalse();
     assertEquals("MSG_EXTERNAL", messages.get(0).getKey());
   }
 
@@ -619,7 +621,7 @@ public final class JsMessageVisitorTest extends TestCase {
     extractMessagesSafely("var MSG_EXTERNAL_111 = goog.getMsg('Hello World');");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
-    assertTrue(messages.get(0).isExternal());
+    assertThat(messages.get(0).isExternal()).isTrue();
     assertEquals("111", messages.get(0).getId());
   }
 
@@ -628,7 +630,7 @@ public final class JsMessageVisitorTest extends TestCase {
     extractMessagesSafely("var MSG_EXTERNAL_111$$1 = goog.getMsg('Hello World');");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
-    assertTrue(messages.get(0).isExternal());
+    assertThat(messages.get(0).isExternal()).isTrue();
     assertEquals("111", messages.get(0).getId());
   }
 
@@ -636,21 +638,21 @@ public final class JsMessageVisitorTest extends TestCase {
   public void testIsValidMessageNameStrict() {
     JsMessageVisitor visitor = new DummyJsVisitor(CLOSURE);
 
-    assertTrue(visitor.isMessageName("MSG_HELLO", true));
-    assertTrue(visitor.isMessageName("MSG_", true));
-    assertTrue(visitor.isMessageName("MSG_HELP", true));
-    assertTrue(visitor.isMessageName("MSG_FOO_HELP", true));
+    assertThat(visitor.isMessageName("MSG_HELLO", true)).isTrue();
+    assertThat(visitor.isMessageName("MSG_", true)).isTrue();
+    assertThat(visitor.isMessageName("MSG_HELP", true)).isTrue();
+    assertThat(visitor.isMessageName("MSG_FOO_HELP", true)).isTrue();
 
-    assertFalse(visitor.isMessageName("_FOO_HELP", true));
-    assertFalse(visitor.isMessageName("MSGFOOP", true));
+    assertThat(visitor.isMessageName("_FOO_HELP", true)).isFalse();
+    assertThat(visitor.isMessageName("MSGFOOP", true)).isFalse();
   }
 
   @Test
   public void testIsValidMessageNameRelax() {
     JsMessageVisitor visitor = new DummyJsVisitor(RELAX);
 
-    assertFalse(visitor.isMessageName("MSG_HELP", false));
-    assertFalse(visitor.isMessageName("MSG_FOO_HELP", false));
+    assertThat(visitor.isMessageName("MSG_HELP", false)).isFalse();
+    assertThat(visitor.isMessageName("MSG_FOO_HELP", false)).isFalse();
   }
 
   @Test
@@ -660,13 +662,13 @@ public final class JsMessageVisitorTest extends TestCase {
   }
 
   private void theseAreLegacyMessageNames(JsMessageVisitor visitor) {
-    assertTrue(visitor.isMessageName("MSG_HELLO", false));
-    assertTrue(visitor.isMessageName("MSG_", false));
+    assertThat(visitor.isMessageName("MSG_HELLO", false)).isTrue();
+    assertThat(visitor.isMessageName("MSG_", false)).isTrue();
 
-    assertFalse(visitor.isMessageName("MSG_HELP", false));
-    assertFalse(visitor.isMessageName("MSG_FOO_HELP", false));
-    assertFalse(visitor.isMessageName("_FOO_HELP", false));
-    assertFalse(visitor.isMessageName("MSGFOOP", false));
+    assertThat(visitor.isMessageName("MSG_HELP", false)).isFalse();
+    assertThat(visitor.isMessageName("MSG_FOO_HELP", false)).isFalse();
+    assertThat(visitor.isMessageName("_FOO_HELP", false)).isFalse();
+    assertThat(visitor.isMessageName("MSGFOOP", false)).isFalse();
   }
 
   @Test
@@ -677,9 +679,10 @@ public final class JsMessageVisitorTest extends TestCase {
     JSError[] errors = compiler.getErrors();
     assertThat(errors).hasLength(1);
     JSError error = errors[0];
-    assertEquals(JsMessageVisitor.MESSAGE_TREE_MALFORMED, error.getType());
-    assertEquals("Message parse tree malformed. Unrecognized message "
-        + "placeholder referenced: foo", error.description);
+    assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+    assertEquals(
+        "Message parse tree malformed. Unrecognized message " + "placeholder referenced: foo",
+        error.description);
   }
 
   @Test
@@ -690,9 +693,9 @@ public final class JsMessageVisitorTest extends TestCase {
     JSError[] errors = compiler.getErrors();
     assertThat(errors).hasLength(1);
     JSError error = errors[0];
-    assertEquals(JsMessageVisitor.MESSAGE_TREE_MALFORMED, error.getType());
-    assertEquals("Message parse tree malformed. Unused message placeholder: "
-        + "foo", error.description);
+    assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+    assertEquals(
+        "Message parse tree malformed. Unused message placeholder: " + "foo", error.description);
   }
 
   @Test
@@ -704,9 +707,9 @@ public final class JsMessageVisitorTest extends TestCase {
     JSError[] errors = compiler.getErrors();
     assertThat(errors).hasLength(1);
     JSError error = errors[0];
-    assertEquals(JsMessageVisitor.MESSAGE_TREE_MALFORMED, error.getType());
-    assertEquals("Message parse tree malformed. Duplicate placeholder "
-        + "name: foo", error.description);
+    assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+    assertEquals(
+        "Message parse tree malformed. Duplicate placeholder " + "name: foo", error.description);
   }
 
   @Test
@@ -742,9 +745,10 @@ public final class JsMessageVisitorTest extends TestCase {
     JSError[] errors = compiler.getErrors();
     assertThat(errors).hasLength(1);
     JSError error = errors[0];
-    assertEquals(JsMessageVisitor.MESSAGE_TREE_MALFORMED, error.getType());
-    assertEquals("Message parse tree malformed. Placeholder name not in "
-        + "lowerCamelCase: slide_number", error.description);
+    assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+    assertEquals(
+        "Message parse tree malformed. Placeholder name not in " + "lowerCamelCase: slide_number",
+        error.description);
   }
 
   @Test
@@ -758,18 +762,18 @@ public final class JsMessageVisitorTest extends TestCase {
 
   @Test
   public void testIsLowerCamelCaseWithNumericSuffixes() {
-    assertTrue(isLowerCamelCaseWithNumericSuffixes("name"));
-    assertFalse(isLowerCamelCaseWithNumericSuffixes("NAME"));
-    assertFalse(isLowerCamelCaseWithNumericSuffixes("Name"));
+    assertThat(isLowerCamelCaseWithNumericSuffixes("name")).isTrue();
+    assertThat(isLowerCamelCaseWithNumericSuffixes("NAME")).isFalse();
+    assertThat(isLowerCamelCaseWithNumericSuffixes("Name")).isFalse();
 
-    assertTrue(isLowerCamelCaseWithNumericSuffixes("a4Letter"));
-    assertFalse(isLowerCamelCaseWithNumericSuffixes("A4_LETTER"));
+    assertThat(isLowerCamelCaseWithNumericSuffixes("a4Letter")).isTrue();
+    assertThat(isLowerCamelCaseWithNumericSuffixes("A4_LETTER")).isFalse();
 
-    assertTrue(isLowerCamelCaseWithNumericSuffixes("startSpan_1_23"));
-    assertFalse(isLowerCamelCaseWithNumericSuffixes("startSpan_1_23b"));
-    assertFalse(isLowerCamelCaseWithNumericSuffixes("START_SPAN_1_23"));
+    assertThat(isLowerCamelCaseWithNumericSuffixes("startSpan_1_23")).isTrue();
+    assertThat(isLowerCamelCaseWithNumericSuffixes("startSpan_1_23b")).isFalse();
+    assertThat(isLowerCamelCaseWithNumericSuffixes("START_SPAN_1_23")).isFalse();
 
-    assertFalse(isLowerCamelCaseWithNumericSuffixes(""));
+    assertThat(isLowerCamelCaseWithNumericSuffixes("")).isFalse();
   }
 
   @Test

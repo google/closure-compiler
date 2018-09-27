@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.Node;
@@ -70,22 +73,23 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
     assertTypeEquals(getNativeStringType(), childAB.getSlot("localB").getType());
     assertTypeEquals(getNativeBooleanType(), childB.getSlot("localB").getType());
-    assertNull(childB.getSlot("localA").getType());
+    assertThat(childB.getSlot("localA").getType()).isNull();
 
     FlowScope joined = join(childB, childAB);
     assertTypeEquals(
         createUnionType(getNativeStringType(), getNativeBooleanType()),
         joined.getSlot("localB").getType());
-    assertNull(joined.getSlot("localA").getType());
+    assertThat(joined.getSlot("localA").getType()).isNull();
 
     joined = join(childAB, childB);
     assertTypeEquals(
         createUnionType(getNativeStringType(), getNativeBooleanType()),
         joined.getSlot("localB").getType());
-    assertNull(joined.getSlot("localA").getType());
+    assertThat(joined.getSlot("localA").getType()).isNull();
 
-    assertEquals("Join should be symmetric",
-        join(childB, childAB), join(childAB, childB));
+    assertWithMessage("Join should be symmetric")
+        .that(join(childAB, childB))
+        .isEqualTo(join(childB, childAB));
   }
 
   @Test
@@ -95,7 +99,7 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
     assertTypeEquals(getNativeStringType(), childA.getSlot("localA").getType());
     assertTypeEquals(getNativeBooleanType(), childB.getSlot("globalB").getType());
-    assertNull(childB.getSlot("localB").getType());
+    assertThat(childB.getSlot("localB").getType()).isNull();
 
     FlowScope joined = join(childB, childA);
     assertTypeEquals(getNativeStringType(), joined.getSlot("localA").getType());
@@ -105,8 +109,9 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
     assertTypeEquals(getNativeStringType(), joined.getSlot("localA").getType());
     assertTypeEquals(getNativeBooleanType(), joined.getSlot("globalB").getType());
 
-    assertEquals("Join should be symmetric",
-        join(childB, childA), join(childA, childB));
+    assertWithMessage("Join should be symmetric")
+        .that(join(childA, childB))
+        .isEqualTo(join(childB, childA));
   }
 
   @Test
@@ -133,8 +138,9 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
         createUnionType(getNativeStringType(), getNativeBooleanType()),
         joined.getSlot("localD").getType());
 
-    assertEquals("Join should be symmetric",
-        join(childB, childA), join(childA, childB));
+    assertWithMessage("Join should be symmetric")
+        .that(join(childA, childB))
+        .isEqualTo(join(childB, childA));
   }
 
   /** Create a long chain of flow scopes. */
@@ -210,17 +216,13 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
   }
 
   private void assertScopesDiffer(FlowScope a, FlowScope b) {
-    assertFalse(a.equals(b));
-    assertFalse(b.equals(a));
-    assertEquals(a, a);
-    assertEquals(b, b);
+    assertThat(a).isNotEqualTo(b);
+    assertThat(b).isNotEqualTo(a);
   }
 
   private void assertScopesSame(FlowScope a, FlowScope b) {
-    assertEquals(a, b);
-    assertEquals(b, a);
-    assertEquals(a, a);
-    assertEquals(b, b);
+    assertThat(b).isEqualTo(a);
+    assertThat(a).isEqualTo(b);
   }
 
   @SuppressWarnings("unchecked")

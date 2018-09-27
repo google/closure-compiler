@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,14 +29,13 @@ public final class JsMessageTest extends TestCase {
 
   @Test
   public void testIsEmpty() {
-    assertTrue(new JsMessage.Builder().build().isEmpty());
-    assertTrue(new JsMessage.Builder().appendStringPart("").build().isEmpty());
-    assertTrue(new JsMessage.Builder().appendStringPart("")
-        .appendStringPart("").build().isEmpty());
-    assertFalse(new JsMessage.Builder().appendStringPart("s")
-        .appendStringPart("").build().isEmpty());
-    assertFalse(new JsMessage.Builder().appendPlaceholderReference("3")
-        .build().isEmpty());
+    assertThat(new JsMessage.Builder().build().isEmpty()).isTrue();
+    assertThat(new JsMessage.Builder().appendStringPart("").build().isEmpty()).isTrue();
+    assertThat(new JsMessage.Builder().appendStringPart("").appendStringPart("").build().isEmpty())
+        .isTrue();
+    assertThat(new JsMessage.Builder().appendStringPart("s").appendStringPart("").build().isEmpty())
+        .isFalse();
+    assertThat(new JsMessage.Builder().appendPlaceholderReference("3").build().isEmpty()).isFalse();
   }
 
   @Test
@@ -43,7 +44,7 @@ public final class JsMessageTest extends TestCase {
         .appendStringPart("foo").build().getId();
     String id2 = new JsMessage.Builder()
         .appendStringPart("foo").setMeaning("bar").build().getId();
-    assertFalse(id1.equals(id2));
+    assertThat(id1.equals(id2)).isFalse();
   }
 
   @Test
@@ -53,7 +54,7 @@ public final class JsMessageTest extends TestCase {
     final long   ANSWER_STRING_64 = 0x43ec5d9731515874L;
     final long   ANSWER_EMPTY_64 = 0x468d9ea2c42361aaL;
 
-    assertEquals(ANSWER_STRING_64, JsMessage.Hash.hash64(VAL));
-    assertEquals(ANSWER_EMPTY_64, JsMessage.Hash.hash64(EMPTY));
+    assertThat(JsMessage.Hash.hash64(VAL)).isEqualTo(ANSWER_STRING_64);
+    assertThat(JsMessage.Hash.hash64(EMPTY)).isEqualTo(ANSWER_EMPTY_64);
   }
 }

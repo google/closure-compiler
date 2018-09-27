@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import java.io.IOException;
@@ -52,7 +53,7 @@ public final class JsMessageExtractorTest extends TestCase {
       return new JsMessageExtractor(null, mode)
           .extractMessages(SourceFile.fromCode("testcode", sourceCode));
     } catch (IOException e) {
-      fail(e.getMessage());
+      assertWithMessage(e.getMessage()).fail();
       return null;
     }
   }
@@ -67,7 +68,7 @@ public final class JsMessageExtractorTest extends TestCase {
   public void testSyntaxError1() {
     try {
       extractMessage("if (true) {}}");
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
       assertThat(e).hasMessageThat().contains("testcode:1: ERROR - Parse error");
@@ -79,7 +80,7 @@ public final class JsMessageExtractorTest extends TestCase {
   public void testSyntaxError2() {
     try {
       extractMessage("", "if (true) {}}");
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
       assertThat(e).hasMessageThat().contains("testcode:2: ERROR - Parse error");
@@ -233,16 +234,16 @@ public final class JsMessageExtractorTest extends TestCase {
             "var MSG_UNNAMED_1 = goog.getMsg('foo');",
             "/** @meaning bar */ var MSG_UNNAMED_2 = goog.getMsg('foo');"));
     assertThat(msgs).hasSize(2);
-    assertFalse(msgs.get(0).getId().equals(msgs.get(1).getId()));
+    assertThat(msgs.get(0).getId().equals(msgs.get(1).getId())).isFalse();
   }
 
   private void assertEquals(JsMessage expected, JsMessage actual) {
     assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.getKey(), actual.getKey());
-    assertEquals(expected.parts(), actual.parts());
-    assertEquals(expected.placeholders(), actual.placeholders());
+    assertThat(actual.parts()).isEqualTo(expected.parts());
+    assertThat(actual.placeholders()).isEqualTo(expected.placeholders());
     assertEquals(expected.getDesc(), actual.getDesc());
-    assertEquals(expected.isHidden(), actual.isHidden());
+    assertThat(actual.isHidden()).isEqualTo(expected.isHidden());
     assertEquals(expected.getMeaning(), actual.getMeaning());
   }
 }

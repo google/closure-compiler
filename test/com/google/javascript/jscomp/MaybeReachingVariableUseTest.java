@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -164,7 +165,7 @@ public final class MaybeReachingVariableUseTest extends TestCase {
     computeUseDef(src);
     Collection<Node> result = useDef.getUses("x", def);
     assertThat(result).hasSize(uses.size());
-    assertTrue(result.containsAll(uses));
+    assertThat(result.containsAll(uses)).isTrue();
   }
 
   /**
@@ -186,7 +187,7 @@ public final class MaybeReachingVariableUseTest extends TestCase {
     Node script = compiler.parseTestCode(src);
     Node root = script.getFirstChild();
     Node functionBlock = root.getLastChild();
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrorCount()).isEqualTo(0);
     Scope globalScope = scopeCreator.createScope(script, null);
     Scope functionScope = scopeCreator.createScope(root, globalScope);
     Scope funcBlockScope = scopeCreator.createScope(functionBlock, functionScope);
@@ -198,9 +199,10 @@ public final class MaybeReachingVariableUseTest extends TestCase {
     def = null;
     uses = new ArrayList<>();
     new NodeTraversal(compiler, new LabelFinder(), scopeCreator).traverse(root);
-    assertNotNull("Code should have an instruction labeled D", def);
-    assertFalse("Code should have an instruction labeled starting withing U",
-        uses.isEmpty());
+    assertWithMessage("Code should have an instruction labeled D").that(def).isNotNull();
+    assertWithMessage("Code should have an instruction labeled starting withing U")
+        .that(uses.isEmpty())
+        .isFalse();
   }
 
   /**

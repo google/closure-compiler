@@ -69,7 +69,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     // is lifted and we can depend on a newer Truth, these assertions should be
     // changed to assertThat(info.getLoadFlags()).containsExactly(...)
     assertThat(info.getLoadFlags()).containsExactly("foo", "bar");
-    assertFalse(info.isModule());
+    assertThat(info.isModule()).isFalse();
   }
 
   @Test
@@ -84,7 +84,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     assertThat(info.getLoadFlags()).containsExactly("module", "goog", "lang", "es5");
-    assertTrue(info.isModule());
+    assertThat(info.isModule()).isTrue();
   }
 
   @Test
@@ -99,7 +99,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     assertThat(info.getLoadFlags()).containsExactly("foo", "bar", "lang", "es6");
-    assertFalse(info.isModule());
+    assertThat(info.isModule()).isFalse();
   }
 
   @Test
@@ -114,7 +114,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     assertThat(info.getLoadFlags()).containsExactly("foo", "bar", "lang", "es6");
-    assertFalse(info.isModule());
+    assertThat(info.isModule()).isFalse();
   }
 
   @Test

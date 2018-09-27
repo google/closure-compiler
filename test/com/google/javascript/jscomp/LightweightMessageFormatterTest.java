@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFormatter;
 import com.google.javascript.rhino.Node;
@@ -36,7 +38,7 @@ public final class LightweightMessageFormatterTest extends TestCase {
 
   @Test
   public void testNull() {
-    assertNull(format(null));
+    assertThat(format(null)).isNull();
   }
 
   @Test
@@ -68,7 +70,7 @@ public final class LightweightMessageFormatterTest extends TestCase {
 
   @Test
   public void testOnlyOneEmptyLine() {
-    assertNull(format(region(7, 7, "")));
+    assertThat(format(region(7, 7, ""))).isNull();
   }
 
   @Test
