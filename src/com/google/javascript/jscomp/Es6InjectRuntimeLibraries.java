@@ -65,6 +65,14 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
     }
 
+    if (used.contains(Feature.ARRAY_DESTRUCTURING)) {
+      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
+    }
+
+    if (used.contains(Feature.ARRAY_PATTERN_REST)) {
+      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayFromIterator");
+    }
+
     if (used.contains(Feature.SPREAD_EXPRESSIONS)) {
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayfromiterable");
     }
