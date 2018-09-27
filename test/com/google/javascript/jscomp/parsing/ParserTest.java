@@ -1991,9 +1991,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testArrayDestructuringVar() {
     mode = LanguageMode.ECMASCRIPT5;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING);
-    parseWarning("var [x,y] = foo();",
-        getRequiresEs6Message(Feature.DESTRUCTURING));
+    expectFeatures(Feature.ARRAY_DESTRUCTURING);
+    parseWarning("var [x,y] = foo();", getRequiresEs6Message(Feature.ARRAY_DESTRUCTURING));
 
     mode = LanguageMode.ECMASCRIPT6;
     parse("var [x,y] = foo();");
@@ -2010,9 +2009,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testArrayDestructuringAssign() {
     mode = LanguageMode.ECMASCRIPT5;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING);
-    parseWarning("[x,y] = foo();",
-        getRequiresEs6Message(Feature.DESTRUCTURING));
+    expectFeatures(Feature.ARRAY_DESTRUCTURING);
+    parseWarning("[x,y] = foo();", getRequiresEs6Message(Feature.ARRAY_DESTRUCTURING));
 
     mode = LanguageMode.ECMASCRIPT6;
     parse("[x,y] = foo();");
@@ -2024,7 +2022,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testArrayDestructuringInitializer() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.ARRAY_DESTRUCTURING);
     parse("var [x=1,y] = foo();");
     parse("[x=1,y] = foo();");
     parse("var [x,y=2] = foo();");
@@ -2048,7 +2046,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
 
-    expectFeatures(Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
+    expectFeatures(Feature.ARRAY_DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
     parse("var [first, ...rest] = foo();");
     parse("let [first, ...rest] = foo();");
     parse("const [first, ...rest] = foo();");
@@ -2066,7 +2064,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning(
         "var [first, ...rest] = foo();",
-        getRequiresEs6Message(Feature.DESTRUCTURING),
+        getRequiresEs6Message(Feature.ARRAY_DESTRUCTURING),
         getRequiresEs6Message(Feature.ARRAY_PATTERN_REST));
   }
 
@@ -2075,7 +2073,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ES_NEXT;
     strictMode = SLOPPY;
 
-    expectFeatures(Feature.DESTRUCTURING, Feature.OBJECT_PATTERN_REST);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING, Feature.OBJECT_PATTERN_REST);
     parse("var {first, ...rest} = foo();");
     parse("let {first, ...rest} = foo();");
     parse("const {first, ...rest} = foo();");
@@ -2130,7 +2128,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testArrayDestructuringAssignRest() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
+    expectFeatures(Feature.ARRAY_DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
     parse("[first, ...rest] = foo();");
     // nested destructuring in regular parameters and rest parameters
     parse("[first, {a, b}, ...[re, st, ...{length}]] = foo();");
@@ -2138,8 +2136,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("[x, ...y[15]] = foo();");
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("var [first, ...rest] = foo();",
-        getRequiresEs6Message(Feature.DESTRUCTURING),
+    parseWarning(
+        "var [first, ...rest] = foo();",
+        getRequiresEs6Message(Feature.ARRAY_DESTRUCTURING),
         getRequiresEs6Message(Feature.ARRAY_PATTERN_REST));
   }
 
@@ -2147,7 +2146,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testObjectDestructuringAssignRest() {
     mode = LanguageMode.ES_NEXT;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING, Feature.OBJECT_PATTERN_REST);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING, Feature.OBJECT_PATTERN_REST);
     parse("const {first, ...rest} = foo();");
 
     mode = LanguageMode.ECMASCRIPT6;
@@ -2171,7 +2170,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testArrayDestructuringFnDeclaration() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.ARRAY_DESTRUCTURING);
     parse("function f([x, y]) { use(x); use(y); }");
     parse("function f([x, [y, z]]) {}");
     parse("function f([x, {y, foo: z}]) {}");
@@ -2197,7 +2196,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testObjectDestructuringVar() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING);
     parse("var {x, y} = foo();");
     parse("var {x: x, y: y} = foo();");
     parse("var {x: {y, z}} = foo();");
@@ -2219,7 +2218,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testObjectDestructuringVarWithInitializer() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING, Feature.DEFAULT_PARAMETERS);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING, Feature.DEFAULT_PARAMETERS);
     parse("var {x = 1} = foo();");
     parse("var {x: {y = 1}} = foo();");
     parse("var {x: y = 1} = foo();");
@@ -2232,7 +2231,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
     parseError("({x, y}) = foo();", "invalid assignment target");
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING);
     parse("({x, y} = foo());");
     parse("({x: x, y: y} = foo());");
     parse("({x: {y, z}} = foo());");
@@ -2247,7 +2246,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
     parseError("({x = 1}) = foo();", "invalid assignment target");
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING);
     parse("({x = 1} = foo());");
     parse("({x: {y = 1}} = foo());");
     parse("({x: y = 1} = foo());");
@@ -2267,7 +2266,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testObjectDestructuringFnDeclaration() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING);
     parse("function f({x, y}) { use(x); use(y); }");
     parse("function f({w, x: {y, z}}) {}");
     parse("function f({x, y} = {x:1, y:2}) {}");
@@ -2297,7 +2296,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     parseError("var {[x]} = z;", "':' expected");
 
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING);
     parse("var {[x]: y} = z;");
     parse("var { [foo()] : [x,y,z] = bar() } = baz();");
   }
@@ -2312,7 +2311,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var { 'hello' = 'world' } = foo();", "':' expected");
     parseError("var { 2 = 5 } = foo();", "':' expected");
 
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING);
     parse("var {'s': x} = foo();");
     parse("var {3: x} = foo();");
   }
@@ -2334,7 +2333,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testObjectDestructuringKeywordKeys() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING);
     parse("var {if: x, else: y} = foo();");
     parse("var {while: x=1, for: y} = foo();");
     parse("var {type} = foo();");
@@ -2361,7 +2360,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "var {foo: bar[x]} = baz();",
         "Only an identifier or destructuring pattern is allowed here.");
 
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING);
     parse("({foo: bar.x} = baz());");
     parse("for ({foo: bar.x} in baz());");
 
@@ -2373,11 +2372,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testObjectDestructuringExtraParens() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING);
     parse("({x: y} = z);");
     parse("({x: (y)} = z);");
     parse("({x: ((y))} = z);");
 
+    expectFeatures(Feature.ARRAY_DESTRUCTURING);
     parse("([x] = y);");
     parse("[(x), y] = z;");
     parse("[x, (y)] = z;");
@@ -2400,7 +2400,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testMixedDestructuring() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING);
     parse("var {x: [y, z]} = foo();");
     parse("var [x, {y, z}] = foo();");
 
@@ -2415,7 +2415,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testMixedDestructuringWithInitializer() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING);
     parse("var {x: [y, z] = [1, 2]} = foo();");
     parse("var [x, {y, z} = {y: 3, z: 4}] = foo();");
 
@@ -4001,7 +4001,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError(
         "function f(...[a[0]]) {}", "Only an identifier or destructuring pattern is allowed here.");
 
-    expectFeatures(Feature.REST_PARAMETERS, Feature.DESTRUCTURING);
+    expectFeatures(Feature.REST_PARAMETERS, Feature.ARRAY_DESTRUCTURING);
     parse("(...[x]) => xs");
     parse("(...[x, y]) => xs");
     parse("(a, b, c, ...[x, y, z]) => x");
@@ -4471,28 +4471,28 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
 
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING);
     parse("for ({a} in b) c;");
     parse("for (var {a} in b) c;");
-    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING, Feature.LET_DECLARATIONS);
     parse("for (let {a} in b) c;");
-    expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parse("for (const {a} in b) c;");
 
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING);
     parse("for ({a: b} in c) d;");
     parse("for (var {a: b} in c) d;");
-    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING, Feature.LET_DECLARATIONS);
     parse("for (let {a: b} in c) d;");
-    expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
+    expectFeatures(Feature.OBJECT_DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parse("for (const {a: b} in c) d;");
 
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.ARRAY_DESTRUCTURING);
     parse("for ([a] in b) c;");
     parse("for (var [a] in b) c;");
-    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
+    expectFeatures(Feature.ARRAY_DESTRUCTURING, Feature.LET_DECLARATIONS);
     parse("for (let [a] in b) c;");
-    expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
+    expectFeatures(Feature.ARRAY_DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parse("for (const [a] in b) c;");
   }
 
@@ -4654,30 +4654,38 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testForOfPatterns() {
-    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING);
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
 
+    expectFeatures(Feature.FOR_OF, Feature.OBJECT_DESTRUCTURING);
     parse("for({x} of b) c;");
     parse("for({x: y} of b) c;");
+
+    expectFeatures(Feature.FOR_OF, Feature.ARRAY_DESTRUCTURING);
     parse("for([x, y] of b) c;");
     parse("for([x, ...y] of b) c;");
 
-    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
+    expectFeatures(Feature.FOR_OF, Feature.OBJECT_DESTRUCTURING, Feature.LET_DECLARATIONS);
     parse("for(let {x} of b) c;");
     parse("for(let {x: y} of b) c;");
+
+    expectFeatures(Feature.FOR_OF, Feature.ARRAY_DESTRUCTURING, Feature.LET_DECLARATIONS);
     parse("for(let [x, y] of b) c;");
     parse("for(let [x, ...y] of b) c;");
 
-    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
+    expectFeatures(Feature.FOR_OF, Feature.OBJECT_DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parse("for(const {x} of b) c;");
     parse("for(const {x: y} of b) c;");
+
+    expectFeatures(Feature.FOR_OF, Feature.ARRAY_DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parse("for(const [x, y] of b) c;");
     parse("for(const [x, ...y] of b) c;");
 
-    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING);
+    expectFeatures(Feature.FOR_OF, Feature.OBJECT_DESTRUCTURING);
     parse("for(var {x} of b) c;");
     parse("for(var {x: y} of b) c;");
+
+    expectFeatures(Feature.FOR_OF, Feature.ARRAY_DESTRUCTURING);
     parse("for(var [x, y] of b) c;");
     parse("for(var [x, ...y] of b) c;");
   }

@@ -1129,7 +1129,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateArrayPattern(Token type, Node n) {
-    validateFeature(Feature.DESTRUCTURING, n);
+    validateFeature(Feature.ARRAY_DESTRUCTURING, n);
     validateNodeType(Token.ARRAY_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
@@ -1149,7 +1149,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateObjectPattern(Token type, Node n) {
-    validateFeature(Feature.DESTRUCTURING, n);
+    validateFeature(Feature.OBJECT_DESTRUCTURING, n);
     validateNodeType(Token.OBJECT_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {

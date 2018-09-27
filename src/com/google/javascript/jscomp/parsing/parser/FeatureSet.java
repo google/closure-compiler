@@ -81,7 +81,8 @@ public final class FeatureSet implements Serializable {
           .without(Feature.CLASS_EXTENDS)
           .without(Feature.CLASS_GETTER_SETTER)
           .without(Feature.DEFAULT_PARAMETERS)
-          .without(Feature.DESTRUCTURING)
+          .without(Feature.ARRAY_DESTRUCTURING)
+          .without(Feature.OBJECT_DESTRUCTURING)
           .without(Feature.MODULES)
           .without(Feature.NEW_TARGET);
 
@@ -127,7 +128,8 @@ public final class FeatureSet implements Serializable {
     COMPUTED_PROPERTIES("computed property", LangVersion.ES6),
     CONST_DECLARATIONS("const declaration", LangVersion.ES6),
     DEFAULT_PARAMETERS("default parameter", LangVersion.ES6),
-    DESTRUCTURING("destructuring", LangVersion.ES6),
+    ARRAY_DESTRUCTURING("array destructuring", LangVersion.ES6),
+    OBJECT_DESTRUCTURING("object destructuring", LangVersion.ES6),
     EXTENDED_OBJECT_LITERALS("extended object literal", LangVersion.ES6),
     FOR_OF("for-of loop", LangVersion.ES6),
     GENERATORS("generator", LangVersion.ES6),

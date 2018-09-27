@@ -492,13 +492,19 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFeatureValidation_destructuring() {
-    testFeatureValidation("var x, {a, b} = obj;", Feature.DESTRUCTURING);
-    testFeatureValidation("var x, [a, b] = arr;", Feature.DESTRUCTURING);
-    testFeatureValidation("(x = 0, {a, b} = obj);", Feature.DESTRUCTURING);
-    testFeatureValidation("x = 0, [a, b] = obj;", Feature.DESTRUCTURING);
-    testFeatureValidation("for ({a, b} of c) {}", Feature.DESTRUCTURING);
-    testFeatureValidation("for ([a, b] of c) {}", Feature.DESTRUCTURING);
+  public void testFeatureValidation_arrayDestructuring() {
+    testFeatureValidation("var x, [a, b] = arr;", Feature.ARRAY_DESTRUCTURING);
+    testFeatureValidation("x = 0, [a, b] = obj;", Feature.ARRAY_DESTRUCTURING);
+    testFeatureValidation("for ([a, b] of c) {}", Feature.ARRAY_DESTRUCTURING);
+    testFeatureValidation("function f([a, b]) {}", Feature.ARRAY_DESTRUCTURING);
+  }
+
+  @Test
+  public void testFeatureValidation_objectDestructuring() {
+    testFeatureValidation("var x, {a, b} = obj;", Feature.OBJECT_DESTRUCTURING);
+    testFeatureValidation("(x = 0, {a, b} = obj);", Feature.OBJECT_DESTRUCTURING);
+    testFeatureValidation("for ({a, b} of c) {}", Feature.OBJECT_DESTRUCTURING);
+    testFeatureValidation("function f({a, b}) {}", Feature.OBJECT_DESTRUCTURING);
   }
 
   @Test

@@ -1026,7 +1026,7 @@ class IRFactory {
     }
 
     Node processArrayPattern(ArrayPatternTree tree) {
-      maybeWarnForFeature(tree, Feature.DESTRUCTURING);
+      maybeWarnForFeature(tree, Feature.ARRAY_DESTRUCTURING);
 
       Node node = newNode(Token.ARRAY_PATTERN);
       for (ParseTree child : tree.elements) {
@@ -1043,7 +1043,7 @@ class IRFactory {
     }
 
     Node processObjectPattern(ObjectPatternTree tree) {
-      maybeWarnForFeature(tree, Feature.DESTRUCTURING);
+      maybeWarnForFeature(tree, Feature.OBJECT_DESTRUCTURING);
 
       Node node = newNode(Token.OBJECT_PATTERN);
       for (ParseTree child : tree.fields) {
@@ -1527,8 +1527,10 @@ class IRFactory {
       maybeWarnForFeature(tree, Feature.REST_PARAMETERS);
 
       Node assignmentTarget = transformNodeWithInlineJsDoc(tree.assignmentTarget);
-      if (assignmentTarget.isDestructuringPattern()) {
-        maybeWarnForFeature(tree.assignmentTarget, Feature.DESTRUCTURING);
+      if (assignmentTarget.isObjectPattern()) {
+        maybeWarnForFeature(tree.assignmentTarget, Feature.OBJECT_DESTRUCTURING);
+      } else if (assignmentTarget.isArrayPattern()) {
+        maybeWarnForFeature(tree.assignmentTarget, Feature.ARRAY_DESTRUCTURING);
       }
       return newNode(Token.REST, assignmentTarget);
     }

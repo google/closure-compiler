@@ -83,7 +83,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       case REWRITE_ALL_OBJECT_PATTERNS:
         this.featuresToTriggerRunningPass =
             FeatureSet.BARE_MINIMUM.with(
-                Feature.DEFAULT_PARAMETERS, Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
+                Feature.DEFAULT_PARAMETERS,
+                Feature.ARRAY_DESTRUCTURING,
+                Feature.ARRAY_PATTERN_REST,
+                Feature.OBJECT_DESTRUCTURING);
 
         // If OBJECT_PATTERN_REST were to be present in featuresToTriggerRunningPass and not the
         // input language featureSet (such as ES6=>ES5) the pass would be skipped.
