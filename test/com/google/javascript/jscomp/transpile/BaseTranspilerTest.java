@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.transpile;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static org.mockito.Answers.RETURNS_SMART_NULLS;
 import static org.mockito.Mockito.when;
 
@@ -107,8 +108,9 @@ public final class BaseTranspilerTest extends TestCase {
   public void testCompilerSupplier_error() {
     try {
       compiler.compile(SOURCE_JS, "cons x = () => 42;");
-      fail("Expected an exception.");
-    } catch (TranspilationException expected) {}
+      assertWithMessage("Expected an exception.").fail();
+    } catch (TranspilationException expected) {
+    }
   }
 
   @Test

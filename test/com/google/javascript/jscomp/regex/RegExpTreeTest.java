@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp.regex;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.truth.ThrowableSubject;
 import junit.framework.TestCase;
@@ -36,7 +37,8 @@ public class RegExpTreeTest extends TestCase {
   private RuntimeException exceptionFrom(String regex, String flags) {
     try {
       String printed = parseRegExpAndPrintPattern(regex, flags);
-      fail("Expected exception, but none was thrown. Instead got back: " + printed);
+      assertWithMessage("Expected exception, but none was thrown. Instead got back: " + printed)
+          .fail();
       throw new AssertionError(); // unreachable
     } catch (RuntimeException thrownException) {
       return thrownException;

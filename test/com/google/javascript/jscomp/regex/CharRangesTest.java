@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp.regex;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.testing.EqualsTester;
 import java.util.BitSet;
 import java.util.Random;
@@ -51,7 +54,7 @@ public final class CharRangesTest extends TestCase {
       // Check all bits including past the min/max bit
       for (int i = 0; i < 0x5000; ++i) {
         if (bs.get(i) != sbs.contains(i)) {
-          fail("sbs=" + sbs + ", bs=" + bs + ", difference at bit " + i);
+          assertWithMessage("sbs=" + sbs + ", bs=" + bs + ", difference at bit " + i).fail();
         }
       }
     }
@@ -61,7 +64,7 @@ public final class CharRangesTest extends TestCase {
   public void testEmptyCharRanges() {
     CharRanges sbs = CharRanges.EMPTY;
     for (int i = -1000; i < 1000; ++i) {
-      assertFalse(sbs.contains(i));
+      assertThat(sbs.contains(i)).isFalse();
     }
     assertEquals("[]", sbs.toString());
   }
@@ -74,42 +77,41 @@ public final class CharRangesTest extends TestCase {
 
     CharRanges esbs = CharRanges.withMembers();
 
-    assertEquals(isbs, isbs);
-    assertEquals(isbs, isbs2);
-    assertFalse(isbs.equals(esbs));
-    assertFalse(isbs.equals(null));
-    assertFalse(isbs.equals(new Object()));
+    assertThat(isbs2).isEqualTo(isbs);
+    assertThat(isbs).isNotEqualTo(esbs);
+    assertThat(isbs).isNotEqualTo(null);
+    assertThat(isbs).isNotEqualTo(new Object());
 
-    assertEquals(isbs.hashCode(), isbs2.hashCode());
-    assertFalse(isbs.hashCode() == esbs.hashCode());
+    assertThat(isbs2.hashCode()).isEqualTo(isbs.hashCode());
+    assertThat(isbs.hashCode()).isNotEqualTo(esbs.hashCode());
   }
 
   @Test
   public void testRangeConstructor() {
     try {
       CharRanges.withRanges(1);
-      fail("Mismatched ranges");
+      assertWithMessage("Mismatched ranges").fail();
     } catch (IllegalArgumentException ex) {
       // pass
     }
 
     try {
       CharRanges.withRanges(1, 4, 4, 5);
-      fail("Discontiguous ranges");
+      assertWithMessage("Discontiguous ranges").fail();
     } catch (IllegalArgumentException ex) {
       // pass
     }
 
     try {
       CharRanges.withRanges(4, 5, 1, 3);
-      fail("Misordered ranges");
+      assertWithMessage("Misordered ranges").fail();
     } catch (IllegalArgumentException ex) {
       // pass
     }
 
     try {
       CharRanges.withRanges(0, 0);
-      fail("Empty range");
+      assertWithMessage("Empty range").fail();
     } catch (IllegalArgumentException ex) {
       // pass
     }
@@ -126,7 +128,7 @@ public final class CharRangesTest extends TestCase {
     new EqualsTester().addEqualityGroup(sbs1, sbs2).testEquals();
 
     for (int i = -10; i < 20; ++i) {
-      assertEquals("" + i, sbs1.contains(i), sbs2.contains(i));
+      assertWithMessage("" + i).that(sbs2.contains(i)).isEqualTo(sbs1.contains(i));
     }
   }
 
@@ -144,25 +146,25 @@ public final class CharRangesTest extends TestCase {
         0x1C, 0x1D, 0x21, 0x24);
     CharRanges empty = CharRanges.withMembers();
 
-    assertEquals(empty, empty.union(empty));
-    assertEquals(a, a.union(empty));
-    assertEquals(b, empty.union(b));
+    assertThat(empty.union(empty)).isEqualTo(empty);
+    assertThat(a.union(empty)).isEqualTo(a);
+    assertThat(empty.union(b)).isEqualTo(b);
 
     CharRanges aSb = a.difference(b);
     assertEquals(
         "[0x4-0x5 0x9-0xa 0x12 0x14 0x16 0x18 0x1e-0x20 0x24-0x26 0x28 0x2a]",
         aSb.toString());
-    assertTrue(a.containsAll(aSb));
-    assertFalse(aSb.containsAll(a));
-    assertFalse(aSb.containsAll(b));
+    assertThat(a.containsAll(aSb)).isTrue();
+    assertThat(aSb.containsAll(a)).isFalse();
+    assertThat(aSb.containsAll(b)).isFalse();
 
     CharRanges bSa = b.difference(a);
     assertEquals(
         "[0x1-0x2 0xc-0xd 0xf-0x11 0x1a 0x21-0x23]",
         bSa.toString());
-    assertTrue(b.containsAll(bSa));
-    assertFalse(bSa.containsAll(a));
-    assertFalse(bSa.containsAll(b));
+    assertThat(b.containsAll(bSa)).isTrue();
+    assertThat(bSa.containsAll(a)).isFalse();
+    assertThat(bSa.containsAll(b)).isFalse();
 
     // Check that a and b not changed by operation
     assertEquals(
@@ -180,11 +182,11 @@ public final class CharRangesTest extends TestCase {
     CharRanges s = CharRanges.withMembers(2, 5, 6, 7, 0xa, 0xb, 0xd, 0xe);
     CharRanges d = m.difference(s);
     assertEquals("[0x0-0x1 0x3 0x9 0xf]", d.toString());
-    assertTrue(m.containsAll(d));
-    assertFalse(d.containsAll(m));
-    assertFalse(d.containsAll(s));
-    assertFalse(s.containsAll(d));
-    assertTrue(d.containsAll(d));
+    assertThat(m.containsAll(d)).isTrue();
+    assertThat(d.containsAll(m)).isFalse();
+    assertThat(d.containsAll(s)).isFalse();
+    assertThat(s.containsAll(d)).isFalse();
+    assertThat(d.containsAll(d)).isTrue();
   }
 
   @Test
@@ -200,22 +202,22 @@ public final class CharRangesTest extends TestCase {
         0x1C, 0x1D, 0x21, 0x24);
     CharRanges empty = CharRanges.withMembers();
 
-    assertEquals(empty, empty.union(empty));
-    assertEquals(a, a.union(empty));
-    assertEquals(b, empty.union(b));
+    assertThat(empty.union(empty)).isEqualTo(empty);
+    assertThat(a.union(empty)).isEqualTo(a);
+    assertThat(empty.union(b)).isEqualTo(b);
 
     CharRanges aUb = a.union(b);
     assertEquals(
         "[0x1-0xd 0xf-0x12 0x14 0x16 0x18 0x1a 0x1c 0x1e-0x26 0x28 0x2a]",
         aUb.toString());
-    assertEquals(aUb, b.union(a));
-    assertTrue(aUb.containsAll(a));
-    assertTrue(aUb.containsAll(b));
-    assertFalse(a.containsAll(b));
-    assertFalse(b.containsAll(a));
-    assertTrue(a.containsAll(a));
-    assertTrue(b.containsAll(b));
-    assertTrue(aUb.containsAll(aUb));
+    assertThat(b.union(a)).isEqualTo(aUb);
+    assertThat(aUb.containsAll(a)).isTrue();
+    assertThat(aUb.containsAll(b)).isTrue();
+    assertThat(a.containsAll(b)).isFalse();
+    assertThat(b.containsAll(a)).isFalse();
+    assertThat(a.containsAll(a)).isTrue();
+    assertThat(b.containsAll(b)).isTrue();
+    assertThat(aUb.containsAll(aUb)).isTrue();
 
     // Check that a and b not changed by operation
     assertEquals(
