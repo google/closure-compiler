@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -195,7 +196,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
           }
         });
 
-    assertNotNull(polymerCall);
+    assertThat(polymerCall).isNotNull();
     PolymerClassDefinition classDef =
         PolymerClassDefinition.extractFromCallNode(polymerCall, compiler, globalNamespace);
 

@@ -79,32 +79,32 @@ public final class PerformanceTrackerTest extends TestCase {
 
     int numRuns = tracker.getRuns();
 
-    assertEquals(7, numRuns);
-    assertEquals(tracker.getRuntime(), numRuns * passRuntime);
-    assertEquals(3, tracker.getLoopRuns());
-    assertEquals(4, tracker.getChanges()); /* reportChange was called 4 times */
-    assertEquals(1, tracker.getLoopChanges());
+    assertThat(numRuns).isEqualTo(7);
+    assertThat(numRuns * passRuntime).isEqualTo(tracker.getRuntime());
+    assertThat(tracker.getLoopRuns()).isEqualTo(3);
+    assertThat(tracker.getChanges()).isEqualTo(4); /* reportChange was called 4 times */
+    assertThat(tracker.getLoopChanges()).isEqualTo(1);
 
     ImmutableMap<String, Stats> stats = tracker.getStats();
     Stats st = stats.get("noloopA");
-    assertEquals(1, st.runs);
-    assertEquals(st.runtime, passRuntime);
-    assertEquals(1, st.changes);
+    assertThat(st.runs).isEqualTo(1);
+    assertThat(passRuntime).isEqualTo(st.runtime);
+    assertThat(st.changes).isEqualTo(1);
 
     st = stats.get("noloopB");
-    assertEquals(3, st.runs);
-    assertEquals(st.runtime, 3 * passRuntime);
-    assertEquals(2, st.changes);
+    assertThat(st.runs).isEqualTo(3);
+    assertThat(3 * passRuntime).isEqualTo(st.runtime);
+    assertThat(st.changes).isEqualTo(2);
 
     st = stats.get("loopA");
-    assertEquals(2, st.runs);
-    assertEquals(st.runtime, 2 * passRuntime);
-    assertEquals(1, st.changes);
+    assertThat(st.runs).isEqualTo(2);
+    assertThat(2 * passRuntime).isEqualTo(st.runtime);
+    assertThat(st.changes).isEqualTo(1);
 
     st = stats.get("loopB");
-    assertEquals(1, st.runs);
-    assertEquals(st.runtime, passRuntime);
-    assertEquals(0, st.changes);
+    assertThat(st.runs).isEqualTo(1);
+    assertThat(passRuntime).isEqualTo(st.runtime);
+    assertThat(st.changes).isEqualTo(0);
   }
 
   @Test

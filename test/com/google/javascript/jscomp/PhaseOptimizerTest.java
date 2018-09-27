@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
@@ -107,7 +108,7 @@ public final class PhaseOptimizerTest extends TestCase {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", PhaseOptimizer.MAX_LOOPS - 2);
     optimizer.process(null, dummyRoot);
-    assertEquals("There should be no errors.", 0, compiler.getErrorCount());
+    assertWithMessage("There should be no errors.").that(compiler.getErrorCount()).isEqualTo(0);
   }
 
   @Test
@@ -116,10 +117,11 @@ public final class PhaseOptimizerTest extends TestCase {
     addLoopedPass(loop, "x", PhaseOptimizer.MAX_LOOPS + 1);
     try {
       optimizer.process(null, dummyRoot);
-      fail("Expected RuntimeException");
+      assertWithMessage("Expected RuntimeException").fail();
     } catch (RuntimeException e) {
-      assertTrue(e.getMessage(),
-          e.getMessage().contains(PhaseOptimizer.OPTIMIZE_LOOP_ERROR));
+      assertWithMessage(e.getMessage())
+          .that(e.getMessage().contains(PhaseOptimizer.OPTIMIZE_LOOP_ERROR))
+          .isTrue();
     }
   }
 
@@ -174,7 +176,7 @@ public final class PhaseOptimizerTest extends TestCase {
     addLoopedPass(loop, "x", 1);
     try {
       addLoopedPass(loop, "x", 1);
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalArgumentException e) {
       return;
     }
@@ -191,7 +193,7 @@ public final class PhaseOptimizerTest extends TestCase {
           loop, optimalOrder.remove(random.nextInt(optimalOrder.size())), 0);
     }
     optimizer.process(null, dummyRoot);
-    assertEquals(PhaseOptimizer.OPTIMAL_ORDER, passesRun);
+    assertThat(passesRun).isEqualTo(PhaseOptimizer.OPTIMAL_ORDER);
   }
 
   @Test
@@ -211,10 +213,10 @@ public final class PhaseOptimizerTest extends TestCase {
     addOneTimePass("x4");
     optimizer.process(null, dummyRoot);
     assertThat(progressList).hasSize(4);
-    assertEquals(25, Math.round(progressList.get(0)));
-    assertEquals(50, Math.round(progressList.get(1)));
-    assertEquals(75, Math.round(progressList.get(2)));
-    assertEquals(100, Math.round(progressList.get(3)));
+    assertThat(Math.round(progressList.get(0))).isEqualTo(25);
+    assertThat(Math.round(progressList.get(1))).isEqualTo(50);
+    assertThat(Math.round(progressList.get(2))).isEqualTo(75);
+    assertThat(Math.round(progressList.get(3))).isEqualTo(100);
   }
 
   @Test
@@ -233,7 +235,7 @@ public final class PhaseOptimizerTest extends TestCase {
 
   public void assertPasses(String ... names) {
     optimizer.process(null, dummyRoot);
-    assertEquals(ImmutableList.copyOf(names), passesRun);
+    assertThat(passesRun).isEqualTo(ImmutableList.copyOf(names));
   }
 
   private void addOneTimePass(String name) {

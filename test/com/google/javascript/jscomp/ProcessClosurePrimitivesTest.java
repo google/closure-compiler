@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.BASE_CLASS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLASS_NAMESPACE_ERROR;
@@ -603,9 +604,9 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test("goog.addDependency('x.js', ['A', 'B'], []);", "0");
 
     Compiler compiler = getLastCompiler();
-    assertTrue(compiler.getTypeRegistry().isForwardDeclaredType("A"));
-    assertTrue(compiler.getTypeRegistry().isForwardDeclaredType("B"));
-    assertFalse(compiler.getTypeRegistry().isForwardDeclaredType("C"));
+    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("A")).isTrue();
+    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("B")).isTrue();
+    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("C")).isFalse();
   }
 
   @Test
@@ -613,8 +614,8 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test("goog.forwardDeclare('A.B')", "");
 
     Compiler compiler = getLastCompiler();
-    assertTrue(compiler.getTypeRegistry().isForwardDeclaredType("A.B"));
-    assertFalse(compiler.getTypeRegistry().isForwardDeclaredType("C.D"));
+    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("A.B")).isTrue();
+    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("C.D")).isFalse();
 
     testError("goog.forwardDeclare();",
         ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
@@ -632,7 +633,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   public void testValidSetCssNameMapping() {
     test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'});", "");
     CssRenamingMap map = getLastCompiler().getCssRenamingMap();
-    assertNotNull(map);
+    assertThat(map).isNotNull();
     assertEquals("bar", map.get("foo"));
     assertEquals("baz", map.get("biz"));
   }
@@ -641,14 +642,14 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   public void testValidSetCssNameMappingWithType() {
     test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'}, 'BY_PART');", "");
     CssRenamingMap map = getLastCompiler().getCssRenamingMap();
-    assertNotNull(map);
+    assertThat(map).isNotNull();
     assertEquals("bar", map.get("foo"));
     assertEquals("baz", map.get("biz"));
 
     test("goog.setCssNameMapping({foo:'bar',biz:'baz','biz-foo':'baz-bar'}," +
         " 'BY_WHOLE');", "");
     map = getLastCompiler().getCssRenamingMap();
-    assertNotNull(map);
+    assertThat(map).isNotNull();
     assertEquals("bar", map.get("foo"));
     assertEquals("baz", map.get("biz"));
     assertEquals("baz-bar", map.get("biz-foo"));
@@ -1486,14 +1487,14 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     Node fooBarDecl = findQualifiedNameNode("foo.bar", root);
     Node fooBarBazDecl = findQualifiedNameNode("foo.bar.baz", root);
 
-    assertEquals(1, fooDecl.getLineno());
-    assertEquals(14, fooDecl.getCharno());
+    assertThat(fooDecl.getLineno()).isEqualTo(1);
+    assertThat(fooDecl.getCharno()).isEqualTo(14);
 
-    assertEquals(1, fooBarDecl.getLineno());
-    assertEquals(18, fooBarDecl.getCharno());
+    assertThat(fooBarDecl.getLineno()).isEqualTo(1);
+    assertThat(fooBarDecl.getCharno()).isEqualTo(18);
 
-    assertEquals(1, fooBarBazDecl.getLineno());
-    assertEquals(22, fooBarBazDecl.getCharno());
+    assertThat(fooBarBazDecl.getLineno()).isEqualTo(1);
+    assertThat(fooBarBazDecl.getCharno()).isEqualTo(22);
   }
 
   @Test

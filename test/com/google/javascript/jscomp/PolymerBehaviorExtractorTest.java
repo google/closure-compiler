@@ -158,7 +158,7 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
           }
         });
 
-    assertNotNull(behaviorArray);
+    assertThat(behaviorArray).isNotNull();
   }
 
   private boolean isBehaviorArrayDeclaration(Node node) {

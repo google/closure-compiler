@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.rhino.Node;
 import org.junit.Test;
@@ -44,7 +45,7 @@ public final class PrepareAstTest extends CompilerTestCase {
     Node call = firstExpr.getFirstChild();
     checkState(call.isCall());
 
-    assertTrue(call.getBooleanProp(Node.FREE_CALL));
+    assertThat(call.getBooleanProp(Node.FREE_CALL)).isTrue();
   }
 
   @Test
@@ -56,6 +57,6 @@ public final class PrepareAstTest extends CompilerTestCase {
     Node call = firstExpr.getFirstChild();
     checkState(call.isCall());
 
-    assertFalse(call.getBooleanProp(Node.FREE_CALL));
+    assertThat(call.getBooleanProp(Node.FREE_CALL)).isFalse();
   }
 }

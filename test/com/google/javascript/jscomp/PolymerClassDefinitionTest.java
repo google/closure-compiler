@@ -79,11 +79,11 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
                 "  behaviors: [ FunBehavior ],",
                 "});"));
 
-    assertNotNull(def);
-    assertEquals(PolymerClassDefinition.DefinitionType.ObjectLiteral, def.defType);
+    assertThat(def).isNotNull();
+    assertThat(def.defType).isEqualTo(PolymerClassDefinition.DefinitionType.ObjectLiteral);
     assertNode(def.target).hasType(Token.NAME);
     assertEquals("A", def.target.getString());
-    assertNull(def.nativeBaseElement);
+    assertThat(def.nativeBaseElement).isNull();
     assertThat(def.behaviors).hasSize(1);
     assertThat(def.props).hasSize(3);
   }
@@ -107,14 +107,14 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
                 "  }",
                 "}"));
 
-    assertNotNull(def);
-    assertEquals(PolymerClassDefinition.DefinitionType.ES6Class, def.defType);
+    assertThat(def).isNotNull();
+    assertThat(def.defType).isEqualTo(PolymerClassDefinition.DefinitionType.ES6Class);
     assertNode(def.target).hasType(Token.NAME);
     assertEquals("A", def.target.getString());
-    assertNotNull(def.descriptor);
+    assertThat(def.descriptor).isNotNull();
     assertNode(def.descriptor).hasType(Token.OBJECTLIT);
-    assertNull(def.nativeBaseElement);
-    assertNull(def.behaviors);
+    assertThat(def.nativeBaseElement).isNull();
+    assertThat(def.behaviors).isNull();
     assertThat(def.props).hasSize(2);
   }
 
@@ -177,7 +177,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
           }
         });
 
-    assertNotNull(polymerCall);
+    assertThat(polymerCall).isNotNull();
     return PolymerClassDefinition.extractFromCallNode(polymerCall, compiler, globalNamespace);
   }
 
@@ -196,7 +196,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
           }
         });
 
-    assertNotNull(polymerCall);
+    assertThat(polymerCall).isNotNull();
     return PolymerClassDefinition.extractFromClassNode(polymerCall, compiler, globalNamespace);
   }
 }

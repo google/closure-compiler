@@ -97,9 +97,9 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
     testSame("");
     Node polymerElementNode = findExternsCallback.getPolymerElementExterns();
 
-    assertNotNull(polymerElementNode);
-    assertTrue(polymerElementNode.isVar());
-    assertTrue(polymerElementNode.getFirstChild().matchesQualifiedName("PolymerElement"));
+    assertThat(polymerElementNode).isNotNull();
+    assertThat(polymerElementNode.isVar()).isTrue();
+    assertThat(polymerElementNode.getFirstChild().matchesQualifiedName("PolymerElement")).isTrue();
   }
 
   @Test
@@ -109,7 +109,7 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
         "$", "created", "ready", "attached", "domReady", "detached", "job");
     ImmutableList<Node> polymerElementProps = findExternsCallback.getPolymerElementProps();
 
-    assertNotNull(polymerElementProps);
+    assertThat(polymerElementProps).isNotNull();
     assertThat(polymerElementProps).hasSize(expectedProps.size());
     for (int i = 0; i < polymerElementProps.size(); ++i) {
       assertThat(getPropertyName(polymerElementProps.get(i))).isEqualTo(expectedProps.get(i));

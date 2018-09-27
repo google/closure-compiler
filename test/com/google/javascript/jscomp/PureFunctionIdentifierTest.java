@@ -1932,8 +1932,8 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     Node lastRoot = getLastCompiler().getRoot().getLastChild();
     Node call = findQualifiedNameNode("f", lastRoot).getParent();
     assertThat(call.isNoSideEffectsCall()).isFalse();
-    assertEquals(
-        new Node.SideEffectFlags().setReturnsTainted().valueOf(), call.getSideEffectFlags());
+    assertThat(call.getSideEffectFlags())
+        .isEqualTo(new Node.SideEffectFlags().setReturnsTainted().valueOf());
   }
 
   @Test
@@ -2338,9 +2338,9 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         compiler -> {
           Node lastRoot = compiler.getRoot();
           Node call = findQualifiedNameNode("g.call", lastRoot).getParent();
-          assertEquals(
-              new Node.SideEffectFlags().clearAllFlags().setMutatesArguments().valueOf(),
-              call.getSideEffectFlags());
+          assertThat(call.getSideEffectFlags())
+              .isEqualTo(
+                  new Node.SideEffectFlags().clearAllFlags().setMutatesArguments().valueOf());
         });
   }
 
@@ -2484,7 +2484,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         srcs(source),
         postcondition(
             compiler -> {
-              assertEquals(expected, noSideEffectCalls);
+              assertThat(noSideEffectCalls).isEqualTo(expected);
               if (post != null) {
                 post.verify(compiler);
               }
@@ -2493,7 +2493,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
   void checkLocalityOfMarkedCalls(String source, final List<String> expected) {
     testSame(srcs(source));
-    assertEquals(expected, localResultCalls);
+    assertThat(localResultCalls).isEqualTo(expected);
   }
 
   @Override
