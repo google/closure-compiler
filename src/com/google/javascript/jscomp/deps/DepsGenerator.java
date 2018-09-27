@@ -231,7 +231,8 @@ public class DepsGenerator {
         // supported.
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (String provide : provides) {
-          if (!provide.equals(mungedProvide)) {
+          if (!provide.equals(mungedProvide)
+              && !provide.equals(dependencyInfo.getPathRelativeToClosureBase())) {
             builder.add(provide);
           }
         }
@@ -336,9 +337,11 @@ public class DepsGenerator {
   private void reportDuplicateProvide(String namespace, DependencyInfo firstDep,
       DependencyInfo secondDep) {
     if (firstDep == secondDep) {
-      errorManager.report(CheckLevel.WARNING,
-          JSError.make(firstDep.getName(), -1, -1,
-              DUPE_PROVIDES_WARNING, namespace));
+      if (!firstDep.getPathRelativeToClosureBase().equals(namespace)) {
+        errorManager.report(
+            CheckLevel.WARNING,
+            JSError.make(firstDep.getName(), -1, -1, DUPE_PROVIDES_WARNING, namespace));
+      }
     } else {
       errorManager.report(CheckLevel.ERROR,
           JSError.make(secondDep.getName(), -1, -1,
