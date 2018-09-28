@@ -42,9 +42,6 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
   // Since there's currently no Feature for Symbol, run this pass if the code has any ES6 features.
   private static final FeatureSet requiredForFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
 
-  private static final FeatureSet knownToRequireSymbol =
-      FeatureSet.BARE_MINIMUM.with(Feature.FOR_OF, Feature.SPREAD_EXPRESSIONS);
-
   public Es6InjectRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.getterSetterSupported =
@@ -57,6 +54,13 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
     for (Node script : root.children()) {
       used = used.with(getScriptFeatures(script));
     }
+
+    // TODO(johnlenz): remove this check for Symbol.  Symbol should be handled like the other
+    // polyfills.
+
+    // Check for "Symbol" references before injecting libraries.  This prevents conditional checks
+    // from pulling in 'Symbol'.
+    TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
 
     // We will need these runtime methods when we transpile, but we want the runtime
     // functions to be have JSType applied to it by the type inferrence.
@@ -96,9 +100,6 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
     if (used.contains(Feature.FOR_AWAIT_OF)) {
       compiler.ensureLibraryInjected("es6/util/makeasynciterator", /* force= */ false);
     }
-
-    // TODO(johnlenz): remove this.  Symbol should be handled like the other polyfills.
-    TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
   }
 
   private static FeatureSet getScriptFeatures(Node script) {

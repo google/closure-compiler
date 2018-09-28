@@ -3748,6 +3748,32 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testInitSymbolIteratorInjectionWithES6Syntax() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    useNoninjectingCompiler = true;
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externs = externsList.build();
+    test(
+        options,
+        lines(
+            "let itr = {",
+            "  next: function() { return { value: 1234, done: false }; },",
+            "};",
+            "itr[Symbol.iterator] = function() { return itr; }"),
+        lines(
+            "var itr = {",
+            "  next: function() { return { value: 1234, done: false }; },",
+            "};",
+            "$jscomp.initSymbol();",
+            "$jscomp.initSymbolIterator();",
+            "itr[Symbol.iterator] = function() { return itr; }"));
+  }
+
+  @Test
   public void testInitSymbolAsyncIteratorInjection() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
@@ -3775,6 +3801,32 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  next() { return { value: 1234, done: false }; },",
             "  [Symbol.asyncIterator]() { return this; },",
             "};"));
+  }
+
+  @Test
+  public void testNoInitSymbolForForOf() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    useNoninjectingCompiler = true;
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externs = externsList.build();
+    test(
+        options,
+        lines(
+            "for (let x of []){}"),
+        lines(
+            "var $jscomp$iter$0=$jscomp.makeIterator([]);",
+            "for(",
+            "  var $jscomp$key$x=$jscomp$iter$0.next();",
+            "  !$jscomp$key$x.done;",
+            "  $jscomp$key$x=$jscomp$iter$0.next()) {",
+            "    var x=$jscomp$key$x.value;{}",
+            "}"));
+    assertThat(((NoninjectingCompiler) lastCompiler).injected).containsExactly(
+        "es6/util/makeiterator");
   }
 
   @Test
