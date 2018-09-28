@@ -424,11 +424,6 @@ public class IR {
     return new Node(Token.GETELEM, target, elem);
   }
 
-  public static Node delprop(Node target) {
-    checkState(mayBeExpression(target));
-    return new Node(Token.DELPROP, target);
-  }
-
   public static Node assign(Node target, Node expr) {
     checkState(target.isValidAssignmentTarget(), target);
     checkState(mayBeExpression(expr), expr);

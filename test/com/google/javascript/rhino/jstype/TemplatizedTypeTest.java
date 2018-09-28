@@ -39,7 +39,6 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
@@ -154,30 +153,6 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
 
     assertTrue(templatizedStringAll.isSubtypeOf(templatizedStringUnknown));
     assertTrue(templatizedStringUnknown.isSubtypeOf(templatizedStringAll));
-  }
-
-  @Test
-  public void testGetPropertyTypeOnTemplatizedType() {
-    TemplateType templateT = registry.createTemplateType("T");
-    FunctionType ctor = // function<T>(new:Foo<T>)
-        registry.createConstructorType("Foo", null, null, null, ImmutableList.of(templateT), false);
-    ObjectType rawType = ctor.getInstanceType(); // Foo<T> == Foo
-    rawType.defineDeclaredProperty("property", templateT, null);
-
-    JSType templatizedNumber = registry.createTemplatizedType(rawType, NUMBER_TYPE);
-    assertType(templatizedNumber.toObjectType().getPropertyType("property")).isEqualTo(NUMBER_TYPE);
-  }
-
-  @Test
-  public void testFindPropertyTypeOnTemplatizedType() {
-    TemplateType templateT = registry.createTemplateType("T");
-    FunctionType ctor = // function<T>(new:Foo<T>)
-        registry.createConstructorType("Foo", null, null, null, ImmutableList.of(templateT), false);
-    ObjectType rawType = ctor.getInstanceType(); // Foo<T> == Foo
-    rawType.defineDeclaredProperty("property", templateT, null);
-
-    JSType templatizedNumber = registry.createTemplatizedType(rawType, NUMBER_TYPE);
-    assertType(templatizedNumber.findPropertyType("property")).isEqualTo(NUMBER_TYPE);
   }
 
   /** Returns an unspecialized type with the provided name and two type parameters. */

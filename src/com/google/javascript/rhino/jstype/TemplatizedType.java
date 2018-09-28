@@ -153,12 +153,6 @@ public final class TemplatizedType extends ProxyObjectType {
   }
 
   @Override
-  public JSType findPropertyType(String propertyName) {
-    JSType result = super.findPropertyType(propertyName);
-    return result == null ? null : result.visit(replacer);
-  }
-
-  @Override
   public JSType getPropertyType(String propertyName) {
     JSType result = super.getPropertyType(propertyName);
     return result == null ? null : result.visit(replacer);
