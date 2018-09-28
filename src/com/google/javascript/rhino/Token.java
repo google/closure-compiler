@@ -188,6 +188,7 @@ public enum Token {
     TAGGED_TEMPLATELIT, // tagged template literal, e.g. foo`bar`
     TEMPLATELIT, // template literal
     TEMPLATELIT_SUB, // template literal substitution
+    TEMPLATELIT_STRING, // template literal string
 
     DEFAULT_VALUE, // Formal parameter or destructuring element with a default value
     NEW_TARGET, // new.target
@@ -291,6 +292,7 @@ public enum Token {
       case NULL:
       case NUMBER:
       case STRING:
+      case TEMPLATELIT_STRING:
       case THIS:
       case TRUE:
         return 0;
