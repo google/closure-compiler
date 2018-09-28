@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-'require es6/symbol';
 'require util/polyfill';
 
 $jscomp.polyfill('Array.from', function(orig) {
@@ -39,11 +38,11 @@ $jscomp.polyfill('Array.from', function(orig) {
    * @suppress {reportUnknownTypes}
    */
   var polyfill = function(arrayLike, opt_mapFn, opt_thisArg) {
-    $jscomp.initSymbolIterator();
     opt_mapFn = opt_mapFn != null ? opt_mapFn : function(x) { return x; };
     var result = [];
     // NOTE: this is cast to ? because [] on @struct is an error
-    var iteratorFunction = /** @type {?} */ (arrayLike)[Symbol.iterator];
+    var iteratorFunction = typeof Symbol != 'undefined' && Symbol.iterator &&
+        (/** @type {?} */ (arrayLike)[Symbol.iterator]);
     if (typeof iteratorFunction == 'function') {
       arrayLike = iteratorFunction.call(arrayLike);
       var next;

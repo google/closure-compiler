@@ -15,7 +15,6 @@
  */
 
 'require es6/conformance';
-'require es6/symbol';
 'require es6/util/makeiterator';
 'require util/defineproperty';
 'require util/owns';
@@ -123,8 +122,6 @@ $jscomp.polyfill('WeakMap',
     this.id_ = (index += (Math.random() + 1)).toString();
 
     if (opt_iterable) {
-      $jscomp.initSymbol();
-      $jscomp.initSymbolIterator();
       var iter = $jscomp.makeIterator(opt_iterable);
       var entry;
       while (!(entry = iter.next()).done) {
