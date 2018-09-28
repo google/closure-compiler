@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import junit.framework.TestCase;
@@ -134,7 +136,7 @@ public final class RecordFunctionInformationTest extends TestCase {
         new RecordFunctionInformation(compiler, collectFunctionNames.getFunctionNames());
     processor.process(externsRoot, mainRoot);
     FunctionInformationMap result = processor.getMap();
-    assertEquals(expected, result);
+    assertThat(result).isEqualTo(expected);
   }
 
   private Compiler compilerFor(JSModule[] modules) {

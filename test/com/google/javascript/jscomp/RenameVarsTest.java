@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -639,7 +640,7 @@ public final class RenameVarsTest extends CompilerTestCase {
     try {
       makeVariableMap("Foo", "z", "Bar", "z");
       testSame("");
-      fail();
+      throw new AssertionError();
     } catch (java.lang.IllegalArgumentException expected) {
     }
   }
@@ -1041,7 +1042,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   private static void assertVariableMapsEqual(VariableMap a, VariableMap b) {
     Map<String, String> ma = a.getOriginalNameToNewNameMap();
     Map<String, String> mb = b.getOriginalNameToNewNameMap();
-    assertEquals("VariableMaps not equal", ma, mb);
+    assertWithMessage("VariableMaps not equal").that(mb).isEqualTo(ma);
   }
 
   private class ClosurePassAndRenameVars implements CompilerPass {

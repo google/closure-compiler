@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -379,7 +380,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
     IR.script(testNode);
     try {
       getProcessor(compiler).injectCustomLogFunction(testNode);
-      fail("Expected an IllegalStateException");
+      assertWithMessage("Expected an IllegalStateException").fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().contains("not a valid qualified name");
     }

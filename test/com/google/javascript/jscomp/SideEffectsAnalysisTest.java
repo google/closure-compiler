@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -582,9 +585,9 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         environment(environmentNode), destinationNode);
 
     if (expected) {
-      assertTrue(result);
+      assertThat(result).isTrue();
     } else {
-      assertFalse(result);
+      assertThat(result).isFalse();
     }
   }
 
@@ -621,7 +624,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     LabeledStatementSearcher s = new LabeledStatementSearcher(label);
 
     NodeTraversal.traverse(getLastCompiler(), getLastCompiler().jsRoot, s);
-    assertNotNull("Label " + label + " should be in the source code", s.found);
+    assertWithMessage("Label " + label + " should be in the source code").that(s.found).isNotNull();
 
     return s.found;
   }

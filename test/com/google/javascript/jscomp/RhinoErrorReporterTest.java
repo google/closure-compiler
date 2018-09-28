@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -64,8 +67,8 @@ public final class RhinoErrorReporterTest extends TestCase {
         RhinoErrorReporter.TRAILING_COMMA,
         message);
 
-    assertEquals(2, error.getLineNumber());
-    assertEquals(8, error.getCharno());
+    assertThat(error.getLineNumber()).isEqualTo(2);
+    assertThat(error.getCharno()).isEqualTo(8);
   }
 
   @Test
@@ -86,8 +89,8 @@ public final class RhinoErrorReporterTest extends TestCase {
         RhinoErrorReporter.INVALID_ES3_PROP_NAME,
         message);
 
-    assertEquals(1, error.getLineNumber());
-    assertEquals(10, error.getCharno());
+    assertThat(error.getLineNumber()).isEqualTo(1);
+    assertThat(error.getCharno()).isEqualTo(10);
   }
 
   @Test
@@ -105,8 +108,8 @@ public final class RhinoErrorReporterTest extends TestCase {
         RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
         message);
 
-    assertEquals(1, error.getLineNumber());
-    assertEquals(4, error.getCharno());
+    assertThat(error.getLineNumber()).isEqualTo(1);
+    assertThat(error.getCharno()).isEqualTo(4);
   }
 
   @Test
@@ -128,8 +131,8 @@ public final class RhinoErrorReporterTest extends TestCase {
    */
   private void assertNoWarningOrError(String code) {
     Compiler compiler = parseCode(code);
-    assertEquals("Expected error", 0, compiler.getErrorCount());
-    assertEquals("Expected warning", 0, compiler.getErrorCount());
+    assertWithMessage("Expected error").that(compiler.getErrorCount()).isEqualTo(0);
+    assertWithMessage("Expected warning").that(compiler.getErrorCount()).isEqualTo(0);
   }
 
   /**
@@ -138,11 +141,11 @@ public final class RhinoErrorReporterTest extends TestCase {
   private JSError assertError(
       String code, DiagnosticType type, String description) {
     Compiler compiler = parseCode(code);
-    assertEquals("Expected error", 1, compiler.getErrorCount());
+    assertWithMessage("Expected error").that(compiler.getErrorCount()).isEqualTo(1);
 
     JSError error =
         Iterables.getOnlyElement(Arrays.asList(compiler.getErrors()));
-    assertEquals(type, error.getType());
+    assertThat(error.getType()).isEqualTo(type);
     assertEquals(description, error.description);
     return error;
   }
@@ -153,11 +156,11 @@ public final class RhinoErrorReporterTest extends TestCase {
   private JSError assertWarning(
       String code, DiagnosticType type, String description) {
     Compiler compiler = parseCode(code);
-    assertEquals("Expected warning", 1, compiler.getWarningCount());
+    assertWithMessage("Expected warning").that(compiler.getWarningCount()).isEqualTo(1);
 
     JSError error =
         Iterables.getOnlyElement(Arrays.asList(compiler.getWarnings()));
-    assertEquals(type, error.getType());
+    assertThat(error.getType()).isEqualTo(type);
     assertEquals(description, error.description);
     return error;
   }

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
@@ -295,7 +297,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     Compiler compiler = compileModules("", modules);
 
     Result result = compiler.getResult();
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     assertEquals(
         "function Bar(){}Bar.prototype.b=function(x){};var foo;foo.b(foo);foo.f=foo;foo.a=foo;",

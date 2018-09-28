@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -47,8 +48,9 @@ public final class RandomNameGeneratorTest extends TestCase {
     try {
       new RandomNameGenerator(Collections.<String>emptySet(), "123abc",
           null, random);
-      fail("Constructor should throw exception when the first char of prefix "
-          + "is invalid");
+      assertWithMessage(
+              "Constructor should throw exception when the first char of prefix is invalid")
+          .fail();
     } catch (IllegalArgumentException ex) {
       // The error messages should contain meaningful information.
       assertThat(ex).hasMessageThat().contains("W, X, Y, Z, $");
@@ -57,8 +59,9 @@ public final class RandomNameGeneratorTest extends TestCase {
     try {
       new RandomNameGenerator(Collections.<String>emptySet(), "abc%",
           null, random);
-      fail("Constructor should throw exception when one of prefix characters "
-          + "is invalid");
+      assertWithMessage(
+              "Constructor should throw exception when one of prefix characters is invalid")
+          .fail();
     } catch (IllegalArgumentException ex) {
       assertThat(ex).hasMessageThat().contains("W, X, Y, Z, _, 0, 1");
     }

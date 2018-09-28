@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNEXPECTED_STRING_LITERAL_ERROR;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNKNOWN_SYMBOL_WARNING;
 
@@ -307,8 +308,8 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     ReplaceCssNames replacer = new ReplaceCssNames(compiler, null, null);
     replacer.process(null, root);
     assertEquals("[\"test\",base+\"-active\"]", compiler.toSource(root));
-    assertEquals("There should be no errors", 0, errorMan.getErrorCount());
-    assertEquals("There should be no warnings", 0, errorMan.getWarningCount());
+    assertWithMessage("There should be no errors").that(errorMan.getErrorCount()).isEqualTo(0);
+    assertWithMessage("There should be no warnings").that(errorMan.getWarningCount()).isEqualTo(0);
   }
 
   @Test

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
@@ -123,9 +124,9 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     Node root = getLastCompiler().getRoot();
     Node dom = findQualifiedNameNode("dom", root);
     Node event = findQualifiedNameNode("event", root);
-    assertTrue("Dom line: " + dom.getLineno() +
-               "\nEvent line: " + event.getLineno(),
-               dom.getLineno() > event.getLineno());
+    assertWithMessage("Dom line should be after event line.")
+        .that(dom.getLineno())
+        .isGreaterThan(event.getLineno());
   }
 
   @Test
@@ -1305,13 +1306,12 @@ public final class ScopedAliasesTest extends CompilerTestCase {
 
   private void verifyAliasTransformationPosition(int startLine, int startChar,
       int endLine, int endChar, SourcePosition<AliasTransformation> pos) {
-    assertEquals(startLine, pos.getStartLine());
-    assertEquals(startChar, pos.getPositionOnStartLine());
-    assertTrue(
-        "expected endline >= " + endLine + ".  Found " + pos.getEndLine(),
-        pos.getEndLine() >= endLine);
-    assertTrue("expected endChar >= " + endChar + ".  Found "
-        + pos.getPositionOnEndLine(), pos.getPositionOnEndLine() >= endChar);
+    assertThat(pos.getStartLine()).isEqualTo(startLine);
+    assertThat(pos.getPositionOnStartLine()).isEqualTo(startChar);
+    assertWithMessage("Endline smaller than expected.").that(pos.getEndLine()).isAtLeast(endLine);
+    assertWithMessage("Endchar is smaller thatn expected.")
+        .that(pos.getPositionOnEndLine())
+        .isAtLeast(endChar);
   }
 
   @Override
@@ -1381,11 +1381,11 @@ public final class ScopedAliasesTest extends CompilerTestCase {
           if (actualTypes != null) {
             List<Node> expectedTypes = new ArrayList<>();
             expectedTypes.addAll(info.getTypeNodes());
-            assertEquals("Wrong number of JsDoc types",
-                expectedTypes.size(), actualTypes.size());
+            assertWithMessage("Wrong number of JsDoc types")
+                .that(actualTypes.size())
+                .isEqualTo(expectedTypes.size());
             for (int i = 0; i < expectedTypes.size(); i++) {
-              assertNull(
-                  expectedTypes.get(i).checkTreeEquals(actualTypes.get(i)));
+              assertThat(expectedTypes.get(i).checkTreeEquals(actualTypes.get(i))).isNull();
             }
           } else {
             actualTypes = new ArrayList<>();

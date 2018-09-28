@@ -629,7 +629,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     test(js, expected);
 
     List<Result> results = pass.getResult();
-    assertEquals(0, substitutedStrings.length % 2);
+    assertThat(substitutedStrings.length % 2).isEqualTo(0);
     assertThat(results).hasSize(substitutedStrings.length / 2);
 
     // Verify that substituted strings are decoded correctly.
