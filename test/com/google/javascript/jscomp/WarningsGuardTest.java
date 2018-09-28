@@ -59,16 +59,15 @@ public final class WarningsGuardTest extends TestCase {
     WarningsGuard includeGuard = new ShowByPathWarningsGuard("/foo/",
         ShowType.INCLUDE);
 
-    assertNull(includeGuard.level(makeError("asasasd/foo/hello.js", WARNING)));
-    assertNull(includeGuard.level(makeError("asasasd/foo/hello.js", ERROR)));
-    assertEquals(OFF, includeGuard.level(makeError("asasasd/hello.js",
-        WARNING)));
-    assertEquals(OFF, includeGuard.level(makeError("asasasd/hello.js", OFF)));
-    assertNull(includeGuard.level(makeError("asasasd/hello.js", ERROR)));
-    assertNull(includeGuard.level(makeError(null)));
-    assertNull(includeGuard.level(makeError(null, WARNING)));
+    assertThat(includeGuard.level(makeError("asasasd/foo/hello.js", WARNING))).isNull();
+    assertThat(includeGuard.level(makeError("asasasd/foo/hello.js", ERROR))).isNull();
+    assertThat(includeGuard.level(makeError("asasasd/hello.js", WARNING))).isEqualTo(OFF);
+    assertThat(includeGuard.level(makeError("asasasd/hello.js", OFF))).isEqualTo(OFF);
+    assertThat(includeGuard.level(makeError("asasasd/hello.js", ERROR))).isNull();
+    assertThat(includeGuard.level(makeError(null))).isNull();
+    assertThat(includeGuard.level(makeError(null, WARNING))).isNull();
 
-    assertFalse(includeGuard.disables(DiagnosticGroups.DEPRECATED));
+    assertThat(includeGuard.disables(DiagnosticGroups.DEPRECATED)).isFalse();
   }
 
   @Test
@@ -76,33 +75,29 @@ public final class WarningsGuardTest extends TestCase {
     WarningsGuard excludeGuard = new ShowByPathWarningsGuard(
         new String[] { "/foo/", "/bar/" }, ShowType.EXCLUDE);
 
-    assertEquals(OFF, excludeGuard.level(makeError("asasasd/foo/hello.js",
-        WARNING)));
-    assertEquals(OFF, excludeGuard.level(makeError("asasasd/foo/bar/hello.js",
-        WARNING)));
-    assertEquals(OFF, excludeGuard.level(makeError("asasasd/bar/hello.js",
-        WARNING)));
-    assertEquals(OFF, excludeGuard.level(makeError("asasasd/foo/bar/hello.js",
-        WARNING)));
-    assertNull(excludeGuard.level(makeError("asasasd/foo/hello.js", ERROR)));
-    assertNull(excludeGuard.level(makeError("asasasd/hello.js", WARNING)));
-    assertNull(excludeGuard.level(makeError("asasasd/hello.js", OFF)));
-    assertNull(excludeGuard.level(makeError("asasasd/hello.js", ERROR)));
-    assertNull(excludeGuard.level(makeError(null)));
-    assertNull(excludeGuard.level(makeError(null, WARNING)));
+    assertThat(excludeGuard.level(makeError("asasasd/foo/hello.js", WARNING))).isEqualTo(OFF);
+    assertThat(excludeGuard.level(makeError("asasasd/foo/bar/hello.js", WARNING))).isEqualTo(OFF);
+    assertThat(excludeGuard.level(makeError("asasasd/bar/hello.js", WARNING))).isEqualTo(OFF);
+    assertThat(excludeGuard.level(makeError("asasasd/foo/bar/hello.js", WARNING))).isEqualTo(OFF);
+    assertThat(excludeGuard.level(makeError("asasasd/foo/hello.js", ERROR))).isNull();
+    assertThat(excludeGuard.level(makeError("asasasd/hello.js", WARNING))).isNull();
+    assertThat(excludeGuard.level(makeError("asasasd/hello.js", OFF))).isNull();
+    assertThat(excludeGuard.level(makeError("asasasd/hello.js", ERROR))).isNull();
+    assertThat(excludeGuard.level(makeError(null))).isNull();
+    assertThat(excludeGuard.level(makeError(null, WARNING))).isNull();
 
-    assertFalse(excludeGuard.disables(DiagnosticGroups.DEPRECATED));
+    assertThat(excludeGuard.disables(DiagnosticGroups.DEPRECATED)).isFalse();
   }
 
   @Test
   public void testStrictGuard() {
     WarningsGuard guard = new StrictWarningsGuard();
 
-    assertEquals(ERROR, guard.level(makeError("foo/hello.js", WARNING)));
-    assertNull(guard.level(makeError("foo/hello.js", OFF)));
-    assertEquals(ERROR, guard.level(makeError("bar.js", ERROR)));
+    assertThat(guard.level(makeError("foo/hello.js", WARNING))).isEqualTo(ERROR);
+    assertThat(guard.level(makeError("foo/hello.js", OFF))).isNull();
+    assertThat(guard.level(makeError("bar.js", ERROR))).isEqualTo(ERROR);
 
-    assertFalse(guard.disables(DiagnosticGroups.DEPRECATED));
+    assertThat(guard.disables(DiagnosticGroups.DEPRECATED)).isFalse();
   }
 
   @Test
@@ -110,16 +105,15 @@ public final class WarningsGuardTest extends TestCase {
     WarningsGuard strictGuard = ByPathWarningsGuard
         .forPath(ImmutableList.of("/foo/"), ERROR);
 
-    assertEquals(ERROR, strictGuard.level(makeError("asasasd/foo/hello.js",
-        WARNING)));
-    assertNull(strictGuard.level(makeError("asasasd/foo/hello.js", ERROR)));
-    assertNull(strictGuard.level(makeError("asasasd/hello.js", WARNING)));
-    assertNull(strictGuard.level(makeError("asasasd/hello.js", OFF)));
-    assertNull(strictGuard.level(makeError("asasasd/hello.js", ERROR)));
-    assertNull(strictGuard.level(makeError(null)));
-    assertNull(strictGuard.level(makeError(null, WARNING)));
+    assertThat(strictGuard.level(makeError("asasasd/foo/hello.js", WARNING))).isEqualTo(ERROR);
+    assertThat(strictGuard.level(makeError("asasasd/foo/hello.js", ERROR))).isNull();
+    assertThat(strictGuard.level(makeError("asasasd/hello.js", WARNING))).isNull();
+    assertThat(strictGuard.level(makeError("asasasd/hello.js", OFF))).isNull();
+    assertThat(strictGuard.level(makeError("asasasd/hello.js", ERROR))).isNull();
+    assertThat(strictGuard.level(makeError(null))).isNull();
+    assertThat(strictGuard.level(makeError(null, WARNING))).isNull();
 
-    assertFalse(strictGuard.disables(DiagnosticGroups.DEPRECATED));
+    assertThat(strictGuard.disables(DiagnosticGroups.DEPRECATED)).isFalse();
   }
 
   @Test
@@ -154,13 +148,13 @@ public final class WarningsGuardTest extends TestCase {
 
     WarningsGuard guard = new ComposeWarningsGuard(g1, g2);
 
-    assertNull(guard.level(makeError("aaa")));
-    assertNull(guard.level(makeError("12345")));
-    assertEquals(ERROR, guard.level(makeError("123456")));
-    assertEquals(WARNING, guard.level(makeError("12345", 12)));
-    assertNull(guard.level(makeError("12345", 13)));
+    assertThat(guard.level(makeError("aaa"))).isNull();
+    assertThat(guard.level(makeError("12345"))).isNull();
+    assertThat(guard.level(makeError("123456"))).isEqualTo(ERROR);
+    assertThat(guard.level(makeError("12345", 12))).isEqualTo(WARNING);
+    assertThat(guard.level(makeError("12345", 13))).isNull();
 
-    assertTrue(guard.disables(DiagnosticGroups.DEPRECATED));
+    assertThat(guard.disables(DiagnosticGroups.DEPRECATED)).isTrue();
   }
 
   @Test
@@ -169,17 +163,13 @@ public final class WarningsGuardTest extends TestCase {
     WarningsGuard strictGuard = new StrictWarningsGuard();
 
     WarningsGuard guard = new ComposeWarningsGuard(strictGuard, pathGuard);
-    assertEquals(
-        OFF, guard.level(makeError("asasasd/hello.js", WARNING)));
-    assertEquals(
-        ERROR, guard.level(makeError("asasasd/foo/hello.js", WARNING)));
+    assertThat(guard.level(makeError("asasasd/hello.js", WARNING))).isEqualTo(OFF);
+    assertThat(guard.level(makeError("asasasd/foo/hello.js", WARNING))).isEqualTo(ERROR);
 
     // Try again with the guards reversed.
     guard = new ComposeWarningsGuard(pathGuard, strictGuard);
-    assertEquals(
-        OFF, guard.level(makeError("asasasd/hello.js", WARNING)));
-    assertEquals(
-        ERROR, guard.level(makeError("asasasd/foo/hello.js", WARNING)));
+    assertThat(guard.level(makeError("asasasd/hello.js", WARNING))).isEqualTo(OFF);
+    assertThat(guard.level(makeError("asasasd/foo/hello.js", WARNING))).isEqualTo(ERROR);
   }
 
   @Test
@@ -192,13 +182,13 @@ public final class WarningsGuardTest extends TestCase {
     WarningsGuard strictGuard = new StrictWarningsGuard();
 
     WarningsGuard guard = new ComposeWarningsGuard(strictGuard, typeGuard);
-    assertEquals(WARNING, guard.level(
-        JSError.make("example.js", 1, 0, CheckAccessControls.DEPRECATED_NAME)));
+    assertThat(guard.level(JSError.make("example.js", 1, 0, CheckAccessControls.DEPRECATED_NAME)))
+        .isEqualTo(WARNING);
 
     // Ordering applied doesn't matter, do it again reversed.
     guard = new ComposeWarningsGuard(typeGuard, strictGuard);
-    assertEquals(WARNING, guard.level(
-        JSError.make("example.js", 1, 0, CheckAccessControls.DEPRECATED_NAME)));
+    assertThat(guard.level(JSError.make("example.js", 1, 0, CheckAccessControls.DEPRECATED_NAME)))
+        .isEqualTo(WARNING);
   }
 
   @Test
@@ -238,10 +228,10 @@ public final class WarningsGuardTest extends TestCase {
     guardB.addGuard(visibilityWarning);
     guardB.addGuard(visibilityOff);
 
-    assertFalse(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS));
-    assertTrue(guardA.enables(DiagnosticGroups.ACCESS_CONTROLS));
-    assertTrue(guardB.disables(DiagnosticGroups.ACCESS_CONTROLS));
-    assertFalse(guardB.enables(DiagnosticGroups.ACCESS_CONTROLS));
+    assertThat(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS)).isFalse();
+    assertThat(guardA.enables(DiagnosticGroups.ACCESS_CONTROLS)).isTrue();
+    assertThat(guardB.disables(DiagnosticGroups.ACCESS_CONTROLS)).isTrue();
+    assertThat(guardB.enables(DiagnosticGroups.ACCESS_CONTROLS)).isFalse();
   }
 
   @Test
@@ -261,7 +251,7 @@ public final class WarningsGuardTest extends TestCase {
           DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING));
     guardA.addGuard(visibilityOff);
 
-    assertTrue(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS));
+    assertThat(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS)).isTrue();
   }
 
   @Test
@@ -275,18 +265,16 @@ public final class WarningsGuardTest extends TestCase {
     guardA.addGuard(visibilityWarning);
     guardA.addGuard(visibilityOff);
 
-    assertTrue(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS));
+    assertThat(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS)).isTrue();
   }
 
   @Test
   public void testEmergencyComposeGuard1() {
     ComposeWarningsGuard guard = new ComposeWarningsGuard();
     guard.addGuard(new StrictWarningsGuard());
-    assertEquals(ERROR,
-        guard.level(makeErrorWithLevel(WARNING)));
-    assertEquals(WARNING,
-        guard.makeEmergencyFailSafeGuard().level(
-            makeErrorWithLevel(WARNING)));
+    assertThat(guard.level(makeErrorWithLevel(WARNING))).isEqualTo(ERROR);
+    assertThat(guard.makeEmergencyFailSafeGuard().level(makeErrorWithLevel(WARNING)))
+        .isEqualTo(WARNING);
   }
 
   @Test
@@ -295,11 +283,9 @@ public final class WarningsGuardTest extends TestCase {
     guard.addGuard(
         new DiagnosticGroupWarningsGuard(
             DiagnosticGroups.ACCESS_CONTROLS, ERROR));
-    assertEquals(ERROR,
-        guard.level(makeErrorWithType(VISIBILITY_MISMATCH)));
-    assertEquals(WARNING,
-        guard.makeEmergencyFailSafeGuard().level(
-            makeErrorWithType(VISIBILITY_MISMATCH)));
+    assertThat(guard.level(makeErrorWithType(VISIBILITY_MISMATCH))).isEqualTo(ERROR);
+    assertThat(guard.makeEmergencyFailSafeGuard().level(makeErrorWithType(VISIBILITY_MISMATCH)))
+        .isEqualTo(WARNING);
   }
 
   @Test
@@ -311,11 +297,9 @@ public final class WarningsGuardTest extends TestCase {
     guard.addGuard(
         new DiagnosticGroupWarningsGuard(
             DiagnosticGroups.ACCESS_CONTROLS, OFF));
-    assertEquals(OFF,
-        guard.level(makeErrorWithType(VISIBILITY_MISMATCH)));
-    assertEquals(OFF,
-        guard.makeEmergencyFailSafeGuard().level(
-            makeErrorWithType(VISIBILITY_MISMATCH)));
+    assertThat(guard.level(makeErrorWithType(VISIBILITY_MISMATCH))).isEqualTo(OFF);
+    assertThat(guard.makeEmergencyFailSafeGuard().level(makeErrorWithType(VISIBILITY_MISMATCH)))
+        .isEqualTo(OFF);
   }
 
   @Test
@@ -323,9 +307,9 @@ public final class WarningsGuardTest extends TestCase {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.CHECK_TYPES, ERROR);
 
-    assertEquals(ERROR, guard.level(makeError("foo", DETERMINISTIC_TEST)));
+    assertThat(guard.level(makeError("foo", DETERMINISTIC_TEST))).isEqualTo(ERROR);
 
-    assertFalse(guard.disables(DiagnosticGroups.CHECK_TYPES));
+    assertThat(guard.disables(DiagnosticGroups.CHECK_TYPES)).isFalse();
 
     assertEnables(guard, DiagnosticGroups.CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
@@ -336,7 +320,7 @@ public final class WarningsGuardTest extends TestCase {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.CHECK_TYPES, OFF);
 
-    assertTrue(guard.disables(DiagnosticGroups.CHECK_TYPES));
+    assertThat(guard.disables(DiagnosticGroups.CHECK_TYPES)).isTrue();
 
     assertNotEnables(guard, DiagnosticGroups.CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
@@ -347,9 +331,9 @@ public final class WarningsGuardTest extends TestCase {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.DEPRECATED, OFF);
 
-    assertTrue(guard.disables(DiagnosticGroups.DEPRECATED));
-    assertFalse(guard.disables(DiagnosticGroups.VISIBILITY));
-    assertFalse(guard.disables(DiagnosticGroups.ACCESS_CONTROLS));
+    assertThat(guard.disables(DiagnosticGroups.DEPRECATED)).isTrue();
+    assertThat(guard.disables(DiagnosticGroups.VISIBILITY)).isFalse();
+    assertThat(guard.disables(DiagnosticGroups.ACCESS_CONTROLS)).isFalse();
 
     assertNotEnables(guard, DiagnosticGroups.DEPRECATED);
     assertNotEnables(guard, DiagnosticGroups.VISIBILITY);
@@ -367,15 +351,9 @@ public final class WarningsGuardTest extends TestCase {
     Node code = compiler.parseTestCode(
         "/** @suppress {deprecated} */ function f() { a; } "
         + "function g() { b; }");
-    assertNull(
-        guard.level(JSError.make(code, BAR_WARNING)));
-    assertEquals(
-        OFF,
-        guard.level(JSError.make(
-            findNameNode(code, "a"), BAR_WARNING)));
-    assertNull(
-        guard.level(JSError.make(
-            findNameNode(code, "b"), BAR_WARNING)));
+    assertThat(guard.level(JSError.make(code, BAR_WARNING))).isNull();
+    assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
+    assertThat(guard.level(JSError.make(findNameNode(code, "b"), BAR_WARNING))).isNull();
   }
 
   @Test
@@ -388,14 +366,8 @@ public final class WarningsGuardTest extends TestCase {
     Node code = compiler.parseTestCode(
         "/** @fileoverview \n * @suppress {deprecated} */ function f() { a; } "
         + "function g() { b; }");
-    assertEquals(
-        OFF,
-        guard.level(JSError.make(
-            findNameNode(code, "a"), BAR_WARNING)));
-    assertEquals(
-        OFF,
-        guard.level(JSError.make(
-            findNameNode(code, "b"), BAR_WARNING)));
+    assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
+    assertThat(guard.level(JSError.make(findNameNode(code, "b"), BAR_WARNING))).isEqualTo(OFF);
   }
 
   @Test
@@ -407,10 +379,7 @@ public final class WarningsGuardTest extends TestCase {
 
     Node code = compiler.parseTestCode(
         "/** @suppress {deprecated} */ var f = function() { a; }");
-    assertEquals(
-        OFF,
-        guard.level(JSError.make(
-            findNameNode(code, "a"), BAR_WARNING)));
+    assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
 
   @Test
@@ -423,10 +392,7 @@ public final class WarningsGuardTest extends TestCase {
     Node code = compiler.parseTestCode(
         "var goog = {}; "
         + "/** @suppress {deprecated} */ goog.f = function() { a; }");
-    assertEquals(
-        OFF,
-        guard.level(JSError.make(
-            findNameNode(code, "a"), BAR_WARNING)));
+    assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
 
   @Test
@@ -442,9 +408,7 @@ public final class WarningsGuardTest extends TestCase {
 
     // We only care about @suppress annotations at the function and
     // script level.
-    assertNull(
-        guard.level(JSError.make(
-            findNameNode(code, "a"), BAR_WARNING)));
+    assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isNull();
   }
 
   @Test
@@ -503,12 +467,12 @@ public final class WarningsGuardTest extends TestCase {
   }
 
   private static void assertEnables(WarningsGuard guard, DiagnosticGroup type) {
-    assertTrue((new ComposeWarningsGuard(guard)).enables(type));
+    assertThat(new ComposeWarningsGuard(guard).enables(type)).isTrue();
   }
 
   private static void assertNotEnables(WarningsGuard guard,
       DiagnosticGroup type) {
-    assertFalse((new ComposeWarningsGuard(guard)).enables(type));
+    assertThat(new ComposeWarningsGuard(guard).enables(type)).isFalse();
   }
 
   private static JSError makeError(String sourcePath) {

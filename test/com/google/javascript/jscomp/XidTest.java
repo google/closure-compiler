@@ -15,6 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -43,7 +46,7 @@ public class XidTest extends TestCase {
     for (int i = lo; i <= hi; ++i) {
       String key = Xid.toString(i);
       Integer dup = map.get(key);
-      assertNull("Both " + dup + " and " + i + " map to: " + key, dup);
+      assertWithMessage("Both " + dup + " and " + i + " map to: " + key).that(dup).isNull();
       map.put(key, i);
     }
   }
@@ -65,9 +68,7 @@ public class XidTest extends TestCase {
   }
 
   private void helpTestLength(int i) {
-    String key = Xid.toString(i);
-    assertTrue("Long value for " + i + ": " + key, key.length() <= 6);
-    assertTrue("Empty value for " + i + ": " + key, key.length() > 0);
+    assertThat(Xid.toString(i)).matches(".{1,6}");
   }
 
   @Test

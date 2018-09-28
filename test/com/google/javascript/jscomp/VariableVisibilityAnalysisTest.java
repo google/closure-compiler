@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallbackInterface;
@@ -111,10 +113,10 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
       VariableVisibility visibility) {
 
     Node functionNode = searchForFunction(functionName);
-    assertNotNull(functionNode);
+    assertThat(functionNode).isNotNull();
 
     Node nameNode = functionNode.getFirstChild();
-    assertEquals(visibility, lastAnalysis.getVariableVisibility(nameNode));
+    assertThat(lastAnalysis.getVariableVisibility(nameNode)).isEqualTo(visibility);
   }
 
   private void assertLabeledVariableHasVisibility(String label,
@@ -127,7 +129,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
     //   NAME
     Node nameNode = labeledVariable.getFirstChild();
 
-    assertEquals(visibility, lastAnalysis.getVariableVisibility(nameNode));
+    assertThat(lastAnalysis.getVariableVisibility(nameNode)).isEqualTo(visibility);
   }
 
   private void assertIsCapturedLocal(String label) {
@@ -148,10 +150,10 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
   private void assertIsParameter(String parameterName) {
     Node parameterNode = searchForParameter(parameterName);
 
-    assertNotNull(parameterNode);
+    assertThat(parameterNode).isNotNull();
 
-    assertEquals(VariableVisibility.PARAMETER,
-        lastAnalysis.getVariableVisibility(parameterNode));
+    assertThat(lastAnalysis.getVariableVisibility(parameterNode))
+        .isEqualTo(VariableVisibility.PARAMETER);
   }
 
   private VariableVisibilityAnalysis analyze(String src) {
@@ -211,7 +213,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
     LabeledVariableSearcher s = new LabeledVariableSearcher(label);
 
     NodeTraversal.traverse(getLastCompiler(), getLastCompiler().jsRoot, s);
-    assertNotNull("Label " + label + " should be in the source code", s.found);
+    assertWithMessage("Label " + label + " should be in the source code").that(s.found).isNotNull();
 
     return s.found;
   }
