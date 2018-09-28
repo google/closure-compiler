@@ -55,6 +55,12 @@ public final class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
 
+  private static final String EXPORT_PROPERTY_DEF =
+      lines(
+          "goog.exportProperty = function(object, publicName, symbol) {",
+          "  object[publicName] = symbol;",
+          "};");
+
   @Test
   public void testStaticMemberClass() {
     CompilerOptions options = createCompilerOptions();
@@ -1034,18 +1040,20 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
 
     Compiler compiler =
-        compile(options,
-        lines(
-            "class FooElement extends PolymerElement {",
-            "  static get properties() {",
-            "    return {",
-            "      longUnusedProperty: String,",
-            "    }",
-            "  }",
-            "  longUnusedMethod() {",
-            "    return this.longUnusedProperty;",
-            "  }",
-            "}"));
+        compile(
+            options,
+            lines(
+                EXPORT_PROPERTY_DEF,
+                "class FooElement extends PolymerElement {",
+                "  static get properties() {",
+                "    return {",
+                "      longUnusedProperty: String,",
+                "    }",
+                "  }",
+                "  longUnusedMethod() {",
+                "    return this.longUnusedProperty;",
+                "  }",
+                "}"));
     String source = compiler.getCurrentJsSource();
 
     // If we see these identifiers anywhere in the output source, we know that we successfully
@@ -1074,6 +1082,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         compile(
             options,
             lines(
+                EXPORT_PROPERTY_DEF,
                 "class FooElement extends PolymerElement {",
                 "  constructor() {",
                 "    super();",

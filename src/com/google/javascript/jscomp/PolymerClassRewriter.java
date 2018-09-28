@@ -31,7 +31,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -128,7 +127,7 @@ final class PolymerClassRewriter {
     ImmutableList<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
     ImmutableList<MemberDefinition> attributeReflectedProps =
         parseAttributeReflectedProperties(cls);
-    addInterfaceExterns(cls, readOnlyProps, attributeReflectedProps);
+    createExportsAndExterns(cls, readOnlyProps, attributeReflectedProps);
     removePropertyDocs(objLit, PolymerClassDefinition.DefinitionType.ObjectLiteral);
 
     Node statements = block.removeChildren();
@@ -218,7 +217,7 @@ final class PolymerClassRewriter {
     ImmutableList<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
     ImmutableList<MemberDefinition> attributeReflectedProps =
         parseAttributeReflectedProperties(cls);
-    addInterfaceExterns(cls, readOnlyProps, attributeReflectedProps);
+    createExportsAndExterns(cls, readOnlyProps, attributeReflectedProps);
 
     // If an external interface is required, mark the class as implementing it
     if (polymerExportPolicy == PolymerExportPolicy.EXPORT_ALL
@@ -426,19 +425,6 @@ final class PolymerClassRewriter {
     }
   }
 
-  /** Appends all of the given methods to the given block. */
-  private void appendMethodsToBlock(
-      final Collection<MemberDefinition> methods, Node block, String basePath) {
-    for (MemberDefinition method : methods) {
-      Node propertyNode = IR.exprResult(
-          NodeUtil.newQName(compiler, basePath + method.name.getString()));
-      propertyNode.useSourceInfoIfMissingFromForTree(method.name);
-      JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(method.info);
-      propertyNode.getFirstChild().setJSDocInfo(info.build());
-      block.addChildToBack(propertyNode);
-    }
-  }
-
   /** Remove all JSDocs from properties of a class definition */
   private void removePropertyDocs(
       final Node objLit, PolymerClassDefinition.DefinitionType defType) {
@@ -539,7 +525,7 @@ final class PolymerClassRewriter {
 
     JSDocInfoBuilder info = new JSDocInfoBuilder(true);
     // This is overriding a generated function which was added to the interface in
-    // {@code addInterfaceExterns}.
+    // {@code createExportsAndExterns}.
     info.recordOverride();
     exprResNode.getFirstChild().setJSDocInfo(info.build());
 
@@ -547,12 +533,25 @@ final class PolymerClassRewriter {
   }
 
   /**
-   * Adds an interface for the given ClassDefinition to externs. This allows generated setter
-   * functions for read-only properties to avoid renaming altogether.
+   * Create exports and externs to protect element properties and methods from renaming and dead
+   * code removal.
    *
-   * @see https://www.polymer-project.org/0.8/docs/devguide/properties.html#read-only
+   * <p>Since Polymer templates, observers, and computed properties rely on string references to
+   * element properties and methods, and because we don't have a way to update those references
+   * reliably, we instead export or extern them.
+   *
+   * <p>For properties, we create a new interface called {@code Polymer<ElementName>Interface}, add
+   * all element properties to it, mark that the element class {@code @implements} this interface,
+   * and add the interface to the Closure externs. The specific set of properties we add to this
+   * interface is determined by the value of {@code polymerExportPolicy}.
+   *
+   * <p>For methods, when {@code polymerExportPolicy = EXPORT_ALL}, we instead generate {@code
+   * goog.exportProperty} calls. This is preferable to using the externs, since it can result in
+   * better minified code (since compiled code can still use the minified name), avoids unnecessary
+   * {@code missingOverride} checks, and avoids needing to keep the signatures of the element class
+   * and the generated interface synchronized (previously the source of a bug).
    */
-  private void addInterfaceExterns(
+  private void createExportsAndExterns(
       final PolymerClassDefinition cls,
       List<MemberDefinition> readOnlyProps,
       List<MemberDefinition> attributeReflectedProps) {
@@ -591,7 +590,14 @@ final class PolymerClassRewriter {
       for (MemberDefinition method : cls.methods) {
         uniqueMethods.put(method.name.getString(), method);
       }
-      appendMethodsToBlock(uniqueMethods.values(), block, interfaceBasePath);
+      for (MemberDefinition method : uniqueMethods.values()) {
+        addExportPropertyCall(
+            cls.target.getQualifiedName() + ".prototype",
+            method.name.getString(),
+            cls.target.getQualifiedName() + ".prototype." + method.name.getString(),
+            method.value,
+            cls.definition);
+      }
 
     } else if (polymerVersion == 1) {
       // For Polymer 1, all declared properties are non-renameable
@@ -632,6 +638,47 @@ final class PolymerClassRewriter {
     scopeRoot.addChildrenToBack(stmts);
 
     compiler.reportChangeToEnclosingScope(stmts);
+  }
+
+  /**
+   * Insert a call to {@code goog.exportProperty} (or equivalent function depending on current
+   * coding convention).
+   *
+   * <p>Note this function is very similar to {@link GenerateExports#addExportPropertyCall}.
+   *
+   * @param object Object whose static property is being exported (e.g. @{code MyClass.prototype}).
+   * @param publicName Unobfuscated name to export (e.g. @{code "myMethod"}).
+   * @param symbol Object the name should point to (e.g. @{code MyClass.prototype.myMethod}).
+   * @param source The context node to use for source info.
+   * @param insertAfter The call will be inserted as the next sibling of this node (or as close as
+   *     possible).
+   */
+  private void addExportPropertyCall(
+      String object, String publicName, String symbol, Node source, Node insertAfter) {
+    CodingConvention convention = compiler.getCodingConvention();
+
+    // Generate the `goog.exportProperty(object, publicName, symbol);` call.
+    String exportPropertyFunction = convention.getExportPropertyFunction();
+    Node call =
+        IR.call(
+            NodeUtil.newQName(
+                compiler, exportPropertyFunction,
+                source, exportPropertyFunction),
+            NodeUtil.newQName(
+                compiler, object,
+                source, exportPropertyFunction),
+            IR.string(publicName),
+            NodeUtil.newQName(
+                compiler, symbol,
+                source, exportPropertyFunction));
+    Node expression = IR.exprResult(call).useSourceInfoIfMissingFromForTree(source);
+
+    // Walk up until we find a statement we can insert after.
+    while (!NodeUtil.isStatementBlock(insertAfter.getParent())) {
+      insertAfter = insertAfter.getParent();
+    }
+    insertAfter.getParent().addChildAfter(expression, insertAfter);
+    compiler.reportChangeToEnclosingScope(expression);
   }
 
   /**

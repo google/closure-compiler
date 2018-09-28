@@ -121,6 +121,12 @@ public class PolymerPassTest extends CompilerTestCase {
           " */",
           "$jscomp.reflectObject = function (type, object) { return object; };");
 
+  private static final String EXPORT_PROPERTY_DEF =
+      lines(
+          "goog.exportProperty = function(object, publicName, symbol) {",
+          "  object[publicName] = symbol;",
+          "};");
+
   private int polymerVersion = 1;
   private PolymerExportPolicy polymerExportPolicy = PolymerExportPolicy.LEGACY;
   private boolean propertyRenamingEnabled = false;
@@ -3549,18 +3555,42 @@ public class PolymerPassTest extends CompilerTestCase {
             "XElement.prototype.thingToDo;"));
   }
 
+  @Test
+  public void textExportsMethodsFromClassBasedElement() {
+    polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    test(
+        2,
+        lines(
+            EXPORT_PROPERTY_DEF,
+            "class TestElement extends PolymerElement {",
+            "  method1() {}",
+            "  method2() {}",
+            "}"),
+        lines(
+            EXPORT_PROPERTY_DEF,
+            "/** @implements {PolymerTestElementInterface} */",
+            "class TestElement extends PolymerElement {",
+            "  method1() {}",
+            "  method2() {}",
+            "}",
+            "goog.exportProperty(TestElement.prototype, \"method2\",",
+            "    TestElement.prototype.method2);",
+            "goog.exportProperty(TestElement.prototype, \"method1\",",
+            "    TestElement.prototype.method1);"));
+  }
+
   /**
-   * When --polymer_export_policy=EXPORT_ALL, the PolymerPass will add all methods of an element to
-   * that element's generated interface (which is injected into the externs), including methods
-   * inherited from Polymer Behaviors. Ensure that each method is included on the interface only
-   * once, even when it is implemented in multiple places.
+   * When --polymer_export_policy=EXPORT_ALL, the PolymerPass will export all methods of an element
+   * including methods inherited from Polymer Behaviors. Ensure that each method is included on the
+   * interface only once, even when it is implemented in multiple places.
    */
   @Test
-  public void testExportAllOnlyExportsEachMethodOnce() {
+  public void textExportsUniqueMethodsFromLegacyElementAndBehaviors() {
     polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
-
-    String js =
+    test(
+        2,
         lines(
+            EXPORT_PROPERTY_DEF,
             "/** @polymerBehavior */",
             "const Behavior1 = {",
             "  onAll: function() {},",
@@ -3576,18 +3606,43 @@ public class PolymerPassTest extends CompilerTestCase {
             "  behaviors: [Behavior1, Behavior2],",
             "  onAll() {},",
             "  onElement: function() {},",
-            "});");
-
-    String newExterns =
+            "});"),
         lines(
-            EXTERNS,
-            "/** @interface */ var PolymerTestElementElementInterface=function(){};",
-            "PolymerTestElementElementInterface.prototype.onAll;",
-            "PolymerTestElementElementInterface.prototype.onBehavior1;",
-            "PolymerTestElementElementInterface.prototype.onBehavior2;",
-            "PolymerTestElementElementInterface.prototype.onElement");
-
-    testExternChanges(EXTERNS, js, newExterns);
+            EXPORT_PROPERTY_DEF,
+            "/** @nocollapse @polymerBehavior */",
+            "const Behavior1 = {",
+            "  /** @suppress {checkTypes,globalThis,visibility} */ onAll: function() {},",
+            "  /** @suppress {checkTypes,globalThis,visibility} */ onBehavior1: function() {}",
+            "};",
+            "/** @nocollapse @polymerBehavior */",
+            "const Behavior2 = {",
+            "  /** @suppress {checkTypes,globalThis,visibility} */ onAll: function() {},",
+            "  /** @suppress {checkTypes,globalThis,visibility} */ onBehavior2: function() {}",
+            "};",
+            "/**",
+            " * @constructor",
+            " * @extends {PolymerElement}",
+            " * @implements {PolymerTestElementElementInterface}",
+            " */",
+            "var TestElementElement = function() {};",
+            "/** @suppress {unusedPrivateMembers} */",
+            "TestElementElement.prototype.onBehavior1 = function() {};",
+            "/** @suppress {unusedPrivateMembers} */",
+            "TestElementElement.prototype.onBehavior2 = function() {};",
+            "Polymer(/** @lends {TestElementElement.prototype} */ {",
+            "  is: \"test-element\",",
+            "  behaviors: [Behavior1, Behavior2],",
+            "  /** @this {TestElementElement} */ onAll() {},",
+            "  /** @this {TestElementElement} */ onElement: function() {}",
+            "});",
+            "goog.exportProperty(TestElementElement.prototype, \"onElement\",",
+            "    TestElementElement.prototype.onElement);",
+            "goog.exportProperty(TestElementElement.prototype, \"onBehavior2\",",
+            "    TestElementElement.prototype.onBehavior2);",
+            "goog.exportProperty(TestElementElement.prototype, \"onBehavior1\",",
+            "    TestElementElement.prototype.onBehavior1);",
+            "goog.exportProperty(TestElementElement.prototype, \"onAll\",",
+            "    TestElementElement.prototype.onAll);"));
   }
 
   @Override
