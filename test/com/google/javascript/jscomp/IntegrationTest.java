@@ -1714,7 +1714,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "function getCss() {\n"
         + "  return 'bar';"
         + "}");
-    assertThat(lastCompiler.getCssNames()).isEqualTo(ImmutableMap.of("foo", 1));
+    assertThat(lastCompiler.getCssNames()).containsExactly("foo", 1);
   }
 
   @Test
