@@ -82,7 +82,7 @@ public class TimelineTest extends TestCase {
 
   @Test
   public void testUnknownTimesReturnNull() {
-    assertNull(timeline.getSince("Monday"));
+    assertThat(timeline.getSince("Monday")).isNull();
   }
 
   @Test

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ScopeSubject.assertScope;
 
 import com.google.javascript.rhino.Node;
@@ -54,7 +55,7 @@ public final class SyntacticScopeCreatorTest extends TestCase {
 
   private Node getRoot(String js) {
     Node root = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrorCount()).isEqualTo(0);
     return root;
   }
 
@@ -98,12 +99,12 @@ public final class SyntacticScopeCreatorTest extends TestCase {
     Node root = getRoot("function foo() { var x = 10; }");
 
     Scope globalScope = (Scope) scopeCreator.createScope(root, null);
-    assertEquals(root, globalScope.getRootNode());
+    assertThat(globalScope.getRootNode()).isEqualTo(root);
 
     Node fooNode = root.getFirstChild();
-    assertEquals(Token.FUNCTION, fooNode.getToken());
+    assertThat(fooNode.getToken()).isEqualTo(Token.FUNCTION);
     Scope fooScope = (Scope) scopeCreator.createScope(fooNode, globalScope);
-    assertEquals(fooNode, fooScope.getRootNode());
+    assertThat(fooScope.getRootNode()).isEqualTo(fooNode);
     assertScope(fooScope).declares("x").directly();
   }
 

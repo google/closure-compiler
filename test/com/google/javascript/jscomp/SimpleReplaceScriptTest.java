@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
@@ -54,7 +55,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "obj.temp(10);\n";
     Result result = runReplaceScript(options,
         ImmutableList.of(source), 0, 0, source, 0, false).getResult();
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
   }
 
   @Test
@@ -65,7 +66,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         SourceFile.fromCode("in", ""));
 
     Result result = compiler.compile(EXTVAR_EXTERNS, inputs, options);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     CompilerInput oldInput = compiler.getInput(new InputId("in"));
     JSModule myModule = oldInput.getModule();
@@ -91,7 +92,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("in", source));
     Result result = compiler.compile(EXTVAR_EXTERNS, inputs, options);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     // Now try to re-infer with a modified version of source
     // with a new variable.
@@ -151,7 +152,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "var c = cVar + 1;";
     Result result = this.runReplaceScript(options, ImmutableList.of(
         firstSource, secondSource), 1, 0, modifiedSource, 1, true).getResult();
-    assertFalse(result.success);
+    assertThat(result.success).isFalse();
     assertThat(result.errors).hasLength(2);
     int i = 2;
     for (JSError e : result.errors) {
@@ -323,7 +324,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
             .getResult();
     // TODO(joeltine): Change back to asserting an error when b/28869281
     // is fixed.
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
   }
 
   @Test
@@ -336,7 +337,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         ImmutableList.of(src), 0, 0, modifiedSrc, 0, false).getResult();
     // TODO(joeltine): Change back to asserting an error when b/28869281
     // is fixed.
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
   }
 
   @Test
@@ -348,7 +349,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "/** @constructor */ ns.Bar = function() {};";
     Result result = runReplaceScript(options,
         ImmutableList.of(source0), 1, 0, source0, 0, true).getResult();
-    assertFalse(result.success);
+    assertThat(result.success).isFalse();
 
     assertThat(result.errors).hasLength(1);
     assertErrorType(result.errors[0], CheckProvides.MISSING_PROVIDE_WARNING, 1);
@@ -366,7 +367,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "var b = a * 20;";
     Result result = this.runReplaceScript(options,
         ImmutableList.of(src), 0, 0, modifiedSrc, 0, false).getResult();
-    assertFalse(result.success);
+    assertThat(result.success).isFalse();
 
     assertThat(result.errors).hasLength(1);
     assertErrorType(result.errors[0], TypeValidator.TYPE_MISMATCH_WARNING, 4);
@@ -792,7 +793,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     type = compiler.getTypeRegistry().getGlobalType("ns.Foo");
     fnType = type.toObjectType().getConstructor();
     StaticTypedSlot newSlot = fnType.getSlot("prototype");
-    assertNotSame(originalSlot, newSlot);
+    assertThat(newSlot).isNotSameAs(originalSlot);
   }
 
   /** This test will fail if global scope generation happens before closure-pass. */
@@ -919,8 +920,8 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
     Result result = this.runReplaceScript(options, ImmutableList.of(src0,
         src1), 0, 0, modifiedSrc1, 1, true).getResult();
-        //ImmutableList.of(src0, modifiedSrc1), 1, 0, modifiedSrc1, 1, true);
-    assertFalse(result.success);
+    // ImmutableList.of(src0, modifiedSrc1), 1, 0, modifiedSrc1, 1, true);
+    assertThat(result.success).isFalse();
     assertThat(result.errors).hasLength(1);
     assertErrorType(result.errors[0],
         CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS, 5);
@@ -961,7 +962,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     SourceFile newSource1 = SourceFile.fromCode("in1", src1);
     JsAst ast = new JsAst(newSource1);
     compiler.replaceScript(ast);
-    assertTrue(compiler.getResult().success);
+    assertThat(compiler.getResult().success).isTrue();
     assertScopesSimilar(oldGlobalScope, compiler.getTopScope());
     assertScopeAndThisForScopeSimilar(compiler.getTopScope());
 
@@ -969,16 +970,16 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     SourceFile newSource2 = SourceFile.fromCode("in2", src2);
     ast = new JsAst(newSource2);
     compiler.replaceScript(ast);
-    assertTrue(compiler.getResult().success);
+    assertThat(compiler.getResult().success).isTrue();
     assertScopesSimilar(oldGlobalScope, compiler.getTopScope());
     assertScopeAndThisForScopeSimilar(compiler.getTopScope());
 
     newSource2 = SourceFile.fromCode("in2", "");
     ast = new JsAst(newSource2);
     compiler.replaceScript(ast);
-    assertTrue(compiler.getResult().success);
-    assertSubsetScope(compiler.getTopScope(), oldGlobalScope,
-        ImmutableSet.of("obj2", "objNoType2"));
+    assertThat(compiler.getResult().success).isTrue();
+    assertSubsetScope(
+        compiler.getTopScope(), oldGlobalScope, ImmutableSet.of("obj2", "objNoType2"));
     assertScopeAndThisForScopeSimilar(compiler.getTopScope());
   }
 
@@ -986,7 +987,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     ObjectType typeOfThis = scope.getTypeOfThis().toObjectType();
     for (TypedVar v : scope.getAllSymbols()) {
       if (!v.getName().contains(".")) {
-        assertEquals(v.getNameNode(), typeOfThis.getPropertyNode(v.getName()));
+        assertThat(typeOfThis.getPropertyNode(v.getName())).isEqualTo(v.getNameNode());
       }
     }
   }
@@ -1000,10 +1001,10 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     for (TypedVar var1 : scope.getVarIterable()) {
       TypedVar var2 = subScope.getVar(var1.getName());
       if (missingVars.contains(var1.getName())) {
-        assertNull(var2);
+        assertThat(var2).isNull();
       } else {
-        assertNotNull(var2);
-        assertEquals(var1.getType(), var2.getType());
+        assertThat(var2).isNotNull();
+        assertThat(var2.getType()).isEqualTo(var1.getType());
       }
     }
   }
@@ -1022,7 +1023,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         ImmutableList.of(src), 0, 0, modifiedSrc, 0, true);
     TypedVar var = compiler.getTopScope().getVar("temp");
     ObjectType type = var.getType().toObjectType().getImplicitPrototype();
-    assertNotNull(type.getOwnPropertyJSDocInfo("prop"));
+    assertThat(type.getOwnPropertyJSDocInfo("prop")).isNotNull();
   }
 
   /** Effectively this tests the clean-up of properties on un-named objects. */
@@ -1036,7 +1037,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "ns.Bar.bar = function() {};\n";
     Result result = this.runReplaceScript(options,
         ImmutableList.of(src0, src1), 0, 0, src1, 1, false).getResult();
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     assertThat(result.errors).isEmpty();
     assertThat(result.warnings).isEmpty();
@@ -1053,7 +1054,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     String src0 = "async function foo() {}";
     Result result =
         this.runReplaceScript(options, ImmutableList.of(src0), 0, 0, src0, 0, false).getResult();
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     assertThat(result.errors).isEmpty();
     assertThat(result.warnings).isEmpty();
@@ -1100,7 +1101,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
     try {
       doAddScript(compiler, updatedOtherSrc, 1);
-      fail("Expected an IllegalStateException to be thrown");
+      assertWithMessage("Expected an IllegalStateException to be thrown").fail();
     } catch (IllegalStateException expectedISE) {
       //ignore expected exception
     }

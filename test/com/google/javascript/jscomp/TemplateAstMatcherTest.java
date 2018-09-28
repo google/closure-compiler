@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
@@ -548,7 +550,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     sb.append("The nodes should").append(shouldMatch ? "" : " not").append(" have matched.\n");
     sb.append("Template node:\n").append(templateRoot.toStringTree()).append("\n");
     sb.append("Test node:\n").append(testNode.getParent().toStringTree()).append("\n");
-    assertEquals(sb.toString(), shouldMatch, matcher.matches(testNode));
+    assertWithMessage(sb.toString()).that(matcher.matches(testNode)).isEqualTo(shouldMatch);
   }
 
   private void assertMatch(Node templateRoot, Node testNode) {

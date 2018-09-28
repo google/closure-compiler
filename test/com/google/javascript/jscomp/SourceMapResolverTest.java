@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.BaseEncoding;
@@ -42,7 +43,7 @@ public final class SourceMapResolverTest extends TestCase {
     SourceFile noInline =
         SourceMapResolver.extractSourceMap(
             SourceFile.fromCode("somePath/hello.js", code), url, false);
-    assertNull(noInline);
+    assertThat(noInline).isNull();
   }
 
   @Test
@@ -63,23 +64,26 @@ public final class SourceMapResolverTest extends TestCase {
     SourceFile result =
         SourceMapResolver.extractSourceMap(
             SourceFile.fromCode("somePath/hello.js", charsetCode), dataURLWithBadCharset, true);
-    assertNull(result);
+    assertThat(result).isNull();
   }
 
   @Test
   public void testAbsolute() {
     SourceFile jsFile = SourceFile.fromCode("somePath/hello.js", "console.log(1)");
     // We cannot reslove absolute urls.
-    assertNull(SourceMapResolver.extractSourceMap(jsFile, "/asdf/asdf.js", true));
-    assertNull(SourceMapResolver.extractSourceMap(jsFile, "/asdf/.././asdf.js", true));
-    assertNull(SourceMapResolver.extractSourceMap(jsFile, "http://google.com/asdf/asdf.js", true));
-    assertNull(SourceMapResolver.extractSourceMap(jsFile, "https://google.com/asdf/asdf.js", true));
+    assertThat(SourceMapResolver.extractSourceMap(jsFile, "/asdf/asdf.js", true)).isNull();
+    assertThat(SourceMapResolver.extractSourceMap(jsFile, "/asdf/.././asdf.js", true)).isNull();
+    assertThat(SourceMapResolver.extractSourceMap(jsFile, "http://google.com/asdf/asdf.js", true))
+        .isNull();
+    assertThat(SourceMapResolver.extractSourceMap(jsFile, "https://google.com/asdf/asdf.js", true))
+        .isNull();
 
     // We can resolve relative urls
-    assertNotNull(SourceMapResolver.extractSourceMap(jsFile, "asdf.js", true));
-    assertNotNull(SourceMapResolver.extractSourceMap(jsFile, "asdf/asdf.js", true));
-    assertNotNull(SourceMapResolver.extractSourceMap(jsFile, "asdf/.././asdf.js", true));
-    assertNotNull(SourceMapResolver.extractSourceMap(jsFile, "not/.././a/js/file.txt", true));
+    assertThat(SourceMapResolver.extractSourceMap(jsFile, "asdf.js", true)).isNotNull();
+    assertThat(SourceMapResolver.extractSourceMap(jsFile, "asdf/asdf.js", true)).isNotNull();
+    assertThat(SourceMapResolver.extractSourceMap(jsFile, "asdf/.././asdf.js", true)).isNotNull();
+    assertThat(SourceMapResolver.extractSourceMap(jsFile, "not/.././a/js/file.txt", true))
+        .isNotNull();
   }
 
   @Test

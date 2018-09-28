@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.SortingErrorManager.ErrorWithLevel;
 import com.google.javascript.jscomp.SortingErrorManager.LeveledJSErrorComparator;
@@ -47,7 +48,7 @@ public final class SortingErrorManagerTest extends TestCase {
 
   @Test
   public void testOrderingBothNull() {
-    assertEquals(0, comparator.compare(null, null));
+    assertThat(comparator.compare(null, null)).isEqualTo(0);
   }
 
   @Test
@@ -156,7 +157,7 @@ public final class SortingErrorManagerTest extends TestCase {
 
           @Override
           protected void printSummary() {
-            assertEquals(1, printed);
+            assertThat(printed).isEqualTo(1);
           }
         };
     manager.report(CheckLevel.ERROR, JSError.make(NULL_SOURCE, -1, -1, FOO_TYPE));
@@ -173,8 +174,8 @@ public final class SortingErrorManagerTest extends TestCase {
 
   private void assertSmaller(ErrorWithLevel p1, ErrorWithLevel p2) {
     int p1p2 = comparator.compare(p1, p2);
-    assertTrue(Integer.toString(p1p2), p1p2 < 0);
+    assertWithMessage(Integer.toString(p1p2)).that(p1p2 < 0).isTrue();
     int p2p1 = comparator.compare(p2, p1);
-    assertTrue(Integer.toString(p2p1), p2p1 > 0);
+    assertWithMessage(Integer.toString(p2p1)).that(p2p1 > 0).isTrue();
   }
 }

@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -735,7 +737,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "const id = function(x) { return x; }",
             "let id2 = function(x) { return id(x); }");
-    assertEquals(50.0, getTypedPercent(js), 0.1);
+    assertThat(getTypedPercent(js)).isWithin(0.1).of(50.0);
   }
 
   @Test
