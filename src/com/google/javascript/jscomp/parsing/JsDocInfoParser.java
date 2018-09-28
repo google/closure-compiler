@@ -53,8 +53,8 @@ import java.util.Set;
 public final class JsDocInfoParser {
   @VisibleForTesting
   public static final String BAD_TYPE_WIKI_LINK =
-      " See https://github.com/google/closure-compiler/wiki/Bad-Type-Annotation for"
-            + " more information.";
+      " See https://github.com/google/closure-compiler/wiki/Annotating-JavaScript-for-the-Closure-Compiler"
+          + " for more information.";
 
   private final JsDocTokenStream stream;
   private final JSDocInfoBuilder jsdocBuilder;

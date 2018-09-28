@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -121,9 +122,7 @@ public final class RhinoErrorReporterTest extends TestCase {
     assertWarning(
         "/** @type string */ var x;",
         RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
-        "Bad type annotation. Type annotations should have curly braces. See"
-            + " https://github.com/google/closure-compiler/wiki/Bad-Type-Annotation"
-            + " for more information.");
+        "Bad type annotation. Type annotations should have curly braces." + BAD_TYPE_WIKI_LINK);
   }
 
   /**
