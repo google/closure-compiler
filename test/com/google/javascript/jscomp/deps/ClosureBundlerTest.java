@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static org.mockito.Mockito.RETURNS_SMART_NULLS;
 import static org.mockito.Mockito.when;
 
@@ -232,7 +233,7 @@ public final class ClosureBundlerTest extends TestCase {
     StringBuilder sb = new StringBuilder();
     try {
       bundler.appendTo(sb, SimpleDependencyInfo.builder("", "").build(), input);
-      fail("Expected an exception");
+      assertWithMessage("Expected an exception").fail();
     } catch (TranspilationException e) {
       assertThat(e)
           .hasMessageThat()

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -85,9 +86,9 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("A/index.js", loader.resolve("B/index.js").resolveJsModule("../A/"));
     assertUri("A/index.js", loader.resolve("B/index.js").resolveJsModule("../A/index"));
     assertUri("A/index.js", loader.resolve("app.js").resolveJsModule("./A/index"));
-    assertNull(loader.resolve("app.js").resolveJsModule("A/index"));
-    assertNull(loader.resolve("folder/app.js").resolveJsModule("A/index"));
-    assertNull(loader.resolve("folder/app.js").resolveJsModule("index"));
+    assertThat(loader.resolve("app.js").resolveJsModule("A/index")).isNull();
+    assertThat(loader.resolve("folder/app.js").resolveJsModule("A/index")).isNull();
+    assertThat(loader.resolve("folder/app.js").resolveJsModule("index")).isNull();
   }
 
   @Test
@@ -143,7 +144,7 @@ public final class ModuleLoaderTest extends TestCase {
             inputs("js/a.js", "js/b.js"),
             BrowserModuleResolver.FACTORY);
     assertUri("js/a.js", loader.resolve("js/a.js"));
-    assertNull(loader.resolve("js/a.js").resolveJsModule("./b"));
+    assertThat(loader.resolve("js/a.js").resolveJsModule("./b")).isNull();
     assertUri("js/b.js", loader.resolve("js/a.js").resolveJsModule("./b.js"));
   }
 
@@ -160,18 +161,18 @@ public final class ModuleLoaderTest extends TestCase {
     input("B/index.js");
     input("app.js");
     assertUri("A/index.js", loader.resolve("A/index.js"));
-    assertNull(loader.resolve("B/index.js").resolveJsModule("../A"));
-    assertNull(loader.resolve("B/index.js").resolveJsModule("../A/index"));
-    assertNull(loader.resolve("app.js").resolveJsModule("./A/index"));
-    assertNull(loader.resolve("app.js").resolveJsModule("A/index"));
-    assertNull(loader.resolve("folder/app.js").resolveJsModule("A/index"));
-    assertNull(loader.resolve("folder/app.js").resolveJsModule("index"));
+    assertThat(loader.resolve("B/index.js").resolveJsModule("../A")).isNull();
+    assertThat(loader.resolve("B/index.js").resolveJsModule("../A/index")).isNull();
+    assertThat(loader.resolve("app.js").resolveJsModule("./A/index")).isNull();
+    assertThat(loader.resolve("app.js").resolveJsModule("A/index")).isNull();
+    assertThat(loader.resolve("folder/app.js").resolveJsModule("A/index")).isNull();
+    assertThat(loader.resolve("folder/app.js").resolveJsModule("index")).isNull();
 
-    assertNull(loader.resolve("B/index.js").resolveJsModule("../A"));
+    assertThat(loader.resolve("B/index.js").resolveJsModule("../A")).isNull();
     assertUri("A/index.js", loader.resolve("B/index.js").resolveJsModule("../A/index.js"));
     assertUri("A/index.js", loader.resolve("app.js").resolveJsModule("./A/index.js"));
     assertUri("A/index.js", loader.resolve("folder/app.js").resolveJsModule("../A/index.js"));
-    assertNull(loader.resolve("folder/app.js").resolveJsModule("index"));
+    assertThat(loader.resolve("folder/app.js").resolveJsModule("index")).isNull();
   }
 
   @Test
@@ -195,24 +196,24 @@ public final class ModuleLoaderTest extends TestCase {
             compilerInputs,
             BrowserModuleResolver.FACTORY);
 
-    assertNull(loader.resolve("/foo.js").resolveJsModule("/A"));
+    assertThat(loader.resolve("/foo.js").resolveJsModule("/A")).isNull();
     assertUri("/A/index.js", loader.resolve("/foo.js").resolveJsModule("/A/index.js"));
-    assertNull(loader.resolve("/foo.js").resolveJsModule("./A"));
+    assertThat(loader.resolve("/foo.js").resolveJsModule("./A")).isNull();
     assertUri("/A/index.js", loader.resolve("/foo.js").resolveJsModule("./A/index.js"));
-    assertNull(loader.resolve("/foo.js").resolveJsModule("/A"));
-    assertNull(loader.resolve("/foo.js").resolveJsModule("/A/index"));
+    assertThat(loader.resolve("/foo.js").resolveJsModule("/A")).isNull();
+    assertThat(loader.resolve("/foo.js").resolveJsModule("/A/index")).isNull();
     assertUri("/A/index.json", loader.resolve("/foo.js").resolveJsModule("/A/index.json"));
 
-    assertNull(loader.resolve("/foo.js").resolveJsModule("A"));
-    assertNull(loader.resolve("/node_modules/A/foo.js").resolveJsModule("A"));
-    assertNull(loader.resolve("/node_modules/A/index.js").resolveJsModule("./foo"));
+    assertThat(loader.resolve("/foo.js").resolveJsModule("A")).isNull();
+    assertThat(loader.resolve("/node_modules/A/foo.js").resolveJsModule("A")).isNull();
+    assertThat(loader.resolve("/node_modules/A/index.js").resolveJsModule("./foo")).isNull();
     assertUri(
         "/node_modules/A/foo.js",
         loader.resolve("/node_modules/A/index.js").resolveJsModule("./foo.js"));
 
-    assertNull(loader.resolve("/app.js").resolveJsModule("/B"));
+    assertThat(loader.resolve("/app.js").resolveJsModule("/B")).isNull();
 
-    assertNull(loader.resolve("/app.js").resolveJsModule("B"));
+    assertThat(loader.resolve("/app.js").resolveJsModule("B")).isNull();
   }
 
   @Test
@@ -239,7 +240,7 @@ public final class ModuleLoaderTest extends TestCase {
           ImmutableList.of("a", "b"),
           inputs("a/f.js", "b/f.js"),
           BrowserModuleResolver.FACTORY);
-      fail("Expected error");
+      assertWithMessage("Expected error").fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessageThat().contains("Duplicate module path");
     }
@@ -389,8 +390,9 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri(
         "/node_modules/mymodule/with/this.js",
         loader.resolve("/node_modules/mymodule/client.js").resolveJsModule("./override/relative.js"));
-    assertNull(
-        loader.resolve("/node_modules/mymodule/client.js").resolveJsModule("./exclude/this.js"));
+    assertThat(
+            loader.resolve("/node_modules/mymodule/client.js").resolveJsModule("./exclude/this.js"))
+        .isNull();
   }
 
   @Test

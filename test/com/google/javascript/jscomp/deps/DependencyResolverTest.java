@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -147,8 +148,9 @@ public final class DependencyResolverTest extends TestCase {
     try {
       Collection<String> deps = resolver.getDependencies(
           "goog.require('foo');goog.require('a');", seen, false);
-      fail("Service exception should be thrown");
-    } catch (ServiceException expected) {}
+      assertWithMessage("Service exception should be thrown").fail();
+    } catch (ServiceException expected) {
+    }
   }
 
 }

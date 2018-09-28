@@ -648,12 +648,16 @@ public final class DepsGeneratorTest extends TestCase {
 
   private void assertErrorWarningCount(int errorCount, int warningCount) {
     if (errorManager.getErrorCount() != errorCount) {
-      fail(String.format("Expected %d errors but got\n%s",
-          errorCount, Joiner.on("\n").join(errorManager.getErrors())));
+      assertWithMessage(
+              "Expected %d errors but got\n%s",
+              errorCount, Joiner.on("\n").join(errorManager.getErrors()))
+          .fail();
     }
     if (errorManager.getWarningCount() != warningCount) {
-      fail(String.format("Expected %d warnings but got\n%s",
-          warningCount, Joiner.on("\n").join(errorManager.getWarnings())));
+      assertWithMessage(
+              "Expected %d warnings but got\n%s",
+              warningCount, Joiner.on("\n").join(errorManager.getWarnings()))
+          .fail();
     }
   }
 
