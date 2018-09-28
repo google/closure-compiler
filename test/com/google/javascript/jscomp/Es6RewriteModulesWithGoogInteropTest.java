@@ -113,9 +113,15 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   }
 
   @Test
-  public void testGoogRequiresInNonEs6ModuleUnchanged() {
+  public void testGoogRequireInNonEs6ModuleUnchanged() {
     testSame("goog.require('foo.bar');");
     testSame("var bar = goog.require('foo.bar');");
+  }
+
+  @Test
+  public void testForwardDeclareInNonEs6ModuleUnchanged() {
+    testSame("goog.forwardDeclare('foo.bar');");
+    testSame("var bar = goog.forwardDeclare('foo.bar');");
   }
 
   @Test
@@ -123,10 +129,13 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
     testError("export var x; goog.require('foo.bar');", MISSING_MODULE_OR_PROVIDE);
   }
 
+  // TODO(tjgq): Add tests for require and forwardDeclare with an invalid namespace.
+  // They currently produce a DEPS_PARSE_ERROR in JsFileLineParser.
+
   @Test
   public void testGoogModuleGetNonStringIsError() {
-    testError("const y = goog.module.get();\nexport {};", INVALID_GET_NAMESPACE);
-    testError("const y = goog.module.get(0);\nexport {};", INVALID_GET_NAMESPACE);
+    testError(lines("const y = goog.module.get();", "export {};"), INVALID_GET_NAMESPACE);
+    testError(lines("const y = goog.module.get(0);", "export {};"), INVALID_GET_NAMESPACE);
   }
 
   @Test
@@ -140,9 +149,9 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   @Test
   public void testGoogRequireForProvideWithDestructure() {
     testModules(
-        lines("const {a, b:c} = goog.require('closure.provide');", "use(a, a.z, c)", "export {};"),
+        lines("const {a, b:c} = goog.require('closure.provide');", "use(a, a.d, c)", "export {};"),
         lines(
-            "use(closure.provide.a, closure.provide.a.z, closure.provide.b);",
+            "use(closure.provide.a, closure.provide.a.d, closure.provide.b);",
             "/** @const */ var module$testcode = {};"));
   }
 
@@ -158,19 +167,10 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   @Test
   public void testGoogRequireForGoogModuleWithDestructure() {
     testModules(
-        lines("const {a, b:c} = goog.require('closure.module');", "use(a, a.z, c)", "export {};"),
+        lines("const {a, b:c} = goog.require('closure.module');", "use(a, a.d, c)", "export {};"),
         lines(
-            "use(module$exports$closure$module.a, module$exports$closure$module.a.z,",
+            "use(module$exports$closure$module.a, module$exports$closure$module.a.d,",
             "  module$exports$closure$module.b);",
-            "/** @const */ var module$testcode = {};"));
-  }
-
-  @Test
-  public void testGoogModuleGetForGoogModule() {
-    testModules(
-        "function foo() { const y = goog.module.get('closure.module'); }\nexport {};",
-        lines(
-            "function foo$$module$testcode() { const y = module$exports$closure$module; }",
             "/** @const */ var module$testcode = {};"));
   }
 
@@ -188,10 +188,19 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
     testModules(
         lines(
             "const {a, b:c} = goog.require('closure.legacy.module');",
-            "use(a, a.z, c)",
+            "use(a, a.d, c)",
             "export {};"),
         lines(
-            "use(closure.legacy.module.a, closure.legacy.module.a.z, closure.legacy.module.b);",
+            "use(closure.legacy.module.a, closure.legacy.module.a.d, closure.legacy.module.b);",
+            "/** @const */ var module$testcode = {};"));
+  }
+
+  @Test
+  public void testGoogModuleGetForGoogModule() {
+    testModules(
+        lines("function foo() { const y = goog.module.get('closure.module'); } export {};"),
+        lines(
+            "function foo$$module$testcode() { const y = module$exports$closure$module; }",
             "/** @const */ var module$testcode = {};"));
   }
 
@@ -208,7 +217,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   public void testGoogModuleGetForEs6Module() {
     test(
         srcs(
-            SourceFile.fromCode("es6.js", "export{}; goog.declareModuleId('es6');"),
+            SourceFile.fromCode("es6.js", "export {}; goog.declareModuleId('es6');"),
             SourceFile.fromCode(
                 "closure.js",
                 "goog.module('my.module'); function f() { const y = goog.module.get('es6'); }")),
@@ -222,7 +231,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   public void testGoogModuleGetForEs6ModuleDeclaresNamespace() {
     test(
         srcs(
-            SourceFile.fromCode("es6.js", "export{}; goog.module.declareNamespace('es6');"),
+            SourceFile.fromCode("es6.js", "export {}; goog.module.declareNamespace('es6');"),
             SourceFile.fromCode(
                 "closure.js",
                 "goog.module('my.module'); function f() { const y = goog.module.get('es6'); }")),
@@ -320,11 +329,11 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   @Test
   public void testGoogRequireLhsNonConstIsError() {
     testModulesError(
-        "var bar = goog.require('closure.provide');\nexport var x;",
+        lines("var bar = goog.require('closure.provide');", "export var x;"),
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
 
     testModulesError(
-        "export var x;\nvar bar = goog.require('closure.provide');",
+        lines("export var x;", "var bar = goog.require('closure.provide');"),
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
 
     testModulesError(
@@ -344,7 +353,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
     testModules(
         lines("import {x, y} from 'goog:closure.provide';", "use(x);", "use(y);"),
-        "use(closure.provide.x);\n use(closure.provide.y);/** @const */ var module$testcode = {};");
+        "use(closure.provide.x); use(closure.provide.y);/** @const */ var module$testcode = {};");
 
     testModules(
         lines("import Foo from 'goog:closure.provide';", "/** @type {Foo} */ var foo = new Foo();"),
@@ -388,7 +397,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   }
 
   @Test
-  public void testExportSpecRequiredSymbol() {
+  public void testExportSpecGoogRequire() {
     testModules(
         lines("const {a} = goog.require('closure.provide');", "export {a};"),
         lines(
@@ -410,7 +419,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   }
 
   @Test
-  public void testTypeNodeIsRenamed() {
+  public void testGoogRequireAnnotationIsRenamed() {
     testModules(
         lines("const {Type} = goog.require('closure.provide');", "export let /** !Type */ value;"),
         lines(
@@ -427,7 +436,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   }
 
   @Test
-  public void testCorrectTypeNodeIsRenamed() {
+  public void testGoogRequireCorrectAnnotationIsRenamed() {
     testModules(
         lines(
             "const {Type} = goog.require('closure.provide');",
@@ -450,7 +459,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   public void testForwardDeclareEs6Module() {
     test(
         srcs(
-            SourceFile.fromCode("es6.js", "export{}; goog.declareModuleId('es6');"),
+            SourceFile.fromCode("es6.js", "export {}; goog.declareModuleId('es6');"),
             SourceFile.fromCode(
                 "closure.js",
                 lines(
@@ -466,7 +475,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
     test(
         srcs(
-            SourceFile.fromCode("es6.js", "export{}; goog.declareModuleId('es6');"),
+            SourceFile.fromCode("es6.js", "export {}; goog.declareModuleId('es6');"),
             SourceFile.fromCode(
                 "closure.js",
                 lines(
@@ -482,7 +491,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
     testError(
         ImmutableList.of(
-            SourceFile.fromCode("es6.js", "export{}; goog.declareModuleId('es6');"),
+            SourceFile.fromCode("es6.js", "export {}; goog.declareModuleId('es6');"),
             SourceFile.fromCode(
                 "closure.js",
                 lines(
@@ -497,7 +506,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   public void testForwardDeclareEs6ModuleDeclareNamespace() {
     test(
         srcs(
-            SourceFile.fromCode("es6.js", "export{}; goog.module.declareNamespace('es6');"),
+            SourceFile.fromCode("es6.js", "export {}; goog.module.declareNamespace('es6');"),
             SourceFile.fromCode(
                 "closure.js",
                 lines(
@@ -513,7 +522,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
     test(
         srcs(
-            SourceFile.fromCode("es6.js", "export{}; goog.module.declareNamespace('es6');"),
+            SourceFile.fromCode("es6.js", "export {}; goog.module.declareNamespace('es6');"),
             SourceFile.fromCode(
                 "closure.js",
                 lines(
@@ -529,7 +538,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
     testError(
         ImmutableList.of(
-            SourceFile.fromCode("es6.js", "export{}; goog.module.declareNamespace('es6');"),
+            SourceFile.fromCode("es6.js", "export {}; goog.module.declareNamespace('es6');"),
             SourceFile.fromCode(
                 "closure.js",
                 lines(
@@ -614,7 +623,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
     test(
         srcs(
-            SourceFile.fromCode("es6.js", "export{}; goog.module.declareNamespace('es6');"),
+            SourceFile.fromCode("es6.js", "export {}; goog.module.declareNamespace('es6');"),
             SourceFile.fromCode(
                 "forwarddeclare.js",
                 lines(
@@ -633,7 +642,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
     testError(
         ImmutableList.of(
-            SourceFile.fromCode("es6.js", "export{}; goog.module.declareNamespace('es6');"),
+            SourceFile.fromCode("es6.js", "export {}; goog.module.declareNamespace('es6');"),
             SourceFile.fromCode(
                 "closure.js",
                 lines(
