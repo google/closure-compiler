@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -65,33 +66,33 @@ public final class CompilerTest extends TestCase {
     String js = "foo();\ngoo();";
     cb.append(js);
     assertEquals(js, cb.toString());
-    assertEquals(1, cb.getLineIndex());
-    assertEquals(6, cb.getColumnIndex());
+    assertThat(cb.getLineIndex()).isEqualTo(1);
+    assertThat(cb.getColumnIndex()).isEqualTo(6);
 
     cb.reset();
 
     assertThat(cb.toString()).isEmpty();
-    assertEquals(1, cb.getLineIndex());
-    assertEquals(6, cb.getColumnIndex());
+    assertThat(cb.getLineIndex()).isEqualTo(1);
+    assertThat(cb.getColumnIndex()).isEqualTo(6);
   }
 
   @Test
   public void testCodeBuilderAppend() {
     Compiler.CodeBuilder cb = new Compiler.CodeBuilder();
     cb.append("foo();");
-    assertEquals(0, cb.getLineIndex());
-    assertEquals(6, cb.getColumnIndex());
+    assertThat(cb.getLineIndex()).isEqualTo(0);
+    assertThat(cb.getColumnIndex()).isEqualTo(6);
 
     cb.append("goo();");
 
-    assertEquals(0, cb.getLineIndex());
-    assertEquals(12, cb.getColumnIndex());
+    assertThat(cb.getLineIndex()).isEqualTo(0);
+    assertThat(cb.getColumnIndex()).isEqualTo(12);
 
     // newline reset the column index
     cb.append("blah();\ngoo();");
 
-    assertEquals(1, cb.getLineIndex());
-    assertEquals(6, cb.getColumnIndex());
+    assertThat(cb.getLineIndex()).isEqualTo(1);
+    assertThat(cb.getColumnIndex()).isEqualTo(6);
   }
 
   @Test
@@ -109,12 +110,12 @@ public final class CompilerTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.init(ImmutableList.<SourceFile>of(), inputs, options);
     compiler.parseInputs();
-    assertEquals(compiler.externAndJsRoot, compiler.jsRoot.getParent());
-    assertEquals(compiler.externAndJsRoot, compiler.externsRoot.getParent());
-    assertNotNull(compiler.externAndJsRoot);
+    assertThat(compiler.jsRoot.getParent()).isEqualTo(compiler.externAndJsRoot);
+    assertThat(compiler.externsRoot.getParent()).isEqualTo(compiler.externAndJsRoot);
+    assertThat(compiler.externAndJsRoot).isNotNull();
 
     Node jsRoot = compiler.jsRoot;
-    assertEquals(3, jsRoot.getChildCount());
+    assertThat(jsRoot.getChildCount()).isEqualTo(3);
   }
 
   @Test
@@ -172,14 +173,14 @@ public final class CompilerTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.init(new ArrayList<SourceFile>(), originalSources, options);
 
-    assertEquals(
-        OriginalMapping.newBuilder()
-            .setOriginalFile(origSourceName)
-            .setLineNumber(18)
-            .setColumnPosition(25)
-            .setIdentifier("testSymbolName")
-            .build(),
-        compiler.getSourceMapping(normalize("generated_js/example.js"), 3, 3));
+    assertThat(compiler.getSourceMapping(normalize("generated_js/example.js"), 3, 3))
+        .isEqualTo(
+            OriginalMapping.newBuilder()
+                .setOriginalFile(origSourceName)
+                .setLineNumber(18)
+                .setColumnPosition(25)
+                .setIdentifier("testSymbolName")
+                .build());
     assertEquals("<div ng-show='foo()'>", compiler.getSourceLine(origSourceName, 1));
   }
 
@@ -220,7 +221,7 @@ public final class CompilerTest extends TestCase {
     SourceMapInput inputSourceMap = compiler.inputSourceMaps.get("tmp");
     SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
     assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
-    assertNull(sourceMap.getOriginalSourcesContent());
+    assertThat(sourceMap.getOriginalSourcesContent()).isNull();
   }
 
   private static final String SOURCE_MAP_TEST_CONTENT =
@@ -317,11 +318,11 @@ public final class CompilerTest extends TestCase {
     TestErrorManager errorManager = new TestErrorManager();
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
       SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(errorManager);
-      assertNull(sourceMap);
+      assertThat(sourceMap).isNull();
     }
 
     // WARNING: Failed to resolve input sourcemap: foo-does-not-exist.js.map
-    assertEquals(1, errorManager.getWarningCount());
+    assertThat(errorManager.getWarningCount()).isEqualTo(1);
   }
 
   @Test
@@ -340,7 +341,7 @@ public final class CompilerTest extends TestCase {
     assertThat(compiler.inputSourceMaps).isEmpty();
 
     // No warnings for unresolved absolute paths.
-    assertEquals(0, errorManager.getWarningCount());
+    assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
   @Test
@@ -375,7 +376,7 @@ public final class CompilerTest extends TestCase {
     assertThat(mapping.getColumnPosition()).isEqualTo(26);
     assertThat(mapping.getIdentifier()).isEqualTo("testSymbolName");
     assertThat(consumer.getOriginalSources()).containsExactly("input.js", "input.ts");
-    assertNull(consumer.getOriginalSourcesContent());
+    assertThat(consumer.getOriginalSourcesContent()).isNull();
   }
 
   @Test
@@ -412,7 +413,7 @@ public final class CompilerTest extends TestCase {
     Compiler compiler = new Compiler();
     SourceFile sourceFile = SourceFile.fromCode("input.js", code);
     compiler.compile(EMPTY_EXTERNS.get(0), sourceFile, options);
-    assertNull(compiler.getSourceMap());
+    assertThat(compiler.getSourceMap()).isNull();
   }
 
   private static final ImmutableList<SourceFile> EMPTY_EXTERNS =
@@ -434,7 +435,7 @@ public final class CompilerTest extends TestCase {
         SourceFile.fromCode("i2", fileOverview));
 
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     String outputSource = compiler.toSource();
     System.err.println("Output:\n[" + outputSource + "]");
@@ -452,8 +453,8 @@ public final class CompilerTest extends TestCase {
     // Default is warning.
     compiler.compile(SourceFile.fromCode("extern.js", ""),
         SourceFile.fromCode("test.js", badJsDoc), options);
-    assertEquals(1, compiler.getWarningCount());
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getWarningCount()).isEqualTo(1);
+    assertThat(compiler.getErrorCount()).isEqualTo(0);
   }
 
   /**
@@ -470,8 +471,8 @@ public final class CompilerTest extends TestCase {
         DiagnosticGroups.NON_STANDARD_JSDOC, CheckLevel.OFF);
     compiler.compile(SourceFile.fromCode("extern.js", ""),
         SourceFile.fromCode("test.js", badJsDoc), options);
-    assertEquals(0, compiler.getWarningCount());
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getWarningCount()).isEqualTo(0);
+    assertThat(compiler.getErrorCount()).isEqualTo(0);
   }
 
   /**
@@ -489,8 +490,8 @@ public final class CompilerTest extends TestCase {
         DiagnosticGroups.NON_STANDARD_JSDOC, CheckLevel.ERROR);
     compiler.compile(SourceFile.fromCode("extern.js", ""),
         SourceFile.fromCode("test.js", badJsDoc), options);
-    assertEquals(0, compiler.getWarningCount());
-    assertEquals(1, compiler.getErrorCount());
+    assertThat(compiler.getWarningCount()).isEqualTo(0);
+    assertThat(compiler.getErrorCount()).isEqualTo(1);
   }
 
   @Test
@@ -502,9 +503,9 @@ public final class CompilerTest extends TestCase {
         SourceFile.fromCode("in2", ""));
     compiler.compile(EMPTY_EXTERNS, inputs, options);
 
-    assertTrue(compiler.getInput(new InputId("externs")).isExtern());
-    assertFalse(compiler.getInput(new InputId("in1")).isExtern());
-    assertFalse(compiler.getInput(new InputId("in2")).isExtern());
+    assertThat(compiler.getInput(new InputId("externs")).isExtern()).isTrue();
+    assertThat(compiler.getInput(new InputId("in1")).isExtern()).isFalse();
+    assertThat(compiler.getInput(new InputId("in2")).isExtern()).isFalse();
   }
 
   @Test
@@ -519,9 +520,9 @@ public final class CompilerTest extends TestCase {
         ImmutableList.<SourceFile>of(), modules, new CompilerOptions());
 
     modules.get(1).add(SourceFile.fromCode("in3", ""));
-    assertNull(compiler.getInput(new InputId("in3")));
+    assertThat(compiler.getInput(new InputId("in3"))).isNull();
     compiler.rebuildInputsFromModules();
-    assertNotNull(compiler.getInput(new InputId("in3")));
+    assertThat(compiler.getInput(new InputId("in3"))).isNotNull();
   }
 
   @Test
@@ -551,9 +552,8 @@ public final class CompilerTest extends TestCase {
     List<SourceFile> input = ImmutableList.of(
         SourceFile.fromCode("foo",
             "/** @fileoverview */ var x; /** @fileoverview */ var y;"));
-    assertTrue(
-        (new Compiler()).compile(
-            EMPTY_EXTERNS, input, new CompilerOptions()).success);
+    assertThat(new Compiler().compile(EMPTY_EXTERNS, input, new CompilerOptions()).success)
+        .isTrue();
   }
 
   // Make sure we correctly output license text.
@@ -576,9 +576,8 @@ public final class CompilerTest extends TestCase {
                     + "/** \n"
                     + "  * @fileoverview This is my favorite file! */\n"
                     + "var x;")));
-    assertTrue(
-        (new Compiler()).compile(
-            EMPTY_EXTERNS, input, new CompilerOptions()).success);
+    assertThat(new Compiler().compile(EMPTY_EXTERNS, input, new CompilerOptions()).success)
+        .isTrue();
   }
 
   // Text for the opposite order - @fileoverview, then @license.
@@ -674,7 +673,7 @@ public final class CompilerTest extends TestCase {
             SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
-    assertTrue(Joiner.on(",").join(result.errors), result.success);
+    assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
     assertEquals(expected, compiler.toSource());
   }
 
@@ -691,7 +690,7 @@ public final class CompilerTest extends TestCase {
             SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
-    assertTrue(Joiner.on(",").join(result.errors), result.success);
+    assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
     assertEquals(expected, compiler.toSource());
   }
 
@@ -715,7 +714,8 @@ public final class CompilerTest extends TestCase {
                     + "/** \n"
                     + "  * @fileoverview This is my favorite file! */\n"
                     + "var x;")));
-    assertTrue((new Compiler()).compile(EMPTY_EXTERNS, input, new CompilerOptions()).success);
+    assertThat(new Compiler().compile(EMPTY_EXTERNS, input, new CompilerOptions()).success)
+        .isTrue();
   }
 
   // Text for the opposite order - @fileoverview, then @license.
@@ -816,7 +816,7 @@ public final class CompilerTest extends TestCase {
         SourceFile.fromCode("testcode2", js2));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
-    assertTrue(Joiner.on(",").join(result.errors), result.success);
+    assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
     assertEquals(expected, compiler.toSource());
   }
 
@@ -839,7 +839,7 @@ public final class CompilerTest extends TestCase {
         SourceFile.fromCode("bundled", js3));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
-    assertTrue(Joiner.on(",").join(result.errors), result.success);
+    assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
     assertEquals(expected, compiler.toSource());
   }
 
@@ -856,7 +856,7 @@ public final class CompilerTest extends TestCase {
             SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
-    assertTrue(Joiner.on(",").join(result.errors), result.success);
+    assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
     assertEquals(expected, compiler.toSource());
   }
 
@@ -928,7 +928,7 @@ public final class CompilerTest extends TestCase {
       return;
     }
 
-    fail(defines + " didn't fail");
+    assertWithMessage(defines + " didn't fail").fail();
   }
 
   static void assertDefineOverrides(Map<String, Node> expected,
@@ -942,11 +942,12 @@ public final class CompilerTest extends TestCase {
     // compare the maps manually using Node.checkTreeEqualsSilent
     assertThat(actual).hasSize(expected.size());
     for (Map.Entry<String, Node> entry : expected.entrySet()) {
-      assertTrue(entry.getKey(), actual.containsKey(entry.getKey()));
+      assertWithMessage(entry.getKey()).that(actual.containsKey(entry.getKey())).isTrue();
 
       Node actualNode = actual.get(entry.getKey());
-      assertTrue(entry.toString(),
-          entry.getValue().isEquivalentTo(actualNode));
+      assertWithMessage(entry.toString())
+          .that(entry.getValue().isEquivalentTo(actualNode))
+          .isTrue();
     }
   }
 
@@ -958,12 +959,12 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     if (error == null) {
-      assertTrue(Joiner.on(",").join(result.errors), result.success);
+      assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
       String outputSource = compiler.toSource();
       assertEquals(expected, outputSource);
     } else {
       assertThat(result.errors).hasLength(1);
-      assertEquals(error, result.errors[0].getType());
+      assertThat(result.errors[0].getType()).isEqualTo(error);
     }
     return result;
   }
@@ -984,32 +985,14 @@ public final class CompilerTest extends TestCase {
   @Test
   public void testWarningsFiltering() {
     // Warnings and errors are left alone when no filtering is used
-    assertTrue(hasOutput(
-        null,
-        "foo/bar.js",
-        CheckLevel.WARNING));
-    assertTrue(hasOutput(
-        null,
-        "foo/bar.js",
-        CheckLevel.ERROR));
+    assertThat(hasOutput(null, "foo/bar.js", CheckLevel.WARNING)).isTrue();
+    assertThat(hasOutput(null, "foo/bar.js", CheckLevel.ERROR)).isTrue();
 
     // Warnings (but not errors) get filtered out
-    assertFalse(hasOutput(
-        "baz",
-        "foo/bar.js",
-        CheckLevel.WARNING));
-    assertTrue(hasOutput(
-        "foo",
-        "foo/bar.js",
-        CheckLevel.WARNING));
-    assertTrue(hasOutput(
-        "baz",
-        "foo/bar.js",
-        CheckLevel.ERROR));
-    assertTrue(hasOutput(
-        "foo",
-        "foo/bar.js",
-        CheckLevel.ERROR));
+    assertThat(hasOutput("baz", "foo/bar.js", CheckLevel.WARNING)).isFalse();
+    assertThat(hasOutput("foo", "foo/bar.js", CheckLevel.WARNING)).isTrue();
+    assertThat(hasOutput("baz", "foo/bar.js", CheckLevel.ERROR)).isTrue();
+    assertThat(hasOutput("foo", "foo/bar.js", CheckLevel.ERROR)).isTrue();
   }
 
   @Test
@@ -1025,7 +1008,7 @@ public final class CompilerTest extends TestCase {
         SourceFile.fromCode("testcode", js));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
     assertThat(compiler.toSource()).isEqualTo("var b;var c;b.exportSymbol(\"a\",c);");
   }
 
@@ -1043,7 +1026,7 @@ public final class CompilerTest extends TestCase {
         SourceFile.fromCode("testcode", js));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
     assertThat(compiler.toSource()).isEqualTo("var b;var c={};b.exportSymbol(\"a\",c);");
   }
 
@@ -1147,8 +1130,8 @@ public final class CompilerTest extends TestCase {
         SourceFile.fromCode("testcode", js));
     compiler.compile(EMPTY_EXTERNS, inputs, options);
 
-    assertTrue(before[0]);  // should run these custom passes
-    assertFalse(after[0]);  // but not these
+    assertThat(before[0]).isTrue(); // should run these custom passes
+    assertThat(after[0]).isFalse(); // but not these
   }
 
   @Test
@@ -1171,7 +1154,7 @@ public final class CompilerTest extends TestCase {
           "tmp", "function foo() {}"));
     Node ast = input.getAstRoot(compiler);
     CompilerInput newInput = (CompilerInput) deserialize(compiler, serialize(input));
-    assertTrue(ast.isEquivalentTo(newInput.getAstRoot(compiler)));
+    assertThat(ast.isEquivalentTo(newInput.getAstRoot(compiler))).isTrue();
   }
 
   @Test
@@ -1504,7 +1487,7 @@ public final class CompilerTest extends TestCase {
     compiler.setAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY, true);
     try {
       compiler.setAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY, false);
-      fail("It didn't fail for overwriting existing annotation.");
+      assertWithMessage("It didn't fail for overwriting existing annotation.").fail();
     } catch (IllegalArgumentException expected) {
       return;
     }
@@ -1518,7 +1501,7 @@ public final class CompilerTest extends TestCase {
 
     try {
       compiler.reportChangeToEnclosingScope(detachedNode);
-      fail("Reporting a change on a node with no scope should have failed.");
+      assertWithMessage("Reporting a change on a node with no scope should have failed.").fail();
     } catch (IllegalStateException e) {
       return;
     }
@@ -1697,7 +1680,7 @@ public final class CompilerTest extends TestCase {
 
     try {
       compiler.addIndexProvider(stringIndexProvider);
-      fail("expected duplicate index addition to fail");
+      assertWithMessage("expected duplicate index addition to fail").fail();
     } catch (IllegalStateException e) {
       // expected
     }
@@ -1789,7 +1772,7 @@ public final class CompilerTest extends TestCase {
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
     Compiler compiler = new Compiler();
     Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     List<String> orderedInputs = new ArrayList<>();
     for (CompilerInput input : compiler.getInputsInOrder()) {
@@ -1835,7 +1818,7 @@ public final class CompilerTest extends TestCase {
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
     Compiler compiler = new Compiler();
     Result result = compiler.compile(externs, sources.build(), options);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     List<String> orderedInputs = new ArrayList<>();
     for (CompilerInput input : compiler.getInputsInOrder()) {
@@ -1887,7 +1870,7 @@ public final class CompilerTest extends TestCase {
       java.util.Collections.shuffle(sources);
       Compiler compiler = new Compiler();
       Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
-      assertTrue(result.success);
+      assertThat(result.success).isTrue();
 
       List<String> orderedInputs = new ArrayList<>();
       for (CompilerInput input : compiler.getInputsInOrder()) {
@@ -1935,7 +1918,7 @@ public final class CompilerTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.initWebpackMap(ImmutableMap.copyOf(webpackModulesById));
     Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     List<String> orderedInputs = new ArrayList<>();
     for (CompilerInput input : compiler.getInputsInOrder()) {
@@ -1980,7 +1963,7 @@ public final class CompilerTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.initWebpackMap(ImmutableMap.copyOf(webpackModulesById));
     Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     List<String> orderedInputs = new ArrayList<>();
     for (CompilerInput input : compiler.getInputsInOrder()) {

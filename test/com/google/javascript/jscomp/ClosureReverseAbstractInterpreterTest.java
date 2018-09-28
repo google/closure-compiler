@@ -368,8 +368,8 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
     TypedScope scope = (TypedScope) SyntacticScopeCreator.makeTyped(compiler).createScope(n, null);
     FlowScope flowScope = LinkedFlowScope.createEntryLattice(scope);
 
-    assertEquals(Token.CALL, call.getToken());
-    assertEquals(Token.NAME, name.getToken());
+    assertThat(call.getToken()).isEqualTo(Token.CALL);
+    assertThat(name.getToken()).isEqualTo(Token.NAME);
 
     flowScope = flowScope.inferSlotType("a", type);
     ClosureReverseAbstractInterpreter rai = new ClosureReverseAbstractInterpreter(registry);

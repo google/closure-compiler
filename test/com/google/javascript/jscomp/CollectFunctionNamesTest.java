@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -215,7 +217,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
       expectedMap.put(id, expectedFunctionNames[id]);
     }
 
-    assertEquals("Function id/name mismatch", expectedMap, idNameMap);
+    assertWithMessage("Function id/name mismatch").that(idNameMap).isEqualTo(expectedMap);
   }
 
   private void testFunctionNamesAndIds(String jsSource, String expectedFunctionName) {

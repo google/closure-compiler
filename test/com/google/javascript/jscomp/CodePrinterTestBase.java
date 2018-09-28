@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
@@ -93,7 +95,7 @@ public abstract class CodePrinterTestBase extends TestCase {
           msg += "Warning:" + err + "\n";
         }
       }
-      assertEquals("Unexpected warnings or errors.\n " + msg, expected, actual);
+      assertWithMessage("Unexpected warnings or errors.\n " + msg).that(actual).isEqualTo(expected);
     }
   }
 

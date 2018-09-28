@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.rhino.Node;
@@ -42,63 +44,63 @@ public final class ClosureCodingConventionTest extends TestCase {
         Node.newString(Token.NAME, "opt_a"),
         Node.newString(Token.NAME, "opt_b"));
 
-    assertFalse(conv.isVarArgsParameter(args.getFirstChild()));
-    assertFalse(conv.isVarArgsParameter(args.getLastChild()));
-    assertFalse(conv.isVarArgsParameter(optArgs.getFirstChild()));
-    assertFalse(conv.isVarArgsParameter(optArgs.getLastChild()));
+    assertThat(conv.isVarArgsParameter(args.getFirstChild())).isFalse();
+    assertThat(conv.isVarArgsParameter(args.getLastChild())).isFalse();
+    assertThat(conv.isVarArgsParameter(optArgs.getFirstChild())).isFalse();
+    assertThat(conv.isVarArgsParameter(optArgs.getLastChild())).isFalse();
 
-    assertFalse(conv.isOptionalParameter(args.getFirstChild()));
-    assertFalse(conv.isOptionalParameter(args.getLastChild()));
-    assertFalse(conv.isOptionalParameter(optArgs.getFirstChild()));
-    assertFalse(conv.isOptionalParameter(optArgs.getLastChild()));
+    assertThat(conv.isOptionalParameter(args.getFirstChild())).isFalse();
+    assertThat(conv.isOptionalParameter(args.getLastChild())).isFalse();
+    assertThat(conv.isOptionalParameter(optArgs.getFirstChild())).isFalse();
+    assertThat(conv.isOptionalParameter(optArgs.getLastChild())).isFalse();
   }
 
   @Test
   public void testInlineName() {
-    assertFalse(conv.isConstant("a"));
-    assertFalse(conv.isConstant("XYZ123_"));
-    assertFalse(conv.isConstant("ABC"));
-    assertFalse(conv.isConstant("ABCdef"));
-    assertFalse(conv.isConstant("aBC"));
-    assertFalse(conv.isConstant("A"));
-    assertFalse(conv.isConstant("_XYZ123"));
-    assertFalse(conv.isConstant("a$b$XYZ123_"));
-    assertFalse(conv.isConstant("a$b$ABC_DEF"));
-    assertFalse(conv.isConstant("a$b$A"));
-    assertFalse(conv.isConstant("a$b$a"));
-    assertFalse(conv.isConstant("a$b$ABCdef"));
-    assertFalse(conv.isConstant("a$b$aBC"));
-    assertFalse(conv.isConstant("a$b$"));
-    assertFalse(conv.isConstant("$"));
+    assertThat(conv.isConstant("a")).isFalse();
+    assertThat(conv.isConstant("XYZ123_")).isFalse();
+    assertThat(conv.isConstant("ABC")).isFalse();
+    assertThat(conv.isConstant("ABCdef")).isFalse();
+    assertThat(conv.isConstant("aBC")).isFalse();
+    assertThat(conv.isConstant("A")).isFalse();
+    assertThat(conv.isConstant("_XYZ123")).isFalse();
+    assertThat(conv.isConstant("a$b$XYZ123_")).isFalse();
+    assertThat(conv.isConstant("a$b$ABC_DEF")).isFalse();
+    assertThat(conv.isConstant("a$b$A")).isFalse();
+    assertThat(conv.isConstant("a$b$a")).isFalse();
+    assertThat(conv.isConstant("a$b$ABCdef")).isFalse();
+    assertThat(conv.isConstant("a$b$aBC")).isFalse();
+    assertThat(conv.isConstant("a$b$")).isFalse();
+    assertThat(conv.isConstant("$")).isFalse();
   }
 
   @Test
   public void testExportedName() {
-    assertFalse(conv.isExported("_a"));
-    assertFalse(conv.isExported("_a_"));
-    assertFalse(conv.isExported("a"));
+    assertThat(conv.isExported("_a")).isFalse();
+    assertThat(conv.isExported("_a_")).isFalse();
+    assertThat(conv.isExported("a")).isFalse();
 
-    assertFalse(conv.isExported("$super", false));
-    assertTrue(conv.isExported("$super", true));
-    assertTrue(conv.isExported("$super"));
+    assertThat(conv.isExported("$super", false)).isFalse();
+    assertThat(conv.isExported("$super", true)).isTrue();
+    assertThat(conv.isExported("$super")).isTrue();
   }
 
   @Test
   public void testPrivateName() {
-    assertFalse(conv.isPrivate("a_"));
-    assertFalse(conv.isPrivate("a"));
-    assertFalse(conv.isPrivate("_a_"));
+    assertThat(conv.isPrivate("a_")).isFalse();
+    assertThat(conv.isPrivate("a")).isFalse();
+    assertThat(conv.isPrivate("_a_")).isFalse();
   }
 
   @Test
   public void testEnumKey() {
-    assertTrue(conv.isValidEnumKey("A"));
-    assertTrue(conv.isValidEnumKey("123"));
-    assertTrue(conv.isValidEnumKey("FOO_BAR"));
+    assertThat(conv.isValidEnumKey("A")).isTrue();
+    assertThat(conv.isValidEnumKey("123")).isTrue();
+    assertThat(conv.isValidEnumKey("FOO_BAR")).isTrue();
 
-    assertTrue(conv.isValidEnumKey("a"));
-    assertTrue(conv.isValidEnumKey("someKeyInCamelCase"));
-    assertTrue(conv.isValidEnumKey("_FOO_BAR"));
+    assertThat(conv.isValidEnumKey("a")).isTrue();
+    assertThat(conv.isValidEnumKey("someKeyInCamelCase")).isTrue();
+    assertThat(conv.isValidEnumKey("_FOO_BAR")).isTrue();
   }
 
   @Test
@@ -257,11 +259,11 @@ public final class ClosureCodingConventionTest extends TestCase {
         new NominalTypeBuilderOti(ctorB, ctorB.getInstanceType()),
         SubclassType.INHERITS);
 
-    assertTrue(ctorB.getPrototype().hasOwnProperty("constructor"));
-    assertEquals(nodeB, ctorB.getPrototype().getPropertyNode("constructor"));
+    assertThat(ctorB.getPrototype().hasOwnProperty("constructor")).isTrue();
+    assertThat(ctorB.getPrototype().getPropertyNode("constructor")).isEqualTo(nodeB);
 
-    assertTrue(ctorB.hasOwnProperty("superClass_"));
-    assertEquals(nodeB, ctorB.getPropertyNode("superClass_"));
+    assertThat(ctorB.hasOwnProperty("superClass_")).isTrue();
+    assertThat(ctorB.getPropertyNode("superClass_")).isEqualTo(nodeB);
   }
 
   @Test
@@ -278,37 +280,37 @@ public final class ClosureCodingConventionTest extends TestCase {
 
   private void assertFunctionBind(String code) {
     Node n = parseTestCode(code);
-    assertNotNull(conv.describeFunctionBind(n.getFirstChild()));
+    assertThat(conv.describeFunctionBind(n.getFirstChild())).isNotNull();
   }
 
   private void assertNotFunctionBind(String code) {
     Node n = parseTestCode(code);
-    assertNull(conv.describeFunctionBind(n.getFirstChild()));
+    assertThat(conv.describeFunctionBind(n.getFirstChild())).isNull();
   }
 
   private void assertRequire(String code) {
     Node n = parseTestCode(code);
-    assertNotNull(conv.extractClassNameIfRequire(n.getFirstChild(), n));
+    assertThat(conv.extractClassNameIfRequire(n.getFirstChild(), n)).isNotNull();
   }
 
   private void assertNotRequire(String code) {
     Node n = parseTestCode(code);
-    assertNull(conv.extractClassNameIfRequire(n.getFirstChild(), n));
+    assertThat(conv.extractClassNameIfRequire(n.getFirstChild(), n)).isNull();
   }
 
   private void assertNotObjectLiteralCast(String code) {
     Node n = parseTestCode(code);
-    assertNull(conv.getObjectLiteralCast(n.getFirstChild()));
+    assertThat(conv.getObjectLiteralCast(n.getFirstChild())).isNull();
   }
 
   private void assertObjectLiteralCast(String code) {
     Node n = parseTestCode(code);
-    assertNotNull(conv.getObjectLiteralCast(n.getFirstChild()));
+    assertThat(conv.getObjectLiteralCast(n.getFirstChild())).isNotNull();
   }
 
   private void assertNotClassDefining(String code) {
     Node n = parseTestCode(code);
-    assertNull(conv.getClassesDefinedByCall(n.getFirstChild()));
+    assertThat(conv.getClassesDefinedByCall(n.getFirstChild())).isNull();
   }
 
   private void assertDefinesClasses(String code, String subclassName,
@@ -316,19 +318,19 @@ public final class ClosureCodingConventionTest extends TestCase {
     Node n = parseTestCode(code);
     SubclassRelationship classes =
         conv.getClassesDefinedByCall(n.getFirstChild());
-    assertNotNull(classes);
+    assertThat(classes).isNotNull();
     assertEquals(subclassName, classes.subclassName);
     assertEquals(superclassName, classes.superclassName);
   }
 
   private void assertCachingCall(String code) {
     Node node = parseTestCode(code);
-    assertNotNull(conv.describeCachingCall(node.getFirstChild()));
+    assertThat(conv.describeCachingCall(node.getFirstChild())).isNotNull();
   }
 
   private void assertNotCachingCall(String code) {
     Node node = parseTestCode(code);
-    assertNull(conv.describeCachingCall(node.getFirstChild()));
+    assertThat(conv.describeCachingCall(node.getFirstChild())).isNull();
   }
 
   private Node parseTestCode(String code) {

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -930,8 +931,8 @@ public final class CommandLineRunnerTest extends TestCase {
           "goog.require('beer');", "goog.provide('beer');", "goog.provide('scotch'); var x = 3;"
         },
         new String[] {"var beer = {};", "", "var scotch = {}, x = 3;"});
-    assertTrue(lastCompiler.getOptions().getDependencyOptions().shouldSortDependencies());
-    assertTrue(lastCompiler.getOptions().getDependencyOptions().shouldPruneDependencies());
+    assertThat(lastCompiler.getOptions().getDependencyOptions().shouldSortDependencies()).isTrue();
+    assertThat(lastCompiler.getOptions().getDependencyOptions().shouldPruneDependencies()).isTrue();
   }
 
   @Test
@@ -1042,9 +1043,11 @@ public final class CommandLineRunnerTest extends TestCase {
     try {
       CommandLineRunner runner = createCommandLineRunner(new String[0]);
       runner.doRun();
-      fail("Expected FlagUsageException");
+      assertWithMessage("Expected FlagUsageException").fail();
     } catch (FlagUsageException e) {
-      assertTrue(e.getMessage(), e.getMessage().contains("dependency_mode=STRICT"));
+      assertWithMessage(e.getMessage())
+          .that(e.getMessage().contains("dependency_mode=STRICT"))
+          .isTrue();
     }
   }
 
@@ -1263,8 +1266,14 @@ public final class CommandLineRunnerTest extends TestCase {
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
     // Move test2 to the same directory as test1, also make the filename of test2
     // lexicographically larger than test1
-    assertTrue(new File(jsFile2.getValue()).renameTo(new File(
-        new File(jsFile1.getValue()).getParentFile() + File.separator + "utest2.js")));
+    assertThat(
+            new File(jsFile2.getValue())
+                .renameTo(
+                    new File(
+                        new File(jsFile1.getValue()).getParentFile()
+                            + File.separator
+                            + "utest2.js")))
+        .isTrue();
     String glob = new File(jsFile1.getValue()).getParent() + File.separator + "**.js";
     compileFiles(
         "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
@@ -1274,8 +1283,14 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testGlobJs2() throws IOException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    assertTrue(new File(jsFile2.getValue()).renameTo(new File(
-        new File(jsFile1.getValue()).getParentFile() + File.separator + "utest2.js")));
+    assertThat(
+            new File(jsFile2.getValue())
+                .renameTo(
+                    new File(
+                        new File(jsFile1.getValue()).getParentFile()
+                            + File.separator
+                            + "utest2.js")))
+        .isTrue();
     String glob = new File(jsFile1.getValue()).getParent() + File.separator + "*test*.js";
     compileFiles(
         "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
@@ -1285,8 +1300,14 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testGlobJs3() throws IOException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    assertTrue(new File(jsFile2.getValue()).renameTo(new File(
-        new File(jsFile1.getValue()).getParentFile() + File.separator + "test2.js")));
+    assertThat(
+            new File(jsFile2.getValue())
+                .renameTo(
+                    new File(
+                        new File(jsFile1.getValue()).getParentFile()
+                            + File.separator
+                            + "test2.js")))
+        .isTrue();
     // Make sure test2.js is excluded from the inputs when the exclusion
     // comes after the inclusion
     String glob1 = new File(jsFile1.getValue()).getParent() + File.separator + "**.js";
@@ -1300,8 +1321,14 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testGlobJs4() throws IOException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    assertTrue(new File(jsFile2.getValue()).renameTo(new File(
-        new File(jsFile1.getValue()).getParentFile() + File.separator + "test2.js")));
+    assertThat(
+            new File(jsFile2.getValue())
+                .renameTo(
+                    new File(
+                        new File(jsFile1.getValue()).getParentFile()
+                            + File.separator
+                            + "test2.js")))
+        .isTrue();
     // Make sure test2.js is excluded from the inputs when the exclusion
     // comes before the inclusion
     String glob1 = "!" + new File(jsFile1.getValue()).getParent() + File.separator + "**test2.js";
@@ -1320,8 +1347,8 @@ public final class CommandLineRunnerTest extends TestCase {
     File jscompTempDir = new File(jsFile1.getValue()).getParentFile();
     File newTemp1 = new File(jscompTempDir + File.separator + "temp1");
     File newTemp2 = new File(jscompTempDir + File.separator + "temp2");
-    assertTrue(temp1.renameTo(newTemp1));
-    assertTrue(temp2.renameTo(newTemp2));
+    assertThat(temp1.renameTo(newTemp1)).isTrue();
+    assertThat(temp2.renameTo(newTemp2)).isTrue();
     new File(jsFile1.getValue()).renameTo(new File(newTemp1 + File.separator + "test1.js"));
     new File(jsFile2.getValue()).renameTo(new File(newTemp2 + File.separator + "test2.js"));
     // Test multiple segments with glob patterns, like /foo/bar/**/*.js
@@ -1341,7 +1368,7 @@ public final class CommandLineRunnerTest extends TestCase {
       }
     }
     ignoredJs.delete();
-    assertTrue(new File(jsFile2.getValue()).renameTo(ignoredJs));
+    assertThat(new File(jsFile2.getValue()).renameTo(ignoredJs)).isTrue();
     // Make sure patterns like "!**\./ignored**.js" work
     String glob1 = "!**\\." + File.separator + "ignored**.js";
     String glob2 = new File(jsFile1.getValue()).getParent() + File.separator + "**.js";
@@ -1369,8 +1396,8 @@ public final class CommandLineRunnerTest extends TestCase {
       }
     }
     ignoredJs.delete();
-    assertTrue(new File(jsFile1.getValue()).renameTo(takenJs));
-    assertTrue(new File(jsFile2.getValue()).renameTo(ignoredJs));
+    assertThat(new File(jsFile1.getValue()).renameTo(takenJs)).isTrue();
+    assertThat(new File(jsFile2.getValue()).renameTo(ignoredJs)).isTrue();
     // Make sure that relative paths like "!**ignored.js" work with absolute paths.
     String glob1 = takenJs.getParentFile().getAbsolutePath() + File.separator + "**Taken.js";
     String glob2 = "!**Ignored.js";
@@ -1758,7 +1785,7 @@ public final class CommandLineRunnerTest extends TestCase {
     CommandLineRunner runner = createCommandLineRunner(new String[0]);
     try {
       runner.doRun();
-      fail("Expected flag usage exception");
+      assertWithMessage("Expected flag usage exception").fail();
     } catch (FlagUsageException e) {
       assertThat(e).hasMessageThat().isEqualTo(
               "Bad --js flag. Manifest files cannot be generated when the input is from stdin.");
@@ -2154,7 +2181,7 @@ public final class CommandLineRunnerTest extends TestCase {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      fail("Unexpected exception " + e);
+      assertWithMessage("Unexpected exception " + e).fail();
     }
     String output = runner.getCompiler().toSource();
     assertThat(output).isEqualTo("alert(\"foo\");");
@@ -2177,7 +2204,7 @@ public final class CommandLineRunnerTest extends TestCase {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      fail("Unexpected exception " + e);
+      assertWithMessage("Unexpected exception " + e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output).isEqualTo("[{\"src\":\"alert(\\\"foo\\\");\\n\","
@@ -2206,7 +2233,7 @@ public final class CommandLineRunnerTest extends TestCase {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      fail("Unexpected exception " + e);
+      assertWithMessage("Unexpected exception " + e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output).isEqualTo("[{\"src\":\"alert(\\\"foo\\\");\\n\","
@@ -2253,7 +2280,7 @@ public final class CommandLineRunnerTest extends TestCase {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      fail("Unexpected exception " + e);
+      assertWithMessage("Unexpected exception " + e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2286,7 +2313,7 @@ public final class CommandLineRunnerTest extends TestCase {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      fail("Unexpected exception " + e);
+      assertWithMessage("Unexpected exception " + e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2320,7 +2347,7 @@ public final class CommandLineRunnerTest extends TestCase {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      fail("Unexpected exception " + e);
+      assertWithMessage("Unexpected exception " + e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2479,10 +2506,14 @@ public final class CommandLineRunnerTest extends TestCase {
     }
 
     if (warning == null) {
-      assertEquals("Expected no warnings or errors"
-          + "\nErrors: \n" + Joiner.on("\n").join(compiler.getErrors())
-          + "\nWarnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
-          0, compiler.getErrors().length + compiler.getWarnings().length);
+      assertWithMessage(
+              "Expected no warnings or errors"
+                  + "\nErrors: \n"
+                  + Joiner.on("\n").join(compiler.getErrors())
+                  + "\nWarnings: \n"
+                  + Joiner.on("\n").join(compiler.getWarnings()))
+          .that(compiler.getErrors().length + compiler.getWarnings().length)
+          .isEqualTo(0);
     } else {
       assertThat(compiler.getWarnings()).hasLength(1);
       assertThat(compiler.getWarnings()[0].getType()).isEqualTo(warning);
@@ -2494,9 +2525,15 @@ public final class CommandLineRunnerTest extends TestCase {
     } else {
       Node expectedRoot = parse(compiled);
       String explanation = expectedRoot.checkTreeEquals(root);
-      assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
-          "\nResult: " + compiler.toSource(root) +
-          "\n" + explanation, explanation);
+      assertWithMessage(
+              "\nExpected: "
+                  + compiler.toSource(expectedRoot)
+                  + "\nResult: "
+                  + compiler.toSource(root)
+                  + "\n"
+                  + explanation)
+          .that(explanation)
+          .isNull();
     }
   }
 
@@ -2516,10 +2553,14 @@ public final class CommandLineRunnerTest extends TestCase {
    */
   private void test(String[] original, DiagnosticType warning) {
     Compiler compiler = compile(original);
-    assertEquals("Expected exactly one warning or error " +
-        "\nErrors: \n" + Joiner.on("\n").join(compiler.getErrors()) +
-        "\nWarnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
-        1, compiler.getErrors().length + compiler.getWarnings().length);
+    assertWithMessage(
+            "Expected exactly one warning or error "
+                + "\nErrors: \n"
+                + Joiner.on("\n").join(compiler.getErrors())
+                + "\nWarnings: \n"
+                + Joiner.on("\n").join(compiler.getWarnings()))
+        .that(compiler.getErrors().length + compiler.getWarnings().length)
+        .isEqualTo(1);
 
     assertThat(exitCodes).isNotEmpty();
     int lastExitCode = Iterables.getLast(exitCodes);
@@ -2635,7 +2676,7 @@ public final class CommandLineRunnerTest extends TestCase {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      fail("Unexpected exception " + e);
+      assertWithMessage("Unexpected exception " + e).fail();
     }
     Compiler compiler = runner.getCompiler();
     String output = compiler.toSource();
@@ -2664,7 +2705,7 @@ public final class CommandLineRunnerTest extends TestCase {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      fail("Unexpected exception " + e);
+      assertWithMessage("Unexpected exception " + e).fail();
     }
     return new String(outputStream.toByteArray(), UTF_8);
   }
@@ -2673,7 +2714,7 @@ public final class CommandLineRunnerTest extends TestCase {
     CommandLineRunner runner = createCommandLineRunner(original);
     if (!runner.shouldRunCompiler()) {
       assertThat(runner.hasErrors()).isTrue();
-      fail(new String(errReader.toByteArray(), UTF_8));
+      assertWithMessage(new String(errReader.toByteArray(), UTF_8)).fail();
     }
     Supplier<List<SourceFile>> inputsSupplier = null;
     Supplier<List<JSModule>> modulesSupplier = null;

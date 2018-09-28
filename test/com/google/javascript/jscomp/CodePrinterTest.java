@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.base.Joiner;
@@ -1794,7 +1795,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testSubtraction() {
     Compiler compiler = new Compiler();
     Node n = compiler.parseTestCode("x - -4");
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrorCount()).isEqualTo(0);
 
     assertEquals(
         "x- -4",
@@ -1926,9 +1927,15 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     Node parse1 = parse(code);
     Node parse2 = parse(new CodePrinter.Builder(parse1).build());
     String explanation = parse1.checkTreeEquals(parse2);
-    assertNull("\nExpected: " + compiler.toSource(parse1) +
-        "\nResult: " + compiler.toSource(parse2) +
-        "\n" + explanation, explanation);
+    assertWithMessage(
+            "\nExpected: "
+                + compiler.toSource(parse1)
+                + "\nResult: "
+                + compiler.toSource(parse2)
+                + "\n"
+                + explanation)
+        .that(explanation)
+        .isNull();
   }
 
   @Test
@@ -2058,7 +2065,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     Node n = parse("foo(a);");
     assertPrintNode("foo(a)", n);
     Node call = n.getFirstFirstChild();
-    assertTrue(call.isCall());
+    assertThat(call.isCall()).isTrue();
     call.putBooleanProp(Node.FREE_CALL, true);
     assertPrintNode("foo(a)", n);
   }
@@ -2068,7 +2075,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     Node n = parse("x.foo(a);");
     assertPrintNode("x.foo(a)", n);
     Node call = n.getFirstFirstChild();
-    assertTrue(call.isCall());
+    assertThat(call.isCall()).isTrue();
     call.putBooleanProp(Node.FREE_CALL, true);
     assertPrintNode("(0,x.foo)(a)", n);
   }
