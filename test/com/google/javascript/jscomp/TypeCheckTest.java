@@ -18,10 +18,13 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.ScopeSubject.assertScope;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -4494,8 +4497,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "/** @param {!E} x\n@return {!E} */ function f(x) { return x; }");
     Node nodeX = n.getLastChild().getLastChild().getLastChild().getLastChild();
     JSType typeE = nodeX.getJSType();
-    assertFalse(typeE.isObject());
-    assertFalse(typeE.isNullable());
+    assertThat(typeE.isObject()).isFalse();
+    assertThat(typeE.isNullable()).isFalse();
   }
 
   @Test
@@ -10106,7 +10109,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     Node nodeC = n.getLastChild().getLastChild().getLastChild().getLastChild()
         .getLastChild().getLastChild();
     JSType typeC = nodeC.getJSType();
-    assertTrue(typeC.isNumber());
+    assertThat(typeC.isNumber()).isTrue();
 
     Node nodeB = nodeC.getFirstFirstChild();
     JSType typeB = nodeB.getJSType();
@@ -10119,7 +10122,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
     Node assign = n.getLastChild().getFirstChild();
     Node node = assign.getFirstChild();
-    assertFalse(node.getJSType().isUnknownType());
+    assertThat(node.getJSType().isUnknownType()).isFalse();
     assertEquals("number", node.getJSType().toString());
   }
 
@@ -10131,8 +10134,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "(new Foo).a;");
 
     Node node = n.getLastChild().getFirstChild();
-    assertFalse(node.getJSType().isUnknownType());
-    assertTrue(node.getJSType().isNumber());
+    assertThat(node.getJSType().isUnknownType()).isFalse();
+    assertThat(node.getJSType().isNumber()).isTrue();
   }
 
   @Test
@@ -11984,10 +11987,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "function foo() { return new goog.MyClass(); }");
 
     JSType typeOfFoo = root.getLastChild().getJSType();
-    assert(typeOfFoo instanceof FunctionType);
+    assertType(typeOfFoo).isInstanceOf(FunctionType.class);
 
     JSType retType = ((FunctionType) typeOfFoo).getReturnType();
-    assert(retType instanceof ObjectType);
+    assertType(retType).isInstanceOf(ObjectType.class);
     assertEquals("goog.MyClass", ((ObjectType) retType).getReferenceName());
   }
 
@@ -12003,29 +12006,31 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // goog type in the scope
     JSType googScopeType = p.scope.getVar("goog").getType();
     assertThat(googScopeType).isInstanceOf(ObjectType.class);
-    assertTrue("foo property not present on goog type",
-        googScopeType.hasProperty("foo"));
-    assertFalse("bar property present on goog type",
-        googScopeType.hasProperty("bar"));
+    assertWithMessage("foo property not present on goog type")
+        .that(googScopeType.hasProperty("foo"))
+        .isTrue();
+    assertWithMessage("bar property present on goog type")
+        .that(googScopeType.hasProperty("bar"))
+        .isFalse();
 
     // goog type on the VAR node
     Node varNode = p.root.getFirstChild();
-    assertEquals(Token.VAR, varNode.getToken());
+    assertNode(varNode).hasToken(Token.VAR);
     JSType googNodeType = varNode.getFirstChild().getJSType();
     assertThat(googNodeType).isInstanceOf(ObjectType.class);
 
     // goog scope type and goog type on VAR node must be the same
-    assertSame(googNodeType, googScopeType);
+    assertThat(googScopeType).isSameAs(googNodeType);
 
     // goog type on the left of the GETPROP node (under fist ASSIGN)
     Node getpropFoo1 = varNode.getNext().getFirstFirstChild();
-    assertEquals(Token.GETPROP, getpropFoo1.getToken());
+    assertNode(getpropFoo1).hasToken(Token.GETPROP);
     assertEquals("goog", getpropFoo1.getFirstChild().getString());
     JSType googGetpropFoo1Type = getpropFoo1.getFirstChild().getJSType();
     assertThat(googGetpropFoo1Type).isInstanceOf(ObjectType.class);
 
     // still the same type as the one on the variable
-    assertSame(googScopeType, googGetpropFoo1Type);
+    assertThat(googGetpropFoo1Type).isSameAs(googScopeType);
 
     // the foo property should be defined on goog
     JSType googFooType = ((ObjectType) googScopeType).getPropertyType("foo");
@@ -12035,24 +12040,27 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // (under second ASSIGN)
     Node getpropFoo2 = varNode.getNext().getNext()
         .getFirstFirstChild().getFirstChild();
-    assertEquals(Token.GETPROP, getpropFoo2.getToken());
+    assertNode(getpropFoo2).hasToken(Token.GETPROP);
     assertEquals("goog", getpropFoo2.getFirstChild().getString());
     JSType googGetpropFoo2Type = getpropFoo2.getFirstChild().getJSType();
     assertThat(googGetpropFoo2Type).isInstanceOf(ObjectType.class);
 
     // still the same type as the one on the variable
-    assertSame(googScopeType, googGetpropFoo2Type);
+    assertThat(googGetpropFoo2Type).isSameAs(googScopeType);
 
     // goog.foo type on the left of the top-level GETPROP node
     // (under second ASSIGN)
     JSType googFooGetprop2Type = getpropFoo2.getJSType();
-    assertTrue("goog.foo incorrectly annotated in goog.foo.bar selection",
-        googFooGetprop2Type instanceof ObjectType);
+    assertWithMessage("goog.foo incorrectly annotated in goog.foo.bar selection")
+        .that(googFooGetprop2Type)
+        .isInstanceOf(ObjectType.class);
     ObjectType googFooGetprop2ObjectType = (ObjectType) googFooGetprop2Type;
-    assertFalse("foo property present on goog.foo type",
-        googFooGetprop2ObjectType.hasProperty("foo"));
-    assertTrue("bar property not present on goog.foo type",
-        googFooGetprop2ObjectType.hasProperty("bar"));
+    assertWithMessage("foo property present on goog.foo type")
+        .that(googFooGetprop2ObjectType.hasProperty("foo"))
+        .isFalse();
+    assertWithMessage("bar property not present on goog.foo type")
+        .that(googFooGetprop2ObjectType.hasProperty("bar"))
+        .isTrue();
     assertTypeEquals(
         "bar property on goog.foo type incorrectly inferred",
         getNativeNumberType(),
@@ -12099,7 +12107,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     ObjectType goog = (ObjectType) p.scope.getVar("goog").getType();
     assertHasXMorePropertiesThanNativeObject(goog, 1);
     JSType googA = goog.getPropertyType("A");
-    assertNotNull(googA);
+    assertThat(googA).isNotNull();
     assertThat(googA).isInstanceOf(FunctionType.class);
     FunctionType googAFunction = (FunctionType) googA;
     ObjectType classA = googAFunction.getInstanceType();
@@ -12756,8 +12764,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     Node objectNode = nameNode.getFirstChild();
 
     // node extraction
-    assertEquals(Token.NAME, nameNode.getToken());
-    assertEquals(Token.OBJECTLIT, objectNode.getToken());
+    assertNode(nameNode).hasToken(Token.NAME);
+    assertNode(objectNode).hasToken(Token.OBJECTLIT);
 
     // value's type
     ObjectType objectType =
@@ -12881,7 +12889,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "function Error(message) {}");
     Node n = parseAndTypeCheck(externs, "Error('x')");
     Node call = n.getFirstFirstChild();
-    assertTrue(call.isCall());
+    assertThat(call.isCall()).isTrue();
     assertTypeEquals(
         call.getFirstChild().getJSType().toMaybeFunctionType().getInstanceType(), call.getJSType());
   }
@@ -13479,7 +13487,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testResolutionViaRegistry5() {
     Node n = parseAndTypeCheck("/** @constructor */ u.T = function() {}; u.T");
     JSType type = n.getLastChild().getLastChild().getJSType();
-    assertFalse(type.isUnknownType());
+    assertThat(type.isUnknownType()).isFalse();
     assertThat(type).isInstanceOf(FunctionType.class);
     assertEquals("u.T",
         ((FunctionType) type).getInstanceType().getReferenceName());
@@ -13490,10 +13498,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     Node n = parseAndTypeCheck("/** @constructor */ var T = function() {};" +
         "/** @type {!T} */var t; t.x; t;");
     JSType type = n.getLastChild().getLastChild().getJSType();
-    assertFalse(type.isUnknownType());
+    assertThat(type.isUnknownType()).isFalse();
     assertThat(type).isInstanceOf(ObjectType.class);
     ObjectType objectType = (ObjectType) type;
-    assertFalse(objectType.hasProperty("x"));
+    assertThat(objectType.hasProperty("x")).isFalse();
   }
 
   @Test
@@ -13502,11 +13510,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         parseAndTypeCheckWithScope("/** @type {!Object} */var t; t.x; t;");
     Node n = ns.root;
     JSType type = n.getLastChild().getLastChild().getJSType();
-    assertFalse(type.isUnknownType());
+    assertThat(type.isUnknownType()).isFalse();
     assertTypeEquals(type, getNativeObjectType());
     assertThat(type).isInstanceOf(ObjectType.class);
     ObjectType objectType = (ObjectType) type;
-    assertFalse(objectType.hasProperty("x"));
+    assertThat(objectType.hasProperty("x")).isFalse();
   }
 
   @Test
@@ -14005,38 +14013,38 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testGetTypedPercent1() {
     String js = "var id = function(x) { return x; }\n" +
                 "var id2 = function(x) { return id(x); }";
-    assertEquals(50.0, getTypedPercent(js), 0.1);
+    assertThat(getTypedPercent(js)).isWithin(0.1).of(50.0);
   }
 
   @Test
   public void testGetTypedPercent2() {
     String js = "var x = {}; x.y = 1;";
-    assertEquals(100.0, getTypedPercent(js), 0.1);
+    assertThat(getTypedPercent(js)).isWithin(0.1).of(100.0);
   }
 
   @Test
   public void testGetTypedPercent3() {
     String js = "var f = function(x) { x.a = x.b; }";
-    assertEquals(50.0, getTypedPercent(js), 0.1);
+    assertThat(getTypedPercent(js)).isWithin(0.1).of(50.0);
   }
 
   @Test
   public void testGetTypedPercent4() {
     String js = "var n = {};\n /** @constructor */ n.T = function() {};\n" +
         "/** @type {n.T} */ var x = new n.T();";
-    assertEquals(100.0, getTypedPercent(js), 0.1);
+    assertThat(getTypedPercent(js)).isWithin(0.1).of(100.0);
   }
 
   @Test
   public void testGetTypedPercent5() {
     String js = "/** @enum {number} */ keys = {A: 1,B: 2,C: 3};";
-    assertEquals(100.0, getTypedPercent(js), 0.1);
+    assertThat(getTypedPercent(js)).isWithin(0.1).of(100.0);
   }
 
   @Test
   public void testGetTypedPercent6() {
     String js = "a = {TRUE: 1, FALSE: 0};";
-    assertEquals(100.0, getTypedPercent(js), 0.1);
+    assertThat(getTypedPercent(js)).isWithin(0.1).of(100.0);
   }
 
   @Test
@@ -14052,8 +14060,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         + "function baz(f) {\n"
         + "  Foo.prototype.bar.call(f, 3);\n"
         + "}");
-    assertEquals(0, compiler.getErrorCount());
-    assertEquals(0, compiler.getWarningCount());
+    assertThat(compiler.getErrorCount()).isEqualTo(0);
+    assertThat(compiler.getWarningCount()).isEqualTo(0);
 
     assertThat(p.scope.getVar("Foo").getType()).isInstanceOf(FunctionType.class);
     FunctionType fooType = (FunctionType) p.scope.getVar("Foo").getType();
@@ -14079,7 +14087,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var Bar = function() {};",
             "/** @constructor */",
             "var Baz = function() {};");
-    assertEquals(100.0, getTypedPercentWithExterns(externs, js), 0.1);
+    assertThat(getTypedPercentWithExterns(externs, js)).isWithin(0.1).of(100.0);
   }
 
   @Test
@@ -14901,9 +14909,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             scopeCreator)
         .process(null, second);
 
-    assertEquals(1, compiler.getWarningCount());
-    assertEquals("cannot instantiate non-constructor",
-        compiler.getWarnings()[0].description);
+    assertThat(compiler.getWarningCount()).isEqualTo(1);
+    assertEquals("cannot instantiate non-constructor", compiler.getWarnings()[0].description);
   }
 
   @Test
@@ -16917,7 +16924,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTemplatizedTypeSubtypes2() {
     JSType arrayOfNumber = createTemplatizedType(getNativeArrayType(), getNativeNumberType());
     JSType arrayOfString = createTemplatizedType(getNativeArrayType(), getNativeStringType());
-    assertFalse(arrayOfString.isSubtypeOf(createUnionType(arrayOfNumber, getNativeNullVoidType())));
+    assertThat(arrayOfString.isSubtypeOf(createUnionType(arrayOfNumber, getNativeNullVoidType())))
+        .isFalse();
   }
 
   @Test
@@ -22546,9 +22554,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     Node externs = compiler.parseTestCode(new TestExternsBuilder().addString().build());
     IR.root(externs, n);
 
-    assertEquals("parsing error: "
-        + Joiner.on(", ").join(compiler.getErrors()),
-        0, compiler.getErrorCount());
+    assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
+        .that(compiler.getErrorCount())
+        .isEqualTo(0);
 
     // For processing goog.addDependency for forward typedefs.
     new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false).process(externs, n);
@@ -22560,27 +22568,23 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         registry)
         .processForTesting(null, n);
 
-    assertEquals(
-        "unexpected error(s) : "
-        + Joiner.on(", ").join(compiler.getErrors()),
-        0, compiler.getErrorCount());
+    assertWithMessage("unexpected error(s) : " + Joiner.on(", ").join(compiler.getErrors()))
+        .that(compiler.getErrorCount())
+        .isEqualTo(0);
 
     if (descriptions == null) {
-      assertEquals(
-          "unexpected warning(s) : "
-          + Joiner.on(", ").join(compiler.getWarnings()),
-          0, compiler.getWarningCount());
+      assertWithMessage("unexpected warning(s) : " + Joiner.on(", ").join(compiler.getWarnings()))
+          .that(compiler.getWarningCount())
+          .isEqualTo(0);
     } else {
-      assertEquals(
-          "unexpected warning(s) : "
-          + Joiner.on(", ").join(compiler.getWarnings()),
-          descriptions.size(), compiler.getWarningCount());
+      assertWithMessage("unexpected warning(s) : " + Joiner.on(", ").join(compiler.getWarnings()))
+          .that(compiler.getWarningCount())
+          .isEqualTo(descriptions.size());
       Set<String> actualWarningDescriptions = new HashSet<>();
       for (int i = 0; i < descriptions.size(); i++) {
         actualWarningDescriptions.add(compiler.getWarnings()[i].description);
       }
-      assertEquals(
-          new HashSet<>(descriptions), actualWarningDescriptions);
+      assertThat(actualWarningDescriptions).isEqualTo(new HashSet<>(descriptions));
     }
   }
 }

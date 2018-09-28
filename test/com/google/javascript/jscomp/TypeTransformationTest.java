@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.parsing.TypeTransformationParser;
 import com.google.javascript.rhino.Node;
@@ -1114,7 +1116,7 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
 
   private JSType union(JSType... variants) {
     JSType type = createUnionType(variants);
-    assertTrue(type.isUnionType());
+    assertThat(type.isUnionType()).isTrue();
     return type;
   }
 

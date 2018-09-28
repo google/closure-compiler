@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 import static com.google.javascript.jscomp.ScopeSubject.assertScope;
@@ -144,9 +145,9 @@ public final class TypeInferenceTest extends TestCase {
 
   private void parseAndRunTypeInference(String js) {
     Node root = compiler.parseTestCode(js);
-    assertEquals("parsing error: " +
-        Joiner.on(", ").join(compiler.getErrors()),
-        0, compiler.getErrorCount());
+    assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
+        .that(compiler.getErrorCount())
+        .isEqualTo(0);
 
     // SCRIPT -> EXPR_RESULT -> FUNCTION
     // `(function() { TEST CODE HERE });`
@@ -224,16 +225,16 @@ public final class TypeInferenceTest extends TestCase {
    */
   private TypeSubject assertTypeOfExpression(String label) {
     Node statementNode = getLabeledStatement(label).statementNode;
-    assertTrue("Not an expression statement.", statementNode.isExprResult());
+    assertWithMessage("Not an expression statement.").that(statementNode.isExprResult()).isTrue();
     JSType jsType = statementNode.getOnlyChild().getJSType();
-    assertNotNull("Expression type is null", jsType);
+    assertWithMessage("Expression type is null").that(jsType).isNotNull();
     return assertType(jsType);
   }
 
   private JSType getType(String name) {
-    assertNotNull("The return scope should not be null.", returnScope);
+    assertWithMessage("The return scope should not be null.").that(returnScope).isNotNull();
     StaticTypedSlot var = returnScope.getSlot(name);
-    assertNotNull("The variable " + name + " is missing from the scope.", var);
+    assertWithMessage("The variable " + name + " is missing from the scope.").that(var).isNotNull();
     return var.getType();
   }
 
@@ -250,10 +251,11 @@ public final class TypeInferenceTest extends TestCase {
 
   private void verifySubtypeOf(String name, JSType type) {
     JSType varType = getType(name);
-    assertNotNull("The variable " + name + " is missing a type.", varType);
-    assertTrue(
-        "The type " + varType + " of variable " + name + " is not a subtype of " + type + ".",
-        varType.isSubtypeOf(type));
+    assertWithMessage("The variable " + name + " is missing a type.").that(varType).isNotNull();
+    assertWithMessage(
+            "The type " + varType + " of variable " + name + " is not a subtype of " + type + ".")
+        .that(varType.isSubtypeOf(type))
+        .isTrue();
   }
 
   private void verifySubtypeOf(String name, JSTypeNative type) {
@@ -1784,7 +1786,7 @@ public final class TypeInferenceTest extends TestCase {
         + "/** @type {?} */"
         + "var bar;"
         + "var r = f({foo:bar});");
-    assertTrue(getType("r").isRecordType());
+    assertThat(getType("r").isRecordType()).isTrue();
     verify("r", getType("e"));
   }
 
@@ -1801,7 +1803,7 @@ public final class TypeInferenceTest extends TestCase {
         + "/** @type {{foo:!Object, bar:!Object}} */"
         + "var e;"
         + "var r = f({foo:{}, bar:{}});");
-    assertTrue(getType("r").isRecordType());
+    assertThat(getType("r").isRecordType()).isTrue();
     verify("r", getType("e"));
   }
 
@@ -1819,7 +1821,7 @@ public final class TypeInferenceTest extends TestCase {
         + "/** @type {!Array<number>} */"
         + "var something;"
         + "var r = f({foo:something});");
-    assertTrue(getType("r").isRecordType());
+    assertThat(getType("r").isRecordType()).isTrue();
     verify("r", getType("e"));
   }
 
@@ -1838,7 +1840,7 @@ public final class TypeInferenceTest extends TestCase {
             " */",
             "function f() { return 123; }",
             "var x = f();"));
-    assertTrue(getType("x").isNumber());
+    assertThat(getType("x").isNumber()).isTrue();
   }
 
   @Test

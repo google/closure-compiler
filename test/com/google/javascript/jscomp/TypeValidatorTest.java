@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -648,6 +649,6 @@ public final class TypeValidatorTest extends CompilerTestCase {
 
   private void assertMismatches(List<TypeMismatch> expected) {
     List<TypeMismatch> actual = ImmutableList.copyOf(getLastCompiler().getTypeMismatches());
-    assertEquals(expected, actual);
+    assertThat(actual).isEqualTo(expected);
   }
 }

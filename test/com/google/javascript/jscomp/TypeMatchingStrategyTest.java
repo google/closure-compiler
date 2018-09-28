@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.TypeMatchingStrategy.EXACT;
 import static com.google.javascript.jscomp.TypeMatchingStrategy.LOOSE;
 import static com.google.javascript.jscomp.TypeMatchingStrategy.STRICT_NULLABILITY;
@@ -154,17 +155,17 @@ public final class TypeMatchingStrategyTest extends TestCase {
     JSType jsType = yNode.getFirstChild().getJSType();
 
     MatchResult matchResult = typeMatchingStrategy.match(templateJsType, jsType);
-    assertEquals(
-        isMatch
-            ? "'" + templateJsType + "' should match '" + jsType + "'"
-            : "'" + templateType + "' should not match '" + type + "'",
-        isMatch,
-        matchResult.isMatch());
-    assertEquals(
-        isLooseMatch
-            ? "'" + templateType + "' should loosely match '" + type + "'"
-            : "'" + templateType + "' should not loosely match '" + type + "'",
-        isLooseMatch,
-        matchResult.isLooseMatch());
+    assertWithMessage(
+            isMatch
+                ? "'" + templateJsType + "' should match '" + jsType + "'"
+                : "'" + templateType + "' should not match '" + type + "'")
+        .that(matchResult.isMatch())
+        .isEqualTo(isMatch);
+    assertWithMessage(
+            isLooseMatch
+                ? "'" + templateType + "' should loosely match '" + type + "'"
+                : "'" + templateType + "' should not loosely match '" + type + "'")
+        .that(matchResult.isLooseMatch())
+        .isEqualTo(isLooseMatch);
   }
 }

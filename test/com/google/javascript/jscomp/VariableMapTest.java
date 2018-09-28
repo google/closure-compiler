@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableMap;
@@ -133,9 +134,9 @@ public final class VariableMapTest extends TestCase {
 
   private void assertEqual(byte[] bytes1, byte[] bytes2) {
     if (bytes1 != bytes2) {
-      assertEquals("length differs.", bytes1.length, bytes2.length);
+      assertWithMessage("length differs.").that(bytes2.length).isEqualTo(bytes1.length);
       for (int i = 0; i < bytes1.length; i++) {
-        assertEquals("byte " + i + "differs.", bytes1[i], bytes2[i]);
+        assertWithMessage("byte " + i + "differs.").that(bytes2[i]).isEqualTo(bytes1[i]);
       }
     }
   }
@@ -144,7 +145,7 @@ public final class VariableMapTest extends TestCase {
   public void testReverseThrowsErrorOnDuplicate() {
     try {
       new VariableMap(ImmutableMap.of("AA", "b", "BB", "b"));
-      fail();
+      throw new AssertionError();
     } catch (IllegalArgumentException expected) {
     }
   }
@@ -152,6 +153,6 @@ public final class VariableMapTest extends TestCase {
   @Test
   public void testReverseLookupOfNullFindsNoName() {
     VariableMap vm = new VariableMap(ImmutableMap.of("AA", "a", "BB", "b"));
-    assertNull(vm.lookupSourceName(null));
+    assertThat(vm.lookupSourceName(null)).isNull();
   }
 }

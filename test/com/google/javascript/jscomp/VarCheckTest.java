@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.ScopeSubject.assertScope;
 import static com.google.javascript.jscomp.VarCheck.BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
@@ -641,7 +642,7 @@ public final class VarCheckTest extends CompilerTestCase {
     validityCheck = true;
     try {
       checkSynthesizedExtern("x", "");
-      fail("Expected RuntimeException");
+      assertWithMessage("Expected RuntimeException").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasMessageThat().contains("Unexpected variable x");
     }

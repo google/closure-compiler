@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.rhino.Node;
@@ -66,7 +67,7 @@ public final class ValidityCheckTest extends CompilerTestCase {
 
     try {
       test("var x = 3;", "var x=3;0;0");
-      fail("Expected IllegalStateException");
+      assertWithMessage("Expected IllegalStateException").fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().contains("Expected BLOCK but was EMPTY");
     }
@@ -82,7 +83,7 @@ public final class ValidityCheckTest extends CompilerTestCase {
 
     try {
       testSame("while(1){}");
-      fail("Expected RuntimeException");
+      assertWithMessage("Expected RuntimeException").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasMessageThat().contains("Normalize constraints violated:\nWHILE node");
     }
@@ -104,7 +105,7 @@ public final class ValidityCheckTest extends CompilerTestCase {
 
     try {
       test("var x;", "var x; x;");
-      fail("Expected RuntimeException");
+      assertWithMessage("Expected RuntimeException").fail();
     } catch (RuntimeException e) {
       assertThat(e)
           .hasMessageThat()
