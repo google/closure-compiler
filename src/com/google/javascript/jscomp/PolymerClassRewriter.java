@@ -31,6 +31,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,7 +47,6 @@ final class PolymerClassRewriter {
   private final int polymerVersion;
   private final PolymerExportPolicy polymerExportPolicy;
   private final boolean propertyRenamingEnabled;
-
   @VisibleForTesting
   static final String POLYMER_ELEMENT_PROP_CONFIG = "PolymerElementProperties";
 
@@ -425,6 +425,19 @@ final class PolymerClassRewriter {
     }
   }
 
+  /** Appends all of the given methods to the given block. */
+  private void appendMethodsToBlock(
+      final Collection<MemberDefinition> methods, Node block, String basePath) {
+    for (MemberDefinition method : methods) {
+      Node propertyNode =
+          IR.exprResult(NodeUtil.newQName(compiler, basePath + method.name.getString()));
+      propertyNode.useSourceInfoIfMissingFromForTree(method.name);
+      JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(method.info);
+      propertyNode.getFirstChild().setJSDocInfo(info.build());
+      block.addChildToBack(propertyNode);
+    }
+  }
+
   /** Remove all JSDocs from properties of a class definition */
   private void removePropertyDocs(
       final Node objLit, PolymerClassDefinition.DefinitionType defType) {
@@ -590,13 +603,22 @@ final class PolymerClassRewriter {
       for (MemberDefinition method : cls.methods) {
         uniqueMethods.put(method.name.getString(), method);
       }
-      for (MemberDefinition method : uniqueMethods.values()) {
-        addExportPropertyCall(
-            cls.target.getQualifiedName() + ".prototype",
-            method.name.getString(),
-            cls.target.getQualifiedName() + ".prototype." + method.name.getString(),
-            method.value,
-            cls.definition);
+
+      if (cls.defType == PolymerClassDefinition.DefinitionType.ES6Class) {
+        // Modern class-based elements get goog.exportProperty exports.
+        for (MemberDefinition method : uniqueMethods.values()) {
+          addExportPropertyCall(
+              cls.target.getQualifiedName() + ".prototype",
+              method.name.getString(),
+              cls.target.getQualifiedName() + ".prototype." + method.name.getString(),
+              method.value,
+              cls.definition);
+        }
+      } else {
+        // Legacy Polymer function calls still need the externs to be augmented. We can't make use
+        // of goog.exportProperty calls because our prototype is actually just a hallucination of
+        // the PolymerPass used for type checking via @lends, so the export won't have any effect.
+        appendMethodsToBlock(uniqueMethods.values(), block, interfaceBasePath);
       }
 
     } else if (polymerVersion == 1) {

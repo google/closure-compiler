@@ -3556,7 +3556,7 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void textExportsMethodsFromClassBasedElement() {
+  public void testExportsMethodsFromClassBasedElement() {
     polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
     test(
         2,
@@ -3580,17 +3580,17 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   /**
-   * When --polymer_export_policy=EXPORT_ALL, the PolymerPass will export all methods of an element
-   * including methods inherited from Polymer Behaviors. Ensure that each method is included on the
-   * interface only once, even when it is implemented in multiple places.
+   * When --polymer_export_policy=EXPORT_ALL, the PolymerPass will add all methods of an element to
+   * that element's generated interface (which is injected into the externs), including methods
+   * inherited from Polymer Behaviors. Ensure that each method is included on the interface only
+   * once, even when it is implemented in multiple places.
    */
   @Test
   public void textExportsUniqueMethodsFromLegacyElementAndBehaviors() {
     polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
-    test(
-        2,
+
+    String js =
         lines(
-            EXPORT_PROPERTY_DEF,
             "/** @polymerBehavior */",
             "const Behavior1 = {",
             "  onAll: function() {},",
@@ -3606,43 +3606,18 @@ public class PolymerPassTest extends CompilerTestCase {
             "  behaviors: [Behavior1, Behavior2],",
             "  onAll() {},",
             "  onElement: function() {},",
-            "});"),
+            "});");
+
+    String newExterns =
         lines(
-            EXPORT_PROPERTY_DEF,
-            "/** @nocollapse @polymerBehavior */",
-            "const Behavior1 = {",
-            "  /** @suppress {checkTypes,globalThis,visibility} */ onAll: function() {},",
-            "  /** @suppress {checkTypes,globalThis,visibility} */ onBehavior1: function() {}",
-            "};",
-            "/** @nocollapse @polymerBehavior */",
-            "const Behavior2 = {",
-            "  /** @suppress {checkTypes,globalThis,visibility} */ onAll: function() {},",
-            "  /** @suppress {checkTypes,globalThis,visibility} */ onBehavior2: function() {}",
-            "};",
-            "/**",
-            " * @constructor",
-            " * @extends {PolymerElement}",
-            " * @implements {PolymerTestElementElementInterface}",
-            " */",
-            "var TestElementElement = function() {};",
-            "/** @suppress {unusedPrivateMembers} */",
-            "TestElementElement.prototype.onBehavior1 = function() {};",
-            "/** @suppress {unusedPrivateMembers} */",
-            "TestElementElement.prototype.onBehavior2 = function() {};",
-            "Polymer(/** @lends {TestElementElement.prototype} */ {",
-            "  is: \"test-element\",",
-            "  behaviors: [Behavior1, Behavior2],",
-            "  /** @this {TestElementElement} */ onAll() {},",
-            "  /** @this {TestElementElement} */ onElement: function() {}",
-            "});",
-            "goog.exportProperty(TestElementElement.prototype, \"onElement\",",
-            "    TestElementElement.prototype.onElement);",
-            "goog.exportProperty(TestElementElement.prototype, \"onBehavior2\",",
-            "    TestElementElement.prototype.onBehavior2);",
-            "goog.exportProperty(TestElementElement.prototype, \"onBehavior1\",",
-            "    TestElementElement.prototype.onBehavior1);",
-            "goog.exportProperty(TestElementElement.prototype, \"onAll\",",
-            "    TestElementElement.prototype.onAll);"));
+            EXTERNS,
+            "/** @interface */ var PolymerTestElementElementInterface=function(){};",
+            "PolymerTestElementElementInterface.prototype.onAll;",
+            "PolymerTestElementElementInterface.prototype.onBehavior1;",
+            "PolymerTestElementElementInterface.prototype.onBehavior2;",
+            "PolymerTestElementElementInterface.prototype.onElement");
+
+    testExternChanges(EXTERNS, js, newExterns);
   }
 
   @Override

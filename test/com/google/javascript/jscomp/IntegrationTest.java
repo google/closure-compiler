@@ -1026,7 +1026,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testPolymerExportPolicyExportAll() {
+  public void testPolymerExportPolicyExportAllClassBased() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -1054,6 +1054,47 @@ public final class IntegrationTest extends IntegrationTestCase {
                 "    return this.longUnusedProperty;",
                 "  }",
                 "}"));
+    String source = compiler.getCurrentJsSource();
+
+    // If we see these identifiers anywhere in the output source, we know that we successfully
+    // protected it against removal and renaming.
+    assertThat(source).contains("longUnusedProperty");
+    assertThat(source).contains("longUnusedMethod");
+
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+  }
+
+  @Test
+  public void testPolymerExportPolicyExportAllLegacyElement() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setPolymerVersion(2);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    addPolymerExterns();
+
+    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRemoveUnusedPrototypeProperties(true);
+    options.setRemoveUnusedVariables(Reach.ALL);
+    options.setRemoveDeadCode(true);
+    options.setRemoveUnusedConstructorProperties(true);
+    options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+
+    Compiler compiler =
+        compile(
+            options,
+            lines(
+                EXPORT_PROPERTY_DEF,
+                "Polymer({",
+                "  is: \"foo-element\",",
+                "  properties: {",
+                "    longUnusedProperty: String,",
+                "  },",
+                "  longUnusedMethod: function() {",
+                "    return this.longUnusedProperty;",
+                "  },",
+                "});"));
     String source = compiler.getCurrentJsSource();
 
     // If we see these identifiers anywhere in the output source, we know that we successfully
