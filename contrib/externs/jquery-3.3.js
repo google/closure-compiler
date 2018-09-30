@@ -305,8 +305,8 @@ jQuery.prototype.append = function(arg1, content) {};
 jQuery.prototype.appendTo = function(target) {};
 
 /**
- * @param {(string|Object<string,*>)} arg1
- * @param {(string|number|boolean|function(number,string))=} arg2
+ * @param {(string|Object<string,(string|number)>)} arg1
+ * @param {(string|number|function(this:Element,number,string):(string|number))=} arg2
  * @return {(string|!jQuery)}
  */
 jQuery.prototype.attr = function(arg1, arg2) {};
