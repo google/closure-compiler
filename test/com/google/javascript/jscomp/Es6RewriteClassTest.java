@@ -835,7 +835,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
 
   @Test
   public void testExtendForwardDeclaredClass() {
-    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
     enableClosurePass();
     test(
         srcs(
@@ -851,7 +850,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
                 "  return ns.D.apply(this, arguments) || this;",
                 "};",
                 "$jscomp.inherits(C, ns.D);")),
-        warning(FunctionTypeBuilder.RESOLVED_TAG_EMPTY));
+        warning(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY));
   }
 
   @Test

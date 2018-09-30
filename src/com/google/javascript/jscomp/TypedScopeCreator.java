@@ -1187,8 +1187,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      if (ctorType != null && (ctorType.isConstructor() || ctorType.isInterface())) {
-        return ctorType.toMaybeFunctionType().getInstanceType();
+      if (ctorType != null) {
+        if (ctorType.isConstructor() || ctorType.isInterface()) {
+          return ctorType.toMaybeFunctionType().getInstanceType();
+        } else if (ctorType.isUnknownType()) {
+          // The constructor could have an unknown type for cases where it is dynamically
+          // created or passed in from elsewhere.
+          // e.g. with a mixin pattern
+          // function mixinSomething(ctor) {
+          //   return class extends ctor { ... };
+          // }
+          // In that case consider the super class instance type to be unknown.
+          return ctorType.toMaybeObjectType();
+        }
       }
 
       // We couldn't determine the type, so for TypedScope creation purposes we will treat it as if

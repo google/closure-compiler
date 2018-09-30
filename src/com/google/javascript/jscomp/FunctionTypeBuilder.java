@@ -408,24 +408,46 @@ final class FunctionTypeBuilder {
     return false;
   }
 
-  /** Infer any supertypes from the JSDocInfo or the passed-in base type. */
-  FunctionTypeBuilder inferInheritance(@Nullable JSDocInfo info, @Nullable ObjectType baseType) {
+  /**
+   * Infer any supertypes from the JSDocInfo or the passed-in base type.
+   *
+   * @param info JSDoc info that is attached to the type declaration, if any
+   * @param classExtendsType The type of the extends clause in `class C extends SuperClass {}`, if
+   *     present.
+   * @return this object
+   */
+  FunctionTypeBuilder inferInheritance(
+      @Nullable JSDocInfo info, @Nullable ObjectType classExtendsType) {
 
-    // base type
     if (info != null && info.hasBaseType()) {
       if (isConstructor) {
         ObjectType infoBaseType =
             info.getBaseType().evaluate(templateScope, typeRegistry).toMaybeObjectType();
         // TODO(sdh): ensure JSDoc's baseType and AST's baseType are compatible if both are set
-        baseType = infoBaseType;
+        if (infoBaseType.setValidator(new ExtendedTypeValidator())) {
+          baseType = infoBaseType;
+        }
       } else {
         reportWarning(EXTENDS_WITHOUT_TYPEDEF, formatFnName());
       }
-    }
-    if (baseType != null && isConstructor) {
-      if (baseType.setValidator(new ExtendedTypeValidator())) {
-        this.baseType = baseType;
-      }
+    } else if (classExtendsType != null && isConstructor) {
+      // This case is:
+      // // no JSDoc here
+      // class extends astBaseType {...}
+      //
+      // It may well be that astBaseType is something dynamically created, like a value passed into
+      // a function. A common pattern is:
+      //
+      // function mixinX(superClass) {
+      //   return class extends superClass {
+      //     ...
+      //   };
+      // }
+      // The ExtendedTypeValidator() used in the JSDocInfo case above will report errors for these
+      // cases, and we don't want that.
+      // Since astBaseType is an actual value in code rather than an annotation, we can
+      // rely on validation elsewhere to ensure it is actually defined.
+      baseType = classExtendsType;
     }
 
     // Implemented interfaces (for constructors only).
@@ -471,13 +493,20 @@ final class FunctionTypeBuilder {
             extendedInterfaces.add((ObjectType) maybeInterfaceType);
           }
           // de-dupe baseType (from extends keyword) if it's also in @extends jsdoc.
-          if (baseType != null && maybeInterfaceType.isSubtypeOf(baseType)) {
-            baseType = null;
+          if (classExtendsType != null && maybeInterfaceType.isSubtypeOf(classExtendsType)) {
+            classExtendsType = null;
           }
         }
       }
-      if (baseType != null && baseType.setValidator(new ExtendedTypeValidator())) {
-        extendedInterfaces.add(baseType);
+      if (classExtendsType != null && classExtendsType.setValidator(new ExtendedTypeValidator())) {
+        // case is:
+        // /**
+        //  * @interface
+        //  * @extends {OtherInterface}
+        //  */
+        // class SomeInterface extends astBaseType {}
+        // Add the explicit extends type to the extended interfaces listed in JSDoc.
+        extendedInterfaces.add(classExtendsType);
       }
     }
 

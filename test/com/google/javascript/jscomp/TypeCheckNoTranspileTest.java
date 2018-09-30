@@ -3907,7 +3907,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     testTypes(
         "class Foo extends Foo {}",
         new String[] {
-          "Could not resolve type in @extends tag of Foo",
           "Parse error. Cycle detected in inheritance chain of type Foo",
         });
   }
@@ -3945,15 +3944,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testClassExtendsUnresolvedClass() {
+  public void testMixinFunction() {
     testTypes(
         lines(
             "/** @param {function(new: ?, ...?)} ctor */",
             "function mixin(ctor) {",
+            // ctor isn't properly declared as a type,
+            // but we shouldn't generate an error,
+            // because it is a real value, not an annotation,
+            // and we need this coding pattern to work.
             "  class Foo extends ctor {}",
-            "}"),
-        // TODO(sdh): This should probably not produce an error.
-        "Could not resolve type in @extends tag of Foo");
+            "}"));
   }
 
   @Test

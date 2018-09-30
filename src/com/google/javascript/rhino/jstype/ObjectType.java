@@ -252,7 +252,7 @@ public abstract class ObjectType extends JSType implements Serializable {
     return "(" + suffix + ")";
   }
 
-  public final boolean isAmbiguousObject() {
+  public boolean isAmbiguousObject() {
     return !hasReferenceName();
   }
 

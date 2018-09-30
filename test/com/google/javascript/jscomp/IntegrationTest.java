@@ -1689,6 +1689,288 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void ambiguatePropertiesWithAliases() {
+    // Avoid injecting the polyfills, so we don't have to include them in the expected output.
+    useNoninjectingCompiler = true;
+
+    // include externs definitions for the stuff that would have been injected
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode(
+            "extraExterns",
+            lines(
+                "var $jscomp = {};",
+                "",
+                "/**",
+                " * @param {?} subClass",
+                " * @param {?} superClass",
+                " * @return {?} newClass",
+                " */",
+                "$jscomp.inherits = function(subClass, superClass) {};",
+                "")));
+    externs = externsList.build();
+
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setAmbiguateProperties(true);
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    test(
+        options,
+        lines(
+            "", //
+            "class A {",
+            "  constructor() {",
+            "    this.aProp = 'aProp';",
+            "  }",
+            "}",
+            "",
+            "/**",
+            " * @const",
+            " */",
+            "const AConstAlias = A;",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "const AConstructorAlias = A;",
+            "",
+            "class B extends A {",
+            "  constructor() {",
+            "    super();",
+            "    this.bProp = 'bProp';",
+            "    this.aProp = 'originalAProp';",
+            "  }",
+            "}",
+            "",
+            "class BConst extends AConstAlias {",
+            "  constructor() {",
+            "    super();",
+            "    this.bProp = 'bConstProp';",
+            "    this.aProp = 'constAliasAProp';",
+            "  }",
+            "}",
+            "",
+            "class BConstructorAlias extends AConstructorAlias {",
+            "  constructor() {",
+            "    super();",
+            "    this.bProp = 'bConstructorProp';",
+            "    this.aProp = 'constructorAliasAProp';",
+            "  }",
+            "}",
+            "",
+            ""),
+        lines(
+            "", //
+            "var A = function() {",
+            "  this.a = 'aProp';", // gets a unique name
+            "};",
+            "",
+            "var AConstAlias = A;",
+            "",
+            "var AConstructorAlias = A;",
+            "",
+            "var B = function() {",
+            "  A.call(this);",
+            "  this.b = 'bProp';", // ambiguated with props from other classes
+            "  this.a = 'originalAProp';", // matches A class property
+            "};",
+            "$jscomp.inherits(B,A);",
+            "",
+            "var BConst = function() {",
+            "  A.call(this);",
+            "  this.b = 'bConstProp';", // ambiguated with props from other classes
+            "  this.a = 'constAliasAProp';", // matches A class property
+            "};",
+            "$jscomp.inherits(BConst,A);",
+            "",
+            "var BConstructorAlias = function() {",
+            "  A.call(this);",
+            "  this.b = 'bConstructorProp';", // ambiguated with props from other classes
+            "  this.a = 'constructorAliasAProp';", // matches A class property
+            "};",
+            "$jscomp.inherits(BConstructorAlias,A)",
+            "",
+            ""));
+  }
+
+  @Test
+  public void ambiguatePropertiesWithMixins() {
+    // Avoid injecting the polyfills, so we don't have to include them in the expected output.
+    useNoninjectingCompiler = true;
+
+    // include externs definitions for the stuff that would have been injected
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode(
+            "extraExterns",
+            lines(
+                "var $jscomp = {};",
+                "",
+                "/**",
+                " * @param {?} subClass",
+                " * @param {?} superClass",
+                " * @return {?} newClass",
+                " */",
+                "$jscomp.inherits = function(subClass, superClass) {};",
+                "")));
+    externs = externsList.build();
+
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setAmbiguateProperties(true);
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    test(
+        options,
+        lines(
+            "", //
+            "class A {",
+            "  constructor() {",
+            "    this.aProp = 'aProp';",
+            "  }",
+            "}",
+            "",
+            "/**",
+            " * @template T",
+            " * @param {function(new: T)} baseType",
+            " * @return {?}",
+            " */",
+            "function mixinX(baseType) {",
+            "  return class extends baseType {",
+            "    constructor() {",
+            "      super();",
+            "      this.x = 'x';",
+            "    }",
+            "  };",
+            "}",
+            "/** @constructor */",
+            "const BSuper = mixinX(A);",
+            "",
+            "class B extends BSuper {",
+            "  constructor() {",
+            "    super();",
+            "    this.bProp = 'bProp';",
+            "  }",
+            "}",
+            "",
+            ""),
+        lines(
+            "", //
+            "var A = function() {",
+            "  this.a = 'aProp';", // unique property name
+            "}",
+            "",
+            "function mixinX(baseType) {",
+            "  var i0$classdecl$var0 = function() {",
+            "    var $jscomp$super$this = baseType.call(this) || this;",
+            "    $jscomp$super$this.c = 'x';", // unique property name
+            "    return $jscomp$super$this;",
+            "  };",
+            "  $jscomp.inherits(i0$classdecl$var0,baseType);",
+            "  return i0$classdecl$var0;",
+            "}",
+            "",
+            "var BSuper = mixinX(A);",
+            "",
+            "var B = function() {",
+            "  var $jscomp$super$this = BSuper.call(this) || this;",
+            "  $jscomp$super$this.b = 'bProp';", // unique property name
+            "  return $jscomp$super$this;",
+            "};",
+            "$jscomp.inherits(B,BSuper);",
+            ""));
+  }
+
+  @Test
+  public void ambiguatePropertiesWithEs5Mixins() {
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode(
+            "extraExterns",
+            lines(
+                "", //
+                "var goog;",
+                "/**",
+                " * @param {!Function} childCtor",
+                " * @param {!Function} parentCtor",
+                " */",
+                "goog.inherits = function(childCtor, parentCtor) {};",
+                "")));
+    externs = externsList.build();
+
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setAmbiguateProperties(true);
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    test(
+        options,
+        lines(
+            "", //
+            "/** @constructor */",
+            "function A() {",
+            "   this.aProp = 'aProp';",
+            "}",
+            "",
+            "/**",
+            " * @template T",
+            " * @param {function(new: T)} baseType",
+            " * @return {?}",
+            " */",
+            "function mixinX(baseType) {",
+            "  /**",
+            "   * @constructor",
+            "   * @extends {baseType}",
+            "   */",
+            "  const newClass = function() {",
+            "    baseType.call(this);",
+            "    this.x = 'x';",
+            "  };",
+            "  goog.inherits(newClass, baseType)",
+            "  return newClass;",
+            "}",
+            // "/** @type {function(new: ?)} */",
+            "/** @constructor */",
+            "const BSuper = mixinX(A);",
+            "",
+            "/**",
+            " * @constructor",
+            " * @extends {BSuper}",
+            " */",
+            "function B() {",
+            "  BSuper.call(this);",
+            "  this.bProp = 'bProp';",
+            "}",
+            "goog.inherits(B, BSuper);",
+            "",
+            ""),
+        lines(
+            "", //
+            "function A() {",
+            "  this.a = 'aProp';", // unique prop name
+            "}",
+            "",
+            "function mixinX(baseType) {",
+            "  var newClass = function() {",
+            "    baseType.call(this);",
+            "    this.c = 'x';", // unique prop name
+            "  };",
+            "  goog.inherits(newClass,baseType);",
+            "  return newClass;",
+            "}",
+            "",
+            "var BSuper = mixinX(A);",
+            "",
+            "function B() {",
+            "  BSuper.call(this);",
+            "  this.b = 'bProp';", // unique prop name
+            "}",
+            "goog.inherits(B,BSuper)",
+            ""));
+  }
+
+  @Test
   public void testCheckTypes() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);

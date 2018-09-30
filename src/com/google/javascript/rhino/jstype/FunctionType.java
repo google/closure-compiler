@@ -89,6 +89,14 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     DICT
   }
 
+  enum ConstructorAmbiguity {
+    UNKNOWN,
+    CONSTRUCTS_AMBIGUOUS_OBJECTS,
+    CONSTRUCTS_UNAMBIGUOUS_OBJECTS
+  }
+
+  private ConstructorAmbiguity constructorAmbiguity = ConstructorAmbiguity.UNKNOWN;
+
   /** {@code [[Call]]} property. */
   private ArrowType call;
 
@@ -1446,5 +1454,63 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       }
     }
     return ctorKeys.build();
+  }
+
+  boolean createsAmbiguousObjects() {
+    if (this.constructorAmbiguity == ConstructorAmbiguity.UNKNOWN) {
+      constructorAmbiguity = calculateConstructorAmbiguity();
+    }
+    return constructorAmbiguity == ConstructorAmbiguity.CONSTRUCTS_AMBIGUOUS_OBJECTS;
+  }
+
+  private ConstructorAmbiguity calculateConstructorAmbiguity() {
+    final ConstructorAmbiguity constructorAmbiguity;
+    if (isUnknownType()) {
+      constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_AMBIGUOUS_OBJECTS;
+    } else if (isNativeObjectType()) {
+      // native types other than unknown are never ambiguous
+      constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_UNAMBIGUOUS_OBJECTS;
+    } else {
+      FunctionType superConstructor = getSuperClassConstructor();
+      if (superConstructor == null) {
+        // TODO(bradfordcsmith): Why is superConstructor ever null here?
+        constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_AMBIGUOUS_OBJECTS;
+      } else if (superConstructor.createsAmbiguousObjects()) {
+        // Subclasses of ambiguous objects are also ambiguous
+        constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_AMBIGUOUS_OBJECTS;
+      } else if (source != null) {
+        // We can see the definition of the class, so we know all properties it directly declares
+        // or references.
+        // The same is true for its superclass (previous condition).
+        constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_UNAMBIGUOUS_OBJECTS;
+      } else if (isDelegateProxy()) {
+        // Type was created by the compiler as a proxy that inherits from the real type that was in
+        // the code.
+        // Since we've made it this far, we know the real type creates unambiguous objects.
+        // Therefore, the proxy does, too.
+        constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_UNAMBIGUOUS_OBJECTS;
+      } else {
+        // Type was created directly from JSDoc without a function or class literal.
+        // e.g.
+        // /**
+        //  * @constructor
+        //  * @param {string} x
+        //  * @implements {SomeInterface}
+        //  */
+        // const MyImpl = createMyImpl();
+        // The actual properties on this class are hidden from us, so we must consider it ambiguous.
+        constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_AMBIGUOUS_OBJECTS;
+      }
+    }
+    return constructorAmbiguity;
+  }
+
+  // See also TypedScopeCreator.DELEGATE_PROXY_SUFFIX
+  // Unfortunately we cannot use that constant here.
+  private static final String DELEGATE_SUFFIX = ObjectType.createDelegateSuffix("Proxy");
+
+  private boolean isDelegateProxy() {
+    // TODO(bradfordcsmith): There should be a better way to determine that we have a proxy type.
+    return hasReferenceName() && getReferenceName().endsWith(DELEGATE_SUFFIX);
   }
 }

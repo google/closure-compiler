@@ -188,6 +188,11 @@ class InstanceObjectType extends PrototypeObjectType {
     return getConstructor().getExtendedInterfaces();
   }
 
+  @Override
+  public boolean isAmbiguousObject() {
+    return getConstructor().createsAmbiguousObjects();
+  }
+
   // The owner will always be a resolved type, so there's no need to set
   // the constructor in resolveInternal.
   // (it would lead to infinite loops if we did).
