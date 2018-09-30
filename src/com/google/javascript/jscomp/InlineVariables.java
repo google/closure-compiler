@@ -452,7 +452,7 @@ class InlineVariables implements CompilerPass {
     private void replaceChildPreserveCast(Node parent, Node child, Node replacement) {
       JSType typeBeforeCast = child.getJSTypeBeforeCast();
       if (typeBeforeCast != null) {
-        replacement.putProp(Node.TYPE_BEFORE_CAST, typeBeforeCast);
+        replacement.setJSTypeBeforeCast(typeBeforeCast);
         replacement.setJSType(child.getJSType());
       }
       parent.replaceChild(child, replacement);

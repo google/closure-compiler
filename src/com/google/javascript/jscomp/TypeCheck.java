@@ -536,7 +536,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
         ensureTyped(n, castType);
 
-        expr.putProp(Node.TYPE_BEFORE_CAST, exprType);
+        expr.setJSTypeBeforeCast(exprType);
         if (castType.restrictByNotNullOrUndefined().isSubtypeOf(exprType)
             || expr.isObjectLit()) {
           expr.setJSType(castType);

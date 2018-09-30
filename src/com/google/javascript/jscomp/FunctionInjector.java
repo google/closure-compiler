@@ -321,7 +321,7 @@ class FunctionInjector {
     // If the call site had a cast ensure it's persisted to the new expression that replaces it.
     JSType typeBeforeCast = callNode.getJSTypeBeforeCast();
     if (typeBeforeCast != null) {
-      newExpression.putProp(Node.TYPE_BEFORE_CAST, typeBeforeCast);
+      newExpression.setJSTypeBeforeCast(typeBeforeCast);
       newExpression.setJSType(callNode.getJSType());
     }
     callParentNode.replaceChild(callNode, newExpression);
