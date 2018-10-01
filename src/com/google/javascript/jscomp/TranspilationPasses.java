@@ -106,8 +106,6 @@ public class TranspilationPasses {
       passes.add(
           getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
       passes.add(es6RewriteArrowFunction);
-      passes.add(es6ExtractClasses);
-      passes.add(es6RewriteClass);
       // TODO(bradfordcsmith): Inject runtime libraries now includes async generator support
       //     (ES_2018), so this should be moved earlier and possibly run unconditionally by this
       //     method, since it will itself detect what it needs to inject or doesn't need to inject.
@@ -155,6 +153,8 @@ public class TranspilationPasses {
               Feature.REGEXP_FLAG_U,
               Feature.REGEXP_FLAG_Y));
 
+      passes.add(es6ExtractClasses);
+      passes.add(es6RewriteClass);
       passes.add(es6RewriteRestAndSpread);
       passes.add(lateConvertEs6ToEs3);
       passes.add(es6ForOf);
