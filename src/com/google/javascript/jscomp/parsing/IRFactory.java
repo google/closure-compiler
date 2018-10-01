@@ -41,6 +41,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.LiteralToken;
+import com.google.javascript.jscomp.parsing.parser.TemplateLiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
 import com.google.javascript.jscomp.parsing.parser.trees.AmbientDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
@@ -1678,16 +1679,25 @@ class IRFactory {
       return node;
     }
 
-    Node processTemplateLiteralToken(LiteralToken token) {
+    Node processTemplateLiteralToken(TemplateLiteralToken token) {
       checkArgument(
           token.type == TokenType.NO_SUBSTITUTION_TEMPLATE
               || token.type == TokenType.TEMPLATE_HEAD
               || token.type == TokenType.TEMPLATE_MIDDLE
               || token.type == TokenType.TEMPLATE_TAIL);
-      Node node = newStringNode(normalizeString(token, true));
-      node.putProp(Node.RAW_STRING_VALUE, token.value);
-      setSourceInfo(node, token);
-      return node;
+      if (token.hasError()) {
+        errorReporter.error(
+            "Unsupported feature: invalid template literal.",
+            sourceName,
+            lineno(token),
+            charno(token));
+        return newNode(Token.EMPTY);
+      } else {
+        Node node = newStringNode(normalizeString(token, true));
+        node.putProp(Node.RAW_STRING_VALUE, token.value);
+        setSourceInfo(node, token);
+        return node;
+      }
     }
 
     private Node processNameWithInlineJSDoc(IdentifierExpressionTree identifierExpression) {
@@ -2032,7 +2042,7 @@ class IRFactory {
     }
 
     Node processTemplateLiteralPortion(TemplateLiteralPortionTree tree) {
-      return processTemplateLiteralToken(tree.value.asLiteral());
+      return processTemplateLiteralToken(tree.value.asTemplateLiteral());
     }
 
     Node processTemplateSubstitution(TemplateSubstitutionTree tree) {

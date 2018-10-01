@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 The Closure Compiler Authors.
+ * Copyright 2018 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,35 +18,35 @@ package com.google.javascript.jscomp.parsing.parser;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
+import javax.annotation.Nullable;
 
 /**
- * A Token in a javascript file.
- * Immutable.
- * A plain old data structure. Should contain data members and simple accessors only.
+ * A token representing a javascript template literal substring.
+ *
+ * <p>The value of the Token is the raw string. The token also stores whether this token contains
+ * any error messages that should be passed to the parser due to invalid escapes.
  */
-public class Token {
+public class TemplateLiteralToken extends LiteralToken {
+  @Nullable public final String errorMessage;
+  public final SourcePosition errorPosition;
 
-  public final SourceRange location;
-  public final TokenType type;
-
-  public Token(TokenType type, SourceRange location) {
-    this.type = type;
-    this.location = location;
-  }
-
-  public SourcePosition getStart() {
-    return location.start;
+  public TemplateLiteralToken(
+      TokenType type,
+      String value,
+      String errorMsg,
+      SourcePosition position,
+      SourceRange location) {
+    super(type, value, location);
+    this.errorMessage = errorMsg;
+    this.errorPosition = position;
   }
 
   @Override
   public String toString() {
-    return type.toString();
+    return value;
   }
 
-  public IdentifierToken asIdentifier() { return (IdentifierToken) this; }
-  public LiteralToken asLiteral() { return (LiteralToken) this; }
-
-  public TemplateLiteralToken asTemplateLiteral() {
-    return (TemplateLiteralToken) this;
+  public boolean hasError() {
+    return errorMessage != null;
   }
 }

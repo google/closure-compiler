@@ -2971,8 +2971,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testIncorrectEscapeSequenceInTemplateLiteral() {
     mode = LanguageMode.ECMASCRIPT6;
 
-    parseError("`hello\\x",
-        "Hex digit expected");
+    parseError("`hello\\x`", "Hex digit expected");
     parseError("`hello\\x`",
         "Hex digit expected");
 
@@ -3667,6 +3666,21 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var i = `Js\\u{}ompiler`", "Empty unicode escape");
     parseError("var i = `\\u{345`", "Hex digit expected");
     parseError("var i = `\\u{110000}`", "Undefined Unicode code-point");
+  }
+
+  @Test
+  public void testEs2018LiftIllegalEscapeSequenceRestrictionOnTaggedTemplates() {
+    // The first four errors are generated on IRFactory after the scanning and parsing stage.
+    // TODO(yitingwang) Should not be error after adding support to construct tree.
+    parseError("latex`\\unicode`", "Unsupported feature: invalid template literal.");
+    parseError("foo`\\xerxes`", "Unsupported feature: invalid template literal.");
+    parseError("bar`\\u{h}ere`", "Unsupported feature: invalid template literal.");
+    parseError("bar`\\u{43`", "Unsupported feature: invalid template literal.");
+
+    // tagged malformed template literal throws error
+    parseError("foo`\\unicode", "Unterminated template literal");
+    // normal template literals still throw error
+    parseError("var bad = `\\unicode`;", "Hex digit expected");
   }
 
   @Test

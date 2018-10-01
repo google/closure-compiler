@@ -2338,9 +2338,17 @@ public class Parser {
         ? getTreeStartLocation()
         : operand.location.start;
     Token token = nextToken();
+    if (!(token instanceof TemplateLiteralToken)) {
+      reportError(token, "Unexpected template literal token %s.", token.type.toString());
+    }
+    boolean isTaggedTemplate = operand != null;
+    TemplateLiteralToken templateToken = (TemplateLiteralToken) token;
+    if (!isTaggedTemplate) {
+      reportTemplateErrorIfPresent(templateToken);
+    }
     ImmutableList.Builder<ParseTree> elements = ImmutableList.builder();
-    elements.add(new TemplateLiteralPortionTree(token.location, token));
-    if (token.type == TokenType.NO_SUBSTITUTION_TEMPLATE) {
+    elements.add(new TemplateLiteralPortionTree(templateToken.location, templateToken));
+    if (templateToken.type == TokenType.NO_SUBSTITUTION_TEMPLATE) {
       return new TemplateLiteralExpressionTree(
           getTreeLocation(start), operand, elements.build());
     }
@@ -2349,13 +2357,15 @@ public class Parser {
     ParseTree expression = parseExpression();
     elements.add(new TemplateSubstitutionTree(expression.location, expression));
     while (!errorReporter.hadError()) {
-      token = nextTemplateLiteralToken();
-      if (token.type == TokenType.ERROR || token.type == TokenType.END_OF_FILE) {
+      templateToken = nextTemplateLiteralToken();
+      if (templateToken.type == TokenType.ERROR || templateToken.type == TokenType.END_OF_FILE) {
         break;
       }
-
-      elements.add(new TemplateLiteralPortionTree(token.location, token));
-      if (token.type == TokenType.TEMPLATE_TAIL) {
+      if (!isTaggedTemplate) {
+        reportTemplateErrorIfPresent(templateToken);
+      }
+      elements.add(new TemplateLiteralPortionTree(templateToken.location, templateToken));
+      if (templateToken.type == TokenType.TEMPLATE_TAIL) {
         break;
       }
 
@@ -4100,11 +4110,9 @@ public class Parser {
     return token;
   }
 
-  /**
-   * Consumes a template literal token and returns it.
-   */
-  private LiteralToken nextTemplateLiteralToken() {
-    LiteralToken token = scanner.nextTemplateLiteralToken();
+  /** Consumes a template literal token and returns it. */
+  private TemplateLiteralToken nextTemplateLiteralToken() {
+    TemplateLiteralToken token = scanner.nextTemplateLiteralToken();
     lastSourcePosition = token.location.end;
     return token;
   }
@@ -4208,6 +4216,25 @@ public class Parser {
   @FormatMethod
   private void reportError(@FormatString String message, Object... arguments) {
     errorReporter.reportError(scanner.getPosition(), message, arguments);
+  }
+
+  /**
+   * Reports an error at the specified location.
+   *
+   * @param position The position of the error.
+   * @param message The message to report in String.format style.
+   * @param arguments The arguments to fill in the message format.
+   */
+  @FormatMethod
+  private void reportError(
+      SourcePosition position, @FormatString String message, Object... arguments) {
+    errorReporter.reportError(position, message, arguments);
+  }
+
+  private void reportTemplateErrorIfPresent(TemplateLiteralToken templateToken) {
+    if (templateToken.errorMessage != null) {
+      reportError(templateToken.errorPosition, "%s", templateToken.errorMessage);
+    }
   }
 
   private Parser recordFeatureUsed(Feature feature) {
