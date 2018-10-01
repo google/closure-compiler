@@ -238,10 +238,36 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMemberDefInObjLit() {
+  public void testMemberDefInObjLitInTestSuite_becomesStringKey() {
     test(
         "goog.testing.testSuite({a() {}, b() {}});",
         "goog.testing.testSuite({'a': function() {}, 'b': function() {}});");
+  }
+
+  @Test
+  public void testMemberDefInObjLitInTestSuite_becomesStringKey_withSameJSDoc() {
+    test(
+        lines(
+            "goog.testing.testSuite({",
+            "  /** @suppress {checkTypes} */ a() {},",
+            "  b() {}",
+            "});"),
+        lines(
+            "goog.testing.testSuite({",
+            "  /** @suppress {checkTypes} */",
+            "  'a': function() {},",
+            "  'b': function() {}",
+            "});"));
+  }
+
+  @Test
+  public void testComputedPropInObjLitInTestSuite_doesNotChange() {
+    testSame(
+        lines(
+            "goog.testing.testSuite({",
+            "  /** @suppress {checkTypes} */ ['a']() {},",
+            "  ['b']() {}",
+            "});"));
   }
 
   @Test
