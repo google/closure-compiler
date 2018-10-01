@@ -168,6 +168,7 @@ public final class CheckConformance implements Callback, CompilerPass {
           existing.addAllWhitelistRegexp(requirement.getWhitelistRegexpList());
           existing.addAllOnlyApplyTo(requirement.getOnlyApplyToList());
           existing.addAllOnlyApplyToRegexp(requirement.getOnlyApplyToRegexpList());
+          existing.addAllWhitelistEntry(requirement.getWhitelistEntryList());
         }
       }
     }

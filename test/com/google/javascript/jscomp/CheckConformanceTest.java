@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ConformanceRules.AbstractRule;
 import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
+import com.google.javascript.jscomp.Requirement.WhitelistEntry;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
 import com.google.protobuf.TextFormat.ParseException;
@@ -213,6 +214,36 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     testNoWarning(
         "eval()");
+  }
+
+  @Test
+  public void testViolationWhitelistedByWhitelistEntryPrefix() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'eval'\n"
+            + "  error_message: 'eval is not allowed'\n"
+            + "  whitelist_entry {\n"
+            + "    prefix: 'testcode'\n"
+            + "  }\n"
+            + "}";
+
+    testNoWarning("eval()");
+  }
+
+  @Test
+  public void testViolationWhitelistedByWhitelistEntryRegexp() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'eval'\n"
+            + "  error_message: 'eval is not allowed'\n"
+            + "  whitelist_entry {\n"
+            + "    regexp: 'tes..ode'\n"
+            + "  }\n"
+            + "}";
+
+    testNoWarning("eval()");
   }
 
   @Test
@@ -1739,14 +1770,25 @@ public final class CheckConformanceTest extends CompilerTestCase {
   public void testMergeRequirements() {
     Compiler compiler = createCompiler();
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
-    builder.addRequirementBuilder().setRuleId("a").addWhitelist("x").addWhitelistRegexp("m");
-    builder.addRequirementBuilder().setExtends("a").addWhitelist("y").addWhitelistRegexp("n");
+    builder
+        .addRequirementBuilder()
+        .setRuleId("a")
+        .addWhitelist("x")
+        .addWhitelistRegexp("m")
+        .addWhitelistEntry(WhitelistEntry.newBuilder().addPrefix("x2").addRegexp("m2").build());
+    builder
+        .addRequirementBuilder()
+        .setExtends("a")
+        .addWhitelist("y")
+        .addWhitelistRegexp("n")
+        .addWhitelistEntry(WhitelistEntry.newBuilder().addPrefix("a2").addRegexp("y2").build());
     List<Requirement> requirements =
         CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
     assertThat(requirements).hasSize(1);
     Requirement requirement = requirements.get(0);
     assertThat(requirement.getWhitelistCount()).isEqualTo(2);
     assertThat(requirement.getWhitelistRegexpCount()).isEqualTo(2);
+    assertThat(requirement.getWhitelistEntryCount()).isEqualTo(2);
   }
 
   @Test

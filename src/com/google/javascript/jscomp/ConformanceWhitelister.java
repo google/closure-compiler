@@ -49,6 +49,7 @@ public class ConformanceWhitelister {
             .toBuilder()
             .clearWhitelist()
             .clearWhitelistRegexp()
+            .clearWhitelistEntry()
             .setSeverity(Severity.ERROR)
             .build(); // So we only have one type of error.
     ConformanceConfig cleanedConfig =

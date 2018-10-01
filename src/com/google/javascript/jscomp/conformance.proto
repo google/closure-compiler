@@ -25,8 +25,8 @@ message ConformanceConfig {
 }
 
 // A specification of code requirements
+// NEXT ID: 15
 message Requirement {
-
   // Required: The message to report when a requirement is violated. This should
   // reference a document describing the reasoning for the requirement
   // and contacts.
@@ -39,6 +39,25 @@ message Requirement {
   // Optional: A list of source paths regexs that are exempt from the
   // requirement.
   repeated string whitelist_regexp = 3;
+
+  message WhitelistEntry {
+    enum Reason {
+      UNSPECIFIED = 0;
+      LEGACY = 1;
+      OUT_OF_SCOPE = 2;
+      MANUALLY_REVIEWED = 3;
+    }
+
+    optional Reason reason = 1;
+
+    // A list of source path prefixes.
+    repeated string prefix = 2;
+
+    // A list of regexes matching sources to be ignored
+    repeated string regexp = 3;
+  }
+
+  repeated WhitelistEntry whitelist_entry = 14;
 
   // Optional: A list of source paths that will be checked for the requirement
   // (the opposite of whitelist).

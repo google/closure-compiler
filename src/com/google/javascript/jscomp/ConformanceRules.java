@@ -35,6 +35,7 @@ import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.jscomp.Requirement.Type;
+import com.google.javascript.jscomp.Requirement.WhitelistEntry;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -124,7 +125,7 @@ public final class ConformanceRules {
     final Severity severity;
     final ImmutableList<String> whitelist;
     final ImmutableList<String> onlyApplyTo;
-    @Nullable final Pattern whitelistRegexp;
+    @Nullable final ImmutableList<Pattern> whitelistRegexps;
     @Nullable final Pattern onlyApplyToRegexp;
     final boolean reportLooseTypeViolations;
     final TypeMatchingStrategy typeMatchingStrategy;
@@ -142,9 +143,24 @@ public final class ConformanceRules {
       } else {
         severity = requirement.getSeverity();
       }
-      whitelist = ImmutableList.copyOf(requirement.getWhitelistList());
-      whitelistRegexp = buildPattern(
-          requirement.getWhitelistRegexpList());
+
+      ImmutableList.Builder<String> whitelistBuilder = new ImmutableList.Builder<>();
+      ImmutableList.Builder<Pattern> whitelistRegexpsBuilder = new ImmutableList.Builder<>();
+      for (WhitelistEntry entry : requirement.getWhitelistEntryList()) {
+        whitelistBuilder.addAll(entry.getPrefixList());
+        if (entry.getRegexpCount() > 0) {
+          whitelistRegexpsBuilder.add(buildPattern(entry.getRegexpList()));
+        }
+      }
+
+      whitelistBuilder.addAll(requirement.getWhitelistList());
+      if (requirement.getWhitelistRegexpCount() > 0) {
+        whitelistRegexpsBuilder.add(buildPattern(requirement.getWhitelistRegexpList()));
+      }
+
+      whitelist = whitelistBuilder.build();
+      whitelistRegexps = whitelistRegexpsBuilder.build();
+
       onlyApplyTo = ImmutableList.copyOf(requirement.getOnlyApplyToList());
       onlyApplyToRegexp = buildPattern(
           requirement.getOnlyApplyToRegexpList());
@@ -211,21 +227,44 @@ public final class ConformanceRules {
         return true;
       } else if (!onlyApplyTo.isEmpty() || onlyApplyToRegexp != null) {
         return pathIsInListOrRegexp(srcfile, onlyApplyTo, onlyApplyToRegexp)
-            && !pathIsInListOrRegexp(srcfile, whitelist, whitelistRegexp);
+            && !pathIsInListOrRegexps(srcfile, whitelist, whitelistRegexps);
       } else {
-        return !pathIsInListOrRegexp(srcfile, whitelist, whitelistRegexp);
+        return !pathIsInListOrRegexps(srcfile, whitelist, whitelistRegexps);
       }
+    }
+
+    private static boolean pathIsInListOrRegexps(
+        String srcfile, ImmutableList<String> list, @Nullable ImmutableList<Pattern> regexps) {
+      if (pathIsInList(srcfile, list)) {
+        return true;
+      }
+      if (regexps == null) {
+        return false;
+      }
+      for (Pattern regexp : regexps) {
+        if (regexp.matcher(srcfile).find()) {
+          return true;
+        }
+      }
+      return false;
     }
 
     private static boolean pathIsInListOrRegexp(
         String srcfile, ImmutableList<String> list, @Nullable Pattern regexp) {
+      if (pathIsInList(srcfile, list)) {
+        return true;
+      }
+      return regexp != null && regexp.matcher(srcfile).find();
+    }
+
+    private static boolean pathIsInList(String srcfile, ImmutableList<String> list) {
       for (int i = 0; i < list.size(); i++) {
         String entry = list.get(i);
         if (!entry.isEmpty() && srcfile.startsWith(entry)) {
           return true;
         }
       }
-      return regexp != null && regexp.matcher(srcfile).find();
+      return false;
     }
 
     @Override
