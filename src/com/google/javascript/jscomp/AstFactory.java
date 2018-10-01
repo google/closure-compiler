@@ -29,6 +29,8 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.TemplateTypeMap;
+import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import javax.annotation.Nullable;
 
 /**
@@ -185,6 +187,14 @@ final class AstFactory {
     return result;
   }
 
+  Node createDelProp(Node target) {
+    Node result = IR.delprop(target);
+    if (isAddingTypes()) {
+      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
+    }
+    return result;
+  }
+
   Node createStringKey(String key, Node value) {
     Node result = IR.stringKey(key, value);
     if (isAddingTypes()) {
@@ -336,6 +346,14 @@ final class AstFactory {
     return result;
   }
 
+  Node createEmptyObjectLit() {
+    Node result = IR.objectlit();
+    if (isAddingTypes()) {
+      result.setJSType(registry.createAnonymousObjectType(null));
+    }
+    return result;
+  }
+
   Node createEmptyFunction(JSType type) {
     Node result = NodeUtil.emptyFunction();
     if (isAddingTypes()) {
@@ -356,6 +374,15 @@ final class AstFactory {
     return result;
   }
 
+  Node createZeroArgFunction(String name, Node body, JSType returnType) {
+    if (isAddingTypes()) {
+      FunctionType type = registry.createFunctionType(returnType);
+      return createFunction(name, IR.paramList(), body, type);
+    } else {
+      return createFunction(name, IR.paramList(), body, null);
+    }
+  }
+
   Node createMemberFunctionDef(String name, Node function) {
     // A function used for a member function definition must have an empty name,
     // because the name string goes on the MEMBER_FUNCTION_DEF node.
@@ -364,6 +391,22 @@ final class AstFactory {
     if (isAddingTypes()) {
       // member function definition must share the type of the function that implements it
       result.setJSType(function.getJSType());
+    }
+    return result;
+  }
+
+  Node createSheq(Node expr1, Node expr2) {
+    Node result = IR.sheq(expr1, expr2);
+    if (isAddingTypes()) {
+      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
+    }
+    return result;
+  }
+
+  Node createHook(Node condition, Node expr1, Node expr2) {
+    Node result = IR.hook(condition, expr1, expr2);
+    if (isAddingTypes()) {
+      result.setJSType(registry.createUnionType(expr1.getJSType(), expr2.getJSType()));
     }
     return result;
   }
@@ -412,6 +455,17 @@ final class AstFactory {
             receiverObjectType == null
                 ? getNativeType(JSTypeNative.UNKNOWN_TYPE)
                 : receiverObjectType.getPropertyType(propertyName);
+      } else {
+        // handle issue where findPropertyType does not correctly replace template types with their
+        // values. (although getPropertyType does).
+        // TODO(b/116830836): remove this code path once TemplatizedType overrides findPropertyType
+        JSType restrictedObjType = receiverJSType.restrictByNotNullOrUndefined();
+        if (!restrictedObjType.getTemplateTypeMap().isEmpty()
+            && getpropType.hasAnyTemplateTypes()) {
+          TemplateTypeMap typeMap = restrictedObjType.getTemplateTypeMap();
+          TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
+          getpropType = getpropType.visit(replacer);
+        }
       }
     }
     if (getpropType == null) {
