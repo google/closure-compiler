@@ -187,7 +187,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   }
 
   private void validateTypedefs(Node n, JSDocInfo info) {
-    if (info != null && info.getTypedefType() != null && isClassDecl(n)) {
+    if (info != null && info.hasTypedefType() && isClassDecl(n)) {
       reportMisplaced(n, "typedef", "@typedef does not make sense on a class declaration.");
     }
   }
@@ -577,12 +577,12 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       if (info == null) {
         return;
       }
-       
+
       JSTypeExpression typeExpr = info.getType();
       if (typeExpr == null) {
         return;
       }
-      
+
       Node typeNode = typeExpr.getRoot();
       if (typeNode.getToken() != Token.EQUALS) {
         report(typeNode, DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
