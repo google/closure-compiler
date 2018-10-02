@@ -3349,11 +3349,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         Compiler.class, "js/" + resourceName + ".js");
     Node ast = parseSyntheticCode(SYNTHETIC_CODE_PREFIX + resourceName + "] ", originalCode);
 
-    // Look for string literals of the form 'require foo bar' or 'externs baz' or 'normalize'.
+    // Look for string literals of the form 'require foo bar' or 'declare baz''.
     // As we process each one, remove it from its parent.
     for (Node node = ast.getFirstChild();
-         node != null && node.isExprResult() && node.getFirstChild().isString();
-         node = ast.getFirstChild()) {
+        node != null && node.isExprResult() && node.getFirstChild().isString();
+        node = ast.getFirstChild()) {
       String directive = node.getFirstChild().getString();
       List<String> words = Splitter.on(' ').limit(2).splitToList(directive);
       switch (words.get(0)) {
