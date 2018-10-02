@@ -46,6 +46,11 @@ final class ClosurePrimitiveErrors {
           "JSC_GOOG_MODULE_INVALID_REQUIRE_NAMESPACE",
           "goog.require parameter must be a string literal.");
 
+  static final DiagnosticType INVALID_REQUIRE_TYPE_NAMESPACE =
+      DiagnosticType.error(
+          "JSC_GOOG_MODULE_INVALID_REQUIRE_TYPE_NAMESPACE",
+          "goog.requireType parameter must be a string literal.");
+
   static final DiagnosticType MISSING_MODULE_OR_PROVIDE =
       DiagnosticType.error(
           "JSC_MISSING_MODULE_OR_PROVIDE", "Required namespace \"{0}\" never defined.");

@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWAR
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_TYPE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 
 import com.google.common.base.Joiner;
@@ -376,7 +377,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           } else if (method.matchesQualifiedName(GOOG_REQUIRE)) {
             recordGoogRequire(t, n, /* mustBeOrdered= */ true);
           } else if (method.matchesQualifiedName(GOOG_REQUIRETYPE)) {
-            recordGoogRequire(t, n, /* mustBeOrdered= */ false);
+            recordGoogRequireType(t, n);
           } else if (method.matchesQualifiedName(GOOG_FORWARDDECLARE) && !parent.isExprResult()) {
             recordGoogForwardDeclare(t, n);
           } else if (method.matchesQualifiedName(GOOG_MODULE_GET)) {
@@ -864,6 +865,21 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
+  private void recordGoogRequireType(NodeTraversal t, Node call) {
+    Node legacyNamespaceNode = call.getLastChild();
+    if (!legacyNamespaceNode.isString()) {
+      t.report(legacyNamespaceNode, INVALID_REQUIRE_TYPE_NAMESPACE);
+      return;
+    }
+
+    // A goog.requireType call is not required to appear after the corresponding namespace
+    // definition.
+    boolean mustBeOrdered = false;
+
+    // For purposes of import collection, goog.requireType is the same as goog.require.
+    recordGoogRequire(t, call, mustBeOrdered);
+  }
+
   private void recordGoogForwardDeclare(NodeTraversal t, Node call) {
     Node namespaceNode = call.getLastChild();
     if (!call.hasTwoChildren() || !namespaceNode.isString()) {
@@ -876,7 +892,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // goog.module.get(). To avoid reporting the error twice suppress it here.
     boolean mustBeOrdered = false;
 
-    // For purposes of import collection goog.forwardDeclare is the same as goog.require;
+    // For purposes of import collection, goog.forwardDeclare is the same as goog.require.
     recordGoogRequire(t, call, mustBeOrdered);
   }
 

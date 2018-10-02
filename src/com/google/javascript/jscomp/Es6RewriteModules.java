@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWAR
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_TYPE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature.MODULES;
@@ -66,7 +67,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   static final DiagnosticType LHS_OF_GOOG_REQUIRE_MUST_BE_CONST =
       DiagnosticType.error(
           "JSC_LHS_OF_GOOG_REQUIRE_MUST_BE_CONST",
-          "The left side of a goog.require() must use ''const'' (not ''let'' or ''var'')");
+          "The left side of a goog.require() or goog.requireType() "
+              + "must use ''const'' (not ''let'' or ''var'')");
 
   static final DiagnosticType NAMESPACE_IMPORT_CANNOT_USE_STAR =
       DiagnosticType.error(
@@ -76,6 +78,11 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   static final DiagnosticType DUPLICATE_EXPORT =
       DiagnosticType.error("JSC_DUPLICATE_EXPORT", "Duplicate export ''{0}''.");
+
+  static final DiagnosticType REQUIRE_TYPE_FOR_ES6_SHOULD_BE_CONST =
+      DiagnosticType.error(
+          "JSC_REQUIRE_TYPE_FOR_ES6_SHOULD_BE_CONST",
+          "goog.requireType alias for ES6 module should be const.");
 
   static final DiagnosticType FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST =
       DiagnosticType.error(
@@ -108,9 +115,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   private Map<String, ModuleOriginalNamePair> importMap;
 
   /**
-   * Local variable names that were goog.require'd to qualified name we need to line. We need to
-   * inline all required names since there are certain well-known Closure symbols (like
-   * goog.asserts) that later stages of the compiler check for and cannot handle aliases.
+   * Local variable names that were goog.require'd to qualified name we need to line.
+   *
+   * <p>We need to inline all required names since there are certain well-known Closure symbols
+   * (like goog.asserts) that later stages of the compiler check for and cannot handle aliases.
    *
    * <p>We use this to rewrite something like:
    *
@@ -208,27 +216,28 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   }
 
   /**
-   * Checks for goog.require + goog.module.get + goog.forwardDeclare calls in non-ES6 modules that
+   * Checks for goog.require, goog.requireType, goog.module.get and goog.forwardDeclare calls that
    * are meant to import ES6 modules and rewrites them.
    */
   private class RewriteRequiresForEs6Modules extends AbstractPostOrderCallback {
     private boolean transpiled = false;
-    private Table<Node, String, String> forwardDeclareRenameTable;
+    // An (s, old, new) entry indicates that occurrences of `old` in scope `s` should be rewritten
+    // as `new`. This is used to rewrite namespaces that appear in calls to goog.requireType and
+    // goog.forwardDeclare.
+    private Table<Node, String, String> renameTable;
 
     void rewrite(Node scriptNode) {
       transpiled = false;
-      forwardDeclareRenameTable = HashBasedTable.create();
+      renameTable = HashBasedTable.create();
       NodeTraversal.traverse(compiler, scriptNode, this);
 
       if (transpiled) {
         scriptNode.putBooleanProp(Node.TRANSPILED, true);
       }
 
-      if (!forwardDeclareRenameTable.isEmpty()) {
+      if (!renameTable.isEmpty()) {
         NodeTraversal.traverse(
-            compiler,
-            scriptNode,
-            new Es6RenameReferences(forwardDeclareRenameTable, /* typesOnly= */ true));
+            compiler, scriptNode, new Es6RenameReferences(renameTable, /* typesOnly= */ true));
       }
     }
 
@@ -239,16 +248,19 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       }
 
       boolean isRequire = n.getFirstChild().matchesQualifiedName("goog.require");
+      boolean isRequireType = n.getFirstChild().matchesQualifiedName("goog.requireType");
       boolean isGet = n.getFirstChild().matchesQualifiedName("goog.module.get");
       boolean isForwardDeclare = n.getFirstChild().matchesQualifiedName("goog.forwardDeclare");
 
-      if (!isRequire && !isGet && !isForwardDeclare) {
+      if (!isRequire && !isRequireType && !isGet && !isForwardDeclare) {
         return;
       }
 
       if (!n.hasTwoChildren() || !n.getLastChild().isString()) {
         if (isRequire) {
           t.report(n, INVALID_REQUIRE_NAMESPACE);
+        } else if (isRequireType) {
+          t.report(n, INVALID_REQUIRE_TYPE_NAMESPACE);
         } else if (isGet) {
           t.report(n, INVALID_GET_NAMESPACE);
         } else {
@@ -282,41 +294,62 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
       Node statementNode = NodeUtil.getEnclosingStatement(n);
       boolean importHasAlias = NodeUtil.isNameDeclaration(statementNode);
-
       if (importHasAlias) {
         if (statementNode.getFirstChild().isDestructuringLhs()) {
           if (isForwardDeclare) {
+            // const {a, c:b} = goog.forwardDeclare('an.es6.namespace');
             t.report(n, INVALID_DESTRUCTURING_FORWARD_DECLARE);
             return;
           }
-          // Work around a bug in the type checker where destructing can create
-          // too many layers of aliases and confuse the type checker. b/112061124.
+          if (isRequireType) {
+            if (!statementNode.isConst()) {
+              t.report(statementNode, REQUIRE_TYPE_FOR_ES6_SHOULD_BE_CONST);
+              return;
+            }
+            // const {a, c:b} = goog.requireType('an.es6.namespace');
+            for (Node child : statementNode.getFirstFirstChild().children()) {
+              checkState(child.isStringKey());
+              checkState(child.getFirstChild().isName());
+              renameTable.put(
+                  t.getScopeRoot(),
+                  child.getFirstChild().getString(),
+                  ModuleRenaming.getGlobalName(moduleMetadata, name) + "." + child.getString());
+            }
+          } else {
+            // Work around a bug in the type checker where destructing can create
+            // too many layers of aliases and confuse the type checker. b/112061124.
 
-          //   const {a, c:b} = goog.require('an.es6.namespace');
-          //   const a = module$es6.a;
-          //   const b = module$es6.c;
-          for (Node child : statementNode.getFirstFirstChild().children()) {
-            checkState(child.isStringKey());
-            checkState(child.getFirstChild().isName());
-            Node constNode =
-                IR.constNode(
-                    IR.name(child.getFirstChild().getString()),
-                    IR.getprop(
-                        IR.name(ModuleRenaming.getGlobalName(moduleMetadata, name)),
-                        IR.string(child.getString())));
-            constNode.useSourceInfoFromForTree(child);
-            statementNode.getParent().addChildBefore(constNode, statementNode);
+            // const {a, c:b} = goog.require('an.es6.namespace');
+            // const a = module$es6.a;
+            // const b = module$es6.c;
+            for (Node child : statementNode.getFirstFirstChild().children()) {
+              checkState(child.isStringKey());
+              checkState(child.getFirstChild().isName());
+              Node constNode =
+                  IR.constNode(
+                      IR.name(child.getFirstChild().getString()),
+                      IR.getprop(
+                          IR.name(ModuleRenaming.getGlobalName(moduleMetadata, name)),
+                          IR.string(child.getString())));
+              constNode.useSourceInfoFromForTree(child);
+              statementNode.getParent().addChildBefore(constNode, statementNode);
+            }
           }
           statementNode.detach();
           t.reportCodeChange();
         } else {
-          if (isForwardDeclare) {
+          if (isForwardDeclare || isRequireType) {
             if (!statementNode.isConst()) {
-              t.report(statementNode, FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST);
+              DiagnosticType diagnostic =
+                  isForwardDeclare
+                      ? FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST
+                      : REQUIRE_TYPE_FOR_ES6_SHOULD_BE_CONST;
+              t.report(statementNode, diagnostic);
               return;
             }
             // const namespace = goog.forwardDeclare('an.es6.namespace');
-            forwardDeclareRenameTable.put(
+            // const namespace = goog.requireType('an.es6.namespace');
+            renameTable.put(
                 t.getScopeRoot(),
                 statementNode.getFirstChild().getString(),
                 ModuleRenaming.getGlobalName(moduleMetadata, name));
@@ -332,9 +365,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           }
         }
       } else {
-        if (isForwardDeclare) {
+        if (isForwardDeclare || isRequireType) {
           // goog.forwardDeclare('an.es6.namespace')
-          forwardDeclareRenameTable.put(
+          // goog.requireType('an.es6.namespace')
+          renameTable.put(
               t.getScopeRoot(), name, ModuleRenaming.getGlobalName(moduleMetadata, name));
           statementNode.detach();
         } else {
@@ -714,9 +748,15 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         script,
         (NodeTraversal t, Node n, Node parent) -> {
           if (n.isCall()) {
-            if (n.getFirstChild().matchesQualifiedName("goog.require")) {
+            Node fn = n.getFirstChild();
+            if (fn.matchesQualifiedName("goog.require")
+                || fn.matchesQualifiedName("goog.requireType")) {
+              // TODO(tjgq): This will rewrite both type references and code references. For
+              // goog.requireType, the latter are potentially broken because the symbols aren't
+              // guaranteed to be available at run time. A separate pass needs to be added to
+              // detect these incorrect uses of goog.requireType.
               visitRequireOrGet(t, n, parent, /* isRequire= */ true);
-            } else if (n.getFirstChild().matchesQualifiedName("goog.module.get")) {
+            } else if (fn.matchesQualifiedName("goog.module.get")) {
               visitGoogModuleGet(t, n, parent);
             }
           }
@@ -728,7 +768,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           JSDocInfo info = n.getJSDocInfo();
           if (info != null) {
             for (Node typeNode : info.getTypeNodes()) {
-              inlineRequiredType(t, typeNode);
+              inlineAliasedTypes(t, typeNode);
             }
           }
 
@@ -744,7 +784,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         });
   }
 
-  private void inlineRequiredType(NodeTraversal t, Node typeNode) {
+  private void inlineAliasedTypes(NodeTraversal t, Node typeNode) {
     if (typeNode.isString()) {
       String name = typeNode.getString();
       List<String> split = Splitter.on('.').limit(2).splitToList(name);
@@ -764,7 +804,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       }
     }
     for (Node child : typeNode.children()) {
-      inlineRequiredType(t, child);
+      inlineAliasedTypes(t, child);
     }
   }
 

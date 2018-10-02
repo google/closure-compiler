@@ -19,6 +19,7 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWAR
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_TYPE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_MODULE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_NAMESPACE;
@@ -1043,7 +1044,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Test
   public void testInvalidRequireType() {
-    testError("goog.module('ns.a');" + "goog.requireType(a);", INVALID_REQUIRE_NAMESPACE);
+    testError("goog.module('ns.a');" + "goog.requireType(a);", INVALID_REQUIRE_TYPE_NAMESPACE);
   }
 
   @Test

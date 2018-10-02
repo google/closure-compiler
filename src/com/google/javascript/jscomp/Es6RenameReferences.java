@@ -47,7 +47,7 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (!typesOnly && NodeUtil.isReferenceName(n)) {
-      renameReference(t, n);
+      renameReference(t, n, false);
     }
 
     JSDocInfo info = n.getJSDocInfo();
@@ -59,13 +59,13 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
   private void renameTypeNode(NodeTraversal t, Iterable<Node> typeNodes) {
     for (Node type : typeNodes) {
       if (type.isString()) {
-        renameReference(t, type);
+        renameReference(t, type, true);
       }
       renameTypeNode(t, type.children());
     }
   }
 
-  private void renameReference(NodeTraversal t, Node n) {
+  private void renameReference(NodeTraversal t, Node n, boolean isType) {
     String fullName = n.getString();
     List<String> split = SPLIT_ON_DOT.splitToList(fullName);
     String oldName = split.get(0);
@@ -75,7 +75,9 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
       if (newName != null) {
         String rest = split.size() == 2 ? "." + split.get(1) : "";
         n.setString(newName + rest);
-        t.reportCodeChange();
+        if (!isType) {
+          t.reportCodeChange();
+        }
         return;
       } else if (current.hasOwnSlot(oldName)) {
         return;
