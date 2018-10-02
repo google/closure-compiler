@@ -3226,7 +3226,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     };
     testSame(options, code);
 
-    options.setCrossModuleCodeMotion(true);
+    options.setCrossChunkCodeMotion(true);
     test(options, code,
         new String[] {
             "", "var x = 1; x;",
@@ -3243,7 +3243,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     };
     testSame(options, code);
 
-    options.setCrossModuleMethodMotion(true);
+    options.setCrossChunkMethodMotion(true);
     test(options, code,
         new String[] {
             CrossModuleMethodMotion.STUB_DECLARATIONS + "var Foo = function() {};"

@@ -486,7 +486,7 @@ public enum CompilationParam {
   CROSS_MODULE_CODE_MOTION(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setCrossModuleCodeMotion(value);
+      options.setCrossChunkCodeMotion(value);
     }
 
     @Override
@@ -498,7 +498,7 @@ public enum CompilationParam {
   CROSS_MODULE_METHOD_MOTION(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setCrossModuleMethodMotion(value);
+      options.setCrossChunkMethodMotion(value);
     }
 
     @Override

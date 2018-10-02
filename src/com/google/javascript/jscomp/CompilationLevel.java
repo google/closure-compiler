@@ -195,8 +195,8 @@ public enum CompilationLevel {
     options.setRemoveUnusedVariables(Reach.ALL);
 
     // Move code around based on the defined modules.
-    options.setCrossModuleCodeMotion(true);
-    options.setCrossModuleMethodMotion(true);
+    options.setCrossChunkCodeMotion(true);
+    options.setCrossChunkMethodMotion(true);
 
     // Call optimizations
     options.setDevirtualizePrototypeMethods(true);
