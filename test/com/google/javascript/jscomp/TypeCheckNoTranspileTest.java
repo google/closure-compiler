@@ -4790,6 +4790,22 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testAnnotatedObjectLiteralInDefaultParameterInitializer() {
+    // Default parameter initializers need to handle defining object literals with annotated
+    // function members.
+    testTypes(
+        lines(
+            "/** @param {{g: function(number): undefined}=} x */",
+            "function f(x = {/** @param {string} x */ g(x) {}}) {}"),
+        lines(
+            "default value has wrong type",
+            "found   : {g: function(string): undefined}",
+            "required: {g: function(number): undefined}",
+            "missing : []",
+            "mismatch: [g]"));
+  }
+
+  @Test
   public void testDictClass1() {
     testTypes("/** @dict */ var C = class { constructor() {} 'x'(){} };");
   }

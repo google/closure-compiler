@@ -22254,20 +22254,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testAnnotatedObjectLiteralInDefaultParameterInitializer() {
-    // Default parameter initializers need to handle defining object literals with annotated
-    // function members.
-    testTypes(
-        lines(
-            "/** @param {{g: function(number): undefined}=} x */",
-            "function f(x = {/** @param {string} x */ g(x) {}}) {}"),
-        lines(
-            "assignment",
-            "found   : ({g: function(number): undefined}|{g: function(string): undefined})",
-            "required: (undefined|{g: function(number): undefined})"));
-  }
-
-  @Test
   public void testAnnotatedObjectLiteralInBlocklessArrow1() {
     testTypes(
         lines(
