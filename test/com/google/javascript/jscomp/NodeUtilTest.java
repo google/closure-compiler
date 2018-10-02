@@ -2323,6 +2323,10 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isStringResult(getNode("(1+[])")));
 
     assertTrue(NodeUtil.isStringResult(getNode("a += 'x'")));
+
+    // Template literals
+    assertTrue(NodeUtil.isStringResult(getNode("`x`")));
+    assertTrue(NodeUtil.isStringResult(getNode("`a${b}c`")));
   }
 
   @Test

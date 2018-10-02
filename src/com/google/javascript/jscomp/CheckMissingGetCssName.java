@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,10 +57,8 @@ class CheckMissingGetCssName
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isString() &&
-        !parent.isGetProp() &&
-        !parent.isRegExp()) {
-      String s = n.getString();
+    if ((n.isString() || n.isTemplateLitString()) && !parent.isGetProp() && !parent.isRegExp()) {
+      String s = n.isString() ? n.getString() : n.getCookedString();
 
       for (blacklist.reset(s); blacklist.find();) {
         if (parent.isTemplateLit()) {

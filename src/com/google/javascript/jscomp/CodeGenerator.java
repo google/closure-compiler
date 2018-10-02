@@ -1128,8 +1128,8 @@ public class CodeGenerator {
       case TEMPLATELIT:
         add("`");
         for (Node c = first; c != null; c = c.getNext()) {
-          if (c.isString()) {
-            add(strEscape(c.getString(), "\"", "'", "\\`", "\\\\", "\\$", false, false));
+          if (c.isTemplateLitString()) {
+            add(c.getRawString());
           } else {
             // Can't use add() since isWordChar('$') == true and cc would add
             // an extra space.

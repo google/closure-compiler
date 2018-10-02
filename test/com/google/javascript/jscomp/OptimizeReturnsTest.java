@@ -360,6 +360,14 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRewriteUnusedTemplateLitResult() {
+    // Proves that the deleted function scope is reported.
+    String source = lines("function a(){ return `template`; }", "a()");
+    String expected = lines("function a(){ return; }", "a()");
+    test(source, expected);
+  }
+
+  @Test
   public void testRewriteUnusedAsyncResult1() {
     // Async function returns can be dropped if no-one waits on the returned
     // promise.

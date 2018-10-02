@@ -143,9 +143,12 @@ public final class NodeUtil {
     switch (n.getToken()) {
       case TEMPLATELIT:
         if (n.hasOneChild()) {
-          return TernaryValue.forBoolean(!n.getFirstChild().getString().isEmpty());
+          return getPureBooleanValue(n.getFirstChild());
         }
         break;
+      case TEMPLATELIT_STRING:
+        return TernaryValue.forBoolean(
+            null != n.getCookedString() && !n.getCookedString().isEmpty());
 
       case STRING:
         return TernaryValue.forBoolean(n.getString().length() > 0);
@@ -214,19 +217,21 @@ public final class NodeUtil {
         // Only convert a template literal if all its expressions can be converted.
         String string = "";
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-          if (child.isString()) {
-            string = string + child.getString();
-          } else if (child.isTemplateLitSub()) {
-            Node expression = child.getFirstChild();
-            String expressionString = getStringValue(expression);
-            if (expressionString == null) {
-              // Cannot convert.
-              return null;
-            }
-            string = string + expressionString;
+          Node expression = child;
+          if (child.isTemplateLitSub()) {
+            expression = child.getFirstChild();
           }
+          String expressionString = getStringValue(expression);
+          if (expressionString == null) {
+            // Cannot convert.
+            return null;
+          }
+          string = string + expressionString;
         }
         return string;
+
+      case TEMPLATELIT_STRING:
+        return n.getCookedString();
 
       case NAME:
         String name = n.getString();
@@ -585,6 +590,8 @@ public final class NodeUtil {
         }
         return true;
       default:
+        // TODO(yitingwang) There are probably other tokens that shouldn't get to the default branch
+        checkArgument(!n.isTemplateLitString());
         break;
     }
 
@@ -1240,6 +1247,7 @@ public final class NodeUtil {
       case TRY:
       case EMPTY:
       case TEMPLATELIT:
+      case TEMPLATELIT_STRING:
       case COMPUTED_PROP:
         break;
 
@@ -1717,6 +1725,7 @@ public final class NodeUtil {
         return 21;
 
       default:
+        checkArgument(type != Token.TEMPLATELIT_STRING);
         throw new IllegalStateException("Unknown precedence for " + type);
     }
   }
@@ -1917,6 +1926,7 @@ public final class NodeUtil {
         return ValueType.OBJECT;
 
       default:
+        checkArgument(!n.isTemplateLitString());
         return ValueType.UNDETERMINED;
     }
   }
@@ -5117,6 +5127,8 @@ public final class NodeUtil {
       case TRUE:
       case FALSE:
         return true;
+      case TEMPLATELIT_STRING:
+        return value.getCookedString() != null;
       case NAME:
         String name = value.getString();
         // We assume here that programs don't change the value of the keyword

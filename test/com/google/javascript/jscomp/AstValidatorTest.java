@@ -566,6 +566,14 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFeatureValidation_taggedTemplateLiteralWithInvalidEscapes() {
+    // Tagged template literals are allowed to contain invalid escape sequences,
+    // so these should not cause compiler errors or warnings.
+    testFeatureValidation("foo`\\unicode`", Feature.TEMPLATE_LITERALS);
+    testFeatureValidation("foo`\\xray ${3} \\u{42`", Feature.TEMPLATE_LITERALS);
+  }
+
+  @Test
   public void testFeatureValidation_modules() {
     testFeatureValidation("export {x};", Feature.MODULES);
     testFeatureValidation("import {x} from './foo.js';", Feature.MODULES);

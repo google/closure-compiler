@@ -398,7 +398,7 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
             return false;
           }
         } else {
-          checkState(child.isString(), child);
+          checkState(child.isTemplateLitString(), child);
         }
       }
       return true;
