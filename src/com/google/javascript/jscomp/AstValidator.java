@@ -480,9 +480,11 @@ public final class AstValidator implements CompilerPass {
     if (calleeTypeI.isFunctionType()) {
       FunctionType calleeFunctionTypeI = calleeTypeI.toMaybeFunctionType();
       JSType returnTypeI = calleeFunctionTypeI.getReturnType();
-      // TODO(b/74537281): This will fail after CAST nodes have been removed from the AST.
-      // Must be fixed before this check can be done after optimizations.
-      expectMatchingTypeInformation(callNode, returnTypeI);
+      // Skip this check if the call node was originally in a cast, because the cast type may be
+      // narrower than the return type.
+      if (callNode.getJSTypeBeforeCast() == null) {
+        expectMatchingTypeInformation(callNode, returnTypeI);
+      }
     } // TODO(b/74537281): What other cases should be covered?
   }
 

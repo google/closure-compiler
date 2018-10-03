@@ -16,9 +16,17 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,6 +37,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
   private ObjectDestructuringRewriteMode destructuringRewriteMode =
       ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS;
+  private boolean useNoninjectingCompiler = true;
 
   @Override
   @Before
@@ -36,10 +45,9 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     enableTypeCheck();
-    // TODO(b/77597706): enable type info validation
-    // enableTypeInfoValidation();
+    enableTypeInfoValidation();
 
-    // there are a lot of 'property x never defined on ?' warnings caused by object dsetructuring
+    // there are a lot of 'property x never defined on ?' warnings caused by object destructuring
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
   }
 
@@ -76,7 +84,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var $jscomp$destructuring$var0 = foo();",
             "var b = $jscomp$destructuring$var0.a;",
             "var d = $jscomp$destructuring$var0.c;"));
-    assertThat(getLastCompiler().injected).isEmpty();
+    assertThat(((NoninjectingCompiler) getLastCompiler()).injected).isEmpty();
 
     test(
         "var {a,b} = foo();",
@@ -244,7 +252,8 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
     // TODO(b/77597706): inject this runtime library in Es6InjectRuntimeLibraries, so it will happen
     // before typechecking.
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/makeiterator");
+    assertThat(((NoninjectingCompiler) getLastCompiler()).injected)
+        .containsExactly("es6/util/makeiterator");
 
     test(
         "function f({key: x = 5}) {}",
@@ -409,7 +418,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(f());",
             "let one = $jscomp$destructuring$var0.next().value;",
             "let others = $jscomp.arrayFromIterator($jscomp$destructuring$var0);"));
-    assertThat(getLastCompiler().injected)
+    assertThat(((NoninjectingCompiler) getLastCompiler()).injected)
         .containsExactly("es6/util/arrayfromiterator", "es6/util/makeiterator");
 
     test(
@@ -1509,13 +1518,253 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var c = $jscomp$destructuring$var2"));
   }
 
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
+  @Test
+  public void testArrayDestructuring_getsCorrectTypes() {
+    // inject libraries to get the correct $jscomp.makeIterator type
+    useNoninjectingCompiler = false;
+    ensureLibraryInjected("es6/util/makeiterator");
+    disableCompareSyntheticCode();
+    allowExternsChanges();
+
+    test(
+        externs(DEFAULT_EXTERNS),
+        srcs(
+            lines(
+                "function takesIterable(/** !Iterable<number> */ iterable) {", //
+                "  const [a] = iterable;",
+                "}")),
+        expected(
+            lines(
+                "function takesIterable(/** !Iterable<number> */ iterable) {", //
+                "  var $jscomp$destructuring$var0 = $jscomp.makeIterator(iterable);",
+                "  const a = $jscomp$destructuring$var0.next().value;",
+                "}")));
+
+    Compiler lastCompiler = getLastCompiler();
+    JSTypeRegistry registry = lastCompiler.getTypeRegistry();
+
+    // `$jscomp$destructuring$var0` is an Iterator<number>
+    Node jscompDestructuringVar0 =
+        getNodeMatchingQName(lastCompiler.getJsRoot(), "$jscomp$destructuring$var0");
+    assertType(jscompDestructuringVar0.getJSType())
+        .isEqualTo(
+            registry.createTemplatizedType(
+                registry.getNativeObjectType(JSTypeNative.ITERATOR_TYPE),
+                registry.getNativeType(JSTypeNative.NUMBER_TYPE)));
+
+    // `a` is a number
+    Node aName = getNodeMatchingQName(lastCompiler.getJsRoot(), "a");
+    assertType(aName.getJSType()).isEqualTo(registry.getNativeType(JSTypeNative.NUMBER_TYPE));
+
+    // `$jscomp$destructuring$var0.next().value` is a number
+    Node destructuringVarNextDotValue = aName.getOnlyChild();
+    assertType(destructuringVarNextDotValue.getJSType())
+        .isEqualTo(registry.getNativeType(JSTypeNative.NUMBER_TYPE));
+
+    // `$jscomp$destructuring$var0.next()` is an IIterableResult<number>
+    Node destructuringVarNextCall = destructuringVarNextDotValue.getFirstChild();
+    assertType(destructuringVarNextCall.getJSType()).toStringIsEqualTo("IIterableResult<number>");
+  }
+
+  @Test
+  public void testArrayDestructuringRest_getsCorrectTypes() {
+    // inject libraries to get the correct $jscomp.arrayFromIterator type
+    useNoninjectingCompiler = false;
+    ensureLibraryInjected("es6/util/arrayfromiterator");
+    ensureLibraryInjected("es6/util/makeiterator");
+    disableCompareSyntheticCode();
+    allowExternsChanges();
+
+    test(
+        externs(DEFAULT_EXTERNS),
+        srcs(
+            lines(
+                "function takesIterable(/** !Iterable<number> */ iterable) {", //
+                "  const [a, ...rest] = iterable;",
+                "}")),
+        expected(
+            lines(
+                "function takesIterable(/** !Iterable<number> */ iterable) {", //
+                "  var $jscomp$destructuring$var0 = $jscomp.makeIterator(iterable);",
+                "  const a = $jscomp$destructuring$var0.next().value;",
+                "  const rest = $jscomp.arrayFromIterator($jscomp$destructuring$var0);",
+                "}")));
+
+    Compiler lastCompiler = getLastCompiler();
+    JSTypeRegistry registry = lastCompiler.getTypeRegistry();
+
+    Node jscompArrayFromIterator =
+        getNodeMatchingQName(lastCompiler.getJsRoot(), "$jscomp.arrayFromIterator");
+    assertType(jscompArrayFromIterator.getJSType())
+        .toStringIsEqualTo("function(Iterator<number>): Array<number>");
+
+    JSType arrayOfNumber =
+        registry.createTemplatizedType(
+            registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE),
+            registry.getNativeType(JSTypeNative.NUMBER_TYPE));
+
+    Node jscompArrayFromIteratorCall = jscompArrayFromIterator.getParent();
+    assertType(jscompArrayFromIteratorCall.getJSType()).isEqualTo(arrayOfNumber);
+
+    // `rest` is Array<number>
+    Node restName = getNodeMatchingQName(lastCompiler.getJsRoot(), "rest");
+    assertType(restName.getJSType()).isEqualTo(arrayOfNumber);
+  }
+
+  @Test
+  public void testObjectDestructuring_getsCorrectTypes() {
+    test(
+        lines(
+            "const obj = {a: 3, b: 'string', c: null};", //
+            "const {a} = obj;"),
+        lines(
+            "const obj = {a: 3, b: 'string', c: null};",
+            "/** @const */ var $jscomp$destructuring$var0=obj;",
+            "const a = $jscomp$destructuring$var0.a;"));
+
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
+    Node jsRoot = getLastCompiler().getJsRoot();
+
+    Node aName = getNodeMatchingQName(jsRoot, "a");
+    assertType(aName.getJSType()).isEqualTo(registry.getNativeType(JSTypeNative.NUMBER_TYPE));
+
+    JSType objType = getNodeMatchingQName(jsRoot, "obj").getJSType();
+    // `$jscomp$destructuring$var0` has the same type as `obj`
+    Node jscompDestructuringVar0Name = getNodeMatchingQName(jsRoot, "$jscomp$destructuring$var0");
+    assertType(jscompDestructuringVar0Name.getJSType()).isEqualTo(objType);
+  }
+
+  @Test
+  public void testObjectDestructuringDefaultValue_getsCorrectTypes() {
+    test(
+        lines(
+            "const obj = {a: 3, b: 'string', c: null};", //
+            "const {a = 4} = obj;"),
+        lines(
+            "const obj = {a: 3, b: 'string', c: null};",
+            "/** @const */ var $jscomp$destructuring$var0=obj;",
+            "const a = $jscomp$destructuring$var0.a === undefined",
+            "    ? 4: $jscomp$destructuring$var0.a;"));
+
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
+    Node jsRoot = getLastCompiler().getJsRoot();
+
+    Node aName = getNodeMatchingQName(jsRoot, "a");
+    assertType(aName.getJSType()).isEqualTo(registry.getNativeType(JSTypeNative.NUMBER_TYPE));
+
+    JSType objType = getNodeMatchingQName(jsRoot, "obj").getJSType();
+
+    // `$jscomp$destructuring$var0` has the same type as `obj`
+    assertThat(
+            getAllNodesMatchingQName(jsRoot, "$jscomp$destructuring$var0").stream()
+                .map(node -> node.getJSType())
+                .collect(Collectors.toSet()))
+        .containsExactly(objType);
+  }
+
+  @Test
+  public void testObjectDestructuringComputedPropWithDefault_getsCorrectTypes() {
+    test(
+        lines(
+            "const /** !Object<string, number> */ obj = {['a']: 3};", //
+            "const {['a']: a = 4} = obj;"),
+        lines(
+            "const /** !Object<string, number> */ obj = {['a']: 3};",
+            "/** @const */ var $jscomp$destructuring$var0=obj;",
+            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0['a'];",
+            "const a = $jscomp$destructuring$var1 === undefined",
+            "    ? 4: $jscomp$destructuring$var1;"));
+
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
+    Node jsRoot = getLastCompiler().getJsRoot();
+
+    Node aName = getNodeMatchingQName(jsRoot, "a");
+    assertType(aName.getJSType()).isEqualTo(registry.getNativeType(JSTypeNative.NUMBER_TYPE));
+
+    // `$jscomp$destructuring$var0` has the same type as `obj`
+    Node jscompDestructuringVar0Name = getNodeMatchingQName(jsRoot, "$jscomp$destructuring$var0");
+
+    JSType objType = jscompDestructuringVar0Name.getOnlyChild().getJSType();
+    assertType(objType).toStringIsEqualTo("Object<string,number>");
+    assertType(jscompDestructuringVar0Name.getJSType()).isEqualTo(objType);
+
+    // `$jscomp$destructuring$var1` is typed as `number` (this is probably less important!)
+    Node jscompDestructuringVar1Name = getNodeMatchingQName(jsRoot, "$jscomp$destructuring$var0");
+    assertType(jscompDestructuringVar1Name.getJSType()).isEqualTo(objType);
+  }
+
+  @Test
+  public void testObjectDestructuringRest_getsCorrectTypes() {
+    test(
+        lines(
+            "const obj = {a: 3, b: 'string', c: null};", //
+            "const {...rest} = obj;"),
+        lines(
+            "const obj = {a: 3, b: 'string', c: null};",
+            "/** @const */ var $jscomp$destructuring$var0=obj;",
+            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
+            "const rest = $jscomp$destructuring$var1;"));
+
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
+    Node jsRoot = getLastCompiler().getJsRoot();
+
+    JSType objType = getNodeMatchingQName(jsRoot, "obj").getJSType();
+
+    // `$jscomp$destructuring$var0` has the same type as `obj`
+    Node jscompDestructuringVar0Name = getNodeMatchingQName(jsRoot, "$jscomp$destructuring$var0");
+    assertType(jscompDestructuringVar0Name.getJSType()).isEqualTo(objType);
+
+    // `$jscomp$destructuring$var1` has the same type as `obj`
+    Node jscompDestructuringVar1Name = getNodeMatchingQName(jsRoot, "$jscomp$destructuring$var1");
+    assertType(jscompDestructuringVar1Name.getJSType()).isEqualTo(objType);
+
+    // `rest` has the type `{a: number, b: string, c: null}`
+    Node restName = getNodeMatchingQName(jsRoot, "rest");
+    assertType(restName.getJSType())
+        .isEqualTo(
+            registry.createRecordType(
+                ImmutableMap.of(
+                    "a", registry.getNativeType(JSTypeNative.NUMBER_TYPE),
+                    "b", registry.getNativeType(JSTypeNative.STRING_TYPE),
+                    "c", registry.getNativeType(JSTypeNative.NULL_TYPE))));
+    // TODO(lharker): should this be true? it's not because objType is a PrototypeObjectType, which
+    // does not compare as structurally equal by default.
+    assertType(restName.getJSType()).isNotEqualTo(objType);
+  }
+
+  /** Returns a list of all nodes in the given AST that matches the given qualified name */
+  private ImmutableList<Node> getAllNodesMatchingQName(Node root, String qname) {
+    ImmutableList.Builder<Node> builder = ImmutableList.builder();
+    addAllNodesMatchingQNameHelper(root, qname, builder);
+    return builder.build();
+  }
+
+  private void addAllNodesMatchingQNameHelper(
+      Node root, String qname, ImmutableList.Builder<Node> nodesSoFar) {
+    if (root.matchesQualifiedName(qname)) {
+      nodesSoFar.add(root);
+    }
+    for (Node child : root.children()) {
+      addAllNodesMatchingQNameHelper(child, qname, nodesSoFar);
+    }
+  }
+
+  /** Returns the first node (preorder) in the given AST that matches the given qualified name */
+  private Node getNodeMatchingQName(Node root, String qname) {
+    if (root.matchesQualifiedName(qname)) {
+      return root;
+    }
+    for (Node child : root.children()) {
+      Node result = getNodeMatchingQName(child, qname);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
   }
 
   @Override
-  protected NoninjectingCompiler getLastCompiler() {
-    return (NoninjectingCompiler) super.getLastCompiler();
+  protected Compiler createCompiler() {
+    return useNoninjectingCompiler ? new NoninjectingCompiler() : new Compiler();
   }
 }

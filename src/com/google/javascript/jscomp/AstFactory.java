@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -409,6 +410,64 @@ final class AstFactory {
       result.setJSType(registry.createUnionType(expr1.getJSType(), expr2.getJSType()));
     }
     return result;
+  }
+
+  Node createJSCompMakeIteratorCall(Node iterable, Scope scope) {
+    String function = "makeIterator";
+    Node makeIteratorName = createQName(scope, "$jscomp." + function);
+    // Since createCall (currently) doesn't handle templated functions, fill in the template types
+    // of makeIteratorName manually.
+    if (isAddingTypes() && !makeIteratorName.getJSType().isUnknownType()) {
+      // if makeIteratorName has the unknown type, we must have not injected the required runtime
+      // libraries - hopefully because this is in a test using NonInjectingCompiler.
+
+      // e.g get `number` from `Iterable<number>`
+      JSType iterableType =
+          iterable
+              .getJSType()
+              .getInstantiatedTypeArgument(getNativeType(JSTypeNative.ITERABLE_TYPE));
+      JSType makeIteratorType = makeIteratorName.getJSType();
+      // e.g. replace
+      //   function(Iterable<T>): Iterator<T>
+      // with
+      //   function(Iterable<number>): Iterator<number>
+      TemplateTypeMap typeMap =
+          registry.createTemplateTypeMap(
+              makeIteratorType.getTemplateTypeMap().getTemplateKeys(),
+              ImmutableList.of(iterableType));
+      TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
+      makeIteratorName.setJSType(makeIteratorType.visit(replacer));
+    }
+    return createCall(makeIteratorName, iterable);
+  }
+
+  Node createJscompArrayFromIteratorCall(Node iterator, Scope scope) {
+    String function = "arrayFromIterator";
+    Node makeIteratorName = createQName(scope, "$jscomp." + function);
+    // Since createCall (currently) doesn't handle templated functions, fill in the template types
+    // of makeIteratorName manually.
+    if (isAddingTypes() && !makeIteratorName.getJSType().isUnknownType()) {
+      // if makeIteratorName has the unknown type, we must have not injected the required runtime
+      // libraries - hopefully because this is in a test using NonInjectingCompiler.
+
+      // e.g get `number` from `Iterator<number>`
+      JSType iterableType =
+          iterator
+              .getJSType()
+              .getInstantiatedTypeArgument(getNativeType(JSTypeNative.ITERATOR_TYPE));
+      JSType makeIteratorType = makeIteratorName.getJSType();
+      // e.g. replace
+      //   function(Iterator<T>): Array<T>
+      // with
+      //   function(Iterator<number>): Array<number>
+      TemplateTypeMap typeMap =
+          registry.createTemplateTypeMap(
+              makeIteratorType.getTemplateTypeMap().getTemplateKeys(),
+              ImmutableList.of(iterableType));
+      TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
+      makeIteratorName.setJSType(makeIteratorType.visit(replacer));
+    }
+    return createCall(makeIteratorName, iterator);
   }
 
   private JSType getNativeType(JSTypeNative nativeType) {

@@ -47,8 +47,7 @@ public final class MultiPassTest extends CompilerTestCase {
     enableNormalize();
     enableGatherExternProperties();
     enableTypeCheck();
-    // TODO(b/77597706): enable type info validation
-    // enableTypeInfoValidation();
+    enableTypeInfoValidation();
   }
 
   @Override
@@ -85,6 +84,10 @@ public final class MultiPassTest extends CompilerTestCase {
 
   @Test
   public void testInlineVarsAndPeephole() {
+    // TODO(lharker): try to preserve type info in the optimizations
+    // right now no optimization passes attempt to preserve type information, so type info
+    // validation fails.
+    disableTypeInfoValidation();
     passes = new ArrayList<>();
     addInlineVariables();
     addPeephole();
@@ -114,6 +117,8 @@ public final class MultiPassTest extends CompilerTestCase {
 
   @Test
   public void testCollapseObjectLiteralsScopeChange() {
+    // TODO(lharker): remove this and try to preserve type info in the optimizations
+    disableTypeInfoValidation();
     passes = new ArrayList<>();
     addCollapseObjectLiterals();
     test("function f() {" +
@@ -151,6 +156,8 @@ public final class MultiPassTest extends CompilerTestCase {
 
   @Test
   public void testTopScopeChange() {
+    // TODO(lharker): remove this and try to preserve type info in the optimizations
+    disableTypeInfoValidation();
     passes = new ArrayList<>();
     addInlineVariables();
     addPeephole();
