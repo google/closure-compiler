@@ -2949,6 +2949,7 @@ public class Parser {
       left = transformLeftHandSideExpression(left);
       if (!left.isValidAssignmentTarget()) {
         reportError("invalid assignment target");
+        return new MissingPrimaryExpressionTree(getTreeLocation(getTreeStartLocation()));
       }
       Token operator = nextToken();
       ParseTree right = parseAssignment(expressionIn);
@@ -3712,7 +3713,12 @@ public class Parser {
       recordFeatureUsed(Feature.ARRAY_PATTERN_REST);
       elements.add(parsePatternRest(kind));
     }
-    eat(TokenType.CLOSE_SQUARE);
+    if (eat(TokenType.CLOSE_SQUARE) == null) {
+      // If we get no closing bracket then return invalid tree to avoid compiler tripping
+      // downstream. It's needed only for IDE mode where compiler continues processing even if
+      // source has syntactic errors.
+      return new MissingPrimaryExpressionTree(getTreeLocation(getTreeStartLocation()));
+    }
     return new ArrayPatternTree(getTreeLocation(start), elements.build());
   }
 

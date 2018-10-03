@@ -4980,6 +4980,28 @@ public final class ParserTest extends BaseJSTypeTestCase {
         .isEqualTo("http://google.com/some/absolute/path/to/somefile.js.map");
   }
 
+  @Test
+  public void testIncorrectAssignmentDoesntCrash() {
+    // Check that error make sense in default "stop on error" mode.
+    parseError("[1 + 2] = 3;", "invalid assignment target");
+
+    // Ensure that in IDE mode parser doesn't crash. It produces much more errors but it's
+    // "ignore errors" mode so it's ok.
+    isIdeMode = true;
+    parseError(
+        "[1 + 2] = 3;",
+        "invalid assignment target",
+        "']' expected",
+        "invalid assignment target",
+        "Semi-colon expected",
+        "Semi-colon expected",
+        "primary expression expected",
+        "invalid assignment target",
+        "Semi-colon expected",
+        "primary expression expected",
+        "Semi-colon expected");
+  }
+
   private void assertNodeHasJSDocInfoWithJSType(Node node, JSType jsType) {
     JSDocInfo info = node.getJSDocInfo();
     assertWithMessage("Node has no JSDocInfo: %s", node).that(info).isNotNull();
