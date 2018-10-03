@@ -3016,10 +3016,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTemplateLiteral() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    // We need to use the raw string instead of the normalized string in template literals
     assertPrintSame("`hello`");
     assertPrintSame("`\\\\bhello`");
-    assertPrint("`hel\rlo`", "`hel\\nlo`");
-    assertPrint("`hel\r\nlo`", "`hel\\nlo`");
+    assertPrintSame("`hel\rlo`");
+    assertPrintSame("`hel\\rlo`");
+    assertPrintSame("`hel\r\nlo`");
+    assertPrintSame("`hel\\r\\nlo`");
     assertPrint("`hello`\n'world'", "`hello`;\"world\"");
     assertPrint("`hello`\n`world`", "`hello``world`");
     assertPrint("var x=`TestA`\n`TemplateB`", "var x=`TestA``TemplateB`");
@@ -3032,15 +3035,21 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("(function(){})()`${(function(){})()}`");
     assertPrintSame("url`hello`");
     assertPrintSame("url(`hello`)");
-    assertPrint("`\\u{2026}`", "`\\u2026`");
-    assertPrint("`start\\u{2026}end`", "`start\\u2026end`");
-    assertPrint("`\\u{1f42a}`", "`\\ud83d\\udc2a`");
-    assertPrint("`start\\u{1f42a}end`", "`start\\ud83d\\udc2aend`");
+    assertPrintSame("`\\u{2026}`");
+    assertPrintSame("`start\\u{2026}end`");
+    assertPrintSame("`\\u{1f42a}`");
+    assertPrintSame("`start\\u{1f42a}end`");
     assertPrintSame("`\\u2026`");
     assertPrintSame("`start\\u2026end`");
     assertPrintSame("`\"`");
     assertPrintSame("`'`");
+    assertPrintSame("`\\\"`");
+    assertPrintSame("`\\'`");
     assertPrintSame("`\\``");
+
+    assertPrintSame("foo`\\unicode`");
+    // b/114808380
+    assertPrintSame("String.raw`a\\ b`");
   }
 
   @Test

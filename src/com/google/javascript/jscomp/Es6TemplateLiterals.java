@@ -50,19 +50,22 @@ class Es6TemplateLiterals {
       n.replaceWith(withType(IR.string("\"\""), stringType));
     } else {
       Node first = n.removeFirstChild();
-      checkState(first.isString());
+      checkState(first.isTemplateLitString() && first.getCookedString() != null);
+      Node firstStr = withType(IR.string(first.getCookedString()), stringType);
       if (length == 1) {
-        n.replaceWith(first);
+        n.replaceWith(firstStr);
       } else {
         // Add the first string with the first substitution expression
-        Node add = withType(IR.add(first, n.removeFirstChild().removeFirstChild()), n.getJSType());
+        Node add =
+            withType(IR.add(firstStr, n.removeFirstChild().removeFirstChild()), n.getJSType());
         // Process the rest of the template literal
         for (int i = 2; i < length; i++) {
           Node child = n.removeFirstChild();
-          if (child.isString()) {
-            if (child.getString().isEmpty()) {
+          if (child.isTemplateLitString()) {
+            checkState(child.getCookedString() != null);
+            if (child.getCookedString().isEmpty()) {
               continue;
-            } else if (i == 2 && first.getString().isEmpty()) {
+            } else if (i == 2 && first.getCookedString().isEmpty()) {
               // So that `${hello} world` gets translated into (hello + " world")
               // instead of ("" + hello + " world").
               add = add.getSecondChild().detach();
@@ -70,7 +73,12 @@ class Es6TemplateLiterals {
           }
           add =
               withType(
-                  IR.add(add, child.isString() ? child : child.removeFirstChild()), n.getJSType());
+                  IR.add(
+                      add,
+                      child.isTemplateLitString()
+                          ? withType(IR.string(child.getCookedString()), stringType)
+                          : child.removeFirstChild()),
+                  n.getJSType());
         }
         n.replaceWith(add.useSourceInfoIfMissingFromForTree(n));
       }
@@ -97,11 +105,14 @@ class Es6TemplateLiterals {
     JSType arrayType = createGenericType(addTypes, registry, JSTypeNative.ARRAY_TYPE, stringType);
     JSType templateArrayType =
         createType(addTypes, registry, JSTypeNative.I_TEMPLATE_ARRAY_TYPE);
+    JSType voidType = createType(addTypes, registry, JSTypeNative.VOID_TYPE);
+    JSType numberType = createType(addTypes, registry, JSTypeNative.NUMBER_TYPE);
 
     Node templateLit = n.getLastChild();
     // Prepare the raw and cooked string arrays.
     Node raw = createRawStringArray(templateLit, arrayType, stringType);
-    Node cooked = createCookedStringArray(templateLit, templateArrayType, stringType);
+    Node cooked =
+        createCookedStringArray(templateLit, templateArrayType, stringType, voidType, numberType);
 
     // Specify the type of the first argument to be ITemplateArray.
     JSTypeExpression nonNullSiteObject = new JSTypeExpression(
@@ -137,7 +148,7 @@ class Es6TemplateLiterals {
     // Generate the call expression.
     Node call = withType(IR.call(n.removeFirstChild(), callsiteId.cloneNode()), n.getJSType());
     for (Node child = templateLit.getFirstChild(); child != null; child = child.getNext()) {
-      if (!child.isString()) {
+      if (!child.isTemplateLitString()) {
         call.addChildToBack(child.removeFirstChild());
       }
     }
@@ -150,79 +161,26 @@ class Es6TemplateLiterals {
   private static Node createRawStringArray(Node n, JSType arrayType, JSType stringType) {
     Node array = withType(IR.arraylit(), arrayType);
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (child.isString()) {
-        array.addChildToBack(
-            withType(IR.string((String) child.getProp(Node.RAW_STRING_VALUE)), stringType));
+      if (child.isTemplateLitString()) {
+        array.addChildToBack(withType(IR.string(child.getRawString()), stringType));
       }
     }
     return array;
   }
 
-  private static Node createCookedStringArray(Node n, JSType templateArrayType, JSType stringType) {
+  private static Node createCookedStringArray(
+      Node n, JSType templateArrayType, JSType stringType, JSType voidType, JSType numberType) {
     Node array = withType(IR.arraylit(), templateArrayType);
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (child.isString()) {
-        Node string =
-            withType(
-                IR.string(cookString((String) child.getProp(Node.RAW_STRING_VALUE))), stringType);
-        array.addChildToBack(string);
+      if (child.isTemplateLitString()) {
+        if (child.getCookedString() != null) {
+          array.addChildToBack(withType(IR.string(child.getCookedString()), stringType));
+        } else {
+          // undefined cooked string due to exception in template escapes
+          array.addChildToBack(withType(IR.voidNode(withType(IR.number(0), numberType)), voidType));
+        }
       }
     }
     return array;
-  }
-
-  /**
-   * Takes a raw string and returns a string that is suitable for the cooked
-   * value (the Template Value or TV as described in the specs). This involves
-   * removing line continuations.
-   */
-  private static String cookString(String s) {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < s.length();) {
-      char c = s.charAt(i++);
-      if (c == '\\') {
-        char c2 = s.charAt(i++);
-        switch (c2) {
-          case 't':
-            sb.append('\t');
-            break;
-          case 'n':
-            sb.append('\n');
-            break;
-          case 'r':
-            sb.append('\r');
-            break;
-          case 'f':
-            sb.append('\f');
-            break;
-          case 'b':
-            sb.append('\b');
-            break;
-          case 'u':
-            int unicodeValue = Integer.parseInt(s.substring(i, i + 4), 16);
-            sb.append((char) unicodeValue);
-            i += 4;
-            break;
-          // Strip line continuation.
-          case '\n':
-          case '\u2028':
-          case '\u2029':
-            break;
-          case '\r':
-            // \ \r \n should be stripped as one
-            if (s.charAt(i + 1) == '\n') {
-              i++;
-            }
-            break;
-
-          default:
-            sb.append(c);
-            sb.append(c2);
-        }
-      } else {
-        sb.append(c);
-      }
-    }
-    return sb.toString();
   }
 }

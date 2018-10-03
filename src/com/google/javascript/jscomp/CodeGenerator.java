@@ -1128,8 +1128,8 @@ public class CodeGenerator {
       case TEMPLATELIT:
         add("`");
         for (Node c = first; c != null; c = c.getNext()) {
-          if (c.isString()) {
-            add(strEscape(c.getString(), "\"", "'", "\\`", "\\\\", "\\$", false, false));
+          if (c.isTemplateLitString()) {
+            add(escapeUnrecognizedCharacters(c.getRawString()));
           } else {
             // Can't use add() since isWordChar('$') == true and cc would add
             // an extra space.
@@ -1864,6 +1864,52 @@ public class CodeGenerator {
           } else {
             sb.append(c);
           }
+          break;
+        default:
+          if ((outputCharsetEncoder != null && outputCharsetEncoder.canEncode(c))
+              || (c > 0x1f && c < 0x7f)) {
+            // If we're given an outputCharsetEncoder, then check if the character can be
+            // represented in this character set. If no charsetEncoder provided - pass straight
+            // Latin characters through, and escape the rest. Doing the explicit character check is
+            // measurably faster than using the CharsetEncoder.
+            sb.append(c);
+          } else {
+            // Other characters can be misinterpreted by some JS parsers,
+            // or perhaps mangled by proxies along the way,
+            // so we play it safe and Unicode escape them.
+            Util.appendHexJavaScriptRepresentation(sb, c);
+          }
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Helper to escape the characters that might be misinterpreted
+   *
+   * @param s the string to modify
+   * @return the string with unrecognizable characters escaped.
+   */
+  private String escapeUnrecognizedCharacters(String s) {
+    // TODO(yitingwang) Move this method to a suitable place
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      switch (c) {
+          // From the SingleEscapeCharacter grammar production.
+        case '\b':
+        case '\f':
+        case '\n':
+        case '\r':
+        case '\t':
+        case '\\':
+        case '\"':
+        case '\'':
+        case '$':
+        case '`':
+        case '\u2028':
+        case '\u2029':
+          sb.append(c);
           break;
         default:
           if ((outputCharsetEncoder != null && outputCharsetEncoder.canEncode(c))

@@ -629,11 +629,22 @@ public final class AstValidator implements CompilerPass {
     validateFeature(Feature.TEMPLATE_LITERALS, n);
     validateNodeType(Token.TEMPLATELIT, n);
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (child.isString()) {
-        validateString(child);
+      if (child.isTemplateLitString()) {
+        validateTemplateLitString(child);
       } else {
         validateTemplateLitSub(child);
       }
+    }
+  }
+
+  private void validateTemplateLitString(Node n) {
+    validateNodeType(Token.TEMPLATELIT_STRING, n);
+    validateChildCount(n);
+    try {
+      // Validate that getRawString doesn't throw
+      n.getRawString();
+    } catch (UnsupportedOperationException e) {
+      violation("Invalid TEMPLATELIT_STRING node.", n);
     }
   }
 
