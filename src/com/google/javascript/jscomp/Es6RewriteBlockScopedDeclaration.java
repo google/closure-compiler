@@ -105,7 +105,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverse(compiler, root, this);
     // Needed for let / const declarations in .d.ts externs.
     TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
-    NodeTraversal.traverse(compiler, root, new Es6RenameReferences(renameTable));
+    NodeTraversal.traverse(compiler, root, new Es6RenameReferences(compiler, renameTable));
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverse(compiler, root, transformer);
     transformer.transformLoopClosure();
@@ -118,7 +118,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     shouldAddTypesOnNewAstNodes = getShouldAddTypesOnNewAstNodes();
     NodeTraversal.traverse(compiler, scriptRoot, new CollectUndeclaredNames());
     NodeTraversal.traverse(compiler, scriptRoot, this);
-    NodeTraversal.traverse(compiler, scriptRoot, new Es6RenameReferences(renameTable));
+    NodeTraversal.traverse(compiler, scriptRoot, new Es6RenameReferences(compiler, renameTable));
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverse(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();

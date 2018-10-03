@@ -76,12 +76,16 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
       String oldName = var.getName();
       if (collector.currFuncReferences.contains(oldName)
           && !renameTable.contains(fBlockScope.getRootNode(), oldName)) {
-        renameTable.put(fBlockScope.getRootNode(),
-            oldName, oldName + "$" + compiler.getUniqueNameIdSupplier().get());
+        renameTable.put(
+            fBlockScope.getRootNode(),
+            oldName,
+            oldName + "$" + compiler.getUniqueNameIdSupplier().get());
       }
     }
     new NodeTraversal(
-            compiler, new Es6RenameReferences(renameTable), new Es6SyntacticScopeCreator(compiler))
+            compiler,
+            new Es6RenameReferences(compiler, renameTable),
+            new Es6SyntacticScopeCreator(compiler))
         .traverseInnerNode(block, block.getParent(), fScope);
   }
 

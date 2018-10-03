@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -30,18 +31,28 @@ import java.util.List;
  */
 final class Es6RenameReferences extends AbstractPostOrderCallback {
 
-  private static final Splitter SPLIT_ON_DOT = Splitter.on('.').limit(2);
+  private static final Splitter SPLIT_ON_DOT = Splitter.on('.');
+  private static final Joiner JOIN_ON_DOT = Joiner.on('.');
 
+  private final AbstractCompiler compiler;
   private final Table<Node, String, String> renameTable;
   private final boolean typesOnly;
 
-  Es6RenameReferences(Table<Node, String, String> renameTable, boolean typesOnly) {
+  /**
+   * @param renameTable table from (scope root, old name) to new name. Both the old and new name can
+   *     be qualified.
+   * @param typesOnly true if only type annotations should be renamed, false if type annotations and
+   *     code references should be renamed
+   */
+  Es6RenameReferences(
+      AbstractCompiler compiler, Table<Node, String, String> renameTable, boolean typesOnly) {
+    this.compiler = compiler;
     this.renameTable = renameTable;
     this.typesOnly = typesOnly;
   }
 
-  Es6RenameReferences(Table<Node, String, String> renameTable) {
-    this(renameTable, /* typesOnly= */ false);
+  Es6RenameReferences(AbstractCompiler compiler, Table<Node, String, String> renameTable) {
+    this(compiler, renameTable, /* typesOnly= */ false);
   }
 
   @Override
@@ -67,15 +78,44 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
 
   private void renameReference(NodeTraversal t, Node n, boolean isType) {
     String fullName = n.getString();
+
     List<String> split = SPLIT_ON_DOT.splitToList(fullName);
-    String oldName = split.get(0);
+
+    // Rename most specific (longest) to least specific (shortest).
+    for (int i = split.size(); i > 0; i--) {
+      String name = JOIN_ON_DOT.join(split.subList(0, i));
+      if (renameTable.containsColumn(name)) {
+        String rest = JOIN_ON_DOT.join(split.subList(i, split.size()));
+        if (!rest.isEmpty()) {
+          rest = "." + rest;
+        }
+        renameReference(t, n, isType, name, rest);
+      }
+    }
+  }
+
+  private void renameReference(
+      NodeTraversal t, Node n, boolean isType, String oldName, String rest) {
     Scope current = t.getScope();
     while (current != null) {
       String newName = renameTable.get(current.getRootNode(), oldName);
       if (newName != null) {
-        String rest = split.size() == 2 ? "." + split.get(1) : "";
-        n.setString(newName + rest);
-        if (!isType) {
+        String newFullName = newName + rest;
+
+        if (isType || n.isName()) {
+          n.setOriginalName(n.getString());
+          n.setString(newFullName);
+          n.setLength(newFullName.length());
+
+          if (!isType) {
+            t.reportCodeChange();
+          }
+        } else {
+          Node newNode = NodeUtil.newQName(compiler, newFullName);
+          newNode.setOriginalName(n.getString());
+          newNode.srcrefTree(n);
+          newNode.addChildrenToBack(n.removeChildren());
+          n.replaceWith(newNode);
           t.reportCodeChange();
         }
         return;
