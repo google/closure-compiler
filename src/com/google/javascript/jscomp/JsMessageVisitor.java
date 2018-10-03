@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CaseFormat;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
@@ -551,9 +549,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         return node.getString();
       case TEMPLATELIT:
         if (node.hasOneChild()) {
-          // Cooked string can be null only for tagged template literals.
-          // A tagged template literal would hit the default case below.
-          return checkNotNull(node.getFirstChild().getCookedString());
+          return node.getFirstChild().getString();
         } else {
           throw new MalformedException(
               "Template literals with substitutions are not allowed.", node);

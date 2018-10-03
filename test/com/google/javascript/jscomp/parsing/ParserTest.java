@@ -2868,8 +2868,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node node = testTemplateLiteral(literal).getFirstFirstChild();
     assertNode(node).hasType(Token.TEMPLATELIT);
     assertThat(node.getChildCount()).isEqualTo(1);
-    assertNode(node.getFirstChild()).hasType(Token.TEMPLATELIT_STRING);
-    assertThat(node.getFirstChild().getCookedString()).isEqualTo(expectedContents);
+    assertNode(node.getFirstChild()).hasType(Token.STRING);
+    assertThat(node.getFirstChild().getString()).isEqualTo(expectedContents);
   }
 
   @Test
@@ -2933,8 +2933,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
         + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
     Node templateLiteral = n.getFirstFirstChild();
     Node stringNode = templateLiteral.getFirstChild();
-    assertNode(stringNode).hasType(Token.TEMPLATELIT_STRING);
-    assertThat(stringNode.getCookedString()).isEqualTo("string continuation");
+    assertNode(stringNode).hasType(Token.STRING);
+    assertThat(stringNode.getString()).isEqualTo("string continuation");
   }
 
   @Test
@@ -3670,12 +3670,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testEs2018LiftIllegalEscapeSequenceRestrictionOnTaggedTemplates() {
-    // These should not generate errors, even though they contain illegal escape sequences.
-    // https://github.com/tc39/proposal-template-literal-revision
-    parse("latex`\\unicode`");
-    parse("foo`\\xerxes`");
-    parse("bar`\\u{h}ere`");
-    parse("bar`\\u{43`");
+    // The first four errors are generated on IRFactory after the scanning and parsing stage.
+    // TODO(yitingwang) Should not be error after adding support to construct tree.
+    parseError("latex`\\unicode`", "Unsupported feature: invalid template literal.");
+    parseError("foo`\\xerxes`", "Unsupported feature: invalid template literal.");
+    parseError("bar`\\u{h}ere`", "Unsupported feature: invalid template literal.");
+    parseError("bar`\\u{43`", "Unsupported feature: invalid template literal.");
 
     // tagged malformed template literal throws error
     parseError("foo`\\unicode", "Unterminated template literal");

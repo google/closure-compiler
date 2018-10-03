@@ -662,7 +662,6 @@ class TypeInference
       case NUMBER:
       case NULL:
       case REGEXP:
-      case TEMPLATELIT_STRING:
         // Primitives are typed in TypedScopeCreator.AbstractScopeBuilder#attachLiteralTypes
         break;
 

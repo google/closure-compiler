@@ -217,7 +217,6 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
       case NULL:
       case TRUE:
       case FALSE:
-      case TEMPLATELIT_STRING:
         return true;
       case TEMPLATELIT_SUB:
       case CAST:

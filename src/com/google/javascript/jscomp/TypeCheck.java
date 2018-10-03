@@ -644,7 +644,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case TEMPLATELIT:
-      case TEMPLATELIT_STRING:
         ensureTyped(n, STRING_TYPE);
         break;
 

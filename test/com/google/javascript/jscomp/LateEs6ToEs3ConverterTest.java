@@ -307,14 +307,6 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
                 + "/** @type {!ITemplateArray} */ (['<p class=\\'foo\\'>', '</p>']);",
             "$jscomp$templatelit$0.raw = ['<p class=\\'foo\\'>', '</p>'];",
             "tag($jscomp$templatelit$0, x);"));
-
-    // invalid escape sequences result in undefined cooked string
-    test(
-        "tag`\\unicode`",
-        lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ ([void 0]);",
-            "$jscomp$templatelit$0.raw = ['\\\\unicode'];",
-            "tag($jscomp$templatelit$0);"));
   }
 
   @Test

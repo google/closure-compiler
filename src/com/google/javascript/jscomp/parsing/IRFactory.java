@@ -1685,15 +1685,19 @@ class IRFactory {
               || token.type == TokenType.TEMPLATE_HEAD
               || token.type == TokenType.TEMPLATE_MIDDLE
               || token.type == TokenType.TEMPLATE_TAIL);
-      Node node;
       if (token.hasError()) {
-        node = newTemplateLitStringNode(null, token.value);
+        errorReporter.error(
+            "Unsupported feature: invalid template literal.",
+            sourceName,
+            lineno(token),
+            charno(token));
+        return newNode(Token.EMPTY);
       } else {
-        node = newTemplateLitStringNode(normalizeString(token, true), token.value);
+        Node node = newStringNode(normalizeString(token, true));
+        node.putProp(Node.RAW_STRING_VALUE, token.value);
+        setSourceInfo(node, token);
+        return node;
       }
-      node.putProp(Node.RAW_STRING_VALUE, token.value);
-      setSourceInfo(node, token);
-      return node;
     }
 
     private Node processNameWithInlineJSDoc(IdentifierExpressionTree identifierExpression) {
@@ -3578,10 +3582,6 @@ class IRFactory {
 
   Node newStringNode(Token type, String value) {
     return Node.newString(type, value).clonePropsFrom(templateNode);
-  }
-
-  Node newTemplateLitStringNode(String cooked, String raw) {
-    return Node.newTemplateLitString(cooked, raw).clonePropsFrom(templateNode);
   }
 
   Node newNumberNode(Double value) {
