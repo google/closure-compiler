@@ -305,8 +305,16 @@ jQuery.prototype.append = function(arg1, content) {};
 jQuery.prototype.appendTo = function(target) {};
 
 /**
- * @param {(string|Object<string,*>)} arg1
- * @param {(string|number|boolean|function(number,string))=} arg2
+ * Only call this method with the following combinations of arguments:
+ *   function(string, (string|number|undefined))
+ *   function(!Object<string, (string|number)>)
+ *   function(string, function(this:Element number,string):(string|number))
+ *
+ * See https://api.jquery.com/attr/#attr2
+ *
+ * @param {(string|!Object<string,(string|number)>)} arg1
+ * @param {(string|number|function(this:Element,number,string):(string|number))=}
+ *     arg2
  * @return {(string|!jQuery)}
  */
 jQuery.prototype.attr = function(arg1, arg2) {};
