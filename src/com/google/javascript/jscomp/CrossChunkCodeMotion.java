@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.javascript.jscomp.CrossModuleReferenceCollector.TopLevelStatement;
+import com.google.javascript.jscomp.CrossChunkReferenceCollector.TopLevelStatement;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -37,40 +37,40 @@ import java.util.Set;
 
 /**
  * A compiler pass for moving global variable declarations and assignments to their properties to a
- * deeper module if possible.
+ * deeper chunk if possible.
  *
  * <ol>
- * <li> Collect all global-level statements and the references they contain.
- * <li> Statements that do not declare global variables are assumed to exist for their side-effects
- *      and are considered immovable.
- * <li> Statements that declare global variables may be movable. See CrossModuleReferenceCollector.
- * <li> Within each module gather all declarations for a single global variable into a
- *      DeclarationStatementGroup (DSG). Keep track of the references to other globals that appear
- *      in the DSG. A DSG is movable if all of its statements are movable.
- * <li> Gather the DSGs for each global variable and note all of the modules that contain immovable
- *      references to it.
- * <li> The global variables form a directed graph. Global A has an edge to B if A has a DSG with a
- *      reference to B.
- * <li> Convert this to a directed-acyclic graph by grouping together all of the strongly-connected
- *      global variables into GlobalSymbolCycles. There is an edge from GlobalSymbolCycle A to
- *      GlobalSymbolCycle B if A contains a DSG (in one of its GlobalSymbols) that contains a
- *      reference to a GlobalSymbol in B.
- * <li> Sort the GlobalSymbolCycles into a list c[1], c[2], c[3],..., c[n], such that there are no
- *      references to GlobalSymbols in c[i] from DSGs in GlobalSymbolCycles c[i+1]...c[n].
- * <li> Traverse the list in that order, so statements for GlobalSymbol X will only be moved after
- *      all statements that refer to X have already been moved.
- * <li> Within a GlobalSymbolCycle, combine statements from DSGs in the same module and keep them
- *      in the same order when moving them.
+ *   <li>Collect all global-level statements and the references they contain.
+ *   <li>Statements that do not declare global variables are assumed to exist for their side-effects
+ *       and are considered immovable.
+ *   <li>Statements that declare global variables may be movable. See CrossChunkReferenceCollector.
+ *   <li>Within each chunk gather all declarations for a single global variable into a
+ *       DeclarationStatementGroup (DSG). Keep track of the references to other globals that appear
+ *       in the DSG. A DSG is movable if all of its statements are movable.
+ *   <li>Gather the DSGs for each global variable and note all of the chunks that contain immovable
+ *       references to it.
+ *   <li>The global variables form a directed graph. Global A has an edge to B if A has a DSG with a
+ *       reference to B.
+ *   <li>Convert this to a directed-acyclic graph by grouping together all of the strongly-connected
+ *       global variables into GlobalSymbolCycles. There is an edge from GlobalSymbolCycle A to
+ *       GlobalSymbolCycle B if A contains a DSG (in one of its GlobalSymbols) that contains a
+ *       reference to a GlobalSymbol in B.
+ *   <li>Sort the GlobalSymbolCycles into a list c[1], c[2], c[3],..., c[n], such that there are no
+ *       references to GlobalSymbols in c[i] from DSGs in GlobalSymbolCycles c[i+1]...c[n].
+ *   <li>Traverse the list in that order, so statements for GlobalSymbol X will only be moved after
+ *       all statements that refer to X have already been moved.
+ *   <li>Within a GlobalSymbolCycle, combine statements from DSGs in the same chunk and keep them
+ *       in the same order when moving them.
  * </ol>
  */
-class CrossModuleCodeMotion implements CompilerPass {
+class CrossChunkCodeMotion implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final JSModuleGraph graph;
 
   /**
-   * Map from module to the node in that module that should parent variable declarations that have
-   * to be moved into that module
+   * Map from chunk to the node in that chunk that should parent variable declarations that have
+   * to be moved into that chunk
    */
   private final Map<JSModule, Node> moduleInsertionPointMap = new HashMap<>();
 
@@ -81,7 +81,7 @@ class CrossModuleCodeMotion implements CompilerPass {
    *
    * @param compiler The compiler
    */
-  CrossModuleCodeMotion(
+  CrossChunkCodeMotion(
       AbstractCompiler compiler,
       JSModuleGraph graph,
       boolean parentModuleCanSeeSymbolsDeclaredInChildren) {
@@ -92,10 +92,10 @@ class CrossModuleCodeMotion implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    // If there are <2 modules, then we will never move anything, so we're done
+    // If there are <2 chunks, then we will never move anything, so we're done
     if (graph.getModuleCount() > 1) {
-      CrossModuleReferenceCollector referenceCollector =
-          new CrossModuleReferenceCollector(compiler, new Es6SyntacticScopeCreator(compiler));
+      CrossChunkReferenceCollector referenceCollector =
+          new CrossChunkReferenceCollector(compiler, new Es6SyntacticScopeCreator(compiler));
       referenceCollector.process(root);
       Collection<GlobalSymbol> globalSymbols =
           new GlobalSymbolCollector().collectGlobalSymbols(referenceCollector);
@@ -125,8 +125,7 @@ class CrossModuleCodeMotion implements CompilerPass {
      */
     final Deque<GlobalSymbol> symbolStack = new ArrayDeque<>();
 
-    Collection<GlobalSymbol> collectGlobalSymbols(
-        CrossModuleReferenceCollector referenceCollector) {
+    Collection<GlobalSymbol> collectGlobalSymbols(CrossChunkReferenceCollector referenceCollector) {
 
       for (TopLevelStatement statement : referenceCollector.getTopLevelStatements()) {
         if (statement.isDeclarationStatement()) {
@@ -210,7 +209,7 @@ class CrossModuleCodeMotion implements CompilerPass {
   }
 
   /**
-   * Moves all of the declaration statements that can move to their best possible module location.
+   * Moves all of the declaration statements that can move to their best possible chunk location.
    */
   private void moveGlobalSymbols(Collection<GlobalSymbol> globalSymbols) {
     for (GlobalSymbolCycle globalSymbolCycle :
@@ -274,7 +273,7 @@ class CrossModuleCodeMotion implements CompilerPass {
       if (module.equals(lastDsg.currentModule)) {
         statementDsg = lastDsg;
       } else {
-        // new module requires a new DSG
+        // new chunk requires a new DSG
         statementDsg = new DeclarationStatementGroup(this, module);
         dsgStack.push(statementDsg);
       }
@@ -287,7 +286,7 @@ class CrossModuleCodeMotion implements CompilerPass {
     }
 
     /**
-     * Does the module depend on at least one of the modules containing declaration statements for
+     * Does the chunk depend on at least one of the chunks containing declaration statements for
      * this symbol?
      */
     boolean declarationsCoverModule(JSModule module) {
@@ -402,14 +401,14 @@ class CrossModuleCodeMotion implements CompilerPass {
   /**
    * A group of declaration statements that must be moved (or not) as a group.
    *
-   * <p>All of the statements must be in the same module initially. If there are declarations for
-   * the same variable in different modules, they will be grouped separately.
+   * <p>All of the statements must be in the same chunk initially. If there are declarations for
+   * the same variable in different chunks, they will be grouped separately.
    */
   private static class DeclarationStatementGroup {
 
     final GlobalSymbol declaredGlobalSymbol;
     final Set<GlobalSymbol> referencedGlobalSymbols = new HashSet<>();
-    /** module containing the statements */
+    /** chunk containing the statements */
     JSModule currentModule;
     /** statements in the group, latest first */
     Deque<TopLevelStatement> statementStack = new ArrayDeque<>();
@@ -450,7 +449,7 @@ class CrossModuleCodeMotion implements CompilerPass {
    * DSGs that contain references to it.
    *
    * <p>DSGs that form cycles are combined into a single DSG. This happens when declarations within
-   * a module form cycles by referring to each other.
+   * a chunk form cycles by referring to each other.
    *
    * <p>This is an implementation of the path-based strong component algorithm as it is described in
    * the Wikipedia article https://en.wikipedia.org/wiki/Path-based_strong_component_algorithm.
@@ -536,7 +535,7 @@ class CrossModuleCodeMotion implements CompilerPass {
   }
 
   /**
-   * One or more DeclarationStatementGroups that that share the same module and whose declared
+   * One or more DeclarationStatementGroups that that share the same chunk and whose declared
    * global symbols refer to each other.
    */
   private class DeclarationStatementGroupCycle {
@@ -555,7 +554,7 @@ class CrossModuleCodeMotion implements CompilerPass {
       if (!preferredModule.equals(currentModule)) {
         moveStatementsToModule(preferredModule);
       }
-      // Now that all the statements have been moved, update the current module for all the DSGs
+      // Now that all the statements have been moved, update the current chunk for all the DSGs
       // and treat all of the references they contain as now immovable.
       for (DeclarationStatementGroup dsg : dsgs) {
         dsg.currentModule = preferredModule;

@@ -677,7 +677,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // TODO(user): This is meant for a temporary quick win.
     // In the future, we might want to improve our analysis in
-    // CrossModuleCodeMotion so we don't need to do this.
+    // CrossChunkCodeMotion so we don't need to do this.
     if (options.shouldRunCrossChunkCodeMotion()) {
       passes.add(crossModuleCodeMotion);
     }
@@ -2691,7 +2691,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory(PassNames.CROSS_MODULE_CODE_MOTION, false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new CrossModuleCodeMotion(
+          return new CrossChunkCodeMotion(
               compiler,
               compiler.getModuleGraph(),
               options.parentChunkCanSeeSymbolsDeclaredInChildren);
@@ -2708,7 +2708,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory(PassNames.CROSS_MODULE_METHOD_MOTION, false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new CrossModuleMethodMotion(
+          return new CrossChunkMethodMotion(
               compiler,
               compiler.getCrossModuleIdGenerator(),
               // Only move properties in externs if we're not treating

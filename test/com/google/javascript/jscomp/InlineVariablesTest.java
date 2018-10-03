@@ -229,9 +229,8 @@ public final class InlineVariablesTest extends CompilerTestCase {
 
   @Test
   public void testInlineAcrossModules() {
-    // TODO(kushal): Make decision about overlap with CrossModuleCodeMotion
-    test(createModules("var a = 2;", "var b = a;"),
-        new String[] { "", "var b = 2;" });
+    // TODO(kushal): Make decision about overlap with CrossChunkCodeMotion
+    test(createModules("var a = 2;", "var b = a;"), new String[] {"", "var b = 2;"});
   }
 
   @Test

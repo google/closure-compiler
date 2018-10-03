@@ -3244,11 +3244,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setCrossChunkMethodMotion(true);
-    test(options, code,
+    test(
+        options,
+        code,
         new String[] {
-            CrossModuleMethodMotion.STUB_DECLARATIONS + "var Foo = function() {};"
-            + "Foo.prototype.bar=JSCompiler_stubMethod(0); var x=new Foo;",
-            "Foo.prototype.bar=JSCompiler_unstubMethod(0,function(){}); x.bar()",
+          CrossChunkMethodMotion.STUB_DECLARATIONS
+              + "var Foo = function() {};"
+              + "Foo.prototype.bar=JSCompiler_stubMethod(0); var x=new Foo;",
+          "Foo.prototype.bar=JSCompiler_unstubMethod(0,function(){}); x.bar()",
         });
   }
 

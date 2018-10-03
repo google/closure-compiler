@@ -25,11 +25,11 @@ import java.util.Collection;
 import java.util.Iterator;
 
 /**
- * Move prototype methods into later modules.
+ * Move prototype methods into later chunks.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class CrossModuleMethodMotion implements CompilerPass {
+class CrossChunkMethodMotion implements CompilerPass {
 
   // Internal errors
   static final DiagnosticType NULL_COMMON_MODULE_ERROR = DiagnosticType.error(
@@ -62,15 +62,19 @@ class CrossModuleMethodMotion implements CompilerPass {
 
   /**
    * Creates a new pass for moving prototype properties.
+   *
    * @param compiler The compiler.
    * @param idGenerator An id generator for method stubs.
-   * @param canModifyExterns If true, then we can move prototype
-   *     properties that are declared in the externs file.
-   * @param noStubFunctions if true, we can move methods without
-   *     stub functions in the parent module.
+   * @param canModifyExterns If true, then we can move prototype properties that are declared in the
+   *     externs file.
+   * @param noStubFunctions if true, we can move methods without stub functions in the parent
+   *     chunk.
    */
-  CrossModuleMethodMotion(AbstractCompiler compiler, IdGenerator idGenerator,
-      boolean canModifyExterns, boolean noStubFunctions) {
+  CrossChunkMethodMotion(
+      AbstractCompiler compiler,
+      IdGenerator idGenerator,
+      boolean canModifyExterns,
+      boolean noStubFunctions) {
     this.compiler = compiler;
     this.idGenerator = idGenerator;
     this.moduleGraph = compiler.getModuleGraph();
@@ -82,7 +86,7 @@ class CrossModuleMethodMotion implements CompilerPass {
 
   @Override
   public void process(Node externRoot, Node root) {
-    // If there are < 2 modules, then we will never move anything,
+    // If there are < 2 chunks, then we will never move anything,
     // so we're done.
     if (moduleGraph.getModuleCount() > 1) {
       analyzer.process(externRoot, root);
@@ -91,7 +95,7 @@ class CrossModuleMethodMotion implements CompilerPass {
   }
 
   /**
-   * Move methods deeper in the module graph when possible.
+   * Move methods deeper in the chunk graph when possible.
    */
   private void moveMethods(Collection<NameInfo> allNameInfo) {
     boolean hasStubDeclaration = idGenerator.hasGeneratedAnyIds();
@@ -122,8 +126,8 @@ class CrossModuleMethodMotion implements CompilerPass {
         }
         Property prop = (Property) symbol;
 
-        // We should only move a property across modules if:
-        // 1) We can move it deeper in the module graph, and
+        // We should only move a property across chunks if:
+        // 1) We can move it deeper in the chunk graph, and
         // 2) it's a function, and
         // 3) it is not a GETTER_DEF or a SETTER_DEF, and
         // 4) the class is available in the global scope.
@@ -135,7 +139,7 @@ class CrossModuleMethodMotion implements CompilerPass {
         // }
         // This is a common way to implement pseudo-multiple inheritance in JS.
         //
-        // So if we move a prototype method into a deeper module, we must
+        // So if we move a prototype method into a deeper chunk, we must
         // replace it with a stub function so that it preserves its original
         // behavior.
         if (prop.getRootVar() == null || !prop.getRootVar().isGlobal()) {
@@ -181,11 +185,11 @@ class CrossModuleMethodMotion implements CompilerPass {
                 .useSourceInfoIfMissingFromForTree(value);
             stubCall.putBooleanProp(Node.FREE_CALL, true);
 
-            // stub out the method in the original module
+            // stub out the method in the original chunk
             // A.prototype.b = JSCompiler_stubMethod(id);
             valueParent.replaceChild(value, stubCall);
 
-            // unstub the function body in the deeper module
+            // unstub the function body in the deeper chunk
             Node unstubParent = compiler.getNodeForCodeInsertion(
                 deepestCommonModuleRef);
             Node unstubCall = IR.call(
@@ -229,7 +233,7 @@ class CrossModuleMethodMotion implements CompilerPass {
 
     if (!noStubFunctions && !hasStubDeclaration && idGenerator
         .hasGeneratedAnyIds()) {
-      // Declare stub functions in the top-most module.
+      // Declare stub functions in the top-most chunk.
       Node declarations = compiler.parseSyntheticCode(STUB_DECLARATIONS);
       NodeUtil.markNewScopesChanged(declarations, compiler);
       Node firstScript = compiler.getNodeForCodeInsertion(null);
@@ -245,7 +249,7 @@ class CrossModuleMethodMotion implements CompilerPass {
       }
       Property otherProp = (Property) symbol;
       // It is possible to do better here if the dependencies are well defined
-      // but redefinitions are usually in optional modules so it isn't likely
+      // but redefinitions are usually in optional chunks so it isn't likely
       // worth the effort to check.
       if (prop != otherProp
           && prop.getRootVar() == otherProp.getRootVar()

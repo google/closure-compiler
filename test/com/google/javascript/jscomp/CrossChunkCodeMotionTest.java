@@ -22,16 +22,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link CrossModuleCodeMotion}.
+ * Tests for {@link CrossChunkCodeMotion}.
  *
  */
 @RunWith(JUnit4.class)
-public final class CrossModuleCodeMotionTest extends CompilerTestCase {
+public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   private static final String EXTERNS = "alert";
   private boolean parentModuleCanSeeSymbolsDeclaredInChildren = false;
 
-  public CrossModuleCodeMotionTest() {
+  public CrossChunkCodeMotionTest() {
     super(EXTERNS);
   }
 
@@ -52,7 +52,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CrossModuleCodeMotion(
+    return new CrossChunkCodeMotion(
         compiler, compiler.getModuleGraph(), parentModuleCanSeeSymbolsDeclaredInChildren);
   }
 
@@ -716,8 +716,8 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
   @Test
   public void testStubMethodMovement() {
     // The method stub can move, but the unstub definition cannot, because
-    // CrossModuleCodeMotion doesn't know where individual methods are used.
-    // CrossModuleMethodMotion is responsible for putting the unstub definitions
+    // CrossChunkCodeMotion doesn't know where individual methods are used.
+    // CrossChunkMethodMotion is responsible for putting the unstub definitions
     // in the right places.
     test(
         createModuleChain(
@@ -1363,7 +1363,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     // When the dest module is empty, it might try to move the code to the
     // one of the modules that the empty module depends on. In some cases
     // this might ended up to be the same module as the definition of the code.
-    // When that happens, CrossModuleCodeMotion might report a code change
+    // When that happens, CrossChunkCodeMotion might report a code change
     // while nothing is moved. This should not be a problem if we know all
     // modules are non-empty.
     JSModule m1 = new JSModule("m1");
@@ -1673,7 +1673,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     //     pass. Code movement in the first pass may cause some variables to become "well defined"
     //     that weren't before, unblocking movement of some statements.
     // B is blocked from moving because A is used before it is defined.
-    // See ReferenceCollection#isWellDefined and CrossModuleReferenceCollector#canMoveValue
+    // See ReferenceCollection#isWellDefined and CrossChunkReferenceCollector#canMoveValue
     test(
         createModuleChain(
             // m0
@@ -1681,10 +1681,10 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             // m1
             "f(); function f2() { return B; }"),
         new String[] {
-            // m0
-            "var A = 1; var B = A;",
-            // m1
-            "function f() { return A; } f(); function f2() { return B; }"
+          // m0
+          "var A = 1; var B = A;",
+          // m1
+          "function f() { return A; } f(); function f2() { return B; }"
         });
   }
 

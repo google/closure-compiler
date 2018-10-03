@@ -22,7 +22,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.CrossModuleReferenceCollector.TopLevelStatement;
+import com.google.javascript.jscomp.CrossChunkReferenceCollector.TopLevelStatement;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.List;
@@ -32,8 +32,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
-  private CrossModuleReferenceCollector testedCollector;
+public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
+  private CrossChunkReferenceCollector testedCollector;
 
   @Override
   @Before
@@ -47,7 +47,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   protected int getNumRepetitions() {
     // Default behavior for CompilerTestCase.test*() methods is to do the whole test twice,
     // because passes that modify the AST need to be idempotent.
-    // Since CrossModuleReferenceCollector() just gathers information, it doesn't make sense to
+    // Since CrossChunkReferenceCollector() just gathers information, it doesn't make sense to
     // run it twice, and doing so just complicates debugging test cases.
     return 1;
   }
@@ -55,9 +55,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
-    testedCollector = new CrossModuleReferenceCollector(
-        compiler,
-        scopeCreator);
+    testedCollector = new CrossChunkReferenceCollector(compiler, scopeCreator);
     return testedCollector;
   }
 
@@ -462,9 +460,9 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
     assertStatementIsImmovable("var t = `${unknownValue}`");
   }
 
-  //  try to find cases to copy from CrossModuleCodeMotion
+  //  try to find cases to copy from CrossChunkCodeMotion
   private ReferenceCollection getReferencesForName(
-      String name, CrossModuleReferenceCollector collector) {
+      String name, CrossChunkReferenceCollector collector) {
     Var v = collector.getGlobalVariableNamesMap().get(name);
     assertThat(v).isNotNull();
     return collector.getReferences(v);

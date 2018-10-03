@@ -22,29 +22,26 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link CrossModuleMethodMotion}.
+ * Tests for {@link CrossChunkMethodMotion}.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
-public final class CrossModuleMethodMotionTest extends CompilerTestCase {
+public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   private static final String EXTERNS =
       "IFoo.prototype.bar; var mExtern; mExtern.bExtern; mExtern['cExtern'];";
 
   private boolean canMoveExterns = false;
   private boolean noStubs = false;
-  private final String STUB_DECLARATIONS =
-      CrossModuleMethodMotion.STUB_DECLARATIONS;
+  private static final String STUB_DECLARATIONS = CrossChunkMethodMotion.STUB_DECLARATIONS;
 
-  public CrossModuleMethodMotionTest() {
+  public CrossChunkMethodMotionTest() {
     super(EXTERNS);
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CrossModuleMethodMotion(
-        compiler, new IdGenerator(), canMoveExterns,
-        noStubs);
+    return new CrossChunkMethodMotion(compiler, new IdGenerator(), canMoveExterns, noStubs);
   }
 
   @Override
