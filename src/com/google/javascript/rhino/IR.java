@@ -803,6 +803,7 @@ public class IR {
       case NE:
       case NEG:
       case NEW:
+      case NEW_TARGET:
       case NOT:
       case NUMBER:
       case NULL:

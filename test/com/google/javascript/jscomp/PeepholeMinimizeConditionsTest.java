@@ -963,4 +963,19 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     testSame("var x = new String(); if (x != null) throw 'a';");
     testSame("var x = new Boolean();\nif (x != null) throw 'a';");
   }
+
+  @Test
+  public void testMinimizeIfWithNewTargetCondition() {
+    // Related to https://github.com/google/closure-compiler/issues/3097
+    test(
+        lines(
+            "function x() {",
+            "  if (new.target) {",
+            "    return 1;",
+            "  } else {",
+            "    return 2;",
+            "  }",
+            "}"),
+        lines("function x() {", "  return new.target ? 1 : 2;", "}"));
+  }
 }
