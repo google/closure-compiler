@@ -2256,20 +2256,9 @@ public class CompilerOptions implements Serializable {
     this.crossChunkCodeMotion = crossChunkCodeMotion;
   }
 
-  @Deprecated
-  public void setCrossModuleCodeMotion(boolean crossChunkCodeMotion) {
-    setCrossChunkCodeMotion(crossChunkCodeMotion);
-  }
-
   public void setCrossChunkCodeMotionNoStubMethods(boolean
       crossChunkCodeMotionNoStubMethods) {
     this.crossChunkCodeMotionNoStubMethods = crossChunkCodeMotionNoStubMethods;
-  }
-
-  @Deprecated
-  public void setCrossModuleCodeMotionNoStubMethods(boolean
-      crossChunkCodeMotionNoStubMethods) {
-    setCrossChunkCodeMotionNoStubMethods(crossChunkCodeMotionNoStubMethods);
   }
 
   public void setParentChunkCanSeeSymbolsDeclaredInChildren(
@@ -2286,11 +2275,6 @@ public class CompilerOptions implements Serializable {
 
   public void setCrossChunkMethodMotion(boolean crossChunkMethodMotion) {
     this.crossChunkMethodMotion = crossChunkMethodMotion;
-  }
-
-  @Deprecated
-  public void setCrossModuleMethodMotion(boolean crossChunkMethodMotion) {
-    setCrossChunkMethodMotion(crossChunkMethodMotion);
   }
 
   public void setCoalesceVariableNames(boolean coalesceVariableNames) {
