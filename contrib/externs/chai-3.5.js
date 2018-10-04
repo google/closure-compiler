@@ -393,6 +393,18 @@ assert.isNotNull = function(value, message) {}
 assert.isNull = function(value, opt_message) {};
 
 /**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.exists = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.notExists = function(value, opt_message) {};
+
+/**
  * @param {*} object
  * @param {function(new: Object)} constructor
  * @param {string=} opt_message
