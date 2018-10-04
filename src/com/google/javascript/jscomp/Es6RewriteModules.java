@@ -237,9 +237,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
       if (!renameTable.isEmpty()) {
         NodeTraversal.traverse(
-            compiler,
-            scriptNode,
-            new Es6RenameReferences(compiler, renameTable, /* typesOnly= */ true));
+            compiler, scriptNode, new Es6RenameReferences(renameTable, /* typesOnly= */ true));
       }
     }
 
