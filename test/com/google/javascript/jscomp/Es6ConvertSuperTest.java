@@ -114,7 +114,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     // get types we need to check
     JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
     ObjectType classAInstanceType = registry.getGlobalType("A").toObjectType();
-    ObjectType classAPrototypeType = classAInstanceType.getPrototypeObject();
+    ObjectType classAPrototypeType = classAInstanceType.getImplicitPrototype();
     FunctionType aDotGMethodType = classAPrototypeType.getPropertyType("g").toMaybeFunctionType();
     JSType aDotGDotCallType =
         aDotGMethodType // A.g property type
@@ -214,7 +214,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     // get types we need to check
     JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
     ObjectType classAInstanceType = registry.getGlobalType("A").toObjectType();
-    ObjectType classAPrototypeType = classAInstanceType.getPrototypeObject();
+    ObjectType classAPrototypeType = classAInstanceType.getImplicitPrototype();
     JSType unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
 
     JSType classBInstanceType = registry.getGlobalType("B");
@@ -308,7 +308,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     // get types we need to check
     JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
     ObjectType classAInstanceType = registry.getGlobalType("A").toObjectType();
-    ObjectType classAPrototypeType = classAInstanceType.getPrototypeObject();
+    ObjectType classAPrototypeType = classAInstanceType.getImplicitPrototype();
     FunctionType aDotGMethodType = classAPrototypeType.getPropertyType("g").toMaybeFunctionType();
 
     // A.prototype.g
@@ -376,7 +376,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     // get types we need to check
     JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
     ObjectType classAInstanceType = registry.getGlobalType("A").toObjectType();
-    ObjectType classAPrototypeType = classAInstanceType.getPrototypeObject();
+    ObjectType classAPrototypeType = classAInstanceType.getImplicitPrototype();
     JSType unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
 
     // A.prototype['g']
@@ -806,7 +806,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     // get types we need to check
     JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
     ObjectType classAInstanceType = registry.getGlobalType("A").toObjectType();
-    ObjectType classAPrototypeType = classAInstanceType.getPrototypeObject();
+    ObjectType classAPrototypeType = classAInstanceType.getImplicitPrototype();
     FunctionType aDotGMethodType = classAPrototypeType.getPropertyType("g").toMaybeFunctionType();
     JSType aDotGDotCallType =
         aDotGMethodType // A.g property type
@@ -903,7 +903,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     // get types we need to check
     JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
     ObjectType classAInstanceType = registry.getGlobalType("A").toObjectType();
-    ObjectType classAPrototypeType = classAInstanceType.getPrototypeObject();
+    ObjectType classAPrototypeType = classAInstanceType.getImplicitPrototype();
     FunctionType aDotGMethodType = classAPrototypeType.getPropertyType("g").toMaybeFunctionType();
     JSType aDotGDotCallType =
         aDotGMethodType // A.g property type

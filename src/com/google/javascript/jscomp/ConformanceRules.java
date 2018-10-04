@@ -651,7 +651,7 @@ public final class ConformanceRules {
     private boolean matchesPrototype(JSType type, JSType maybePrototype) {
       ObjectType methodClassObjectType = type.toMaybeObjectType();
       if (methodClassObjectType != null) {
-        if (methodClassObjectType.getPrototypeObject().isEquivalentTo(maybePrototype)) {
+        if (methodClassObjectType.getImplicitPrototype().isEquivalentTo(maybePrototype)) {
           return true;
         }
       }

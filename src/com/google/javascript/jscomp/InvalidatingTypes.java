@@ -146,7 +146,7 @@ final class InvalidatingTypes {
 
         ObjectType objType = type.toMaybeObjectType();
         if (objType != null) {
-          ObjectType proto = objType.getPrototypeObject();
+          ObjectType proto = objType.getImplicitPrototype();
           if (proto != null) {
             types.add(proto);
             recordInvalidation(proto, mismatch);

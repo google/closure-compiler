@@ -322,7 +322,7 @@ class AmbiguateProperties implements CompilerPass {
     checkArgument(constructor.hasInstanceType(),
         "Constructor %s without instance type.", constructor);
     ObjectType instanceType = constructor.getInstanceType();
-    related.set(getIntForType(instanceType.getPrototypeObject()));
+    related.set(getIntForType(instanceType.getImplicitPrototype()));
     computeRelatedTypes(instanceType);
     related.or(relatedBitsets.get(instanceType));
   }

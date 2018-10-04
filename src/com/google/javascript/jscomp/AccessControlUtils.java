@@ -143,8 +143,8 @@ public final class AccessControlUtils {
     }
 
     // Find the lowest property defined on a class with visibility information.
-    ObjectType current = isOverride ? referenceType.getPrototypeObject() : referenceType;
-    for (; current != null; current = current.getPrototypeObject()) {
+    ObjectType current = isOverride ? referenceType.getImplicitPrototype() : referenceType;
+    for (; current != null; current = current.getImplicitPrototype()) {
       JSDocInfo docInfo = current.getOwnPropertyJSDocInfo(propertyName);
       if (docInfo != null && docInfo.getVisibility() != Visibility.INHERITED) {
         return current;

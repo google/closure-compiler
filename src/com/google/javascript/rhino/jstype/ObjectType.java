@@ -292,11 +292,11 @@ public abstract class ObjectType extends JSType implements Serializable {
   public abstract FunctionType getConstructor();
 
   public FunctionType getSuperClassConstructor() {
-    ObjectType iproto = getPrototypeObject();
+    ObjectType iproto = getImplicitPrototype();
     if (iproto == null) {
       return null;
     }
-    iproto = iproto.getPrototypeObject();
+    iproto = iproto.getImplicitPrototype();
     return iproto == null ? null : iproto.getConstructor();
   }
 
@@ -317,10 +317,6 @@ public abstract class ObjectType extends JSType implements Serializable {
    * Gets the implicit prototype (a.k.a. the {@code [[Prototype]]} property).
    */
   public abstract ObjectType getImplicitPrototype();
-
-  public final ObjectType getPrototypeObject() {
-    return getImplicitPrototype();
-  }
 
   /**
    * Defines a property whose type is explicitly declared by the programmer.

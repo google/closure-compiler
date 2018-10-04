@@ -774,7 +774,7 @@ class DisambiguateProperties implements CompilerPass {
       types.add(skipType);
       ObjectType objSkipType = skipType.toMaybeObjectType();
       if (objSkipType != null) {
-        skipType = objSkipType.getPrototypeObject();
+        skipType = objSkipType.getImplicitPrototype();
       } else {
         break;
       }
@@ -859,14 +859,14 @@ class DisambiguateProperties implements CompilerPass {
         && objType.getConstructor().isInterface()) {
       ObjectType topInterface = objType.getTopDefiningInterface(field);
       if (topInterface != null && topInterface.getConstructor() != null) {
-        foundType = topInterface.getPrototypeObject();
+        foundType = topInterface.getImplicitPrototype();
       }
     } else {
-      while (objType != null && !Objects.equals(objType.getPrototypeObject(), objType)) {
+      while (objType != null && !Objects.equals(objType.getImplicitPrototype(), objType)) {
         if (objType.hasOwnProperty(field)) {
           foundType = objType;
         }
-        objType = objType.getPrototypeObject();
+        objType = objType.getImplicitPrototype();
       }
     }
 

@@ -722,14 +722,14 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
               t.makeError(propRef.getSourceNode(), CONST_PROPERTY_REASSIGNED_VALUE, propertyName));
           break;
         }
-        oType = oType.getPrototypeObject();
+        oType = oType.getImplicitPrototype();
       }
 
       initializedConstantProperties.put(objectType, propertyName);
 
       // Add the prototype when we're looking at an instance object
       if (objectType.isInstanceType()) {
-        ObjectType prototype = objectType.getPrototypeObject();
+        ObjectType prototype = objectType.getImplicitPrototype();
         if (prototype != null && prototype.hasProperty(propertyName)) {
           initializedConstantProperties.put(prototype, propertyName);
         }
@@ -1105,7 +1105,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
 
     ObjectType objType = castToObject(type);
     if (objType != null) {
-      ObjectType implicitProto = objType.getPrototypeObject();
+      ObjectType implicitProto = objType.getImplicitPrototype();
       if (implicitProto != null) {
         return getTypeDeprecationInfo(implicitProto);
       }
@@ -1132,9 +1132,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
         && compiler.getCodingConvention().isConstant(prop)) {
       return true;
     }
-    for (;
-         objectType != null;
-         objectType = objectType.getPrototypeObject()) {
+    for (; objectType != null; objectType = objectType.getImplicitPrototype()) {
       JSDocInfo docInfo = objectType.getOwnPropertyJSDocInfo(prop);
       if (docInfo != null && docInfo.isConstant()) {
         return true;
@@ -1155,7 +1153,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       return depReason;
     }
 
-    ObjectType implicitProto = type.getPrototypeObject();
+    ObjectType implicitProto = type.getImplicitPrototype();
     if (implicitProto != null) {
       return getPropertyDeprecationInfo(implicitProto, prop);
     }
