@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing.parser.util.format;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,30 +33,30 @@ public final class SimpleFormatTest extends TestCase {
 
   @Test
   public void testCharacter() {
-    assertEquals("c is a character", SimpleFormat.format("%c is a character", 'c'));
+    assertThat(SimpleFormat.format("%c is a character", 'c')).isEqualTo("c is a character");
   }
 
   @Test
   public void testInteger() {
-    assertEquals("1 + 41 = 42", SimpleFormat.format("%d + %d = %d", 1, 41, 42));
+    assertThat(SimpleFormat.format("%d + %d = %d", 1, 41, 42)).isEqualTo("1 + 41 = 42");
   }
 
   @Test
   public void testString() {
-    assertEquals("This is foo", SimpleFormat.format("This is %s", "foo"));
+    assertThat(SimpleFormat.format("This is %s", "foo")).isEqualTo("This is foo");
   }
 
   @Test
   public void testArgumentIndex() {
-    assertEquals("one 2 3.0", SimpleFormat.format("%1$s %2$d %3$f", "one", 2, 3.0));
+    assertThat(SimpleFormat.format("%1$s %2$d %3$f", "one", 2, 3.0)).isEqualTo("one 2 3.0");
   }
 
   @Test
   public void testPrecision() {
-    assertEquals("003", SimpleFormat.format("%03d", 3));
-    assertEquals("+3", SimpleFormat.format("%+d", 3));
-    assertEquals("0.1", SimpleFormat.format("%.1f", 0.123456));
-    assertEquals("0.12", SimpleFormat.format("%.2f", 0.123456));
-    assertEquals("0.123", SimpleFormat.format("%.3f", 0.123456));
+    assertThat(SimpleFormat.format("%03d", 3)).isEqualTo("003");
+    assertThat(SimpleFormat.format("%+d", 3)).isEqualTo("+3");
+    assertThat(SimpleFormat.format("%.1f", 0.123456)).isEqualTo("0.1");
+    assertThat(SimpleFormat.format("%.2f", 0.123456)).isEqualTo("0.12");
+    assertThat(SimpleFormat.format("%.3f", 0.123456)).isEqualTo("0.123");
   }
 }

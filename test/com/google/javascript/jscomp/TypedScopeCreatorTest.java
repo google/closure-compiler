@@ -293,7 +293,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar fooInstanceVar = checkNotNull(globalScope.getVar("f"));
     assertType(fooInstanceVar.getType()).toStringIsEqualTo("string");
-    assertFalse(fooInstanceVar.isTypeInferred());
+    assertThat(fooInstanceVar.isTypeInferred()).isFalse();
   }
 
   @Test
@@ -964,7 +964,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     // TODO(b/112651122): infer that f takes {x: number}
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
     assertType(fVar.getType()).toStringIsEqualTo("function(?): undefined");
-    assertFalse(fVar.isTypeInferred());
+    assertThat(fVar.isTypeInferred()).isFalse();
 
     TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
     assertType(xVar.getType()).toStringIsEqualTo("number");
@@ -993,15 +993,15 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     // having tuple types.
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
     assertType(fVar.getType()).toStringIsEqualTo("function(?): undefined");
-    assertFalse(fVar.isTypeInferred());
+    assertThat(fVar.isTypeInferred()).isFalse();
 
     TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
     assertType(xVar.getType()).toStringIsEqualTo("number");
-    assertFalse(xVar.isTypeInferred());
+    assertThat(xVar.isTypeInferred()).isFalse();
 
     TypedVar yVar = checkNotNull(lastFunctionScope.getVar("y"));
     assertType(yVar.getType()).toStringIsEqualTo("string");
-    assertFalse(yVar.isTypeInferred());
+    assertThat(yVar.isTypeInferred()).isFalse();
   }
 
   @Test
@@ -1024,11 +1024,11 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar propAVar = checkNotNull(globalScope.getVar("propA"));
     assertType(propAVar.getType()).isEqualTo(getNativeType(JSTypeNative.NUMBER_TYPE));
-    assertFalse(propAVar.isTypeInferred());
+    assertThat(propAVar.isTypeInferred()).isFalse();
 
     TypedVar propBVar = checkNotNull(globalScope.getVar("propB"));
     assertType(propBVar.getType()).isEqualTo(getNativeType(JSTypeNative.STRING_TYPE));
-    assertFalse(propBVar.isTypeInferred());
+    assertThat(propBVar.isTypeInferred()).isFalse();
   }
 
   @Test
@@ -1042,7 +1042,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar b = checkNotNull(globalScope.getVar("b"));
     assertType(b.getType()).isUnknown();
-    assertTrue(b.isTypeInferred()); // b is inferred but not treated as declared
+    assertThat(b.isTypeInferred()).isTrue(); // b is inferred but not treated as declared
   }
 
   @Test
@@ -1059,7 +1059,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar b = checkNotNull(globalScope.getVar("b"));
     assertType(b.getType()).isUnknown();
-    assertTrue(b.isTypeInferred());
+    assertThat(b.isTypeInferred()).isTrue();
   }
 
   @Test
