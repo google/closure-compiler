@@ -26,7 +26,7 @@
  *
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html
  * @see http://www.w3.org/TR/XMLHttpRequest/
- * @see http://www.w3.org/TR/XMLHttpRequest2/
+ * @see https://xhr.spec.whatwg.org/
  *
  * @externs
  * @author stevey@google.com (Steve Yegge)
@@ -148,7 +148,7 @@ XPathResult.prototype.booleanValue;
  * @type {boolean} {@see XPathException.TYPE_ERR}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-invalid-iterator-state
  */
-XPathResult.prototype.invalidInteratorState;
+XPathResult.prototype.invalidIteratorState;
 
 /**
  * @type {number}
@@ -431,21 +431,80 @@ XMLHttpRequest.LOADING;
  */
 XMLHttpRequest.DONE;
 
+
 /**
  * The FormData object represents an ordered collection of entries. Each entry
  * has a name and value.
  *
+ * Please note that the service worker version of FormData constructor omits the
+ * optional form element, since there's no DOM present in the
+ * ServiceWorkerGlobalScope.
+ *
  * @param {?Element=} opt_form An optional form to use for constructing the form
  *     data set.
  * @constructor
- * @see http://www.w3.org/TR/XMLHttpRequest2/#the-formdata-interface
+ * @implements {Iterable<!Array<!Blob|string>>}
+ * @see https://xhr.spec.whatwg.org/#formdata
  */
 function FormData(opt_form) {}
 
 /**
  * @param {string} name
- * @param {Blob|string} value
+ * @param {!Blob|string} value
  * @param {string=} opt_filename
  * @return {undefined}
  */
 FormData.prototype.append = function(name, value, opt_filename) {};
+
+/**
+ * @param {string} name
+ * @return {undefined}
+ */
+FormData.prototype.delete = function(name) {};
+
+/**
+ * @return {!IteratorIterable<!Array<!Blob|string>>}
+ * @nosideeffects
+ */
+FormData.prototype.entries = function() {};
+
+/**
+ * @param {string} name
+ * @return {?Blob|string|undefined}
+ * @nosideeffects
+ */
+FormData.prototype.get = function(name) {};
+
+/**
+ * @param {string} name
+ * @return {!Array<!Blob|string>}
+ * @nosideeffects
+ */
+FormData.prototype.getAll = function(name) {};
+
+/**
+ * @param {string} name
+ * @return {boolean}
+ * @nosideeffects
+ */
+FormData.prototype.has = function(name) {};
+
+/**
+ * @return {!IteratorIterable<string>}
+ * @nosideeffects
+ */
+FormData.prototype.keys = function() {};
+
+/**
+ * @param {string} name
+ * @param {!Blob|string} value
+ * @param {string=} opt_filename
+ * @return {undefined}
+ */
+FormData.prototype.set = function(name, value, opt_filename) {};
+
+/**
+ * @return {!IteratorIterable<!Blob|string>}
+ * @nosideeffects
+ */
+FormData.prototype.values = function() {};
