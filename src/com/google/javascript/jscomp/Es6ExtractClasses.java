@@ -189,13 +189,64 @@ public final class Es6ExtractClasses
     Node statement = NodeUtil.getEnclosingStatement(parent);
     JSType classType = classNode.getJSType();
     checkState(!compiler.hasTypeCheckingRun() || classType != null);
-    Node className = IR.name(name).setJSType(classType);
-    parent.replaceChild(classNode, className.cloneTree());
+    // class name node used as LHS in newly created assignment
+    Node classNameLhs = IR.name(name).setJSType(classType);
+    // class name node that replaces the class literal in the original statement
+    Node classNameRhs = classNameLhs.cloneTree();
+    parent.replaceChild(classNode, classNameRhs);
     Node classDeclaration =
-        IR.constNode(className, classNode).useSourceInfoIfMissingFromForTree(classNode);
+        IR.constNode(classNameLhs, classNode).useSourceInfoIfMissingFromForTree(classNode);
     NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
     classDeclaration.setJSDocInfo(JSDocInfoBuilder.maybeCopyFrom(info).build());
     statement.getParent().addChildBefore(classDeclaration, statement);
+
+    // If the original statement was a variable declaration or qualified name assignment like
+    // like these:
+    // var ClassName = class {...
+    // OR
+    // some.qname.ClassName = class {...
+    //
+    // We will have changed the original statement to
+    //
+    // var ClassName = generatedName;
+    // OR
+    // some.qname.ClassName = generatedName;
+    //
+    // This is creating a type alias for a class, but since there's no literal class on the RHS,
+    // it doesn't look like one. Add at-constructor JSDoc to make it clear that this is happening.
+    //
+    // This was added to fix a specific problem where the original definition was for an abstract
+    // class, so its JSDoc included at-abstract.
+    // This caused ClosureCodeRemoval to think this rewritten assignment was a removable abstract
+    // method definition instead of the definition of an abstract class.
+    //
+    // TODO(b/117292942): Make ClosureCodeRemoval smarter so this hack isn't necessary to
+    // prevent incorrect removal of assignments.
+    if (NodeUtil.isNameDeclaration(statement)
+        && statement.hasOneChild()
+        && statement.getOnlyChild() == parent) {
+      // var ClassName = generatedName;
+      addAtConstructor(statement);
+    } else if (statement.isExprResult()) {
+      Node expr = statement.getOnlyChild();
+      if (expr.isAssign()
+          && expr.getFirstChild().isQualifiedName()
+          && expr.getSecondChild() == classNameRhs) {
+        // some.qname.ClassName = generatedName;
+        addAtConstructor(expr);
+      }
+    }
     compiler.reportChangeToEnclosingScope(classDeclaration);
+  }
+
+  /**
+   * Add at-constructor to the JSDoc of the given node.
+   *
+   * @param node
+   */
+  private void addAtConstructor(Node node) {
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(node.getJSDocInfo());
+    builder.recordConstructor();
+    node.setJSDocInfo(builder.build());
   }
 }

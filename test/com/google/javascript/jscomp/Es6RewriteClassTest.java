@@ -676,6 +676,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         lines(
             "/** @constructor @struct */",
             "const testcode$classdecl$var0 = function() {};",
+            "/** @constructor */",
             "var C = testcode$classdecl$var0;"));
   }
 
@@ -688,6 +689,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "const testcode$classdecl$var0 = function() {}",
             "testcode$classdecl$var0.prototype.foo = function() {};",
             "",
+            "/** @constructor */",
             "var C = testcode$classdecl$var0;"));
   }
 
@@ -1703,6 +1705,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         lines(
             "/** @constructor @struct */",
             "const testcode$classdecl$var0 = function(){};",
+            "/** @constructor */",
             "var F = testcode$classdecl$var0;"));
   }
 
@@ -1713,6 +1716,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         lines(
             "/** @constructor @struct */",
             "const testcode$classdecl$var0 = function(){};",
+            "/** @constructor */",
             "F = testcode$classdecl$var0;"));
   }
 

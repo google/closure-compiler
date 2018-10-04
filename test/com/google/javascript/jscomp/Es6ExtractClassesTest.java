@@ -62,6 +62,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "const testcode$classdecl$var0 = class {",
             "  constructor() { alert(testcode$classdecl$var0); }",
             "};",
+            "/** @constructor */",
             "var Outer=testcode$classdecl$var0"));
 
     test(
@@ -70,6 +71,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "const testcode$classdecl$var0 = class {",
             "  constructor() { alert(testcode$classdecl$var0); }",
             "};",
+            "/** @constructor */",
             "let Outer=testcode$classdecl$var0"));
 
     test(
@@ -78,6 +80,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "const testcode$classdecl$var0 = class {",
             "  constructor() { alert(testcode$classdecl$var0); }",
             "};",
+            "/** @constructor */",
             "const Outer=testcode$classdecl$var0"));
   }
 
@@ -118,7 +121,11 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "/** @const */ const testcode$classdecl$var0=class {",
             "  constructor(){ alert(testcode$classdecl$var0); }",
             "};",
-            "/** @const */ var module$exports$example=testcode$classdecl$var0"));
+            "/**",
+            " * @constructor",
+            " * @const",
+            " */ ",
+            "var module$exports$example=testcode$classdecl$var0"));
   }
 
   @Test
@@ -136,6 +143,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "    alert(testcode$classdecl$var0);",
             "  }",
             "};",
+            "/** @constructor */",
             "outer.qual.Name = testcode$classdecl$var0;"));
   }
 
@@ -167,13 +175,13 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testJSDoc() {
+  public void testJSDocOnVar() {
     test(
         "/** @unrestricted */ var foo = class bar {};",
         lines(
             "/** @unrestricted */",
             "const testcode$classdecl$var0 = class {};",
-            "/** @unrestricted */",
+            "/** @unrestricted @constructor */",
             "var foo = testcode$classdecl$var0;"));
   }
 
