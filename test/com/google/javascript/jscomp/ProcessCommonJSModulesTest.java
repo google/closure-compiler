@@ -1538,4 +1538,31 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "const w$$module$test = new module$test.default.Impl(\"a\");",
             "console.log(w$$module$test.getString());"));
   }
+
+  @Test
+  public void testDestructuredImportExported() {
+    testModules(
+        "test.js",
+        "const {Foo} = require('./other.js'); Foo; exports.Foo = Foo;",
+        lines(
+            "/** @const */ var module$test = {",
+            "    /** @const */ default: {}",
+            "};",
+            "const {Foo: Foo$$module$test} = module$other.default;",
+            "module$other.default.Foo;",
+            "module$test.default.Foo = module$other.default.Foo;"));
+  }
+
+  @Test
+  public void testDestructuredExports() {
+    testModules(
+        "test.js",
+        "const {b} = {b: 1}; module.exports = {b: b};",
+        lines(
+            "/** @const */ var module$test = {",
+            "    /** @const */ default: {}",
+            "};",
+            "const {b: b$$module$test} = {b: 1};",
+            "module$test.default.b = b$$module$test;"));
+  }
 }

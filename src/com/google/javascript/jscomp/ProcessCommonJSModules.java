@@ -1472,7 +1472,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           && rValueVar != null
           && (NodeUtil.getEnclosingScript(rValueVar.nameNode) == null
               || (rValueVar.nameNode.getParent() != null && !rValueVar.isParam()))
-          && export.isInSupportedScope) {
+          && export.isInSupportedScope
+          && (rValueVar.getNameNode().getParent() == null
+              || !NodeUtil.isLhsByDestructuring(rValueVar.getNameNode()))) {
         root.getParent().getParent().detach();
         t.reportCodeChange();
         return;
@@ -1512,7 +1514,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           && root.getNext().isName()
           && rValueVar != null
           && rValueVar.isGlobal()
-          && export.isInSupportedScope) {
+          && export.isInSupportedScope
+          && (rValueVar.getNameNode().getParent() == null
+              || !NodeUtil.isLhsByDestructuring(rValueVar.getNameNode()))) {
         // This is a where a module export assignment is used in a complex expression.
         // Before: `SOME_VALUE !== undefined && module.exports = SOME_VALUE`
         // After: `SOME_VALUE !== undefined && module$name`
@@ -1641,7 +1645,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
         // We need to exclude the alias created by the require import. We assume dead
         // code elimination will remove these later.
-        if ((n != var.getNode() || n.getParent().isClass()) && exportedName == null) {
+        if ((n != var.getNode() || n.getParent().isClass())
+            && exportedName == null
+            && (var == null
+                || var.getNameNode().getParent() == null
+                || !NodeUtil.isLhsByDestructuring(var.getNameNode()))) {
           // The name is actually the export reference itself.
           // This will be handled later by visitExports.
           if (n.getParent().isClass() && n.getParent().getFirstChild() == n) {
@@ -1655,7 +1663,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         if (importedModuleName == null
             && exportedName != null
             && !exportedName.equals(name)
-            && !var.isParam()) {
+            && !var.isParam()
+            && (var.getNameNode().getParent() == null
+                || !NodeUtil.isLhsByDestructuring(var.getNameNode()))) {
           boolean exportPropIsConst =
               defaultExportIsConst
                   && getBasePropertyImport(getModuleName(t.getInput())).equals(exportedName)
@@ -1867,7 +1877,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           break;
 
         default:
-          {
+          // Whenever possible, reuse the existing reference
+          if (!newNameIsQualified && nameRef.isName()) {
+            nameRef.setString(newName);
+            nameRef.setOriginalName(originalName);
+          } else {
             Node name =
                 newNameIsQualified
                     ? NodeUtil.newQName(compiler, newName, nameRef, originalName)
@@ -1885,9 +1899,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             if (nameRef.hasChildren()) {
               name.addChildrenToFront(nameRef.removeChildren());
             }
-
-            break;
           }
+
+          break;
       }
 
       t.reportCodeChange();
