@@ -248,14 +248,14 @@ public final class ModuleLoaderTest extends TestCase {
 
   @Test
   public void testCanonicalizePath() {
-    assertEquals("a/b/c", ModuleNames.canonicalizePath("a/b/c"));
-    assertEquals("a/c", ModuleNames.canonicalizePath("a/b/../c"));
-    assertEquals("b/c", ModuleNames.canonicalizePath("a/b/../../b/c"));
-    assertEquals("c", ModuleNames.canonicalizePath("a/b/../../c"));
-    assertEquals("../a", ModuleNames.canonicalizePath("../a/b/.."));
-    assertEquals("/", ModuleNames.canonicalizePath("/a/b/../../.."));
-    assertEquals("/b", ModuleNames.canonicalizePath("/a/../../../b"));
-    assertEquals("/", ModuleNames.canonicalizePath("/a/.."));
+    assertThat(ModuleNames.canonicalizePath("a/b/c")).isEqualTo("a/b/c");
+    assertThat(ModuleNames.canonicalizePath("a/b/../c")).isEqualTo("a/c");
+    assertThat(ModuleNames.canonicalizePath("a/b/../../b/c")).isEqualTo("b/c");
+    assertThat(ModuleNames.canonicalizePath("a/b/../../c")).isEqualTo("c");
+    assertThat(ModuleNames.canonicalizePath("../a/b/..")).isEqualTo("../a");
+    assertThat(ModuleNames.canonicalizePath("/a/b/../../..")).isEqualTo("/");
+    assertThat(ModuleNames.canonicalizePath("/a/../../../b")).isEqualTo("/b");
+    assertThat(ModuleNames.canonicalizePath("/a/..")).isEqualTo("/");
   }
 
   @Test
@@ -558,6 +558,6 @@ public final class ModuleLoaderTest extends TestCase {
   }
 
   private static void assertUri(String expected, ModuleLoader.ModulePath actual) {
-    assertEquals(expected, actual.toString());
+    assertThat(actual.toString()).isEqualTo(expected);
   }
 }

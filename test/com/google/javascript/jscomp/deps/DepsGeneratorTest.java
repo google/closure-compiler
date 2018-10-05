@@ -87,7 +87,7 @@ public final class DepsGeneratorTest extends TestCase {
             "goog.addDependency('goog/es6.js', [], " + "[], {'lang': 'es6', 'module': 'es6'});",
             "");
 
-    assertEquals(expected, output);
+    assertThat(output).isEqualTo(expected);
   }
 
   @Test
@@ -123,7 +123,7 @@ public final class DepsGeneratorTest extends TestCase {
             "goog.addDependency('goog/es6.js', [], " + "[], {'lang': 'es6', 'module': 'es6'});",
             "");
 
-    assertEquals(expected, output);
+    assertThat(output).isEqualTo(expected);
   }
 
   @Test
@@ -167,7 +167,7 @@ public final class DepsGeneratorTest extends TestCase {
                 + "{'lang': 'es6', 'module': 'goog'});",
             "");
 
-    assertEquals(expected, output);
+    assertThat(output).isEqualTo(expected);
   }
 
   @Test
@@ -212,7 +212,7 @@ public final class DepsGeneratorTest extends TestCase {
                 + "{'lang': 'es6', 'module': 'goog'});",
             "");
 
-    assertEquals(expected, output);
+    assertThat(output).isEqualTo(expected);
   }
 
   // Unit test for an issue run into by https://github.com/google/closure-compiler/pull/3026

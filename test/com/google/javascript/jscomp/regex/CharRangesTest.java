@@ -66,14 +66,14 @@ public final class CharRangesTest extends TestCase {
     for (int i = -1000; i < 1000; ++i) {
       assertThat(sbs.contains(i)).isFalse();
     }
-    assertEquals("[]", sbs.toString());
+    assertThat(sbs.toString()).isEqualTo("[]");
   }
 
   @Test
   public void testCharRangesFactories() {
     CharRanges isbs = CharRanges.withMembers(0, 1, 4, 9);
     CharRanges isbs2 = CharRanges.withMembers(0, 1, 4, 9);
-    assertEquals("[0x0-0x1 0x4 0x9]", isbs.toString());
+    assertThat(isbs.toString()).isEqualTo("[0x0-0x1 0x4 0x9]");
 
     CharRanges esbs = CharRanges.withMembers();
 
@@ -120,10 +120,10 @@ public final class CharRangesTest extends TestCase {
   @Test
   public void testDupeMembers() {
     CharRanges sbs1 = CharRanges.withMembers(0, 1, 4, 9);
-    assertEquals(sbs1.toString(), "[0x0-0x1 0x4 0x9]", sbs1.toString());
+    assertWithMessage(sbs1.toString()).that(sbs1.toString()).isEqualTo("[0x0-0x1 0x4 0x9]");
 
     CharRanges sbs2 = CharRanges.withMembers(9, 1, 4, 1, 0);
-    assertEquals(sbs2.toString(), "[0x0-0x1 0x4 0x9]", sbs2.toString());
+    assertWithMessage(sbs2.toString()).that(sbs2.toString()).isEqualTo("[0x0-0x1 0x4 0x9]");
 
     new EqualsTester().addEqualityGroup(sbs1, sbs2).testEquals();
 
@@ -151,28 +151,22 @@ public final class CharRangesTest extends TestCase {
     assertThat(empty.union(b)).isEqualTo(b);
 
     CharRanges aSb = a.difference(b);
-    assertEquals(
-        "[0x4-0x5 0x9-0xa 0x12 0x14 0x16 0x18 0x1e-0x20 0x24-0x26 0x28 0x2a]",
-        aSb.toString());
+    assertThat(aSb.toString())
+        .isEqualTo("[0x4-0x5 0x9-0xa 0x12 0x14 0x16 0x18 0x1e-0x20 0x24-0x26 0x28 0x2a]");
     assertThat(a.containsAll(aSb)).isTrue();
     assertThat(aSb.containsAll(a)).isFalse();
     assertThat(aSb.containsAll(b)).isFalse();
 
     CharRanges bSa = b.difference(a);
-    assertEquals(
-        "[0x1-0x2 0xc-0xd 0xf-0x11 0x1a 0x21-0x23]",
-        bSa.toString());
+    assertThat(bSa.toString()).isEqualTo("[0x1-0x2 0xc-0xd 0xf-0x11 0x1a 0x21-0x23]");
     assertThat(b.containsAll(bSa)).isTrue();
     assertThat(bSa.containsAll(a)).isFalse();
     assertThat(bSa.containsAll(b)).isFalse();
 
     // Check that a and b not changed by operation
-    assertEquals(
-        "[0x3-0xb 0x12 0x14 0x16 0x18 0x1c 0x1e-0x20 0x24-0x26 0x28 0x2a]",
-        a.toString());
-    assertEquals(
-        "[0x1-0x3 0x6-0x8 0xb-0xd 0xf-0x11 0x1a 0x1c 0x21-0x23]",
-        b.toString());
+    assertThat(a.toString())
+        .isEqualTo("[0x3-0xb 0x12 0x14 0x16 0x18 0x1c 0x1e-0x20 0x24-0x26 0x28 0x2a]");
+    assertThat(b.toString()).isEqualTo("[0x1-0x3 0x6-0x8 0xb-0xd 0xf-0x11 0x1a 0x1c 0x21-0x23]");
 
     //    0 1 2 3 4 5 6 7 8 9 a b c d e f
     // m: * * * *     *     * *       * *
@@ -181,7 +175,7 @@ public final class CharRangesTest extends TestCase {
     CharRanges m = CharRanges.withMembers(0, 1, 2, 3, 6, 9, 0xa, 0xe, 0xf);
     CharRanges s = CharRanges.withMembers(2, 5, 6, 7, 0xa, 0xb, 0xd, 0xe);
     CharRanges d = m.difference(s);
-    assertEquals("[0x0-0x1 0x3 0x9 0xf]", d.toString());
+    assertThat(d.toString()).isEqualTo("[0x0-0x1 0x3 0x9 0xf]");
     assertThat(m.containsAll(d)).isTrue();
     assertThat(d.containsAll(m)).isFalse();
     assertThat(d.containsAll(s)).isFalse();
@@ -207,9 +201,8 @@ public final class CharRangesTest extends TestCase {
     assertThat(empty.union(b)).isEqualTo(b);
 
     CharRanges aUb = a.union(b);
-    assertEquals(
-        "[0x1-0xd 0xf-0x12 0x14 0x16 0x18 0x1a 0x1c 0x1e-0x26 0x28 0x2a]",
-        aUb.toString());
+    assertThat(aUb.toString())
+        .isEqualTo("[0x1-0xd 0xf-0x12 0x14 0x16 0x18 0x1a 0x1c 0x1e-0x26 0x28 0x2a]");
     assertThat(b.union(a)).isEqualTo(aUb);
     assertThat(aUb.containsAll(a)).isTrue();
     assertThat(aUb.containsAll(b)).isTrue();
@@ -220,11 +213,8 @@ public final class CharRangesTest extends TestCase {
     assertThat(aUb.containsAll(aUb)).isTrue();
 
     // Check that a and b not changed by operation
-    assertEquals(
-        "[0x3-0xb 0x12 0x14 0x16 0x18 0x1c 0x1e-0x20 0x24-0x26 0x28 0x2a]",
-        a.toString());
-    assertEquals(
-        "[0x1-0x3 0x6-0x8 0xb-0xd 0xf-0x11 0x1a 0x1c 0x21-0x23]",
-        b.toString());
+    assertThat(a.toString())
+        .isEqualTo("[0x3-0xb 0x12 0x14 0x16 0x18 0x1c 0x1e-0x20 0x24-0x26 0x28 0x2a]");
+    assertThat(b.toString()).isEqualTo("[0x1-0x3 0x6-0x8 0xb-0xd 0xf-0x11 0x1a 0x1c 0x21-0x23]");
   }
 }

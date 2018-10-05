@@ -216,7 +216,7 @@ public final class GraphTest extends TestCase {
     graph.connect("a", "-", "b");
     assertThat(graph.getFirstEdge("a", "b").getValue()).isEqualTo("-");
     assertThat(graph.getFirstEdge("b", "a").getValue()).isEqualTo("-");
-    assertNull(graph.getFirstEdge("a", "c"));
+    assertThat(graph.getFirstEdge("a", "c")).isNull();
   }
 
   @Test
@@ -229,7 +229,7 @@ public final class GraphTest extends TestCase {
     graph.connect("a", "-", "b");
     assertThat(graph.getFirstEdge("a", "b").getValue()).isEqualTo("-");
     assertThat(graph.getFirstEdge("b", "a").getValue()).isEqualTo("-");
-    assertNull(graph.getFirstEdge("a", "c"));
+    assertThat(graph.getFirstEdge("a", "c")).isNull();
   }
 
   @Test
@@ -259,28 +259,28 @@ public final class GraphTest extends TestCase {
     final Annotation B = new Annotation() {};
 
     // Initially null.
-    assertNull(a.getAnnotation());
-    assertNull(b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isNull();
+    assertThat(b.<Annotation>getAnnotation()).isNull();
 
     // Test basic setting.
     a.setAnnotation(A);
     b.setAnnotation(B);
-    assertSame(A, a.getAnnotation());
-    assertSame(B, b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isSameAs(A);
+    assertThat(b.<Annotation>getAnnotation()).isSameAs(B);
 
     // Test clearing.
     graph.clearEdgeAnnotations();
     graph.clearNodeAnnotations();
-    assertNull(a.getAnnotation());
-    assertNull(b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isNull();
+    assertThat(b.<Annotation>getAnnotation()).isNull();
 
     a.setAnnotation(A);
     b.setAnnotation(B);
     // Pushing clears.
     graph.pushEdgeAnnotations();
     graph.pushNodeAnnotations();
-    assertNull(a.getAnnotation());
-    assertNull(b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isNull();
+    assertThat(b.<Annotation>getAnnotation()).isNull();
     a.setAnnotation(B);
     b.setAnnotation(B);
     graph.pushEdgeAnnotations();
@@ -289,16 +289,16 @@ public final class GraphTest extends TestCase {
     b.setAnnotation(A);
 
     // Test restoring then restoring old values with pop.
-    assertSame(B, a.getAnnotation());
-    assertSame(A, b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isSameAs(B);
+    assertThat(b.<Annotation>getAnnotation()).isSameAs(A);
     graph.popEdgeAnnotations();
     graph.popNodeAnnotations();
-    assertSame(B, a.getAnnotation());
-    assertSame(B, b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isSameAs(B);
+    assertThat(b.<Annotation>getAnnotation()).isSameAs(B);
     graph.popEdgeAnnotations();
     graph.popNodeAnnotations();
-    assertSame(A, a.getAnnotation());
-    assertSame(B, b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isSameAs(A);
+    assertThat(b.<Annotation>getAnnotation()).isSameAs(B);
   }
 
   @Test

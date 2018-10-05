@@ -195,13 +195,13 @@ public final class GraphColoringTest extends TestCase {
    */
   private static <N, E> void validateColoring(Graph<N, E> graph) {
     for (GraphNode<N, E> node : graph.getNodes()) {
-      assertNotNull(node.getAnnotation());
+      assertThat(node.<Annotation>getAnnotation()).isNotNull();
     }
     for (GraphEdge<N, E> edge : graph.getEdges()) {
       Color c1 = edge.getNodeA().getAnnotation();
       Color c2 = edge.getNodeB().getAnnotation();
-      assertNotNull(c1);
-      assertNotNull(c2);
+      assertThat(c1).isNotNull();
+      assertThat(c2).isNotNull();
       assertThat(c1.equals(c2)).isFalse();
     }
   }

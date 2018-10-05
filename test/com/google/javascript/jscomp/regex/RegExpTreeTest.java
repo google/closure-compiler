@@ -46,7 +46,7 @@ public class RegExpTreeTest extends TestCase {
   }
 
   private void assertRegexCompilesTo(String regex, String flags, String expected) {
-    assertEquals(expected, parseRegExpAndPrintPattern(regex, flags));
+    assertThat(parseRegExpAndPrintPattern(regex, flags)).isEqualTo(expected);
   }
 
   private ThrowableSubject assertRegexThrowsExceptionThat(String regex, String flags) {
