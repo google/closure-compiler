@@ -447,9 +447,8 @@ public final class WarningsGuardTest extends TestCase {
     ComposeWarningsGuard guard = new ComposeWarningsGuard(
         visibilityOff, visibilityWarning);
     guard.addGuard(guard);
-    assertEquals(
-        "DiagnosticGroup<visibility>(WARNING), DiagnosticGroup<visibility>(OFF)",
-        guard.toString());
+    assertThat(guard.toString())
+        .isEqualTo("DiagnosticGroup<visibility>(WARNING), DiagnosticGroup<visibility>(OFF)");
   }
 
   private static Node findNameNode(Node root, String name) {

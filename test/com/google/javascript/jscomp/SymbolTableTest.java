@@ -100,7 +100,7 @@ public final class SymbolTableTest extends TestCase {
     SymbolTable table = createSymbolTable("/** @type {number} */ var x = 5;");
     assertThat(getGlobalVar(table, "y")).isNull();
     assertThat(getGlobalVar(table, "x")).isNotNull();
-    assertEquals("number", getGlobalVar(table, "x").getType().toString());
+    assertThat(getGlobalVar(table, "x").getType().toString()).isEqualTo("number");
 
     // 2 == sizeof({x, *global*})
     assertThat(getVars(table)).hasSize(2);
@@ -336,7 +336,7 @@ public final class SymbolTableTest extends TestCase {
     assertThat(domHelper).isNotNull();
 
     Symbol domHelperNamespacedMethod = getGlobalVar(table, "DomHelper.method");
-    assertEquals("method", domHelperNamespacedMethod.getName());
+    assertThat(domHelperNamespacedMethod.getName()).isEqualTo("method");
 
     Symbol domHelperMethod = domHelper.getPropertyScope().getSlot("method");
     assertThat(domHelperMethod).isNotNull();
@@ -397,7 +397,7 @@ public final class SymbolTableTest extends TestCase {
 
     SymbolScope scope = table.getEnclosingScope(refs.get(0).getNode());
     assertThat(scope.isGlobalScope()).isTrue();
-    assertEquals(SymbolTable.GLOBAL_THIS, table.getSymbolForScope(scope).getName());
+    assertThat(table.getSymbolForScope(scope).getName()).isEqualTo(SymbolTable.GLOBAL_THIS);
   }
 
   @Test
@@ -611,7 +611,7 @@ public final class SymbolTableTest extends TestCase {
     List<Reference> refs = ImmutableList.copyOf(table.getReferences(fooPrototype));
     assertThat(refs).hasSize(1);
     assertThat(refs.get(0).getNode().getToken()).isEqualTo(Token.GETPROP);
-    assertEquals("Foo.prototype", refs.get(0).getNode().getQualifiedName());
+    assertThat(refs.get(0).getNode().getQualifiedName()).isEqualTo("Foo.prototype");
   }
 
   @Test
@@ -686,7 +686,7 @@ public final class SymbolTableTest extends TestCase {
       Reference ref = refs.get(i);
       assertThat(ref.getNode().isFromExterns()).isEqualTo(i != last);
       if (!ref.getNode().isFromExterns()) {
-        assertEquals("in1", ref.getNode().getSourceFileName());
+        assertThat(ref.getNode().getSourceFileName()).isEqualTo("in1");
       }
     }
   }
@@ -740,7 +740,7 @@ public final class SymbolTableTest extends TestCase {
 
     assertThat(refs.get(0).getNode().getCharno()).isEqualTo(code.indexOf("x) {"));
     assertThat(refs.get(1).getNode().getCharno()).isEqualTo(code.indexOf("x */"));
-    assertEquals("in1", refs.get(0).getNode().getSourceFileName());
+    assertThat(refs.get(0).getNode().getSourceFileName()).isEqualTo("in1");
   }
 
   @Test
@@ -750,7 +750,7 @@ public final class SymbolTableTest extends TestCase {
     assertThat(xNumber).isNotNull();
     assertThat(table.getScope(xNumber).isGlobalScope()).isFalse();
 
-    assertEquals("number", xNumber.getType().toString());
+    assertThat(xNumber.getType().toString()).isEqualTo("number");
   }
 
   @Test
@@ -934,8 +934,8 @@ public final class SymbolTableTest extends TestCase {
 
     List<Reference> refs = table.getReferenceList(good);
     assertThat(refs).hasSize(2);
-    assertEquals(
-        "a.b.DerivedClass.superClass_.doSomething", refs.get(1).getNode().getQualifiedName());
+    assertThat(refs.get(1).getNode().getQualifiedName())
+        .isEqualTo("a.b.DerivedClass.superClass_.doSomething");
   }
 
   @Test
@@ -966,9 +966,9 @@ public final class SymbolTableTest extends TestCase {
     assertThat(abc).isNotNull();
     assertThat(table.getReferenceList(abc)).hasSize(1);
 
-    assertEquals("{b: {c: function(): undefined}}", a.getType().toString());
-    assertEquals("{c: function(): undefined}", ab.getType().toString());
-    assertEquals("function(): undefined", abc.getType().toString());
+    assertThat(a.getType().toString()).isEqualTo("{b: {c: function(): undefined}}");
+    assertThat(ab.getType().toString()).isEqualTo("{c: function(): undefined}");
+    assertThat(abc.getType().toString()).isEqualTo("function(): undefined");
   }
 
   @Test
@@ -981,9 +981,9 @@ public final class SymbolTableTest extends TestCase {
     assertThat(abc).isNotNull();
     assertThat(table.getReferenceList(abc)).hasSize(1);
 
-    assertEquals("{b: {c: function(): undefined}}", a.getType().toString());
-    assertEquals("{c: function(): undefined}", ab.getType().toString());
-    assertEquals("function(): undefined", abc.getType().toString());
+    assertThat(a.getType().toString()).isEqualTo("{b: {c: function(): undefined}}");
+    assertThat(ab.getType().toString()).isEqualTo("{c: function(): undefined}");
+    assertThat(abc.getType().toString()).isEqualTo("function(): undefined");
   }
 
   @Test
@@ -992,7 +992,7 @@ public final class SymbolTableTest extends TestCase {
         createSymbolTable(lines("/**", " * @param {number} x", " * @param y", " */", "var a;"));
     Symbol x = getDocVar(table, "x");
     assertThat(x).isNotNull();
-    assertEquals("number", x.getType().toString());
+    assertThat(x.getType().toString()).isEqualTo("number");
     assertThat(table.getReferenceList(x)).hasSize(1);
 
     Symbol y = getDocVar(table, "y");
@@ -1072,7 +1072,7 @@ public final class SymbolTableTest extends TestCase {
     assertThat(getGlobalVar(table, "String.prototype.slice")).isEqualTo(scope);
 
     Symbol proto = getGlobalVar(table, "String.prototype");
-    assertEquals("externs1", proto.getDeclaration().getNode().getSourceFileName());
+    assertThat(proto.getDeclaration().getNode().getSourceFileName()).isEqualTo("externs1");
   }
 
   @Test

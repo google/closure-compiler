@@ -76,10 +76,10 @@ public final class VariableMapTest extends TestCase {
   public void testFromBytes() throws ParseException {
     VariableMap vm = VariableMap.fromBytes("AAA:a\nBBB:b\n".getBytes(UTF_8));
     assertThat(vm.getOriginalNameToNewNameMap()).hasSize(2);
-    assertEquals("a", vm.lookupNewName("AAA"));
-    assertEquals("b", vm.lookupNewName("BBB"));
-    assertEquals("AAA", vm.lookupSourceName("a"));
-    assertEquals("BBB", vm.lookupSourceName("b"));
+    assertThat(vm.lookupNewName("AAA")).isEqualTo("a");
+    assertThat(vm.lookupNewName("BBB")).isEqualTo("b");
+    assertThat(vm.lookupSourceName("a")).isEqualTo("AAA");
+    assertThat(vm.lookupSourceName("b")).isEqualTo("BBB");
   }
 
   @Test
@@ -126,10 +126,10 @@ public final class VariableMapTest extends TestCase {
     VariableMap vm = VariableMap.fromBytes("AAA['\\:f']:a\n".getBytes(UTF_8));
 
     assertThat(vm.getOriginalNameToNewNameMap()).hasSize(1);
-    assertEquals("a", vm.lookupNewName("AAA[':f']"));
+    assertThat(vm.lookupNewName("AAA[':f']")).isEqualTo("a");
 
     assertThat(vm.getNewNameToOriginalNameMap()).hasSize(1);
-    assertEquals("AAA[':f']", vm.lookupSourceName("a"));
+    assertThat(vm.lookupSourceName("a")).isEqualTo("AAA[':f']");
   }
 
   private void assertEqual(byte[] bytes1, byte[] bytes2) {

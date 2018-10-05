@@ -73,24 +73,24 @@ public class XidTest extends TestCase {
 
   @Test
   public void testToString() {
-    assertEquals("z6ArXc", Xid.toString(1));
-    assertEquals("A6ArXc", Xid.toString(2));
-    assertEquals("x6ArXc", Xid.toString(-1));
-    assertEquals("OcErXc", Xid.toString(10000));
-    assertEquals("tTaYp", Xid.toString(-1951591049));
+    assertThat(Xid.toString(1)).isEqualTo("z6ArXc");
+    assertThat(Xid.toString(2)).isEqualTo("A6ArXc");
+    assertThat(Xid.toString(-1)).isEqualTo("x6ArXc");
+    assertThat(Xid.toString(10000)).isEqualTo("OcErXc");
+    assertThat(Xid.toString(-1951591049)).isEqualTo("tTaYp");
   }
 
   @Test
   public void testGet() {
     Xid dummyMap = new Xid();
-    assertEquals("nZzm6c", dummyMap.get("today"));
-    assertEquals("fkPKBb", dummyMap.get("tomorrow"));
-    assertEquals("b6Lt6c", dummyMap.get("value"));
+    assertThat(dummyMap.get("today")).isEqualTo("nZzm6c");
+    assertThat(dummyMap.get("tomorrow")).isEqualTo("fkPKBb");
+    assertThat(dummyMap.get("value")).isEqualTo("b6Lt6c");
 
-    assertEquals("QB6rXc", dummyMap.get("foo"));
-    assertEquals("RW4o4b", dummyMap.get("foo.Bar"));
+    assertThat(dummyMap.get("foo")).isEqualTo("QB6rXc");
+    assertThat(dummyMap.get("foo.Bar")).isEqualTo("RW4o4b");
 
-    assertEquals("MiB45c", dummyMap.get("prop1"));
-    assertEquals("NiB45c", dummyMap.get("prop2"));
+    assertThat(dummyMap.get("prop1")).isEqualTo("MiB45c");
+    assertThat(dummyMap.get("prop2")).isEqualTo("NiB45c");
   }
 }

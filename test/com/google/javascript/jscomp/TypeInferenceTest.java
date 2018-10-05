@@ -979,7 +979,7 @@ public final class TypeInferenceTest extends TestCase {
         "var x = /** @type {!Array<number>} */ ([]);\n" +
         "var result = new F(x);");
 
-    assertEquals("F<Array<number>>", getType("result").toString());
+    assertThat(getType("result").toString()).isEqualTo("F<Array<number>>");
   }
 
   @Test
@@ -998,7 +998,7 @@ public final class TypeInferenceTest extends TestCase {
         "var z = /** @type {boolean} */ (true);\n" +
         "var result = new F(x,y,z);");
 
-    assertEquals("F<(number|string),boolean>", getType("result").toString());
+    assertThat(getType("result").toString()).isEqualTo("F<(number|string),boolean>");
   }
 
   @Test
@@ -1018,7 +1018,7 @@ public final class TypeInferenceTest extends TestCase {
             "var z = /** @type {boolean} */ (true);",
             "var result = new F(x,y,z);"));
 
-    assertEquals("F<(number|string),boolean>", getType("result").toString());
+    assertThat(getType("result").toString()).isEqualTo("F<(number|string),boolean>");
   }
 
   @Test
@@ -1394,7 +1394,7 @@ public final class TypeInferenceTest extends TestCase {
         "var y = {};" +
         "f(y);");
 
-    assertEquals("{foo: (number|undefined)}", getType("y").toString());
+    assertThat(getType("y").toString()).isEqualTo("{foo: (number|undefined)}");
   }
 
   @Test
@@ -1406,7 +1406,7 @@ public final class TypeInferenceTest extends TestCase {
             "var y = {};",
             "f(y);"));
 
-    assertEquals("{foo: (number|undefined)}", getType("y").toString());
+    assertThat(getType("y").toString()).isEqualTo("{foo: (number|undefined)}");
   }
 
   @Test
@@ -1420,7 +1420,7 @@ public final class TypeInferenceTest extends TestCase {
         "var y = {};" +
         "new F(y);");
 
-    assertEquals("{foo: (number|undefined)}", getType("y").toString());
+    assertThat(getType("y").toString()).isEqualTo("{foo: (number|undefined)}");
   }
 
   @Test
@@ -1438,8 +1438,8 @@ public final class TypeInferenceTest extends TestCase {
         "function f(x) {}" +
         "var out = {};" +
         "f(out);");
-    assertEquals("{a: (boolean|undefined), b: (string|undefined)}",
-        getType("out").toString());
+    assertThat(getType("out").toString())
+        .isEqualTo("{a: (boolean|undefined), b: (string|undefined)}");
   }
 
   @Test
@@ -1452,7 +1452,7 @@ public final class TypeInferenceTest extends TestCase {
     code += "default: a = undefined; break;\n";
     code += "}\n";
     inFunction(code);
-    assertEquals("(number|undefined)", getType("a").toString());
+    assertThat(getType("a").toString()).isEqualTo("(number|undefined)");
   }
 
   @Test
@@ -1461,7 +1461,7 @@ public final class TypeInferenceTest extends TestCase {
                "function f(x) {}" +
                "var out = {};" +
                "f(out);");
-    assertEquals("{prop: (string|undefined)}", getType("out").toString());
+    assertThat(getType("out").toString()).isEqualTo("{prop: (string|undefined)}");
   }
 
   @Test
