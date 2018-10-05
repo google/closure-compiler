@@ -199,7 +199,7 @@ public final class DefaultCodingConventionTest extends TestCase {
 
   private void assertPackageName(String filename, String expectedPackageName) {
     StaticSourceFile sourceFile = SourceFile.fromCode(filename, "");
-    assertEquals(expectedPackageName, conv.getPackageName(sourceFile));
+    assertThat(conv.getPackageName(sourceFile)).isEqualTo(expectedPackageName);
   }
 
   private void assertFunctionBind(String code) {

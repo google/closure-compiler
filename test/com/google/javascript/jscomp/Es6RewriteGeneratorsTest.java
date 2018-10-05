@@ -1308,25 +1308,25 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     checkState(callNode.isCall(), callNode);
     // TODO(lharker): this should really be {value: number} and may indicate a bug
     // Possibly the same as https://github.com/google/closure-compiler/issues/2867.
-    assertEquals("{value: VALUE}", callNode.getJSType().toString());
+    assertThat(callNode.getJSType().toString()).isEqualTo("{value: VALUE}");
 
     Node yieldFn = callNode.getFirstChild();
     Node jscompGeneratorContext = yieldFn.getFirstChild();
     assertThat(yieldFn.getJSType().isFunctionType()).isTrue();
-    assertEquals(
-        "$jscomp.generator.Context<number>", jscompGeneratorContext.getJSType().toString());
+    assertThat(jscompGeneratorContext.getJSType().toString())
+        .isEqualTo("$jscomp.generator.Context<number>");
 
     // Check types on "1 + 2" are still present after transpilation
     Node yieldedValue = callNode.getSecondChild(); // 1 + 2
 
     checkState(yieldedValue.isAdd(), yieldedValue);
-    assertEquals("number", yieldedValue.getJSType().toString());
-    assertEquals("number", yieldedValue.getFirstChild().getJSType().toString()); // 1
-    assertEquals("number", yieldedValue.getSecondChild().getJSType().toString()); // 2
+    assertThat(yieldedValue.getJSType().toString()).isEqualTo("number");
+    assertThat(yieldedValue.getFirstChild().getJSType().toString()).isEqualTo("number"); // 1
+    assertThat(yieldedValue.getSecondChild().getJSType().toString()).isEqualTo("number"); // 2
 
     Node zero = yieldedValue.getNext();
     checkState(0 == zero.getDouble(), zero);
-    assertEquals("number", zero.getJSType().toString());
+    assertThat(zero.getJSType().toString()).isEqualTo("number");
   }
 
   @Test
@@ -1339,7 +1339,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node callNode = returnNode.getFirstChild();
     checkState(callNode.isCall(), callNode);
     // TODO(lharker): this really should be {value: number}
-    assertEquals("(undefined|{value: VALUE})", callNode.getJSType().toString());
+    assertThat(callNode.getJSType().toString()).isEqualTo("(undefined|{value: VALUE})");
 
     Node yieldAllFn = callNode.getFirstChild();
     checkState(yieldAllFn.isGetProp());
@@ -1349,13 +1349,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node yieldedValue = callNode.getSecondChild(); // [1, 2]
 
     checkState(yieldedValue.isArrayLit(), yieldedValue);
-    assertEquals("Array", yieldedValue.getJSType().toString()); // [1, 2]
-    assertEquals("number", yieldedValue.getFirstChild().getJSType().toString()); // 1
-    assertEquals("number", yieldedValue.getSecondChild().getJSType().toString()); // 2
+    assertThat(yieldedValue.getJSType().toString()).isEqualTo("Array"); // [1, 2]
+    assertThat(yieldedValue.getFirstChild().getJSType().toString()).isEqualTo("number"); // 1
+    assertThat(yieldedValue.getSecondChild().getJSType().toString()).isEqualTo("number"); // 2
 
     Node zero = yieldedValue.getNext();
     checkState(0 == zero.getDouble(), zero);
-    assertEquals("number", zero.getJSType().toString());
+    assertThat(zero.getJSType().toString()).isEqualTo("number");
   }
 
   @Test
@@ -1380,13 +1380,12 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     // $jscomp$generator$forin$0 = $jscomp$generator$context.forIn([]);
     Node assign = case1Node.getSecondChild().getFirstFirstChild();
     checkState(assign.isAssign(), assign);
-    assertEquals("$jscomp.generator.Context.PropertyIterator", assign.getJSType().toString());
-    assertEquals(
-        "$jscomp.generator.Context.PropertyIterator",
-        assign.getFirstChild().getJSType().toString());
-    assertEquals(
-        "$jscomp.generator.Context.PropertyIterator",
-        assign.getSecondChild().getJSType().toString());
+    assertThat(assign.getJSType().toString())
+        .isEqualTo("$jscomp.generator.Context.PropertyIterator");
+    assertThat(assign.getFirstChild().getJSType().toString())
+        .isEqualTo("$jscomp.generator.Context.PropertyIterator");
+    assertThat(assign.getSecondChild().getJSType().toString())
+        .isEqualTo("$jscomp.generator.Context.PropertyIterator");
 
     // if (!((i = $jscomp$generator$forin$0.getNext()) != null)) {
     Node case2Node = case1Node.getNext();
@@ -1394,20 +1393,20 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     checkState(ifNode.isIf(), ifNode);
     Node ifCond = ifNode.getFirstChild();
     checkState(ifCond.isNot(), ifCond);
-    assertEquals("boolean", ifCond.getJSType().toString());
+    assertThat(ifCond.getJSType().toString()).isEqualTo("boolean");
     Node ne = ifCond.getFirstChild();
-    assertEquals("boolean", ifCond.getJSType().toString());
+    assertThat(ifCond.getJSType().toString()).isEqualTo("boolean");
 
     Node lhs = ne.getFirstChild(); // i = $jscomp$generator$forin$0.getNext()
-    assertEquals("(null|string)", lhs.getJSType().toString());
-    assertEquals("(null|string)", lhs.getFirstChild().getJSType().toString());
-    assertEquals("(null|string)", lhs.getSecondChild().getJSType().toString());
+    assertThat(lhs.getJSType().toString()).isEqualTo("(null|string)");
+    assertThat(lhs.getFirstChild().getJSType().toString()).isEqualTo("(null|string)");
+    assertThat(lhs.getSecondChild().getJSType().toString()).isEqualTo("(null|string)");
     Node getNextFn = lhs.getSecondChild().getFirstChild();
     assertThat(getNextFn.getJSType().isFunctionType()).isTrue();
 
     Node rhs = ne.getSecondChild();
     checkState(rhs.isNull(), rhs);
-    assertEquals("null", rhs.getJSType().toString());
+    assertThat(rhs.getJSType().toString()).isEqualTo("null");
 
     // $jscomp$generator$context.jumpToEnd()
     Node case4Node = case2Node.getNext();
@@ -1417,9 +1416,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node jumpToEndFn = jumpToEndCall.getFirstChild();
     Node jscompGeneratorContext = jumpToEndFn.getFirstChild();
 
-    assertEquals("undefined", jumpToEndCall.getJSType().toString());
-    assertEquals(
-        "$jscomp.generator.Context<number>", jscompGeneratorContext.getJSType().toString());
+    assertThat(jumpToEndCall.getJSType().toString()).isEqualTo("undefined");
+    assertThat(jscompGeneratorContext.getJSType().toString())
+        .isEqualTo("$jscomp.generator.Context<number>");
   }
 
   @Test
@@ -1443,9 +1442,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     // Test that "e = $jscomp$generator$context.enterCatchBlock();" has the unknown type
     Node eAssign = case2Node.getFirstChild();
     checkState(eAssign.isAssign(), eAssign);
-    assertEquals("?", eAssign.getJSType().toString());
-    assertEquals("?", eAssign.getFirstChild().getJSType().toString());
-    assertEquals("?", eAssign.getSecondChild().getJSType().toString());
+    assertThat(eAssign.getJSType().toString()).isEqualTo("?");
+    assertThat(eAssign.getFirstChild().getJSType().toString()).isEqualTo("?");
+    assertThat(eAssign.getSecondChild().getJSType().toString()).isEqualTo("?");
 
     Node enterCatchBlockFn = eAssign.getSecondChild().getFirstChild();
     checkState(enterCatchBlockFn.isGetProp());
@@ -1461,21 +1460,21 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "a = 1, b = '2'; $jscomp$generator$context.jumpToEnd();");
     Node comma = exprResultNode.getFirstChild();
     checkState(comma.isComma(), comma);
-    assertEquals("string", comma.getJSType().toString());
+    assertThat(comma.getJSType().toString()).isEqualTo("string");
 
     // a = 1
     Node assignA = comma.getFirstChild();
     checkState(assignA.isAssign(), assignA);
-    assertEquals("number", assignA.getJSType().toString());
-    assertEquals("number", assignA.getFirstChild().getJSType().toString());
-    assertEquals("number", assignA.getSecondChild().getJSType().toString());
+    assertThat(assignA.getJSType().toString()).isEqualTo("number");
+    assertThat(assignA.getFirstChild().getJSType().toString()).isEqualTo("number");
+    assertThat(assignA.getSecondChild().getJSType().toString()).isEqualTo("number");
 
     // b = '2';
     Node assignB = comma.getSecondChild();
     checkState(assignB.isAssign(), assignB);
-    assertEquals("string", assignB.getJSType().toString());
-    assertEquals("string", assignB.getFirstChild().getJSType().toString());
-    assertEquals("string", assignB.getSecondChild().getJSType().toString());
+    assertThat(assignB.getJSType().toString()).isEqualTo("string");
+    assertThat(assignB.getFirstChild().getJSType().toString()).isEqualTo("string");
+    assertThat(assignB.getSecondChild().getJSType().toString()).isEqualTo("string");
   }
 
   /**
@@ -1505,18 +1504,16 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node createGenerator = callNode.getFirstChild();
     assertThat(createGenerator.getJSType().isFunctionType())
         .isTrue(); // $jscomp.generator.createGenerator
-    assertEquals(
-        "Generator<number>",
-        createGenerator.getJSType().toMaybeFunctionType().getReturnType().toString());
+    assertThat(createGenerator.getJSType().toMaybeFunctionType().getReturnType().toString())
+        .isEqualTo("Generator<number>");
 
     Node program = createGenerator.getNext().getNext();
 
     assertWithMessage("Expected function: " + program.getJSType())
         .that(program.getJSType().isFunctionType())
         .isTrue();
-    assertEquals(
-        "(undefined|{value: number})",
-        program.getJSType().toMaybeFunctionType().getReturnType().toString());
+    assertThat(program.getJSType().toMaybeFunctionType().getReturnType().toString())
+        .isEqualTo("(undefined|{value: number})");
     return program;
   }
 }

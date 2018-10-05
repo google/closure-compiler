@@ -85,6 +85,6 @@ public final class DotFormatterTest extends TestCase {
   }
 
   private void test(String expected, Node ast) throws Exception {
-    assertEquals(expected, DotFormatter.toDot(ast));
+    assertThat(DotFormatter.toDot(ast)).isEqualTo(expected);
   }
 }

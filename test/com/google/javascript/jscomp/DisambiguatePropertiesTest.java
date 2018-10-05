@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.DisambiguateProperties.Warnings.INVALIDATION;
 import static com.google.javascript.jscomp.DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE;
 
@@ -2712,12 +2713,12 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   private void testSets(String js, String expected, final String fieldTypes) {
     test(srcs(js), expected(expected));
-    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+    assertThat(mapToString(lastPass.getRenamedTypesForTesting())).isEqualTo(fieldTypes);
   }
 
   private void testSets(String externs, String js, String expected, final String fieldTypes) {
     test(externs(DEFAULT_EXTERNS + externs), srcs(js), expected(expected));
-    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+    assertThat(mapToString(lastPass.getRenamedTypesForTesting())).isEqualTo(fieldTypes);
   }
 
   private void testSets(String externs, String js, String expected,
@@ -2727,7 +2728,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         srcs(js),
         expected(expected),
         warning(warning).withMessage(description));
-    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+    assertThat(mapToString(lastPass.getRenamedTypesForTesting())).isEqualTo(fieldTypes);
   }
 
   /**
@@ -2739,7 +2740,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
    */
   private void testSets(String js, final String fieldTypes) {
     test(srcs(js));
-    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+    assertThat(mapToString(lastPass.getRenamedTypesForTesting())).isEqualTo(fieldTypes);
   }
 
   /**

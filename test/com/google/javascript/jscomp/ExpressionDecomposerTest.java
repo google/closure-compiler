@@ -1134,10 +1134,9 @@ public final class ExpressionDecomposerTest extends TestCase {
     } else {
       // we can't compare actual equality because the types are from different runs of the
       // type inference, so we just compare the strings.
-      assertEquals(
-          "Expected " + rootExpected + " but got " + rootActual,
-          expectedType.toAnnotationString(JSType.Nullability.EXPLICIT),
-          actualType.toAnnotationString(JSType.Nullability.EXPLICIT));
+      assertWithMessage("Expected " + rootExpected + " but got " + rootActual)
+          .that(actualType.toAnnotationString(JSType.Nullability.EXPLICIT))
+          .isEqualTo(expectedType.toAnnotationString(JSType.Nullability.EXPLICIT));
     }
 
     Node child1 = rootExpected.getFirstChild();

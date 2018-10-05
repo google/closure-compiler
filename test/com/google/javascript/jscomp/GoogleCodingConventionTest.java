@@ -191,7 +191,7 @@ public final class GoogleCodingConventionTest extends TestCase {
 
   private void assertPackageName(String filename, String expectedPackageName) {
     StaticSourceFile sourceFile = SourceFile.fromCode(filename, "");
-    assertEquals(expectedPackageName, conv.getPackageName(sourceFile));
+    assertThat(conv.getPackageName(sourceFile)).isEqualTo(expectedPackageName);
   }
 
   private void assertNotClassDefining(String code) {
@@ -205,8 +205,8 @@ public final class GoogleCodingConventionTest extends TestCase {
     SubclassRelationship classes =
         conv.getClassesDefinedByCall(n.getFirstChild());
     assertThat(classes).isNotNull();
-    assertEquals(subclassName, classes.subclassName);
-    assertEquals(superclassName, classes.superclassName);
+    assertThat(classes.subclassName).isEqualTo(subclassName);
+    assertThat(classes.superclassName).isEqualTo(superclassName);
   }
 
   private Node parseTestCode(String code) {

@@ -70,26 +70,26 @@ public final class DefaultNameGeneratorTest extends TestCase {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
     String[] result = generate(ng, "", 106);
-    assertEquals("a", result[0]);
-    assertEquals("z", result[25]);
-    assertEquals("A", result[26]);
-    assertEquals("Z", result[51]);
-    assertEquals("$", result[52]);
-    assertEquals("aa", result[53]);
+    assertThat(result[0]).isEqualTo("a");
+    assertThat(result[25]).isEqualTo("z");
+    assertThat(result[26]).isEqualTo("A");
+    assertThat(result[51]).isEqualTo("Z");
+    assertThat(result[52]).isEqualTo("$");
+    assertThat(result[53]).isEqualTo("aa");
     // ba is reserved
-    assertEquals("ca", result[54]);
-    assertEquals("$a", result[104]);
+    assertThat(result[54]).isEqualTo("ca");
+    assertThat(result[104]).isEqualTo("$a");
 
     ng = new DefaultNameGenerator(RESERVED_NAMES, "x", null);
     result = generate(ng, "x", 132);
 
     // Expected: x, xa, ..., x$, xaa, ..., x$$
-    assertEquals("x", result[0]);
-    assertEquals("xa", result[1]);
-    assertEquals("x$", result[64]);
-    assertEquals("xaa", result[65]);
+    assertThat(result[0]).isEqualTo("x");
+    assertThat(result[1]).isEqualTo("xa");
+    assertThat(result[64]).isEqualTo("x$");
+    assertThat(result[65]).isEqualTo("xaa");
     // xba is reserved
-    assertEquals("xca", result[66]);
+    assertThat(result[66]).isEqualTo("xca");
   }
 
   @Test
@@ -97,14 +97,14 @@ public final class DefaultNameGeneratorTest extends TestCase {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", new char[] {'$'});
     String[] result = generate(ng, "", 106);
-    assertEquals("a", result[0]);
-    assertEquals("z", result[25]);
-    assertEquals("A", result[26]);
-    assertEquals("Z", result[51]);
-    assertEquals("aa", result[52]);
+    assertThat(result[0]).isEqualTo("a");
+    assertThat(result[25]).isEqualTo("z");
+    assertThat(result[26]).isEqualTo("A");
+    assertThat(result[51]).isEqualTo("Z");
+    assertThat(result[52]).isEqualTo("aa");
     // ba is reserved
-    assertEquals("ca", result[53]);
-    assertEquals("ab", result[103]);
+    assertThat(result[53]).isEqualTo("ca");
+    assertThat(result[103]).isEqualTo("ab");
   }
 
   @Test
@@ -112,28 +112,28 @@ public final class DefaultNameGeneratorTest extends TestCase {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
     String[] result = generate(ng, "", 106);
-    assertEquals("a", result[0]);
-    assertEquals("z", result[25]);
-    assertEquals("A", result[26]);
-    assertEquals("Z", result[51]);
-    assertEquals("$", result[52]);
-    assertEquals("aa", result[53]);
+    assertThat(result[0]).isEqualTo("a");
+    assertThat(result[25]).isEqualTo("z");
+    assertThat(result[26]).isEqualTo("A");
+    assertThat(result[51]).isEqualTo("Z");
+    assertThat(result[52]).isEqualTo("$");
+    assertThat(result[53]).isEqualTo("aa");
 
     ng.favors("b");
     ng.reset(RESERVED_NAMES, "", null);
     result = generate(ng, "", 106);
-    assertEquals("b", result[0]);
-    assertEquals("a", result[1]);
-    assertEquals("c", result[2]);
-    assertEquals("d", result[3]);
+    assertThat(result[0]).isEqualTo("b");
+    assertThat(result[1]).isEqualTo("a");
+    assertThat(result[2]).isEqualTo("c");
+    assertThat(result[3]).isEqualTo("d");
 
     ng.favors("cc");
     ng.reset(RESERVED_NAMES, "", null);
     result = generate(ng, "", 106);
-    assertEquals("c", result[0]);
-    assertEquals("b", result[1]);
-    assertEquals("a", result[2]);
-    assertEquals("d", result[3]);
+    assertThat(result[0]).isEqualTo("c");
+    assertThat(result[1]).isEqualTo("b");
+    assertThat(result[2]).isEqualTo("a");
+    assertThat(result[3]).isEqualTo("d");
   }
 
   @Test
@@ -141,12 +141,12 @@ public final class DefaultNameGeneratorTest extends TestCase {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
     String[] result = generate(ng, "", 106);
-    assertEquals("a", result[0]);
-    assertEquals("z", result[25]);
-    assertEquals("A", result[26]);
-    assertEquals("Z", result[51]);
-    assertEquals("$", result[52]);
-    assertEquals("aa", result[53]);
+    assertThat(result[0]).isEqualTo("a");
+    assertThat(result[25]).isEqualTo("z");
+    assertThat(result[26]).isEqualTo("A");
+    assertThat(result[51]).isEqualTo("Z");
+    assertThat(result[52]).isEqualTo("$");
+    assertThat(result[53]).isEqualTo("aa");
 
     ng.favors("function");
     ng.favors("function");
@@ -156,25 +156,25 @@ public final class DefaultNameGeneratorTest extends TestCase {
     result = generate(ng, "", 106);
 
     // All the letters of function should come first. In alphabetical order.
-    assertEquals("n", result[0]);
-    assertEquals("c", result[1]);
-    assertEquals("f", result[2]);
-    assertEquals("i", result[3]);
-    assertEquals("o", result[4]);
-    assertEquals("t", result[5]);
-    assertEquals("u", result[6]);
+    assertThat(result[0]).isEqualTo("n");
+    assertThat(result[1]).isEqualTo("c");
+    assertThat(result[2]).isEqualTo("f");
+    assertThat(result[3]).isEqualTo("i");
+    assertThat(result[4]).isEqualTo("o");
+    assertThat(result[5]).isEqualTo("t");
+    assertThat(result[6]).isEqualTo("u");
 
     // Back to normal.
-    assertEquals("a", result[7]);
-    assertEquals("b", result[8]);
+    assertThat(result[7]).isEqualTo("a");
+    assertThat(result[8]).isEqualTo("b");
 
     // c has been prioritized.
-    assertEquals("d", result[9]);
-    assertEquals("e", result[10]);
+    assertThat(result[9]).isEqualTo("d");
+    assertThat(result[10]).isEqualTo("e");
 
     // This used to start with 'aa' but now n is prioritized over it.
-    assertEquals("nn", result[53]);
-    assertEquals("cn", result[54]);
+    assertThat(result[53]).isEqualTo("nn");
+    assertThat(result[54]).isEqualTo("cn");
   }
 
   @Test
@@ -185,6 +185,6 @@ public final class DefaultNameGeneratorTest extends TestCase {
     ng.favors("???");
     ng.reset(RESERVED_NAMES, "", null);
     result = generate(ng, "", 106);
-    assertEquals("a", result[0]);
+    assertThat(result[0]).isEqualTo("a");
   }
 }
