@@ -634,8 +634,8 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'});", "");
     CssRenamingMap map = getLastCompiler().getCssRenamingMap();
     assertThat(map).isNotNull();
-    assertEquals("bar", map.get("foo"));
-    assertEquals("baz", map.get("biz"));
+    assertThat(map.get("foo")).isEqualTo("bar");
+    assertThat(map.get("biz")).isEqualTo("baz");
   }
 
   @Test
@@ -643,16 +643,16 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'}, 'BY_PART');", "");
     CssRenamingMap map = getLastCompiler().getCssRenamingMap();
     assertThat(map).isNotNull();
-    assertEquals("bar", map.get("foo"));
-    assertEquals("baz", map.get("biz"));
+    assertThat(map.get("foo")).isEqualTo("bar");
+    assertThat(map.get("biz")).isEqualTo("baz");
 
     test("goog.setCssNameMapping({foo:'bar',biz:'baz','biz-foo':'baz-bar'}," +
         " 'BY_WHOLE');", "");
     map = getLastCompiler().getCssRenamingMap();
     assertThat(map).isNotNull();
-    assertEquals("bar", map.get("foo"));
-    assertEquals("baz", map.get("biz"));
-    assertEquals("baz-bar", map.get("biz-foo"));
+    assertThat(map.get("foo")).isEqualTo("bar");
+    assertThat(map.get("biz")).isEqualTo("baz");
+    assertThat(map.get("biz-foo")).isEqualTo("baz-bar");
   }
 
   @Test

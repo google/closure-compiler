@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
@@ -1003,21 +1004,21 @@ public final class RenameVarsTest extends CompilerTestCase {
     // appear in the name maps with the same name as in the code (eg,
     // 'a0' in this case).
     test(createManyVarFunction(1000), null);
-    assertEquals(null, renameVars.getVariableMap().lookupNewName("a0"));
-    assertEquals("b", renameVars.getVariableMap().lookupNewName("L 0"));
+    assertThat(renameVars.getVariableMap().lookupNewName("a0")).isNull();
+    assertThat(renameVars.getVariableMap().lookupNewName("L 0")).isEqualTo("b");
     test(createManyVarFunction(1001), null);
-    assertEquals("b", renameVars.getVariableMap().lookupNewName("a0"));
-    assertEquals(null, renameVars.getVariableMap().lookupNewName("L 0"));
+    assertThat(renameVars.getVariableMap().lookupNewName("a0")).isEqualTo("b");
+    assertThat(renameVars.getVariableMap().lookupNewName("L 0")).isNull();
 
     // With {@code preferStableNames} off locals should
     // unconditionally receive temporary names.
     preferStableNames = false;
     test(createManyVarFunction(1000), null);
-    assertEquals(null, renameVars.getVariableMap().lookupNewName("a0"));
-    assertEquals("b", renameVars.getVariableMap().lookupNewName("L 0"));
+    assertThat(renameVars.getVariableMap().lookupNewName("a0")).isNull();
+    assertThat(renameVars.getVariableMap().lookupNewName("L 0")).isEqualTo("b");
     test(createManyVarFunction(1001), null);
-    assertEquals(null, renameVars.getVariableMap().lookupNewName("a0"));
-    assertEquals("b", renameVars.getVariableMap().lookupNewName("L 0"));
+    assertThat(renameVars.getVariableMap().lookupNewName("a0")).isNull();
+    assertThat(renameVars.getVariableMap().lookupNewName("L 0")).isEqualTo("b");
   }
 
   private static String createManyVarFunction(int numVars) {

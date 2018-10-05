@@ -43,29 +43,25 @@ public final class LightweightMessageFormatterTest extends TestCase {
 
   @Test
   public void testOneLineRegion() {
-    assertEquals("  5| hello world", format(region(5, 5, "hello world")));
+    assertThat(format(region(5, 5, "hello world"))).isEqualTo("  5| hello world");
   }
 
   @Test
   public void testTwoLineRegion() {
-    assertEquals("  5| hello world\n" +
-            "  6| foo bar", format(region(5, 6, "hello world\nfoo bar")));
+    assertThat(format(region(5, 6, "hello world\nfoo bar")))
+        .isEqualTo("  5| hello world\n" + "  6| foo bar");
   }
 
   @Test
   public void testThreeLineRegionAcrossNumberRange() {
     String region = format(region(9, 11, "hello world\nfoo bar\nanother one"));
-    assertEquals("   9| hello world\n" +
-            "  10| foo bar\n" +
-            "  11| another one", region);
+    assertThat(region).isEqualTo("   9| hello world\n" + "  10| foo bar\n" + "  11| another one");
   }
 
   @Test
   public void testThreeLineRegionEmptyLine() {
     String region = format(region(7, 9, "hello world\n\nanother one"));
-    assertEquals("  7| hello world\n" +
-            "  8| \n" +
-            "  9| another one", region);
+    assertThat(region).isEqualTo("  7| hello world\n" + "  8| \n" + "  9| another one");
   }
 
   @Test
@@ -75,14 +71,13 @@ public final class LightweightMessageFormatterTest extends TestCase {
 
   @Test
   public void testTwoEmptyLines() {
-    assertEquals("  7| ", format(region(7, 8, "\n")));
+    assertThat(format(region(7, 8, "\n"))).isEqualTo("  7| ");
   }
 
   @Test
   public void testThreeLineRemoveLastEmptyLine() {
     String region = format(region(7, 9, "hello world\nfoobar\n"));
-    assertEquals("  7| hello world\n" +
-            "  8| foobar", region);
+    assertThat(region).isEqualTo("  7| hello world\n" + "  8| foobar");
   }
 
   @Test
@@ -92,9 +87,11 @@ public final class LightweightMessageFormatterTest extends TestCase {
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("    if (foobar) {");
-    assertEquals("javascript/complex.js:5: ERROR - error description here\n" +
-        "    if (foobar) {\n" +
-        "        ^^^^^^\n", formatter.formatError(error));
+    assertThat(formatter.formatError(error))
+        .isEqualTo(
+            "javascript/complex.js:5: ERROR - error description here\n"
+                + "    if (foobar) {\n"
+                + "        ^^^^^^\n");
   }
 
   @Test
@@ -104,9 +101,11 @@ public final class LightweightMessageFormatterTest extends TestCase {
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("\t\tif (foobar) {");
-    assertEquals("javascript/complex.js:5: ERROR - error description here\n" +
-        "\t\tif (foobar) {\n" +
-        "\t\t    ^^^^^^\n", formatter.formatError(error));
+    assertThat(formatter.formatError(error))
+        .isEqualTo(
+            "javascript/complex.js:5: ERROR - error description here\n"
+                + "\t\tif (foobar) {\n"
+                + "\t\t    ^^^^^^\n");
   }
 
   @Test
@@ -114,9 +113,11 @@ public final class LightweightMessageFormatterTest extends TestCase {
     JSError error = JSError.make("javascript/complex.js",
         1, 10, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("assert (1;");
-    assertEquals("javascript/complex.js:1: ERROR - error description here\n" +
-        "assert (1;\n" +
-        "          ^\n", formatter.formatError(error));
+    assertThat(formatter.formatError(error))
+        .isEqualTo(
+            "javascript/complex.js:1: ERROR - error description here\n"
+                + "assert (1;\n"
+                + "          ^\n");
   }
 
   @Test
@@ -124,9 +125,11 @@ public final class LightweightMessageFormatterTest extends TestCase {
     JSError error = JSError.make("javascript/complex.js",
         6, 7, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("if (foo");
-    assertEquals("javascript/complex.js:6: ERROR - error description here\n" +
-        "if (foo\n" +
-        "       ^\n", formatter.formatError(error));
+    assertThat(formatter.formatError(error))
+        .isEqualTo(
+            "javascript/complex.js:6: ERROR - error description here\n"
+                + "if (foo\n"
+                + "       ^\n");
   }
 
   @Test
@@ -137,13 +140,13 @@ public final class LightweightMessageFormatterTest extends TestCase {
     JSError error = JSError.make(n, FOO_TYPE);
     LightweightMessageFormatter formatter =
         formatter("    if (foobar) {", "<div ng-show='(foo'>");
-    assertEquals(
-        "javascript/complex.js:5: \n" +
-        "Originally at:\n" +
-        "original/source.html:3: ERROR - error description here\n" +
-        "<div ng-show='(foo'>\n" +
-        "               ^^^^^\n",
-        formatter.formatError(error));
+    assertThat(formatter.formatError(error))
+        .isEqualTo(
+            "javascript/complex.js:5: \n"
+                + "Originally at:\n"
+                + "original/source.html:3: ERROR - error description here\n"
+                + "<div ng-show='(foo'>\n"
+                + "               ^^^^^\n");
   }
 
   private LightweightMessageFormatter formatter(String string) {

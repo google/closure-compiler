@@ -62,7 +62,7 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertThat(pairs.length % 2).isEqualTo(0);
     for (int i = 0; i < pairs.length; i += 2) {
       String s = functionMap.lookupSourceName(pairs[i]);
-      assertEquals(pairs[i + 1], s);
+      assertThat(s).isEqualTo(pairs[i + 1]);
     }
     assertThat(functionMap.getNewNameToOriginalNameMap()).hasSize(pairs.length / 2);
   }

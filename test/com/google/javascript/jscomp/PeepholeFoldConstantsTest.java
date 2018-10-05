@@ -1708,10 +1708,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   private void assertSameResults(String exprA, String exprB) {
-    assertEquals(
-        "Expressions did not fold the same\nexprA: " +
-        exprA + "\nexprB: " + exprB,
-        process(exprA), process(exprB));
+    assertWithMessage("Expressions did not fold the same\nexprA: " + exprA + "\nexprB: " + exprB)
+        .that(process(exprB))
+        .isEqualTo(process(exprA));
   }
 
   private void assertNotSameResults(String exprA, String exprB) {

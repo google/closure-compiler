@@ -106,7 +106,7 @@ public final class NodeTraversalTest extends TestCase {
 
     t.report(new Node(Token.EMPTY), dt, "Foo", "Bar", "Hello");
     assertThat(errors).hasSize(1);
-    assertEquals("Foo, Bar - Hello", errors.get(0).description);
+    assertThat(errors.get(0).description).isEqualTo("Foo, Bar - Hello");
   }
 
   private static final String TEST_EXCEPTION = "test me";
@@ -328,7 +328,7 @@ public final class NodeTraversalTest extends TestCase {
                 + " [input_id: InputId: [testcode]]"
                 + " [feature_set: []] @1:0\n");
 
-    assertEquals(expectedResult, builder.toString());
+    assertThat(builder.toString()).isEqualTo(expectedResult);
   }
 
   @Test

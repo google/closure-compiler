@@ -299,13 +299,15 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     Result result = compiler.getResult();
     assertThat(result.success).isTrue();
 
-    assertEquals(
-        "function Bar(){}Bar.prototype.b=function(x){};var foo;foo.b(foo);foo.f=foo;foo.a=foo;",
-        compiler.toSource(module1));
+    assertThat(compiler.toSource(module1))
+        .isEqualTo(
+            "function Bar(){}Bar.prototype.b=function(x){};"
+                + "var foo;foo.b(foo);foo.f=foo;foo.a=foo;");
 
-    assertEquals(
-        "function Far(){}Far.prototype.c=function(y){};var too;too.c(too);too.g=too;too.a=too;",
-        compiler.toSource(module2));
+    assertThat(compiler.toSource(module2))
+        .isEqualTo(
+            "function Far(){}Far.prototype.c=function(y){};"
+                + "var too;too.c(too);too.g=too;too.a=too;");
 
     // Note that properties that occur most often globally get the earliest
     // names. The "getC" property, which doesn't occur until module 3, is
@@ -313,9 +315,10 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     // in module 2, because "getC" occurs more total times across all modules.
     // Might be better to give early modules the shortest names, but this is
     // how the pass currently works.
-    assertEquals(
-        "function Car(){}Car.prototype.d=function(z){};var noo;noo.d(noo);noo.h=noo;noo.e=noo;",
-        compiler.toSource(module3));
+    assertThat(compiler.toSource(module3))
+        .isEqualTo(
+            "function Car(){}Car.prototype.d=function(z){};"
+                + "var noo;noo.d(noo);noo.h=noo;noo.e=noo;");
   }
 
   @Test

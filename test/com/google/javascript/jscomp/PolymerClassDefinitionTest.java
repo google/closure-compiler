@@ -82,7 +82,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
     assertThat(def).isNotNull();
     assertThat(def.defType).isEqualTo(PolymerClassDefinition.DefinitionType.ObjectLiteral);
     assertNode(def.target).hasType(Token.NAME);
-    assertEquals("A", def.target.getString());
+    assertThat(def.target.getString()).isEqualTo("A");
     assertThat(def.nativeBaseElement).isNull();
     assertThat(def.behaviors).hasSize(1);
     assertThat(def.props).hasSize(3);
@@ -110,7 +110,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
     assertThat(def).isNotNull();
     assertThat(def.defType).isEqualTo(PolymerClassDefinition.DefinitionType.ES6Class);
     assertNode(def.target).hasType(Token.NAME);
-    assertEquals("A", def.target.getString());
+    assertThat(def.target.getString()).isEqualTo("A");
     assertThat(def.descriptor).isNotNull();
     assertNode(def.descriptor).hasType(Token.OBJECTLIT);
     assertThat(def.nativeBaseElement).isNull();
@@ -126,7 +126,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
             "  is: x,",
             "});"));
 
-    assertEquals("A", def.target.getString());
+    assertThat(def.target.getString()).isEqualTo("A");
   }
 
   @Test
@@ -137,7 +137,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
             "  is: x,",
             "});"));
 
-    assertEquals("XElement", def.target.getString());
+    assertThat(def.target.getString()).isEqualTo("XElement");
   }
 
   @Test
@@ -148,7 +148,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
             "  is: foo.bar,",
             "});"));
 
-    assertEquals("Foo$barElement", def.target.getString());
+    assertThat(def.target.getString()).isEqualTo("Foo$barElement");
   }
 
   @Test
@@ -159,7 +159,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
             "  is: this.bar,",
             "});"));
 
-    assertEquals("This$barElement", def.target.getString());
+    assertThat(def.target.getString()).isEqualTo("This$barElement");
   }
 
   private PolymerClassDefinition parseAndExtractClassDefFromCall(String code) {
