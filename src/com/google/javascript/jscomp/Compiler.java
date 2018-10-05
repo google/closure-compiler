@@ -3720,11 +3720,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private static String resolveSibling(String path1, String path2) {
     List<String> path1Parts = new ArrayList<>(Arrays.asList(path1.split("/")));
     List<String> path2Parts = new ArrayList<>(Arrays.asList(path2.split("/")));
-    if (path1Parts.size() > 0) {
+    if (!path1Parts.isEmpty()) {
       path1Parts.remove(path1Parts.size() - 1);
     }
 
-    while (path1Parts.size() > 0 && path2Parts.size() > 0) {
+    while (!path1Parts.isEmpty() && !path2Parts.isEmpty()) {
       if (path2Parts.get(0).equals(".")) {
         path2Parts.remove(0);
       } else if (path2Parts.get(0).equals("..")) {

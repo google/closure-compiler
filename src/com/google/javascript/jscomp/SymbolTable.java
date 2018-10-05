@@ -1343,11 +1343,7 @@ public final class SymbolTable {
     }
 
     public Reference defineReferenceAt(Node n) {
-      Reference result = references.get(n);
-      if (result == null) {
-        result = new Reference(this, n);
-        references.put(n, result);
-      }
+      Reference result = references.computeIfAbsent(n, (Node k) -> new Reference(this, k));
       return result;
     }
 

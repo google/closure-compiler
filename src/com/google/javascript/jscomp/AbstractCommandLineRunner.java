@@ -24,6 +24,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Ascii;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -507,7 +508,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     checkNotNull(input);
 
     ZipInputStream zip = new ZipInputStream(input);
-    String envPrefix = env.toString().toLowerCase() + "/";
+    String envPrefix = Ascii.toLowerCase(env.toString()) + "/";
     Map<String, SourceFile> mapFromExternsZip = new HashMap<>();
     for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
       String filename = entry.getName();
@@ -1459,7 +1460,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   @GwtIncompatible("Unnecessary")
   void outputJsonStream() throws IOException {
     try (JsonWriter jsonWriter =
-            new JsonWriter(new BufferedWriter(new OutputStreamWriter(defaultJsOutput, "UTF-8")))) {
+        new JsonWriter(new BufferedWriter(new OutputStreamWriter(defaultJsOutput, UTF_8)))) {
       jsonWriter.beginArray();
       for (JsonFileSpec jsonFile : this.filesToStreamOut) {
         jsonWriter.beginObject();
