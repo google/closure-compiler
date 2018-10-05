@@ -148,13 +148,13 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
       Collection<String> provides = userOrderedInput.getProvides();
       String firstProvide = Iterables.getFirst(provides, null);
       if (firstProvide == null
-          // TODO(sdh): It would be better to have a more robust way to distinguish
-          // between actual provided symbols and synthetic symbols generated for
-          // ES6 (or other) modules.  We can't read loadFlags here (to see if
-          // the module type is 'es6') either, since that requires a full parse.
-          // So for now we rely on the heuristic that all generated provides start
-          // with "module$".
-          || (provides.size() == 1 && firstProvide.startsWith("module$"))) {
+          // "module$" indicates the provide is generated from the path. If this is the only thing
+          // the module provides and it is not an ES6 module then it is just a script and doesn't
+          // export anything.
+          || (provides.size() == 1
+              && firstProvide.startsWith("module$")
+              // ES6 modules should always be considered as exporting something.
+              && !"es6".equals(userOrderedInput.getLoadFlags().get("module")))) {
         nonExportingInputs.put(
             ModuleNames.fileToModuleName(userOrderedInput.getName()), userOrderedInput);
       }
