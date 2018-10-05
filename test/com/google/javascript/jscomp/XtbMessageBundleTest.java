@@ -75,17 +75,17 @@ public final class XtbMessageBundleTest extends TestCase {
         stream, PROJECT_ID);
 
     JsMessage message = bundle.getMessage("7639678437384034548");
-    assertEquals("descargar", message.toString());
+    assertThat(message.toString()).isEqualTo("descargar");
 
     message = bundle.getMessage("2398375912250604550");
-    assertEquals("Se han\nignorado {$num} conversaciones.",
-        message.toString());
+    assertThat(message.toString()).isEqualTo("Se han\nignorado {$num} conversaciones.");
 
     message = bundle.getMessage("6323937743550839320");
-    assertEquals("{$pStart}Si, puede {$linkStart_1_3}hacer "
-        + "clic{$linkEnd_1_3} para utilizar.{$pEnd}{$pStart}Esperamos "
-        + "poder ampliar.{$pEnd}",
-        message.toString());
+    assertThat(message.toString())
+        .isEqualTo(
+            "{$pStart}Si, puede {$linkStart_1_3}hacer "
+                + "clic{$linkEnd_1_3} para utilizar.{$pEnd}{$pStart}Esperamos "
+                + "poder ampliar.{$pEnd}");
 
     message = bundle.getMessage("3945720239421293834");
     assertThat(message.toString()).isEmpty();
@@ -104,16 +104,15 @@ public final class XtbMessageBundleTest extends TestCase {
     XtbMessageBundle bundle = new XtbMessageBundle(stream, PROJECT_ID);
 
     assertThat(bundle.getAllMessages()).hasSize(2);
-    assertEquals(
-        "{USER_GENDER,select,"
-            + "female{Hello {userIdentifier}.}"
-            + "male{Hello {userIdentifier}.}"
-            + "other{Hello {userIdentifier}.}}",
-        bundle.getMessage("123456").toString());
+    assertThat(bundle.getMessage("123456").toString())
+        .isEqualTo(
+            "{USER_GENDER,select,"
+                + "female{Hello {userIdentifier}.}"
+                + "male{Hello {userIdentifier}.}"
+                + "other{Hello {userIdentifier}.}}");
 
     // Previous ICU message should not to affect next message
-    assertEquals(
-        "{$startParagraph}p1{$endParagraph}{$startParagraph}p1{$endParagraph}",
-        bundle.getMessage("123457").toString());
+    assertThat(bundle.getMessage("123457").toString())
+        .isEqualTo("{$startParagraph}p1{$endParagraph}{$startParagraph}p1{$endParagraph}");
   }
 }
