@@ -391,7 +391,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       IdentifierBehaviour identifierBehaviour,
       NodeTraversal traversal) {
     if (identifierBehaviour.equals(IdentifierBehaviour.ES6_CLASS_INVOCATION)) {
-      checkEs6ConstructorVisibility(node, traversal);
+      checkEs6ConstructorInvocationVisibility(node, traversal);
     }
 
     if (!identifierBehaviour.equals(IdentifierBehaviour.ES5_CLASS_NAMESPACE)) {
@@ -844,22 +844,54 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
    *
    * <p>Precondition: {@code target} has an ES6 class {@link JSType}.
    */
-  private void checkEs6ConstructorVisibility(Node target, NodeTraversal traversal) {
+  private void checkEs6ConstructorInvocationVisibility(Node target, NodeTraversal traversal) {
     FunctionType ctorType = target.getJSType().toMaybeFunctionType();
+    ObjectType prototypeType = ctorType.getPrototype();
 
-    // Check constructor visibility by pretending we're accessing `Foo.prototype.constructor`.
+    // We use the class definition site because classes automatically get a implicit constructor,
+    // so there may not be a definition node.
+    @Nullable Node classDefinition = ctorType.getSource();
+
+    @Nullable
+    StaticSourceFile definingSource =
+        (classDefinition == null)
+            ? null
+            : AccessControlUtils.getDefiningSource(classDefinition, prototypeType, "constructor");
+
+    // Synthesize a `PropertyReference` for this constructor call as if we're accessing
+    // `Foo.prototype.constructor`. This object allows us to reuse the
+    // `checkNonOverriddenPropertyVisibility` method which actually reports violations.
     PropertyReference fauxCtorRef =
         PropertyReference.builder()
             .setSourceNode(target)
             .setName("constructor")
-            .setReceiverType(ctorType.getPrototype())
+            .setReceiverType(prototypeType)
             .setMutation(false) // This shouldn't matter.
             .setDeclaration(false) // This shouldn't matter.
             .setOverride(false) // This shouldn't matter.
             .setReadableTypeName(() -> ctorType.getInstanceType().toString())
             .build();
 
-    checkPropertyVisibility(traversal, fauxCtorRef);
+    Visibility annotatedCtorVisibility =
+        // This function defaults to `INHERITED` which isn't what we want here, but it does handle
+        // combining inline and `@fileoverview` visibilities.
+        getEffectiveVisibilityForNonOverriddenProperty(
+            fauxCtorRef,
+            prototypeType,
+            defaultVisibilityForFiles.get(definingSource),
+            enforceCodingConventions ? compiler.getCodingConvention() : null);
+    Visibility effectiveCtorVisibility =
+        annotatedCtorVisibility.equals(Visibility.INHERITED)
+            ? Visibility.PUBLIC
+            : annotatedCtorVisibility;
+
+    checkNonOverriddenPropertyVisibility(
+        traversal,
+        fauxCtorRef,
+        effectiveCtorVisibility,
+        ctorType,
+        target.getStaticSourceFile(),
+        definingSource);
   }
 
   private static boolean propertyIsDeclaredButNotPrivate(PropertyReference propRef) {
@@ -1464,7 +1496,10 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     }
     Visibility raw = Visibility.INHERITED;
     if (objectType != null) {
-      raw = objectType.getOwnPropertyJSDocInfo(propertyName).getVisibility();
+      JSDocInfo jsdoc = objectType.getOwnPropertyJSDocInfo(propertyName);
+      if (jsdoc != null) {
+        raw = jsdoc.getVisibility();
+      }
     }
     JSType type = propRef.getJSType();
     boolean createdFromGoogProvide = (type != null && type.isLiteralObject());

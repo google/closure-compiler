@@ -1953,6 +1953,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
+  @Test
   public void
       testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_OneFile() {
     test(
@@ -1975,6 +1976,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
         error(BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY));
   }
 
+  @Test
   public void
       testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_TwoFiles() {
     test(
@@ -2091,7 +2093,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "class Foo {}")),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"), //
-                "new Foo();")),
+                "Foo;")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -2110,7 +2112,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "class Foo {}")),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"), //
-                "new Foo();")));
+                "Foo;")));
   }
 
   @Test
@@ -2128,10 +2130,11 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "var Foo = class {};")),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"), //
-                "new Foo();")),
+                "Foo;")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
+  @Test
   public void
       testPackageFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPublicVisibility() {
     test(
@@ -2144,7 +2147,11 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     " * @package",
                     " */",
                     "",
+                    "/** @public */", // The class must be visible.
                     "Foo = class {",
+                    "  /** @public */", // The constructor must be visible.
+                    "  constructor() { }",
+                    "",
                     "  /** @public */",
                     "  bar() {}",
                     "};")),
@@ -2155,6 +2162,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "foo.bar();"))));
   }
 
+  @Test
   public void
       testPublicFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPackageVisibility() {
     test(
@@ -2213,7 +2221,11 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     " * @package",
                     " */",
                     "",
+                    "/** @public */", // The class must be visible.
                     "Foo = class {",
+                    "  /** @public */", // The constructor must be visible.
+                    "  constructor() { }",
+                    "",
                     "  bar() {}",
                     "}")),
             SourceFile.fromCode(
@@ -2236,7 +2248,11 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     " * @package",
                     " */",
                     "",
+                    "/** @public */", // The class must be visible.
                     "Foo = class {",
+                    "  /** @public */", // The constructor must be visible.
+                    "  constructor() { }",
+                    "",
                     "  bar() {}",
                     "}")),
             SourceFile.fromCode(
@@ -2249,6 +2265,96 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "",
                     "var foo = new Foo();",
                     "foo.bar();"))),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testImplicitSubclassConstructor_doesNotInheritVisibility_andIsPublic() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  constructor() { }",
+                "}",
+                "",
+                // The implict constructor for `SubFoo` should be treated as public.
+                "class SubFoo extends Foo { }"),
+            // So we get no warning for using it here.
+            lines("new SubFoo();")));
+  }
+
+  @Test
+  public void testImplicitSubclassConstructor_doesNotInheritVisibility_andUsesFileOverview() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/**",
+                    " * @fileoverview",
+                    " * @package",
+                    " */",
+                    "",
+                    "class Foo {", //
+                    "  /** @private */",
+                    "  constructor() { }",
+                    "}",
+                    "",
+                    // The implict constructor for `SubFoo` should be trated as package.
+                    "/** @public */", // The class must be visible.
+                    "class SubFoo extends Foo { }")),
+            SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), lines("new SubFoo();"))),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testUnannotatedSubclassConstructor_doesNotInheritVisibility_andIsPublic() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  constructor() { }",
+                "}",
+                "",
+                "class SubFoo extends Foo {",
+                // The unannotated constructor for `SubFoo` should be treated as public.
+                "  constructor() {",
+                "    super();",
+                "  }",
+                "}"),
+            // So we get no warning for using it here.
+            lines("new SubFoo();")));
+  }
+
+  @Test
+  public void testUnannotatedSubclassConstructor_doesNotInheritVisibility_andUsesFileOverview() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/**",
+                    " * @fileoverview",
+                    " * @package",
+                    " */",
+                    "",
+                    "class Foo {", //
+                    "  /** @private */",
+                    "  constructor() { }",
+                    "}",
+                    "",
+                    "/** @public */", // The class must be visible.
+                    "class SubFoo extends Foo {",
+                    // The unannotated constructor for `SubFoo` should be treated as package.
+                    "  constructor() {",
+                    "    super();",
+                    "  }",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"), //
+                lines("new SubFoo();"))),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
