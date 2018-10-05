@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER;
 
 import com.google.common.collect.ImmutableMap;
@@ -665,7 +666,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   private void testMap(String code, String expected, String expectedMap) {
     test(code, expected);
-    assertEquals(expectedMap, lastPass.getSerializedIdMappings());
+    assertThat(lastPass.getSerializedIdMappings()).isEqualTo(expectedMap);
   }
 
   private void testWithPseudo(String code, String expected, String expectedPseudo) {

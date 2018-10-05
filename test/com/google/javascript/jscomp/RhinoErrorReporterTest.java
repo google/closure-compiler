@@ -145,7 +145,7 @@ public final class RhinoErrorReporterTest extends TestCase {
     JSError error =
         Iterables.getOnlyElement(Arrays.asList(compiler.getErrors()));
     assertThat(error.getType()).isEqualTo(type);
-    assertEquals(description, error.description);
+    assertThat(error.description).isEqualTo(description);
     return error;
   }
 
@@ -160,7 +160,7 @@ public final class RhinoErrorReporterTest extends TestCase {
     JSError error =
         Iterables.getOnlyElement(Arrays.asList(compiler.getWarnings()));
     assertThat(error.getType()).isEqualTo(type);
-    assertEquals(description, error.description);
+    assertThat(error.description).isEqualTo(description);
     return error;
   }
 

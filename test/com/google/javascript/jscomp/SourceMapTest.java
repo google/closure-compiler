@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.SourceMapConsumer;
@@ -166,8 +168,8 @@ public final class SourceMapTest extends SourceMapTestCase {
   private void checkSourceMap2(
       String js1, String file1, String js2, String file2, String expectedMap) throws IOException {
     RunResult result = compile(js1, file1, js2, file2);
-    assertEquals(expectedMap, result.sourceMapFileContent);
-    assertEquals(result.sourceMapFileContent, getSourceMap(result));
+    assertThat(result.sourceMapFileContent).isEqualTo(expectedMap);
+    assertThat(getSourceMap(result)).isEqualTo(result.sourceMapFileContent);
   }
 
   @Override

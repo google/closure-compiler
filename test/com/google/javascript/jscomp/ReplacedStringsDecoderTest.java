@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableMap;
 import junit.framework.TestCase;
 import org.junit.Test;
@@ -38,7 +40,7 @@ public class ReplacedStringsDecoderTest extends TestCase {
         encoding, replacement
     ));
     ReplacedStringsDecoder decoder = new ReplacedStringsDecoder(variableMap);
-    assertEquals(original, decoder.decode(encoding + args));
+    assertThat(decoder.decode(encoding + args)).isEqualTo(original);
   }
 
   @Test
@@ -74,7 +76,6 @@ public class ReplacedStringsDecoderTest extends TestCase {
   @Test
   public void testNullDecoder() {
     ReplacedStringsDecoder nullDecoder = ReplacedStringsDecoder.NULL_DECODER;
-    assertEquals("foo", nullDecoder.decode("foo"));
+    assertThat(nullDecoder.decode("foo")).isEqualTo("foo");
   }
-
 }

@@ -36,8 +36,8 @@ public final class SourceMapResolverTest extends TestCase {
     SourceFile s =
         SourceMapResolver.extractSourceMap(
             SourceFile.fromCode("somePath/hello.js", code), url, true);
-    assertEquals(sourceMap, s.getCode());
-    assertEquals("somePath/hello.js.inline.map", s.getName());
+    assertThat(s.getCode()).isEqualTo(sourceMap);
+    assertThat(s.getName()).isEqualTo("somePath/hello.js.inline.map");
 
     // --parse_inline_source_maps=false
     SourceFile noInline =
@@ -55,8 +55,8 @@ public final class SourceMapResolverTest extends TestCase {
     SourceFile s =
         SourceMapResolver.extractSourceMap(
             SourceFile.fromCode("somePath/hello.js", code), url, true);
-    assertEquals(sourceMap, s.getCode());
-    assertEquals("somePath/hello.js.inline.map", s.getName());
+    assertThat(s.getCode()).isEqualTo(sourceMap);
+    assertThat(s.getName()).isEqualTo("somePath/hello.js.inline.map");
 
     // Try non supported charset.
     String dataURLWithBadCharset = "data:application/json;charset=asdf;base64," + encoded;
@@ -88,28 +88,29 @@ public final class SourceMapResolverTest extends TestCase {
 
   @Test
   public void testRelativePaths() {
-    assertEquals(
-        "basefile.js.map",
-        SourceMapResolver.getRelativePath("basefile.js", "basefile.js.map").getOriginalPath());
-    assertEquals(
-        "path/relative/path/basefile.js.map",
-        SourceMapResolver.getRelativePath("path/basefile.js", "relative/path/basefile.js.map")
-            .getOriginalPath());
-    assertEquals(
-        "some/longer/sourcemap.js.map",
-        SourceMapResolver.getRelativePath("some/longer/path/basefile.js", "../sourcemap.js.map")
-            .toString());
-    assertEquals(
-        "some/sourcemap.js.map",
-        SourceMapResolver.getRelativePath(
-                "some/longer/path/basefile.js", ".././../sourcemap.js.map")
-            .getOriginalPath());
-    assertEquals(
-        "../basefile.js.map",
-        SourceMapResolver.getRelativePath("basefile.js", "../basefile.js.map").getOriginalPath());
-    assertEquals(
-        "baz/foo/bar.js",
-        SourceMapResolver.getRelativePath("baz/bam/qux.js", "../foo/bar.js").getOriginalPath());
+    assertThat(
+            SourceMapResolver.getRelativePath("basefile.js", "basefile.js.map").getOriginalPath())
+        .isEqualTo("basefile.js.map");
+    assertThat(
+            SourceMapResolver.getRelativePath("path/basefile.js", "relative/path/basefile.js.map")
+                .getOriginalPath())
+        .isEqualTo("path/relative/path/basefile.js.map");
+    assertThat(
+            SourceMapResolver.getRelativePath("some/longer/path/basefile.js", "../sourcemap.js.map")
+                .toString())
+        .isEqualTo("some/longer/sourcemap.js.map");
+    assertThat(
+            SourceMapResolver.getRelativePath(
+                    "some/longer/path/basefile.js", ".././../sourcemap.js.map")
+                .getOriginalPath())
+        .isEqualTo("some/sourcemap.js.map");
+    assertThat(
+            SourceMapResolver.getRelativePath("basefile.js", "../basefile.js.map")
+                .getOriginalPath())
+        .isEqualTo("../basefile.js.map");
+    assertThat(
+            SourceMapResolver.getRelativePath("baz/bam/qux.js", "../foo/bar.js").getOriginalPath())
+        .isEqualTo("baz/foo/bar.js");
   }
 
   @Test
@@ -118,6 +119,6 @@ public final class SourceMapResolverTest extends TestCase {
     SourceFile s =
         SourceMapResolver.extractSourceMap(
             SourceFile.fromCode("somePath/hello.js", ""), url, false);
-    assertEquals("somePath/relative/path/to/sourcemap/hello.js.map", s.getName());
+    assertThat(s.getName()).isEqualTo("somePath/relative/path/to/sourcemap/hello.js.map");
   }
 }

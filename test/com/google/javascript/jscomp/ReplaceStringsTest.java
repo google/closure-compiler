@@ -636,10 +636,10 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     for (int i = 0; i < substitutedStrings.length; i += 2) {
       Result result = results.get(i / 2);
       String original = substitutedStrings[i + 1];
-      assertEquals(original, result.original);
+      assertThat(result.original).isEqualTo(original);
 
       String replacement = substitutedStrings[i];
-      assertEquals(replacement, result.replacement);
+      assertThat(result.replacement).isEqualTo(replacement);
     }
   }
 }
