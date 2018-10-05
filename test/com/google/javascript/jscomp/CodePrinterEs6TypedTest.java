@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +49,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
       }
     }));
     parsed = parsed.trim(); // strip trailing line break.
-    assertEquals(js, parsed);
+    assertThat(parsed).isEqualTo(js);
   }
 
   @Test

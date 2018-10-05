@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
@@ -124,18 +125,24 @@ public abstract class CodePrinterTestBase extends TestCase {
   }
 
   void assertPrintNode(String expectedJs, Node ast) {
-    assertEquals(expectedJs, printNode(ast));
+    assertThat(printNode(ast)).isEqualTo(expectedJs);
   }
 
   protected void assertPrint(String js, String expected) {
     parse(expected); // validate the expected string is valid JS
-    assertEquals(expected,
-        parsePrint(js, newCompilerOptions(new CompilerOptionBuilder() {
-          @Override void setOptions(CompilerOptions options) {
-            options.setPrettyPrint(false);
-            options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
-          }
-        })));
+    assertThat(
+            parsePrint(
+                js,
+                newCompilerOptions(
+                    new CompilerOptionBuilder() {
+                      @Override
+                      void setOptions(CompilerOptions options) {
+                        options.setPrettyPrint(false);
+                        options.setLineLengthThreshold(
+                            CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
+                      }
+                    })))
+        .isEqualTo(expected);
   }
 
   protected void assertPrintSame(String js) {

@@ -71,7 +71,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
     Node root = compiler.parseSyntheticCode("cfgtest", input);
     cfa.process(null, root);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
-    assertEquals(expected, DotFormatter.toDot(root, cfg));
+    assertThat(DotFormatter.toDot(root, cfg)).isEqualTo(expected);
   }
 
   /**

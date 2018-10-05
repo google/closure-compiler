@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -155,15 +156,19 @@ public final class CombinedCompilerPassTest extends TestCase {
     }
 
     void checkResults() {
-      assertEquals(
-          "ConcatTraversal ignoring " + traversal.getIgnoring()
-          + " has unexpected visiting order",
-          expectedVisited, traversal.getVisited());
+      assertWithMessage(
+              "ConcatTraversal ignoring "
+                  + traversal.getIgnoring()
+                  + " has unexpected visiting order")
+          .that(traversal.getVisited())
+          .isEqualTo(expectedVisited);
 
-      assertEquals(
-          "ConcatTraversal ignoring " + traversal.getIgnoring()
-          + " has unexpected traversal order",
-          shouldTraverseExpected, traversal.getShouldTraversed());
+      assertWithMessage(
+              "ConcatTraversal ignoring "
+                  + traversal.getIgnoring()
+                  + " has unexpected traversal order")
+          .that(traversal.getShouldTraversed())
+          .isEqualTo(shouldTraverseExpected);
     }
   }
 

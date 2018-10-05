@@ -65,7 +65,7 @@ public final class CompilerTest extends TestCase {
     Compiler.CodeBuilder cb = new Compiler.CodeBuilder();
     String js = "foo();\ngoo();";
     cb.append(js);
-    assertEquals(js, cb.toString());
+    assertThat(cb.toString()).isEqualTo(js);
     assertThat(cb.getLineIndex()).isEqualTo(1);
     assertThat(cb.getColumnIndex()).isEqualTo(6);
 
@@ -181,7 +181,7 @@ public final class CompilerTest extends TestCase {
                 .setColumnPosition(25)
                 .setIdentifier("testSymbolName")
                 .build());
-    assertEquals("<div ng-show='foo()'>", compiler.getSourceLine(origSourceName, 1));
+    assertThat(compiler.getSourceLine(origSourceName, 1)).isEqualTo("<div ng-show='foo()'>");
   }
 
   private SourceMapInput sourcemap(String sourceMapPath, String originalSource,
@@ -439,7 +439,7 @@ public final class CompilerTest extends TestCase {
 
     String outputSource = compiler.toSource();
     System.err.println("Output:\n[" + outputSource + "]");
-    assertEquals("// Input 0\n// Input 1\n", outputSource);
+    assertThat(outputSource).isEqualTo("// Input 0\n// Input 1\n");
   }
 
   /** Make sure that non-standard JSDoc annotation is not a hard error unless it is specified. */
@@ -542,9 +542,9 @@ public final class CompilerTest extends TestCase {
         ImmutableList.of(SourceFile.fromCode("externs", "function f() {}\n")),
         ImmutableList.of(SourceFile.fromCode("foo", "function g() {}\n")),
         new CompilerOptions());
-    assertEquals("function f() {}", compiler.getSourceLine("externs", 1));
-    assertEquals("function g() {}", compiler.getSourceLine("foo", 1));
-    assertEquals(null, compiler.getSourceLine("bar", 1));
+    assertThat(compiler.getSourceLine("externs", 1)).isEqualTo("function f() {}");
+    assertThat(compiler.getSourceLine("foo", 1)).isEqualTo("function g() {}");
+    assertThat(compiler.getSourceLine("bar", 1)).isNull();
   }
 
   @Test
@@ -674,7 +674,7 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
-    assertEquals(expected, compiler.toSource());
+    assertThat(compiler.toSource()).isEqualTo(expected);
   }
 
   @Test
@@ -691,7 +691,7 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
-    assertEquals(expected, compiler.toSource());
+    assertThat(compiler.toSource()).isEqualTo(expected);
   }
 
   // Make sure we correctly output license text.
@@ -817,7 +817,7 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
-    assertEquals(expected, compiler.toSource());
+    assertThat(compiler.toSource()).isEqualTo(expected);
   }
 
   @Test
@@ -840,7 +840,7 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
-    assertEquals(expected, compiler.toSource());
+    assertThat(compiler.toSource()).isEqualTo(expected);
   }
 
   @Test
@@ -857,7 +857,7 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
-    assertEquals(expected, compiler.toSource());
+    assertThat(compiler.toSource()).isEqualTo(expected);
   }
 
   @Test
@@ -961,7 +961,7 @@ public final class CompilerTest extends TestCase {
     if (error == null) {
       assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
       String outputSource = compiler.toSource();
-      assertEquals(expected, outputSource);
+      assertThat(outputSource).isEqualTo(expected);
     } else {
       assertThat(result.errors).hasLength(1);
       assertThat(result.errors[0].getType()).isEqualTo(error);
@@ -979,7 +979,7 @@ public final class CompilerTest extends TestCase {
     Node n = compiler.parseTestCode(js);
     Compiler.CodeBuilder cb = new Compiler.CodeBuilder();
     compiler.toSource(cb, 0, n);
-    assertEquals(js, cb.toString());
+    assertThat(cb.toString()).isEqualTo(js);
   }
 
   @Test
@@ -1143,7 +1143,7 @@ public final class CompilerTest extends TestCase {
     Map<String, Node> replacements = DefaultPassConfig.getAdditionalReplacements(options);
 
     assertThat(replacements).hasSize(2);
-    assertEquals("it_IT", replacements.get("goog.LOCALE").getString());
+    assertThat(replacements.get("goog.LOCALE").getString()).isEqualTo("it_IT");
   }
 
   @Test
@@ -1226,8 +1226,7 @@ public final class CompilerTest extends TestCase {
 
     compiler.performOptimizations();
     String source = compiler.toSource();
-    assertEquals("'use strict';console.log(2);", source);
-
+    assertThat(source).isEqualTo("'use strict';console.log(2);");
   }
 
   @Test
@@ -1246,7 +1245,7 @@ public final class CompilerTest extends TestCase {
 
     compiler.parse();
     String source = compiler.toSource();
-    assertEquals("console.log(0);", source);
+    assertThat(source).isEqualTo("console.log(0);");
   }
 
   @Test
@@ -1265,7 +1264,7 @@ public final class CompilerTest extends TestCase {
 
     compiler.parse();
     String source = compiler.toSource();
-    assertEquals("'use strict';console.log(0);", source);
+    assertThat(source).isEqualTo("'use strict';console.log(0);");
   }
 
   @Test
@@ -1283,7 +1282,7 @@ public final class CompilerTest extends TestCase {
 
     compiler.parse();
     String source = compiler.toSource();
-    assertEquals("console.log(0);", source);
+    assertThat(source).isEqualTo("console.log(0);");
   }
 
   @Test
@@ -1302,7 +1301,7 @@ public final class CompilerTest extends TestCase {
     compiler.parse();
 
     String source = compiler.toSource();
-    assertEquals("'use strict';console.log(0);", source);
+    assertThat(source).isEqualTo("'use strict';console.log(0);");
   }
 
   @Test
@@ -1324,7 +1323,7 @@ public final class CompilerTest extends TestCase {
     compiler.performOptimizations();
 
     String source = compiler.toSource();
-    assertEquals("console.log(0);", source);
+    assertThat(source).isEqualTo("console.log(0);");
   }
 
   @Test
@@ -1346,7 +1345,7 @@ public final class CompilerTest extends TestCase {
     compiler.performOptimizations();
 
     String source = compiler.toSource();
-    assertEquals("'use strict';console.log(0);", source);
+    assertThat(source).isEqualTo("'use strict';console.log(0);");
   }
 
   @Test

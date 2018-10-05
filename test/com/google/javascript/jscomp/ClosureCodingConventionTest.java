@@ -319,8 +319,8 @@ public final class ClosureCodingConventionTest extends TestCase {
     SubclassRelationship classes =
         conv.getClassesDefinedByCall(n.getFirstChild());
     assertThat(classes).isNotNull();
-    assertEquals(subclassName, classes.subclassName);
-    assertEquals(superclassName, classes.superclassName);
+    assertThat(classes.subclassName).isEqualTo(subclassName);
+    assertThat(classes.superclassName).isEqualTo(superclassName);
   }
 
   private void assertCachingCall(String code) {

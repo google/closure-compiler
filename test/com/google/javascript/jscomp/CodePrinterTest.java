@@ -848,15 +848,20 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   private void assertLineBreak(String js, String expected) {
-    assertEquals(expected,
-        parsePrint(js, newCompilerOptions(new CompilerOptionBuilder() {
-          @Override
-          void setOptions(CompilerOptions options) {
-            options.setPrettyPrint(false);
-            options.setLineBreak(true);
-            options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
-          }
-        })));
+    assertThat(
+            parsePrint(
+                js,
+                newCompilerOptions(
+                    new CompilerOptionBuilder() {
+                      @Override
+                      void setOptions(CompilerOptions options) {
+                        options.setPrettyPrint(false);
+                        options.setLineBreak(true);
+                        options.setLineLengthThreshold(
+                            CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
+                      }
+                    })))
+        .isEqualTo(expected);
   }
 
   @Test
@@ -892,26 +897,34 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   private void assertLineBreakAtEndOfFile(String js,
       String expectedWithoutBreakAtEnd, String expectedWithBreakAtEnd) {
-    assertEquals(expectedWithoutBreakAtEnd,
-        parsePrint(js, newCompilerOptions(new CompilerOptionBuilder() {
-          @Override
-          void setOptions(CompilerOptions options) {
-            options.setPrettyPrint(false);
-            options.setLineBreak(false);
-            options.setLineLengthThreshold(30);
-            options.setPreferLineBreakAtEndOfFile(false);
-          }
-        })));
-    assertEquals(expectedWithBreakAtEnd,
-        parsePrint(js, newCompilerOptions(new CompilerOptionBuilder() {
-          @Override
-          void setOptions(CompilerOptions options) {
-            options.setPrettyPrint(false);
-            options.setLineBreak(false);
-            options.setLineLengthThreshold(30);
-            options.setPreferLineBreakAtEndOfFile(true);
-          }
-        })));
+    assertThat(
+            parsePrint(
+                js,
+                newCompilerOptions(
+                    new CompilerOptionBuilder() {
+                      @Override
+                      void setOptions(CompilerOptions options) {
+                        options.setPrettyPrint(false);
+                        options.setLineBreak(false);
+                        options.setLineLengthThreshold(30);
+                        options.setPreferLineBreakAtEndOfFile(false);
+                      }
+                    })))
+        .isEqualTo(expectedWithoutBreakAtEnd);
+    assertThat(
+            parsePrint(
+                js,
+                newCompilerOptions(
+                    new CompilerOptionBuilder() {
+                      @Override
+                      void setOptions(CompilerOptions options) {
+                        options.setPrettyPrint(false);
+                        options.setLineBreak(false);
+                        options.setLineLengthThreshold(30);
+                        options.setPreferLineBreakAtEndOfFile(true);
+                      }
+                    })))
+        .isEqualTo(expectedWithBreakAtEnd);
   }
 
   @Test
@@ -1761,17 +1774,22 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   private void assertPrettyPrint(String js, String expected,
                                  final CompilerOptionBuilder optionBuilder) {
-    assertEquals(expected,
-        parsePrint(js, newCompilerOptions(new CompilerOptionBuilder() {
-          @Override
-          void setOptions(CompilerOptions options) {
-            options.setPrettyPrint(true);
-            options.setPreserveTypeAnnotations(true);
-            options.setLineBreak(false);
-            options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
-            optionBuilder.setOptions(options);
-          }
-        })));
+    assertThat(
+            parsePrint(
+                js,
+                newCompilerOptions(
+                    new CompilerOptionBuilder() {
+                      @Override
+                      void setOptions(CompilerOptions options) {
+                        options.setPrettyPrint(true);
+                        options.setPreserveTypeAnnotations(true);
+                        options.setLineBreak(false);
+                        options.setLineLengthThreshold(
+                            CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
+                        optionBuilder.setOptions(options);
+                      }
+                    })))
+        .isEqualTo(expected);
   }
 
   private void assertTypeAnnotations(String js, String expected) {
@@ -1797,9 +1815,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     Node n = compiler.parseTestCode("x - -4");
     assertThat(compiler.getErrorCount()).isEqualTo(0);
 
-    assertEquals(
-        "x- -4",
-        printNode(n));
+    assertThat(printNode(n)).isEqualTo("x- -4");
   }
 
   @Test
@@ -1859,15 +1875,19 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   private void assertLineLength(String js, String expected) {
-    assertEquals(expected,
-        parsePrint(js, newCompilerOptions(new CompilerOptionBuilder() {
-          @Override
-          void setOptions(CompilerOptions options) {
-            options.setPrettyPrint(false);
-            options.setLineBreak(true);
-            options.setLineLengthThreshold(10);
-          }
-        })));
+    assertThat(
+            parsePrint(
+                js,
+                newCompilerOptions(
+                    new CompilerOptionBuilder() {
+                      @Override
+                      void setOptions(CompilerOptions options) {
+                        options.setPrettyPrint(false);
+                        options.setLineBreak(true);
+                        options.setLineLengthThreshold(10);
+                      }
+                    })))
+        .isEqualTo(expected);
   }
 
   @Test
@@ -2088,7 +2108,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         new Node(Token.EXPR_RESULT, Node.newString("f")),
         new Node(Token.EXPR_RESULT, Node.newString("g")));
     String result = new CodePrinter.Builder(ast).setPrettyPrint(true).build();
-    assertEquals("\"f\";\n\"g\";\n", result);
+    assertThat(result).isEqualTo("\"f\";\n\"g\";\n");
   }
 
   @Test
@@ -2262,7 +2282,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testStrict() {
     String result =
         defaultBuilder(parse("var x", /* typeChecked= */ true)).setTagAsStrict(true).build();
-    assertEquals("'use strict';var x", result);
+    assertThat(result).isEqualTo("'use strict';var x");
   }
 
   @Test
@@ -2281,7 +2301,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         defaultBuilder(parse("var x", /* typeChecked= */ true))
             .setTagAsTypeSummary(true)
             .build();
-    assertEquals("/** @fileoverview @typeSummary */\nvar x", result);
+    assertThat(result).isEqualTo("/** @fileoverview @typeSummary */\nvar x");
   }
 
   @Test
@@ -2442,7 +2462,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     String expected = Joiner.on(",").join(numbers);
     String actual = printNode(current).replace("\n", "");
-    assertEquals(expected, actual);
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
@@ -2463,7 +2483,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     String expected = Joiner.on("+").join(numbers);
     String actual = printNode(current).replace("\n", "");
-    assertEquals(expected, actual);
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
@@ -3196,11 +3216,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     codePrinterOptions.setLineLengthThreshold(80);
     codePrinterOptions.setPreserveTypeAnnotations(true);
     codePrinterOptions.setUseOriginalNamesInOutput(true);
-    assertEquals(expectedCode, new CodePrinter.Builder(node)
-        .setCompilerOptions(codePrinterOptions)
-        .setPrettyPrint(true)
-        .setLineBreak(true)
-        .build());
+    assertThat(
+            new CodePrinter.Builder(node)
+                .setCompilerOptions(codePrinterOptions)
+                .setPrettyPrint(true)
+                .setLineBreak(true)
+                .build())
+        .isEqualTo(expectedCode);
   }
 
   @Test
@@ -3290,12 +3312,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     codePrinterOptions.setPreferSingleQuotes(true);
     codePrinterOptions.setLineLengthThreshold(80);
     codePrinterOptions.setUseOriginalNamesInOutput(true);
-    assertEquals(
-        expectedCode,
-        new CodePrinter.Builder(node)
-            .setCompilerOptions(codePrinterOptions)
-            .setPrettyPrint(true)
-            .setLineBreak(true)
-            .build());
+    assertThat(
+            new CodePrinter.Builder(node)
+                .setCompilerOptions(codePrinterOptions)
+                .setPrettyPrint(true)
+                .setLineBreak(true)
+                .build())
+        .isEqualTo(expectedCode);
   }
 }
