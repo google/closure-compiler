@@ -88,9 +88,9 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(1);
 
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_HELLO", msg.getKey());
-    assertEquals("Hello", msg.getDesc());
-    assertEquals("[testcode]", msg.getSourceName());
+    assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
+    assertThat(msg.getDesc()).isEqualTo("Hello");
+    assertThat(msg.getSourceName()).isEqualTo("[testcode]");
   }
 
   @Test
@@ -103,9 +103,9 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(1);
 
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_HELLO", msg.getKey());
-    assertEquals("Hello", msg.getDesc());
-    assertEquals("[testcode]", msg.getSourceName());
+    assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
+    assertThat(msg.getDesc()).isEqualTo("Hello");
+    assertThat(msg.getSourceName()).isEqualTo("[testcode]");
   }
 
   @Test
@@ -118,9 +118,9 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(1);
 
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_HELLO", msg.getKey());
-    assertEquals("Hello", msg.getDesc());
-    assertEquals("[testcode]", msg.getSourceName());
+    assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
+    assertThat(msg.getDesc()).isEqualTo("Hello");
+    assertThat(msg.getSourceName()).isEqualTo("[testcode]");
   }
 
   @Test
@@ -145,14 +145,14 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(2);
 
     JsMessage msg1 = messages.get(0);
-    assertEquals("MSG_HELLO", msg1.getKey());
-    assertEquals("Hello", msg1.getDesc());
-    assertEquals("source1.html", msg1.getSourceName());
+    assertThat(msg1.getKey()).isEqualTo("MSG_HELLO");
+    assertThat(msg1.getDesc()).isEqualTo("Hello");
+    assertThat(msg1.getSourceName()).isEqualTo("source1.html");
 
     JsMessage msg2 = messages.get(1);
-    assertEquals("MSG_HI", msg2.getKey());
-    assertEquals("Hi", msg2.getDesc());
-    assertEquals("source2.html", msg2.getSourceName());
+    assertThat(msg2.getKey()).isEqualTo("MSG_HI");
+    assertThat(msg2.getDesc()).isEqualTo("Hi");
+    assertThat(msg2.getSourceName()).isEqualTo("source2.html");
   }
 
   @Test
@@ -163,8 +163,8 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(1);
 
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_MENU_MARK_AS_UNREAD", msg.getKey());
-    assertEquals("a", msg.getDesc());
+    assertThat(msg.getKey()).isEqualTo("MSG_MENU_MARK_AS_UNREAD");
+    assertThat(msg.getDesc()).isEqualTo("a");
   }
 
   @Test
@@ -182,8 +182,8 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(1);
 
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_MENU", msg.getKey());
-    assertEquals("a", msg.getDesc());
+    assertThat(msg.getKey()).isEqualTo("MSG_MENU");
+    assertThat(msg.getDesc()).isEqualTo("a");
   }
 
   @Test
@@ -226,8 +226,8 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(1);
 
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_MENU_MARK_AS_UNREAD", msg.getKey());
-    assertEquals("a", msg.getDesc());
+    assertThat(msg.getKey()).isEqualTo("MSG_MENU_MARK_AS_UNREAD");
+    assertThat(msg.getDesc()).isEqualTo("a");
   }
 
   @Test
@@ -271,7 +271,7 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(1);
 
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_HELLO", msg.getKey());
+    assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
 
     assertError(compiler.getWarnings()[0]).hasType(JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION);
   }
@@ -285,9 +285,8 @@ public final class JsMessageVisitorTest extends TestCase {
 
     JSError malformedTreeError = compiler.getErrors()[0];
     assertError(malformedTreeError).hasType(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
-    assertEquals("Message parse tree malformed. "
-        + "STRING or ADD node expected; found: POS",
-        malformedTreeError.description);
+    assertThat(malformedTreeError.description)
+        .isEqualTo("Message parse tree malformed. " + "STRING or ADD node expected; found: POS");
   }
 
   @Test
@@ -329,7 +328,7 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_EMPTY", msg.getKey());
+    assertThat(msg.getKey()).isEqualTo("MSG_EMPTY");
     assertThat(msg.toString()).isEmpty();
   }
 
@@ -339,8 +338,8 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_NOTEMPTY", msg.getKey());
-    assertEquals("aabbb ccc", msg.toString());
+    assertThat(msg.getKey()).isEqualTo("MSG_NOTEMPTY");
+    assertThat(msg.toString()).isEqualTo("aabbb ccc");
   }
 
   @Test
@@ -350,9 +349,9 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_SILLY", msg.getKey());
-    assertEquals("help text", msg.getDesc());
-    assertEquals("silly test message", msg.toString());
+    assertThat(msg.getKey()).isEqualTo("MSG_SILLY");
+    assertThat(msg.getDesc()).isEqualTo("help text");
+    assertThat(msg.toString()).isEqualTo("silly test message");
   }
 
   @Test
@@ -363,9 +362,9 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_SILLY", msg.getKey());
-    assertEquals(null, msg.getDesc());
-    assertEquals("{$one}, {$two}, buckle my shoe", msg.toString());
+    assertThat(msg.getKey()).isEqualTo("MSG_SILLY");
+    assertThat(msg.getDesc()).isNull();
+    assertThat(msg.toString()).isEqualTo("{$one}, {$two}, buckle my shoe");
   }
 
   @Test
@@ -378,9 +377,9 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(1);
     assertThat(compiler.getWarnings()).isEmpty();
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_A", msg.getKey());
-    assertEquals("The Message", msg.toString());
-    assertEquals("The description", msg.getDesc());
+    assertThat(msg.getKey()).isEqualTo("MSG_A");
+    assertThat(msg.toString()).isEqualTo("The Message");
+    assertThat(msg.getDesc()).isEqualTo("The description");
   }
 
   @Test
@@ -396,9 +395,9 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(1);
     assertThat(compiler.getWarnings()).hasLength(1);
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_A", msg.getKey());
-    assertEquals("The Message", msg.toString());
-    assertEquals("The description in @desc", msg.getDesc());
+    assertThat(msg.getKey()).isEqualTo("MSG_A");
+    assertThat(msg.toString()).isEqualTo("The Message");
+    assertThat(msg.getDesc()).isEqualTo("The description in @desc");
   }
 
   @Test
@@ -408,9 +407,9 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_FOO_HELP", msg.getKey());
-    assertEquals("help text", msg.getDesc());
-    assertEquals("Help!", msg.toString());
+    assertThat(msg.getKey()).isEqualTo("MSG_FOO_HELP");
+    assertThat(msg.getDesc()).isEqualTo("help text");
+    assertThat(msg.toString()).isEqualTo("Help!");
   }
 
   @Test
@@ -433,9 +432,9 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_SILLY", msg.getKey());
-    assertEquals("help text", msg.getDesc());
-    assertEquals("{$adjective} message", msg.toString());
+    assertThat(msg.getKey()).isEqualTo("MSG_SILLY");
+    assertThat(msg.getDesc()).isEqualTo("help text");
+    assertThat(msg.toString()).isEqualTo("{$adjective} message");
   }
 
   @Test
@@ -463,14 +462,14 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_HUGE", msg.getKey());
-    assertEquals("A message with lots of stuff.", msg.getDesc());
+    assertThat(msg.getKey()).isEqualTo("MSG_HUGE");
+    assertThat(msg.getDesc()).isEqualTo("A message with lots of stuff.");
     assertThat(msg.isHidden()).isTrue();
-    assertEquals(
-        "{$startLink_1}Google{$endLink}{$startLink_2}blah{$endLink}"
-            + "{$boo}{$foo_001}{$boo}{$foo_002}{$xxx_001}{$image}"
-            + "{$image_001}{$xxx_002}",
-        msg.toString());
+    assertThat(msg.toString())
+        .isEqualTo(
+            "{$startLink_1}Google{$endLink}{$startLink_2}blah{$endLink}"
+                + "{$boo}{$foo_001}{$boo}{$foo_002}{$xxx_001}{$image}"
+                + "{$image_001}{$xxx_002}");
   }
 
   @Test
@@ -479,9 +478,9 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals(null, msg.getDesc());
-    assertEquals("MSG_16LJMYKCXT84X", msg.getKey());
-    assertEquals("MSG_16LJMYKCXT84X", msg.getId());
+    assertThat(msg.getDesc()).isNull();
+    assertThat(msg.getKey()).isEqualTo("MSG_16LJMYKCXT84X");
+    assertThat(msg.getId()).isEqualTo("MSG_16LJMYKCXT84X");
   }
 
   @Test
@@ -490,9 +489,9 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     assertThat(compiler.getWarnings()).hasLength(1);
-    assertEquals("Message value of MSG_FOO is just an empty string. "
-        + "Empty messages are forbidden.",
-        compiler.getWarnings()[0].description);
+    assertThat(compiler.getWarnings()[0].description)
+        .isEqualTo(
+            "Message value of MSG_FOO is just an empty string. " + "Empty messages are forbidden.");
   }
 
   @Test
@@ -502,9 +501,9 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     assertThat(compiler.getWarnings()).hasLength(1);
-    assertEquals("Message value of MSG_BAR is just an empty string. "
-        + "Empty messages are forbidden.",
-        compiler.getWarnings()[0].description);
+    assertThat(compiler.getWarnings()[0].description)
+        .isEqualTo(
+            "Message value of MSG_BAR is just an empty string. " + "Empty messages are forbidden.");
   }
 
   @Test
@@ -528,7 +527,7 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(compiler.getErrors()).hasLength(1);
     JSError error = compiler.getErrors()[0];
-    assertEquals("Message MSG_SILLY_PROP has no value", error.description);
+    assertThat(error.description).isEqualTo("Message MSG_SILLY_PROP has no value");
   }
 
   @Test
@@ -537,8 +536,8 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(compiler.getErrors()).hasLength(1);
     JSError error = compiler.getErrors()[0];
-    assertEquals("Message parse tree malformed. Cannot parse value of "
-        + "message MSG_SILLY", error.description);
+    assertThat(error.description)
+        .isEqualTo("Message parse tree malformed. Cannot parse value of " + "message MSG_SILLY");
   }
 
   @Test
@@ -548,9 +547,10 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).isEmpty();
     assertThat(compiler.getErrors()).hasLength(1);
     JSError error = compiler.getErrors()[0];
-    assertEquals(
-        "Message parse tree malformed. Message must be initialized using goog.getMsg function.",
-        error.description);
+    assertThat(error.description)
+        .isEqualTo(
+            "Message parse tree malformed."
+                + " Message must be initialized using goog.getMsg function.");
   }
 
   @Test
@@ -561,10 +561,10 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).isEmpty();
     assertThat(compiler.getErrors()).hasLength(1);
     JSError error = compiler.getErrors()[0];
-    assertEquals(
-        "Message parse tree malformed. Message initialized using unrecognized function. "
-            + "Please use goog.getMsg() instead.",
-        error.description);
+    assertThat(error.description)
+        .isEqualTo(
+            "Message parse tree malformed. Message initialized using unrecognized function. "
+                + "Please use goog.getMsg() instead.");
   }
 
   @Test
@@ -579,9 +579,9 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_SILLY", msg.getKey());
-    assertEquals("{$adjective} {$someNoun}", msg.toString());
-    assertEquals("A message that demonstrates placeholders", msg.getDesc());
+    assertThat(msg.getKey()).isEqualTo("MSG_SILLY");
+    assertThat(msg.toString()).isEqualTo("{$adjective} {$someNoun}");
+    assertThat(msg.getDesc()).isEqualTo("A message that demonstrates placeholders");
     assertThat(msg.isHidden()).isTrue();
   }
 
@@ -600,9 +600,9 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_SILLY", msg.getKey());
-    assertEquals("{$adjective} {$someNoun}", msg.toString());
-    assertEquals("A message that demonstrates placeholders", msg.getDesc());
+    assertThat(msg.getKey()).isEqualTo("MSG_SILLY");
+    assertThat(msg.toString()).isEqualTo("{$adjective} {$someNoun}");
+    assertThat(msg.getDesc()).isEqualTo("A message that demonstrates placeholders");
     assertThat(msg.isHidden()).isTrue();
   }
 
@@ -613,7 +613,7 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
     assertThat(messages.get(0).isExternal()).isFalse();
-    assertEquals("MSG_EXTERNAL", messages.get(0).getKey());
+    assertThat(messages.get(0).getKey()).isEqualTo("MSG_EXTERNAL");
   }
 
   @Test
@@ -622,7 +622,7 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
     assertThat(messages.get(0).isExternal()).isTrue();
-    assertEquals("111", messages.get(0).getId());
+    assertThat(messages.get(0).getId()).isEqualTo("111");
   }
 
   @Test
@@ -631,7 +631,7 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
     assertThat(messages.get(0).isExternal()).isTrue();
-    assertEquals("111", messages.get(0).getId());
+    assertThat(messages.get(0).getId()).isEqualTo("111");
   }
 
   @Test
@@ -680,9 +680,9 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(errors).hasLength(1);
     JSError error = errors[0];
     assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
-    assertEquals(
-        "Message parse tree malformed. Unrecognized message " + "placeholder referenced: foo",
-        error.description);
+    assertThat(error.description)
+        .isEqualTo(
+            "Message parse tree malformed. Unrecognized message " + "placeholder referenced: foo");
   }
 
   @Test
@@ -694,8 +694,8 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(errors).hasLength(1);
     JSError error = errors[0];
     assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
-    assertEquals(
-        "Message parse tree malformed. Unused message placeholder: " + "foo", error.description);
+    assertThat(error.description)
+        .isEqualTo("Message parse tree malformed. Unused message placeholder: " + "foo");
   }
 
   @Test
@@ -708,8 +708,8 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(errors).hasLength(1);
     JSError error = errors[0];
     assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
-    assertEquals(
-        "Message parse tree malformed. Duplicate placeholder " + "name: foo", error.description);
+    assertThat(error.description)
+        .isEqualTo("Message parse tree malformed. Duplicate placeholder " + "name: foo");
   }
 
   @Test
@@ -719,7 +719,7 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals("{$foo}:, {$foo}", msg.toString());
+    assertThat(msg.toString()).isEqualTo("{$foo}:, {$foo}");
   }
 
   @Test
@@ -729,11 +729,11 @@ public final class JsMessageVisitorTest extends TestCase {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_WITH_CAMELCASE", msg.getKey());
-    assertEquals("Slide {$slideNumber}:", msg.toString());
+    assertThat(msg.getKey()).isEqualTo("MSG_WITH_CAMELCASE");
+    assertThat(msg.toString()).isEqualTo("Slide {$slideNumber}:");
     List<CharSequence> parts = msg.parts();
     assertThat(parts).hasSize(3);
-    assertEquals("slideNumber", ((JsMessage.PlaceholderReference) parts.get(1)).getName());
+    assertThat(((JsMessage.PlaceholderReference) parts.get(1)).getName()).isEqualTo("slideNumber");
   }
 
   @Test
@@ -746,9 +746,10 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(errors).hasLength(1);
     JSError error = errors[0];
     assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
-    assertEquals(
-        "Message parse tree malformed. Placeholder name not in " + "lowerCamelCase: slide_number",
-        error.description);
+    assertThat(error.description)
+        .isEqualTo(
+            "Message parse tree malformed. Placeholder name not in "
+                + "lowerCamelCase: slide_number");
   }
 
   @Test
@@ -778,10 +779,9 @@ public final class JsMessageVisitorTest extends TestCase {
 
   @Test
   public void testToLowerCamelCaseWithNumericSuffixes() {
-    assertEquals("name", toLowerCamelCaseWithNumericSuffixes("NAME"));
-    assertEquals("a4Letter", toLowerCamelCaseWithNumericSuffixes("A4_LETTER"));
-    assertEquals("startSpan_1_23",
-        toLowerCamelCaseWithNumericSuffixes("START_SPAN_1_23"));
+    assertThat(toLowerCamelCaseWithNumericSuffixes("NAME")).isEqualTo("name");
+    assertThat(toLowerCamelCaseWithNumericSuffixes("A4_LETTER")).isEqualTo("a4Letter");
+    assertThat(toLowerCamelCaseWithNumericSuffixes("START_SPAN_1_23")).isEqualTo("startSpan_1_23");
   }
 
   @Test
@@ -848,9 +848,9 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(1);
 
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_HELLO", msg.getKey());
-    assertEquals("Hello", msg.getDesc());
-    assertEquals("[testcode]", msg.getSourceName());
+    assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
+    assertThat(msg.getDesc()).isEqualTo("Hello");
+    assertThat(msg.getSourceName()).isEqualTo("[testcode]");
   }
 
   @Test
@@ -862,8 +862,8 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).hasSize(1);
 
     JsMessage msg = messages.get(0);
-    assertEquals("MSG_MENU_MARK_AS_UNREAD", msg.getKey());
-    assertEquals("a", msg.getDesc());
+    assertThat(msg.getKey()).isEqualTo("MSG_MENU_MARK_AS_UNREAD");
+    assertThat(msg.getDesc()).isEqualTo("a");
   }
 
   private void assertNoErrors() {

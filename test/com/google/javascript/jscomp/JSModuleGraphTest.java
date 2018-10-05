@@ -323,10 +323,10 @@ public final class JSModuleGraphTest extends TestCase {
       assertThat(m.get("inputs")).isNotNull();
     }
     JsonObject m = modules.get(3).getAsJsonObject();
-    assertEquals("D", m.get("name").getAsString());
-    assertEquals("[\"B\"]", m.get("dependencies").getAsJsonArray().toString());
+    assertThat(m.get("name").getAsString()).isEqualTo("D");
+    assertThat(m.get("dependencies").getAsJsonArray().toString()).isEqualTo("[\"B\"]");
     assertThat(m.get("transitive-dependencies").getAsJsonArray().size()).isEqualTo(2);
-    assertEquals("[]", m.get("inputs").getAsJsonArray().toString());
+    assertThat(m.get("inputs").getAsJsonArray().toString()).isEqualTo("[]");
   }
 
   private List<CompilerInput> setUpManageDependenciesTest() {
@@ -547,6 +547,7 @@ public final class JSModuleGraphTest extends TestCase {
 
   private void assertTransitiveDepsDeepestFirst(JSModule m, JSModule... deps) {
     Iterable<JSModule> actual = graph.getTransitiveDepsDeepestFirst(m);
-    assertEquals(Arrays.toString(deps), Arrays.toString(Iterables.toArray(actual, JSModule.class)));
+    assertThat(Arrays.toString(Iterables.toArray(actual, JSModule.class)))
+        .isEqualTo(Arrays.toString(deps));
   }
 }

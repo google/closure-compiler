@@ -49,36 +49,36 @@ public final class JSCompilerSourceExcerptProviderTest extends TestCase {
 
   @Test
   public void testExcerptOneLine() {
-    assertEquals("foo:first line", provider.getSourceLine("foo", 1));
-    assertEquals("foo:second line", provider.getSourceLine("foo", 2));
-    assertEquals("foo:third line", provider.getSourceLine("foo", 3));
-    assertEquals("bar:first line", provider.getSourceLine("bar", 1));
-    assertEquals("bar:second line", provider.getSourceLine("bar", 2));
-    assertEquals("bar:third line", provider.getSourceLine("bar", 3));
-    assertEquals("bar:fourth line", provider.getSourceLine("bar", 4));
+    assertThat(provider.getSourceLine("foo", 1)).isEqualTo("foo:first line");
+    assertThat(provider.getSourceLine("foo", 2)).isEqualTo("foo:second line");
+    assertThat(provider.getSourceLine("foo", 3)).isEqualTo("foo:third line");
+    assertThat(provider.getSourceLine("bar", 1)).isEqualTo("bar:first line");
+    assertThat(provider.getSourceLine("bar", 2)).isEqualTo("bar:second line");
+    assertThat(provider.getSourceLine("bar", 3)).isEqualTo("bar:third line");
+    assertThat(provider.getSourceLine("bar", 4)).isEqualTo("bar:fourth line");
   }
 
   @Test
   public void testExcerptLineFromInexistentSource() {
-    assertEquals(null, provider.getSourceLine("inexistent", 1));
-    assertEquals(null, provider.getSourceLine("inexistent", 7));
-    assertEquals(null, provider.getSourceLine("inexistent", 90));
+    assertThat(provider.getSourceLine("inexistent", 1)).isNull();
+    assertThat(provider.getSourceLine("inexistent", 7)).isNull();
+    assertThat(provider.getSourceLine("inexistent", 90)).isNull();
   }
 
   @Test
   public void testExcerptInexistentLine() {
-    assertEquals(null, provider.getSourceLine("foo", 0));
-    assertEquals(null, provider.getSourceLine("foo", 4));
-    assertEquals(null, provider.getSourceLine("bar", 0));
-    assertEquals(null, provider.getSourceLine("bar", 5));
+    assertThat(provider.getSourceLine("foo", 0)).isNull();
+    assertThat(provider.getSourceLine("foo", 4)).isNull();
+    assertThat(provider.getSourceLine("bar", 0)).isNull();
+    assertThat(provider.getSourceLine("bar", 5)).isNull();
   }
 
   @Test
   public void testExceptNoNewLine() {
-    assertEquals("foo2:first line", provider.getSourceLine("foo2", 1));
-    assertEquals("foo2:second line", provider.getSourceLine("foo2", 2));
-    assertEquals("foo2:third line", provider.getSourceLine("foo2", 3));
-    assertEquals(null, provider.getSourceLine("foo2", 4));
+    assertThat(provider.getSourceLine("foo2", 1)).isEqualTo("foo2:first line");
+    assertThat(provider.getSourceLine("foo2", 2)).isEqualTo("foo2:second line");
+    assertThat(provider.getSourceLine("foo2", 3)).isEqualTo("foo2:third line");
+    assertThat(provider.getSourceLine("foo2", 4)).isNull();
   }
 
   @Test

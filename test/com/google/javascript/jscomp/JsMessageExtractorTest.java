@@ -215,8 +215,8 @@ public final class JsMessageExtractorTest extends TestCase {
 
     assertThat(msgs).hasSize(2);
     final Iterator<JsMessage> iter = msgs.iterator();
-    assertEquals("foo", iter.next().toString());
-    assertEquals("bar", iter.next().toString());
+    assertThat(iter.next().toString()).isEqualTo("foo");
+    assertThat(iter.next().toString()).isEqualTo("bar");
   }
 
   @Test
@@ -226,7 +226,7 @@ public final class JsMessageExtractorTest extends TestCase {
             "var MSG_UNNAMED_1 = goog.getMsg('foo');",
             "var MSG_UNNAMED_2 = goog.getMsg('foo');"));
     assertThat(msgs).hasSize(2);
-    assertEquals(msgs.get(1).getId(), msgs.get(0).getId());
+    assertThat(msgs.get(0).getId()).isEqualTo(msgs.get(1).getId());
     assertEquals(msgs.get(0), msgs.get(1));
 
     msgs = new ArrayList<>(
@@ -238,12 +238,12 @@ public final class JsMessageExtractorTest extends TestCase {
   }
 
   private void assertEquals(JsMessage expected, JsMessage actual) {
-    assertEquals(expected.getId(), actual.getId());
-    assertEquals(expected.getKey(), actual.getKey());
+    assertThat(actual.getId()).isEqualTo(expected.getId());
+    assertThat(actual.getKey()).isEqualTo(expected.getKey());
     assertThat(actual.parts()).isEqualTo(expected.parts());
     assertThat(actual.placeholders()).isEqualTo(expected.placeholders());
-    assertEquals(expected.getDesc(), actual.getDesc());
+    assertThat(actual.getDesc()).isEqualTo(expected.getDesc());
     assertThat(actual.isHidden()).isEqualTo(expected.isHidden());
-    assertEquals(expected.getMeaning(), actual.getMeaning());
+    assertThat(actual.getMeaning()).isEqualTo(expected.getMeaning());
   }
 }

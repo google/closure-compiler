@@ -4164,13 +4164,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     Compiler compiler = compile(options, code);
     checkUnexpectedErrorsOrWarnings(compiler, 1);
-    assertEquals(
-        "JSC_PARSE_ERROR. Parse error."
-            + " getters are not supported in older versions of JavaScript."
-            + " If you are targeting newer versions of JavaScript,"
-            + " set the appropriate language_in option."
-            + " at i0.js line 1 : 0",
-        compiler.getErrors()[0].toString());
+    assertThat(compiler.getErrors()[0].toString())
+        .isEqualTo(
+            "JSC_PARSE_ERROR. Parse error."
+                + " getters are not supported in older versions of JavaScript."
+                + " If you are targeting newer versions of JavaScript,"
+                + " set the appropriate language_in option."
+                + " at i0.js line 1 : 0");
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     testSame(options, code);
@@ -4277,7 +4277,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "       ASCII    ART\n" +
         "*/\n";
     testSame(createCompilerOptions(), ascii);
-    assertEquals(result, lastCompiler.toSource());
+    assertThat(lastCompiler.toSource()).isEqualTo(result);
   }
 
   // http://blickly.github.io/closure-compiler-issues/#724
@@ -4773,9 +4773,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testCodingConvention() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
-    assertEquals(
-      compiler.getCodingConvention().getClass().toString(),
-      ClosureCodingConvention.class.toString());
+    assertThat(compiler.getCodingConvention()).isInstanceOf(ClosureCodingConvention.class);
   }
 
   @Test
