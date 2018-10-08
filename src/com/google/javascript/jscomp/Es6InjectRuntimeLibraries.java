@@ -55,6 +55,8 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
       used = used.with(getScriptFeatures(script));
     }
 
+    FeatureSet mustBeCompiledAway = used.without(compiler.getOptions().getOutputFeatureSet());
+
     // TODO(johnlenz): remove this check for Symbol.  Symbol should be handled like the other
     // polyfills.
 
@@ -65,39 +67,39 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
     // We will need these runtime methods when we transpile, but we want the runtime
     // functions to be have JSType applied to it by the type inferrence.
 
-    if (used.contains(Feature.FOR_OF)) {
+    if (mustBeCompiledAway.contains(Feature.FOR_OF)) {
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
     }
 
-    if (used.contains(Feature.ARRAY_DESTRUCTURING)) {
+    if (mustBeCompiledAway.contains(Feature.ARRAY_DESTRUCTURING)) {
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
     }
 
-    if (used.contains(Feature.ARRAY_PATTERN_REST)) {
+    if (mustBeCompiledAway.contains(Feature.ARRAY_PATTERN_REST)) {
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayFromIterator");
     }
 
-    if (used.contains(Feature.SPREAD_EXPRESSIONS)) {
+    if (mustBeCompiledAway.contains(Feature.SPREAD_EXPRESSIONS)) {
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayfromiterable");
     }
 
-    if (used.contains(Feature.CLASS_EXTENDS)) {
+    if (mustBeCompiledAway.contains(Feature.CLASS_EXTENDS)) {
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "inherits");
     }
 
-    if (used.contains(Feature.CLASS_GETTER_SETTER)) {
+    if (mustBeCompiledAway.contains(Feature.CLASS_GETTER_SETTER)) {
       compiler.ensureLibraryInjected("util/global", /* force= */ false);
     }
 
-    if (used.contains(Feature.GENERATORS)) {
+    if (mustBeCompiledAway.contains(Feature.GENERATORS)) {
       compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
     }
 
-    if (used.contains(Feature.ASYNC_GENERATORS)) {
+    if (mustBeCompiledAway.contains(Feature.ASYNC_GENERATORS)) {
       compiler.ensureLibraryInjected("es6/async_generator_wrapper", /* force= */ false);
     }
 
-    if (used.contains(Feature.FOR_AWAIT_OF)) {
+    if (mustBeCompiledAway.contains(Feature.FOR_AWAIT_OF)) {
       compiler.ensureLibraryInjected("es6/util/makeasynciterator", /* force= */ false);
     }
   }

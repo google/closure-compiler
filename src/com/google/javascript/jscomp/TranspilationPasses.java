@@ -74,6 +74,10 @@ public class TranspilationPasses {
   static void addPreTypecheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options, boolean doEs6ExternsCheck) {
 
+    // TODO(bradfordcsmith): Rename this since it isn't just libraries for ES6 features anymore.
+    // Inject runtime libraries needed for the transpilation we will have to do.
+    passes.add(es6InjectRuntimeLibraries);
+
     passes.add(
         markUntranspilableFeaturesAsRemoved(
             options.getLanguageIn().toFeatureSet(), options.getOutputFeatureSet()));
@@ -105,11 +109,6 @@ public class TranspilationPasses {
       passes.add(es6SplitVariableDeclarations);
       passes.add(
           getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
-
-      // TODO(bradfordcsmith): Inject runtime libraries now includes async generator support
-      //     (ES_2018), so this should be moved earlier and possibly run unconditionally by this
-      //     method, since it will itself detect what it needs to inject or doesn't need to inject.
-      passes.add(es6InjectRuntimeLibraries);
 
       if (!options.checksOnly) {
         // Don't run these passes in checksOnly mode since all the typechecking & checks passes
@@ -438,7 +437,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES_NEXT;
         }
       };
 
