@@ -658,7 +658,7 @@ function Int8Array(length, opt_byteOffset, opt_length) {}
 Int8Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -691,7 +691,7 @@ function Uint8Array(length, opt_byteOffset, opt_length) {}
 Uint8Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -724,7 +724,7 @@ function Uint8ClampedArray(length, opt_byteOffset, opt_length) {}
 Uint8ClampedArray.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -766,7 +766,7 @@ function Int16Array(length, opt_byteOffset, opt_length) {}
 Int16Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -799,7 +799,7 @@ function Uint16Array(length, opt_byteOffset, opt_length) {}
 Uint16Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -832,7 +832,7 @@ function Int32Array(length, opt_byteOffset, opt_length) {}
 Int32Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -865,7 +865,7 @@ function Uint32Array(length, opt_byteOffset, opt_length) {}
 Uint32Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -898,7 +898,7 @@ function Float32Array(length, opt_byteOffset, opt_length) {}
 Float32Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -931,7 +931,7 @@ function Float64Array(length, opt_byteOffset, opt_length) {}
 Float64Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
