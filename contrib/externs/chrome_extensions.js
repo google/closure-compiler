@@ -4582,17 +4582,15 @@ ChromeInputImeOnKeyEventEvent.prototype.removeListener = function(callback) {};
 /**
  * @param {function(string, !ChromeKeyboardEvent): (boolean|undefined)} callback
  *     callback.
- * @return {undefined}
+ * @return {boolean}
  */
 ChromeInputImeOnKeyEventEvent.prototype.hasListener = function(callback) {};
 
 
 /**
- * @param {function(string, !ChromeKeyboardEvent): (boolean|undefined)} callback
- *     callback.
- * @return {undefined}
+ * @return {boolean}
  */
-ChromeInputImeOnKeyEventEvent.prototype.hasListeners = function(callback) {};
+ChromeInputImeOnKeyEventEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -6739,16 +6737,15 @@ WebRequestBaseEvent.prototype.removeListener = function(listener) {};
 
 /**
  * @param {LISTENER} listener Listener function.
- * @return {undefined}
+ * @return {boolean}
  */
 WebRequestBaseEvent.prototype.hasListener = function(listener) {};
 
 
 /**
- * @param {LISTENER} listener Listener function.
- * @return {undefined}
+ * @return {boolean}
  */
-WebRequestBaseEvent.prototype.hasListeners = function(listener) {};
+WebRequestBaseEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -6814,16 +6811,15 @@ WebRequestOnErrorOccurredEvent.prototype.removeListener = function(listener) {};
 
 /**
  * @param {function(!Object): void} listener Listener function.
- * @return {undefined}
+ * @return {boolean}
  */
 WebRequestOnErrorOccurredEvent.prototype.hasListener = function(listener) {};
 
 
 /**
- * @param {function(!Object): void} listener Listener function.
- * @return {undefined}
+ * @return {boolean}
  */
-WebRequestOnErrorOccurredEvent.prototype.hasListeners = function(listener) {};
+WebRequestOnErrorOccurredEvent.prototype.hasListeners = function() {};
 
 
 /**
