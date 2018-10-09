@@ -4532,7 +4532,19 @@ HTMLMeterElement.prototype.labels;
 
 
 /**
+ * @interface
+ * @see https://storage.spec.whatwg.org/#api
+ */
+function NavigatorStorage() {};
+
+/**
+ * @type {!StorageManager}
+ */
+NavigatorStorage.prototype.storage;
+
+/**
  * @constructor
+ * @implements NavigatorStorage
  * @see https://www.w3.org/TR/html5/webappapis.html#navigator
  */
 function Navigator() {}
@@ -4674,6 +4686,7 @@ Navigator.prototype.hardwareConcurrency;
 
 /**
  * @constructor
+ * @implements NavigatorStorage
  * @see https://html.spec.whatwg.org/multipage/workers.html#the-workernavigator-object
  */
 function WorkerNavigator() {}
@@ -4690,6 +4703,12 @@ WorkerNavigator.prototype.deviceMemory;
  * @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorConcurrentHardware/hardwareConcurrency
  */
 WorkerNavigator.prototype.hardwareConcurrency;
+
+/**
+ * @type {!StorageManager}
+ * @see https://storage.spec.whatwg.org
+ */
+WorkerNavigator.prototype.storage;
 
 /**
  * @record
