@@ -205,6 +205,17 @@ class TypeInference
                         var.setType(type);
                         lvalue.setJSType(type);
                       }
+                      if (lvalue.getParent().isDefaultValue()) {
+                        // e.g. given
+                        //   /** @param {{age: (number|undefined)}} data */
+                        //   function f({age = 99}) {}
+                        // infer that `age` is now a `number` and not `number|undefined`
+                        // but don't change the 'declared type' of `age`
+                        // TODO(b/117162687): allow people to narrow the declared type to
+                        // exclude 'undefined' inside the function body.
+                        scope =
+                            updateScopeForAssignment(scope, lvalue, type, AssignmentType.ASSIGN);
+                      }
                       return scope;
                     });
           } else if (inferredType != null) {

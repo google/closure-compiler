@@ -633,7 +633,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .declares("str")
         .onClosestContainerScope()
         .withTypeThat()
-        .toStringIsEqualTo("string");
+        // TODO(b/117162687): this should just be `string`
+        .toStringIsEqualTo("(string|undefined)");
   }
 
   @Test
@@ -650,7 +651,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .declares("str")
         .onClosestContainerScope()
         .withTypeThat()
-        .toStringIsEqualTo("string");
+        // TODO(b/117162687): this should just be `string`
+        .toStringIsEqualTo("(string|undefined)");
   }
 
   @Test
@@ -698,7 +700,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .withTypeThat()
         // TODO(b/111523967): Should report an error when header and inline JSDoc types
         //     conflict.
-        .toStringIsEqualTo("number");
+        .toStringIsEqualTo("(number|undefined)");
   }
 
   @Test
@@ -734,7 +736,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .declares("str")
         .onClosestContainerScope()
         .withTypeThat()
-        .toStringIsEqualTo("string");
+        .toStringIsEqualTo("(string|undefined)");
   }
 
   @Test
@@ -750,7 +752,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .declares("str")
         .onClosestContainerScope()
         .withTypeThat()
-        .toStringIsEqualTo("string");
+        .toStringIsEqualTo("(string|undefined)");
   }
 
   @Test

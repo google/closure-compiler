@@ -4348,12 +4348,40 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "default value has wrong type", //
             "found   : string",
-            "required: number"));
+            "required: (number|undefined)"));
   }
 
   @Test
   public void testDefaultParameterIsUndefined() {
     testTypes("function f(/** number= */ n = undefined) {}");
+  }
+
+  @Test
+  public void testDefaultParameter_IsVariableTypedAsUndefined() {
+    testTypes(
+        lines(
+            "const alsoUndefined = undefined;",
+            "",
+            "/** @param {string=} str */", //
+            "function f(str = alsoUndefined) {}"));
+  }
+
+  @Test
+  public void testDefaultParameter_IsKnownNotUndefinedInClosure() {
+    // TODO(b/117162687): treat `str` as having declared type `string`, which will remove the
+    // spurious warning here.
+    testTypes(
+        lines(
+            "function takesString(/** string */ str) {}",
+            "",
+            "/** @param {string=} str */",
+            "function f(str = '') {",
+            "  return () => takesString(str);",
+            "}"),
+        lines(
+            "actual parameter 1 of takesString does not match formal parameter",
+            "found   : (string|undefined)",
+            "required: string"));
   }
 
   @Test
@@ -4382,11 +4410,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "const alsoUndefined = undefined;",
             "",
             "/** @param {{prop: (string|undefined)}} obj */", //
-            "function f({prop = alsoUndefined}) {}"),
-        lines(
-            "default value has wrong type", //
-            "found   : undefined",
-            "required: string"));
+            "function f({prop = alsoUndefined}) {}"));
   }
 
   @Test
@@ -4800,9 +4824,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "default value has wrong type",
             "found   : {g: function(string): undefined}",
-            "required: {g: function(number): undefined}",
-            "missing : []",
-            "mismatch: [g]"));
+            "required: (undefined|{g: function(number): undefined})"));
   }
 
   @Test

@@ -1913,6 +1913,7 @@ public class JSTypeRegistry implements Serializable {
                 firstChild, sourceName, scope, recordUnresolvedTypes));
 
       case EQUALS: // Optional
+        // TODO(b/117162687): stop automatically converting {string=} to {(string|undefined)]}
         return createOptionalType(
             createFromTypeNodesInternal(
                 n.getFirstChild(), sourceName, scope, recordUnresolvedTypes));

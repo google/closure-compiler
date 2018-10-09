@@ -2730,16 +2730,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           break;
 
         case DEFAULT_VALUE: // function f(x = 3) {} or function f([x] = []) {}
-          Node value = astParameter.getSecondChild();
-          // e.g. given
-          //     /** @param {number=} age */
-          //     function f(age = 3) {}
-          // the function type for f will say the first parameter is (number|undefined)
-          // Then since the default value `3` is not literally `undefined`, declare `age` inside the
-          // function as just `number`.
-          if (!NodeUtil.isUndefined(value)) {
-            paramType = paramType.restrictByNotUndefined();
-          }
           Node actualParam = astParameter.getFirstChild();
           if (actualParam.isName()) {
             declareSingleParameterName(isInferred, actualParam, paramType);
@@ -2766,12 +2756,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           DestructuredTarget.createAllNonEmptyTargetsInPattern(
               typeRegistry, patternType, pattern)) {
         JSType inferredType = target.inferTypeWithoutUsingDefaultValue();
-
-        if (target.hasDefaultValue() && !NodeUtil.isUndefined(target.getDefaultValue())) {
-          // i.e. replace `(string|undefined)` with just `string`
-          // unless the default value is actually `undefined`, which we allow.
-          inferredType = inferredType.restrictByNotUndefined();
-        }
 
         if (target.getNode().isDestructuringPattern()) {
           declareDestructuringParameter(isInferred, target.getNode(), inferredType);
