@@ -1552,19 +1552,24 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
      * (e.g. <code>foo.bar = {};</code>).
      */
     private Node makeAssignmentExprNode(Node value) {
-      Node decl = IR.exprResult(
-          IR.assign(
-              NodeUtil.newQName(
-                  compiler, namespace,
-                  firstNode /* real source info will be filled in below */,
-                  namespace),
-              value));
+      Node lhs =
+          NodeUtil.newQName(
+              compiler,
+              namespace,
+              firstNode /* real source info will be filled in below */,
+              namespace);
+      Node decl = IR.exprResult(IR.assign(lhs, value));
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
       if (candidateDefinition == null) {
         decl.getFirstChild().setJSDocInfo(NodeUtil.createConstantJsDoc());
       }
       checkState(isNamespacePlaceholder(decl));
       setSourceInfo(decl);
+      // This function introduces artifical nodes and we don't need them for indexing.
+      // Marking all but the last one as non-indexable. So if this function adds:
+      // foo.bar.baz = {};
+      // then we mark foo and bar as non-indexable.
+      lhs.getFirstChild().makeNonIndexableRecursive();
       return decl;
     }
 
