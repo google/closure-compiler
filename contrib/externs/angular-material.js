@@ -467,6 +467,12 @@ md.$toast.preset = function() {};
 md.$toast.preset.prototype.action = function(action) {};
 
 /**
+ * @param {string} actionKey
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.actionKey = function(actionKey) {};
+
+/**
  * @param {boolean} capsule
  * @return {!md.$toast.preset}
  */
