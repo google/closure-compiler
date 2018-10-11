@@ -3162,6 +3162,47 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTemplatedThis_inClassInstanceMethod_isInferredToBe_receiverType() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /**",
+            "   * @template THIS",
+            "   * @this {THIS}",
+            "   * @return {THIS}",
+            "   */",
+            "  clone() { return this; }",
+            "}",
+            "",
+            "var result = new Foo().clone();"));
+
+    assertType(findNameType("result", globalScope)).toStringIsEqualTo("Foo");
+  }
+
+  @Test
+  public void testTemplatedThis_inClassInstanceMethod_invokedOnSuper_isInferredToBe_subtype() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /**",
+            "   * @template THIS",
+            "   * @this {THIS}",
+            "   * @return {THIS}",
+            "   */",
+            "  clone() { return this; }",
+            "}",
+            "",
+            "class SubFoo extends Foo {",
+            "  other() {",
+            "    LABEL: super.clone();",
+            "  }",
+            "}"));
+
+    Node superCloneCall = getLabeledStatement("LABEL").statementNode.getOnlyChild();
+    assertType(superCloneCall.getJSType()).toStringIsEqualTo("SubFoo");
+  }
+
+  @Test
   public void testTemplateType11() {
     testSame(
         "/**\n" +

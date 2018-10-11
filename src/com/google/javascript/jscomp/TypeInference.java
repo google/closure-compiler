@@ -693,22 +693,27 @@ class TypeInference
     }
     if (scope == null) {
       superNode.setJSType(unknownType);
+      superNode.setSuperThisType(unknownType);
       return;
     }
+
     Node root = scope.getRootNode();
     JSType jsType = root.getJSType();
     FunctionType functionType = jsType != null ? jsType.toMaybeFunctionType() : null;
     ObjectType superNodeType = unknownType;
+    ObjectType superThisType = unknownType;
     Node context = superNode.getParent();
+
     // NOTE: we currently transpile subclass constructors to use "super.apply", which is not
     // actually valid ES6.  For now, provide a special case to support this, but it should be
     // removed once class transpilation is after type checking.
     if (context.isCall()) {
-      // Call the superclass constructor.
+      // Case: `super(args);` in a subclass ctor.
       if (functionType != null && functionType.isConstructor()) {
         FunctionType superCtor = functionType.getSuperClassConstructor();
         if (superCtor != null) {
           superNodeType = superCtor;
+          superThisType = null; // Not useful in this context.
         }
       }
     } else if (context.isGetProp() || context.isGetElem()) {
@@ -723,6 +728,7 @@ class TypeInference
           FunctionType superCtor = thisCtor.getSuperClassConstructor();
           if (superCtor != null) {
             superNodeType = superCtor;
+            superThisType = thisCtor;
           }
         }
       } else if (functionType != null) {
@@ -734,12 +740,15 @@ class TypeInference
             ObjectType superInstance = superCtor.getInstanceType();
             if (superInstance != null) {
               superNodeType = superInstance;
+              superThisType = thisInstance;
             }
           }
         }
       }
     }
+
     superNode.setJSType(superNodeType);
+    superNode.setSuperThisType(superThisType);
   }
 
   private void traverseNewTarget(Node newTargetNode) {
@@ -1664,11 +1673,10 @@ class TypeInference
     Node callTarget = call.getFirstChild();
     if (NodeUtil.isGet(callTarget)) {
       Node obj = callTarget.getFirstChild();
+      JSType objType = obj.isSuper() ? checkNotNull(obj.getSuperThisType()) : getJSType(obj);
+
       maybeResolveTemplatedType(
-          fnType.getTypeOfThis(),
-          getJSType(obj).restrictByNotNullOrUndefined(),
-          resolvedTypes,
-          seenTypes);
+          fnType.getTypeOfThis(), objType.restrictByNotNullOrUndefined(), resolvedTypes, seenTypes);
     }
 
     if (call.isTaggedTemplateLit()) {
