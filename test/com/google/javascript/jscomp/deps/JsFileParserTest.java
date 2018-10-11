@@ -498,10 +498,7 @@ public final class JsFileParserTest extends TestCase {
 
   @Test
   public void testIncludeGoog1() {
-    String contents = "/**\n" +
-        " * the first constant in base.js\n" +
-        " */\n" +
-        "var COMPILED = false;\n";
+    String contents = "/**\n" + " * @provideGoog\n" + " */\n";
 
     DependencyInfo expected = SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
         .setProvides(ImmutableList.of("goog"))

@@ -87,8 +87,8 @@ public final class JsFileParser extends JsFileLineParser {
    */
   private static final Pattern ES6_EXPORT_PATTERN = Pattern.compile("^export\\b");
 
-  /** The first non-comment line of base.js */
-  private static final String BASE_JS_START = "var COMPILED = false;";
+  /** Line in comment indicating that the file is Closure's base.js. */
+  private static final String PROVIDES_GOOG_COMMENT = "@provideGoog";
 
   /** The start of a bundled goog.module, i.e. one that is wrapped in a goog.loadModule call */
   private static final String BUNDLED_GOOG_MODULE_START = "goog.loadModule(function(";
@@ -245,10 +245,16 @@ public final class JsFileParser extends JsFileLineParser {
     moduleType = type;
   }
 
-  /**
-   * Parses a line of JavaScript, extracting goog.provide and goog.require
-   * information.
-   */
+  @Override
+  protected boolean parseBlockCommentLine(String line) {
+    if (includeGoogBase && line.contains(PROVIDES_GOOG_COMMENT)) {
+      provides.add("goog");
+      return false;
+    }
+    return true;
+  }
+
+  /** Parses a line of JavaScript, extracting goog.provide and goog.require information. */
   @Override
   protected boolean parseLine(String line) throws ParseException {
     boolean lineHasProvidesOrRequires = false;
@@ -308,12 +314,6 @@ public final class JsFileParser extends JsFileLineParser {
           }
         }
       }
-    } else if (includeGoogBase && line.startsWith(BASE_JS_START) &&
-               provides.isEmpty() && requires.isEmpty()) {
-      provides.add("goog");
-
-      // base.js can't provide or require anything else.
-      return false;
     }
 
     if (line.startsWith("import") || line.startsWith("export")) {

@@ -2236,6 +2236,21 @@ public abstract class CompilerTestCase extends TestCase {
     return new Externs(createSources("externs", srcTexts));
   }
 
+  protected static Externs externs(SourceFile... externs) {
+    // Copy SourceFile objects to prevent the externs bit from polluting tests.
+    return new Externs(
+        Arrays.stream(externs)
+            .map(
+                f -> {
+                  try {
+                    return SourceFile.fromCode(f.getName(), f.getCode());
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                })
+            .collect(ImmutableList.toImmutableList()));
+  }
+
   protected static Externs externs(List<SourceFile> files) {
     return new Externs(files);
   }

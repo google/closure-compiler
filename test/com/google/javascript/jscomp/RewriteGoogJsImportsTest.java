@@ -30,9 +30,9 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class RewriteGoogJsImportsTest extends CompilerTestCase {
-  // JsFileParser determines if this file is base.js by looking at the first line of the file.
+  // JsFileParser determines if this file is base.js by looking at the first comment of the file.
   private static final SourceFile BASE =
-      SourceFile.fromCode("/closure/base.js", "var COMPILED = false;");
+      SourceFile.fromCode("/closure/base.js", "/** @provideGoog */");
 
   private static final SourceFile GOOG =
       SourceFile.fromCode(
@@ -95,6 +95,24 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
         expected(
             BASE,
             GOOG,
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "import './closure/goog.js';",
+                    "use(goog.require, goog.foo, goog.MyClass, goog.constant);"))));
+  }
+
+  @Test
+  public void testGoogAndBaseInExterns() {
+    test(
+        externs(BASE, GOOG),
+        srcs(
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "import * as goog from './closure/goog.js';",
+                    "use(goog.require, goog.foo, goog.MyClass, goog.constant);"))),
+        expected(
             SourceFile.fromCode(
                 "testcode",
                 lines(

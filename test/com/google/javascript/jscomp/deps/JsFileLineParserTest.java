@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
 import java.io.StringReader;
 import junit.framework.TestCase;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -34,16 +33,6 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class JsFileLineParserTest extends TestCase {
-
-  TestParser parser;
-  private ErrorManager errorManager;
-
-  @Override
-  @Before
-  public void setUp() {
-    errorManager = new PrintStreamErrorManager(System.err);
-    parser = new TestParser(errorManager);
-  }
 
   @Test
   public void testSingleLine1() {
@@ -95,13 +84,40 @@ public final class JsFileLineParserTest extends TestCase {
     assertStrip("1 34", "1/** // 2 **/ 3\n4");
   }
 
+  @Test
+  public void testBlockComment() {
+    assertBlocks("/** one line */", "/** one line */");
+  }
+
+  @Test
+  public void testInlineBlockComment() {
+    assertBlocks("/** one line */", "var x; /** one line */");
+    assertBlocks("/** one line */", "/** one line */ var y;");
+    assertBlocks("/** one line */", "var x; /** one line */ var y;");
+  }
+
+  @Test
+  public void testMultipleBlockComments() {
+    assertBlocks("/** first *//** * second */", "/** first */\n/**\n * second\n */");
+  }
+
   private void assertStrip(String expected, String input) {
+    ErrorManager errorManager = new PrintStreamErrorManager(System.err);
+    TestParser parser = new TestParser(errorManager);
     parser.doParse("file", new StringReader(input));
     assertThat(parser.toString()).isEqualTo(expected);
   }
 
+  private void assertBlocks(String expected, String input) {
+    ErrorManager errorManager = new PrintStreamErrorManager(System.err);
+    TestParser parser = new TestParser(errorManager);
+    parser.doParse("file", new StringReader(input));
+    assertThat(parser.comments.toString()).isEqualTo(expected);
+  }
+
   private static class TestParser extends JsFileLineParser {
     StringBuilder sb = new StringBuilder();
+    StringBuilder comments = new StringBuilder();
 
     TestParser(ErrorManager errorManager) {
       super(errorManager);
@@ -110,6 +126,12 @@ public final class JsFileLineParserTest extends TestCase {
     @Override
     boolean parseLine(String line) {
       sb.append(line);
+      return true;
+    }
+
+    @Override
+    boolean parseBlockCommentLine(String line) {
+      comments.append(line);
       return true;
     }
 

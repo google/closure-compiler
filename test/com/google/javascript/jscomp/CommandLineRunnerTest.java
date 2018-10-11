@@ -813,10 +813,9 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testSourceSortingOn2() {
     test(
         new String[] {
-          "goog.provide('a');",
-          "goog.require('a');\n/** This is base.js */\nvar COMPILED = false;",
+          "goog.provide('a');", "goog.require('a');",
         },
-        new String[] {"var a={};", "var COMPILED=!1"});
+        new String[] {"var a={};", ""});
   }
 
   @Test
@@ -826,7 +825,7 @@ public final class CommandLineRunnerTest extends TestCase {
     test(
         new String[] {
           "goog.addDependency('sym', [], []);\nvar x = 3;",
-          "/** This is base.js */\nvar COMPILED = false;",
+          "/** This is base.js @provideGoog */ var COMPILED = false;",
         },
         new String[] {"var COMPILED = !1;", "var x = 3;"});
   }
@@ -940,7 +939,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--dependency_mode=LOOSE");
     test(
         new String[] {
-          "/** This is base.js */\nvar COMPILED = false;",
+          "/** This is base.js @provideGoog */ var COMPILED = false;",
         },
         new String[] {
           "var COMPILED = !1;",
@@ -1055,19 +1054,20 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testOnlyClosureDependenciesOneEntryPoint() {
     args.add("--dependency_mode=STRICT");
     args.add("--entry_point=goog:beer");
-    test(new String[] {
+    test(
+        new String[] {
           "goog.require('beer'); var beerRequired = 1;",
           "goog.provide('beer');\ngoog.require('hops');\nvar beerProvided = 1;",
           "goog.provide('hops'); var hopsProvided = 1;",
           "goog.provide('scotch'); var scotchProvided = 1;",
           "goog.require('scotch');\nvar includeFileWithoutProvides = 1;",
-          "/** This is base.js */\nvar COMPILED = false;",
-         },
-         new String[] {
-           "var COMPILED = !1;",
-           "var hops = {}, hopsProvided = 1;",
-           "var beer = {}, beerProvided = 1;"
-         });
+          "/** This is base.js @provideGoog */ var COMPILED = false;",
+        },
+        new String[] {
+          "var COMPILED = !1;",
+          "var hops = {}, hopsProvided = 1;",
+          "var beer = {}, beerProvided = 1;"
+        });
   }
 
   @Test

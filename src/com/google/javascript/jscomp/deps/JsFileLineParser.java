@@ -136,12 +136,15 @@ public abstract class JsFileLineParser {
         ++lineNum;
         try {
           String revisedLine = line;
+          String revisedBlockCommentLine = "";
           if (inMultilineComment) {
             int endOfComment = revisedLine.indexOf("*/");
             if (endOfComment != -1) {
+              revisedBlockCommentLine = revisedLine.substring(0, endOfComment + 2);
               revisedLine = revisedLine.substring(endOfComment + 2);
               inMultilineComment = false;
             } else {
+              revisedBlockCommentLine = line;
               revisedLine = "";
             }
           }
@@ -156,14 +159,18 @@ public abstract class JsFileLineParser {
                 revisedLine = revisedLine.substring(0, startOfLineComment);
                 break;
               } else if (startOfMultilineComment != -1) {
-                int endOfMultilineComment = revisedLine.indexOf("*/",
-                    startOfMultilineComment + 2);
+                int endOfMultilineComment = revisedLine.indexOf("*/", startOfMultilineComment + 2);
                 if (endOfMultilineComment == -1) {
-                  revisedLine = revisedLine.substring(
-                      0, startOfMultilineComment);
+                  revisedBlockCommentLine = revisedLine.substring(startOfMultilineComment);
+                  revisedLine = revisedLine.substring(0, startOfMultilineComment);
                   inMultilineComment = true;
                   break;
                 } else {
+                  if (!parseBlockCommentLine(
+                          revisedLine.substring(startOfMultilineComment, endOfMultilineComment + 2))
+                      && shortcutMode) {
+                    break;
+                  }
                   revisedLine =
                       revisedLine.substring(0, startOfMultilineComment) +
                       revisedLine.substring(endOfMultilineComment + 2);
@@ -171,6 +178,12 @@ public abstract class JsFileLineParser {
               } else {
                 break;
               }
+            }
+          }
+
+          if (!revisedBlockCommentLine.isEmpty()) {
+            if (!parseBlockCommentLine(revisedBlockCommentLine) && shortcutMode) {
+              break;
             }
           }
 
@@ -208,12 +221,15 @@ public abstract class JsFileLineParser {
    */
   abstract boolean parseLine(String line) throws ParseException;
 
+  boolean parseBlockCommentLine(String line) {
+    return true;
+  }
+
   /**
    * Parses a JS string literal.
    *
    * @param jsStringLiteral The literal. Must look like "asdf" or 'asdf'
-   * @throws ParseException Thrown if there is a string literal that cannot be
-   *     parsed.
+   * @throws ParseException Thrown if there is a string literal that cannot be parsed.
    */
   String parseJsString(String jsStringLiteral) throws ParseException {
     valueMatcher.reset(jsStringLiteral);
