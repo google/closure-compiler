@@ -121,12 +121,6 @@ public class PolymerPassTest extends CompilerTestCase {
           " */",
           "$jscomp.reflectObject = function (type, object) { return object; };");
 
-  private static final String EXPORT_PROPERTY_DEF =
-      lines(
-          "goog.exportProperty = function(object, publicName, symbol) {",
-          "  object[publicName] = symbol;",
-          "};");
-
   private int polymerVersion = 1;
   private PolymerExportPolicy polymerExportPolicy = PolymerExportPolicy.LEGACY;
   private boolean propertyRenamingEnabled = false;
@@ -3561,63 +3555,117 @@ public class PolymerPassTest extends CompilerTestCase {
     test(
         2,
         lines(
-            EXPORT_PROPERTY_DEF,
             "class TestElement extends PolymerElement {",
-            "  method1() {}",
-            "  method2() {}",
+            "  /** @public */ method1() {}",
+            "  /** @private */ method2() {}",
             "}"),
         lines(
-            EXPORT_PROPERTY_DEF,
             "/** @implements {PolymerTestElementInterface} */",
             "class TestElement extends PolymerElement {",
-            "  method1() {}",
-            "  method2() {}",
+            "  /** @public */ method1() {}",
+            "  /** @private */ method2() {}",
             "}",
-            "goog.exportProperty(TestElement.prototype, \"method2\",",
-            "    TestElement.prototype.method2);",
-            "goog.exportProperty(TestElement.prototype, \"method1\",",
-            "    TestElement.prototype.method1);"));
+            "/** @private @export */ TestElement.prototype.method2;",
+            "/** @public @export */ TestElement.prototype.method1;"));
   }
 
-  /**
-   * When --polymer_export_policy=EXPORT_ALL, the PolymerPass will add all methods of an element to
-   * that element's generated interface (which is injected into the externs), including methods
-   * inherited from Polymer Behaviors. Ensure that each method is included on the interface only
-   * once, even when it is implemented in multiple places.
-   */
   @Test
-  public void textExportsUniqueMethodsFromLegacyElementAndBehaviors() {
+  public void testExportMethodsFromLegacyElement() {
     polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    test(
+        2,
+        lines(
+            "Polymer({",
+            "  is: 'test-element',",
+            "  /** @public */ method1() {},",
+            "  /** @private */ method2() {},",
+            "});"),
+        lines(
+            "/**",
+            " * @constructor",
+            " * @extends {PolymerElement}",
+            " * @implements {PolymerTestElementElementInterface}",
+            " */",
+            "var TestElementElement = function() {};",
+            "Polymer(/** @lends {TestElementElement.prototype} */ {",
+            "  is: \"test-element\",",
+            "  /** @public @this {TestElementElement} */ method1() {},",
+            "  /** @private @this {TestElementElement} */ method2() {},",
+            "});",
+            "/** @private @export */ TestElementElement.prototype.method2;",
+            "/** @public @export */ TestElementElement.prototype.method1;"));
+  }
 
-    String js =
+  @Test
+  public void testExportsUniqueMethodsFromLegacyElementAndBehaviors() {
+    polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    test(
+        2,
         lines(
             "/** @polymerBehavior */",
             "const Behavior1 = {",
-            "  onAll: function() {},",
-            "  onBehavior1: function() {},",
+            "  /** @public */ onAll: function() {},",
+            "  /**",
+            "   * @public",
+            // Note we include this @return annotation to test that we aren't including @return,
+            // @param and other redundant JSDoc in our generated @export statements, since that
+            // would cause a re-declaration error.
+            "   * @return {void}",
+            "   */",
+            "   onBehavior1: function() {},",
             "};",
             "/** @polymerBehavior */",
             "const Behavior2 = {",
-            "  onAll: function() {},",
-            "  onBehavior2: function() {},",
+            "  /** @private */ onAll: function() {},",
+            "  /** @private */ onBehavior2: function() {},",
             "};",
             "Polymer({",
             "  is: 'test-element',",
             "  behaviors: [Behavior1, Behavior2],",
-            "  onAll() {},",
-            "  onElement: function() {},",
-            "});");
-
-    String newExterns =
+            "  /** @private */ onAll: function() {},",
+            "  /** @private */ onElement: function() {},",
+            "});"),
         lines(
-            EXTERNS,
-            "/** @interface */ var PolymerTestElementElementInterface=function(){};",
-            "PolymerTestElementElementInterface.prototype.onAll;",
-            "PolymerTestElementElementInterface.prototype.onBehavior1;",
-            "PolymerTestElementElementInterface.prototype.onBehavior2;",
-            "PolymerTestElementElementInterface.prototype.onElement");
-
-    testExternChanges(EXTERNS, js, newExterns);
+            "/** @nocollapse @polymerBehavior */",
+            "const Behavior1 = {",
+            "  /** @suppress {checkTypes,globalThis,visibility} */",
+            "  onAll: function() {},",
+            "  /** @suppress {checkTypes,globalThis,visibility} */",
+            "  onBehavior1: function() {}",
+            "};",
+            "/** @nocollapse @polymerBehavior */",
+            "const Behavior2 = {",
+            "  /** @suppress {checkTypes,globalThis,visibility} */",
+            "  onAll: function() {},",
+            "  /** @suppress {checkTypes,globalThis,visibility} */",
+            "  onBehavior2: function() {}",
+            "};",
+            "/**",
+            " * @constructor",
+            " * @extends {PolymerElement}",
+            " * @implements {PolymerTestElementElementInterface}",
+            " */",
+            "var TestElementElement = function() {};",
+            "/**",
+            " * @public",
+            " * @suppress {unusedPrivateMembers}",
+            " * @return {void}",
+            " */",
+            "TestElementElement.prototype.onBehavior1 = function() {};",
+            "/** @private @suppress {unusedPrivateMembers} */",
+            "TestElementElement.prototype.onBehavior2 = function() {};",
+            "Polymer(/** @lends {TestElementElement.prototype} */ {",
+            "  is: \"test-element\",",
+            "  behaviors: [Behavior1, Behavior2],",
+            "  /** @private @this {TestElementElement} */",
+            "  onAll: function() {},",
+            "  /** @private @this {TestElementElement} */",
+            "  onElement: function() {}",
+            "});",
+            "/** @private @export */ TestElementElement.prototype.onElement;",
+            "/** @private @export */ TestElementElement.prototype.onBehavior2;",
+            "/** @public @export */ TestElementElement.prototype.onBehavior1;",
+            "/** @private @export */ TestElementElement.prototype.onAll;"));
   }
 
   @Override

@@ -1038,6 +1038,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
     options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(true);
 
     Compiler compiler =
         compile(
@@ -1080,6 +1082,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRemoveDeadCode(true);
     options.setRemoveUnusedConstructorProperties(true);
     options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(true);
 
     Compiler compiler =
         compile(
@@ -1098,7 +1102,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String source = compiler.getCurrentJsSource();
 
     // If we see these identifiers anywhere in the output source, we know that we successfully
-    // protected it against removal and renaming.
+    // protected them against removal and renaming.
     assertThat(source).contains("longUnusedProperty");
     assertThat(source).contains("longUnusedMethod");
 
