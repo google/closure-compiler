@@ -40,10 +40,6 @@ import javax.annotation.Nullable;
  * with no corresponding {@code @param} annotation, coding conventions not being respected, etc.
  */
 public final class CheckJSDocStyle extends AbstractPostOrderCallback implements CompilerPass {
-  public static final DiagnosticType CONSTRUCTOR_DISALLOWED_JSDOC =
-      DiagnosticType.disabled("JSC_CONSTRUCTOR_DISALLOWED_JSDOC",
-          "Setting visibility on constructors is not yet supported.\n"
-          + "See https://github.com/google/closure-compiler/issues/2761\n");
 
   public static final DiagnosticType CLASS_DISALLOWED_JSDOC =
       DiagnosticType.disabled("JSC_CLASS_DISALLOWED_JSDOC",
@@ -94,7 +90,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   public static final DiagnosticGroup ALL_DIAGNOSTICS =
       new DiagnosticGroup(
           CLASS_DISALLOWED_JSDOC,
-          CONSTRUCTOR_DISALLOWED_JSDOC,
           MISSING_JSDOC,
           MISSING_PARAMETER_JSDOC,
           MIXED_PARAM_JSDOC_STYLES,
@@ -120,10 +115,10 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   }
 
   @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
+  public void visit(NodeTraversal t, Node n, Node unused) {
     switch (n.getToken()) {
       case FUNCTION:
-        visitFunction(t, n, parent);
+        visitFunction(t, n);
         break;
       case CLASS:
         visitClass(t, n);
@@ -198,7 +193,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     }
   }
 
-  private void visitFunction(NodeTraversal t, Node function, Node parent) {
+  private void visitFunction(NodeTraversal t, Node function) {
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(function);
 
     checkForAtSignCodePresence(t, function, jsDoc);
@@ -213,13 +208,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         checkParams(t, function, jsDoc);
       }
       checkReturn(t, function, jsDoc);
-    }
-
-    if (parent.isMemberFunctionDef()
-        && "constructor".equals(parent.getString())
-        && jsDoc != null
-        && !jsDoc.getVisibility().equals(Visibility.INHERITED)) {
-      t.report(function, CONSTRUCTOR_DISALLOWED_JSDOC);
     }
   }
 
