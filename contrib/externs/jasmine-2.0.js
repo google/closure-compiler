@@ -146,6 +146,12 @@ jasmine.Matchers.prototype.toEqual = function(value) {};
 /** @return {void} */
 jasmine.Matchers.prototype.toHaveBeenCalled = function() {};
 
+/**
+ * @param {!jasmine.Spy} expected
+ * @return {void}
+ */
+jasmine.Matchers.prototype.toHaveBeenCalledBefore = function(expected) {};
+
 
 /** @param {...*} var_args */
 jasmine.Matchers.prototype.toHaveBeenCalledWith = function(var_args) {};
