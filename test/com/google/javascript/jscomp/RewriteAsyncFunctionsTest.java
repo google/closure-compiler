@@ -143,6 +143,74 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInnerSuperCallEs2015Out() {
+    setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    test(
+        lines(
+            "class A {",
+            "  m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  async m() {",
+            "    return super.m();",
+            "  }",
+            "}"),
+        lines(
+            "class A {",
+            "  m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  m() {",
+            "    const $jscomp$async$this = this;",
+            "    const $jscomp$async$super$get$m =",
+            "        () => Object.getPrototypeOf(this.constructor).prototype.m;",
+            "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
+            "        function* () {",
+            "          return $jscomp$async$super$get$m().call($jscomp$async$this);",
+            "        });",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testInnerSuperCallStaticEs2015Out() {
+    setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    test(
+        lines(
+            "class A {",
+            "  static m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  static async m() {",
+            "    return super.m();",
+            "  }",
+            "}"),
+        lines(
+            "class A {",
+            "  static m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  static m() {",
+            "    const $jscomp$async$this = this;",
+            "    const $jscomp$async$super$get$m =",
+            "        () => Object.getPrototypeOf(this.constructor).m;",
+            "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
+            "        function* () {",
+            "          return $jscomp$async$super$get$m().call($jscomp$async$this);",
+            "        });",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testNestedArrowFunctionUsingThis() {
     test(
         lines(

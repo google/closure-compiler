@@ -557,17 +557,38 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
           IR.constNode(IR.name(argumentsVarName), IR.name("arguments"))
               .useSourceInfoFromForTree(block));
     }
+    boolean needsSuperTranspilation = compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6);
     for (String replacedMethodName : thisSuperArgsCtx.usedSuperProperties) {
       // { // prefixBlock
       //   const $jscomp$asyncIter$this = this;
       //   const $jscomp$asyncIter$arguments = arguments;
       //   const $jscomp$asyncIter$super$get$x = () => super.x;
       // }
+      //
+      // MS Edge 17 cannot properly capture references to "super" in an arrow function.
+      // If we are not transpiling classes, switch to using Object.getPrototypeOf(this.constructor)
+      // as a replacement for super.
+      // If we are transpiling classes, the super reference will be handled elsewhere.
+      Node superReference;
+      if (needsSuperTranspilation) {
+        superReference = IR.superNode();
+      } else {
+        // instance super: Object.getPrototypeOf(this.constructor).prototype
+        // static super: Object.getPrototypeOf(this.constructor)
+        superReference =
+            IR.call(
+                IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")),
+                IR.getprop(IR.thisNode(), IR.string("constructor")));
+        if (!ctx.function.getParent().isStaticMember()) {
+          superReference = IR.getprop(superReference, IR.string("prototype"));
+        }
+      }
+
       Node arrowFunction =
           IR.arrowFunction(
               IR.name(""),
               IR.paramList(),
-              IR.getprop(IR.superNode(), IR.string(replacedMethodName)));
+              IR.getprop(superReference, IR.string(replacedMethodName)));
       compiler.reportChangeToChangeScope(arrowFunction);
       NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.ARROW_FUNCTIONS);
       String superReplacementName = superPropGetterPrefix + replacedMethodName;

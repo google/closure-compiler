@@ -243,10 +243,33 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       newBody.addChildToBack(IR.constNode(IR.name(ASYNC_ARGUMENTS), IR.name("arguments")));
       NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
     }
+    boolean needsSuperTranspilation = compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6);
     for (String replacedMethodName : functionContext.replacedSuperProperties) {
+      // MS Edge 17 cannot properly capture references to "super" in an arrow function.
+      // If we are not transpiling classes, switch to using Object.getPrototypeOf(this.constructor)
+      // as a replacement for super.
+      // If we are transpiling classes, the super reference will be handled elsewhere.
+      Node superReference;
+      if (needsSuperTranspilation) {
+        superReference = IR.superNode();
+      } else {
+        // instance super: Object.getPrototypeOf(this.constructor).prototype
+        // static super: Object.getPrototypeOf(this.constructor)
+        superReference =
+            IR.call(
+                IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")),
+                IR.getprop(IR.thisNode(), IR.string("constructor")));
+        if (!originalFunction.getParent().isStaticMember()) {
+          superReference = IR.getprop(superReference, IR.string("prototype"));
+        }
+      }
+
       // const super$get$x = () => super.x;
-      Node arrowFunction = IR.arrowFunction(
-          IR.name(""), IR.paramList(), IR.getprop(IR.superNode(), IR.string(replacedMethodName)));
+      Node arrowFunction =
+          IR.arrowFunction(
+              IR.name(""),
+              IR.paramList(),
+              IR.getprop(superReference, IR.string(replacedMethodName)));
       compiler.reportChangeToChangeScope(arrowFunction);
       NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.ARROW_FUNCTIONS);
 
