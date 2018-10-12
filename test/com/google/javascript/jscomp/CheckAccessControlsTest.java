@@ -1805,15 +1805,6 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         + "/** @protected */ SubFoo.prototype.bar = function() {};",
          },
         PRIVATE_OVERRIDE);
-
-    testSame(new String[] {
-        "/** @constructor */ function Foo() { } "
-        + "/** @private */ Foo.prototype.bar = function() {};",
-        "/** @constructor \n * @extends {Foo} */ "
-        + "function SubFoo() {}"
-        + "/** @override \n *@suppress{visibility} */\n"
-        + " SubFoo.prototype.bar = function() {};",
-    });
   }
 
   @Test
@@ -2038,20 +2029,6 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         + "var foo = new Foo();"
         + "foo.PROP = 3;",
         CONST_PROPERTY_REASSIGNED_VALUE);
-  }
-
-  @Test
-  public void testConstantProperty3a() {
-    testSame("/** @constructor */ function Foo() {}\n"
-        + "/** @type {number} */ Foo.prototype.PROP = 2;\n"
-        + "/** @suppress {duplicate|const} */ Foo.prototype.PROP = 3;\n");
-  }
-
-  @Test
-  public void testConstantProperty3b() {
-    testSame("/** @constructor */ function Foo() {}\n"
-        + "/** @const */ Foo.prototype.prop = 2;\n"
-        + "/** @suppress {const} */ Foo.prototype.prop = 3;\n");
   }
 
   @Test
@@ -2325,27 +2302,6 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         + "/** @param {number} a */\n"
         + "function Bar(a) {};\n"
         + "Bar.CONST = 100;\n");
-  }
-
-  @Test
-  public void testSuppressConstantProperty() {
-    testSame("/** @constructor */ function A() {"
-        + "/** @const */ this.bar = 3;}"
-        + "/**\n"
-        + " * @suppress {constantProperty}\n"
-        + " * @constructor\n"
-        + " */ function B() { /** @const */ this.bar = 3; this.bar += 4; }");
-  }
-
-  @Test
-  public void testSuppressConstantProperty2() {
-    testSame("/** @constructor */ function A() {"
-        + "/** @const */ this.bar = 3;}"
-        + "/**\n"
-        + " * @suppress {const}\n"
-        + " * @constructor\n"
-        + " */ function B() {"
-        + "/** @const */ this.bar = 3;this.bar += 4;}");
   }
 
   @Test

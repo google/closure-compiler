@@ -2438,22 +2438,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "  bar() {}",
                 "}")),
         error(PRIVATE_OVERRIDE));
-
-    test(
-        srcs(
-            lines(
-                "class Foo {", //
-                "  /** @private */",
-                "  bar() {}",
-                "}"),
-            lines(
-                "class SubFoo extends Foo {",
-                "  /**",
-                "   * @override",
-                "   * @suppress{visibility}",
-                "   */",
-                "  bar() {}",
-                "}")));
   }
 
   @Test
@@ -2772,34 +2756,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstantProperty3a() {
-    test(
-        srcs(
-            lines(
-                "class Foo {}",
-                "",
-                "/** @type {number} */",
-                "Foo.prototype.PROP = 2;",
-                "",
-                "/** @suppress {duplicate|const} */",
-                "Foo.prototype.PROP = 3;")));
-  }
-
-  @Test
-  public void testConstantProperty3b() {
-    test(
-        srcs(
-            lines(
-                "class Foo {}",
-                "",
-                "/** @const */",
-                "Foo.prototype.prop = 2;",
-                "",
-                "/** @suppress {const} */",
-                "Foo.prototype.prop = 3;")));
-  }
-
-  @Test
   public void testConstantProperty4() {
     test(
         srcs(
@@ -3096,52 +3052,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "class Bar {}",
                 "",
                 "Bar.CONST = 100;")));
-  }
-
-  @Test
-  public void testSuppressConstantProperty() {
-    test(
-        srcs(
-            lines(
-                "class A {",
-                "  constructor() {",
-                "    /** @const */",
-                "    this.bar = 3;",
-                "  }",
-                "}",
-                "",
-                "/** @suppress {constantProperty} */",
-                "class B {",
-                "  constuctor() {",
-                "    /** @const */",
-                "    this.bar = 3;",
-                "",
-                "    this.bar += 4;",
-                "  }",
-                "}")));
-  }
-
-  @Test
-  public void testSuppressConstantProperty2() {
-    test(
-        srcs(
-            lines(
-                "class A {",
-                "  constructor() {",
-                "    /** @const */",
-                "    this.bar = 3;",
-                "  }",
-                "}",
-                "",
-                "/** @suppress {const} */",
-                "class B {",
-                "  constuctor() {",
-                "    /** @const */",
-                "    this.bar = 3;",
-                "",
-                "    this.bar += 4;",
-                "  }",
-                "}")));
   }
 
   @Test

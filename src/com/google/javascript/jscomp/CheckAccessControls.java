@@ -694,11 +694,6 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
 
     // Check whether constant properties are reassigned
     if (isConstant) {
-      JSDocInfo info = propRef.getJSDocInfo();
-      if (info != null && info.getSuppressions().contains("const")) {
-        return;
-      }
-
       if (propRef.isDeletion()) {
         compiler.report(t.makeError(propRef.getSourceNode(), CONST_PROPERTY_DELETED, propertyName));
         return;
@@ -766,11 +761,6 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
 
   /** Reports an error if the given property is not visible in the current context. */
   private void checkPropertyVisibility(NodeTraversal t, PropertyReference propRef) {
-    JSDocInfo jsdoc = propRef.getJSDocInfo();
-    if (jsdoc != null && jsdoc.getSuppressions().contains("visibility")) {
-      return;
-    }
-
     JSType rawReferenceType = typeOrUnknown(propRef.getReceiverType()).autobox();
     ObjectType referenceType = castToObject(rawReferenceType);
 
