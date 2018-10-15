@@ -8830,7 +8830,7 @@ chrome.usb.FindDevicesOptions;
 /**
  * @typedef {?{
  *   vendorId: (number|undefined),
- *   producId: (number|undefined),
+ *   productId: (number|undefined),
  *   interfaceClass: (number|undefined),
  *   interfaceSubclass: (number|undefined),
  *   interfaceProtocol: (number|undefined)
