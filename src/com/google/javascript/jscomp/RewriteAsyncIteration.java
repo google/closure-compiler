@@ -572,16 +572,16 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
       Node superReference;
       if (needsSuperTranspilation) {
         superReference = IR.superNode();
-      } else {
-        // instance super: Object.getPrototypeOf(this.constructor).prototype
-        // static super: Object.getPrototypeOf(this.constructor)
+      } else if (ctx.function.getParent().isStaticMember()) {
+        // static super: Object.getPrototypeOf(this.constructor);
         superReference =
             IR.call(
                 IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")),
                 IR.getprop(IR.thisNode(), IR.string("constructor")));
-        if (!ctx.function.getParent().isStaticMember()) {
-          superReference = IR.getprop(superReference, IR.string("prototype"));
-        }
+      } else {
+        // instance super: Object.getPrototypeOf(this)
+        superReference =
+            IR.call(IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")), IR.thisNode());
       }
 
       Node arrowFunction =

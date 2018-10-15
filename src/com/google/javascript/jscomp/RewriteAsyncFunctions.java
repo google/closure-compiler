@@ -252,16 +252,18 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       Node superReference;
       if (needsSuperTranspilation) {
         superReference = IR.superNode();
+      } else if (originalFunction.getParent().isStaticMember()) {
+        // static super: Object.getPrototypeOf(this);
+        superReference =
+            IR.call(IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")), IR.thisNode());
       } else {
         // instance super: Object.getPrototypeOf(this.constructor).prototype
-        // static super: Object.getPrototypeOf(this.constructor)
         superReference =
-            IR.call(
-                IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")),
-                IR.getprop(IR.thisNode(), IR.string("constructor")));
-        if (!originalFunction.getParent().isStaticMember()) {
-          superReference = IR.getprop(superReference, IR.string("prototype"));
-        }
+            IR.getprop(
+                IR.call(
+                    IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")),
+                    IR.getprop(IR.thisNode(), IR.string("constructor"))),
+                IR.string("prototype"));
       }
 
       // const super$get$x = () => super.x;
