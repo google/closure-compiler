@@ -246,24 +246,22 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     boolean needsSuperTranspilation = compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6);
     for (String replacedMethodName : functionContext.replacedSuperProperties) {
       // MS Edge 17 cannot properly capture references to "super" in an arrow function.
-      // If we are not transpiling classes, switch to using Object.getPrototypeOf(this.constructor)
+      // See https://github.com/Microsoft/ChakraCore/issues/5784
+      // If we are not transpiling classes, switch to using Object.getPrototypeOf(this)
       // as a replacement for super.
       // If we are transpiling classes, the super reference will be handled elsewhere.
       Node superReference;
       if (needsSuperTranspilation) {
         superReference = IR.superNode();
-      } else if (originalFunction.getParent().isStaticMember()) {
+      } else {
         // static super: Object.getPrototypeOf(this);
         superReference =
             IR.call(IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")), IR.thisNode());
-      } else {
-        // instance super: Object.getPrototypeOf(this.constructor).prototype
-        superReference =
-            IR.getprop(
-                IR.call(
-                    IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")),
-                    IR.getprop(IR.thisNode(), IR.string("constructor"))),
-                IR.string("prototype"));
+        if (!originalFunction.getParent().isStaticMember()) {
+          // instance super: Object.getPrototypeOf(Object.getPrototypeOf(this))
+          superReference =
+              IR.call(IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")), superReference);
+        }
       }
 
       // const super$get$x = () => super.x;

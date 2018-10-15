@@ -226,7 +226,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "class X extends A {",
             "  m() {",
             "    const $jscomp$asyncIter$super$get$m =",
-            "        () => Object.getPrototypeOf(this.constructor).prototype.m;",
+            "        () => Object.getPrototypeOf(Object.getPrototypeOf(this)).m;",
             "    return new $jscomp.AsyncGeneratorWrapper(",
             "        function* () {",
             "          const tmp = $jscomp$asyncIter$super$get$m();",

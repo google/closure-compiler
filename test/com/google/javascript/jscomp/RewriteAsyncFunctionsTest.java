@@ -167,7 +167,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "  m() {",
             "    const $jscomp$async$this = this;",
             "    const $jscomp$async$super$get$m =",
-            "        () => Object.getPrototypeOf(this.constructor).prototype.m;",
+            "        () => Object.getPrototypeOf(Object.getPrototypeOf(this)).m;",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "        function* () {",
             "          return $jscomp$async$super$get$m().call($jscomp$async$this);",
