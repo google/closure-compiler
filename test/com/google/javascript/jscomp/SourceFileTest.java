@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.MoreFiles;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
@@ -62,7 +63,13 @@ public final class SourceFileTest extends TestCase {
 
   @Test
   public void testLineOffset() {
-    SourceFile sf = SourceFile.fromCode("test.js", "'1';\n'2';\n'3'\n");
+    SourceFile sf = SourceFile.fromCode("test.js", "");
+    assertThat(sf.getLineOfOffset(0)).isEqualTo(1);
+    assertThat(sf.getColumnOfOffset(0)).isEqualTo(0);
+    assertThat(sf.getLineOfOffset(10)).isEqualTo(1);
+    assertThat(sf.getColumnOfOffset(10)).isEqualTo(10);
+
+    sf.setCode("'1';\n'2';\n'3'\n");
     assertThat(sf.getLineOffset(1)).isEqualTo(0);
     assertThat(sf.getLineOffset(2)).isEqualTo(5);
     assertThat(sf.getLineOffset(3)).isEqualTo(10);
@@ -164,5 +171,58 @@ public final class SourceFileTest extends TestCase {
     zos.write(content.getBytes(StandardCharsets.UTF_8));
     zos.closeEntry();
     zos.close();
+  }
+
+  @Test
+  public void testDiskFile() throws IOException {
+    String expectedContent = "var c;";
+
+    Path tempFile = Files.createTempFile("test", "file.js");
+    MoreFiles.asCharSink(tempFile, UTF_8).write(expectedContent);
+
+    SourceFile newFile = SourceFile.fromFile(tempFile.toString());
+    String actualContent;
+
+    actualContent = newFile.getLine(1);
+    assertThat(actualContent).isEqualTo(expectedContent);
+
+    newFile.clearCachedSource();
+
+    assertThat(newFile.getCodeNoCache()).isNull();
+    actualContent = newFile.getLine(1);
+    assertThat(actualContent).isEqualTo(expectedContent);
+  }
+
+  private static class CodeGeneratorHelper implements SourceFile.Generator {
+    int reads = 0;
+
+    @Override
+    public String getCode() {
+      reads++;
+      return "var a;\n";
+    }
+
+    public int numberOfReads() {
+      return reads;
+    }
+  }
+
+  @Test
+  public void testGeneratedFile() {
+    String expectedContent = "var a;";
+    CodeGeneratorHelper myGenerator = new CodeGeneratorHelper();
+    SourceFile newFile = SourceFile.fromGenerator("file.js", myGenerator);
+    String actualContent;
+
+    actualContent = newFile.getLine(1);
+    assertThat(actualContent).isEqualTo(expectedContent);
+    assertThat(myGenerator.numberOfReads()).isEqualTo(1);
+
+    newFile.clearCachedSource();
+    assertThat(newFile.getCodeNoCache()).isNull();
+
+    actualContent = newFile.getLine(1);
+    assertThat(actualContent).isEqualTo(expectedContent);
+    assertThat(myGenerator.numberOfReads()).isEqualTo(2);
   }
 }
