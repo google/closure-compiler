@@ -791,7 +791,7 @@ function TextMetrics() {}
 TextMetrics.prototype.width;
 
 /**
- * @param {Uint8ClampedArray|number} dataOrWidth In the first form, this is the
+ * @param {!Uint8ClampedArray|number} dataOrWidth In the first form, this is the
  *     array of pixel data.  In the second form, this is the image width.
  * @param {number} widthOrHeight In the first form, this is the image width.  In
  *     the second form, this is the image height.
@@ -802,7 +802,7 @@ TextMetrics.prototype.width;
  */
 function ImageData(dataOrWidth, widthOrHeight, opt_height) {}
 
-/** @const {Uint8ClampedArray} */
+/** @const {!Uint8ClampedArray} */
 ImageData.prototype.data;
 
 /** @const {number} */
