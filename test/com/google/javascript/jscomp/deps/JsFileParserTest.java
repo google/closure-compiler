@@ -138,7 +138,7 @@ public final class JsFileParserTest extends TestCase {
   }
 
   @Test
-  public void testParseGoogModuleWithWeakDeps() {
+  public void testParseGoogModuleWithRequireType() {
     String contents =
         ""
             + "goog.module('yes1');\n"
@@ -149,7 +149,7 @@ public final class JsFileParserTest extends TestCase {
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
             .setProvides(ImmutableList.of("yes1"))
-            .setWeakRequires(ImmutableList.of("yes2", "a.b.C", "a.b.d"))
+            .setTypeRequires(ImmutableList.of("yes2", "a.b.C", "a.b.d"))
             .setLoadFlags(ImmutableMap.of("module", "goog"))
             .build();
 
@@ -159,13 +159,13 @@ public final class JsFileParserTest extends TestCase {
   }
 
   @Test
-  public void testParseScriptWithWeakDeps() {
+  public void testParseScriptWithRequireType() {
     String contents = "" + "goog.provide('yes1');\n" + "goog.requireType('a.b.C');";
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
             .setProvides(ImmutableList.of("yes1"))
-            .setWeakRequires(ImmutableList.of("a.b.C"))
+            .setTypeRequires(ImmutableList.of("a.b.C"))
             .build();
 
     DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);

@@ -106,7 +106,7 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
   }
 
   @Override
-  public ImmutableList<String> getWeakRequires() {
+  public ImmutableList<String> getTypeRequires() {
     // TODO(blickly): Actually allow weak module deps
     return ImmutableList.of();
   }

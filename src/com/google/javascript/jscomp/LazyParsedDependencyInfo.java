@@ -83,8 +83,8 @@ public class LazyParsedDependencyInfo extends DependencyInfo.Base {
   }
 
   @Override
-  public ImmutableList<String> getWeakRequires() {
-    return delegate.getWeakRequires();
+  public ImmutableList<String> getTypeRequires() {
+    return delegate.getTypeRequires();
   }
 
   @Override

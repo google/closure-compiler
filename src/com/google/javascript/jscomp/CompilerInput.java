@@ -167,8 +167,8 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
   }
 
   @Override
-  public ImmutableList<String> getWeakRequires() {
-    return getDependencyInfo().getWeakRequires();
+  public ImmutableList<String> getTypeRequires() {
+    return getDependencyInfo().getTypeRequires();
   }
 
   /**

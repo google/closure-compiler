@@ -101,9 +101,8 @@ public final class JsFileParser extends JsFileLineParser {
 
   /** The info for the file we are currently parsing. */
   private List<String> provides;
-
   private List<Require> requires;
-  private List<String> weakRequires;
+  private List<String> typeRequires;
   private boolean fileHasProvidesOrRequires;
   private ModuleLoader loader = ModuleLoader.EMPTY;
   private ModuleLoader.ModulePath file;
@@ -179,7 +178,7 @@ public final class JsFileParser extends JsFileLineParser {
       String closureRelativePath, Reader fileContents) {
     provides = new ArrayList<>();
     requires = new ArrayList<>();
-    weakRequires = new ArrayList<>();
+    typeRequires = new ArrayList<>();
     fileHasProvidesOrRequires = false;
     file = loader.resolve(filePath);
     moduleType = ModuleType.NON_MODULE;
@@ -210,7 +209,7 @@ public final class JsFileParser extends JsFileLineParser {
         SimpleDependencyInfo.builder(closureRelativePath, filePath)
             .setProvides(provides)
             .setRequires(requires)
-            .setWeakRequires(weakRequires)
+            .setTypeRequires(typeRequires)
             .setLoadFlags(loadFlags)
             .build();
     if (logger.isLoggable(Level.FINE)) {
@@ -303,7 +302,7 @@ public final class JsFileParser extends JsFileLineParser {
           // Add the dependency.
           if (isRequire) {
             if ("requireType".equals(methodName)) {
-              weakRequires.add(arg);
+              typeRequires.add(arg);
             } else if (!"goog".equals(arg)) {
               // goog is always implicit.
               Require require = Require.googRequireSymbol(arg);

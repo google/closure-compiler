@@ -35,7 +35,7 @@ public abstract class SimpleDependencyInfo extends DependencyInfo.Base {
         .setPathRelativeToClosureBase(srcPathRelativeToClosure)
         .setProvides(ImmutableList.of())
         .setRequires(ImmutableList.of())
-        .setWeakRequires(ImmutableList.of())
+        .setTypeRequires(ImmutableList.of())
         .setLoadFlags(ImmutableMap.of());
   }
 
@@ -51,7 +51,7 @@ public abstract class SimpleDependencyInfo extends DependencyInfo.Base {
           .setPathRelativeToClosureBase(copy.getPathRelativeToClosureBase())
           .setProvides(copy.getProvides())
           .setRequires(copy.getRequires())
-          .setWeakRequires(copy.getWeakRequires())
+          .setTypeRequires(copy.getTypeRequires())
           .setLoadFlags(copy.getLoadFlags());
     }
 
@@ -65,8 +65,10 @@ public abstract class SimpleDependencyInfo extends DependencyInfo.Base {
 
     public abstract Builder setRequires(Require... requires);
 
-    public abstract Builder setWeakRequires(Collection<String> weakRequires);
-    public abstract Builder setWeakRequires(String... weakRequires);
+    public abstract Builder setTypeRequires(Collection<String> typeRequires);
+
+    public abstract Builder setTypeRequires(String... typeRequires);
+
     public abstract Builder setLoadFlags(Map<String, String> loadFlags);
 
     private static final ImmutableMap<String, String> GOOG_MODULE_FLAGS =
