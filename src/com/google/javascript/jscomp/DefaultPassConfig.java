@@ -2688,7 +2688,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Move global symbols to a deeper common module */
   private final PassFactory crossModuleCodeMotion =
-      new PassFactory(PassNames.CROSS_MODULE_CODE_MOTION, false) {
+      new PassFactory(PassNames.CROSS_CHUNK_CODE_MOTION, false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new CrossChunkCodeMotion(
@@ -2705,7 +2705,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Move methods to a deeper common module */
   private final PassFactory crossModuleMethodMotion =
-      new PassFactory(PassNames.CROSS_MODULE_METHOD_MOTION, false) {
+      new PassFactory(PassNames.CROSS_CHUNK_METHOD_MOTION, false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new CrossChunkMethodMotion(
