@@ -49,7 +49,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -167,10 +166,8 @@ public class Node implements Serializable {
       MODULE_EXPORT = 97, // Mark a property as a module export so that collase properties
       // can act on it.
       IS_SHORTHAND_PROPERTY = 98, // Indicates that a property {x:x} was originally parsed as {x}.
-      ES6_MODULE = 99, // Indicates that a SCRIPT node is or was an ES6 module. Remains set
+      ES6_MODULE = 99; // Indicates that a SCRIPT node is or was an ES6 module. Remains set
       // after the module is rewritten.
-      SUPER_THIS_TYPE = 100; // The type of `this` corresponding to a `super`. Only valid on SUPER
-  // nodes.
 
   private static final String propToString(byte propType) {
       switch (propType) {
@@ -239,8 +236,6 @@ public class Node implements Serializable {
         return "is_shorthand_property";
       case ES6_MODULE:
         return "es6_module";
-      case SUPER_THIS_TYPE:
-        return "super_this_type";
       default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -2565,25 +2560,6 @@ public class Node implements Serializable {
   /** Whether this {x:x} property was originally parsed as {x}. */
   public final boolean isShorthandProperty() {
     return getBooleanProp(IS_SHORTHAND_PROPERTY);
-  }
-
-  /** Sets the `this` type corresponding to a SUPER node. */
-  public final void setSuperThisType(@Nullable ObjectType superThisType) {
-    checkState(isSuper());
-    checkArgument(superThisType == null || superThisType.isSubtypeOf(getJSType()));
-
-    putProp(SUPER_THIS_TYPE, superThisType);
-  }
-
-  /** Returns the `this` type corresponding to a SUPER node. */
-  @Nullable
-  public final ObjectType getSuperThisType() {
-    checkState(isSuper());
-
-    @Nullable ObjectType superThisType = (ObjectType) getProp(SUPER_THIS_TYPE);
-    checkState(superThisType == null || superThisType.isSubtypeOf(getJSType()));
-
-    return superThisType;
   }
 
   /**

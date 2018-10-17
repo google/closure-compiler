@@ -693,27 +693,22 @@ class TypeInference
     }
     if (scope == null) {
       superNode.setJSType(unknownType);
-      superNode.setSuperThisType(unknownType);
       return;
     }
-
     Node root = scope.getRootNode();
     JSType jsType = root.getJSType();
     FunctionType functionType = jsType != null ? jsType.toMaybeFunctionType() : null;
     ObjectType superNodeType = unknownType;
-    ObjectType superThisType = unknownType;
     Node context = superNode.getParent();
-
     // NOTE: we currently transpile subclass constructors to use "super.apply", which is not
     // actually valid ES6.  For now, provide a special case to support this, but it should be
     // removed once class transpilation is after type checking.
     if (context.isCall()) {
-      // Case: `super(args);` in a subclass ctor.
+      // Call the superclass constructor.
       if (functionType != null && functionType.isConstructor()) {
         FunctionType superCtor = functionType.getSuperClassConstructor();
         if (superCtor != null) {
           superNodeType = superCtor;
-          superThisType = null; // Not useful in this context.
         }
       }
     } else if (context.isGetProp() || context.isGetElem()) {
@@ -728,7 +723,6 @@ class TypeInference
           FunctionType superCtor = thisCtor.getSuperClassConstructor();
           if (superCtor != null) {
             superNodeType = superCtor;
-            superThisType = thisCtor;
           }
         }
       } else if (functionType != null) {
@@ -740,15 +734,12 @@ class TypeInference
             ObjectType superInstance = superCtor.getInstanceType();
             if (superInstance != null) {
               superNodeType = superInstance;
-              superThisType = thisInstance;
             }
           }
         }
       }
     }
-
     superNode.setJSType(superNodeType);
-    superNode.setSuperThisType(superThisType);
   }
 
   private void traverseNewTarget(Node newTargetNode) {
@@ -1660,9 +1651,12 @@ class TypeInference
     return currentType;
   }
 
-  /** @param call A CALL, NEW, or TAGGED_TEMPLATELIT node */
+  /**
+   * @param call A CALL, NEW, or TAGGED_TEMPLATELIT node
+   * @param scope
+   */
   private Map<TemplateType, JSType> inferTemplateTypesFromParameters(
-      FunctionType fnType, Node call) {
+      FunctionType fnType, Node call, FlowScope scope) {
     if (fnType.getTemplateTypeMap().getTemplateKeys().isEmpty()) {
       return Collections.emptyMap();
     }
@@ -1673,10 +1667,18 @@ class TypeInference
     Node callTarget = call.getFirstChild();
     if (NodeUtil.isGet(callTarget)) {
       Node obj = callTarget.getFirstChild();
-      JSType objType = obj.isSuper() ? checkNotNull(obj.getSuperThisType()) : getJSType(obj);
-
+      JSType typeOfThisRequiredByTheFunction = fnType.getTypeOfThis();
+      // The type placed on a SUPER node is the superclass type, which allows us to infer the right
+      // property types for the GETPROP or GETELEM nodes built on it.
+      // However, the type actually passed as `this` when making calls this way is the `this`
+      // of the scope where the `super` appears.
+      JSType typeOfThisProvidedByTheCall = obj.isSuper() ? scope.getTypeOfThis() : getJSType(obj);
+      // We're looking at a call made as `obj['method']()` or `obj.method()` (see enclosing if),
+      // so if the call is successfully made, then the object through which it is made isn't null
+      // or undefined.
+      typeOfThisProvidedByTheCall = typeOfThisProvidedByTheCall.restrictByNotNullOrUndefined();
       maybeResolveTemplatedType(
-          fnType.getTypeOfThis(), objType.restrictByNotNullOrUndefined(), resolvedTypes, seenTypes);
+          typeOfThisRequiredByTheFunction, typeOfThisProvidedByTheCall, resolvedTypes, seenTypes);
     }
 
     if (call.isTaggedTemplateLit()) {
@@ -1914,7 +1916,7 @@ class TypeInference
     }
 
     // Try to infer the template types
-    Map<TemplateType, JSType> rawInferrence = inferTemplateTypesFromParameters(fnType, n);
+    Map<TemplateType, JSType> rawInferrence = inferTemplateTypesFromParameters(fnType, n, scope);
     Map<TemplateType, JSType> inferred = Maps.newIdentityHashMap();
     for (TemplateType key : keys) {
       JSType type = rawInferrence.get(key);
@@ -1971,8 +1973,7 @@ class TypeInference
           // If necessary, create a TemplatizedType wrapper around the instance
           // type, based on the types of the constructor parameters.
           ObjectType instanceType = ct.getInstanceType();
-          Map<TemplateType, JSType> inferredTypes =
-              inferTemplateTypesFromParameters(ct, n);
+          Map<TemplateType, JSType> inferredTypes = inferTemplateTypesFromParameters(ct, n, scope);
           if (inferredTypes.isEmpty()) {
             type = instanceType;
           } else {
