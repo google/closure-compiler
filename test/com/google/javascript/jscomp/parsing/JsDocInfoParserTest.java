@@ -1649,13 +1649,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseLends1() {
     JSDocInfo info = parse("@lends {name} */");
-    assertThat(info.getLendsName()).isEqualTo("name");
+    assertThat(info.getLendsName().getRoot().getString()).isEqualTo("name");
   }
 
   @Test
   public void testParseLends2() {
     JSDocInfo info = parse("@lends   foo.bar  */");
-    assertThat(info.getLendsName()).isEqualTo("foo.bar");
+    assertThat(info.getLendsName().getRoot().getString()).isEqualTo("foo.bar");
   }
 
   @Test

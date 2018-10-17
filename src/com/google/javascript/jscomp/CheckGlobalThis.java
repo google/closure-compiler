@@ -120,9 +120,9 @@ final class CheckGlobalThis implements Callback {
       Node grandparent = parent.getParent();
       if (NodeUtil.isObjectLitKey(parent)) {
         JSDocInfo maybeLends = grandparent.getJSDocInfo();
-        if (maybeLends != null &&
-            maybeLends.getLendsName() != null &&
-            maybeLends.getLendsName().endsWith(".prototype")) {
+        if (maybeLends != null
+            && maybeLends.hasLendsName()
+            && maybeLends.getLendsName().getRoot().getString().endsWith(".prototype")) {
           return false;
         }
       }

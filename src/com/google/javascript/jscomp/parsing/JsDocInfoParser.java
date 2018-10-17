@@ -655,7 +655,7 @@ public final class JsDocInfoParser {
 
           if (match(JsDocToken.STRING)) {
             token = next();
-            if (!jsdocBuilder.recordLends(stream.getString())) {
+            if (!jsdocBuilder.recordLends(createJSTypeExpression(IR.string(stream.getString())))) {
               addTypeWarning("msg.jsdoc.lends.incompatible");
             }
           } else {

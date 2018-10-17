@@ -77,7 +77,10 @@ final class PolymerClassRewriter {
 
     // Add {@code @lends} to the object literal.
     JSDocInfoBuilder objLitDoc = new JSDocInfoBuilder(true);
-    objLitDoc.recordLends(cls.target.getQualifiedName() + ".prototype");
+    JSTypeExpression jsTypeExpression =
+        new JSTypeExpression(
+            IR.string(cls.target.getQualifiedName() + ".prototype"), exprRoot.getSourceFileName());
+    objLitDoc.recordLends(jsTypeExpression);
     objLit.setJSDocInfo(objLitDoc.build());
 
     addTypesToFunctions(objLit, cls.target.getQualifiedName(), cls.defType);

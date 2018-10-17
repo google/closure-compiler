@@ -660,7 +660,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         case OBJECTLIT:
           JSDocInfo info = n.getJSDocInfo();
-          if (info != null && info.getLendsName() != null) {
+          if (info != null && info.hasLendsName()) {
             // Defer analyzing object literals with a @lends annotation until we
             // reach the root of the statement they're defined in.
             //
@@ -698,8 +698,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // Handle the @lends annotation.
       JSType type = null;
       JSDocInfo info = objectLit.getJSDocInfo();
-      if (info != null && info.getLendsName() != null) {
-        String lendsName = info.getLendsName();
+      if (info != null && info.hasLendsName()) {
+        String lendsName = info.getLendsName().getRoot().getString();
         TypedVar lendsVar = currentScope.getVar(lendsName);
         if (lendsVar == null) {
           report(JSError.make(objectLit, UNKNOWN_LENDS, lendsName));

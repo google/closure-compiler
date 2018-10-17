@@ -2632,6 +2632,25 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "function A() {}"));
   }
 
+  @Test
+  public void rewriteLendsAnnotation() {
+    test(
+        lines(
+            "goog.module('mod');",
+            "class Foo {",
+            "  constructor() {",
+            "    this.x = /** @lends {Foo.prototype} */ {};",
+            "  }",
+            "}"),
+        lines(
+            "/** @const */ var module$exports$mod = {};",
+            "class module$contents$mod_Foo {",
+            "  constructor() {",
+            "    this.x = /** @lends {module$contents$mod_Foo.prototype} */  {};",
+            "  }",
+            "}"));
+  }
+
   // This pass only handles goog.modules. ES6 modules are left alone.
   @Test
   public void testEs6Module() {
