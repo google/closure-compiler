@@ -1731,4 +1731,123 @@ test(
             "/** @typedef {number} */ Item.Models;",
             "Item.Models = Item.Models;"));
   }
+
+  @Test
+  public void testDontInlinePropertiesOnEscapedNamespace() {
+    test(
+        externs("function use(obj) {}"),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "Foo.Bar = {};",
+                "Foo.Bar.baz = {A: 1, B: 2};",
+                "",
+                "var $jscomp$destructuring$var1 = Foo.Bar;",
+                // This call could potentially have changed the value of Foo.Bar, so don't replace
+                // $jscomp$destructuring$var1.baz with Foo.Bar.baz
+                "use(Foo);",
+                "var baz = $jscomp$destructuring$var1.baz;",
+                "use(baz.A);")));
+  }
+
+  @Test
+  public void testInlinePropertiesOnEscapedNamespace_withDeclaredType() {
+    test(
+        externs("function use(obj) {}"),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "/** @constructor */",
+                "Foo.Bar = function() {};",
+                "/** @enum {number} */",
+                "Foo.Bar.baz = {A: 1, B: 2};",
+                "",
+                "var $jscomp$destructuring$var1 = Foo.Bar;",
+                // This call could potentially have changed the value of Foo.Bar.
+                "use(Foo);",
+                "var baz = $jscomp$destructuring$var1.baz;",
+                "use(baz.A);")),
+        expected(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "/** @constructor */",
+                "Foo.Bar = function() {};",
+                "/** @enum {number} */",
+                "Foo.Bar.baz = {A: 1, B: 2};",
+                "",
+                "var $jscomp$destructuring$var1 = null;",
+                "use(Foo);",
+                "var baz = null;",
+                // If we didn't unsafely replace baz.A with Foo.Bar.baz.A, this reference would
+                // break after CollapseProperties runs because Foo.Bar.baz -> Foo$Bar$baz
+                // So although inlining this is technically unsafe, because use(Foo) could have
+                // changed the value of Foo.Bar, it actually fixes a breakage caused by
+                // CollapseProperties.
+                "use(Foo.Bar.baz.A);")));
+  }
+
+  @Test
+  public void testDontInlinePropertiesOnNamespace_withNoCollapse() {
+    testSame(
+        externs("function use(obj) {}"),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "/** @constructor @nocollapse */",
+                "Foo.Bar = function() {};",
+                "/** @enum {number} @nocollapse */",
+                "Foo.Bar.baz = {A: 1, B: 2};",
+                "",
+                "var $jscomp$destructuring$var1 = Foo.Bar;",
+                "use(Foo);",
+                "var baz = $jscomp$destructuring$var1.baz;",
+                "use(baz.A);")));
+  }
+
+  @Test
+  public void testNestedAssignWithAlias() {
+    test(
+        lines(
+            "var ns = {a: {}};",
+            "var Letters = { B: 'b'};",
+            "ns.c = ns.a.b = Letters.B;",
+            "use(ns.c);",
+            "use(ns.a.b);"),
+        lines(
+            "var ns = {a: {}};",
+            "var Letters = {B: 'b'};",
+            // test that we handle nested assigns correctly
+            "ns.c = null;",
+            "use(Letters.B);",
+            "use(Letters.B);"));
+  }
+
+  @Test
+  public void testCommaExpression() {
+    test(
+        lines(
+            "/** @const */ var exports = {};",
+            "/** @const @enum {string} */ var Letters = {",
+            "  A: 'a', ",
+            "  B: 'b'};",
+            "exports.A = Letters.A, exports.B = Letters.B;",
+            "use(exports.B);"),
+        lines(
+            "/** @const */ var exports = {};",
+            "/** @const @enum {string} */ var Letters = {",
+            "  A: 'a', ",
+            "  B: 'b'};",
+            // this used to become
+            //   exports.A = null, Letters.B = null;
+            // breaking all references to Letters.B
+            // GlobalNamespace treats 'exports.B' as both a read and write of
+            // 'exports.B', and AggressiveInlineAliases used to replace all reads of exports.B with
+            // `Letters.B` without verifying that the read was not also a write.
+            "Letters.A, Letters.B;",
+            "use(Letters.B);"));
+  }
 }

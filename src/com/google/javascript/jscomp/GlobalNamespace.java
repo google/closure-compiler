@@ -1666,6 +1666,7 @@ class GlobalNamespace
       return module;
     }
 
+    /** Returns the corresponding read/write Ref of a name in a nested assign, or null otherwise */
     Ref getTwin() {
       return twin;
     }
