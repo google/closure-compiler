@@ -1521,38 +1521,4 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "Item$Models;",
             "var Item$Models = Item$Models;"));
   }
-
-  @Test
-  public void testInlinePropertyOnAliasedConstructor() {
-    // TODO(b/117905881): as long as we unsafely collapse Foo.prop -> Foo$prop, there's no way to
-    // safely rewrite the "use(ns.alias.prop)" call in the compiler
-    // Either
-    // a) we replace "ns.alias.prop" with "Foo$prop" or
-    // b) we leave "ns.alias.prop" as is.
-
-    // Option a) can break code if the "use(ns)" call actually reassigns ns.alias (which is not
-    // declared const).
-    // Option b) breaks code if "use(ns)" does NOT reassign ns.alias, since now
-    // ns.alias.prop is Foo.prop, which is undefined.
-    test(
-        externs("function use(ctor) {}"),
-        srcs(
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "Foo.prop = 2;",
-                "var ns = {};",
-                "ns.alias = Foo;",
-                "use(ns);",
-                "use(ns.alias.prop);")),
-        expected(
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "var Foo$prop = 2;",
-                "var ns = {};",
-                "ns.alias = Foo;",
-                "use(ns);",
-                "use(ns.alias.prop);")));
-  }
 }

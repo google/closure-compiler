@@ -429,7 +429,7 @@ class CollapseProperties implements CompilerPass {
    * @param alias The flattened name for {@code n}
    */
   private void collapseDeclarationOfNameAndDescendants(Name n, String alias) {
-    boolean canCollapseChildNames = n.canCollapseChildNames();
+    boolean canCollapseChildNames = n.canCollapseUnannotatedChildNames();
 
     // Handle this name first so that nested object literals get unrolled.
     if (canCollapse(n)) {
@@ -835,7 +835,7 @@ class CollapseProperties implements CompilerPass {
    * @param addAfter The child of after which new variables should be added
    */
   private void addStubsForUndeclaredProperties(Name n, String alias, Node parent, Node addAfter) {
-    checkState(n.canCollapseChildNames(), n);
+    checkState(n.canCollapseUnannotatedChildNames(), n);
     checkArgument(NodeUtil.isStatementBlock(parent), parent);
     checkNotNull(addAfter);
     if (n.props == null) {
