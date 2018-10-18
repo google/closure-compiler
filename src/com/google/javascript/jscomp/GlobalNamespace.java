@@ -1295,7 +1295,7 @@ class GlobalNamespace
     }
 
     boolean canEliminate() {
-      if (!canCollapseUnannotatedChildNames() || totalGets > 0) {
+      if (!canCollapseChildNames() || totalGets > 0) {
         return false;
       }
 
@@ -1330,32 +1330,68 @@ class GlobalNamespace
       return docInfo != null && docInfo.isNoCollapse();
     }
 
+    /**
+     * Handles how we treat qualified names marked @constructor or @enum and their properties.
+     *
+     * <p>In some places we want to be more aggressive, and inline or collapse constructor
+     * properties even when that possibly breaks the behavior of code.
+     *
+     * <p>Other places we should be more conservative and only do safe optimizations.
+     */
+    private enum DeclaredTypeHandling {
+      UNSAFE,
+      SAFE;
+
+      /**
+       * Whether to inline/collapse static constructor properties even when the constructor is
+       * escaped, and the property is potentially referenced elsewhere.
+       */
+      boolean allowInliningOfEscapedStaticConstructorProperties() {
+        return this == DeclaredTypeHandling.UNSAFE;
+      }
+    }
+
+    /**
+     * Returns whether this name is effectively constant and is safe to inline into multiple places
+     */
+    boolean isInlinableGlobalAlias_forTypes() {
+      // TODO(b/117901733): remove this option after cleaning up inlineAliases breakages
+      return isInlinableGlobalAlias(DeclaredTypeHandling.UNSAFE);
+    }
+
+    /**
+     * Returns whether this name is effectively constant and is safe to inline into multiple places
+     */
     boolean isInlinableGlobalAlias() {
-      // Only simple aliases with direct usage are inlinable.
-      if (inExterns() || globalSets != 1 || localSets != 0 || !canCollapse()) {
+      return isInlinableGlobalAlias(DeclaredTypeHandling.SAFE);
+    }
+
+    private boolean isInlinableGlobalAlias(DeclaredTypeHandling safety) {
+      if (inExterns()) {
+        // Don't change the externs
         return false;
       }
 
-      // Only allow inlining of simple references.
-      for (Ref ref : getRefs()) {
-        switch (ref.type) {
-          case SET_FROM_GLOBAL:
-            // Expect one global set
-            continue;
-          case SET_FROM_LOCAL:
-            throw new IllegalStateException();
-          case ALIASING_GET:
-          case DIRECT_GET:
-          case PROTOTYPE_GET:
-          case CALL_GET:
-            continue;
-          case DELETE_PROP:
-            return false;
-          default:
-            throw new IllegalStateException();
-        }
+      if (globalSets != 1 || localSets != 0 || deleteProps != 0) {
+        // If this is set multiple times, or in a local scope, don't inline because we assume
+        // it may change between references.
+        return false;
       }
-      return true;
+
+      // TODO(lharker): try removing these cases. They're copied to preserve legacy behavior
+      // from canCollapse() but aren't unit tested.
+      if (isGetOrSetDefinition() || isStaticClassMemberFunction()) {
+        return false;
+      }
+
+      // @nocollapse also implies no inline; this may or may not have been intentional when this
+      // pass was originally written.
+      if (isCollapsingExplicitlyDenied()) {
+        return false;
+      }
+
+      // Make sure that the parent isn't escaped, which might mean this name is set multiple times.
+      return parent == null || parent.shouldInlineAndCollapseChildNames(safety);
     }
 
     boolean canCollapse() {
@@ -1363,7 +1399,7 @@ class GlobalNamespace
           && !isGetOrSetDefinition()
           && !isCollapsingExplicitlyDenied()
           && (declaredType
-              || ((parent == null || parent.canCollapseUnannotatedChildNames())
+              || ((parent == null || parent.canCollapseChildNames())
                   && (globalSets > 0 || localSets > 0)
                   && localSetsWithNoCollapse == 0
                   && deleteProps == 0))
@@ -1400,9 +1436,31 @@ class GlobalNamespace
       return this.type == Type.GET_SET;
     }
 
-    boolean canCollapseUnannotatedChildNames() {
+    /** Returns whether we should collapse descendant properties on this qualified name. */
+    boolean canCollapseChildNames() {
+
+      // When deciding to collapse properties, toggle the option for unsafe constructor property
+      // collapsing.
+      return shouldInlineAndCollapseChildNames(DeclaredTypeHandling.UNSAFE);
+    }
+
+    /**
+     * Returns whether to assume that child properties of this name are collapsible/inlinable
+     *
+     * <p>For legacy reasons, both CollapseProperties and AggressiveInlineAliases share the same
+     * logic when deciding whether to inline properties or to collapse them. This method should
+     * return false if it's unsafe to either inline or collapse a property.
+     *
+     * <p>The main reasons we cannot inline/collapse a name are: a) it is set multiple times b) its
+     * properties might not be referred to by their full qname c) one or more of the above
+     * conditions applies to a parent name d) it's annotated @nocollapse
+     *
+     * @param constructorAssumptions whether to special case @constructor/@enum properties.
+     */
+    private boolean shouldInlineAndCollapseChildNames(DeclaredTypeHandling constructorAssumptions) {
       if (type == Type.OTHER || isGetOrSetDefinition()
           || globalSets != 1 || localSets != 0 || deleteProps != 0) {
+        // condition (a) and (b)
         return false;
       }
 
@@ -1415,33 +1473,42 @@ class GlobalNamespace
       }
 
       if (isCollapsingExplicitlyDenied()) {
+        // condition (d)
         return false;
       }
 
       if (isSetInLoop()) {
+        // condition (a)
         return false;
       }
 
       if (usedHasOwnProperty) {
+        // condition (b)
         return false;
       }
 
-      if (declaredType) {
+      // Skip the aliasing checks if this is @constructor and we have enabled unsafe constructor
+      // handling. This ignores condition (b)
+      if (declaredType
+          && constructorAssumptions.allowInliningOfEscapedStaticConstructorProperties()) {
         return true;
       }
 
       // If this is a key of an aliased object literal, then it will be aliased
       // later. So we won't be able to collapse its properties.
+      // condition (b)
       if (parent != null && parent.shouldKeepKeys()) {
         return false;
       }
 
       // If this is aliased, then its properties can't be collapsed either.
+      // condition (b)
       if (aliasingGets > 0) {
         return false;
       }
 
-      return (parent == null || parent.canCollapseUnannotatedChildNames());
+      // condition (c)
+      return (parent == null || parent.shouldInlineAndCollapseChildNames(constructorAssumptions));
     }
 
     /** Whether this is an object literal that needs to keep its keys. */

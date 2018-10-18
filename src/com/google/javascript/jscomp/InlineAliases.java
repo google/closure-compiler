@@ -90,8 +90,9 @@ final class InlineAliases implements CompilerPass {
 
     /**
      * Maybe record that given lvalue is an alias of the qualified name on its rhs.
-     * Note that since we are doing a post-order traversal, any previous aliases contained in
-     * the rhs will have already been substituted by the time we record the new alias.
+     *
+     * <p>Note that since we are doing a post-order traversal, any previous aliases contained in the
+     * rhs will have already been substituted by the time we record the new alias.
      */
     private void visitAliasDefinition(Node lhs, JSDocInfo info) {
       if (isDeclaredConst(lhs, info) && (info == null || !info.hasTypeInformation())
@@ -101,9 +102,9 @@ final class InlineAliases implements CompilerPass {
           GlobalNamespace.Name lhsName = namespace.getOwnSlot(lhs.getQualifiedName());
           GlobalNamespace.Name rhsName = namespace.getOwnSlot(rhs.getQualifiedName());
           if (lhsName != null
-              && lhsName.isInlinableGlobalAlias()
+              && lhsName.isInlinableGlobalAlias_forTypes()
               && rhsName != null
-              && rhsName.isInlinableGlobalAlias()
+              && rhsName.isInlinableGlobalAlias_forTypes()
               && !isPrivate(rhsName.getDeclaration().getNode())) {
             aliases.put(lhs.getQualifiedName(), rhs.getQualifiedName());
           }

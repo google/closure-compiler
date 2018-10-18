@@ -1635,8 +1635,7 @@ test(
   }
 
   @Test
-  public void testInliningPropertyAliasBeforeNamespace1() {
-    // TODO(b/80429954): Fix this test. It is producing bad output and will cause runtime errors
+  public void testInliningPropertyAliasBeforeNamespace_withConstructorProperty() {
     test(
         lines(
             "var prop = 1;",
@@ -1655,14 +1654,13 @@ test(
             "Foo.prop = null;",
             "",
             "var aliasOfFoo = null;",
-            "alert(Foo.prop);")); // NOTE - this is bad! Foo.prop is now null.
+            "alert(prop);"));
   }
 
   @Test
-  public void testInliningPropertyAliasBeforeNamespace2() {
-    // NOTE(b/80429954): the only difference between this input and the above input is that the
-    // above has annotated Foo with @constructor, which triggers some unsafe behavior, while this
-    // test case produces correct output.
+  public void testInliningPropertyAliasBeforeNamespace_withNonConstructorProperty() {
+    // NOTE: the only difference between this input and the above input is that the
+    // above has annotated Foo with @constructor. The @constructor case used to generate bad output
     test(
         lines(
             "var prop = 1;",
