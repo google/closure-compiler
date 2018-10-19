@@ -85,7 +85,6 @@ public final class XtbMessageBundle implements MessageBundle {
    * @param projectId  the translation console project id (i.e. name)
    */
   public XtbMessageBundle(InputStream xtb, @Nullable String projectId) {
-    checkState(!"".equals(projectId));
     this.messages = new HashMap<>();
     this.idGenerator = new GoogleJsMessageIdGenerator(projectId);
 
