@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Optional;
+
 /**
  * A simple delegating {@link ErrorManager} that provides a thread-safe wrapper
  * for the one being delegated.
@@ -74,7 +76,9 @@ public class ThreadSafeDelegatingErrorManager implements ErrorManager {
 
   @Override
   public synchronized boolean shouldReportConformanceViolation(
-      Requirement requirement, JSError diagnostic) {
-    return delegated.shouldReportConformanceViolation(requirement, diagnostic);
+      Requirement requirement,
+      Optional<Requirement.WhitelistEntry> whitelistEntry,
+      JSError diagnostic) {
+    return delegated.shouldReportConformanceViolation(requirement, whitelistEntry, diagnostic);
   }
 }

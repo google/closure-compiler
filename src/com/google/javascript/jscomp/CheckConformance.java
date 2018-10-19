@@ -239,6 +239,10 @@ public final class CheckConformance implements Callback, CompilerPass {
     InvalidRequirementSpec(String message) {
       super(message);
     }
+
+    InvalidRequirementSpec(String message, Throwable cause) {
+      super(message, cause);
+    }
   }
 
   /**

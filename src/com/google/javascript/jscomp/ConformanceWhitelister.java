@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.Requirement.Severity;
@@ -63,7 +64,9 @@ public class ConformanceWhitelister {
           new ThreadSafeDelegatingErrorManager(oldErrorManager) {
             @Override
             public synchronized boolean shouldReportConformanceViolation(
-                Requirement requirement, JSError diagnostic) {
+                Requirement requirement,
+                Optional<Requirement.WhitelistEntry> whitelistEntry,
+                JSError diagnostic) {
               errors.add(diagnostic);
               return false;
             }
