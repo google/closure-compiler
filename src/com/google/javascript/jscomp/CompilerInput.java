@@ -332,6 +332,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
       return SimpleDependencyInfo.builder("", "")
           .setProvides(finder.provides)
           .setRequires(finder.requires)
+          .setTypeRequires(finder.typeRequires)
           .setLoadFlags(finder.loadFlags)
           .build();
     }
@@ -341,6 +342,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     private final Map<String, String> loadFlags = new TreeMap<>();
     private final List<String> provides = new ArrayList<>();
     private final List<Require> requires = new ArrayList<>();
+    private final List<String> typeRequires = new ArrayList<>();
     private final ModulePath modulePath;
 
     DepsFinder(ModulePath modulePath) {
@@ -390,6 +392,13 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
                   return;
                 }
                 requires.add(Require.googRequireSymbol(argument.getString()));
+                return;
+
+              case "requireType":
+                if (!argument.isString()) {
+                  return;
+                }
+                typeRequires.add(argument.getString());
                 return;
 
               case "loadModule":
