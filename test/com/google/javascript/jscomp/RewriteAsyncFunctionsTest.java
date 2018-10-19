@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +38,10 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteAsyncFunctions(compiler);
+    return new RewriteAsyncFunctions.Builder(compiler)
+        .rewriteSuperPropertyReferencesWithoutSuper(
+            !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
+        .build();
   }
 
   // Don't let the compiler actually inject any code.
@@ -137,6 +141,73 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "        function* () {",
             "          const tmp = $jscomp$async$super$get$m();",
             "          return tmp.call(null);",
+            "        });",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testInnerSuperCallEs2015Out() {
+    setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    test(
+        lines(
+            "class A {",
+            "  m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  async m() {",
+            "    return super.m();",
+            "  }",
+            "}"),
+        lines(
+            "class A {",
+            "  m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  m() {",
+            "    const $jscomp$async$this = this;",
+            "    const $jscomp$async$super$get$m =",
+            "        () => Object.getPrototypeOf(Object.getPrototypeOf(this)).m;",
+            "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
+            "        function* () {",
+            "          return $jscomp$async$super$get$m().call($jscomp$async$this);",
+            "        });",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testInnerSuperCallStaticEs2015Out() {
+    setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    test(
+        lines(
+            "class A {",
+            "  static m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  static async m() {",
+            "    return super.m();",
+            "  }",
+            "}"),
+        lines(
+            "class A {",
+            "  static m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  static m() {",
+            "    const $jscomp$async$this = this;",
+            "    const $jscomp$async$super$get$m = () => Object.getPrototypeOf(this).m;",
+            "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
+            "        function* () {",
+            "          return $jscomp$async$super$get$m().call($jscomp$async$this);",
             "        });",
             "  }",
             "}"));

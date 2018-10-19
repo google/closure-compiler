@@ -81,6 +81,22 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
   private final String superPropGetterPrefix = "$jscomp$asyncIter$super$get$";
 
   /**
+   * If this option is set to true, then this pass will rewrite references to properties using super
+   * (e.g. `super.method()`) to avoid using `super` within an arrow function.
+   *
+   * <p>This option exists due to a bug in MS Edge 17 which causes it to fail to access super
+   * properties correctly from within arrow functions.
+   *
+   * <p>See https://github.com/Microsoft/ChakraCore/issues/5784
+   *
+   * <p>If the final compiler output will not include ES6 classes, this option should not be set. It
+   * isn't needed since the `super` references will be transpiled away anyway. Also, when this
+   * option is set it uses `Object.getPrototypeOf()` to rewrite `super`, which may not exist in
+   * pre-ES6 JS environments.
+   */
+  private final boolean rewriteSuperPropertyReferencesWithoutSuper;
+
+  /**
    * Tracks a function and its context of this/arguments/super, if such a context exists.
    */
   private static final class LexicalContext {
@@ -142,9 +158,30 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     }
   }
 
-  RewriteAsyncIteration(AbstractCompiler compiler) {
-    this.compiler = compiler;
+  private RewriteAsyncIteration(Builder builder) {
+    this.compiler = builder.compiler;
     this.contextStack = new ArrayDeque<>();
+    this.rewriteSuperPropertyReferencesWithoutSuper =
+        builder.rewriteSuperPropertyReferencesWithoutSuper;
+  }
+
+  static class Builder {
+    private final AbstractCompiler compiler;
+    private boolean rewriteSuperPropertyReferencesWithoutSuper = false;
+
+    Builder(AbstractCompiler compiler) {
+      checkNotNull(compiler);
+      this.compiler = compiler;
+    }
+
+    Builder rewriteSuperPropertyReferencesWithoutSuper(boolean value) {
+      rewriteSuperPropertyReferencesWithoutSuper = value;
+      return this;
+    }
+
+    RewriteAsyncIteration build() {
+      return new RewriteAsyncIteration(this);
+    }
   }
 
   @Override
@@ -558,16 +595,36 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
               .useSourceInfoFromForTree(block));
     }
     for (String replacedMethodName : thisSuperArgsCtx.usedSuperProperties) {
-      // { // prefixBlock
-      //   const $jscomp$asyncIter$this = this;
-      //   const $jscomp$asyncIter$arguments = arguments;
-      //   const $jscomp$asyncIter$super$get$x = () => super.x;
-      // }
+      // const super$get$x = () => super.x;
+      // OR avoid super for static method (class object -> superclass object)
+      // const super$get$x = () => Object.getPrototypeOf(this).x
+      // OR avoid super for instance method (instance -> prototype -> super prototype)
+      // const super$get$x = () => Object.getPrototypeOf(Object.getPrototypeOf(this)).x
+      Node superReference;
+      if (rewriteSuperPropertyReferencesWithoutSuper) {
+        // Rewrite to avoid using `super` within an arrow function.
+        // See more information on definition of this option.
+        // TODO(bradfordcsmith): RewriteAsyncIteration and RewriteAsyncFunctions have the
+        // same logic for dealing with super references. Consider having them share
+        // it from a common place instead of duplicating.
+
+        // static super: Object.getPrototypeOf(this);
+        superReference =
+            IR.call(IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")), IR.thisNode());
+        if (!ctx.function.getParent().isStaticMember()) {
+          // instance super: Object.getPrototypeOf(Object.getPrototypeOf(this))
+          superReference =
+              IR.call(IR.getprop(IR.name("Object"), IR.string("getPrototypeOf")), superReference);
+        }
+      } else {
+        superReference = IR.superNode();
+      }
+
       Node arrowFunction =
           IR.arrowFunction(
               IR.name(""),
               IR.paramList(),
-              IR.getprop(IR.superNode(), IR.string(replacedMethodName)));
+              IR.getprop(superReference, IR.string(replacedMethodName)));
       compiler.reportChangeToChangeScope(arrowFunction);
       NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.ARROW_FUNCTIONS);
       String superReplacementName = superPropGetterPrefix + replacedMethodName;

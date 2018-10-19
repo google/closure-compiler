@@ -217,7 +217,13 @@ public class TranspilationPasses {
       new HotSwapPassFactory("rewriteAsyncFunctions") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new RewriteAsyncFunctions(compiler);
+          return new RewriteAsyncFunctions.Builder(compiler)
+              // If ES6 classes will not be transpiled away later,
+              // transpile away property references that use `super` in async functions.
+              // See explanation in RewriteAsyncFunctions.
+              .rewriteSuperPropertyReferencesWithoutSuper(
+                  !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
+              .build();
         }
 
         @Override
@@ -230,7 +236,13 @@ public class TranspilationPasses {
       new HotSwapPassFactory("rewriteAsyncIteration") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new RewriteAsyncIteration(compiler);
+          return new RewriteAsyncIteration.Builder(compiler)
+              // If ES6 classes will not be transpiled away later,
+              // transpile away property references that use `super` in async iteration.
+              // See explanation in RewriteAsyncIteration.
+              .rewriteSuperPropertyReferencesWithoutSuper(
+                  !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
+              .build();
         }
 
         @Override

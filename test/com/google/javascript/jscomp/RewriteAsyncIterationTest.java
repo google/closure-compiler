@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,7 +48,10 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteAsyncIteration(compiler);
+    return new RewriteAsyncIteration.Builder(compiler)
+        .rewriteSuperPropertyReferencesWithoutSuper(
+            !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
+        .build();
   }
 
   @Test
@@ -225,7 +229,8 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}",
             "class X extends A {",
             "  m() {",
-            "    const $jscomp$asyncIter$super$get$m = () => super.m;",
+            "    const $jscomp$asyncIter$super$get$m =",
+            "        () => Object.getPrototypeOf(Object.getPrototypeOf(this)).m;",
             "    return new $jscomp.AsyncGeneratorWrapper(",
             "        function* () {",
             "          const tmp = $jscomp$asyncIter$super$get$m();",
