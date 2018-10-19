@@ -146,7 +146,7 @@ public class DiagnosticGroups {
           + "newCheckTypes, "
           + "nonStandardJsDocs, "
           + "missingSourcesWarnings, "
-          + "polymer,"
+          + "polymer, "
           + "reportUnknownTypes, "
           + "suspiciousCode, "
           + "strictCheckTypes, "
