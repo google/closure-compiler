@@ -1524,7 +1524,10 @@ RTCIceServerInterface_.prototype.credential;
 var RTCIceServer;
 
 /**
- * @typedef {{iceServers: !Array<!RTCIceServer>}}
+ * @typedef {{
+ *   iceServers: !Array<!RTCIceServer>,
+ *   sdpSemantics: (string|undefined)
+ * }}
  * @private
  */
 var RTCConfigurationRecord_;
@@ -1539,6 +1542,15 @@ function RTCConfigurationInterface_() {}
  * @type {!Array<!RTCIceServer>}
  */
 RTCConfigurationInterface_.prototype.iceServers;
+
+/**
+ * Allows specifying the SDP semantics. Valid values are "plan-b" and
+ * "unified-plan".
+ *
+ * @see {@link https://webrtc.org/web-apis/chrome/unified-plan/}
+ * @type {string|undefined}
+ */
+RTCConfigurationInterface_.prototype.sdpSemantics;
 
 /**
  * @typedef {RTCConfigurationRecord_|RTCConfigurationInterface_}
