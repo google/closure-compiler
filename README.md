@@ -26,7 +26,7 @@ Note: The Closure Compiler requires [Java 8 or higher](https://www.java.com/).
 1. Download [Maven](https://maven.apache.org/download.cgi).
 
 2. Add sonatype snapshots repository to `~/.m2/settings.xml`:
-   ```
+   ```xml
    <profile>
      <id>allow-snapshots</id>
         <activation><activeByDefault>true</activeByDefault></activation>
@@ -61,7 +61,7 @@ unit tests too).
 6. Disregard the warnings about maven-antrun-plugin and build errors.
 7. Configure the project to use the [Google Eclipse style guide](https://github.com/google/styleguide/blob/gh-pages/eclipse-java-google-style.xml)
 8. Edit `.classpath` in closure-compiler-parent. Delete the `<classpathentry ... kind="src" path="src" ... />` line, then add:
-   ```
+   ```xml
    <classpathentry excluding="com/google/debugging/sourcemap/super/**|com/google/javascript/jscomp/debugger/gwt/DebuggerGwtMain.java|com/google/javascript/jscomp/gwt/|com/google/javascript/jscomp/resources/super-gwt/**" kind="src" path="src"/>
    <classpathentry kind="src" path="target/generated-sources/annotations"/>
    ```
