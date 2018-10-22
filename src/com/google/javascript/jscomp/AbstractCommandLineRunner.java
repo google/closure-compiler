@@ -2767,6 +2767,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     @Nullable
     private final String webpackId;
 
+    // Graal requires a non-arg constructor for use with GSON
+    // See https://github.com/oracle/graal/issues/680
+    private JsonFileSpec() {
+      this(null, null, null, null);
+    }
+
     public JsonFileSpec(String src, String path) {
       this(src, path, null, null);
     }
