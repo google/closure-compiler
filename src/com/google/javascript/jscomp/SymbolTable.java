@@ -633,6 +633,19 @@ public final class SymbolTable {
     return symbol;
   }
 
+  /**
+   * Merges 'from' symbol to 'to' symbol by moving all references to point to the 'to' symbol and
+   * removing 'from' symbol.
+   */
+  private void mergeSymbol(Symbol from, Symbol to) {
+    for (Node nodeToMove : from.references.keySet()) {
+      if (!nodeToMove.equals(from.getDeclarationNode())) {
+        to.defineReferenceAt(nodeToMove);
+      }
+    }
+    removeSymbol(from);
+  }
+
   private void removeSymbol(Symbol s) {
     SymbolScope scope = getScope(s);
     if (!s.equals(scope.ownSymbols.remove(s.getName()))) {
@@ -1158,6 +1171,59 @@ public final class SymbolTable {
   }
 
   /**
+   * Heuristic method to check whether symbol was created by DeclaredGlobalExternsOnWindow.java
+   * pass.
+   */
+  private boolean isSymbolDuplicatedExternOnWindow(Symbol symbol) {
+    return symbol.getName().startsWith("window.") && !symbol.getDeclarationNode().isIndexable();
+  }
+
+  /**
+   * DeclaredGLobalExternsOnWindow.java pass duplicates all global variables so that:
+   *
+   * <pre>
+   * var foo;
+   * </pre>
+   *
+   * becomes
+   *
+   * <pre>
+   * var foo;
+   * window.foo;
+   * </pre>
+   *
+   * This function finds all such cases and merges window.foo symbol back to foo. It changes
+   * window.foo references to point to foo symbol.
+   */
+  private void mergeExternSymbolsDuplicatedOnWindow() {
+    // To find duplicated symbols we rely on the fact that duplicated symbol share the same
+    // source position as original symbol and going to use filename => sourcePosition => symbol
+    // table.
+    Table<String, Integer, Symbol> externSymbols = HashBasedTable.create();
+    for (Symbol symbol : ImmutableList.copyOf(symbols.values())) {
+      if (symbol.getDeclarationNode() == null
+          || !symbol.getDeclarationNode().getStaticSourceFile().isExtern()) {
+        continue;
+      }
+      String sourceFile = symbol.getSourceFileName();
+      int position = symbol.getDeclarationNode().getSourcePosition();
+      if (!externSymbols.contains(sourceFile, position)) {
+        externSymbols.put(sourceFile, position, symbol);
+        continue;
+      }
+      Symbol existingSymbol = externSymbols.get(sourceFile, position);
+      // Consider 2 possibilies: either symbol or existingSymbol might be the generated symbol we
+      // are looking for.
+      if (isSymbolDuplicatedExternOnWindow(existingSymbol)) {
+        mergeSymbol(existingSymbol, symbol);
+        externSymbols.put(sourceFile, position, symbol);
+      } else if (isSymbolDuplicatedExternOnWindow(symbol)) {
+        mergeSymbol(symbol, existingSymbol);
+      }
+    }
+  }
+
+  /**
    * Removes various generated symbols that are invisible to users and pollute or mess up index.
    * Jscompiler does transpilations that might introduce extra nodes/symbols. Most of these symbols
    * should not get into final SymbolTable because SymbolTable should contain only symbols that
@@ -1193,6 +1259,7 @@ public final class SymbolTable {
         }
       }
     }
+    mergeExternSymbolsDuplicatedOnWindow();
   }
 
   /**
@@ -1245,10 +1312,7 @@ public final class SymbolTable {
     if (originalSymbol == null) {
       return;
     }
-    for (Node nodeToMove : exportPropertySymbol.references.keySet()) {
-      originalSymbol.defineReferenceAt(nodeToMove);
-    }
-    removeSymbol(exportPropertySymbol);
+    mergeSymbol(exportPropertySymbol, originalSymbol);
   }
 
   /**

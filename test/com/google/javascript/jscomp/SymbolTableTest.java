@@ -36,8 +36,10 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
 import org.junit.Before;
@@ -1412,6 +1414,22 @@ public final class SymbolTableTest extends TestCase {
     // TODO(b/112359882): change number of refs to 2 once Es6ConvertSuper pass is moved after type
     // checks.
     assertThat(numberOfSuperReferences).isEqualTo(1);
+  }
+
+  @Test
+  public void testDuplicatedWindowExternsMerged() {
+    // Add window so that it triggers logic that defines all global externs on window.
+    // See DeclaredGlobalExternsOnWindow.java pass.
+    String externs = lines("/** @externs */", "var window", "var foo;");
+    String mainCode = lines("foo;", "window.foo;");
+    SymbolTable table = createSymbolTable(mainCode, externs);
+
+    Map<String, Integer> refsPerFile = new HashMap<>();
+    for (Reference reference : table.getReferenceList(getGlobalVar(table, "foo"))) {
+      String file = reference.getSourceFile().getName();
+      refsPerFile.put(file, refsPerFile.getOrDefault(file, 0) + 1);
+    }
+    assertThat(refsPerFile).containsExactly("in1", 2, "externs1", 1);
   }
 
   private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
