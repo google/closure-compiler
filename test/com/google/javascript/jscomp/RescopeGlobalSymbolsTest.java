@@ -812,4 +812,9 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame(
         createModules("var a = 3; export {a};", "import {a} from './input0';"));
   }
+
+  @Test
+  public void testEmptyDestructuring() {
+    testSame("var {} = {};");
+  }
 }

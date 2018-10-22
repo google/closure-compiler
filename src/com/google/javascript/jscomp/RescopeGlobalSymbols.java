@@ -375,6 +375,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
     private void visitNameDeclaration(NodeTraversal t, Node declaration) {
       List<Node> allLhsNodes = NodeUtil.findLhsNodesInNode(declaration);
+      if (allLhsNodes.isEmpty()) {
+        return;
+      }
       boolean hasImportantName = false;
       boolean isGlobalDeclaration = t.getScope().getVar(allLhsNodes.get(0).getString()).isGlobal();
 
