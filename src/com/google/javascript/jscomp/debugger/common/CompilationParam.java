@@ -731,18 +731,6 @@ public enum CompilationParam {
     }
   },
 
-  REMOVE_SUPER_METHODS(ParamGroup.OPTIMIZATION){
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setRemoveSuperMethods(value);
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.getRemoveSuperMethods();
-    }
-  },
-
   REWRITE_FUNCTION_EXPRESSIONS(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {

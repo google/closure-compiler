@@ -790,9 +790,6 @@ public class CompilerOptions implements Serializable {
   /** Remove goog.abstractMethod assignments and @abstract methods. */
   boolean removeAbstractMethods;
 
-  /** Remove methods that only make a super call without changing the arguments. */
-  boolean removeSuperMethods;
-
   /** Remove goog.asserts calls. */
   boolean removeClosureAsserts;
 
@@ -1335,7 +1332,6 @@ public class CompilerOptions implements Serializable {
     dartPass = false;
     j2clPassMode = J2clPassMode.AUTO;
     removeAbstractMethods = false;
-    removeSuperMethods = false;
     removeClosureAsserts = false;
     stripTypes = Collections.emptySet();
     stripNameSuffixes = Collections.emptySet();
@@ -1739,14 +1735,6 @@ public class CompilerOptions implements Serializable {
 
   public void setRemoveAbstractMethods(boolean remove) {
     this.removeAbstractMethods = remove;
-  }
-
-  public void setRemoveSuperMethods(boolean remove) {
-    this.removeSuperMethods = remove;
-  }
-
-  public boolean getRemoveSuperMethods() {
-    return removeSuperMethods;
   }
 
   public void setRemoveClosureAsserts(boolean remove) {
@@ -3104,7 +3092,6 @@ public class CompilerOptions implements Serializable {
             .add("quoteKeywordProperties", quoteKeywordProperties)
             .add("recordFunctionInformation", recordFunctionInformation)
             .add("removeAbstractMethods", removeAbstractMethods)
-            .add("removeSuperMethods", removeSuperMethods)
             .add("removeClosureAsserts", removeClosureAsserts)
             .add("removeJ2clAsserts", removeJ2clAsserts)
             .add("removeDeadCode", removeDeadCode)

@@ -78,7 +78,6 @@ public final class PassNames {
   public static final String PEEPHOLE_OPTIMIZATIONS = "peepholeOptimizations";
   public static final String REWRITE_COMMON_JS_MODULES = "rewriteCommonJsModules";
   public static final String REWRITE_SCRIPTS_TO_ES6_MODULES = "rewriteScriptsToEs6Modules";
-  public static final String REMOVE_SUPER_METHODS = "removeSuperMethods";
   public static final String REMOVE_UNREACHABLE_CODE = "removeUnreachableCode";
   public static final String REMOVE_UNUSED_CLASS_PROPERTIES = "removeUnusedClassProperties";
   public static final String REMOVE_UNUSED_PROTOTYPE_PROPERTIES =

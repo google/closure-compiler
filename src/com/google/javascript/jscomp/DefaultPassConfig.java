@@ -682,12 +682,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(crossModuleCodeMotion);
     }
 
-    // Must run after ProcessClosurePrimitives, Es6ConvertSuper, and assertion removals, but
-    // before OptimizeCalls (specifically, OptimizeParameters) and DevirtualizePrototypeMethods.
-    if (options.removeSuperMethods) {
-      passes.add(removeSuperMethodsPass);
-    }
-
     // Method devirtualization benefits from property disambiguation so
     // it should run after that pass but before passes that do
     // optimizations based on global names (like cross module code motion
@@ -1095,27 +1089,6 @@ public final class DefaultPassConfig extends PassConfig {
         checkVariableReferences,
         closureGoogScopeAliases,
         "Variable checking must happen before goog.scope processing.");
-
-    assertPassOrder(
-        checks,
-        TranspilationPasses.es6ConvertSuper,
-        removeSuperMethodsPass,
-        "Super-call method removal must run after Es6 super rewriting, "
-            + "because Es6 super calls are matched on their post-processed form.");
-
-    assertPassOrder(
-        checks,
-        closurePrimitives,
-        removeSuperMethodsPass,
-        "Super-call method removal must run after Es6 super rewriting, "
-            + "because Closure base calls are expected to be in post-processed form.");
-
-    assertPassOrder(
-        checks,
-        closureCodeRemoval,
-        removeSuperMethodsPass,
-        "Super-call method removal must run after closure code removal, because "
-            + "removing assertions may make more super calls eligible to be stripped.");
   }
 
   /**
@@ -1125,12 +1098,6 @@ public final class DefaultPassConfig extends PassConfig {
    * @param optimizations The list of optimization passes
    */
   private void assertValidOrderForOptimizations(List<PassFactory> optimizations) {
-    assertPassOrder(optimizations, removeSuperMethodsPass, optimizeCalls,
-        "RemoveSuperMethodsPass must run before OptimizeCalls.");
-
-    assertPassOrder(optimizations, removeSuperMethodsPass, devirtualizePrototypeMethods,
-        "RemoveSuperMethodsPass must run before DevirtualizePrototypeMethods.");
-
     assertPassOrder(
         optimizations,
         processDefines,
@@ -3431,19 +3398,6 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           return ES8_MODULES;
-        }
-      };
-
-  private final PassFactory removeSuperMethodsPass =
-      new PassFactory(PassNames.REMOVE_SUPER_METHODS, true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new RemoveSuperMethodsPass(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES5;
         }
       };
 
