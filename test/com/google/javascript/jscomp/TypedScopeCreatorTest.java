@@ -2425,7 +2425,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertNode(fooProto.getOwnPropertyDefSite("constructor")).isSameAs(fooCtorDef);
 
     assertType(fooConstructorProperty).isSubtypeOf(barConstructorProperty);
-    assertType(fooConstructorProperty).withTypeOfProp("method").isNotUnknown();
+    // TODO(b/118174876): The type of `this` should be equal to the Foo class itself.
+    assertType(fooConstructorProperty)
+        .withTypeOfProp("method")
+        .isFunctionTypeThat()
+        .hasTypeOfThisThat()
+        .isUnknown();
   }
 
   @Test
