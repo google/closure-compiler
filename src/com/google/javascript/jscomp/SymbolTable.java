@@ -1202,6 +1202,7 @@ public final class SymbolTable {
     Table<String, Integer, Symbol> externSymbols = HashBasedTable.create();
     for (Symbol symbol : ImmutableList.copyOf(symbols.values())) {
       if (symbol.getDeclarationNode() == null
+          || symbol.getDeclarationNode().getStaticSourceFile() == null
           || !symbol.getDeclarationNode().getStaticSourceFile().isExtern()) {
         continue;
       }
