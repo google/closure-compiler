@@ -1726,7 +1726,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       if (options.getDependencyOptions().needsManagement()) {
-        findDependenciesFromEntryPoints(
+        findModulesFromEntryPoints(
             options.getLanguageIn().toFeatureSet().has(Feature.MODULES),
             options.processCommonJSModules);
       } else if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)
@@ -1869,16 +1869,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Find dependencies by recursively traversing each dependency of an input starting with the entry
-   * points. Causes a full parse of each file, but since the file is reachable by walking the graph,
-   * this would be required in later compilation passes regardless.
+   * Find modules by recursively traversing dependencies starting with the entry points.
    *
-   * <p>Inputs which are not reachable during graph traversal will be dropped.
+   * <p>Causes a regex parse of every file, and a full parse of every file reachable from the entry
+   * points (which would be required by later compilation passes regardless).
    *
-   * <p>If the dependency mode is set to LOOSE, inputs for which the deps package did not find a
-   * provide statement or detect as a module will be treated as entry points.
+   * <p>If the dependency mode is set to LOOSE, inputs which the regex parse does not identify as ES
+   * modules and which do not contain any provide statements are considered to be additional entry
+   * points.
    */
-  void findDependenciesFromEntryPoints(boolean supportEs6Modules, boolean supportCommonJSModules) {
+  private void findModulesFromEntryPoints(
+      boolean supportEs6Modules, boolean supportCommonJSModules) {
     hoistExterns();
     List<CompilerInput> entryPoints = new ArrayList<>();
     Map<String, CompilerInput> inputsByProvide = new HashMap<>();
@@ -1907,7 +1908,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     Set<CompilerInput> workingInputSet = Sets.newHashSet(moduleGraph.getAllInputs());
     for (CompilerInput entryPoint : entryPoints) {
-      depthFirstDependenciesFromInput(
+      findModulesFromInput(
           entryPoint,
           /* wasImportedByModule = */ false,
           workingInputSet,
@@ -1918,8 +1919,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  /** For a given input, order it's dependencies in a depth first traversal */
-  private List<CompilerInput> depthFirstDependenciesFromInput(
+  /** Traverse an input's dependencies to find additional modules. */
+  private void findModulesFromInput(
       CompilerInput input,
       boolean wasImportedByModule,
       Set<CompilerInput> inputs,
@@ -1927,7 +1928,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       Map<String, CompilerInput> inputsByProvide,
       boolean supportEs6Modules,
       boolean supportCommonJSModules) {
-    List<CompilerInput> orderedInputs = new ArrayList<>();
     if (!inputs.remove(input)) {
       // It's possible for a module to be included as both a script
       // and a module in the same compilation. In these cases, it should
@@ -1935,8 +1935,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
         input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
       }
-
-      return orderedInputs;
+      return;
     }
 
     FindModuleDependencies findDeps =
@@ -1965,19 +1964,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       if (requiredInput != null) {
-        orderedInputs.addAll(
-            depthFirstDependenciesFromInput(
-                requiredInput,
-                requiredByModuleImport,
-                inputs,
-                inputsByIdentifier,
-                inputsByProvide,
-                supportEs6Modules,
-                supportCommonJSModules));
+        findModulesFromInput(
+            requiredInput,
+            requiredByModuleImport,
+            inputs,
+            inputsByIdentifier,
+            inputsByProvide,
+            supportEs6Modules,
+            supportCommonJSModules);
       }
     }
-    orderedInputs.add(input);
-    return orderedInputs;
   }
 
   /**
