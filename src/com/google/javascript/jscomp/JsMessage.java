@@ -28,8 +28,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -299,15 +297,27 @@ public final class JsMessage {
   public static class Builder {
 
     // Allow arbitrary suffixes to allow for local variable disambiguation.
-    private static final Pattern MSG_EXTERNAL_PATTERN = Pattern.compile("MSG_EXTERNAL_(\\d+).*");
+    private static final String MSG_EXTERNAL_PREFIX = "MSG_EXTERNAL_";
 
     /**
      * @return an external message id or null if this is not an
      * external message identifier
      */
     private static String getExternalMessageId(String identifier) {
-      Matcher m = MSG_EXTERNAL_PATTERN.matcher(identifier);
-      return m.matches() ? m.group(1) : null;
+      if (identifier.startsWith(MSG_EXTERNAL_PREFIX)) {
+        int start = MSG_EXTERNAL_PREFIX.length();
+        int end = start;
+        for (; end < identifier.length(); end++) {
+          char c = identifier.charAt(end);
+          if (c > '9' || c < '0') {
+            break;
+          }
+        }
+        if (end > start) {
+          return identifier.substring(start, end);
+        }
+      }
+      return null;
     }
 
     private String key;
