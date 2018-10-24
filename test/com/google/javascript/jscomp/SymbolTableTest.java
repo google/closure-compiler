@@ -1421,7 +1421,7 @@ public final class SymbolTableTest extends TestCase {
     // Add window so that it triggers logic that defines all global externs on window.
     // See DeclaredGlobalExternsOnWindow.java pass.
     String externs = lines("/** @externs */", "var window", "var foo;");
-    String mainCode = lines("foo;", "window.foo;");
+    String mainCode = lines("foo = 2;", "window.foo = 1;");
     SymbolTable table = createSymbolTable(mainCode, externs);
 
     Map<String, Integer> refsPerFile = new HashMap<>();
