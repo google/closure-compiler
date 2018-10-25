@@ -31,7 +31,6 @@ import com.google.javascript.rhino.Token;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -42,7 +41,7 @@ import org.junit.runners.JUnit4;
  * @author anatol@google.com (Anatol Pomazau)
  */
 @RunWith(JUnit4.class)
-public final class WarningsGuardTest extends TestCase {
+public final class WarningsGuardTest {
   private static final DiagnosticType BAR_WARNING =
       DiagnosticType.warning("BAR", "Bar description");
 
@@ -424,6 +423,7 @@ public final class WarningsGuardTest extends TestCase {
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
 
+  @Test
   public void testSuppressDocGuard_appliesSuppressionsOnComputedPropMethod_toPropNameExpression() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));

@@ -21,14 +21,13 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Unit test for {@link Xid}. */
 @RunWith(JUnit4.class)
-public class XidTest extends TestCase {
+public class XidTest {
 
   /**
    * Verifies that {@link Xid#toString} generates unique strings for the integers close to zero,

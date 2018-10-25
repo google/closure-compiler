@@ -22,7 +22,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -32,7 +31,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class XtbMessageBundleTest extends TestCase {
+public final class XtbMessageBundleTest {
   private static final String PROJECT_ID = "TestProject";
 
   private static final String XTB =
