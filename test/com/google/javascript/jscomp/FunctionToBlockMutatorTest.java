@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,12 +32,11 @@ import org.junit.runners.JUnit4;
 
 /** @author johnlenz@google.com (John Lenz) */
 @RunWith(JUnit4.class)
-public final class FunctionToBlockMutatorTest extends TestCase {
+public final class FunctionToBlockMutatorTest {
 
   private boolean needsDefaultResult;
   private boolean isCallInLoop;
 
-  @Override
   @Before
   public void setUp() {
     needsDefaultResult = false;

@@ -25,7 +25,6 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +36,7 @@ import org.junit.runners.JUnit4;
  * @author bashir@google.com (Bashir Sadjad)
  */
 @RunWith(JUnit4.class)
-public final class GlobalVarReferenceMapTest extends TestCase {
+public final class GlobalVarReferenceMapTest {
 
   private final CompilerInput INPUT1 =
       new CompilerInput(SourceFile.fromCode("input1", ""), false);
@@ -72,10 +71,8 @@ public final class GlobalVarReferenceMapTest extends TestCase {
   private final Reference var3In2Ref = createRefForTest(INPUT2);
   private final Reference var3In1Ext = createRefForTest(EXTERN1);
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     globalScope.declare(VAR1, new Node(Token.NAME), INPUT1);
     var1Refs.references = ImmutableList.of(var1In1Ref,
         var1In2Ref, var1In3Ref);

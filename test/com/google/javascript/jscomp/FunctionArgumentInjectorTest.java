@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -42,7 +41,7 @@ import org.junit.runners.JUnit4;
  * @author johnlenz@google.com (John Lenz)
  */
 @RunWith(JUnit4.class)
-public final class FunctionArgumentInjectorTest extends TestCase {
+public final class FunctionArgumentInjectorTest {
 
   private static final ImmutableSet<String> EMPTY_STRING_SET = ImmutableSet.of();
 

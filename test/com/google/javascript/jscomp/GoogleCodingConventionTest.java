@@ -22,14 +22,13 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Test class for {@link GoogleCodingConvention}. */
 @RunWith(JUnit4.class)
-public final class GoogleCodingConventionTest extends TestCase {
+public final class GoogleCodingConventionTest {
   private final GoogleCodingConvention conv = new GoogleCodingConvention();
 
   @Test

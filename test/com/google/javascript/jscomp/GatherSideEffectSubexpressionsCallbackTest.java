@@ -25,7 +25,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -35,7 +34,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
+public final class GatherSideEffectSubexpressionsCallbackTest {
   @Test
   public void testAndOr() {
     Node andNode = getSideEffectsAndNode();

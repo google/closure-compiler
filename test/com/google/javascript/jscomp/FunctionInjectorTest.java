@@ -31,7 +31,6 @@ import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -44,17 +43,15 @@ import org.junit.runners.JUnit4;
  * @author johnlenz@google.com (John Lenz)
  */
 @RunWith(JUnit4.class)
-public final class FunctionInjectorTest extends TestCase {
+public final class FunctionInjectorTest {
   static final InliningMode INLINE_DIRECT = InliningMode.DIRECT;
   static final InliningMode INLINE_BLOCK = InliningMode.BLOCK;
   private boolean assumeStrictThis = false;
   private final boolean assumeMinimumCapture = false;
   private boolean allowDecomposition;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     assumeStrictThis = false;
     allowDecomposition = false;
   }
