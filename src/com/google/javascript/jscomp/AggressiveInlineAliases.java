@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
+import com.google.javascript.jscomp.GlobalNamespace.Name.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.GlobalNamespace.Ref.Type;
 import com.google.javascript.rhino.IR;
@@ -51,65 +52,6 @@ class AggressiveInlineAliases implements CompilerPass {
       DiagnosticType.warning(
           "JSC_UNSAFE_CTOR_ALIASING",
           "Variable {0} aliases a constructor, " + "so it cannot be assigned multiple times");
-
-  /**
-   * @param name The Name whose properties references should be updated.
-   * @param value The value to use when rewriting.
-   * @param depth The chain depth.
-   * @param newNodes Expression nodes that have been updated.
-   */
-  private void rewriteAliasProps(Name name, Node value, int depth, Set<AstChange> newNodes) {
-    if (name.props == null) {
-      return;
-    }
-    Preconditions.checkState(
-        !value.matchesQualifiedName(name.getFullName()),
-        "%s should not match name %s",
-        value,
-        name.getFullName());
-    for (Name prop : name.props) {
-      rewriteAliasProp(value, depth, newNodes, prop);
-    }
-  }
-
-  /**
-   * @param value The value to use when rewriting.
-   * @param depth The chain depth.
-   * @param newNodes Expression nodes that have been updated.
-   * @param prop The property to rewrite with value.
-   */
-  private void rewriteAliasProp(Node value, int depth, Set<AstChange> newNodes, Name prop) {
-    rewriteAliasProps(prop, value, depth + 1, newNodes);
-    List<Ref> refs = new ArrayList<>(prop.getRefs());
-    for (Ref ref : refs) {
-      Node target = ref.node;
-      for (int i = 0; i <= depth; i++) {
-        if (target.isGetProp()) {
-          target = target.getFirstChild();
-        } else if (NodeUtil.isObjectLitKey(target)) {
-          // Object literal key definitions are a little trickier, as we
-          // need to find the assignment target
-          Node gparent = target.getGrandparent();
-          if (gparent.isAssign()) {
-            target = gparent.getFirstChild();
-          } else {
-            checkState(NodeUtil.isObjectLitKey(gparent));
-            target = gparent;
-          }
-        } else {
-          throw new IllegalStateException("unexpected: " + target);
-        }
-      }
-      checkState(target.isGetProp() || target.isName());
-      Node newValue = value.cloneTree();
-      target.replaceWith(newValue);
-      compiler.reportChangeToEnclosingScope(newValue);
-      prop.removeRef(ref);
-      // Rescan the expression root.
-      newNodes.add(new AstChange(ref.module, ref.scope, ref.node));
-      codeChanged = true;
-    }
-  }
 
   private final AbstractCompiler compiler;
   private boolean codeChanged;
@@ -184,15 +126,11 @@ class AggressiveInlineAliases implements CompilerPass {
             // TODO(johnlenz): consider picking up new aliases at the end
             // of the pass instead of immediately like we do for global
             // inlines.
-            if (inlineAliasIfPossible(name, ref, namespace)) {
-              name.removeRef(ref);
-            }
+            inlineAliasIfPossible(name, ref, namespace);
           } else if (ref.type == Type.ALIASING_GET
               && hoistScope.isGlobal()
               && ref.getTwin() == null) { // ignore aliases in chained assignments
-            if (inlineGlobalAliasIfPossible(name, ref, namespace)) {
-              name.removeRef(ref);
-            }
+            inlineGlobalAliasIfPossible(name, ref, namespace);
           }
         }
       }
@@ -349,7 +287,20 @@ class AggressiveInlineAliases implements CompilerPass {
     return true;
   }
 
-  private boolean inlineAliasIfPossible(Name name, Ref alias, GlobalNamespace namespace) {
+  /**
+   * Attempts to inline a non-global alias of a global name.
+   *
+   * <p>It is assumed that the name for which it is an alias meets conditions (a) and (b).
+   *
+   * <p>The non-global alias is only inlinable if it is well-defined and assigned once, according to
+   * the definitions in {@link ReferenceCollection}
+   *
+   * <p>If the aliasing name is completely removed, also deletes the aliasing Ref.
+   *
+   * @param name The global name being aliased
+   * @param alias The aliasing reference to the name to remove
+   */
+  private void inlineAliasIfPossible(Name name, Ref alias, GlobalNamespace namespace) {
     // Ensure that the alias is assigned to a local variable at that
     // variable's declaration. If the alias's parent is a NAME,
     // then the NAME must be the child of a VAR, LET, or CONST node, and we must
@@ -390,7 +341,8 @@ class AggressiveInlineAliases implements CompilerPass {
         // Inlining the variable may have introduced new references
         // to descendants of {@code name}. So those need to be collected now.
         namespace.scanNewNodes(newNodes);
-        return true;
+        name.removeRef(alias);
+        return;
       }
 
       if (name.isConstructor()) {
@@ -399,7 +351,7 @@ class AggressiveInlineAliases implements CompilerPass {
         // If we find another (safer) way to avoid aliasing in method decomposition, consider
         // removing this.
         if (partiallyInlineAlias(alias, namespace, aliasRefs, aliasLhsNode)) {
-          return true;
+          name.removeRef(alias);
         } else {
           // If we can't inline all alias references, make sure there are no unsafe property
           // accesses.
@@ -409,8 +361,6 @@ class AggressiveInlineAliases implements CompilerPass {
         }
       }
     }
-
-    return false;
   }
 
   /**
@@ -549,11 +499,12 @@ class AggressiveInlineAliases implements CompilerPass {
    * defined: assigned unconditionally, assigned exactly once. It is assumed that, the name for
    * which it is an alias must already meet these same requirements.
    *
+   * <p>If the alias is completely removed, also deletes the aliasing Ref.
+   *
    * @param name The global name being aliased
    * @param alias The alias to inline
-   * @return Whether the alias was inlined.
    */
-  private boolean inlineGlobalAliasIfPossible(Name name, Ref alias, GlobalNamespace namespace) {
+  private void inlineGlobalAliasIfPossible(Name name, Ref alias, GlobalNamespace namespace) {
     // Ensure that the alias is assigned to global name at that the
     // declaration.
     Node aliasParent = alias.node.getParent();
@@ -566,27 +517,38 @@ class AggressiveInlineAliases implements CompilerPass {
         || (aliasParent.isName() && name.isConstructor())) {
       Node lvalue = aliasParent.isName() ? aliasParent : aliasParent.getFirstChild();
       if (!lvalue.isQualifiedName()) {
-        return false;
+        return;
       }
       if (lvalue.isName()
           && compiler.getCodingConvention().isExported(lvalue.getString(), /* local */ false)) {
-        return false;
+        return;
       }
       Name aliasingName = namespace.getSlot(lvalue.getQualifiedName());
 
-      if (name.equals(aliasingName) && aliasParent.isAssign()) {
-        // Ignore `a.b.c = a.b.c;` with `a.b.c;`.
-        return false;
+      if (aliasingName == null) {
+        // this is true for names in externs or properties on extern names
+        return;
       }
 
-      if (aliasingName != null && aliasingName.isInlinableGlobalAlias()) {
-        Set<AstChange> newNodes = new LinkedHashSet<>();
+      if (name.equals(aliasingName) && aliasParent.isAssign()) {
+        // Ignore `a.b.c = a.b.c;` with `a.b.c;`.
+        return;
+      }
 
-        // Rewrite all references to the aliasing name, except for the initialization
-        rewriteAliasReferences(aliasingName, alias, newNodes);
-        rewriteAliasProps(aliasingName, alias.node, 0, newNodes);
+      Inlinability aliasInlinability = aliasingName.calculateInlinability();
+      if (!aliasInlinability.shouldInlineUsages()) {
+        // nothing to do here
+        return;
+      }
+      Set<AstChange> newNodes = new LinkedHashSet<>();
 
-        // Rewrite the initialization of the alias
+      // Rewrite all references to the aliasing name, except for the initialization
+      rewriteAliasReferences(aliasingName, alias, newNodes);
+      rewriteAliasProps(aliasingName, alias.node, 0, newNodes);
+
+      if (aliasInlinability.shouldRemoveDeclaration()) {
+        // Rewrite the initialization of the alias, unless this is an unsafe alias inline
+        // caused by an @constructor. In that case, we need to leave the initialization around.
         Ref aliasDeclaration = aliasingName.getDeclaration();
         if (aliasDeclaration.getTwin() != null) {
           // This is in a nested assign.
@@ -606,15 +568,14 @@ class AggressiveInlineAliases implements CompilerPass {
           compiler.reportChangeToEnclosingScope(aliasParent);
         }
         codeChanged = true;
-
-        // Inlining the variable may have introduced new references
-        // to descendants of {@code name}. So those need to be collected now.
-        namespace.scanNewNodes(newNodes);
-
-        return true;
+        // Update the original aliased name to say that it has one less ALIASING_REF.
+        name.removeRef(alias);
       }
+
+      // Inlining the variable may have introduced new references
+      // to descendants of {@code name}. So those need to be collected now.
+      namespace.scanNewNodes(newNodes);
     }
-    return false;
   }
 
   /** Replaces all reads of a name with the name it aliases */
@@ -651,7 +612,7 @@ class AggressiveInlineAliases implements CompilerPass {
   }
 
   /** Check if the name has multiple sets that are not of the form "a = a || {}" */
-  private boolean isUnsafelyReassigned(Name name) {
+  private static boolean isUnsafelyReassigned(Name name) {
     boolean foundOriginalDefinition = false;
     for (Ref ref : name.getRefs()) {
       if (!ref.isSet()) {
@@ -667,5 +628,64 @@ class AggressiveInlineAliases implements CompilerPass {
       }
     }
     return false;
+  }
+
+  /**
+   * @param name The Name whose properties references should be updated.
+   * @param value The value to use when rewriting.
+   * @param depth The chain depth.
+   * @param newNodes Expression nodes that have been updated.
+   */
+  private void rewriteAliasProps(Name name, Node value, int depth, Set<AstChange> newNodes) {
+    if (name.props == null) {
+      return;
+    }
+    Preconditions.checkState(
+        !value.matchesQualifiedName(name.getFullName()),
+        "%s should not match name %s",
+        value,
+        name.getFullName());
+    for (Name prop : name.props) {
+      rewriteAliasProp(value, depth, newNodes, prop);
+    }
+  }
+
+  /**
+   * @param value The value to use when rewriting.
+   * @param depth The chain depth.
+   * @param newNodes Expression nodes that have been updated.
+   * @param prop The property to rewrite with value.
+   */
+  private void rewriteAliasProp(Node value, int depth, Set<AstChange> newNodes, Name prop) {
+    rewriteAliasProps(prop, value, depth + 1, newNodes);
+    List<Ref> refs = new ArrayList<>(prop.getRefs());
+    for (Ref ref : refs) {
+      Node target = ref.node;
+      for (int i = 0; i <= depth; i++) {
+        if (target.isGetProp()) {
+          target = target.getFirstChild();
+        } else if (NodeUtil.isObjectLitKey(target)) {
+          // Object literal key definitions are a little trickier, as we
+          // need to find the assignment target
+          Node gparent = target.getGrandparent();
+          if (gparent.isAssign()) {
+            target = gparent.getFirstChild();
+          } else {
+            checkState(NodeUtil.isObjectLitKey(gparent));
+            target = gparent;
+          }
+        } else {
+          throw new IllegalStateException("unexpected: " + target);
+        }
+      }
+      checkState(target.isGetProp() || target.isName());
+      Node newValue = value.cloneTree();
+      target.replaceWith(newValue);
+      compiler.reportChangeToEnclosingScope(newValue);
+      prop.removeRef(ref);
+      // Rescan the expression root.
+      newNodes.add(new AstChange(ref.module, ref.scope, ref.node));
+      codeChanged = true;
+    }
   }
 }

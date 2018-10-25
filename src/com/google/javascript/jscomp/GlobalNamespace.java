@@ -1330,10 +1330,59 @@ class GlobalNamespace
       return docInfo != null && docInfo.isNoCollapse();
     }
 
-    boolean isInlinableGlobalAlias() {
+    /**
+     * How much to inline a variable The INLINE_BUT_KEEP_DECLARATION case is really an indicator
+     * that something 'unsafe' is happening in order to not break CollapseProperties as badly. Sadly
+     * INLINE_COMPLETELY may /also/ be unsafe.
+     */
+    enum Inlinability {
+      INLINE_COMPLETELY,
+      INLINE_BUT_KEEP_DECLARATION,
+      DO_NOT_INLINE;
+
+      boolean shouldInlineUsages() {
+        return this != DO_NOT_INLINE;
+      }
+
+      boolean shouldRemoveDeclaration() {
+        return this == INLINE_COMPLETELY;
+      }
+
+      boolean canCollapse() {
+        return this != DO_NOT_INLINE;
+      }
+    }
+
+    /**
+     * Returns whether to treat this alias as completely inlinable or to keep the aliasing
+     * assignment
+     *
+     * <p>This method used to only return true/false, but now returns an enum in order to track more
+     * information about "unsafely" inlinable names.
+     *
+     * <p>CollapseProperties will flatten `@constructor` properties even if they are potentially
+     * accessed by a reference other than their fully qualified name, which breaks those other refs.
+     * To avoid breakages AggressiveInlineAliases must unsafely inline constructor properties that
+     * alias another global name. Existing code depends on this behavior, and it's not easily
+     * determinable where these dependencies are.
+     *
+     * <p>However, AggressiveInlineAliases must not also remove the initializtion of an alias if it
+     * is not safely inlinable. (i.e. if Inlinability#shouldRemoveDeclaration()). It's possible that
+     * a third name aliases the alias - we might later inline the third name (as an alias of the
+     * original alias) and don't want to set the third name to null.
+     */
+    Inlinability calculateInlinability() {
       // Only simple aliases with direct usage are inlinable.
-      if (inExterns() || globalSets != 1 || localSets != 0 || !canCollapse()) {
-        return false;
+      if (inExterns() || globalSets != 1 || localSets != 0) {
+        return Inlinability.DO_NOT_INLINE;
+      }
+
+      // TODO(lharker): consider separating canCollapseOrInline() into this method, since it
+      // duplicates some logic here
+      Inlinability collapsibility = canCollapseOrInline();
+      if (!collapsibility.shouldInlineUsages()) {
+        // if you can't even inline the usages, do nothing.
+        return Inlinability.DO_NOT_INLINE;
       }
 
       // Only allow inlining of simple references.
@@ -1350,24 +1399,102 @@ class GlobalNamespace
           case CALL_GET:
             continue;
           case DELETE_PROP:
-            return false;
+            return Inlinability.DO_NOT_INLINE;
           default:
             throw new IllegalStateException();
         }
       }
-      return true;
+      return collapsibility;
     }
 
     boolean canCollapse() {
-      return !inExterns()
-          && !isGetOrSetDefinition()
-          && !isCollapsingExplicitlyDenied()
-          && (declaredType
-              || ((parent == null || parent.canCollapseUnannotatedChildNames())
-                  && (globalSets > 0 || localSets > 0)
-                  && localSetsWithNoCollapse == 0
-                  && deleteProps == 0))
-          && !isStaticClassMemberFunction();
+      return canCollapseOrInline().canCollapse();
+    }
+
+    /**
+     * Determines whether it's safe to collapse properties on an objects
+     *
+     * <p>For legacy reasons, both CollapseProperties and AggressiveInlineAliases share the same
+     * logic when deciding whether to inline properties or to collapse them.
+     *
+     * <p>The main reasons we cannot inline/collapse properties of a name name are:
+     *
+     * <pre>
+     *   a) it is set multiple times or set once in a local scope,
+     *   b) one or more of the above conditions in canCollapseOrInlineChildNames
+     *      applies to the namespace it's on,
+     *   c) it's annotated at-nocollapse
+     *   d) it's in the externs,
+     *   e) or it's a known getter or setter, not a regular property
+     * </pre>
+     *
+     * <p>We ignore conditions (a) and (b) on at-constructor and at-enum names in
+     * CollapseProperties.
+     *
+     * <p>In AggressiveInlineAliases we want to do some partial backoff if (a) and (b) are false for
+     * at-constructor or at-enum names, which is why we return an enum value instead of a boolean.
+     */
+    private Inlinability canCollapseOrInline() {
+      if (inExterns()) {
+        // condition (e)
+        return Inlinability.DO_NOT_INLINE;
+      }
+      if (isGetOrSetDefinition()) {
+        // condition (f)
+        return Inlinability.DO_NOT_INLINE;
+      }
+      if (isCollapsingExplicitlyDenied()) {
+        // condition (d)
+        return Inlinability.DO_NOT_INLINE;
+      }
+
+      if (isStaticClassMemberFunction()) {
+        // condition (b) b/c of uses of super/this in static fns
+        return Inlinability.DO_NOT_INLINE;
+      }
+
+      // condition (a)
+      boolean isUnchangedThroughFullName =
+          (globalSets > 0 || localSets > 0) && localSetsWithNoCollapse == 0 && deleteProps == 0;
+      // additional information about condition (b)
+      Inlinability parentInlinability =
+          parent == null ? Inlinability.INLINE_COMPLETELY : parent.canCollapseOrInlineChildNames();
+
+      // if condition (a) or condition (b) is not true, but this is a declared name, we may need
+      // to allow inlining usages of a variable but keep the declaration.
+      switch (parentInlinability) {
+        case INLINE_COMPLETELY:
+          if (isUnchangedThroughFullName) {
+            return Inlinability.INLINE_COMPLETELY;
+          }
+          // maybe inline usages of this name, but only if a declared type. non-declared-types just
+          // back off and don't inline at all
+          return declaredType
+              ? Inlinability.INLINE_BUT_KEEP_DECLARATION
+              : Inlinability.DO_NOT_INLINE;
+
+        case INLINE_BUT_KEEP_DECLARATION:
+          // this is definitely not safe to completely inline/collapse of its parent
+          // if it's a declared type, we should still partially inline it and completely collapse it
+          // if not a declared type we should partially inline it iff the other conditions hold
+          if (declaredType) {
+            return Inlinability.INLINE_BUT_KEEP_DECLARATION;
+          }
+          // Not a declared type. We may still 'partially' inline it because it must be a property
+          // on an @enum or @constructor, but only if it actually matches conditions (a) and (b)
+          return isUnchangedThroughFullName
+              ? Inlinability.INLINE_BUT_KEEP_DECLARATION
+              : Inlinability.DO_NOT_INLINE;
+
+        case DO_NOT_INLINE:
+          // If the parent is unsafely to collapse/inline, we will still inline it if it's on
+          // a declaredType (i.e. @constructor or @enum), but we propagate the information that
+          // the parent is unsafe. If this is not a declared type, return DO_NOT_INLINE.
+          return declaredType
+              ? Inlinability.INLINE_BUT_KEEP_DECLARATION
+              : Inlinability.DO_NOT_INLINE;
+      }
+      throw new IllegalStateException("unknown enum value " + parentInlinability);
     }
 
     boolean isStaticClassMemberFunction() {
@@ -1401,9 +1528,34 @@ class GlobalNamespace
     }
 
     boolean canCollapseUnannotatedChildNames() {
+      return canCollapseOrInlineChildNames().canCollapse();
+    }
+
+    /**
+     * Returns whether to assume that child properties of this name are collapsible/inlinable
+     *
+     * <p>For legacy reasons, both CollapseProperties and AggressiveInlineAliases share the same
+     * logic when deciding whether to inline properties or to collapse them.
+     *
+     * <p>The main reasons we cannot inline/collapse properties of a name name are:
+     *
+     * <pre>
+     *   a) it is set multiple times
+     *   b) its properties might not be referred to by their full qname but on a different object
+     *   c) one or more of the above conditions applies to a parent name
+     *   d) it's annotated @nocollapse
+     *   e) it's in the externs.
+     * </pre>
+     *
+     * <p>However, in some cases for properties of `@constructor` or `@enum` names, we ignore some
+     * of these conditions in order to more aggressively collapse `@constructor`s used in
+     * goog.provide namespace chains.
+     */
+    private Inlinability canCollapseOrInlineChildNames() {
       if (type == Type.OTHER || isGetOrSetDefinition()
           || globalSets != 1 || localSets != 0 || deleteProps != 0) {
-        return false;
+        // condition (a) and (b)
+        return Inlinability.DO_NOT_INLINE;
       }
 
       // Don't try to collapse if the one global set is a twin reference.
@@ -1411,37 +1563,55 @@ class GlobalNamespace
       // it's probably not worth the effort.
       checkNotNull(declaration);
       if (declaration.getTwin() != null) {
-        return false;
+        return Inlinability.DO_NOT_INLINE;
       }
 
       if (isCollapsingExplicitlyDenied()) {
-        return false;
+        // condition (d)
+        return Inlinability.DO_NOT_INLINE;
       }
 
       if (isSetInLoop()) {
-        return false;
+        // condition (a)
+        return Inlinability.DO_NOT_INLINE;
       }
 
       if (usedHasOwnProperty) {
-        return false;
-      }
-
-      if (declaredType) {
-        return true;
+        // condition (b)
+        return Inlinability.DO_NOT_INLINE;
       }
 
       // If this is a key of an aliased object literal, then it will be aliased
       // later. So we won't be able to collapse its properties.
+      // condition (b)
       if (parent != null && parent.shouldKeepKeys()) {
-        return false;
+        return declaredType ? Inlinability.INLINE_BUT_KEEP_DECLARATION : Inlinability.DO_NOT_INLINE;
       }
 
-      // If this is aliased, then its properties can't be collapsed either.
+      // If this is aliased, then its properties can't be collapsed either. but we may do so anyway
+      // if it's a declared type.
+      // condition (b)
       if (aliasingGets > 0) {
-        return false;
+        return declaredType ? Inlinability.INLINE_BUT_KEEP_DECLARATION : Inlinability.DO_NOT_INLINE;
       }
 
-      return (parent == null || parent.canCollapseUnannotatedChildNames());
+      if (parent == null) {
+        // this is completely safe to inline! yay
+        return Inlinability.INLINE_COMPLETELY;
+      }
+
+      // Cases are:
+      //  - parent is safe to completely inline. then same for this name
+      //  - parent is unsafe but should still be inlined. then same for this name
+      //  - parent is unsafe, should not be inlined at all. then return either DO_NOT_INLINE,
+      //    or maybe unsafely inline if this is a ctor property
+      Inlinability parentInlinability = parent.canCollapseOrInlineChildNames();
+      if (parentInlinability == Inlinability.DO_NOT_INLINE) {
+        // the parent name is used in a way making this unsafe to inline, but we might want to
+        // inline usages of this name
+        return declaredType ? Inlinability.INLINE_BUT_KEEP_DECLARATION : Inlinability.DO_NOT_INLINE;
+      }
+      return parentInlinability;
     }
 
     /** Whether this is an object literal that needs to keep its keys. */

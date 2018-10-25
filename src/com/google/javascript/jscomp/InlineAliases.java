@@ -101,9 +101,9 @@ final class InlineAliases implements CompilerPass {
           GlobalNamespace.Name lhsName = namespace.getOwnSlot(lhs.getQualifiedName());
           GlobalNamespace.Name rhsName = namespace.getOwnSlot(rhs.getQualifiedName());
           if (lhsName != null
-              && lhsName.isInlinableGlobalAlias()
+              && lhsName.calculateInlinability().shouldInlineUsages()
               && rhsName != null
-              && rhsName.isInlinableGlobalAlias()
+              && rhsName.calculateInlinability().shouldInlineUsages()
               && !isPrivate(rhsName.getDeclaration().getNode())) {
             aliases.put(lhs.getQualifiedName(), rhs.getQualifiedName());
           }
