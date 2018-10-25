@@ -38,7 +38,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -112,7 +111,7 @@ public final class NodeUtilTest extends TestCase {
   @Test
   public void testGetNodeByLineCol_1() {
     Node root = parse("var x = 1;");
-    assertNull(NodeUtil.getNodeByLineCol(root, 1, 0));
+    assertNode(NodeUtil.getNodeByLineCol(root, 1, 0)).isNull();
     assertNode(NodeUtil.getNodeByLineCol(root, 1, 1)).hasType(Token.VAR);
     assertNode(NodeUtil.getNodeByLineCol(root, 1, 2)).hasType(Token.VAR);
     assertNode(NodeUtil.getNodeByLineCol(root, 1, 5)).hasType(Token.NAME);
@@ -301,17 +300,15 @@ public final class NodeUtilTest extends TestCase {
   }
 
   private void assertPureBooleanTrue(String val) {
-    assertEquals(TernaryValue.TRUE, NodeUtil.getPureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getPureBooleanValue(getNode(val))).isEqualTo(TernaryValue.TRUE);
   }
 
   private void assertPureBooleanFalse(String val) {
-    assertEquals(
-        TernaryValue.FALSE, NodeUtil.getPureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getPureBooleanValue(getNode(val))).isEqualTo(TernaryValue.FALSE);
   }
 
   private void assertPureBooleanUnknown(String val) {
-    assertEquals(
-        TernaryValue.UNKNOWN, NodeUtil.getPureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getPureBooleanValue(getNode(val))).isEqualTo(TernaryValue.UNKNOWN);
   }
 
   @Test
@@ -379,52 +376,49 @@ public final class NodeUtilTest extends TestCase {
   }
 
   private void assertImpureBooleanTrue(String val) {
-    assertEquals(TernaryValue.TRUE,
-        NodeUtil.getImpureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getImpureBooleanValue(getNode(val))).isEqualTo(TernaryValue.TRUE);
   }
 
   private void assertImpureBooleanFalse(String val) {
-    assertEquals(TernaryValue.FALSE,
-        NodeUtil.getImpureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getImpureBooleanValue(getNode(val))).isEqualTo(TernaryValue.FALSE);
   }
 
   private void assertImpureBooleanUnknown(String val) {
-    assertEquals(TernaryValue.UNKNOWN,
-        NodeUtil.getImpureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getImpureBooleanValue(getNode(val))).isEqualTo(TernaryValue.UNKNOWN);
   }
 
   @Test
   public void testGetStringValue() {
-    assertEquals("true", NodeUtil.getStringValue(getNode("true")));
-    assertEquals("10", NodeUtil.getStringValue(getNode("10")));
-    assertEquals("1", NodeUtil.getStringValue(getNode("1.0")));
+    assertThat(NodeUtil.getStringValue(getNode("true"))).isEqualTo("true");
+    assertThat(NodeUtil.getStringValue(getNode("10"))).isEqualTo("10");
+    assertThat(NodeUtil.getStringValue(getNode("1.0"))).isEqualTo("1");
 
     /* See https://github.com/google/closure-compiler/issues/1262 */
-    assertEquals(
-        "1.2323919403474454e+21", NodeUtil.getStringValue(getNode("1.2323919403474454e+21")));
+    assertThat(NodeUtil.getStringValue(getNode("1.2323919403474454e+21")))
+        .isEqualTo("1.2323919403474454e+21");
 
-    assertEquals("0", NodeUtil.getStringValue(getNode("'0'")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("/a/")));
-    assertEquals("[object Object]", NodeUtil.getStringValue(getNode("{}")));
+    assertThat(NodeUtil.getStringValue(getNode("'0'"))).isEqualTo("0");
+    assertThat(NodeUtil.getStringValue(getNode("/a/"))).isNull();
+    assertThat(NodeUtil.getStringValue(getNode("{}"))).isEqualTo("[object Object]");
     assertThat(NodeUtil.getStringValue(getNode("[]"))).isEmpty();
-    assertEquals("false", NodeUtil.getStringValue(getNode("false")));
-    assertEquals("null", NodeUtil.getStringValue(getNode("null")));
-    assertEquals("0", NodeUtil.getStringValue(getNode("0")));
+    assertThat(NodeUtil.getStringValue(getNode("false"))).isEqualTo("false");
+    assertThat(NodeUtil.getStringValue(getNode("null"))).isEqualTo("null");
+    assertThat(NodeUtil.getStringValue(getNode("0"))).isEqualTo("0");
     assertThat(NodeUtil.getStringValue(getNode("''"))).isEmpty();
-    assertEquals("undefined", NodeUtil.getStringValue(getNode("undefined")));
-    assertEquals("undefined", NodeUtil.getStringValue(getNode("void 0")));
-    assertEquals("undefined", NodeUtil.getStringValue(getNode("void foo()")));
+    assertThat(NodeUtil.getStringValue(getNode("undefined"))).isEqualTo("undefined");
+    assertThat(NodeUtil.getStringValue(getNode("void 0"))).isEqualTo("undefined");
+    assertThat(NodeUtil.getStringValue(getNode("void foo()"))).isEqualTo("undefined");
 
-    assertEquals("NaN", NodeUtil.getStringValue(getNode("NaN")));
-    assertEquals("Infinity", NodeUtil.getStringValue(getNode("Infinity")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("x")));
+    assertThat(NodeUtil.getStringValue(getNode("NaN"))).isEqualTo("NaN");
+    assertThat(NodeUtil.getStringValue(getNode("Infinity"))).isEqualTo("Infinity");
+    assertThat(NodeUtil.getStringValue(getNode("x"))).isNull();
 
-    assertEquals("Hello", NodeUtil.getStringValue(getNode("`Hello`")));
-    assertEquals("Hello foo", NodeUtil.getStringValue(getNode("`Hello ${'foo'}`")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("`Hello ${name}`")));
-    assertEquals("4 bananas", NodeUtil.getStringValue(getNode("`${4} bananas`")));
-    assertEquals("This is true.", NodeUtil.getStringValue(getNode("`This is ${true}.`")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("`${'hello'} ${name}`")));
+    assertThat(NodeUtil.getStringValue(getNode("`Hello`"))).isEqualTo("Hello");
+    assertThat(NodeUtil.getStringValue(getNode("`Hello ${'foo'}`"))).isEqualTo("Hello foo");
+    assertThat(NodeUtil.getStringValue(getNode("`Hello ${name}`"))).isNull();
+    assertThat(NodeUtil.getStringValue(getNode("`${4} bananas`"))).isEqualTo("4 bananas");
+    assertThat(NodeUtil.getStringValue(getNode("`This is ${true}.`"))).isEqualTo("This is true.");
+    assertThat(NodeUtil.getStringValue(getNode("`${'hello'} ${name}`"))).isNull();
   }
 
   @Test
@@ -434,12 +428,12 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getStringValue(getNode("[null]"))).isEmpty();
     assertThat(NodeUtil.getStringValue(getNode("[undefined]"))).isEmpty();
     assertThat(NodeUtil.getStringValue(getNode("[void 0]"))).isEmpty();
-    assertEquals("NaN", NodeUtil.getStringValue(getNode("[NaN]")));
-    assertEquals(",", NodeUtil.getStringValue(getNode("[,'']")));
-    assertEquals(",,", NodeUtil.getStringValue(getNode("[[''],[''],['']]")));
-    assertEquals("1,2", NodeUtil.getStringValue(getNode("[[1.0],[2.0]]")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("[a]")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("[1,a]")));
+    assertThat(NodeUtil.getStringValue(getNode("[NaN]"))).isEqualTo("NaN");
+    assertThat(NodeUtil.getStringValue(getNode("[,'']"))).isEqualTo(",");
+    assertThat(NodeUtil.getStringValue(getNode("[[''],[''],['']]"))).isEqualTo(",,");
+    assertThat(NodeUtil.getStringValue(getNode("[[1.0],[2.0]]"))).isEqualTo("1,2");
+    assertThat(NodeUtil.getStringValue(getNode("[a]"))).isNull();
+    assertThat(NodeUtil.getStringValue(getNode("[1,a]"))).isNull();
   }
 
   @Test
@@ -460,7 +454,7 @@ public final class NodeUtilTest extends TestCase {
   }
 
   private void assertIsObjectLiteralKey(Node node, boolean expected) {
-    assertEquals(expected, NodeUtil.isObjectLitKey(node));
+    assertThat(NodeUtil.isObjectLitKey(node)).isEqualTo(expected);
   }
 
   @Test
@@ -505,8 +499,7 @@ public final class NodeUtilTest extends TestCase {
   public void testGetBestFunctionName1() {
     Node parent = parse("function func(){}");
 
-    assertEquals("func",
-        NodeUtil.getNearestFunctionName(parent.getFirstChild()));
+    assertThat(NodeUtil.getNearestFunctionName(parent.getFirstChild())).isEqualTo("func");
   }
 
   @Test
@@ -514,8 +507,7 @@ public final class NodeUtilTest extends TestCase {
     Node parent = parse("var obj = {memFunc(){}}")
         .getFirstFirstChild().getFirstFirstChild();
 
-    assertEquals("memFunc",
-        NodeUtil.getNearestFunctionName(parent.getLastChild()));
+    assertThat(NodeUtil.getNearestFunctionName(parent.getLastChild())).isEqualTo("memFunc");
   }
 
   @Test
@@ -530,8 +522,8 @@ public final class NodeUtilTest extends TestCase {
   }
 
   private void assertGetNameResult(Node function, String name) {
-    assertEquals(Token.FUNCTION, function.getToken());
-    assertEquals(name, NodeUtil.getName(function));
+    assertNode(function).hasToken(Token.FUNCTION);
+    assertThat(NodeUtil.getName(function)).isEqualTo(name);
   }
 
   @Test
@@ -584,11 +576,11 @@ public final class NodeUtilTest extends TestCase {
 
   private void assertSideEffect(boolean se, String js) {
     Node n = parse(js);
-    assertEquals(se, NodeUtil.mayHaveSideEffects(n.getFirstChild()));
+    assertThat(NodeUtil.mayHaveSideEffects(n.getFirstChild())).isEqualTo(se);
   }
 
   private void assertSideEffect(boolean se, Node n) {
-    assertEquals(se, NodeUtil.mayHaveSideEffects(n));
+    assertThat(NodeUtil.mayHaveSideEffects(n)).isEqualTo(se);
   }
 
   private void assertSideEffect(boolean se, String js, boolean globalRegExp) {
@@ -596,7 +588,7 @@ public final class NodeUtilTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     compiler.setHasRegExpGlobalReferences(globalRegExp);
-    assertEquals(se, NodeUtil.mayHaveSideEffects(n.getFirstChild(), compiler));
+    assertThat(NodeUtil.mayHaveSideEffects(n.getFirstChild(), compiler)).isEqualTo(se);
   }
 
   @Test
@@ -812,7 +804,7 @@ public final class NodeUtilTest extends TestCase {
 
   private void assertMutableState(boolean se, String js) {
     Node n = parse(js);
-    assertEquals(se, NodeUtil.mayEffectMutableState(n.getFirstChild()));
+    assertThat(NodeUtil.mayEffectMutableState(n.getFirstChild())).isEqualTo(se);
   }
 
   @Test
@@ -907,9 +899,12 @@ public final class NodeUtilTest extends TestCase {
 
   private void assertContainsAnonFunc(boolean expected, String js) {
     Node funcParent = findParentOfFuncOrClassDescendant(parse(js), Token.FUNCTION);
-    assertNotNull("Expected function node in parse tree of: " + js, funcParent);
+    assertWithMessage("Expected function node in parse tree of: %s", js)
+        .that(funcParent)
+        .isNotNull();
+
     Node funcNode = getFuncOrClassChild(funcParent, Token.FUNCTION);
-    assertEquals(expected, NodeUtil.isFunctionExpression(funcNode));
+    assertThat(NodeUtil.isFunctionExpression(funcNode)).isEqualTo(expected);
   }
 
   @Test
@@ -943,9 +938,9 @@ public final class NodeUtilTest extends TestCase {
 
   private void assertContainsAnonClass(boolean expected, String js) {
     Node classParent = findParentOfFuncOrClassDescendant(parse(js), Token.CLASS);
-    assertNotNull("Expected class node in parse tree of: " + js, classParent);
+    assertWithMessage("Expected class node in parse tree of: %s", js).that(classParent).isNotNull();
     Node classNode = getFuncOrClassChild(classParent, Token.CLASS);
-    assertEquals(expected, NodeUtil.isClassExpression(classNode));
+    assertThat(NodeUtil.isClassExpression(classNode)).isEqualTo(expected);
   }
 
   private Node findParentOfFuncOrClassDescendant(Node n, Token token) {
@@ -990,13 +985,13 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.referencesThis(parse("function foo(){this}"))).isFalse();
     // But starting with a function properly check for 'this'
     Node n = parse("function foo(){this}").getFirstChild();
-    assertEquals(Token.FUNCTION, n.getToken());
+    assertNode(n).hasToken(Token.FUNCTION);
     assertThat(NodeUtil.referencesThis(n)).isTrue();
     assertThat(NodeUtil.referencesThis(parse("b?this:null"))).isTrue();
 
     assertThat(NodeUtil.referencesThis(parse("a"))).isFalse();
     n = parse("function foo(){}").getFirstChild();
-    assertEquals(Token.FUNCTION, n.getToken());
+    assertNode(n).hasToken(Token.FUNCTION);
     assertThat(NodeUtil.referencesThis(n)).isFalse();
     assertThat(NodeUtil.referencesThis(parse("(b?foo():null)"))).isFalse();
 
@@ -1006,18 +1001,18 @@ public final class NodeUtilTest extends TestCase {
 
   @Test
   public void testGetNodeTypeReferenceCount() {
-    assertEquals(
-        0,
-        NodeUtil.getNodeTypeReferenceCount(
-            parse("function foo(){}"), Token.THIS, Predicates.<Node>alwaysTrue()));
-    assertEquals(
-        1,
-        NodeUtil.getNodeTypeReferenceCount(
-            parse("this"), Token.THIS, Predicates.<Node>alwaysTrue()));
-    assertEquals(
-        2,
-        NodeUtil.getNodeTypeReferenceCount(
-            parse("this;function foo(){}(this)"), Token.THIS, Predicates.<Node>alwaysTrue()));
+    assertThat(
+            NodeUtil.getNodeTypeReferenceCount(
+                parse("function foo(){}"), Token.THIS, Predicates.<Node>alwaysTrue()))
+        .isEqualTo(0);
+    assertThat(
+            NodeUtil.getNodeTypeReferenceCount(
+                parse("this"), Token.THIS, Predicates.<Node>alwaysTrue()))
+        .isEqualTo(1);
+    assertThat(
+            NodeUtil.getNodeTypeReferenceCount(
+                parse("this;function foo(){}(this)"), Token.THIS, Predicates.<Node>alwaysTrue()))
+        .isEqualTo(2);
   }
 
   @Test
@@ -1036,21 +1031,17 @@ public final class NodeUtilTest extends TestCase {
 
   @Test
   public void testGetNameReferenceCount() {
-    assertEquals(0, NodeUtil.getNameReferenceCount(
-        parse("function foo(){}"), "undefined"));
-    assertEquals(1, NodeUtil.getNameReferenceCount(
-        parse("undefined"), "undefined"));
-    assertEquals(2, NodeUtil.getNameReferenceCount(
-        parse("undefined;function foo(){}(undefined)"), "undefined"));
+    assertThat(NodeUtil.getNameReferenceCount(parse("function foo(){}"), "undefined")).isEqualTo(0);
+    assertThat(NodeUtil.getNameReferenceCount(parse("undefined"), "undefined")).isEqualTo(1);
+    assertThat(
+            NodeUtil.getNameReferenceCount(
+                parse("undefined;function foo(){}(undefined)"), "undefined"))
+        .isEqualTo(2);
 
-    assertEquals(1, NodeUtil.getNameReferenceCount(
-        parse("goo.foo"), "goo"));
-    assertEquals(0, NodeUtil.getNameReferenceCount(
-        parse("goo.foo"), "foo"));
-    assertEquals(1, NodeUtil.getNameReferenceCount(
-        parse("function foo(){}"), "foo"));
-    assertEquals(1, NodeUtil.getNameReferenceCount(
-        parse("var foo = function(){}"), "foo"));
+    assertThat(NodeUtil.getNameReferenceCount(parse("goo.foo"), "goo")).isEqualTo(1);
+    assertThat(NodeUtil.getNameReferenceCount(parse("goo.foo"), "foo")).isEqualTo(0);
+    assertThat(NodeUtil.getNameReferenceCount(parse("function foo(){}"), "foo")).isEqualTo(1);
+    assertThat(NodeUtil.getNameReferenceCount(parse("var foo = function(){}"), "foo")).isEqualTo(1);
   }
 
   @Test
@@ -1077,7 +1068,7 @@ public final class NodeUtilTest extends TestCase {
     for (Node node : nodes) {
       actualNames.add(node.getString());
     }
-    assertEquals(nodeNames, actualNames);
+    assertThat(actualNames).isEqualTo(nodeNames);
   }
 
   @Test
@@ -1180,10 +1171,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(outerBlockNode, innerBlockNode);
     String expected = "{{}}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1196,10 +1184,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(tryNode, finallyBlock);
     String expected = "try {foo()} catch(e) {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1212,10 +1197,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(tryNode, tryBlock);
     String expected = "try {} catch(e) {} finally {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1229,10 +1211,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(catchBlocks, catchBlock);
     String expected = "try {foo()} finally {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1245,10 +1224,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(tryNode, catchBlocks);
     String expected = "try {foo()} finally {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1261,10 +1237,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(importNode, functionFoo);
     String expected = "import './foo';";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1277,10 +1250,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(paramList, p1);
     String expected = "function f() {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1293,10 +1263,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(paramList, p1);
     String expected = "function f(p2) {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1309,10 +1276,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(varNode, nameNode);
     String expected = "var goo, hoo";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the second child.
     actual = parse("var foo, goo, hoo");
@@ -1322,10 +1286,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(varNode, nameNode);
     expected = "var foo, hoo";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the last child of several children.
     actual = parse("var foo, hoo");
@@ -1335,10 +1296,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(varNode, nameNode);
     expected = "var foo";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the last.
     actual = parse("var hoo");
@@ -1348,10 +1306,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(varNode, nameNode);
     expected = "";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1364,10 +1319,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(letNode, nameNode);
     String expected = "let goo, hoo";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the second child.
     actual = parse("let foo, goo, hoo");
@@ -1377,10 +1329,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(letNode, nameNode);
     expected = "let foo, hoo";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the last child of several children.
     actual = parse("let foo, hoo");
@@ -1390,10 +1339,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(letNode, nameNode);
     expected = "let foo";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the last.
     actual = parse("let hoo");
@@ -1403,10 +1349,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(letNode, nameNode);
     expected = "";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1419,10 +1362,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(labelNode, callExpressNode);
     String expected = "";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1435,10 +1375,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(labelNode, callExpressNode);
     String expected = "";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1454,15 +1391,13 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(pattern, a);
     String expected = "var {b, c} = {a:1, b:2, c:3};";
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Remove all entries in object pattern
     NodeUtil.removeChild(pattern, b);
     NodeUtil.removeChild(pattern, c);
     expected = "var { } = {a:1, b:2, c:3};";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // remove variable declaration from array pattern
     actual = parse("var [a, b] = [1, 2]");
@@ -1473,8 +1408,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(pattern, a);
     expected = "var [ , b] = [1, 2];";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1487,9 +1421,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(forNode, child);
     String expected = "for(;a<0;a++)foo()";
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
-
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the condition.
     actual = parse("for(var a=0;a<0;a++)foo()");
@@ -1499,9 +1431,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(forNode, child);
     expected = "for(var a=0;;a++)foo()";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
-
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the increment.
     actual = parse("for(var a=0;a<0;a++)foo()");
@@ -1511,9 +1441,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(forNode, child);
     expected = "for(var a=0;a<0;)foo()";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
-
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the body.
     actual = parse("for(var a=0;a<0;a++)foo()");
@@ -1523,9 +1451,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(forNode, child);
     expected = "for(var a=0;a<0;a++);";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
-
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the body.
     actual = parse("for(a in ack)foo();");
@@ -1535,8 +1461,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(forNode, child);
     expected = "for(a in ack);";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   private static void replaceDeclChild(String js, int declarationChild, String expected) {
@@ -1545,8 +1470,7 @@ public final class NodeUtilTest extends TestCase {
     Node nameNode = declarationNode.getChildAtIndex(declarationChild);
 
     NodeUtil.replaceDeclarationChild(nameNode, IR.block());
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1571,8 +1495,7 @@ public final class NodeUtilTest extends TestCase {
 
     assertThat(NodeUtil.tryMergeBlock(childBlock, false)).isTrue();
     String expected = "{a();b();}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1597,8 +1520,7 @@ public final class NodeUtilTest extends TestCase {
 
     assertThat(NodeUtil.tryMergeBlock(childBlock, false)).isFalse();
     String expected = code;
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1609,8 +1531,7 @@ public final class NodeUtilTest extends TestCase {
     Node block = actual.getFirstChild();
 
     assertThat(NodeUtil.tryMergeBlock(block, true)).isTrue();
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   @Test
@@ -1639,7 +1560,7 @@ public final class NodeUtilTest extends TestCase {
     Node parent = new Node(Token.BLOCK, n);
     parent.setSourceFileForTesting("foo");
 
-    assertEquals("foo", NodeUtil.getSourceName(n));
+    assertThat(NodeUtil.getSourceName(n)).isEqualTo("foo");
   }
 
   @Test
@@ -1973,110 +1894,93 @@ public final class NodeUtilTest extends TestCase {
 
   @Test
   public void testGetOctalNumberValue() {
-    assertEquals(18.0, NodeUtil.getNumberValue(getNode("022")), 0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("022"))).isEqualTo(18.0);
   }
 
   @SuppressWarnings("JUnit3FloatingPointComparisonWithoutDelta")
   @Test
   public void testGetNumberValue() {
     // Strings
-    assertEquals(1.0, NodeUtil.getNumberValue(getNode("'\\uFEFF1'")));
-    assertEquals(0.0, NodeUtil.getNumberValue(getNode("''")));
-    assertEquals(0.0, NodeUtil.getNumberValue(getNode("' '")));
-    assertEquals(0.0, NodeUtil.getNumberValue(getNode("' \\t'")));
-    assertEquals(0.0, NodeUtil.getNumberValue(getNode("'+0'")));
-    assertEquals(-0.0, NodeUtil.getNumberValue(getNode("'-0'")));
-    assertEquals(2.0, NodeUtil.getNumberValue(getNode("'+2'")));
-    assertEquals(-1.6, NodeUtil.getNumberValue(getNode("'-1.6'")));
-    assertEquals(16.0, NodeUtil.getNumberValue(getNode("'16'")));
-    assertEquals(16.0, NodeUtil.getNumberValue(getNode("' 16 '")));
-    assertEquals(16.0, NodeUtil.getNumberValue(getNode("' 16 '")));
-    assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'123e2'")));
-    assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'123E2'")));
-    assertEquals(1.23, NodeUtil.getNumberValue(getNode("'123e-2'")));
-    assertEquals(1.23, NodeUtil.getNumberValue(getNode("'123E-2'")));
-    assertEquals(-1.23, NodeUtil.getNumberValue(getNode("'-123e-2'")));
-    assertEquals(-1.23, NodeUtil.getNumberValue(getNode("'-123E-2'")));
-    assertEquals(1.23, NodeUtil.getNumberValue(getNode("'+123e-2'")));
-    assertEquals(1.23, NodeUtil.getNumberValue(getNode("'+123E-2'")));
-    assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'+123e+2'")));
-    assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'+123E+2'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'\\uFEFF1'"))).isEqualTo(1.0);
+    assertThat(NodeUtil.getNumberValue(getNode("''"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("' '"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("' \\t'"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'+0'"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'-0'"))).isEqualTo(-0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'+2'"))).isEqualTo(2.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'-1.6'"))).isEqualTo(-1.6);
+    assertThat(NodeUtil.getNumberValue(getNode("'16'"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(getNode("' 16 '"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(getNode("' 16 '"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'123e2'"))).isEqualTo(12300.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'123E2'"))).isEqualTo(12300.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'123e-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'123E-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'-123e-2'"))).isEqualTo(-1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'-123E-2'"))).isEqualTo(-1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'+123e-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'+123E-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'+123e+2'"))).isEqualTo(12300.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'+123E+2'"))).isEqualTo(12300.0);
 
-    assertEquals(15.0, NodeUtil.getNumberValue(getNode("'0xf'")));
-    assertEquals(15.0, NodeUtil.getNumberValue(getNode("'0xF'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'0xf'"))).isEqualTo(15.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'0xF'"))).isEqualTo(15.0);
 
     // Chrome and rhino behavior differently from FF and IE. FF and IE
     // consider a negative hex number to be invalid
-    assertNull(NodeUtil.getNumberValue(getNode("'-0xf'")));
-    assertNull(NodeUtil.getNumberValue(getNode("'-0xF'")));
-    assertNull(NodeUtil.getNumberValue(getNode("'+0xf'")));
-    assertNull(NodeUtil.getNumberValue(getNode("'+0xF'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'-0xf'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("'-0xF'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("'+0xf'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("'+0xF'"))).isNull();
 
-    assertEquals(16.0, NodeUtil.getNumberValue(getNode("'0X10'")));
-    assertEquals(Double.NaN, NodeUtil.getNumberValue(getNode("'0X10.8'")));
-    assertEquals(77.0, NodeUtil.getNumberValue(getNode("'077'")));
-    assertEquals(-77.0, NodeUtil.getNumberValue(getNode("'-077'")));
-    assertEquals(-77.5, NodeUtil.getNumberValue(getNode("'-077.5'")));
-    assertEquals(
-        Double.NEGATIVE_INFINITY,
-        NodeUtil.getNumberValue(getNode("'-Infinity'")));
-    assertEquals(
-        Double.POSITIVE_INFINITY,
-        NodeUtil.getNumberValue(getNode("'Infinity'")));
-    assertEquals(
-        Double.POSITIVE_INFINITY,
-        NodeUtil.getNumberValue(getNode("'+Infinity'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'0X10'"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'0X10.8'"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(getNode("'077'"))).isEqualTo(77.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'-077'"))).isEqualTo(-77.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'-077.5'"))).isEqualTo(-77.5);
+    assertThat(NodeUtil.getNumberValue(getNode("'-Infinity'"))).isNegativeInfinity();
+    assertThat(NodeUtil.getNumberValue(getNode("'Infinity'"))).isPositiveInfinity();
+    assertThat(NodeUtil.getNumberValue(getNode("'+Infinity'"))).isPositiveInfinity();
     // Firefox treats "infinity" as "Infinity", IE treats it as NaN
-    assertNull(NodeUtil.getNumberValue(getNode("'-infinity'")));
-    assertNull(NodeUtil.getNumberValue(getNode("'infinity'")));
-    assertNull(NodeUtil.getNumberValue(getNode("'+infinity'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'-infinity'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("'infinity'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("'+infinity'"))).isNull();
 
-    assertEquals(Double.NaN, NodeUtil.getNumberValue(getNode("'NaN'")));
-    assertEquals(
-        Double.NaN, NodeUtil.getNumberValue(getNode("'some unknown string'")));
-    assertEquals(Double.NaN, NodeUtil.getNumberValue(getNode("'123 blah'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'NaN'"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(getNode("'some unknown string'"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(getNode("'123 blah'"))).isNaN();
 
     // Literals
-    assertEquals(1.0, NodeUtil.getNumberValue(getNode("1")));
+    assertThat(NodeUtil.getNumberValue(getNode("1"))).isEqualTo(1.0);
     // "-1" is parsed as a literal
-    assertEquals(-1.0, NodeUtil.getNumberValue(getNode("-1")));
+    assertThat(NodeUtil.getNumberValue(getNode("-1"))).isEqualTo(-1.0);
     // "+1" is parse as an op + literal
-    assertNull(NodeUtil.getNumberValue(getNode("+1")));
-    assertEquals(22.0, NodeUtil.getNumberValue(getNode("22")));
-    assertEquals(18.0, NodeUtil.getNumberValue(getNode("022")));
-    assertEquals(34.0, NodeUtil.getNumberValue(getNode("0x22")));
+    assertThat(NodeUtil.getNumberValue(getNode("+1"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("22"))).isEqualTo(22.0);
+    assertThat(NodeUtil.getNumberValue(getNode("022"))).isEqualTo(18.0);
+    assertThat(NodeUtil.getNumberValue(getNode("0x22"))).isEqualTo(34.0);
 
-    assertEquals(
-        1.0, NodeUtil.getNumberValue(getNode("true")));
-    assertEquals(
-        0.0, NodeUtil.getNumberValue(getNode("false")));
-    assertEquals(
-        0.0, NodeUtil.getNumberValue(getNode("null")));
-    assertEquals(
-        Double.NaN, NodeUtil.getNumberValue(getNode("void 0")));
-    assertEquals(
-        Double.NaN, NodeUtil.getNumberValue(getNode("void f")));
+    assertThat(NodeUtil.getNumberValue(getNode("true"))).isEqualTo(1.0);
+    assertThat(NodeUtil.getNumberValue(getNode("false"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("null"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("void 0"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(getNode("void f"))).isNaN();
     // values with side-effects are ignored.
-    assertNull(NodeUtil.getNumberValue(getNode("void f()")));
-    assertEquals(
-        Double.NaN, NodeUtil.getNumberValue(getNode("NaN")));
-    assertEquals(
-        Double.POSITIVE_INFINITY,
-        NodeUtil.getNumberValue(getNode("Infinity")));
-    assertEquals(
-        Double.NEGATIVE_INFINITY,
-        NodeUtil.getNumberValue(getNode("-Infinity")));
+    assertThat(NodeUtil.getNumberValue(getNode("void f()"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("NaN"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(getNode("Infinity"))).isPositiveInfinity();
+    assertThat(NodeUtil.getNumberValue(getNode("-Infinity"))).isNegativeInfinity();
 
     // "infinity" is not a known name.
-    assertNull(NodeUtil.getNumberValue(getNode("infinity")));
-    assertNull(NodeUtil.getNumberValue(getNode("-infinity")));
+    assertThat(NodeUtil.getNumberValue(getNode("infinity"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("-infinity"))).isNull();
 
     // getNumberValue only converts literals
-    assertNull(NodeUtil.getNumberValue(getNode("x")));
-    assertNull(NodeUtil.getNumberValue(getNode("x.y")));
-    assertNull(NodeUtil.getNumberValue(getNode("1/2")));
-    assertNull(NodeUtil.getNumberValue(getNode("1-2")));
-    assertNull(NodeUtil.getNumberValue(getNode("+1")));
+    assertThat(NodeUtil.getNumberValue(getNode("x"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("x.y"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("1/2"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("1-2"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("+1"))).isNull();
   }
 
   @Test
@@ -2431,32 +2335,32 @@ public final class NodeUtilTest extends TestCase {
 
   @Test
   public void testGetBestLValue() {
-    assertEquals("x", getFunctionLValue("var x = function() {};"));
-    assertEquals("x", getFunctionLValue("x = function() {};"));
-    assertEquals("x", getFunctionLValue("function x() {};"));
-    assertEquals("x", getFunctionLValue("var x = y ? z : function() {};"));
-    assertEquals("x", getFunctionLValue("var x = y ? function() {} : z;"));
-    assertEquals("x", getFunctionLValue("var x = y && function() {};"));
-    assertEquals("x", getFunctionLValue("var x = y || function() {};"));
-    assertEquals("x", getFunctionLValue("var x = (y, function() {});"));
+    assertThat(getFunctionLValue("var x = function() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("x = function() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("function x() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("var x = y ? z : function() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("var x = y ? function() {} : z;")).isEqualTo("x");
+    assertThat(getFunctionLValue("var x = y && function() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("var x = y || function() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("var x = (y, function() {});")).isEqualTo("x");
   }
 
   @Test
   public void testGetBestLValueName() {
     Function<String, String> getBestName =
         (js) -> NodeUtil.getBestLValueName(NodeUtil.getBestLValue(getFunctionNode(js)));
-    assertEquals("x", getBestName.apply("var x = function() {};"));
-    assertEquals("x", getBestName.apply("x = function() {};"));
-    assertEquals("x", getBestName.apply("function x() {};"));
-    assertEquals("x", getBestName.apply("var x = y ? z : function() {};"));
-    assertEquals("x", getBestName.apply("var x = y ? function() {} : z;"));
-    assertEquals("x", getBestName.apply("var x = y && function() {};"));
-    assertEquals("x", getBestName.apply("var x = y || function() {};"));
-    assertEquals("x", getBestName.apply("var x = (y, function() {});"));
-    assertEquals("C.prototype.d", getBestName.apply("C.prototype.d = function() {};"));
-    assertEquals("C.prototype.d", getBestName.apply("class C { d() {} };"));
-    assertEquals("C.d", getBestName.apply("C.d = function() {};"));
-    assertEquals("C.d", getBestName.apply("class C { static d() {} };"));
+    assertThat(getBestName.apply("var x = function() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("x = function() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("function x() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("var x = y ? z : function() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("var x = y ? function() {} : z;")).isEqualTo("x");
+    assertThat(getBestName.apply("var x = y && function() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("var x = y || function() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("var x = (y, function() {});")).isEqualTo("x");
+    assertThat(getBestName.apply("C.prototype.d = function() {};")).isEqualTo("C.prototype.d");
+    assertThat(getBestName.apply("class C { d() {} };")).isEqualTo("C.prototype.d");
+    assertThat(getBestName.apply("C.d = function() {};")).isEqualTo("C.d");
+    assertThat(getBestName.apply("class C { static d() {} };")).isEqualTo("C.d");
   }
 
   @Test
@@ -3748,8 +3652,8 @@ public final class NodeUtilTest extends TestCase {
     List<Var> orderedVars = new ArrayList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
         allVariables, orderedVars, compiler, scopeCreator, functionScope);
-    Set<String> keySet = new HashSet<>(Arrays.asList("a", "b", "c", "z", "x", "y"));
-    assertEquals(keySet, allVariables.keySet());
+
+    assertThat(allVariables.keySet()).containsExactly("a", "b", "c", "z", "x", "y");
   }
 
   @Test
@@ -3776,8 +3680,8 @@ public final class NodeUtilTest extends TestCase {
     List<Var> orderedVars = new ArrayList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
         allVariables, orderedVars, compiler, scopeCreator, functionScope);
-    Set<String> keySet = new HashSet<>(Arrays.asList("x", "y", "z", "a", "b", "c"));
-    assertEquals(keySet, allVariables.keySet());
+
+    assertThat(allVariables.keySet()).containsExactly("x", "y", "z", "a", "b", "c");
   }
 
   @Test
@@ -3866,20 +3770,18 @@ public final class NodeUtilTest extends TestCase {
     Node ast = parse(js);
     Node nameNode = getNameNode(ast, "x");
     Node funcNode = getFunctionNode(ast);
-    assertNotNull("No function node to test", funcNode);
+    assertWithMessage("No function node to test").that(funcNode).isNotNull();
     return funcNode == NodeUtil.getRValueOfLValue(nameNode);
   }
 
   private void assertNodeTreesEqual(
       Node expected, Node actual) {
     String error = expected.checkTreeEquals(actual);
-    assertNull(error, error);
+    assertThat(error).isNull();
   }
 
   private static void testFunctionName(String js, String expected) {
-    assertEquals(
-        expected,
-        NodeUtil.getNearestFunctionName(getFunctionNode(js)));
+    assertThat(NodeUtil.getNearestFunctionName(getFunctionNode(js))).isEqualTo(expected);
   }
 
   private static Node getClassNode(String js) {

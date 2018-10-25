@@ -72,9 +72,9 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
     super(failureMetadata, node);
   }
 
-  @Override
+  @Override // TODO(nickreid): This isn't really equality based. Use a different name.
   public void isEqualTo(Object o) {
-    check().that(actual()).isInstanceOf(Node.class);
+    check().that(o).isInstanceOf(Node.class);
     Node node = (Node) o;
 
     check("checkTreeEquals(%s)", node).that(actual().checkTreeEquals(node)).isNull();
