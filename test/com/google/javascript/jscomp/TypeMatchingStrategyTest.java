@@ -28,13 +28,12 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.TypeMatchingStrategy.MatchResult;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class TypeMatchingStrategyTest extends TestCase {
+public final class TypeMatchingStrategyTest {
 
   private static final String EXTERNS = Joiner.on("\n").join(
       "/** @constructor */",

@@ -41,7 +41,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,7 +53,7 @@ import org.junit.runners.JUnit4;
  */
 
 @RunWith(JUnit4.class)
-public final class SymbolTableTest extends TestCase {
+public final class SymbolTableTest {
 
   private static final String EXTERNS =
       CompilerTypeTestCase.DEFAULT_EXTERNS
@@ -63,10 +62,8 @@ public final class SymbolTableTest extends TestCase {
 
   private CompilerOptions options;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
 
     options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);

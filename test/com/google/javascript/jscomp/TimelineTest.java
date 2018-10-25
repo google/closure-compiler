@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,7 +24,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests {@link Timeline}. */
 @RunWith(JUnit4.class)
-public class TimelineTest extends TestCase {
+public class TimelineTest {
 
   private static class Event {
     final int hashcode;
@@ -53,10 +52,8 @@ public class TimelineTest extends TestCase {
   private static final Event ATE_HASHBROWNS = new Event(3);
   private Timeline<Event> timeline;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     timeline = new Timeline<>();
   }
 

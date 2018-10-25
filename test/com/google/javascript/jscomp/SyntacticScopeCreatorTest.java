@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.ScopeSubject.assertScope;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,12 +31,11 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class SyntacticScopeCreatorTest extends TestCase {
+public final class SyntacticScopeCreatorTest {
 
   private Compiler compiler;
   private SyntacticScopeCreator scopeCreator;
 
-  @Override
   @Before
   public void setUp() {
     compiler = new Compiler();

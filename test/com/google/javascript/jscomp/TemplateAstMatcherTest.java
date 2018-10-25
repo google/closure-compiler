@@ -21,14 +21,13 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link TemplateAstMatcher}. */
 @RunWith(JUnit4.class)
-public final class TemplateAstMatcherTest extends TestCase {
+public final class TemplateAstMatcherTest {
 
   private Compiler lastCompiler;
 

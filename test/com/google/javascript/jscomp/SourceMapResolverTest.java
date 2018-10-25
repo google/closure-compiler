@@ -19,13 +19,12 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.BaseEncoding;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class SourceMapResolverTest extends TestCase {
+public final class SourceMapResolverTest {
 
   @Test
   public void testResolveBase64Inline() throws Exception {

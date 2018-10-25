@@ -58,7 +58,6 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.testing.TypeSubject;
 import java.util.HashMap;
 import java.util.Map;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -69,7 +68,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class TypeInferenceTest extends TestCase {
+public final class TypeInferenceTest {
 
   private Compiler compiler;
   private JSTypeRegistry registry;
@@ -104,7 +103,6 @@ public final class TypeInferenceTest extends TestCase {
     }
   }
 
-  @Override
   @Before
   public void setUp() {
     compiler = new Compiler();
