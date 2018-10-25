@@ -22,14 +22,13 @@ import static com.google.javascript.jscomp.deps.DependencyInfo.Require.googRequi
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link DependencyInfo}. */
 @RunWith(JUnit4.class)
-public final class DependencyInfoTest extends TestCase {
+public final class DependencyInfoTest {
 
   @Test
   public void testWriteAddDependency() throws IOException {

@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.PrintStreamErrorManager;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.ArrayList;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,12 +34,11 @@ import org.junit.runners.JUnit4;
 
 /** Tests for {@link DepsGenerator}. */
 @RunWith(JUnit4.class)
-public final class DepsGeneratorTest extends TestCase {
+public final class DepsGeneratorTest {
 
   private static final Joiner LINE_JOINER = Joiner.on("\n");
   private ErrorManager errorManager;
 
-  @Override
   @Before
   public void setUp() throws Exception {
     errorManager = new PrintStreamErrorManager(System.err);

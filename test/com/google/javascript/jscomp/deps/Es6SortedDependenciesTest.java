@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -34,7 +33,7 @@ import org.junit.runners.JUnit4;
  * @author stalcup@google.com (John Stalcup)
  */
 @RunWith(JUnit4.class)
-public class Es6SortedDependenciesTest extends TestCase {
+public class Es6SortedDependenciesTest {
   private static SortedDependencies<SimpleDependencyInfo> createSortedDependencies(
       List<SimpleDependencyInfo> shuffled) {
     return new Es6SortedDependencies<>(shuffled);

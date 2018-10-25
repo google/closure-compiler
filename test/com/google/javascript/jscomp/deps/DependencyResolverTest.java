@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +34,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class DependencyResolverTest extends TestCase {
+public final class DependencyResolverTest {
 
   DependencyFile fakeDeps1 = new DependencyFile(new VirtualFile("deps1",
       "goog.addDependency('a.js', ['a'], []);\n"
@@ -52,9 +51,7 @@ public final class DependencyResolverTest extends TestCase {
   DefaultDependencyResolver resolver;
 
   @Before
-  @Override
   public void setUp() throws Exception {
-    super.setUp();
     resolver = new DefaultDependencyResolver(ImmutableList.of(fakeDeps1, fakeDeps2), false);
   }
 

@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.transpile.TranspileResult;
 import com.google.javascript.jscomp.transpile.Transpiler;
 import java.io.IOException;
 import java.net.URI;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -35,7 +34,7 @@ import org.mockito.Mockito;
 
 /** Tests for ClosureBundler */
 @RunWith(JUnit4.class)
-public final class ClosureBundlerTest extends TestCase {
+public final class ClosureBundlerTest {
 
   private static final DependencyInfo MODULE =
       SimpleDependencyInfo.builder("", "").setGoogModule(true).build();

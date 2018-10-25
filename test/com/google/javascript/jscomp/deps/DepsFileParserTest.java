@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,13 +35,12 @@ import org.junit.runners.JUnit4;
  * @author agrieve@google.com (Andrew Grieve)
  */
 @RunWith(JUnit4.class)
-public final class DepsFileParserTest extends TestCase {
+public final class DepsFileParserTest {
 
   private DepsFileParser parser;
   private ErrorManager errorManager;
   private static final String SRC_PATH = "/path/1.js";
 
-  @Override
   @Before
   public void setUp() {
     errorManager = new PrintStreamErrorManager(System.err);

@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +36,7 @@ import org.junit.runners.JUnit4;
  * @author agrieve@google.com (Andrew Grieve)
  */
 @RunWith(JUnit4.class)
-public final class JsFileParserTest extends TestCase {
+public final class JsFileParserTest {
 
   JsFileParser parser;
   private ErrorManager errorManager;
@@ -45,7 +44,6 @@ public final class JsFileParserTest extends TestCase {
   private static final String SRC_PATH = "a";
   private static final String CLOSURE_PATH = "b";
 
-  @Override
   @Before
   public void setUp() {
     errorManager = new PrintStreamErrorManager(System.err);
