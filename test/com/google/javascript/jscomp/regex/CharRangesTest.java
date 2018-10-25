@@ -22,13 +22,12 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import com.google.common.testing.EqualsTester;
 import java.util.BitSet;
 import java.util.Random;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class CharRangesTest extends TestCase {
+public final class CharRangesTest {
 
   static final long SEED = Long.parseLong(System.getProperty(
       "junit.random.seed", "" + System.currentTimeMillis()));

@@ -25,7 +25,6 @@ import static org.mockito.Mockito.when;
 import com.google.common.cache.CacheBuilder;
 import java.net.URI;
 import java.net.URISyntaxException;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +34,7 @@ import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link CachingTranspiler}. */
 @RunWith(JUnit4.class)
-public final class CachingTranspilerTest extends TestCase {
+public final class CachingTranspilerTest {
 
   private Transpiler transpiler;
   @Mock(answer = RETURNS_SMART_NULLS) Transpiler delegate;
@@ -61,7 +60,6 @@ public final class CachingTranspilerTest extends TestCase {
     RESULT3 = new TranspileResult(BAR_JS, "baz", "xyzzy", "");
   }
 
-  @Override
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);

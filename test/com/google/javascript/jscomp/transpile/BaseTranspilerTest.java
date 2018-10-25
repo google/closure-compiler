@@ -24,7 +24,6 @@ import static org.mockito.Mockito.when;
 import com.google.javascript.jscomp.bundle.TranspilationException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +34,7 @@ import org.mockito.MockitoAnnotations;
 /** Tests for {@link BaseTranspiler}. */
 
 @RunWith(JUnit4.class)
-public final class BaseTranspilerTest extends TestCase {
+public final class BaseTranspilerTest {
 
   private Transpiler transpiler;
   private BaseTranspiler.CompilerSupplier compiler;
@@ -53,7 +52,6 @@ public final class BaseTranspilerTest extends TestCase {
     }
   }
 
-  @Override
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);

@@ -19,13 +19,12 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.truth.ThrowableSubject;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class RegExpTreeTest extends TestCase {
+public class RegExpTreeTest {
 
   private String parseRegExpAndPrintPattern(String regex, String flags) {
     RegExpTree tree = RegExpTree.parseRegExp(regex, flags);
@@ -109,6 +108,7 @@ public class RegExpTreeTest extends TestCase {
         .isEqualTo("unicode property escape value cannot be empty");
   }
 
+  @Test
   public void testValidEs2018RegexNamedCaptureGroups() {
     assertRegexCompilesToSame("(?<name>)", "");
     assertRegexCompilesToSame("(?<h$h1h_>)", "u");
@@ -116,6 +116,7 @@ public class RegExpTreeTest extends TestCase {
     assertRegexCompilesToSame("(?<_var_name>>>>)", "");
   }
 
+  @Test
   public void testInvalidEs2018RegexNamedCaptureGroups() {
     assertRegexThrowsExceptionThat("(?<name)", "")
         .hasMessageThat()
@@ -131,6 +132,7 @@ public class RegExpTreeTest extends TestCase {
         .isEqualTo("Invalid capture group name: <.name>)");
   }
 
+  @Test
   public void testNumCapturingGroups() {
     assertRegexCompilesToSame("(h(i))\\2", "");
     // TODO(b/116048051): reference to non-existent capture group should be an error.
@@ -139,6 +141,7 @@ public class RegExpTreeTest extends TestCase {
     assertRegexCompilesToSame("(?<foo>.*(?<bar>))", "");
   }
 
+  @Test
   public void testValidEs2018CaptureNameBackreferencing() {
     assertRegexCompilesToSame("(?<name>)\\k<name>", "");
     // Note that (?: ) only used for printing purposes to
@@ -158,6 +161,7 @@ public class RegExpTreeTest extends TestCase {
     assertRegexCompilesToSame("(?<foo>\\k<foo>)", "");
   }
 
+  @Test
   public void testInvalidEs2018CaptureNameBackreferencing() {
     assertRegexThrowsExceptionThat("(?<foo>)\\k<bar>", "")
         .hasMessageThat()
@@ -175,6 +179,7 @@ public class RegExpTreeTest extends TestCase {
         .isEqualTo("Invalid named capture referenced: \\k<foo>");
   }
 
+  @Test
   public void testBackreferencingTreatedAsStringIfNoGroup() {
     // Backreferencing without named group definitions is just treated as normal string
     assertRegexCompilesTo("\\k<foo>", "", "k<foo>");

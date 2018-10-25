@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.testing.EqualsTester;
 import java.net.URI;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -28,7 +27,7 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link TranspileResult}. */
 
 @RunWith(JUnit4.class)
-public final class TranspileResultTest extends TestCase {
+public final class TranspileResultTest {
 
   @Test
   public void testEquals() throws Exception {
