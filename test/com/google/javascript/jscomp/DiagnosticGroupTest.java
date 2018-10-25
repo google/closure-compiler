@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,7 +28,7 @@ import org.junit.runners.JUnit4;
  * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
-public final class DiagnosticGroupTest extends TestCase {
+public final class DiagnosticGroupTest {
 
   @Test
   public void testRegistration() {

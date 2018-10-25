@@ -20,13 +20,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class DotFormatterTest extends TestCase {
+public final class DotFormatterTest {
   /** Tests that keys are assigned sequentially. */
   @Test
   public void testKeyAssignementSequential() throws Exception {

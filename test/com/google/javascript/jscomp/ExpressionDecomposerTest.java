@@ -35,7 +35,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,7 +47,7 @@ import org.junit.runners.JUnit4;
  */
 // Note: functions "foo" and "goo" are external functions in the helper.
 @RunWith(JUnit4.class)
-public final class ExpressionDecomposerTest extends TestCase {
+public final class ExpressionDecomposerTest {
   private boolean allowMethodCallDecomposing;
   private final Set<String> knownConstants = new HashSet<>();
   // How many times to run `moveExpression` or `exposeExpression`.
@@ -56,7 +55,6 @@ public final class ExpressionDecomposerTest extends TestCase {
   // Whether we should run type checking and test the type information in the output expression
   private boolean shouldTestTypes;
 
-  @Override
   @Before
   public void setUp() {
     allowMethodCallDecomposing = false;
@@ -319,6 +317,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "foo");
   }
 
+  @Test
   public void testCanExposeExpressionInTemplateLiteralSubstitution() {
     helperCanExposeExpression(DecompositionType.MOVABLE, "const result = `${foo()}`;", "foo");
 
@@ -892,6 +891,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0=foo();var x = {set a(p) {}, b: result$jscomp$0};");
   }
 
+  @Test
   public void testExposeExpressionInTemplateLibSub() {
     helperExposeExpression(
         "` ${ foo() }  ${ goo() } `;",
@@ -899,6 +899,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var temp_const$jscomp$0 = foo(); ` ${ temp_const$jscomp$0 }  ${ goo() } `;");
   }
 
+  @Test
   public void testExposeSubExpressionInTemplateLibSub() {
     helperExposeExpression(
         "` ${ foo() + goo() } `;",
@@ -906,6 +907,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var temp_const$jscomp$0 = foo(); ` ${ temp_const$jscomp$0 + goo() } `;");
   }
 
+  @Test
   public void testMoveExpressionInTemplateLibSub() {
     helperMoveExpression(
         "` ${ foo() }  ${ goo() } `;",

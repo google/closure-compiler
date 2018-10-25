@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +34,7 @@ import org.junit.runners.JUnit4;
  * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
-public final class FixedPointGraphTraversalTest extends TestCase {
+public final class FixedPointGraphTraversalTest {
 
   // The maximum value of a counter that counts as a "change"
   // to the state of the graph, for the purposes of fixed-point
@@ -72,7 +71,6 @@ public final class FixedPointGraphTraversalTest extends TestCase {
   //   E
   //
   // with all edges pointing downwards, and an "up-edge" from E to D.
-  @Override
   @Before
   public void setUp() {
     A = new Counter();

@@ -21,13 +21,12 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class DefaultNameGeneratorTest extends TestCase {
+public final class DefaultNameGeneratorTest {
 
   private static final ImmutableSet<String> RESERVED_NAMES = ImmutableSet.of("ba", "xba");
 

@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Es6SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,7 +41,7 @@ import org.junit.runners.JUnit4;
  * @author moz@google.com (Michael Zhou)
  */
 @RunWith(JUnit4.class)
-public final class Es6SyntacticScopeCreatorTest extends TestCase {
+public final class Es6SyntacticScopeCreatorTest {
 
   private Compiler compiler;
   private Es6SyntacticScopeCreator scopeCreator;
@@ -68,10 +67,8 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     return scopeCreator.createScope(getRoot(js), null);
   }
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
