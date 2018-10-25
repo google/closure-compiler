@@ -143,29 +143,30 @@ public final class ModuleMetadataMap {
       return new AutoValue_ModuleMetadataMap_ModuleMetadata.Builder();
     }
 
+    /** Builder for {@link ModuleMetadata}. */
     @AutoValue.Builder
-    abstract static class Builder {
-      abstract ModuleMetadata build();
+    public abstract static class Builder {
+      public abstract ModuleMetadata build();
 
-      abstract ImmutableMultiset.Builder<String> googNamespacesBuilder();
+      public abstract ImmutableMultiset.Builder<String> googNamespacesBuilder();
 
-      abstract ImmutableMultiset.Builder<String> requiredGoogNamespacesBuilder();
+      public abstract ImmutableMultiset.Builder<String> requiredGoogNamespacesBuilder();
 
-      abstract ImmutableMultiset.Builder<String> requiredTypesBuilder();
+      public abstract ImmutableMultiset.Builder<String> requiredTypesBuilder();
 
-      abstract ImmutableMultiset.Builder<String> es6ImportSpecifiersBuilder();
+      public abstract ImmutableMultiset.Builder<String> es6ImportSpecifiersBuilder();
 
-      abstract ImmutableList.Builder<ModuleMetadata> nestedModulesBuilder();
+      public abstract ImmutableList.Builder<ModuleMetadata> nestedModulesBuilder();
 
-      abstract Builder path(@Nullable ModulePath value);
+      public abstract Builder path(@Nullable ModulePath value);
 
-      abstract Builder usesClosure(boolean value);
+      public abstract Builder usesClosure(boolean value);
 
-      abstract Builder isTestOnly(boolean value);
+      public abstract Builder isTestOnly(boolean value);
 
-      abstract ModuleType moduleType();
+      public abstract ModuleType moduleType();
 
-      abstract Builder moduleType(ModuleType value);
+      public abstract Builder moduleType(ModuleType value);
     }
   }
 

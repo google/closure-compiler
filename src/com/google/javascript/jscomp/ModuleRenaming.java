@@ -15,16 +15,26 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
+import com.google.javascript.jscomp.modules.Binding;
+import com.google.javascript.jscomp.modules.Export;
 import javax.annotation.Nullable;
 
 /** Centralized location for determining how to rename modules. */
 final class ModuleRenaming {
+
+  private ModuleRenaming() {}
+
+  // TODO(johnplaisted): Consolidate this and Es6RewriteModule's constant.
+  private static final String DEFAULT_EXPORT_VAR_PREFIX = "$jscompDefaultExport";
+
   /**
    * @param moduleMetadata the metadata of the module to get the global name of
-   * @param googNamespace the Closure namespace that is being referenced from this module, if any
+   * @param googNamespace the Closure namespace that is being referenced fromEsModule this module,
+   *     if any
    * @return the global, qualified name to rewrite any references to this module to
    */
   static String getGlobalName(ModuleMetadata moduleMetadata, @Nullable String googNamespace) {
@@ -42,5 +52,25 @@ final class ModuleRenaming {
         // fall through, throw an error
     }
     throw new IllegalStateException("Unexpected module type: " + moduleMetadata.moduleType());
+  }
+
+  static String getGlobalName(Export export) {
+    if (export.moduleMetadata().isEs6Module()) {
+      String prefix = checkNotNull(export.localName());
+      if (export.localName().equals(Export.DEFAULT_EXPORT_NAME)) {
+        prefix = DEFAULT_EXPORT_VAR_PREFIX;
+      }
+      return prefix + "$$" + getGlobalName(export.moduleMetadata(), /* googNamespace= */ null);
+    }
+    return getGlobalName(export.moduleMetadata(), export.closureNamespace())
+        + "."
+        + export.localName();
+  }
+
+  static String getGlobalName(Binding binding) {
+    if (binding.isModuleNamespace()) {
+      return getGlobalName(binding.metadata(), binding.closureNamespace());
+    }
+    return getGlobalName(binding.originatingExport());
   }
 }
