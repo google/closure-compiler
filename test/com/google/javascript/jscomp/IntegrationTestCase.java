@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Before;
 
 /**
@@ -34,7 +33,7 @@ import org.junit.Before;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-abstract class IntegrationTestCase extends TestCase {
+abstract class IntegrationTestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
   protected static final Joiner EMPTY_JOINER = Joiner.on("");
 
@@ -321,7 +320,6 @@ abstract class IntegrationTestCase extends TestCase {
   protected String inputFileNamePrefix;
   protected String inputFileNameSuffix;
 
-  @Override
   @Before
   public void setUp() {
     externs = DEFAULT_EXTERNS;

@@ -21,14 +21,13 @@ import static com.google.javascript.jscomp.IdMappingUtil.NEW_LINE;
 
 import com.google.common.collect.BiMap;
 import java.util.Map;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link IdMappingUtil}. */
 @RunWith(JUnit4.class)
-public final class IdMappingUtilTest extends TestCase {
+public final class IdMappingUtilTest {
 
   @Test
   public void testParseIdMapping() {

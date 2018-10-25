@@ -27,14 +27,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** A tests for {@link IncrementalScopeCreator}. */
 @RunWith(JUnit4.class)
-public final class IncrementalScopeCreatorTest extends TestCase {
+public final class IncrementalScopeCreatorTest {
 
   @Test
   public void testMemoization() {

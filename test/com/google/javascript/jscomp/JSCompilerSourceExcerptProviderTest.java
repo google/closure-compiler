@@ -19,17 +19,15 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class JSCompilerSourceExcerptProviderTest extends TestCase {
+public final class JSCompilerSourceExcerptProviderTest {
   private SourceExcerptProvider provider;
 
-  @Override
   @Before
   public void setUp() throws Exception {
     SourceFile foo = SourceFile.fromCode("foo",

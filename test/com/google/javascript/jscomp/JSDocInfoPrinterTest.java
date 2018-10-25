@@ -29,7 +29,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.function.Function;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,12 +36,11 @@ import org.junit.runners.JUnit4;
 
 /** @author moz@google.com (Michael Zhou) */
 @RunWith(JUnit4.class)
-public final class JSDocInfoPrinterTest extends TestCase {
+public final class JSDocInfoPrinterTest {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
   private JSDocInfoBuilder builder;
   private JSDocInfoPrinter jsDocInfoPrinter;
 
-  @Override
   @Before
   public void setUp() {
     builder = new JSDocInfoBuilder(true);
