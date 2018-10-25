@@ -27,7 +27,6 @@ import com.google.javascript.rhino.Token;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.regex.Pattern;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -38,7 +37,7 @@ import org.junit.runners.JUnit4;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 @RunWith(JUnit4.class)
-public final class PerformanceTrackerTest extends TestCase {
+public final class PerformanceTrackerTest {
   private final Node emptyExternRoot = new Node(Token.BLOCK);
   private final Node emptyJsRoot = new Node(Token.BLOCK);
 

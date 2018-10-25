@@ -20,14 +20,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** A tests for {@link MemoizedScopeCreator}. */
 @RunWith(JUnit4.class)
-public final class MemoizedScopeCreatorTest extends TestCase {
+public final class MemoizedScopeCreatorTest {
 
   @Test
   public void testMemoization() {

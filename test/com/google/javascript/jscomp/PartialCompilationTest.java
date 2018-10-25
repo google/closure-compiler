@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -42,7 +41,7 @@ import org.junit.runners.JUnit4;
  * DiagnosticGroups#MISSING_SOURCES_WARNINGS}.
  */
 @RunWith(JUnit4.class)
-public class PartialCompilationTest extends TestCase {
+public class PartialCompilationTest {
 
   private Compiler compiler;
 

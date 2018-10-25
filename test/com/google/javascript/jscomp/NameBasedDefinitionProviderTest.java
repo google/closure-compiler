@@ -20,13 +20,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.rhino.Node;
 import javax.annotation.Nullable;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class NameBasedDefinitionProviderTest extends TestCase {
+public final class NameBasedDefinitionProviderTest {
 
   @Test
   public void testGetSimplifiedName() {

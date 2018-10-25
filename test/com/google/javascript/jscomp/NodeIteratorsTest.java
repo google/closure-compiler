@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -38,7 +37,7 @@ import org.junit.runners.JUnit4;
  * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
-public final class NodeIteratorsTest extends TestCase {
+public final class NodeIteratorsTest {
 
   // In each test, we find the declaration of "X" in the local scope,
   // construct a list of all nodes where X is guaranteed to retain its

@@ -36,14 +36,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link NodeTraversal}. */
 @RunWith(JUnit4.class)
-public final class NodeTraversalTest extends TestCase {
+public final class NodeTraversalTest {
   @Test
   public void testPruningCallbackShouldTraverse1() {
     PruningCallback include =

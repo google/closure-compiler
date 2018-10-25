@@ -47,14 +47,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for NodeUtil */
 @RunWith(JUnit4.class)
-public final class NodeUtilTest extends TestCase {
+public final class NodeUtilTest {
 
   private static Node parse(String js) {
     CompilerOptions options = new CompilerOptions();

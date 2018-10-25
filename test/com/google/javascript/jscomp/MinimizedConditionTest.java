@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -37,7 +36,7 @@ import org.junit.runners.JUnit4;
  * @author blickly@google.com (Ben Lickly)
  */
 @RunWith(JUnit4.class)
-public final class MinimizedConditionTest extends TestCase {
+public final class MinimizedConditionTest {
 
   private static Node parseExpr(String code) {
     Compiler compiler = new Compiler();
