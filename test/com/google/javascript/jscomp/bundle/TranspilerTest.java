@@ -24,7 +24,6 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.JSError;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,7 +35,7 @@ import org.mockito.MockitoAnnotations;
 @GwtIncompatible
 
 @RunWith(JUnit4.class)
-public final class TranspilerTest extends TestCase {
+public final class TranspilerTest {
 
   private Source.Transformer transpiler;
   private Transpiler.CompilerSupplier compiler;
@@ -48,7 +47,6 @@ public final class TranspilerTest extends TestCase {
   private static final Path SOURCE_JS = Paths.get("source.js");
   private static final JSError[] NO_ERRORS = new JSError[] {};
 
-  @Override
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);

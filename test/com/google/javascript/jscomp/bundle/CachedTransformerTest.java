@@ -24,7 +24,6 @@ import static org.mockito.Mockito.when;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.cache.CacheBuilder;
 import java.util.function.Function;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +34,7 @@ import org.mockito.MockitoAnnotations;
 /** Tests for {@link Source} and its nested classes. */
 @GwtIncompatible
 @RunWith(JUnit4.class)
-public final class CachedTransformerTest extends TestCase {
+public final class CachedTransformerTest {
 
   private static final Source FOO = Source.builder().setCode("foo").build();
   private static final Source BAR = Source.builder().setCode("bar").build();
@@ -44,7 +43,6 @@ public final class CachedTransformerTest extends TestCase {
 
   @Mock Function<Source, Source> delegate;
 
-  @Override
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);

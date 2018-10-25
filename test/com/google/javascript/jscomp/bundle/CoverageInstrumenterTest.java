@@ -25,7 +25,6 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.JSError;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +36,7 @@ import org.mockito.MockitoAnnotations;
 @GwtIncompatible
 
 @RunWith(JUnit4.class)
-public final class CoverageInstrumenterTest extends TestCase {
+public final class CoverageInstrumenterTest {
 
   private Source.Transformer instrumenter;
   private CoverageInstrumenter.CompilerSupplier compiler;
@@ -49,7 +48,6 @@ public final class CoverageInstrumenterTest extends TestCase {
   private static final Path SOURCE_JS = Paths.get("source.js");
   private static final JSError[] NO_ERRORS = new JSError[] {};
 
-  @Override
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);

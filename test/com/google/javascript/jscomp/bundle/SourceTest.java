@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
 import java.nio.file.Paths;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -32,7 +31,7 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link Source} and its nested classes. */
 @GwtIncompatible
 @RunWith(JUnit4.class)
-public final class SourceTest extends TestCase {
+public final class SourceTest {
 
   @Test
   public void testEquals() {
