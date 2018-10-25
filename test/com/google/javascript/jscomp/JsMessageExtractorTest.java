@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,14 +35,12 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class JsMessageExtractorTest extends TestCase {
+public final class JsMessageExtractorTest {
 
   private JsMessage.Style mode;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     mode = JsMessage.Style.LEGACY;
   }
 

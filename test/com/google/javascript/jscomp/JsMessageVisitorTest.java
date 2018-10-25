@@ -35,8 +35,8 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -47,7 +47,7 @@ import org.junit.runners.JUnit4;
  * @author anatol@google.com (Anatol Pomazau)
  */
 @RunWith(JUnit4.class)
-public final class JsMessageVisitorTest extends TestCase {
+public final class JsMessageVisitorTest {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private static class RenameMessagesVisitor extends AbstractPostOrderCallback {
@@ -71,7 +71,6 @@ public final class JsMessageVisitorTest extends TestCase {
   private JsMessage.Style mode;
   private boolean renameMessages = false;
 
-  @Override
   @Before
   public void setUp() throws Exception {
     messages = new ArrayList<>();
@@ -522,7 +521,9 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).isEmpty();
   }
 
-  public void itIsNotImplementedYet_testMsgPropertyWithoutAssignment() {
+  @Test
+  @Ignore // Currently unimplemented.
+  public void testMsgPropertyWithoutAssignment() {
     extractMessages("goog.message.MSG_SILLY_PROP;");
 
     assertThat(compiler.getErrors()).hasLength(1);

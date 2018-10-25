@@ -30,7 +30,6 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,7 +40,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class JSModuleGraphTest extends TestCase {
+public final class JSModuleGraphTest {
 
   // NOTE: These are not static. It would probably be clearer to initialize them in setUp()
   private final JSModule A = new JSModule("A");
@@ -55,10 +54,8 @@ public final class JSModuleGraphTest extends TestCase {
   // For resolving dependencies only.
   private Compiler compiler;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     B.addDependency(A); //     __A__
     C.addDependency(A); //    /  |  \
     D.addDependency(B); //   B   C  |

@@ -24,14 +24,13 @@ import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
 import java.util.Arrays;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link LazyParsedDependencyInfo}. */
 @RunWith(JUnit4.class)
-public final class LazyParsedDependencyInfoTest extends TestCase {
+public final class LazyParsedDependencyInfoTest {
 
   @Test
   public void testDelegation() {

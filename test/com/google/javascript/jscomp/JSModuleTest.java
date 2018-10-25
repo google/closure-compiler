@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,14 +32,13 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class JSModuleTest extends TestCase {
+public final class JSModuleTest {
   private JSModule mod1;
   private JSModule mod2;  // depends on mod1
   private JSModule mod3;  // depends on mod1
   private JSModule mod4;  // depends on mod2, mod3
   private JSModule mod5;  // depends on mod1
 
-  @Override
   @Before
   public void setUp() throws Exception {
     List<JSModule> modulesInDepOrder = new ArrayList<>();

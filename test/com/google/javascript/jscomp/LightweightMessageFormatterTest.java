@@ -20,13 +20,12 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFormatter;
 import com.google.javascript.rhino.Node;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class LightweightMessageFormatterTest extends TestCase {
+public final class LightweightMessageFormatterTest {
   private static final DiagnosticType FOO_TYPE =
       DiagnosticType.error("TEST_FOO", "error description here");
   private static final String ORIGINAL_SOURCE_FILE = "original/source.html";
