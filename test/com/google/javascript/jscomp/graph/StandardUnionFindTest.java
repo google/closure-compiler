@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Iterator;
 import java.util.Set;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,11 +33,10 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class StandardUnionFindTest extends TestCase {
+public final class StandardUnionFindTest {
   private StandardUnionFind<String> union;
 
   @Before
-  @Override
   public void setUp() {
     union = new StandardUnionFind<>();
   }

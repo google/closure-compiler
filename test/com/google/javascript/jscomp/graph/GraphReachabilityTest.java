@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -28,7 +27,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class GraphReachabilityTest extends TestCase {
+public final class GraphReachabilityTest {
   GraphReachability<String, String> reachability = null;
   DiGraph<String, String> graph = null;
 

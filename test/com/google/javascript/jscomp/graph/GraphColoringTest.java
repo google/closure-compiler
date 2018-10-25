@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.graph.Graph.GraphEdge;
 import com.google.javascript.jscomp.graph.GraphColoring.Color;
 import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
 import java.util.Comparator;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -34,7 +33,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class GraphColoringTest extends TestCase {
+public final class GraphColoringTest {
 
   @Test
   public void testNoEdge() {

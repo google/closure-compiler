@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -34,7 +33,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class GraphTest extends TestCase {
+public final class GraphTest {
 
   @Test
   public void testDirectedSimple() {
