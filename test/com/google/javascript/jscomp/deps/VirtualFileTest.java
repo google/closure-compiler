@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -28,7 +27,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class VirtualFileTest extends TestCase {
+public final class VirtualFileTest {
   @Test
   public void testEquals() {
     VirtualFile vf = new VirtualFile("name", "code");

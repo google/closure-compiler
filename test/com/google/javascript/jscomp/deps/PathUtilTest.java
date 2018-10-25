@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.deps;
 import static com.google.common.base.StandardSystemProperty.USER_DIR;
 import static com.google.common.truth.Truth.assertThat;
 
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,7 +28,7 @@ import org.junit.runners.JUnit4;
  * @author agrieve@google.com (Andrew Grieve)
  */
 @RunWith(JUnit4.class)
-public final class PathUtilTest extends TestCase {
+public final class PathUtilTest {
 
   @Test
   public void testCollapseDots() {

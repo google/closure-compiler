@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathResolver;
 import javax.annotation.Nullable;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -36,7 +35,7 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link ModuleLoader}. */
 
 @RunWith(JUnit4.class)
-public final class ModuleLoaderTest extends TestCase {
+public final class ModuleLoaderTest {
   private final ImmutableMap<String, String> packageJsonMainEntries =
       ImmutableMap.of(
           "/B/package.json", "/B/lib/b",
