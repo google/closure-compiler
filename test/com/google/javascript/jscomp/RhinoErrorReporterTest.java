@@ -25,7 +25,6 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.Arrays;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,17 +36,15 @@ import org.junit.runners.JUnit4;
  * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
-public final class RhinoErrorReporterTest extends TestCase {
+public final class RhinoErrorReporterTest {
 
   private boolean reportEs3Props;
   private boolean reportLintWarnings;
 
-  @Override
   @Before
   public void setUp() throws Exception {
     reportEs3Props = true;
     reportLintWarnings = true;
-    super.setUp();
   }
 
   @Test

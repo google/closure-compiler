@@ -29,7 +29,6 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,7 +40,7 @@ import org.junit.runners.JUnit4;
  * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
-public final class PhaseOptimizerTest extends TestCase {
+public final class PhaseOptimizerTest {
   private final List<String> passesRun = new ArrayList<>();
   private Node dummyExternsRoot;
   private Node dummyRoot;
@@ -50,7 +49,6 @@ public final class PhaseOptimizerTest extends TestCase {
   private Compiler compiler;
   private PerformanceTracker tracker;
 
-  @Override
   @Before
   public void setUp() {
     passesRun.clear();

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableMap;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -28,7 +27,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public class ReplacedStringsDecoderTest extends TestCase {
+public class ReplacedStringsDecoderTest {
 
   private void verifyDecoder(String original, String replacement) {
     verifyDecoder(original, replacement, "");

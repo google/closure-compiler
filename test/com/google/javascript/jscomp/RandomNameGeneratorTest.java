@@ -24,13 +24,12 @@ import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.Random;
 import java.util.Set;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class RandomNameGeneratorTest extends TestCase {
+public final class RandomNameGeneratorTest {
 
   private static String[] generate(RandomNameGenerator ng, int count)
       throws Exception {

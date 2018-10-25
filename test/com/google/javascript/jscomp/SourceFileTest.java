@@ -29,14 +29,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 
 @RunWith(JUnit4.class)
-public final class SourceFileTest extends TestCase {
+public final class SourceFileTest {
 
   @Test
   public void testSourceKind() {

@@ -18,13 +18,12 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.rhino.IR;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class PolymerPassStaticUtilsTest extends TestCase {
+public final class PolymerPassStaticUtilsTest {
 
   @Test
   public void testGetPolymerElementType_noNativeElement() {
