@@ -22,13 +22,12 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class ChangeVerifierTest extends TestCase {
+public final class ChangeVerifierTest {
 
   @Test
   public void testCorrectValidationOfScriptWithChangeAfterFunction() {
@@ -131,7 +130,8 @@ public final class ChangeVerifierTest extends TestCase {
     }
   }
 
-  public static void testChangeVerification() {
+  @Test
+  public void testChangeVerification() {
     Compiler compiler = new Compiler();
 
     Node mainScript = IR.script();

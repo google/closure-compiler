@@ -19,14 +19,13 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** @author tylerg@google.com (Tyler Goodwin) */
 @RunWith(JUnit4.class)
-public final class CleanupPassesTest extends TestCase {
+public final class CleanupPassesTest {
 
   private final AbstractCompiler compiler = new Compiler();
   private final CompilerOptions options = new CompilerOptions();

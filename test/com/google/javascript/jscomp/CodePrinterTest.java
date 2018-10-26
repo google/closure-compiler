@@ -1793,20 +1793,24 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   private void assertTypeAnnotations(String js, String expected) {
-    assertEquals(
-        expected,
+    String actual =
         new CodePrinter.Builder(parse(js, /* typeChecked= */ true))
-            .setCompilerOptions(newCompilerOptions(new CompilerOptionBuilder() {
-              @Override
-              void setOptions(CompilerOptions options) {
-                options.setPrettyPrint(true);
-                options.setLineBreak(false);
-                options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
-              }
-            }))
+            .setCompilerOptions(
+                newCompilerOptions(
+                    new CompilerOptionBuilder() {
+                      @Override
+                      void setOptions(CompilerOptions options) {
+                        options.setPrettyPrint(true);
+                        options.setLineBreak(false);
+                        options.setLineLengthThreshold(
+                            CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
+                      }
+                    }))
             .setOutputTypes(true)
             .setTypeRegistry(lastCompiler.getTypeRegistry())
-            .build());
+            .build();
+
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test

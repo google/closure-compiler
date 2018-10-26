@@ -23,7 +23,6 @@ import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -33,7 +32,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public final class CheckPathsBetweenNodesTest extends TestCase {
+public final class CheckPathsBetweenNodesTest {
 
   /**
    * Predicate satisfied by strings with a given prefix.

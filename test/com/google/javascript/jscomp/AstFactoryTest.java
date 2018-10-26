@@ -31,22 +31,19 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class AstFactoryTest extends TestCase {
+public class AstFactoryTest {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private Compiler compiler;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     compiler = new Compiler();
   }
 

@@ -21,11 +21,10 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
-import junit.framework.TestCase;
 import org.junit.Before;
 
 /** Base class for tests that exercise {@link CodePrinter}. */
-public abstract class CodePrinterTestBase extends TestCase {
+public abstract class CodePrinterTestBase {
   // If this is set, ignore parse warnings and only fail the test
   // for parse errors.
   protected boolean allowWarnings = false;
@@ -34,10 +33,8 @@ public abstract class CodePrinterTestBase extends TestCase {
   protected LanguageMode languageMode = LanguageMode.ECMASCRIPT5;
   protected Compiler lastCompiler = null;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     allowWarnings = false;
     preserveTypeAnnotations = false;
     trustedStrings = true;

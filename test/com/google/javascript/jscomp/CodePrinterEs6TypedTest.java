@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -72,7 +73,9 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
     assertPrettyPrintSame("function foo(x: string = 'hello') {\n}");
   }
 
-  public void disabled_testFunctionParamDeclaration_arrow() {
+  @Test
+  @Ignore
+  public void testFunctionParamDeclaration_arrow() {
     assertPrettyPrintSame("(x: string) => 'hello' + x;");
   }
 
@@ -81,7 +84,9 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
     assertPrettyPrintSame("function foo(): string {\n  return 'hello';\n}");
   }
 
-  public void disabled_testFunctionReturn_arrow() {
+  @Test
+  @Ignore
+  public void testFunctionReturn_arrow() {
     assertPrettyPrintSame("(): string => 'hello';");
   }
 

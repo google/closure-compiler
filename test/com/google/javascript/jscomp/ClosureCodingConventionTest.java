@@ -25,14 +25,13 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.NominalTypeBuilderOti;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Test class for {@link GoogleCodingConvention}. */
 @RunWith(JUnit4.class)
-public final class ClosureCodingConventionTest extends TestCase {
+public final class ClosureCodingConventionTest {
   private final ClosureCodingConvention conv = new ClosureCodingConvention();
 
   @Test
