@@ -1417,7 +1417,30 @@ public final class SymbolTableTest {
   public void testDuplicatedWindowExternsMerged() {
     // Add window so that it triggers logic that defines all global externs on window.
     // See DeclaredGlobalExternsOnWindow.java pass.
-    String externs = lines("/** @externs */", "var window", "var foo;");
+    String externs = lines("/** @externs */", "var window", "/** @type {number} */ var foo;");
+    String mainCode = lines("foo = 2;", "window.foo = 1;");
+    SymbolTable table = createSymbolTable(mainCode, externs);
+
+    Map<String, Integer> refsPerFile = new HashMap<>();
+    for (Reference reference : table.getReferenceList(getGlobalVar(table, "foo"))) {
+      String file = reference.getSourceFile().getName();
+      refsPerFile.put(file, refsPerFile.getOrDefault(file, 0) + 1);
+    }
+    assertThat(refsPerFile).containsExactly("in1", 2, "externs1", 1);
+  }
+
+  @Test
+  public void testDuplicatedWindowExternsMergedWithWindowPrototype() {
+    // Add window so that it triggers logic that defines all global externs on window.
+    // See DeclaredGlobalExternsOnWindow.java pass.
+    // Also add Window class as it affects symbols (e.g. window.foo is set on Window.prototype.foo
+    // instead).
+    String externs =
+        lines(
+            "/** @externs */",
+            "/** @constructor */ function Window() {}",
+            "/** @type {!Window} */ var window;",
+            "/** @type {number} */ var foo;");
     String mainCode = lines("foo = 2;", "window.foo = 1;");
     SymbolTable table = createSymbolTable(mainCode, externs);
 

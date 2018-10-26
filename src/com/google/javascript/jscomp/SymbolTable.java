@@ -1175,7 +1175,12 @@ public final class SymbolTable {
    * pass.
    */
   private boolean isSymbolDuplicatedExternOnWindow(Symbol symbol) {
-    return symbol.getName().startsWith("window.") && !symbol.getDeclarationNode().isIndexable();
+    Node node = symbol.getDeclarationNode();
+    // Check that node is of type "window.foo";
+    return !node.isIndexable()
+        && node.isGetProp()
+        && node.getFirstChild().isName()
+        && node.getFirstChild().getString().equals("window");
   }
 
   /**
