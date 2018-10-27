@@ -104,10 +104,6 @@ public class TranspilationPasses {
       passes.add(es6NormalizeShorthandProperties);
       passes.add(es6RewriteClassExtends);
       passes.add(es6ConvertSuper);
-      passes.add(es6RenameVariablesInParamLists);
-      passes.add(es6SplitVariableDeclarations);
-      passes.add(
-          getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
 
       if (!options.checksOnly) {
         // Don't run these passes in checksOnly mode since all the typechecking & checks passes
@@ -115,10 +111,6 @@ public class TranspilationPasses {
         // TODO(b/73387406): Move each pass above here temporarily, then into
         // addEs6PostCheck Passes once the pass supports propagating type information
       }
-    } else if (options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
-      passes.add(es6RenameVariablesInParamLists);
-      passes.add(es6SplitVariableDeclarations);
-      passes.add(getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
     }
   }
 
@@ -151,6 +143,10 @@ public class TranspilationPasses {
               Feature.REGEXP_FLAG_U,
               Feature.REGEXP_FLAG_Y));
 
+      passes.add(es6RenameVariablesInParamLists);
+      passes.add(es6SplitVariableDeclarations);
+      passes.add(
+          getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
       passes.add(es6RewriteArrowFunction);
       passes.add(es6ExtractClasses);
       passes.add(es6RewriteClass);
@@ -161,6 +157,10 @@ public class TranspilationPasses {
       passes.add(rewriteBlockScopedDeclaration);
       passes.add(rewriteGenerators);
       passes.add(es6ConvertSuperConstructorCalls);
+    } else if (options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
+      passes.add(es6RenameVariablesInParamLists);
+      passes.add(es6SplitVariableDeclarations);
+      passes.add(getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
     }
   }
 
@@ -408,7 +408,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018;
+          return FeatureSet.latest();
         }
       };
 
@@ -479,7 +479,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return FeatureSet.latest();
         }
       };
 
