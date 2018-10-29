@@ -26,14 +26,13 @@ import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @GwtIncompatible("Conformance")
 @RunWith(JUnit4.class)
-public class ConformanceWhitelisterTest extends TestCase {
+public class ConformanceWhitelisterTest {
   @Test
   public void testConformanceWhitelistAddNew() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();

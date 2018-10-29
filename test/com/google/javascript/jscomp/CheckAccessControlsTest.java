@@ -1393,6 +1393,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
+  @Test
   public void
       testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_OneFile() {
     testError(
@@ -1421,6 +1422,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         + "foo.bar = function() { return 'asdf'; };");
   }
 
+  @Test
   public void
       testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_TwoFiles() {
     testError(new String[] {
@@ -1543,6 +1545,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
+  @Test
   public void
       testPackageFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPublicVisibility() {
     testSame(ImmutableList.of(
@@ -1672,6 +1675,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
+  @Test
   public void
       testPublicFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPackageVisibility() {
     testError(

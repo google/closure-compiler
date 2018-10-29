@@ -311,6 +311,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
                 "        : null;")));
   }
 
+  @Test
   public void
       testSpreadVariableIntoMethodParameterListOnRecieversWithSideEffectsMultipleTimesInOneScope() {
     test(

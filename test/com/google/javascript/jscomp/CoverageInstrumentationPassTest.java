@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -24,7 +23,7 @@ import org.junit.runners.JUnit4;
 /** Tests for function transformation in {@link CoverageInstrumentationPass}. */
 
 @RunWith(JUnit4.class)
-public final class CoverageInstrumentationPassTest extends TestCase {
+public final class CoverageInstrumentationPassTest {
 
   private CompilerOptions options(LanguageMode inMode) {
     CompilerOptions options = GoldenFileComparer.options();

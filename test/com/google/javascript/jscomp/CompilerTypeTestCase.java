@@ -37,14 +37,13 @@ import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.util.Objects;
-import junit.framework.TestCase;
 import org.junit.Before;
 
 /**
  * This class is mostly used by passes testing the old type checker. Passes that run after type
  * checking and need type information use the class TypeICompilerTestCase.
  */
-abstract class CompilerTypeTestCase extends TestCase {
+abstract class CompilerTypeTestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   static final String CLOSURE_DEFS = LINE_JOINER.join(
@@ -119,10 +118,8 @@ abstract class CompilerTypeTestCase extends TestCase {
         .inOrder();
   }
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     errorReporter = new TestErrorReporter(null, null);
     initializeNewCompiler(getDefaultOptions());
   }

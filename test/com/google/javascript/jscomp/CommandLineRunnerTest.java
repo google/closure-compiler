@@ -50,8 +50,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import junit.framework.TestCase;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -62,7 +62,7 @@ import org.junit.runners.JUnit4;
  * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
-public final class CommandLineRunnerTest extends TestCase {
+public final class CommandLineRunnerTest {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private Compiler lastCompiler = null;
@@ -129,10 +129,8 @@ public final class CommandLineRunnerTest extends TestCase {
 
   private List<SourceFile> externs;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     externs = DEFAULT_EXTERNS;
     filenames = new HashMap<>();
     lastCompiler = null;
@@ -143,11 +141,6 @@ public final class CommandLineRunnerTest extends TestCase {
     useModules = ModulePattern.NONE;
     args.clear();
     exitCodes = new ArrayList<>();
-  }
-
-  @Override
-  public void tearDown() throws Exception {
-    super.tearDown();
   }
 
   @Test
@@ -1357,8 +1350,9 @@ public final class CommandLineRunnerTest extends TestCase {
         "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
   }
 
-  // TODO(tbreisacher): Re-enable this test when we drop Ant.
-  public void disabled_testGlobJs6() throws IOException {
+  @Test
+  @Ignore // TODO(tbreisacher): Re-enable this test when we drop Ant.
+  public void testGlobJs6() throws IOException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
     File ignoredJs = new File("." + File.separator + "ignored.js");
@@ -1378,8 +1372,9 @@ public final class CommandLineRunnerTest extends TestCase {
     ignoredJs.delete();
   }
 
-  // TODO(tbreisacher): Re-enable this test when we drop Ant.
-  public void disabled_testGlobJs7() throws IOException {
+  @Test
+  @Ignore // TODO(tbreisacher): Re-enable this test when we drop Ant.
+  public void testGlobJs7() throws IOException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
     File takenJs = new File("." + File.separator + "globTestTaken.js");

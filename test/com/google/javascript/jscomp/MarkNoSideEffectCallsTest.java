@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -60,7 +61,8 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void tearDown() throws Exception {
+  @After
+  public void tearDown() throws Exception {
     super.tearDown();
     noSideEffectCalls.clear();
   }

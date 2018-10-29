@@ -51,20 +51,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import junit.framework.TestCase;
 import org.junit.Before;
 
 /**
- * <p>Base class for testing JS compiler classes that change
- * the node tree of a compiled JS input.</p>
+ * Base class for testing JS compiler classes that change the node tree of a compiled JS input.
  *
- * <p>Pulls in shared functionality from different test cases. Also supports
- * node tree comparison for input and output (instead of string comparison),
- * which makes it easier to write tests b/c you don't have to get the syntax
- * exactly correct to the spacing.</p>
+ * <p>Pulls in shared functionality from different test cases. Also supports node tree comparison
+ * for input and output (instead of string comparison), which makes it easier to write tests b/c you
+ * don't have to get the syntax exactly correct to the spacing.
  *
  */
-public abstract class CompilerTestCase extends TestCase {
+public abstract class CompilerTestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   /** Externs for the test */
@@ -582,10 +579,8 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   // Overridden here so that we can easily find all classes that override.
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
 
     // TODO(sdh): Initialize *all* the options here, but first we must ensure no subclass
     // is changing them in the constructor, rather than in their own setUp method.
@@ -624,9 +619,7 @@ public abstract class CompilerTestCase extends TestCase {
     this.setUpRan = true;
   }
 
-  @Override
   protected void tearDown() throws Exception {
-    super.tearDown();
     this.setUpRan = false;
   }
 

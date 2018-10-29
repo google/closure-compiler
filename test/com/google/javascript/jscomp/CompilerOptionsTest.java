@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -38,7 +37,7 @@ import org.junit.runners.JUnit4;
  * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
-public final class CompilerOptionsTest extends TestCase {
+public final class CompilerOptionsTest {
 
   @Test
   public void testDefines() {

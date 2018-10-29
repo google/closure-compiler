@@ -28,6 +28,7 @@ import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -47,7 +48,8 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
   }
 
   @Override
-  protected void tearDown() throws Exception {
+  @After
+  public void tearDown() throws Exception {
     super.tearDown();
     found.clear();
   }

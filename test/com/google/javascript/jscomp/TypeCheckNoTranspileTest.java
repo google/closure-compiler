@@ -1833,6 +1833,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     testTypes("/** @enum */ var obj = {[1]: 2};", "enum key must be a string or numeric literal");
   }
 
+  @Test
   public void testComputedPropAllowedOnDictClass() {
     testTypes(
         lines(
@@ -1842,6 +1843,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "}"));
   }
 
+  @Test
   public void testNormalPropNotAllowedOnDictClass() {
     testTypes(
         lines(
@@ -1852,6 +1854,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         "Illegal key, the class is a dict");
   }
 
+  @Test
   public void testComputedPropNotAllowedOnStructClass() {
     testTypes(
         lines(
@@ -1862,6 +1865,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         "Cannot do '[]' access on a struct");
   }
 
+  @Test
   public void testQuotedGetterPropNotAllowedOnStructClass() {
     testTypes(
         lines(
@@ -2622,6 +2626,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "class Foo {}"));
   }
 
+  @Test
   public void testInterfaceHasBothExtendsClauseAndExtendsJSDoc() {
     // TODO(b/114472257): ban this syntax because it results in strange behavior in class-side
     // inheritance - the inferface only inherits properties from one of the extended interfaces.

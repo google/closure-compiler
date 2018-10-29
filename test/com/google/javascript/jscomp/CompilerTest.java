@@ -49,7 +49,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -57,7 +56,7 @@ import org.junit.runners.JUnit4;
 /** @author johnlenz@google.com (John Lenz) */
 
 @RunWith(JUnit4.class)
-public final class CompilerTest extends TestCase {
+public final class CompilerTest {
 
   // Verify the line and column information is maintained after a reset
   @Test
@@ -1972,6 +1971,7 @@ public final class CompilerTest extends TestCase {
     assertThat(orderedInputs).containsExactly("/a.js", "/entry.js", "/b.js").inOrder();
   }
 
+  @Test
   public void testWeakSources() throws Exception {
     List<SourceFile> sources =
         ImmutableList.of(
@@ -2042,10 +2042,12 @@ public final class CompilerTest extends TestCase {
     assertThat(compiler.toSource(weakModule)).isEmpty();
   }
 
+  @Test
   public void testWeakSourcesModules() throws Exception {
     weakSourcesModulesHelper(/* saveAndRestore= */ false);
   }
 
+  @Test
   public void testWeakSourcesSaveRestore() throws Exception {
     weakSourcesModulesHelper(/* saveAndRestore= */ true);
   }

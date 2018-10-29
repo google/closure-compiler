@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -30,6 +31,7 @@ public final class CheckDebuggerStatementTest extends CompilerTestCase {
   private CheckLevel checkLevel;
 
   @Override
+  @After
   public void tearDown() {
     checkLevel = null;
   }

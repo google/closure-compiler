@@ -2578,6 +2578,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     assertThat(getLastCompiler().injected).isEmpty();
   }
 
+  @Test
   public void testClassInsideCast() {
     test(
         "const Foo = /** @type {?} */ (class {});",
@@ -2586,6 +2587,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "const Foo= /** @type {?} */ (testcode$classdecl$var0)"));
   }
 
+  @Test
   public void testClassWithSuperclassInsideCast() {
     test(
         lines(
@@ -2617,6 +2619,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
    * <p>We do this by comparing the source information of nodes on the transpiled AST with nodes on
    * a different parsed-but-not-transpiled AST.
    */
+  @Test
   public void testSimpleClassStatement_hasCorrectSourceInfo() {
     String source = "class C { }";
     String expected = "/** @constructor @struct */ let C = function() {};";
@@ -2639,6 +2642,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     assertNode(expectedFunction).hasToken(Token.FUNCTION).hasEqualSourceInfoTo(sourceClass);
   }
 
+  @Test
   public void testClassStatementWithConstructor_hasCorrectSourceInfo() {
     String source = "class C { constructor() {} }";
     String expected = "/** @constructor @struct */ let C = function() {};";
@@ -2665,6 +2669,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         .hasEqualSourceInfoTo(sourceConstructorFunction);
   }
 
+  @Test
   public void testClassStatementWithMethod_hasCorrectSourceInfo() {
     String source = "class C { method() {}; }";
     String expected =
@@ -2703,6 +2708,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         .hasEqualSourceInfoTo(sourceMethodFunction);
   }
 
+  @Test
   public void testSuperCall_hasCorrectSourceInfo() {
     String source =
         lines(
@@ -2749,6 +2755,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     assertNode(thisNode).hasToken(Token.THIS).hasEqualSourceInfoTo(sourceSuper);
   }
 
+  @Test
   public void testComputedSuper_hasCorrectSourceInfo() {
     String source =
         lines(

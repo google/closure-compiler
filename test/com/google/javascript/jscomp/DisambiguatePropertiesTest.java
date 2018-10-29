@@ -2755,7 +2755,9 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         srcs(js),
         warning(warning),
         (Postcondition)
-            unused -> assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting())));
+            unused ->
+                assertThat(mapToString(lastPass.getRenamedTypesForTesting()))
+                    .isEqualTo(fieldTypes));
   }
 
   /** Sorts the map and converts to a string for comparison purposes. */

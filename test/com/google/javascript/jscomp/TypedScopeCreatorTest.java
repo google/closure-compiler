@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -3098,7 +3099,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(findNameType("result", globalScope).toString()).isEqualTo("Array<string>");
   }
 
-  public void disable_testTemplateType8() {
+  @Test
+  @Ignore
+  public void testTemplateType8() {
     // TODO(johnlenz): somehow allow templated typedefs
     testSame(
         "/** @constructor */ NodeList = function() {};" +
@@ -3242,7 +3245,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .isEqualTo("(Array<T>|{length: number})");
   }
 
-  public void disable_testTemplateType13() {
+  @Test
+  @Ignore
+  public void testTemplateType13() {
     // TODO(johnlenz): allow template types in @type function expressions
     testSame(
         "/**\n" +
@@ -3640,10 +3645,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     ObjectType proto = instance.getImplicitPrototype();
     assertThat(proto.toString()).isEqualTo("Foo.prototype");
 
-    assertEquals(
-        // should be: "function(this:Foo, number): ?"
-        "function(this:Foo, number): ?",
-        proto.getPropertyType("bar").toString());
+    assertType(proto.getPropertyType("bar")).toStringIsEqualTo("function(this:Foo, number): ?");
   }
 
   @Test
@@ -4017,7 +4019,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(findNameType("x", globalScope).toString()).isEqualTo("number");
   }
 
-  public void disable_testAliasTypedefFromNamespaceAlias() {
+  @Test
+  @Ignore
+  public void testAliasTypedefFromNamespaceAlias() {
     // TODO(johnlenz): support typedef aliases.
     testSame(
         lines(

@@ -732,6 +732,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testCrossModuleRequireType() {
     test(
         createModuleStar("goog.requireType('goog.ui');", "", "goog.provide('goog.ui')"),
@@ -814,6 +815,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   // Tests that a requireType of additional code generates no error.
+  @Test
   public void testRequireTypeOfAdditionalProvide() {
     additionalCode = "goog.provide('b.B'); b.B = {};";
     test(
@@ -830,6 +832,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   // Tests that a requireType not in additional code generates (only) one error.
+  @Test
   public void testMissingRequireTypeWithAdditionalProvide() {
     additionalCode = "goog.provide('b.B'); b.B = {};";
     testError("goog.requireType('b.C'); goog.provide('a.A'); a.A = {};", MISSING_PROVIDE_ERROR);
@@ -843,6 +846,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   // Tests that a requireType in additional code generates no error.
+  @Test
   public void testLateRequireType() {
     additionalEndCode = "goog.requireType('a.A');";
     test("goog.provide('a.A'); a.A = {};", "/** @const */ var a={}; a.A={};");

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,6 +55,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   @Override
+  @After
   public void tearDown() {
     inlineAllStrings = false;
     inlineLocalsOnly = false;

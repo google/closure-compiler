@@ -28,14 +28,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class CombinedCompilerPassTest extends TestCase {
+public final class CombinedCompilerPassTest {
 
   private Compiler compiler;
 
@@ -84,10 +83,8 @@ public final class CombinedCompilerPassTest extends TestCase {
     return m;
   }
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
   }
