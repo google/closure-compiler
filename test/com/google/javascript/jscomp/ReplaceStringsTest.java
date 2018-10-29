@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.ReplaceStrings.Result;
 import com.google.javascript.rhino.Node;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +97,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     enableNormalize();
     enableParseTypeInfo();
     functionsToInspect = defaultFunctionsToInspect;
-    reserved = Collections.emptySet();
+    reserved = ImmutableSet.of();
     previous = null;
     runDisambiguateProperties = false;
     rename = false;

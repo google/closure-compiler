@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import java.util.Collections;
 import java.util.Random;
 import java.util.Set;
 import org.junit.Test;
@@ -45,8 +44,7 @@ public final class RandomNameGeneratorTest {
     Random random = new Random(0);
 
     try {
-      new RandomNameGenerator(Collections.<String>emptySet(), "123abc",
-          null, random);
+      new RandomNameGenerator(ImmutableSet.of(), "123abc", null, random);
       assertWithMessage(
               "Constructor should throw exception when the first char of prefix is invalid")
           .fail();
@@ -56,8 +54,7 @@ public final class RandomNameGeneratorTest {
     }
 
     try {
-      new RandomNameGenerator(Collections.<String>emptySet(), "abc%",
-          null, random);
+      new RandomNameGenerator(ImmutableSet.of(), "abc%", null, random);
       assertWithMessage(
               "Constructor should throw exception when one of prefix characters is invalid")
           .fail();

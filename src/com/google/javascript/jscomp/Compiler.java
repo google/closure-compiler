@@ -801,12 +801,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(!hasErrors());
     checkState(!options.getInstrumentForCoverageOnly());
     runInCompilerThread(
-        new Callable<Void>() {
-          @Override
-          public Void call() throws Exception {
-            performChecksAndTranspilation();
-            return null;
-          }
+        () -> {
+          performChecksAndTranspilation();
+          return null;
         });
   }
 
@@ -825,14 +822,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(!hasErrors());
     checkState(!options.getInstrumentForCoverageOnly());
     runInCompilerThread(
-        new Callable<Void>() {
-          @Override
-          public Void call() throws Exception {
-            if (options.shouldOptimize()) {
-              performOptimizations();
-            }
-            return null;
+        () -> {
+          if (options.shouldOptimize()) {
+            performOptimizations();
           }
+          return null;
         });
   }
 
@@ -881,15 +875,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p> DO call it even when {@code hasErrors()} returns true.
    */
   public void performPostCompilationTasks() {
-    runInCompilerThread(new Callable<Void>() {
-
-      @Override
-      public Void call() throws Exception {
-        performPostCompilationTasksInternal();
-        return null;
-      }
-
-    });
+    runInCompilerThread(
+        () -> {
+          performPostCompilationTasksInternal();
+          return null;
+        });
   }
 
   /**
@@ -925,14 +915,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(moduleGraph != null, "No inputs. Did you call init() or initModules()?");
     checkState(!hasErrors());
     runInCompilerThread(
-        new Callable<Void>() {
-          @Override
-          public Void call() throws Exception {
-            checkState(options.getInstrumentForCoverageOnly());
-            checkState(!hasErrors());
-            instrumentForCoverageInternal(options.instrumentBranchCoverage);
-            return null;
-          }
+        () -> {
+          checkState(options.getInstrumentForCoverageOnly());
+          checkState(!hasErrors());
+          instrumentForCoverageInternal(options.instrumentBranchCoverage);
+          return null;
         });
   }
 
@@ -955,12 +942,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   public void parseForCompilation() {
     runInCompilerThread(
-        new Callable<Void>() {
-          @Override
-          public Void call() throws Exception {
-            parseForCompilationInternal();
-            return null;
-          }
+        () -> {
+          parseForCompilationInternal();
+          return null;
         });
   }
 
@@ -1330,12 +1314,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   Supplier<String> getUniqueNameIdSupplier() {
-    return new Supplier<String>() {
-      @Override
-      public String get() {
-        return String.valueOf(Compiler.this.nextUniqueNameId());
-      }
-    };
+    return () -> String.valueOf(Compiler.this.nextUniqueNameId());
   }
 
   @Override
@@ -1822,18 +1801,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void orderInputsWithLargeStack() {
-    runInCompilerThread(new Callable<Void>() {
-      @Override
-      public Void call() throws Exception {
-        Tracer tracer = newTracer("orderInputsWithLargeStack");
-        try {
-          orderInputs();
-        } finally {
-          stopTracer(tracer, "orderInputsWithLargeStack");
-        }
-        return null;
-      }
-    });
+    runInCompilerThread(
+        () -> {
+          Tracer tracer = newTracer("orderInputsWithLargeStack");
+          try {
+            orderInputs();
+          } finally {
+            stopTracer(tracer, "orderInputsWithLargeStack");
+          }
+          return null;
+        });
   }
 
   void orderInputs() {
@@ -2157,31 +2134,28 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public String toSource() {
     return runInCompilerThread(
-        new Callable<String>() {
-          @Override
-          public String call() throws Exception {
-            Tracer tracer = newTracer("toSource");
-            try {
-              CodeBuilder cb = new CodeBuilder();
-              if (jsRoot != null) {
-                int i = 0;
-                if (options.shouldPrintExterns()) {
-                  for (Node scriptNode = externsRoot.getFirstChild();
-                      scriptNode != null;
-                      scriptNode = scriptNode.getNext()) {
-                    toSource(cb, i++, scriptNode);
-                  }
-                }
-                for (Node scriptNode = jsRoot.getFirstChild();
+        () -> {
+          Tracer tracer = newTracer("toSource");
+          try {
+            CodeBuilder cb = new CodeBuilder();
+            if (jsRoot != null) {
+              int i = 0;
+              if (options.shouldPrintExterns()) {
+                for (Node scriptNode = externsRoot.getFirstChild();
                     scriptNode != null;
                     scriptNode = scriptNode.getNext()) {
                   toSource(cb, i++, scriptNode);
                 }
               }
-              return cb.toString();
-            } finally {
-              stopTracer(tracer, "toSource");
+              for (Node scriptNode = jsRoot.getFirstChild();
+                  scriptNode != null;
+                  scriptNode = scriptNode.getNext()) {
+                toSource(cb, i++, scriptNode);
+              }
             }
+            return cb.toString();
+          } finally {
+            stopTracer(tracer, "toSource");
           }
         });
   }
@@ -2190,26 +2164,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Converts the parse tree for a module back to JS code.
    */
   public String toSource(final JSModule module) {
-    return runInCompilerThread(new Callable<String>() {
-      @Override
-      public String call() throws Exception {
-        List<CompilerInput> inputs = module.getInputs();
-        int numInputs = inputs.size();
-        if (numInputs == 0) {
-          return "";
-        }
-        CodeBuilder cb = new CodeBuilder();
-        for (int i = 0; i < numInputs; i++) {
-          Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
-          if (scriptNode == null) {
-            throw new IllegalArgumentException(
-                "Bad module: " + module.getName());
+    return runInCompilerThread(
+        () -> {
+          List<CompilerInput> inputs = module.getInputs();
+          int numInputs = inputs.size();
+          if (numInputs == 0) {
+            return "";
           }
-          toSource(cb, i, scriptNode);
-        }
-        return cb.toString();
-      }
-    });
+          CodeBuilder cb = new CodeBuilder();
+          for (int i = 0; i < numInputs; i++) {
+            Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
+            if (scriptNode == null) {
+              throw new IllegalArgumentException("Bad module: " + module.getName());
+            }
+            toSource(cb, i, scriptNode);
+          }
+          return cb.toString();
+        });
   }
 
   /**
@@ -2223,62 +2194,59 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                        final int inputSeqNum,
                        final Node root) {
     runInCompilerThread(
-        new Callable<Void>() {
-          @Override
-          public Void call() throws Exception {
-            if (options.printInputDelimiter) {
-              if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
-                cb.append("\n"); // Make sure that the label starts on a new line
-              }
-              checkState(root.isScript());
-
-              String delimiter = options.inputDelimiter;
-
-              String inputName = root.getInputId().getIdName();
-              String sourceName = root.getSourceFileName();
-              checkState(sourceName != null);
-              checkState(!sourceName.isEmpty());
-
-              delimiter =
-                  delimiter
-                      .replace("%name%", Matcher.quoteReplacement(inputName))
-                      .replace("%num%", String.valueOf(inputSeqNum))
-                      .replace("%n%", "\n");
-
-              cb.append(delimiter).append("\n");
+        () -> {
+          if (options.printInputDelimiter) {
+            if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
+              cb.append("\n"); // Make sure that the label starts on a new line
             }
-            if (root.getJSDocInfo() != null) {
-              String license = root.getJSDocInfo().getLicense();
-              if (license != null && cb.addLicense(license)) {
-                cb.append("/*\n").append(license).append("*/\n");
-              }
-            }
+            checkState(root.isScript());
 
-            // If there is a valid source map, then indicate to it that the current
-            // root node's mappings are offset by the given string builder buffer.
-            if (options.sourceMapOutputPath != null) {
-              sourceMap.setStartingPosition(cb.getLineIndex(), cb.getColumnIndex());
-            }
+            String delimiter = options.inputDelimiter;
 
-            // if LanguageMode is strict, only print 'use strict'
-            // for the first input file
-            String code = toSource(root, sourceMap, inputSeqNum == 0);
-            if (!code.isEmpty()) {
-              cb.append(code);
+            String inputName = root.getInputId().getIdName();
+            String sourceName = root.getSourceFileName();
+            checkState(sourceName != null);
+            checkState(!sourceName.isEmpty());
 
-              // In order to avoid parse ambiguity when files are concatenated
-              // together, all files should end in a semi-colon. Do a quick
-              // heuristic check if there's an obvious semi-colon already there.
-              int length = code.length();
-              char lastChar = code.charAt(length - 1);
-              char secondLastChar = length >= 2 ? code.charAt(length - 2) : '\0';
-              boolean hasSemiColon = lastChar == ';' || (lastChar == '\n' && secondLastChar == ';');
-              if (!hasSemiColon) {
-                cb.append(";");
-              }
-            }
-            return null;
+            delimiter =
+                delimiter
+                    .replace("%name%", Matcher.quoteReplacement(inputName))
+                    .replace("%num%", String.valueOf(inputSeqNum))
+                    .replace("%n%", "\n");
+
+            cb.append(delimiter).append("\n");
           }
+          if (root.getJSDocInfo() != null) {
+            String license = root.getJSDocInfo().getLicense();
+            if (license != null && cb.addLicense(license)) {
+              cb.append("/*\n").append(license).append("*/\n");
+            }
+          }
+
+          // If there is a valid source map, then indicate to it that the current
+          // root node's mappings are offset by the given string builder buffer.
+          if (options.sourceMapOutputPath != null) {
+            sourceMap.setStartingPosition(cb.getLineIndex(), cb.getColumnIndex());
+          }
+
+          // if LanguageMode is strict, only print 'use strict'
+          // for the first input file
+          String code = toSource(root, sourceMap, inputSeqNum == 0);
+          if (!code.isEmpty()) {
+            cb.append(code);
+
+            // In order to avoid parse ambiguity when files are concatenated
+            // together, all files should end in a semi-colon. Do a quick
+            // heuristic check if there's an obvious semi-colon already there.
+            int length = code.length();
+            char lastChar = code.charAt(length - 1);
+            char secondLastChar = length >= 2 ? code.charAt(length - 2) : '\0';
+            boolean hasSemiColon = lastChar == ';' || (lastChar == '\n' && secondLastChar == ';');
+            if (!hasSemiColon) {
+              cb.append(";");
+            }
+          }
+          return null;
         });
   }
 
@@ -2335,31 +2303,28 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Converts the parse tree for each input in a module back to JS code.
    */
   public String[] toSourceArray(final JSModule module) {
-    return runInCompilerThread(new Callable<String[]>() {
-      @Override
-      public String[] call() throws Exception {
-        List<CompilerInput> inputs = module.getInputs();
-        int numInputs = inputs.size();
-        if (numInputs == 0) {
-          return new String[0];
-        }
-
-        String[] sources = new String[numInputs];
-        CodeBuilder cb = new CodeBuilder();
-        for (int i = 0; i < numInputs; i++) {
-          Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
-          if (scriptNode == null) {
-            throw new IllegalArgumentException(
-                "Bad module input: " + inputs.get(i).getName());
+    return runInCompilerThread(
+        () -> {
+          List<CompilerInput> inputs = module.getInputs();
+          int numInputs = inputs.size();
+          if (numInputs == 0) {
+            return new String[0];
           }
 
-          cb.reset();
-          toSource(cb, i, scriptNode);
-          sources[i] = cb.toString();
-        }
-        return sources;
-      }
-    });
+          String[] sources = new String[numInputs];
+          CodeBuilder cb = new CodeBuilder();
+          for (int i = 0; i < numInputs; i++) {
+            Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
+            if (scriptNode == null) {
+              throw new IllegalArgumentException("Bad module input: " + inputs.get(i).getName());
+            }
+
+            cb.reset();
+            toSource(cb, i, scriptNode);
+            sources[i] = cb.toString();
+          }
+          return sources;
+        });
   }
 
   /**
@@ -3575,18 +3540,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public void saveState(OutputStream outputStream) throws IOException {
     // Do not close the outputstream, caller is responsible for closing it.
     final ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-    runInCompilerThread(new Callable<Void>() {
-      @Override
-      public Void call() throws Exception {
-        Tracer tracer = newTracer("serializeCompilerState");
-        objectOutputStream.writeObject(new CompilerState(Compiler.this));
-        if (typeRegistry != null) {
-          typeRegistry.saveContents(objectOutputStream);
-        }
-        stopTracer(tracer, "serializeCompilerState");
-        return null;
-      }
-    });
+    runInCompilerThread(
+        () -> {
+          Tracer tracer = newTracer("serializeCompilerState");
+          objectOutputStream.writeObject(new CompilerState(Compiler.this));
+          if (typeRegistry != null) {
+            typeRegistry.saveContents(objectOutputStream);
+          }
+          stopTracer(tracer, "serializeCompilerState");
+          return null;
+        });
   }
 
   @GwtIncompatible("ObjectInputStream")

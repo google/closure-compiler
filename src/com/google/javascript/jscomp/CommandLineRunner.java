@@ -1164,8 +1164,7 @@ public class CommandLineRunner extends
         if (source.getValue().endsWith(".zip")) {
           mixedSources.add(source);
         } else if (source.getValue().startsWith("!")) {
-          for (String filename : findJsFiles(
-              Collections.singletonList(source.getValue().substring(1)))) {
+          for (String filename : findJsFiles(ImmutableList.of(source.getValue().substring(1)))) {
             excludes.add(filename);
             mixedSources.remove(new FlagEntry<>(JsSourceType.JS, filename));
           }

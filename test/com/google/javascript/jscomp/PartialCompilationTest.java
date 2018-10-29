@@ -76,7 +76,7 @@ public class PartialCompilationTest {
     options.setPreserveDetailedSourceInfo(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     compiler.init(
-        Collections.<SourceFile>emptyList(),
+        ImmutableList.of(),
         Collections.singletonList(SourceFile.fromCode("input.js", Joiner.on('\n').join(code))),
         options);
     compiler.parse();

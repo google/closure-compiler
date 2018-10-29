@@ -47,7 +47,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -1554,7 +1553,7 @@ public final class NodeUtil {
    * has side-effects.
    */
   static boolean canBeSideEffected(Node n) {
-    Set<String> emptySet = Collections.emptySet();
+    Set<String> emptySet = ImmutableSet.of();
     return canBeSideEffected(n, emptySet, null);
   }
 

@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -56,9 +56,9 @@ public final class ProcessTweaksTest extends CompilerTestCase {
         processTweak.process(externs, root);
 
         if (stripTweaks) {
-          Set<String> emptySet = Collections.emptySet();
-          final StripCode stripCode = new StripCode(compiler, emptySet,
-              emptySet, emptySet, emptySet);
+          Set<String> emptySet = ImmutableSet.of();
+          final StripCode stripCode =
+              new StripCode(compiler, emptySet, emptySet, emptySet, emptySet);
           stripCode.enableTweakStripping();
           stripCode.process(externs, root);
         }

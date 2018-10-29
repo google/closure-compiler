@@ -27,7 +27,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -212,7 +211,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
         "/** @param {string} x */ function f(x) {}\n"
             + "f(/** @type {string|null|undefined} */ ('a'));",
         TYPE_MISMATCH_WARNING);
-    assertMismatches(Collections.<TypeMismatch>emptyList());
+    assertMismatches(ImmutableList.of());
   }
 
   @Test
@@ -228,7 +227,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
             + "/** @param {Sub} x */ function f(x) {}\n"
             + "f(/** @type {Super} */ (new Sub));",
         TYPE_MISMATCH_WARNING);
-    assertMismatches(Collections.<TypeMismatch>emptyList());
+    assertMismatches(ImmutableList.of());
   }
 
   @Test

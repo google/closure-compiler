@@ -1238,7 +1238,7 @@ public final class CompilerTest {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     compiler.init(
-        Collections.emptyList(),
+        ImmutableList.of(),
         Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
         options);
 
@@ -1257,7 +1257,7 @@ public final class CompilerTest {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
 
     compiler.init(
-        Collections.emptyList(),
+        ImmutableList.of(),
         Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
         options);
 
@@ -1275,7 +1275,7 @@ public final class CompilerTest {
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
 
     compiler.init(
-        Collections.emptyList(),
+        ImmutableList.of(),
         Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
         options);
 
@@ -1293,7 +1293,7 @@ public final class CompilerTest {
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
 
     compiler.init(
-        Collections.emptyList(),
+        ImmutableList.of(),
         Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
         options);
 
@@ -1313,7 +1313,7 @@ public final class CompilerTest {
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
 
     compiler.init(
-        Collections.emptyList(),
+        ImmutableList.of(),
         Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
         options);
 
@@ -1335,7 +1335,7 @@ public final class CompilerTest {
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
 
     compiler.init(
-        Collections.emptyList(),
+        ImmutableList.of(),
         Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
         options);
 

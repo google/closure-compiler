@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableSet;
-import java.util.Collections;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -45,7 +44,7 @@ public final class DefaultNameGeneratorTest {
   @Test
   public void testNameGeneratorInvalidPrefixes() throws Exception {
     try {
-      new DefaultNameGenerator(Collections.<String>emptySet(), "123abc", null);
+      new DefaultNameGenerator(ImmutableSet.of(), "123abc", null);
       assertWithMessage(
               "Constructor should throw exception when the first char of prefix is invalid")
           .fail();
@@ -55,7 +54,7 @@ public final class DefaultNameGeneratorTest {
     }
 
     try {
-      new DefaultNameGenerator(Collections.<String>emptySet(), "abc%", null);
+      new DefaultNameGenerator(ImmutableSet.of(), "abc%", null);
       assertWithMessage(
               "Constructor should throw exception when one of prefix characters is invalid")
           .fail();

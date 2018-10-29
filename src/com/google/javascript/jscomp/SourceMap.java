@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapFormat;
 import com.google.debugging.sourcemap.SourceMapGenerator;
@@ -24,7 +25,6 @@ import com.google.debugging.sourcemap.SourceMapGeneratorFactory;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,9 +142,8 @@ public final class SourceMap {
   }
 
   private final SourceMapGenerator generator;
-  private List<? extends LocationMapping> prefixMappings = Collections.emptyList();
-  private final Map<String, String> sourceLocationFixupCache =
-       new HashMap<>();
+  private List<? extends LocationMapping> prefixMappings = ImmutableList.of();
+  private final Map<String, String> sourceLocationFixupCache = new HashMap<>();
   /**
    * A mapping derived from input source maps. Maps back to input sources that inputs to this
    * compilation job have been generated from, and used to create a source map that maps all the way

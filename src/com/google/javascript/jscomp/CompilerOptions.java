@@ -47,7 +47,6 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1119,8 +1118,7 @@ public class CompilerOptions implements Serializable {
    */
   boolean resolveSourceMapAnnotations = true;
 
-  public List<? extends SourceMap.LocationMapping> sourceMapLocationMappings =
-      Collections.emptyList();
+  public List<? extends SourceMap.LocationMapping> sourceMapLocationMappings = ImmutableList.of();
 
   /**
    * Whether to include full file contents in the source map.
@@ -1292,7 +1290,7 @@ public class CompilerOptions implements Serializable {
     removeUnusedLocalVars = false;
     collapseVariableDeclarations = false;
     collapseAnonymousFunctions = false;
-    aliasableStrings = Collections.emptySet();
+    aliasableStrings = ImmutableSet.of();
     aliasStringsBlacklist = "";
     aliasAllStrings = false;
     outputJsStringUsage = false;
@@ -1333,10 +1331,10 @@ public class CompilerOptions implements Serializable {
     j2clPassMode = J2clPassMode.AUTO;
     removeAbstractMethods = false;
     removeClosureAsserts = false;
-    stripTypes = Collections.emptySet();
-    stripNameSuffixes = Collections.emptySet();
-    stripNamePrefixes = Collections.emptySet();
-    stripTypePrefixes = Collections.emptySet();
+    stripTypes = ImmutableSet.of();
+    stripNameSuffixes = ImmutableSet.of();
+    stripNamePrefixes = ImmutableSet.of();
+    stripTypePrefixes = ImmutableSet.of();
     customPasses = null;
     markNoSideEffectCalls = false;
     defineReplacements = new HashMap<>();
@@ -1354,9 +1352,9 @@ public class CompilerOptions implements Serializable {
     cssRenamingWhitelist = null;
     processObjectPropertyString = false;
     idGenerators = ImmutableMap.of();
-    replaceStringsFunctionDescriptions = Collections.emptyList();
+    replaceStringsFunctionDescriptions = ImmutableList.of();
     replaceStringsPlaceholderToken = "";
-    replaceStringsReservedStrings = Collections.emptySet();
+    replaceStringsReservedStrings = ImmutableSet.of();
     propertyInvalidationErrors = new HashMap<>();
     inputSourceMaps = ImmutableMap.of();
 

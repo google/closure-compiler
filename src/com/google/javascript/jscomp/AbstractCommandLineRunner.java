@@ -64,7 +64,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -777,8 +776,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
     if (files.isEmpty() && jsonFiles == null) {
       // Request to read from stdin.
-      files = Collections.singletonList(
-          new FlagEntry<JsSourceType>(JsSourceType.JS, "-"));
+      files = ImmutableList.of(new FlagEntry<JsSourceType>(JsSourceType.JS, "-"));
     }
     try {
       if (jsonFiles != null) {
