@@ -1032,15 +1032,12 @@ public final class CommandLineRunnerTest {
     args.add("--env=CUSTOM");
 
     args.add("--dependency_mode=STRICT");
-    try {
-      CommandLineRunner runner = createCommandLineRunner(new String[0]);
-      runner.doRun();
-      assertWithMessage("Expected FlagUsageException").fail();
-    } catch (FlagUsageException e) {
-      assertWithMessage(e.getMessage())
-          .that(e.getMessage().contains("dependency_mode=STRICT"))
-          .isTrue();
-    }
+
+    CommandLineRunner runner = createCommandLineRunner(new String[0]);
+    assertThat(runner.hasErrors()).isTrue();
+    assertThat(runner.shouldRunCompiler()).isFalse();
+    assertThat(new String(errReader.toByteArray(), UTF_8))
+        .contains("When --dependency_mode=STRICT, you must specify at least one --entry_point");
   }
 
   @Test
