@@ -101,10 +101,12 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "JSC_INCORRECT_SHORTNAME_CAPITALIZATION",
           "The capitalization of short name {0} is incorrect; it should be {1}.");
 
-  static final DiagnosticType EXPORT_NOT_A_MODULE_LEVEL_STATEMENT =
+  static final DiagnosticType EXPORT_NOT_AT_MODULE_SCOPE =
       DiagnosticType.error(
-          "JSC_EXPORT_NOT_A_MODULE_LEVEL_STATEMENT",
-          "Exports must be a statement at the top-level of a module");
+          "JSC_EXPORT_NOT_AT_MODULE_SCOPE", "Exports must be at the top-level of a module");
+
+  static final DiagnosticType EXPORT_NOT_A_STATEMENT =
+      DiagnosticType.error("JSC_EXPORT_NOT_A_STATEMENT", "Exports should be a statement.");
 
   static final DiagnosticType EXPORT_REPEATED_ERROR =
       DiagnosticType.error(
@@ -157,8 +159,9 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     private final Map<String, Node> importsByLongRequiredName = new HashMap<>();
     // Module-local short names for goog.required symbols.
     private final Set<String> shortImportNames = new HashSet<>();
-    // The node of the default (non-named) export of this module, if it exists.
-    private Node defaultExportNode = null;
+    // A map from the export names "exports.name" to the nodes of those named exports.
+    // The default export is keyed with just "exports"
+    private final Map<String, Node> exportNodesByName = new HashMap<>();
 
     ModuleInfo(String moduleName) {
       this.name = moduleName;
@@ -372,23 +375,52 @@ public final class ClosureCheckModule extends AbstractModuleCallback
         || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"));
   }
 
+  /**
+   * Returns if the given export RHS nodes are safe to export multiple times. previousLhs is the LHS
+   * of the first assignment to the given export, and newLhs is a later assignment to the same
+   * export.
+   *
+   * <p>This is specifically to allow the TypeScript like the following: var foo; ((object) => { ...
+   * })(foo = exports.foo || (exports.name = {})); ((object) => { ... })(foo = exports.foo ||
+   * (exports.name = {})); which doesn't abide by the goog.module restriction that each export be
+   * exported only once. Since these exports do have a constant value at the end of loading the
+   * goog.module, and we only rewrite named exports whose RHS is a name node in
+   * ClosureRewriteModule, this pattern with an object literal on the RHS is safe to process.
+   */
+  private boolean isPermittedTypeScriptMultipleExportPattern(Node previousLhs, Node newLhs) {
+    Node previousRhs = NodeUtil.getRValueOfLValue(previousLhs);
+    Node newRhs = NodeUtil.getRValueOfLValue(newLhs);
+    return previousRhs != null
+        && previousRhs.isObjectLit()
+        && newRhs != null
+        && newRhs.isObjectLit();
+  }
+
   private void checkModuleExport(NodeTraversal t, Node n, Node parent) {
     checkArgument(n.isAssign());
     Node lhs = n.getFirstChild();
     checkState(isExportLhs(lhs));
-    if (currentModule.defaultExportNode == null && (!t.inModuleScope() || !parent.isExprResult())) {
-      // Invalid export location.
-      t.report(n, EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
+    // Check multiple exports of the same name
+    Node previousDefinition = currentModule.exportNodesByName.get(lhs.getQualifiedName());
+    if (previousDefinition != null
+        && !isPermittedTypeScriptMultipleExportPattern(previousDefinition, lhs)) {
+      int previousLine = previousDefinition.getLineno();
+      t.report(n, EXPORT_REPEATED_ERROR, String.valueOf(previousLine));
     }
-    if (lhs.isName()) {
-      if (currentModule.defaultExportNode != null) {
-        // Multiple exports
-        int previousLine = currentModule.defaultExportNode.getLineno();
-        t.report(n, EXPORT_REPEATED_ERROR, String.valueOf(previousLine));
+    // Check exports in invalid program position
+    Node defaultExportNode = currentModule.exportNodesByName.get("exports");
+    // If we have never seen an `exports =` default export assignment, or this is the
+    // default export, then treat this assignment as an export and do the checks it is well formed.
+    if (defaultExportNode == null || lhs.matchesQualifiedName("exports")) {
+      currentModule.exportNodesByName.put(lhs.getQualifiedName(), lhs);
+      if (!t.inModuleScope()) {
+        t.report(n, EXPORT_NOT_AT_MODULE_SCOPE);
+      } else if (!parent.isExprResult()) {
+        t.report(n, EXPORT_NOT_A_STATEMENT);
       }
-      currentModule.defaultExportNode = lhs;
     }
-    if ((lhs.isName() || !NodeUtil.isPrototypeProperty(lhs))
+    // Check @export on a module local name
+    if (!NodeUtil.isPrototypeProperty(lhs)
         && !NodeUtil.isLegacyGoogModuleFile(NodeUtil.getEnclosingScript(n))) {
       JSDocInfo jsDoc = n.getJSDocInfo();
       if (jsDoc != null && jsDoc.isExport()) {

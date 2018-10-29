@@ -687,6 +687,10 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerGroup("es6Typed", RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);
 
     DiagnosticGroups.registerDeprecatedGroup("duplicateZipContents");
+
+    // Only exposed for tsickle-generated code.
+    DiagnosticGroups.registerGroup(
+        "googModuleExportNotAStatement", ClosureCheckModule.EXPORT_NOT_A_STATEMENT);
   }
 
   /** Adds warning levels by name. */

@@ -17,7 +17,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE;
 import static com.google.javascript.jscomp.ClosureCheckModule.DUPLICATE_NAME_SHORT_REQUIRE;
-import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_A_MODULE_LEVEL_STATEMENT;
+import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_AT_MODULE_SCOPE;
+import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_A_STATEMENT;
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_REPEATED_ERROR;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERENCES_THIS;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
@@ -664,43 +665,55 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   }
 
   @Test
-  public void testIllegalExports() {
+  public void testNonModuleLevelExports() {
     testError(
-        lines(
-            "goog.module('xyz');",
-            "",
-            "if (window.exportMe) { exports = 5; }"),
-            EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
+        lines("goog.module('xyz');", "", "if (window.exportMe) { exports = 5; }"),
+        EXPORT_NOT_AT_MODULE_SCOPE);
 
     testError(
-        lines(
-            "goog.module('xyz');",
-            "",
-            "window.exportMe && (exports = 5);"),
-            EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
+        lines("goog.module('xyz');", "", "window.exportMe && (exports = 5);"),
+        EXPORT_NOT_A_STATEMENT);
 
     testError(
-        lines(
-            "goog.module('xyz');",
-            "",
-            "if (window.exportMe) { exports.me = 5; }"),
-            EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
+        lines("goog.module('xyz');", "", "exports.f = () => { exports.me = 5; }"),
+        EXPORT_NOT_AT_MODULE_SCOPE);
 
     testSame(
         lines(
             "goog.module('xyz');",
             "",
-            "exports = {};",
-            "if (window.exportMe) { exports.me = 5; }"));
+            "exports = class {};",
+            "exports.staticMethod = () => { exports.me = 5; }"));
+  }
+
+  @Test
+  public void testRepeatedExports() {
+    testError(
+        lines("goog.module('xyz');", "", "exports = 5;", "exports = 'str';"),
+        EXPORT_REPEATED_ERROR);
 
     testError(
+        lines("goog.module('xyz');", "", "exports.y = 5;", "exports.y = 'str';"),
+        EXPORT_REPEATED_ERROR);
+
+    testSame(
         lines(
             "goog.module('xyz');",
             "",
-            "exports = 5;",
-            "exports = 'str';"),
-            EXPORT_REPEATED_ERROR);
+            "exports = class {};",
+            "exports.y = 'str';",
+            "exports.y = decorate(exports.y);"));
 
+    // This pattern is used by typescript in a way that won't violate our goog.module assumptions.
+    testSame(
+        lines(
+            "/** @fileoverview @suppress {googModuleExportNotAStatement} */",
+            "goog.module('xyz');",
+            "",
+            "((x) => {})(exports.y || (exports.y = {}));",
+            "",
+            "((x) => {})(exports.y || (exports.y = {}));",
+            ""));
   }
 
   @Test
