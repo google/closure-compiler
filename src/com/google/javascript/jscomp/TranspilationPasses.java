@@ -95,22 +95,8 @@ public class TranspilationPasses {
               "markTrailingCommasInParameterListsRemoved", Feature.TRAILING_COMMA_IN_PARAM_LIST));
       passes.add(rewriteAsyncFunctions);
     }
-
-    if (options.needsTranspilationFrom(ES6)) {
-      if (doEs6ExternsCheck) {
-        passes.add(es6ExternsCheck);
-      }
-
-      passes.add(es6NormalizeShorthandProperties);
-      passes.add(es6RewriteClassExtends);
-      passes.add(es6ConvertSuper);
-
-      if (!options.checksOnly) {
-        // Don't run these passes in checksOnly mode since all the typechecking & checks passes
-        // support the transpiled features.
-        // TODO(b/73387406): Move each pass above here temporarily, then into
-        // addEs6PostCheck Passes once the pass supports propagating type information
-      }
+    if (options.needsTranspilationFrom(ES6) && doEs6ExternsCheck) {
+      passes.add(es6ExternsCheck);
     }
   }
 
@@ -143,6 +129,9 @@ public class TranspilationPasses {
               Feature.REGEXP_FLAG_U,
               Feature.REGEXP_FLAG_Y));
 
+      passes.add(es6NormalizeShorthandProperties);
+      passes.add(es6RewriteClassExtends);
+      passes.add(es6ConvertSuper);
       passes.add(es6RenameVariablesInParamLists);
       passes.add(es6SplitVariableDeclarations);
       passes.add(
