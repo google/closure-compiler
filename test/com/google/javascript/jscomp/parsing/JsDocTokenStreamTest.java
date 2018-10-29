@@ -41,14 +41,13 @@ import static com.google.javascript.jscomp.parsing.JsDocToken.STRING;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link JsDocTokenStream}. */
 @RunWith(JUnit4.class)
-public final class JsDocTokenStreamTest extends TestCase {
+public final class JsDocTokenStreamTest {
 
   @Test
   public void testJsDocTokenization1() {

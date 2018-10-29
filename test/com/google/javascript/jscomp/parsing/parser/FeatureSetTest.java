@@ -18,14 +18,13 @@ package com.google.javascript.jscomp.parsing.parser;
 import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link FeatureSet}. */
 @RunWith(JUnit4.class)
-public final class FeatureSetTest extends TestCase {
+public final class FeatureSetTest {
   @Test
   public void testContains() {
     assertFS(FeatureSet.TYPESCRIPT).has(Feature.AMBIENT_DECLARATION);

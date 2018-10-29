@@ -15,10 +15,9 @@
  */
 
 package com.google.javascript.jscomp.parsing.parser.util.format;
-
 import static com.google.common.truth.Truth.assertThat;
 
-import junit.framework.TestCase;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,7 +28,7 @@ import org.junit.runners.JUnit4;
  * @author zhoumotongxue008@gmail.com (Michael Zhou)
  */
 @RunWith(JUnit4.class)
-public final class SimpleFormatTest extends TestCase {
+public final class SimpleFormatTest {
 
   @Test
   public void testCharacter() {

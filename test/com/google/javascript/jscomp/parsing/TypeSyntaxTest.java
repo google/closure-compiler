@@ -40,8 +40,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.TypeDeclarationNode;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeDeclarationsIR;
-import junit.framework.TestCase;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -55,14 +55,12 @@ import org.junit.runners.JUnit4;
  * @author martinprobst@google.com (Martin Probst)
  */
 @RunWith(JUnit4.class)
-public final class TypeSyntaxTest extends TestCase {
+public final class TypeSyntaxTest {
 
   private TestErrorManager testErrorManager;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     testErrorManager = new TestErrorManager();
   }
 
@@ -164,7 +162,9 @@ public final class TypeSyntaxTest extends TestCase {
     parse("function foo({x}: any) {\n}");
   }
 
-  public void disabled_testFunctionParamDeclaration_arrow() {
+  @Test
+  @Ignore
+  public void testFunctionParamDeclaration_arrow() {
     Node fn = parse("(x: string) => 'hello' + x;").getFirstFirstChild();
     Node param = fn.getSecondChild().getFirstChild();
     assertDeclaredType("string type", stringType(), param);
@@ -187,7 +187,9 @@ public final class TypeSyntaxTest extends TestCase {
     assertDeclaredType("string type", stringType(), fn);
   }
 
-  public void disabled_testFunctionReturn_arrow() {
+  @Test
+  @Ignore
+  public void testFunctionReturn_arrow() {
     Node fn = parse("(): string => 'hello';").getFirstFirstChild();
     assertDeclaredType("string type", stringType(), fn);
   }
