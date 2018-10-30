@@ -269,8 +269,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private String lastPassName;
 
   private Set<String> externProperties = null;
-  private ImmutableMap<String, PropertyAccessKind> externGetterAndSetterProperties = null;
-  private ImmutableMap<String, PropertyAccessKind> sourceGetterAndSetterProperties = null;
 
   private static final Joiner pathJoiner = Joiner.on(File.separator);
 
@@ -3184,28 +3182,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   Set<String> getExternProperties() {
     return externProperties;
-  }
-
-  @Override
-  ImmutableMap<String, PropertyAccessKind> getExternGetterAndSetterProperties() {
-    return externGetterAndSetterProperties;
-  }
-
-  @Override
-  void setExternGetterAndSetterProperties(
-      ImmutableMap<String, PropertyAccessKind> externGetterAndSetterProperties) {
-    this.externGetterAndSetterProperties = externGetterAndSetterProperties;
-  }
-
-  @Override
-  ImmutableMap<String, PropertyAccessKind> getSourceGetterAndSetterProperties() {
-    return sourceGetterAndSetterProperties;
-  }
-
-  @Override
-  void setSourceGetterAndSetterProperties(
-      ImmutableMap<String, PropertyAccessKind> sourceGetterAndSetterProperties) {
-    this.sourceGetterAndSetterProperties = sourceGetterAndSetterProperties;
   }
 
   /**
