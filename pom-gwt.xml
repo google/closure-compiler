@@ -38,6 +38,11 @@
   <inceptionYear>2009</inceptionYear>
 
   <properties>
+    <!--
+         Generating javadoc chokes on super/ sources,
+         and we don't need it for the GWT release anyway.
+     -->
+    <maven.javadoc.skip>true</maven.javadoc.skip>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
     <jdk.version>1.8</jdk.version>
