@@ -17,15 +17,19 @@ package com.google.debugging.sourcemap;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-public final class UtilTest extends TestCase {
-  public void testAppendHexJavaScriptRepresentation(char ch, String expectedOut) {
+@RunWith(JUnit4.class)
+public final class UtilTest {
+  private void testAppendHexJavaScriptRepresentation(char ch, String expectedOut) {
     StringBuilder sb = new StringBuilder();
     Util.appendHexJavaScriptRepresentation(sb, ch);
     assertThat(sb.toString()).isEqualTo(expectedOut);
   }
 
+  @Test
   public void testAppendHexJavaScriptRepresentation() {
     testAppendHexJavaScriptRepresentation('a', "\\u0061");
     testAppendHexJavaScriptRepresentation('z', "\\u007a");

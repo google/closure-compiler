@@ -20,18 +20,20 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-
-import junit.framework.TestCase;
-
 import java.util.Map;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link SourceMapConsumerV3}
  *
  */
-public final class SourceMapConsumerV3Test extends TestCase {
+@RunWith(JUnit4.class)
+public final class SourceMapConsumerV3Test {
 
-  public void testSources() throws Exception{
+  @Test
+  public void testSources() throws Exception {
     String sourceMap =  "{\n" +
                         "\"version\":3,\n" +
                         "\"file\":\"testcode\",\n" +
@@ -48,7 +50,8 @@ public final class SourceMapConsumerV3Test extends TestCase {
     assertThat(consumer.getSourceRoot()).isNull();
   }
 
-  public void testMap() throws Exception{
+  @Test
+  public void testMap() throws Exception {
     String sourceMap = ""
         + "{"
         + "  \"version\": 3,"
@@ -74,7 +77,8 @@ public final class SourceMapConsumerV3Test extends TestCase {
 
   }
 
-  public void testSourcesWithRoot() throws Exception{
+  @Test
+  public void testSourcesWithRoot() throws Exception {
     String sourceMap =  "{\n" +
                         "\"version\":3,\n" +
                         "\"file\":\"testcode\",\n" +
@@ -93,7 +97,8 @@ public final class SourceMapConsumerV3Test extends TestCase {
     assertThat(consumer.getSourceRoot()).isEqualTo("http://server/path/");
   }
 
-  public void testExtensions() throws Exception{
+  @Test
+  public void testExtensions() throws Exception {
     String sourceMap =  "{\n" +
                         "\"version\":3,\n" +
                         "\"file\":\"testcode\",\n" +

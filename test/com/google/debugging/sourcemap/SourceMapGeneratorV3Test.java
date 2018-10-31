@@ -32,14 +32,14 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
+/** @author johnlenz@google.com (John Lenz) */
+@RunWith(JUnit4.class)
+
 public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
-
-  public SourceMapGeneratorV3Test() {
-  }
 
   @Override
   protected SourceMapConsumer getSourceMapConsumer() {
@@ -59,10 +59,12 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     }
   }
 
+  @Test
   public void testBasicMapping1() throws Exception {
     compileAndCheck("function __BASIC__() { }");
   }
 
+  @Test
   public void testBasicMappingGoldenOutput() throws Exception {
     // Empty source map test
     checkSourceMap("function __BASIC__() { }",
@@ -77,15 +79,18 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "}\n");
   }
 
+  @Test
   public void testBasicMapping2() throws Exception {
     compileAndCheck("function __BASIC__(__PARAM1__) {}");
   }
 
+  @Test
   public void testLiteralMappings() throws Exception {
     compileAndCheck("function __BASIC__(__PARAM1__, __PARAM2__) { " +
                     "var __VAR__ = '__STR__'; }");
   }
 
+  @Test
   public void testLiteralMappingsGoldenOutput() throws Exception {
     // Empty source map test
     checkSourceMap("function __BASIC__(__PARAM1__, __PARAM2__) { " +
@@ -103,6 +108,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "}\n");
   }
 
+  @Test
   public void testMultilineMapping() throws Exception {
     compileAndCheck("function __BASIC__(__PARAM1__, __PARAM2__) {\n" +
                     "var __VAR__ = '__STR__';\n" +
@@ -110,6 +116,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                     "}");
   }
 
+  @Test
   public void testMultilineMapping2() throws Exception {
     compileAndCheck("function __BASIC__(__PARAM1__, __PARAM2__) {\n" +
                     "var __VAR__ = 1;\n" +
@@ -117,6 +124,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                     "}");
   }
 
+  @Test
   public void testMultiFunctionMapping() throws Exception {
     compileAndCheck("function __BASIC__(__PARAM1__, __PARAM2__) {\n" +
                     "var __VAR__ = '__STR__';\n" +
@@ -129,6 +137,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                     "}\n");
   }
 
+  @Test
   public void testGoldenOutput0() throws Exception {
     // Empty source map test
     checkSourceMap("",
@@ -143,6 +152,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "}\n");
   }
 
+  @Test
   public void testGoldenOutput0a() throws Exception {
     checkSourceMap("a;",
 
@@ -170,6 +180,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "}\n");
   }
 
+  @Test
   public void testGoldenOutput1() throws Exception {
     detailLevel = SourceMap.DetailLevel.ALL;
 
@@ -219,6 +230,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "}\n");
   }
 
+  @Test
   public void testGoldenOutput2() throws Exception {
     checkSourceMap("function f(foo, bar) {\r\n\n\n\nfoo = foo + bar + foo;" +
                    "\nreturn foo;\n}",
@@ -235,6 +247,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "}\n");
   }
 
+  @Test
   public void testGoldenOutput3() throws Exception {
     checkSourceMap("c:\\myfile.js",
                    "foo;",
@@ -249,6 +262,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "}\n");
   }
 
+  @Test
   public void testGoldenOutput4() throws Exception {
     checkSourceMap("c:\\myfile.js",
                    "foo;   boo;   goo;",
@@ -263,6 +277,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "}\n");
   }
 
+  @Test
   public void testGoldenOutput5() throws Exception {
     detailLevel = SourceMap.DetailLevel.ALL;
 
@@ -354,6 +369,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
         "}\n");
   }
 
+  @Test
   public void testBasicDeterminism() throws Exception {
     RunResult result1 = compile("file1", "foo;", "file2", "bar;");
     RunResult result2 = compile("file2", "foo;", "file1", "bar;");
@@ -371,6 +387,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     assertThat(files2).isEqualTo(files1);
   }
 
+  @Test
   public void testWriteMetaMap() throws IOException {
     StringWriter out = new StringWriter();
     String name = "./app.js";
@@ -419,6 +436,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     return out.toString();
   }
 
+  @Test
   public void testWriteMetaMap2() throws IOException {
     StringWriter out = new StringWriter();
     String name = "./app.js";
@@ -461,6 +479,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
             + "}\n");
   }
 
+  @Test
   public void testParseSourceMetaMap() throws Exception {
     final String INPUT1 = "file1";
     final String INPUT2 = "file2";
@@ -497,6 +516,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
       }});
   }
 
+  @Test
   public void testSourceMapMerging() throws Exception {
     final String INPUT1 = "file1";
     final String INPUT2 = "file2";
@@ -522,6 +542,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     check(inputs, output.toString(), mapContents.toString());
   }
 
+  @Test
   public void testSourceMapExtensions() throws Exception {
     //generating the json
     SourceMapGeneratorV3 mapper = new SourceMapGeneratorV3();
@@ -549,6 +570,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     assertThat(sourceMap.get("x_google_str").getAsString()).isEqualTo("Some text");
   }
 
+  @Test
   public void testSourceMapMergeExtensions() throws Exception {
     SourceMapGeneratorV3 mapper = new SourceMapGeneratorV3();
     mapper.mergeMapSection(0, 0,
@@ -589,7 +611,8 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     assertThat(((JsonPrimitive) mapper.getExtension("x_company_bar")).getAsBoolean()).isFalse();
   }
 
-  public void testSourceRoot() throws Exception{
+  @Test
+  public void testSourceRoot() throws Exception {
     SourceMapGeneratorV3 mapper = new SourceMapGeneratorV3();
 
     //checking absence of sourceRoot

@@ -18,18 +18,21 @@ package com.google.debugging.sourcemap;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
-public final class Base64Test extends TestCase {
+/** @author johnlenz@google.com (John Lenz) */
+@RunWith(JUnit4.class)
+public final class Base64Test {
+  @Test
   public void testBase64() {
     for (int i = 0; i < 64; i++) {
       testValue(i);
     }
   }
 
+  @Test
   public void testBase64EncodeInt() {
     assertThat(Base64.base64EncodeInt(0)).isEqualTo("AAAAAA");
     assertThat(Base64.base64EncodeInt(1)).isEqualTo("AAAAAQ");

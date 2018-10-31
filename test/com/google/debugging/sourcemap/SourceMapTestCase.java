@@ -17,6 +17,7 @@
 package com.google.debugging.sourcemap;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
@@ -32,22 +33,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import junit.framework.TestCase;
+import org.junit.Before;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
-public abstract class SourceMapTestCase extends TestCase {
+/** @author johnlenz@google.com (John Lenz) */
+public abstract class SourceMapTestCase {
 
   private boolean validateColumns = true;
-
-  public SourceMapTestCase() {
-  }
 
   void disableColumnValidation() {
     validateColumns = false;
   }
-
 
   static final ImmutableList<SourceFile> EXTERNS =
       ImmutableList.of(SourceFile.fromCode("externs", ""));
@@ -72,7 +67,7 @@ public abstract class SourceMapTestCase extends TestCase {
       }
     }
 
-  @Override
+  @Before
   public void setUp() {
     detailLevel = SourceMap.DetailLevel.ALL;
   }
@@ -246,7 +241,9 @@ public abstract class SourceMapTestCase extends TestCase {
       // Ensure that if the token name does not being with an 'STR' (meaning a
       // string) it has an original name.
       if (!inputToken.tokenName.startsWith("STR")) {
-        assertFalse("missing name for " + inputToken.tokenName, mapping.getIdentifier().isEmpty());
+        assertWithMessage("missing name for %s", inputToken.tokenName)
+            .that(mapping.getIdentifier())
+            .isNotEmpty();
       }
 
       // Ensure that if the mapping has a name, it matches the token.
@@ -276,7 +273,7 @@ public abstract class SourceMapTestCase extends TestCase {
 
     Result result = compiler.compile(EXTERNS, inputs, options);
 
-    assertTrue("compilation failed", result.success);
+    assertWithMessage("compilation failed").that(result.success).isTrue();
     String source = compiler.toSource();
 
     StringBuilder sb = new StringBuilder();

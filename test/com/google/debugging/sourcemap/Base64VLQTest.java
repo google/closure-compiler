@@ -18,18 +18,21 @@ package com.google.debugging.sourcemap;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
-public final class Base64VLQTest extends TestCase {
+/** @author johnlenz@google.com (John Lenz) */
+@RunWith(JUnit4.class)
+public final class Base64VLQTest {
+  @Test
   public void testBase64VLQSelectedValues1() {
     for (int i = 0; i < 63; i++) {
       testValue(i);
     }
   }
 
+  @Test
   public void testBase64VLQSelectedValues2() {
     int base = 1;
     for (int i = 0; i < 30; i++) {
@@ -39,12 +42,14 @@ public final class Base64VLQTest extends TestCase {
     }
   }
 
+  @Test
   public void testBase64VLQSelectedSignedValues1() {
     for (int i = -(64*64-1); i < (64*64-1); i++) {
       testValue(i);
     }
   }
 
+  @Test
   public void testBase64VLQSelectedSignedValues2() {
     int base = 1;
     for (int i = 0; i < 30; i++) {
