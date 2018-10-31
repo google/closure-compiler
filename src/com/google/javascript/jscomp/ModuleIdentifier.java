@@ -15,66 +15,46 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.deps.ModuleNames;
 import java.io.Serializable;
 
 /**
  * Basic information on an entry point module.
- * While closure entry points are namespaces,
- * ES6 and CommonJS entry points are file paths
- * which are normalized to a closure namespace.
  *
- * This class allows error messages to the user to
- * be based on the input name rather than the
- * normalized version.
+ * <p>Closure entry points are namespace names, while ES and CommonJS entry points are file paths
+ * which are normalized to a namespace name.
+ *
+ * <p>This class allows error messages to be based on the user-provided name rather than the
+ * normalized name.
  */
+@AutoValue
 @Immutable
-public class ModuleIdentifier implements Serializable {
-  private final String name;
-  private final String closureNamespace;
-  private final String moduleName;
+public abstract class ModuleIdentifier implements Serializable {
+  /** Returns the user-provided name. */
+  public abstract String getName();
 
-  /**
-   * @param name as provided by the user
-   * @param closureNamespace entry point normalized to a closure namespace
-   * @param moduleName For closure namespaces, the module name may be different than
-   *     the namespace
-   */
-  ModuleIdentifier(String name, String closureNamespace, String moduleName) {
-    this.name = name;
-    this.closureNamespace = closureNamespace;
-    this.moduleName = moduleName;
-  }
+  /** Returns the Closure namespace name. */
+  public abstract String getClosureNamespace();
 
-  public String getName() {
-    return name;
-  }
-
-  public String getClosureNamespace() {
-    return closureNamespace;
-  }
-
-  public String getModuleName() {
-    return moduleName;
-  }
+  /** Returns the module name. */
+  public abstract String getModuleName();
 
   @Override
-  public String toString() {
-    if (closureNamespace.equals(moduleName)) {
-      return closureNamespace;
+  public final String toString() {
+    if (getClosureNamespace().equals(getModuleName())) {
+      return getClosureNamespace();
     }
-    return moduleName + ":" + closureNamespace;
+    return getModuleName() + ":" + getClosureNamespace();
   }
 
   /**
-   * @param name Closure namespace used as an entry point. May start
-   *     "goog:" when provided as a flag from the command line.
+   * Returns an identifier for a Closure namespace.
    *
-   * Closure entry points may also be formatted as:
-   *     'goog:moduleName:name.space'
-   * which specifies that the module name and provided namespace
-   * are different
+   * @param name The Closure namespace. It may be in one of the formats `name.space`,
+   *     `goog:name.space` or `goog:moduleName:name.space`, where the latter specifies that the
+   *     module and namespace names are different.
    */
   public static ModuleIdentifier forClosure(String name) {
     String normalizedName = name;
@@ -90,14 +70,31 @@ public class ModuleIdentifier implements Serializable {
       namespace = normalizedName.substring(Math.min(splitPoint + 1, normalizedName.length() - 1));
     }
 
-    return new ModuleIdentifier(normalizedName, namespace, moduleName);
+    return new AutoValue_ModuleIdentifier(normalizedName, namespace, moduleName);
   }
 
   /**
-   * @param filepath ES6 or CommonJS module used as an entry point.
+   * Returns an identifier for an ES or CommonJS module.
+   *
+   * @param filepath Path to the ES or CommonJS module.
    */
   public static ModuleIdentifier forFile(String filepath) {
     String normalizedName = ModuleNames.fileToModuleName(filepath);
-    return new ModuleIdentifier(filepath, normalizedName, normalizedName);
+    return new AutoValue_ModuleIdentifier(filepath, normalizedName, normalizedName);
+  }
+
+  /**
+   * Returns an identifier for an --entry_point flag value.
+   *
+   * @param flagValue The flag value. If it is in one of the formats `goog:name.space` or
+   *     `goog:moduleName:name.space`, it is interpreted as a Closure namespace. Otherwise, it is
+   *     interpreted as the path to an ES or CommonJS module.
+   */
+  public static ModuleIdentifier forFlagValue(String flagValue) {
+    if (flagValue.startsWith("goog:")) {
+      return ModuleIdentifier.forClosure(flagValue);
+    } else {
+      return ModuleIdentifier.forFile(flagValue);
+    }
   }
 }
