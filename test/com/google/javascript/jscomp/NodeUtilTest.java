@@ -3598,6 +3598,14 @@ public final class NodeUtilTest {
             NodeUtil.isObjectDefinePropertiesDefinition(
                 getCallNode("Object.defineProperties(this, foo);")))
         .isTrue();
+    assertThat(
+            NodeUtil.isObjectDefinePropertiesDefinition(
+                getCallNode("$jscomp.global.Object.defineProperties(this, foo);")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isObjectDefinePropertiesDefinition(
+                getCallNode("$jscomp$global.Object.defineProperties(this, foo);")))
+        .isTrue();
 
     assertThat(
             NodeUtil.isObjectDefinePropertiesDefinition(
@@ -3621,6 +3629,14 @@ public final class NodeUtilTest {
     assertThat(
             NodeUtil.isObjectDefinePropertyDefinition(
                 getCallNode("Object.defineProperty(this, 'foo', foo);")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isObjectDefinePropertyDefinition(
+                getCallNode("$jscomp.global.Object.defineProperty(this, 'foo', foo);")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isObjectDefinePropertyDefinition(
+                getCallNode("$jscomp$global.Object.defineProperty(this, 'foo', foo);")))
         .isTrue();
 
     assertThat(

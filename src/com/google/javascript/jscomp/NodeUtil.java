@@ -4337,13 +4337,18 @@ public final class NodeUtil {
     }
   }
 
-  /**
-   * @return {@code true} if the node is a definition with Object.defineProperty
-   */
+  /** Returns {@code true} if the node is a definition with Object.defineProperty. */
   static boolean isObjectDefinePropertyDefinition(Node n) {
-    return n.isCall()
-        && n.hasXChildren(4)
-        && n.getFirstChild().matchesQualifiedName("Object.defineProperty");
+    if (!n.isCall() || !n.hasXChildren(4)) {
+      return false;
+    }
+    Node first = n.getFirstChild();
+    if (!first.isGetProp()) {
+      return false;
+    }
+    Node prop = first.getLastChild();
+    return prop.getString().equals("defineProperty")
+        && isKnownGlobalObjectReference(first.getFirstChild());
   }
 
   /**
