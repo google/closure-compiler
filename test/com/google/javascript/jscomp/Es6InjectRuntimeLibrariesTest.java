@@ -83,4 +83,11 @@ public class Es6InjectRuntimeLibrariesTest {
 
     assertThat(injected).containsExactly("es6/util/makeiterator", "es6/util/arrayfromiterator");
   }
+
+  @Test
+  public void testArrayPatternRest_injectsExecuteAsyncFunctionSupport() {
+    Set<String> injected = parseAndRunInjectionPass("async function foo() {}");
+
+    assertThat(injected).containsExactly("es6/execute_async_generator");
+  }
 }

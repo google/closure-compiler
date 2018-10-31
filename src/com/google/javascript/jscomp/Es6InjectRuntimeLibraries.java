@@ -95,6 +95,10 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
       compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
     }
 
+    if (mustBeCompiledAway.contains(Feature.ASYNC_FUNCTIONS)) {
+      compiler.ensureLibraryInjected("es6/execute_async_generator", /* force= */ false);
+    }
+
     if (mustBeCompiledAway.contains(Feature.ASYNC_GENERATORS)) {
       compiler.ensureLibraryInjected("es6/async_generator_wrapper", /* force= */ false);
     }
