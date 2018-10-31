@@ -12,10 +12,10 @@ install: true
 
 script:
   # Builds the compiler and runs tests
-  - mvn install --batch-mode
+  - mvn -Dstyle.color=always install
   - node test/gwt.js
   # Checks for JavaDoc errors
-  - mvn -pl com.google.javascript:closure-compiler javadoc:javadoc
+  - mvn -Dstyle.color=always -pl com.google.javascript:closure-compiler javadoc:javadoc
 
 # Causes the build to run on a VM instead of in a container, to avoid OOM errors.
 sudo: required
@@ -25,6 +25,8 @@ after_success:
 
 env:
   global:
+    # Force maven to use colorized output
+    - MAVEN_OPTS="-Djansi.force=true"
     # CI_DEPLOY_USERNAME
     - secure: "U2O3l6+TOz+3pxxsFdl/T+ktgGixfJO1Fc9pNC75v/N08lfNmyB+ee1wz0E8q7SZvnNR9D6KfLCFzjq0sS5F9FGrfKbFDTPxyaz/4EwTk0fdvPzaKhs8xl6LPVlLw6vLRIWc8PPCIVqqbYAbG6JA8liBPGbBXD/LXmCFbSr0rLg="
     # CI_DEPLOY_PASSWORD
