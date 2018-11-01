@@ -4046,37 +4046,35 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testAsyncFunctionCannotReturnNumber() {
-    testTypes(
+    testTypesWithCommonExterns(
         "/** @return {number} */ async function f() {}",
         lines(
-            "An async function must return a (supertype of) Promise",
-            "found   : number",
-            "required: IThenable"));
+            "The return type of an async function must be a non-union supertype of Promise",
+            "found: number"));
   }
 
   @Test
   public void testAsyncFunctionCannotReturnArray() {
-    testTypes(
+    testTypesWithCommonExterns(
         "/** @return {!Array} */ async function f() {}",
         lines(
-            "An async function must return a (supertype of) Promise",
-            "found   : Array",
-            "required: IThenable"));
+            "The return type of an async function must be a non-union supertype of Promise",
+            "found: Array"));
   }
 
   @Test
   public void testAsyncFunctionCanReturnObject() {
-    testTypes("/** @return {!Object} */ async function f() {}");
+    testTypesWithCommonExterns("/** @return {!Object} */ async function f() {}");
   }
 
   @Test
   public void testAsyncFunctionCanReturnAllType() {
-    testTypes("/** @return {*} */ async function f() {}");
+    testTypesWithCommonExterns("/** @return {*} */ async function f() {}");
   }
 
   @Test
   public void testAsyncReturnsPromise1() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {!Promise<number>} */",
             "async function getANumber() {",
@@ -4086,7 +4084,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testAsyncReturnsPromise2() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {!Promise<string>} */",
             "async function getAString() {",
@@ -4101,7 +4099,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testAsyncCanReturnNullablePromise() {
     // TODO(lharker): don't allow async functions to return null.
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {?Promise<string>} */",
             "async function getAString() {",
@@ -4115,21 +4113,55 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testAsyncCannotReturnUnionOfPromiseAndNumber() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {(number|!Promise<string>)} */",
             "async function getAString() {",
             "  return 1;",
             "}"),
         lines(
-            "An async function must return a (supertype of) Promise",
-            "found   : (Promise<string>|number)",
-            "required: IThenable"));
+            "The return type of an async function must be a non-union supertype of Promise",
+            "found: (Promise<string>|number)"));
+  }
+
+  @Test
+  public void testAsyncCannotReturnASubtypeOfPromise() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @extends {Promise<string>} */",
+            "class MyPromise extends Promise { }",
+            "",
+            "/** @return {!MyPromise} */",
+            "async function getAString() {",
+            "  return '';",
+            "}"),
+        lines(
+            "The return type of an async function must be a non-union supertype of Promise",
+            "found: MyPromise"));
+  }
+
+  @Test
+  public void testAsyncCannotReturnASiblingOfPromise() {
+    testTypesWithCommonExterns(
+        lines(
+            "/**",
+            " * @interface",
+            " * @extends {IThenable<string>}",
+            " */",
+            "class MyThenable { }",
+            "",
+            "/** @return {!MyThenable} */",
+            "async function getAString() {",
+            "  return '';",
+            "}"),
+        lines(
+            "The return type of an async function must be a non-union supertype of Promise",
+            "found: MyThenable"));
   }
 
   @Test
   public void testAsyncCanReturnIThenable1() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {!IThenable<string>} */",
             "async function getAString() {",
@@ -4145,7 +4177,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAsyncReturnStatementIsResolved() {
     // Test that we correctly handle resolving an "IThenable" return statement inside an async
     // function.
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {!IThenable<string>} */",
             "async function getAString(/** !IThenable<number> */ iThenable) {",
