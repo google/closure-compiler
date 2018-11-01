@@ -6,7 +6,7 @@ set -e -u
 
 function mvn_deploy() {
   mvn clean source:jar deploy \
-    --settings="$(dirname $0)/settings.xml" -DskipTests=true "$@"
+    --settings="$(dirname $0)/settings.xml" -DskipTests=true -Dstyle.color=always "$@"
 }
 
 # Restrict when snapshots are published
