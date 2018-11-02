@@ -109,7 +109,7 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
 
     newNode.useSourceInfoFromForTree(node);
     newNode.setOriginalName(name);
-    newNode.makeNonIndexable();
+    newNode.makeNonIndexableRecursive();
     node.getGrandparent().addChildToBack(IR.exprResult(newNode));
   }
 
