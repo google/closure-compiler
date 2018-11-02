@@ -2135,7 +2135,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     } else if (n.isAsyncFunction()) {
       // An async function must return a Promise or supertype of Promise
       JSType returnType = functionType.getReturnType();
-      validator.expectValidAsyncReturnType(t, n, returnType.restrictByNotNullOrUndefined());
+      validator.expectValidAsyncReturnType(t, n, returnType);
     }
   }
 
@@ -2481,14 +2481,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         expectedReturnType = getNativeType(VOID_TYPE);
       } else if (enclosingFunction.isAsyncFunction()) {
         // Unwrap the async function's declared return type.
-        expectedReturnType = Promises.getTemplateTypeOfThenable(typeRegistry, expectedReturnType);
+        expectedReturnType = Promises.createAsyncReturnableType(typeRegistry, expectedReturnType);
       }
 
       // Fetch the returned value's type
       JSType actualReturnType = getJSType(exprNode);
-      if (enclosingFunction.isAsyncFunction()) {
-        actualReturnType = Promises.getResolvedType(typeRegistry, actualReturnType);
-      }
 
       validator.expectCanAssignTo(t, exprNode, actualReturnType, expectedReturnType,
           "inconsistent return type");
@@ -2526,9 +2523,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // e.g. if returnType is "Generator<string>", make it just "string".
         returnType = getTemplateTypeOfGenerator(returnType);
       } else if (enclosingFunction.isAsyncFunction()) {
-        // Unwrap the template variable from a async function's declared return type.
-        // e.g. if returnType is "!Promise<string>" or "!IThenable<string>", make it just "string".
-        returnType = Promises.getTemplateTypeOfThenable(typeRegistry, returnType);
+        // e.g. `!Promise<string>` => `string|!IThenable<string>`
+        // We transform the expected return type rather than the actual return type so that the
+        // extual return type is always reported to the user. This was felt to be clearer.
+        returnType = Promises.createAsyncReturnableType(typeRegistry, returnType);
       } else if (returnType.isVoidType() && functionType.isConstructor()) {
         // Allow constructors to use empty returns for flow control.
         if (!n.hasChildren()) {
@@ -2547,11 +2545,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         valueNode = n;
       } else {
         actualReturnType = getJSType(valueNode);
-        if (enclosingFunction.isAsyncFunction()) {
-          // We want to treat `return Promise.resolve(1);` as if it were `return 1;` inside an async
-          // function.
-          actualReturnType = Promises.getResolvedType(typeRegistry, actualReturnType);
-        }
       }
 
       // verifying

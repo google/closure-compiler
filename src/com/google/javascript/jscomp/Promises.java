@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -95,5 +96,37 @@ final class Promises {
     }
 
     return type;
+  }
+
+  /**
+   * Synthesizes a type representing the legal types of a return expression within async code
+   * (i.e.`Promise` callbacks, async functions).
+   *
+   * <p>The return type will generally be a union but may not be, for example:
+   *
+   * <ul>
+   *   <li>`!Promise<number>` => `number|!IThenable<number>`
+   *   <li>`number` => `number|!IThenable<number>`
+   *   <li>`?` => `?`
+   *   <li>`*` => `*`
+   *   <li>`number|!Foo` => `number|!Foo|!IThenable<number|!Foo>`
+   *   <li>`!Foo|!IThenable<!Foo>` => `Foo|!IThenable<!Foo>`
+   *   <li>`!Promise<!IThenable<!Foo>>` => `!Foo|!IThenable<!Foo>`
+   * </ul>
+   *
+   * Note that this method may create an incorrect (but not really dangerous) type when supplied
+   * with types that are nonsensical in an async context, for example:
+   *
+   * <ul>
+   *   <li>`number|!IThenable<string>` => `number|string|!IThenable<number|string>`
+   *   <li>`?IThenable<!Foo>` => `null|!Foo|!Thenable<?Foo>`
+   * </ul>
+   */
+  static final JSType createAsyncReturnableType(JSTypeRegistry registry, JSType maybeThenable) {
+    JSType parameterType = getResolvedType(registry, maybeThenable);
+    return registry.createUnionType(
+        parameterType,
+        registry.createTemplatizedType(
+            registry.getNativeObjectType(JSTypeNative.I_THENABLE_TYPE), parameterType));
   }
 }

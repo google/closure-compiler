@@ -213,12 +213,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAsyncArrowWithIncorrectBlocklessReturn() {
     testTypes(
         lines(
-            "function takesPromiseProvider(/** function(): ?Promise<string> */ getPromise) {}",
+            "function takesPromiseProvider(/** function(): !Promise<string> */ getPromise) {}",
             "takesPromiseProvider(async () => 1);"),
         lines(
             "inconsistent return type", // preserve newline
             "found   : number",
-            "required: string"));
+            "required: (IThenable<string>|string)"));
   }
 
   @Test
@@ -4093,22 +4093,20 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "inconsistent return type", // preserve newline
             "found   : number",
-            "required: string"));
+            "required: (IThenable<string>|string)"));
   }
 
   @Test
-  public void testAsyncCanReturnNullablePromise() {
-    // TODO(lharker): don't allow async functions to return null.
+  public void testAsyncFunctionCannotReturnNullablePromise() {
     testTypesWithCommonExterns(
         lines(
             "/** @return {?Promise<string>} */",
             "async function getAString() {",
-            "  return 1;",
+            "  return '';",
             "}"),
         lines(
-            "inconsistent return type", // preserve newline
-            "found   : number",
-            "required: string"));
+            "The return type of an async function must be a non-union supertype of Promise",
+            "found: (Promise<string>|null)"));
   }
 
   @Test
@@ -4170,7 +4168,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "inconsistent return type", //
             "found   : number",
-            "required: string"));
+            "required: (IThenable<string>|string)"));
   }
 
   @Test
@@ -4185,8 +4183,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "}"),
         lines(
             "inconsistent return type", // preserve newline
-            "found   : number",
-            "required: string"));
+            "found   : IThenable<number>",
+            "required: (IThenable<string>|string)"));
   }
 
   @Test
