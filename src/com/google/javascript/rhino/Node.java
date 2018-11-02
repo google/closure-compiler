@@ -166,8 +166,10 @@ public class Node implements Serializable {
       MODULE_EXPORT = 97, // Mark a property as a module export so that collase properties
       // can act on it.
       IS_SHORTHAND_PROPERTY = 98, // Indicates that a property {x:x} was originally parsed as {x}.
-      ES6_MODULE = 99; // Indicates that a SCRIPT node is or was an ES6 module. Remains set
+      ES6_MODULE = 99, // Indicates that a SCRIPT node is or was an ES6 module. Remains set
       // after the module is rewritten.
+      TYPEDEF_TYPE = 100; // Record the type associated with a @typedef to enable looking up typedef
+      // in the AST possible without saving the type scope.
 
   private static final String propToString(byte propType) {
       switch (propType) {
@@ -236,6 +238,8 @@ public class Node implements Serializable {
         return "is_shorthand_property";
       case ES6_MODULE:
         return "es6_module";
+      case TYPEDEF_TYPE:
+        return "typedef_type";
       default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -2541,6 +2545,17 @@ public class Node implements Serializable {
     return getBooleanProp(DELETED);
   }
 
+  /** If this node represents a typedef declaration, the associated JSType */
+  public final void setTypedefTypeProp(JSType type) {
+    putProp(TYPEDEF_TYPE, type);
+  }
+
+  /** If this node represents a typedef declaration, the associated JSType */
+  public final JSType getTypedefTypeProp() {
+    return (JSType) getProp(TYPEDEF_TYPE);
+  }
+
+  /** @param unused Whether a parameter was function to be unused. Set by RemoveUnusedVars */
   public final void setUnusedParameter(boolean unused) {
     putBooleanProp(IS_UNUSED_PARAMETER, unused);
   }
