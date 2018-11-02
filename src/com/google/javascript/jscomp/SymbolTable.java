@@ -422,8 +422,11 @@ public final class SymbolTable {
     for (Reference ref : getReferences(symbol)) {
       builder.append(
           SimpleFormat.format(
-              "  Ref %d: %s:%d\n",
-              refCount, ref.getNode().getSourceFileName(), ref.getNode().getLineno()));
+              "  Ref %d: %s:%d %s\n",
+              refCount,
+              ref.getNode().getSourceFileName(),
+              ref.getNode().getLineno(),
+              ref.getNode().isIndexable() ? "" : "non indexable"));
       refCount++;
     }
   }
