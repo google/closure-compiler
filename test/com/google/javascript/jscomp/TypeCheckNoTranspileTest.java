@@ -713,8 +713,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testTypedefAliasValueTypeIsUndefined() {
-    // Aliasing a typedef (const Alias = SomeTypedef) should be interchangeable with the original.
+  public void testTypedefAlias() {
+    // Ensure that the type of a variable representing a typedef is "undefined"
     testTypes(
         lines(
             "/** @typedef {number} */", // preserve newlines
@@ -727,139 +727,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "invalid cast - must be a subtype or supertype", // preserve newlines
             "from: undefined",
             "to  : string"));
-  }
-
-  @Test
-  public void testTypedefAliasOfLocalTypedef() {
-    // Aliasing should work on local typedefs as well as global.
-    testTypes(
-        lines(
-            "function f() {",
-            "  /** @typedef {number} */",
-            "  var MyNumber;",
-            "  /** @const */",
-            "  var Alias = MyNumber;",
-            "  /** @type {Alias} */",
-            "  var x = 'x';",
-            "}"),
-        lines(
-            "initializing variable", // preserve newlines
-            "found   : string",
-            "required: number"));
-  }
-
-  @Test
-  public void testTypedefLocalQualifiedName() {
-    // Aliasing should work on local typedefs as well as global.
-    testTypes(
-        lines(
-            "function f() {",
-            "  /** @const */",
-            "  var ns = {};",
-            "  /** @typedef {number} */",
-            "  ns.MyNumber;",
-            "  /** @type {ns.MyNumber} */",
-            "  var x = 'x';",
-            "}"),
-        lines(
-            "initializing variable", // preserve newlines
-            "found   : string",
-            "required: number"));
-  }
-
-  @Test
-  public void testTypedefLocalQualifiedNameAlias() {
-    // Aliasing should work on local typedefs as well as global.
-    testTypes(
-        lines(
-            "function f() {",
-            "  /** @typedef {number} */",
-            "  var MyNumber;",
-            "  /** @const */",
-            "  var ns = {};",
-            "  /** @const */",
-            "  ns.MyNumber = MyNumber;",
-            "  /** @type {ns.MyNumber} */",
-            "  var x = 'x';",
-            "}"),
-        lines(
-            "initializing variable", // preserve newlines
-            "found   : string",
-            "required: number"));
-  }
-
-  @Test
-  public void testTypedefLocalAliasOfGlobalTypedef() {
-    // Should also work if the alias is local but the typedef is global.
-    testTypes(
-        lines(
-            "/** @typedef {number} */",
-            "var MyNumber;",
-            "function f() {",
-            "  /** @const */ var Alias = MyNumber;",
-            "  var /** Alias */ x = 'x';",
-            "}"),
-        lines(
-            "initializing variable", // preserve newlines
-            "found   : string",
-            "required: number"));
-  }
-
-  @Test
-  public void testTypedefOnAliasedNamespace() {
-    // Aliasing a namespace (const alias = ns) should carry over any typedefs on the namespace.
-    testTypes(
-        lines(
-            "const ns = {};",
-            "/** @const */ ns.bar = 'x';",
-            "/** @typedef {number} */", // preserve newlines
-            "ns.MyNumber;",
-            "const alias = ns;",
-            "/** @const */ alias.foo = 42",
-            "/** @type {alias.MyNumber} */ const x = 'str';",
-            ""),
-        // TODO(sdh): should be non-nullable number, but we get nullability wrong.
-        lines(
-            "initializing variable", // preserve newlines
-            "found   : string",
-            "required: (null|number)"));
-  }
-
-  @Test
-  public void testTypedefOnLocalAliasedNamespace() {
-    // Aliasing a namespace (const alias = ns) should carry over any typedefs on the namespace.
-    testTypes(
-        lines(
-            "function f() {",
-            "  const ns = {};",
-            "  /** @typedef {number} */", // preserve newlines
-            "  ns.MyNumber;",
-            "  const alias = ns;",
-            "  /** @const */ alias.foo = 42",
-            "  /** @type {alias.MyNumber} */ const x = 'str';",
-            "}"),
-        // TODO(sdh): should be non-nullable number, but we get nullability wrong.
-        lines(
-            "initializing variable", // preserve newlines
-            "found   : string",
-            "required: (null|number)"));
-  }
-
-  @Test
-  public void testTypedefOnClassSideInheritedSubtype() {
-    // Class-side inheritance should carry over any typedefs nested on the class.
-    testTypes(
-        lines(
-            "class Base {}",
-            "/** @typedef {number} */", // preserve newlines
-            "Base.MyNumber;",
-            "class Sub extends Base {}",
-            "/** @type {Sub.MyNumber} */ const x = 'str';",
-            ""),
-        lines(
-            "initializing variable", // preserve newlines
-            "found   : string",
-            "required: (null|number)"));
   }
 
   @Test
@@ -5341,9 +5208,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testTypeNameAliasOnAliasedNamespace() {
     testTypes(
         lines(
-            "class Foo {}",
-            "/** @enum {number} */",
-            "Foo.E = {A: 1};",
+            "class Foo {};",
+            "/** @enum {number} */ Foo.E = {A: 1};",
             "const F = Foo;",
             "const E = F.E;",
             "/** @type {E} */ let e = undefined;"),
@@ -5358,23 +5224,19 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testTypedefNameAliasOnAliasedNamespace() {
     testTypes(
         lines(
-            "class Foo {}",
-            "/** @typedef {number|string} */",
-            "Foo.E;",
+            "class Foo {};",
+            "/** @typedef {number|string} */ Foo.E;",
             "const F = Foo;",
             "const E = F.E;",
             "/** @type {E} */ let e = undefined;"),
-        lines(
-            "initializing variable", //
-            "found   : undefined",
-            "required: (number|string)"));
+        lines("Bad type annotation. Unknown type E"));
   }
 
   @Test
   public void testTypeNameAliasOnAliasedClassSideNamespace() {
     testTypes(
         lines(
-            "class Foo {}",
+            "class Foo {};",
             "/** @enum {number} */ Foo.E = {A: 1};",
             "class Bar extends Foo {};",
             "const B = Bar;",
@@ -5385,37 +5247,5 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "found   : undefined",
             // TODO(johnlenz): this should not be nullable
             "required: (Foo.E<number>|null)"));
-  }
-
-  @Test
-  public void testTypedefInExtern() {
-    testTypesWithExtraExterns(
-        "/** @typedef {boolean} */ var ConstrainBoolean;",
-        "var /** ConstrainBoolean */ x = 42;",
-        lines(
-            "initializing variable", //
-            "found   : number",
-            "required: boolean"));
-  }
-
-  @Test
-  public void testDeeplyNestedAliases() {
-    testTypes(
-        lines(
-            "const ns = {};",
-            "/** @typedef {number} */",
-            "ns.MyNumber;",
-            "const alias = {};",
-            "/** @const */",
-            "alias.child = ns;",
-            "const outer = {};",
-            "/** @const */",
-            "outer.inner = alias;",
-            "const /** outer.inner.child.MyNumber */ x = '';"),
-        lines(
-            "initializing variable",
-            "found   : string",
-            // TODO(sdh): this should not be nullable
-            "required: (null|number)"));
   }
 }

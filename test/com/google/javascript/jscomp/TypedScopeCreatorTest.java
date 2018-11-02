@@ -4020,7 +4020,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  @Ignore
   public void testAliasTypedefFromNamespaceAlias() {
+    // TODO(johnlenz): support typedef aliases.
     testSame(
         lines(
             "const Foo = {};",
