@@ -39,6 +39,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.MapBasedScope.emptyScope;
 
 import com.google.common.collect.ImmutableMap;
@@ -93,8 +94,8 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     NamedType type = new NamedTypeBuilder().setName(FORWARD_DECLARED_TYPE_NAME).build();
 
     // Then
-    assertFalse(type.isResolved());
-    assertFalse(type.isEmptyType());
+    assertThat(type.isResolved()).isFalse();
+    assertThat(type.isEmptyType()).isFalse();
     assertTypeNotEquals(UNKNOWN_TYPE, type);
     assertTypeEquals(UNKNOWN_TYPE, type.getReferencedType());
   }
@@ -108,8 +109,8 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     type.resolve(ErrorReporter.NULL_INSTANCE);
 
     // Then
-    assertTrue(type.isUnsuccessfullyResolved());
-    assertFalse(type.isUnknownType());
+    assertThat(type.isUnsuccessfullyResolved()).isTrue();
+    assertThat(type.isUnknownType()).isFalse();
   }
 
   @Test
@@ -122,7 +123,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     namedFooType.resolve(ErrorReporter.NULL_INSTANCE);
 
     // Then
-    assertTrue(namedFooType.isSuccessfullyResolved());
+    assertThat(namedFooType.isSuccessfullyResolved()).isTrue();
     assertTypeEquals(namedFooType, fooType);
   }
 

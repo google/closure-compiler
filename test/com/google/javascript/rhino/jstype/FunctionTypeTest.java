@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -76,14 +78,12 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertGreatestSubtype(
         "function(): None", retString, retNumber);
 
-    assertTrue(retString.isReturnTypeInferred());
-    assertFalse(retNumber.isReturnTypeInferred());
-    assertTrue(
-        ((FunctionType) retString.getLeastSupertype(retNumber))
-        .isReturnTypeInferred());
-    assertTrue(
-        ((FunctionType) retString.getGreatestSubtype(retString))
-        .isReturnTypeInferred());
+    assertThat(retString.isReturnTypeInferred()).isTrue();
+    assertThat(retNumber.isReturnTypeInferred()).isFalse();
+    assertThat(((FunctionType) retString.getLeastSupertype(retNumber)).isReturnTypeInferred())
+        .isTrue();
+    assertThat(((FunctionType) retString.getGreatestSubtype(retString)).isReturnTypeInferred())
+        .isTrue();
   }
 
   @Test
@@ -177,7 +177,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         .withParamsNode(registry.createParameters())
         .withTypeOfThis(OBJECT_TYPE)
         .withReturnType(BOOLEAN_TYPE).build();
-    assertTrue(objReturnBoolean.isSubtype(ifaceReturnBoolean));
+    assertThat(objReturnBoolean.isSubtype(ifaceReturnBoolean)).isTrue();
   }
 
   @Test
@@ -191,16 +191,16 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testCtorWithPrototypeSet() {
     FunctionType ctor = registry.createConstructorType("Foo", null, null, null, null, false);
-    assertFalse(ctor.getInstanceType().isUnknownType());
+    assertThat(ctor.getInstanceType().isUnknownType()).isFalse();
 
     Node node = new Node(Token.OBJECTLIT);
     ctor.defineDeclaredProperty("prototype", UNKNOWN_TYPE, node);
-    assertTrue(ctor.getInstanceType().isUnknownType());
+    assertThat(ctor.getInstanceType().isUnknownType()).isTrue();
 
     assertEquals(ImmutableSet.<String>of("prototype"),
         ctor.getOwnPropertyNames());
-    assertTrue(ctor.isPropertyTypeInferred("prototype"));
-    assertTrue(ctor.getPropertyType("prototype").isUnknownType());
+    assertThat(ctor.isPropertyTypeInferred("prototype")).isTrue();
+    assertThat(ctor.getPropertyType("prototype").isUnknownType()).isTrue();
 
     assertEquals(node, ctor.getPropertyNode("prototype"));
   }
@@ -236,8 +236,8 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testEmptyFunctionTypes() {
-    assertTrue(LEAST_FUNCTION_TYPE.isEmptyType());
-    assertFalse(GREATEST_FUNCTION_TYPE.isEmptyType());
+    assertThat(LEAST_FUNCTION_TYPE.isEmptyType()).isTrue();
+    assertThat(GREATEST_FUNCTION_TYPE.isEmptyType()).isFalse();
   }
 
   @Test
@@ -271,9 +271,9 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         subIface.getPrototype().getImplicitPrototype());
 
     ObjectType subIfaceInst = subIface.getInstanceType();
-    assertTrue(subIfaceInst.hasProperty("numberProp"));
-    assertTrue(subIfaceInst.isPropertyTypeDeclared("numberProp"));
-    assertFalse(subIfaceInst.isPropertyTypeInferred("numberProp"));
+    assertThat(subIfaceInst.hasProperty("numberProp")).isTrue();
+    assertThat(subIfaceInst.isPropertyTypeDeclared("numberProp")).isTrue();
+    assertThat(subIfaceInst.isPropertyTypeInferred("numberProp")).isFalse();
   }
 
   @Test
@@ -296,9 +296,9 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         subIface.getPrototype().getImplicitPrototype());
 
     ObjectType subIfaceInst = subIface.getInstanceType();
-    assertTrue(subIfaceInst.hasProperty("genericProp"));
-    assertTrue(subIfaceInst.isPropertyTypeDeclared("genericProp"));
-    assertFalse(subIfaceInst.isPropertyTypeInferred("genericProp"));
+    assertThat(subIfaceInst.hasProperty("genericProp")).isTrue();
+    assertThat(subIfaceInst.isPropertyTypeDeclared("genericProp")).isTrue();
+    assertThat(subIfaceInst.isPropertyTypeInferred("genericProp")).isFalse();
     assertEquals(templateT, subIfaceInst.getPropertyType("genericProp"));
   }
 
@@ -315,8 +315,8 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testIsEquivalentTo() {
     FunctionType type = new FunctionBuilder(registry).build();
-    assertFalse(type.equals(null));
-    assertTrue(type.isEquivalentTo(type));
+    assertThat(type.equals(null)).isFalse();
+    assertThat(type.isEquivalentTo(type)).isTrue();
   }
 
   @Test
@@ -333,9 +333,9 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     Asserts.assertEquivalenceOperations(oneNum, oneNum);
     Asserts.assertEquivalenceOperations(optNum, optNum);
     Asserts.assertEquivalenceOperations(varNum, varNum);
-    assertFalse(oneNum.isEquivalentTo(optNum));
-    assertFalse(oneNum.isEquivalentTo(varNum));
-    assertFalse(optNum.isEquivalentTo(varNum));
+    assertThat(oneNum.isEquivalentTo(optNum)).isFalse();
+    assertThat(oneNum.isEquivalentTo(varNum)).isFalse();
+    assertThat(optNum.isEquivalentTo(varNum)).isFalse();
   }
 
   @Test
@@ -353,8 +353,8 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
     // We currently do not consider function(T=, ...T) and function(...T)
     // equivalent. This may change.
-    assertFalse(varNum.isEquivalentTo(optAndVarNum));
-    assertFalse(optAndVarNum.isEquivalentTo(varNum));
+    assertThat(varNum.isEquivalentTo(optAndVarNum)).isFalse();
+    assertThat(optAndVarNum.isEquivalentTo(varNum)).isFalse();
   }
 
   @Test

@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,14 +59,14 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
     EnumElementType typeB = registry.createEnumType(
         "typeB", null, NUMBER_TYPE).getElementsType();
 
-    assertFalse(typeA.isSubtype(typeB));
-    assertFalse(typeB.isSubtype(typeA));
+    assertThat(typeA.isSubtype(typeB)).isFalse();
+    assertThat(typeB.isSubtype(typeA)).isFalse();
 
-    assertFalse(NUMBER_TYPE.isSubtypeOf(typeB));
-    assertFalse(NUMBER_TYPE.isSubtypeOf(typeA));
+    assertThat(NUMBER_TYPE.isSubtypeOf(typeB)).isFalse();
+    assertThat(NUMBER_TYPE.isSubtypeOf(typeA)).isFalse();
 
-    assertTrue(typeA.isSubtype(NUMBER_TYPE));
-    assertTrue(typeB.isSubtype(NUMBER_TYPE));
+    assertThat(typeA.isSubtype(NUMBER_TYPE)).isTrue();
+    assertThat(typeB.isSubtype(NUMBER_TYPE)).isTrue();
   }
 
   @Test
@@ -74,13 +76,13 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
         .getElementsType();
 
     JSType stringsOfA = typeA.getGreatestSubtype(STRING_TYPE);
-    assertFalse(stringsOfA.isEmptyType());
+    assertThat(stringsOfA.isEmptyType()).isFalse();
     assertEquals("typeA<string>", stringsOfA.toString());
-    assertTrue(stringsOfA.isSubtypeOf(typeA));
+    assertThat(stringsOfA.isSubtypeOf(typeA)).isTrue();
 
     JSType numbersOfA = NUMBER_TYPE.getGreatestSubtype(typeA);
-    assertFalse(numbersOfA.isEmptyType());
+    assertThat(numbersOfA.isEmptyType()).isFalse();
     assertEquals("typeA<number>", numbersOfA.toString());
-    assertTrue(numbersOfA.isSubtypeOf(typeA));
+    assertThat(numbersOfA.isSubtypeOf(typeA)).isTrue();
   }
 }

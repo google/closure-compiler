@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
@@ -117,14 +118,14 @@ public class TernaryValueTest extends TestCase {
 
   @Test
   public void testToBoolean() {
-    assertTrue(TRUE.toBoolean(true));
-    assertTrue(TRUE.toBoolean(false));
+    assertThat(TRUE.toBoolean(true)).isTrue();
+    assertThat(TRUE.toBoolean(false)).isTrue();
 
-    assertFalse(FALSE.toBoolean(true));
-    assertFalse(FALSE.toBoolean(false));
+    assertThat(FALSE.toBoolean(true)).isFalse();
+    assertThat(FALSE.toBoolean(false)).isFalse();
 
-    assertTrue(UNKNOWN.toBoolean(true));
-    assertFalse(UNKNOWN.toBoolean(false));
+    assertThat(UNKNOWN.toBoolean(true)).isTrue();
+    assertThat(UNKNOWN.toBoolean(false)).isFalse();
   }
 
   @Test

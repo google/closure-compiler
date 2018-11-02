@@ -91,10 +91,10 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getReturnType());
     assertType(resolve(info.getType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertNull(info.getVisibility());
-    assertTrue(info.hasType());
-    assertFalse(info.isConstant());
-    assertFalse(info.isConstructor());
-    assertFalse(info.isHidden());
+    assertThat(info.hasType()).isTrue();
+    assertThat(info.isConstant()).isFalse();
+    assertThat(info.isConstructor()).isFalse();
+    assertThat(info.isHidden()).isFalse();
   }
 
   @Test
@@ -110,10 +110,10 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getReturnType());
     assertType(resolve(info.getType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertEquals(PROTECTED, info.getVisibility());
-    assertTrue(info.hasType());
-    assertFalse(info.isConstant());
-    assertFalse(info.isConstructor());
-    assertFalse(info.isHidden());
+    assertThat(info.hasType()).isTrue();
+    assertThat(info.isConstant()).isFalse();
+    assertThat(info.isConstructor()).isFalse();
+    assertThat(info.isHidden()).isFalse();
   }
 
   @Test
@@ -128,10 +128,10 @@ public class JSDocInfoTest extends TestCase {
     assertType(resolve(info.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertNull(info.getType());
     assertNull(info.getVisibility());
-    assertFalse(info.hasType());
-    assertFalse(info.isConstant());
-    assertFalse(info.isConstructor());
-    assertFalse(info.isHidden());
+    assertThat(info.hasType()).isFalse();
+    assertThat(info.isConstant()).isFalse();
+    assertThat(info.isConstructor()).isFalse();
+    assertThat(info.isHidden()).isFalse();
   }
 
   @Test
@@ -150,10 +150,10 @@ public class JSDocInfoTest extends TestCase {
     assertType(resolve(info.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertNull(info.getType());
     assertNull(info.getVisibility());
-    assertFalse(info.hasType());
-    assertFalse(info.isConstant());
-    assertFalse(info.isConstructor());
-    assertFalse(info.isHidden());
+    assertThat(info.hasType()).isFalse();
+    assertThat(info.isConstant()).isFalse();
+    assertThat(info.isConstructor()).isFalse();
+    assertThat(info.isHidden()).isFalse();
   }
 
   @Test
@@ -169,10 +169,10 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getReturnType());
     assertNull(info.getType());
     assertNull(info.getVisibility());
-    assertFalse(info.hasType());
-    assertFalse(info.isConstant());
-    assertFalse(info.isConstructor());
-    assertFalse(info.isHidden());
+    assertThat(info.hasType()).isFalse();
+    assertThat(info.isConstant()).isFalse();
+    assertThat(info.isConstructor()).isFalse();
+    assertThat(info.isHidden()).isFalse();
   }
 
   @Test
@@ -205,7 +205,7 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getReturnType());
     assertNull(info.getEnumParameterType());
     assertNull(info.getTypedefType());
-    assertTrue(info.hasType());
+    assertThat(info.hasType()).isTrue();
   }
 
   @Test
@@ -239,7 +239,7 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getEnumParameterType());
     assertNull(info.getType());
     assertNull(info.getTypedefType());
-    assertFalse(info.hasType());
+    assertThat(info.hasType()).isFalse();
   }
 
   @Test
@@ -281,10 +281,10 @@ public class JSDocInfoTest extends TestCase {
     info.declareTypedefType(fromString("boolean"));
 
     assertType(resolve(info.getTypedefType())).isStructurallyEqualTo(getNativeType(BOOLEAN_TYPE));
-    assertTrue(info.hasTypedefType());
-    assertFalse(info.hasType());
-    assertFalse(info.hasEnumParameterType());
-    assertFalse(info.hasReturnType());
+    assertThat(info.hasTypedefType()).isTrue();
+    assertThat(info.hasType()).isFalse();
+    assertThat(info.hasEnumParameterType()).isFalse();
+    assertThat(info.hasReturnType()).isFalse();
   }
 
   @Test
@@ -292,11 +292,11 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setConstant(true);
 
-    assertFalse(info.hasType());
-    assertTrue(info.isConstant());
-    assertFalse(info.isConstructor());
-    assertFalse(info.isDefine());
-    assertFalse(info.isHidden());
+    assertThat(info.hasType()).isFalse();
+    assertThat(info.isConstant()).isTrue();
+    assertThat(info.isConstructor()).isFalse();
+    assertThat(info.isDefine()).isFalse();
+    assertThat(info.isHidden()).isFalse();
   }
 
   @Test
@@ -304,10 +304,10 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setConstructor(true);
 
-    assertFalse(info.isConstant());
-    assertTrue(info.isConstructor());
-    assertFalse(info.isDefine());
-    assertFalse(info.isHidden());
+    assertThat(info.isConstant()).isFalse();
+    assertThat(info.isConstructor()).isTrue();
+    assertThat(info.isDefine()).isFalse();
+    assertThat(info.isHidden()).isFalse();
   }
 
   @Test
@@ -315,10 +315,10 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setDefine(true);
 
-    assertTrue(info.isConstant());
-    assertFalse(info.isConstructor());
-    assertTrue(info.isDefine());
-    assertFalse(info.isHidden());
+    assertThat(info.isConstant()).isTrue();
+    assertThat(info.isConstructor()).isFalse();
+    assertThat(info.isDefine()).isTrue();
+    assertThat(info.isHidden()).isFalse();
   }
 
   @Test
@@ -326,11 +326,11 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setHidden(true);
 
-    assertFalse(info.hasType());
-    assertFalse(info.isConstant());
-    assertFalse(info.isConstructor());
-    assertFalse(info.isDefine());
-    assertTrue(info.isHidden());
+    assertThat(info.hasType()).isFalse();
+    assertThat(info.isConstant()).isFalse();
+    assertThat(info.isConstructor()).isFalse();
+    assertThat(info.isDefine()).isFalse();
+    assertThat(info.isHidden()).isTrue();
   }
 
   @Test
@@ -338,8 +338,8 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setOverride(true);
 
-    assertFalse(info.isDeprecated());
-    assertTrue(info.isOverride());
+    assertThat(info.isDeprecated()).isFalse();
+    assertThat(info.isOverride()).isTrue();
   }
 
   @Test
@@ -347,60 +347,60 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setExport(true);
 
-    assertTrue(info.isExport());
+    assertThat(info.isExport()).isTrue();
   }
 
   @Test
   public void testSetPolymerBehavior() {
     JSDocInfo info = new JSDocInfo();
-    assertFalse(info.isPolymerBehavior());
+    assertThat(info.isPolymerBehavior()).isFalse();
     info.setPolymerBehavior(true);
 
-    assertTrue(info.isPolymerBehavior());
+    assertThat(info.isPolymerBehavior()).isTrue();
   }
 
   @Test
   public void testSetPolymer() {
     JSDocInfo info = new JSDocInfo();
-    assertFalse(info.isPolymer());
+    assertThat(info.isPolymer()).isFalse();
     info.setPolymer(true);
 
-    assertTrue(info.isPolymer());
+    assertThat(info.isPolymer()).isTrue();
   }
 
   @Test
   public void testSetCustomElement() {
     JSDocInfo info = new JSDocInfo();
-    assertFalse(info.isCustomElement());
+    assertThat(info.isCustomElement()).isFalse();
     info.setCustomElement(true);
 
-    assertTrue(info.isCustomElement());
+    assertThat(info.isCustomElement()).isTrue();
   }
 
   @Test
   public void testSetMixinClass() {
     JSDocInfo info = new JSDocInfo();
-    assertFalse(info.isMixinClass());
+    assertThat(info.isMixinClass()).isFalse();
     info.setMixinClass(true);
 
-    assertTrue(info.isMixinClass());
+    assertThat(info.isMixinClass()).isTrue();
   }
 
   @Test
   public void testSetMixinFunction() {
     JSDocInfo info = new JSDocInfo();
-    assertFalse(info.isMixinFunction());
+    assertThat(info.isMixinFunction()).isFalse();
     info.setMixinFunction(true);
 
-    assertTrue(info.isMixinFunction());
+    assertThat(info.isMixinFunction()).isTrue();
   }
 
   @Test
   public void testSetNoAlias() {
     JSDocInfo info = new JSDocInfo();
 
-    assertFalse(info.isDeprecated());
-    assertFalse(info.isOverride());
+    assertThat(info.isDeprecated()).isFalse();
+    assertThat(info.isOverride()).isFalse();
   }
 
   @Test
@@ -408,8 +408,8 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setDeprecated(true);
 
-    assertFalse(info.isOverride());
-    assertTrue(info.isDeprecated());
+    assertThat(info.isOverride()).isFalse();
+    assertThat(info.isDeprecated()).isTrue();
   }
 
   @Test
@@ -419,33 +419,33 @@ public class JSDocInfoTest extends TestCase {
     info.setConstructor(true);
     info.setHidden(true);
 
-    assertFalse(info.hasType());
-    assertTrue(info.isConstant());
-    assertTrue(info.isConstructor());
-    assertFalse(info.isDefine());
-    assertTrue(info.isHidden());
+    assertThat(info.hasType()).isFalse();
+    assertThat(info.isConstant()).isTrue();
+    assertThat(info.isConstructor()).isTrue();
+    assertThat(info.isDefine()).isFalse();
+    assertThat(info.isHidden()).isTrue();
 
     info.setHidden(false);
 
-    assertTrue(info.isConstant());
-    assertTrue(info.isConstructor());
-    assertFalse(info.isDefine());
-    assertFalse(info.isHidden());
+    assertThat(info.isConstant()).isTrue();
+    assertThat(info.isConstructor()).isTrue();
+    assertThat(info.isDefine()).isFalse();
+    assertThat(info.isHidden()).isFalse();
 
     info.setConstant(false);
     info.setConstructor(false);
 
-    assertFalse(info.isConstant());
-    assertFalse(info.isConstructor());
-    assertFalse(info.isDefine());
-    assertFalse(info.isHidden());
+    assertThat(info.isConstant()).isFalse();
+    assertThat(info.isConstructor()).isFalse();
+    assertThat(info.isDefine()).isFalse();
+    assertThat(info.isHidden()).isFalse();
 
     info.setConstructor(true);
 
-    assertFalse(info.isConstant());
-    assertTrue(info.isConstructor());
-    assertFalse(info.isDefine());
-    assertFalse(info.isHidden());
+    assertThat(info.isConstant()).isFalse();
+    assertThat(info.isConstructor()).isTrue();
+    assertThat(info.isDefine()).isFalse();
+    assertThat(info.isHidden()).isFalse();
   }
 
   @Test
@@ -453,7 +453,7 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo(true);
     info.setOriginalCommentString("Blah blah {@code blah blah} blah blah.");
 
-    assertTrue(info.isAtSignCodePresent());
+    assertThat(info.isAtSignCodePresent()).isTrue();
   }
 
   @Test
@@ -461,7 +461,7 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo(true);
     info.setOriginalCommentString("Blah blah `blah blah` blah blah.");
 
-    assertFalse(info.isAtSignCodePresent());
+    assertThat(info.isAtSignCodePresent()).isFalse();
   }
 
   @Test
@@ -482,9 +482,9 @@ public class JSDocInfoTest extends TestCase {
         .isStructurallyEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
     assertEquals("The source info", cloned.getDescription());
     assertType(resolve(cloned.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
-    assertTrue(cloned.isConstant());
-    assertTrue(cloned.isConstructor());
-    assertTrue(cloned.isHidden());
+    assertThat(cloned.isConstant()).isTrue();
+    assertThat(cloned.isConstructor()).isTrue();
+    assertThat(cloned.isHidden()).isTrue();
 
     cloned.setDescription("The cloned info");
     cloned.setHidden(false);
@@ -492,16 +492,16 @@ public class JSDocInfoTest extends TestCase {
 
     assertType(resolve(cloned.getBaseType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertEquals("The cloned info", cloned.getDescription());
-    assertFalse(cloned.isHidden());
+    assertThat(cloned.isHidden()).isFalse();
 
     // Original info should be unchanged.
     assertType(resolve(info.getBaseType()))
         .isStructurallyEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
     assertEquals("The source info", info.getDescription());
     assertType(resolve(info.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
-    assertTrue(info.isConstant());
-    assertTrue(info.isConstructor());
-    assertTrue(info.isHidden());
+    assertThat(info.isConstant()).isTrue();
+    assertThat(info.isConstructor()).isTrue();
+    assertThat(info.isHidden()).isTrue();
   }
 
   @Test
@@ -575,7 +575,7 @@ public class JSDocInfoTest extends TestCase {
   public void testAddSingleTemplateTypeName() {
     JSDocInfo info = new JSDocInfo(true);
     ImmutableList<String> typeNames = ImmutableList.of("T");
-    assertTrue(info.declareTemplateTypeName("T"));
+    assertThat(info.declareTemplateTypeName("T")).isTrue();
     assertEquals(typeNames, info.getTemplateTypeNames());
   }
 
@@ -592,7 +592,7 @@ public class JSDocInfoTest extends TestCase {
   public void testFailToAddTemplateTypeName() {
     JSDocInfo info = new JSDocInfo(true);
     info.declareTemplateTypeName("T");
-    assertFalse(info.declareTemplateTypeName("T"));
+    assertThat(info.declareTemplateTypeName("T")).isFalse();
   }
 
   @Test
@@ -617,7 +617,7 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
 
     // should be added to implemented interfaces
-    assertTrue("", info.addImplementedInterface(null));
+    assertThat(info.addImplementedInterface(null)).isTrue();
 
     Collection<Node> nodes = info.getTypeNodes();
     assertThat(nodes).isEmpty();

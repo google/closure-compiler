@@ -255,12 +255,16 @@ public class HamtPMapTest extends TestCase {
     PMap<String, String> left = empty.plus("abc", "AAa").plus("def", "Ddd").plus("ghi", "ggG");
     PMap<String, String> right = empty.plus("abc", "aAA").plus("def", "ddD").plus("ghi", "GGG");
 
-    assertTrue(left.equivalent(right, new PMap.BiPredicate<String, String>() {
-      @Override
-      public boolean test(String left, String right) {
-        return left.toLowerCase().equals(right.toLowerCase());
-      }
-    }));
+    assertThat(
+            left.equivalent(
+                right,
+                new PMap.BiPredicate<String, String>() {
+                  @Override
+                  public boolean test(String left, String right) {
+                    return left.toLowerCase().equals(right.toLowerCase());
+                  }
+                }))
+        .isTrue();
   }
 
   @Test
@@ -270,13 +274,17 @@ public class HamtPMapTest extends TestCase {
     PMap<Integer, String> right = empty.plus(1, "3").plus(2, "4");
 
     int[] calls = new int[] { 0 };
-    assertFalse(left.equivalent(right, new PMap.BiPredicate<String, String>() {
-      @Override
-      public boolean test(String left, String right) {
-        calls[0]++;
-        return false;
-      }
-    }));
+    assertThat(
+            left.equivalent(
+                right,
+                new PMap.BiPredicate<String, String>() {
+                  @Override
+                  public boolean test(String left, String right) {
+                    calls[0]++;
+                    return false;
+                  }
+                }))
+        .isFalse();
     assertThat(calls[0]).isEqualTo(1);
   }
 

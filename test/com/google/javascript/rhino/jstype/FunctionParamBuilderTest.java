@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import org.junit.Test;
@@ -55,9 +57,9 @@ public class FunctionParamBuilderTest extends BaseJSTypeTestCase {
   @Test
   public void testBuild() {
     FunctionParamBuilder builder = new FunctionParamBuilder(registry);
-    assertTrue(builder.addRequiredParams(NUMBER_TYPE));
-    assertTrue(builder.addOptionalParams(BOOLEAN_TYPE));
-    assertTrue(builder.addVarArgs(STRING_TYPE));
+    assertThat(builder.addRequiredParams(NUMBER_TYPE)).isTrue();
+    assertThat(builder.addOptionalParams(BOOLEAN_TYPE)).isTrue();
+    assertThat(builder.addVarArgs(STRING_TYPE)).isTrue();
 
     Node params = builder.build();
     assertTypeEquals(NUMBER_TYPE, params.getFirstChild().getJSType());
@@ -65,7 +67,7 @@ public class FunctionParamBuilderTest extends BaseJSTypeTestCase {
         params.getSecondChild().getJSType());
     assertTypeEquals(STRING_TYPE, params.getLastChild().getJSType());
 
-    assertTrue(params.getSecondChild().isOptionalArg());
-    assertTrue(params.getLastChild().isVarArgs());
+    assertThat(params.getSecondChild().isOptionalArg()).isTrue();
+    assertThat(params.getLastChild().isVarArgs()).isTrue();
   }
 }

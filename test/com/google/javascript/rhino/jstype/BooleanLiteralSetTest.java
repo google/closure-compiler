@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.jstype.BooleanLiteralSet.BOTH;
 import static com.google.javascript.rhino.jstype.BooleanLiteralSet.EMPTY;
 import static com.google.javascript.rhino.jstype.BooleanLiteralSet.FALSE;
@@ -103,13 +104,13 @@ public class BooleanLiteralSetTest extends TestCase {
 
   @Test
   public void testContains() {
-    assertFalse(EMPTY.contains(true));
-    assertFalse(EMPTY.contains(false));
-    assertTrue(TRUE.contains(true));
-    assertFalse(TRUE.contains(false));
-    assertFalse(FALSE.contains(true));
-    assertTrue(FALSE.contains(false));
-    assertTrue(BOTH.contains(true));
-    assertTrue(BOTH.contains(false));
+    assertThat(EMPTY.contains(true)).isFalse();
+    assertThat(EMPTY.contains(false)).isFalse();
+    assertThat(TRUE.contains(true)).isTrue();
+    assertThat(TRUE.contains(false)).isFalse();
+    assertThat(FALSE.contains(true)).isFalse();
+    assertThat(FALSE.contains(false)).isTrue();
+    assertThat(BOTH.contains(true)).isTrue();
+    assertThat(BOTH.contains(false)).isTrue();
   }
 }

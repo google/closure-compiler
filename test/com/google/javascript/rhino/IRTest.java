@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
@@ -122,7 +124,7 @@ public class IRTest extends TestCase {
     } catch(IllegalStateException e) {
       caught = true;
     }
-    assertTrue("expected exception was not seen", caught);
+    assertWithMessage("expected exception was not seen").that(caught).isTrue();
   }
 
   @Test

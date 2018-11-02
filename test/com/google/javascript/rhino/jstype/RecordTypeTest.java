@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.rhino.jstype.JSType.Nullability;
@@ -142,8 +143,8 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
     JSType recordB = new RecordTypeBuilder(registry)
         .addProperty("a", UNKNOWN_TYPE, null)
         .build();
-    assertTrue(recordA.isSubtypeOf(recordB));
-    assertTrue(recordB.isSubtypeOf(recordA));
+    assertThat(recordA.isSubtypeOf(recordB)).isTrue();
+    assertThat(recordB.isSubtypeOf(recordA)).isTrue();
   }
 
   @Test
@@ -162,8 +163,8 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
             .build(),
             null)
         .build();
-    assertTrue(recordA.isSubtypeOf(recordB));
-    assertTrue(recordB.isSubtypeOf(recordA));
+    assertThat(recordA.isSubtypeOf(recordB)).isTrue();
+    assertThat(recordB.isSubtypeOf(recordA)).isTrue();
   }
 
   @Test
@@ -182,8 +183,8 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
             .build(),
             null)
         .build();
-    assertFalse(recordA.isSubtypeOf(recordB));
-    assertFalse(recordB.isSubtypeOf(recordA));
+    assertThat(recordA.isSubtypeOf(recordB)).isFalse();
+    assertThat(recordB.isSubtypeOf(recordA)).isFalse();
   }
 
   @Test
@@ -201,10 +202,10 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
         .addProperty("b",
             registry.createUnionType(NUMBER_TYPE, STRING_TYPE), null)
         .build();
-    assertFalse(recordA.isSubtypeOf(recordB));
-    assertFalse(recordB.isSubtypeOf(recordA));
-    assertFalse(recordC.isSubtypeOf(recordB));
-    assertTrue(recordB.isSubtypeOf(recordC));
-    assertTrue(recordA.isSubtypeOf(recordC));
+    assertThat(recordA.isSubtypeOf(recordB)).isFalse();
+    assertThat(recordB.isSubtypeOf(recordA)).isFalse();
+    assertThat(recordC.isSubtypeOf(recordB)).isFalse();
+    assertThat(recordB.isSubtypeOf(recordC)).isTrue();
+    assertThat(recordA.isSubtypeOf(recordC)).isTrue();
   }
 }
