@@ -313,8 +313,7 @@ public final class TypeSyntaxTest {
     parse("var x: (string | number)[];");
 
     Node ast = parse("var x: string | number[] | Array<Foo>;");
-    TypeDeclarationNode union = (TypeDeclarationNode)
-        (ast.getFirstFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
+    TypeDeclarationNode union = ast.getFirstFirstChild().getDeclaredTypeExpression();
     assertThat(union.getChildCount()).isEqualTo(3);
   }
 
@@ -356,18 +355,15 @@ public final class TypeSyntaxTest {
     // parse("(number): () => number => number;");
 
     Node ast = parse("var n: (p1: string, p2: number) => boolean[];");
-    TypeDeclarationNode function = (TypeDeclarationNode)
-        (ast.getFirstFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
+    TypeDeclarationNode function = ast.getFirstFirstChild().getDeclaredTypeExpression();
     assertNode(function).hasType(Token.FUNCTION_TYPE);
 
     Node ast2 = parse("var n: (p1: string, p2: number) => boolean | number;");
-    TypeDeclarationNode function2 = (TypeDeclarationNode)
-        (ast2.getFirstFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
+    TypeDeclarationNode function2 = ast2.getFirstFirstChild().getDeclaredTypeExpression();
     assertNode(function2).hasType(Token.FUNCTION_TYPE);
 
     Node ast3 = parse("var n: (p1: string, p2: number) => Array<Foo>;");
-    TypeDeclarationNode function3 = (TypeDeclarationNode)
-        (ast3.getFirstFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
+    TypeDeclarationNode function3 = ast3.getFirstFirstChild().getDeclaredTypeExpression();
     assertNode(function3).hasType(Token.FUNCTION_TYPE);
   }
 

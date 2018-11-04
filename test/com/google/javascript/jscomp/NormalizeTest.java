@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -814,7 +815,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("var CONST = 3; var b = CONST;");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
     assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
@@ -828,7 +829,7 @@ public final class NormalizeTest extends CompilerTestCase {
         "var {CONST: CONST} = {CONST:3}; var b = CONST;");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
     assertThat(constantNodes).hasSize(4);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
@@ -840,7 +841,7 @@ public final class NormalizeTest extends CompilerTestCase {
     test("var {CONST = 3} = {}; var b = CONST;", "var {CONST: CONST = 3} = {}; var b = CONST;");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
     assertThat(constantNodes).hasSize(3);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
@@ -852,7 +853,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("var a = {}; a.CONST = 3; var b = a.CONST;");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
     assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
@@ -864,7 +865,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("var a = {CONST: 3}; var b = a.CONST;");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
     assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
@@ -876,7 +877,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("var a = { get CONST() {return 3} }; var b = a.CONST;");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
     assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
@@ -889,7 +890,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("var a = { set CONST(b) {throw 'invalid'} }; var c = a.CONST;");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
     assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
@@ -923,14 +924,17 @@ public final class NormalizeTest extends CompilerTestCase {
             "}"));
   }
 
-  private Set<Node> findNodesWithProperty(Node root, final byte prop) {
+  private static final Predicate<Node> IS_CONSTANT_NAME =
+      (n) -> n.getBooleanProp(Node.IS_CONSTANT_NAME);
+
+  private Set<Node> findNodesWithProperty(Node root, Predicate<Node> prop) {
     final Set<Node> set = new HashSet<>();
 
     NodeTraversal.traversePostOrder(
         getLastCompiler(),
         root,
         (NodeTraversal t, Node node, Node parent) -> {
-          if (node.getBooleanProp(prop)) {
+          if (prop.test(node)) {
             set.add(node);
           }
         });

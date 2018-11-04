@@ -384,43 +384,43 @@ public class NodeTest extends TestCase {
 
   @Test
   public void testSharedProps1() {
-    Node n = getVarRef("A");
-    n.putIntProp(Node.SIDE_EFFECT_FLAGS, 5);
+    Node n = getCall("A");
+    n.setSideEffectFlags(5);
     Node m = new Node(Token.TRUE);
     m.clonePropsFrom(n);
     assertEquals(m.getPropListHeadForTesting(), n.getPropListHeadForTesting());
-    assertEquals(5, n.getIntProp(Node.SIDE_EFFECT_FLAGS));
-    assertEquals(5, m.getIntProp(Node.SIDE_EFFECT_FLAGS));
+    assertEquals(5, n.getSideEffectFlags());
+    assertEquals(5, m.getSideEffectFlags());
   }
 
   @Test
   public void testSharedProps2() {
-    Node n = getVarRef("A");
-    n.putIntProp(Node.SIDE_EFFECT_FLAGS, 5);
-    Node m = new Node(Token.TRUE);
+    Node n = getCall("A");
+    n.setSideEffectFlags(5);
+    Node m = getCall("B");
     m.clonePropsFrom(n);
 
-    n.putIntProp(Node.SIDE_EFFECT_FLAGS, 6);
-    assertEquals(6, n.getIntProp(Node.SIDE_EFFECT_FLAGS));
-    assertEquals(5, m.getIntProp(Node.SIDE_EFFECT_FLAGS));
+    n.setSideEffectFlags(6);
+    assertEquals(6, n.getSideEffectFlags());
+    assertEquals(5, m.getSideEffectFlags());
     assertThat(m.getPropListHeadForTesting() == n.getPropListHeadForTesting()).isFalse();
 
-    m.putIntProp(Node.SIDE_EFFECT_FLAGS, 7);
-    assertEquals(6, n.getIntProp(Node.SIDE_EFFECT_FLAGS));
-    assertEquals(7, m.getIntProp(Node.SIDE_EFFECT_FLAGS));
+    m.setSideEffectFlags(7);
+    assertEquals(6, n.getSideEffectFlags());
+    assertEquals(7, m.getSideEffectFlags());
   }
 
   @Test
   public void testSharedProps3() {
-    Node n = getVarRef("A");
-    n.putIntProp(Node.SIDE_EFFECT_FLAGS, 2);
+    Node n = getCall("A");
+    n.setSideEffectFlags(2);
     n.putBooleanProp(Node.INCRDECR_PROP, true);
     Node m = new Node(Token.TRUE);
     m.clonePropsFrom(n);
+    n.setSideEffectFlags(4);
 
-    n.putIntProp(Node.SIDE_EFFECT_FLAGS, 4);
-    assertEquals(4, n.getIntProp(Node.SIDE_EFFECT_FLAGS));
-    assertEquals(2, m.getIntProp(Node.SIDE_EFFECT_FLAGS));
+    assertEquals(4, n.getSideEffectFlags());
+    assertEquals(2, m.getSideEffectFlags());
   }
 
   @Test
@@ -621,5 +621,9 @@ public class NodeTest extends TestCase {
 
   private static Node getAssignExpr(String name1, String name2) {
     return new Node(Token.ASSIGN, getVarRef(name1), getVarRef(name2));
+  }
+
+  private static Node getCall(String name1) {
+    return new Node(Token.CALL, getVarRef(name1));
   }
 }
