@@ -158,6 +158,30 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testComparison5() {
+    testReportNaN("x == Number.NaN");
+    testReportNaN("x != Number.NaN");
+    testReportNaN("x === Number.NaN");
+    testReportNaN("x !== Number.NaN");
+    testReportNaN("x < Number.NaN");
+    testReportNaN("x <= Number.NaN");
+    testReportNaN("x > Number.NaN");
+    testReportNaN("x >= Number.NaN");
+  }
+
+  @Test
+  public void testComparison6() {
+    testReportNaN("Number.NaN == x");
+    testReportNaN("Number.NaN != x");
+    testReportNaN("Number.NaN === x");
+    testReportNaN("Number.NaN !== x");
+    testReportNaN("Number.NaN < x");
+    testReportNaN("Number.NaN <= x");
+    testReportNaN("Number.NaN > x");
+    testReportNaN("Number.NaN >= x");
+  }
+
+  @Test
   public void testInstanceOf() {
     testReportInstanceOf("''", "String");
     testReportInstanceOf("4", "Number");

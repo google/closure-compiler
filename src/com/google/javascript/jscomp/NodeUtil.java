@@ -5527,8 +5527,11 @@ public final class NodeUtil {
             && n.getFirstChild().isNumber()
             && n.getFirstChild().getDouble() == 0
             && n.getLastChild().isNumber()
-            && n.getLastChild().getDouble() == 0);
+            && n.getLastChild().getDouble() == 0)
+        || n.matchesQualifiedName(NUMBER_NAN);
   }
+
+  private static final Node NUMBER_NAN = IR.getprop(IR.name("Number"), IR.string("NaN"));
 
   /**
    * A change scope does not directly correspond to a language scope but is an internal
