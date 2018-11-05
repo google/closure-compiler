@@ -19,15 +19,13 @@ package com.google.debugging.sourcemap;
 import java.io.IOException;
 
 /**
- * We encode our variable length numbers as base64 encoded strings with
- * the least significant digit coming first.  Each base64 digit encodes
- * a 5-bit value (0-31) and a continuation bit.  Signed values can be
- * represented by using the least significant bit of the value as the
- * sign bit.
+ * We encode our variable length numbers as base64 encoded strings with the least significant digit
+ * coming first. Each base64 digit encodes a 5-bit value (0-31) and a continuation bit. Signed
+ * values can be represented by using the least significant bit of the value as the sign bit.
  *
  * @author johnlenz@google.com (John Lenz)
  */
-final class Base64VLQ {
+public final class Base64VLQ {
   // Utility class.
   private Base64VLQ() {}
 
@@ -85,12 +83,13 @@ final class Base64VLQ {
   }
 
   /**
-   * A simple interface for advancing through a sequence of characters, that
-   * communicates that advance back to the source.
+   * A simple interface for advancing through a sequence of characters, that communicates that
+   * advance back to the source.
    */
-  interface CharIterator {
-    boolean hasNext();
-    char next();
+  public interface CharIterator {
+    public boolean hasNext();
+
+    public char next();
   }
 
   /**
