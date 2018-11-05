@@ -493,7 +493,7 @@ public class PrototypeObjectType extends ObjectType {
         if (superCtor != null) {
           // If the super ctor of this prototype object was not known before resolution, then the
           // subTypes would not have been set. Update them.
-          superCtor.addSubTypeIfNotPresent(ctor);
+          superCtor.addSubClassAfterResolution(ctor);
         }
       }
     }
