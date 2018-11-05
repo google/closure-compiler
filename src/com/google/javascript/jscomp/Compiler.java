@@ -269,8 +269,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private String lastPassName;
 
   private Set<String> externProperties = null;
-  private ImmutableMap<String, PropertyAccessKind> externGetterAndSetterProperties = null;
-  private ImmutableMap<String, PropertyAccessKind> sourceGetterAndSetterProperties = null;
+  private ImmutableMap<String, PropertyAccessKind> externGetterAndSetterProperties =
+      ImmutableMap.of();
+  private ImmutableMap<String, PropertyAccessKind> sourceGetterAndSetterProperties =
+      ImmutableMap.of();
 
   private static final Joiner pathJoiner = Joiner.on(File.separator);
 
