@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE;
@@ -116,11 +117,11 @@ public class JSTypeRegistryTest extends TestCase {
     FunctionType promiseCtor = promiseType.getConstructor();
     Node paramList = promiseCtor.getParametersNode();
     Node firstParameter = paramList.getFirstChild();
-    assertNotNull(firstParameter);
+    assertThat(firstParameter).isNotNull();
     FunctionType paramType = paramList.getFirstChild().getJSType().toMaybeFunctionType();
-    assertEquals(
-        "function(function((IThenable<TYPE>|TYPE|null|{then: ?})=): ?, function(*=): ?): ?",
-        paramType.toString());
+    assertThat(paramType.toString())
+        .isEqualTo(
+            "function(function((IThenable<TYPE>|TYPE|null|{then: ?})=): ?, function(*=): ?): ?");
   }
 
   @Test
@@ -133,7 +134,7 @@ public class JSTypeRegistryTest extends TestCase {
 
     // Ensure different instances are independent.
     JSTypeRegistry typeRegistry2 = new JSTypeRegistry(null);
-    assertEquals(null, typeRegistry2.getType(null, name));
+    assertThat(typeRegistry2.getType(null, name)).isEqualTo(null);
     assertType(typeRegistry.getType(null, name)).isStructurallyEqualTo(type);
   }
 
@@ -163,26 +164,28 @@ public class JSTypeRegistryTest extends TestCase {
   public void testReadableTypeName() {
     JSTypeRegistry registry = new JSTypeRegistry(null);
 
-    assertEquals("*", getReadableTypeNameHelper(registry, ALL_TYPE));
+    assertThat(getReadableTypeNameHelper(registry, ALL_TYPE)).isEqualTo("*");
 
-    assertEquals("boolean", getReadableTypeNameHelper(registry, BOOLEAN_TYPE));
-    assertEquals("Boolean", getReadableTypeNameHelper(registry, BOOLEAN_OBJECT_TYPE));
-    assertEquals("function", getReadableTypeNameHelper(registry, BOOLEAN_OBJECT_FUNCTION_TYPE));
+    assertThat(getReadableTypeNameHelper(registry, BOOLEAN_TYPE)).isEqualTo("boolean");
+    assertThat(getReadableTypeNameHelper(registry, BOOLEAN_OBJECT_TYPE)).isEqualTo("Boolean");
+    assertThat(getReadableTypeNameHelper(registry, BOOLEAN_OBJECT_FUNCTION_TYPE))
+        .isEqualTo("function");
 
-    assertEquals(
-        "(String|string)", getReadableTypeNameHelper(registry, STRING_VALUE_OR_OBJECT_TYPE));
+    assertThat(getReadableTypeNameHelper(registry, STRING_VALUE_OR_OBJECT_TYPE))
+        .isEqualTo("(String|string)");
 
-    assertEquals("(null|undefined)", getReadableTypeNameHelper(registry, NULL_VOID));
-    assertEquals("(null|undefined)", getReadableTypeNameHelper(registry, NULL_VOID, true));
+    assertThat(getReadableTypeNameHelper(registry, NULL_VOID)).isEqualTo("(null|undefined)");
+    assertThat(getReadableTypeNameHelper(registry, NULL_VOID, true)).isEqualTo("(null|undefined)");
 
-    assertEquals(
-        "(number|string|null)",
-        getReadableTypeNameHelper(registry, union(registry, NUMBER_TYPE, STRING_TYPE, NULL_TYPE)));
+    assertThat(
+            getReadableTypeNameHelper(
+                registry, union(registry, NUMBER_TYPE, STRING_TYPE, NULL_TYPE)))
+        .isEqualTo("(number|string|null)");
 
-    assertEquals(
-        "(Number|String)",
-        getReadableTypeNameHelper(
-            registry, union(registry, NUMBER_TYPE, STRING_TYPE, NULL_TYPE), true));
+    assertThat(
+            getReadableTypeNameHelper(
+                registry, union(registry, NUMBER_TYPE, STRING_TYPE, NULL_TYPE), true))
+        .isEqualTo("(Number|String)");
   }
 
   private JSType union(JSTypeRegistry registry, JSTypeNative... types) {

@@ -137,7 +137,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
 
     // findPropertyType
     assertType(nullOrString.findPropertyType("length")).isStructurallyEqualTo(NUMBER_TYPE);
-    assertEquals(null, nullOrString.findPropertyType("lengthx"));
+    assertThat(nullOrString.findPropertyType("lengthx")).isNull();
 
     Asserts.assertResolvesToSame(nullOrString);
   }
@@ -324,114 +324,76 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     UnionType stringOrBoolean =
         (UnionType) createUnionType(BOOLEAN_TYPE, STRING_TYPE);
 
-    assertEquals(
-        "(boolean|number|string)",
-        stringOrNumber.getLeastSupertype(stringOrBoolean).toString());
-    assertEquals(
-        "string",
-        stringOrNumber.getGreatestSubtype(stringOrBoolean).toString());
-    assertEquals(
-        TernaryValue.UNKNOWN,
-        stringOrNumber.testForEquality(stringOrBoolean));
-    assertEquals(
-        "(number|string)",
-        stringOrNumber.getTypesUnderEquality(
-            stringOrBoolean).typeA.toString());
-    assertEquals(
-        "string",
-        stringOrNumber.getTypesUnderShallowEquality(
-            stringOrBoolean).typeA.toString());
-    assertEquals(
-        "(number|string)",
-        stringOrNumber.getTypesUnderInequality(
-            stringOrBoolean).typeA.toString());
-    assertEquals(
-        "(number|string)",
-        stringOrNumber.getTypesUnderShallowInequality(
-            stringOrBoolean).typeA.toString());
+    assertThat(stringOrNumber.getLeastSupertype(stringOrBoolean).toString())
+        .isEqualTo("(boolean|number|string)");
+    assertThat(stringOrNumber.getGreatestSubtype(stringOrBoolean).toString()).isEqualTo("string");
+    assertThat(stringOrNumber.testForEquality(stringOrBoolean)).isEqualTo(TernaryValue.UNKNOWN);
+    assertThat(stringOrNumber.getTypesUnderEquality(stringOrBoolean).typeA.toString())
+        .isEqualTo("(number|string)");
+    assertThat(stringOrNumber.getTypesUnderShallowEquality(stringOrBoolean).typeA.toString())
+        .isEqualTo("string");
+    assertThat(stringOrNumber.getTypesUnderInequality(stringOrBoolean).typeA.toString())
+        .isEqualTo("(number|string)");
+    assertThat(stringOrNumber.getTypesUnderShallowInequality(stringOrBoolean).typeA.toString())
+        .isEqualTo("(number|string)");
 
     ObjectType stringOrNumberProxy =
         new ProxyObjectType(registry, stringOrNumber);
     ObjectType stringOrBooleanProxy =
         new ProxyObjectType(registry, stringOrBoolean);
-    assertEquals(
-        "(boolean|number|string)",
-        stringOrNumberProxy.getLeastSupertype(
-            stringOrBooleanProxy).toString());
-    assertEquals(
-        "string",
-        stringOrNumberProxy.getGreatestSubtype(
-            stringOrBooleanProxy).toString());
-    assertEquals(
-        TernaryValue.UNKNOWN,
-        stringOrNumberProxy.testForEquality(stringOrBooleanProxy));
-    assertEquals(
-        "(number|string)",
-        stringOrNumberProxy.getTypesUnderEquality(
-            stringOrBooleanProxy).typeA.toString());
-    assertEquals(
-        "string",
-        stringOrNumberProxy.getTypesUnderShallowEquality(
-            stringOrBooleanProxy).typeA.toString());
-    assertEquals(
-        "(number|string)",
-        stringOrNumberProxy.getTypesUnderInequality(
-            stringOrBooleanProxy).typeA.toString());
-    assertEquals(
-        "(number|string)",
-        stringOrNumberProxy.getTypesUnderShallowInequality(
-            stringOrBooleanProxy).typeA.toString());
+    assertThat(stringOrNumberProxy.getLeastSupertype(stringOrBooleanProxy).toString())
+        .isEqualTo("(boolean|number|string)");
+    assertThat(stringOrNumberProxy.getGreatestSubtype(stringOrBooleanProxy).toString())
+        .isEqualTo("string");
+    assertThat(stringOrNumberProxy.testForEquality(stringOrBooleanProxy))
+        .isEqualTo(TernaryValue.UNKNOWN);
+    assertThat(stringOrNumberProxy.getTypesUnderEquality(stringOrBooleanProxy).typeA.toString())
+        .isEqualTo("(number|string)");
+    assertThat(
+            stringOrNumberProxy.getTypesUnderShallowEquality(stringOrBooleanProxy).typeA.toString())
+        .isEqualTo("string");
+    assertThat(stringOrNumberProxy.getTypesUnderInequality(stringOrBooleanProxy).typeA.toString())
+        .isEqualTo("(number|string)");
+    assertThat(
+            stringOrNumberProxy
+                .getTypesUnderShallowInequality(stringOrBooleanProxy)
+                .typeA
+                .toString())
+        .isEqualTo("(number|string)");
   }
 
   @Test
   public void testCollapseUnion1() {
-    assertEquals(
-        "*",
-        registry.createUnionType(NUMBER_TYPE, STRING_TYPE)
-        .collapseUnion().toString());
+    assertThat(registry.createUnionType(NUMBER_TYPE, STRING_TYPE).collapseUnion().toString())
+        .isEqualTo("*");
   }
 
   @Test
   public void testCollapseUnion2() {
-    assertEquals(
-        "?",
-        registry.createUnionType(UNKNOWN_TYPE, NUMBER_TYPE)
-        .collapseUnion().toString());
-    assertEquals(
-        "?",
-        registry.createUnionType(NUMBER_TYPE, UNKNOWN_TYPE)
-        .collapseUnion().toString());
+    assertThat(registry.createUnionType(UNKNOWN_TYPE, NUMBER_TYPE).collapseUnion().toString())
+        .isEqualTo("?");
+    assertThat(registry.createUnionType(NUMBER_TYPE, UNKNOWN_TYPE).collapseUnion().toString())
+        .isEqualTo("?");
   }
 
   @Test
   public void testCollapseUnion3() {
-    assertEquals(
-        "Object",
-        registry.createUnionType(ARRAY_TYPE, DATE_TYPE).collapseUnion().toString());
-    assertEquals(
-        "Object",
-        registry.createUnionType(ARRAY_TYPE, OBJECT_TYPE).collapseUnion().toString());
-    assertEquals(
-        "Base",
-        registry.createUnionType(base, sub1).collapseUnion().toString());
-    assertEquals(
-        "Base",
-        registry.createUnionType(sub1, sub2).collapseUnion().toString());
-    assertEquals(
-        "Base",
-        registry.createUnionType(sub1, sub2, sub3).collapseUnion().toString());
+    assertThat(registry.createUnionType(ARRAY_TYPE, DATE_TYPE).collapseUnion().toString())
+        .isEqualTo("Object");
+    assertThat(registry.createUnionType(ARRAY_TYPE, OBJECT_TYPE).collapseUnion().toString())
+        .isEqualTo("Object");
+    assertThat(registry.createUnionType(base, sub1).collapseUnion().toString()).isEqualTo("Base");
+    assertThat(registry.createUnionType(sub1, sub2).collapseUnion().toString()).isEqualTo("Base");
+    assertThat(registry.createUnionType(sub1, sub2, sub3).collapseUnion().toString())
+        .isEqualTo("Base");
   }
 
   @Test
   public void testCollapseUnion4() {
-    assertEquals(
-        "*",
-        registry.createUnionType(OBJECT_TYPE, STRING_TYPE)
-        .collapseUnion().toString());
-    assertEquals(
-        "*",
-        registry.createUnionType(STRING_TYPE, OBJECT_TYPE)
-        .collapseUnion().toString());
+    assertThat(registry.createUnionType(OBJECT_TYPE, STRING_TYPE).collapseUnion().toString())
+        .isEqualTo("*");
+    assertThat(registry.createUnionType(STRING_TYPE, OBJECT_TYPE).collapseUnion().toString())
+        .isEqualTo("*");
   }
 
   @Test

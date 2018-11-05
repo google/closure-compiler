@@ -178,9 +178,9 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     NamedType activeXObject =
         new NamedTypeBuilder().setScope(scope).setName("ActiveXObject").build();
 
-    assertEquals("ActiveXObject", activeXObject.toString());
+    assertThat(activeXObject.toString()).isEqualTo("ActiveXObject");
     activeXObject.resolve(null);
-    assertEquals("NoObject", activeXObject.toString());
+    assertThat(activeXObject.toString()).isEqualTo("NoObject");
     assertTypeEquals(NO_OBJECT_TYPE, activeXObject.getReferencedType());
   }
 

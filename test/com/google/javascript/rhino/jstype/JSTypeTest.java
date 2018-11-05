@@ -61,7 +61,6 @@ import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import org.junit.Before;
@@ -155,7 +154,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     googObject.defineDeclaredProperty("Bar", googBar, null);
 
     namedGoogBar.resolve(null);
-    assertNotNull(namedGoogBar.getImplicitPrototype());
+    assertThat(namedGoogBar.getImplicitPrototype()).isNotNull();
 
     forwardDeclaredNamedType = new NamedType(scope, registry, "forwardDeclared", "source", 1, 0);
     forwardDeclaredNamedType.resolve(new SimpleErrorReporter());
@@ -306,10 +305,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(U2U_CONSTRUCTOR_TYPE.matchesSymbolContext()).isFalse();
 
     // toString
-    assertEquals("Function",
-        U2U_CONSTRUCTOR_TYPE.toString());
+    assertThat(U2U_CONSTRUCTOR_TYPE.toString()).isEqualTo("Function");
     assertThat(U2U_CONSTRUCTOR_TYPE.hasDisplayName()).isTrue();
-    assertEquals("Function", U2U_CONSTRUCTOR_TYPE.getDisplayName());
+    assertThat(U2U_CONSTRUCTOR_TYPE.getDisplayName()).isEqualTo("Function");
 
     // getPropertyType
     assertTypeEquals(UNKNOWN_TYPE,
@@ -433,9 +431,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(NO_OBJECT_TYPE.matchesSymbolContext()).isTrue();
 
     // toString
-    assertEquals("NoObject", NO_OBJECT_TYPE.toString());
+    assertThat(NO_OBJECT_TYPE.toString()).isEqualTo("NoObject");
     assertThat(NO_OBJECT_TYPE.hasDisplayName()).isFalse();
-    assertEquals(null, NO_OBJECT_TYPE.getDisplayName());
+    assertThat(NO_OBJECT_TYPE.getDisplayName()).isNull();
 
     // getPropertyType
     assertTypeEquals(NO_TYPE,
@@ -554,8 +552,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(NO_TYPE.matchesSymbolContext()).isTrue();
 
     // toString
-    assertEquals("None", NO_TYPE.toString());
-    assertEquals(null, NO_TYPE.getDisplayName());
+    assertThat(NO_TYPE.toString()).isEqualTo("None");
+    assertThat(NO_TYPE.getDisplayName()).isNull();
     assertThat(NO_TYPE.hasDisplayName()).isFalse();
 
     // getPropertyType
@@ -676,8 +674,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(NO_RESOLVED_TYPE.matchesSymbolContext()).isTrue();
 
     // toString
-    assertEquals("NoResolvedType", NO_RESOLVED_TYPE.toString());
-    assertEquals(null, NO_RESOLVED_TYPE.getDisplayName());
+    assertThat(NO_RESOLVED_TYPE.toString()).isEqualTo("NoResolvedType");
+    assertThat(NO_RESOLVED_TYPE.getDisplayName()).isNull();
     assertThat(NO_RESOLVED_TYPE.hasDisplayName()).isFalse();
 
     // getPropertyType
@@ -812,10 +810,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ARRAY_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // getPropertyType
-    assertEquals(17, ARRAY_TYPE.getImplicitPrototype().getPropertiesCount());
-    assertEquals(18, ARRAY_TYPE.getPropertiesCount());
-    assertReturnTypeEquals(ARRAY_TYPE,
-        ARRAY_TYPE.getPropertyType("constructor"));
+    assertThat(ARRAY_TYPE.getImplicitPrototype().getPropertiesCount()).isEqualTo(17);
+    assertThat(ARRAY_TYPE.getPropertiesCount()).isEqualTo(18);
+    assertReturnTypeEquals(ARRAY_TYPE, ARRAY_TYPE.getPropertyType("constructor"));
     assertReturnTypeEquals(STRING_TYPE,
         ARRAY_TYPE.getPropertyType("toString"));
     assertReturnTypeEquals(STRING_TYPE,
@@ -843,9 +840,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(ARRAY_TYPE.matchesSymbolContext()).isFalse();
 
     // toString
-    assertEquals("Array", ARRAY_TYPE.toString());
+    assertThat(ARRAY_TYPE.toString()).isEqualTo("Array");
     assertThat(ARRAY_TYPE.hasDisplayName()).isTrue();
-    assertEquals("Array", ARRAY_TYPE.getDisplayName());
+    assertThat(ARRAY_TYPE.getDisplayName()).isEqualTo("Array");
 
     assertThat(ARRAY_TYPE.isNativeObjectType()).isTrue();
 
@@ -885,7 +882,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(UNKNOWN_TYPE.isInstanceType()).isFalse();
 
     // autoboxesTo
-    assertNull(UNKNOWN_TYPE.autoboxesTo());
+    assertThat(UNKNOWN_TYPE.autoboxesTo()).isNull();
 
     // isSubtype
     assertThat(UNKNOWN_TYPE.isSubtypeOf(UNKNOWN_TYPE)).isTrue();
@@ -960,14 +957,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertPropertyTypeUnknown(UNKNOWN_TYPE, "XXX");
 
     // toString
-    assertEquals("?", UNKNOWN_TYPE.toString());
+    assertThat(UNKNOWN_TYPE.toString()).isEqualTo("?");
     assertThat(UNKNOWN_TYPE.hasDisplayName()).isTrue();
-    assertEquals("Unknown", UNKNOWN_TYPE.getDisplayName());
+    assertThat(UNKNOWN_TYPE.getDisplayName()).isEqualTo("Unknown");
 
     Asserts.assertResolvesToSame(UNKNOWN_TYPE);
     assertThat(UNKNOWN_TYPE.isNominalConstructor()).isFalse();
 
-    assertEquals(UNKNOWN_TYPE, UNKNOWN_TYPE.getPropertyType("abc"));
+    assertThat(UNKNOWN_TYPE.getPropertyType("abc")).isEqualTo(UNKNOWN_TYPE);
   }
 
   /** Tests the behavior of the checked unknown type. */
@@ -977,15 +974,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertPropertyTypeUnknown(CHECKED_UNKNOWN_TYPE, "XXX");
 
     // toString
-    assertEquals("??", CHECKED_UNKNOWN_TYPE.toString());
+    assertThat(CHECKED_UNKNOWN_TYPE.toString()).isEqualTo("??");
     assertThat(CHECKED_UNKNOWN_TYPE.hasDisplayName()).isTrue();
-    assertEquals("Unknown", CHECKED_UNKNOWN_TYPE.getDisplayName());
+    assertThat(CHECKED_UNKNOWN_TYPE.getDisplayName()).isEqualTo("Unknown");
 
     Asserts.assertResolvesToSame(CHECKED_UNKNOWN_TYPE);
     assertThat(CHECKED_UNKNOWN_TYPE.isNominalConstructor()).isFalse();
 
-    assertEquals(CHECKED_UNKNOWN_TYPE,
-        CHECKED_UNKNOWN_TYPE.getPropertyType("abc"));
+    assertThat(CHECKED_UNKNOWN_TYPE.getPropertyType("abc")).isEqualTo(CHECKED_UNKNOWN_TYPE);
   }
 
   /** Tests the behavior of the unknown type. */
@@ -1105,10 +1101,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(ALL_TYPE.matchesSymbolContext()).isFalse(); // ?
 
     // toString
-    assertEquals("*", ALL_TYPE.toString());
+    assertThat(ALL_TYPE.toString()).isEqualTo("*");
 
     assertThat(ALL_TYPE.hasDisplayName()).isTrue();
-    assertEquals("<Any Type>", ALL_TYPE.getDisplayName());
+    assertThat(ALL_TYPE.getDisplayName()).isEqualTo("<Any Type>");
 
     Asserts.assertResolvesToSame(ALL_TYPE);
     assertThat(ALL_TYPE.isNominalConstructor()).isFalse();
@@ -1236,9 +1232,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         OBJECT_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // getPropertyType
-    assertEquals(7, OBJECT_TYPE.getPropertiesCount());
-    assertReturnTypeEquals(OBJECT_TYPE,
-        OBJECT_TYPE.getPropertyType("constructor"));
+    assertThat(OBJECT_TYPE.getPropertiesCount()).isEqualTo(7);
+    assertReturnTypeEquals(OBJECT_TYPE, OBJECT_TYPE.getPropertyType("constructor"));
     assertReturnTypeEquals(STRING_TYPE,
         OBJECT_TYPE.getPropertyType("toString"));
     assertReturnTypeEquals(STRING_TYPE,
@@ -1262,7 +1257,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(OBJECT_PROTOTYPE, OBJECT_TYPE.getImplicitPrototype());
 
     // toString
-    assertEquals("Object", OBJECT_TYPE.toString());
+    assertThat(OBJECT_TYPE.toString()).isEqualTo("Object");
 
     assertThat(OBJECT_TYPE.isNativeObjectType()).isTrue();
     assertThat(OBJECT_TYPE.getImplicitPrototype().isNativeObjectType()).isTrue();
@@ -1400,9 +1395,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(NUMBER_OBJECT_TYPE.matchesSymbolContext()).isFalse();
 
     // toString
-    assertEquals("Number", NUMBER_OBJECT_TYPE.toString());
+    assertThat(NUMBER_OBJECT_TYPE.toString()).isEqualTo("Number");
     assertThat(NUMBER_OBJECT_TYPE.hasDisplayName()).isTrue();
-    assertEquals("Number", NUMBER_OBJECT_TYPE.getDisplayName());
+    assertThat(NUMBER_OBJECT_TYPE.getDisplayName()).isEqualTo("Number");
 
     assertThat(NUMBER_OBJECT_TYPE.isNativeObjectType()).isTrue();
 
@@ -1530,9 +1525,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(NUMBER_TYPE.matchesSymbolContext()).isFalse();
 
     // toString
-    assertEquals("number", NUMBER_TYPE.toString());
+    assertThat(NUMBER_TYPE.toString()).isEqualTo("number");
     assertThat(NUMBER_TYPE.hasDisplayName()).isTrue();
-    assertEquals("number", NUMBER_TYPE.getDisplayName());
+    assertThat(NUMBER_TYPE.getDisplayName()).isEqualTo("number");
 
     Asserts.assertResolvesToSame(NUMBER_TYPE);
     assertThat(NUMBER_TYPE.isNominalConstructor()).isFalse();
@@ -1570,7 +1565,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(NULL_TYPE.isInstanceType()).isFalse();
 
     // autoboxesTo
-    assertNull(NULL_TYPE.autoboxesTo());
+    assertThat(NULL_TYPE.autoboxesTo()).isNull();
 
     // isSubtype
     assertThat(NULL_TYPE.isSubtypeOf(NO_OBJECT_TYPE)).isFalse();
@@ -1673,9 +1668,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(NULL_TYPE.matchesSymbolContext()).isFalse();
 
     // toString
-    assertEquals("null", NULL_TYPE.toString());
+    assertThat(NULL_TYPE.toString()).isEqualTo("null");
     assertThat(NULL_TYPE.hasDisplayName()).isTrue();
-    assertEquals("null", NULL_TYPE.getDisplayName());
+    assertThat(NULL_TYPE.getDisplayName()).isEqualTo("null");
 
     Asserts.assertResolvesToSame(NULL_TYPE);
 
@@ -1722,7 +1717,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(DATE_TYPE.isInstanceType()).isTrue();
 
     // autoboxesTo
-    assertNull(DATE_TYPE.autoboxesTo());
+    assertThat(DATE_TYPE.autoboxesTo()).isNull();
 
     // isSubtype
     assertThat(DATE_TYPE.isSubtypeOf(NO_TYPE)).isFalse();
@@ -1801,8 +1796,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         DATE_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // getPropertyType
-    assertEquals(46, DATE_TYPE.getImplicitPrototype().getPropertiesCount());
-    assertEquals(46, DATE_TYPE.getPropertiesCount());
+    assertThat(DATE_TYPE.getImplicitPrototype().getPropertiesCount()).isEqualTo(46);
+    assertThat(DATE_TYPE.getPropertiesCount()).isEqualTo(46);
     assertReturnTypeEquals(DATE_TYPE, DATE_TYPE.getPropertyType("constructor"));
     assertReturnTypeEquals(STRING_TYPE,
         DATE_TYPE.getPropertyType("toString"));
@@ -1887,9 +1882,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(DATE_TYPE.matchesSymbolContext()).isFalse();
 
     // toString
-    assertEquals("Date", DATE_TYPE.toString());
+    assertThat(DATE_TYPE.toString()).isEqualTo("Date");
     assertThat(DATE_TYPE.hasDisplayName()).isTrue();
-    assertEquals("Date", DATE_TYPE.getDisplayName());
+    assertThat(DATE_TYPE.getDisplayName()).isEqualTo("Date");
 
     assertThat(DATE_TYPE.isNativeObjectType()).isTrue();
 
@@ -1924,7 +1919,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(REGEXP_TYPE.isVoidType()).isFalse();
 
     // autoboxesTo
-    assertNull(REGEXP_TYPE.autoboxesTo());
+    assertThat(REGEXP_TYPE.autoboxesTo()).isNull();
 
     // isSubtype
     assertThat(REGEXP_TYPE.isSubtypeOf(NO_TYPE)).isFalse();
@@ -2004,10 +1999,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         REGEXP_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // getPropertyType
-    assertEquals(9, REGEXP_TYPE.getImplicitPrototype().getPropertiesCount());
-    assertEquals(14, REGEXP_TYPE.getPropertiesCount());
-    assertReturnTypeEquals(REGEXP_TYPE,
-        REGEXP_TYPE.getPropertyType("constructor"));
+    assertThat(REGEXP_TYPE.getImplicitPrototype().getPropertiesCount()).isEqualTo(9);
+    assertThat(REGEXP_TYPE.getPropertiesCount()).isEqualTo(14);
+    assertReturnTypeEquals(REGEXP_TYPE, REGEXP_TYPE.getPropertyType("constructor"));
     assertReturnTypeEquals(createNullableType(ARRAY_TYPE),
         REGEXP_TYPE.getPropertyType("exec"));
     assertReturnTypeEquals(BOOLEAN_TYPE,
@@ -2027,9 +2021,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(REGEXP_TYPE.matchesSymbolContext()).isFalse();
 
     // toString
-    assertEquals("RegExp", REGEXP_TYPE.toString());
+    assertThat(REGEXP_TYPE.toString()).isEqualTo("RegExp");
     assertThat(REGEXP_TYPE.hasDisplayName()).isTrue();
-    assertEquals("RegExp", REGEXP_TYPE.getDisplayName());
+    assertThat(REGEXP_TYPE.getDisplayName()).isEqualTo("RegExp");
 
     assertThat(REGEXP_TYPE.isNativeObjectType()).isTrue();
 
@@ -2130,9 +2124,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE)).isTrue();
 
     // properties (ECMA-262 page 98 - 106)
-    assertEquals(24, STRING_OBJECT_TYPE.getImplicitPrototype().
-        getPropertiesCount());
-    assertEquals(25, STRING_OBJECT_TYPE.getPropertiesCount());
+    assertThat(STRING_OBJECT_TYPE.getImplicitPrototype().getPropertiesCount()).isEqualTo(24);
+    assertThat(STRING_OBJECT_TYPE.getPropertiesCount()).isEqualTo(25);
 
     assertReturnTypeEquals(STRING_TYPE,
         STRING_OBJECT_TYPE.getPropertyType("toString"));
@@ -2191,7 +2184,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     Asserts.assertResolvesToSame(STRING_OBJECT_TYPE);
 
     assertThat(STRING_OBJECT_TYPE.hasDisplayName()).isTrue();
-    assertEquals("String", STRING_OBJECT_TYPE.getDisplayName());
+    assertThat(STRING_OBJECT_TYPE.getDisplayName()).isEqualTo("String");
     assertThat(STRING_OBJECT_TYPE.isNominalConstructor()).isFalse();
     assertThat(STRING_OBJECT_TYPE.getConstructor().isNominalConstructor()).isTrue();
   }
@@ -2298,13 +2291,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(createUnionType(STRING_TYPE, VOID_TYPE).isVoidable()).isTrue();
 
     // toString
-    assertEquals("string", STRING_TYPE.toString());
+    assertThat(STRING_TYPE.toString()).isEqualTo("string");
     assertThat(STRING_TYPE.hasDisplayName()).isTrue();
-    assertEquals("string", STRING_TYPE.getDisplayName());
+    assertThat(STRING_TYPE.getDisplayName()).isEqualTo("string");
 
     // findPropertyType
     assertTypeEquals(NUMBER_TYPE, STRING_TYPE.findPropertyType("length"));
-    assertEquals(null, STRING_TYPE.findPropertyType("unknownProperty"));
+    assertThat(STRING_TYPE.findPropertyType("unknownProperty")).isNull();
 
     Asserts.assertResolvesToSame(STRING_TYPE);
     assertThat(STRING_TYPE.isNominalConstructor()).isFalse();
@@ -2405,9 +2398,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(SYMBOL_TYPE.matchesSymbolContext()).isTrue();
 
     // toString
-    assertEquals("symbol", SYMBOL_TYPE.toString());
+    assertThat(SYMBOL_TYPE.toString()).isEqualTo("symbol");
     assertThat(SYMBOL_TYPE.hasDisplayName()).isTrue();
-    assertEquals("symbol", SYMBOL_TYPE.getDisplayName());
+    assertThat(SYMBOL_TYPE.getDisplayName()).isEqualTo("symbol");
 
     Asserts.assertResolvesToSame(SYMBOL_TYPE);
   }
@@ -2495,9 +2488,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(SYMBOL_OBJECT_TYPE.matchesSymbolContext()).isTrue();
 
     // toString
-    assertEquals("Symbol", SYMBOL_OBJECT_TYPE.toString());
+    assertThat(SYMBOL_OBJECT_TYPE.toString()).isEqualTo("Symbol");
     assertThat(SYMBOL_OBJECT_TYPE.hasDisplayName()).isTrue();
-    assertEquals("Symbol", SYMBOL_OBJECT_TYPE.getDisplayName());
+    assertThat(SYMBOL_OBJECT_TYPE.getDisplayName()).isEqualTo("Symbol");
 
     assertThat(SYMBOL_OBJECT_TYPE.isNativeObjectType()).isTrue();
 
@@ -2547,7 +2540,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(recordType.isSubtypeOf(U2U_CONSTRUCTOR_TYPE)).isFalse();
 
     // autoboxesTo
-    assertNull(recordType.autoboxesTo());
+    assertThat(recordType.autoboxesTo()).isNull();
 
     // canBeCalled
     assertThat(recordType.canBeCalled()).isFalse();
@@ -2616,7 +2609,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(functionInst.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
 
     // autoboxesTo
-    assertNull(functionInst.autoboxesTo());
+    assertThat(functionInst.autoboxesTo()).isNull();
 
     // canBeCalled
     assertThat(functionInst.canBeCalled()).isTrue();
@@ -2692,7 +2685,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(functionType.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
 
     // autoboxesTo
-    assertNull(functionType.autoboxesTo());
+    assertThat(functionType.autoboxesTo()).isNull();
 
     // canBeCalled
     assertThat(functionType.canBeCalled()).isTrue();
@@ -2741,9 +2734,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     Asserts.assertResolvesToSame(functionType);
 
-
-    assertEquals("aFunctionName", new FunctionBuilder(registry).
-        withName("aFunctionName").build().getDisplayName());
+    assertThat(new FunctionBuilder(registry).withName("aFunctionName").build().getDisplayName())
+        .isEqualTo("aFunctionName");
   }
 
   /** Tests the subtyping relation of record types. */
@@ -3104,9 +3096,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NUMBER_TYPE, applyFn.getReturnType());
 
     Node params = applyFn.getParametersNode();
-    assertEquals("apply takes two args",
-        2, params.getChildCount());
-    assertTypeEquals("apply's first arg is the @this type",
+    assertWithMessage("apply takes two args").that(params.getChildCount()).isEqualTo(2);
+    assertTypeEquals(
+        "apply's first arg is the @this type",
         registry.createOptionalNullableType(DATE_TYPE),
         params.getFirstChild().getJSType());
     assertTypeEquals("apply's second arg is an Array",
@@ -3131,9 +3123,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NUMBER_TYPE, callFn.getReturnType());
 
     Node params = callFn.getParametersNode();
-    assertEquals("call takes one argument in this case",
-        1, params.getChildCount());
-    assertTypeEquals("call's first arg is the @this type",
+    assertWithMessage("call takes one argument in this case")
+        .that(params.getChildCount())
+        .isEqualTo(1);
+    assertTypeEquals(
+        "call's first arg is the @this type",
         registry.createOptionalNullableType(DATE_TYPE),
         params.getFirstChild().getJSType());
     assertWithMessage("call's args must be optional")
@@ -3144,33 +3138,37 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   /** Tests the representation of function types. */
   @Test
   public void testFunctionTypeRepresentation() {
-    assertEquals("function(number, string): boolean",
-        registry.createFunctionType(BOOLEAN_TYPE, NUMBER_TYPE, STRING_TYPE).toString());
+    assertThat(registry.createFunctionType(BOOLEAN_TYPE, NUMBER_TYPE, STRING_TYPE).toString())
+        .isEqualTo("function(number, string): boolean");
 
-    assertEquals("function(new:Array, ...*): Array",
-        ARRAY_FUNCTION_TYPE.toString());
+    assertThat(ARRAY_FUNCTION_TYPE.toString()).isEqualTo("function(new:Array, ...*): Array");
 
-    assertEquals("function(new:Boolean, *=): boolean",
-        BOOLEAN_OBJECT_FUNCTION_TYPE.toString());
+    assertThat(BOOLEAN_OBJECT_FUNCTION_TYPE.toString())
+        .isEqualTo("function(new:Boolean, *=): boolean");
 
-    assertEquals("function(new:Number, *=): number",
-        NUMBER_OBJECT_FUNCTION_TYPE.toString());
+    assertThat(NUMBER_OBJECT_FUNCTION_TYPE.toString())
+        .isEqualTo("function(new:Number, *=): number");
 
-    assertEquals("function(new:String, *=): string",
-        STRING_OBJECT_FUNCTION_TYPE.toString());
+    assertThat(STRING_OBJECT_FUNCTION_TYPE.toString())
+        .isEqualTo("function(new:String, *=): string");
 
-    assertEquals("function(...number): boolean",
-        registry.createFunctionTypeWithVarArgs(BOOLEAN_TYPE, NUMBER_TYPE).toString());
+    assertThat(registry.createFunctionTypeWithVarArgs(BOOLEAN_TYPE, NUMBER_TYPE).toString())
+        .isEqualTo("function(...number): boolean");
 
-    assertEquals("function(number, ...string): boolean",
-        registry.createFunctionTypeWithVarArgs(BOOLEAN_TYPE, NUMBER_TYPE, STRING_TYPE).toString());
+    assertThat(
+            registry
+                .createFunctionTypeWithVarArgs(BOOLEAN_TYPE, NUMBER_TYPE, STRING_TYPE)
+                .toString())
+        .isEqualTo("function(number, ...string): boolean");
 
-    assertEquals("function(this:Date, number): (boolean|number|string)",
-        new FunctionBuilder(registry)
-            .withParamsNode(registry.createParameters(NUMBER_TYPE))
-            .withReturnType(NUMBER_STRING_BOOLEAN)
-            .withTypeOfThis(DATE_TYPE)
-            .build().toString());
+    assertThat(
+            new FunctionBuilder(registry)
+                .withParamsNode(registry.createParameters(NUMBER_TYPE))
+                .withReturnType(NUMBER_STRING_BOOLEAN)
+                .withTypeOfThis(DATE_TYPE)
+                .build()
+                .toString())
+        .isEqualTo("function(this:Date, number): (boolean|number|string)");
   }
 
   /** Tests relationships between structural function types. */
@@ -3206,14 +3204,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
       for (int j = 0; j < allFunctions.size(); j++) {
         FunctionType typeA = allFunctions.get(i);
         FunctionType typeB = allFunctions.get(j);
-        assertEquals(String.format("equals(%s, %s)", typeA, typeB),
-            i == j, typeA.isEquivalentTo(typeB));
+        assertWithMessage(String.format("equals(%s, %s)", typeA, typeB))
+            .that(typeA.isEquivalentTo(typeB))
+            .isEqualTo(i == j);
 
         // For this particular set of functions, the functions are subtypes
         // of each other iff they have the same "this" type.
-        assertEquals(String.format("isSubtype(%s, %s)", typeA, typeB),
-            typeA.getTypeOfThis().isEquivalentTo(typeB.getTypeOfThis()),
-            typeA.isSubtype(typeB));
+        assertWithMessage(String.format("isSubtype(%s, %s)", typeA, typeB))
+            .that(typeA.isSubtype(typeB))
+            .isEqualTo(typeA.getTypeOfThis().isEquivalentTo(typeB.getTypeOfThis()));
 
         if (i == j) {
           assertTypeEquals(typeA, typeA.getLeastSupertype(typeB));
@@ -3274,8 +3273,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
       for (int j = 0; j < allFunctions.size(); j++) {
         FunctionType typeA = allFunctions.get(i);
         FunctionType typeB = allFunctions.get(j);
-        assertEquals(String.format("equals(%s, %s)", typeA, typeB),
-            i == j, typeA.isEquivalentTo(typeB));
+        assertWithMessage(String.format("equals(%s, %s)", typeA, typeB))
+            .that(typeA.isEquivalentTo(typeB))
+            .isEqualTo(i == j);
 
         // TODO(nicksantos): This formulation of least subtype and greatest
         // supertype is a bit loose. We might want to tighten it up later.
@@ -3306,7 +3306,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         (ObjectType) constructor.getPropertyType("prototype");
     prototype.defineDeclaredProperty("foo", DATE_TYPE, null);
 
-    assertEquals(NATIVE_PROPERTIES_COUNT + 1, instance.getPropertiesCount());
+    assertThat(instance.getPropertiesCount()).isEqualTo(NATIVE_PROPERTIES_COUNT + 1);
   }
 
   /**
@@ -3325,7 +3325,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     prototype.defineDeclaredProperty("foo", DATE_TYPE, null);
     constructor.defineDeclaredProperty("prototype", prototype, null);
 
-    assertEquals(NATIVE_PROPERTIES_COUNT + 1, instance.getPropertiesCount());
+    assertThat(instance.getPropertiesCount()).isEqualTo(NATIVE_PROPERTIES_COUNT + 1);
   }
 
   /** Tests assigning JsDoc on a prototype property. */
@@ -3333,7 +3333,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testJSDocOnPrototypeProperty() {
     subclassCtor.setPropertyJSDocInfo("prototype",
         new JSDocInfoBuilder(false).build());
-    assertNull(subclassCtor.getOwnPropertyJSDocInfo("prototype"));
+    assertThat(subclassCtor.getOwnPropertyJSDocInfo("prototype")).isNull();
   }
 
   /**
@@ -3357,7 +3357,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(VOID_TYPE.isSubtypeOf(REGEXP_TYPE)).isFalse();
 
     // autoboxesTo
-    assertNull(VOID_TYPE.autoboxesTo());
+    assertThat(VOID_TYPE.autoboxesTo()).isNull();
 
     // canTestForEqualityWith
     assertCanTestForEqualityWith(VOID_TYPE, ALL_TYPE);
@@ -3482,9 +3482,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(BOOLEAN_TYPE.matchesNumberContext()).isTrue();
 
     // toString
-    assertEquals("boolean", BOOLEAN_TYPE.toString());
+    assertThat(BOOLEAN_TYPE.toString()).isEqualTo("boolean");
     assertThat(BOOLEAN_TYPE.hasDisplayName()).isTrue();
-    assertEquals("boolean", BOOLEAN_TYPE.getDisplayName());
+    assertThat(BOOLEAN_TYPE.getDisplayName()).isEqualTo("boolean");
 
     Asserts.assertResolvesToSame(BOOLEAN_TYPE);
   }
@@ -3570,9 +3570,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(BOOLEAN_OBJECT_TYPE.matchesNumberContext()).isTrue();
 
     // toString
-    assertEquals("Boolean", BOOLEAN_OBJECT_TYPE.toString());
+    assertThat(BOOLEAN_OBJECT_TYPE.toString()).isEqualTo("Boolean");
     assertThat(BOOLEAN_OBJECT_TYPE.hasDisplayName()).isTrue();
-    assertEquals("Boolean", BOOLEAN_OBJECT_TYPE.getDisplayName());
+    assertThat(BOOLEAN_OBJECT_TYPE.getDisplayName()).isEqualTo("Boolean");
 
     assertThat(BOOLEAN_OBJECT_TYPE.isNativeObjectType()).isTrue();
 
@@ -3662,12 +3662,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(enumType.matchesNumberContext()).isFalse();
 
     // toString
-    assertEquals("enum{Enum}", enumType.toString());
+    assertThat(enumType.toString()).isEqualTo("enum{Enum}");
     assertThat(enumType.hasDisplayName()).isTrue();
-    assertEquals("Enum", enumType.getDisplayName());
+    assertThat(enumType.getDisplayName()).isEqualTo("Enum");
 
-    assertEquals("AnotherEnum", new EnumType(registry, "AnotherEnum",
-        null, NUMBER_TYPE).getDisplayName());
+    assertThat(new EnumType(registry, "AnotherEnum", null, NUMBER_TYPE).getDisplayName())
+        .isEqualTo("AnotherEnum");
     assertThat(new EnumType(registry, null, null, NUMBER_TYPE).hasDisplayName()).isFalse();
 
     Asserts.assertResolvesToSame(enumType);
@@ -3756,9 +3756,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(elementsType.matchesNumberContext()).isTrue();
 
     // toString
-    assertEquals("Enum<number>", elementsType.toString());
+    assertThat(elementsType.toString()).isEqualTo("Enum<number>");
     assertThat(elementsType.hasDisplayName()).isTrue();
-    assertEquals("Enum", elementsType.getDisplayName());
+    assertThat(elementsType.getDisplayName()).isEqualTo("Enum");
 
     Asserts.assertResolvesToSame(elementsType);
   }
@@ -3770,9 +3770,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertTypeEquals(UNKNOWN_TYPE, stringEnum.getPropertyType("length"));
     assertTypeEquals(NUMBER_TYPE, stringEnum.findPropertyType("length"));
-    assertEquals(false, stringEnum.hasProperty("length"));
+    assertThat(stringEnum.hasProperty("length")).isFalse();
     assertTypeEquals(STRING_OBJECT_TYPE, stringEnum.autoboxesTo());
-    assertNull(stringEnum.getConstructor());
+    assertThat(stringEnum.getConstructor()).isNull();
 
     Asserts.assertResolvesToSame(stringEnum);
   }
@@ -3785,7 +3785,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertTypeEquals(NUMBER_TYPE, stringEnum.getPropertyType("length"));
     assertTypeEquals(NUMBER_TYPE, stringEnum.findPropertyType("length"));
-    assertEquals(true, stringEnum.hasProperty("length"));
+    assertThat(stringEnum.hasProperty("length")).isTrue();
     assertTypeEquals(STRING_OBJECT_FUNCTION_TYPE, stringEnum.getConstructor());
   }
 
@@ -3800,7 +3800,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(objectType.isArrayType()).isFalse();
     assertThat(objectType.isDateType()).isFalse();
     assertThat(objectType.isFunctionPrototypeType()).isFalse();
-    assertSame(objectType.getImplicitPrototype(), OBJECT_TYPE);
+    assertThat(OBJECT_TYPE).isSameAs(objectType.getImplicitPrototype());
 
     // isSubtype
     assertThat(objectType.isSubtypeOf(ALL_TYPE)).isTrue();
@@ -3815,7 +3815,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(objectType.isSubtypeOf(REGEXP_TYPE)).isFalse();
 
     // autoboxesTo
-    assertNull(objectType.autoboxesTo());
+    assertThat(objectType.autoboxesTo()).isNull();
 
     // canTestForEqualityWith
     assertCanTestForEqualityWith(objectType, NUMBER_TYPE);
@@ -3834,11 +3834,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(createUnionType(objectType, VOID_TYPE).isVoidable()).isTrue();
 
     // toString
-    assertEquals("{...}", objectType.toString());
-    assertEquals(null, objectType.getDisplayName());
+    assertThat(objectType.toString()).isEqualTo("{...}");
+    assertThat(objectType.getDisplayName()).isNull();
     assertType(objectType).getReferenceNameIsNull();
-    assertEquals("anObject", new PrototypeObjectType(registry, "anObject",
-        null).getDisplayName());
+    assertThat(new PrototypeObjectType(registry, "anObject", null).getDisplayName())
+        .isEqualTo("anObject");
 
     Asserts.assertResolvesToSame(objectType);
   }
@@ -3873,13 +3873,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     int nativeProperties = sup.getPropertiesCount();
 
     sup.defineDeclaredProperty("a", DATE_TYPE, null);
-    assertEquals(nativeProperties + 1, sup.getPropertiesCount());
+    assertThat(sup.getPropertiesCount()).isEqualTo(nativeProperties + 1);
 
     sup.defineDeclaredProperty("b", DATE_TYPE, null);
-    assertEquals(nativeProperties + 2, sup.getPropertiesCount());
+    assertThat(sup.getPropertiesCount()).isEqualTo(nativeProperties + 2);
 
     ObjectType sub = registry.createObjectType(null, sup);
-    assertEquals(nativeProperties + 2, sub.getPropertiesCount());
+    assertThat(sub.getPropertiesCount()).isEqualTo(nativeProperties + 2);
   }
 
   /** Tests how properties are defined. */
@@ -3924,11 +3924,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     int nativeProperties = sup.getPropertiesCount();
 
     sup.defineDeclaredProperty("a", OBJECT_TYPE, null);
-    assertEquals(nativeProperties + 1, sup.getPropertiesCount());
+    assertThat(sup.getPropertiesCount()).isEqualTo(nativeProperties + 1);
 
     ObjectType sub = registry.createObjectType(null, sup);
     sub.defineDeclaredProperty("a", OBJECT_TYPE, null);
-    assertEquals(nativeProperties + 1, sub.getPropertiesCount());
+    assertThat(sub.getPropertiesCount()).isEqualTo(nativeProperties + 1);
   }
 
   /** Tests the named type goog.Bar. */
@@ -3952,7 +3952,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(namedGoogBar.isSubtype(ARRAY_TYPE)).isFalse();
 
     // autoboxesTo
-    assertNull(namedGoogBar.autoboxesTo());
+    assertThat(namedGoogBar.autoboxesTo()).isNull();
 
     // properties
     assertTypeEquals(DATE_TYPE, namedGoogBar.getPropertyType("date"));
@@ -3961,8 +3961,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(namedGoogBar.getImplicitPrototype().isNativeObjectType()).isFalse();
 
     JSType resolvedNamedGoogBar = Asserts.assertValidResolve(namedGoogBar);
-    assertNotSame(resolvedNamedGoogBar, namedGoogBar);
-    assertSame(resolvedNamedGoogBar, googBar.getInstanceType());
+    assertThat(namedGoogBar).isNotSameAs(resolvedNamedGoogBar);
+    assertThat(googBar.getInstanceType()).isSameAs(resolvedNamedGoogBar);
   }
 
   /** Tests the prototype chaining of native objects. */
@@ -4111,8 +4111,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   private void compare(TernaryValue r, JSType t1, JSType t2) {
-    assertEquals(r, t1.testForEquality(t2));
-    assertEquals(r, t2.testForEquality(t1));
+    assertThat(t1.testForEquality(t2)).isEqualTo(r);
+    assertThat(t2.testForEquality(t1)).isEqualTo(r);
   }
 
   private void assertCanTestForEqualityWith(JSType t1, JSType t2) {
@@ -4603,8 +4603,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         unresolvedNamedType.getLeastSupertype(U2U_FUNCTION_TYPE));
     assertTypeEquals(expected,
         U2U_FUNCTION_TYPE.getLeastSupertype(unresolvedNamedType));
-    assertEquals("(function(...?): ?|not.resolved.named.type)",
-        expected.toString());
+    assertThat(expected.toString()).isEqualTo("(function(...?): ?|not.resolved.named.type)");
   }
 
   @Test
@@ -4715,12 +4714,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(b, realB);
 
     JSType resolvedA = Asserts.assertValidResolve(a);
-    assertNotSame(resolvedA, a);
-    assertSame(resolvedA, realA);
+    assertThat(a).isNotSameAs(resolvedA);
+    assertThat(realA).isSameAs(resolvedA);
 
     JSType resolvedB = Asserts.assertValidResolve(b);
-    assertNotSame(resolvedB, b);
-    assertSame(resolvedB, realB);
+    assertThat(b).isNotSameAs(resolvedB);
+    assertThat(realB).isSameAs(resolvedB);
   }
 
   @Test
@@ -5242,12 +5241,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ARRAY_TYPE,
         JSType.getLeastSupertype(ARRAY_TYPE, arrayOfString));
 
-    assertEquals(
-        "(Array|Object<string,?>)",
-        JSType.getLeastSupertype(objectOfString, ARRAY_TYPE).toString());
-    assertEquals(
-        "(Array|Object<string,?>)",
-        JSType.getLeastSupertype(ARRAY_TYPE, objectOfString).toString());
+    assertThat(JSType.getLeastSupertype(objectOfString, ARRAY_TYPE).toString())
+        .isEqualTo("(Array|Object<string,?>)");
+    assertThat(JSType.getLeastSupertype(ARRAY_TYPE, objectOfString).toString())
+        .isEqualTo("(Array|Object<string,?>)");
 
     assertType(JSType.getLeastSupertype(arrayOfString, arrayOfNumber))
         .toStringIsEqualTo("Array<?>");
@@ -5258,12 +5255,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         arrayOfString,
         JSType.getLeastSupertype(arrayOfString, arrayOfString));
 
-    assertEquals(
-        "(Array<string>|Object<string,?>)",
-        JSType.getLeastSupertype(objectOfString, arrayOfString).toString());
-    assertEquals(
-        "(Array<string>|Object<string,?>)",
-        JSType.getLeastSupertype(arrayOfString, objectOfString).toString());
+    assertThat(JSType.getLeastSupertype(objectOfString, arrayOfString).toString())
+        .isEqualTo("(Array<string>|Object<string,?>)");
+    assertThat(JSType.getLeastSupertype(arrayOfString, objectOfString).toString())
+        .isEqualTo("(Array<string>|Object<string,?>)");
 
     assertTypeEquals(
         objectOfString,
@@ -5783,7 +5778,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     ObjectType anonymous = registry.createAnonymousObjectType(null);
     assertTypeEquals(OBJECT_TYPE, anonymous.getImplicitPrototype());
     assertType(anonymous).getReferenceNameIsNull();
-    assertEquals("{}", anonymous.toString());
+    assertThat(anonymous.toString()).isEqualTo("{}");
   }
 
   /**
@@ -5806,17 +5801,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         "e", NUMBER_TYPE, null);
     anonymous.defineDeclaredProperty(
         "f", NUMBER_TYPE, null);
-    assertEquals(
-        LINE_JOINER.join(
-            "{",
-            "  a: number,",
-            "  b: number,",
-            "  c: number,",
-            "  d: number,",
-            "  e: number,",
-            "  f: number",
-            "}"),
-        anonymous.toString());
+    assertThat(anonymous.toString())
+        .isEqualTo(
+            LINE_JOINER.join(
+                "{",
+                "  a: number,",
+                "  b: number,",
+                "  c: number,",
+                "  d: number,",
+                "  e: number,",
+                "  f: number",
+                "}"));
   }
 
   /** Tests the factory method {@link JSTypeRegistry#createObjectType(String, ObjectType)}}. */
@@ -5828,7 +5823,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(DATE_TYPE.getImplicitPrototype(),
         subDate.getImplicitPrototype());
     assertType(subDate).getReferenceNameIsNull();
-    assertEquals("{...}", subDate.toString());
+    assertThat(subDate.toString()).isEqualTo("{...}");
 
     // name, node, prototype
     ObjectType subArray = registry.createObjectType("Foo",
@@ -5931,14 +5926,31 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     sup.defineProperty("base", null, false, null);
     sub.defineProperty("sub", null, false, null);
 
-    assertEquals(ImmutableSet.of("isPrototypeOf", "toLocaleString",
-          "propertyIsEnumerable", "toString", "valueOf", "hasOwnProperty",
-          "constructor", "base", "sub"), sub.getPropertyNames());
-    assertEquals(ImmutableSet.of("isPrototypeOf", "toLocaleString",
-          "propertyIsEnumerable", "toString", "valueOf", "hasOwnProperty",
-          "constructor", "base"), sup.getPropertyNames());
+    assertThat(sub.getPropertyNames())
+        .isEqualTo(
+            ImmutableSet.of(
+                "isPrototypeOf",
+                "toLocaleString",
+                "propertyIsEnumerable",
+                "toString",
+                "valueOf",
+                "hasOwnProperty",
+                "constructor",
+                "base",
+                "sub"));
+    assertThat(sup.getPropertyNames())
+        .isEqualTo(
+            ImmutableSet.of(
+                "isPrototypeOf",
+                "toLocaleString",
+                "propertyIsEnumerable",
+                "toString",
+                "valueOf",
+                "hasOwnProperty",
+                "constructor",
+                "base"));
 
-    assertEquals(new HashSet<>(), NO_OBJECT_TYPE.getPropertyNames());
+    assertThat(NO_OBJECT_TYPE.getPropertyNames()).isEmpty();
   }
 
   @Test
@@ -5947,7 +5959,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder.recordDeprecated();
     JSDocInfo info = builder.build();
 
-    assertNull(namedGoogBar.getOwnPropertyJSDocInfo("X"));
+    assertThat(namedGoogBar.getOwnPropertyJSDocInfo("X")).isNull();
     namedGoogBar.setPropertyJSDocInfo("X", info);
     assertThat(namedGoogBar.getOwnPropertyJSDocInfo("X").isDeprecated()).isTrue();
     assertPropertyTypeInferred(namedGoogBar, "X");
@@ -5975,12 +5987,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     sub.setPropertyJSDocInfo("X", deprecated);
 
     assertThat(sup.getOwnPropertyJSDocInfo("X").isDeprecated()).isFalse();
-    assertEquals(Visibility.PRIVATE,
-        sup.getOwnPropertyJSDocInfo("X").getVisibility());
+    assertThat(sup.getOwnPropertyJSDocInfo("X").getVisibility()).isEqualTo(Visibility.PRIVATE);
     assertTypeEquals(NUMBER_TYPE, sup.getPropertyType("X"));
     assertThat(sub.getOwnPropertyJSDocInfo("X").isDeprecated()).isTrue();
-    assertEquals(Visibility.INHERITED,
-        sub.getOwnPropertyJSDocInfo("X").getVisibility());
+    assertThat(sub.getOwnPropertyJSDocInfo("X").getVisibility()).isEqualTo(Visibility.INHERITED);
     assertTypeEquals(NUMBER_TYPE, sub.getPropertyType("X"));
   }
 
@@ -5991,7 +6001,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSDocInfo deprecated = builder.build();
 
     NO_TYPE.setPropertyJSDocInfo("X", deprecated);
-    assertNull(NO_TYPE.getOwnPropertyJSDocInfo("X"));
+    assertThat(NO_TYPE.getOwnPropertyJSDocInfo("X")).isNull();
   }
 
   @Test
@@ -6060,11 +6070,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     TemplateTypeMap ctrTypeMap = templatizedCtor.getTemplateTypeMap();
     TemplateType keyA = ctrTypeMap.getTemplateTypeKeyByName("A");
-    assertNotNull(keyA);
+    assertThat(keyA).isNotNull();
     TemplateType keyB = ctrTypeMap.getTemplateTypeKeyByName("B");
-    assertNotNull(keyB);
+    assertThat(keyB).isNotNull();
     TemplateType keyC = ctrTypeMap.getTemplateTypeKeyByName("C");
-    assertNull(keyC);
+    assertThat(keyC).isNull();
     TemplateType unknownKey = registry.createTemplateType("C");
 
     TemplateTypeMap templateTypeMap = templatizedInstance.getTemplateTypeMap();
@@ -6072,11 +6082,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(templateTypeMap.hasTemplateKey(keyB)).isTrue();
     assertThat(templateTypeMap.hasTemplateKey(unknownKey)).isFalse();
 
-    assertEquals(NUMBER_TYPE, templateTypeMap.getResolvedTemplateType(keyA));
-    assertEquals(STRING_TYPE, templateTypeMap.getResolvedTemplateType(keyB));
-    assertEquals(UNKNOWN_TYPE, templateTypeMap.getResolvedTemplateType(unknownKey));
+    assertThat(templateTypeMap.getResolvedTemplateType(keyA)).isEqualTo(NUMBER_TYPE);
+    assertThat(templateTypeMap.getResolvedTemplateType(keyB)).isEqualTo(STRING_TYPE);
+    assertThat(templateTypeMap.getResolvedTemplateType(unknownKey)).isEqualTo(UNKNOWN_TYPE);
 
-    assertEquals("TestingType<number,string>", templatizedInstance.toString());
+    assertThat(templatizedInstance.toString()).isEqualTo("TestingType<number,string>");
   }
 
   @Test
@@ -6095,11 +6105,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     TemplateTypeMap ctrTypeMap = templatizedCtor.getTemplateTypeMap();
     TemplateType keyA = ctrTypeMap.getTemplateTypeKeyByName("A");
-    assertNotNull(keyA);
+    assertThat(keyA).isNotNull();
     TemplateType keyB = ctrTypeMap.getTemplateTypeKeyByName("B");
-    assertNotNull(keyB);
+    assertThat(keyB).isNotNull();
     TemplateType keyC = ctrTypeMap.getTemplateTypeKeyByName("C");
-    assertNull(keyC);
+    assertThat(keyC).isNull();
     TemplateType unknownKey = registry.createTemplateType("C");
 
     TemplateTypeMap templateTypeMap = templatizedInstance.getTemplateTypeMap();
@@ -6107,11 +6117,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(templateTypeMap.hasTemplateKey(keyB)).isTrue();
     assertThat(templateTypeMap.hasTemplateKey(unknownKey)).isFalse();
 
-    assertEquals(NUMBER_TYPE, templateTypeMap.getResolvedTemplateType(keyA));
-    assertEquals(UNKNOWN_TYPE, templateTypeMap.getResolvedTemplateType(keyB));
-    assertEquals(UNKNOWN_TYPE, templateTypeMap.getResolvedTemplateType(unknownKey));
+    assertThat(templateTypeMap.getResolvedTemplateType(keyA)).isEqualTo(NUMBER_TYPE);
+    assertThat(templateTypeMap.getResolvedTemplateType(keyB)).isEqualTo(UNKNOWN_TYPE);
+    assertThat(templateTypeMap.getResolvedTemplateType(unknownKey)).isEqualTo(UNKNOWN_TYPE);
 
-    assertEquals("TestingType<number,?>", templatizedInstance.toString());
+    assertThat(templatizedInstance.toString()).isEqualTo("TestingType<number,?>");
   }
 
   @Test

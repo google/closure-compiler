@@ -77,12 +77,12 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
 
     JSType stringsOfA = typeA.getGreatestSubtype(STRING_TYPE);
     assertThat(stringsOfA.isEmptyType()).isFalse();
-    assertEquals("typeA<string>", stringsOfA.toString());
+    assertThat(stringsOfA.toString()).isEqualTo("typeA<string>");
     assertThat(stringsOfA.isSubtypeOf(typeA)).isTrue();
 
     JSType numbersOfA = NUMBER_TYPE.getGreatestSubtype(typeA);
     assertThat(numbersOfA.isEmptyType()).isFalse();
-    assertEquals("typeA<number>", numbersOfA.toString());
+    assertThat(numbersOfA.toString()).isEqualTo("typeA<number>");
     assertThat(numbersOfA.isSubtypeOf(typeA)).isTrue();
   }
 }

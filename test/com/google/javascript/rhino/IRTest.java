@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
@@ -257,6 +258,6 @@ public class IRTest extends TestCase {
   }
 
   private void testIR(Node node, String expectedStructure) {
-    assertEquals(expectedStructure, node.toStringTree());
+    assertThat(node.toStringTree()).isEqualTo(expectedStructure);
   }
 }

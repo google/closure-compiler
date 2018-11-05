@@ -39,6 +39,7 @@
 package com.google.javascript.rhino;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Iterables;
@@ -294,7 +295,9 @@ public class HamtPMapTest extends TestCase {
     @Override
     public V apply(T left, T right) {
       if (!table.contains(Optional.ofNullable(left), Optional.ofNullable(right))) {
-        fail("Unexpected invocation of JoinExpectation for (" + left + ", " + right + ")");
+        assertWithMessage(
+                "Unexpected invocation of JoinExpectation for (" + left + ", " + right + ")")
+            .fail();
       }
       return table.remove(Optional.ofNullable(left), Optional.ofNullable(right)).orElse(null);
     }
@@ -306,7 +309,7 @@ public class HamtPMapTest extends TestCase {
 
     void verify() {
       if (!table.isEmpty()) {
-        fail("Missing invocations of JoinExpectation: " + table);
+        assertWithMessage("Missing invocations of JoinExpectation: " + table).fail();
       }
     }
   }

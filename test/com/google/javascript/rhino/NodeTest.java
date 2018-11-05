@@ -60,40 +60,38 @@ public class NodeTest extends TestCase {
 
   @Test
   public void testMergeExtractErroneous() {
-    assertEquals(-1, Node.mergeLineCharNo(-5, 90));
-    assertEquals(-1, Node.mergeLineCharNo(0, -1));
-    assertEquals(-1, Node.extractLineno(-1));
-    assertEquals(-1, Node.extractCharno(-1));
+    assertThat(Node.mergeLineCharNo(-5, 90)).isEqualTo(-1);
+    assertThat(Node.mergeLineCharNo(0, -1)).isEqualTo(-1);
+    assertThat(Node.extractLineno(-1)).isEqualTo(-1);
+    assertThat(Node.extractCharno(-1)).isEqualTo(-1);
   }
 
   @Test
   public void testMergeOverflowGraciously() {
     int linecharno = Node.mergeLineCharNo(89, 4096);
-    assertEquals(89, Node.extractLineno(linecharno));
-    assertEquals(4095, Node.extractCharno(linecharno));
+    assertThat(Node.extractLineno(linecharno)).isEqualTo(89);
+    assertThat(Node.extractCharno(linecharno)).isEqualTo(4095);
   }
 
   @Test
   public void testCheckTreeEqualsImplSame() {
     Node node1 = new Node(Token.LET, new Node(Token.VAR));
     Node node2 = new Node(Token.LET, new Node(Token.VAR));
-    assertEquals(null, node1.checkTreeEqualsImpl(node2));
+    assertThat(node1.checkTreeEqualsImpl(node2)).isNull();
   }
 
   @Test
   public void testCheckTreeEqualsImplDifferentType() {
     Node node1 = new Node(Token.LET, new Node(Token.VAR));
     Node node2 = new Node(Token.VAR, new Node(Token.VAR));
-    assertEquals(new NodeMismatch(node1, node2),
-        node1.checkTreeEqualsImpl(node2));
+    assertThat(node1.checkTreeEqualsImpl(node2)).isEqualTo(new NodeMismatch(node1, node2));
   }
 
   @Test
   public void testCheckTreeEqualsImplDifferentChildCount() {
     Node node1 = new Node(Token.LET, new Node(Token.VAR));
     Node node2 = new Node(Token.LET);
-    assertEquals(new NodeMismatch(node1, node2),
-        node1.checkTreeEqualsImpl(node2));
+    assertThat(node1.checkTreeEqualsImpl(node2)).isEqualTo(new NodeMismatch(node1, node2));
   }
 
   @Test
@@ -102,34 +100,33 @@ public class NodeTest extends TestCase {
     Node child2 = new Node(Token.VAR);
     Node node1 = new Node(Token.LET, child1);
     Node node2 = new Node(Token.LET, child2);
-    assertEquals(new NodeMismatch(child1, child2),
-        node1.checkTreeEqualsImpl(node2));
+    assertThat(node1.checkTreeEqualsImpl(node2)).isEqualTo(new NodeMismatch(child1, child2));
   }
 
   @Test
   public void testCheckTreeEqualsSame() {
     Node node1 = new Node(Token.LET);
-    assertEquals(null, node1.checkTreeEquals(node1));
+    assertThat(node1.checkTreeEquals(node1)).isNull();
   }
 
   @Test
   public void testCheckTreeEqualsStringDifferent() {
     Node node1 = new Node(Token.ADD);
     Node node2 = new Node(Token.SUB);
-    assertNotNull(node1.checkTreeEquals(node2));
+    assertThat(node1.checkTreeEquals(node2)).isNotNull();
   }
 
   @Test
   public void testCheckTreeEqualsBooleanSame() {
     Node node1 = new Node(Token.LET);
-    assertEquals(true, node1.isEquivalentTo(node1));
+    assertThat(node1.isEquivalentTo(node1)).isTrue();
   }
 
   @Test
   public void testCheckTreeEqualsBooleanDifferent() {
     Node node1 = new Node(Token.LET);
     Node node2 = new Node(Token.VAR);
-    assertEquals(false, node1.isEquivalentTo(node2));
+    assertThat(node1.isEquivalentTo(node2)).isFalse();
   }
 
   @Test
@@ -137,7 +134,7 @@ public class NodeTest extends TestCase {
     Node node1 = Node.newString("\u000B");
     node1.putBooleanProp(Node.SLASH_V, true);
     Node node2 = Node.newString("\u000B");
-    assertEquals(false, node1.isEquivalentTo(node2));
+    assertThat(node1.isEquivalentTo(node2)).isFalse();
   }
 
   @Test
@@ -145,7 +142,7 @@ public class NodeTest extends TestCase {
     Node node1 = new Node(Token.INC);
     node1.putBooleanProp(Node.INCRDECR_PROP, true);
     Node node2 = new Node(Token.INC);
-    assertNotNull(node1.checkTreeEqualsImpl(node2));
+    assertThat(node1.checkTreeEqualsImpl(node2)).isNotNull();
   }
 
   @Test
@@ -208,8 +205,8 @@ public class NodeTest extends TestCase {
 
   private void testMergeExtract(int lineno, int charno) {
     int linecharno = Node.mergeLineCharNo(lineno, charno);
-    assertEquals(lineno, Node.extractLineno(linecharno));
-    assertEquals(charno, Node.extractCharno(linecharno));
+    assertThat(Node.extractLineno(linecharno)).isEqualTo(lineno);
+    assertThat(Node.extractCharno(linecharno)).isEqualTo(charno);
   }
 
   @Test
@@ -388,9 +385,9 @@ public class NodeTest extends TestCase {
     n.setSideEffectFlags(5);
     Node m = new Node(Token.TRUE);
     m.clonePropsFrom(n);
-    assertEquals(m.getPropListHeadForTesting(), n.getPropListHeadForTesting());
-    assertEquals(5, n.getSideEffectFlags());
-    assertEquals(5, m.getSideEffectFlags());
+    assertThat(n.getPropListHeadForTesting()).isEqualTo(m.getPropListHeadForTesting());
+    assertThat(n.getSideEffectFlags()).isEqualTo(5);
+    assertThat(m.getSideEffectFlags()).isEqualTo(5);
   }
 
   @Test
@@ -401,13 +398,13 @@ public class NodeTest extends TestCase {
     m.clonePropsFrom(n);
 
     n.setSideEffectFlags(6);
-    assertEquals(6, n.getSideEffectFlags());
-    assertEquals(5, m.getSideEffectFlags());
+    assertThat(n.getSideEffectFlags()).isEqualTo(6);
+    assertThat(m.getSideEffectFlags()).isEqualTo(5);
     assertThat(m.getPropListHeadForTesting() == n.getPropListHeadForTesting()).isFalse();
 
     m.setSideEffectFlags(7);
-    assertEquals(6, n.getSideEffectFlags());
-    assertEquals(7, m.getSideEffectFlags());
+    assertThat(n.getSideEffectFlags()).isEqualTo(6);
+    assertThat(m.getSideEffectFlags()).isEqualTo(7);
   }
 
   @Test
@@ -419,8 +416,8 @@ public class NodeTest extends TestCase {
     m.clonePropsFrom(n);
     n.setSideEffectFlags(4);
 
-    assertEquals(4, n.getSideEffectFlags());
-    assertEquals(2, m.getSideEffectFlags());
+    assertThat(n.getSideEffectFlags()).isEqualTo(4);
+    assertThat(m.getSideEffectFlags()).isEqualTo(2);
   }
 
   @Test
@@ -429,17 +426,17 @@ public class NodeTest extends TestCase {
 
     n.putBooleanProp(Node.IS_CONSTANT_NAME, false);
 
-    assertNull(n.lookupProperty(Node.IS_CONSTANT_NAME));
+    assertThat(n.lookupProperty(Node.IS_CONSTANT_NAME)).isNull();
     assertThat(n.getBooleanProp(Node.IS_CONSTANT_NAME)).isFalse();
 
     n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
 
-    assertNotNull(n.lookupProperty(Node.IS_CONSTANT_NAME));
+    assertThat(n.lookupProperty(Node.IS_CONSTANT_NAME)).isNotNull();
     assertThat(n.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
 
     n.putBooleanProp(Node.IS_CONSTANT_NAME, false);
 
-    assertNull(n.lookupProperty(Node.IS_CONSTANT_NAME));
+    assertThat(n.lookupProperty(Node.IS_CONSTANT_NAME)).isNull();
     assertThat(n.getBooleanProp(Node.IS_CONSTANT_NAME)).isFalse();
   }
 
@@ -461,15 +458,15 @@ public class NodeTest extends TestCase {
   @Test
   public void testGetIndexOfChild() {
     Node assign = getAssignExpr("b", "c");
-    assertEquals(2, assign.getChildCount());
+    assertThat(assign.getChildCount()).isEqualTo(2);
 
     Node firstChild = assign.getFirstChild();
     Node secondChild = firstChild.getNext();
-    assertNotNull(secondChild);
+    assertThat(secondChild).isNotNull();
 
-    assertEquals(0, assign.getIndexOfChild(firstChild));
-    assertEquals(1, assign.getIndexOfChild(secondChild));
-    assertEquals(-1, assign.getIndexOfChild(assign));
+    assertThat(assign.getIndexOfChild(firstChild)).isEqualTo(0);
+    assertThat(assign.getIndexOfChild(secondChild)).isEqualTo(1);
+    assertThat(assign.getIndexOfChild(assign)).isEqualTo(-1);
   }
 
   @Test
@@ -480,14 +477,14 @@ public class NodeTest extends TestCase {
 
     Node lhs = assign.getFirstChild();
     lhs.useSourceInfoIfMissingFrom(assign);
-    assertEquals(99, lhs.getSourcePosition());
-    assertEquals("foo.js", lhs.getSourceFileName());
+    assertThat(lhs.getSourcePosition()).isEqualTo(99);
+    assertThat(lhs.getSourceFileName()).isEqualTo("foo.js");
 
     assign.setSourceEncodedPosition(101);
     assign.setSourceFileForTesting("bar.js");
     lhs.useSourceInfoIfMissingFrom(assign);
-    assertEquals(99, lhs.getSourcePosition());
-    assertEquals("foo.js", lhs.getSourceFileName());
+    assertThat(lhs.getSourcePosition()).isEqualTo(99);
+    assertThat(lhs.getSourceFileName()).isEqualTo("foo.js");
   }
 
   @Test
@@ -498,14 +495,14 @@ public class NodeTest extends TestCase {
 
     Node lhs = assign.getFirstChild();
     lhs.useSourceInfoFrom(assign);
-    assertEquals(99, lhs.getSourcePosition());
-    assertEquals("foo.js", lhs.getSourceFileName());
+    assertThat(lhs.getSourcePosition()).isEqualTo(99);
+    assertThat(lhs.getSourceFileName()).isEqualTo("foo.js");
 
     assign.setSourceEncodedPosition(101);
     assign.setSourceFileForTesting("bar.js");
     lhs.useSourceInfoFrom(assign);
-    assertEquals(101, lhs.getSourcePosition());
-    assertEquals("bar.js", lhs.getSourceFileName());
+    assertThat(lhs.getSourcePosition()).isEqualTo(101);
+    assertThat(lhs.getSourceFileName()).isEqualTo("bar.js");
   }
 
   @Test
@@ -521,14 +518,11 @@ public class NodeTest extends TestCase {
 
   @Test
   public void testQualifiedName() {
-    assertNull(IR.name("").getQualifiedName());
-    assertEquals("a", IR.name("a").getQualifiedName());
-    assertEquals(
-        "a.b", IR.getprop(IR.name("a"), IR.string("b")).getQualifiedName());
-    assertEquals(
-        "this.b", IR.getprop(IR.thisNode(), IR.string("b")).getQualifiedName());
-    assertNull(
-        IR.getprop(IR.call(IR.name("a")), IR.string("b")).getQualifiedName());
+    assertThat(IR.name("").getQualifiedName()).isNull();
+    assertThat(IR.name("a").getQualifiedName()).isEqualTo("a");
+    assertThat(IR.getprop(IR.name("a"), IR.string("b")).getQualifiedName()).isEqualTo("a.b");
+    assertThat(IR.getprop(IR.thisNode(), IR.string("b")).getQualifiedName()).isEqualTo("this.b");
+    assertThat(IR.getprop(IR.call(IR.name("a")), IR.string("b")).getQualifiedName()).isNull();
   }
 
   @Test
@@ -541,24 +535,22 @@ public class NodeTest extends TestCase {
 
     // By default the JSDocInfo and JSTypeExpression objects are not cloned
     Node clone = original.cloneTree();
-    assertSame(original.getFirstChild().getJSDocInfo(), clone.getFirstChild().getJSDocInfo());
-    assertSame(
-        original.getFirstChild().getJSDocInfo().getType(),
-        clone.getFirstChild().getJSDocInfo().getType());
-    assertSame(
-        original.getFirstChild().getJSDocInfo().getType().getRoot(),
-        clone.getFirstChild().getJSDocInfo().getType().getRoot());
+    assertThat(clone.getFirstChild().getJSDocInfo())
+        .isSameAs(original.getFirstChild().getJSDocInfo());
+    assertThat(clone.getFirstChild().getJSDocInfo().getType())
+        .isSameAs(original.getFirstChild().getJSDocInfo().getType());
+    assertThat(clone.getFirstChild().getJSDocInfo().getType().getRoot())
+        .isSameAs(original.getFirstChild().getJSDocInfo().getType().getRoot());
 
     // If requested the JSDocInfo and JSTypeExpression objects are cloned.
     // This is required because compiler classes are modifying the type expressions in place
     clone = original.cloneTree(true);
-    assertNotSame(original.getFirstChild().getJSDocInfo(), clone.getFirstChild().getJSDocInfo());
-    assertNotSame(
-        original.getFirstChild().getJSDocInfo().getType(),
-        clone.getFirstChild().getJSDocInfo().getType());
-    assertNotSame(
-        original.getFirstChild().getJSDocInfo().getType().getRoot(),
-        clone.getFirstChild().getJSDocInfo().getType().getRoot());
+    assertThat(clone.getFirstChild().getJSDocInfo())
+        .isNotSameAs(original.getFirstChild().getJSDocInfo());
+    assertThat(clone.getFirstChild().getJSDocInfo().getType())
+        .isNotSameAs(original.getFirstChild().getJSDocInfo().getType());
+    assertThat(clone.getFirstChild().getJSDocInfo().getType().getRoot())
+        .isNotSameAs(original.getFirstChild().getJSDocInfo().getType().getRoot());
   }
 
   @Test
@@ -568,11 +560,11 @@ public class NodeTest extends TestCase {
 
     root.addChildToFront(nodeToAdd);
 
-    assertEquals(root, nodeToAdd.parent);
-    assertEquals(root.getFirstChild(), nodeToAdd);
-    assertEquals(root.getLastChild(), nodeToAdd);
-    assertEquals(nodeToAdd.previous, nodeToAdd);
-    assertNull(nodeToAdd.next);
+    assertThat(nodeToAdd.parent).isEqualTo(root);
+    assertThat(nodeToAdd).isEqualTo(root.getFirstChild());
+    assertThat(nodeToAdd).isEqualTo(root.getLastChild());
+    assertThat(nodeToAdd).isEqualTo(nodeToAdd.previous);
+    assertThat(nodeToAdd.next).isNull();
   }
 
   @Test
@@ -586,12 +578,12 @@ public class NodeTest extends TestCase {
 
     root.addChildToFront(nodeToAdd);
 
-    assertEquals(root, nodeToAdd.parent);
-    assertEquals(root.getFirstChild(), nodeToAdd);
-    assertEquals(root.getLastChild(), right);
-    assertEquals(nodeToAdd.previous, root.getLastChild());
-    assertEquals(left, nodeToAdd.next);
-    assertEquals(nodeToAdd, left.previous);
+    assertThat(nodeToAdd.parent).isEqualTo(root);
+    assertThat(nodeToAdd).isEqualTo(root.getFirstChild());
+    assertThat(right).isEqualTo(root.getLastChild());
+    assertThat(root.getLastChild()).isEqualTo(nodeToAdd.previous);
+    assertThat(nodeToAdd.next).isEqualTo(left);
+    assertThat(left.previous).isEqualTo(nodeToAdd);
   }
 
   @Test
@@ -601,18 +593,18 @@ public class NodeTest extends TestCase {
     Node right = Node.newString("right");
     Node root = new Node(Token.SCRIPT, left, mid, right);
 
-    assertEquals(root, mid.parent);
-    assertEquals(left, mid.previous);
-    assertEquals(right, mid.next);
+    assertThat(mid.parent).isEqualTo(root);
+    assertThat(mid.previous).isEqualTo(left);
+    assertThat(mid.next).isEqualTo(right);
 
     mid.detach();
 
-    assertNull(mid.parent);
-    assertNull(mid.previous);
-    assertNull(mid.next);
+    assertThat(mid.parent).isNull();
+    assertThat(mid.previous).isNull();
+    assertThat(mid.next).isNull();
 
-    assertEquals(left, right.getPrevious());
-    assertEquals(right, left.getNext());
+    assertThat(right.getPrevious()).isEqualTo(left);
+    assertThat(left.getNext()).isEqualTo(right);
   }
 
   private static Node getVarRef(String name) {

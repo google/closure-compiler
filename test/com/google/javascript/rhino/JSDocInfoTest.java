@@ -39,6 +39,7 @@
 package com.google.javascript.rhino;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.PACKAGE;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.PRIVATE;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.PROTECTED;
@@ -73,10 +74,10 @@ public class JSDocInfoTest extends TestCase {
   /** Tests the assigned ordinal of the elements of the {@link JSDocInfo.Visibility} enum. */
   @Test
   public void testVisibilityOrdinal() {
-    assertEquals(0, PRIVATE.ordinal());
-    assertEquals(1, PACKAGE.ordinal());
-    assertEquals(2, PROTECTED.ordinal());
-    assertEquals(3, PUBLIC.ordinal());
+    assertThat(PRIVATE.ordinal()).isEqualTo(0);
+    assertThat(PACKAGE.ordinal()).isEqualTo(1);
+    assertThat(PROTECTED.ordinal()).isEqualTo(2);
+    assertThat(PUBLIC.ordinal()).isEqualTo(3);
   }
 
   @Test
@@ -84,13 +85,13 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setType(fromString("string"));
 
-    assertNull(info.getBaseType());
-    assertNull(info.getDescription());
-    assertNull(info.getEnumParameterType());
-    assertEquals(0, info.getParameterCount());
-    assertNull(info.getReturnType());
+    assertThat(info.getBaseType()).isNull();
+    assertThat(info.getDescription()).isNull();
+    assertThat(info.getEnumParameterType()).isNull();
+    assertThat(info.getParameterCount()).isEqualTo(0);
+    assertThat(info.getReturnType()).isNull();
     assertType(resolve(info.getType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
-    assertNull(info.getVisibility());
+    assertThat(info.getVisibility()).isNull();
     assertThat(info.hasType()).isTrue();
     assertThat(info.isConstant()).isFalse();
     assertThat(info.isConstructor()).isFalse();
@@ -103,13 +104,13 @@ public class JSDocInfoTest extends TestCase {
     info.setType(fromString("string"));
     info.setVisibility(PROTECTED);
 
-    assertNull(info.getBaseType());
-    assertNull(info.getDescription());
-    assertNull(info.getEnumParameterType());
-    assertEquals(0, info.getParameterCount());
-    assertNull(info.getReturnType());
+    assertThat(info.getBaseType()).isNull();
+    assertThat(info.getDescription()).isNull();
+    assertThat(info.getEnumParameterType()).isNull();
+    assertThat(info.getParameterCount()).isEqualTo(0);
+    assertThat(info.getReturnType()).isNull();
     assertType(resolve(info.getType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
-    assertEquals(PROTECTED, info.getVisibility());
+    assertThat(info.getVisibility()).isEqualTo(PROTECTED);
     assertThat(info.hasType()).isTrue();
     assertThat(info.isConstant()).isFalse();
     assertThat(info.isConstructor()).isFalse();
@@ -121,13 +122,13 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setReturnType(fromString("string"));
 
-    assertNull(info.getBaseType());
-    assertNull(info.getDescription());
-    assertNull(info.getEnumParameterType());
-    assertEquals(0, info.getParameterCount());
+    assertThat(info.getBaseType()).isNull();
+    assertThat(info.getDescription()).isNull();
+    assertThat(info.getEnumParameterType()).isNull();
+    assertThat(info.getParameterCount()).isEqualTo(0);
     assertType(resolve(info.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
-    assertNull(info.getType());
-    assertNull(info.getVisibility());
+    assertThat(info.getType()).isNull();
+    assertThat(info.getVisibility()).isNull();
     assertThat(info.hasType()).isFalse();
     assertThat(info.isConstant()).isFalse();
     assertThat(info.isConstructor()).isFalse();
@@ -144,12 +145,12 @@ public class JSDocInfoTest extends TestCase {
 
     assertType(resolve(info.getBaseType()))
         .isStructurallyEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
-    assertNull(info.getDescription());
-    assertNull(info.getEnumParameterType());
-    assertEquals(0, info.getParameterCount());
+    assertThat(info.getDescription()).isNull();
+    assertThat(info.getEnumParameterType()).isNull();
+    assertThat(info.getParameterCount()).isEqualTo(0);
     assertType(resolve(info.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
-    assertNull(info.getType());
-    assertNull(info.getVisibility());
+    assertThat(info.getType()).isNull();
+    assertThat(info.getVisibility()).isNull();
     assertThat(info.hasType()).isFalse();
     assertThat(info.isConstant()).isFalse();
     assertThat(info.isConstructor()).isFalse();
@@ -161,14 +162,14 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setEnumParameterType(fromString("string"));
 
-    assertNull(info.getBaseType());
-    assertNull(info.getDescription());
+    assertThat(info.getBaseType()).isNull();
+    assertThat(info.getDescription()).isNull();
     assertType(resolve(info.getEnumParameterType()))
         .isStructurallyEqualTo(getNativeType(STRING_TYPE));
-    assertEquals(0, info.getParameterCount());
-    assertNull(info.getReturnType());
-    assertNull(info.getType());
-    assertNull(info.getVisibility());
+    assertThat(info.getParameterCount()).isEqualTo(0);
+    assertThat(info.getReturnType()).isNull();
+    assertThat(info.getType()).isNull();
+    assertThat(info.getVisibility()).isNull();
     assertThat(info.hasType()).isFalse();
     assertThat(info.isConstant()).isFalse();
     assertThat(info.isConstructor()).isFalse();
@@ -182,29 +183,29 @@ public class JSDocInfoTest extends TestCase {
 
     try {
       info.setReturnType(fromString("boolean"));
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalStateException e) {
       // expected
     }
 
     try {
       info.setEnumParameterType(fromString("string"));
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalStateException e) {
       // expected
     }
 
     try {
       info.declareTypedefType(fromString("string"));
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalStateException e) {
       // expected
     }
 
     assertType(resolve(info.getType())).isStructurallyEqualTo(getNativeType(NUMBER_TYPE));
-    assertNull(info.getReturnType());
-    assertNull(info.getEnumParameterType());
-    assertNull(info.getTypedefType());
+    assertThat(info.getReturnType()).isNull();
+    assertThat(info.getEnumParameterType()).isNull();
+    assertThat(info.getTypedefType()).isNull();
     assertThat(info.hasType()).isTrue();
   }
 
@@ -216,29 +217,29 @@ public class JSDocInfoTest extends TestCase {
 
     try {
       info.setType(fromString("number"));
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalStateException e) {
       // expected
     }
 
     try {
       info.setEnumParameterType(fromString("string"));
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalStateException e) {
       // expected
     }
 
     try {
       info.declareTypedefType(fromString("string"));
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalStateException e) {
       // expected
     }
 
     assertType(resolve(info.getReturnType())).isStructurallyEqualTo(getNativeType(BOOLEAN_TYPE));
-    assertNull(info.getEnumParameterType());
-    assertNull(info.getType());
-    assertNull(info.getTypedefType());
+    assertThat(info.getEnumParameterType()).isNull();
+    assertThat(info.getType()).isNull();
+    assertThat(info.getTypedefType()).isNull();
     assertThat(info.hasType()).isFalse();
   }
 
@@ -249,28 +250,28 @@ public class JSDocInfoTest extends TestCase {
 
     try {
       info.setType(fromString("number"));
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalStateException e) {
       // expected
     }
 
     try {
       info.setReturnType(fromString("string"));
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalStateException e) {
       // expected
     }
 
     try {
       info.declareTypedefType(fromString("string"));
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (IllegalStateException e) {
       // expected
     }
 
-    assertNull(info.getType());
-    assertNull(info.getTypedefType());
-    assertNull(info.getReturnType());
+    assertThat(info.getType()).isNull();
+    assertThat(info.getTypedefType()).isNull();
+    assertThat(info.getReturnType()).isNull();
     assertType(resolve(info.getEnumParameterType()))
         .isStructurallyEqualTo(getNativeType(BOOLEAN_TYPE));
   }
@@ -480,7 +481,7 @@ public class JSDocInfoTest extends TestCase {
 
     assertType(resolve(cloned.getBaseType()))
         .isStructurallyEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
-    assertEquals("The source info", cloned.getDescription());
+    assertThat(cloned.getDescription()).isEqualTo("The source info");
     assertType(resolve(cloned.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertThat(cloned.isConstant()).isTrue();
     assertThat(cloned.isConstructor()).isTrue();
@@ -491,13 +492,13 @@ public class JSDocInfoTest extends TestCase {
     cloned.setBaseType(fromString("string"));
 
     assertType(resolve(cloned.getBaseType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
-    assertEquals("The cloned info", cloned.getDescription());
+    assertThat(cloned.getDescription()).isEqualTo("The cloned info");
     assertThat(cloned.isHidden()).isFalse();
 
     // Original info should be unchanged.
     assertType(resolve(info.getBaseType()))
         .isStructurallyEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
-    assertEquals("The source info", info.getDescription());
+    assertThat(info.getDescription()).isEqualTo("The source info");
     assertType(resolve(info.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertThat(info.isConstant()).isTrue();
     assertThat(info.isConstructor()).isTrue();
@@ -519,13 +520,14 @@ public class JSDocInfoTest extends TestCase {
 
     JSDocInfo cloned = info.clone(true);
 
-    assertNotSame(info.getBaseType().getRoot(), cloned.getBaseType().getRoot());
+    assertThat(cloned.getBaseType().getRoot()).isNotSameAs(info.getBaseType().getRoot());
     assertType(resolve(cloned.getBaseType()))
         .isStructurallyEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
-    assertEquals("The source info", cloned.getDescription());
-    assertNotSame(info.getReturnType().getRoot(), cloned.getReturnType().getRoot());
+    assertThat(cloned.getDescription()).isEqualTo("The source info");
+    assertThat(cloned.getReturnType().getRoot()).isNotSameAs(info.getReturnType().getRoot());
     assertType(resolve(cloned.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
-    assertNotSame(info.getParameterType("a").getRoot(), cloned.getParameterType("a").getRoot());
+    assertThat(cloned.getParameterType("a").getRoot())
+        .isNotSameAs(info.getParameterType("a").getRoot());
     assertType(resolve(cloned.getParameterType("a")))
         .isStructurallyEqualTo(getNativeType(STRING_TYPE));
   }
@@ -536,39 +538,39 @@ public class JSDocInfoTest extends TestCase {
     info.declareParam(null, "a");
     JSDocInfo cloned = info.clone(true);
 
-    assertNull(cloned.getParameterType("a"));
+    assertThat(cloned.getParameterType("a")).isNull();
   }
 
   @Test
   public void testSetFileOverviewWithDocumentationOff() {
     JSDocInfo info = new JSDocInfo();
     info.documentFileOverview("hi bob");
-    assertNull(info.getFileOverview());
+    assertThat(info.getFileOverview()).isNull();
   }
 
   @Test
   public void testSetFileOverviewWithDocumentationOn() {
     JSDocInfo info = new JSDocInfo(true);
     info.documentFileOverview("hi bob");
-    assertEquals("hi bob", info.getFileOverview());
+    assertThat(info.getFileOverview()).isEqualTo("hi bob");
   }
 
   @Test
   public void testSetSuppressions() {
     JSDocInfo info = new JSDocInfo(true);
     info.addSuppressions(ImmutableSet.of("sam", "bob"));
-    assertEquals(ImmutableSet.of("bob", "sam"), info.getSuppressions());
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("bob", "sam"));
   }
 
   @Test
   public void testSetModifies() {
     JSDocInfo info = new JSDocInfo(true);
     info.setModifies(ImmutableSet.of("this"));
-    assertEquals(ImmutableSet.of("this"), info.getModifies());
+    assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("this"));
 
     info = new JSDocInfo(true);
     info.setModifies(ImmutableSet.of("arguments"));
-    assertEquals(ImmutableSet.of("arguments"), info.getModifies());
+    assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("arguments"));
   }
 
   @Test
@@ -576,7 +578,7 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo(true);
     ImmutableList<String> typeNames = ImmutableList.of("T");
     assertThat(info.declareTemplateTypeName("T")).isTrue();
-    assertEquals(typeNames, info.getTemplateTypeNames());
+    assertThat(info.getTemplateTypeNames()).isEqualTo(typeNames);
   }
 
   @Test
@@ -585,7 +587,7 @@ public class JSDocInfoTest extends TestCase {
     ImmutableList<String> typeNames = ImmutableList.of("T", "R");
     info.declareTemplateTypeName("T");
     info.declareTemplateTypeName("R");
-    assertEquals(typeNames, info.getTemplateTypeNames());
+    assertThat(info.getTemplateTypeNames()).isEqualTo(typeNames);
   }
 
   @Test
@@ -606,9 +608,9 @@ public class JSDocInfoTest extends TestCase {
     JSTypeExpression otherType = fromString("Other");
     info.documentThrows(errorType, "Because it does.");
     info.documentThrows(otherType, "");
-    assertEquals("Because it does.", info.getThrowsDescriptionForType(errorType));
-    assertEquals("", info.getThrowsDescriptionForType(otherType));
-    assertNull(info.getThrowsDescriptionForType(fromString("NeverSeen")));
+    assertThat(info.getThrowsDescriptionForType(errorType)).isEqualTo("Because it does.");
+    assertThat(info.getThrowsDescriptionForType(otherType)).isEmpty();
+    assertThat(info.getThrowsDescriptionForType(fromString("NeverSeen"))).isNull();
   }
 
   // https://github.com/google/closure-compiler/issues/2328

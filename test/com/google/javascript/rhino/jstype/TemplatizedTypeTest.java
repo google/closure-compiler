@@ -84,28 +84,28 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
   public void testPrint1() {
     TemplatizedType arrOfString = createTemplatizedType(
         ARRAY_TYPE, STRING_TYPE);
-    assertEquals("Array<string>", arrOfString.toString());
+    assertThat(arrOfString.toString()).isEqualTo("Array<string>");
   }
 
   @Test
   public void testPrint2() {
     TemplatizedType arrOfTemplateType = createTemplatizedType(
         ARRAY_TYPE, new TemplateType(registry, "T"));
-    assertEquals("Array<T>", arrOfTemplateType.toString());
+    assertThat(arrOfTemplateType.toString()).isEqualTo("Array<T>");
   }
 
   @Test
   public void testPrint3() {
     TemplatizedType arrOfUnknown = createTemplatizedType(
         ARRAY_TYPE, UNKNOWN_TYPE);
-    assertEquals("Array<?>", arrOfUnknown.toString());
+    assertThat(arrOfUnknown.toString()).isEqualTo("Array<?>");
   }
 
   @Test
   public void testPrintingRawType() {
     ObjectType rawType = createCustomTemplatizedType("Foo");
 
-    assertEquals("Foo", rawType.toString());
+    assertThat(rawType.toString()).isEqualTo("Foo");
   }
 
   @Test

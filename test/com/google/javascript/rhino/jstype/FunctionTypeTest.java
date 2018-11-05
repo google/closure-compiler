@@ -39,6 +39,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +62,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testDefaultReturnType() {
     FunctionType f = new FunctionBuilder(registry).build();
-    assertEquals(UNKNOWN_TYPE, f.getReturnType());
+    assertThat(f.getReturnType()).isEqualTo(UNKNOWN_TYPE);
   }
 
   @Test
@@ -185,7 +186,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     FunctionType oneNumber = new FunctionBuilder(registry)
         .withParamsNode(registry.createParameters(NUMBER_TYPE))
         .withReturnType(BOOLEAN_TYPE).build();
-    assertEquals(ImmutableSet.<String>of(), oneNumber.getOwnPropertyNames());
+    assertThat(oneNumber.getOwnPropertyNames()).isEmpty();
   }
 
   @Test
@@ -197,12 +198,11 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     ctor.defineDeclaredProperty("prototype", UNKNOWN_TYPE, node);
     assertThat(ctor.getInstanceType().isUnknownType()).isTrue();
 
-    assertEquals(ImmutableSet.<String>of("prototype"),
-        ctor.getOwnPropertyNames());
+    assertThat(ctor.getOwnPropertyNames()).isEqualTo(ImmutableSet.<String>of("prototype"));
     assertThat(ctor.isPropertyTypeInferred("prototype")).isTrue();
     assertThat(ctor.getPropertyType("prototype").isUnknownType()).isTrue();
 
-    assertEquals(node, ctor.getPropertyNode("prototype"));
+    assertThat(ctor.getPropertyNode("prototype")).isEqualTo(node);
   }
 
   @Test
@@ -212,8 +212,8 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     barCtor.setPrototypeBasedOn(fooCtor.getInstanceType());
     fooCtor.getPrototype().defineDeclaredProperty("bar", STRING_TYPE, null);
 
-    assertEquals(fooCtor.getInstanceType(), barCtor.getPrototype().getImplicitPrototype());
-    assertEquals(STRING_TYPE, fooCtor.getInstanceType().getSlot("bar").getType());
+    assertThat(barCtor.getPrototype().getImplicitPrototype()).isEqualTo(fooCtor.getInstanceType());
+    assertThat(fooCtor.getInstanceType().getSlot("bar").getType()).isEqualTo(STRING_TYPE);
   }
 
   @Test
@@ -230,8 +230,8 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     barCtor.setPrototypeBasedOn(fooCtor.getInstanceType());
     fooCtor.defineDeclaredProperty("foo", NUMBER_TYPE, null);
 
-    assertEquals(fooCtor, barCtor.getImplicitPrototype());
-    assertEquals(NUMBER_TYPE, barCtor.getSlot("foo").getType());
+    assertThat(barCtor.getImplicitPrototype()).isEqualTo(fooCtor);
+    assertThat(barCtor.getSlot("foo").getType()).isEqualTo(NUMBER_TYPE);
   }
 
   @Test
@@ -299,17 +299,17 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertThat(subIfaceInst.hasProperty("genericProp")).isTrue();
     assertThat(subIfaceInst.isPropertyTypeDeclared("genericProp")).isTrue();
     assertThat(subIfaceInst.isPropertyTypeInferred("genericProp")).isFalse();
-    assertEquals(templateT, subIfaceInst.getPropertyType("genericProp"));
+    assertThat(subIfaceInst.getPropertyType("genericProp")).isEqualTo(templateT);
   }
 
   private void assertLeastSupertype(String s, JSType t1, JSType t2) {
-    assertEquals(s, t1.getLeastSupertype(t2).toString());
-    assertEquals(s, t2.getLeastSupertype(t1).toString());
+    assertThat(t1.getLeastSupertype(t2).toString()).isEqualTo(s);
+    assertThat(t2.getLeastSupertype(t1).toString()).isEqualTo(s);
   }
 
   private void assertGreatestSubtype(String s, JSType t1, JSType t2) {
-    assertEquals(s, t1.getGreatestSubtype(t2).toString());
-    assertEquals(s, t2.getGreatestSubtype(t1).toString());
+    assertThat(t1.getGreatestSubtype(t2).toString()).isEqualTo(s);
+    assertThat(t2.getGreatestSubtype(t1).toString()).isEqualTo(s);
   }
 
   @Test
@@ -365,7 +365,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         .withReturnType(loop).build();
 
     loop.setReferencedType(fn);
-    assertEquals("function(Function): Function", fn.toString());
+    assertThat(fn.toString()).isEqualTo("function(Function): Function");
 
     Asserts.assertEquivalenceOperations(fn, loop);
   }
@@ -377,10 +377,9 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         .withParamsNode(registry.createParameters(STRING_TYPE, NUMBER_TYPE))
         .withReturnType(BOOLEAN_TYPE).build();
 
-    assertEquals(
-        "function((Date|null|undefined), string=, number=):" +
-        " function(...?): boolean",
-        fn.getPropertyType("bind").toString());
+    assertThat(fn.getPropertyType("bind").toString())
+        .isEqualTo(
+            "function((Date|null|undefined), string=, number=):" + " function(...?): boolean");
   }
 
   @Test
@@ -390,9 +389,8 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         .withParamsNode(registry.createParameters(STRING_TYPE, NUMBER_TYPE))
         .withReturnType(BOOLEAN_TYPE).build();
 
-    assertEquals(
-        "function((Date|null|undefined), string, number): boolean",
-        fn.getPropertyType("call").toString());
+    assertThat(fn.getPropertyType("call").toString())
+        .isEqualTo("function((Date|null|undefined), string, number): boolean");
   }
 
   @Test
@@ -402,9 +400,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         .withParamsNode(registry.createParameters())
         .withReturnType(BOOLEAN_TYPE).build();
 
-    assertEquals(
-        "function((Date|null)=): boolean",
-        fn.getPropertyType("call").toString());
+    assertThat(fn.getPropertyType("call").toString()).isEqualTo("function((Date|null)=): boolean");
   }
 
   @Test
@@ -415,14 +411,14 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
       .withTemplateKeys(ImmutableList.of(template))
       .withReturnType(BOOLEAN_TYPE).build();
 
-    assertEquals("[T]", fn.getPropertyType("call").getTemplateTypeMap()
-        .getTemplateKeys().toString());
-    assertEquals("[T]", fn.getPropertyType("apply").getTemplateTypeMap()
-        .getTemplateKeys().toString());
-    assertEquals("[T]", fn.getPropertyType("bind").getTemplateTypeMap()
-        .getTemplateKeys().toString());
-    assertEquals("[T]", fn.getBindReturnType(0).getTemplateTypeMap()
-        .getTemplateKeys().toString());
+    assertThat(fn.getPropertyType("call").getTemplateTypeMap().getTemplateKeys().toString())
+        .isEqualTo("[T]");
+    assertThat(fn.getPropertyType("apply").getTemplateTypeMap().getTemplateKeys().toString())
+        .isEqualTo("[T]");
+    assertThat(fn.getPropertyType("bind").getTemplateTypeMap().getTemplateKeys().toString())
+        .isEqualTo("[T]");
+    assertThat(fn.getBindReturnType(0).getTemplateTypeMap().getTemplateKeys().toString())
+        .isEqualTo("[T]");
   }
 
   @Test
@@ -430,7 +426,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     FunctionType fn = new FunctionBuilder(registry)
       .withTypeOfThis(new TemplateType(registry, "T"))
       .withReturnType(BOOLEAN_TYPE).build();
-    assertEquals("function(this:T, ...?): boolean", fn.toString());
+    assertThat(fn.toString()).isEqualTo("function(this:T, ...?): boolean");
   }
 
   @Test
@@ -442,7 +438,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     try {
       subIface.setImplementedInterfaces(
           ImmutableList.of(iface.getInstanceType()));
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (UnsupportedOperationException e) {
       // OK
     }

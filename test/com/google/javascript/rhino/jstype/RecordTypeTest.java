@@ -59,14 +59,14 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
         .addProperty("number", NUMBER_TYPE, null)
         .addProperty("string", STRING_TYPE, null)
         .build();
-    assertEquals("{\n  loop: number,\n  number: number,\n  string: string\n}",
-        record.toString());
+    assertThat(record.toString())
+        .isEqualTo("{\n  loop: number,\n  number: number,\n  string: string\n}");
 
     loop.setReferencedType(record);
-    assertEquals("{\n  loop: {...},\n  number: number,\n  string: string\n}",
-        record.toString());
-    assertEquals("{loop: ?, number: number, string: string}",
-        record.toAnnotationString(Nullability.EXPLICIT));
+    assertThat(record.toString())
+        .isEqualTo("{\n  loop: {...},\n  number: number,\n  string: string\n}");
+    assertThat(record.toAnnotationString(Nullability.EXPLICIT))
+        .isEqualTo("{loop: ?, number: number, string: string}");
 
     Asserts.assertEquivalenceOperations(record, loop);
   }
@@ -86,25 +86,25 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
         .addProperty("a10", NUMBER_TYPE, null)
         .addProperty("a11", NUMBER_TYPE, null)
         .build();
-    assertEquals(
-        LINE_JOINER.join(
-            "{",
-            "  a01: number,",
-            "  a02: number,",
-            "  a03: number,",
-            "  a04: number,",
-            "  a05: number,",
-            "  a06: number,",
-            "  a07: number,",
-            "  a08: number,",
-            "  a09: number,",
-            "  a10: number, ...",
-            "}"),
-        record.toString());
-    assertEquals(
-        "{a01: number, a02: number, a03: number, a04: number, a05: number, a06: number," +
-        " a07: number, a08: number, a09: number, a10: number, a11: number}",
-        record.toAnnotationString(Nullability.EXPLICIT));
+    assertThat(record.toString())
+        .isEqualTo(
+            LINE_JOINER.join(
+                "{",
+                "  a01: number,",
+                "  a02: number,",
+                "  a03: number,",
+                "  a04: number,",
+                "  a05: number,",
+                "  a06: number,",
+                "  a07: number,",
+                "  a08: number,",
+                "  a09: number,",
+                "  a10: number, ...",
+                "}"));
+    assertThat(record.toAnnotationString(Nullability.EXPLICIT))
+        .isEqualTo(
+            "{a01: number, a02: number, a03: number, a04: number, a05: number, a06: number,"
+                + " a07: number, a08: number, a09: number, a10: number, a11: number}");
   }
 
   @Test
