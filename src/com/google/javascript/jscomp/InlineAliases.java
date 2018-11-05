@@ -151,6 +151,11 @@ final class InlineAliases implements CompilerPass {
             // If n is get_prop like "obj.foo" then newNode should use only location of foo, not
             // obj.foo.
             newNode.useSourceInfoFromForTree(n.isGetProp() ? n.getLastChild() : n);
+            // Similarly if n is get_prop like "obj.foo" we should index only foo. obj should not
+            // be indexed as it's invisible to users.
+            if (newNode.isGetProp()) {
+              newNode.getFirstChild().makeNonIndexableRecursive();
+            }
             parent.replaceChild(n, newNode);
             t.reportCodeChange();
           }
