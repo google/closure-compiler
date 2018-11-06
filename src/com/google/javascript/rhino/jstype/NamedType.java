@@ -285,45 +285,16 @@ public final class NamedType extends ProxyObjectType {
    * as properties. The scope must have been fully parsed and a symbol table constructed.
    */
   private void resolveViaProperties(ErrorReporter reporter) {
-    JSType value = lookupViaProperties();
-    // last component of the chain
-    if (value != null && value.isFunctionType() &&
-        (value.isConstructor() || value.isInterface())) {
-      FunctionType functionType = value.toMaybeFunctionType();
-      setReferencedAndResolvedType(functionType.getInstanceType(), reporter);
-    } else if (value != null && value.isNoObjectType()) {
-      setReferencedAndResolvedType(
-          registry.getNativeObjectType(
-              JSTypeNative.NO_OBJECT_TYPE), reporter);
-    } else if (value instanceof EnumType) {
-      setReferencedAndResolvedType(
-          ((EnumType) value).getElementsType(), reporter);
-    } else {
-      // We've been running into issues where people forward-declare
-      // non-named types. (This is legitimate...our dependency management
-      // code doubles as our forward-declaration code.)
-      //
-      // So if the type does resolve to an actual value, but it's not named,
-      // then don't respect the forward declaration.
-      handleUnresolvedType(reporter, value == null || value.isUnknownType());
-    }
-  }
-
-  /**
-   * Resolves a type by looking up its first component in the scope, and
-   * subsequent components as properties. The scope must have been fully
-   * parsed and a symbol table constructed.
-   * @return The type of the symbol, or null if the type could not be found.
-   */
-  private JSType lookupViaProperties() {
     String[] componentNames = reference.split("\\.", -1);
     if (componentNames[0].length() == 0) {
-      return null;
+      handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
+      return;
     }
 
     StaticTypedSlot slot = resolutionScope.getSlot(componentNames[0]);
     if (slot == null) {
-      return null;
+      handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
+      return;
     }
 
     // If the first component has a type of 'Unknown', then any type
@@ -331,21 +302,48 @@ public final class NamedType extends ProxyObjectType {
     // noisy about it.
     JSType slotType = slot.getType();
     if (slotType == null || slotType.isAllType() || slotType.isNoType()) {
-      return null;
+      handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
+      return;
     }
 
     // resolving component by component
     for (int i = 1; i < componentNames.length; i++) {
       ObjectType parentObj = ObjectType.cast(slotType);
-      if (parentObj == null) {
-        return null;
+      if (parentObj == null || componentNames[i].length() == 0) {
+        handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
+        return;
       }
-      if (componentNames[i].length() == 0) {
-        return null;
+      if (i == componentNames.length - 1) {
+        // Look for a typedefTypeProp on the definition node of the last component.
+        Node def = parentObj.getPropertyDefSite(componentNames[i]);
+        JSType typedefType = def != null ? def.getTypedefTypeProp() : null;
+        if (typedefType != null) {
+          setReferencedAndResolvedType(typedefType, reporter);
+          return;
+        }
       }
       slotType = parentObj.getPropertyType(componentNames[i]);
     }
-    return slotType;
+
+    // Translate "constructor" types to "instance" types.
+    if (slotType == null) {
+      handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
+    } else if (slotType.isFunctionType() && (slotType.isConstructor() || slotType.isInterface())) {
+      setReferencedAndResolvedType(slotType.toMaybeFunctionType().getInstanceType(), reporter);
+    } else if (slotType.isNoObjectType()) {
+      setReferencedAndResolvedType(
+          registry.getNativeObjectType(JSTypeNative.NO_OBJECT_TYPE), reporter);
+    } else if (slotType instanceof EnumType) {
+      setReferencedAndResolvedType(((EnumType) slotType).getElementsType(), reporter);
+    } else {
+      // We've been running into issues where people forward-declare
+      // non-named types. (This is legitimate...our dependency management
+      // code doubles as our forward-declaration code.)
+      //
+      // So if the type does resolve to an actual value, but it's not named,
+      // then don't respect the forward declaration.
+      handleUnresolvedType(reporter, slotType.isUnknownType());
+    }
   }
 
   private void setReferencedAndResolvedType(

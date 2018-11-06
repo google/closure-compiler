@@ -22526,6 +22526,80 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: string"));
   }
 
+  @Test
+  public void testStrayTypedefOnRecordInstanceDoesNotModifyRecord() {
+    // This is a common pattern for angular.  This test is checking that adding the property to one
+    // instance does not require all other instances to specify it as well.
+    testTypes(
+        lines(
+            "/** @record */",
+            "function Component() {}",
+            "",
+            "/** @const {!Component} */",
+            "var MyComponent = {};",
+            "/** @typedef {string} */",
+            "MyComponent.MyString;",
+            "",
+            "/** @const {!Component} */",
+            "var OtherComponent = {};"));
+  }
+
+  @Test
+  public void testStrayPropertyOnRecordInstanceDoesNotModifyRecord() {
+    // This is a common pattern for angular.  This test is checking that adding the property to one
+    // instance does not require all other instances to specify it as well.
+    testTypes(
+        lines(
+            "/** @record */",
+            "function Component() {}",
+            "",
+            "/** @const {!Component} */",
+            "var MyComponent = {};",
+            "/** @const {string} */",
+            "MyComponent.NAME = 'MyComponent';", // strict inexistent property is usually suppressed
+            "",
+            "/** @const {!Component} */",
+            "var OtherComponent = {};"),
+        STRICT_INEXISTENT_PROPERTY);
+  }
+
+  @Test
+  public void testStrayTypedefOnRecordTypedefDoesNotModifyRecord() {
+    // This is a common pattern for angular.  This test is checking that adding the property to one
+    // instance does not require all other instances to specify it as well.
+    testTypes(
+        lines(
+            "/** @typedef {{foo: number}} */",
+            "var Component = {};",
+            "",
+            "/** @const {!Component} */",
+            "var MyComponent = {foo: 1};",
+            "/** @typedef {string} */",
+            "MyComponent.MyString;",
+            "",
+            "/** @const {!Component} */",
+            "var OtherComponent = {foo: 2};"));
+  }
+
+  @Test
+  public void testStrayPropertyOnRecordTypedefDoesNotModifyRecord() {
+    // This is a common pattern for angular.  This test is checking that adding the property to one
+    // instance does not require all other instances to specify it as well.
+    testTypes(
+        lines(
+            "/** @typedef {{foo: number}} */",
+            "var Component = {};",
+            "",
+            "/** @const {!Component} */",
+            "var MyComponent = {foo: 1 };",
+            "/** @const {string} */",
+            "MyComponent.NAME = 'MyComponent';",
+            "",
+            "/** @const {!Component} */",
+            "var OtherComponent = {foo: 2};"),
+        STRICT_INEXISTENT_PROPERTY);
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
