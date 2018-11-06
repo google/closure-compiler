@@ -55,6 +55,11 @@ message Requirement {
 
     // A list of regexes matching sources to be ignored
     repeated string regexp = 3;
+
+    // Short explanation.
+    optional string explanation = 4;
+
+    repeated string comment = 5;
   }
 
   repeated WhitelistEntry whitelist_entry = 14;
