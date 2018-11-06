@@ -292,6 +292,7 @@ public class Scanner {
       case '\r':      // Carriage Return
       case '\u2028':  // Line Separator
       case '\u2029':  // Paragraph Separator
+      case '\u3000': // Ideographic Space
         // TODO: there are other Unicode Category 'Zs' chars that should go here.
         return true;
       default:
