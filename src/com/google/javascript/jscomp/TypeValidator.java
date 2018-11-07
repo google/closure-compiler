@@ -114,8 +114,7 @@ class TypeValidator implements Serializable {
   static final DiagnosticType INVALID_ASYNC_RETURN_TYPE =
       DiagnosticType.warning(
           "JSC_INVALID_ASYNC_RETURN_TYPE",
-          "The return type of an async function must be a non-union supertype of Promise\n"
-              + "found: {0}");
+          "The return type of an async function must be a supertype of Promise\n" + "found: {0}");
 
   static final DiagnosticType INVALID_OPERAND_TYPE =
       DiagnosticType.disabled("JSC_INVALID_OPERAND_TYPE", "{0}");
@@ -312,25 +311,18 @@ class TypeValidator implements Serializable {
   }
 
   /**
-   * Expect the type to be a supertype of Promise.
+   * Expect the type to be a supertype of `Promise`.
    *
    * <p>`Promise` is the <em>lower</em> bound of the declared return type, since that's what async
    * functions always return; the user can't return an instance of a more specific type.
-   *
-   * <p>We forbid returning a union type because it complicates how we typecheck returns within
-   * async functions.
    */
   void expectValidAsyncReturnType(NodeTraversal t, Node n, JSType type) {
-    boolean isSupertypeOfPromise = promiseOfUnknownType.isSubtypeOf(type);
-    if (isSupertypeOfPromise && !type.isUnionType()) {
+    if (promiseOfUnknownType.isSubtypeOf(type)) {
       return;
     }
 
     JSError err = JSError.make(n, INVALID_ASYNC_RETURN_TYPE, type.toString());
-    if (!isSupertypeOfPromise) {
-      // Only subtyping issues should report mismatches, not all invalid return types.
-      registerMismatch(type, promiseOfUnknownType, err);
-    }
+    registerMismatch(type, promiseOfUnknownType, err);
     report(err);
   }
 
