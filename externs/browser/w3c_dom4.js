@@ -55,6 +55,54 @@ CharacterData.prototype.remove = function() {};
 DocumentType.prototype.replaceWith = function(nodes) {};
 
 /**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.SECURITY_ERR = 18;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.NETWORK_ERR = 19;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.ABORT_ERR = 20;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.URL_MISMATCH_ERR = 21;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.QUOTA_EXCEEDED_ERR = 22;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.TIMEOUT_ERR = 23;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.INVALID_NODE_TYPE_ERR = 24;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.DATA_CLONE_ERR = 25;
+
+/**
  * @param {...(!Node|string)} nodes
  * @return {undefined}
  * @see https://dom.spec.whatwg.org/#dom-childnode-replacewith
