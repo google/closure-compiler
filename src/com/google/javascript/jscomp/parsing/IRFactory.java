@@ -162,7 +162,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -179,10 +178,6 @@ class IRFactory {
       "setters are not supported in older versions of JavaScript. " +
       "If you are targeting newer versions of JavaScript, " +
       "set the appropriate language_in option.";
-
-  static final String SUSPICIOUS_COMMENT_WARNING =
-      "Non-JSDoc comment has annotations. " +
-      "Did you mean to start it with '/**'?";
 
   static final String INVALID_ES3_PROP_NAME =
       "Keywords and reserved words are not allowed as unquoted property " +
@@ -243,9 +238,6 @@ class IRFactory {
           "class", "const", "enum", "export", "extends", "import", "super",
           "implements", "interface", "let", "package", "private", "protected",
           "public", "static", "yield");
-
-  private static final Pattern COMMENT_PATTERN =
-      Pattern.compile("(/|(\n[ \t]*))\\*[ \t]*@[a-zA-Z]+[ \t\n{]");
 
   /**
    * If non-null, use this set of keywords instead of TokenStream.isKeyword().
@@ -341,8 +333,6 @@ class IRFactory {
         if ((comment.type == Comment.Type.JSDOC || comment.type == Comment.Type.IMPORTANT)
             && !irFactory.parsedComments.contains(comment)) {
           irFactory.handlePossibleFileOverviewJsDoc(comment);
-        } else if (comment.type == Comment.Type.BLOCK) {
-          irFactory.handleBlockComment(comment);
         }
       }
     }
@@ -604,19 +594,6 @@ class IRFactory {
       irNode.setIsAddedBlock(true);
     }
     return irNode;
-  }
-
-  /**
-   * Check to see if the given block comment looks like it should be JSDoc.
-   */
-  private void handleBlockComment(Comment comment) {
-    if (COMMENT_PATTERN.matcher(comment.value).find()) {
-      errorReporter.warning(
-          SUSPICIOUS_COMMENT_WARNING,
-          sourceName,
-          lineno(comment.location.start),
-          charno(comment.location.start));
-    }
   }
 
   /**

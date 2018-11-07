@@ -23,11 +23,13 @@ import static com.google.javascript.jscomp.CheckJSDoc.DISALLOWED_MEMBER_JSDOC;
 import static com.google.javascript.jscomp.CheckJSDoc.INVALID_DEFINE_ON_LET;
 import static com.google.javascript.jscomp.CheckJSDoc.INVALID_MODIFIES_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.INVALID_NO_SIDE_EFFECT_ANNOTATION;
+import static com.google.javascript.jscomp.CheckJSDoc.JSDOC_IN_BLOCK_COMMENT;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_MSG_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_SUPPRESS;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,6 +59,8 @@ public final class CheckJsDocTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MISPLACED_SUPPRESS, CheckLevel.WARNING);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
+    options.setPreserveDetailedSourceInfo(true);
     return options;
   }
 
@@ -982,5 +986,18 @@ public final class CheckJsDocTest extends CompilerTestCase {
             " */",
             "Element.prototype.innerHTML;"),
         TypeCheck.ILLEGAL_IMPLICIT_CAST);
+  }
+
+  @Test
+  public void testJsDocInBlockComments() {
+    testSame("/** @type {X} */ let x;");
+    testSame("// @type {X}\nlet x;");
+
+    testWarning("/* @type {X} */ let x;", JSDOC_IN_BLOCK_COMMENT);
+
+    // jsdoc tags contain letters only, no underscores etc.
+    testSame("/* @cc_on */ var x = 3;");
+    // a jsdoc tag can't be immediately followed by a paren
+    testSame("/* @TODO(username) */ var x = 3;");
   }
 }

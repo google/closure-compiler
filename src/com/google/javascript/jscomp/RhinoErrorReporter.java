@@ -72,9 +72,6 @@ class RhinoErrorReporter {
   static final DiagnosticType BAD_JSDOC_ANNOTATION =
       DiagnosticType.warning("JSC_BAD_JSDOC_ANNOTATION", "Parse error. {0}");
 
-  static final DiagnosticType JSDOC_IN_BLOCK_COMMENT =
-      DiagnosticType.warning("JSC_JSDOC_IN_BLOCK_COMMENT", "Parse error. {0}");
-
   static final DiagnosticType INVALID_ES3_PROP_NAME = DiagnosticType.warning(
       "JSC_INVALID_ES3_PROP_NAME",
       "Keywords and reserved words are not allowed as unquoted property " +
@@ -140,12 +137,6 @@ class RhinoErrorReporter {
             .put(
                 replacePlaceHolders(SimpleErrorReporter.getMessage0("msg.bad.jsdoc.tag")),
                 BAD_JSDOC_ANNOTATION)
-
-            .put(
-                Pattern.compile("^" + Pattern.quote(
-                    "Non-JSDoc comment has annotations. "
-                        + "Did you mean to start it with '/**'?")),
-                JSDOC_IN_BLOCK_COMMENT)
 
             .put(
                 Pattern.compile(

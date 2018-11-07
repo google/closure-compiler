@@ -20,11 +20,13 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -80,6 +82,14 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
           "@suppress annotation not allowed here. See"
               + " https://github.com/google/closure-compiler/wiki/@suppress-annotations");
 
+  public static final DiagnosticType JSDOC_IN_BLOCK_COMMENT =
+      DiagnosticType.warning(
+          "JSC_JSDOC_IN_BLOCK_COMMENT",
+          "Non-JSDoc comment has annotations. Did you mean to start it with '/**'?");
+
+  private static final Pattern COMMENT_PATTERN =
+      Pattern.compile("(/|(\n[ \t]*))\\*[ \t]*@[a-zA-Z]+[ \t\n{]");
+
   private final AbstractCompiler compiler;
   private boolean inExterns;
 
@@ -100,8 +110,35 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
+  /**
+   * Checks for block comments (e.g. starting with /*) that look like they are JsDoc, and thus
+   * should start with /**.
+   */
+  private void checkJsDocInBlockComments(String fileName) {
+    if (!compiler.getOptions().preservesDetailedSourceInfo()) {
+      // Comments only available if preservesDetailedSourceInfo is true.
+      return;
+    }
+
+    for (Comment comment : compiler.getComments(fileName)) {
+      if (comment.type == Comment.Type.BLOCK) {
+        if (COMMENT_PATTERN.matcher(comment.value).find()) {
+          compiler.report(
+              JSError.make(
+                  fileName,
+                  comment.location.start.line + 1,
+                  comment.location.start.column,
+                  JSDOC_IN_BLOCK_COMMENT));
+        }
+      }
+    }
+  }
+
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.isScript()) {
+      checkJsDocInBlockComments(n.getSourceFileName());
+    }
     JSDocInfo info = n.getJSDocInfo();
     validateTypeAnnotations(n, info);
     validateFunctionJsDoc(n, info);

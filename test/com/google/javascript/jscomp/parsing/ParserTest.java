@@ -50,9 +50,6 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class ParserTest extends BaseJSTypeTestCase {
-  private static final String SUSPICIOUS_COMMENT_WARNING =
-      IRFactory.SUSPICIOUS_COMMENT_WARNING;
-
   private static final String TRAILING_COMMA_MESSAGE =
       "Trailing comma is not legal in an ECMA-262 object initializer";
 
@@ -1903,61 +1900,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testTrailingCommaWarning7() {
     parseError("var a = {,};",
         "'}' expected");
-  }
-
-  @Test
-  public void testSuspiciousBlockCommentWarning1() {
-    parseWarning("/* @type {number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
-  }
-
-  @Test
-  public void testSuspiciousBlockCommentWarning2() {
-    parseWarning("/* \n * @type {number} */ var x = 3;",
-        SUSPICIOUS_COMMENT_WARNING);
-  }
-
-  @Test
-  public void testSuspiciousBlockCommentWarning3() {
-    parseWarning("/* \n *@type {number} */ var x = 3;",
-        SUSPICIOUS_COMMENT_WARNING);
-  }
-
-  @Test
-  public void testSuspiciousBlockCommentWarning4() {
-    parseWarning(
-        "  /*\n" +
-        "   * @type {number}\n" +
-        "   */\n" +
-        "  var x = 3;",
-        SUSPICIOUS_COMMENT_WARNING);
-  }
-
-  @Test
-  public void testSuspiciousBlockCommentWarning5() {
-    parseWarning(
-        "  /*\n" +
-        "   * some random text here\n" +
-        "   * @type {number}\n" +
-        "   */\n" +
-        "  var x = 3;",
-        SUSPICIOUS_COMMENT_WARNING);
-  }
-
-  @Test
-  public void testSuspiciousBlockCommentWarning6() {
-    parseWarning("/* @type{number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
-  }
-
-  @Test
-  public void testSuspiciousBlockCommentWarning7() {
-    // jsdoc tags contain letters only, no underscores etc.
-    parse("/* @cc_on */ var x = 3;");
-  }
-
-  @Test
-  public void testSuspiciousBlockCommentWarning8() {
-    // a jsdoc tag can't be immediately followed by a paren
-    parse("/* @TODO(username) */ var x = 3;");
   }
 
   @Test

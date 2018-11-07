@@ -21,6 +21,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.refactoring.ApplySuggestedFixes;
 import com.google.javascript.refactoring.FixingErrorManager;
 import com.google.javascript.refactoring.SuggestedFix;
@@ -50,6 +51,8 @@ public final class Linter {
     SourceFile file = SourceFile.fromFile(path.toString());
     CompilerOptions options = new CompilerOptions();
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
+    options.setPreserveDetailedSourceInfo(true);
 
     // These are necessary to make sure that suggested fixes are printed correctly.
     options.setPrettyPrint(true);

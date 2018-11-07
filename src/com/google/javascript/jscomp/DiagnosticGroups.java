@@ -204,10 +204,11 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("accessControls", VISIBILITY);
 
   public static final DiagnosticGroup NON_STANDARD_JSDOC =
-      DiagnosticGroups.registerGroup("nonStandardJsDocs",
+      DiagnosticGroups.registerGroup(
+          "nonStandardJsDocs",
           RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
           RhinoErrorReporter.INVALID_PARAM,
-          RhinoErrorReporter.JSDOC_IN_BLOCK_COMMENT);
+          CheckJSDoc.JSDOC_IN_BLOCK_COMMENT);
 
   public static final DiagnosticGroup INVALID_CASTS =
       DiagnosticGroups.registerGroup("invalidCasts",
