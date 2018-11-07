@@ -283,6 +283,17 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   @Test
+  public void testVarReferenceInExterns2() {
+    testSame(
+        externs("asdf;"),
+        srcs(
+            lines(
+                "(function() { var asdf; })()", //
+                "var /** @suppress {duplicate} */ asdf;")),
+        warning(VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR));
+  }
+
+  @Test
   public void testNamespaceDeclarationInExterns() {
     testSame(externs("/** @const */ var $jscomp = $jscomp || {};"), srcs(""));
   }
