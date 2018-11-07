@@ -167,6 +167,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     assertThat(builder.getAlternatesCount()).isEqualTo(1);
   }
 
+  @Test
   public void testDifferentTemplateSpecializations_whenUnioned_doNotLeakRawType() {
     // Given
     JSType arrayOfString = registry.createTemplatizedType(ARRAY_TYPE, STRING_TYPE);

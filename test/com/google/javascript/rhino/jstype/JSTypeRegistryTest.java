@@ -58,7 +58,6 @@ import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -68,7 +67,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public class JSTypeRegistryTest extends TestCase {
+public class JSTypeRegistryTest {
   // TODO(user): extend this class with more tests, as JSTypeRegistry is
   // now much larger
   @Test

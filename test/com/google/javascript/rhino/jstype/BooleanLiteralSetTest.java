@@ -44,7 +44,6 @@ import static com.google.javascript.rhino.jstype.BooleanLiteralSet.EMPTY;
 import static com.google.javascript.rhino.jstype.BooleanLiteralSet.FALSE;
 import static com.google.javascript.rhino.jstype.BooleanLiteralSet.TRUE;
 
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -54,7 +53,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public class BooleanLiteralSetTest extends TestCase {
+public class BooleanLiteralSetTest {
 
   @Test
   public void testIntersection() {

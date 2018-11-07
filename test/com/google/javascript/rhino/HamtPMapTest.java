@@ -47,14 +47,13 @@ import com.google.common.collect.Table;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeSet;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link HamtPMap}. */
 @RunWith(JUnit4.class)
-public class HamtPMapTest extends TestCase {
+public class HamtPMapTest {
   @Test
   public void testEmpty() {
     PMap<String, Integer> map = HamtPMap.empty();

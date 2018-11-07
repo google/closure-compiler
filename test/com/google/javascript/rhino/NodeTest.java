@@ -44,13 +44,12 @@ import com.google.javascript.rhino.Node.NodeMismatch;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.TestErrorReporter;
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class NodeTest extends TestCase {
+public class NodeTest {
   @Test
   public void testMergeExtractNormal() {
     testMergeExtract(5, 6);
