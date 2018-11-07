@@ -90,9 +90,7 @@ public final class RefactoringDriver {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setSummaryDetailLevel(0);
 
-    DependencyOptions deps = new DependencyOptions();
-    deps.setDependencySorting(true);
-    options.setDependencyOptions(deps);
+    options.setDependencyOptions(DependencyOptions.sortOnly());
 
     options.setChecksOnly(true);
     options.setContinueAfterErrors(true);

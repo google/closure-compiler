@@ -1819,7 +1819,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     hoistExterns();
     // Check if the sources need to be re-ordered.
     boolean staleInputs = false;
-    if (options.dependencyOptions.needsManagement()) {
+    if (options.getDependencyOptions().needsManagement()) {
       for (CompilerInput input : moduleGraph.getAllInputs()) {
         // Forward-declare all the provided types, so that they
         // are not flagged even if they are dropped from the process.
@@ -1829,7 +1829,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       try {
-        moduleGraph.manageDependencies(options.dependencyOptions);
+        moduleGraph.manageDependencies(options.getDependencyOptions());
         staleInputs = true;
       } catch (MissingProvideException e) {
         report(JSError.make(
@@ -2050,7 +2050,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     List<CompilerInput> filteredInputs = new ArrayList<>();
     for (CompilerInput input : inputsToProcess) {
       // Only process files that are detected as ES6 modules
-      if (!options.dependencyOptions.shouldPruneDependencies()
+      if (!options.getDependencyOptions().shouldPrune()
           || !JsFileParser.isSupported()
           || "es6".equals(input.getLoadFlags().get("module"))) {
         filteredInputs.add(input);

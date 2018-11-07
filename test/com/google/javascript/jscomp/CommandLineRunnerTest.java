@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagEntry;
-import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagUsageException;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.JsSourceType;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.rhino.Node;
@@ -813,7 +812,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testSourceSortingOn3() {
-    args.add("--dependency_mode=LOOSE");
+    args.add("--dependency_mode=PRUNE_LEGACY");
     args.add("--language_in=ECMASCRIPT5");
     test(
         new String[] {
@@ -825,7 +824,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testSourceSortingCircularDeps1() {
-    args.add("--dependency_mode=LOOSE");
+    args.add("--dependency_mode=PRUNE_LEGACY");
     args.add("--language_in=ECMASCRIPT5");
     test(new String[] {
           "goog.provide('gin'); goog.require('tonic'); var gin = {};",
@@ -837,7 +836,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testSourceSortingCircularDeps2() {
-    args.add("--dependency_mode=LOOSE");
+    args.add("--dependency_mode=PRUNE_LEGACY");
     args.add("--language_in=ECMASCRIPT5");
     test(new String[] {
           "goog.provide('roses.lime.juice');",
@@ -851,7 +850,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testSourcePruningOn1() {
-    args.add("--dependency_mode=LOOSE");
+    args.add("--dependency_mode=PRUNE_LEGACY");
     args.add("--language_in=ECMASCRIPT5");
     test(new String[] {
           "goog.require('beer');",
@@ -923,13 +922,15 @@ public final class CommandLineRunnerTest {
           "goog.require('beer');", "goog.provide('beer');", "goog.provide('scotch'); var x = 3;"
         },
         new String[] {"var beer = {};", "", "var scotch = {}, x = 3;"});
-    assertThat(lastCompiler.getOptions().getDependencyOptions().shouldSortDependencies()).isTrue();
-    assertThat(lastCompiler.getOptions().getDependencyOptions().shouldPruneDependencies()).isTrue();
+    assertThat(lastCompiler.getOptions().getDependencyOptions())
+        .isEqualTo(
+            DependencyOptions.pruneLegacyForEntryPoints(
+                ImmutableList.of(ModuleIdentifier.forClosure("scotch"))));
   }
 
   @Test
   public void testSourcePruningOn7() {
-    args.add("--dependency_mode=LOOSE");
+    args.add("--dependency_mode=PRUNE_LEGACY");
     test(
         new String[] {
           "/** This is base.js @provideGoog */ var COMPILED = false;",
@@ -941,7 +942,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testSourcePruningOn8() {
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
     args.add("--entry_point=goog:scotch");
     args.add("--warning_level=VERBOSE");
     test(new String[] {
@@ -957,7 +958,7 @@ public final class CommandLineRunnerTest {
   @Test
   public void testModuleEntryPoint() {
     useModules = ModulePattern.STAR;
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
     args.add("--entry_point=goog:m1:a");
     test(
         new String[] {
@@ -988,7 +989,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testDependencySortingWhitespaceMode() {
-    args.add("--dependency_mode=LOOSE");
+    args.add("--dependency_mode=PRUNE_LEGACY");
     args.add("--compilation_level=WHITESPACE_ONLY");
     test(new String[] {
           "goog.require('beer');",
@@ -1004,7 +1005,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testForwardDeclareDroppedTypes() {
-    args.add("--dependency_mode=LOOSE");
+    args.add("--dependency_mode=PRUNE_LEGACY");
 
     args.add("--warning_level=VERBOSE");
     test(
@@ -1031,18 +1032,18 @@ public final class CommandLineRunnerTest {
     // Prevents this from trying to load externs.zip
     args.add("--env=CUSTOM");
 
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
 
     CommandLineRunner runner = createCommandLineRunner(new String[0]);
     assertThat(runner.hasErrors()).isTrue();
     assertThat(runner.shouldRunCompiler()).isFalse();
     assertThat(new String(errReader.toByteArray(), UTF_8))
-        .contains("When --dependency_mode=STRICT, you must specify at least one --entry_point");
+        .contains("--dependency_mode=PRUNE requires --entry_point.");
   }
 
   @Test
   public void testOnlyClosureDependenciesOneEntryPoint() {
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
     args.add("--entry_point=goog:beer");
     test(
         new String[] {
@@ -1820,7 +1821,7 @@ public final class CommandLineRunnerTest {
   public void testProcessCJSWithClosureRequires() {
     args.add("--process_common_js_modules");
     args.add("--entry_point=app");
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
     args.add("--module_resolution=NODE");
     setFilename(0, "base.js");
     setFilename(1, "array.js");
@@ -1879,7 +1880,7 @@ public final class CommandLineRunnerTest {
   @Test
   public void testProcessCJSWithClosureRequires2() {
     args.add("--process_common_js_modules");
-    args.add("--dependency_mode=LOOSE");
+    args.add("--dependency_mode=PRUNE_LEGACY");
     args.add("--entry_point=app");
     args.add("--module_resolution=NODE");
     setFilename(0, "base.js");
@@ -1937,7 +1938,7 @@ public final class CommandLineRunnerTest {
   public void testProcessCJSWithES6Export() {
     args.add("--process_common_js_modules");
     args.add("--entry_point=app");
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
     args.add("--language_in=ECMASCRIPT6");
     args.add("--module_resolution=NODE");
     setFilename(0, "foo.js");
@@ -1967,7 +1968,7 @@ public final class CommandLineRunnerTest {
   public void testES6ImportOfCJS() {
     args.add("--process_common_js_modules");
     args.add("--entry_point=app");
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
     args.add("--language_in=ECMASCRIPT6");
     args.add("--language_out=ECMASCRIPT5");
     args.add("--module_resolution=NODE");
@@ -1997,7 +1998,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testES6ImportOfFileWithoutImportsOrExports() {
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
     args.add("--entry_point='./app.js'");
     args.add("--language_in=ECMASCRIPT6");
     args.add("--language_out=ECMASCRIPT5");
@@ -2019,7 +2020,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testES6ImportOfFileWithImportsButNoExports() {
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
     args.add("--entry_point='./app.js'");
     args.add("--language_in=ECMASCRIPT6");
     setFilename(0, "message.js");
@@ -2048,7 +2049,7 @@ public final class CommandLineRunnerTest {
   @Test
   public void testCommonJSRequireOfFileWithoutExports() {
     args.add("--process_common_js_modules");
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
     args.add("--entry_point='./app.js'");
     args.add("--language_in=ECMASCRIPT6");
     args.add("--module_resolution=NODE");
@@ -2073,7 +2074,7 @@ public final class CommandLineRunnerTest {
   public void testProcessCJSWithPackageJsonBrowserField() {
     useStringComparison = true;
     args.add("--process_common_js_modules");
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
     args.add("--entry_point=app");
     args.add("--module_resolution=NODE");
     args.add("--package_json_entry_names=browser,main");
@@ -2385,7 +2386,7 @@ public final class CommandLineRunnerTest {
     args.add("--module_resolution=WEBPACK");
     args.add("--process_common_js_modules");
     args.add("--entry_point=foo.js");
-    args.add("--dependency_mode=STRICT");
+    args.add("--dependency_mode=PRUNE");
     args.add("--js_output_file=out.js");
 
     CommandLineRunner runner =

@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -258,11 +257,11 @@ public class CompilerOptions implements Serializable {
    */
   private boolean checkDeterminism;
 
-  //--------------------------------
+  // --------------------------------
   // Input Options
-  //--------------------------------
+  // --------------------------------
 
-  DependencyOptions dependencyOptions = new DependencyOptions();
+  private DependencyOptions dependencyOptions = DependencyOptions.none();
 
   /** Returns localized replacement for MSG_* variables */
   public MessageBundle messageBundle = null;
@@ -1820,50 +1819,13 @@ public class CompilerOptions implements Serializable {
     return codingConvention;
   }
 
-  /**
-   * Sets dependency options. See the DependencyOptions class for more info.
-   * This supersedes manageClosureDependencies.
-   */
-  public void setDependencyOptions(DependencyOptions options) {
-    this.dependencyOptions = options;
+  /** Sets the dependency management options. */
+  public void setDependencyOptions(DependencyOptions dependencyOptions) {
+    this.dependencyOptions = dependencyOptions;
   }
 
   public DependencyOptions getDependencyOptions() {
     return dependencyOptions;
-  }
-
-  /**
-   * Sort inputs by their goog.provide/goog.require calls, and prune inputs
-   * whose symbols are not required.
-   */
-  public void setManageClosureDependencies(boolean newVal) {
-    dependencyOptions.setDependencySorting(
-        newVal || dependencyOptions.shouldSortDependencies());
-    dependencyOptions.setDependencyPruning(
-        newVal || dependencyOptions.shouldPruneDependencies());
-    dependencyOptions.setMoocherDropping(false);
-  }
-
-  /**
-   * Sort inputs by their goog.provide/goog.require calls.
-   *
-   * @param entryPoints Entry points to the program. Must be goog.provide'd
-   *     symbols. Any goog.provide'd symbols that are not a transitive
-   *     dependency of the entry points will be deleted.
-   *     Files without goog.provides, and their dependencies,
-   *     will always be left in.
-   */
-  public void setManageClosureDependencies(List<String> entryPoints) {
-    checkNotNull(entryPoints);
-    setManageClosureDependencies(true);
-
-    List<ModuleIdentifier> normalizedEntryPoints = new ArrayList<>();
-
-    for (String entryPoint : entryPoints) {
-      normalizedEntryPoints.add(ModuleIdentifier.forClosure(entryPoint));
-    }
-
-    dependencyOptions.setEntryPoints(normalizedEntryPoints);
   }
 
   /**
@@ -2995,7 +2957,7 @@ public class CompilerOptions implements Serializable {
             .add("debugFunctionSideEffectsPath", debugFunctionSideEffectsPath)
             .add("declaredGlobalExternsOnWindow", declaredGlobalExternsOnWindow)
             .add("defineReplacements", getDefineReplacements())
-            .add("dependencyOptions", dependencyOptions)
+            .add("dependencyOptions", getDependencyOptions())
             .add("devirtualizePrototypeMethods", devirtualizePrototypeMethods)
             .add("devMode", devMode)
             .add("disambiguatePrivateProperties", disambiguatePrivateProperties)
@@ -3445,30 +3407,6 @@ public class CompilerOptions implements Serializable {
      * stdin and stdout are both json streams.
      */
     BOTH
-  }
-
-  /** How compiler should prune files based on the provide-require dependency graph */
-  public static enum DependencyMode {
-    /**
-     * All files will be included in the compilation
-     */
-    NONE,
-
-    /**
-     * Files must be discoverable from specified entry points. Files
-     * which do not goog.provide a namespace and are not either
-     * an ES6 or CommonJS module will be automatically treated as entry points.
-     * Module files will be included only if referenced from an entry point.
-     */
-    LOOSE,
-
-    /**
-     * Files must be discoverable from specified entry points. Files which
-     * do not goog.provide a namespace and are neither
-     * an ES6 or CommonJS module will be dropped. Module files will be included
-     * only if referenced from an entry point.
-     */
-    STRICT
   }
 
   /**

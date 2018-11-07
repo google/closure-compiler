@@ -5227,9 +5227,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testProvideRequireSameFile() {
     CompilerOptions options = createCompilerOptions();
-    options.setDependencyOptions(
-        new DependencyOptions()
-        .setDependencySorting(true));
+    options.setDependencyOptions(DependencyOptions.sortOnly());
     options.setClosurePass(true);
     test(
         options,
@@ -5240,9 +5238,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testDependencySorting() {
     CompilerOptions options = createCompilerOptions();
-    options.setDependencyOptions(
-        new DependencyOptions()
-        .setDependencySorting(true));
+    options.setDependencyOptions(DependencyOptions.sortOnly());
     test(
         options,
         new String[] {
@@ -6630,10 +6626,10 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testExternsWithGoogProvide() {
     CompilerOptions options = createCompilerOptions();
+    options.setDependencyOptions(DependencyOptions.sortOnly());
     options.setClosurePass(true);
     options.setChecksOnly(true);
     options.setCheckGlobalNamesLevel(CheckLevel.ERROR);
-    options.getDependencyOptions().setDependencySorting(true);
 
     test(
         options,
@@ -6664,10 +6660,10 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testExternsWithGoogProvide_required() {
     CompilerOptions options = createCompilerOptions();
+    options.setDependencyOptions(DependencyOptions.sortOnly());
     options.setClosurePass(true);
     options.setChecksOnly(true);
     options.setCheckGlobalNamesLevel(CheckLevel.ERROR);
-    options.getDependencyOptions().setDependencySorting(true);
     String externs =
         lines(
             "/** @externs */",

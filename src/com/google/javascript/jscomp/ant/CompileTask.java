@@ -19,15 +19,18 @@ package com.google.javascript.jscomp.ant;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.MessageFormatter;
+import com.google.javascript.jscomp.ModuleIdentifier;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMap;
@@ -448,7 +451,10 @@ public final class CompileTask
     options.setOutputCharset(this.outputEncoding);
 
     this.warningLevel.setOptionsForWarningLevel(options);
-    options.setManageClosureDependencies(manageDependencies);
+    options.setDependencyOptions(
+        manageDependencies
+            ? DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of())
+            : DependencyOptions.sortOnly());
     convertEntryPointParameters(options);
     options.setTrustedStrings(true);
     options.setAngularPass(angularPass);
@@ -533,13 +539,13 @@ public final class CompileTask
    * replacements.
    */
   private void convertEntryPointParameters(CompilerOptions options) {
-    List<String> entryPoints = new ArrayList<>();
+    ImmutableList.Builder<ModuleIdentifier> entryPointsBuilder = ImmutableList.builder();
     for (Parameter p : entryPointParams) {
-      String key = p.getName();
-      entryPoints.add(key);
+      entryPointsBuilder.add(ModuleIdentifier.forClosure(p.getName()));
     }
     if (this.manageDependencies) {
-      options.setManageClosureDependencies(entryPoints);
+      options.setDependencyOptions(
+          DependencyOptions.pruneLegacyForEntryPoints(entryPointsBuilder.build()));
     }
   }
 

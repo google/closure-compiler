@@ -105,7 +105,7 @@ public final class CompilerTest {
             "mix", "goog.require('gin'); goog.require('tonic');"));
     CompilerOptions options = new CompilerOptions();
     options.setIdeMode(true);
-    options.setManageClosureDependencies(true);
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of()));
     Compiler compiler = new Compiler();
     compiler.init(ImmutableList.<SourceFile>of(), inputs, options);
     compiler.parseInputs();
@@ -1167,7 +1167,7 @@ public final class CompilerTest {
             SourceFile.fromCode("hops", "/** @fileoverview @typeSummary */ goog.provide('hops');"));
 
     CompilerOptions options = createNewFlagBasedOptions();
-    options.dependencyOptions.setDependencySorting(true);
+    options.setDependencyOptions(DependencyOptions.sortOnly());
 
     List<SourceFile> externs = ImmutableList.of();
     Compiler compiler = new Compiler();
@@ -1359,7 +1359,7 @@ public final class CompilerTest {
                 "something", "/** @fileoverview @typeSummary */ goog.provide('something');"));
 
     CompilerOptions options = createNewFlagBasedOptions();
-    options.dependencyOptions.setDependencyPruning(true);
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of()));
 
     List<SourceFile> externs = ImmutableList.of();
     Compiler compiler = new Compiler();
@@ -1387,9 +1387,7 @@ public final class CompilerTest {
     CompilerOptions options = createNewFlagBasedOptions();
     options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
-    options.dependencyOptions.setDependencyPruning(true);
-    options.dependencyOptions.setDependencySorting(true);
-    options.dependencyOptions.setEntryPoints(entryPoints);
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
 
     List<SourceFile> externs =
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
@@ -1418,9 +1416,7 @@ public final class CompilerTest {
     CompilerOptions options = createNewFlagBasedOptions();
     options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
-    options.dependencyOptions.setDependencyPruning(true);
-    options.dependencyOptions.setDependencySorting(true);
-    options.dependencyOptions.setEntryPoints(entryPoints);
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
     options.processCommonJSModules = true;
 
     List<SourceFile> externs =
@@ -1447,9 +1443,7 @@ public final class CompilerTest {
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
-    options.dependencyOptions.setDependencyPruning(true);
-    options.dependencyOptions.setDependencySorting(true);
-    options.dependencyOptions.setEntryPoints(entryPoints);
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
 
     List<SourceFile> externs =
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
@@ -1761,11 +1755,9 @@ public final class CompilerTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.dependencyOptions.setEntryPoints(
-        ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
-    options.dependencyOptions.setDependencySorting(true);
-    options.dependencyOptions.setDependencyPruning(true);
-    options.dependencyOptions.setMoocherDropping(true);
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
     List<SourceFile> externs =
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
     Compiler compiler = new Compiler();
@@ -1807,11 +1799,9 @@ public final class CompilerTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.dependencyOptions.setEntryPoints(
-        ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
-    options.dependencyOptions.setDependencySorting(true);
-    options.dependencyOptions.setDependencyPruning(true);
-    options.dependencyOptions.setMoocherDropping(true);
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
     List<SourceFile> externs =
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
     Compiler compiler = new Compiler();
@@ -1856,11 +1846,10 @@ public final class CompilerTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.dependencyOptions.setEntryPoints(
-        ImmutableList.of(ModuleIdentifier.forFile("entry.js")));
-    options.dependencyOptions.setDependencySorting(true);
-    options.dependencyOptions.setDependencyPruning(true);
-    options.dependencyOptions.setMoocherDropping(false);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDependencyOptions(
+        DependencyOptions.pruneLegacyForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("entry.js"))));
     List<SourceFile> externs =
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
 
@@ -1904,11 +1893,10 @@ public final class CompilerTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.dependencyOptions.setEntryPoints(
-        ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
-    options.dependencyOptions.setDependencySorting(true);
-    options.dependencyOptions.setDependencyPruning(true);
-    options.dependencyOptions.setMoocherDropping(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(ResolutionMode.WEBPACK);
     List<SourceFile> externs =
@@ -1949,11 +1937,10 @@ public final class CompilerTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.dependencyOptions.setEntryPoints(
-        ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
-    options.dependencyOptions.setDependencySorting(true);
-    options.dependencyOptions.setDependencyPruning(true);
-    options.dependencyOptions.setMoocherDropping(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(ResolutionMode.WEBPACK);
     List<SourceFile> externs =

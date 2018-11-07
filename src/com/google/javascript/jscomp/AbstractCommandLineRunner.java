@@ -311,30 +311,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     return compiler.getDiagnosticGroups();
   }
 
-  /** A helper function for creating the dependency options object. */
-  public static DependencyOptions createDependencyOptions(
-      CompilerOptions.DependencyMode dependencyMode, List<ModuleIdentifier> entryPoints) {
-    if (dependencyMode == CompilerOptions.DependencyMode.STRICT) {
-      if (entryPoints.isEmpty()) {
-        throw new FlagUsageException(
-            "When dependency_mode=STRICT, you must " + "specify at least one entry_point");
-      }
-
-      return new DependencyOptions()
-          .setDependencyPruning(true)
-          .setDependencySorting(true)
-          .setMoocherDropping(true)
-          .setEntryPoints(entryPoints);
-    } else if (dependencyMode == CompilerOptions.DependencyMode.LOOSE || !entryPoints.isEmpty()) {
-      return new DependencyOptions()
-          .setDependencyPruning(true)
-          .setDependencySorting(true)
-          .setMoocherDropping(false)
-          .setEntryPoints(entryPoints);
-    }
-    return null;
-  }
-
   @GwtIncompatible("Unnecessary")
   protected abstract void addWhitelistWarningsGuard(CompilerOptions options, File whitelistFile);
 
@@ -385,10 +361,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.setTweakProcessing(config.tweakProcessing);
     createDefineOrTweakReplacements(config.tweak, options, true);
 
-    DependencyOptions depOptions =
-        createDependencyOptions(config.dependencyMode, config.entryPoints);
-    if (depOptions != null) {
-      options.setDependencyOptions(depOptions);
+    // TODO(tjgq): Unconditionally set the options.
+    if (config.dependencyOptions != null) {
+      options.setDependencyOptions(config.dependencyOptions);
     }
 
     options.devMode = config.jscompDevMode;
@@ -542,7 +517,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     int result;
     try {
       result = doRun();
-    } catch (AbstractCommandLineRunner.FlagUsageException e) {
+    } catch (FlagUsageException e) {
       err.println(e.getMessage());
       result = -1;
     } catch (Throwable t) {
@@ -557,17 +532,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   @GwtIncompatible("Unnecessary")
   protected final PrintStream getErrorPrintStream() {
     return err;
-  }
-
-  /**
-   * An exception thrown when command-line flags are used incorrectly.
-   */
-  public static class FlagUsageException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
-
-    public FlagUsageException(String message) {
-      super(message);
-    }
   }
 
   @GwtIncompatible("Unnecessary")
@@ -2149,7 +2113,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * Configurations for the command line configs. Designed for easy building, so that we can
    * decouple the flags-parsing library from the actual configuration options.
    *
-   * <p>By design, these configurations must match one-to-one with command-line flags.
+   * <p>TODO(tjgq): Investigate whether this class is really needed to mediate between the
+   * CompilerOptions and runner implementations. An alternative would be for the runners to fill in
+   * the CompilerOptions directly, but that conflicts with the latter's mutability and the desire to
+   * reuse the same options across multiple compilations.
    */
   @GwtIncompatible("Unnecessary")
   protected static class CommandLineConfig {
@@ -2544,59 +2511,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private CompilerOptions.DependencyMode dependencyMode = CompilerOptions.DependencyMode.NONE;
+    private DependencyOptions dependencyOptions = null;
 
-    /**
-     * Sets whether to sort files by their goog.provide/require deps,
-     * and prune inputs that are not required.
-     */
-    public CommandLineConfig setDependencyMode(CompilerOptions.DependencyMode newVal) {
-      this.dependencyMode = newVal;
+    /** Sets the dependency management options. */
+    public CommandLineConfig setDependencyOptions(@Nullable DependencyOptions dependencyOptions) {
+      this.dependencyOptions = dependencyOptions;
       return this;
-    }
-
-    private List<ModuleIdentifier> entryPoints = ImmutableList.of();
-
-    /**
-     * Set module entry points, which makes the compiler only include
-     * those files and sort them in dependency order.
-     */
-    public CommandLineConfig setEntryPoints(List<ModuleIdentifier> entryPoints) {
-      checkNotNull(entryPoints);
-      this.entryPoints = entryPoints;
-      return this;
-    }
-
-    /**
-     * Helper method to convert the manage closure dependecy options to the new
-     * DependencyMode enum value
-     */
-    static CompilerOptions.DependencyMode depModeFromClosureDepOptions(
-        boolean onlyClosureDependencies, boolean manageClosureDependencies) {
-      if (onlyClosureDependencies) {
-        return CompilerOptions.DependencyMode.STRICT;
-      } else if (manageClosureDependencies) {
-        return CompilerOptions.DependencyMode.LOOSE;
-      } else {
-        return CompilerOptions.DependencyMode.NONE;
-      }
-    }
-
-    /**
-     * Helper method to convert a list of entry points specifications to a list of the new
-     * ModuleIdentifier values. The specifications can be in form of "path/to/module" for ES6 or
-     * CommonJS modules, or "goog:some.Namespace" for Closure symbols.
-     */
-    static List<ModuleIdentifier> moduleIdentifiersForEntryPoints(List<String> entryPoints) {
-      List<ModuleIdentifier> mids = new ArrayList<>();
-      for (String entryPoint : entryPoints) {
-        if (entryPoint.startsWith("goog:")) {
-          mids.add(ModuleIdentifier.forClosure(entryPoint));
-        } else {
-          mids.add(ModuleIdentifier.forFile(entryPoint));
-        }
-      }
-      return mids;
     }
 
     private List<String> outputManifests = ImmutableList.of();

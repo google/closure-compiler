@@ -203,12 +203,9 @@ public final class JSModuleGraphTest {
   }
 
   @Test
-  public void testManageDependencies1() throws Exception {
+  public void testManageDependenciesLooseWithoutEntryPoint() throws Exception {
     setUpManageDependenciesTest();
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-    depOptions.setDependencyPruning(true);
-    depOptions.setEntryPoints(ImmutableList.<ModuleIdentifier>of());
+    DependencyOptions depOptions = DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of());
     List<CompilerInput> results = graph.manageDependencies(depOptions);
 
     assertInputs(A, "a1", "a3");
@@ -221,12 +218,11 @@ public final class JSModuleGraphTest {
   }
 
   @Test
-  public void testManageDependencies2() throws Exception {
+  public void testManageDependenciesLooseWithEntryPoint() throws Exception {
     setUpManageDependenciesTest();
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-    depOptions.setDependencyPruning(true);
-    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
+    DependencyOptions depOptions =
+        DependencyOptions.pruneLegacyForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("c2")));
     List<CompilerInput> results = graph.manageDependencies(depOptions);
 
     assertInputs(A, "a1", "a3");
@@ -239,13 +235,10 @@ public final class JSModuleGraphTest {
   }
 
   @Test
-  public void testManageDependencies3Impl() throws Exception {
+  public void testManageDependenciesStrictWithEntryPoint() throws Exception {
     setUpManageDependenciesTest();
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-    depOptions.setDependencyPruning(true);
-    depOptions.setMoocherDropping(true);
-    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
+    DependencyOptions depOptions =
+        DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
     List<CompilerInput> results = graph.manageDependencies(depOptions);
 
     // Everything gets pushed up into module c, because that's
@@ -259,12 +252,9 @@ public final class JSModuleGraphTest {
   }
 
   @Test
-  public void testManageDependencies4() throws Exception {
+  public void testManageDependenciesSortOnly() throws Exception {
     setUpManageDependenciesTest();
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-
-    List<CompilerInput> results = graph.manageDependencies(depOptions);
+    List<CompilerInput> results = graph.manageDependencies(DependencyOptions.sortOnly());
 
     assertInputs(A, "a1", "a2", "a3");
     assertInputs(B, "b1", "b2");
@@ -280,7 +270,7 @@ public final class JSModuleGraphTest {
       "/** @provideGoog */\nvar COMPILED = false; var goog = goog || {}";
 
   @Test
-  public void testManageDependencies5Impl() throws Exception {
+  public void testManageDependenciesSortOnlyImpl() throws Exception {
     A.add(code("a2", provides("a2"), requires("a1")));
     A.add(code("a1", provides("a1"), requires()));
     A.add(code("base.js", BASEJS, provides(), requires()));
@@ -289,10 +279,7 @@ public final class JSModuleGraphTest {
       input.setCompiler(compiler);
     }
 
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-
-    List<CompilerInput> results = graph.manageDependencies(depOptions);
+    List<CompilerInput> results = graph.manageDependencies(DependencyOptions.sortOnly());
 
     assertInputs(A, "base.js", "a1", "a2");
 
@@ -301,10 +288,7 @@ public final class JSModuleGraphTest {
 
   @Test
   public void testNoFiles() throws Exception {
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-
-    List<CompilerInput> results = graph.manageDependencies(depOptions);
+    List<CompilerInput> results = graph.manageDependencies(DependencyOptions.sortOnly());
     assertThat(results).isEmpty();
   }
 
@@ -368,11 +352,8 @@ public final class JSModuleGraphTest {
         code("a1", provides("a1"), requires("a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9")));
     sourceFiles.add(code("base.js", BASEJS, provides(), requires()));
 
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-    depOptions.setDependencyPruning(true);
-    depOptions.setMoocherDropping(true);
-    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("a1")));
+    DependencyOptions depOptions =
+        DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("a1")));
     for (int i = 0; i < 10; i++) {
       shuffle(sourceFiles);
       A.removeAll();
@@ -422,11 +403,9 @@ public final class JSModuleGraphTest {
     orderedRequires.put("/b/c.js", ImmutableList.of());
     orderedRequires.put("/important.js", ImmutableList.of());
 
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-    depOptions.setDependencyPruning(true);
-    depOptions.setMoocherDropping(true);
-    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
+    DependencyOptions depOptions =
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
     for (int iterationCount = 0; iterationCount < 10; iterationCount++) {
       shuffle(sourceFiles);
       A.removeAll();

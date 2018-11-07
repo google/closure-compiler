@@ -116,12 +116,14 @@ public enum CompilationLevel {
    * @param options The CompilerOptions object to set the options on.
    */
   private static void applySafeCompilationOptions(CompilerOptions options) {
+    // TODO(tjgq): Remove this.
+    options.setDependencyOptions(DependencyOptions.sortOnly());
+
     // ReplaceIdGenerators is on by default, but should run in simple mode.
     options.replaceIdGenerators = false;
 
     // Does not call applyBasicCompilationOptions(options) because the call to
     // skipAllCompilerPasses() cannot be easily undone.
-    options.dependencyOptions.setDependencySorting(true);
     options.setClosurePass(true);
     options.setRenamingPolicy(VariableRenamingPolicy.LOCAL, PropertyRenamingPolicy.OFF);
     options.shadowVariables = true;
@@ -148,6 +150,9 @@ public enum CompilationLevel {
    * @param options The CompilerOptions object to set the options on.
    */
   private static void applyFullCompilationOptions(CompilerOptions options) {
+    // TODO(tjgq): Remove this.
+    options.setDependencyOptions(DependencyOptions.sortOnly());
+
     // Do not call applySafeCompilationOptions(options) because the call can
     // create possible conflicts between multiple diagnostic groups.
 
@@ -155,7 +160,6 @@ public enum CompilationLevel {
     options.setCheckTypes(true);
 
     // All the safe optimizations.
-    options.dependencyOptions.setDependencySorting(true);
     options.setClosurePass(true);
     options.setFoldConstants(true);
     options.setCoalesceVariableNames(true);

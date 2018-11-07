@@ -430,10 +430,11 @@ public final class JSModuleGraph implements Serializable {
    * Apply the dependency options to the list of sources, returning a new source list re-ordering
    * and dropping files as necessary. This module graph will be updated to reflect the new list.
    *
+   * <p>See {@link DependencyOptions} for more information on how this works.
+   *
    * @throws MissingProvideException if an entry point was not provided by any of the inputs.
-   * @see DependencyOptions for more info on how this works.
    */
-  public ImmutableList<CompilerInput> manageDependencies(DependencyOptions depOptions)
+  public ImmutableList<CompilerInput> manageDependencies(DependencyOptions dependencyOptions)
       throws MissingProvideException, MissingModuleException {
 
     // Make a copy since we're going to mutate the graph below.
@@ -442,7 +443,7 @@ public final class JSModuleGraph implements Serializable {
     SortedDependencies<CompilerInput> sorter = new Es6SortedDependencies<>(originalInputs);
 
     Set<CompilerInput> entryPointInputs =
-        createEntryPointInputs(depOptions, getAllInputs(), sorter);
+        createEntryPointInputs(dependencyOptions, getAllInputs(), sorter);
 
     HashMap<String, CompilerInput> inputsByProvide = new HashMap<>();
     for (CompilerInput input : originalInputs) {
@@ -466,7 +467,7 @@ public final class JSModuleGraph implements Serializable {
 
     // The order of inputs, sorted independently of modules.
     List<CompilerInput> absoluteOrder =
-        sorter.getDependenciesOf(originalInputs, depOptions.shouldSortDependencies());
+        sorter.getDependenciesOf(originalInputs, dependencyOptions.shouldSort());
 
     // Figure out which sources *must* be in each module.
     ListMultimap<JSModule, CompilerInput> entryPointInputsPerModule =
@@ -492,7 +493,7 @@ public final class JSModuleGraph implements Serializable {
       // Prefer a depth first ordering of dependencies from entry points.
       // Always orders in a deterministic fashion regardless of the order of provided inputs
       // given the same entry points in the same order.
-      if (depOptions.shouldSortDependencies() && depOptions.shouldPruneDependencies()) {
+      if (dependencyOptions.shouldSort() && dependencyOptions.shouldPrune()) {
         transitiveClosure = new ArrayList<>();
         // We need the ful set of dependencies for each module, so start with the full input set
         Set<CompilerInput> inputsNotYetReached = new HashSet<>(originalInputs);
@@ -511,7 +512,7 @@ public final class JSModuleGraph implements Serializable {
         // Ordered result varies based on the original order of inputs.
         transitiveClosure =
             sorter.getDependenciesOf(
-                entryPointInputsPerModule.get(module), depOptions.shouldSortDependencies());
+                entryPointInputsPerModule.get(module), dependencyOptions.shouldSort());
       }
       for (CompilerInput input : transitiveClosure) {
         JSModule oldModule = input.getModule();
@@ -524,7 +525,7 @@ public final class JSModuleGraph implements Serializable {
         }
       }
     }
-    if (!(depOptions.shouldSortDependencies() && depOptions.shouldPruneDependencies())
+    if (!(dependencyOptions.shouldSort() && dependencyOptions.shouldPrune())
         || entryPointInputsPerModule.isEmpty()) {
       orderedInputs = absoluteOrder;
     }
@@ -578,13 +579,13 @@ public final class JSModuleGraph implements Serializable {
   }
 
   private Set<CompilerInput> createEntryPointInputs(
-      DependencyOptions depOptions,
+      DependencyOptions dependencyOptions,
       Iterable<CompilerInput> inputs,
       SortedDependencies<CompilerInput> sorter)
       throws MissingModuleException, MissingProvideException {
     Set<CompilerInput> entryPointInputs = new LinkedHashSet<>();
     Map<String, JSModule> modulesByName = getModulesByName();
-    if (depOptions.shouldPruneDependencies()) {
+    if (dependencyOptions.shouldPrune()) {
       // Some files implicitly depend on base.js without actually requiring anything.
       // So we always treat it as the first entry point to ensure it's ordered correctly.
       CompilerInput baseJs = sorter.maybeGetInputProviding("goog");
@@ -592,11 +593,11 @@ public final class JSModuleGraph implements Serializable {
         entryPointInputs.add(baseJs);
       }
 
-      if (!depOptions.shouldDropMoochers()) {
+      if (!dependencyOptions.shouldDropMoochers()) {
         entryPointInputs.addAll(sorter.getInputsWithoutProvides());
       }
 
-      for (ModuleIdentifier entryPoint : depOptions.getEntryPoints()) {
+      for (ModuleIdentifier entryPoint : dependencyOptions.getEntryPoints()) {
         CompilerInput entryPointInput = null;
         try {
           if (entryPoint.getClosureNamespace().equals(entryPoint.getModuleName())) {

@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.gwt.client;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.jscomp.AbstractCommandLineRunner.createDefineOrTweakReplacements;
-import static com.google.javascript.jscomp.AbstractCommandLineRunner.createDependencyOptions;
 import static com.google.javascript.jscomp.AbstractCommandLineRunner.createJsModules;
 import static com.google.javascript.jscomp.AbstractCommandLineRunner.parseModuleWrappers;
 
@@ -39,6 +38,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.DefaultExterns;
 import com.google.javascript.jscomp.DependencyOptions;
+import com.google.javascript.jscomp.DependencyOptions.DependencyMode;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
@@ -666,16 +666,20 @@ public final class GwtRunner {
       options.setDefineReplacements(flags.defines.asMap());
     }
 
-    CompilerOptions.DependencyMode dependencyMode = CompilerOptions.DependencyMode.NONE;
+    DependencyMode dependencyMode = null;
     if (flags.dependencyMode != null) {
-      dependencyMode =
-          CompilerOptions.DependencyMode.valueOf(Ascii.toUpperCase(flags.dependencyMode));
+      dependencyMode = DependencyMode.valueOf(Ascii.toUpperCase(flags.dependencyMode));
     }
-    List<ModuleIdentifier> entryPoints = createEntryPoints(getStringArray(flags, "entryPoint"));
-    DependencyOptions dependencyOptions = createDependencyOptions(dependencyMode, entryPoints);
-    if (dependencyOptions != null) {
-      options.setDependencyOptions(dependencyOptions);
-    }
+    List<String> entryPoints = Arrays.asList(getStringArray(flags, "entryPoint"));
+    DependencyOptions dependencyOptions =
+        DependencyOptions.fromFlags(
+            dependencyMode,
+            entryPoints,
+            /* closureEntryPointFlag= */ ImmutableList.of(),
+            /* commonJsEntryModuleFlag= */ null,
+            /* manageClosureDependenciesFlag= */ false,
+            /* onlyClosureDependenciesFlag= */ false);
+    options.setDependencyOptions(dependencyOptions);
 
     options.setTrustedStrings(true);
 
