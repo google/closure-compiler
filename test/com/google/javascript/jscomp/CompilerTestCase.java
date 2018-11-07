@@ -28,8 +28,11 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.MapDifference;
+import com.google.common.collect.Maps;
 import com.google.common.truth.Correspondence;
 import com.google.errorprone.annotations.ForOverride;
+import com.google.javascript.jscomp.AbstractCompiler.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -115,8 +118,20 @@ public abstract class CompilerTestCase {
   private boolean gatherExternPropertiesEnabled;
 
   /**
-   * Whether the Normalize pass runs before pass being tested and
-   * whether the expected JS strings should be normalized.
+   * Whether to verify that the list of getter and setter properties was correctly updated by the
+   * pass.
+   */
+  private boolean verifyGetterAndSetterUpdates;
+
+  /**
+   * Whether to verify that no new getters / setters were added. This is looser than
+   * verifyGetterAndSetterUpdates.
+   */
+  private boolean verifyNoNewGettersOrSetters;
+
+  /**
+   * Whether the Normalize pass runs before pass being tested and whether the expected JS strings
+   * should be normalized.
    */
   private boolean normalizeEnabled;
 
@@ -603,6 +618,8 @@ public abstract class CompilerTestCase {
     this.expectParseWarningsThisTest = false;
     this.expectedSymbolTableError = null;
     this.gatherExternPropertiesEnabled = false;
+    this.verifyGetterAndSetterUpdates = true;
+    this.verifyNoNewGettersOrSetters = false;
     this.inferConsts = false;
     this.languageOut = LanguageMode.ECMASCRIPT5;
     this.markNoSideEffects = false;
@@ -938,6 +955,22 @@ public abstract class CompilerTestCase {
   protected final void enableGatherExternProperties() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     gatherExternPropertiesEnabled = true;
+  }
+
+  /** Disables verification that getters and setters were correctly updated by the pass. */
+  protected final void disableGetterAndSetterUpdateValidation() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    verifyGetterAndSetterUpdates = false;
+    verifyNoNewGettersOrSetters = false;
+  }
+
+  /**
+   * Only validation of getters and setters ensures that there are no new ones. This means it is
+   * okay for a pass to remove getters and setters and not update them.
+   */
+  protected final void onlyValidateNoNewGettersAndSetters() {
+    verifyGetterAndSetterUpdates = false;
+    verifyNoNewGettersOrSetters = true;
   }
 
   /**
@@ -1572,6 +1605,10 @@ public abstract class CompilerTestCase {
           (new GatherExternProperties(compiler)).process(externsRoot, mainRoot);
         }
 
+        if ((verifyGetterAndSetterUpdates || verifyNoNewGettersOrSetters) && i == 0) {
+          GatherGettersAndSetterProperties.update(compiler, externsRoot, mainRoot);
+        }
+
         recentChange.reset();
 
         ChangeVerifier changeVerifier = null;
@@ -1587,6 +1624,39 @@ public abstract class CompilerTestCase {
           // check the AST marking after each pass runs.
           // Verify that changes to the AST are properly marked on the AST.
           changeVerifier.checkRecordedChanges(mainRoot);
+        }
+
+        if (verifyGetterAndSetterUpdates) {
+          assertWithMessage("Pass did not update extern getters / setters")
+              .that(compiler.getExternGetterAndSetterProperties())
+              .isEqualTo(GatherGettersAndSetterProperties.gather(compiler, externsRoot));
+          assertWithMessage("Pass did not update source getters / setters")
+              .that(compiler.getSourceGetterAndSetterProperties())
+              .isEqualTo(GatherGettersAndSetterProperties.gather(compiler, mainRoot));
+        }
+
+        if (verifyNoNewGettersOrSetters) {
+          MapDifference<String, PropertyAccessKind> externsDifference =
+              Maps.difference(
+                  compiler.getExternGetterAndSetterProperties(),
+                  GatherGettersAndSetterProperties.gather(compiler, externsRoot));
+          assertWithMessage("Pass did not update new extern getters / setters")
+              .that(externsDifference.entriesOnlyOnRight())
+              .isEmpty();
+          assertWithMessage("Pass did not update new extern getters / setters")
+              .that(externsDifference.entriesDiffering())
+              .isEmpty();
+
+          MapDifference sourceDifference =
+              Maps.difference(
+                  compiler.getSourceGetterAndSetterProperties(),
+                  GatherGettersAndSetterProperties.gather(compiler, mainRoot));
+          assertWithMessage("Pass did not update new source getters / setters")
+              .that(sourceDifference.entriesOnlyOnRight())
+              .isEmpty();
+          assertWithMessage("Pass did not update new source getters / setters")
+              .that(sourceDifference.entriesDiffering())
+              .isEmpty();
         }
 
         if (astValidationEnabled) {

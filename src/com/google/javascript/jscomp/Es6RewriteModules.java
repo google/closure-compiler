@@ -187,6 +187,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       hotSwapScript(file, null);
     }
     compiler.setFeatureSet(compiler.getFeatureSet().without(MODULES));
+    // This pass may add getters properties on module objects.
+    GatherGettersAndSetterProperties.update(compiler, externs, root);
   }
 
   @Override

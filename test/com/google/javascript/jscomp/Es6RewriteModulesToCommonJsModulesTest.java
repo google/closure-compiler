@@ -40,7 +40,9 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
     super.setUp();
     // ECMASCRIPT5 to trigger module processing after parsing.
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
-    enableRunTypeCheckAfterProcessing();
+    // Pass doesn't need to update these as it should only be used for bundling and thus
+    // optimizations never run after it.
+    disableGetterAndSetterUpdateValidation();
     moduleRoots = ImmutableList.of();
     resolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     prefixReplacements = ImmutableMap.of();

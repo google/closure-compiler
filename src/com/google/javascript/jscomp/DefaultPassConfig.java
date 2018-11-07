@@ -240,6 +240,8 @@ public final class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = new ArrayList<>();
 
+    checks.add(gatherGettersAndSetters);
+
     if (options.shouldGenerateTypedExterns()) {
       checks.add(closureGoogScopeAliases);
       checks.add(closureRewriteClass);
@@ -3433,6 +3435,19 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new GatherModuleMetadata(
               compiler, options.processCommonJSModules, options.moduleResolutionMode);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES_NEXT;
+        }
+      };
+
+  private final PassFactory gatherGettersAndSetters =
+      new PassFactory(PassNames.GATHER_GETTERS_AND_SETTERS, /* isOneTimePass= */ true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new GatherGettersAndSetterProperties(compiler);
         }
 
         @Override

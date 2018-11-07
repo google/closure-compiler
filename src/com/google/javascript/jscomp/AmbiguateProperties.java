@@ -234,6 +234,10 @@ class AmbiguateProperties implements CompilerPass {
         }
       }
     }
+
+    // We may have renamed getter / setter properties.
+    GatherGettersAndSetterProperties.update(compiler, externs, root);
+
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("Collapsed " + numRenamedPropertyNames + " properties into "
                   + numNewPropertyNames + " and skipped renaming "

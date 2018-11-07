@@ -357,6 +357,8 @@ class DisambiguateProperties implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new FindRenameableProperties());
     // Do the actual renaming.
     renameProperties();
+    // Update any getters and setters we renamed.
+    GatherGettersAndSetterProperties.update(compiler, externs, root);
   }
 
   /** Returns the property for the given name, creating it if necessary. */
