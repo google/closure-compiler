@@ -514,17 +514,6 @@ final class AstFactory {
             receiverObjectType == null
                 ? getNativeType(JSTypeNative.UNKNOWN_TYPE)
                 : receiverObjectType.getPropertyType(propertyName);
-      } else {
-        // handle issue where findPropertyType does not correctly replace template types with their
-        // values. (although getPropertyType does).
-        // TODO(b/116830836): remove this code path once TemplatizedType overrides findPropertyType
-        JSType restrictedObjType = receiverJSType.restrictByNotNullOrUndefined();
-        if (!restrictedObjType.getTemplateTypeMap().isEmpty()
-            && getpropType.hasAnyTemplateTypes()) {
-          TemplateTypeMap typeMap = restrictedObjType.getTemplateTypeMap();
-          TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
-          getpropType = getpropType.visit(replacer);
-        }
       }
     }
     if (getpropType == null) {

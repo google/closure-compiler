@@ -176,8 +176,7 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
     rawType.defineDeclaredProperty("property", templateT, null);
 
     JSType templatizedNumber = registry.createTemplatizedType(rawType, NUMBER_TYPE);
-    // TODO(b/116830836): this should be the NUMBER_TYPE
-    assertType(templatizedNumber.findPropertyType("property")).isUnknown();
+    assertType(templatizedNumber.findPropertyType("property")).isEqualTo(NUMBER_TYPE);
   }
 
   /** Returns an unspecialized type with the provided name and two type parameters. */

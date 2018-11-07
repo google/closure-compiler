@@ -12913,6 +12913,68 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "required: string");
   }
 
+  @Test
+  public void testGetPropertyTypeOfUnionType_withMatchingTemplates() {
+    testTypes(
+        lines(
+            "/** @interface @template T */ function Foo() {};",
+            "/** @type {T} */",
+            "Foo.prototype.p;",
+            "/** @interface @template U */ function Bar() {};",
+            "/** @type {U} */",
+            "Bar.prototype.p;",
+            "",
+            "/**",
+            " * @param {!Foo<number>|!Bar<number>} x",
+            " * @return {string} ",
+            " */",
+            "var f = function(x) { return x.p; };"),
+        lines(
+            "inconsistent return type", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testGetPropertyTypeOfUnionType_withDifferingTemplates() {
+    testTypes(
+        lines(
+            "/** @interface @template T */ function Foo() {};",
+            "/** @type {T} */",
+            "Foo.prototype.p;",
+            "/** @interface @template U */ function Bar() {};",
+            "/** @type {U} */",
+            "Bar.prototype.p;",
+            "",
+            "/**",
+            " * @param {!Foo<number>|!Bar<string>} x",
+            " * @return {string} ",
+            " */",
+            "var f = function(x) { return x.p; };"),
+        lines(
+            "inconsistent return type", //
+            "found   : (number|string)",
+            "required: string"));
+  }
+
+  @Test
+  public void testInvalidAssignToPropertyTypeOfUnionType_withMatchingTemplates_doesntWarn() {
+    // We don't warn for this assignment because we treat the type of `x.p` as inferred...
+    testTypes(
+        lines(
+            "/** @interface @template T */ function Foo() {};",
+            "/** @type {T} */",
+            "Foo.prototype.p;",
+            "/** @interface @template U */ function Bar() {};",
+            "/** @type {U} */",
+            "Bar.prototype.p;",
+            "",
+            "/**",
+            " * @param {!Foo<number>|!Bar<number>} x",
+            " */",
+            "var f = function(x) { x.p = 'not a number'; };"));
+  }
+
   // TODO(user): We should flag these as invalid. This will probably happen
   // when we make sure the interface is never referenced outside of its
   // definition. We might want more specific and helpful error messages.

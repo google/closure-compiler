@@ -48,13 +48,16 @@ import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumType;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
+import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.testing.TypeSubject;
 import java.util.HashMap;
 import java.util.Map;
@@ -2296,6 +2299,29 @@ public final class TypeInferenceTest {
             "}"));
 
     assertTypeOfExpression("LENGTH").toStringIsEqualTo("number");
+  }
+
+  @Test
+  public void testInferringTypeInObjectPattern_fromTemplatizedProperty() {
+    // create type Foo with one property templatized with type T
+    TemplateType templateKey = registry.createTemplateType("T");
+    FunctionType fooCtor =
+        registry.createConstructorType(
+            "Foo", null, IR.paramList(), null, ImmutableList.of(templateKey), false);
+    ObjectType fooInstanceType = fooCtor.getInstanceType();
+    fooInstanceType.defineDeclaredProperty("data", templateKey, null);
+
+    // create a variable obj with type Foo<number>
+    JSType fooOfNumber = templatize(fooInstanceType, ImmutableList.of(getNativeType(NUMBER_TYPE)));
+    assuming("obj", fooOfNumber);
+    inFunction(
+        lines(
+            "const {data} = obj;", //
+            "OBJ: obj;",
+            "DATA: data"));
+
+    assertTypeOfExpression("OBJ").toStringIsEqualTo("Foo<number>");
+    assertTypeOfExpression("DATA").toStringIsEqualTo("number");
   }
 
   @Test
