@@ -100,6 +100,7 @@ class Es6TemplateLiterals {
    * @param n A TAGGED_TEMPLATELIT node
    */
   static void visitTaggedTemplateLiteral(NodeTraversal t, Node n, boolean addTypes) {
+    AstFactory astFactory = t.getCompiler().createAstFactory();
     JSTypeRegistry registry = t.getCompiler().getTypeRegistry();
     JSType stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
     JSType arrayType = createGenericType(addTypes, registry, JSTypeNative.ARRAY_TYPE, stringType);
@@ -109,8 +110,6 @@ class Es6TemplateLiterals {
     JSType numberType = createType(addTypes, registry, JSTypeNative.NUMBER_TYPE);
 
     Node templateLit = n.getLastChild();
-    // Prepare the raw and cooked string arrays.
-    Node raw = createRawStringArray(templateLit, arrayType, stringType);
     Node cooked =
         createCookedStringArray(templateLit, templateArrayType, stringType, voidType, numberType);
 
@@ -132,17 +131,27 @@ class Es6TemplateLiterals {
     t.reportCodeChange(var);
 
     // Define the "raw" property on the introduced variable.
-    Node defineRaw =
-        IR.exprResult(
-                withType(
-                    IR.assign(
-                        withType(
-                            IR.getprop(
-                                callsiteId.cloneNode(), withType(IR.string("raw"), stringType)),
-                            arrayType),
-                        raw),
-                    arrayType))
-            .useSourceInfoIfMissingFromForTree(n);
+    Node defineRaw;
+    if (cookedAndRawStringsSame(templateLit)) {
+      // The cooked and raw versions of the array are the same, so just call slice() on the
+      // cooked array at runtime to make the raw array a copy of the cooked array.
+      defineRaw =
+          IR.exprResult(
+                  astFactory.createAssign(
+                      astFactory.createGetProp(callsiteId.cloneNode(), "raw"),
+                      astFactory.createCall(
+                          astFactory.createGetProp(callsiteId.cloneNode(), "slice"))))
+              .useSourceInfoIfMissingFromForTree(n);
+    } else {
+      // The raw string array is different, so we need to construct it.
+      Node raw = createRawStringArray(templateLit, arrayType, stringType);
+      defineRaw =
+          IR.exprResult(
+                  astFactory.createAssign(
+                      astFactory.createGetProp(callsiteId.cloneNode(), "raw"), raw))
+              .useSourceInfoIfMissingFromForTree(n);
+    }
+
     script.addChildAfter(defineRaw, var);
 
     // Generate the call expression.
@@ -182,5 +191,19 @@ class Es6TemplateLiterals {
       }
     }
     return array;
+  }
+
+  private static boolean cookedAndRawStringsSame(Node n) {
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      if (!child.isTemplateLitString()) {
+        continue;
+      }
+      // getCookedString() returns null when the template literal has an illegal escape sequence.
+      if (child.getCookedString() == null
+          || !child.getCookedString().equals(child.getRawString())) {
+        return false;
+      }
+    }
+    return true;
   }
 }

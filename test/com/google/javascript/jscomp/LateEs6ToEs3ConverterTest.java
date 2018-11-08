@@ -244,43 +244,54 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         "tag``",
         lines(
             "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['']);",
-            "$jscomp$templatelit$0.raw = [''];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag`${hello} world`",
         lines(
             "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
-            "$jscomp$templatelit$0.raw = ['', ' world'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, hello);"));
 
     test(
         "tag`${hello} ${world}`",
         lines(
             "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' ', '']);",
-            "$jscomp$templatelit$0.raw = ['', ' ', ''];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, hello, world);"));
 
     test(
         "tag`\"`",
         lines(
             "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['\\\"']);",
-            "$jscomp$templatelit$0.raw = ['\\\"'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0);"));
 
     // The cooked string and the raw string are different.
+    // Note that this test is tricky to read, because any escape sequences will be escaped twice.
+    // This table is helpful:
+    //
+    //     Java String    JavaScript String      JavaScript Value
+    //
+    //     ----------------------------------------------------------------
+    //     \t        ->   <tab character>    -> <tab character> (length: 1)
+    //     \\t       ->   \t                 -> <tab character> (length: 1)
+    //     \\\t      ->   \<tab character>   -> <tab character> (length: 1)
+    //     \\\\t     ->   \\t                -> \t              (length: 2)
+    //
     test(
-        "tag`a\tb`",
+        "tag`a\\tb`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['a\tb']);",
-            "$jscomp$templatelit$0.raw = ['a\\tb'];",
+            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['a\\tb']);",
+            "$jscomp$templatelit$0.raw = ['a\\\\tb'];",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag()`${hello} world`",
         lines(
             "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
-            "$jscomp$templatelit$0.raw = ['', ' world'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag()($jscomp$templatelit$0, hello);"));
 
     test(
@@ -289,7 +300,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         expected(
             lines(
                 "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
-                "$jscomp$templatelit$0.raw = ['', ' world'];",
+                "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
                 "a.b($jscomp$templatelit$0, hello);")));
 
     // https://github.com/google/closure-compiler/issues/1299
@@ -298,14 +309,14 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         lines(
             "var $jscomp$templatelit$0 = "
                 + "/** @type {!ITemplateArray} */ (['<p class=\"foo\">', '</p>']);",
-            "$jscomp$templatelit$0.raw = ['<p class=\"foo\">', '</p>'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, x);"));
     test(
         "tag`<p class='foo'>${x}</p>`",
         lines(
             "var $jscomp$templatelit$0 = "
                 + "/** @type {!ITemplateArray} */ (['<p class=\\'foo\\'>', '</p>']);",
-            "$jscomp$templatelit$0.raw = ['<p class=\\'foo\\'>', '</p>'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, x);"));
 
     // invalid escape sequences result in undefined cooked string
