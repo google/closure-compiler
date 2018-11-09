@@ -360,7 +360,7 @@ public final class ConformanceRules {
 
     protected boolean isSomeUnknownType(Node n) {
       JSType type = n.getJSType();
-      return (type == null || type.isSomeUnknownType());
+      return (type == null || type.isUnknownType());
     }
 
     protected boolean isTypeVariable(Node n) {
@@ -624,11 +624,11 @@ public final class ConformanceRules {
               foundType = foundObj.getRawType();
             }
           }
-          if (foundType.isSomeUnknownType()
-             || foundType.isTypeVariable()
-             || foundType.isEmptyType()
-             || foundType.isAllType()
-             || foundType.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
+          if (foundType.isUnknownType()
+              || foundType.isTypeVariable()
+              || foundType.isEmptyType()
+              || foundType.isAllType()
+              || foundType.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
             if (reportLooseTypeViolations) {
               return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
             }

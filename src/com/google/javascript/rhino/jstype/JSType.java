@@ -292,13 +292,14 @@ public abstract class JSType implements Serializable {
     return false;
   }
 
+  /**
+   * Whether to treat this type as the unknown type.
+   *
+   * Note this includes more types than just the UnknownType class represented by '?'; an override
+   * will return true for objects whose implicit prototype is unknown.
+   */
   public boolean isUnknownType() {
     return false;
-  }
-
-  public final boolean isSomeUnknownType() {
-    // OTI's notion of isUnknownType already accounts for looseness (see override in ObjectType).
-    return isUnknownType();
   }
 
   public boolean isCheckedUnknownType() {

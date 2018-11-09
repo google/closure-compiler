@@ -270,7 +270,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
    */
   private Config findMatchingClass(
       JSType callClassType, Collection<String> declarationNames) {
-    if (!callClassType.isEmptyType() && !callClassType.isSomeUnknownType()) {
+    if (!callClassType.isEmptyType() && !callClassType.isUnknownType()) {
       for (String declarationName : declarationNames) {
         String className = getClassFromDeclarationName(declarationName);
         JSType methodClassType = registry.getGlobalType(className);
