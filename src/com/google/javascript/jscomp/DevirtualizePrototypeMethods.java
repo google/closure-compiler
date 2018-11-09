@@ -229,6 +229,7 @@ class DevirtualizePrototypeMethods implements CompilerPass {
                                        DefinitionSite definitionSite) {
 
     Definition definition = definitionSite.definition;
+    JSModule definitionModule = definitionSite.module;
 
     // Only functions may be rewritten.
     // Functions that access "arguments" are not eligible since
@@ -266,6 +267,8 @@ class DevirtualizePrototypeMethods implements CompilerPass {
       return false;
     }
 
+    JSModuleGraph moduleGraph = compiler.getModuleGraph();
+
     for (UseSite site : useSites) {
       // Accessing the property directly prevents rewrite.
       if (!isCall(site)) {
@@ -282,6 +285,15 @@ class DevirtualizePrototypeMethods implements CompilerPass {
       }
       checkState(!singleSiteDefinitions.isEmpty());
       checkState(singleSiteDefinitions.contains(definition));
+
+      // Accessing the property in a module loaded before the
+      // definition module prevents rewrite; accessing a variable
+      // before definition results in a parse error.
+      JSModule callModule = site.module;
+      if ((definitionModule != callModule)
+          && ((callModule == null) || !moduleGraph.dependsOn(callModule, definitionModule))) {
+        return false;
+      }
     }
 
     return true;

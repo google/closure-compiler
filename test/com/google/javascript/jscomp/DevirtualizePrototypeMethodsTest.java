@@ -578,6 +578,105 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     testSame("(function() {})()");
   }
 
+  private static class ModuleTestInput {
+    static final String DEFINITION = "a.prototype.foo = function() {}";
+    static final String USE = "x.foo()";
+
+    static final String REWRITTEN_DEFINITION =
+        "var JSCompiler_StaticMethods_foo=" + "function(JSCompiler_StaticMethods_foo$self){}";
+    static final String REWRITTEN_USE = "JSCompiler_StaticMethods_foo(x)";
+
+    private ModuleTestInput() {}
+  }
+
+  @Test
+  public void testRewriteSameModule1() {
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            semicolonJoin(ModuleTestInput.DEFINITION, ModuleTestInput.USE),
+            // m2
+            "");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          semicolonJoin(ModuleTestInput.REWRITTEN_DEFINITION, ModuleTestInput.REWRITTEN_USE),
+          // m2
+          "",
+        });
+  }
+
+  @Test
+  public void testRewriteSameModule2() {
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            "",
+            // m2
+            semicolonJoin(ModuleTestInput.DEFINITION, ModuleTestInput.USE));
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          semicolonJoin(ModuleTestInput.REWRITTEN_DEFINITION, ModuleTestInput.REWRITTEN_USE)
+        });
+  }
+
+  @Test
+  public void testRewriteSameModule3() {
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            semicolonJoin(ModuleTestInput.USE, ModuleTestInput.DEFINITION),
+            // m2
+            "");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          semicolonJoin(ModuleTestInput.REWRITTEN_USE, ModuleTestInput.REWRITTEN_DEFINITION),
+          // m2
+          ""
+        });
+  }
+
+  @Test
+  public void testRewriteDefinitionBeforeUse() {
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            ModuleTestInput.DEFINITION,
+            // m2
+            ModuleTestInput.USE);
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          ModuleTestInput.REWRITTEN_DEFINITION,
+          // m2
+          ModuleTestInput.REWRITTEN_USE
+        });
+  }
+
+  @Test
+  public void testNoRewriteUseBeforeDefinition() {
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            ModuleTestInput.USE,
+            // m2
+            ModuleTestInput.DEFINITION);
+
+    testSame(modules);
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new DevirtualizePrototypeMethods(compiler);
