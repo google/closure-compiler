@@ -2038,4 +2038,43 @@ public final class CompilerTest {
   public void testWeakSourcesSaveRestore() throws Exception {
     weakSourcesModulesHelper(/* saveAndRestore= */ true);
   }
+
+  @Test
+  public void testWeakSourcesEntryPoint() throws Exception {
+    SourceFile extern = SourceFile.fromCode("extern.js", "/** @externs */ function alert(x) {}");
+    SourceFile strong =
+        SourceFile.fromCode(
+            "strong.js",
+            lines(
+                "goog.module('strong');",
+                "const T = goog.requireType('weak');",
+                "/** @param {!T} x */ function f(x) { alert(x); }"),
+            SourceKind.STRONG);
+    SourceFile weak =
+        SourceFile.fromCode(
+            "type.js",
+            lines(
+                "goog.module('weak');",
+                "/** @typedef {number|string} */ exports.T;",
+                "sideeffect();"),
+            SourceKind.WEAK);
+
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    options.setClosurePass(true);
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("strong"))));
+
+    Compiler compiler = new Compiler();
+
+    compiler.init(ImmutableList.of(extern), ImmutableList.of(strong, weak), options);
+
+    compiler.parse();
+    compiler.check();
+    compiler.performOptimizations();
+
+    assertThat(compiler.toSource())
+        .isEqualTo("var module$exports$strong={};function module$contents$strong_f(x){alert(x)};");
+  }
 }

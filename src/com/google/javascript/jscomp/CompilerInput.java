@@ -269,6 +269,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
           SimpleDependencyInfo.builder(getName(), getName())
               .setProvides(concat(dependencyInfo.getProvides(), extraProvides))
               .setRequires(concat(dependencyInfo.getRequires(), extraRequires))
+              .setTypeRequires(dependencyInfo.getTypeRequires())
               .setLoadFlags(dependencyInfo.getLoadFlags())
               .build();
       extraRequires.clear();

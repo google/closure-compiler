@@ -1929,9 +1929,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
 
-    ArrayList<String> allDeps = new ArrayList<>();
-    allDeps.addAll(input.getRequiredSymbols());
-    allDeps.addAll(input.getDynamicRequires());
+    Iterable<String> allDeps =
+        Iterables.concat(
+            input.getRequiredSymbols(), input.getDynamicRequires(), input.getTypeRequires());
     for (String requiredNamespace : allDeps) {
       CompilerInput requiredInput = null;
       boolean requiredByModuleImport = false;
