@@ -145,43 +145,54 @@ public final class CodePrinter {
     }
 
     /**
-     * Reports to the code consumer that the given line has been cut at the
-     * given position, i.e. a \n has been inserted there. Or that a cut has
-     * been undone, i.e. a previously inserted \n has been removed.
-     * All mappings in the source maps after that position will be renormalized
-     * as needed.
+     * Reports to the code consumer that the given line has been cut at the given position, i.e. a
+     * \n has been inserted there. Or that a cut has been undone, i.e. a previously inserted \n has
+     * been removed. All mappings in the source maps after that position will be renormalized as
+     * needed.
+     *
+     * @param lineIndex The index of the line at which the newline was inserted/removed.
+     * @param charIndex The position on the line at which the newline was inserted./removed
+     * @param insertion True if a newline was inserted, false if a newline was removed.
+     * @param lastLineContainsLineBreaks True if the last line contains line breaks. This is useful
+     *     when the last line is a template literal that spans multiple lines.
      */
-    void reportLineCut(int lineIndex, int charIndex, boolean insertion) {
+    void reportLineCut(
+        int lineIndex, int charIndex, boolean insertion, boolean lastLineContainsLineBreaks) {
       if (createSrcMap) {
         for (Mapping mapping : allMappings) {
-          mapping.start = convertPosition(mapping.start, lineIndex, charIndex,
-              insertion);
+          mapping.start =
+              convertPosition(
+                  mapping.start, lineIndex, charIndex, insertion, lastLineContainsLineBreaks);
 
           if (mapping.end != null) {
-            mapping.end = convertPosition(mapping.end, lineIndex, charIndex,
-                insertion);
+            mapping.end =
+                convertPosition(
+                    mapping.end, lineIndex, charIndex, insertion, lastLineContainsLineBreaks);
           }
         }
       }
     }
 
     /**
-     * Converts the given position by normalizing it against the insertion
-     * or removal of a newline at the given line and character position.
+     * Converts the given position by normalizing it against the insertion or removal of a newline
+     * at the given line and character position.
      *
-     * @param position The existing position before the newline was inserted.
-     * @param lineIndex The index of the line at which the newline was inserted.
-     * @param characterPosition The position on the line at which the newline
-     *     was inserted.
-     * @param insertion True if a newline was inserted, false if a newline was
-     *     removed.
-     *
+     * @param position The existing position before the newline was inserted/removed.
+     * @param lineIndex The index of the line at which the newline was inserted/removed.
+     * @param characterPosition The position on the line at which the newline was inserted.
+     * @param insertion True if a newline was inserted, false if a newline was removed.
+     * @param lastLineContainsLineBreaks True if the last line contains line breaks. This is useful
+     *     when the last line is a template literal that spans multiple lines.
      * @return The normalized position.
-     * @throws IllegalStateException if an attempt to reverse a line cut is
-     *     made on a previous line rather than the current line.
+     * @throws IllegalStateException if an attempt to reverse a line cut is made on a previous line
+     *     rather than the current line.
      */
-    private static FilePosition convertPosition(FilePosition position, int lineIndex,
-                                                int characterPosition, boolean insertion) {
+    private static FilePosition convertPosition(
+        FilePosition position,
+        int lineIndex,
+        int characterPosition,
+        boolean insertion,
+        boolean lastLineContainsLineBreaks) {
       int originalLine = position.getLine();
       int originalChar = position.getColumn();
       if (insertion) {
@@ -198,11 +209,14 @@ public final class CodePrinter {
           return new FilePosition(
               originalLine - 1, originalChar + characterPosition);
         } else if (originalLine > lineIndex) {
+          if (lastLineContainsLineBreaks) {
+            return new FilePosition(originalLine - 1, originalChar);
+          } else {
             // Not supported, can only undo a cut on the most recent line. To
             // do this on a previous lines would require reevaluating the cut
             // positions on all subsequent lines.
-            throw new IllegalStateException(
-                "Cannot undo line cut on a previous line.");
+            throw new IllegalStateException("Cannot undo line cut on a previous line.");
+          }
         } else {
           return position;
         }
@@ -648,7 +662,7 @@ public final class CodePrinter {
           int position = preferredBreakPosition;
           code.insert(position, '\n');
           prevCutPosition = position;
-          reportLineCut(lineIndex, position - lineStartPosition, true);
+          reportLineCut(lineIndex, position - lineStartPosition, true, false);
           lineIndex++;
           lineLength -= (position - lineStartPosition);
           prevLineStartPosition = lineStartPosition;
@@ -675,15 +689,25 @@ public final class CodePrinter {
         append(";");
         startNewLine();
       } else if (prevCutPosition > 0) {
+
         // Shift the previous break to end of file by replacing it with a
         // <space> and adding a new break at end of file. Adding the space
         // handles cases like instanceof\nfoo. (it would be nice to avoid this)
         code.setCharAt(prevCutPosition, ' ');
         lineStartPosition = prevLineStartPosition;
-        lineLength = code.length() - lineStartPosition;
+        int cutLineIndex = lineIndex;
         // We need +1 to account for the space added few lines above.
         int prevLineEndPosition = prevCutPosition - prevLineStartPosition + 1;
-        reportLineCut(lineIndex, prevLineEndPosition, false);
+        if (code.indexOf("\n", prevCutPosition) != -1) {
+          // having "\n" in the code after prevCutPosition means that the original code had
+          // irremovable \n such as template literals with line breaks.
+          lineLength = code.length() - code.lastIndexOf("\n");
+          cutLineIndex = lineIndex - CharMatcher.is('\n').countIn(code.substring(prevCutPosition));
+          reportLineCut(cutLineIndex, prevLineEndPosition, false, true);
+        } else {
+          lineLength = code.length() - lineStartPosition;
+          reportLineCut(cutLineIndex, prevLineEndPosition, false, false);
+        }
         lineIndex--;
         prevCutPosition = 0;
         prevLineStartPosition = 0;

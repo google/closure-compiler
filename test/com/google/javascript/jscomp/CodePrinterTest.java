@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.SourceMap.Format;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -3321,6 +3322,28 @@ public final class CodePrinterTest extends CodePrinterTestBase {
                 .setCompilerOptions(codePrinterOptions)
                 .setPrettyPrint(true)
                 .setLineBreak(true)
+                .build())
+        .isEqualTo(expectedCode);
+  }
+
+  @Test
+  public void testMultiLineTemplateLiteralInLastLine() {
+    // related to b/117613188
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    String code = "var x = 'this is a pretty long line'; var y = `hello\nworld\nfoo\nbar`;";
+    String expectedCode = "var x=\"this is a pretty long line\"; var y=`hello\nworld\nfoo\nbar`;\n";
+
+    CompilerOptions codePrinterOptions = new CompilerOptions();
+    // This needs to be smaller than the length of the first statement to force a line break
+    codePrinterOptions.setLineLengthThreshold(30);
+    // This needs to be true since `endFile()` of CompactCodePrinter would just return if false
+    codePrinterOptions.setPreferLineBreakAtEndOfFile(true);
+
+    assertThat(
+            new CodePrinter.Builder(parse(code))
+                .setCompilerOptions(codePrinterOptions)
+                .setPrettyPrint(false)
+                .setSourceMap(Format.DEFAULT.getInstance())
                 .build())
         .isEqualTo(expectedCode);
   }
