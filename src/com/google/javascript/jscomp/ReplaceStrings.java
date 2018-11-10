@@ -325,27 +325,21 @@ class ReplaceStrings extends AbstractPostOrderCallback
         replacementString = getReplacement(key);
         replacement = IR.string(replacementString);
         break;
+      case TEMPLATELIT:
       case ADD:
+      case NAME:
         StringBuilder keyBuilder = new StringBuilder();
         Node keyNode = IR.string("");
-        replacement = buildReplacement(expr, keyNode, keyBuilder);
+        replacement = buildReplacement(t, expr, keyNode, keyBuilder);
         key = keyBuilder.toString();
+        if (key.equals(placeholderToken)) {
+          // There is no static text in expr - only a placeholder - so just return expr directly.
+          // In this case, replacement is just the string join ('`' + expr), which is not useful.
+          return expr;
+        }
         replacementString = getReplacement(key);
         keyNode.setString(replacementString);
         break;
-      case NAME:
-        // If the referenced variable is a constant, use its value.
-        Var var = t.getScope().getVar(expr.getString());
-        if (var != null && var.isInferredConst()) {
-          Node value = var.getInitialValue();
-          if (value != null && value.isString()) {
-            key = value.getString();
-            replacementString = getReplacement(key);
-            replacement = IR.string(replacementString);
-            break;
-          }
-        }
-        return expr;
       default:
         // This may be a function call or a variable reference. We don't
         // replace these.
@@ -388,29 +382,58 @@ class ReplaceStrings extends AbstractPostOrderCallback
   }
 
   /**
-   * Builds a replacement abstract syntax tree for the string expression {@code
-   * expr}. Appends any string literal values that are encountered to
-   * {@code keyBuilder}, to build the expression's replacement key.
+   * Builds a replacement abstract syntax tree for the string expression {@code expr}. Appends any
+   * string literal values that are encountered to {@code keyBuilder}, to build the expression's
+   * replacement key.
    *
    * @param expr A JS expression that evaluates to a string value
-   * @param prefix The JS expression to which {@code expr}'s replacement is
-   *        logically being concatenated. It is a partial solution to the
-   *        problem at hand and will either be this method's return value or a
-   *        descendant of it.
+   * @param prefix The JS expression to which {@code expr}'s replacement is logically being
+   *     concatenated. It is a partial solution to the problem at hand and will either be this
+   *     method's return value or a descendant of it.
    * @param keyBuilder A builder of the string expression's replacement key
    * @return The abstract syntax tree that should replace {@code expr}
    */
-  private Node buildReplacement(
-      Node expr, Node prefix, StringBuilder keyBuilder) {
+  private Node buildReplacement(NodeTraversal t, Node expr, Node prefix, StringBuilder keyBuilder) {
     switch (expr.getToken()) {
       case ADD:
         Node left = expr.getFirstChild();
         Node right = left.getNext();
-        prefix = buildReplacement(left, prefix, keyBuilder);
-        return buildReplacement(right, prefix, keyBuilder);
+        prefix = buildReplacement(t, left, prefix, keyBuilder);
+        return buildReplacement(t, right, prefix, keyBuilder);
+      case TEMPLATELIT:
+        for (Node child = expr.getFirstChild(); child != null; child = child.getNext()) {
+          switch (child.getToken()) {
+            case TEMPLATELIT_STRING:
+              keyBuilder.append(child.getCookedString());
+              break;
+            case TEMPLATELIT_SUB:
+              prefix = buildReplacement(t, child.getFirstChild(), prefix, keyBuilder);
+              break;
+            default:
+              throw new IllegalStateException("Unexpected TEMPLATELIT child: " + child);
+          }
+        }
+        return prefix;
       case STRING:
         keyBuilder.append(expr.getString());
         return prefix;
+      case NAME:
+        // If the referenced variable is a constant, use its value.
+        Var var = t.getScope().getVar(expr.getString());
+        if (var != null && (var.isInferredConst() || var.isConst())) {
+          Node initialValue = var.getInitialValue();
+          if (initialValue != null) {
+            Node newKeyNode = IR.string("");
+            StringBuilder newKeyBuilder = new StringBuilder();
+            Node replacement = buildReplacement(t, initialValue, newKeyNode, newKeyBuilder);
+            if (replacement == newKeyNode) {
+              keyBuilder.append(newKeyBuilder);
+              return prefix;
+            }
+          }
+          // Not a simple string constant.
+        }
+        // fall-through
       default:
         keyBuilder.append(placeholderToken);
         prefix = IR.add(prefix, IR.string(placeholderToken));

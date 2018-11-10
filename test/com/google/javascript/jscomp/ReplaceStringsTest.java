@@ -230,6 +230,22 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testThrowError3a() {
+    testDebugStrings(
+        lines(
+            "/** @const */ var preposition = 'in';",
+            "/** @const */ var action = 'search';",
+            "/** @const */ var error = 'Unhandled ' + action;",
+            "throw Error(error + ' ' + type + ' ' + preposition + ' ' + search);"),
+        lines(
+            "/** @const */ var preposition = 'in';",
+            "/** @const */ var action = 'search';",
+            "/** @const */ var error = 'Unhandled ' + action;",
+            "throw Error('a' + '`' + type + '`' + search);"),
+        (new String[] {"a", "Unhandled search ` in `"}));
+  }
+
+  @Test
   public void testThrowError4() {
     testDebugStrings(
         lines(
@@ -262,6 +278,53 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testThrowError_templateLiteral() {
+    testDebugStrings(
+        "throw Error(`Unhandled search ${type} in ${search}`);",
+        "throw Error('a' + '`' + type + '`' + search);",
+        (new String[] {"a", "Unhandled search ` in `"}));
+  }
+
+  @Test
+  public void testThrowError_templateLiteralWithConstantTerms() {
+    testDebugStrings(
+        lines(
+            "const preposition = 'in';",
+            "const action = 'search';",
+            "const error = `Unhandled ${action}`;",
+            "throw Error(`${error} ${'type ' + getType()} ${preposition} ${search}`);"),
+        lines(
+            "const preposition = 'in';",
+            "const action = 'search';",
+            "const error = `Unhandled ${action}`;",
+            "throw Error('a' + '`' + getType() + '`' + search);"),
+        (new String[] {"a", "Unhandled search type ` in `"}));
+  }
+
+  @Test
+  public void testThrowError_templateLiteralWithNonconstantTerms() {
+    // NOTE: We can only inline error if it is *transitively* constant. Otherwise it is left alone,
+    // since any transitive strings may have changed, and we certainly don't want to call functions
+    // a second time.
+    testDebugStrings(
+        lines(
+            "const error = `Unhandled ${action}`;",
+            "throw Error(`${error} ${type} in ${search}`);"),
+        lines(
+            "const error = `Unhandled ${action}`;",
+            "throw Error('a' + '`' + error + '`' + type + '`' + search);"),
+        (new String[] {"a", "` ` in `"}));
+  }
+
+  @Test
+  public void testThrowError_templateLiteralConcatenation() {
+    testDebugStrings(
+        "throw Error(`Unhandled mail` + ` search type ${type}`);",
+        "throw Error('a' + '`' + type);",
+        (new String[] {"a", "Unhandled mail search type `"}));
+  }
+
+  @Test
   public void testThrowNonStringError() {
     // No replacement is done when an error is neither a string literal nor
     // a string concatenation expression.
@@ -272,11 +335,28 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testThrowError_taggedTemplateLiteral() {
+    // No replacement is done when there is a tag function.
+    testDebugStrings(
+        "throw Error(x`abc`);", //
+        "throw Error(x`abc`);",
+        (new String[] {}));
+  }
+
+  @Test
   public void testThrowConstStringError() {
     testDebugStrings(
-        "var AA = 'uvw', AB = 'xyz'; throw Error(AB);",
-        "var AA = 'uvw', AB = 'xyz'; throw Error('a');",
-        (new String [] { "a", "xyz" }));
+        "var AA = 'uvw', AB = AA + 'xyz'; throw Error(AB);",
+        "var AA = 'uvw', AB = AA + 'xyz'; throw Error('a');",
+        (new String[] {"a", "uvwxyz"}));
+  }
+
+  @Test
+  public void testThrowConstStringError_templateLiteral() {
+    testDebugStrings(
+        "var AA = 'uvw', AB = `${AA}xyz`; throw Error(AB);",
+        "var AA = 'uvw', AB = `${AA}xyz`; throw Error('a');",
+        (new String[] {"a", "uvwxyz"}));
   }
 
   @Test

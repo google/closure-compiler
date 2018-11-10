@@ -2273,28 +2273,31 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   /** Replace strings. */
-  private final PassFactory replaceStrings = new PassFactory("replaceStrings", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
-        @Override public void process(Node externs, Node root) {
-          ReplaceStrings pass = new ReplaceStrings(
-              compiler,
-              options.replaceStringsPlaceholderToken,
-              options.replaceStringsFunctionDescriptions,
-              options.replaceStringsReservedStrings,
-              options.replaceStringsInputMap);
-          pass.process(externs, root);
-          compiler.setStringMap(pass.getStringMap());
+  private final PassFactory replaceStrings =
+      new PassFactory("replaceStrings", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new CompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              ReplaceStrings pass =
+                  new ReplaceStrings(
+                      compiler,
+                      options.replaceStringsPlaceholderToken,
+                      options.replaceStringsFunctionDescriptions,
+                      options.replaceStringsReservedStrings,
+                      options.replaceStringsInputMap);
+              pass.process(externs, root);
+              compiler.setStringMap(pass.getStringMap());
+            }
+          };
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
         }
       };
-    }
-
-    @Override
-    protected FeatureSet featureSet() {
-      return ES5;
-    }
-  };
 
   /** Optimizes the "arguments" array. */
   private final PassFactory optimizeArgumentsArray =
