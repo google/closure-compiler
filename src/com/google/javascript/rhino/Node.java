@@ -2111,6 +2111,11 @@ public class Node implements Serializable {
     }
   }
 
+  @Nullable
+  public final QualifiedName getQualifiedNameObject() {
+    return isQualifiedName() ? new QualifiedName.NodeQname(this) : null;
+  }
+
   /**
    * Helper method for {@link #getQualifiedName} to handle GETPROP nodes.
    *

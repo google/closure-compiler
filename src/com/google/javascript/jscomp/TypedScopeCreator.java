@@ -63,11 +63,11 @@ import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticSymbolTable;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
@@ -225,36 +225,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
   }
 
-  /**
-   * Stores the type and qualified name for a destructuring rvalue, which has no actual AST node.
-   * The {@code qualifiedName} is therefore a detached Node cloned out of the source tree with extra
-   * getprops added onto it. Cloning should generally be pretty cheap (since it's always just a
-   * qualified name). Nevertheless, we may pull out a QualifiedName class abstraction at some point
-   * in the future, which would allow avoiding the clone in the first place. Using a Node here is
-   * necessary to avoid duplicating logic for non-destructured qualified name aliasing.
-   */
+  /** Stores the type and qualified name for a destructuring rvalue. */
   private static class RValueInfo {
     @Nullable final JSType type;
-    @Nullable final Node qualifiedName;
+    @Nullable final QualifiedName qualifiedName;
 
-    RValueInfo(JSType type, Node qualifiedName) {
+    RValueInfo(JSType type, QualifiedName qualifiedName) {
       this.type = type;
       this.qualifiedName = qualifiedName;
     }
 
     static RValueInfo empty() {
       return new RValueInfo(null, null);
-    }
-
-    /** Returns a new RValueInfo whose qualified name has an extra property. */
-    RValueInfo forProperty(JSType type, String property) {
-      if (qualifiedName == null) {
-        return new RValueInfo(type, null);
-      } else if (qualifiedName.getParent() == null) {
-        return new RValueInfo(type, IR.getprop(qualifiedName, property));
-      }
-      // qualified name is already in the tree, so we need to clone it first.
-      return new RValueInfo(type, IR.getprop(qualifiedName.cloneTree(), property));
     }
   }
 
@@ -901,7 +883,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                 value != null
                     ? new RValueInfo(
                         getDeclaredRValueType(/* lValue= */ null, value),
-                        /* qualifiedName= */ value)
+                        value.getQualifiedNameObject())
                     : new RValueInfo(unknownType, /* qualifiedName= */ null));
       }
     }
@@ -928,14 +910,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       RValueInfo rvalue = patternTypeSupplier.get();
       JSType patternType = rvalue.type;
       String propertyName = target.getStringKey().getString();
+      QualifiedName qname =
+          rvalue.qualifiedName != null ? rvalue.qualifiedName.getprop(propertyName) : null;
       if (patternType == null || patternType.isUnknownType()) {
-        return rvalue.forProperty(null, propertyName);
+        return new RValueInfo(null, qname);
       }
       if (patternType.hasProperty(propertyName)) {
         JSType type = patternType.findPropertyType(propertyName);
-        return rvalue.forProperty(type, propertyName);
+        return new RValueInfo(type, qname);
       }
-      return rvalue.forProperty(null, propertyName);
+      return new RValueInfo(null, qname);
     }
 
     void defineDestructuringPatternInVarDeclaration(
@@ -1890,7 +1874,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (NodeUtil.isConstantDeclaration(compiler.getCodingConvention(), info, lValue)) {
         if (rValue != null) {
           JSType rValueType = getDeclaredRValueType(lValue, rValue);
-          maybeDeclareAliasType(lValue, rValue, rValueType);
+          maybeDeclareAliasType(lValue, rValue.getQualifiedNameObject(), rValueType);
           if (rValueType != null) {
             return rValueType;
           }
@@ -1920,7 +1904,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * @param rvalueName the rvalue's qualified name if it exists, null otherwise
      */
     private void maybeDeclareAliasType(
-        Node lValue, @Nullable Node rValue, @Nullable JSType rValueType) {
+        Node lValue, @Nullable QualifiedName rValue, @Nullable JSType rValueType) {
       // NOTE: this allows some strange patterns such allowing instance properties
       // to be aliases of constructors, and then creating a local alias of that to be
       // used as a type name.  Consider restricting this.
@@ -1949,9 +1933,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         FunctionType functionType = rValueType.toMaybeFunctionType();
         typeRegistry.declareType(
             currentScope, lValue.getQualifiedName(), functionType.getInstanceType());
-      } else if (rValue.isQualifiedName()) {
+      } else if (rValue != null) {
         // Also infer a type name for aliased @typedef
-        JSType rhsNamedType = typeRegistry.getType(currentScope, rValue.getQualifiedName());
+        JSType rhsNamedType = typeRegistry.getType(currentScope, rValue.join());
         if (rhsNamedType != null) {
           typeRegistry.declareType(currentScope, lValue.getQualifiedName(), rhsNamedType);
         }
@@ -1959,15 +1943,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /** Returns the AST node associated with the definition, if any. */
-    private Node getDefinitionNode(Node qnameNode) {
-      if (!qnameNode.isGetProp()) {
-        TypedVar var = currentScope.getVar(qnameNode.getQualifiedName());
+    private Node getDefinitionNode(QualifiedName qname) {
+      if (qname.isSimple()) {
+        TypedVar var = currentScope.getVar(qname.getComponent());
         return var != null ? var.getNameNode() : null;
       }
-      ObjectType parent = ObjectType.cast(lookupQualifiedName(qnameNode.getFirstChild()));
-      return parent != null
-          ? parent.getPropertyDefSite(qnameNode.getLastChild().getString())
-          : null;
+      ObjectType parent = ObjectType.cast(lookupQualifiedName(qname.getOwner()));
+      return parent != null ? parent.getPropertyDefSite(qname.getComponent()) : null;
     }
 
     /**
@@ -1996,7 +1978,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       // If rValue is a name, try looking it up in the current scope.
       if (rValue.isQualifiedName()) {
-        return lookupQualifiedName(rValue);
+        return lookupQualifiedName(rValue.getQualifiedNameObject());
       }
 
       // Check for simple invariant operations, such as "!x" or "+x" or "''+x"
@@ -2013,7 +1995,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       if (rValue.isNew() && rValue.getFirstChild().isQualifiedName()) {
-        JSType targetType = lookupQualifiedName(rValue.getFirstChild());
+        JSType targetType = lookupQualifiedName(rValue.getFirstChild().getQualifiedNameObject());
         if (targetType != null) {
           FunctionType fnType = targetType
               .restrictByNotNullOrUndefined()
@@ -2047,23 +2029,20 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       return null;
     }
 
-    private JSType lookupQualifiedName(Node n) {
-      String name = n.getQualifiedName();
-      TypedVar slot = currentScope.getVar(name);
+    private JSType lookupQualifiedName(QualifiedName qname) {
+      TypedVar slot = currentScope.getVar(qname.join());
       if (slot != null && !slot.isTypeInferred()) {
         JSType type = slot.getType();
         if (type != null && !type.isUnknownType()) {
           return type;
         }
-      } else if (n.isGetProp()) {
-        JSType type = lookupQualifiedName(n.getFirstChild());
+      } else if (!qname.isSimple()) {
+        JSType type = lookupQualifiedName(qname.getOwner());
         // NOTE: The scope only contains declared types at this
         // point so any property we find is a value type
         // to look up properties on.
         if (type != null) {
-          JSType propType = type.findPropertyType(
-             n.getLastChild().getString());
-          return propType;
+          return type.findPropertyType(qname.getComponent());
         }
       }
       return null;
@@ -2504,7 +2483,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             .withType(getNativeType(NO_TYPE))
             .allowLaterTypeInference(false)
             .defineSlot();
-        Node definitionNode = getDefinitionNode(candidate.getFirstChild());
+        Node definitionNode = getDefinitionNode(candidate.getFirstChild().getQualifiedNameObject());
         if (definitionNode != null) {
           ObjectType parent = ObjectType.cast(definitionNode.getJSType());
           if (parent != null) {
