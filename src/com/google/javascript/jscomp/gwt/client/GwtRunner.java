@@ -679,7 +679,9 @@ public final class GwtRunner {
             /* commonJsEntryModuleFlag= */ null,
             /* manageClosureDependenciesFlag= */ false,
             /* onlyClosureDependenciesFlag= */ false);
-    options.setDependencyOptions(dependencyOptions);
+    if (dependencyOptions != null) {
+      options.setDependencyOptions(dependencyOptions);
+    }
 
     options.setTrustedStrings(true);
 
