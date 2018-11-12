@@ -2152,6 +2152,32 @@ chrome.enterprise.deviceAttributes.getDirectoryDeviceId = function(callback) {};
 
 
 /**
+ * @param {function(string): void} callback Called with the serial number of the
+ *     device.
+ * @return {undefined}
+ */
+chrome.enterprise.deviceAttributes.getDeviceSerialNumber = function(
+    callback) {};
+
+
+/**
+ * @param {function(string): void} callback Called with the Asset ID of the
+ *     device.
+ * @return {undefined}
+ */
+chrome.enterprise.deviceAttributes.getDeviceAssetId = function(callback) {};
+
+
+/**
+ * @param {function(string): void} callback Called with the Annotated Location
+ *     of the device.
+ * @return {undefined}
+ */
+chrome.enterprise.deviceAttributes.getDeviceAnnotatedLocation = function(
+    callback) {};
+
+
+/**
  * @constructor
  * platformKeys allows for generating hardware-backed keys and the installation
  * of certificates for these keys.
