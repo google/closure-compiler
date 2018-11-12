@@ -6261,7 +6261,39 @@ chrome.system.cpu = {};
 
 
 /**
- * @param {function(!Object)} callback
+ * @typedef {?{
+ *   user: number,
+ *   kernel: number,
+ *   idle: number,
+ *   total: number,
+ * }}
+ */
+chrome.system.cpu.CpuTime;
+
+
+/**
+ * @typedef {?{
+ *   usage: !chrome.system.cpu.CpuTime,
+ * }}
+ */
+chrome.system.cpu.ProcessorInfo;
+
+
+/**
+ * @typedef {?{
+ *   numOfProcessors: number,
+ *   archName: string,
+ *   modelName: string,
+ *   features: !Array<string>,
+ *   processors: !Array<!chrome.system.cpu.ProcessorInfo>,
+ *   temperatures: !Array<number>,
+ * }}
+ */
+chrome.system.cpu.CpuInfo;
+
+
+/**
+ * @param {function(!chrome.system.cpu.CpuInfo)} callback
  * @return {undefined}
  */
 chrome.system.cpu.getInfo = function(callback) {};
