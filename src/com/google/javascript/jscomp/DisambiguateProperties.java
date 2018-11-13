@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -421,6 +422,8 @@ class DisambiguateProperties implements CompilerPass {
         handleCall(t, n);
       } else if (n.isClass()) {
         handleClass(n);
+      } else if (n.isObjectPattern()) {
+        handleObjectPattern(n);
       }
     }
 
@@ -536,6 +539,50 @@ class DisambiguateProperties implements CompilerPass {
                   name,
                   String.valueOf(ownerType),
                   member.toString(),
+                  suggestion));
+        }
+      }
+    }
+
+    private void handleObjectPattern(Node pattern) {
+      JSType objectPatternType = checkNotNull(pattern.getJSType());
+
+      for (DestructuredTarget target :
+          DestructuredTarget.createAllNonEmptyTargetsInPattern(
+              compiler.getTypeRegistry(), objectPatternType, pattern)) {
+        if (!target.hasStringKey()) {
+          // ignore computed properties and rest
+          continue;
+        }
+        Node stringKey = target.getStringKey();
+        String name = stringKey.getString();
+        Property prop = getProperty(name);
+        if (!prop.scheduleRenaming(stringKey, processProperty(prop, objectPatternType, null))
+            && propertiesToErrorFor.containsKey(name)) {
+          String suggestion = "";
+          if (objectPatternType.isAllType() || objectPatternType.isUnknownType()) {
+            String qName = target.getNode().getQualifiedName();
+            if (qName != null) {
+              suggestion = "Consider tightening the type assigned to " + qName;
+            } else {
+              suggestion = "Consider tightening the type assigned to " + target.getNode();
+            }
+          } else {
+            List<String> errors = new ArrayList<>();
+            printErrorLocations(errors, objectPatternType);
+            if (!errors.isEmpty()) {
+              suggestion = "Consider fixing errors for the following types:\n";
+              suggestion += Joiner.on("\n").join(errors);
+            }
+          }
+          compiler.report(
+              JSError.make(
+                  stringKey,
+                  propertiesToErrorFor.get(name),
+                  Warnings.INVALIDATION,
+                  name,
+                  String.valueOf(objectPatternType),
+                  stringKey.toString(),
                   suggestion));
         }
       }

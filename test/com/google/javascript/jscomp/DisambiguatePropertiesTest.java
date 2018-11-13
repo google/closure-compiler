@@ -20,6 +20,8 @@ import static com.google.javascript.jscomp.DisambiguateProperties.Warnings.INVAL
 import static com.google.javascript.jscomp.DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE;
 
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.DisambiguateProperties.Warnings;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.HashMap;
@@ -3038,7 +3040,190 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "{}");
   }
 
-  // TODO(b/117574089): add tests for destructuring
+  /** Tests for destructuring */
+  @Test
+  public void testDisambiguatePropertyReference_objectPattern_stringKey_inDeclaration() {
+    testSets(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.prop = 'static property!';",
+            "const {prop} = (new Foo());"),
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.Foo$prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.function_new_Foo___undefined$prop = 'static property!';",
+            "const {Foo$prop: prop} = (new Foo());"),
+        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+  }
+
+  @Test
+  public void testDisambiguateCtorPropertyReference_objectPattern_stringKey_inDeclaration() {
+    testSets(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.prop = 'static property!';",
+            "const {prop} = Foo;"),
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.Foo$prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.function_new_Foo___undefined$prop = 'static property!';",
+            "const {function_new_Foo___undefined$prop: prop} = Foo;"),
+        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+  }
+
+  @Test
+  public void testDisambiguatePropertyReference_objectPattern_stringKey_withDefaultValue() {
+    testSets(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @type {number|undefined} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.prop = 'static property!';",
+            "const {prop = 0} = (new Foo());"),
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @type {number|undefined} */",
+            "    this.Foo$prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.function_new_Foo___undefined$prop = 'static property!';",
+            "const {Foo$prop: prop = 0} = (new Foo());"),
+        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+  }
+
+  @Test
+  public void testDisambiguatePropertyReference_objectPattern_stringKey_inParameter() {
+    testSets(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.prop = 'static property!';",
+            "const fn = (/** !Foo */ {prop}) => prop;"),
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.Foo$prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.function_new_Foo___undefined$prop = 'static property!';",
+            "const fn = (/** !Foo */ {Foo$prop: prop}) => prop;"),
+        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+  }
+
+  @Test
+  public void testDisambiguatePropertyReference_objectPattern_stringKey_inNestedPattern() {
+    testSets(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.prop = 'static property!';",
+            "const {f: {prop}} = {f: new Foo()};"),
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.Foo$prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.function_new_Foo___undefined$prop = 'static property!';",
+            "const {f: {Foo$prop: prop}} = {f: new Foo()};"),
+        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+  }
+
+  @Test
+  public void testPropertyReference_leftFromObjectPatternRest_blocksDisambiguation() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    testSets(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.prop = 'static property!';",
+            "const {...rest} = (new Foo());",
+            "alert(rest.prop);"),
+        "{}");
+  }
+
+  @Test
+  public void testObjectPattern_withTypeMismatch_emitsInvalidationError_aboutType() {
+    testError(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  constructor() {",
+                "    /** @const {number} */",
+                "    this.foobar = 3;",
+                "  }",
+                "}",
+                "/** @type {string} */",
+                "Foo.foobar = 'static property!';",
+                // cause a type mismatch warning on Foo, preventing disambiguation
+                "const /** !Foo */ foo = {};")),
+        error(Warnings.INVALIDATION).withMessageContaining("Foo"));
+  }
+
+  @Test
+  public void testObjectPattern_withUnknownType_stringKey_emitsInvalidationError_aboutName() {
+    testError(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  constructor() {",
+                "    /** @const {number} */",
+                "    this.foobar = 3;",
+                "  }",
+                "}",
+                "/** @type {string} */",
+                "Foo.foobar = 'static property!';",
+                // because unknownName is of the unknown type '?', we can't disambiguate foobar
+                "const {foobar: someRandomName} = unknownName;")),
+        error(Warnings.INVALIDATION).withMessageContaining("someRandomName"));
+  }
 
   private void testSets(String js, String expected, final String fieldTypes) {
     test(srcs(js), expected(expected));

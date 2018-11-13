@@ -28,15 +28,16 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import javax.annotation.Nullable;
 
 /**
- * Keeps track of "invalidating types" that force type-based
- * optimizations to back off, specifically for {@link InlineProperties},
- * {@link AmbiguateProperties}, and {@link DisambiguateProperties}.
- * Note that disambiguation has slightly different behavior from the
- * other two, as pointed out in implementation comments.
+ * Keeps track of "invalidating types" that force type-based optimizations to back off, specifically
+ * for {@link InlineProperties}, {@link AmbiguateProperties}, and {@link DisambiguateProperties}.
+ * Note that disambiguation has slightly different behavior from the other two, as pointed out in
+ * implementation comments.
  */
 final class InvalidatingTypes {
   private final ImmutableSet<JSType> types;
+  /** Whether to allow disambiguating enum properties */
   private final boolean allowEnums;
+  /** Whether to allow types like 'str'.toString() */
   private final boolean allowScalars;
 
   private InvalidatingTypes(Builder builder) {
@@ -49,6 +50,8 @@ final class InvalidatingTypes {
     if (type == null || type.isUnknownType() || type.isEmptyType()) {
       return true;
     }
+
+    // A union type is invalidating if any one of its members is invalidating
     if (type.isUnionType()) {
       type = type.restrictByNotNullOrUndefined();
       if (type.isUnionType()) {
@@ -66,7 +69,9 @@ final class InvalidatingTypes {
     if (objType == null) {
       return !allowScalars;
     }
+
     return types.contains(objType)
+        // Don't disambiguate properties on object literals, e.g. var obj = {a: 'a', b: 'b'};
         || objType.isAmbiguousObject()
         || (!allowEnums && objType.isEnumType())
         || (!allowScalars && objType.isBoxableScalar());
