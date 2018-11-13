@@ -44,9 +44,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType.EqCache;
+import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.io.Serializable;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Manages a mapping from TemplateType to its resolved JSType. Provides utility
@@ -67,7 +69,6 @@ public class TemplateTypeMap implements Serializable {
   // instance. These fully-resolved values are necessary for determining the
   // equivalence of two TemplateTypeMap instances.
   private final JSType[] resolvedTemplateValues;
-  private boolean inRecursiveEquivalenceCheck = false;
   final JSTypeRegistry registry;
 
   TemplateTypeMap(JSTypeRegistry registry,
@@ -223,18 +224,16 @@ public class TemplateTypeMap implements Serializable {
 
   public boolean checkEquivalenceHelper(TemplateTypeMap that,
       EquivalenceMethod eqMethod, EqCache eqCache, SubtypingMode subtypingMode) {
-    boolean result = false;
-    if (!this.inRecursiveEquivalenceCheck && !that.inRecursiveEquivalenceCheck) {
-      this.inRecursiveEquivalenceCheck = true;
-      that.inRecursiveEquivalenceCheck = true;
-
-      result = checkEquivalenceHelper(eqMethod, this, that, eqCache, subtypingMode)
-          && checkEquivalenceHelper(eqMethod, that, this, eqCache, subtypingMode);
-
-      this.inRecursiveEquivalenceCheck = false;
-      that.inRecursiveEquivalenceCheck = false;
+    @Nullable MatchStatus status = eqCache.checkCache(this, that);
+    if (status == null) {
+      boolean result =
+          checkEquivalenceHelper(eqMethod, this, that, eqCache, subtypingMode)
+              && checkEquivalenceHelper(eqMethod, that, this, eqCache, subtypingMode);
+      eqCache.updateCache(this, that, result ? MatchStatus.MATCH : MatchStatus.NOT_MATCH);
+      return result;
+    } else {
+      return status.subtypeValue();
     }
-    return result;
   }
 
   @SuppressWarnings("ReferenceEquality")

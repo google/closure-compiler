@@ -35,6 +35,20 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testCorrectSubtyping_ofRecursiveTemplateType() {
+    testTypes(
+        lines(
+            "/** @template T */", //
+            "class Base { }",
+            "",
+            "/** @extends {Base<!Child>} */",
+            "class Child extends Base { }",
+            "",
+            // Confirm that `Child` is seen as a subtype of `Base<Child>`.
+            "const /** !Base<!Child> */ x = new Child();"));
+  }
+
+  @Test
   public void testArrowInferredReturn() {
     // TODO(johnlenz): infer simple functions return results.
 
