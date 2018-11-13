@@ -2819,6 +2819,88 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     assertNode(thisNode).hasToken(Token.THIS).hasEqualSourceInfoTo(sourceSuperGet);
   }
 
+  @Test
+  public void testStringKeyGetterAndSetter() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    // Can't add a property to a struct
+    disableTypeCheck();
+    disableTypeInfoValidation();
+
+    test(
+        lines(
+            "class MyClass {",
+            "  /** @param {number} v */",
+            "  set 'setter'(v) {}",
+            "  /** @return {number} */",
+            "  get 'getter'() { return 1; }",
+            "}"),
+        lines(
+            "/** @constructor @struct */",
+            "let MyClass=function(){};",
+            "/** @type {number} */",
+            "MyClass.prototype['setter'];",
+            "/** @type {number} */",
+            "MyClass.prototype['getter'];",
+            "$jscomp.global.Object.defineProperties(",
+            "    MyClass.prototype,",
+            "    {",
+            "      'setter': {",
+            "        configurable:true,",
+            "        enumerable:true,",
+            "        /** @this {MyClass} @param {number} v */",
+            "        set:function(v){ }",
+            "      },",
+            "      'getter': {",
+            "        configurable:true,",
+            "        enumerable:true,",
+            "        /** @this {MyClass} @return {number} */",
+            "        get:function(){ return 1; }",
+            "      },",
+            "    })"));
+  }
+
+  @Test
+  public void testNumericGetterAndSetter() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    // Can't add a property to a struct
+    disableTypeCheck();
+    disableTypeInfoValidation();
+
+    test(
+        lines(
+            "class MyClass {",
+            "  /** @param {number} v */",
+            "  set 1(v) {}",
+            "  /** @return {number} */",
+            "  get 1.5() { return 1; }",
+            "}"),
+        lines(
+            "/** @constructor @struct */",
+            "let MyClass=function(){};",
+            "/** @type {number} */",
+            "MyClass.prototype['1'];",
+            "/** @type {number} */",
+            "MyClass.prototype['1.5'];",
+            "$jscomp.global.Object.defineProperties(",
+            "    MyClass.prototype,",
+            "    {",
+            "      1: {",
+            "        configurable:true,",
+            "        enumerable:true,",
+            "        /** @this {MyClass} @param {number} v */",
+            "        set:function(v){ }",
+            "      },",
+            "      1.5: {",
+            "        configurable:true,",
+            "        enumerable:true,",
+            "        /** @this {MyClass} @return {number} */",
+            "        get:function(){ return 1; }",
+            "      },",
+            "    })"));
+  }
+
   /** Returns the first node (preorder) in the given AST labeled as {@code label} */
   private Node getNodeMatchingLabel(Node root, String label) {
     if (root.isLabel() && root.getFirstChild().getString().equals(label)) {

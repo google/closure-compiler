@@ -402,7 +402,11 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         obj.addChildToBack(
             astFactory.createComputedProperty(member.getFirstChild().cloneTree(), prop));
       } else {
-        obj.addChildToBack(astFactory.createStringKey(member.getString(), prop));
+        Node stringKey = astFactory.createStringKey(member.getString(), prop);
+        if (member.isQuotedString()) {
+          stringKey.putBooleanProp(Node.QUOTED_PROP, true);
+        }
+        obj.addChildToBack(stringKey);
       }
     }
 
@@ -441,22 +445,30 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member);
     addToDefinePropertiesObject(metadata, member);
 
-    Map<String, JSDocInfo> membersToDeclare;
+    Map<String, ClassProperty> membersToDeclare =
+        member.isStaticMember()
+            ? metadata.getClassMembersToDeclare()
+            : metadata.getPrototypeMembersToDeclare();
+    ClassProperty.Builder builder = ClassProperty.builder();
     String memberName;
+
     if (member.isComputedProp()) {
       checkState(!member.isStaticMember());
-      membersToDeclare = metadata.getPrototypeComputedPropsToDeclare();
       memberName = member.getFirstChild().getQualifiedName();
-    } else {
-      membersToDeclare =
-          member.isStaticMember()
-              ? metadata.getClassMembersToDeclare()
-              : metadata.getPrototypeMembersToDeclare();
+      builder.kind(ClassProperty.PropertyKind.COMPUTED_PROPERTY);
+    } else if (member.isQuotedString()) {
       memberName = member.getString();
+      builder.kind(ClassProperty.PropertyKind.QUOTED_PROPERTY);
+    } else {
+      memberName = member.getString();
+      builder.kind(ClassProperty.PropertyKind.NORMAL_PROPERTY);
     }
-    JSDocInfo existingJSDoc = membersToDeclare.get(memberName);
-    JSTypeExpression existingType = existingJSDoc == null ? null : existingJSDoc.getType();
-    if (existingType != null && typeExpr != null && !existingType.equals(typeExpr)) {
+
+    builder.propertyKey(memberName);
+    ClassProperty existingProperty = membersToDeclare.get(memberName);
+    JSTypeExpression existingType =
+        existingProperty == null ? null : existingProperty.jsDocInfo().getType();
+    if (existingProperty != null && typeExpr != null && !existingType.equals(typeExpr)) {
       compiler.report(JSError.make(member, CONFLICTING_GETTER_SETTER_TYPE, memberName));
     } else {
       JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
@@ -475,7 +487,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       if (member.isStaticMember() && !member.isComputedProp()) {
         jsDoc.recordNoCollapse();
       }
-      membersToDeclare.put(memberName, jsDoc.build());
+      builder.jsDocInfo(jsDoc.build());
+      membersToDeclare.put(memberName, builder.build());
     }
   }
 
@@ -515,41 +528,17 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
    */
   private void addTypeDeclarations(
       Scope scope, ClassDeclarationMetadata metadata, Node insertionPoint) {
-    for (Map.Entry<String, JSDocInfo> entry : metadata.getPrototypeMembersToDeclare().entrySet()) {
-      String declaredMember = entry.getKey();
+    for (ClassProperty property : metadata.getPrototypeMembersToDeclare().values()) {
       Node declaration =
-          astFactory.createGetProp(metadata.getClassPrototypeNode().cloneTree(), declaredMember);
-      declaration.setJSDocInfo(entry.getValue());
-      declaration =
-          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.getClassNameNode());
+          property.getDeclaration(astFactory, scope, metadata.getClassPrototypeNode().cloneTree());
+      declaration.useSourceInfoIfMissingFromForTree(metadata.getClassNameNode());
       insertionPoint.getParent().addChildAfter(declaration, insertionPoint);
       insertionPoint = declaration;
     }
-    for (Map.Entry<String, JSDocInfo> entry : metadata.getClassMembersToDeclare().entrySet()) {
-      String declaredMember = entry.getKey();
+    for (ClassProperty property : metadata.getClassMembersToDeclare().values()) {
       Node declaration =
-          astFactory.createGetProp(metadata.getFullClassNameNode().cloneTree(), declaredMember);
-      declaration.setJSDocInfo(entry.getValue());
-      declaration =
-          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.getClassNameNode());
-      insertionPoint.getParent().addChildAfter(declaration, insertionPoint);
-      insertionPoint = declaration;
-    }
-    for (Map.Entry<String, JSDocInfo> entry :
-        metadata.getPrototypeComputedPropsToDeclare().entrySet()) {
-      String declaredMember = entry.getKey();
-      // Note that at the moment we only allow qualified names as the keys for class computed
-      // properties.
-      // TODO(bradfordcsmith): Clone the original declared member qualified name instead of creating
-      // it from scratch from the string form. That way we would just reuse the type information,
-      // instead of AstFactory having to re-create it.
-      Node computedPropertyQName = astFactory.createQName(scope, declaredMember);
-      Node declaration =
-          astFactory.createGetElem(
-              metadata.getClassPrototypeNode().cloneTree(), computedPropertyQName);
-      declaration.setJSDocInfo(entry.getValue());
-      declaration =
-          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.getClassNameNode());
+          property.getDeclaration(astFactory, scope, metadata.getFullClassNameNode().cloneTree());
+      declaration.useSourceInfoIfMissingFromForTree(metadata.getClassNameNode());
       insertionPoint.getParent().addChildAfter(declaration, insertionPoint);
       insertionPoint = declaration;
     }
@@ -620,6 +609,118 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         .setJSType(objectPropertyDescriptorType);
   }
 
+  @AutoValue
+  abstract static class ClassProperty {
+    enum PropertyKind {
+      /**
+       * Any kind of quoted property, which can include numeric properties that we treated as
+       * quoted.
+       *
+       * <pre>
+       * class Example {
+       *   'quoted'() {}
+       *   42() { return 'the answer'; }
+       * }
+       * </pre>
+       */
+      QUOTED_PROPERTY,
+
+      /**
+       * A computed property, e.g. using bracket [] access.
+       *
+       * <p>Computed properties *must* currently be qualified names, and not literals, function
+       * calls, etc.
+       *
+       * <pre>
+       * class Example {
+       *   [variable]() {}
+       *   [another.example]() {}
+       * }
+       * </pre>
+       */
+      COMPUTED_PROPERTY,
+
+      /**
+       * A normal property definition.
+       *
+       * <pre>
+       * class Example {
+       *   normal() {}
+       * }
+       * </pre>
+       */
+      NORMAL_PROPERTY,
+    }
+
+    /**
+     * The name of this ClassProperty for NORMAL_PROPERTY, the string value of this property if
+     * QUOTED_PROPERTY, or the qualified name of the computed property.
+     */
+    abstract String propertyKey();
+
+    abstract PropertyKind kind();
+
+    abstract JSDocInfo jsDocInfo();
+
+    /**
+     * Returns an EXPR_RESULT node that declares this property on the given node.
+     *
+     * <p>Examples:
+     *
+     * <pre>
+     *   /** @type {string} *\/
+     *   Class.prototype.property;
+     *
+     *   /** @type {string} *\/
+     *   Class.staticProperty;
+     * </pre>
+     *
+     * @param toDeclareOn the node to declare the property on. This should either be a reference to
+     *     the class (if a static property) or a class' prototype (if non-static). This should
+     *     always be a new node, as this method will insert it into the returned EXPR_RESULT.
+     */
+    final Node getDeclaration(AstFactory astFactory, Scope scope, Node toDeclareOn) {
+      Node decl = null;
+
+      switch (kind()) {
+        case QUOTED_PROPERTY:
+          decl = astFactory.createGetElem(toDeclareOn, astFactory.createString(propertyKey()));
+          break;
+        case COMPUTED_PROPERTY:
+          // Note that at the moment we only allow qualified names as the keys for class computed
+          // properties.
+          // TODO(bradfordcsmith): Clone the original declared member qualified name instead of
+          // creating it from scratch from the string form. That way we would just reuse the type
+          // information, instead of AstFactory having to re-create it.
+          decl =
+              astFactory.createGetElem(toDeclareOn, astFactory.createQName(scope, propertyKey()));
+          break;
+        case NORMAL_PROPERTY:
+          decl = astFactory.createGetProp(toDeclareOn, propertyKey());
+          break;
+      }
+
+      decl.setJSDocInfo(jsDocInfo());
+      decl = astFactory.exprResult(decl);
+      return decl;
+    }
+
+    static Builder builder() {
+      return new AutoValue_Es6RewriteClass_ClassProperty.Builder();
+    }
+
+    @AutoValue.Builder
+    abstract static class Builder {
+      abstract Builder propertyKey(String value);
+
+      abstract Builder kind(PropertyKind value);
+
+      abstract Builder jsDocInfo(JSDocInfo value);
+
+      abstract ClassProperty build();
+    }
+  }
+
   /**
    * Represents static metadata on a class declaration expression - i.e. the qualified name that a
    * class declares (directly or by assignment), whether it's anonymous, and where transpiled code
@@ -645,14 +746,11 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
      */
     abstract Node getDefinePropertiesObjForClass();
 
-    // Normal declarations to be added to the prototype: Foo.prototype.bar
-    abstract Map<String, JSDocInfo> getPrototypeMembersToDeclare();
+    // Property declarations to be added to the prototype
+    abstract Map<String, ClassProperty> getPrototypeMembersToDeclare();
 
-    // Computed property declarations to be added to the prototype: Foo.prototype[bar]
-    abstract Map<String, JSDocInfo> getPrototypeComputedPropsToDeclare();
-
-    // Normal declarations to be added to the class: Foo.bar
-    abstract Map<String, JSDocInfo> getClassMembersToDeclare();
+    // Property declarations to be added to the class
+    abstract Map<String, ClassProperty> getClassMembersToDeclare();
 
     /**
      * The fully qualified name of the class, as a cloneable node. May come from the class itself or
@@ -682,12 +780,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       abstract Node getFullClassNameNode();
 
       abstract Builder setPrototypeMembersToDeclare(
-          Map<String, JSDocInfo> prototypeMembersToDeclare);
+          Map<String, ClassProperty> prototypeMembersToDeclare);
 
-      abstract Builder setPrototypeComputedPropsToDeclare(
-          Map<String, JSDocInfo> prototypeComputedPropsToDeclare);
-
-      abstract Builder setClassMembersToDeclare(Map<String, JSDocInfo> classMembersToDeclare);
+      abstract Builder setClassMembersToDeclare(Map<String, ClassProperty> classMembersToDeclare);
 
       abstract Builder setAnonymous(boolean anonymous);
 
@@ -707,8 +802,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     public static Builder builder() {
       return new AutoValue_Es6RewriteClass_ClassDeclarationMetadata.Builder()
           .setPrototypeMembersToDeclare(new LinkedHashMap<>())
-          .setClassMembersToDeclare(new LinkedHashMap<>())
-          .setPrototypeComputedPropsToDeclare(new LinkedHashMap<>());
+          .setClassMembersToDeclare(new LinkedHashMap<>());
     }
 
     /**

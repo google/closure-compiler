@@ -91,6 +91,17 @@ final class AstFactory {
   }
 
   /**
+   * Returns a new EXPR_RESULT node.
+   *
+   * <p>Blocks have no type information, so this is functionally the same as calling {@code
+   * IR.exprResult(expr)}. It exists so that a pass can be consistent about always using {@code
+   * AstFactory} to create new nodes.
+   */
+  Node exprResult(Node expr) {
+    return IR.exprResult(expr);
+  }
+
+  /**
    * Returns a new BLOCK node.
    *
    * <p>Blocks have no type information, so this is functionally the same as calling {@code
