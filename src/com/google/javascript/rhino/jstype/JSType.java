@@ -413,6 +413,18 @@ public abstract class JSType implements Serializable {
     return null;
   }
 
+  /** Returns this object cast to FunctionType or throws an exception if it isn't a FunctionType. */
+  public FunctionType assertFunctionType() {
+    FunctionType result = checkNotNull(toMaybeFunctionType(), "not a FunctionType: %s", this);
+    return result;
+  }
+
+  /** Returns this object cast to ObjectType or throws an exception if it isn't an ObjectType. */
+  public ObjectType assertObjectType() {
+    ObjectType result = checkNotNull(toMaybeObjectType(), "Not an ObjectType: %s", this);
+    return result;
+  }
+
   /** Null-safe version of toMaybeFunctionType(). */
   @SuppressWarnings("AmbiguousMethodReference")
   public static FunctionType toMaybeFunctionType(JSType type) {

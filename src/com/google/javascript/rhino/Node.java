@@ -2512,6 +2512,12 @@ public class Node implements Serializable {
     return jstype;
   }
 
+  /** Returns the compiled inferred type on this node, or throws an NPE if there isn't one. */
+  public final JSType getJSTypeRequired() {
+    checkNotNull(jstype, "no jstype: %s", this);
+    return jstype;
+  }
+
   public final Node setJSType(@Nullable JSType jstype) {
     this.jstype = jstype;
     return this;

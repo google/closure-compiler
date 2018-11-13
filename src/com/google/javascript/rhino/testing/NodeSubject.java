@@ -80,6 +80,10 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
     check("checkTreeEquals(%s)", node).that(actual().checkTreeEquals(node)).isNull();
   }
 
+  public TypeSubject hasJSTypeThat() {
+    return TypeSubject.assertType(actual().getJSTypeRequired());
+  }
+
   public void hasType(Token type) {
     hasToken(type);
   }
