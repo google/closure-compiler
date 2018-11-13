@@ -217,11 +217,11 @@ PolymerElement.prototype.notifySplices = function(path, splices) {};
  *   or an array of path parts (e.g. `['foo.bar', 'baz']`).  Note that
  *   bracketed expressions are not supported; string-based path parts
  *   *must* be separated by dots.  Note that when dereferencing array
- *   indicies, the index may be used as a dotted part directly
+ *   indices, the index may be used as a dotted part directly
  *   (e.g. `users.12.name` or `['users', 12, 'name']`).
  * @param {*} value Value to set at the specified path.
  * @param {Object=} root Root object from which the path is evaluated.
-*/
+ */
 PolymerElement.prototype.set = function(path, value, root) {};
 
 /**
@@ -236,7 +236,7 @@ PolymerElement.prototype.set = function(path, value, root) {};
  *   or an array of path parts (e.g. `['foo.bar', 'baz']`).  Note that
  *   bracketed expressions are not supported; string-based path parts
  *   *must* be separated by dots.  Note that when dereferencing array
- *   indicies, the index may be used as a dotted part directly
+ *   indices, the index may be used as a dotted part directly
  *   (e.g. `users.12.name` or `['users', 12, 'name']`).
  * @param {Object=} root Root object from which the path is evaluated.
  * @return {*} Value at the path, or `undefined` if any part of the path
@@ -1557,7 +1557,8 @@ Polymer.ResolveUrl.resolveUrl = function(url, baseURI) {}
 Polymer.RenderStatus = {};
 
 /**
- * Makes callback when first render occurs or immediately if render has occured.
+ * Makes callback when first render occurs or immediately if render has
+ * occurred.
  * @param {!function()} cb Callback function to be invoked.
  */
 Polymer.RenderStatus.whenReady = function(cb) {}
