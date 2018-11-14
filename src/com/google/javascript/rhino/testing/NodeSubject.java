@@ -99,6 +99,26 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
     return this;
   }
 
+  public NodeSubject isThis() {
+    check("isThis()").that(actual().isThis()).isTrue();
+    return this;
+  }
+
+  public NodeSubject isSuper() {
+    check("isSuper()").that(actual().isSuper()).isTrue();
+    return this;
+  }
+
+  public NodeSubject isArrowFunction() {
+    check("isArrowFunction()").that(actual().isArrowFunction()).isTrue();
+    return this;
+  }
+
+  public NodeSubject isCall() {
+    check("isCall()").that(actual().isCall()).isTrue();
+    return this;
+  }
+
   public NodeSubject isMemberFunctionDef(String name) {
     check("isMemberFunction()").that(actual().isMemberFunctionDef()).isTrue();
     check("getString()").that(actual().getString()).isEqualTo(name);

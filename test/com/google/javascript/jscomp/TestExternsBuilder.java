@@ -258,16 +258,168 @@ public class TestExternsBuilder {
           "Array.prototype.concat = function(var_args) {};",
           "");
 
-  private final String argumentsExterns =
+  private static final String ARGUMENTS_EXTERNS =
       lines(
           "/**",
           " * @constructor",
           " * @implements {IArrayLike<T>}",
           " * @implements {Iterable<?>}",
           " * @template T",
-          " * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/arguments",
           " */",
           "function Arguments() {}",
+          "",
+          "/** @type {!Arguments} */",
+          "var arguments;",
+          "");
+
+  private static final String CONSOLE_EXTERNS =
+      lines(
+          "/** @constructor */",
+          "function Console() {};",
+          "",
+          "/**",
+          " * @param {...*} var_args",
+          " * @return {undefined}",
+          " */",
+          "Console.prototype.log = function(var_args) {};",
+          "",
+          "/** @const {!Console} */",
+          "var console;",
+          "");
+
+  private static final String PROMISE_EXTERNS =
+      lines(
+          "", //
+          "/**",
+          " * @typedef {{then: ?}}",
+          " */",
+          "var Thenable;",
+          "",
+          "",
+          "/**",
+          " * @interface",
+          " * @template TYPE",
+          " */",
+          "function IThenable() {}",
+          "",
+          "",
+          "/**",
+          " * @param {?(function(TYPE):VALUE)=} opt_onFulfilled",
+          " * @param {?(function(*): *)=} opt_onRejected",
+          " * @return {RESULT}",
+          " * @template VALUE",
+          " *",
+          " * @template RESULT := type('IThenable',",
+          " *     cond(isUnknown(VALUE), unknown(),",
+          " *       mapunion(VALUE, (V) =>",
+          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+          " *           templateTypeOf(V, 0),",
+          " *           cond(sub(V, 'Thenable'),",
+          " *              unknown(),",
+          " *              V)))))",
+          " * =:",
+          " */",
+          "IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};",
+          "",
+          "",
+          "/**",
+          " * @param {function(",
+          " *             function((TYPE|IThenable<TYPE>|Thenable|null)=),",
+          " *             function(*=))} resolver",
+          " * @constructor",
+          " * @implements {IThenable<TYPE>}",
+          " * @template TYPE",
+          " */",
+          "function Promise(resolver) {}",
+          "",
+          "",
+          "/**",
+          " * @param {VALUE=} opt_value",
+          " * @return {RESULT}",
+          " * @template VALUE",
+          " * @template RESULT := type('Promise',",
+          " *     cond(isUnknown(VALUE), unknown(),",
+          " *       mapunion(VALUE, (V) =>",
+          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+          " *           templateTypeOf(V, 0),",
+          " *           cond(sub(V, 'Thenable'),",
+          " *              unknown(),",
+          " *              V)))))",
+          " * =:",
+          " */",
+          "Promise.resolve = function(opt_value) {};",
+          "",
+          "",
+          "/**",
+          " * @param {*=} opt_error",
+          " * @return {!Promise<?>}",
+          " */",
+          "Promise.reject = function(opt_error) {};",
+          "",
+          "",
+          "/**",
+          " * @param {!Iterable<VALUE>} iterable",
+          " * @return {!Promise<!Array<RESULT>>}",
+          " * @template VALUE",
+          " * @template RESULT := mapunion(VALUE, (V) =>",
+          " *     cond(isUnknown(V),",
+          " *         unknown(),",
+          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+          " *             templateTypeOf(V, 0),",
+          " *             cond(sub(V, 'Thenable'), unknown(), V))))",
+          " * =:",
+          " */",
+          "Promise.all = function(iterable) {};",
+          "",
+          "",
+          "/**",
+          " * @param {!Iterable<VALUE>} iterable",
+          " * @return {!Promise<RESULT>}",
+          " * @template VALUE",
+          " * @template RESULT := mapunion(VALUE, (V) =>",
+          " *     cond(isUnknown(V),",
+          " *         unknown(),",
+          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+          " *             templateTypeOf(V, 0),",
+          " *             cond(sub(V, 'Thenable'), unknown(), V))))",
+          " * =:",
+          " */",
+          "Promise.race = function(iterable) {};",
+          "",
+          "",
+          "/**",
+          " * @param {?(function(this:void, TYPE):VALUE)=} opt_onFulfilled",
+          " * @param {?(function(this:void, *): *)=} opt_onRejected",
+          " * @return {RESULT}",
+          " * @template VALUE",
+          " *",
+          " * @template RESULT := type('Promise',",
+          " *     cond(isUnknown(VALUE), unknown(),",
+          " *       mapunion(VALUE, (V) =>",
+          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+          " *           templateTypeOf(V, 0),",
+          " *           cond(sub(V, 'Thenable'),",
+          " *              unknown(),",
+          " *              V)))))",
+          " * =:",
+          " * @override",
+          " */",
+          "Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};",
+          "",
+          "",
+          "/**",
+          " * @param {function(*): RESULT} onRejected",
+          " * @return {!Promise<RESULT>}",
+          " * @template RESULT",
+          " */",
+          "Promise.prototype.catch = function(onRejected) {};",
+          "",
+          "",
+          "/**",
+          " * @param {function()} callback",
+          " * @return {!Promise<TYPE>}",
+          " */",
+          "Promise.prototype.finally = function(callback) {};",
           "");
 
   private boolean includeIterableExterns = false;
@@ -276,6 +428,8 @@ public class TestExternsBuilder {
   private boolean includeObjectExterns = false;
   private boolean includeArrayExterns = false;
   private boolean includeArgumentsExterns = false;
+  private boolean includeConsoleExterns = false;
+  private boolean includePromiseExterns = false;
 
   public TestExternsBuilder addIterable() {
     includeIterableExterns = true;
@@ -312,6 +466,18 @@ public class TestExternsBuilder {
     return this;
   }
 
+  public TestExternsBuilder addPromise() {
+    includePromiseExterns = true;
+    addIterable(); // Promise.all() and Promise.race() need Iterable
+    return this;
+  }
+
+  /** Adds declaration of `console.log()` */
+  public TestExternsBuilder addConsole() {
+    includeConsoleExterns = true;
+    return this;
+  }
+
   public String build() {
     List<String> externSections = new ArrayList<>();
     if (includeIterableExterns) {
@@ -330,7 +496,13 @@ public class TestExternsBuilder {
       externSections.add(ARRAY_EXTERNS);
     }
     if (includeArgumentsExterns) {
-      externSections.add(argumentsExterns);
+      externSections.add(ARGUMENTS_EXTERNS);
+    }
+    if (includeConsoleExterns) {
+      externSections.add(CONSOLE_EXTERNS);
+    }
+    if (includePromiseExterns) {
+      externSections.add(PROMISE_EXTERNS);
     }
     return LINE_JOINER.join(externSections);
   }

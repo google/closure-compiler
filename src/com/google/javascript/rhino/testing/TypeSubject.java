@@ -309,5 +309,9 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
     public TypeSubject hasTypeOfThisThat() {
       return assertType(actualFunctionType().getTypeOfThis());
     }
+
+    public TypeSubject hasReturnTypeThat() {
+      return assertType(actualFunctionType().getReturnType());
+    }
   }
 }
