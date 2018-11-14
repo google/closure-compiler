@@ -1900,8 +1900,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     /**
      * For a const alias, like `const alias = other.name`, this may declare `alias` as a type name,
      * depending on what other.name is defined to be.
-     *
-     * @param rvalueName the rvalue's qualified name if it exists, null otherwise
      */
     private void maybeDeclareAliasType(
         Node lValue, @Nullable QualifiedName rValue, @Nullable JSType rValueType) {
@@ -2795,33 +2793,53 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
-    /** Declares all names inside a destructuring pattern in a parameter list in the scope */
+    /**
+     * Declares all names inside a destructuring pattern in a parameter list in the scope if we can
+     * find a non-unknown type for them.
+     *
+     * <p>Unknown typed parameters are always treated as inferred, not declared. TypeInference may
+     * later give them a better inferred type than unknown, but they will never become declared.
+     *
+     * <p>NOTE: currently, there are some less-than-ideal aspects to how we do this. If the pattern
+     * type is an unresolved NamedType, then we can't lookup properties on it (to find the
+     * individual parameter types) until after name resolution. The current state is to defer to
+     * TypeInference to type those parameters, with the drawback that they are 'inferred', not
+     * 'declared', and so any type can be assigned to them. In the future we will just enforce
+     * typing each parameter individually: <a
+     * href="https://github.com/google/closure-compiler/issues/1781">relevant issue</a>
+     */
     private void declareDestructuringParameter(
         boolean isInferred, Node pattern, JSType patternType) {
 
       for (DestructuredTarget target :
           DestructuredTarget.createAllNonEmptyTargetsInPattern(
               typeRegistry, patternType, pattern)) {
-        JSType inferredType = target.inferTypeWithoutUsingDefaultValue();
+        JSType parameterType = target.inferTypeWithoutUsingDefaultValue();
 
         if (target.getNode().isDestructuringPattern()) {
-          declareDestructuringParameter(isInferred, target.getNode(), inferredType);
+          declareDestructuringParameter(isInferred, target.getNode(), parameterType);
         } else {
           Node paramName = target.getNode();
           checkState(paramName.isName(), "Expected all parameters to be names, got %s", paramName);
 
-          if ((inferredType == null || inferredType.isUnknownType())
-              && paramName.getJSDocInfo() != null
-              && paramName.getJSDocInfo().hasType()) {
-            // see if the parameter has its own inline JSDoc
-            // TODO(b/112651122): this should happen inside FunctionTypeBuilder, so that we can
-            // check that calls to the function match the inline JSDoc.
-            inferredType =
-                typeRegistry.evaluateTypeExpression(
-                    paramName.getJSDocInfo().getType(), currentScope);
-            isInferred = false;
+          if (parameterType == null || parameterType.isUnknownType()) {
+            JSDocInfo paramJSDoc = paramName.getJSDocInfo();
+            if (paramJSDoc != null && paramJSDoc.hasType()) {
+              // see if the parameter has its own inline JSDoc, and use that unless we already have
+              // a type from @param JSDoc.
+              // TODO(b/112651122): this should happen inside FunctionTypeBuilder, so that we can
+              // check that calls to the function match the inline JSDoc.
+              // TODO(b/111523967): we should also report a
+              // warning if the inline and non-inline JSDoc conflict.
+              parameterType =
+                  typeRegistry.evaluateTypeExpression(paramJSDoc.getType(), currentScope);
+              isInferred = false;
+            } else {
+              // note - these parameters may get better types during TypeInference
+              isInferred = true;
+            }
           }
-          declareSingleParameterName(isInferred, paramName, inferredType);
+          declareSingleParameterName(isInferred, paramName, parameterType);
         }
       }
     }

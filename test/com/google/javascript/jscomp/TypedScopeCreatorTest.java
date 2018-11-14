@@ -33,6 +33,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -836,7 +837,163 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar bVar = checkNotNull(lastFunctionScope.getVar("b"));
     assertType(bVar.getType()).toStringIsEqualTo("?");
-    assertThat(bVar.isTypeInferred()).isFalse();
+    assertThat(bVar.isTypeInferred()).isTrue();
+  }
+
+  /**
+   * Note: these tests expect the parameters to have inferred, not declared, types because of the
+   * order in which scope creation & named type resolution happens.
+   *
+   * <p>See also b/118710352
+   */
+  @Test
+  public void testObjectPatternParameter_withUnresolvedForwardDeclaredType_isInferred() {
+    // Note that this only emits one UNRECOGNIZED_TYPE_ERROR for SomeUnknownName. We don't emit
+    // an error for SomeUnknownName#a, as that would be redundant.
+    test(
+        srcs(
+            lines(
+                "goog.forwardDeclare('SomeUnknownName');",
+                "/** @param {!SomeUnknownName} obj */ function f({a}) {}")),
+        warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
+
+    TypedVar aVar = checkNotNull(lastFunctionScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("?");
+    assertThat(aVar.isTypeInferred()).isTrue();
+  }
+
+  @Test
+  public void testObjectPatternParameterWithFullJSDoc_withMissingProperty_isInferred() {
+    testSame(
+        lines(
+            "class SomeName {}", //
+            "/** @param {!SomeName} obj */ function f({a}) {}"));
+
+    TypedVar aVar = checkNotNull(lastFunctionScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("?");
+    // we still consider this a declared type
+    assertThat(aVar.isTypeInferred()).isTrue();
+  }
+
+  @Test
+  public void testNestedObjectPatternParameter_withNamedType() {
+    testSame(
+        lines(
+            "class SomeOtherName {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.a;",
+            "  }",
+            "}",
+            "class SomeName {",
+            "  constructor() {",
+            "    /** @type {!SomeOtherName} */",
+            "    this.data;",
+            "  }",
+            "}",
+            "/** @param {!SomeName} obj */ function f({data: {a}}) { A: a; }",
+            ""));
+
+    // This variable becomes inferred, even though SomeName is declared before it is referenced,
+    // just because the SomeName in the @param is still unresolved at type scope creation time.
+    TypedVar aVar = checkNotNull(getLabeledStatement("A").enclosingScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("number");
+    assertThat(aVar.isTypeInferred()).isTrue();
+  }
+
+  @Test
+  public void testTypecheckingTemplatizedTypesForObjectParameter() {
+    testSame(
+        lines(
+            "/**",
+            " * @constructor ",
+            " * @template T",
+            " */",
+            "function TemplatizedClass() {",
+            "  /** @const {T} */",
+            "  this.data;",
+            "}",
+            "/** @param {!TemplatizedClass<!SomeName>} obj */",
+            "function f({data}) { A: data.a; }",
+            "",
+            "class SomeName {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.a;",
+            "  }",
+            "}"));
+
+    LabeledStatement aStatement = getLabeledStatement("A");
+    TypedVar dataVar = checkNotNull(aStatement.enclosingScope.getVar("data"));
+
+    assertType(dataVar.getType()).toStringIsEqualTo("SomeName");
+    assertType(aStatement.statementNode.getOnlyChild().getJSType()).toStringIsEqualTo("number");
+  }
+
+  @Test
+  public void testTypecheckingAliasOfTypedefType_forObjectParameter() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.a;",
+            "  }",
+            "}",
+            "/** @typedef {!Foo} */",
+            "var TypedefOfFoo;",
+            "",
+            "const ns = {};",
+            "/** @const */",
+            "ns.TypedefOfFoo = TypedefOfFoo;",
+            "",
+            "/** @param {!ns.TypedefOfFoo} obj */",
+            "function f({a}) { A: a; }"));
+
+    TypedVar aVar = checkNotNull(getLabeledStatement("A").enclosingScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("number");
+    assertThat(aVar.isTypeInferred()).isTrue();
+  }
+
+  @Test
+  public void testArrayPatternParameter_withNamedType() {
+    testSame(
+        lines(
+            "/**",
+            " * @interface",
+            " * @extends {Iterable<T>}",
+            " * @template T",
+            " */",
+            "function TemplatizedClass() {",
+            "}",
+            "/** @interface @extends {TemplatizedClass<number>} */",
+            "class ASubclass {}",
+            "/** @param {!ASubclass} obj */ function f([a]) { A: a; }",
+            ""));
+
+    // Verify we get the correct type for 'a' after name resolution is complete
+    TypedVar aVar = checkNotNull(getLabeledStatement("A").enclosingScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("number");
+    assertThat(aVar.isTypeInferred()).isTrue();
+  }
+
+  @Test
+  public void testObjectPatternParameter_withNamedType_andRest() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    testSame(
+        lines(
+            "class SomeUnknownName {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.data;",
+            "  }",
+            "}",
+            "/** @param {!SomeUnknownName} obj */ function f({...rest}) { REST: rest; }",
+            ""));
+
+    TypedVar aVar = checkNotNull(getLabeledStatement("REST").enclosingScope.getVar("rest"));
+    assertType(aVar.getType()).toStringIsEqualTo("Object");
+    assertThat(aVar.isTypeInferred()).isFalse();
   }
 
   @Test
