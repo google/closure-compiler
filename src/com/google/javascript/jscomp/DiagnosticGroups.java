@@ -585,6 +585,7 @@ public class DiagnosticGroups {
               CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
               CheckMissingSemicolon.MISSING_SEMICOLON,
               CheckNullabilityModifiers.MISSING_NULLABILITY_MODIFIER_JSDOC,
+              CheckNullabilityModifiers.NULL_MISSING_NULLABILITY_MODIFIER_JSDOC,
               CheckNullabilityModifiers.REDUNDANT_NULLABILITY_MODIFIER_JSDOC,
               CheckPrimitiveAsObject.NEW_PRIMITIVE_OBJECT,
               CheckPrimitiveAsObject.PRIMITIVE_OBJECT_DECLARATION,

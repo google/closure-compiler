@@ -3277,7 +3277,7 @@ public final class NodeUtil {
    * @param parent Parent of the node
    * @return True if n is the left hand of an assign
    */
-  static boolean isNameDeclOrSimpleAssignLhs(Node n, Node parent) {
+  public static boolean isNameDeclOrSimpleAssignLhs(Node n, Node parent) {
     return
         (parent.isAssign() && parent.getFirstChild() == n) || NodeUtil.isNameDeclaration(parent);
   }

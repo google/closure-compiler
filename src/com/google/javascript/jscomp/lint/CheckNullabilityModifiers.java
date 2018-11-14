@@ -46,6 +46,13 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
               + "Please add a '!' to make it explicitly non-nullable, "
               + "or a '?' to make it explicitly nullable.");
 
+  /** The diagnostic for a missing nullability modifier, where the value is clearly nullable. */
+  public static final DiagnosticType NULL_MISSING_NULLABILITY_MODIFIER_JSDOC =
+      DiagnosticType.disabled(
+          "JSC_NULL_MISSING_NULLABILITY_MODIFIER_JSDOC",
+          "{0} is a reference type with no nullability modifier that is explicitly set to null.\n"
+              + "Add a '?' to make it explicitly nullable.");
+
   /** The diagnostic for a redundant nullability modifier. */
   public static final DiagnosticType REDUNDANT_NULLABILITY_MODIFIER_JSDOC =
       DiagnosticType.disabled(
@@ -62,6 +69,7 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
   // Store the candidate warnings and template types found while traversing a single script node.
   private final HashSet<Node> redundantCandidates = new HashSet<>();
   private final HashSet<Node> missingCandidates = new HashSet<>();
+  private final HashSet<Node> nullMissingCandidates = new HashSet<>();
   private final HashSet<String> templateTypeNames = new HashSet<>();
 
   public CheckNullabilityModifiers(AbstractCompiler compiler) {
@@ -79,7 +87,7 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
     if (info != null) {
       templateTypeNames.addAll(info.getTemplateTypeNames());
       if (info.hasType()) {
-        visitTypeExpression(info.getType(), false);
+        handleHasType(info.getType(), n);
       }
       for (String param : info.getParameterNames()) {
         if (info.hasParameterType(param)) {
@@ -116,15 +124,33 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
       report(t);
       redundantCandidates.clear();
       missingCandidates.clear();
+      nullMissingCandidates.clear();
       templateTypeNames.clear();
       return;
     }
+  }
+
+  private void handleHasType(JSTypeExpression expr, Node n) {
+    // Check if the type is explicitly set to null, if so use NULL_MISSING_NULLABILITY diagnostic.
+    if (NodeUtil.isNameDeclOrSimpleAssignLhs(n.getFirstChild(), n)) {
+      Node rValue = NodeUtil.getRValueOfLValue(n.getFirstChild());
+      if (rValue != null && rValue.isNull()) {
+        visitTypeExpression(expr, false, rValue);
+        return;
+      }
+    }
+    visitTypeExpression(expr, false);
   }
 
   private void report(NodeTraversal t) {
     for (Node n : missingCandidates) {
       if (shouldReport(n)) {
         t.report(n, MISSING_NULLABILITY_MODIFIER_JSDOC, getReportedTypeName(n));
+      }
+    }
+    for (Node n : nullMissingCandidates) {
+      if (shouldReport(n)) {
+        t.report(n, NULL_MISSING_NULLABILITY_MODIFIER_JSDOC, getReportedTypeName(n));
       }
     }
     for (Node n : redundantCandidates) {
@@ -146,6 +172,11 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
   }
 
   private void visitTypeExpression(JSTypeExpression expr, boolean hasArtificialTopLevelBang) {
+    visitTypeExpression(expr, hasArtificialTopLevelBang, /* rValue= */ null);
+  }
+
+  private void visitTypeExpression(
+      JSTypeExpression expr, boolean hasArtificialTopLevelBang, Node rValue) {
     Node root = expr.getRoot();
     NodeUtil.visitPreOrder(
         root,
@@ -170,7 +201,11 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
           boolean isTypeOfType = parent != null && parent.isTypeOf();
 
           if (isReference && !hasBang && !hasQmark && !isNewOrThis && !isTypeOfType) {
-            missingCandidates.add(node);
+            if (rValue != null && rValue.isNull()) {
+              nullMissingCandidates.add(node);
+            } else {
+              missingCandidates.add(node);
+            }
           } else if (isPrimitiveOrLiteral && hasNonArtificialBang) {
             redundantCandidates.add(node);
           }

@@ -235,12 +235,30 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
         "/** @param {T} x */ function g(x){}");
   }
 
+  @Test
+  public void testSetToNull() {
+    checkNullMissingWarning("/** @type {Object} */ var x = null;");
+    checkNullMissingWarning(
+        "/** @constructor */ function C() {} /** @private {Object} */ C.prop = null;");
+    checkNullMissingWarning(
+        "/** @constructor */ function C() { /** @private {Object} */ this.foo = null; }");
+
+    checkNoWarning("/** @type {?Object} */ var x = null;");
+    checkNoWarning("/** @constructor */ function C() {} /** @private {?Symbol} */ C.prop = null;");
+    checkNoWarning(
+        "/** @constructor */ function C() { /** @private {?Object} */ this.foo = null; }");
+  }
+
   private void checkNoWarning(String... js) {
     testSame(js);
   }
 
   private void checkMissingWarning(String... js) {
     testWarning(js, CheckNullabilityModifiers.MISSING_NULLABILITY_MODIFIER_JSDOC);
+  }
+
+  private void checkNullMissingWarning(String... js) {
+    testWarning(js, CheckNullabilityModifiers.NULL_MISSING_NULLABILITY_MODIFIER_JSDOC);
   }
 
   private void checkRedundantWarning(String... js) {
