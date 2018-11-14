@@ -983,9 +983,10 @@ public class CompilerOptions implements Serializable {
   private boolean allowMethodCallDecomposing;
 
   /**
-   * See https://github.com/google/closure-compiler/wiki/FAQ#i-get-an-undecomposable-expression-error-for-my-yield-or-await-expression-what-do-i-do
+   * See
+   * https://github.com/google/closure-compiler/wiki/FAQ#i-get-an-undecomposable-expression-error-for-my-yield-or-await-expression-what-do-i-do
    */
-  boolean allowMethodCallDecomposing() {
+  public boolean allowMethodCallDecomposing() {
     return allowMethodCallDecomposing;
   }
 

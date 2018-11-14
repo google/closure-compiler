@@ -363,6 +363,22 @@ public enum CompilationParam {
     }
   },
 
+  /**
+   * See
+   * https://github.com/google/closure-compiler/wiki/FAQ#i-get-an-undecomposable-expression-error-for-my-yield-or-await-expression-what-do-i-do
+   */
+  ALLOW_METHOD_CALL_DECOMPOSING(ParamGroup.OPTIMIZATION) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setAllowMethodCallDecomposing(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.allowMethodCallDecomposing();
+    }
+  },
+
   AMBIGUATE_PROPERTIES(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
