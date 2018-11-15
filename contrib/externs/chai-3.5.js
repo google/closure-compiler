@@ -503,4 +503,7 @@ chai.Assertion.prototype._obj;
  * @param {boolean=} showDiff
  */
 chai.Assertion.prototype.assert = function(
-    expr, msg, negateMsg, expected, actual, showDiff) {}
+    expr, msg, negateMsg, expected, actual, showDiff) {};
+
+/** @const */
+chai.assert = assert;
