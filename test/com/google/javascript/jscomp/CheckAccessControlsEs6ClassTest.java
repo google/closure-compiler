@@ -518,6 +518,21 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testPrivatePropAccess_inSameFile_throughDestructuring() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  bar_() { }",
+                "}",
+                "",
+                "function f(/** !Foo */ x) {", //
+                "  const {bar_: bar} = x;",
+                "}")));
+  }
+
+  @Test
   public void testPrivateAccessForProperties6() {
     test(
         srcs(
@@ -810,6 +825,22 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "  set bar_(x) { this.barValue = x; }",
                 "}"),
             lines("new Foo().bar_ = 1;")),
+        error(BAD_PRIVATE_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testNoPrivatePropAccess_inDifferentFile_throughDestructuring() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  bar_() { }",
+                "}"),
+            lines(
+                "function f(/** !Foo */ x) {", //
+                "  const {bar_: bar} = x;",
+                "}")),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1197,6 +1228,23 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testProtectedPropAccess_inDifferentFile_inSubclass_throughDestructuring() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  bar() { }",
+                "}"),
+            lines(
+                "class SubFoo extends Foo {", //
+                "  method(/** !Foo */ x) {",
+                "    const {bar: bar} = x;",
+                "  }",
+                "}")));
+  }
+
+  @Test
   public void testNoProtectedAccess_forOverriddenProperty_elsewhereInSubclassFile() {
     test(
         srcs(
@@ -1469,6 +1517,22 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoProtectedPropAccess_inDifferentFile_throughDestructuring() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  bar() { }",
+                "}"),
+            lines(
+                "function f(/** !Foo */ x) {", //
+                "  const {bar: bar} = x;",
+                "}")),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
+  }
+
+  @Test
   public void testNoProtectedAccess_forInheritedProperty_elsewhereInSubclassFile() {
     test(
         srcs(
@@ -1605,6 +1669,45 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "}",
                     "",
                     "Child.prototype = new Parent();"))),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testPackagePropAccess_inSamePackage_throughDestructuring() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "class Foo {", //
+                    "  /** @package */",
+                    "  bar() { }",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "quux.js"),
+                lines(
+                    "function f(/** !Foo */ x) {", //
+                    "  const {bar: bar} = x;",
+                    "}"))));
+  }
+
+  @Test
+  public void testNoPackagePropAccess_inDifferentPackage_throughDestructuring() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "class Foo {", //
+                    "  /** @package */",
+                    "  bar() { }",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"),
+                lines(
+                    "function f(/** !Foo */ x) {", //
+                    "  const {bar: bar} = x;",
+                    "}"))),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 

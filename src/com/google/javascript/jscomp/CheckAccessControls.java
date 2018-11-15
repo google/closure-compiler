@@ -1395,28 +1395,46 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
         {
-          if (!parent.isClassMembers()) {
-            // TODO(b/80580110): Eventually non-class members should be covered by
-            // `PropertyReference`s. However, doing so initially would have caused too many errors
-            // in existing code and delayed support for class syntax.
-            return null;
-          }
+          switch (parent.getToken()) {
+            case OBJECTLIT:
+              // TODO(b/80580110): Eventually object-literal members should be covered by
+              // `PropertyReference`s. However, doing so initially would have caused too many errors
+              // in existing code and delayed support for class syntax.
+              return null;
 
-          builder
-              .setName(sourceNode.getString())
-              .setReceiverType((ObjectType) typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE))
-              .setMutation(true)
-              .setDeclaration(true)
-              // TODO(b/113704668): This definition is way too loose. It was used to prevent
-              // breakages during refactoring and should be tightened.
-              .setOverride(jsdoc != null)
-              .setReadableTypeName(() -> ""); // The default is fine for class types.
+            case OBJECT_PATTERN:
+              builder
+                  .setName(sourceNode.getString())
+                  .setReceiverType(typeOrUnknown(ObjectType.cast(parent.getJSType())))
+                  .setMutation(false)
+                  .setDeclaration(false)
+                  .setOverride(false)
+                  .setReadableTypeName(() -> typeRegistry.getReadableTypeName(parent));
+              break;
 
-          JSType ctorType = parent.getParent().getJSType();
-          if (ctorType != null && ctorType.isFunctionType()) {
-            FunctionType ctorFunctionType = ctorType.toMaybeFunctionType();
-            builder.setReceiverType(
-                sourceNode.isStaticMember() ? ctorFunctionType : ctorFunctionType.getPrototype());
+            case CLASS_MEMBERS:
+              builder
+                  .setName(sourceNode.getString())
+                  .setReceiverType(typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE))
+                  .setMutation(true)
+                  .setDeclaration(true)
+                  // TODO(b/113704668): This definition is way too loose. It was used to prevent
+                  // breakages during refactoring and should be tightened.
+                  .setOverride(jsdoc != null)
+                  .setReadableTypeName(() -> ""); // The default is fine for class types.
+
+              JSType ctorType = parent.getParent().getJSType();
+              if (ctorType != null && ctorType.isFunctionType()) {
+                FunctionType ctorFunctionType = ctorType.toMaybeFunctionType();
+                builder.setReceiverType(
+                    sourceNode.isStaticMember()
+                        ? ctorFunctionType
+                        : ctorFunctionType.getPrototype());
+              }
+              break;
+
+            default:
+              throw new AssertionError();
           }
         }
         break;
