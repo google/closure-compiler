@@ -72,12 +72,11 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES_NEXT = ES2018_MODULES.with(LangVersion.ES_NEXT.features());
 
-  public static final FeatureSet TYPESCRIPT =  ES_NEXT.with(LangVersion.TYPESCRIPT.features());
+  public static final FeatureSet TYPESCRIPT = ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
   // OBJECT_PATTERN_REST is a 2018 feature, but its transpilation is done by the same pass that
   // handles the destructuring transpilation done for ES6.
-  public static final FeatureSet TYPE_CHECK_SUPPORTED =
-      ES8.without(Feature.ASYNC_FUNCTIONS).with(Feature.OBJECT_PATTERN_REST);
+  public static final FeatureSet TYPE_CHECK_SUPPORTED = ES8.with(Feature.OBJECT_PATTERN_REST);
 
   private enum LangVersion {
     ES3,
