@@ -4842,6 +4842,12 @@ CustomElementRegistry.prototype.get = function(tagName) {};
  */
 CustomElementRegistry.prototype.whenDefined = function(tagName) {};
 
+/**
+ * @param {!Node} root
+ * @return {undefined}
+ */
+CustomElementRegistry.prototype.upgrade = function(root) {};
+
 /** @type {!CustomElementRegistry} */
 var customElements;
 
