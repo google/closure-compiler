@@ -179,7 +179,10 @@ public final class SourceMap {
         sourceFile = sourceMapping.getOriginalFile();
         lineNo = sourceMapping.getLineNumber();
         charNo = sourceMapping.getColumnPosition();
-        originalName = sourceMapping.getIdentifier();
+        String identifier = sourceMapping.getIdentifier();
+        if (sourceMapping != null && !identifier.isEmpty()) {
+          originalName = identifier;
+        }
       }
     }
 
