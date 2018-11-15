@@ -166,7 +166,7 @@ public final class Es6ExtractClasses
       return false;
     }
 
-    if (NodeUtil.mayHaveSideEffects(classNode)
+    if (NodeUtil.mayHaveSideEffects(classNode, compiler)
         // Don't extract the class if it's not safe to do so. For example,
         // var c = maybeTrue() && class extends someSideEffect() {};
         // TODO(brndn): it is possible to be less conservative. If the classNode is DECOMPOSABLE,

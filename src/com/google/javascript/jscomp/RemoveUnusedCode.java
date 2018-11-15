@@ -454,7 +454,7 @@ class RemoveUnusedCode implements CompilerPass {
         varInfo.addRemovable(builder.buildUnusedReadReference(getProp, propertyNameNode));
       } else {
         // (objExpression).prototype.propName;
-        if (NodeUtil.mayHaveSideEffects(objExpression)) {
+        if (NodeUtil.mayHaveSideEffects(objExpression, compiler)) {
           traverseNode(objExpression, scope);
         } else {
           builder.addContinuation(new Continuation(objExpression, scope));
@@ -491,7 +491,7 @@ class RemoveUnusedCode implements CompilerPass {
           varInfo.addRemovable(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode));
         } else {
           // (someExpression).prototype.propName++
-          if (NodeUtil.mayHaveSideEffects(exprObj)) {
+          if (NodeUtil.mayHaveSideEffects(exprObj, compiler)) {
             traverseNode(exprObj, scope);
           } else {
             builder.addContinuation(new Continuation(exprObj, scope));
@@ -606,7 +606,7 @@ class RemoveUnusedCode implements CompilerPass {
       // TODO(bradfordcsmith): Is it really necessary to traverse the callee
       // (aka. Object.defineProperties)?
       builder.addContinuation(new Continuation(callee, scope));
-      if (NodeUtil.mayHaveSideEffects(propertyDefinitions)) {
+      if (NodeUtil.mayHaveSideEffects(propertyDefinitions, compiler)) {
         traverseNode(propertyDefinitions, scope);
       } else {
         builder.addContinuation(new Continuation(propertyDefinitions, scope));
@@ -632,7 +632,7 @@ class RemoveUnusedCode implements CompilerPass {
         traverseNode(property.getOnlyChild(), scope);
       } else if (property.isStringKey()) {
         Node definition = property.getOnlyChild();
-        if (NodeUtil.mayHaveSideEffects(definition)) {
+        if (NodeUtil.mayHaveSideEffects(definition, compiler)) {
           traverseNode(definition, scope);
         } else {
           considerForIndependentRemoval(
@@ -713,7 +713,7 @@ class RemoveUnusedCode implements CompilerPass {
         traverseChildren(propertyNode, scope);
       } else {
         Node valueNode = propertyNode.getOnlyChild();
-        if (NodeUtil.mayHaveSideEffects(valueNode)) {
+        if (NodeUtil.mayHaveSideEffects(valueNode, compiler)) {
           // TODO(bradfordcsmith): Ideally we should preserve the side-effect without keeping the
           // property itself alive.
           traverseNode(valueNode, scope);
@@ -818,7 +818,7 @@ class RemoveUnusedCode implements CompilerPass {
         VarInfo varInfo = traverseNameNode(nameNode, scope);
         if (valueNode == null) {
           varInfo.addRemovable(new RemovableBuilder().buildVanillaForNameDeclaration(nameNode));
-        } else if (NodeUtil.mayHaveSideEffects(valueNode)) {
+        } else if (NodeUtil.mayHaveSideEffects(valueNode, compiler)) {
           // TODO(bradfordcsmith): Actually allow for removing the variable while keeping the
           // valueNode for its side-effects.
           varInfo.setIsExplicitlyNotRemovable();
@@ -847,7 +847,7 @@ class RemoveUnusedCode implements CompilerPass {
       if (valueNode == null) {
         varInfo.addRemovable(builder.buildNameDeclarationStatement(declarationStatement));
       } else {
-        if (NodeUtil.mayHaveSideEffects(valueNode)) {
+        if (NodeUtil.mayHaveSideEffects(valueNode, compiler)) {
           traverseNode(valueNode, scope);
         } else {
           builder.addContinuation(new Continuation(valueNode, scope));
@@ -884,7 +884,7 @@ class RemoveUnusedCode implements CompilerPass {
         // varName.prototype[someExpression] = someValue
         VarInfo varInfo = traverseNameNode(varNameNode, scope);
         RemovableBuilder builder = new RemovableBuilder();
-        if (NodeUtil.mayHaveSideEffects(getElemKey)) {
+        if (NodeUtil.mayHaveSideEffects(getElemKey, compiler)) {
           traverseNode(getElemKey, scope);
         } else {
           builder.addContinuation(new Continuation(getElemKey, scope));
@@ -917,7 +917,7 @@ class RemoveUnusedCode implements CompilerPass {
           varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode));
         } else {
           // (someExpression).prototype.propertyName = someValue
-          if (NodeUtil.mayHaveSideEffects(objExpression)) {
+          if (NodeUtil.mayHaveSideEffects(objExpression, compiler)) {
             traverseNode(objExpression, scope);
           } else {
             builder.addContinuation(new Continuation(objExpression, scope));
@@ -943,7 +943,7 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private void traverseRemovableAssignValue(Node valueNode, RemovableBuilder builder, Scope scope) {
-    if (NodeUtil.mayHaveSideEffects(valueNode)
+    if (NodeUtil.mayHaveSideEffects(valueNode, compiler)
         || NodeUtil.isExpressionResultUsed(valueNode.getParent())) {
       traverseNode(valueNode, scope);
     } else {
@@ -960,7 +960,7 @@ class RemoveUnusedCode implements CompilerPass {
   private void traverseDefaultValue(Node defaultValueNode, Scope scope) {
     Node target = defaultValueNode.getFirstChild();
     Node value = target.getNext();
-    if (NodeUtil.mayHaveSideEffects(value)) {
+    if (NodeUtil.mayHaveSideEffects(value, compiler)) {
       // TODO(bradfordcsmith): Preserve side effects without keeping unreferenced variables and
       // properties alive.
       traverseNode(target, scope);
@@ -1034,7 +1034,7 @@ class RemoveUnusedCode implements CompilerPass {
       defaultValue = checkNotNull(target.getNext());
     }
 
-    if (defaultValue != null && NodeUtil.mayHaveSideEffects(defaultValue)) {
+    if (defaultValue != null && NodeUtil.mayHaveSideEffects(defaultValue, compiler)) {
       // TODO(bradfordcsmith): Preserve side effects without preventing removal of variables and
       // properties.
       if (defaultValue != null) {
@@ -1077,8 +1077,8 @@ class RemoveUnusedCode implements CompilerPass {
       defaultValue = checkNotNull(target.getNext());
     }
 
-    if (NodeUtil.mayHaveSideEffects(propertyExpression)
-        || (defaultValue != null && NodeUtil.mayHaveSideEffects(defaultValue))) {
+    if (NodeUtil.mayHaveSideEffects(propertyExpression, compiler)
+        || (defaultValue != null && NodeUtil.mayHaveSideEffects(defaultValue, compiler))) {
       // TODO(bradfordcsmith): Preserve side effects without preventing removal of variables and
       // properties.
       traverseNode(propertyExpression, scope);
@@ -1151,7 +1151,7 @@ class RemoveUnusedCode implements CompilerPass {
       // Use traverseChildren() here, because we should not consider any properties on the exported
       // class to be removable.
       traverseChildren(classBodyNode, classScope);
-    } else if (NodeUtil.mayHaveSideEffects(baseClassExpression)) {
+    } else if (NodeUtil.mayHaveSideEffects(baseClassExpression, compiler)) {
       // TODO(bradfordcsmith): implement removal without losing side-effects for this case
       varInfo.setIsExplicitlyNotRemovable();
       traverseNode(baseClassExpression, scope);
@@ -1371,7 +1371,7 @@ class RemoveUnusedCode implements CompilerPass {
       Node lValue = lastArg;
       if (lastArg.isDefaultValue()) {
         lValue = lastArg.getFirstChild();
-        if (NodeUtil.mayHaveSideEffects(lastArg.getLastChild())) {
+        if (NodeUtil.mayHaveSideEffects(lastArg.getLastChild(), compiler)) {
           break;
         }
       }
@@ -1778,7 +1778,7 @@ class RemoveUnusedCode implements CompilerPass {
           checkState(isDotPrototypeDotProperty(referenceNode), referenceNode);
           // objExpression.prototype.propertyName
           Node objExpression = referenceNode.getFirstFirstChild();
-          if (NodeUtil.mayHaveSideEffects(objExpression)) {
+          if (NodeUtil.mayHaveSideEffects(objExpression, compiler)) {
             replaceNodeWith(referenceNode, objExpression.detach());
           } else {
             removeExpressionCompletely(referenceNode);
@@ -1813,7 +1813,7 @@ class RemoveUnusedCode implements CompilerPass {
       if (!alreadyRemoved(instanceofNode)) {
         Node lhs = instanceofNode.getFirstChild();
         Node falseNode = IR.falseNode().srcref(instanceofNode);
-        if (NodeUtil.mayHaveSideEffects(lhs)) {
+        if (NodeUtil.mayHaveSideEffects(lhs, compiler)) {
           replaceNodeWith(instanceofNode, IR.comma(lhs.detach(), falseNode).srcref(instanceofNode));
         } else {
           replaceNodeWith(instanceofNode, falseNode);
@@ -1859,7 +1859,7 @@ class RemoveUnusedCode implements CompilerPass {
           checkState(isDotPrototypeDotProperty(arg), arg);
           // objExpression.prototype.propertyName
           Node objExpression = arg.getFirstFirstChild();
-          if (NodeUtil.mayHaveSideEffects(objExpression)) {
+          if (NodeUtil.mayHaveSideEffects(objExpression, compiler)) {
             replaceNodeWith(incOrDecNode, objExpression.detach());
           } else {
             removeExpressionCompletely(incOrDecNode);
@@ -2132,7 +2132,7 @@ class RemoveUnusedCode implements CompilerPass {
     void removeInternal(AbstractCompiler compiler) {
       Node nameNode = declarationStatement.getOnlyChild();
       Node valueNode = nameNode.getFirstChild();
-      if (valueNode != null && NodeUtil.mayHaveSideEffects(valueNode)) {
+      if (valueNode != null && NodeUtil.mayHaveSideEffects(valueNode, compiler)) {
         compiler.reportChangeToEnclosingScope(declarationStatement);
         valueNode.detach();
         declarationStatement.replaceWith(IR.exprResult(valueNode).useSourceInfoFrom(valueNode));
@@ -2271,9 +2271,9 @@ class RemoveUnusedCode implements CompilerPass {
       Node lhs = assignNode.getFirstChild();
       Node rhs = assignNode.getSecondChild();
       boolean mustPreserveRhs =
-          NodeUtil.mayHaveSideEffects(rhs) || NodeUtil.isExpressionResultUsed(assignNode);
+          NodeUtil.mayHaveSideEffects(rhs, compiler) || NodeUtil.isExpressionResultUsed(assignNode);
       boolean mustPreserveGetElmExpr =
-          lhs.isGetElem() && NodeUtil.mayHaveSideEffects(lhs.getLastChild());
+          lhs.isGetElem() && NodeUtil.mayHaveSideEffects(lhs.getLastChild(), compiler);
 
       if (mustPreserveRhs && mustPreserveGetElmExpr) {
         Node replacement =
@@ -2323,8 +2323,8 @@ class RemoveUnusedCode implements CompilerPass {
       checkState(prototype.getString().equals("prototype"), prototype);
 
       boolean mustPreserveRhs =
-          NodeUtil.mayHaveSideEffects(rhs) || NodeUtil.isExpressionResultUsed(assignNode);
-      boolean mustPreserveObjExpression = NodeUtil.mayHaveSideEffects(objExpression);
+          NodeUtil.mayHaveSideEffects(rhs, compiler) || NodeUtil.isExpressionResultUsed(assignNode);
+      boolean mustPreserveObjExpression = NodeUtil.mayHaveSideEffects(objExpression, compiler);
 
       if (mustPreserveRhs && mustPreserveObjExpression) {
         Node replacement =
@@ -2373,7 +2373,7 @@ class RemoveUnusedCode implements CompilerPass {
       callNode.removeFirstChild();
       for (Node arg = callNode.getLastChild(); arg != null; arg = callNode.getLastChild()) {
         arg.detach();
-        if (NodeUtil.mayHaveSideEffects(arg)) {
+        if (NodeUtil.mayHaveSideEffects(arg, compiler)) {
           if (replacement == null) {
             replacement = arg;
           } else {

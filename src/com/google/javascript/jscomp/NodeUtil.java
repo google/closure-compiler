@@ -1094,19 +1094,25 @@ public final class NodeUtil {
   static Node newExpr(Node child) {
     return IR.exprResult(child).srcref(child);
   }
-
-  /**
-   * Returns true if the node may create new mutable state, or change existing
-   * state.
-   *
-   * @see <a href="http://www.xkcd.org/326/">XKCD Cartoon</a>
-   */
+  // TODO(johnplaisted): All call sites should pass in the compiler.
+  @Deprecated
   static boolean mayEffectMutableState(Node n) {
     return mayEffectMutableState(n, null);
   }
 
+  /**
+   * Returns true if the node may create new mutable state, or change existing state.
+   *
+   * @see <a href="http://www.xkcd.org/326/">XKCD Cartoon</a>
+   */
   static boolean mayEffectMutableState(Node n, AbstractCompiler compiler) {
     return checkForStateChangeHelper(n, true, compiler);
+  }
+
+  // TODO(johnplaisted): All call sites should pass in the compiler.
+  @Deprecated
+  public static boolean mayHaveSideEffects(Node n) {
+    return mayHaveSideEffects(n, null);
   }
 
   /**
@@ -1114,10 +1120,6 @@ public final class NodeUtil {
    * This version default to the "safe" assumptions when the compiler object is not
    * provided (RegExp have side-effects, etc).
    */
-  public static boolean mayHaveSideEffects(Node n) {
-    return mayHaveSideEffects(n, null);
-  }
-
   public static boolean mayHaveSideEffects(Node n, AbstractCompiler compiler) {
     return checkForStateChangeHelper(n, false, compiler);
   }
