@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
@@ -622,13 +622,14 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
   @Test
   public void testGoogRequireMustBeModuleScope() {
-    testModulesError("{ goog.require('closure.provide'); } export {}", INVALID_CLOSURE_CALL_ERROR);
+    testModulesError(
+        "{ goog.require('closure.provide'); } export {}", INVALID_CLOSURE_CALL_SCOPE_ERROR);
   }
 
   @Test
   public void testGoogRequireTypeMustBeModuleScope() {
     testModulesError(
-        "{ goog.requireType('closure.provide'); } export {}", INVALID_CLOSURE_CALL_ERROR);
+        "{ goog.requireType('closure.provide'); } export {}", INVALID_CLOSURE_CALL_SCOPE_ERROR);
   }
 
   @Test

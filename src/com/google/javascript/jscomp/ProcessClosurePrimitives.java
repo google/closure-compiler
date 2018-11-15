@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -153,6 +153,17 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       + "For EcmaScript classes use the super keyword. For traditional Closure classes,\n"
       + "use the class specific base method instead. For example, for the constructor MyClass:\n"
       + "   MyClass.base(this, ''constructor'')");
+
+  static final DiagnosticType CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR =
+      DiagnosticType.error(
+          "JSC_CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR",
+          "Closure primitive method {0} may not be aliased");
+
+  static final DiagnosticType CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR =
+      DiagnosticType.error(
+          "JSC_CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR",
+          "Closure primitive method {0} may not be aliased  outside a module (ES "
+              + "module, CommonJS module, or goog.module)");
 
   /** The root Closure namespace */
   static final String GOOG = "goog";
@@ -297,18 +308,18 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
                 processBaseClassCall(t, n);
                 break;
               case "define":
-                if (validPrimitiveCall(t, n)) {
+                if (validateUnaliasablePrimitiveCall(t, n, methodName)) {
                   processDefineCall(t, n, parent);
                 }
                 break;
               case "require":
               case "requireType":
-                if (validPrimitiveCall(t, n)) {
+                if (validateAliasiablePrimitiveCall(t, n, methodName)) {
                   processRequireCall(t, n, parent);
                 }
                 break;
               case "provide":
-                if (validPrimitiveCall(t, n)) {
+                if (validateUnaliasablePrimitiveCall(t, n, methodName)) {
                   processProvideCall(t, n, parent);
                 }
                 break;
@@ -330,12 +341,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
                 }
                 break;
               case "forwardDeclare":
-                if (validPrimitiveCall(t, n)) {
+                if (validateAliasiablePrimitiveCall(t, n, methodName)) {
                   processForwardDeclare(t, n, parent);
                 }
                 break;
               case "addDependency":
-                if (validPrimitiveCall(t, n)) {
+                if (validateUnaliasablePrimitiveCall(t, n, methodName)) {
                   processAddDependency(n, parent);
                 }
                 break;
@@ -402,13 +413,45 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     }
   }
 
-  private boolean validPrimitiveCall(NodeTraversal t, Node n) {
-    if (!n.getParent().isExprResult() || !t.inGlobalHoistScope()) {
-      // Ignore invalid primitives if we didn't strip module sugar.
-      if (!compiler.getOptions().shouldPreserveGoogModule()) {
-        compiler.report(t.makeError(n, INVALID_CLOSURE_CALL_ERROR));
-        return false;
-      }
+  /**
+   * Verifies that a) the call is in the global scope and b) the return value is unused
+   *
+   * <p>This method is for primitives that never return a value.
+   */
+  private boolean validateUnaliasablePrimitiveCall(NodeTraversal t, Node n, String methodName) {
+    return validatePrimitiveCallWithMessage(t, n, methodName, CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR);
+  }
+
+  /**
+   * Verifies that a) the call is in the global scope and b) the return value is unused
+   *
+   * <p>This method is for primitives that do return a value in modules, but not in scripts/
+   * goog.provide files
+   */
+  private boolean validateAliasiablePrimitiveCall(NodeTraversal t, Node n, String methodName) {
+    return validatePrimitiveCallWithMessage(
+        t, n, methodName, CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
+  }
+
+  /**
+   * @param methodName list of primitve types classed together with this one
+   * @param invalidAliasingError which DiagnosticType to emit if this call is aliased. this depends
+   *     on whether the primitive is sometimes aliasiable in a module or never aliasable.
+   */
+  private boolean validatePrimitiveCallWithMessage(
+      NodeTraversal t, Node n, String methodName, DiagnosticType invalidAliasingError) {
+    // Ignore invalid primitives if we didn't strip module sugar.
+    if (compiler.getOptions().shouldPreserveGoogModule()) {
+      return true;
+    }
+
+    if (!t.inGlobalHoistScope()) {
+      compiler.report(t.makeError(n, INVALID_CLOSURE_CALL_SCOPE_ERROR));
+      return false;
+    } else if (!n.getParent().isExprResult()) {
+      // If the call is in the global hoist scope, but the result is used
+      compiler.report(t.makeError(n, invalidAliasingError, GOOG + "." + methodName));
+      return false;
     }
     return true;
   }

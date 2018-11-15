@@ -60,9 +60,9 @@ final class ClosurePrimitiveErrors {
           "JSC_GOOG_MODULE_INVALID_GET_CALL_SCOPE",
           "goog.module.get can not be called in global scope.");
 
-  static final DiagnosticType INVALID_CLOSURE_CALL_ERROR =
+  static final DiagnosticType INVALID_CLOSURE_CALL_SCOPE_ERROR =
       DiagnosticType.error(
           "JSC_INVALID_CLOSURE_CALL_ERROR",
-          "Closure dependency methods(goog.provide, goog.require, etc) must be called at file "
-              + "scope.");
+          "Closure primitive methods (goog.provide, goog.require, goog.define, etc) must be called "
+              + " at file scope.");
 }

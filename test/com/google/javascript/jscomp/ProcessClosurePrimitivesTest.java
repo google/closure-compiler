@@ -17,9 +17,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.BASE_CLASS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLASS_NAMESPACE_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_DEFINES_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.DUPLICATE_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.EXPECTED_OBJECTLIT_ERROR;
@@ -468,7 +470,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   @Test
   public void testProvideInESModule() {
-    testError("import {x} from 'y'; goog.provide('z');", INVALID_CLOSURE_CALL_ERROR);
+    testError("import {x} from 'y'; goog.provide('z');", INVALID_CLOSURE_CALL_SCOPE_ERROR);
   }
 
   @Test
@@ -1024,22 +1026,67 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   @Test
   public void testInvalidRequire() {
-    testError("goog.provide('a.b'); var x = x || goog.require('a.b');",
-        INVALID_CLOSURE_CALL_ERROR);
-    testError("goog.provide('a.b'); x = goog.require('a.b');",
-        INVALID_CLOSURE_CALL_ERROR);
-    testError("goog.provide('a.b'); function f() { goog.require('a.b'); }",
-        INVALID_CLOSURE_CALL_ERROR);
+    testError(
+        "goog.provide('a.b'); var x = x || goog.require('a.b');",
+        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
+    testError(
+        "goog.provide('a.b'); x = goog.require('a.b');",
+        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
+    testError(
+        "goog.provide('a.b'); function f() { goog.require('a.b'); }",
+        INVALID_CLOSURE_CALL_SCOPE_ERROR);
   }
 
   @Test
   public void testInvalidRequireType() {
     testError(
-        "goog.provide('a.b'); var x = x || goog.requireType('a.b');", INVALID_CLOSURE_CALL_ERROR);
-    testError("goog.provide('a.b'); x = goog.requireType('a.b');", INVALID_CLOSURE_CALL_ERROR);
+        "goog.provide('a.b'); var x = x || goog.requireType('a.b');",
+        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
+    testError(
+        "goog.provide('a.b'); x = goog.requireType('a.b');",
+        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
     testError(
         "goog.provide('a.b'); function f() { goog.requireType('a.b'); }",
-        INVALID_CLOSURE_CALL_ERROR);
+        INVALID_CLOSURE_CALL_SCOPE_ERROR);
+  }
+
+  @Test
+  public void testInvalidForwardDeclare() {
+    testError(
+        "goog.provide('a.b'); var x = x || goog.forwardDeclare('a.b');",
+        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
+    testError(
+        "goog.provide('a.b'); x = goog.forwardDeclare('a.b');",
+        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
+    testError(
+        "goog.provide('a.b'); function f() { goog.forwardDeclare('a.b'); }",
+        INVALID_CLOSURE_CALL_SCOPE_ERROR);
+  }
+
+  @Test
+  public void testInvalidDefine() {
+    testError(
+        "goog.provide('a.b'); var x = x || goog.define('goog.DEBUG', true);",
+        CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR);
+    testError(
+        "goog.provide('a.b'); x = goog.define('goog.DEBUG', true);",
+        CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR);
+    testError(
+        "goog.provide('a.b'); function f() { goog.define('goog.DEBUG', true); }",
+        INVALID_CLOSURE_CALL_SCOPE_ERROR);
+  }
+
+  @Test
+  public void testInvalidAddDependency() {
+    testError(
+        "goog.provide('a.b'); var x = x || goog.addDependency('a.b', ['foo'], ['bar']);",
+        CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR);
+    testError(
+        "goog.provide('a.b'); x = goog.addDependency('a.b', ['foo'], ['bar']);",
+        CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR);
+    testError(
+        "goog.provide('a.b'); function f() { goog.addDependency('a.b', ['foo'], ['bar']); }",
+        INVALID_CLOSURE_CALL_SCOPE_ERROR);
   }
 
   @Test

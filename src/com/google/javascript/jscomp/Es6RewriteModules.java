@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_DESTRUCTURING_FORWARD_DECLARE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
@@ -834,7 +834,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
     // Module has already been turned into a script at this point.
     if (isRequire && !t.getScope().isGlobal()) {
-      t.report(requireCall, INVALID_CLOSURE_CALL_ERROR);
+      t.report(requireCall, INVALID_CLOSURE_CALL_SCOPE_ERROR);
       return;
     }
 

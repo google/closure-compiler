@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
@@ -639,11 +641,14 @@ public class DiagnosticGroups {
           MISSING_CONST_PROPERTY);
 
   public static final DiagnosticGroup USE_OF_GOOG_BASE =
-      DiagnosticGroups.registerGroup("useOfGoogBase",
-          ProcessClosurePrimitives.USE_OF_GOOG_BASE);
+      DiagnosticGroups.registerGroup("useOfGoogBase", ProcessClosurePrimitives.USE_OF_GOOG_BASE);
 
   public static final DiagnosticGroup CLOSURE_DEP_METHOD_USAGE_CHECKS =
-      DiagnosticGroups.registerGroup("closureDepMethodUsageChecks", INVALID_CLOSURE_CALL_ERROR);
+      DiagnosticGroups.registerGroup(
+          "closureDepMethodUsageChecks",
+          INVALID_CLOSURE_CALL_SCOPE_ERROR,
+          CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR,
+          CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
 
   // This group exists so that generated code can suppress these
   // warnings. Not for general use. These diagnostics will most likely
