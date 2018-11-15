@@ -2540,9 +2540,11 @@ chrome.runtime.reload = function() {};
 
 
 /**
- * @param {function(string, !Object=): void} callback Called with "throttled",
- *     "no_update", or "update_available". If an update is available, the object
- *     contains more information about the available update.
+ * @see https://developer.chrome.com/apps/runtime#method-requestUpdateCheck
+ * @param {function(string, !{version: string}=): void} callback Called with
+ *     "throttled", "no_update", or "update_available". If an update is
+ *     available, the object contains more information about the available
+ *     update.
  * @return {undefined}
  */
 chrome.runtime.requestUpdateCheck = function(callback) {};
