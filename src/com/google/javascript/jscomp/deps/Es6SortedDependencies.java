@@ -68,7 +68,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   }
 
   @Override
-  public ImmutableList<INPUT> getDependenciesOf(List<INPUT> rootInputs, boolean sorted) {
+  public ImmutableList<INPUT> getStrongDependenciesOf(List<INPUT> rootInputs, boolean sorted) {
     checkArgument(userOrderedInputs.containsAll(rootInputs));
 
     Set<INPUT> includedInputs = new HashSet<>();
@@ -76,6 +76,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
     while (!worklist.isEmpty()) {
       INPUT input = worklist.pop();
       if (includedInputs.add(input)) {
+
         for (String symbolName : input.getRequiredSymbols()) {
           INPUT importedSymbolName = exportingInputBySymbolName.get(symbolName);
           if (importedSymbolName != null) {
@@ -110,8 +111,44 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   }
 
   @Override
-  public ImmutableList<INPUT> getSortedDependenciesOf(List<INPUT> roots) {
-    return getDependenciesOf(roots, true);
+  public ImmutableList<INPUT> getSortedStrongDependenciesOf(List<INPUT> roots) {
+    return getStrongDependenciesOf(roots, true);
+  }
+
+  @Override
+  public List<INPUT> getSortedWeakDependenciesOf(List<INPUT> rootInputs) {
+    Set<INPUT> strongInputs = new HashSet<>(getSortedStrongDependenciesOf(rootInputs));
+    Set<INPUT> weakInputs = new HashSet<>();
+    Deque<INPUT> worklist = new ArrayDeque<>(strongInputs);
+    while (!worklist.isEmpty()) {
+      INPUT input = worklist.pop();
+      boolean isStrong = strongInputs.contains(input);
+
+      Iterable<String> edges =
+          isStrong
+              ? input.getTypeRequires()
+              : Iterables.concat(input.getRequiredSymbols(), input.getTypeRequires());
+
+      if (!isStrong) {
+        weakInputs.add(input);
+      }
+
+      for (String symbolName : edges) {
+        INPUT importedSymbolName = exportingInputBySymbolName.get(symbolName);
+        if (importedSymbolName != null) {
+          worklist.add(importedSymbolName);
+        }
+      }
+    }
+
+    ImmutableList.Builder<INPUT> builder = ImmutableList.builder();
+    for (INPUT input : importOrderedInputs) {
+      if (weakInputs.contains(input)) {
+        builder.add(input);
+      }
+    }
+
+    return builder.build();
   }
 
   @Override
@@ -163,7 +200,9 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
       }
     }
     for (INPUT userOrderedInput : userOrderedInputs) {
-      for (String symbolName : userOrderedInput.getRequiredSymbols()) {
+      for (String symbolName :
+          Iterables.concat(
+              userOrderedInput.getRequiredSymbols(), userOrderedInput.getTypeRequires())) {
         INPUT importedInput = exportingInputBySymbolName.get(symbolName);
         if (importedInput != null) {
           importedInputByImportingInput.put(userOrderedInput, importedInput);

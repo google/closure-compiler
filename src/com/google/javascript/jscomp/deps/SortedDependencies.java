@@ -47,23 +47,36 @@ public interface SortedDependencies<INPUT extends DependencyInfo> {
   public List<INPUT> getSortedList();
 
   /**
-   * Gets all the dependencies of the given roots. The inputs must be returned
-   * in a stable order. In other words, if A comes before B, and A does not
-   * transitively depend on B, then A must also come before B in the returned
-   * list.
+   * Gets all the strong dependencies of the given roots. The inputs must be returned in a stable
+   * order. In other words, if A comes before B, and A does not transitively depend on B, then A
+   * must also come before B in the returned list.
    */
-  public List<INPUT> getSortedDependenciesOf(List<INPUT> roots);
+  public List<INPUT> getSortedStrongDependenciesOf(List<INPUT> roots);
 
   /**
-   * Gets all the dependencies of the given roots. The inputs must be returned
-   * in a stable order. In other words, if A comes before B, and A does not
-   * transitively depend on B, then A must also come before B in the returned
-   * list.
+   * Gets all the weak dependencies of the given roots. The inputs must be returned in stable order.
+   * In other words, if A comes before B, and A does not * transitively depend on B, then A must
+   * also come before B in the returned * list.
    *
-   * @param sorted If true, get them in topologically sorted order. If false,
-   *     get them in the original order they were passed to the compiler.
+   * <p>The weak dependencies are those that are only reachable via type requires from the roots.
+   * Note that if a root weakly requires another input, then all of its transitive dependencies
+   * (strong or weak) that are not strongly reachable from the roots will be included. e.g. if A
+   * weakly requires B, and B strongly requires C, and A is the sole root, then this will return B
+   * and C. However, if we add D as a root, and D strongly requires C, then this will only return B.
+   *
+   * <p>Root inputs will never be in the returned list as they are all considered strong.
    */
-  public List<INPUT> getDependenciesOf(List<INPUT> roots, boolean sorted);
+  public List<INPUT> getSortedWeakDependenciesOf(List<INPUT> roots);
+
+  /**
+   * Gets all the strong dependencies of the given roots. The inputs must be returned in a stable
+   * order. In other words, if A comes before B, and A does not transitively depend on B, then A
+   * must also come before B in the returned list.
+   *
+   * @param sorted If true, get them in topologically sorted order. If false, get them in the
+   *     original order they were passed to the compiler.
+   */
+  public List<INPUT> getStrongDependenciesOf(List<INPUT> roots, boolean sorted);
 
   public List<INPUT> getInputsWithoutProvides();
 

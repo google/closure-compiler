@@ -483,8 +483,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     initOptions(options);
 
     checkFirstModule(modules);
-    modules = moveWeakSources(modules);
-    fillEmptyModules(modules);
 
     this.externs = makeExternInputs(externs);
 
@@ -498,6 +496,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           e.getModule().getName(), e.getDependentModule().getName()));
       return;
     }
+
+    // Creating the module graph can move weak source around, and end up with empty modules.
+    fillEmptyModules(getModules());
 
     this.commentsPerFile = new ConcurrentHashMap<>(moduleGraph.getInputCount());
     initBasedOnOptions();
@@ -565,52 +566,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       report(JSError.make(EMPTY_ROOT_MODULE_ERROR,
           modules.get(0).getName()));
     }
-  }
-
-  /** Moves all weak sources into a separate weak module that depends on every other module. */
-  private List<JSModule> moveWeakSources(List<JSModule> modules) {
-    // Collect weak sources.
-    List<CompilerInput> weakInputs = new ArrayList<>();
-    for (JSModule module : modules) {
-      if (module.getName().equals(JSModule.WEAK_MODULE_NAME)) {
-        // Skip an already existing weak module - see below.
-        continue;
-      }
-      for (int i = 0; i < module.getInputCount(); ) {
-        CompilerInput input = module.getInput(i);
-        if (input.getSourceFile().isWeak()) {
-          module.remove(input);
-          weakInputs.add(input);
-        } else {
-          i++;
-        }
-      }
-    }
-
-    // If a weak module already exists (e.g. in a stage 2 compilation), make sure it contains all
-    // weak sources, but leave the module graph otherwise untouched.
-    if (moduleGraph != null
-        && moduleGraph.getModuleByName(JSModule.WEAK_MODULE_NAME) != null
-        && !weakInputs.isEmpty()) {
-      throw new RuntimeException(
-          "A weak module already exists but weak sources were found in other modules.");
-    }
-
-    // Create the weak module and make it depend on every other module.
-    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
-    for (JSModule module : modules) {
-      weakModule.addDependency(module);
-    }
-
-    // Move the weak sources.
-    for (CompilerInput input : weakInputs) {
-      weakModule.add(input);
-    }
-
-    // Make a copy in case the original list is immutable.
-    modules = ImmutableList.<JSModule>builder().addAll(modules).add(weakModule).build();
-
-    return modules;
   }
 
   /**
@@ -823,6 +778,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(moduleGraph != null, "No inputs. Did you call init() or initModules()?");
     checkState(!hasErrors());
     checkState(!options.getInstrumentForCoverageOnly());
+    JSModule weakModule = moduleGraph.getModuleByName(JSModule.WEAK_MODULE_NAME);
+    if (weakModule != null) {
+      for (CompilerInput i : moduleGraph.getAllInputs()) {
+        if (i.getSourceFile().isWeak()) {
+          checkState(
+              i.getModule() == weakModule, "Expected all weak files to be in the weak module.");
+        }
+      }
+    }
     runInCompilerThread(
         () -> {
           if (options.shouldOptimize()) {
@@ -1840,6 +1804,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
 
+    // Manage dependencies may move weak sources around, and end up with empty modules.
+    fillEmptyModules(getModules());
     hoistNoCompileFiles();
 
     if (staleInputs) {
