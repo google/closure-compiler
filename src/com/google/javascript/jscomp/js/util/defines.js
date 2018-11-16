@@ -35,3 +35,13 @@ $jscomp.ASSUME_NO_NATIVE_MAP = false;
  * @define {boolean}
  */
 $jscomp.ASSUME_NO_NATIVE_SET = false;
+
+/**
+ * Whether to provide an incorrect but tiny Math.fround polyfill that just
+ * returns the number given.  This is usually okay to do, particularly if
+ * `Math.fround` is only used to allow the JavaScript engine to use faster
+ * 32-bit float operations, but could cause problems if program logic is
+ * dependent on floats being truncated consistently.
+ * @define {boolean}
+ */
+$jscomp.SIMPLE_FROUND_POLYFILL = false;

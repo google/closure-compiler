@@ -169,6 +169,14 @@ Math.imul = function(value1, value2) {};
  */
 Math.clz32 = function(value) {};
 
+/**
+ * @param {number} value
+ * @return {number}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/fround
+ */
+Math.fround = function(value) {};
+
 
 /**
  * @param {*} a
