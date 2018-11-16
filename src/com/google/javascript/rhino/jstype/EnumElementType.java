@@ -197,7 +197,7 @@ public class EnumElementType extends ObjectType {
   }
 
   @Override
-  public JSType findPropertyType(String propertyName) {
+  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
     return primitiveType.findPropertyType(propertyName);
   }
 

@@ -12958,6 +12958,28 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testGetPropertyTypeOfUnionType_withMembersThatExtendATemplatizedType() {
+    testTypes(
+        lines(
+            "/** @interface @template T */ function Foo() {};",
+            "/** @type {T} */",
+            "Foo.prototype.p;",
+            "",
+            "/** @interface @extends {Foo<number>} */ function Bar() {};",
+            "/** @interface @extends {Foo<number>} */ function Baz() {}",
+            "",
+            "/**",
+            " * @param {!Bar|!Baz} x",
+            " * @return {string} ",
+            " */",
+            "var f = function(x) { return x.p; };"),
+        lines(
+            "inconsistent return type", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
   public void testInvalidAssignToPropertyTypeOfUnionType_withMatchingTemplates_doesntWarn() {
     // We don't warn for this assignment because we treat the type of `x.p` as inferred...
     testTypes(

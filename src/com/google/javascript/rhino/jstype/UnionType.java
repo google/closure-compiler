@@ -210,7 +210,7 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public JSType findPropertyType(String propertyName) {
+  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
     JSType propertyType = null;
 
     for (JSType alternate : getAlternates()) {

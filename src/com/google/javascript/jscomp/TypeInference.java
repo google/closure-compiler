@@ -55,7 +55,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
-import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
@@ -2098,19 +2097,6 @@ class TypeInference
       }
     }
 
-    if (propertyType != null && objType != null) {
-      // Replace any remaining template variables in the property with the correct type
-      // e.g. function(T) becomes function(string)
-      // TODO(b/119142727): remove this code path
-      JSType restrictedObjType = objType.restrictByNotNullOrUndefined();
-      if (!restrictedObjType.getTemplateTypeMap().isEmpty()
-          && propertyType.hasAnyTemplateTypes()) {
-        TemplateTypeMap typeMap = restrictedObjType.getTemplateTypeMap();
-        TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(
-            registry, typeMap);
-        propertyType = propertyType.visit(replacer);
-      }
-    }
 
     if ((propertyType == null || propertyType.isUnknownType()) && qualifiedName != null) {
       // If we find this node in the registry, then we can infer its type.

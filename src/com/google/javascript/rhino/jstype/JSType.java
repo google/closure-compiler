@@ -46,6 +46,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import java.io.Serializable;
@@ -878,21 +879,47 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Coerces this type to an Object type, then gets the type of the property
-   * whose name is given.
+   * Coerces this type to an Object type, then gets the type of the property whose name is given.
    *
-   * Unlike {@link ObjectType#getPropertyType}, returns null if the property
-   * is not found.
+   * <p>Unlike {@link ObjectType#getPropertyType}, returns null if the property is not found.
    *
-   * @return The property's type. {@code null} if the current type cannot
-   *     have properties, or if the type is not found.
+   * @return The property's type. {@code null} if the current type cannot have properties, or if the
+   *     type is not found.
    */
-  public JSType findPropertyType(String propertyName) {
+  @Nullable
+  public final JSType findPropertyType(String propertyName) {
+    @Nullable JSType propertyType = findPropertyTypeWithoutConsideringTemplateTypes(propertyName);
+    if (propertyType == null) {
+      return null;
+    }
+
+    // Do templatized type replacing logic here, and make this method final, to prevent a subclass
+    // from forgetting to replace template types
+    if (getTemplateTypeMap().isEmpty() || !propertyType.hasAnyTemplateTypes()) {
+      return propertyType;
+    }
+
+    TemplateTypeMap typeMap = getTemplateTypeMap();
+    TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
+    return propertyType.visit(replacer);
+  }
+
+  /**
+   * Looks up a property on this type, but without properly replacing any templates in the result.
+   *
+   * <p>Subclasses can override this if they need more complicated logic for property lookup than
+   * just autoboxing to an object.
+   *
+   * <p>This is only for use by {@code findPropertyType(JSType)}. Call that method instead if you
+   * need to lookup a property on a random JSType
+   */
+  @ForOverride
+  @Nullable
+  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
     ObjectType autoboxObjType = ObjectType.cast(autoboxesTo());
     if (autoboxObjType != null) {
       return autoboxObjType.findPropertyType(propertyName);
     }
-
     return null;
   }
 

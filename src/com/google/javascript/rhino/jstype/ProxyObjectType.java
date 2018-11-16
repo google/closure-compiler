@@ -311,7 +311,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public JSType findPropertyType(String propertyName) {
+  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
     return referencedType.findPropertyType(propertyName);
   }
 
