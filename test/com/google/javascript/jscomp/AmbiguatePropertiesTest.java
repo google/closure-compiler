@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.jscomp.DisambiguateProperties.Warnings;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
@@ -176,25 +177,56 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testUnion() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "/** @constructor */ var Bar = function(){};",
-        "Foo.prototype.foodoo=0;",
-        "Bar.prototype.bardoo=0;",
-        "/** @type {Foo|Bar} */",
-        "var U = any();",
-        "U.joint;",
-        "U.joint");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "/** @constructor */ var Bar = function(){};",
-        "Foo.prototype.b=0;",
-        "Bar.prototype.b=0;",
-        "/** @type {Foo|Bar} */",
-        "var U = any();",
-        "U.a;",
-        "U.a");
+  public void testUnion_withUnrelatedPropertyAccess() {
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "/** @constructor */ var Bar = function(){};",
+            "Foo.prototype.foodoo=0;",
+            "Bar.prototype.bardoo=0;",
+            // variable exists that could be a Foo or a Bar
+            "/** @type {Foo|Bar} */",
+            "var U = any();",
+            // We don't actually access either foodoo or bardoo on it,
+            // though, so it's OK if they end up having the same name
+            "U.joint");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "/** @constructor */ var Bar = function(){};",
+            "Foo.prototype.a=0;",
+            "Bar.prototype.a=0;",
+            "/** @type {Foo|Bar} */",
+            "var U = any();",
+            "U.b");
+    test(js, output);
+  }
+
+  @Test
+  public void testUnion_withRelatedPropertyAccess() {
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "/** @constructor */ var Bar = function(){};",
+            "Foo.prototype.foodoo=0;",
+            "Bar.prototype.bardoo=0;",
+            // variable exists that could be a Foo or a Bar
+            "/** @type {Foo|Bar} */",
+            "var U = any();",
+            // both foodoo and bardoo are accessed through that variable,
+            // so they must have different names.
+            "U.foodoo;",
+            "U.bardoo");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "/** @constructor */ var Bar = function(){};",
+            "Foo.prototype.b=0;",
+            "Bar.prototype.a=0;",
+            "/** @type {Foo|Bar} */",
+            "var U = any();",
+            "U.b;",
+            "U.a");
     test(js, output);
   }
 
@@ -1192,5 +1224,45 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
       "Foo.prototype.a = function() {};");
 
     test(externs(""), srcs(js), expected(output));
+  }
+
+  @Test
+  public void testInvalidRenameFunction_withZeroArgs_causesWarning() {
+    testError("const p = JSCompiler_renameProperty()", Warnings.INVALID_RENAME_FUNCTION);
+  }
+
+  @Test
+  public void testInvalidRenameFunction_withThreeArgs_causesWarning() {
+    testError("const p = JSCompiler_renameProperty('foo', 0, 1)", Warnings.INVALID_RENAME_FUNCTION);
+  }
+
+  @Test
+  public void testInvalidRenameFunction_withNonStringArg_causesWarning() {
+    testError("const p = JSCompiler_renameProperty(0)", Warnings.INVALID_RENAME_FUNCTION);
+  }
+
+  @Test
+  public void testInvalidRenameFunction_withPropertyRefInFirstArg_causesWarning() {
+    testError("const p = JSCompiler_renameProperty('a.b')", Warnings.INVALID_RENAME_FUNCTION);
+  }
+
+  @Test
+  public void testJSCompiler_renameProperty_twoArgs_blocksAmbiguation() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.bar = 3;",
+            "const barName = JSCompiler_renameProperty('bar', Foo);"));
+  }
+
+  @Test
+  public void testJSCompiler_renameProperty_oneArg_blocksAmbiguation() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.bar = 3;",
+            "const barName = JSCompiler_renameProperty('bar');"));
   }
 }
