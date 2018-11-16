@@ -803,7 +803,7 @@ public final class NodeUtilTest {
 
   private void assertMutableState(boolean se, String js) {
     Node n = parse(js);
-    assertThat(NodeUtil.mayEffectMutableState(n.getFirstChild())).isEqualTo(se);
+    assertThat(NodeUtil.mayEffectMutableState(n.getFirstChild(), new Compiler())).isEqualTo(se);
   }
 
   @Test

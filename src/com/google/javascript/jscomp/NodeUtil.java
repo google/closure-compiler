@@ -1094,11 +1094,6 @@ public final class NodeUtil {
   static Node newExpr(Node child) {
     return IR.exprResult(child).srcref(child);
   }
-  // TODO(johnplaisted): All call sites should pass in the compiler.
-  @Deprecated
-  static boolean mayEffectMutableState(Node n) {
-    return mayEffectMutableState(n, null);
-  }
 
   /**
    * Returns true if the node may create new mutable state, or change existing state.
@@ -1106,6 +1101,7 @@ public final class NodeUtil {
    * @see <a href="http://www.xkcd.org/326/">XKCD Cartoon</a>
    */
   static boolean mayEffectMutableState(Node n, AbstractCompiler compiler) {
+    checkNotNull(compiler);
     return checkForStateChangeHelper(n, true, compiler);
   }
 

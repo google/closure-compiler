@@ -731,7 +731,7 @@ class FunctionInjector {
         // Limit the inlining
         Set<String> allNamesToAlias = new HashSet<>(namesToAlias);
         FunctionArgumentInjector.maybeAddTempsForCallArguments(
-            fnNode, args, allNamesToAlias, compiler.getCodingConvention());
+            compiler, fnNode, args, allNamesToAlias, compiler.getCodingConvention());
         if (!allNamesToAlias.isEmpty()) {
           return false;
         }
@@ -787,7 +787,7 @@ class FunctionInjector {
       // Limit the inlining
       Set<String> allNamesToAlias = new HashSet<>(namesToAlias);
       FunctionArgumentInjector.maybeAddTempsForCallArguments(
-          fnNode, args, allNamesToAlias, compiler.getCodingConvention());
+          compiler, fnNode, args, allNamesToAlias, compiler.getCodingConvention());
       if (!allNamesToAlias.isEmpty()) {
         return CanInlineResult.NO;
       }

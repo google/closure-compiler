@@ -261,14 +261,18 @@ class FunctionArgumentInjector {
   }
 
   /**
-   * Updates the set of parameter names in set unsafe to include any
-   * arguments from the call site that require aliases.
+   * Updates the set of parameter names in set unsafe to include any arguments from the call site
+   * that require aliases.
+   *
    * @param fnNode The FUNCTION node to be inlined.
    * @param argMap The argument list for the call to fnNode.
    * @param namesNeedingTemps The set of names to update.
    */
   static void maybeAddTempsForCallArguments(
-      Node fnNode, ImmutableMap<String, Node> argMap, Set<String> namesNeedingTemps,
+      AbstractCompiler compiler,
+      Node fnNode,
+      ImmutableMap<String, Node> argMap,
+      Set<String> namesNeedingTemps,
       CodingConvention convention) {
     if (argMap.isEmpty()) {
       // No arguments to check, we are done.
@@ -300,7 +304,7 @@ class FunctionArgumentInjector {
       boolean safe = true;
       int references = NodeUtil.getNameReferenceCount(block, argName);
 
-      boolean argSideEffects = NodeUtil.mayHaveSideEffects(cArg);
+      boolean argSideEffects = NodeUtil.mayHaveSideEffects(cArg, compiler);
       if (!argSideEffects && references == 0) {
         safe = true;
       } else if (isTrivialBody && hasMinimalParameters
@@ -312,7 +316,7 @@ class FunctionArgumentInjector {
         //
         // This is done to help inline common trivial functions
         safe = true;
-      } else if (NodeUtil.mayEffectMutableState(cArg) && references > 0) {
+      } else if (NodeUtil.mayEffectMutableState(cArg, compiler) && references > 0) {
         // Note: Mutable arguments should be assigned to temps, as the
         // may be within in a loop:
         //   function x(a) {

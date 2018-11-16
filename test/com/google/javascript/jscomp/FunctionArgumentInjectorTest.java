@@ -584,7 +584,8 @@ public final class FunctionArgumentInjectorTest {
         ImmutableMap.copyOf(getFunctionCallParameterMap(fn, call, getNameSupplier()));
 
     Set<String> actualTemps = new HashSet<>();
-    maybeAddTempsForCallArguments(fn, args, actualTemps, new ClosureCodingConvention());
+    maybeAddTempsForCallArguments(
+        getCompiler(), fn, args, actualTemps, new ClosureCodingConvention());
 
     assertThat(actualTemps).isEqualTo(expectedTemps);
   }
