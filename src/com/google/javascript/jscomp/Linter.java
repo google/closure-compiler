@@ -116,7 +116,7 @@ public final class Linter {
 
     lint(Paths.get(filename), compiler);
 
-    Collection<SuggestedFix> fixes = errorManager.getAllFixes();
+    Collection<SuggestedFix> fixes = errorManager.getSureFixes();
     if (!fixes.isEmpty()) {
       ApplySuggestedFixes.applySuggestedFixesToFiles(fixes);
       return true;
