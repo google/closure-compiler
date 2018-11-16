@@ -555,6 +555,11 @@ class DisambiguateProperties implements CompilerPass {
           continue;
         }
         Node stringKey = target.getStringKey();
+        if (stringKey.isQuotedString()) {
+          // Never rename quoted property accesses, e.g.
+          //   const {'prop': localVar} = someObj;
+          continue;
+        }
         String name = stringKey.getString();
         Property prop = getProperty(name);
         if (!prop.scheduleRenaming(stringKey, processProperty(prop, objectPatternType, null))

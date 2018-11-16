@@ -3068,6 +3068,33 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDontDisambiguatePropertyReference_objectPattern_withQuotedStringKey() {
+    testSets(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.prop = 'static property!';",
+            "const {'prop': prop} = {'prop': 3};"),
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.Foo$prop = 3;",
+            "  }",
+            "}",
+            "/** @type {string} */",
+            "Foo.function_new_Foo___undefined$prop = 'static property!';",
+            // we still rewrite the other 'prop' references, but ignore the quoted 'prop'
+            "const {'prop': prop} = {'prop': 3};"),
+        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+  }
+
+  @Test
   public void testDisambiguateCtorPropertyReference_objectPattern_stringKey_inDeclaration() {
     testSets(
         lines(
