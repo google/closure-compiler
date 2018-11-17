@@ -82,6 +82,7 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.OptionDef;
 import org.kohsuke.args4j.OptionHandlerFilter;
 import org.kohsuke.args4j.spi.FieldSetter;
+import org.kohsuke.args4j.spi.IntOptionHandler;
 import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
@@ -476,6 +477,13 @@ public class CommandLineRunner extends
     private String compilationLevel = "SIMPLE";
 
     private CompilationLevel compilationLevelParsed = null;
+
+    @Option(
+        name = "--num_parallel_threads",
+        hidden = true,
+        handler = IntOptionHandler.class,
+        usage = "Use multiple threads to parallelize parts of the compilation.")
+    private int numParallelThreads = 1;
 
     @Option(name = "--checks_only",
         aliases = {"--checks-only"},
@@ -1800,6 +1808,8 @@ public class CommandLineRunner extends
     if (flags.debug) {
       level.setDebugOptionsForCompilationLevel(options);
     }
+
+    options.setNumParallelThreads(flags.numParallelThreads);
 
     options.setEnvironment(flags.environment);
 
