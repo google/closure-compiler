@@ -50,7 +50,7 @@ import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import java.io.Serializable;
-import java.util.IdentityHashMap;
+import java.util.HashMap;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -1891,7 +1891,7 @@ public abstract class JSType implements Serializable {
    * cache used by equivalence check logic
    */
   static class EqCache extends MatchCache {
-    private IdentityHashMap<Object, IdentityHashMap<Object, MatchStatus>> matchCache;
+    private HashMap<Key, MatchStatus> matchCache;
 
     static EqCache create() {
       return new EqCache(true);
@@ -1903,48 +1903,95 @@ public abstract class JSType implements Serializable {
 
     private EqCache(boolean isStructuralTyping) {
       super(isStructuralTyping);
-      this.matchCache = null;
     }
 
     void updateCache(JSType left, JSType right, MatchStatus isMatch) {
-      updateCacheAnyType(left, right, isMatch);
+      updateCacheAnyType(left, right, isMatch); // Defer Key instantiation.
     }
 
     void updateCache(TemplateTypeMap left, TemplateTypeMap right, MatchStatus isMatch) {
-      updateCacheAnyType(left, right, isMatch);
+      updateCacheAnyType(left, right, isMatch); // Defer Key instantiation.
     }
 
-    private void updateCacheAnyType(Object t1, Object t2, MatchStatus isMatch) {
-      IdentityHashMap<Object, MatchStatus> map = this.matchCache.get(t1);
-      if (map == null) {
-        map = new IdentityHashMap<>();
+    private void updateCacheAnyType(Object left, Object right, MatchStatus isMatch) {
+      if (left == right) {
+        // Recall that we never bother reading keys with equal elements.
+        return;
       }
-      map.put(t2, isMatch);
-      this.matchCache.put(t1, map);
+
+      getMatchCache().put(new Key(left, right), isMatch);
     }
 
     @Nullable
     MatchStatus checkCache(JSType left, JSType right) {
-      return checkCacheAnyType(left, right);
+      return checkCacheAnyType(left, right); // Defer Key instantiation.
     }
 
     @Nullable
     MatchStatus checkCache(TemplateTypeMap left, TemplateTypeMap right) {
-      return checkCacheAnyType(left, right);
+      return checkCacheAnyType(left, right); // Defer Key instantiation.
     }
 
-    private MatchStatus checkCacheAnyType(Object t1, Object t2) {
-      if (this.matchCache == null) {
-        this.matchCache = new IdentityHashMap<>();
+    private MatchStatus checkCacheAnyType(Object left, Object right) {
+      if (left == right) {
+        return MatchStatus.MATCH;
       }
-      // check the cache
-      if (this.matchCache.containsKey(t1) && this.matchCache.get(t1).containsKey(t2)) {
-        return this.matchCache.get(t1).get(t2);
-      } else if (this.matchCache.containsKey(t2) && this.matchCache.get(t2).containsKey(t1)) {
-        return this.matchCache.get(t2).get(t1);
-      } else {
-        this.updateCacheAnyType(t1, t2, MatchStatus.PROCESSING);
-        return null;
+
+      return getMatchCache().putIfAbsent(new Key(left, right), MatchStatus.PROCESSING);
+    }
+
+    private HashMap<Key, MatchStatus> getMatchCache() {
+      if (matchCache == null) {
+        matchCache = new HashMap<>();
+      }
+      return matchCache;
+    }
+
+    private static final class Key {
+      private final Object left;
+      private final Object right;
+      private final int hashCode; // Cache this calculation because it is made often.
+
+      @Override
+      public int hashCode() {
+        return hashCode;
+      }
+
+      @Override
+      @SuppressWarnings({
+        "ShortCircuitBoolean",
+        "ReferenceEquality",
+        "EqualsBrokenForNull",
+        "EqualsUnsafeCast"
+      })
+      public boolean equals(Object other) {
+        // Calling this with `null` or not a `Key` should cause a crash.
+        Key that = (Key) other;
+        if (this == other) {
+          return true;
+        }
+
+        // Recall that `Key` implements identity equality on `left` and `right`.
+        //
+        // Recall that `left` and `right` are not ordered.
+        //
+        // Use non-short circuiting operators to eliminate branches. Equality checks are
+        // side-effect-free and less expensive than branches.
+        return ((this.left == that.left) & (this.right == that.right))
+            | ((this.left == that.right) & (this.right == that.left));
+      }
+
+      @SuppressWarnings("ReferenceEquality")
+      private Key(Object left, Object right) {
+        this.left = left;
+        this.right = right;
+
+        // XOR the component hashcodes because:
+        //   - It's a symmetric operator, so we don't have to worry about order.
+        //   - It's assumed the inputs are already uniformly distributed and unrelated.
+        //     - `left` and `right` should never be identical.
+        // Recall that `Key` implements identity equality on `left` and `right`.
+        this.hashCode = System.identityHashCode(left) ^ System.identityHashCode(right);
       }
     }
   }
