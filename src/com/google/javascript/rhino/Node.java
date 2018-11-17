@@ -2057,7 +2057,14 @@ public class Node implements Serializable {
         return false;
       }
     } else if (token == Token.FUNCTION) {
+      // Must be the same kind of function to be equivalent
       if (this.isArrowFunction() != node.isArrowFunction()) {
+        return false;
+      }
+      if (this.isGeneratorFunction() != node.isGeneratorFunction()) {
+        return false;
+      }
+      if (this.isAsyncFunction() != node.isAsyncFunction()) {
         return false;
       }
     }

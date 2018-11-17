@@ -39,6 +39,7 @@
 package com.google.javascript.rhino;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.rhino.Node.NodeMismatch;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -113,6 +114,49 @@ public class NodeTest {
     Node node1 = new Node(Token.ADD);
     Node node2 = new Node(Token.SUB);
     assertThat(node1.checkTreeEquals(node2)).isNotNull();
+  }
+
+  @Test
+  public void isEquivalentToForFunctionsConsidersKindOfFunction() {
+    Node normalFunction = IR.function(IR.name(""), IR.paramList(), IR.block());
+    assertNode(normalFunction).isEquivalentTo(normalFunction.cloneTree());
+
+    // normal vs async function
+    Node asyncFunction = normalFunction.cloneTree();
+    asyncFunction.setIsAsyncFunction(true);
+    assertNode(asyncFunction)
+        .isEquivalentTo(asyncFunction.cloneTree())
+        .isNotEquivalentTo(normalFunction);
+
+    // normal vs arrow function
+    Node arrowFunction = normalFunction.cloneTree();
+    arrowFunction.setIsArrowFunction(true);
+    assertNode(arrowFunction)
+        .isEquivalentTo(arrowFunction.cloneTree())
+        .isNotEquivalentTo(normalFunction);
+
+    // async arrow function vs async only vs arrow only
+    Node asyncArrowFunction = arrowFunction.cloneTree();
+    asyncArrowFunction.setIsAsyncFunction(true);
+    assertNode(asyncArrowFunction)
+        .isEquivalentTo(asyncArrowFunction.cloneTree())
+        .isNotEquivalentTo(arrowFunction)
+        .isNotEquivalentTo(asyncFunction);
+
+    // normal vs generator function
+    Node generatorFunction = normalFunction.cloneTree();
+    generatorFunction.setIsGeneratorFunction(true);
+    assertNode(generatorFunction)
+        .isEquivalentTo(generatorFunction.cloneTree())
+        .isNotEquivalentTo(normalFunction);
+
+    // async generator function vs only async vs only generator
+    Node asyncGeneratorFunction = generatorFunction.cloneTree();
+    asyncGeneratorFunction.setIsAsyncFunction(true);
+    assertNode(asyncGeneratorFunction)
+        .isEquivalentTo(asyncGeneratorFunction.cloneTree())
+        .isNotEquivalentTo(asyncFunction)
+        .isNotEquivalentTo(generatorFunction);
   }
 
   @Test

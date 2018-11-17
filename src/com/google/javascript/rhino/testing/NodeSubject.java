@@ -80,6 +80,16 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
     check("checkTreeEquals(%s)", node).that(actual().checkTreeEquals(node)).isNull();
   }
 
+  public NodeSubject isEquivalentTo(Node other) {
+    check("isEquivalentTo(%s)", other).that(actual().isEquivalentTo(other)).isTrue();
+    return this;
+  }
+
+  public NodeSubject isNotEquivalentTo(Node other) {
+    check("isEquivalentTo(%s)", other).that(actual().isEquivalentTo(other)).isFalse();
+    return this;
+  }
+
   public TypeSubject hasJSTypeThat() {
     return TypeSubject.assertType(actual().getJSTypeRequired());
   }
