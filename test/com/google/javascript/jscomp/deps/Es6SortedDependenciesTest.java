@@ -344,57 +344,6 @@ public class Es6SortedDependenciesTest {
     assertThat(sorted.getSortedList()).containsExactly(c, a, b).inOrder();
   }
 
-  @Test
-  public void testWeakSort() throws Exception {
-    SimpleDependencyInfo a =
-        SimpleDependencyInfo.builder("a", "a").setProvides("a").setTypeRequires("b").build();
-    SimpleDependencyInfo b =
-        SimpleDependencyInfo.builder("b", "b").setProvides("b").setTypeRequires("c").build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c").setProvides("c").build();
-
-    assertSortedWeakDeps(ImmutableList.of(c, b), ImmutableList.of(a, b, c), ImmutableList.of(a));
-
-    assertSortedWeakDeps(ImmutableList.of(c, b), ImmutableList.of(a, c, b), ImmutableList.of(a));
-
-    assertSortedWeakDeps(ImmutableList.of(c, b), ImmutableList.of(b, c, a), ImmutableList.of(a));
-
-    assertSortedWeakDeps(ImmutableList.of(c, b), ImmutableList.of(c, b, a), ImmutableList.of(a));
-  }
-
-  @Test
-  public void testWeakSortIncludesStrongEdgesFromWeakSources() throws Exception {
-    SimpleDependencyInfo a =
-        SimpleDependencyInfo.builder("a", "a").setProvides("a").setTypeRequires("b").build();
-    SimpleDependencyInfo b =
-        SimpleDependencyInfo.builder("b", "b")
-            .setProvides("b")
-            .setRequires(Require.googRequireSymbol("c"))
-            .build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c").setProvides("c").build();
-
-    assertSortedWeakDeps(ImmutableList.of(c, b), ImmutableList.of(a, c, b), ImmutableList.of(a));
-  }
-
-  @Test
-  public void testWeakAndStrongIsStrong() throws Exception {
-    SimpleDependencyInfo a =
-        SimpleDependencyInfo.builder("a", "a")
-            .setProvides("a")
-            .setRequires(Require.googRequireSymbol("c"))
-            .build();
-    SimpleDependencyInfo b =
-        SimpleDependencyInfo.builder("b", "b").setProvides("b").setTypeRequires("c").build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c").setProvides("c").build();
-
-    assertSortedWeakDeps(ImmutableList.of(), ImmutableList.of(a, b, c), ImmutableList.of(a, b));
-
-    assertSortedWeakDeps(ImmutableList.of(), ImmutableList.of(a, b, c), ImmutableList.of(b, a));
-
-    assertSortedWeakDeps(ImmutableList.of(), ImmutableList.of(c, b, a), ImmutableList.of(a, b));
-
-    assertSortedWeakDeps(ImmutableList.of(), ImmutableList.of(c, a, b), ImmutableList.of(b, a));
-  }
-
   private static void assertSortedInputs(
       List<SimpleDependencyInfo> expected, List<SimpleDependencyInfo> shuffled) {
     SortedDependencies<SimpleDependencyInfo> sorted = createSortedDependencies(shuffled);
@@ -407,15 +356,7 @@ public class Es6SortedDependenciesTest {
       List<SimpleDependencyInfo> roots)
       throws Exception {
     SortedDependencies<SimpleDependencyInfo> sorted = createSortedDependencies(shuffled);
-    assertThat(sorted.getSortedStrongDependenciesOf(roots)).isEqualTo(expected);
-  }
-
-  private static void assertSortedWeakDeps(
-      List<SimpleDependencyInfo> expected,
-      List<SimpleDependencyInfo> shuffled,
-      List<SimpleDependencyInfo> roots) {
-    SortedDependencies<SimpleDependencyInfo> sorted = createSortedDependencies(shuffled);
-    assertThat(sorted.getSortedWeakDependenciesOf(roots)).isEqualTo(expected);
+    assertThat(sorted.getSortedDependenciesOf(roots)).isEqualTo(expected);
   }
 
   private static void assertOrder(
