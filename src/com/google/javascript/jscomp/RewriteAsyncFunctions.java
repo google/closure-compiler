@@ -348,9 +348,6 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
     if (n.isFunction()) {
       contextStack.addFirst(new LexicalContext(contextStack.getFirst(), n));
-      if (n.isAsyncFunction()) {
-        compiler.ensureLibraryInjected("es6/execute_async_generator", /* force= */ false);
-      }
     }
     return true;
   }
@@ -433,6 +430,17 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     Node originalFunction = checkNotNull(functionContext.function);
     originalFunction.setIsAsyncFunction(false);
     Node originalBody = originalFunction.getLastChild();
+    if (originalFunction.isFromExterns()) {
+      // A function defined in externs will never be executed, so we don't need to transpile it.
+      // Make sure it has an empty body though so later passes won't trip over uses of `await` or
+      // anything like that.
+      if (!NodeUtil.isEmptyBlock(originalBody)) {
+        // TODO(b/119685646): Maybe we should warn for non-empty functions in externs?
+        originalBody.replaceWith(astFactory.createBlock());
+        NodeUtil.markFunctionsDeleted(originalBody, compiler);
+      }
+      return;
+    }
     Node newBody = astFactory.createBlock();
     originalFunction.replaceChild(originalBody, newBody);
 

@@ -608,20 +608,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRequiredCodeInjected() {
-    test(
-        "async function foo() { return 1; }",
-        lines(
-            "function foo() {",
-            "  return $jscomp.asyncExecutePromiseGeneratorFunction(",
-            "      function* () {",
-            "        return 1;",
-            "      });",
-            "}"));
-    assertThat(getLastCompiler().injected).containsExactly("es6/execute_async_generator");
-  }
-
-  @Test
   public void testAwaitReplacement() {
     test(
         "async function foo(promise) { return await promise; }",
@@ -632,6 +618,43 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "          return yield promise;",
             "        });",
             "}"));
+  }
+
+  @Test
+  public void testAsyncFunctionInExterns() {
+    testExternChanges(
+        lines(
+            "/**",
+            " * @param {!Promise<?>} promise",
+            " * @return {?}",
+            " */",
+            "async function foo(promise) {}"),
+        "",
+        lines(
+            "/**",
+            " * @param {!Promise<?>} promise",
+            " * @return {?}",
+            " */",
+            "function foo(promise) {}"));
+  }
+
+  @Test
+  public void testAsyncFunctionInExternsWithNonemptyBody() {
+    testExternChanges(
+        lines(
+            "/**",
+            " * @param {!Promise<?>} promise",
+            " * @return {?}",
+            " */",
+            // TODO(b/119685646): Maybe we should report an error for non-empty function in externs?
+            "async function foo(promise) { return await promise; }"),
+        "",
+        lines(
+            "/**",
+            " * @param {!Promise<?>} promise",
+            " * @return {?}",
+            " */",
+            "function foo(promise) {}"));
   }
 
   @Test
