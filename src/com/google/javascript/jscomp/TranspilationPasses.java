@@ -86,15 +86,6 @@ public class TranspilationPasses {
       passes.add(rewriteObjectSpread);
     }
 
-    if (options.needsTranspilationFrom(ES8)) {
-      // Trailing commas in parameter lists are flagged as present by the parser,
-      // but never actually represented in the AST.
-      // The only thing we need to do is mark them as not present in the AST.
-      passes.add(
-          createFeatureRemovalPass(
-              "markTrailingCommasInParameterListsRemoved", Feature.TRAILING_COMMA_IN_PARAM_LIST));
-      passes.add(rewriteAsyncFunctions);
-    }
     if (options.needsTranspilationFrom(ES6) && doEs6ExternsCheck) {
       passes.add(es6ExternsCheck);
     }
@@ -111,6 +102,16 @@ public class TranspilationPasses {
   /** Adds transpilation passes that should run after all checks are done. */
   public static void addPostCheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
+    if (options.needsTranspilationFrom(ES8)) {
+      // Trailing commas in parameter lists are flagged as present by the parser,
+      // but never actually represented in the AST.
+      // The only thing we need to do is mark them as not present in the AST.
+      passes.add(
+          createFeatureRemovalPass(
+              "markTrailingCommasInParameterListsRemoved", Feature.TRAILING_COMMA_IN_PARAM_LIST));
+      passes.add(rewriteAsyncFunctions);
+    }
+
     if (options.needsTranspilationFrom(ES7)) {
       passes.add(rewriteExponentialOperator);
     }
