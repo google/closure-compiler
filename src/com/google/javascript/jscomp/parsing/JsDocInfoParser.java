@@ -1919,6 +1919,9 @@ public final class JsDocInfoParser {
   }
 
   /**
+   * Parse a ParamTypeExpression:
+   *
+   * <pre>
    * ParamTypeExpression :=
    *     OptionalParameterType |
    *     TopLevelTypeExpression |
@@ -1926,7 +1929,7 @@ public final class JsDocInfoParser {
    *
    * OptionalParameterType :=
    *     TopLevelTypeExpression '='
-   *
+   * </pre>
    */
   private Node parseParamTypeExpression(JsDocToken token) {
     boolean restArg = false;
@@ -2174,8 +2177,12 @@ public final class JsDocInfoParser {
   }
 
   /**
-   * TypeName := NameExpression | NameExpression TypeApplication TypeApplication := '.'? '<'
-   * TypeExpressionList '>'
+   * Parse a TypeName:
+   *
+   * <pre>{@code
+   * TypeName := NameExpression | NameExpression TypeApplication
+   * TypeApplication := '.'? '<' TypeExpressionList '>'
+   * }</pre>
    */
   private Node parseTypeName(JsDocToken token) {
     Node typeNameNode = parseNameExpression(token);
@@ -2209,16 +2216,19 @@ public final class JsDocInfoParser {
   }
 
   /**
+   * Parse a FunctionType:
+   *
+   * <pre>
    * FunctionType := 'function' FunctionSignatureType
    * FunctionSignatureType :=
    *    TypeParameters '(' 'this' ':' TypeName, ParametersType ')' ResultType
+   * </pre>
    *
-   * <p>The Node that is produced has type Token.FUNCTION but does not look like a typical
-   * function node. If there is a 'this:' or 'new:' type, that type is added as a child.
-   * Then, if there are parameters, a PARAM_LIST node is added as a child. Finally, if
-   * there is a return type, it is added as a child. This means that the parameters
-   * could be the first or second child, and the return type could be
-   * the first, second, or third child.
+   * <p>The Node that is produced has type Token.FUNCTION but does not look like a typical function
+   * node. If there is a 'this:' or 'new:' type, that type is added as a child. Then, if there are
+   * parameters, a PARAM_LIST node is added as a child. Finally, if there is a return type, it is
+   * added as a child. This means that the parameters could be the first or second child, and the
+   * return type could be the first, second, or third child.
    */
   private Node parseFunctionType(JsDocToken token) {
     // NOTE(nicksantos): We're not implementing generics at the moment, so
@@ -2294,6 +2304,9 @@ public final class JsDocInfoParser {
   }
 
   /**
+   * Parse a ParametersType:
+   *
+   * <pre>
    * ParametersType := RestParameterType | NonRestParametersType
    *     | NonRestParametersType ',' RestParameterType
    * RestParameterType := '...' Identifier
@@ -2304,6 +2317,7 @@ public final class JsDocInfoParser {
    *     | OptionalParameterType, OptionalParametersType
    * OptionalParameterType := ParameterType=
    * ParameterType := TypeExpression | Identifier ':' TypeExpression
+   * </pre>
    */
   // NOTE(nicksantos): The official ES4 grammar forces optional and rest
   // arguments to come after the required arguments. Our parser does not
