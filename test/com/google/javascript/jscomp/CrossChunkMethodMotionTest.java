@@ -705,4 +705,48 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             "this.prototype.foo = function() {};",
             "(new F()).foo();"));
   }
+
+  @Test
+  public void testDestructuring() {
+    test(
+        createModuleChain(
+            lines(
+                "/** @constructor */", //
+                "function F() {}",
+                "F.prototype.foo = function() {};"),
+            "const {foo} = new F();"),
+        new String[] {
+          STUB_DECLARATIONS
+              + lines(
+                  "/** @constructor */", //
+                  "function F() {}",
+                  "F.prototype.foo = JSCompiler_stubMethod(0);"),
+          lines(
+              "F.prototype.foo = JSCompiler_unstubMethod(0, function(){});", //
+              "const {foo} = new F();")
+        });
+  }
+
+  @Test
+  public void testDestructuringWithQuotedProp() {
+    testSame(
+        createModuleChain(
+            lines(
+                "/** @constructor */", //
+                "function F() {}",
+                "F.prototype.foo = function() {};"),
+            "const {'foo': foo} = new F();"));
+  }
+
+  @Test
+  public void testDestructuringWithComputedProp() {
+    // See https://github.com/google/closure-compiler/issues/3145
+    testSame(
+        createModuleChain(
+            lines(
+                "/** @constructor */", //
+                "function F() {}",
+                "F.prototype['foo'] = function() {};"),
+            "const {['foo']: foo} = new F();"));
+  }
 }

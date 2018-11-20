@@ -320,7 +320,10 @@ class AnalyzePrototypeProperties implements CompilerPass {
         case OBJECT_PATTERN:
           for (Node stringKeyNode = n.getFirstChild(); stringKeyNode != null;
               stringKeyNode = stringKeyNode.getNext()) {
-            addSymbolUse(stringKeyNode.getString(), t.getModule(), PROPERTY);
+            if (!stringKeyNode.isComputedProp() && !stringKeyNode.isQuotedString()) {
+              // skip over const {['foobar']: foo} = ...; and const {'foobar': foo} = ...;
+              addSymbolUse(stringKeyNode.getString(), t.getModule(), PROPERTY);
+            }
           }
           break;
 
