@@ -4898,13 +4898,34 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testBadComputedPropertyKeyInObjectPattern() {
+  public void testBadComputedPropertyKeyTypeInObjectPattern() {
     testTypes(
         "const {[{}]: x} = {};",
         lines(
             "property access", //
             "found   : {}",
             "required: (string|symbol)"));
+  }
+
+  @Test
+  public void testComputedPropertyAccessOnStructInObjectPattern() {
+    testTypes(
+        "/** @struct */ const myStruct = {a: 1}; const {['a']: a} = myStruct;",
+        "Cannot do '[]' access on a struct");
+  }
+
+  @Test
+  public void testQuotedPropertyAccessOnStructInObjectPattern() {
+    testTypes(
+        "/** @struct */ const myStruct = {a: 1}; const {'a': a} = myStruct;",
+        "Cannot do quoted access on a struct");
+  }
+
+  @Test
+  public void testNonQuotedPropertyAccessOnDictInObjectPattern() {
+    testTypes(
+        "/** @dict*/ const myDict = {'a': 1}; const {a} = myDict;",
+        "Cannot do unquoted access on a dict");
   }
 
   @Test

@@ -891,27 +891,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case OBJECT_PATTERN:
-        // We only check that COMPUTED_PROP keys are valid here
-        // Other checks for object patterns are done when visiting DEFAULT_VALUEs or assignments/
-        // declarations
-        JSType patternType = getJSType(n);
-        for (Node child : n.children()) {
-          DestructuredTarget target =
-              DestructuredTarget.createTarget(typeRegistry, patternType, child);
-
-          if (target.hasComputedProperty()) {
-            Node computedProperty = target.getComputedProperty();
-            validator.expectIndexMatch(
-                t, computedProperty, patternType, getJSType(computedProperty.getFirstChild()));
-          }
-
-          if (target.hasStringKey() && !target.getStringKey().isQuotedString()) {
-            // check `const {a} = obj;` but not `const {'a': a} = obj;`
-            checkPropertyAccessForDestructuring(
-                t, n, getJSType(n), target.getStringKey(), getJSType(target.getNode()));
-          }
-        }
-        ensureTyped(n);
+        visitObjectPattern(t, n);
         break;
 
       case DEFAULT_VALUE:
@@ -1299,6 +1279,39 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           t, key.getFirstChild(), ctorType, propertyName,
           key.getJSDocInfo(), type.getPropertyType(propertyName));
     }
+  }
+
+  /**
+   * Validates all keys in an object pattern
+   *
+   * <p>Validating the types assigned to any lhs nodes in the pattern is done at the ASSIGN/VAR/
+   * PARAM_LIST/etc. node
+   */
+  private void visitObjectPattern(NodeTraversal t, Node pattern) {
+    JSType patternType = getJSType(pattern);
+    for (Node child : pattern.children()) {
+      DestructuredTarget target = DestructuredTarget.createTarget(typeRegistry, patternType, child);
+
+      if (target.hasComputedProperty()) {
+        Node computedProperty = target.getComputedProperty();
+        validator.expectIndexMatch(
+            t, computedProperty, patternType, getJSType(computedProperty.getFirstChild()));
+      } else if (target.hasStringKey()) {
+        Node stringKey = target.getStringKey();
+        if (!stringKey.isQuotedString()) {
+          if (patternType.isDict()) {
+            report(t, stringKey, TypeValidator.ILLEGAL_PROPERTY_ACCESS, "unquoted", "dict");
+          }
+          // check for missing properties given `const {a} = obj;` but not `const {'a': a} = obj;`
+          checkPropertyAccessForDestructuring(
+              t, pattern, patternType, stringKey, getJSType(target.getNode()));
+        } else if (patternType.isStruct()) {
+          // check that we are not accessing a struct with a quoted string
+          report(t, stringKey, TypeValidator.ILLEGAL_PROPERTY_ACCESS, "quoted", "struct");
+        }
+      }
+    }
+    ensureTyped(pattern);
   }
 
   /**
