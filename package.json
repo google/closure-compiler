@@ -1,0 +1,10 @@
+{
+  "name": "closure-compiler",
+  "version": "1.0.0",
+  "repository": "git@github.com:google/closure-compiler.git",
+  "license": "Apache-2",
+  "private": true,
+  "devDependencies": {
+    "closure-compiler-npm": "google/closure-compiler-npm"
+  }
+}
