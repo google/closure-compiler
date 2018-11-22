@@ -152,7 +152,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
    * }
    * </pre>
    *
-   * <p>Expression should always be inside a block, so that other statemetns could be added at need.
+   * <p>Expression should always be inside a block, so that other statements could be added at need.
    *
    * <p>Uses the {@link ExpressionDecomposer} class.
    */
