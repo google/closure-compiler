@@ -2353,7 +2353,11 @@ public final class DefaultPassConfig extends PassConfig {
       return new RescopeGlobalSymbols(
           compiler,
           options.renamePrefixNamespace,
-          options.renamePrefixNamespaceAssumeCrossChunkNames);
+          true,
+          options.renamePrefixNamespaceAssumeCrossChunkNames,
+          options.rescopeRuntimeGlobal,
+          options.rescopeRuntimeGlobalNames
+          );
     }
 
     @Override

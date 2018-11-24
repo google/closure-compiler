@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,19 +33,26 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
   private static final String NAMESPACE = "_";
 
   private boolean assumeCrossModuleNames = true;
+  private final Set<String> globalNames = new HashSet<>();
+  private String runtimeGlobal = "window";
 
   @Override protected CompilerPass getProcessor(Compiler compiler) {
     return new RescopeGlobalSymbols(
         compiler,
         NAMESPACE,
         false,
-        assumeCrossModuleNames);
+        assumeCrossModuleNames,
+        runtimeGlobal,
+        globalNames);
   }
 
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    runtimeGlobal = "window";
+    globalNames.clear();
+    globalNames.addAll(RescopeGlobalSymbols.SPECIAL_EXTERNS);
     assumeCrossModuleNames = true;
   }
 
@@ -687,6 +696,29 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         + "Date;RegExp;JSON;Error;EvalError;ReferenceError;"
         + "SyntaxError;TypeError;URIError;");
   }
+  
+  @Test
+  public void testAdditionalGlobalNames() {
+    globalNames.add("module");
+    globalNames.add("exports");
+    testSame("module.exports.foo = 1;exports.bar = 1");
+  }
+  
+  @Test
+  public void testCustomRuntimeGlobal() {
+    runtimeGlobal = "global";
+    test(
+        externs("var x, y;"),
+        srcs("var x, y = 2;"),
+        expected("global.y = 2;"));
+  
+    test(
+        externs("var foo;"),
+        srcs("var foo = function(x) { if (x > 0) { var y = foo; } };"),
+        expected(
+            "global.foo = function(x) { if (x > 0) { var y = global.foo; } };"));
+  }
+
 
   @Test
   public void testSameVarDeclaredInExternsAndSource() {

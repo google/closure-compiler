@@ -47,6 +47,7 @@ import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -617,6 +618,18 @@ public class CompilerOptions implements Serializable {
   @Deprecated
   void setRenamePrefixNamespaceAssumeCrossModuleNames(boolean assume) {
     setRenamePrefixNamespaceAssumeCrossChunkNames(assume);
+  }
+  
+  public String rescopeRuntimeGlobal = "window";
+
+  public Set<String> rescopeRuntimeGlobalNames = new HashSet<>();
+
+  public void setRescopeRuntimeGlobal(String rescopeRuntimeGlobal) {
+    this.rescopeRuntimeGlobal = rescopeRuntimeGlobal;
+  }
+
+  public Set<String> getRescopeRuntimeGlobalNames() {
+    return rescopeRuntimeGlobalNames;
   }
 
   private PropertyCollapseLevel collapsePropertiesLevel;
@@ -1314,6 +1327,8 @@ public class CompilerOptions implements Serializable {
     exportTestFunctions = false;
     declaredGlobalExternsOnWindow = true;
     nameGenerator = new DefaultNameGenerator();
+    rescopeRuntimeGlobal = RescopeGlobalSymbols.WINDOW;
+    rescopeRuntimeGlobalNames.addAll(RescopeGlobalSymbols.SPECIAL_EXTERNS);
 
     // Alterations
     runtimeTypeCheck = false;

@@ -52,14 +52,13 @@ import java.util.Set;
  *
  *
  */
-final class RescopeGlobalSymbols implements CompilerPass {
+public final class RescopeGlobalSymbols implements CompilerPass {
 
   // Appended to variables names that conflict with globalSymbolNamespace.
   private static final String DISAMBIGUATION_SUFFIX = "$";
-  private static final String WINDOW = "window";
-  private static final ImmutableSet<String> SPECIAL_EXTERNS =
+  public static final String WINDOW = "window";
+  public static final ImmutableSet<String> SPECIAL_EXTERNS =
       ImmutableSet.of(
-          WINDOW,
           "eval",
           "arguments",
           "undefined",
@@ -85,7 +84,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final String globalSymbolNamespace;
   private final boolean addExtern;
   private final boolean assumeCrossModuleNames;
+  private final String runtimeGlobal;
+  private final Set<String> globalNames = new HashSet<>();
   private final Set<String> crossModuleNames = new HashSet<>();
+
   /** Global identifiers that may be a non-arrow function referencing "this" */
   private final Set<String> maybeReferencesThis = new HashSet<>();
   private Set<String> externNames;
@@ -99,11 +101,11 @@ final class RescopeGlobalSymbols implements CompilerPass {
    * @param assumeCrossModuleNames If true, all global symbols will be assumed
    *     cross module boundaries and thus require renaming.
    */
-  RescopeGlobalSymbols(
+  public RescopeGlobalSymbols(
       AbstractCompiler compiler,
       String globalSymbolNamespace,
       boolean assumeCrossModuleNames) {
-    this(compiler, globalSymbolNamespace, true, assumeCrossModuleNames);
+    this(compiler, globalSymbolNamespace, true, assumeCrossModuleNames, WINDOW, SPECIAL_EXTERNS);
   }
 
   /**
@@ -116,17 +118,26 @@ final class RescopeGlobalSymbols implements CompilerPass {
    *    globalSymbolNamespace an extern name.
    * @param assumeCrossModuleNames If true, all global symbols will be assumed
    *     cross module boundaries and thus require renaming.
+   * @param runtimeGlobal Name of the global variable used by the runtime
+   *     typically window for browser environments
+   * @param globalNames set of global names provided by the runtime that
+   *     should not be rescoped
    * VisibleForTesting
    */
-  RescopeGlobalSymbols(
+  public RescopeGlobalSymbols(
       AbstractCompiler compiler,
       String globalSymbolNamespace,
       boolean addExtern,
-      boolean assumeCrossModuleNames) {
+      boolean assumeCrossModuleNames,
+      String runtimeGlobal,
+      Set<String> globalNames) {
     this.compiler = compiler;
     this.globalSymbolNamespace = globalSymbolNamespace;
     this.addExtern = addExtern;
     this.assumeCrossModuleNames = assumeCrossModuleNames;
+    this.runtimeGlobal = runtimeGlobal;
+    this.globalNames.addAll(globalNames);
+    this.globalNames.add(runtimeGlobal);
   }
 
   private boolean isCrossModuleName(String name) {
@@ -501,10 +512,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
      */
     private void visitExtern(Node nameNode, Node parent) {
       String name = nameNode.getString();
-      if (globalSymbolNamespace.equals(name) || SPECIAL_EXTERNS.contains(name)) {
+      if (globalSymbolNamespace.equals(name) || RescopeGlobalSymbols.this.globalNames.contains(name)) {
         return;
       }
-      Node windowPropAccess = IR.getprop(IR.name(WINDOW), IR.string(name));
+      Node windowPropAccess = IR.getprop(IR.name(RescopeGlobalSymbols.this.runtimeGlobal), IR.string(name));
       parent.replaceChild(nameNode, windowPropAccess.srcrefTree(nameNode));
       compiler.reportChangeToEnclosingScope(parent);
     }
