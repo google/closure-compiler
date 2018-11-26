@@ -408,6 +408,7 @@ abstract class PotentialDeclaration {
     }
     Node callee = rhs.getFirstChild();
     return callee.matchesQualifiedName("goog.require")
+        || callee.matchesQualifiedName("goog.requireType")
         || callee.matchesQualifiedName("goog.forwardDeclare");
   }
 

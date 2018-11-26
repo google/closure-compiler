@@ -79,7 +79,8 @@ public class ConvertToTypedInterface implements CompilerPass {
           "goog.declareModuleId",
           "goog.module.declareNamespace",
           "goog.provide",
-          "goog.require");
+          "goog.require",
+          "goog.requireType");
 
   private final AbstractCompiler compiler;
 

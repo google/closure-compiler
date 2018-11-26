@@ -461,6 +461,52 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRequireTypeAlias1() {
+    testSame(
+        lines(
+            "goog.provide('FooAlias');",
+            "",
+            "goog.requireType('a.b.c.Foo');",
+            "",
+            "/** @const */ var FooAlias = a.b.c.Foo;"));
+  }
+
+  @Test
+  public void testRequireTypeAlias2() {
+    testSame(
+        lines(
+            "goog.provide('FooAlias');",
+            "goog.provide('BarAlias');",
+            "",
+            "goog.requireType('a.b.c');",
+            "",
+            "/** @const */ var FooAlias = a.b.c.Foo;",
+            "/** @const */ var BarAlias = a.b.c.Bar;"));
+  }
+
+  @Test
+  public void testRequireTypeAlias3() {
+    testSame(
+        lines(
+            "goog.module('FooAlias');",
+            "",
+            "const Foo = goog.requireType('a.b.c.Foo');",
+            "",
+            "exports = Foo;"));
+  }
+
+  @Test
+  public void testRequireTypeAlias4() {
+    testSame(
+        lines(
+            "goog.module('FooAlias');",
+            "",
+            "const {Foo} = goog.requireType('a.b.c');",
+            "",
+            "exports = Foo;"));
+  }
+
+  @Test
   public void testConstPropagationPrivateProperties1() {
     test(
         lines(
