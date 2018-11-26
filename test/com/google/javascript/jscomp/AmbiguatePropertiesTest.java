@@ -1265,4 +1265,202 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "Foo.prototype.bar = 3;",
             "const barName = JSCompiler_renameProperty('bar');"));
   }
+
+  @Test
+  public void testSingleClass_withSingleMemberFn_ambiguated() {
+    test("class Foo { methodFoo() {} }", "class Foo { a() {} }");
+  }
+
+  @Test
+  public void testQuotedMemberFnInClass_notAmbiguated() {
+    testSame("/** @dict */ class Foo { 'methodFoo'() {} }");
+  }
+
+  @Test
+  public void testSingleClass_withTwoMemberFns_notAmbiguated() {
+    test("class Foo { method1() {} method2() {} }", "class Foo { a() {} b() {} }");
+  }
+
+  @Test
+  public void testSingleClass_withStaticAndPrototypeMemberFns_ambiguated() {
+    test("class Foo { static method1() {} method2() {} }", "class Foo { static a() {} a() {} }");
+  }
+
+  @Test
+  public void testTwoUnrelatedClasses_withMemberFns_ambiguated() {
+    test(
+        "class Foo { methodFoo() {} } class Bar { methodBar() {} }",
+        "class Foo { a() {} } class Bar { a() {} }");
+  }
+
+  @Test
+  public void testTwoUnrelatedClasses_withStaticMemberFns_ambiguatede() {
+    test(
+        lines(
+            "class Foo { static methodFoo() {} }", //
+            "class Bar { static methodBar() {} }"),
+        lines(
+            "class Foo { a() {} }", //
+            "class Bar { a() {} }"));
+  }
+
+  @Test
+  public void testEs6SuperclassStaticMethod_notAmbiguated() {
+    test(
+        lines(
+            "class Foo { static methodFoo() {} }",
+            "class Bar extends Foo { static methodBar() {} }"),
+        // Since someone could access Foo.methodFoo() through Bar, make sure the methods get
+        // distinct names.
+        lines(
+            "class Foo { static b() {} }", //
+            "class Bar extends Foo { static a() {} }"));
+  }
+
+  @Test
+  public void testEs6SubclassChain_withStaticMethods_notAmbiguated() {
+    test(
+        lines(
+            "class Foo { static methodFoo() { alert('foo'); } }",
+            "class Bar extends Foo { static methodBar() {alert('bar'); } }",
+            "class Baz extends Bar { static methodBaz() {alert('baz'); } }",
+            "class Moo extends Baz { static methodMoo() { alert('moo'); } }",
+            "Moo.methodFoo();"),
+        // All four static methods must get distinct names, so that Moo.a resolves correctly to
+        // Foo.a
+        lines(
+            "class Foo { static a() {alert('foo'); } }", //
+            "class Bar extends Foo { static b() {alert('bar'); } }",
+            "class Baz extends Bar { static c() {alert('baz'); } }",
+            "class Moo extends Baz { static d() { alert('moo'); } }",
+            "Moo.a();"));
+  }
+
+  @Test
+  public void testEs5ClassWithExtendsChainStaticMethods_notAmbiguated() {
+    test(
+        lines(
+            "/** @constructor */ function Foo () {}",
+            "Foo.methodFoo = function() { alert('foo'); };",
+            "class Bar extends Foo { static methodBar() {alert('bar'); } }",
+            "class Baz extends Bar { static methodBaz() {alert('baz'); } }",
+            "class Moo extends Baz { static methodMoo() { alert('moo'); } }",
+            "Moo.methodFoo();"),
+        lines(
+            "/** @constructor */ function Foo () {}",
+            "Foo.a = function() { alert('foo'); };",
+            "class Bar extends Foo { static b() {alert('bar'); } }",
+            "class Baz extends Bar { static c() {alert('baz'); } }",
+            "class Moo extends Baz { static d() { alert('moo'); } }",
+            "Moo.a();"));
+  }
+
+  @Test
+  public void testEs5ClassWithEs5SubclassWtaticMethods_ambiguated() {
+    test(
+        lines(
+            "/** @constructor */ function Foo () {}",
+            "Foo.methodFoo = function() { alert('foo'); };",
+            "/** @constructor @extends {Foo} */ function Bar() {}",
+            "Bar.methodBar = function() { alert('bar'); };"),
+        lines(
+            "/** @constructor */ function Foo () {}",
+            "Foo.a = function() { alert('foo'); };",
+            "/** @constructor @extends {Foo} */ function Bar() {}",
+            "Bar.a = function() { alert('bar'); };"));
+  }
+
+  @Test
+  public void testClassWithSuperclassStaticMethodsCalledWithSuper_ambiguated() {
+
+    test(
+        lines(
+            "class Foo { static methodFoo() {} }",
+            "class Bar extends Foo { static methodBar() { super.methodFoo(); } }"),
+        // Since someone could access Foo.methodFoo() through Bar, make sure the methods get
+        // distinct names.
+        lines(
+            "class Foo { static a() {} }", //
+            "class Bar extends Foo { static b() { super.a(); } }"));
+  }
+
+  @Test
+  public void testGetterInClass_ambiguated() {
+    test("class Foo { get prop() {} }", "class Foo { get a() {} }");
+  }
+
+  @Test
+  public void testQuotedGetterInClass_isNotAmbiguated() {
+    testSame("/** @dict */ class Foo { get 'prop'() {} }");
+  }
+
+  @Test
+  public void testSetterInClass_isAmbiguated() {
+    test("class Foo { set prop(x) {} }", "class Foo { set a(x) {} }");
+  }
+
+  @Test
+  public void testQuotedSetterInClass_notAmbiguated() {
+    testSame("/** @dict */ class Foo { set 'prop'(x) {} }");
+  }
+
+  @Test
+  public void testSameGetterAndSetterInClass_ambiguated() {
+    test("class Foo { get prop() {} set prop(x) {} }", "class Foo { get a() {} set a(x) {} }");
+  }
+
+  @Test
+  public void testDistinctGetterAndSetterInClass_notAmbiguated() {
+    test("class Foo { set propA(x) {} get propB() {} }", "class Foo { set a(x) {} get b() {} }");
+  }
+
+  @Test
+  public void testComputedMemberFunctionInClass_notAmbiguated() {
+    testSame("/** @dict */ class Foo { ['method']() {}}");
+  }
+
+  @Test
+  public void testEs6ClassConstructorMethod_notAmbiguated() {
+    testSame("class Foo { constructor() {} }");
+  }
+
+  @Test
+  public void testAmbiguateEs6ClassMethodsDoesntCrashOnClassInACast() {
+    // the cast causes the actual CLASS node to have the unknown type, so verify that the pass
+    // can handle it not being a function type.
+    testSame(
+        lines(
+            "const Foo = /** @type {?} */ (class {", //
+            "  method() {}",
+            "});",
+            "class Bar {",
+            "  method() {}",
+            "}"));
+  }
+
+  @Test
+  public void testObjectSetPrototypeOfIsIgnored() {
+    test(
+        externs("Object.setPrototypeOf = function(obj, proto) {}"),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "Foo.fooMethod = () => 3;",
+                "/** @constructor */",
+                "function Bar() {}",
+                "Bar.barMethod = () => 4;",
+                "Object.setPrototypeOf(Foo, Bar);")),
+        expected(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "Foo.a = () => 3;",
+                "/** @constructor */",
+                "function Bar() {}",
+                "Bar.a = () => 4;",
+                "Object.setPrototypeOf(Foo, Bar);")));
+    // now trying to reference Foo.barMethod will not work, and will call barMethod instead.
+    // AmbiguateProperties currently ignores this case
+  }
 }

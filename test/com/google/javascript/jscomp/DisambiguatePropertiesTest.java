@@ -2993,6 +2993,11 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "Bar.function_new_Bar___undefined$method();"));
   }
 
+  @Test
+  public void testDoNotDisambiguateEs6ClassConstructor() {
+    testSets("class Foo { constructor() {} } class Bar { constructor() {} }", "{}");
+  }
+
   /** Tests for ES6 object literal features */
   @Test
   public void testIgnoreComputedPropertyInObjectLiteral() {

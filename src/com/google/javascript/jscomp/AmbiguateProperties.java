@@ -114,7 +114,11 @@ class AmbiguateProperties implements CompilerPass {
   /** A map from JSType to a unique representative Integer. */
   private final BiMap<JSType, Integer> intForType = HashBiMap.create();
 
-  /** A map from JSType to JSTypeBitSet representing the types related to the type. */
+  /**
+   * A map from JSType to JSTypeBitSet representing the types related to the type.
+   *
+   * <p>A type is always related to itself.
+   */
   private final Map<JSType, JSTypeBitSet> relatedBitsets = new HashMap<>();
 
   /** A set of types that invalidate properties from ambiguation. */
@@ -269,9 +273,10 @@ class AmbiguateProperties implements CompilerPass {
    *                          I
    * }</pre>
    *
-   * <p>Note that we don't need to correctly handle the relationships between functions, because the
-   * function type is invalidating (i.e. its properties won't be ambiguated).
+   * <p>We also need to handle relationships between functions because of ES6 class-side inheritance
+   * although the top Function type itself is invalidating.
    */
+  @SuppressWarnings("ReferenceEquality")
   private void computeRelatedTypesForNonUnionType(JSType type) {
     // This method could be expanded to handle union types if necessary, but currently no union
     // types are ever passed as input so the method doesn't have logic for union types
@@ -302,6 +307,24 @@ class AmbiguateProperties implements CompilerPass {
         addRelatedInstance(subType, related);
       }
     }
+
+    // We only specifically handle implicit prototypes of functions in the case of ES6 classes
+    // For regular functions, the implicit prototype being Function.prototype does not matter
+    // because the type `Function` is invalidating.
+    // This may cause unexpected behavior for code that manually sets a prototype, e.g.
+    //   Object.setPrototypeOf(myFunction, prototypeObj);
+    // but code like that should not be used with --ambiguate_properties or type-based optimizations
+    FunctionType fnType = type.toMaybeFunctionType();
+    if (fnType != null) {
+      for (FunctionType subType : fnType.getDirectSubTypes()) {
+        // We record all subtypes of constructors, but don't care about old 'ES5-style' subtyping,
+        // just ES6-style. This is equivalent to saying that the subtype constructor's implicit
+        // prototype is the given type
+        if (fnType == subType.getImplicitPrototype()) {
+          addRelatedType(subType, related);
+        }
+      }
+    }
   }
 
   /**
@@ -312,9 +335,13 @@ class AmbiguateProperties implements CompilerPass {
     checkArgument(constructor.hasInstanceType(),
         "Constructor %s without instance type.", constructor);
     ObjectType instanceType = constructor.getInstanceType();
-    related.set(getIntForType(instanceType.getImplicitPrototype()));
-    computeRelatedTypesForNonUnionType(instanceType);
-    related.or(relatedBitsets.get(instanceType));
+    addRelatedType(instanceType, related);
+  }
+
+  /** Adds the given type and all its related types to the given bit set. */
+  private void addRelatedType(JSType type, JSTypeBitSet related) {
+    computeRelatedTypesForNonUnionType(type);
+    related.or(relatedBitsets.get(type));
   }
 
   class PropertyGraph implements AdjacencyGraph<Property, Void> {
@@ -439,6 +466,10 @@ class AmbiguateProperties implements CompilerPass {
           processGetElem(n);
           return;
 
+        case CLASS:
+          processClass(n);
+          return;
+
         default:
           // Nothing to do.
       }
@@ -530,6 +561,31 @@ class AmbiguateProperties implements CompilerPass {
       Node child = n.getLastChild();
       if (child.isString()) {
         quotedNames.add(child.getString());
+      }
+    }
+
+    private void processClass(Node classNode) {
+      JSType classConstructorType = getJSType(classNode);
+      JSType classPrototype =
+          classConstructorType.isFunctionType()
+              ? classConstructorType.toMaybeFunctionType().getPrototype()
+              : compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      for (Node member : NodeUtil.getClassMembers(classNode).children()) {
+        if (member.isComputedProp() || member.isQuotedString()) {
+          // ignore ['foo']() {} or get 'foo'() {}
+          // Note that only getters/setters are represented as quoted strings, not 'foo'() {}
+          // see https://github.com/google/closure-compiler/issues/3071
+          continue;
+        } else if ("constructor".equals(member.getString())) {
+          // don't rename `class C { constructor() {} }` !
+          // This only applies for ES6 classes, not generic properties called 'constructor', which
+          // is why it's handled in this method specifically.
+          continue;
+        }
+        JSType memberOwnerType = member.isStaticMember() ? classConstructorType : classPrototype;
+
+        // member could be a MEMBER_FUNCTION_DEF, GETTER_DEF, or SETTER_DEF
+        maybeMarkCandidate(member, memberOwnerType);
       }
     }
 
