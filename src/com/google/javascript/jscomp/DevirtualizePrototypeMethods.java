@@ -28,6 +28,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Rewrites prototyped methods calls as static calls that take "this"
@@ -229,7 +230,7 @@ class DevirtualizePrototypeMethods implements CompilerPass {
                                        DefinitionSite definitionSite) {
 
     Definition definition = definitionSite.definition;
-    JSModule definitionModule = definitionSite.module;
+    JSModule definitionModule = moduleForNode(definitionSite.node);
 
     // Only functions may be rewritten.
     // Functions that access "arguments" are not eligible since
@@ -286,12 +287,27 @@ class DevirtualizePrototypeMethods implements CompilerPass {
       checkState(!singleSiteDefinitions.isEmpty());
       checkState(singleSiteDefinitions.contains(definition));
 
-      // Accessing the property in a module loaded before the
-      // definition module prevents rewrite; accessing a variable
-      // before definition results in a parse error.
-      JSModule callModule = site.module;
-      if ((definitionModule != callModule)
-          && ((callModule == null) || !moduleGraph.dependsOn(callModule, definitionModule))) {
+      // We can't rewrite functions called in modules that do not depend on the defining module.
+      // This is due to a subtle execution order change introduced by rewriting. Example:
+      //
+      //     `x.foo().bar()` => `JSCompiler_StaticMethods_bar(x.foo())`
+      //
+      // Note how `JSCompiler_StaticMethods_bar` will be resolved before `x.foo()` is executed. In
+      // the case that `x.foo()` defines `JSCompiler_StaticMethods_bar` (e.g. by dynamically loading
+      // the defining module) this change in ordering will cause a `ReferenceError`. No error would
+      // be thrown by the original code because `bar` would be resolved later.
+      //
+      // We choose to use module ordering to avoid this issue because:
+      //   - The other eligibility checks for devirtualization prevent any other dangerous cases
+      //     that JSCompiler supports.
+      //   - Rewriting all call-sites in a way that preserves exact ordering (e.g. using
+      //     `ExpressionDecomposer`) has a significant code-size impact (circa 2018-11-19).
+      @Nullable JSModule callModule = moduleForNode(nameNode);
+      if (definitionModule == callModule) {
+        // Do nothing.
+      } else if (callModule == null) {
+        return false;
+      } else if (!moduleGraph.dependsOn(callModule, definitionModule)) {
         return false;
       }
     }
@@ -338,16 +354,25 @@ class DevirtualizePrototypeMethods implements CompilerPass {
                                 String newMethodName) {
     Collection<UseSite> useSites = defFinder.getUseSites(definition);
     for (UseSite site : useSites) {
-      Node node = site.node;
-      Node parent = node.getParent();
+      Node getprop = site.node;
+      checkState(getprop.isGetProp());
+      Node call = getprop.getParent();
+      checkState(call.isCall());
+      Node receiever = getprop.getFirstChild();
 
-      Node objectNode = node.getFirstChild();
-      node.removeChild(objectNode);
-      parent.replaceChild(node, objectNode);
-      parent.addChildToFront(IR.name(newMethodName).srcref(node));
-      checkState(parent.isCall());
-      parent.putBooleanProp(Node.FREE_CALL, true);
-      compiler.reportChangeToEnclosingScope(parent);
+      // This rewriting does not exactly preserve order of operations; the newly inserted static
+      // method name will be resolved before `receiver` is evaluated. This is known to be safe due
+      // to the eligibility checks earlier in the pass.
+      //
+      // We choose not to do a full-fidelity rewriting (e.g. using `ExpressionDecomposer`) because
+      // doing so means extracting `receiver` into a new variable at each call-site. This  has a
+      // significant code-size impact (circa 2018-11-19).
+
+      getprop.removeChild(receiever);
+      call.replaceChild(getprop, receiever);
+      call.addChildToFront(IR.name(newMethodName).srcref(getprop));
+      call.putBooleanProp(Node.FREE_CALL, true);
+      compiler.reportChangeToEnclosingScope(call);
     }
   }
 
@@ -459,5 +484,12 @@ class DevirtualizePrototypeMethods implements CompilerPass {
     }
 
     return changed;
+  }
+
+  @Nullable
+  private JSModule moduleForNode(Node node) {
+    Node script = NodeUtil.getEnclosingScript(node);
+    CompilerInput input = compiler.getInput(script.getInputId());
+    return input.getModule();
   }
 }
