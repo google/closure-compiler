@@ -8546,6 +8546,7 @@ chrome.notifications.NotificationItem;
  * @typedef {{
  *   type: (string|undefined),
  *   iconUrl: (string|undefined),
+ *   appIconMaskUrl: (string|undefined),
  *   title: (string|undefined),
  *   message: (string|undefined),
  *   contextMessage: (string|undefined),
@@ -8555,7 +8556,9 @@ chrome.notifications.NotificationItem;
  *   imageUrl: (string|undefined),
  *   items: (!Array<!chrome.notifications.NotificationItem>|undefined),
  *   progress: (number|undefined),
- *   isClickable: (boolean|undefined)
+ *   isClickable: (boolean|undefined),
+ *   requireInteraction: (boolean|undefined),
+ *   silent: (boolean|undefined)
  * }}
  * @see http://developer.chrome.com/extensions/notifications.html#type-NotificationOptions
  */
