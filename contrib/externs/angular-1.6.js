@@ -510,6 +510,15 @@ angular.JQLite.prototype.children = function() {};
 angular.JQLite.prototype.clone = function() {};
 
 /**
+ * `cleanData` is an undocumented method that is relied upon for ngUpgrade.
+ * Without this extern, clients cannot enable property_renaming for ngUpgrade
+ * applications that downgrade components.
+ *
+ * @param {?} element
+ */
+angular.JQLite.prototype.cleanData = function(element) {};
+
+/**
  * @return {!angular.JQLite}
  */
 angular.JQLite.prototype.contents = function() {};
