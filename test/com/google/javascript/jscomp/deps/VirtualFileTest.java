@@ -45,6 +45,6 @@ public final class VirtualFileTest {
     VirtualFile same = new VirtualFile("name", "code");
     VirtualFile other = new VirtualFile("otherName", "otherCode");
     assertThat(same.hashCode()).isEqualTo(vf.hashCode());
-    assertThat(vf.hashCode() == other.hashCode()).isFalse();
+    assertThat(vf.hashCode()).isNotEqualTo(other.hashCode());
   }
 }
