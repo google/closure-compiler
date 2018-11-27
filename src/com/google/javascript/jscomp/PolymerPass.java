@@ -87,7 +87,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
     if (polymerVersion == 1 && polymerElementExterns == null) {
       this.warnedPolymer1ExternsMissing = true;
-      compiler.report(JSError.make(externs, POLYMER_MISSING_EXTERNS));
+      compiler.report(JSError.make(POLYMER_MISSING_EXTERNS));
       return;
     }
 
@@ -116,7 +116,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       if (polymerElementExterns != null) {
         rewritePolymer1ClassDefinition(node, parent, traversal);
       } else if (!warnedPolymer1ExternsMissing) {
-        compiler.report(JSError.make(polymerElementExterns, POLYMER_MISSING_EXTERNS));
+        compiler.report(JSError.make(POLYMER_MISSING_EXTERNS));
         warnedPolymer1ExternsMissing = true;
       }
     } else if (PolymerPassStaticUtils.isPolymerClass(node)) {
