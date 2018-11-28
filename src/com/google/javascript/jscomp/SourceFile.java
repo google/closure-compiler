@@ -217,14 +217,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return kind;
   }
 
-  /**
-   * Sets the source kind.
-   *
-   * <p>TODO(tjgq): Move the extern bit into the AST, so we can make the kind immutable. This is
-   * currently not possible because for some files the extern bit is not determined by the contents
-   * (e.g. files passed under the --externs flag and missing an externs annotation).
-   */
-  void setKind(SourceKind kind) {
+  /** Sets the source kind. */
+  public void setKind(SourceKind kind) {
     this.kind = kind;
   }
 
