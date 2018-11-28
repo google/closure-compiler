@@ -756,10 +756,6 @@ public abstract class ObjectType extends JSType implements Serializable {
     return false;
   }
 
-  public final JSType getLegacyResolvedType() {
-    return toMaybeNamedType().getReferencedType();
-  }
-
   /**
    * A null-safe version of JSType#toObjectType.
    */

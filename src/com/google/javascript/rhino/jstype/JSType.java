@@ -464,10 +464,6 @@ public abstract class JSType implements Serializable {
     return toMaybeNamedType() != null;
   }
 
-  public boolean isLegacyNamedType() {
-    return isNamedType();
-  }
-
   public NamedType toMaybeNamedType() {
     return null;
   }
