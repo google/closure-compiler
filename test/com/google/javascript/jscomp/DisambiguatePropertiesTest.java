@@ -2154,7 +2154,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testStructuralInterfacesInExterns() {
+  public void testStructuralEs5InterfacesInExterns() {
     String externs =
         lines(
             "/** @record */",
@@ -2173,6 +2173,57 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "Foo.prototype.baz = function() { return ''; };");
 
     testSets(externs, js, js, "{}");
+  }
+
+  @Test
+  public void testStructuralEs6InterfacesInExterns() {
+    // We don't disambiguate any properties that appear on a structural interface.
+    // See b/119876051
+    String externs =
+        lines("/** @record */", "class I {", "  /** @return {string} */", "   baz() {}", "}");
+
+    String js =
+        lines(
+            "/** @constructor */",
+            "function Bar() {}",
+            "Bar.prototype.baz = function() { return ''; };",
+            "",
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.baz = function() { return ''; };");
+
+    testSets(externs, js, js, "{}");
+  }
+
+  @Test
+  public void testStructuralEs6InterfacesInExternsWithStaticMethod() {
+    // The existence of a static method on a structural interface doesn't prevent renaming other
+    // properties of the same name
+    String externs =
+        lines(
+            "/** @record */", "class I {", "  /** @return {string} */", "   static baz() {}", "}");
+
+    String js =
+        lines(
+            "/** @constructor */",
+            "function Bar() {}",
+            "Bar.prototype.baz = function() { return ''; };",
+            "",
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.baz = function() { return ''; };");
+
+    String expected =
+        lines(
+            "/** @constructor */",
+            "function Bar() {}",
+            "Bar.prototype.Bar_prototype$baz = function() { return ''; };",
+            "",
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.Foo_prototype$baz = function() { return ''; };");
+
+    testSets(externs, js, expected, "{baz=[[Bar.prototype], [Foo.prototype]]}");
   }
 
   @Test
@@ -3043,6 +3094,95 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  method() {}",
             "}"),
         "{}");
+  }
+
+  @Test
+  public void testClassInExternsWithComputedProperty() {
+    testSame(externs("Symbol.iterator; class Foo { [Symbol.iterator]() {}}"), srcs(""));
+  }
+
+  @Test
+  public void testClassPrototypeMemberInExternsReassignedOnPrototype() {
+    test(
+        externs("class Foo { method() {} }"),
+        srcs(
+            lines(
+                "class Bar { method() {} }", //
+                "Foo.prototype.method = function() {};",
+                "(new Bar()).method();")),
+        expected(
+            lines(
+                "class Bar { Bar_prototype$method() {} }",
+                // Note that this `method` usage is NOT renamed because it's from an externs type
+                "Foo.prototype.method = function() {};",
+                "(new Bar).Bar_prototype$method();")));
+  }
+
+  @Test
+  public void testClassPrototypeMemberInExternsAccessedOnInstance() {
+    test(
+        externs("class Foo { method() {} }"),
+        srcs(
+            lines(
+                "class Bar { method() {} }", //
+                "(new Foo()).method();",
+                "(new Bar()).method();")),
+        expected(
+            lines(
+                "class Bar { Bar_prototype$method() {} }",
+                // Note that this `method` usage is NOT renamed because it's from an externs type
+                "(new Foo()).method();",
+                "(new Bar).Bar_prototype$method();")));
+  }
+
+  @Test
+  public void testClassStaticMemberMemberInExterns() {
+    test(
+        externs("class Foo { static method() {} }"),
+        srcs(
+            lines(
+                "class Bar { method() {} }", //
+                "Foo.method();",
+                "(new Bar()).method();")),
+        expected(
+            lines(
+                "class Bar { Bar_prototype$method() {} }",
+                // Note that this `method` usage is NOT renamed because it's from an externs type
+                "Foo.method();",
+                "(new Bar()).Bar_prototype$method();")));
+  }
+
+  @Test
+  public void testClassPrototypeMemberInInvalidatingExternsType() {
+    testSame(
+        externs("class Foo { method() {} }"),
+        srcs(
+            lines(
+                "class Bar { method() {} }", //
+                "(new Foo()).method();",
+                "(new Bar()).method();",
+                // this invalidates renaming all properties matching the name method
+                "const /** number */ n = new Foo();")),
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
+  }
+
+  @Test
+  public void testClassPrototypeMemberInExternsWithQuotedPropertyDoesntInvalidate() {
+    test(
+        externs("/** @dict */ class Foo { 'method'() {} }"),
+        srcs(
+            lines(
+                "class Bar { method() {} }", //
+                "class Baz { method() {} }",
+                // this invalidates renaming properties on Foo, but 'method' properties still get
+                // renamed because 'method' is quoted
+                "const /** number */ n = new Foo();")),
+        expected(
+            lines(
+                "class Bar { Bar_prototype$method() {} }", //
+                "class Baz { Baz_prototype$method() {} }",
+                "const /** number */ n = new Foo();")),
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   /** Tests for destructuring */

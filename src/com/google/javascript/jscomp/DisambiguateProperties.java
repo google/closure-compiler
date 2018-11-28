@@ -383,27 +383,57 @@ class DisambiguateProperties implements CompilerPass {
         Node recv = n.getFirstChild();
         JSType recvType = getType(recv);
         Property prop = getProperty(n.getLastChild().getString());
-        // TODO(dimvar): invalidating here when isStructuralInterfacePrototype is true is
-        // kind of arbitrary. We should only do it when the @record is implicitly implemented.
-        if (invalidatingTypes.isInvalidating(recvType) || isStructuralInterfacePrototype(recv)) {
-          prop.invalidate();
-        } else if (!prop.skipRenaming) {
-          prop.addTypeToSkip(recvType);
-          // If this is a prototype property, then we want to skip assignments
-          // to the instance type as well.  These assignments are not usually
-          // seen in the extern code itself, so we must handle them here.
-          if ((recvType = getInstanceFromPrototype(recv)) != null) {
-            prop.getTypes().add(recvType);
-            prop.typesToSkip.add(recvType);
+        processExternsProperty(prop, recvType);
+      } else if (n.isClass()) {
+        JSType classType = n.getJSType();
+        JSType classInstanceType =
+            // the class type may not be a function type if it was in a cast, so treat it as unknown
+            classType.toMaybeFunctionType() != null
+                ? classType.toMaybeFunctionType().getPrototype()
+                : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+
+        for (Node member : NodeUtil.getClassMembers(n).children()) {
+          // possibilities are:
+          //   MEMBER_FUNCTION_DEF (could be static)
+          //   COMPUTED_PROP (ignore)
+          //   GETTER_DEF (could be static)
+          //   SETTER_DEF (could be static)
+          if (member.isComputedProp() || member.isQuotedString()) {
+            // TODO(b/119682883): consider handling symbols here
+            continue;
           }
+          String name = member.getString();
+          JSType ownerType = member.isStaticMember() ? classType : classInstanceType;
+
+          Property prop = getProperty(name);
+          processExternsProperty(prop, ownerType);
         }
       }
     }
 
-    private boolean isStructuralInterfacePrototype(Node n) {
-      return n.isGetProp()
-          && n.getLastChild().getString().equals("prototype")
-          && n.getFirstChild().getJSType().isStructuralInterface();
+    /**
+     * Marks an externs property as not-renamable, and possibly invalidates the property based on
+     * the type it is on
+     *
+     * @param ownerType The type of the object the property is on (e.g. `ns.a` for `ns.a.MyType;`)
+     */
+    private void processExternsProperty(Property prop, JSType ownerType) {
+      if (invalidatingTypes.isInvalidating(ownerType)
+          // TODO(b/119886075): invalidating here when isStructuralInterfacePrototype is true is
+          // kind of arbitrary. We should only do it when the @record is implicitly implemented.
+          || isStructuralInterfacePrototype(ownerType)) {
+        prop.invalidate();
+      } else if (!prop.skipRenaming) {
+        prop.addTypeToSkip(ownerType);
+        // If this is a prototype property, then we want to skip assignments
+        // to the instance type as well.  These assignments are not usually
+        // seen in the extern code itself, so we must handle them here.
+        JSType instanceType = getInstanceIfPrototype(ownerType);
+        if (instanceType != null) {
+          prop.getTypes().add(instanceType);
+          prop.typesToSkip.add(instanceType);
+        }
+      }
     }
   }
 
@@ -495,9 +525,9 @@ class DisambiguateProperties implements CompilerPass {
       String functionName = target.getOriginalQualifiedName();
       if (functionName != null
           && compiler.getCodingConvention().isPropertyRenameFunction(functionName)) {
-        handlePropertyRenameFunctionCall(t, call, functionName);
+        handlePropertyRenameFunctionCall(call, functionName);
       } else if (NodeUtil.isObjectDefinePropertiesDefinition(call)) {
-        handleObjectDefineProperties(t, call);
+        handleObjectDefineProperties(call);
       }
     }
 
@@ -516,6 +546,7 @@ class DisambiguateProperties implements CompilerPass {
         //   GETTER_DEF (could be static)
         //   SETTER_DEF (could be static)
         if (member.isComputedProp() || member.isQuotedString()) {
+          // TODO(b/119682883): consider handling symbols here
           continue;
         }
         String name = member.getString();
@@ -552,6 +583,7 @@ class DisambiguateProperties implements CompilerPass {
               compiler.getTypeRegistry(), objectPatternType, pattern)) {
         if (!target.hasStringKey()) {
           // ignore computed properties and rest
+          // TODO(b/119682883): consider handling symbols here
           continue;
         }
         Node stringKey = target.getStringKey();
@@ -593,8 +625,7 @@ class DisambiguateProperties implements CompilerPass {
       }
     }
 
-    private void handlePropertyRenameFunctionCall(
-        NodeTraversal t, Node call, String renameFunctionName) {
+    private void handlePropertyRenameFunctionCall(Node call, String renameFunctionName) {
       int childCount = call.getChildCount();
       if (childCount != 2 && childCount != 3) {
         compiler.report(
@@ -662,7 +693,7 @@ class DisambiguateProperties implements CompilerPass {
       }
     }
 
-    private void handleObjectDefineProperties(NodeTraversal t, Node call) {
+    private void handleObjectDefineProperties(Node call) {
       Node typeObj = call.getSecondChild();
       JSType type = getType(typeObj);
       Node objectLiteral = typeObj.getNext();
@@ -1004,25 +1035,40 @@ class DisambiguateProperties implements CompilerPass {
     return foundType;
   }
 
-  private JSType getInstanceFromPrototype(Node n) {
-    if (n.isGetProp() && n.getLastChild().getString().equals("prototype")) {
-      FunctionType f = n.getFirstChild().getJSType().toMaybeFunctionType();
-      if (f != null && f.hasInstanceType()) {
-        return f.getInstanceType();
+  private static boolean isStructuralInterfacePrototype(JSType type) {
+    if (!type.isFunctionPrototypeType()) {
+      return false;
+    }
+    FunctionType constructor = type.toObjectType().getOwnerFunction();
+    return constructor != null && constructor.isStructuralInterface();
+  }
+
+  /**
+   * Returns the corresponding instance if `maybePrototype` is a prototype of a constructor,
+   * otherwise null
+   */
+  @Nullable
+  private static JSType getInstanceIfPrototype(JSType maybePrototype) {
+    if (maybePrototype.isFunctionPrototypeType()) {
+      FunctionType constructor = maybePrototype.toObjectType().getOwnerFunction();
+      if (constructor != null) {
+        if (!constructor.hasInstanceType()) {
+          // this can happen when adding to the prototype of a non-constructor function
+          return null;
+        }
+        return constructor.getInstanceType();
       }
     }
     return null;
   }
 
   /**
-   * Records that this property could be referenced from any interface that
-   * this type inherits from.
+   * Records that this property could be referenced from any interface that this type inherits from.
    *
-   * If the property p is defined only on a subtype of constructor, then this
-   * method has no effect. But we tried modifying getTypeWithProperty to tell us
-   * when the returned type is a subtype, and then skip those calls to
-   * recordInterface, and there was no speed-up.
-   * And it made the code harder to understand, so we don't do it.
+   * <p>If the property p is defined only on a subtype of constructor, then this method has no
+   * effect. But we tried modifying getTypeWithProperty to tell us when the returned type is a
+   * subtype, and then skip those calls to recordInterface, and there was no speed-up. And it made
+   * the code harder to understand, so we don't do it.
    */
   private void recordInterfaces(FunctionType constructor, JSType relatedType, Property p) {
     Iterable<ObjectType> interfaces = ancestorInterfaces.get(constructor);
