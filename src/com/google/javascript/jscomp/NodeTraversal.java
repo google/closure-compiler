@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 
+import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -211,41 +212,97 @@ public class NodeTraversal {
   }
 
   /**
-   * Abstract callback that knows when goog.modules (and in the future ES6 modules) are entered
-   * and exited. This includes both whole file modules and bundled modules.
+   * Abstract callback that knows when goog.provide, goog.module, and ES modules are entered and
+   * exited. This includes both whole file modules and bundled modules.
    */
-  public abstract static class AbstractModuleCallback implements ScopedCallback {
+  public abstract static class AbstractModuleCallback implements Callback {
+    protected final AbstractCompiler compiler;
+    private final ModuleMetadataMap moduleMetadataMap;
 
-    /**
-     * Called immediately after entering a module.
-     */
-    public abstract void enterModule(NodeTraversal t, Node scopeRoot);
+    private ModuleMetadata currentModule;
+    private Node scopeRoot;
+    private boolean inLoadModule;
 
-    /**
-     * Called immediately before exiting a module.
-     */
-    public abstract void exitModule(NodeTraversal t, Node scopeRoot);
+    AbstractModuleCallback(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
+      this.compiler = compiler;
+      this.moduleMetadataMap = moduleMetadataMap;
+    }
+
+    protected void enterModule(ModuleMetadata currentModule, Node moduleScopRoot) {}
+
+    protected void exitModule(
+        @Nullable ModuleMetadata currentModule, @Nullable Node moduleScopRoot) {}
 
     @Override
-    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      switch (n.getToken()) {
+        case SCRIPT:
+          currentModule =
+              moduleMetadataMap.getModulesByPath().get(t.getInput().getPath().toString());
+          scopeRoot = n.hasChildren() && n.getFirstChild().isModuleBody() ? n.getFirstChild() : n;
+          enterModule(currentModule, scopeRoot);
+          break;
+        case BLOCK:
+          if (NodeUtil.isBundledGoogModuleScopeRoot(n)) {
+            scopeRoot = n;
+            inLoadModule = true;
+          }
+          break;
+        case CALL:
+          if (inLoadModule && n.getFirstChild().matchesQualifiedName("goog.module")) {
+            ModuleMetadata newModule =
+                moduleMetadataMap.getModulesByGoogNamespace().get(n.getLastChild().getString());
+            // In the event of multiple goog.module statements (an error), don't call enterModule
+            // more than once.
+            if (newModule != currentModule) {
+              currentModule = newModule;
+              enterModule(currentModule, scopeRoot);
+            }
+          }
+          break;
+        default:
+          break;
+      }
+      return shouldTraverse(t, n, currentModule, scopeRoot);
+    }
+
+    protected boolean shouldTraverse(
+        NodeTraversal t,
+        Node n,
+        @Nullable ModuleMetadata currentModule,
+        @Nullable Node moduleScopeRoot) {
       return true;
     }
 
     @Override
-    public final void enterScope(NodeTraversal t) {
-      Node scopeRoot = t.getScopeRoot();
-      if (NodeUtil.isModuleScopeRoot(scopeRoot)) {
-        enterModule(t, scopeRoot);
+    public final void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getToken()) {
+        case SCRIPT:
+          currentModule = null;
+          scopeRoot = null;
+          exitModule(currentModule, scopeRoot);
+          break;
+        case BLOCK:
+          if (NodeUtil.isBundledGoogModuleScopeRoot(n)) {
+            scopeRoot = n.getGrandparent().getGrandparent();
+            inLoadModule = false;
+            currentModule =
+                moduleMetadataMap.getModulesByPath().get(t.getInput().getPath().toString());
+            exitModule(currentModule, scopeRoot);
+          }
+          break;
+        default:
+          break;
       }
+
+      visit(t, n, currentModule, scopeRoot);
     }
 
-    @Override
-    public final void exitScope(NodeTraversal t) {
-      Node scopeRoot = t.getScopeRoot();
-      if (NodeUtil.isModuleScopeRoot(scopeRoot)) {
-        exitModule(t, scopeRoot);
-      }
-    }
+    protected void visit(
+        NodeTraversal t,
+        Node n,
+        @Nullable ModuleMetadata currentModule,
+        @Nullable Node moduleScopeRoot) {}
   }
 
   /**

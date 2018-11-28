@@ -2721,6 +2721,10 @@ public class CompilerOptions implements Serializable {
     this.processCommonJSModules = processCommonJSModules;
   }
 
+  public boolean getProcessCommonJSModules() {
+    return processCommonJSModules;
+  }
+
   /**
    * How ES6 modules should be transformed.
    */

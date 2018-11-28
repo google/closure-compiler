@@ -1091,6 +1091,12 @@ public final class DefaultPassConfig extends PassConfig {
         checkVariableReferences,
         closureGoogScopeAliases,
         "Variable checking must happen before goog.scope processing.");
+
+    assertPassOrder(
+        checks,
+        gatherModuleMetadataPass,
+        closureCheckModule,
+        "Need to gather module metadata before checking closure modules.");
   }
 
   /**
@@ -1472,7 +1478,7 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("closureCheckModule") {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new ClosureCheckModule(compiler);
+          return new ClosureCheckModule(compiler, compiler.getModuleMetadataMap());
         }
 
         @Override
@@ -3432,10 +3438,10 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  private final PassFactory gatherModuleMetadataPass =
-      new PassFactory(PassNames.GATHER_MODULE_METADATA, /* isOneTimePass= */ true) {
+  private final HotSwapPassFactory gatherModuleMetadataPass =
+      new HotSwapPassFactory(PassNames.GATHER_MODULE_METADATA) {
         @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new GatherModuleMetadata(
               compiler, options.processCommonJSModules, options.moduleResolutionMode);
         }
