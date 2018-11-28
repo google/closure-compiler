@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
  * Gathers metadata around modules that is useful for checking imports / requires and creates a
  * {@link ModuleMetadataMap}.
  */
-public final class GatherModuleMetadata implements HotSwapCompilerPass {
+public final class GatherModuleMetadata implements CompilerPass {
   static final DiagnosticType MIXED_MODULE_TYPE =
       DiagnosticType.error("JSC_MIXED_MODULE_TYPE", "A file cannot be both {0} and {1}.");
 
@@ -418,32 +418,6 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, externs, new Finder());
     NodeTraversal.traverse(compiler, root, new Finder());
-    compiler.setModuleMetadataMap(new ModuleMetadataMap(modulesByPath, modulesByGoogNamespace));
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    // This pass is run as either a hot swap or full pass. So if we're running in hot swap this is
-    // a different instance from the full pass, and we need to populate these again.
-    modulesByPath.putAll(compiler.getModuleMetadataMap().getModulesByPath());
-    modulesByGoogNamespace.putAll(compiler.getModuleMetadataMap().getModulesByGoogNamespace());
-
-    ModuleMetadata oldMetadata =
-        modulesByPath.remove(compiler.getInput(originalRoot.getInputId()).getPath().toString());
-
-    if (oldMetadata != null) {
-      for (String namespace : oldMetadata.googNamespaces()) {
-        modulesByGoogNamespace.remove(namespace);
-      }
-
-      for (ModuleMetadata nestedMetadata : oldMetadata.nestedModules()) {
-        for (String namespace : nestedMetadata.googNamespaces()) {
-          modulesByGoogNamespace.remove(namespace);
-        }
-      }
-    }
-
-    NodeTraversal.traverse(compiler, scriptRoot, new Finder());
     compiler.setModuleMetadataMap(new ModuleMetadataMap(modulesByPath, modulesByGoogNamespace));
   }
 }
