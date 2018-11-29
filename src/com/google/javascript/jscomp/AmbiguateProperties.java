@@ -459,7 +459,8 @@ class AmbiguateProperties implements CompilerPass {
           return;
 
         case OBJECTLIT:
-          processObjectLit(n);
+        case OBJECT_PATTERN:
+          processObjectLitOrPattern(n);
           return;
 
         case GETELEM:
@@ -531,7 +532,7 @@ class AmbiguateProperties implements CompilerPass {
       }
     }
 
-    private void processObjectLit(Node objectLit) {
+    private void processObjectLitOrPattern(Node objectLit) {
       // Object.defineProperties literals are handled at the CALL node.
       if (objectLit.getParent().isCall()
           && NodeUtil.isObjectDefinePropertiesDefinition(objectLit.getParent())) {
@@ -544,7 +545,16 @@ class AmbiguateProperties implements CompilerPass {
       for (Node key = objectLit.getFirstChild(); key != null; key = key.getNext()) {
         // We only want keys that were unquoted.
         // Keys are STRING, GET, SET
-        if (key.isQuotedString()) {
+        if (key.isComputedProp()) {
+          if (key.getFirstChild().isString()) {
+            // Ensure that we never rename some other property in a way that could conflict with
+            // this computed prop. This is largely because we store quoted member fns as
+            // computed properties and want to be consistent with how other quoted properties
+            // invalidate property names
+            quotedNames.add(key.getFirstChild().getString());
+          }
+          // Never rename computed properties
+        } else if (key.isQuotedString()) {
           // Ensure that we never rename some other property in a way
           // that could conflict with this quoted key.
           quotedNames.add(key.getString());
@@ -571,10 +581,18 @@ class AmbiguateProperties implements CompilerPass {
               ? classConstructorType.toMaybeFunctionType().getPrototype()
               : compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
       for (Node member : NodeUtil.getClassMembers(classNode).children()) {
-        if (member.isComputedProp() || member.isQuotedString()) {
-          // ignore ['foo']() {} or get 'foo'() {}
+        if (member.isQuotedString()) {
+          // ignore get 'foo'() {} and prevent property name collisions
           // Note that only getters/setters are represented as quoted strings, not 'foo'() {}
           // see https://github.com/google/closure-compiler/issues/3071
+          quotedNames.add(member.getString());
+          continue;
+        } else if (member.isComputedProp()) {
+          // ignore ['foo']() {}
+          // for simple cases, we also prevent renaming collisions
+          if (member.getFirstChild().isString()) {
+            quotedNames.add(member.getFirstChild().getString());
+          }
           continue;
         } else if ("constructor".equals(member.getString())) {
           // don't rename `class C { constructor() {} }` !
@@ -582,6 +600,7 @@ class AmbiguateProperties implements CompilerPass {
           // is why it's handled in this method specifically.
           continue;
         }
+
         JSType memberOwnerType = member.isStaticMember() ? classConstructorType : classPrototype;
 
         // member could be a MEMBER_FUNCTION_DEF, GETTER_DEF, or SETTER_DEF

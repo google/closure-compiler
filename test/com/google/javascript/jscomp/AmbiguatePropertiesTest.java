@@ -1277,6 +1277,13 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testQuotedMemberFnInClassReservesPropertyName() {
+    test(
+        "/** @unrestricted */ class Foo { 'a'() {} foo() {} }",
+        "/** @unrestricted */ class Foo { 'a'() {} b() {} }");
+  }
+
+  @Test
   public void testSingleClass_withTwoMemberFns_notAmbiguated() {
     test("class Foo { method1() {} method2() {} }", "class Foo { a() {} b() {} }");
   }
@@ -1395,6 +1402,13 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testQuotedGetterInClassReservesPropertyName() {
+    test(
+        "/** @unrestricted */ class Foo { get 'a'() {} foo() {} }",
+        "/** @unrestricted */ class Foo { get 'a'() {} b() {} }");
+  }
+
+  @Test
   public void testSetterInClass_isAmbiguated() {
     test("class Foo { set prop(x) {} }", "class Foo { set a(x) {} }");
   }
@@ -1417,6 +1431,24 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   @Test
   public void testComputedMemberFunctionInClass_notAmbiguated() {
     testSame("/** @dict */ class Foo { ['method']() {}}");
+  }
+
+  @Test
+  public void testSimpleComputedMemberFnInClassReservesPropertyName() {
+    test(
+        "/** @unrestricted */ class Foo { ['a']() {} foo() {} }",
+        "/** @unrestricted */ class Foo { ['a']() {} b() {} }");
+  }
+
+  @Test
+  public void testComplexComputedMemberFnInClassDoesntReservePropertyName() {
+    // we don't try to evaluate 'a' + '' to see that it's identical to 'a', and so end up renaming
+    // 'foo' -> 'a'
+    // The property name invalidation is already just a heuristic, so just handle the very simple
+    // case of ['a']() {}
+    test(
+        "/** @unrestricted */ class Foo { ['a' + '']() {} foo() {} }",
+        "/** @unrestricted */ class Foo { ['a' + '']() {} a() {} }");
   }
 
   @Test
@@ -1462,5 +1494,148 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
                 "Object.setPrototypeOf(Foo, Bar);")));
     // now trying to reference Foo.barMethod will not work, and will call barMethod instead.
     // AmbiguateProperties currently ignores this case
+  }
+
+  @Test
+  public void testComputedPropertyInObjectLiteral_notAmbiguated() {
+    testSame("const obj = {['a']: 3, b: 4}");
+  }
+
+  @Test
+  public void testQuotedPropertyInObjectLiteralReservesPropertyName() {
+    test(
+        "const obj = {'a': 3}; class C { method() {}}",
+        // `method` is renamed to `b`, not `a`, to avoid colliding with the computed prop.
+        // This is just a heuristic; JSCompiler cannot statically determine all string
+        // property names.
+        "const obj = {'a': 3}; class C { b() {}}");
+  }
+
+  @Test
+  public void testQuotedMemberFnInObjectLiteralReservesPropertyName() {
+    test(
+        "const obj = {'a'() {}}; class C { method() {}}",
+        "const obj = {'a'() {}}; class C { b() {}}");
+  }
+
+  @Test
+  public void testComputedPropertyInObjectLiteralReservesPropertyName() {
+    test(
+        "const obj = {['a']: 3}; class C { method() {}}",
+        "const obj = {['a']: 3}; class C { b() {}}");
+  }
+
+  @Test
+  public void testMemberFnInObjectLiteralPreventsPropertyRenaming() {
+    // Don't rename the class member 'm' because the object literal type is invalidating, and
+    // also has a property 'm'
+    testSame("const obj = {m() {}}; class C {m() {}}");
+  }
+
+  @Test
+  public void testSimplePropInObjectLiteralPreventsPropertyRenaminge() {
+    // Don't rename the class member 'm' because the object literal type is invalidating, and
+    // also has a property 'm'
+    testSame("const obj = {m: 0}; class C {m() {}}");
+  }
+
+  @Test
+  public void testObjectPatternDeclarationWithStringKey_ambiguated() {
+    test(
+        lines(
+            "class Foo {", //
+            "  method() {}",
+            "}",
+            "const {method} = new Foo();"),
+        lines(
+            "class Foo {", //
+            "  a() {}",
+            "}",
+            "const {a: method} = new Foo();"));
+  }
+
+  @Test
+  public void testObjectPatternDeclarationWithStringKeWithDefault_ambiguated() {
+    test(
+        lines(
+            "class Foo {", //
+            "  method() {}",
+            "}",
+            "const {method = () => 3} = new Foo();"),
+        lines(
+            "class Foo {", //
+            "  a() {}",
+            "}",
+            "const {a: method = () => 3} = new Foo();"));
+  }
+
+  @Test
+  public void testNestedObjectPatternWithStringKey_ambiguated() {
+    test(
+        lines(
+            "class Foo {", //
+            "  method() {}",
+            "}",
+            "const {foo: {method}} = {foo: new Foo()};"),
+        lines(
+            "class Foo {", //
+            "  a() {}",
+            "}",
+            // note: we rename the 'method' access but not 'foo', because we don't try ambiguating
+            // properties on object literal types.
+            "const {foo: {a: method}} = {foo: new Foo()};"));
+  }
+
+  @Test
+  public void testObjectPatternParameterWithStringKey_ambiguated() {
+    test(
+        lines(
+            "class Foo {", //
+            "  method() {}",
+            "}",
+            "/** @param {!Foo} foo */",
+            "function f({method}) {}"),
+        lines(
+            "class Foo {", //
+            "  a() {}",
+            "}",
+            "/** @param {!Foo} foo */",
+            "function f({a: method}) {}"));
+  }
+
+  @Test
+  public void testObjectPatternQuotedStringKey_notAmbiguated() {
+    // this emits a warning for a computed property access on a struct, since property ambiguation
+    // will break this code.
+    ignoreWarnings(TypeValidator.ILLEGAL_PROPERTY_ACCESS);
+    test(
+        lines(
+            "class Foo {", //
+            "  method() {}",
+            "}",
+            "const {'method': method} = new Foo();"),
+        lines(
+            "class Foo {", //
+            "  a() {}",
+            "}",
+            "const {'method': method} = new Foo();"));
+  }
+
+  @Test
+  public void testObjectPatternComputedProperty_notAmbiguated() {
+    // this emits a warning for a computed property access on a struct, since property ambiguation
+    // will break this code.
+    ignoreWarnings(TypeValidator.ILLEGAL_PROPERTY_ACCESS);
+    test(
+        lines(
+            "class Foo {", //
+            "  method() {}",
+            "}",
+            "const {['method']: method} = new Foo();"),
+        lines(
+            "class Foo {", //
+            "  a() {}",
+            "}",
+            "const {['method']: method} = new Foo();"));
   }
 }
