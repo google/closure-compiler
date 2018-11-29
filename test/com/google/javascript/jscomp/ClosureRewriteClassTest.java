@@ -540,6 +540,26 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogModuleGet() {
+    // This pattern can be produced by goog.scope processing from code that originally looks like:
+    // goog.scope(function() {
+    //   var super = goog.module.get('ns.Foo');
+    //   var y = goog.defineClass(super, {
+    //     // ...
+    //   });
+    // };
+    testRewrite(
+        lines(
+            "var y = goog.defineClass(goog.module.get('ns.Foo'), {",
+            "  constructor: function(){}",
+            "});"),
+        lines(
+            "/** @struct @constructor @extends {ns.Foo} */",
+            "var y = function(){};",
+            "goog.inherits(y, goog.module.get('ns.Foo'));"));
+  }
+
+  @Test
   public void testNgInject() {
     testRewrite(
         "var x = goog.defineClass(Object, {\n"
