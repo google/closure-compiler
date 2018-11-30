@@ -3687,6 +3687,78 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testAbstractSuperMethodCall_warning() {
+    testTypes(
+        lines(
+            "/** @abstract */",
+            "class Foo {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  foo() {",
+            "    super.foo();",
+            "  }",
+            "}"),
+        "Abstract super method Foo.prototype.foo cannot be dereferenced");
+  }
+
+  @Test
+  public void testAbstractInheritedSuperMethodCall_warning() {
+    testTypes(
+        lines(
+            "/** @abstract */",
+            "class Foo {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "/** @abstract */",
+            "class Bar extends Foo {}",
+            "class Baz extends Bar {",
+            "  /** @override */",
+            "  foo() {",
+            "    super.foo();",
+            "  }",
+            "}"),
+        "Abstract super method Foo.prototype.foo cannot be dereferenced");
+  }
+
+  @Test
+  public void testAbstractInheritedSuperMethodCallInAbstractClass_warning() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */",
+            "class Base {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "/** @abstract */",
+            "class Sub extends Base {",
+            "  bar() {",
+            "    super.foo();",
+            "  }",
+            "}"),
+        "Abstract super method Base.prototype.foo cannot be dereferenced");
+  }
+
+  @Test
+  public void testConcreteSuperMethodCall_noWarning() {
+    testTypes(
+        lines(
+            "/** @abstract */",
+            "class Foo {",
+            "  foo() {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  foo() {",
+            "    super.foo();",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testClassStaticSuperParameterMismatch() {
     testTypes(
         lines(

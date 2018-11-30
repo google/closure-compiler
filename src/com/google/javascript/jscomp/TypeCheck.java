@@ -154,9 +154,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_CONSTRUCTOR_NOT_CALLABLE",
           "Constructor {0} should be called with the \"new\" keyword");
 
-  static final DiagnosticType ABSTRACT_SUPER_METHOD_NOT_CALLABLE =
+  static final DiagnosticType ABSTRACT_SUPER_METHOD_NOT_USABLE =
       DiagnosticType.warning(
-          "JSC_ABSTRACT_SUPER_METHOD_NOT_CALLABLE", "Abstract super method {0} cannot be called");
+          "JSC_ABSTRACT_SUPER_METHOD_NOT_USABLE",
+          "Abstract super method {0} cannot be dereferenced");
 
   static final DiagnosticType FUNCTION_MASKS_VARIABLE =
       DiagnosticType.warning("JSC_FUNCTION_MASKS_VARIABLE", "function {0} masks variable (IE bug)");
@@ -326,7 +327,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           ILLEGAL_OBJLIT_KEY,
           NON_STRINGIFIABLE_OBJECT_KEY,
           ABSTRACT_METHOD_IN_CONCRETE_CLASS,
-          ABSTRACT_SUPER_METHOD_NOT_CALLABLE,
+          ABSTRACT_SUPER_METHOD_NOT_USABLE,
           ES5_CLASS_EXTENDING_ES6_CLASS,
           RhinoErrorReporter.TYPE_PARSE_ERROR,
           RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR,
@@ -1792,6 +1793,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     Node propNode = getProp.getSecondChild();
     JSType propType = getJSType(getProp);
 
+    checkAbstractPropertyAccess(t, getProp);
     checkPropertyAccess(objType, t, getProp, propType, propNode, objNode);
   }
 
@@ -1813,6 +1815,57 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       objNode = pattern.getNext();
     }
     checkPropertyAccess(objectType, t, /* getProp= */ null, inferredPropType, stringKey, objNode);
+  }
+
+  /**
+   * Warns if @abstract methods are dereferenced, with some false negatives
+   *
+   * <p>This method only handles some cases that we are certain are incorrect. e.g. we are lenient
+   * about union types, and we don't track an abstract methods once they are reassigned to new
+   * variables.
+   *
+   * <p>This method's logic is complicated to avoid spurious warnings. Sometimes a reference to
+   * something typed @abstract is okay. For example, don't warn on `this.foo();` in {@code
+   * /** @abstract * / class Base { /** @abstract * / foo() {} bar() { this.foo(); } } }
+   *
+   * <p>The `this` object with which `Base.prototype.bar` is called must be a concrete subclass of
+   * Base. To avoid false positives, we warn only in the following cases:
+   *
+   * <ul>
+   *   <li>(a) the function is accessed off `super`
+   *   <li>(b) the function is accessed off a .prototype
+   *   <li>(c) the function is transpiled from a goog.base superclass reference
+   * </ul>
+   */
+  private void checkAbstractPropertyAccess(NodeTraversal t, Node method) {
+
+    if (NodeUtil.isLhsOfAssign(method)) {
+      // Allow declaring abstract methods. (This assumes they are never re-assigned)
+      //   /** @abstract */ Foo.prototype.bar = function() {}
+      return;
+    }
+
+    FunctionType methodType = getJSType(method).toMaybeFunctionType();
+    if (methodType == null || !methodType.isAbstract() || methodType.isConstructor()) {
+      // Ignore non-abstract methods and @abstract constructors. An @abstract constructor is still
+      // callable.
+      return;
+    }
+
+    Node objectNode = method.getFirstChild();
+    if (objectNode.isSuper()) {
+      // case (a)
+      // `super.foo()` definitely refers to `Superclass.prototype.foo`, not an override.
+      // At parse time, `Subclass.prototype` becomes a lower bound for what `super` evaluates to,
+      // even if the `this` object changes. So `super` will never resolve to a concrete subclass.
+      report(t, method, ABSTRACT_SUPER_METHOD_NOT_USABLE, methodType.getDisplayName());
+    } else if (objectNode.isGetProp()) {
+      String objectProp = objectNode.getSecondChild().getString();
+      if (objectProp.equals("prototype") // case (b), e.g. `Foo.prototype.bar`
+          || compiler.getCodingConvention().isSuperClassReference(objectProp)) { // case (c)
+        report(t, method, ABSTRACT_SUPER_METHOD_NOT_USABLE, methodType.getDisplayName());
+      }
+    }
   }
 
   /**
@@ -2340,7 +2393,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         report(t, n, EXPECTED_THIS_TYPE, functionType.toString());
       }
 
-      checkAbstractMethodCall(t, n);
       visitArgumentList(t, n, functionType);
       ensureTyped(n, functionType.getReturnType());
     } else {
@@ -2350,40 +2402,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // TODO(nicksantos): Add something to check for calls of RegExp objects,
     // which is not supported by IE. Either say something about the return type
     // or warn about the non-portability of the call or both.
-  }
-
-  /** Check that @abstract methods are not called */
-  private void checkAbstractMethodCall(NodeTraversal t, Node call) {
-    if (NodeUtil.isFunctionObjectCall(call) || NodeUtil.isFunctionObjectApply(call)) {
-      Node method = call.getFirstFirstChild();
-      // this.foo.apply(this) should be allowed
-      if (method.isGetProp()
-          && (method.getFirstChild().isThis()
-              || method.getFirstChild().matchesQualifiedName(Es6RewriteArrowFunction.THIS_VAR))) {
-        return;
-      }
-      FunctionType methodType = method.getJSType().toMaybeFunctionType();
-      if (methodType != null && methodType.isAbstract() && !methodType.isConstructor()) {
-        report(t, call, ABSTRACT_SUPER_METHOD_NOT_CALLABLE, methodType.getDisplayName());
-      }
-    } else {
-      // Check for cases like Base.prototype.foo() where foo is abstract
-      Node maybeGetProp = call.getFirstChild();
-      if (maybeGetProp.isGetProp() && maybeGetProp.isQualifiedName()) {
-        Node rootOfQName = NodeUtil.getRootOfQualifiedName(maybeGetProp);
-        if (rootOfQName.isName()) {
-          Node maybePrototype = rootOfQName.getNext();
-          if (maybePrototype.isString() && maybePrototype.getString().equals("prototype")) {
-            FunctionType methodType = maybeGetProp.getJSType().toMaybeFunctionType();
-            if (methodType != null && methodType.isAbstract() && !methodType.isConstructor()
-                && rootOfQName.getJSType() != null && methodType.getTypeOfThis().equals(
-                    rootOfQName.getJSType().toMaybeFunctionType().getInstanceType())) {
-                report(t, call, ABSTRACT_SUPER_METHOD_NOT_CALLABLE, methodType.getDisplayName());
-              }
-          }
-        }
-      }
-    }
   }
 
   /** Visits the parameters of a CALL or a NEW node. */

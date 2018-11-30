@@ -10539,7 +10539,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor @extends {A} */ var B = function() {};",
             "B.superClass_ = A.prototype",
             "/** @override */ B.prototype.foo = function() { B.superClass_.foo.call(this); };"),
-        "Abstract super method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be dereferenced");
   }
 
   @Test
@@ -10555,7 +10555,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @override */ ns.B.prototype.foo = function() {",
             "  ns.B.superClass_.foo.call(this);",
             "};"),
-        "Abstract super method ns.A.prototype.foo cannot be called");
+        "Abstract super method ns.A.prototype.foo cannot be dereferenced");
   }
 
   @Test
@@ -10567,7 +10567,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @abstract */ A.prototype.foo = function() {};",
             "/** @constructor @extends {A} */ var B = function() {};",
             "/** @override */ B.prototype.foo = function() { A.prototype.foo.call(this); };"),
-        "Abstract super method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be dereferenced");
   }
 
   @Test
@@ -10651,7 +10651,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor @abstract */ var A = function() {};",
             "/** @abstract */ A.prototype.foo = function() {};",
             "A.prototype.foo.call(new Subtype);"),
-        "Abstract super method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be dereferenced");
   }
 
   @Test
@@ -10664,7 +10664,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @override */ B.prototype.foo = function() {};",
             "var abstractMethod = A.prototype.foo;",
             "abstractMethod.call(new B);"),
-        "Abstract super method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be dereferenced");
   }
 
   @Test
@@ -10676,7 +10676,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor @extends {A} */ var B = function() {};",
             "B.superClass_ = A.prototype",
             "/** @override */ B.prototype.foo = function() { B.superClass_.foo.apply(this); };"),
-        "Abstract super method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be dereferenced");
   }
 
   @Test
@@ -10698,7 +10698,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @override */ B.prototype.foo = function() {};",
             "var abstractMethod = A.prototype.foo;",
             "(0, abstractMethod).call(new B);"),
-        "Abstract super method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be dereferenced");
   }
 
   @Test
@@ -10711,7 +10711,28 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @override */ B.prototype.foo = function() {};",
             "var abstractMethod = A.prototype.foo;",
             "(abstractMethod = abstractMethod).call(new B);"),
-        "Abstract super method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be dereferenced");
+  }
+
+  @Test
+  public void testDefiningPropOnAbstractMethodForbidden() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @constructor @abstract */ function A() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "A.prototype.foo.callFirst = true;"),
+        "Abstract super method A.prototype.foo cannot be dereferenced");
+  }
+
+  @Test
+  public void testPassingAbstractMethodAsArgForbidden() {
+    testTypesWithExterns(
+        "function externsFn(callback) {}",
+        lines(
+            "/** @constructor @abstract */ function A() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "externsFn(A.prototype.foo);"),
+        "Abstract super method A.prototype.foo cannot be dereferenced");
   }
 
   @Test
@@ -10770,7 +10791,100 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "    Base.prototype.foo();",
             "  }",
             "}"),
-        "Abstract super method Base.prototype.foo cannot be called");
+        "Abstract super method Base.prototype.foo cannot be dereferenced");
+  }
+
+  @Test
+  public void testAbstractMethodCall_Es6Class_abstractSubclass_warns() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */",
+            "class Base {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "/** @abstract */",
+            "class Sub extends Base {",
+            "  bar() {",
+            "    Sub.prototype.foo();",
+            "  }",
+            "}"),
+        "Abstract super method Base.prototype.foo cannot be dereferenced");
+  }
+
+  @Test
+  public void testAbstractMethodCall_Es6Class_onAbstractSubclassPrototype_warns() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */",
+            "class Base {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "/** @abstract */",
+            "class Sub extends Base {",
+            "  bar() {",
+            "    Base.prototype.foo();",
+            "  }",
+            "}"),
+        "Abstract super method Base.prototype.foo cannot be dereferenced");
+  }
+
+  @Test
+  public void testAbstractMethodCall_Es6Class_concreteSubclassMissingImplementation_warns() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */",
+            "class Base {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "class Sub extends Base {",
+            "  bar() {",
+            "    Sub.prototype.foo();",
+            "  }",
+            "}"),
+        ImmutableList.of(
+            "property foo on abstract class Base is not implemented by type Sub",
+            "Abstract super method Base.prototype.foo cannot be dereferenced"));
+  }
+
+  @Test
+  public void testAbstractMethodCall_Es6Class_concreteSubclassWithImplementation_noWarning() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */",
+            "class Base {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override */",
+            "  foo() {}",
+            "  bar() {",
+            "    Sub.prototype.foo();",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testAbstractMethodCall_NamespacedEs6Class_prototype_warns() {
+    testTypesWithCommonExterns(
+        lines(
+            "const ns = {};",
+            "/** @abstract */",
+            "ns.Base = class {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "class Sub extends ns.Base {",
+            "  /** @override */",
+            "  foo() {}",
+            "  bar() {",
+            "    ns.Base.prototype.foo();",
+            "  }",
+            "}"),
+        "Abstract super method ns.Base.prototype.foo cannot be dereferenced");
   }
 
   @Test

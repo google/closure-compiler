@@ -144,6 +144,10 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     checkReportedWarningsHelper(warnings);
   }
 
+  protected void testTypesWithCommonExterns(String js, List<String> descriptions) {
+    testTypesWithExterns(DEFAULT_EXTERNS, js, descriptions, false);
+  }
+
   protected void testTypesWithCommonExterns(String js, String description) {
     testTypesWithExterns(DEFAULT_EXTERNS, js, description, false);
   }
