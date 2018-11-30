@@ -687,7 +687,9 @@ public class CommandLineRunner extends
                 + "ECMASCRIPT_2015, STABLE")
     private String languageOut = "STABLE";
 
-    @Option(name = "--version",
+
+    @Option(
+        name = "--version",
         handler = BooleanOptionHandler.class,
         usage = "Prints the compiler version to stdout and exit.")
     private boolean version = false;
@@ -1797,6 +1799,7 @@ public class CommandLineRunner extends
         throw new FlagUsageException("Unknown language `" + flags.languageOut + "' specified.");
       }
     }
+
 
     options.setCodingConvention(new ClosureCodingConvention());
 
