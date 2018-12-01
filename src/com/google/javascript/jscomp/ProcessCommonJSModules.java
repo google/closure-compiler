@@ -73,6 +73,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverse(compiler, externs, this);
   }
 
   @Override
@@ -556,18 +557,16 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (t.inGlobalScope()) {
-        // Check for goog.provide or goog.module statements
-        if (parent == null
-            || NodeUtil.isControlStructure(parent)
-            || NodeUtil.isStatementBlock(parent)) {
-          if (n.isExprResult()) {
-            Node maybeGetProp = n.getFirstFirstChild();
-            if (maybeGetProp != null
-                && (maybeGetProp.matchesQualifiedName("goog.provide")
-                    || maybeGetProp.matchesQualifiedName("goog.module"))) {
-              hasGoogProvideOrModule = true;
-            }
+      // Check for goog.provide or goog.module statements
+      if (parent == null
+          || NodeUtil.isControlStructure(parent)
+          || NodeUtil.isStatementBlock(parent)) {
+        if (n.isExprResult()) {
+          Node maybeGetProp = n.getFirstFirstChild();
+          if (maybeGetProp != null
+              && (maybeGetProp.matchesQualifiedName("goog.provide")
+                  || maybeGetProp.matchesQualifiedName("goog.module"))) {
+            hasGoogProvideOrModule = true;
           }
         }
       }
