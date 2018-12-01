@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.fail;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -2076,5 +2077,102 @@ public final class CompilerTest {
 
     assertThat(compiler.toSource())
         .isEqualTo("var module$exports$strong={};function module$contents$strong_f(x){alert(x)};");
+  }
+
+  @Test
+  public void testPreexistingWeakModule() throws Exception {
+    JSModule strong = new JSModule("m");
+    strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
+    JSModule weak = new JSModule(JSModule.WEAK_MODULE_NAME);
+    weak.add(SourceFile.fromCode("weak.js", "goog.provide('b');", SourceKind.WEAK));
+    weak.addDependency(strong);
+
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    options.setClosurePass(true);
+
+    Compiler compiler = new Compiler();
+
+    compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options);
+
+    compiler.parse();
+    compiler.check();
+    compiler.performOptimizations();
+
+    assertThat(compiler.getModuleGraph().getModuleCount()).isEqualTo(2);
+    assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 0).getName())
+        .isEqualTo("m");
+    assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 1).getName())
+        .isEqualTo(JSModule.WEAK_MODULE_NAME);
+
+    assertThat(compiler.toSource()).isEqualTo("var a={};");
+  }
+
+  @Test
+  public void testPreexistingWeakModuleWithAdditionalStrongSources() throws Exception {
+    JSModule strong = new JSModule("m");
+    strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
+    JSModule weak = new JSModule(JSModule.WEAK_MODULE_NAME);
+    weak.add(SourceFile.fromCode("weak.js", "goog.provide('b');", SourceKind.WEAK));
+    weak.add(
+        SourceFile.fromCode(
+            "weak_but_actually_strong.js", "goog.provide('c');", SourceKind.STRONG));
+    weak.addDependency(strong);
+
+    CompilerOptions options = new CompilerOptions();
+    Compiler compiler = new Compiler();
+
+    try {
+      compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options);
+      fail();
+    } catch (RuntimeException e) {
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("A weak module already exists but strong sources were found in it.");
+    }
+  }
+
+  @Test
+  public void testPreexistingWeakModuleWithMissingWeakSources() throws Exception {
+    JSModule strong = new JSModule("m");
+    strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
+    strong.add(
+        SourceFile.fromCode("strong_but_actually_weak.js", "goog.provide('b');", SourceKind.WEAK));
+    JSModule weak = new JSModule(JSModule.WEAK_MODULE_NAME);
+    weak.add(SourceFile.fromCode("weak.js", "goog.provide('c');", SourceKind.WEAK));
+    weak.addDependency(strong);
+
+    CompilerOptions options = new CompilerOptions();
+    Compiler compiler = new Compiler();
+
+    try {
+      compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options);
+      fail();
+    } catch (RuntimeException e) {
+
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("A weak module already exists but weak sources were found in other modules.");
+    }
+  }
+
+  @Test
+  public void testPreexistingWeakModuleWithIncorrectDependencies() throws Exception {
+    JSModule m1 = new JSModule("m1");
+    JSModule m2 = new JSModule("m2");
+    JSModule weak = new JSModule(JSModule.WEAK_MODULE_NAME);
+    weak.addDependency(m1);
+
+    CompilerOptions options = new CompilerOptions();
+    Compiler compiler = new Compiler();
+
+    try {
+      compiler.initModules(ImmutableList.of(), ImmutableList.of(m1, m2, weak), options);
+      fail();
+    } catch (RuntimeException e) {
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("A weak module already exists but it does not depend on every other module.");
+    }
   }
 }
