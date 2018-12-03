@@ -1337,7 +1337,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                 }
               }
               // Replace loose "module" references with an object literal
-            } else if (n.getString().equals(MODULE)
+            } else if (allowFullRewrite
+                && n.getString().equals(MODULE)
                 && !(n.getParent().isGetProp()
                     || n.getParent().isGetElem()
                     || n.getParent().isTypeOf())) {

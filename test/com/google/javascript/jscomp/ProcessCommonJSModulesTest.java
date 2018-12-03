@@ -1568,4 +1568,11 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testGoogProvideUnaffected() {
     testModules("test.js", "goog.provide('foo'); foo = 123;", "goog.provide('foo'); foo = 123;");
   }
+
+  @Test
+  public void testTopModuleCallNotRewritten() {
+    // This test the case when some JS doesn't use common js but uses top-level module calls.
+    // For example in Jasmine test framwork.
+    testModules("test.js", "module('foo.bar');", "module('foo.bar');");
+  }
 }
