@@ -5642,7 +5642,7 @@ public final class NodeUtil {
     return n.isModuleBody() || isBundledGoogModuleScopeRoot(n);
   }
 
-  private static boolean isBundledGoogModuleScopeRoot(Node n) {
+  static boolean isBundledGoogModuleScopeRoot(Node n) {
     if (!n.isBlock() || !n.hasChildren() || !isGoogModuleCall(n.getFirstChild())) {
       return false;
     }

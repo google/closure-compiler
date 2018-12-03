@@ -26,7 +26,6 @@ import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAM
 import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
-import static com.google.javascript.jscomp.ClosureCheckModule.MODULE_AND_PROVIDES;
 import static com.google.javascript.jscomp.ClosureCheckModule.MULTIPLE_MODULES_IN_FILE;
 import static com.google.javascript.jscomp.ClosureCheckModule.ONE_REQUIRE_PER_DECLARATION;
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME;
@@ -37,6 +36,7 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_DESTRU
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +46,13 @@ import org.junit.runners.JUnit4;
 public final class ClosureCheckModuleTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ClosureCheckModule(compiler);
+    return (externs, root) -> {
+      GatherModuleMetadata gatherModuleMetadata =
+          new GatherModuleMetadata(
+              compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER);
+      gatherModuleMetadata.process(externs, root);
+      new ClosureCheckModule(compiler, compiler.getModuleMetadataMap()).process(externs, root);
+    };
   }
 
   @Override
@@ -134,11 +140,6 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGoogModuleAndProvide() {
-    testError("goog.module('xyz');\ngoog.provide('abc');", MODULE_AND_PROVIDES);
-  }
-
-  @Test
   public void testMultipleGoogModules() {
     testError(
         lines(
@@ -197,6 +198,63 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "  return exports;",
             "});"),
         MULTIPLE_MODULES_IN_FILE);
+  }
+
+  @Test
+  public void testBundledGoogModulesAndProvides() {
+    testSame(
+        lines(
+            "goog.provide('first.provide');",
+            "first.provide = 0;",
+            "",
+            "goog.provide('second.provide');",
+            "second.provide = 0;",
+            "",
+            "goog.loadModule(function(exports){",
+            "  'use strict';",
+            "  goog.module('Xyz');",
+            "  const first = goog.require('first.provide');",
+            "  exports = class {}",
+            "  return exports;",
+            "});",
+            "",
+            "goog.loadModule(function(exports){",
+            "  goog.module('abc');",
+            "  const Foo = goog.require('Xyz');",
+            "  const second = goog.require('second.provide');",
+            "  var x = new Foo;",
+            "  return exports;",
+            "});"));
+  }
+
+  @Test
+  public void testBundledGoogModulesAndProvidesWithGoog() {
+    testSame(
+        lines(
+            "/** @provideGoog */",
+            "var goog = {};",
+            "",
+            "goog.provide('first.provide');",
+            "first.provide = 0;",
+            "",
+            "goog.provide('second.provide');",
+            "second.provide = 0;",
+            "",
+            "goog.loadModule(function(exports){",
+            "  'use strict';",
+            "  goog.module('Xyz');",
+            "  const first = goog.require('first.provide');",
+            "  exports = class {}",
+            "  return exports;",
+            "});",
+            "",
+            "goog.loadModule(function(exports){",
+            "  goog.module('abc');",
+            "  const Foo = goog.require('Xyz');",
+            "  const second = goog.require('second.provide');",
+            "  var x = new Foo;",
+            "  return exports;",
+            "});"));
   }
 
   @Test
@@ -427,20 +485,6 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var {foo, bar} = goog.require('abc');",
             "var foo = goog.require('def.foo');"),
         DUPLICATE_NAME_SHORT_REQUIRE);
-
-    testError(
-        lines(
-            "goog.module('xyz');",
-            "",
-            "const localName = goog.require(namespace.without.the.quotes);"),
-        ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR);
-
-    testError(
-        lines(
-            "goog.module('xyz');",
-            "",
-            "goog.require(namespace.without.the.quotes);"),
-        ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR);
   }
 
   @Test

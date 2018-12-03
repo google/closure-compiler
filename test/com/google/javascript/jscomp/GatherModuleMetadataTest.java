@@ -61,13 +61,6 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSameFileGoogIsIgnored() {
-    testSame("var goog; goog.provide('my.provide');");
-    assertThat(metadataMap().getModulesByGoogNamespace().keySet()).isEmpty();
-    assertThat(metadataMap().getModulesByPath().get("testcode").usesClosure()).isFalse();
-  }
-
-  @Test
   public void testLocalGoogIsIgnored() {
     testSame("function bar(goog) { goog.provide('my.provide'); }");
     assertThat(metadataMap().getModulesByGoogNamespace().keySet()).isEmpty();
@@ -132,8 +125,15 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
   @Test
   public void testLoadModule() {
-    testSame("goog.loadModule(function() { goog.module('my.module'); });");
-    assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("my.module");
+    testSame(
+        lines(
+            "goog.loadModule(function(exports) {", //
+            "  goog.module('my.module');",
+            "  return exports;",
+            "});"));
+
+    assertThat(metadataMap().getModulesByGoogNamespace().keySet())
+        .containsExactly("my.module");
 
     ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("my.module");
     assertThat(m.googNamespaces()).containsExactly("my.module");
@@ -143,6 +143,186 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.googNamespaces()).isEmpty();
     assertThat(m.isScript()).isTrue();
+  }
+
+  @Test
+  public void testLoadModuleLegacyNamespace() {
+    testSame(
+        lines(
+            "goog.loadModule(function(exports) {", //
+            "  goog.module('my.module');",
+            "  goog.module.declareLegacyNamespace();",
+            "  return exports;",
+            "});"));
+
+    assertThat(metadataMap().getModulesByGoogNamespace().keySet())
+        .containsExactly("my.module");
+
+    ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("my.module");
+    assertThat(m.googNamespaces()).containsExactly("my.module");
+    assertThat(m.isLegacyGoogModule()).isTrue();
+    assertThat(m.path()).isNull();
+
+    m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.googNamespaces()).isEmpty();
+    assertThat(m.isScript()).isTrue();
+  }
+
+  @Test
+  public void testLoadModuleUseStrict() {
+    testSame(
+        lines(
+            "goog.loadModule(function(exports) {", //
+            "  'use strict';",
+            "  goog.module('with.strict');",
+            "  return exports;",
+            "});"));
+
+    assertThat(metadataMap().getModulesByGoogNamespace().keySet())
+        .containsExactly("with.strict");
+
+    ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("with.strict");
+    assertThat(m.googNamespaces()).containsExactly("with.strict");
+    assertThat(m.isNonLegacyGoogModule()).isTrue();
+    assertThat(m.path()).isNull();
+
+    m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.googNamespaces()).isEmpty();
+    assertThat(m.isScript()).isTrue();
+  }
+
+  @Test
+  public void testMultipleGoogModuleCallsInLoadModule() {
+    testSame(
+        lines(
+            // Technically an error but this pass shouldn't report it.
+            "goog.loadModule(function(exports) {",
+            "  goog.module('multiple.calls.c0');",
+            "  goog.module('multiple.calls.c1');",
+            "  return exports;",
+            "});"));
+
+    assertThat(metadataMap().getModulesByGoogNamespace().keySet())
+        .containsExactly("multiple.calls.c0", "multiple.calls.c1");
+
+    ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("multiple.calls.c0");
+    assertThat(m.googNamespaces()).containsExactly("multiple.calls.c0", "multiple.calls.c1");
+    assertThat(metadataMap().getModulesByGoogNamespace().get("multiple.calls.c1")).isSameAs(m);
+    assertThat(m.isNonLegacyGoogModule()).isTrue();
+    assertThat(m.path()).isNull();
+
+    m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.googNamespaces()).isEmpty();
+    assertThat(m.isScript()).isTrue();
+  }
+
+  @Test
+  public void testMultipleGoogLoadModules() {
+    testSame(
+        lines(
+            "goog.loadModule(function(exports) {",
+            "  goog.module('multiple.calls.c0');",
+            "  return exports;",
+            "});",
+            "",
+            "goog.loadModule(function(exports) {",
+            "  goog.module('multiple.calls.c1');",
+            "  return exports;",
+            "});"));
+
+    assertThat(metadataMap().getModulesByGoogNamespace().keySet())
+        .containsExactly("multiple.calls.c0", "multiple.calls.c1");
+
+    ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("multiple.calls.c0");
+    assertThat(m.googNamespaces()).containsExactly("multiple.calls.c0");
+    assertThat(m.isNonLegacyGoogModule()).isTrue();
+    assertThat(m.path()).isNull();
+
+    m = metadataMap().getModulesByGoogNamespace().get("multiple.calls.c1");
+    assertThat(m.googNamespaces()).containsExactly("multiple.calls.c1");
+    assertThat(m.isNonLegacyGoogModule()).isTrue();
+    assertThat(m.path()).isNull();
+
+    m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.googNamespaces()).isEmpty();
+    assertThat(m.isScript()).isTrue();
+  }
+
+  @Test
+  public void testBundleGoogLoadModuleAndProvides() {
+    testSame(
+        lines(
+            "goog.provide('some.provide');",
+            "",
+            "goog.provide('some.other.provide');",
+            "",
+            "goog.loadModule(function(exports) {",
+            "  goog.module('multiple.calls.c0');",
+            "  return exports;",
+            "});",
+            "",
+            "goog.loadModule(function(exports) {",
+            "  goog.module('multiple.calls.c1');",
+            "  return exports;",
+            "});"));
+
+    assertThat(metadataMap().getModulesByGoogNamespace().keySet())
+        .containsExactly(
+            "some.provide", "some.other.provide", "multiple.calls.c0", "multiple.calls.c1");
+
+    ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("multiple.calls.c0");
+    assertThat(m.googNamespaces()).containsExactly("multiple.calls.c0");
+    assertThat(m.isNonLegacyGoogModule()).isTrue();
+    assertThat(m.path()).isNull();
+
+    m = metadataMap().getModulesByGoogNamespace().get("multiple.calls.c1");
+    assertThat(m.googNamespaces()).containsExactly("multiple.calls.c1");
+    assertThat(m.isNonLegacyGoogModule()).isTrue();
+    assertThat(m.path()).isNull();
+
+    m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.googNamespaces()).containsExactly("some.provide", "some.other.provide");
+    assertThat(m.isGoogProvide()).isTrue();
+  }
+
+  @Test
+  public void testBundleGoogLoadModuleAndProvidesWithGoogDefined() {
+    testSame(
+        lines(
+            "/** @provideGoog */",
+            "var goog = {};",
+            "",
+            "goog.provide('some.provide');",
+            "",
+            "goog.provide('some.other.provide');",
+            "",
+            "goog.loadModule(function(exports) {",
+            "  goog.module('multiple.calls.c0');",
+            "  return exports;",
+            "});",
+            "",
+            "goog.loadModule(function(exports) {",
+            "  goog.module('multiple.calls.c1');",
+            "  return exports;",
+            "});"));
+
+    assertThat(metadataMap().getModulesByGoogNamespace().keySet())
+        .containsExactly(
+            "some.provide", "some.other.provide", "multiple.calls.c0", "multiple.calls.c1");
+
+    ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("multiple.calls.c0");
+    assertThat(m.googNamespaces()).containsExactly("multiple.calls.c0");
+    assertThat(m.isNonLegacyGoogModule()).isTrue();
+    assertThat(m.path()).isNull();
+
+    m = metadataMap().getModulesByGoogNamespace().get("multiple.calls.c1");
+    assertThat(m.googNamespaces()).containsExactly("multiple.calls.c1");
+    assertThat(m.isNonLegacyGoogModule()).isTrue();
+    assertThat(m.path()).isNull();
+
+    m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.googNamespaces()).containsExactly("some.provide", "some.other.provide");
+    assertThat(m.isGoogProvide()).isTrue();
   }
 
   @Test
@@ -291,7 +471,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
   @Test
   public void testLocalGoogIsNotClosure() {
-    testSame("var goog; goog.isArray(foo);");
+    testSame("function bar() { var goog; goog.isArray(foo); }");
     ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.usesClosure()).isFalse();
   }
