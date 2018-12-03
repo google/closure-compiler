@@ -1710,7 +1710,6 @@ Symbol.asyncIterator;
 
 /**
  * @interface
- * @extends {AsyncIterable<VALUE>}
  * @template VALUE
  * @see https://tc39.github.io/proposal-async-iteration/
  */
@@ -1735,10 +1734,20 @@ function AsyncIterable() {}
  */
 AsyncIterable.prototype[Symbol.asyncIterator] = function() {};
 
+
+/**
+ * @interface
+ * @extends {AsyncIterator<VALUE>}
+ * @extends {AsyncIterable<VALUE>}
+ * @template VALUE
+ * @see https://tc39.github.io/proposal-async-iteration/
+ */
+function AsyncIteratorIterable() {}
+
 /**
  * @interface
  * @see https://tc39.github.io/proposal-async-iteration/
- * @extends {AsyncIterator<VALUE>}
+ * @extends {AsyncIteratorIterable<VALUE>}
  * @template VALUE
  */
 function AsyncGenerator() {}
