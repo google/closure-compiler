@@ -1559,6 +1559,25 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testWebpackRequireNamespace() {
+    Map<String, String> webpackModulesById =
+        ImmutableMap.of(
+            "1", "other.js",
+            "yet_another.js", "yet_another.js",
+            "3", "test.js");
+    setWebpackModulesById(webpackModulesById);
+    resolutionMode = ModuleLoader.ResolutionMode.WEBPACK;
+
+    testModules(
+        "test.js",
+        lines("var name = __webpack_require__.t('yet_another.js');", "exports.foo = 1;"),
+        lines(
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "var name$$module$test = module$yet_another;",
+            "module$test.default.foo = 1;"));
+  }
+
+  @Test
   public void testGoogModuleUnaffected() {
     testModules(
         "test.js", "goog.module('foo'); exports.y = 123;", "goog.module('foo'); exports.y = 123;");
