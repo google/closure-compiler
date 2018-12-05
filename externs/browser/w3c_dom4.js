@@ -205,3 +205,12 @@ DocumentType.prototype.after = function(nodes) {};
  * @see https://dom.spec.whatwg.org/#dom-childnode-after
  */
 CharacterData.prototype.after = function(nodes) {};
+
+/**
+ * @param {string} name
+ * @param {boolean=} force
+ * @return {boolean}
+ * @throws {DOMException}
+ * @see https://dom.spec.whatwg.org/#dom-element-toggleattribute
+ */
+Element.prototype.toggleAttribute = function(name, force) {};
