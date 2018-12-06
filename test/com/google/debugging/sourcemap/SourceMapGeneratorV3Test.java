@@ -17,14 +17,17 @@
 package com.google.debugging.sourcemap;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3.ExtensionMergeAction;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.google.javascript.jscomp.SourceMap;
+import com.google.javascript.jscomp.*;
+import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.SourceMap.Format;
 import java.io.File;
 import java.io.IOException;
@@ -57,6 +60,49 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     } else {
       return "c:\\\\myfile.js";
     }
+  }
+
+  @Test
+  public void testModuleMappingsWithInputSourceMaps() throws Exception {
+    sourceMapIncludeSourcesContent = true;
+    Compiler compiler = new Compiler();
+    CompilerOptions options = getCompilerOptions();
+    options.setApplyInputSourceMaps(true);
+
+    JSModule module = new JSModule("foo.js");
+    module.add(SourceFile.fromCode("baa.js", "function __AAAAA__() { }"));
+    List<JSModule> modules = ImmutableList.of(module);
+    SourceFile inputSourceMap = SourceFile.fromCode("baa.js.map", "{\n" +
+            "\"version\":3,\n" +
+            "\"file\":\"testcode\",\n" +
+            "\"lineCount\":1,\n" +
+            "\"mappings\":\"AAAAA,QAASA,UAAS,EAAG;\",\n" +
+            "\"sources\":[\"baa.js\"],\n" +
+            "\"sourcesContent\":[\"function __BASIC__() { }\"],\n" +
+            "\"names\":[\"__BASIC__\"]\n" +
+            "}\n");
+    options.setInputSourceMaps(ImmutableMap.of("baa.js", new SourceMapInput(inputSourceMap)));
+
+    Result result = compiler.compileModules(EXTERNS, modules, options);
+    assertWithMessage("compilation failed").that(result.success).isTrue();
+
+    compiler.getSourceMap().reset();
+    compiler.toSource(module);
+    SourceMap sourceMap = compiler.getSourceMap();
+
+    StringBuilder sb = new StringBuilder();
+    sourceMap.appendTo(sb, "foo.js");
+    String output = sb.toString();
+
+    assertThat(output).isEqualTo("{\n" +
+            "\"version\":3,\n" +
+            "\"file\":\"foo.js\",\n" +
+            "\"lineCount\":1,\n" +
+            "\"mappings\":\"AAAAA,QAASA,UAAS,EAAG;\",\n" +
+            "\"sources\":[\"baa.js\"],\n" +
+            "\"sourcesContent\":[\"function __BASIC__() { }\"],\n" +
+            "\"names\":[\"__BASIC__\"]\n" +
+            "}\n");
   }
 
   @Test
