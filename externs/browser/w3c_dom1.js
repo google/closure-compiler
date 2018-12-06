@@ -387,10 +387,11 @@ Document.prototype.createDocumentFragment = function() {};
  * tags (e.g. document.createElement('button', 'fancy-button')).
  *
  * @param {string} tagName
- * @param {string|{is: string}=} opt_typeExtension
+ * @param {string=} opt_typeExtension
  * @return {!Element}
  * @nosideeffects
- * @see https://dom.spec.whatwg.org/#ref-for-dom-document-createelement
+ * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createElement
+ * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-instantiate
  */
 Document.prototype.createElement = function(tagName, opt_typeExtension) {};
 
