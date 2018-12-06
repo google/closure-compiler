@@ -106,6 +106,40 @@ HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
 HTMLCanvasElement.prototype.captureStream = function(opt_framerate) {};
 
 /**
+ * @see https://html.spec.whatwg.org/multipage/canvas.html#the-offscreencanvas-interface
+ * @implements {EventTarget}
+ * @implements {Transferable}
+ * @param {number} width
+ * @param {number} height
+ * @constructor
+ */
+function OffscreenCanvas(width, height) {}
+
+/** @type {number} */
+OffscreenCanvas.prototype.width;
+
+/** @type {number} */
+OffscreenCanvas.prototype.height;
+
+/**
+ * @param {string} contextId
+ * @param {!Object=} opt_args
+ * @return {!Object}
+ */
+OffscreenCanvas.prototype.getContext = function(contextId, opt_args) {};
+
+/**
+ * @return {!ImageBitmap}
+ */
+OffscreenCanvas.prototype.transferToImageBitmap = function() {};
+
+/**
+ * @param {{type: (string|undefined), quality: (number|undefined)}=} opt_options
+ * @return {!Promise<!Blob>}
+ */
+OffscreenCanvas.prototype.convertToBlob = function(opt_options) {};
+
+/**
  * @typedef {HTMLImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap}
  */
 var CanvasImageSource;
