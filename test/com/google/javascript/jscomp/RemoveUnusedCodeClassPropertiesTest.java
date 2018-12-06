@@ -444,14 +444,19 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   }
 
   @Test
-  public void testObjectDefineProperties_used_setter_not_removed() {
+  public void testObjectDefineProperties_used_setter_removed() {
+    // TODO(bradfordcsmith): Either remove, fix this, or document it as a limitation of advanced
+    // mode optimizations.
     enableTypeCheck();
 
-    testSame(
+    test(
         lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {prop:{set:function (a) {alert(2)}}});",
-            "C.prop = 2;"));
+            "C.prop = 2;"),
+        lines(
+            "/** @constructor */ function C() {}",
+            "Object.defineProperties(C, {                                  });"));
   }
 
   @Test

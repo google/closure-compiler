@@ -906,11 +906,6 @@ class RemoveUnusedCode implements CompilerPass {
         RemovableBuilder builder = new RemovableBuilder();
         traverseRemovableAssignValue(valueNode, builder, scope);
         varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode));
-
-        if (isGetterOrSetterProperty(propNameNode.getString())) {
-          markPropertyNameReferenced(propNameNode.getString());
-          varInfo.setIsExplicitlyNotRemovable();
-        }
       } else if (isDotPrototype(getPropLhs)) {
         // objExpression.prototype.propertyName = someValue
         Node objExpression = getPropLhs.getFirstChild();
@@ -1303,17 +1298,12 @@ class RemoveUnusedCode implements CompilerPass {
     }
   }
 
-  private boolean isGetterOrSetterProperty(String propertyName) {
-    return compiler.getPropertyAccessKind(propertyName).hasGetterOrSetter();
-  }
-
   private void considerForIndependentRemoval(Removable removable) {
     if (removable.isNamedProperty()) {
       String propertyName = removable.getPropertyName();
 
       if (referencedPropertyNames.contains(propertyName)
-          || codingConvention.isExported(propertyName)
-          || (removable.isNamedPropertyAssignment() && isGetterOrSetterProperty(propertyName))) {
+          || codingConvention.isExported(propertyName)) {
         // Referenced or exported, so not removable.
         removable.applyContinuations();
       } else if (isIndependentlyRemovable(removable)) {
