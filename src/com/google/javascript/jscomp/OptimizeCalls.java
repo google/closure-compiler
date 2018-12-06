@@ -319,7 +319,7 @@ class OptimizeCalls implements CompilerPass {
     }
 
     @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
+    public void visit(NodeTraversal t, Node n, Node unused) {
       switch (n.getToken()) {
         case NAME:
           maybeAddNameReference(n);
@@ -343,8 +343,6 @@ class OptimizeCalls implements CompilerPass {
             maybeAddPropReference(n.getString(), n);
           }
           break;
-
-        // TODO(johnlenz): object destructuring.
 
         default:
           break;

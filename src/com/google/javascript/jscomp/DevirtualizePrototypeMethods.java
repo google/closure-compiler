@@ -25,6 +25,7 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -134,62 +135,71 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
    */
   private static boolean isPrototypeMethodDefinition(Node node) {
     Node parent = node.getParent();
-    if (parent == null) {
-      return false;
-    }
-    Node gramp = parent.getParent();
-    if (gramp == null) {
+    Node grandparent = node.getGrandparent();
+    if (parent == null || grandparent == null) {
       return false;
     }
 
-    if (node.isGetProp()) {
-      if (parent.getFirstChild() != node) {
+    switch (node.getToken()) {
+      case MEMBER_FUNCTION_DEF:
+        if (node.getString().equals("constructor")) {
+          return false; // Constructors aren't methods.
+        }
+
+        return true;
+
+      case GETPROP:
+        {
+          // Case: `Foo.prototype.bar = function() { };
+          if (parent.getFirstChild() != node) {
+            return false;
+          }
+
+          if (!NodeUtil.isExprAssign(grandparent)) {
+            return false;
+          }
+
+          Node functionNode = parent.getLastChild();
+          if ((functionNode == null) || !functionNode.isFunction()) {
+            return false;
+          }
+
+          Node nameNode = node.getFirstChild();
+          return nameNode.isGetProp() && nameNode.getLastChild().getString().equals("prototype");
+        }
+
+      case STRING_KEY:
+        {
+          // Case: `Foo.prototype = {
+          //          bar: function() { },
+          //        }`
+          checkArgument(parent.isObjectLit(), parent);
+
+          if (!grandparent.isAssign()) {
+            return false;
+          }
+
+          if (grandparent.getLastChild() != parent) {
+            return false;
+          }
+
+          Node greatgrandparent = grandparent.getParent();
+          if (greatgrandparent == null || !greatgrandparent.isExprResult()) {
+            return false;
+          }
+
+          Node functionNode = node.getFirstChild();
+          if ((functionNode == null) || !functionNode.isFunction()) {
+            return false;
+          }
+
+          Node target = grandparent.getFirstChild();
+          return target.isGetProp() && target.getLastChild().getString().equals("prototype");
+        }
+
+      default:
         return false;
-      }
-
-      if (!NodeUtil.isExprAssign(gramp)) {
-        return false;
-      }
-
-      Node functionNode = parent.getLastChild();
-      if ((functionNode == null) || !functionNode.isFunction()) {
-        return false;
-      }
-
-      Node nameNode = node.getFirstChild();
-      return nameNode.isGetProp() &&
-          nameNode.getLastChild().getString().equals("prototype");
-    } else if (node.isStringKey()) {
-      checkArgument(parent.isObjectLit(), parent);
-
-      if (!gramp.isAssign()) {
-        return false;
-      }
-
-      if (gramp.getLastChild() != parent) {
-        return false;
-      }
-
-      Node greatGramp = gramp.getParent();
-      if (greatGramp == null || !greatGramp.isExprResult()) {
-        return false;
-      }
-
-      Node functionNode = node.getFirstChild();
-      if ((functionNode == null) || !functionNode.isFunction()) {
-        return false;
-      }
-
-      Node target = gramp.getFirstChild();
-      return target.isGetProp() &&
-          target.getLastChild().getString().equals("prototype");
-    } else {
-      return false;
     }
-  }
-
-  private static String rewrittenMethodNameOf(String originalMethodName) {
-    return "JSCompiler_StaticMethods_" + originalMethodName;
   }
 
   /**
@@ -203,7 +213,16 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
    * </ul>
    */
   private boolean isEligibleDefinitionSite(String name, Node definitionSite) {
-    checkArgument(!definitionSite.isGetElem(), definitionSite);
+    switch (definitionSite.getToken()) {
+      case GETPROP:
+      case MEMBER_FUNCTION_DEF:
+      case STRING_KEY:
+        break;
+
+      default:
+        // No other node types are supported.
+        throw new IllegalArgumentException(definitionSite.toString());
+    }
 
     // Exporting a method prevents rewrite.
     CodingConvention codingConvention = compiler.getCodingConvention();
@@ -227,23 +246,37 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
    *   <li>Be instantiated exactly once
    *   <li>Be the only possible implementation at a given site
    *   <li>Not refer to its `arguments`; no implicit varags
+   *   <li>Not be an arrow function
    * </ul>
    */
   private boolean isEligibleDefinitionFunction(Node definitionFunction) {
     checkArgument(definitionFunction.isFunction(), definitionFunction);
 
-    // The definition must be made exactly once. (i.e. not in a loop, conditional, or function)
+    if (definitionFunction.isArrowFunction()) {
+      return false;
+    }
+
     for (Node ancestor = definitionFunction.getParent();
         ancestor != null;
         ancestor = ancestor.getParent()) {
-      if (NodeUtil.isControlStructure(ancestor) // Single definition.
-          || ancestor.isAnd() // Single definition.
-          || ancestor.isOr() // Single definition.
-          || ancestor.isFunction() // Single definition / function scoped variables.
-          || ancestor.isBlock() // Block scoped variables.
-      ) {
+      // The definition must be made exactly once. (i.e. not in a loop, conditional, or function)
+      if (isScopingOrBranchingConstruct(ancestor)) {
         return false;
       }
+
+      // TODO(nickreid): Support this so long as the definition doesn't reference the name.
+      // We can't allow this in general because references to the local name:
+      //  - won't be rewritten correctly
+      //  - won't be the same across multiple definitions, even if they are node-wise identical.
+      if (ancestor.isClass() && localNameIsDeclaredByClass(ancestor)) {
+        return false;
+      }
+    }
+
+    if (NodeUtil.containsType(definitionFunction, Token.SUPER)) {
+      // TODO(b/120452418): Remove this when we have a rewrite for `super`. We punted initially due
+      // to complexity.
+      return false;
     }
 
     if (NodeUtil.doesFunctionReferenceOwnArgumentsObject(definitionFunction)) {
@@ -331,7 +364,7 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
     checkArgument(getprop.isGetProp(), getprop);
     Node call = getprop.getParent();
     checkArgument(call.isCall(), call);
-    Node receiever = getprop.getFirstChild();
+    Node receiver = getprop.getFirstChild();
 
     // This rewriting does not exactly preserve order of operations; the newly inserted static
     // method name will be resolved before `receiver` is evaluated. This is known to be safe due
@@ -341,78 +374,74 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
     // doing so means extracting `receiver` into a new variable at each call-site. This  has a
     // significant code-size impact (circa 2018-11-19).
 
-    getprop.removeChild(receiever);
-    call.replaceChild(getprop, receiever);
+    getprop.removeChild(receiver);
+    call.replaceChild(getprop, receiver);
     call.addChildToFront(IR.name(newMethodName).srcref(getprop));
+
+    if (receiver.isSuper()) {
+      // Case: `super.foo(a, b)` => `foo(this, a, b)`
+      receiver.setToken(Token.THIS);
+    }
+
     call.putBooleanProp(Node.FREE_CALL, true);
     compiler.reportChangeToEnclosingScope(call);
   }
 
   /**
-   * Rewrites method definitions as global functions that take "this"
-   * as their first argument.
+   * Rewrites method definitions as global functions that take "this" as their first argument.
    *
-   * Before:
-   *   a.prototype.b = function(a, b, c) {...}
+   * <p>Before: a.prototype.b = function(a, b, c) {...}
    *
-   * After:
-   *   var b = function(self, a, b, c) {...}
+   * <p>After: var b = function(self, a, b, c) {...}
    */
-  private void rewriteDefinition(Node node, String newMethodName) {
-    boolean isObjLitDefKey = node.isStringKey();
+  private void rewriteDefinition(Node definitionSite, String newMethodName) {
+    final Node function;
+    final Node subtreeToRemove;
+    final Node nameSource;
 
-    Node parent = node.getParent();
+    switch (definitionSite.getToken()) {
+      case GETPROP:
+        function = definitionSite.getParent().getLastChild();
+        nameSource = definitionSite.getLastChild();
+        subtreeToRemove = NodeUtil.getEnclosingStatement(definitionSite);
+        break;
 
-    Node refNode = isObjLitDefKey ? node : parent.getFirstChild();
-    Node newNameNode = IR.name(newMethodName).useSourceInfoIfMissingFrom(refNode);
-    Node newVarNode = IR.var(newNameNode).useSourceInfoIfMissingFrom(refNode);
+      case STRING_KEY:
+      case MEMBER_FUNCTION_DEF:
+        function = definitionSite.getLastChild();
+        nameSource = definitionSite;
+        subtreeToRemove = definitionSite;
+        break;
 
-    Node functionNode;
-    if (!isObjLitDefKey) {
-      // Case: `x.foo = function() { };`
-      checkArgument(parent.isAssign(), parent);
-
-      functionNode = parent.getLastChild();
-      Node assign = parent.getParent();
-      Node block = assign.getParent();
-
-      parent.removeChild(functionNode);
-      newNameNode.addChildToFront(functionNode);
-
-      block.addChildAfter(newVarNode, assign);
-      NodeUtil.deleteNode(assign, compiler);
-    } else {
-      // Case: `a = {foo: function() { }};`
-      checkArgument(parent.isObjectLit(), parent);
-
-      functionNode = node.getFirstChild();
-      Node assign = parent.getParent();
-      Node expr = assign.getParent();
-      Node block = expr.getParent();
-
-      node.removeChild(functionNode);
-      parent.removeChild(node);
-      newNameNode.addChildToFront(functionNode);
-      block.addChildAfter(newVarNode, expr);
+      default:
+        throw new IllegalArgumentException(definitionSite.toString());
     }
 
+    // Define a new variable after the original declaration.
+    Node statement = NodeUtil.getEnclosingStatement(definitionSite);
+    Node newNameNode = IR.name(newMethodName).useSourceInfoIfMissingFrom(nameSource);
+    Node newVarNode = IR.var(newNameNode).useSourceInfoIfMissingFrom(nameSource);
+    statement.getParent().addChildBefore(newVarNode, statement);
+
+    // Attatch the function to the new variable.
+    function.detach();
+    newNameNode.addChildToFront(function);
+
+    // Create the `this` param.
+    String selfName = newMethodName + "$self";
+    Node paramList = function.getSecondChild();
+    paramList.addChildToFront(IR.name(selfName).useSourceInfoIfMissingFrom(function));
+    compiler.reportChangeToEnclosingScope(paramList);
+
+    // Eliminate `this`.
+    Node body = function.getLastChild();
+    replaceReferencesToThis(body, selfName);
+
+    fixFunctionType(function);
+
+    // Clean up dangling AST.
+    NodeUtil.deleteNode(subtreeToRemove, compiler);
     compiler.reportChangeToEnclosingScope(newVarNode);
-
-    // add extra argument
-    String self = newMethodName + "$self";
-    Node argList = functionNode.getSecondChild();
-    argList.addChildToFront(IR.name(self)
-        .useSourceInfoIfMissingFrom(functionNode));
-    compiler.reportChangeToEnclosingScope(argList);
-
-    // rewrite body
-    Node body = functionNode.getLastChild();
-    if (replaceReferencesToThis(body, self)) {
-      compiler.reportChangeToEnclosingScope(body);
-    }
-
-    // fix type
-    fixFunctionType(functionNode);
   }
 
   /**
@@ -442,29 +471,22 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
         unknown, method.getReturnType(), paramTypes);
   }
 
-  /**
-   * Replaces references to "this" with references to name.  Do not
-   * traverse function boundaries.
-   */
-  private static boolean replaceReferencesToThis(Node node, String name) {
-    // TODO(nickreid): This won't work with arrow functions. `this` has different bindings.
-    if (node.isFunction()) {
-      return false;
+  /** Replaces references to "this" with references to name. Do not traverse function boundaries. */
+  private void replaceReferencesToThis(Node node, String name) {
+    if (node.isFunction() && !node.isArrowFunction()) {
+      // Functions (besides arrows) create a new binding for `this`.
+      return;
     }
 
-    boolean changed = false;
     for (Node child : node.children()) {
       if (child.isThis()) {
-        Node newName = IR.name(name);
-        newName.setJSType(child.getJSType());
+        Node newName = IR.name(name).useSourceInfoFrom(child).setJSType(child.getJSType());
         node.replaceChild(child, newName);
-        changed = true;
+        compiler.reportChangeToEnclosingScope(newName);
       } else {
-        changed |= replaceReferencesToThis(child, name);
+        replaceReferencesToThis(child, name);
       }
     }
-
-    return changed;
   }
 
   @Nullable
@@ -472,5 +494,49 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
     Node script = NodeUtil.getEnclosingScript(node);
     CompilerInput input = compiler.getInput(script.getInputId());
     return input.getModule();
+  }
+
+  private static String rewrittenMethodNameOf(String originalMethodName) {
+    return "JSCompiler_StaticMethods_" + originalMethodName;
+  }
+
+  /**
+   * Returns {@code true} iff a node may change the variable bindings of its subtree or cause that
+   * subtree to be executed not exactly once.
+   *
+   * <p>This method does not include CLASS because CLASS does not always create a new binding and it
+   * is important for the success of this optimization to consider class methods.
+   *
+   * @see {@link #localNameIsDeclaredByClass()}
+   */
+  private static boolean isScopingOrBranchingConstruct(Node node) {
+    return NodeUtil.isControlStructure(node) // Branching.
+        || node.isAnd() // Branching.
+        || node.isOr() // Branching.
+        || node.isFunction() // Branching & scoping.
+        || node.isBlock(); // Scoping.
+  }
+
+  /**
+   * Returns {@code true} iff a CLASS subtree declares a name local to the class body.
+   *
+   * <p>Example:
+   *
+   * <pre>{@code
+   * const Foo = class Bar {
+   *   qux() { return Bar; }
+   * }
+   * }</pre>
+   */
+  private static boolean localNameIsDeclaredByClass(Node clazz) {
+    checkArgument(clazz.isClass(), clazz);
+
+    if (clazz.getFirstChild().isEmpty()) {
+      return false; // There must be a name.
+    } else if (NodeUtil.isStatement(clazz)) {
+      return false; // The name must be local.
+    }
+
+    return true;
   }
 }
