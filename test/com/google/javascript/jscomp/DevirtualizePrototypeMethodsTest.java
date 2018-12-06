@@ -318,66 +318,93 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
             "function B(){};",
             "B.prototype.getFoo = function() { return 1; }; ",
             "",
-            "(Math.random() ? new A() : new B()).getFoo();"),
+            "x.getFoo();"),
         lines(
-            "function A(){}; ",
-            "var JSCompiler_StaticMethods_getFoo=",
-            "  function(JSCompiler_StaticMethods_getFoo$self){return 1};",
+            "function A() {}; ",
+            "var JSCompiler_StaticMethods_getFoo =",
+            "    function(JSCompiler_StaticMethods_getFoo$self) { return 1; };",
             "",
             "function B(){};",
-            // Dead definition.
-            "B.prototype.getFoo=function(){return 1};",
+            "B.prototype.getFoo = function() { return 1 };", // Dead definition.
             "",
-            "JSCompiler_StaticMethods_getFoo(Math.random() ? new A() : new B());"));
+            "JSCompiler_StaticMethods_getFoo(x);"));
   }
 
   @Test
   public void testRewrite_ifMultipleIdenticalDefinitions_ensuresDefinitionBeforeInvocations() {
     test(
         lines(
-            "function A(){};",
+            "function A() {};",
             "A.prototype.getFoo = function() { return 1; }; ",
             "",
-            "(new A()).getFoo();",
+            "x.getFoo();",
             "",
-            "function B(){};",
+            "function B() {};",
             "B.prototype.getFoo = function() { return 1; }; ",
             "",
-            "(new B()).getFoo();"),
+            "y.getFoo();"),
         lines(
-            "function A(){}; ",
-            "var JSCompiler_StaticMethods_getFoo=",
-            "  function(JSCompiler_StaticMethods_getFoo$self){return 1};",
+            "function A() {}; ",
+            "var JSCompiler_StaticMethods_getFoo =",
+            "    function(JSCompiler_StaticMethods_getFoo$self) { return 1; };",
             "",
-            "JSCompiler_StaticMethods_getFoo(new A());",
+            "JSCompiler_StaticMethods_getFoo(x);",
             "",
-            "function B(){};",
-            // Dead definition.
-            "B.prototype.getFoo=function(){return 1};",
+            "function B() {};",
+            "B.prototype.getFoo=function() { return 1; };", // Dead definition.
             "",
-            "JSCompiler_StaticMethods_getFoo(new B());"));
+            "JSCompiler_StaticMethods_getFoo(y);"));
   }
 
   @Test
   public void testRewrite_ifMultipleIdenticalDefinitions_withThis() {
     test(
         lines(
-            "function A(){}; A.prototype.getFoo = ",
-            "function() { return this._foo + 1; }; ",
-            "function B(){}; B.prototype.getFoo = ",
-            "function() { return this._foo + 1; }; ",
-            "var x = Math.random() ? new A() : new B();",
-            "alert(x.getFoo());"),
+            "function A() {};",
+            "A.prototype.getFoo = function() { return this._foo + 1; };",
+            "",
+            "function B() {};",
+            "B.prototype.getFoo = function() { return this._foo + 1; }; ",
+            "",
+            "x.getFoo();"),
         lines(
-            "function A(){}; ",
-            "var JSCompiler_StaticMethods_getFoo=",
-            "function(JSCompiler_StaticMethods_getFoo$self){",
-            "  return JSCompiler_StaticMethods_getFoo$self._foo + 1",
-            "};",
-            "function B(){};",
-            "B.prototype.getFoo=function(){return this._foo + 1};",
-            "var x = Math.random() ? new A() : new B();",
-            "alert(JSCompiler_StaticMethods_getFoo(x));"));
+            "function A() {}; ",
+            "var JSCompiler_StaticMethods_getFoo =",
+            "    function(JSCompiler_StaticMethods_getFoo$self) {",
+            "      return JSCompiler_StaticMethods_getFoo$self._foo + 1",
+            "    };",
+            "",
+            "function B() {};",
+            "B.prototype.getFoo = function() { return this._foo + 1 };", // Dead definition.
+            "",
+            "JSCompiler_StaticMethods_getFoo(x);"));
+  }
+
+  @Test
+  public void testRewrite_ifMultipleIdenticalDefinitions_withLocalNames() {
+    // TODO(nickreid): This is actually dangerous, however because `Normalize` is run before
+    // devirtualization, this shouldn't ever happen. All local names will be unique. Maybe back off
+    // in this case too.
+    test(
+        lines(
+            // Note how `f` refers to different objects in the function bodies, even though the
+            // bodies are node-wise identical.
+            "function A() {};",
+            "A.prototype.getFoo = function f() { return f.prop; }; ",
+            "",
+            "function B() {};",
+            "B.prototype.getFoo = function f() { return f.prop; }; ",
+            "",
+            "x.getFoo();"),
+        lines(
+            "function A() {}; ",
+            "var JSCompiler_StaticMethods_getFoo =",
+            "    function f(JSCompiler_StaticMethods_getFoo$self) { return f.prop; };",
+            "",
+            "function B() {};",
+            "B.prototype.getFoo = function f() { return f.prop; };", // Dead definition.
+            "",
+            "JSCompiler_StaticMethods_getFoo(x);"));
   }
 
   @Test
