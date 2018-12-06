@@ -1248,6 +1248,15 @@ public final class NodeUtil {
       case COMPUTED_PROP:
         break;
 
+      case GETPROP:
+        // TODO(johnplaisted): Eventually all call sites should no longer pass in null.
+        if (compiler != null
+            && compiler.getPropertyAccessKind(n.getLastChild().getString()).hasGetter()) {
+          return true;
+        } else {
+          break;
+        }
+
       default:
         if (isSimpleOperator(n)) {
           break;
@@ -1532,6 +1541,12 @@ public final class NodeUtil {
       case NAME:
         // A variable definition.
         return n.hasChildren();
+      case GETPROP:
+        if (compiler == null) {
+          // TODO(johnplaisted): Eventually all call sites should no longer pass in null.
+          return false;
+        }
+        return compiler.getPropertyAccessKind(n.getLastChild().getString()).hasGetterOrSetter();
       default:
         return false;
     }

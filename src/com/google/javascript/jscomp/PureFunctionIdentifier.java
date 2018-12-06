@@ -500,6 +500,12 @@ class PureFunctionIdentifier implements CompilerPass {
       }
     }
 
+    /**
+     * Updates the side effects of a given node.
+     *
+     * <p>This node should be known to (possibly have) side effects. This method does not check if
+     * the node (possibly) has side effects.
+     */
     public void updateSideEffectsForNode(
         FunctionInformation sideEffectInfo,
         NodeTraversal traversal,
@@ -590,6 +596,10 @@ class PureFunctionIdentifier implements CompilerPass {
       } else if (node.isAwait()) {
         // 'await' throws if the promise it's waiting on is rejected.
         sideEffectInfo.setFunctionThrows();
+      } else if (node.isGetProp()) {
+        // Getprops only have side effects if they are getters or setters. Assume it taints global
+        // state.
+        sideEffectInfo.setTaintsGlobalState();
       } else {
         throw new IllegalArgumentException("Unhandled side effect node type " + node);
       }

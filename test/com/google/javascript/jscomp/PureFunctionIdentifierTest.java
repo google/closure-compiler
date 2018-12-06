@@ -2469,6 +2469,40 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         });
   }
 
+  @Test
+  public void testReferenceGetters() {
+    String prefix = "function f(){";
+    String suffix = "} f()";
+    List<String> expected = ImmutableList.of("f");
+
+    assertPureCallsMarked(prefix + "var a = {get x() {}};" + suffix, expected);
+
+    assertNoPureCalls(prefix + "var a = {get x() {}}; a.x;" + suffix);
+
+    assertPureCallsMarked("var a = {get x() {}};" + prefix + suffix, expected);
+
+    assertNoPureCalls("var a = {get x() {}};" + prefix + "a.x;" + suffix);
+
+    assertPureCallsMarked("var a = {get x() {}}; a.x;" + prefix + suffix, expected);
+  }
+
+  @Test
+  public void testReferenceSetters() {
+    String prefix = "function f(){";
+    String suffix = "} f()";
+    List<String> expected = ImmutableList.of("f");
+
+    assertPureCallsMarked(prefix + "var a = {set x(v) {}};" + suffix, expected);
+
+    assertNoPureCalls(prefix + "var a = {set x(v) {}}; a.x = 0;" + suffix);
+
+    assertPureCallsMarked("var a = {set x(v) {}};" + prefix + suffix, expected);
+
+    assertNoPureCalls("var a = {set x(v) {}};" + prefix + "a.x = 0;" + suffix);
+
+    assertPureCallsMarked("var a = {set x(v) {}}; a.x = 0;" + prefix + suffix, expected);
+  }
+
   void assertNoPureCalls(String source) {
     assertPureCallsMarked(source, ImmutableList.<String>of(), null);
   }
