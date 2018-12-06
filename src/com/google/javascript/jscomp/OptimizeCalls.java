@@ -16,8 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
@@ -103,62 +106,89 @@ class OptimizeCalls implements CompilerPass {
     }
 
     /**
-     * Given a set of references, returns the set of known definitions. Specifically,
-     * those of the form:
-     *    function x() { }
-     * or
-     *    x = ...;
+     * Given a set of references, returns the set of known definitions; specifically, those of the
+     * form: `function x() { }` or `x = ...;`
      *
-     * As much as possible, functions are collected from conditional definitions. This
-     * is useful for optimizations that can be performed when the callers are known but
-     * all definitions may not be (unused call results, parameters that are never provided).
-     * Examples expressions:
+     * <p>As much as possible, functions are collected from conditional definitions. This is useful
+     * for optimizations that can be performed when the callers are known but all definitions may
+     * not be (unused call results, parameters that are never provided). Examples expressions:
      *
-     *   (a(), function() {})
-     *   a && function(){}
-     *   b || function(){}
-     *   a ? function() {} : function() {}
+     * <ul>
+     *   <li>`(a(), function() {})`
+     *   <li>`a && function(){}`
+     *   <li>`b || function(){}`
+     *   <li>`a ? function() {} : function() {}`
+     * </ul>
      *
+     * @param definitionSites The definition site nodes to search for associated functions. These
+     *     should taken from a {@link ReferenceMap} since only the node types collected by {@link
+     *     ReferenceMap} are supported.
+     * @return A mapping from the input {@code definitionSites} to each of their associated
+     *     functions.
      */
-    static ArrayList<Node> getFunctionNodes(List<Node> references) {
-      ArrayList<Node> fns = new ArrayList<>();
-      for (Node n : references) {
-        addDefinitionFunctionNodes(fns, n);
+    static ImmutableListMultimap<Node, Node> getFunctionNodes(List<Node> definitionSites) {
+      ImmutableListMultimap.Builder<Node, Node> result = ImmutableListMultimap.builder();
+      for (Node def : definitionSites) {
+        result.putAll(def, definitionFunctionNodesFor(def));
       }
-      return fns;
+      return result.build();
     }
 
-    private static void addDefinitionFunctionNodes(ArrayList<Node> fns, Node n) {
-      Node parent = n.getParent();
-      if (parent != null) {
-        switch (parent.getToken()) {
-          case FUNCTION:
-            fns.add(parent);
-            break;
-          case CLASS_MEMBERS:
-            if (n.isMemberFunctionDef()) {
-              fns.add(n.getLastChild());
-            }
-            break;
-          case ASSIGN:
-            // Only a candidate if the assign isn't consumed.
-            Node target = parent.getFirstChild();
-            Node value = parent.getLastChild();
-            if (n == target) {
-              addValueFunctionNodes(fns, value);
-            }
-            break;
-          case CONST:
-          case LET:
-          case VAR:
-            if (n.isName() && n.hasChildren()) {
-              addValueFunctionNodes(fns, n.getFirstChild());
-            }
-            break;
-          default:
-            break;
-        }
+    /**
+     * Collects potential definition FUNCTIONs associated with a method definition site.
+     *
+     * @see {@link #getFunctionNodes()}
+     */
+    private static List<Node> definitionFunctionNodesFor(Node definitionSite) {
+      if (definitionSite.isGetterDef() || definitionSite.isSetterDef()) {
+        // TODO(nickreid): Support getters and setters. Ignore them for now since they aren't
+        // "called".
+        return ImmutableList.of();
       }
+
+      // Ignore detached nodes.
+      Node parent = definitionSite.getParent();
+      if (parent == null) {
+        return ImmutableList.of();
+      }
+
+      ArrayList<Node> fns = new ArrayList<>();
+      switch (parent.getToken()) {
+        case FUNCTION:
+          fns.add(parent);
+          break;
+
+        case CLASS_MEMBERS:
+          checkArgument(definitionSite.isMemberFunctionDef());
+          fns.add(definitionSite.getLastChild());
+          break;
+
+        case OBJECTLIT:
+          checkArgument(definitionSite.isStringKey());
+          addValueFunctionNodes(fns, definitionSite.getLastChild());
+          break;
+
+        case ASSIGN:
+          // Only a candidate if the assign isn't consumed.
+          Node target = parent.getFirstChild();
+          Node value = parent.getLastChild();
+          if (definitionSite == target) {
+            addValueFunctionNodes(fns, value);
+          }
+          break;
+
+        case CONST:
+        case LET:
+        case VAR:
+          if (definitionSite.isName() && definitionSite.hasChildren()) {
+            addValueFunctionNodes(fns, definitionSite.getFirstChild());
+          }
+          break;
+
+        default:
+          break;
+      }
+      return fns;
     }
 
     private static void addValueFunctionNodes(ArrayList<Node> fns, Node n) {
@@ -220,14 +250,18 @@ class OptimizeCalls implements CompilerPass {
      */
     static Node getCallOrNewNodeForTarget(Node n) {
       Node maybeCall = n.getParent();
-      checkState(maybeCall.getFirstChild() == n);
+      checkState(n.isFirstChildOf(maybeCall), "%s\n\n%s", maybeCall, n);
+
       if (NodeUtil.isCallOrNew(maybeCall)) {
         return maybeCall;
       } else {
         Node child = maybeCall;
         maybeCall = child.getParent();
-        checkState(
-            child.isGetProp() && maybeCall.isCall() && maybeCall.getFirstChild() == child, child);
+
+        checkState(child.isGetProp(), child);
+        checkState(maybeCall.isCall(), maybeCall);
+        checkState(child.isFirstChildOf(maybeCall), "%s\n\n%s", maybeCall, child);
+
         return maybeCall;
       }
     }

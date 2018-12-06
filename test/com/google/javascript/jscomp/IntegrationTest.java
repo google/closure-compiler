@@ -6523,7 +6523,12 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testGithubIssue3040() {
+  public void testNoDevirtualization_whenSingleDefinitionInSource_ifNameCollidesWithExtern() {
+    // See https://github.com/google/closure-compiler/issues/3040
+    //
+    // We run this as an integration test because it depends on the extern properties having been
+    // collected.
+
     CompilerOptions options = createCompilerOptions();
     options.checkTypes = true;
     options.devirtualizePrototypeMethods = true;
@@ -6541,29 +6546,23 @@ public final class IntegrationTest extends IntegrationTestCase {
                 "}")));
     externs = externsList.build();
 
-    test(
+    testSame(
         options,
         lines(
-            "class X {",
-            "  restart(n) {",
-            "    console.log(n);",
-            "  }",
+            "/** @constructor */",
+            "var X = function() { }",
+            "",
+            "X.prototype.restart = function(n) {",
+            "  console.log(n);",
             "}",
+            "",
             "/** @param {SomeExternType} e */",
             "function f(e) {",
+            // Notice how `restart` has not been rewritten even though there is only one
+            // definition in the sources. A single definition is not a sufficient condition. An
+            // extern property may exist with the same name but no definition.
             "  new X().restart(5);",
             "  e.restart();",
-            "}"),
-        lines(
-            "var X = function() {};",
-            "var JSCompiler_StaticMethods_restart = function(",
-            "    JSCompiler_StaticMethods_restart$self, n) {",
-            "  console.log(n)",
-            "};",
-            "function f(e) {",
-            "  JSCompiler_StaticMethods_restart(new X, 5);",
-            // TODO(tjgq): The following line should be `e.restart()`.
-            "  JSCompiler_StaticMethods_restart(e)",
             "}"));
   }
 

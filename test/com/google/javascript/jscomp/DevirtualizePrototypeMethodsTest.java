@@ -205,23 +205,14 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
                            NoRewriteDeclarationUsedAsRValue.CALL));
   }
 
-  /**
-   * Inputs for restrict-to-global-scope tests.
-   */
-  private static class NoRewriteIfNotInGlobalScopeTestInput {
-    static final String INPUT =
+  @Test
+  public void testRewrite_ifDefined_unconditionally() {
+    test(
         lines(
             "function a(){}",
             "a.prototype.foo = function() {return this.x};",
             "var o = new a;",
-            "o.foo()");
-
-    private NoRewriteIfNotInGlobalScopeTestInput() {}
-  }
-
-  @Test
-  public void testRewriteInGlobalScope() {
-    String expected =
+            "o.foo()"),
         lines(
             "function a(){}",
             "var JSCompiler_StaticMethods_foo = ",
@@ -229,50 +220,146 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
             "  return JSCompiler_StaticMethods_foo$self.x",
             "};",
             "var o = new a;",
-            "JSCompiler_StaticMethods_foo(o);");
+            "JSCompiler_StaticMethods_foo(o);"));
+  }
 
-    test(NoRewriteIfNotInGlobalScopeTestInput.INPUT, expected);
+  private void testNoRewriteIfDefinitionSiteBetween(String prefix, String suffix) {
+    testSame(
+        lines(
+            "function a(){}",
+            prefix + "a.prototype.foo = function() {return this.x}" + suffix + ";",
+            "var o = new a;",
+            "o.foo()"));
   }
 
   @Test
-  public void testNoRewriteIfNotInGlobalScope1() {
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
-    testSame("if(true){" + NoRewriteIfNotInGlobalScopeTestInput.INPUT + "}");
+  public void testNoRewrite_ifDefinedIn_ifScope() {
+    testNoRewriteIfDefinitionSiteBetween("if (true) ", "");
   }
 
   @Test
-  public void testNoRewriteIfNotInGlobalScope2() {
-    testSame("function enclosingFunction() {" +
-             NoRewriteIfNotInGlobalScopeTestInput.INPUT +
-             "}");
+  public void testNoRewrite_ifDefinedIn_loopScope() {
+    testNoRewriteIfDefinitionSiteBetween("while (true) ", "");
   }
 
   @Test
-  public void testNoRewriteNamespaceFunctions() {
+  public void testNoRewrite_ifDefinedIn_switchScope() {
+    testNoRewriteIfDefinitionSiteBetween("switch (true) { case true: ", "; }");
+  }
+
+  @Test
+  public void testNoRewrite_ifDefinedIn_functionScope() {
+    testNoRewriteIfDefinitionSiteBetween("function f() { ", "; }");
+  }
+
+  @Test
+  public void testNoRewrite_ifDefinedIn_arrowFunctionScope() {
+    testNoRewriteIfDefinitionSiteBetween("() => ", "");
+  }
+
+  @Test
+  public void testNoRewrite_ifDefinedIn_blockScope() {
+    // Some declarations are block scoped in ES6 and so might have different values. This could make
+    // multiple definitions with identical node structure behave differently.
+    testNoRewriteIfDefinitionSiteBetween("{ ", "; }");
+  }
+
+  @Test
+  public void testNoRewrite_ifDefinedBy_andExpression_withLiteral() {
+    // TODO(nickreid): This may be unnecessarily restrictive. We could probably rely on the
+    // definitions being identical or not to filter this case.
+    testNoRewriteIfDefinitionSiteBetween("", " && function() {}");
+  }
+
+  @Test
+  public void testNoRewrite_ifDefinedBy_andExpression_withReference() {
+    testNoRewriteIfDefinitionSiteBetween("", " && bar");
+  }
+
+  @Test
+  public void testNoRewrite_ifDefinedBy_orExpression_withLiteral() {
+    // TODO(nickreid): This may be unnecessarily restrictive. We could probably rely on the
+    // definitions being identical or not to filter this case.
+    testNoRewriteIfDefinitionSiteBetween("", " || function() {}");
+  }
+
+  @Test
+  public void testNoRewrite_ifDefinedBy_orExpression_withReference() {
+    testNoRewriteIfDefinitionSiteBetween("", " || bar");
+  }
+
+  @Test
+  public void testNoRewrite_ifDefinedBy_ternaryExpression_withLiteral() {
+    // TODO(nickreid): This may be unnecessarily restrictive. We could probably rely on the
+    // definitions being identical or not to filter this case.
+
+    // Make the functions look different, just to be safe.
+    testNoRewriteIfDefinitionSiteBetween("", " ? function() { this.a; } : function() { this.b; }");
+  }
+
+  @Test
+  public void testNoRewrite_ifDefinedBy_ternaryExpression_withReference() {
+    testNoRewriteIfDefinitionSiteBetween("", " ? function() { } : bar");
+  }
+
+  @Test
+  public void testNoRewrite_namespaceFunctions() {
     String source = "function a(){}; a.foo = function() {return this.x}; a.foo()";
     testSame(source);
   }
 
   @Test
-  public void testRewriteIfDuplicates() {
+  public void testRewrite_ifMultipleIdenticalDefinitions() {
     test(
         lines(
-            "function A(){}; A.prototype.getFoo = function() { return 1; }; ",
-            "function B(){}; B.prototype.getFoo = function() { return 1; }; ",
-            "var x = Math.random() ? new A() : new B();",
-            "alert(x.getFoo());"),
+            "function A(){};",
+            "A.prototype.getFoo = function() { return 1; }; ",
+            "",
+            "function B(){};",
+            "B.prototype.getFoo = function() { return 1; }; ",
+            "",
+            "(Math.random() ? new A() : new B()).getFoo();"),
         lines(
             "function A(){}; ",
             "var JSCompiler_StaticMethods_getFoo=",
-            "function(JSCompiler_StaticMethods_getFoo$self){return 1};",
+            "  function(JSCompiler_StaticMethods_getFoo$self){return 1};",
+            "",
             "function B(){};",
+            // Dead definition.
             "B.prototype.getFoo=function(){return 1};",
-            "var x = Math.random() ? new A() : new B();",
-            "alert(JSCompiler_StaticMethods_getFoo(x));"));
+            "",
+            "JSCompiler_StaticMethods_getFoo(Math.random() ? new A() : new B());"));
   }
 
   @Test
-  public void testRewriteIfDuplicatesWithThis() {
+  public void testRewrite_ifMultipleIdenticalDefinitions_ensuresDefinitionBeforeInvocations() {
+    test(
+        lines(
+            "function A(){};",
+            "A.prototype.getFoo = function() { return 1; }; ",
+            "",
+            "(new A()).getFoo();",
+            "",
+            "function B(){};",
+            "B.prototype.getFoo = function() { return 1; }; ",
+            "",
+            "(new B()).getFoo();"),
+        lines(
+            "function A(){}; ",
+            "var JSCompiler_StaticMethods_getFoo=",
+            "  function(JSCompiler_StaticMethods_getFoo$self){return 1};",
+            "",
+            "JSCompiler_StaticMethods_getFoo(new A());",
+            "",
+            "function B(){};",
+            // Dead definition.
+            "B.prototype.getFoo=function(){return 1};",
+            "",
+            "JSCompiler_StaticMethods_getFoo(new B());"));
+  }
+
+  @Test
+  public void testRewrite_ifMultipleIdenticalDefinitions_withThis() {
     test(
         lines(
             "function A(){}; A.prototype.getFoo = ",
@@ -294,7 +381,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoRewriteIfDuplicates() {
+  public void testNoRewrite_ifMultipleDistinctDefinitions() {
     testSame(
         lines(
             "function A(){}; A.prototype.getFoo = function() { return 1; }; ",
@@ -327,7 +414,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRewritePrototypeObjectLiterals1() {
+  public void testRewrite_definedUsingProtoObjectLit() {
     test(
         semicolonJoin(
             NoRewritePrototypeObjectLiteralsTestInput.OBJ_LIT,
@@ -340,24 +427,26 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoRewritePrototypeObjectLiterals2() {
+  public void testNoRewrite_multipleDefinitions_definedUsingProtoObjectLit_definedUsingGetProp() {
     testSame(semicolonJoin(NoRewritePrototypeObjectLiteralsTestInput.OBJ_LIT,
                            NoRewritePrototypeObjectLiteralsTestInput.REGULAR,
                            NoRewritePrototypeObjectLiteralsTestInput.CALL));
   }
 
   @Test
-  public void testNoRewriteExternalMethods1() {
+  public void testNoRewrite_noDefinition() {
     testSame("a.externalMethod()");
   }
 
   @Test
-  public void testNoRewriteExternalMethods2() {
-    testSame("A.prototype.externalMethod = function(){}; o.externalMethod()");
+  public void testNoRewrite_externMethod() {
+    testSame(
+        externs("A.prototype.externalMethod = function(){};"), //
+        srcs("o.externalMethod()"));
   }
 
   @Test
-  public void testNoRewriteCodingConvention() {
+  public void testNoRewrite_exportedMethod_viaCodingConvention() {
     // no rename, leading _ indicates exported symbol
     testSame("a.prototype._foo = function() {};");
   }
@@ -404,7 +493,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRewriteCallReference() {
+  public void testRewrite_callReference() {
     String expected =
         lines(
             "function a(){}",
@@ -419,13 +508,36 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoRewriteNoReferences() {
+  public void testNoRewrite_noReferences() {
     testSame(NoRewriteNonCallReferenceTestInput.BASE);
   }
 
   @Test
-  public void testNoRewriteNonCallReference() {
+  public void testNoRewrite_nonCallReference_viaGetprop() {
     testSame(NoRewriteNonCallReferenceTestInput.BASE + "o.foo && o.foo()");
+  }
+
+  @Test
+  public void testNoRewrite_nonCallReference_viaGetprop_usingFnCall() {
+    // TODO(nickreid): Add rewriting support for this.
+    testSame(NoRewriteNonCallReferenceTestInput.BASE + "o.foo.call(null) && o.foo()");
+  }
+
+  @Test
+  public void testNoRewrite_nonCallReference_viaGetprop_usingFnApply() {
+    // TODO(nickreid): Add rewriting support for this.
+    testSame(NoRewriteNonCallReferenceTestInput.BASE + "o.foo.apply(null) && o.foo()");
+  }
+
+  @Test
+  public void testNoRewrite_nonCallReference_viaGetprop_asArgument() {
+    testSame(NoRewriteNonCallReferenceTestInput.BASE + "bar(o.foo, null) && o.foo()");
+  }
+
+  @Test
+  public void testNoRewrite_nonCallReference_viaNew() {
+    // TODO(nickreid): Add rewriting support for this.
+    testSame(NoRewriteNonCallReferenceTestInput.BASE + "new o.foo() && o.foo()");
   }
 
   /**
@@ -469,7 +581,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRewriteImplementedMethod() {
+  public void testRewrite_definedUsingGetProp_with_callUsingGetProp() {
     String source =
         lines(
             "function a(){}",
@@ -487,7 +599,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRewriteImplementedMethod2() {
+  public void testRewrite_definedUsingGetElem_with_callUsingGetProp() {
     String source =
         lines(
             "function a(){}",
@@ -498,7 +610,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRewriteImplementedMethod3() {
+  public void testNoRewrite_definedUsingGetProp_with_noCall_bracketAccess() {
     String source =
         lines(
             "function a(){}",
@@ -509,7 +621,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRewriteImplementedMethod4() {
+  public void testNoRewrite_definedUsingGetElem_with_noCall_bracketAccess() {
     String source =
         lines(
             "function a(){}",
@@ -520,26 +632,48 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRewriteImplementedMethod5() {
-    String source = "(function() {this.foo()}).prototype.foo = function() {extern();};";
-    testSame(source);
+  public void testRewrite_definedOnScopeCreatingExpression_reportsScopeAsDeleted() {
+    test(
+        lines(
+            "(function() {}).prototype.foo = function() {extern();};",
+            // A call is needed to trigger rewriting.
+            "a.foo();"),
+        lines(
+            "var JSCompiler_StaticMethods_foo = function(JSCompiler_StaticMethods_foo$self) {",
+            "  extern();",
+            "};",
+            "JSCompiler_StaticMethods_foo(a);"));
   }
 
   @Test
-  public void testRewriteImplementedMethodInObj() {
-    String source =
+  public void testRewrite_definedOnExpressionWithSideEffects() {
+    // TODO(nickreid): Expect this not to be a rewrite (or confirm it's safe).
+    test(
+        lines(
+            "extern().prototype.foo = function() { };",
+            // A call is needed to trigger rewriting.
+            "a.foo()"),
+        // We think this is risky because if `extern()` had side effects they'd be eliminated.
+        lines(
+            "var JSCompiler_StaticMethods_foo=function(JSCompiler_StaticMethods_foo$self){};",
+            "JSCompiler_StaticMethods_foo(a)"));
+  }
+
+  @Test
+  public void testRewrite_definedUsingStringKey_inPrototypeLiteral_with_callUsingGetProp() {
+    test(
         lines(
             "function a(){}",
             "a.prototype = {foo: function(args) {return args}};",
             "var o = new a;",
-            "o.foo()");
-    test(source,
-        "function a(){}" +
-        "a.prototype={};" +
-        "var JSCompiler_StaticMethods_foo=" +
-        "function(JSCompiler_StaticMethods_foo$self,args){return args};" +
-        "var o=new a;" +
-        "JSCompiler_StaticMethods_foo(o)");
+            "o.foo()"),
+        lines(
+            "function a(){}",
+            "a.prototype={};",
+            "var JSCompiler_StaticMethods_foo=",
+            "function(JSCompiler_StaticMethods_foo$self,args){return args};",
+            "var o=new a;",
+            "JSCompiler_StaticMethods_foo(o)"));
   }
 
   @Test
@@ -569,7 +703,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoRewriteNotImplementedMethod() {
+  public void testNoRewrite_notImplementedMethod() {
     testSame("function a(){}; var o = new a; o.foo()");
   }
 
@@ -679,6 +813,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new DevirtualizePrototypeMethods(compiler);
+    OptimizeCalls pass = new OptimizeCalls(compiler);
+    pass.addPass(new DevirtualizePrototypeMethods(compiler));
+    return pass;
   }
 }

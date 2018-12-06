@@ -16,9 +16,13 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.javascript.jscomp.DefinitionsRemover.Definition;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -28,24 +32,28 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * Rewrites prototyped methods calls as static calls that take "this"
- * as their first argument.  This transformation simplifies the call
- * graph so smart name removal, cross module code motion and other
- * passes can do more.
+ * Rewrites prototyped methods calls as static calls that take "this" as their first argument. This
+ * transformation simplifies the call graph so smart name removal, cross module code motion and
+ * other passes can do more.
  *
- * <p>This pass should only be used in production code if property
- * and variable renaming are turned on.  Resulting code may also
- * benefit from --collapse_anonymous_functions and
- * --collapse_variable_declarations
+ * <p>To work effectively, this pass depends on {@link DisambiguateProperties} running first to do a
+ * lot of heavy-lifting. It assumes that different methods will have unique names which in general
+ * isn't true for source JavaScript.
  *
- * <p>This pass only rewrites functions that are part of an objects
- * prototype.  Functions that access the "arguments" variable
- * arguments object are not eligible for this optimization.
+ * <p>This pass should only be used in production code if property and variable renaming are turned
+ * on. Resulting code may also benefit from `--collapse_anonymous_functions` and
+ * `--collapse_variable_declarations`
+ *
+ * <p>This pass only rewrites functions that are part of an object's prototype, as well as a host of
+ * other preconditions. Functions that access the "arguments" variable arguments object are not
+ * eligible for this optimization.
  *
  * <p>For example:
+ *
  * <pre>
  *     A.prototype.accumulate = function(value) {
  *       this.total += value; return this.total
@@ -63,7 +71,7 @@ import javax.annotation.Nullable;
  * </pre>
  *
  */
-class DevirtualizePrototypeMethods implements CompilerPass {
+class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPass {
   private final AbstractCompiler compiler;
 
   DevirtualizePrototypeMethods(AbstractCompiler compiler) {
@@ -71,29 +79,54 @@ class DevirtualizePrototypeMethods implements CompilerPass {
   }
 
   @Override
-  public void process(Node externs, Node root) {
-    DefinitionUseSiteFinder defFinder = new DefinitionUseSiteFinder(compiler);
-    defFinder.process(externs, root);
-    process(externs, root, defFinder);
-  }
-
-  public void process(
-      Node externs, Node root, DefinitionUseSiteFinder definitions) {
-    for (DefinitionSite defSite : definitions.getDefinitionSites()) {
-      rewriteDefinitionIfEligible(defSite, definitions);
+  public void process(Node externs, Node root, ReferenceMap refMap) {
+    for (Map.Entry<String, ArrayList<Node>> referenceGroup : refMap.getPropReferences()) {
+      processReferenceList(referenceGroup.getKey(), referenceGroup.getValue());
     }
   }
 
-  /**
-   * Determines if the name node acts as the function name in a call expression.
-   */
-  private static boolean isCall(UseSite site) {
-    Node node = site.node;
-    Node parent = node.getParent();
-    if (parent == null) {
-      return false;
+  private void processReferenceList(String name, List<Node> sites) {
+    ImmutableListMultimap<Node, Node> functionsBySite = ReferenceMap.getFunctionNodes(sites);
+    if (functionsBySite.isEmpty()) {
+      return; // We can't devirtualize without a definition.
     }
-    return (parent.getFirstChild() == node) && parent.isCall();
+
+    // Use the first definition to ensure that all invocations are after the definition
+    // (temporally). It's  possible that if class `A` is defined after class `B` there are calls to
+    // `A::foo` before `B::foo` is defined.
+    Node canonicalDefinitionSite = Iterables.get(functionsBySite.keySet(), 0);
+
+    ImmutableList<Node> callSites =
+        sites.stream()
+            // If a site has no associated functions, it must be a call site.
+            .filter((s) -> !functionsBySite.containsKey(s))
+            .collect(toImmutableList());
+    if (callSites.isEmpty()) {
+      return; // No need to devirtualize without calls.
+    }
+
+    // Check that this method is safe for devirtualization. These are in (estimated) increasing
+    // order of cost.
+    if (!functionsBySite.keySet().stream().allMatch((s) -> isEligibleDefinitionSite(name, s))) {
+      return;
+    } else if (!functionsBySite.values().stream().allMatch(this::isEligibleDefinitionFunction)) {
+      return;
+    } else if (!callSites.stream()
+        .allMatch((c) -> isEligibleCallSite(c, canonicalDefinitionSite))) {
+      return;
+    } else if (!allDefinitionsEquivalent(functionsBySite.values())) {
+      // Remember that this is only valid because we already checked the scoping of the definitions.
+      return;
+    }
+
+    String devirtualizedName = rewrittenMethodNameOf(name);
+
+    for (Node callSite : callSites) {
+      rewriteCall(callSite, devirtualizedName);
+    }
+    // We only have to rewrite one definition. We've checked they're all identical so any of them
+    // can replace the others. The un-rewritten ones will be dead-code eliminated.
+    rewriteDefinition(canonicalDefinitionSite, devirtualizedName);
   }
 
   /**
@@ -127,7 +160,7 @@ class DevirtualizePrototypeMethods implements CompilerPass {
       return nameNode.isGetProp() &&
           nameNode.getLastChild().getString().equals("prototype");
     } else if (node.isStringKey()) {
-      checkState(parent.isObjectLit());
+      checkArgument(parent.isObjectLit(), parent);
 
       if (!gramp.isAssign()) {
         return false;
@@ -155,225 +188,164 @@ class DevirtualizePrototypeMethods implements CompilerPass {
     }
   }
 
-  private static String getMethodName(Node node) {
-    if (node.isGetProp()) {
-      return node.getLastChild().getString();
-    } else if (node.isStringKey()) {
-      return node.getString();
-    } else {
-      throw new IllegalStateException("unexpected");
-    }
-  }
-
-  /**
-   * @return The new name for a rewritten method.
-   */
-  private static String getRewrittenMethodName(String originalMethodName) {
+  private static String rewrittenMethodNameOf(String originalMethodName) {
     return "JSCompiler_StaticMethods_" + originalMethodName;
   }
 
   /**
-   * Rewrites method definition and call sites if the method is
-   * defined in the global scope exactly once.
+   * Determines if a method definition site is eligible for rewrite as a global.
    *
-   * Definition and use site information is provided by the
-   * {@link DefinitionUseSiteFinder} passed in as an argument.
+   * <p>In order to be eligible for rewrite, the definition site must:
    *
-   * @param defSite definition site to process.
-   * @param defFinder structure that hold Node -> Definition and
-   * Definition -> [UseSite] maps.
+   * <ul>
+   *   <li>Not be exported
+   *   <li>Be for a prototype method
+   * </ul>
    */
-  private void rewriteDefinitionIfEligible(DefinitionSite defSite,
-                                           DefinitionUseSiteFinder defFinder) {
-    if (defSite.inExterns ||
-        !defSite.inGlobalScope ||
-        !isEligibleDefinition(defFinder, defSite)) {
-      return;
-    }
-
-    Node node = defSite.node;
-    if (!isPrototypeMethodDefinition(node)) {
-      return;
-    }
-
-    for (Node ancestor = node.getParent();
-         ancestor != null;
-         ancestor = ancestor.getParent()) {
-      if (NodeUtil.isControlStructure(ancestor)) {
-        return;
-      }
-    }
-
-    // TODO(user) The code only works if there is a single definition associated with a property
-    // name.
-    // Whatever scheme we use should not break stable renaming.
-    String newMethodName = getRewrittenMethodName(
-        getMethodName(node));
-    rewriteDefinition(node, newMethodName);
-    rewriteCallSites(defFinder, defSite.definition, newMethodName);
-  }
-
-  /**
-   * Determines if a method definition is eligible for rewrite as a
-   * global function.  In order to be eligible for rewrite, the
-   * definition must:
-   *
-   * - Refer to a function that takes a fixed number of arguments.
-   * - Function must not be exported.
-   * - Function must be used at least once.
-   * - Property is never accessed outside a function call context.
-   * - The definition under consideration must be the only possible
-   *   choice at each call site.
-   * - Definition must happen in a module loaded before the first use.
-   */
-  private boolean isEligibleDefinition(DefinitionUseSiteFinder defFinder,
-                                       DefinitionSite definitionSite) {
-
-    Definition definition = definitionSite.definition;
-    JSModule definitionModule = moduleForNode(definitionSite.node);
-
-    // Only functions may be rewritten.
-    // Functions that access "arguments" are not eligible since
-    // rewrite changes the structure of this object.
-    Node rValue = definition.getRValue();
-    if (rValue == null
-        || !rValue.isFunction()
-        || NodeUtil.doesFunctionReferenceOwnArgumentsObject(rValue)) {
-      return false;
-    }
-
-    Node lValue = definition.getLValue();
-    if ((lValue == null)
-        || !lValue.isGetProp()) {
-      return false;
-    }
-
-    // Note: the definition for prototype defined with an object literal returns
-    // a mock return LValue of the form "{}.prop".
-    if (!lValue.isQualifiedName()
-        && !lValue.getFirstChild().isObjectLit()) {
-      return false;
-    }
+  private boolean isEligibleDefinitionSite(String name, Node definitionSite) {
+    checkArgument(!definitionSite.isGetElem(), definitionSite);
 
     // Exporting a method prevents rewrite.
     CodingConvention codingConvention = compiler.getCodingConvention();
-    if (codingConvention.isExported(lValue.getLastChild().getString())) {
+    if (codingConvention.isExported(name)) {
       return false;
     }
 
-    Collection<UseSite> useSites = defFinder.getUseSites(definition);
-
-    // Rewriting unused methods is not sound.
-    if (useSites.isEmpty()) {
+    if (!isPrototypeMethodDefinition(definitionSite)) {
       return false;
     }
+
+    return true;
+  }
+
+  /**
+   * Determines if a method definition function is eligible for rewrite as a global function.
+   *
+   * <p>In order to be eligible for rewrite, the definition function must:
+   *
+   * <ul>
+   *   <li>Be instantiated exactly once
+   *   <li>Be the only possible implementation at a given site
+   *   <li>Not refer to its `arguments`; no implicit varags
+   * </ul>
+   */
+  private boolean isEligibleDefinitionFunction(Node definitionFunction) {
+    checkArgument(definitionFunction.isFunction(), definitionFunction);
+
+    // The definition must be made exactly once. (i.e. not in a loop, conditional, or function)
+    for (Node ancestor = definitionFunction.getParent();
+        ancestor != null;
+        ancestor = ancestor.getParent()) {
+      if (NodeUtil.isControlStructure(ancestor) // Single definition.
+          || ancestor.isAnd() // Single definition.
+          || ancestor.isOr() // Single definition.
+          || ancestor.isFunction() // Single definition / function scoped variables.
+          || ancestor.isBlock() // Block scoped variables.
+      ) {
+        return false;
+      }
+    }
+
+    if (NodeUtil.doesFunctionReferenceOwnArgumentsObject(definitionFunction)) {
+      // Functions that access "arguments" are not eligible since rewriting changes the structure of
+      // the function params.
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Determines if a method call is eligible for rewrite as a global function.
+   *
+   * <p>In order to be eligible for rewrite, the call must:
+   *
+   * <ul>
+   *   <li>Property is never accessed outside a function call context.
+   * </ul>
+   */
+  private boolean isEligibleCallSite(Node access, Node definitionSite) {
+    Node invocation = access.getParent();
+    if (!NodeUtil.isInvocationTarget(access) || !invocation.isCall()) {
+      // TODO(nickreid): Use the same definition of "a call" as
+      // `OptimizeCalls::ReferenceMap::isCallTarget`.
+      //
+      // Accessing the property in any way besides CALL has issues:
+      //   - tear-off: invocations can't be tracked
+      //   - as constructor: unsupported rewrite
+      //   - as tagged template string: unspported rewrite
+      return false;
+    }
+
+    // We can't rewrite functions called in modules that do not depend on the defining module.
+    // This is due to a subtle execution order change introduced by rewriting. Example:
+    //
+    //     `x.foo().bar()` => `JSCompiler_StaticMethods_bar(x.foo())`
+    //
+    // Note how `JSCompiler_StaticMethods_bar` will be resolved before `x.foo()` is executed. In
+    // the case that `x.foo()` defines `JSCompiler_StaticMethods_bar` (e.g. by dynamically loading
+    // the defining module) this change in ordering will cause a `ReferenceError`. No error would
+    // be thrown by the original code because `bar` would be resolved later.
+    //
+    // We choose to use module ordering to avoid this issue because:
+    //   - The other eligibility checks for devirtualization prevent any other dangerous cases
+    //     that JSCompiler supports.
+    //   - Rewriting all call-sites in a way that preserves exact ordering (e.g. using
+    //     `ExpressionDecomposer`) has a significant code-size impact (circa 2018-11-19).
 
     JSModuleGraph moduleGraph = compiler.getModuleGraph();
-
-    for (UseSite site : useSites) {
-      // Accessing the property directly prevents rewrite.
-      if (!isCall(site)) {
-        return false;
-      }
-
-      Node nameNode = site.node;
-
-      // Multiple definitions prevent rewrite.
-      Collection<Definition> singleSiteDefinitions =
-          defFinder.getDefinitionsReferencedAt(nameNode);
-      if (!allDefinitionsEquivalent(singleSiteDefinitions)) {
-        return false;
-      }
-      checkState(!singleSiteDefinitions.isEmpty());
-      checkState(singleSiteDefinitions.contains(definition));
-
-      // We can't rewrite functions called in modules that do not depend on the defining module.
-      // This is due to a subtle execution order change introduced by rewriting. Example:
-      //
-      //     `x.foo().bar()` => `JSCompiler_StaticMethods_bar(x.foo())`
-      //
-      // Note how `JSCompiler_StaticMethods_bar` will be resolved before `x.foo()` is executed. In
-      // the case that `x.foo()` defines `JSCompiler_StaticMethods_bar` (e.g. by dynamically loading
-      // the defining module) this change in ordering will cause a `ReferenceError`. No error would
-      // be thrown by the original code because `bar` would be resolved later.
-      //
-      // We choose to use module ordering to avoid this issue because:
-      //   - The other eligibility checks for devirtualization prevent any other dangerous cases
-      //     that JSCompiler supports.
-      //   - Rewriting all call-sites in a way that preserves exact ordering (e.g. using
-      //     `ExpressionDecomposer`) has a significant code-size impact (circa 2018-11-19).
-      @Nullable JSModule callModule = moduleForNode(nameNode);
-      if (definitionModule == callModule) {
-        // Do nothing.
-      } else if (callModule == null) {
-        return false;
-      } else if (!moduleGraph.dependsOn(callModule, definitionModule)) {
-        return false;
-      }
+    @Nullable JSModule definitionModule = moduleForNode(definitionSite);
+    @Nullable JSModule callModule = moduleForNode(access);
+    if (definitionModule == callModule) {
+      // Do nothing.
+    } else if (callModule == null) {
+      return false;
+    } else if (!moduleGraph.dependsOn(callModule, definitionModule)) {
+      return false;
     }
 
     return true;
   }
 
   /** Given a set of method definitions, verify they are the same. */
-  boolean allDefinitionsEquivalent(Collection<Definition> definitions) {
-    if (definitions.size() <= 1) {
+  private boolean allDefinitionsEquivalent(Collection<Node> definitions) {
+    if (definitions.isEmpty()) {
       return true;
     }
 
-    Definition first = null;
-    for (Definition definition : definitions) {
-      if (definition.getRValue() == null) {
-        return false; // We can't tell if they're all the same.
-      }
+    Node definition = Iterables.get(definitions, 0);
+    checkArgument(definition.isFunction(), definition);
 
-      if (first == null) {
-        first = definition;
-        continue;
-      }
-
-      if (!compiler.areNodesEqualForInlining(first.getRValue(), definition.getRValue())) {
-        return false;
-      }
-    }
-    return true;
+    return definitions.stream().allMatch((d) -> compiler.areNodesEqualForInlining(d, definition));
   }
 
   /**
-   * Rewrites object method call sites as calls to global functions
-   * that take "this" as their first argument.
+   * Rewrites object method call sites as calls to global functions that take "this" as their first
+   * argument.
    *
-   * Before:
-   *   o.foo(a, b, c)
+   * <p>Before: o.foo(a, b, c)
    *
-   * After:
-   *   foo(o, a, b, c)
+   * <p>After: foo(o, a, b, c)
    */
-  private void rewriteCallSites(DefinitionUseSiteFinder defFinder,
-                                Definition definition,
-                                String newMethodName) {
-    Collection<UseSite> useSites = defFinder.getUseSites(definition);
-    for (UseSite site : useSites) {
-      Node getprop = site.node;
-      checkState(getprop.isGetProp());
-      Node call = getprop.getParent();
-      checkState(call.isCall());
-      Node receiever = getprop.getFirstChild();
+  private void rewriteCall(Node getprop, String newMethodName) {
+    checkArgument(getprop.isGetProp(), getprop);
+    Node call = getprop.getParent();
+    checkArgument(call.isCall(), call);
+    Node receiever = getprop.getFirstChild();
 
-      // This rewriting does not exactly preserve order of operations; the newly inserted static
-      // method name will be resolved before `receiver` is evaluated. This is known to be safe due
-      // to the eligibility checks earlier in the pass.
-      //
-      // We choose not to do a full-fidelity rewriting (e.g. using `ExpressionDecomposer`) because
-      // doing so means extracting `receiver` into a new variable at each call-site. This  has a
-      // significant code-size impact (circa 2018-11-19).
+    // This rewriting does not exactly preserve order of operations; the newly inserted static
+    // method name will be resolved before `receiver` is evaluated. This is known to be safe due
+    // to the eligibility checks earlier in the pass.
+    //
+    // We choose not to do a full-fidelity rewriting (e.g. using `ExpressionDecomposer`) because
+    // doing so means extracting `receiver` into a new variable at each call-site. This  has a
+    // significant code-size impact (circa 2018-11-19).
 
-      getprop.removeChild(receiever);
-      call.replaceChild(getprop, receiever);
-      call.addChildToFront(IR.name(newMethodName).srcref(getprop));
-      call.putBooleanProp(Node.FREE_CALL, true);
-      compiler.reportChangeToEnclosingScope(call);
-    }
+    getprop.removeChild(receiever);
+    call.replaceChild(getprop, receiever);
+    call.addChildToFront(IR.name(newMethodName).srcref(getprop));
+    call.putBooleanProp(Node.FREE_CALL, true);
+    compiler.reportChangeToEnclosingScope(call);
   }
 
   /**
@@ -397,15 +369,22 @@ class DevirtualizePrototypeMethods implements CompilerPass {
 
     Node functionNode;
     if (!isObjLitDefKey) {
-      checkState(parent.isAssign());
+      // Case: `x.foo = function() { };`
+      checkArgument(parent.isAssign(), parent);
+
       functionNode = parent.getLastChild();
-      Node expr = parent.getParent();
-      Node block = expr.getParent();
+      Node assign = parent.getParent();
+      Node block = assign.getParent();
+
       parent.removeChild(functionNode);
       newNameNode.addChildToFront(functionNode);
-      block.replaceChild(expr, newVarNode);
+
+      block.addChildAfter(newVarNode, assign);
+      NodeUtil.deleteNode(assign, compiler);
     } else {
-      checkState(parent.isObjectLit());
+      // Case: `a = {foo: function() { }};`
+      checkArgument(parent.isObjectLit(), parent);
+
       functionNode = node.getFirstChild();
       Node assign = parent.getParent();
       Node expr = assign.getParent();
@@ -416,6 +395,7 @@ class DevirtualizePrototypeMethods implements CompilerPass {
       newNameNode.addChildToFront(functionNode);
       block.addChildAfter(newVarNode, expr);
     }
+
     compiler.reportChangeToEnclosingScope(newVarNode);
 
     // add extra argument
@@ -467,6 +447,7 @@ class DevirtualizePrototypeMethods implements CompilerPass {
    * traverse function boundaries.
    */
   private static boolean replaceReferencesToThis(Node node, String name) {
+    // TODO(nickreid): This won't work with arrow functions. `this` has different bindings.
     if (node.isFunction()) {
       return false;
     }

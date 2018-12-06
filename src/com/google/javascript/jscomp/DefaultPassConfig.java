@@ -2429,7 +2429,9 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory(PassNames.DEVIRTUALIZE_PROTOTYPE_METHODS, true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new DevirtualizePrototypeMethods(compiler);
+          OptimizeCalls passes = new OptimizeCalls(compiler);
+          passes.addPass(new DevirtualizePrototypeMethods(compiler));
+          return passes;
         }
 
         @Override

@@ -76,7 +76,7 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
 
     // Now modify the AST
     for (ArrayList<Node> refs : toOptimize) {
-      for (Node fn : ReferenceMap.getFunctionNodes(refs)) {
+      for (Node fn : ReferenceMap.getFunctionNodes(refs).values()) {
         rewriteReturns(fn);
       }
     }
