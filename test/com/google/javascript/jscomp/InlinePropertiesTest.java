@@ -531,4 +531,178 @@ public final class InlinePropertiesTest extends CompilerTestCase {
             "function f(/** ? */ x) { return x.foo; }",
             "f(new C());"));
   }
+
+  @Test
+  public void testConstInstanceProp_es6Class() {
+    // Replace a reference to known constant property.
+    test(
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.foo = 1;",
+            "  }",
+            "}",
+            "new C().foo;"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.foo = 1;",
+            "  }",
+            "}",
+            "new C(), 1;"));
+  }
+
+  @Test
+  public void testMultipleConstInstanceProp_es6Class() {
+    test(
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    /** @type {?number} */",
+            "    this.a = 1;",
+            "    /** @type {number} */",
+            "    this.b = 2;",
+            "  }",
+            "}",
+            "var x = (new Foo).b;"),
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    /** @type {?number} */",
+            "    this.a = 1;",
+            "    /** @type {number} */",
+            "    this.b = 2;",
+            "  }",
+            "}",
+            "var x = (new Foo, 2);"));
+  }
+
+  @Test
+  public void testConstInstancePropInArrowFunction_es6Class() {
+    // Don't replace a reference to known constant property defined in an arrow function.
+    testSame(
+        lines(
+            "/** @unrestricted */", // make this not a struct, so we can define this.foo
+            "class C {", //
+            "  constructor() {",
+            "    (() => {",
+            "      this.foo = 1;",
+            "    })();",
+            "  }",
+            "}",
+            "new C().foo;"));
+  }
+
+  @Test
+  public void testConstClassProps_es6Class() {
+    // Inline constant class properties,
+    test(
+        lines(
+            "class C {}", //
+            "C.bar = 2;",
+            "C.foo = 1;",
+            "var z = C.foo;"),
+        lines(
+            "class C {}", //
+            "C.bar = 2;",
+            "C.foo = 1;",
+            "var z = 1;"));
+  }
+
+  @Test
+  public void testConstClassPropsInheritedProp_es6Class() {
+    test(
+        lines(
+            "class C {}", //
+            "class D extends C {}",
+            "C.foo = 1;",
+            "var z = D.foo;\n"),
+        lines(
+            "class C {}", //
+            "class D extends C {}",
+            "C.foo = 1;",
+            "var z = 1;\n"));
+  }
+
+  @Test
+  public void testConstClassPropsInheritedPropChain_es6Class() {
+    test(
+        lines(
+            "class C {}", //
+            "class D extends C {}",
+            "class E extends D {}",
+            "class F extends E {}",
+            "C.foo = 1;",
+            "var z = F.foo;"),
+        lines(
+            "class C {}", //
+            "class D extends C {}",
+            "class E extends D {}",
+            "class F extends E {}",
+            "C.foo = 1;",
+            "var z = 1;"));
+  }
+
+  @Test
+  public void testConstClassPropsNonInheritedProp_es6Class() {
+    // Test that we don't accidentally treat the superclass as having a subclass prop
+    testSame(
+        lines(
+            "class C {}", //
+            "class D extends C {}",
+            "D.foo = 1;",
+            "var z = C.foo;"));
+  }
+
+  @Test
+  public void testNonConstClassProp_es6ClassWithStaticMethod() {
+    testSame(
+        lines(
+            "class C { static foo() {} }", //
+            "alert(C.foo);",
+            "C.foo = 1;"));
+  }
+
+  @Test
+  public void testConstPrototypeProp_es6Class() {
+    test(
+        lines(
+            "class C {}", //
+            "C.prototype.foo = 1;",
+            "new C().foo;"),
+        lines(
+            "class C {}", //
+            "C.prototype.foo = 1;",
+            "new C(), 1;"));
+  }
+
+  @Test
+  public void testNonConstPrototypePropFromMemberFn() {
+    testSame(
+        lines(
+            "class C {", //
+            "  foo() {}",
+            "}",
+            "C.prototype.foo = 4;",
+            "(new C()).foo"));
+  }
+
+  @Test
+  public void testObjectPatternStringKeyDoesntInvalidateProp() {
+    test(
+        lines(
+            "/** @constructor */",
+            "function C() {",
+            "  this.foo = 3;",
+            "}",
+            "(new C()).foo",
+            "const {foo} = new C();"),
+        lines(
+            "/** @constructor */",
+            "function C() {",
+            "  this.foo = 3;",
+            "}",
+            "new C(), 3;",
+            "const {foo} = new C();"));
+  }
 }
