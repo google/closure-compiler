@@ -54,591 +54,1364 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMovePrototypeMethod1() {
-    testSame(createModuleChain(
-                 "function Foo() {}" +
-                 "Foo.prototype.bar = function() {};",
-                 // Module 2
-                 "(new Foo).bar()"));
+  public void moveMethodAssignedToPrototype() {
+    // bar property is defined in externs, so it cannot be moved
+    testSame(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.bar = function() {};"),
+            // Chunk 2
+            "(new Foo).bar()"));
 
     canMoveExterns = true;
-    test(createModuleChain(
-             "function Foo() {}" +
-             "Foo.prototype.bar = function() {};",
-             // Module 2
-             "(new Foo).bar()"),
-         new String[] {
-             STUB_DECLARATIONS +
-             "function Foo() {}" +
-             "Foo.prototype.bar = JSCompiler_stubMethod(0);",
-             // Module 2
-             "Foo.prototype.bar = JSCompiler_unstubMethod(0, function() {});" +
-             "(new Foo).bar()"
-         });
-  }
-
-  @Test
-  public void testMovePrototypeMethod2() {
-    test(createModuleChain(
-             "function Foo() {}" +
-             "Foo.prototype = { method: function() {} };",
-             // Module 2
-             "(new Foo).method()"),
-         new String[] {
-             STUB_DECLARATIONS +
-             "function Foo() {}" +
-             "Foo.prototype = { method: JSCompiler_stubMethod(0) };",
-             // Module 2
-             "Foo.prototype.method = " +
-             "    JSCompiler_unstubMethod(0, function() {});" +
-             "(new Foo).method()"
-         });
-  }
-
-  @Test
-  public void testMovePrototypeMethod3() {
-    testSame(createModuleChain(
-             "function Foo() {}" +
-             "Foo.prototype = { get method() {} };",
-             // Module 2
-             "(new Foo).method()"));
-  }
-
-  @Test
-  public void testMovePrototypeMethodWithoutStub() {
-    testSame(createModuleChain(
-        "function Foo() {}" +
-            "Foo.prototype.bar = function() {};",
-        // Module 2
-        "(new Foo).bar()"));
-
-    canMoveExterns = true;
-    noStubs = true;
-    test(createModuleChain(
-            "function Foo() {}" +
-                "Foo.prototype.bar = function() {};",
-            // Module 2
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.bar = function() {};"),
+            // Chunk 2
             "(new Foo).bar()"),
         new String[] {
-                "function Foo() {}",
-            // Module 2
-            "Foo.prototype.bar = function() {};" +
-                "(new Foo).bar()"
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.bar = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.bar = JSCompiler_unstubMethod(0, function() {});", //
+              "(new Foo).bar()")
         });
   }
 
   @Test
-  public void testNoMovePrototypeMethodIfAliasedNoStubs() {
+  public void moveMethodDefinedInPrototypeLiteral() {
+    // TODO(b/70340193): Create similar case using method shorthand.
+    //   Currently `Foo.prototype = { method() {} };` causes a compiler crash.
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype = { method: function() {} };"),
+            // Chunk 2
+            "(new Foo).method()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype = { method: JSCompiler_stubMethod(0) };"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.method = ", //
+              "    JSCompiler_unstubMethod(0, function() {});",
+              "(new Foo).method()")
+        });
+  }
+
+  @Test
+  public void moveClassClassMethod() {
+    testSame(
+        createModuleChain(
+            // Chunk 1
+            "class Foo { method() {} }",
+            // Chunk 2
+            "(new Foo).method()"));
+
+    // TODO(b/70340193): This test case should be:
+    // test(
+    //     createModuleChain(
+    //         // Chunk 1
+    //         "class Foo { method() {} }",
+    //         // Chunk 2
+    //         "(new Foo).method()"),
+    //     new String[] {
+    //       lines(
+    //           STUB_DECLARATIONS,
+    //           "class Foo {}",
+    //           "Foo.prototype.method = JSCompiler_stubMethod(0);"),
+    //       // Chunk 2
+    //       lines(
+    //           "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});",
+    //           "(new Foo).method();")
+    //     });
+  }
+
+  @Test
+  public void doNotMoveGetterDefinedInPrototypeLiteral() {
+    testSame(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype = { get method() {} };"),
+            // Chunk 2
+            "(new Foo).method()"));
+  }
+
+  @Test
+  public void doNotMoveClassGetter() {
+    testSame(
+        createModuleChain(
+            "class Foo { get method() {} }",
+            // Chunk 2
+            "(new Foo).method()"));
+  }
+
+  @Test
+  public void movePrototypeMethodWithoutStub() {
+    testSame(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.bar = function() {};"),
+            // Chunk 2
+            "(new Foo).bar()"));
+
+    canMoveExterns = true;
+    noStubs = true;
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.bar = function() {};"),
+            // Chunk 2
+            "(new Foo).bar()"),
+        new String[] {
+          "function Foo() {}",
+          // Chunk 2
+          lines(
+              "Foo.prototype.bar = function() {};", //
+              "(new Foo).bar()")
+        });
+  }
+
+  @Test
+  public void moveClassMethodWithoutStub() {
+    testSame(
+        createModuleChain(
+            "class Foo { bar() {} }",
+            // Chunk 2
+            "(new Foo).bar()"));
+
+    canMoveExterns = true;
+    noStubs = true;
+    testSame(
+        createModuleChain(
+            "class Foo { bar() {} }",
+            // Chunk 2
+            "(new Foo).bar()"));
+    // TODO(b/70340193): This test case should be:
+    // test(
+    //     createModuleChain(
+    //         "class Foo { bar() {} }",
+    //         // Chunk 2
+    //         "(new Foo).bar()"),
+    //     new String[] {
+    //       "class Foo {}",
+    //       // Chunk 2
+    //       lines("Foo.prototype.bar = function() {};", "(new Foo).bar()")
+    //     });
+  }
+
+  @Test
+  public void doNotMovePrototypeMethodIfAliasedAndNoStubs() {
     // don't move if noStubs enabled and there's a reference to the method to be moved
     noStubs = true;
     testSame(
         createModuleChain(
-            "function Foo() {}"
-                + "Foo.prototype.m = function() {};"
-                + "Foo.prototype.m2 = Foo.prototype.m;",
-            // Module 2
+            lines(
+                "function Foo() {}",
+                "Foo.prototype.m = function() {};",
+                "Foo.prototype.m2 = Foo.prototype.m;"),
+            // Chunk 2
             "(new Foo).m()"));
 
     testSame(
         createModuleChain(
-            "function Foo() {}"
-                + "Foo.prototype.m = function() {};"
-                + "Foo.prototype.m2 = Foo.prototype.m;",
-            // Module 2
+            lines(
+                "function Foo() {}",
+                "Foo.prototype.m = function() {};",
+                "Foo.prototype.m2 = Foo.prototype.m;"),
+            // Chunk 2
             "(new Foo).m(), (new Foo).m2()"));
 
     noStubs = false;
 
     test(
         createModuleChain(
-            "function Foo() {}"
-                + "Foo.prototype.m = function() {};"
-                + "Foo.prototype.m2 = Foo.prototype.m;",
-            // Module 2
+            lines(
+                "function Foo() {}",
+                "Foo.prototype.m = function() {};",
+                "Foo.prototype.m2 = Foo.prototype.m;"),
+            // Chunk 2
             "(new Foo).m()"),
         new String[] {
-          STUB_DECLARATIONS
-              + "function Foo() {}"
-              + "Foo.prototype.m = JSCompiler_stubMethod(0);"
-              + "Foo.prototype.m2 = Foo.prototype.m;",
-          // Module 2
-          "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});" + "(new Foo).m()"
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.m = JSCompiler_stubMethod(0);",
+              "Foo.prototype.m2 = Foo.prototype.m;"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});", //
+              "(new Foo).m()")
         });
 
     test(
         createModuleChain(
-            "function Foo() {}"
-                + "Foo.prototype.m = function() {};"
-                + "Foo.prototype.m2 = Foo.prototype.m;",
-            // Module 2
+            lines(
+                "function Foo() {}",
+                "Foo.prototype.m = function() {};",
+                "Foo.prototype.m2 = Foo.prototype.m;"),
+            // Chunk 2
             "(new Foo).m(), (new Foo).m2()"),
         new String[] {
-          STUB_DECLARATIONS
-              + "function Foo() {}"
-              + "Foo.prototype.m = JSCompiler_stubMethod(0);"
-              + "Foo.prototype.m2 = Foo.prototype.m;",
-          // Module 2
-          "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});"
-              + "(new Foo).m(), (new Foo).m2()",
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.m = JSCompiler_stubMethod(0);",
+              "Foo.prototype.m2 = Foo.prototype.m;"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});",
+              "(new Foo).m(), (new Foo).m2()"),
         });
   }
 
   @Test
-  public void testNoMovePrototypeMethodRedeclaration1() {
-    // don't move if it can be overwritten when a sibling module is loaded.
-    testSame(createModuleStar(
-             "function Foo() {}" +
-             "Foo.prototype.method = function() {};",
-             // Module 2
-             "Foo.prototype.method = function() {};",
-             // Module 3
-             "(new Foo).method()"));
+  public void doNotMoveClassMethodIfAliasedAndNoStubs() {
+    // don't move if noStubs enabled and there's a reference to the method to be moved
+    noStubs = true;
+    testSame(
+        createModuleChain(
+            lines(
+                "class Foo { m() {} }", //
+                "Foo.prototype.m2 = m;"),
+            // Chunk 2
+            "(new Foo).m()"));
+
+    testSame(
+        createModuleChain(
+            lines(
+                "class Foo { m() {} }", //
+                "Foo.prototype.m2 = m;"),
+            // Chunk 2
+            "(new Foo).m(), (new Foo).m2()"));
+
+    noStubs = false;
+
+    testSame(
+        createModuleChain(
+            lines(
+                "class Foo { m() {} }", //
+                "Foo.prototype.m2 = m;"),
+            // Chunk 2
+            "(new Foo).m()"));
+
+    // TODO(b/70340193): above case should be this
+    // test(
+    //     createModuleChain(
+    //         lines(
+    //             "class Foo { m() {} }", //
+    //             "Foo.prototype.m2 = m;"),
+    //         // Chunk 2
+    //         "(new Foo).m()"),
+    //     new String[] {
+    //         lines(
+    //             STUB_DECLARATIONS,
+    //             "class Foo {}",
+    //             "Foo.prototype.m = JSCompiler_stubMethod(0);",
+    //             "Foo.prototype.m2 = Foo.prototype.m;"),
+    //         // Chunk 2
+    //         lines(
+    //             "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});", //
+    //             "(new Foo).m()")
+    //     });
+
+    testSame(
+        createModuleChain(
+            lines(
+                "class Foo { m() {} }", //
+                "Foo.prototype.m2 = m;"),
+            // Chunk 2
+            "(new Foo).m(), (new Foo).m2()"));
+
+    // TODO(b/70340193): above case should be this
+    // test(
+    //     createModuleChain(
+    //         lines(
+    //             "class Foo { m() {} }", //
+    //             "Foo.prototype.m2 = m;"),
+    //         // Chunk 2
+    //         "(new Foo).m(), (new Foo).m2()"),
+    //     new String[] {
+    //       lines(
+    //           STUB_DECLARATIONS,
+    //           "class Foo {}",
+    //           "Foo.prototype.m = JSCompiler_stubMethod(0);",
+    //           "Foo.prototype.m2 = Foo.prototype.m;"),
+    //       // Chunk 2
+    //       lines(
+    //           "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});",
+    //           "(new Foo).m(), (new Foo).m2()"),
+    //     });
   }
 
   @Test
-  public void testNoMovePrototypeMethodRedeclaration2() {
-    // don't move if it can be overwritten when a later module is loaded.
-    testSame(createModuleChain(
-             "function Foo() {}" +
-             "Foo.prototype.method = function() {};",
-             // Module 2
-             "(new Foo).method()",
-             // Module 3
-             "Foo.prototype.method = function() {};"));
+  public void doNotMovePrototypeMethodRedeclaredInSiblingChunk() {
+    // don't move if it can be overwritten when a sibling of the first referencing chunk is loaded.
+    testSame(
+        createModuleStar(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.method = function() {};"),
+            // Chunk 2
+            "Foo.prototype.method = function() {};",
+            // Chunk 3
+            "(new Foo).method()"));
   }
 
   @Test
-  public void testNoMovePrototypeMethodRedeclaration3() {
+  public void doNotMoveClassMethodRedeclaredInSiblingChunk() {
+    // don't move if it can be overwritten when a sibling of the first referencing chunk is loaded.
+    testSame(
+        createModuleStar(
+            "class Foo { method() {} }",
+            // Chunk 2
+            "Foo.prototype.method = function() {};",
+            // Chunk 3
+            "(new Foo).method()"));
+  }
+
+  @Test
+  public void doNotMovePrototypeMethodRedeclaredInDependentChunk() {
+    // don't move if it can be overwritten by a chunk depending on the first referencing chunk.
+    testSame(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.method = function() {};"),
+            // Chunk 2
+            "(new Foo).method()",
+            // Chunk 3
+            "Foo.prototype.method = function() {};"));
+  }
+
+  @Test
+  public void doNotMoveClassMethodRedeclaredInDependentChunk() {
+    // don't move if it can be overwritten by a chunk depending on the first referencing chunk.
+    testSame(
+        createModuleChain(
+            "class Foo { method() {} }",
+            // Chunk 2
+            "(new Foo).method()",
+            // Chunk 3
+            "Foo.prototype.method = function() {};"));
+  }
+
+  @Test
+  public void doNotMovePrototypeMethodRedeclaredBeforeFirstReferencingChunk() {
     // Note: it is reasonable to move the method in this case,
     // but it is difficult enough to prove that we don't.
-    testSame(createModuleChain(
-             "function Foo() {}" +
-             "Foo.prototype.method = function() {};",
-             // Module 2
-             "Foo.prototype.method = function() {};",
-             // Module 3
-             "(new Foo).method()"));
+    testSame(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.method = function() {};"),
+            // Chunk 2
+            "Foo.prototype.method = function() {};",
+            // Chunk 3
+            "(new Foo).method()"));
   }
 
   @Test
-  public void testMovePrototypeRecursiveMethod() {
-    test(createModuleChain(
-             "function Foo() {}" +
-             "Foo.prototype.baz = function() { this.baz(); };",
-             // Module 2
-             "(new Foo).baz()"),
-         new String[] {
-             STUB_DECLARATIONS +
-             "function Foo() {}" +
-             "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-             // Module 2
-             "Foo.prototype.baz = JSCompiler_unstubMethod(0, " +
-             "    function() { this.baz(); });" +
-             "(new Foo).baz()"
-         });
+  public void doNotMoveClassMethodRedeclaredBeforeFirstReferencingChunk() {
+    // Note: it is reasonable to move the method in this case,
+    // but it is difficult enough to prove that we don't.
+    test(
+        createModuleChain(
+            "class Foo { method() {} }",
+            // Chunk 2
+            "Foo.prototype.method = function() {};",
+            // Chunk 3
+            "(new Foo).method()"),
+        new String[] {
+          lines(STUB_DECLARATIONS, "class Foo { method() {} }"),
+          // Chunk 2
+          "Foo.prototype.method = JSCompiler_stubMethod(0);",
+          // Chunk 3
+          lines(
+              "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});", //
+              "(new Foo).method()")
+        });
+
+    // TODO(b/70340193): This test case should be:
+    // testSame(
+    //     createModuleChain(
+    //         "class Foo { method() {} }",
+    //         // Chunk 2
+    //         "Foo.prototype.method = function() {};",
+    //         // Chunk 3
+    //         "(new Foo).method()"));
   }
 
   @Test
-  public void testCantMovePrototypeProp() {
-    testSame(createModuleChain(
-                 "function Foo() {}" +
-                 "Foo.prototype.baz = goog.nullFunction;",
-                 // Module 2
-                 "(new Foo).baz()"));
+  public void movePrototypeRecursiveMethod() {
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.baz = function() { this.baz(); };"),
+            // Chunk 2
+            "(new Foo).baz()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { this.baz(); });",
+              "(new Foo).baz()")
+        });
   }
 
   @Test
-  public void testMoveMethodsInRightOrder() {
-    test(createModuleChain(
-             "function Foo() {}" +
-             "Foo.prototype.baz = function() { return 1; };" +
-             "Foo.prototype.baz = function() { return 2; };",
-             // Module 2
-             "(new Foo).baz()"),
-         new String[] {
-             STUB_DECLARATIONS +
-             "function Foo() {}" +
-             "Foo.prototype.baz = JSCompiler_stubMethod(1);" +
-             "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-             // Module 2
-             "Foo.prototype.baz = " +
-             "JSCompiler_unstubMethod(1, function() { return 1; });" +
-             "Foo.prototype.baz = " +
-             "JSCompiler_unstubMethod(0, function() { return 2; });" +
-             "(new Foo).baz()"
-         });
+  public void moveInstanceRecursiveMethod() {
+    testSame(
+        createModuleChain(
+            "class Foo { baz() { this.baz(); } }",
+            // Chunk 2
+            "(new Foo).baz()"));
+
+    // TODO(b/70340193): This test case should be:
+    // test(
+    //     createModuleChain(
+    //         "class Foo { baz() { this.baz(); } }",
+    //         // Chunk 2
+    //         "(new Foo).baz()"),
+    //     new String[] {
+    //       lines(STUB_DECLARATIONS, "class Foo {}", "Foo.prototype.baz =
+    // JSCompiler_stubMethod(0);"),
+    //       // Chunk 2
+    //       lines(
+    //           "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { this.baz(); });",
+    //           "(new Foo).baz()")
+    //     });
   }
 
   @Test
-  public void testMoveMethodsInRightOrder2() {
-    JSModule[] m = createModules(
-        "function Foo() {}" +
-        "Foo.prototype.baz = function() { return 1; };" +
-        "function Goo() {}" +
-        "Goo.prototype.baz = function() { return 2; };",
-        // Module 2, depends on 1
-        "",
-        // Module 3, depends on 2
-        "(new Foo).baz()",
-        // Module 4, depends on 3
-        "",
-        // Module 5, depends on 3
-        "(new Goo).baz()");
+  public void doNotMoveNonLiteralFunction() {
+    testSame(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.baz = goog.nullFunction;"),
+            // Chunk 2
+            "(new Foo).baz()"));
+
+    testSame(
+        createModuleChain(
+            lines(
+                "class Foo {}", //
+                "Foo.prototype.baz = goog.nullFunction;"),
+            // Chunk 2
+            "(new Foo).baz()"));
+  }
+
+  @Test
+  public void movePrototypeDeclarationsInTheRightOrder() {
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}",
+                "Foo.prototype.baz = function() { return 1; };",
+                "Foo.prototype.baz = function() { return 2; };"),
+            // Chunk 2
+            "(new Foo).baz()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(1);",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });",
+              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });",
+              "(new Foo).baz()")
+        });
+  }
+
+  @Test
+  public void moveClassMethodAndReclarationInTheRightOrder() {
+    test(
+        createModuleChain(
+            lines(
+                "class Foo { baz() { return 1; } }",
+                "Foo.prototype.baz = function() { return 2; };"),
+            // Chunk 2
+            "(new Foo).baz()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "class Foo { baz() { return 1; } }",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });",
+              "(new Foo).baz()")
+        });
+
+    // TODO(b/70340193): this test case should be:
+    // test(
+    //     createModuleChain(
+    //         lines(
+    //             "class Foo { baz() { return 1; } }",
+    //             "Foo.prototype.baz = function() { return 2; };"),
+    //         // Chunk 2
+    //         "(new Foo).baz()"),
+    //     new String[] {
+    //       lines(
+    //           STUB_DECLARATIONS,
+    //           "class Foo {}",
+    //           "Foo.prototype.baz = JSCompiler_stubMethod(1);",
+    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+    //       // Chunk 2
+    //       lines(
+    //           "Foo.prototype.baz = ",
+    //           "JSCompiler_unstubMethod(1, function() { return 1; });",
+    //           "Foo.prototype.baz = ",
+    //           "JSCompiler_unstubMethod(0, function() { return 2; });",
+    //           "(new Foo).baz()")
+    //     });
+  }
+
+  @Test
+  public void movePrototypeMethodsForDifferentClassesInTheRightOrder() {
+    JSModule[] m =
+        createModules(
+            lines(
+                "function Foo() {}",
+                "Foo.prototype.baz = function() { return 1; };",
+                "function Goo() {}",
+                "Goo.prototype.baz = function() { return 2; };"),
+            // Chunk 2, depends on 1
+            "",
+            // Chunk 3, depends on 2
+            "(new Foo).baz()",
+            // Chunk 4, depends on 3
+            "",
+            // Chunk 5, depends on 3
+            "(new Goo).baz()");
 
     m[1].addDependency(m[0]);
     m[2].addDependency(m[1]);
     m[3].addDependency(m[2]);
     m[4].addDependency(m[2]);
 
-    test(m,
-         new String[] {
-             STUB_DECLARATIONS +
-             "function Foo() {}" +
-             "Foo.prototype.baz = JSCompiler_stubMethod(1);" +
-             "function Goo() {}" +
-             "Goo.prototype.baz = JSCompiler_stubMethod(0);",
-             // Module 2
-             "",
-             // Module 3
-             "Foo.prototype.baz = " +
-             "JSCompiler_unstubMethod(1, function() { return 1; });" +
-             "Goo.prototype.baz = " +
-             "JSCompiler_unstubMethod(0, function() { return 2; });" +
-             "(new Foo).baz()",
-             // Module 4
-             "",
-             // Module 5
-             "(new Goo).baz()"
-         });
+    test(
+        m,
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(1);",
+              "function Goo() {}",
+              "Goo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          "",
+          // Chunk 3
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });",
+              "Goo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });",
+              "(new Foo).baz()"),
+          // Chunk 4
+          "",
+          // Chunk 5
+          "(new Goo).baz()"
+        });
   }
 
   @Test
-  public void testMoveMethodsUsedInTwoModules() {
-    testSame(createModuleStar(
-                 "function Foo() {}" +
-                 "Foo.prototype.baz = function() {};",
-                 // Module 2
-                 "(new Foo).baz()",
-                 // Module 3
-                 "(new Foo).baz()"));
+  public void moveClassMethodsForDifferentClassesInTheRightOrder() {
+    JSModule[] m =
+        createModules(
+            lines(
+                "class Foo { baz() { return 1; } }", //
+                "class Goo { baz() { return 2; } }"),
+            // Chunk 2, depends on 1
+            "",
+            // Chunk 3, depends on 2
+            "(new Foo).baz()",
+            // Chunk 4, depends on 3
+            "",
+            // Chunk 5, depends on 3
+            "(new Goo).baz()");
+
+    m[1].addDependency(m[0]);
+    m[2].addDependency(m[1]);
+    m[3].addDependency(m[2]);
+    m[4].addDependency(m[2]);
+
+    testSame(m);
+    // TODO(b/70340193): This test case should be:
+    // test(
+    //     m,
+    //     new String[] {
+    //       lines(
+    //           STUB_DECLARATIONS,
+    //           "function Foo() {}",
+    //           "Foo.prototype.baz = JSCompiler_stubMethod(1);",
+    //           "function Goo() {}",
+    //           "Goo.prototype.baz = JSCompiler_stubMethod(0);"),
+    //       // Chunk 2
+    //       "",
+    //       // Chunk 3
+    //       lines(
+    //           "Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });",
+    //           "Goo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });",
+    //           "(new Foo).baz()"),
+    //       // Chunk 4
+    //       "",
+    //       // Chunk 5
+    //       "(new Goo).baz()"
+    //     });
   }
 
   @Test
-  public void testMoveMethodsUsedInTwoModules2() {
-    JSModule[] modules = createModules(
-        "function Foo() {}" +
-        "Foo.prototype.baz = function() {};",
-        // Module 2
-        "", // a blank module in the middle
-        // Module 3
-        "(new Foo).baz() + 1",
-        // Module 4
-        "(new Foo).baz() + 2");
+  public void doNotMovePrototypeMethodUsedInMultiplepDependentChunks() {
+    testSame(
+        createModuleStar(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.baz = function() {};"),
+            // Chunk 2
+            "(new Foo).baz()",
+            // Chunk 3
+            "(new Foo).baz()"));
+  }
+
+  @Test
+  public void doNotMoveClassMethodUsedInMultiplepDependentChunks() {
+    testSame(
+        createModuleStar(
+            "class Foo { baz() {} }",
+            // Chunk 2
+            "(new Foo).baz()",
+            // Chunk 3
+            "(new Foo).baz()"));
+  }
+
+  @Test
+  public void movePrototypeMethodToDeepestCommonDependencyOfReferencingChunks() {
+    JSModule[] modules =
+        createModules(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.baz = function() {};"),
+            // Chunk 2
+            "", // a blank chunk in the middle
+            // Chunk 3
+            "(new Foo).baz() , 1",
+            // Chunk 4
+            "(new Foo).baz() , 2");
 
     modules[1].addDependency(modules[0]);
     modules[2].addDependency(modules[1]);
     modules[3].addDependency(modules[1]);
-    test(modules,
-         new String[] {
-             STUB_DECLARATIONS +
-             "function Foo() {}" +
-             "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-             // Module 2
-             "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
-             // Module 3
-             "(new Foo).baz() + 1",
-             // Module 4
-             "(new Foo).baz() + 2"
-         });
+    test(
+        modules,
+        new String[] {
+          lines(
+              STUB_DECLARATIONS, //
+              "function Foo() {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
+          // Chunk 3
+          "(new Foo).baz() , 1",
+          // Chunk 4
+          "(new Foo).baz() , 2"
+        });
   }
 
   @Test
-  public void testTwoMethods() {
-    test(createModuleChain(
-             "function Foo() {}" +
-             "Foo.prototype.baz = function() {};",
-             // Module 2
-             "Foo.prototype.callBaz = function() { this.baz(); }",
-             // Module 3
-             "(new Foo).callBaz()"),
-         new String[] {
-             STUB_DECLARATIONS +
-             "function Foo() {}" +
-             "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-             // Module 2
-             "Foo.prototype.callBaz = JSCompiler_stubMethod(1);",
-             // Module 3
-             "Foo.prototype.callBaz = " +
-             "  JSCompiler_unstubMethod(1, function() { this.baz(); });" +
-             "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});" +
-             "(new Foo).callBaz()"
-         });
+  public void moveClassMethodToDeepestCommonDependencyOfReferencingChunks() {
+    JSModule[] modules =
+        createModules(
+            "class Foo { baz() {} }",
+            // Chunk 2
+            "", // a blank chunk in the middle
+            // Chunk 3
+            "(new Foo).baz() , 1",
+            // Chunk 4
+            "(new Foo).baz() , 2");
+
+    modules[1].addDependency(modules[0]);
+    modules[2].addDependency(modules[1]);
+    modules[3].addDependency(modules[1]);
+
+    testSame(modules);
+    // TODO(b/70340193): This test case should be:
+    // test(
+    //     modules,
+    //     new String[] {
+    //       lines(
+    //           STUB_DECLARATIONS, //
+    //           "class Foo {}",
+    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+    //       // Chunk 2
+    //       "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
+    //       // Chunk 3
+    //       "(new Foo).baz() , 1",
+    //       // Chunk 4
+    //       "(new Foo).baz() , 2"
+    //     });
   }
 
   @Test
-  public void testTwoMethods2() {
+  public void movePrototypeMethodThatRefersToAnotherOnTheSameClass() {
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.baz = function() {};"),
+            // Chunk 2
+            "Foo.prototype.callBaz = function() { this.baz(); }",
+            // Chunk 3
+            "(new Foo).callBaz()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          "Foo.prototype.callBaz = JSCompiler_stubMethod(1);",
+          // Chunk 3
+          lines(
+              "Foo.prototype.callBaz = ",
+              "  JSCompiler_unstubMethod(1, function() { this.baz(); });",
+              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
+              "(new Foo).callBaz()")
+        });
+  }
+
+  @Test
+  public void movePrototypeMethodThatRefersToAnClassMethodOnTheSameClass() {
+    test(
+        createModuleChain(
+            "class Foo { baz() {} }",
+            // Chunk 2
+            "Foo.prototype.callBaz = function() { this.baz(); };",
+            // Chunk 3
+            "(new Foo).callBaz()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS, //
+              "class Foo { baz() {} }"),
+          // Chunk 2
+          "Foo.prototype.callBaz = JSCompiler_stubMethod(0);",
+          // Chunk 3
+          lines(
+              "Foo.prototype.callBaz = JSCompiler_unstubMethod(0, function() { this.baz(); });",
+              "(new Foo).callBaz()")
+        });
+
+    // TODO(b/70340193): This test case should be:
+    // test(
+    //     createModuleChain(
+    //         "class Foo { baz() {} }",
+    //         // Chunk 2
+    //         "Foo.prototype.callBaz = function() { this.baz(); }",
+    //         // Chunk 3
+    //         "(new Foo).callBaz()"),
+    //     new String[] {
+    //       lines(
+    //           STUB_DECLARATIONS,
+    //           "class Foo {}",
+    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+    //       // Chunk 2
+    //       "Foo.prototype.callBaz = JSCompiler_stubMethod(1);",
+    //       // Chunk 3
+    //       lines(
+    //           "Foo.prototype.callBaz = JSCompiler_unstubMethod(1, function() { this.baz(); });",
+    //           "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
+    //           "(new Foo).callBaz()")
+    //     });
+  }
+
+  @Test
+  public void doNotMovePrototypeMethodDefinitionThatFollowsFirstUse() {
     // if the programmer screws up the module order, we don't try to correct
     // the mistake.
-    test(createModuleChain(
-             "function Foo() {}" +
-             "Foo.prototype.baz = function() {};",
-             // Module 2
-             "(new Foo).callBaz()",
-             // Module 3
-             "Foo.prototype.callBaz = function() { this.baz(); }"),
-         new String[] {
-             STUB_DECLARATIONS +
-             "function Foo() {}" +
-             "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-             // Module 2
-             "(new Foo).callBaz()",
-             // Module 3
-             "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});" +
-             "Foo.prototype.callBaz = function() { this.baz(); };"
-         });
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.baz = function() {};"),
+            // Chunk 2
+            "(new Foo).callBaz()", // call before definition
+            // Chunk 3
+            "Foo.prototype.callBaz = function() { this.baz(); }"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          "(new Foo).callBaz()",
+          // Chunk 3
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
+              "Foo.prototype.callBaz = function() { this.baz(); };")
+        });
   }
 
   @Test
-  public void testGlobalFunctionsInGraph() {
-    test(createModuleChain(
-            "function Foo() {}" +
-            "Foo.prototype.baz = function() {};" +
-            "function x() { return (new Foo).baz(); }",
-            // Module 2
+  public void movePrototypeMethodPastUsageInAGlobalFunction() {
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}",
+                "Foo.prototype.baz = function() {};",
+                // usage here doesn't really happen until x() is called, so
+                // it's OK to move the definition of baz().
+                "function x() { return (new Foo).baz(); }"),
+            // Chunk 2
             "x();"),
         new String[] {
-          STUB_DECLARATIONS +
-          "function Foo() {}" +
-          "Foo.prototype.baz = JSCompiler_stubMethod(0);" +
-          "function x() { return (new Foo).baz(); }",
-          // Module 2
-          "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});" +
-          "x();"
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);",
+              "function x() { return (new Foo).baz(); }"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});", //
+              "x();")
         });
+  }
+
+  @Test
+  public void moveClassMethodPastUsageInAGlobalFunction() {
+    testSame(
+        createModuleChain(
+            lines(
+                "class Foo {",
+                "  baz() {}",
+                "}",
+                // usage here doesn't really happen until x() is called, so
+                // it's OK to move the definition of baz().
+                "function x() { return (new Foo).baz(); }"),
+            // Chunk 2
+            "x();"));
+
+    // TODO(b/70340193): This test case should be:
+    // test(
+    //     createModuleChain(
+    //         lines(
+    //             "class Foo {",
+    //             "  baz() {}",
+    //             "}",
+    //             // usage here doesn't really happen until x() is called, so
+    //             // it's OK to move the definition of baz().
+    //             "function x() { return (new Foo).baz(); }"),
+    //         // Chunk 2
+    //         "x();"),
+    //     new String[] {
+    //       STUB_DECLARATIONS,
+    //       lines(
+    //           "class Foo {}",
+    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);",
+    //           "function x() { return (new Foo).baz(); }"),
+    //       // Chunk 2
+    //       "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
+    //       "x();"
+    //     });
   }
 
   // Read of closure variable disables method motions.
   @Test
-  public void testClosureVariableReads1() {
-    testSame(createModuleChain(
-            "function Foo() {}" +
-            "(function() {" +
-            "var x = 'x';" +
-            "Foo.prototype.baz = function() {x};" +
-            "})();",
-            // Module 2
+  public void doNotMovePrototypeMethodThatUsesLocalClosureVariable() {
+    testSame(
+        createModuleChain(
+            lines(
+                "function Foo() {}",
+                "(function() {",
+                "  var x = 'x';",
+                "  Foo.prototype.baz = function() {x};",
+                "})();"),
+            // Chunk 2
             "var y = new Foo(); y.baz();"));
   }
 
-  // Read of global variable is fine.
   @Test
-  public void testClosureVariableReads2() {
-    test(createModuleChain(
-            "function Foo() {}" +
-            "Foo.prototype.b1 = function() {" +
-            "  var x = 1;" +
-            "  Foo.prototype.b2 = function() {" +
-            "    Foo.prototype.b3 = function() {" +
-            "      x;" +
-            "    }" +
-            "  }" +
-            "};",
-            // Module 2
+  public void doNotMoveClassMethodThatUsesLocalClosureVariable() {
+    testSame(
+        createModuleChain(
+            lines(
+                "const Foo = (function() {",
+                "  var x = 'x';",
+                "  return class Foo { baz() { return x; } };",
+                "})();"),
+            // Chunk 2
+            "var y = new Foo(); y.baz();"));
+  }
+
+  @Test
+  public void movePrototypeMethodThatDefinesOtherMethodsOnSameGlobalClass() {
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}",
+                "Foo.prototype.b1 = function() {",
+                "  var x = 1;",
+                "  Foo.prototype.b2 = function() {",
+                "    Foo.prototype.b3 = function() {",
+                "      x;",
+                "    }",
+                "  }",
+                "};"),
+            // Chunk 2
             "var y = new Foo(); y.b1();",
-            // Module 3
+            // Chunk 3
             "y = new Foo(); z.b2();",
-            // Module 4
-            "y = new Foo(); z.b3();"
-            ),
-         new String[] {
-           STUB_DECLARATIONS +
-           "function Foo() {}" +
-           "Foo.prototype.b1 = JSCompiler_stubMethod(0);",
-           // Module 2
-           "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {" +
-           "  var x = 1;" +
-           "  Foo.prototype.b2 = function() {" +
-           "    Foo.prototype.b3 = function() {" +
-           "      x;" +
-           "    }" +
-           "  }" +
-           "});" +
-           "var y = new Foo(); y.b1();",
-           // Module 3
-           "y = new Foo(); z.b2();",
-           // Module 4
-           "y = new Foo(); z.b3();"
+            // Chunk 4
+            "y = new Foo(); z.b3();"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {",
+              "  var x = 1;",
+              "  Foo.prototype.b2 = function() {",
+              "    Foo.prototype.b3 = function() {",
+              "      x;",
+              "    }",
+              "  }",
+              "});",
+              "var y = new Foo(); y.b1();"),
+          // Chunk 3
+          "y = new Foo(); z.b2();",
+          // Chunk 4
+          "y = new Foo(); z.b3();"
         });
   }
 
   @Test
-  public void testClosureVariableReads3() {
-    test(createModuleChain(
-            "function Foo() {}" +
-            "Foo.prototype.b1 = function() {" +
-            "  Foo.prototype.b2 = function() {" +
-            "    var x = 1;" +
-            "    Foo.prototype.b3 = function() {" +
-            "      x;" +
-            "    }" +
-            "  }" +
-            "};",
-            // Module 2
+  public void moveClassMethodThatDefinesOtherMethodsOnSameGlobalClass() {
+    testSame(
+        createModuleChain(
+            lines(
+                "class Foo {",
+                "  b1() {",
+                "    var x = 1;",
+                "    Foo.prototype.b2 = function() {",
+                "      Foo.prototype.b3 = function() {",
+                "        x;",
+                "      }",
+                "    }",
+                "  };",
+                "}"),
+            // Chunk 2
             "var y = new Foo(); y.b1();",
-            // Module 3
+            // Chunk 3
             "y = new Foo(); z.b2();",
-            // Module 4
-            "y = new Foo(); z.b3();"
-            ),
-         new String[] {
-           STUB_DECLARATIONS +
-           "function Foo() {}" +
-           "Foo.prototype.b1 = JSCompiler_stubMethod(0);",
-           // Module 2
-           "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {" +
-           "  Foo.prototype.b2 = JSCompiler_stubMethod(1);" +
-           "});" +
-           "var y = new Foo(); y.b1();",
-           // Module 3
-           "Foo.prototype.b2 = JSCompiler_unstubMethod(1, function() {" +
-           "  var x = 1;" +
-           "  Foo.prototype.b3 = function() {" +
-           "    x;" +
-           "  }" +
-           "});" +
-           "y = new Foo(); z.b2();",
-           // Module 4
-           "y = new Foo(); z.b3();"
+            // Chunk 4
+            "y = new Foo(); z.b3();"));
+    // TODO(b/70340193): this test case should be:
+    // test(
+    //     createModuleChain(
+    //         lines(
+    //             "class Foo {",
+    //             "  b1() {",
+    //             "    var x = 1;",
+    //             // b2 cannot be extracted, because it contains a reference to x
+    //             "    Foo.prototype.b2 = function() {",
+    //             "      Foo.prototype.b3 = function() {",
+    //             "        x;",
+    //             "      }",
+    //             "    }",
+    //             "  };",
+    //             "}"),
+    //         // Chunk 2
+    //         "var y = new Foo(); y.b1();",
+    //         // Chunk 3
+    //         "y = new Foo(); z.b2();",
+    //         // Chunk 4
+    //         "y = new Foo(); z.b3();"),
+    //     new String[] {
+    //       lines(STUB_DECLARATIONS, "class Foo {}", "Foo.prototype.b1 =
+    // JSCompiler_stubMethod(0);"),
+    //       // Chunk 2
+    //       lines(
+    //           "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {",
+    //           "  var x = 1;",
+    //           "  Foo.prototype.b2 = function() {",
+    //           "    Foo.prototype.b3 = function() {",
+    //           "      x;",
+    //           "    }",
+    //           "  }",
+    //           "});",
+    //           "var y = new Foo(); y.b1();"),
+    //       // Chunk 3
+    //       "y = new Foo(); z.b2();",
+    //       // Chunk 4
+    //       "y = new Foo(); z.b3();"
+    //     });
+  }
+
+  @Test
+  public void extractPrototypeMethodDefinedInAnotherMethodWhenNoClosureReferencePreventsIt() {
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}",
+                "Foo.prototype.b1 = function() {",
+                // definition of b2 can be extracted, because it doesn't refer to any variables
+                // defined by b1.
+                "  Foo.prototype.b2 = function() {",
+                "    var x = 1;",
+                // definition of b3 cannot be extracted, because it refers to x
+                "    Foo.prototype.b3 = function() {",
+                "      x;",
+                "    }",
+                "  }",
+                "};"),
+            // Chunk 2
+            "var y = new Foo(); y.b1();",
+            // Chunk 3
+            "y = new Foo(); z.b2();",
+            // Chunk 4
+            "y = new Foo(); z.b3();"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS, //
+              "function Foo() {}",
+              "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {",
+              "  Foo.prototype.b2 = JSCompiler_stubMethod(1);",
+              "});",
+              "var y = new Foo(); y.b1();"),
+          // Chunk 3
+          lines(
+              "Foo.prototype.b2 = JSCompiler_unstubMethod(1, function() {",
+              "  var x = 1;",
+              "  Foo.prototype.b3 = function() {",
+              "    x;",
+              "  }",
+              "});",
+              "y = new Foo(); z.b2();"),
+          // Chunk 4
+          "y = new Foo(); z.b3();"
+        });
+  }
+
+  @Test
+  public void extractClassMethodDefinedInAnotherMethodWhenNoClosureReferencePreventsIt() {
+    test(
+        createModuleChain(
+            lines(
+                "class Foo {",
+                "  b1() {",
+                // definition of b2 can be extracted, because it doesn't refer to any variables
+                // defined by b1.
+                "    Foo.prototype.b2 = function() {",
+                "      var x = 1;",
+                // definition of b3 cannot be extracted, because it refers to x
+                "      Foo.prototype.b3 = function() {",
+                "        x;",
+                "      }",
+                "    }",
+                "  }",
+                "}"),
+            // Chunk 2
+            "var y = new Foo(); y.b1();",
+            // Chunk 3
+            "y = new Foo(); z.b2();",
+            // Chunk 4
+            "y = new Foo(); z.b3();"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS, //
+              "class Foo {",
+              // TODO(b/70340193): b1 should also be stubbed and moved
+              "  b1() {",
+              "    Foo.prototype.b2 = JSCompiler_stubMethod(0);",
+              "  }",
+              "}"),
+          // Chunk 2
+          lines("var y = new Foo(); y.b1();"),
+          // Chunk 3
+          lines(
+              "Foo.prototype.b2 = JSCompiler_unstubMethod(0, function() {",
+              "  var x = 1;",
+              "  Foo.prototype.b3 = function() {",
+              "    x;",
+              "  }",
+              "});",
+              "y = new Foo(); z.b2();"),
+          // Chunk 4
+          "y = new Foo(); z.b3();"
         });
   }
 
   // Read of global variable is fine.
   @Test
-  public void testNoClosureVariableReads1() {
-    test(createModuleChain(
-            "function Foo() {}" +
-            "var x = 'x';" +
-            "Foo.prototype.baz = function(){x};",
-            // Module 2
+  public void movePrototypeMethodThatReadsGlobalVar() {
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "var x = 'x';",
+                "Foo.prototype.baz = function(){x};"),
+            // Chunk 2
             "var y = new Foo(); y.baz();"),
-         new String[] {
-           STUB_DECLARATIONS +
-           "function Foo() {}" +
-           "var x = 'x';" +
-           "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-           // Module 2
-           "Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});" +
-           "var y = new Foo(); y.baz();"
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "var x = 'x';",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});", //
+              "var y = new Foo(); y.baz();")
+        });
+  }
+
+  // Read of global variable is fine.
+  @Test
+  public void moveClassMethodThatReadsGlobalVar() {
+    testSame(
+        createModuleChain(
+            lines(
+                "class Foo {", //
+                "  baz() { x; }",
+                "}",
+                "var x = 'x';",
+                ""),
+            // Chunk 2
+            "var y = new Foo(); y.baz();"));
+    // TODO(b/70340193): This test case should be:
+    // test(
+    //     createModuleChain(
+    //         lines(
+    //             "class Foo {", //
+    //             "  baz() { x; }",
+    //             "}",
+    //             "var x = 'x';",
+    //             ""),
+    //         // Chunk 2
+    //         "var y = new Foo(); y.baz();"),
+    //     new String[] {
+    //       lines(
+    //           STUB_DECLARATIONS,
+    //           "class Foo {}",
+    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);",
+    //           "var x = 'x';",
+    //           ""),
+    //       // Chunk 2
+    //       lines(
+    //           "Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});", //
+    //           "var y = new Foo(); y.baz();")
+    //     });
+  }
+
+  // Read of a local is fine.
+  @Test
+  public void movePrototypeMethodThatReferencesOnlyLocalVariables() {
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype.baz = function(){var x = 1;x};"),
+            // Chunk 2
+            "var y = new Foo(); y.baz();"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(",
+              "    0, function(){var x = 1; x});",
+              "var y = new Foo(); y.baz();")
         });
   }
 
   // Read of a local is fine.
   @Test
-  public void testNoClosureVariableReads2() {
-    test(createModuleChain(
-            "function Foo() {}" +
-            "Foo.prototype.baz = function(){var x = 1;x};",
-            // Module 2
-            "var y = new Foo(); y.baz();"),
-         new String[] {
-           STUB_DECLARATIONS +
-           "function Foo() {}" +
-           "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-           // Module 2
-           "Foo.prototype.baz = JSCompiler_unstubMethod(" +
-           "    0, function(){var x = 1; x});" +
-           "var y = new Foo(); y.baz();"
-        });
+  public void moveClassMethodThatReferencesOnlyLocalVariables() {
+    testSame(
+        createModuleChain(
+            "class Foo { baz() {var x = 1; x; } }",
+            // Chunk 2
+            "var y = new Foo(); y.baz();"));
+    // TODO(b/70340193): This test case should be:
+    // test(
+    //     createModuleChain(
+    //         "class Foo { baz() {var x = 1; x; } }",
+    //         // Chunk 2
+    //         "var y = new Foo(); y.baz();"),
+    //     new String[] {
+    //       lines(
+    //           STUB_DECLARATIONS, //
+    //           "class Foo {}",
+    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+    //       // Chunk 2
+    //       lines(
+    //           "Foo.prototype.baz = JSCompiler_unstubMethod(",
+    //           "    0, function(){var x = 1; x});",
+    //           "var y = new Foo(); y.baz();")
+    //     });
   }
 
   // An anonymous inner function reading a closure variable is fine.
   @Test
-  public void testInnerFunctionClosureVariableReads() {
-    test(createModuleChain(
-            "function Foo() {}" +
-            "Foo.prototype.baz = function(){var x = 1;" +
-            "  return function(){x}};",
-            // Module 2
+  public void movePrototypeMethodContainingClosureOverLocalVariable() {
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}",
+                "Foo.prototype.baz = function() {",
+                "  var x = 1;",
+                "  return function(){x}",
+                "};"),
+            // Chunk 2
             "var y = new Foo(); y.baz();"),
-         new String[] {
-           STUB_DECLARATIONS +
-           "function Foo() {}" +
-           "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-           // Module 2
-           "Foo.prototype.baz = JSCompiler_unstubMethod(" +
-           "    0, function(){var x = 1; return function(){x}});" +
-           "var y = new Foo(); y.baz();"
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(",
+              "    0, function(){var x = 1; return function(){x}});",
+              "var y = new Foo(); y.baz();")
         });
+  }
+
+  @Test
+  public void moveClassMethodContainingClosureOverLocalVariable() {
+    testSame(
+        createModuleChain(
+            lines(
+                "class Foo {",
+                "  baz() {",
+                "    var x = 1;",
+                "    return function(){x}",
+                "  }",
+                "}"),
+            // Chunk 2
+            "var y = new Foo(); y.baz();"));
+    // TODO(b/70340193): this test case should be:
+    // test(
+    //     createModuleChain(
+    //         lines(
+    //             "class Foo {",
+    //             "  baz() {",
+    //             "    var x = 1;",
+    //             "    return function(){x}",
+    //             "  }",
+    //             "}"),
+    //         // Chunk 2
+    //         "var y = new Foo(); y.baz();"),
+    //     new String[] {
+    //       lines(STUB_DECLARATIONS, "class Foo {}", "Foo.prototype.baz =
+    // JSCompiler_stubMethod(0);"),
+    //       // Chunk 2
+    //       lines(
+    //           "Foo.prototype.baz = JSCompiler_unstubMethod(",
+    //           "    0, function(){var x = 1; return function(){x}});",
+    //           "var y = new Foo(); y.baz();")
+    //     });
   }
 
   @Test
   public void testIssue600() {
     testSame(
         createModuleChain(
-            "var jQuery1 = (function() {\n" +
-            "  var jQuery2 = function() {};\n" +
-            "  var theLoneliestNumber = 1;\n" +
-            "  jQuery2.prototype = {\n" +
-            "    size: function() {\n" +
-            "      return theLoneliestNumber;\n" +
-            "    }\n" +
-            "  };\n" +
-            "  return jQuery2;\n" +
-            "})();\n",
-
-            "(function() {" +
-            "  var div = jQuery1('div');" +
-            "  div.size();" +
-            "})();"));
+            lines(
+                "var jQuery1 = (function() {",
+                "  var jQuery2 = function() {};",
+                "  var theLoneliestNumber = 1;",
+                "  jQuery2.prototype = {",
+                "    size: function() {",
+                "      return theLoneliestNumber;",
+                "    }",
+                "  };",
+                "  return jQuery2;",
+                "})();"),
+            // Chunk 2
+            lines(
+                "(function() {", //
+                "  var div = jQuery1('div');",
+                "  div.size();",
+                "})();")));
   }
 
   @Test
   public void testIssue600b() {
     testSame(
         createModuleChain(
-            "var jQuery1 = (function() {\n" +
-            "  var jQuery2 = function() {};\n" +
-            "  jQuery2.prototype = {\n" +
-            "    size: function() {\n" +
-            "      return 1;\n" +
-            "    }\n" +
-            "  };\n" +
-            "  return jQuery2;\n" +
-            "})();\n",
-
-            "(function() {" +
-            "  var div = jQuery1('div');" +
-            "  div.size();" +
-            "})();"));
+            lines(
+                "var jQuery1 = (function() {",
+                "  var jQuery2 = function() {};",
+                "  jQuery2.prototype = {",
+                "    size: function() {",
+                "      return 1;",
+                "    }",
+                "  };",
+                "  return jQuery2;",
+                "})();\n"),
+            // Chunk 2
+            lines(
+                "(function() {", //
+                "  var div = jQuery1('div');",
+                "  div.size();",
+                "})();")));
   }
 
   @Test
   public void testIssue600c() {
     test(
         createModuleChain(
-            "var jQuery2 = function() {};\n" +
-            "jQuery2.prototype = {\n" +
-            "  size: function() {\n" +
-            "    return 1;\n" +
-            "  }\n" +
-            "};\n",
-
-            "(function() {" +
-            "  var div = jQuery2('div');" +
-            "  div.size();" +
-            "})();"),
+            lines(
+                "var jQuery2 = function() {};",
+                "jQuery2.prototype = {",
+                "  size: function() {",
+                "    return 1;",
+                "  }",
+                "};"),
+            // Chunk 2
+            lines(
+                "(function() {", //
+                "  var div = jQuery2('div');",
+                "  div.size();",
+                "})();")),
         new String[] {
-            STUB_DECLARATIONS +
-            "var jQuery2 = function() {};\n" +
-            "jQuery2.prototype = {\n" +
-            "  size: JSCompiler_stubMethod(0)\n" +
-            "};\n",
-            "jQuery2.prototype.size=" +
-            "    JSCompiler_unstubMethod(0,function(){return 1});" +
-            "(function() {" +
-            "  var div = jQuery2('div');" +
-            "  div.size();" +
-            "})();"
+          lines(
+              STUB_DECLARATIONS,
+              "var jQuery2 = function() {};",
+              "jQuery2.prototype = {",
+              "  size: JSCompiler_stubMethod(0)",
+              "};"),
+          // Chunk 2
+          lines(
+              "jQuery2.prototype.size=",
+              "    JSCompiler_unstubMethod(0,function(){return 1});",
+              "(function() {",
+              "  var div = jQuery2('div');",
+              "  div.size();",
+              "})();")
         });
   }
 
@@ -646,33 +1419,36 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   public void testIssue600d() {
     test(
         createModuleChain(
-            "var jQuery2 = function() {};\n" +
-            "(function() {" +
-            "  jQuery2.prototype = {\n" +
-            "    size: function() {\n" +
-            "      return 1;\n" +
-            "    }\n" +
-            "  };\n" +
-            "})();",
-
-            "(function() {" +
-            "  var div = jQuery2('div');" +
-            "  div.size();" +
-            "})();"),
+            lines(
+                "var jQuery2 = function() {};",
+                "(function() {",
+                "  jQuery2.prototype = {",
+                "    size: function() {",
+                "      return 1;",
+                "    }",
+                "  };",
+                "})();"),
+            lines(
+                "(function() {", //
+                "  var div = jQuery2('div');",
+                "  div.size();",
+                "})();")),
         new String[] {
-            STUB_DECLARATIONS +
-            "var jQuery2 = function() {};\n" +
-            "(function() {" +
-            "  jQuery2.prototype = {\n" +
-            "    size: JSCompiler_stubMethod(0)\n" +
-            "  };\n" +
-            "})();",
-            "jQuery2.prototype.size=" +
-            "    JSCompiler_unstubMethod(0,function(){return 1});" +
-            "(function() {" +
-            "  var div = jQuery2('div');" +
-            "  div.size();" +
-            "})();"
+          lines(
+              STUB_DECLARATIONS,
+              "var jQuery2 = function() {};",
+              "(function() {",
+              "  jQuery2.prototype = {",
+              "    size: JSCompiler_stubMethod(0)",
+              "  };",
+              "})();"),
+          lines(
+              "jQuery2.prototype.size=",
+              "    JSCompiler_unstubMethod(0,function(){return 1});",
+              "(function() {",
+              "  var div = jQuery2('div');",
+              "  div.size();",
+              "})();")
         });
   }
 
@@ -680,28 +1456,30 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   public void testIssue600e() {
     testSame(
         createModuleChain(
-            "var jQuery2 = function() {};\n" +
-            "(function() {" +
-            "  var theLoneliestNumber = 1;\n" +
-            "  jQuery2.prototype = {\n" +
-            "    size: function() {\n" +
-            "      return theLoneliestNumber;\n" +
-            "    }\n" +
-            "  };\n" +
-            "})();",
-
-            "(function() {" +
-            "  var div = jQuery2('div');" +
-            "  div.size();" +
-            "})();"));
+            lines(
+                "var jQuery2 = function() {};",
+                "(function() {",
+                "  var theLoneliestNumber = 1;",
+                "  jQuery2.prototype = {",
+                "    size: function() {",
+                "      return theLoneliestNumber;",
+                "    }",
+                "  };",
+                "})();"),
+            // Chunk 2
+            lines(
+                "(function() {", //
+                "  var div = jQuery2('div');",
+                "  div.size();",
+                "})();")));
   }
 
   @Test
   public void testPrototypeOfThisAssign() {
     testSame(
         createModuleChain(
-            "/** @constructor */" +
-            "function F() {}" +
+            "/** @constructor */",
+            "function F() {}",
             "this.prototype.foo = function() {};",
             "(new F()).foo();"));
   }
@@ -716,11 +1494,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "F.prototype.foo = function() {};"),
             "const {foo} = new F();"),
         new String[] {
-          STUB_DECLARATIONS
-              + lines(
-                  "/** @constructor */", //
-                  "function F() {}",
-                  "F.prototype.foo = JSCompiler_stubMethod(0);"),
+          lines(
+              STUB_DECLARATIONS,
+              "/** @constructor */",
+              "function F() {}",
+              "F.prototype.foo = JSCompiler_stubMethod(0);"),
           lines(
               "F.prototype.foo = JSCompiler_unstubMethod(0, function(){});", //
               "const {foo} = new F();")
