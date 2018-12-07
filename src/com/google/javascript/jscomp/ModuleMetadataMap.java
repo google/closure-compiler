@@ -110,6 +110,11 @@ public final class ModuleMetadataMap {
      * Whether this file uses Closure Library at all. Note that a file could use Closure Library
      * even without calling goog.provide/module/require - there are some primitives in base.js that
      * can be used without being required like goog.isArray.
+     *
+     * <p>If this is true this indicates the base.js is needed and is not part of this script - it
+     * is an EXTERNAL dependencym otherwise false. If this is also false if Closure Library is part
+     * of this script - e.g. a bundle with base.js. So something could be a "goog.provide'd file",
+     * but not use Closure if the bundle already contains Closure.
      */
     public abstract boolean usesClosure();
 

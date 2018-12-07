@@ -274,15 +274,18 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     assertThat(m.googNamespaces()).containsExactly("multiple.calls.c0");
     assertThat(m.isNonLegacyGoogModule()).isTrue();
     assertThat(m.path()).isNull();
+    assertThat(m.usesClosure()).isTrue();
 
     m = metadataMap().getModulesByGoogNamespace().get("multiple.calls.c1");
     assertThat(m.googNamespaces()).containsExactly("multiple.calls.c1");
     assertThat(m.isNonLegacyGoogModule()).isTrue();
     assertThat(m.path()).isNull();
+    assertThat(m.usesClosure()).isTrue();
 
     m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.googNamespaces()).containsExactly("some.provide", "some.other.provide");
     assertThat(m.isGoogProvide()).isTrue();
+    assertThat(m.usesClosure()).isTrue();
   }
 
   @Test
@@ -314,15 +317,18 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     assertThat(m.googNamespaces()).containsExactly("multiple.calls.c0");
     assertThat(m.isNonLegacyGoogModule()).isTrue();
     assertThat(m.path()).isNull();
+    assertThat(m.usesClosure()).isFalse();
 
     m = metadataMap().getModulesByGoogNamespace().get("multiple.calls.c1");
     assertThat(m.googNamespaces()).containsExactly("multiple.calls.c1");
     assertThat(m.isNonLegacyGoogModule()).isTrue();
     assertThat(m.path()).isNull();
+    assertThat(m.usesClosure()).isFalse();
 
     m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.googNamespaces()).containsExactly("some.provide", "some.other.provide");
     assertThat(m.isGoogProvide()).isTrue();
+    assertThat(m.usesClosure()).isFalse();
   }
 
   @Test
@@ -474,6 +480,20 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     testSame("function bar() { var goog; goog.isArray(foo); }");
     ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.usesClosure()).isFalse();
+  }
+
+  @Test
+  public void testGoogInSameScriptGoogIsNotClosure() {
+    testSame("/** @provideGoog */ var goog = {}; goog.isArray(foo);");
+    ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.usesClosure()).isFalse();
+  }
+
+  @Test
+  public void testGoogInOtherScriptGoogIsClosure() {
+    testSame(srcs("/** @provideGoog */ var goog = {};", "goog.isArray(foo);"));
+    ModuleMetadata m = metadataMap().getModulesByPath().get("input1");
+    assertThat(m.usesClosure()).isTrue();
   }
 
   @Test

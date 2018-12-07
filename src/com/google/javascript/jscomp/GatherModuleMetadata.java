@@ -330,7 +330,12 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
         return;
       }
 
-      currentModule.metadataBuilder.usesClosure(true);
+      // If goog is defined in this script then it does not use Closure. If this is a bundle with
+      // base.js in it, then it doesn't need base.js again.
+      if (root == null
+          || NodeUtil.getEnclosingScript(root.getNameNode()) != NodeUtil.getEnclosingScript(n)) {
+        currentModule.metadataBuilder.usesClosure(true);
+      }
 
       if (getprop.matchesQualifiedName(GOOG_PROVIDE)) {
         currentModule.moduleType(ModuleType.GOOG_PROVIDE, t, n);
