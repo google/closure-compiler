@@ -2113,27 +2113,29 @@ public final class DefaultPassConfig extends PassConfig {
   };
 
   /** Override @define-annotated constants. */
-  private final PassFactory processDefines = new PassFactory("processDefines", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
+  private final PassFactory processDefines =
+      new PassFactory("processDefines", true) {
         @Override
-        public void process(Node externs, Node jsRoot) {
-          HashMap<String, Node> replacements = new HashMap<>();
-          replacements.putAll(compiler.getDefaultDefineValues());
-          replacements.putAll(getAdditionalReplacements(options));
-          replacements.putAll(options.getDefineReplacements());
-          new ProcessDefines(compiler, ImmutableMap.copyOf(replacements), !options.checksOnly)
-              .injectNamespace(namespaceForChecks).process(externs, jsRoot);
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new CompilerPass() {
+            @Override
+            public void process(Node externs, Node jsRoot) {
+              HashMap<String, Node> replacements = new HashMap<>();
+              replacements.putAll(compiler.getDefaultDefineValues());
+              replacements.putAll(getAdditionalReplacements(options));
+              replacements.putAll(options.getDefineReplacements());
+              new ProcessDefines(compiler, ImmutableMap.copyOf(replacements), !options.checksOnly)
+                  .injectNamespace(namespaceForChecks)
+                  .process(externs, jsRoot);
+            }
+          };
+        }
+
+        @Override
+        public FeatureSet featureSet() {
+          return TYPE_CHECK_SUPPORTED;
         }
       };
-    }
-
-    @Override
-    public FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
 
   /**
    * Strips code for smaller compiled code. This is useful for removing debug
