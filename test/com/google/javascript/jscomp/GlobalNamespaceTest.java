@@ -16,12 +16,19 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
+import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.GlobalNamespace.AstChange;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Name.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
+import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.Node;
+import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -33,6 +40,8 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class GlobalNamespaceTest {
+
+  @Nullable private Compiler lastCompiler = null;
 
   @Test
   public void testRemoveDeclaration1() {
@@ -72,6 +81,93 @@ public final class GlobalNamespaceTest {
 
     assertThat(n.getDeclaration()).isNull();
     assertThat(n.getGlobalSets()).isEqualTo(0);
+  }
+
+  @Test
+  public void testSimpleSubclassingRefCollection() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "class Superclass {}", //
+                "class Subclass extends Superclass {}"));
+
+    Name superclass = namespace.getOwnSlot("Superclass");
+    assertThat(superclass.getRefs()).hasSize(2);
+    assertThat(superclass.getSubclassingGets()).isEqualTo(1);
+  }
+
+  @Test
+  public void testStaticInheritedReferencesDontReferToSuperclass() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "class Superclass {",
+                "  static staticMethod() {}",
+                "}",
+                "class Subclass extends Superclass {}",
+                "Subclass.staticMethod();"));
+
+    Name superclassStaticMethod = namespace.getOwnSlot("Superclass.staticMethod");
+    assertThat(superclassStaticMethod.getRefs()).hasSize(1);
+    assertThat(superclassStaticMethod.getDeclaration()).isNotNull();
+
+    Name subclassStaticMethod = namespace.getOwnSlot("Subclass.staticMethod");
+    assertThat(subclassStaticMethod.getRefs()).hasSize(1);
+    assertThat(subclassStaticMethod.getDeclaration()).isNull();
+  }
+
+  @Test
+  public void testScanFromNodeDoesntDuplicateVarDeclarationSets() {
+    GlobalNamespace namespace = parse("class Foo {} const Bar = Foo; const Baz = Bar;");
+
+    Name foo = namespace.getOwnSlot("Foo");
+    assertThat(foo.getAliasingGets()).isEqualTo(1);
+    Name baz = namespace.getOwnSlot("Baz");
+    assertThat(baz.getGlobalSets()).isEqualTo(1);
+
+    // Replace "const Baz = Bar" with "const Baz = Foo"
+    Node root = lastCompiler.getJsRoot();
+    Node barRef = root.getFirstChild().getLastChild().getFirstFirstChild();
+    checkState(barRef.getString().equals("Bar"), barRef);
+    Node fooName = IR.name("Foo");
+    barRef.replaceWith(fooName);
+
+    // Rescan the new nodes
+    namespace.scanNewNodes(ImmutableSet.of(createGlobalAstChangeForNode(root, fooName)));
+
+    assertThat(foo.getAliasingGets()).isEqualTo(2);
+    // A bug in scanFromNode used to make this `2`
+    assertThat(baz.getGlobalSets()).isEqualTo(1);
+  }
+
+  @Test
+  public void testScanFromNodeAddsReferenceToParentGetprop() {
+    GlobalNamespace namespace = parse("const x = {bar: 0}; const y = x; const baz = y.bar;");
+
+    Name xbar = namespace.getOwnSlot("x.bar");
+    assertThat(xbar.getAliasingGets()).isEqualTo(0);
+    Name baz = namespace.getOwnSlot("baz");
+    assertThat(baz.getGlobalSets()).isEqualTo(1);
+
+    // Replace "const baz = y.bar" with "const baz = x.bar"
+    Node root = lastCompiler.getJsRoot();
+    Node yRef = root.getFirstChild().getLastChild().getFirstFirstChild().getFirstChild();
+    checkState(yRef.getString().equals("y"), yRef);
+    Node xName = IR.name("x");
+    yRef.replaceWith(xName);
+
+    // Rescan the new nodes
+    namespace.scanNewNodes(ImmutableSet.of(createGlobalAstChangeForNode(root, xName)));
+
+    assertThat(xbar.getAliasingGets()).isEqualTo(1);
+    assertThat(baz.getGlobalSets()).isEqualTo(1);
+  }
+
+  private AstChange createGlobalAstChangeForNode(Node jsRoot, Node n) {
+    // This only creates a global scope, so don't use this with local nodes
+    Scope globalScope = new Es6SyntacticScopeCreator(lastCompiler).createScope(jsRoot, null);
+    // I don't know if lastCompiler.getModules() is correct but it works
+    return new AstChange(Iterables.getFirst(lastCompiler.getModules(), null), globalScope, n);
   }
 
   @Test
@@ -121,8 +217,10 @@ public final class GlobalNamespaceTest {
   private GlobalNamespace parse(String js) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
+    options.setSkipNonTranspilationPasses(true);
     compiler.compile(SourceFile.fromCode("ex.js", ""), SourceFile.fromCode("test.js", js), options);
     assertThat(compiler.getErrors()).isEmpty();
+    this.lastCompiler = compiler;
 
     return new GlobalNamespace(compiler, compiler.getRoot());
   }

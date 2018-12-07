@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
@@ -33,6 +35,7 @@ import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Inlines type aliases if they are explicitly or effectively const. Also inlines inherited static
@@ -55,17 +58,25 @@ class AggressiveInlineAliases implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private boolean codeChanged;
+  private GlobalNamespace namespace;
 
   AggressiveInlineAliases(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.codeChanged = true;
   }
 
+  @VisibleForTesting
+  GlobalNamespace getLastUsedGlobalNamespace() {
+    return namespace;
+  }
+
   @Override
   public void process(Node externs, Node root) {
-    while (this.codeChanged) {
-      this.codeChanged = false;
-      GlobalNamespace namespace = new GlobalNamespace(compiler, root);
+    // Building the `GlobalNamespace` dominates the cost of this pass, so it is built once and
+    // updated as changes are made so it can be reused for the next iteration.
+    this.namespace = new GlobalNamespace(compiler, root);
+    while (codeChanged) {
+      codeChanged = false;
       inlineAliases(namespace);
     }
   }
@@ -115,7 +126,7 @@ class AggressiveInlineAliases implements CompilerPass {
       if (!name.inExterns()
           && name.getGlobalSets() == 1
           && name.getLocalSets() == 0
-          && name.getAliasingGets() > 0) {
+          && (name.getAliasingGets() > 0 || name.getSubclassingGets() > 0)) {
         // {@code name} meets condition (b). Find all of its local aliases
         // and try to inline them.
         List<Ref> refs = new ArrayList<>(name.getRefs());
@@ -131,16 +142,9 @@ class AggressiveInlineAliases implements CompilerPass {
               && hoistScope.isGlobal()
               && ref.getTwin() == null) { // ignore aliases in chained assignments
             inlineGlobalAliasIfPossible(name, ref, namespace);
-          }
-        }
-      }
-
-      if (!name.inExterns() && name.isClass()) {
-        List<Name> subclasses = name.subclasses;
-        if (subclasses != null && name.props != null) {
-          for (Name subclass : subclasses) {
+          } else if (name.isClass() && ref.type == Type.SUBCLASSING_GET && name.props != null) {
             for (Name prop : name.props) {
-              rewriteAllSubclassInheritedAccesses(name, subclass, prop, namespace);
+              rewriteAllSubclassInheritedAccesses(name, ref, prop, namespace);
             }
           }
         }
@@ -202,12 +206,17 @@ class AggressiveInlineAliases implements CompilerPass {
    * possible, since they may use this or super().
    *
    * @param superclassNameObj The Name of the superclass
-   * @param subclassNameObj The Name of the subclass
+   * @param superclassRef The SUBCLASSING_REF
    * @param prop The property on the superclass to rewrite, if any descendant accesses it.
    * @param namespace The GlobalNamespace containing superclassNameObj
    */
   private boolean rewriteAllSubclassInheritedAccesses(
-      Name superclassNameObj, Name subclassNameObj, Name prop, GlobalNamespace namespace) {
+      Name superclassNameObj, Ref superclassRef, Name prop, GlobalNamespace namespace) {
+    Node subclass = getSubclassForEs6Superclass(superclassRef.getNode());
+    if (subclass == null || !subclass.isQualifiedName()) {
+      return false;
+    }
+    String subclassName = subclass.getQualifiedName();
     Ref propDeclRef = prop.getDeclaration();
     if (propDeclRef == null
         || propDeclRef.node == null
@@ -219,7 +228,7 @@ class AggressiveInlineAliases implements CompilerPass {
       return false;
     }
 
-    String subclassQualifiedPropName = subclassNameObj.getFullName() + "." + prop.getBaseName();
+    String subclassQualifiedPropName = subclassName + "." + prop.getBaseName();
     Name subclassPropNameObj = namespace.getOwnSlot(subclassQualifiedPropName);
     // Don't rewrite if the subclass ever shadows the parent static property.
     // This may also back off on cases where the subclass first accesses the parent property, then
@@ -230,9 +239,12 @@ class AggressiveInlineAliases implements CompilerPass {
     }
 
     // Recurse to find potential sub-subclass accesses of the superclass property.
-    if (subclassNameObj.subclasses != null) {
-      for (Name name : subclassNameObj.subclasses) {
-        rewriteAllSubclassInheritedAccesses(superclassNameObj, name, prop, namespace);
+    Name subclassNameObj = namespace.getOwnSlot(subclassName);
+    if (subclassNameObj != null && subclassNameObj.subclassingGets > 0) {
+      for (Ref ref : subclassNameObj.getRefs()) {
+        if (ref.type == Type.SUBCLASSING_GET) {
+          rewriteAllSubclassInheritedAccesses(superclassNameObj, ref, prop, namespace);
+        }
       }
     }
 
@@ -336,12 +348,13 @@ class AggressiveInlineAliases implements CompilerPass {
         }
 
         // just set the original alias to null.
-        replaceAliasAssignment(alias, aliasLhsNode);
+        if (tryReplacingAliasingAssignment(alias, aliasLhsNode)) {
+          name.removeRef(alias);
+        }
 
         // Inlining the variable may have introduced new references
         // to descendants of {@code name}. So those need to be collected now.
         namespace.scanNewNodes(newNodes);
-        name.removeRef(alias);
         return;
       }
 
@@ -350,9 +363,7 @@ class AggressiveInlineAliases implements CompilerPass {
         // generators introduces some constructor aliases that weren't getting inlined.
         // If we find another (safer) way to avoid aliasing in method decomposition, consider
         // removing this.
-        if (partiallyInlineAlias(alias, namespace, aliasRefs, aliasLhsNode)) {
-          name.removeRef(alias);
-        } else {
+        if (!partiallyInlineAlias(alias, namespace, aliasRefs, aliasLhsNode)) {
           // If we can't inline all alias references, make sure there are no unsafe property
           // accesses.
           if (referencesCollapsibleProperty(aliasRefs, name, namespace)) {
@@ -423,7 +434,7 @@ class AggressiveInlineAliases implements CompilerPass {
 
     // We removed all references to the alias, so remove the original aliasing assignment.
     if (!foundNonReplaceableAlias) {
-      replaceAliasAssignment(alias, aliasLhsNode);
+      tryReplacingAliasingAssignment(alias, aliasLhsNode);
     }
 
     if (codeChanged) {
@@ -438,19 +449,20 @@ class AggressiveInlineAliases implements CompilerPass {
    * Replaces the rhs of an aliasing assignment with null, unless the assignment result is used in a
    * complex expression.
    */
-  private void replaceAliasAssignment(Ref alias, Node aliasLhsNode) {
+  private boolean tryReplacingAliasingAssignment(Ref alias, Node aliasLhsNode) {
     // either VAR/CONST/LET or ASSIGN.
     Node assignment = aliasLhsNode.getParent();
     if (!NodeUtil.isNameDeclaration(assignment) && NodeUtil.isExpressionResultUsed(assignment)) {
       // e.g. don't change "if (alias = someVariable)" to "if (alias = null)"
       // TODO(lharker): instead replace the entire assignment with the RHS - "alias = x" becomes "x"
-      return;
+      return false;
     }
     Node aliasParent = alias.node.getParent();
     aliasParent.replaceChild(alias.node, IR.nullNode());
     alias.name.removeRef(alias);
     codeChanged = true;
     compiler.reportChangeToEnclosingScope(aliasParent);
+    return true;
   }
 
   /**
@@ -561,6 +573,7 @@ class AggressiveInlineAliases implements CompilerPass {
           aliasParent.replaceWith(alias.node.detach());
           aliasingName.removeRef(aliasDeclaration);
           aliasingName.removeRef(aliasDeclaration.getTwin());
+          newNodes.add(new AstChange(alias.module, alias.scope, alias.node));
           compiler.reportChangeToEnclosingScope(aliasGrandparent);
         } else {
           // just set the original alias to null.
@@ -589,6 +602,7 @@ class AggressiveInlineAliases implements CompilerPass {
         case ALIASING_GET:
         case PROTOTYPE_GET:
         case CALL_GET:
+        case SUBCLASSING_GET:
           if (ref.getTwin() != null) {
             // The reference is the left-hand side of a nested assignment. This means we store two
             // separate 'twin' Refs with the same node of types ALIASING_GET and SET_FROM_GLOBAL.
@@ -687,5 +701,29 @@ class AggressiveInlineAliases implements CompilerPass {
       newNodes.add(new AstChange(ref.module, ref.scope, ref.node));
       codeChanged = true;
     }
+  }
+
+  /**
+   * Tries to find an lvalue for the subclass given the superclass node in an `class ... extends `
+   * clause
+   *
+   * <p>Only handles cases where we have either a class declaration or a class expression in an
+   * assignment or name declaration. Otherwise returns null.
+   */
+  @Nullable
+  private static Node getSubclassForEs6Superclass(Node superclass) {
+    Node classNode = superclass.getParent();
+    checkArgument(classNode.isClass(), classNode);
+    if (NodeUtil.isNameDeclaration(classNode.getGrandparent())) {
+      // const Clazz = class extends Super {
+      return classNode.getParent();
+    } else if (superclass.getGrandparent().isAssign()) {
+      // ns.foo.Clazz = class extends Super {
+      return classNode.getPrevious();
+    } else if (NodeUtil.isClassDeclaration(classNode)) {
+      // class Clazz extends Super {
+      return classNode.getFirstChild();
+    }
+    return null;
   }
 }

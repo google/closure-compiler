@@ -235,7 +235,11 @@ class GlobalNamespace
   private void scanFromNode(
     BuildGlobalNamespace builder, JSModule module, Scope scope, Node n) {
     // Check affected parent nodes first.
-    if (n.isName() || n.isGetProp()) {
+    Node parent = n.getParent();
+    if ((n.isName() || n.isGetProp()) && parent.isGetProp()) {
+      // e.g. when replacing "my.alias.prop" with "foo.bar.prop"
+      // we want also want to visit "foo.bar.prop", since that's a new global qname we are now
+      // referencing.
       scanFromNode(builder, module, scope, n.getParent());
     }
     builder.collect(module, scope, n);
@@ -647,7 +651,6 @@ class GlobalNamespace
       if (n.getBooleanProp(Node.MODULE_EXPORT)) {
         nameObj.isModuleProp = true;
       }
-      maybeRecordEs6Subclass(n, parent, nameObj);
 
       Ref set = new Ref(module, scope, n, nameObj, Ref.Type.SET_FROM_GLOBAL,
           currentPreOrderIndex++);
@@ -666,55 +669,12 @@ class GlobalNamespace
     }
 
     /**
-     * Given a new node and its name that is an ES6 class, checks if it is an ES6 class with an ES6
-     * superclass. If the superclass is a simple or qualified names, adds itself to the parent's
-     * list of subclasses. Otherwise this does nothing.
-     *
-     * @param n The node being visited.
-     * @param parent {@code n}'s parent
-     * @param subclassNameObj The Name of the new node being visited.
-     */
-    private void maybeRecordEs6Subclass(Node n, Node parent, Name subclassNameObj) {
-      if (subclassNameObj.type != Name.Type.CLASS || parent == null) {
-        return;
-      }
-
-      Node superclass = null;
-      if (parent.isClass()) {
-        superclass = parent.getSecondChild();
-      } else if (n.isName() || n.isGetProp()){
-        Node classNode = NodeUtil.getAssignedValue(n);
-        if (classNode != null && classNode.isClass()) {
-          superclass = classNode.getSecondChild();
-        }
-      }
-      // TODO(lharker): figure out what should we do when n is an object literal key.
-      // e.g. var obj = {foo: class extends Parent {}};
-
-      // If there's no superclass, or the superclass expression is more complicated than a simple
-      // or qualified name, return.
-      if (superclass == null
-          || superclass.isEmpty()
-          || !(superclass.isName() || superclass.isGetProp())) {
-        return;
-      }
-      String superclassName = superclass.getQualifiedName();
-
-      Name superclassNameObj = getOrCreateName(superclassName, true);
-      // If the superclass is an ES3/5 class we don't record its subclasses.
-      if (superclassNameObj != null && superclassNameObj.type == Name.Type.CLASS) {
-        superclassNameObj.addSubclass(subclassNameObj);
-      }
-    }
-
-    /**
-     * Determines whether a set operation is a constructor or enumeration
-     * or interface declaration. The set operation may either be an assignment
-     * to a name, a variable declaration, or an object literal key mapping.
+     * Determines whether a set operation is a constructor or enumeration or interface declaration.
+     * The set operation may either be an assignment to a name, a variable declaration, or an object
+     * literal key mapping.
      *
      * @param n The node that represents the name being set
-     * @return Whether the set operation is either a constructor or enum
-     *     declaration
+     * @return Whether the set operation is either a constructor or enum declaration
      */
     private boolean isTypeDeclaration(Node n) {
       Node valueNode = NodeUtil.getRValueOfLValue(n);
@@ -825,7 +785,7 @@ class GlobalNamespace
           break;
         case CLASS:
           // This node is the superclass in an extends clause.
-          type = Ref.Type.DIRECT_GET;
+          type = Ref.Type.SUBCLASSING_GET;
           break;
         default:
           type = Ref.Type.ALIASING_GET;
@@ -1055,6 +1015,7 @@ class GlobalNamespace
       CLASS, // class C {}
       OBJECTLIT, // var x = {};
       FUNCTION, // function f() {}
+      SUBCLASSING_GET, // class C extends SuperClass {
       GET_SET, // a getter, setter, or both; e.g. `obj.b` in `const obj = {set b(x) {}};`
       OTHER, // anything else, including `var x = 1;`, var x = new Something();`, etc.
     }
@@ -1087,6 +1048,7 @@ class GlobalNamespace
     private int totalGets = 0;
     private int callGets = 0;
     private int deleteProps = 0;
+    int subclassingGets = 0;
     private final SourceKind sourceKind;
 
     JSDocInfo docInfo = null;
@@ -1111,15 +1073,6 @@ class GlobalNamespace
         props.add(node);
       }
       return node;
-    }
-
-    Name addSubclass(Name subclassName) {
-      checkArgument(this.type == Type.CLASS && subclassName.type == Type.CLASS);
-      if (subclasses == null) {
-        subclasses = new ArrayList<>();
-      }
-      subclasses.add(subclassName);
-      return subclassName;
     }
 
     String getBaseName() {
@@ -1174,12 +1127,20 @@ class GlobalNamespace
       return aliasingGets;
     }
 
+    int getSubclassingGets() {
+      return subclassingGets;
+    }
+
     int getLocalSets() {
       return localSets;
     }
 
     int getGlobalSets() {
       return globalSets;
+    }
+
+    int getCallGets() {
+      return callGets;
     }
 
     int getDeleteProps() {
@@ -1231,6 +1192,10 @@ class GlobalNamespace
         case DELETE_PROP:
           deleteProps++;
           break;
+        case SUBCLASSING_GET:
+          subclassingGets++;
+          totalGets++;
+          break;
         default:
           throw new IllegalStateException();
       }
@@ -1276,6 +1241,10 @@ class GlobalNamespace
             break;
           case DELETE_PROP:
             deleteProps--;
+            break;
+          case SUBCLASSING_GET:
+            subclassingGets--;
+            totalGets--;
             break;
           default:
             throw new IllegalStateException();
@@ -1397,6 +1366,7 @@ class GlobalNamespace
           case DIRECT_GET:
           case PROTOTYPE_GET:
           case CALL_GET:
+          case SUBCLASSING_GET:
             continue;
           case DELETE_PROP:
             return Inlinability.DO_NOT_INLINE;
@@ -1667,13 +1637,18 @@ class GlobalNamespace
     }
 
     @Override public String toString() {
-      return getFullName() + " (" + type + "): "
-          + Joiner.on(", ").join(
-              "globalSets=" + globalSets,
-              "localSets=" + localSets,
-              "totalGets=" + totalGets,
-              "aliasingGets=" + aliasingGets,
-              "callGets=" + callGets);
+      return getFullName()
+          + " ("
+          + type
+          + "): "
+          + Joiner.on(", ")
+              .join(
+                  "globalSets=" + globalSets,
+                  "localSets=" + localSets,
+                  "totalGets=" + totalGets,
+                  "aliasingGets=" + aliasingGets,
+                  "callGets=" + callGets,
+                  "subclassingGets=" + subclassingGets);
     }
 
     @Override
@@ -1766,6 +1741,9 @@ class GlobalNamespace
        * Prevents a name from being collapsed at all.
        */
       DELETE_PROP,
+
+      /** ES6 subclassing ref: class extends A {} */
+      SUBCLASSING_GET,
     }
 
     Node node; // Not final because CollapseProperties needs to update the namespace in-place.

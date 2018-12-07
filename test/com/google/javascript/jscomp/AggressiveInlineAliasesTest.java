@@ -16,7 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import com.google.common.truth.Expect;
+import com.google.javascript.jscomp.GlobalNamespace.Name;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -24,6 +30,9 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link AggressiveInlineAliases}. */
 @RunWith(JUnit4.class)
 public class AggressiveInlineAliasesTest extends CompilerTestCase {
+
+  private AggressiveInlineAliases lastAggressiveInlineAliases;
+  @Rule public final Expect expect = Expect.create();
 
   private static final String EXTERNS =
       "var window;"
@@ -43,7 +52,8 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new AggressiveInlineAliases(compiler);
+    this.lastAggressiveInlineAliases = new AggressiveInlineAliases(compiler);
+    return this.lastAggressiveInlineAliases;
   }
 
   @Override
@@ -1405,15 +1415,18 @@ test(
         "var A = class {}; A.staticProp = 6; var B = class extends A {}; use(A.staticProp);");
 
     test(
-        "var A; A = class {}; A.staticProp = 6; var B = class extends A {}; use(B.staticProp);",
-        "var A; A = class {}; A.staticProp = 6; var B = class extends A {}; use(A.staticProp);");
-    test(
         "let A = class {}; A.staticProp = 6; let B = class extends A {}; use(B.staticProp);",
         "let A = class {}; A.staticProp = 6; let B = class extends A {}; use(A.staticProp);");
 
     test(
         "const A = class {}; A.staticProp = 6; const B = class extends A {}; use(B.staticProp);",
         "const A = class {}; A.staticProp = 6; const B = class extends A {}; use(A.staticProp);");
+  }
+
+  @Test
+  public void testClassStaticInheritence_lateInitializedExpression() {
+    testSame(
+        "var A; A = class {}; A.staticProp = 6; var B = class extends A {}; use(B.staticProp);");
   }
 
   @Test
@@ -1764,11 +1777,10 @@ test(
 
   @Test
   public void testDontInlinePropertiesOnEscapedNamespace() {
-    test(
+    testSame(
         externs("function use(obj) {}"),
         srcs(
             lines(
-                "/** @constructor */",
                 "function Foo() {}",
                 "Foo.Bar = {};",
                 "Foo.Bar.baz = {A: 1, B: 2};",
@@ -1879,5 +1891,53 @@ test(
             // `Letters.B` without verifying that the read was not also a write.
             "Letters.A, Letters.B;",
             "use(Letters.B);"));
+  }
+
+  /**
+   * To ensure that as we modify the AST, the GlobalNamespace stays up-to-date, we do a consistency
+   * check after every unit test.
+   *
+   * <p>This check compares the names in the global namespace in the pass with a freshly-created
+   * global namespace.
+   */
+  @After
+  public void validateGlobalNamespace() {
+    GlobalNamespace passGlobalNamespace = lastAggressiveInlineAliases.getLastUsedGlobalNamespace();
+    GlobalNamespace expectedGlobalNamespace =
+        new GlobalNamespace(getLastCompiler(), getLastCompiler().getJsRoot());
+
+    // GlobalNamespace (understandably) does not override equals. It would be silly to put it in
+    // a datastructure. Neither does GlobalNamespace.Name (which probably could?)
+    // So to compare equality: we verify that
+    //  1. the two namespaces have the same qualified names, bar extern names
+    //  2. each name has the same number of references in both namespaces
+    for (Name expectedName : expectedGlobalNamespace.getNameForest()) {
+      if (expectedName.inExterns()) {
+        continue;
+      }
+      String fullName = expectedName.getFullName();
+      Name actualName = passGlobalNamespace.getSlot(expectedName.getFullName());
+      assertThat(actualName).named(fullName).isNotNull();
+
+      assertThat(actualName.getAliasingGets())
+          .named(fullName)
+          .isEqualTo(expectedName.getAliasingGets());
+      assertThat(actualName.getSubclassingGets())
+          .named(fullName)
+          .isEqualTo(expectedName.getSubclassingGets());
+      assertThat(actualName.getLocalSets()).named(fullName).isEqualTo(expectedName.getLocalSets());
+      assertThat(actualName.getGlobalSets())
+          .named(fullName)
+          .isEqualTo(expectedName.getGlobalSets());
+      assertThat(actualName.getDeleteProps())
+          .named(fullName)
+          .isEqualTo(expectedName.getDeleteProps());
+      assertThat(actualName.getCallGets()).named(fullName).isEqualTo(expectedName.getCallGets());
+    }
+    // Verify that no names in the actual name forest are not present in the expected name forest
+    for (Name actualName : passGlobalNamespace.getNameForest()) {
+      String actualFullName = actualName.getFullName();
+      assertThat(expectedGlobalNamespace.getSlot(actualFullName)).named(actualFullName).isNotNull();
+    }
   }
 }
