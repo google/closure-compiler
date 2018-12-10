@@ -1185,10 +1185,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   final String getCurrentJsSource() {
-    SourceMap sourceMap = getSourceMap();
-    if (sourceMap != null) {
-      sourceMap.reset();
-    }
+    this.resetAndIntitializeSourceMap();
 
     List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
     List<String> moduleNameRegexList = options.chunksToPrintAfterEachPassRegexList;
@@ -3718,5 +3715,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     path1Parts.addAll(path2Parts);
     return String.join("/", path1Parts);
+  }
+
+  public void resetAndIntitializeSourceMap() {
+    if (sourceMap == null) {
+      return;
+    }
+    sourceMap.reset();
+    if (options.applyInputSourceMaps && options.sourceMapIncludeSourcesContent) {
+      for (SourceMapInput inputSourceMap : inputSourceMaps.values()) {
+        addSourceMapSourceFiles(inputSourceMap);
+      }
+    }
   }
 }

@@ -340,7 +340,7 @@ public final class GwtRunner {
 
     for (JSModule c : chunks) {
       if (flags.createSourceMap != null && !flags.createSourceMap.equals(false)) {
-        compiler.getSourceMap().reset();
+        compiler.resetAndIntitializeSourceMap();
       }
 
       File file = new File();
