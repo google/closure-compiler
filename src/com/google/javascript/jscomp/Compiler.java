@@ -3695,28 +3695,33 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Simplistic implementation of the java.nio.file.Path resolveSibling method that works
    * with GWT.
    *
-   * @param path1 from path - must be a file (not directory)
-   * @param path2 to path - must be a file (not directory)
+   * @param fromPath - must be a file (not directory)
+   * @param toPath - must be a file (not directory)
    */
-  private static String resolveSibling(String path1, String path2) {
-    List<String> path1Parts = new ArrayList<>(Arrays.asList(path1.split("/")));
-    List<String> path2Parts = new ArrayList<>(Arrays.asList(path2.split("/")));
-    if (!path1Parts.isEmpty()) {
-      path1Parts.remove(path1Parts.size() - 1);
+  private static String resolveSibling(String fromPath, String toPath) {
+    // If the destination is an absolute path, nothing to do.
+    if (toPath.startsWith("/")) {
+      return toPath;
     }
 
-    while (!path1Parts.isEmpty() && !path2Parts.isEmpty()) {
-      if (path2Parts.get(0).equals(".")) {
-        path2Parts.remove(0);
-      } else if (path2Parts.get(0).equals("..")) {
-        path2Parts.remove(0);
-        path1Parts.remove(path1Parts.size() - 1);
+    List<String> fromPathParts = new ArrayList<>(Arrays.asList(fromPath.split("/")));
+    List<String> toPathParts = new ArrayList<>(Arrays.asList(toPath.split("/")));
+    if (!fromPathParts.isEmpty()) {
+      fromPathParts.remove(fromPathParts.size() - 1);
+    }
+
+    while (!fromPathParts.isEmpty() && !toPathParts.isEmpty()) {
+      if (toPathParts.get(0).equals(".")) {
+        toPathParts.remove(0);
+      } else if (toPathParts.get(0).equals("..")) {
+        toPathParts.remove(0);
+        fromPathParts.remove(fromPathParts.size() - 1);
       } else {
         break;
       }
     }
 
-    path1Parts.addAll(path2Parts);
-    return String.join("/", path1Parts);
+    fromPathParts.addAll(toPathParts);
+    return String.join("/", fromPathParts);
   }
 }
