@@ -288,12 +288,18 @@ public class JsfileParser {
     } else if (module.isGoogModule()) {
       info.loadFlags.add(JsArray.of("module", "goog"));
     }
-    info.provides.addAll(module.googNamespaces());
-    info.requires.addAll(module.requiredGoogNamespaces());
-    info.typeRequires.addAll(module.requiredTypes());
-    info.testonly = module.isTestOnly();
-    info.importedModules.addAll(module.es6ImportSpecifiers().elementSet());
     info.goog = module.usesClosure();
+    // If something doesn't have an external dependency on Closure, then it does not have any
+    // externally required files or symbols to provide. This is needed for bundles that contain
+    // base.js as well as other files. These bundles should look like they do not require or provide
+    // anything at all.
+    if (module.usesClosure()) {
+      info.provides.addAll(module.googNamespaces());
+      info.requires.addAll(module.requiredGoogNamespaces());
+      info.typeRequires.addAll(module.requiredTypes());
+      info.testonly = module.isTestOnly();
+    }
+    info.importedModules.addAll(module.es6ImportSpecifiers().elementSet());
     return info;
   }
 
