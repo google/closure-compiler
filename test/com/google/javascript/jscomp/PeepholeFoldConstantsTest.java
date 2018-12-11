@@ -1067,6 +1067,42 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldArrayLitSpreadGetElem() {
+    numRepetitions = 1;
+    fold("x = [...[0]][0]", "x = 0;");
+    fold("x = [0, 1, ...[2, 3, 4]][3]", "x = 3;");
+    fold("x = [...[0, 1], 2, ...[3, 4]][3]", "x = 3;");
+    fold("x = [...[...[0, 1], 2, 3], 4][0]", "x = 0");
+    fold("x = [...[...[0, 1], 2, 3], 4][3]", "x = 3");
+    test(
+        srcs("x = [...[]][100]"),
+        expected("x = [][100]"),
+        warning(PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR));
+    test(
+        srcs("x = [...[0]][100]"),
+        expected("x = [0][100]"),
+        warning(PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR));
+  }
+
+  @Test
+  public void testDontFoldNonLiteralSpreadGetElem() {
+    foldSame("x = [...iter][0];");
+    foldSame("x = [0, 1, ...iter][2];");
+    //  `...iter` could have side effects, so don't replace `x` with `0`
+    foldSame("x = [0, 1, ...iter][0];");
+  }
+
+  @Test
+  public void testFoldArraySpread() {
+    numRepetitions = 1;
+    fold("x = [...[]]", "x = []");
+    fold("x = [0, ...[], 1]", "x = [0, 1]");
+    fold("x = [...[0, 1], 2, ...[3, 4]]", "x = [0, 1, 2, 3, 4]");
+    fold("x = [...[...[0], 1], 2]", "x = [0, 1, 2]");
+    foldSame("[...[x]] = arr");
+  }
+
+  @Test
   public void testFoldComplex() {
     fold("x = (3 / 1.0) + (1 * 2)", "x = 5");
     fold("x = (1 == 1.0) && foo() && true", "x = foo()&&true");

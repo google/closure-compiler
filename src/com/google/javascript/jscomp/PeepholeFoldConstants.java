@@ -81,6 +81,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case TYPEOF:
         return tryFoldTypeof(subtree);
 
+      case ARRAYLIT:
+        return tryFlattenArray(subtree);
+
       case NOT:
       case POS:
       case NEG:
@@ -1378,6 +1381,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node current = left.getFirstChild();
     Node elem = null;
     for (int i = 0; current != null; i++) {
+      if (current.isSpread()) {
+        // The only time we can fold getelems with spread is for spread arrays literals, and
+        // `tryFlattenArray` already flattens those.
+        return n;
+      }
       if (i != intIndex) {
         if (mayHaveSideEffects(current)) {
           return n;
@@ -1404,6 +1412,43 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     n.replaceWith(elem);
     compiler.reportChangeToEnclosingScope(elem);
     return elem;
+  }
+
+  /**
+   * Flattens array literals that contain spreads of other array literals.
+   *
+   * <p>Does not recurse into nested spreads,because this method is already called as part of a
+   * postorder traversal and nested spreads will already have been flattened
+   *
+   * <p>Example: `[0, ...[1, 2, 3], 4, ...[5]]` => `[0, 1, 2, 3, 4, 5]`
+   */
+  private Node tryFlattenArray(Node arrayLit) {
+    for (Node child = arrayLit.getFirstChild(); child != null; ) {
+      Node spread = child;
+      // we have to put child.getNext() here because spread nodes are detached below
+      child = child.getNext();
+      if (spread.isSpread() && spread.getOnlyChild().isArrayLit()) {
+        inlineSpreadInArrayLit(spread);
+      }
+    }
+    return arrayLit;
+  }
+
+  /** Replaces `...[1, 2, 3]` with `1, 2, 3` in an array literal. */
+  private void inlineSpreadInArrayLit(Node spread) {
+    Node parentArray = spread.getParent();
+    checkArgument(parentArray.isArrayLit(), "This isn't supported for object spread");
+
+    Node childArray = spread.getOnlyChild();
+    // We can't use `child.getNext()` because the child is being moved.
+    for (Node element = childArray.getFirstChild();
+        element != null;
+        element = childArray.getFirstChild()) {
+      parentArray.addChildBefore(element.detach(), spread);
+    }
+
+    spread.detach();
+    compiler.reportChangeToEnclosingScope(parentArray);
   }
 
   private Node tryFoldStringArrayAccess(Node n, Node left, Node right) {
