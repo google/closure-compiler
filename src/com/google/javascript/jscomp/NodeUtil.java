@@ -2987,8 +2987,14 @@ public final class NodeUtil {
           return true;
         case COMPUTED_PROP:
           // `({ [expression]() {} })`
+          // `({ get [expression]() {} })`
+          // `({ set [expression](x) {} })`
+          // (but not `({ [expression]: function() {} })`
           // The first child is the expression, and could possibly be a function.
-          return parent.getLastChild() == n;
+          return parent.getLastChild() == n
+              && (parent.getBooleanProp(Node.COMPUTED_PROP_METHOD)
+                  || parent.getBooleanProp(Node.COMPUTED_PROP_GETTER)
+                  || parent.getBooleanProp(Node.COMPUTED_PROP_SETTER));
         default:
           return false;
       }

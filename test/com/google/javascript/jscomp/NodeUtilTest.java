@@ -868,6 +868,7 @@ public final class NodeUtilTest {
     assertContainsAnonFunc(true, "(function(){})");
     assertContainsAnonFunc(true, "[function a(){}]");
     assertContainsAnonFunc(true, "({x: function a(){}})");
+    assertContainsAnonFunc(true, "({[0]: function a() {}})");
     assertContainsAnonFunc(true, "(function a(){})()");
     assertContainsAnonFunc(true, "x = function a(){};");
     assertContainsAnonFunc(true, "var x = function a(){};");
@@ -894,6 +895,9 @@ public final class NodeUtilTest {
     assertContainsAnonFunc(false, "class C { a() {} }");
     assertContainsAnonFunc(false, "class C { static a() {} }");
     assertContainsAnonFunc(false, "x = { a() {} }");
+    assertContainsAnonFunc(false, "({[0]() {}})");
+    assertContainsAnonFunc(false, "({get [0]() {}})");
+    assertContainsAnonFunc(false, "({set [0](x) {}})");
   }
 
   private void assertContainsAnonFunc(boolean expected, String js) {

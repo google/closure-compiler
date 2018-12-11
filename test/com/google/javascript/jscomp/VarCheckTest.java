@@ -913,6 +913,11 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame("import {a} from './foo.js'; let c = a;");
   }
 
+  @Test
+  public void testComputedPropertyWithNamedFunction() {
+    testSame("({[0]: function f() {}})");
+  }
+
   private static final class VariableTestCheck implements CompilerPass {
 
     final AbstractCompiler compiler;
