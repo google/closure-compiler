@@ -222,7 +222,8 @@ abstract class PotentialDeclaration {
           || (rhs != null
               && rhs.isObjectLit()
               && !rhs.hasChildren()
-              && (jsdoc == null || !JsdocUtil.hasAnnotatedType(jsdoc)));
+              && (jsdoc == null || !JsdocUtil.hasAnnotatedType(jsdoc)))
+          || (rhs != null && NodeUtil.isCallTo(rhs, "Polymer"));
     }
   }
 

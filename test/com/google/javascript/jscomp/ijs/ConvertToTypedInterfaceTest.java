@@ -1656,6 +1656,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testPolymerCallsDeclareType() {
+    testSame("Polymer({is: 'exampleApp'});");
+    testSame("const ExampleApp = Polymer({is: 'exampleApp'});");
+  }
+
+  @Test
   public void testComputedPropertyInferenceDoesntCrash() {
     test(
         "const SomeMap = { [foo()]: 5 };",
