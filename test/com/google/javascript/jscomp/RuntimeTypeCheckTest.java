@@ -171,6 +171,20 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             + "}");
   }
 
+  @Test
+  public void testNullableFunctionType() {
+    // TODO(b/120913284): Nullable function outer cast incorrectly prevents instrumentation.
+    testChecks(
+        lines(
+            "/** @type {?function(number):number} */ (/** @param {number} x*/ function(x) {",
+            " return x;",
+            "})"),
+        lines(
+            "/** @type {?function(number):number} */ (/** @param {number} x */ function(x) {",
+            " return x;",
+            "})"));
+  }
+
   // Closure collapses {function()|!Function} into {!Function}
   @Test
   public void testFunctionTypeOrFunctionObjectParam() {
