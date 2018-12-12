@@ -19,23 +19,25 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Comparator.comparing;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import javax.annotation.Nullable;
 
 /**
  * Creates an externs file containing all exported symbols and properties
@@ -45,6 +47,9 @@ import java.util.TreeSet;
  */
 final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     implements CompilerPass {
+
+  private static final Joiner Q_NAME_JOINER = Joiner.on('.');
+  private static final Splitter Q_NAME_SPLITTER = Splitter.on('.');
 
   /** The exports found. */
   private final List<Export> exports;
@@ -109,14 +114,16 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       for (int i = 0; i < pathPrefixes.size(); ++i) {
         String pathPrefix = pathPrefixes.get(i);
 
-        /* The complete path (the last path prefix) must be emitted and
-         * it gets initialized to the externed version of the value.
-         */
+        // The complete path (the last path prefix) must be emitted and
+        // it gets initialized to the externed version of the value.
         boolean isCompletePathPrefix = (i == pathPrefixes.size() - 1);
 
-        boolean skipPathPrefix = pathPrefix.endsWith(".prototype")
-            || (alreadyExportedPaths.contains(pathPrefix)
-                && !isCompletePathPrefix);
+        boolean skipPathPrefix =
+            pathPrefix.endsWith(".prototype")
+                || (alreadyExportedPaths.contains(pathPrefix) && !isCompletePathPrefix);
+        if (skipPathPrefix) {
+          continue;
+        }
 
         boolean exportedValueDefinesNewType = false;
 
@@ -127,83 +134,54 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
           }
         }
 
-        if (!skipPathPrefix) {
-           Node initializer;
-           JSDocInfo jsdoc = null;
-
-          /* Namespaces get initialized to {}, functions to
-           * externed versions of their value, and if we can't
-           * figure out where the value came from we initialize
-           * it to {}.
-           *
-           * Since externs are always exported in sorted order,
-           * we know that if we export a.b = function() {} and later
-           * a.b.c = function then a.b will always be in alreadyExportedPaths
-           * when we emit a.b.c and thus we will never overwrite the function
-           * exported for a.b with a namespace.
-           */
-
-          if (isCompletePathPrefix && valueToExport != null) {
-            if (valueToExport.isFunction()) {
-              initializer = createExternFunction(valueToExport);
-            } else {
-              checkState(valueToExport.isObjectLit());
-              initializer = createExternObjectLit(valueToExport);
-            }
-          } else if (!isCompletePathPrefix && exportedValueDefinesNewType) {
-            jsdoc = buildNamespaceJSDoc();
-            initializer = createExternObjectLit(IR.objectlit());
-            // Don't add the empty jsdoc here
-            initializer.setJSDocInfo(null);
+        // Namespaces get initialized to {}, functions to externed versions of their value, and if
+        // we can't figure out where the value came from we initialize it to {}.
+        //
+        // Since externs are always exported in sorted order, we know that if we export a.b =
+        // function() {} and later a.b.c = function then a.b will always be in alreadyExportedPaths
+        // when we emit a.b.c and thus we will never overwrite the function exported for a.b with a
+        // namespace.
+        final Node initializer;
+        JSDocInfo jsdoc = null;
+        if (isCompletePathPrefix && valueToExport != null) {
+          if (valueToExport.isFunction()) {
+            initializer = createExternFunction(valueToExport);
           } else {
-            initializer = IR.empty();
+            checkState(valueToExport.isObjectLit());
+            initializer = createExternObjectLit(valueToExport);
           }
-
-          appendPathDefinition(pathPrefix, initializer, jsdoc);
+        } else if (!isCompletePathPrefix && exportedValueDefinesNewType) {
+          jsdoc = buildNamespaceJSDoc();
+          initializer = createExternObjectLit(IR.objectlit());
+          // Don't add the empty jsdoc here
+          initializer.setJSDocInfo(null);
+        } else {
+          initializer = IR.empty();
         }
+
+        appendPathDefinition(pathPrefix, initializer, jsdoc);
       }
-    }
-
-    /**
-     * Computes a list of the path prefixes constructed from the components
-     * of the path.
-     * <pre>
-     * E.g., if the path is:
-     *      "a.b.c"
-     * then then path prefixes will be
-     *    ["a","a.b","a.b.c"]:
-     * </pre>
-     */
-    private List<String> computePathPrefixes(String path) {
-      List<String> pieces = Splitter.on('.').splitToList(path);
-      List<String> pathPrefixes = new ArrayList<>();
-
-      for (int i = 0; i < pieces.size(); i++) {
-        pathPrefixes.add(Joiner.on(".").join(Iterables.limit(pieces, i + 1)));
-      }
-
-      return pathPrefixes;
     }
 
     private void appendPathDefinition(
         String path, Node initializer, JSDocInfo jsdoc) {
-      Node pathDefinition;
+      final Node pathDefinition;
 
-      if (!path.contains(".")) {
+      if (path.contains(".")) {
+        Node qualifiedPath = NodeUtil.newQName(compiler, path);
+        if (initializer.isEmpty()) {
+          pathDefinition = NodeUtil.newExpr(qualifiedPath);
+        } else {
+          pathDefinition = NodeUtil.newExpr(IR.assign(qualifiedPath, initializer));
+        }
+      } else {
         if (initializer.isEmpty()) {
           pathDefinition = IR.var(IR.name(path));
         } else {
           pathDefinition = NodeUtil.newVarNode(path, initializer);
         }
-      } else {
-        Node qualifiedPath = NodeUtil.newQName(compiler, path);
-        if (initializer.isEmpty()) {
-          pathDefinition = NodeUtil.newExpr(qualifiedPath);
-        } else {
-          pathDefinition = NodeUtil.newExpr(
-              IR.assign(qualifiedPath, initializer));
-        }
       }
+
       if (jsdoc != null) {
         if (pathDefinition.isExprResult()) {
           pathDefinition.getFirstChild().setJSDocInfo(jsdoc);
@@ -228,16 +206,16 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * parameter or return types.
      */
     private Node createExternFunction(Node exportedFunction) {
-      Node paramList = NodeUtil.getFunctionParameters(exportedFunction)
-          .cloneTree();
+      Node paramList = NodeUtil.getFunctionParameters(exportedFunction).cloneTree();
+
       // Use the original parameter names so that the externs look pretty.
-      Node param = paramList.getFirstChild();
-      while (param != null && param.isName()) {
+      for (Node param = paramList.getFirstChild();
+          param != null && param.isName();
+          param = param.getNext()) {
         String originalName = param.getOriginalName();
         if (originalName != null) {
           param.setString(originalName);
         }
-        param = param.getNext();
       }
       Node externFunction = IR.function(IR.name(""), paramList, IR.block());
 
@@ -318,8 +296,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
         return null;
       }
 
-      Node definition;
-
+      final Node definition;
       switch (definitionParent.getToken()) {
         case ASSIGN:
           definition = definitionParent.getLastChild();
@@ -381,29 +358,47 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
     @Override
     String getExportedPath() {
-
       // Find the longest path that has been mapped (if any).
-      List<String> pieces = Splitter.on('.').splitToList(exportPath);
+      for (String currentPath : Lists.reverse(computePathPrefixes(exportPath))) {
+        checkState(currentPath.length() > 0);
 
-      for (int i = pieces.size(); i > 0; i--) {
-        // Find the path of the current length.
-        String cPath = Joiner.on(".").join(Iterables.limit(pieces, i));
-
-        // If this path is mapped, return the mapped path plus any remaining
-        // pieces.
-        if (mappedPaths.containsKey(cPath)) {
-          String newPath = mappedPaths.get(cPath);
-
-          if (i < pieces.size()) {
-            newPath += "." + Joiner.on(".").join(Iterables.skip(pieces, i));
-          }
-
-          return newPath + "." + symbolName;
+        // If this path is mapped, return the mapped path plus any remaining pieces.
+        @Nullable String mappedPath = mappedPaths.get(currentPath);
+        if (mappedPath == null) {
+          continue;
         }
+
+        // Append the remaining path segments, including a leading separator.
+        mappedPath += exportPath.substring(currentPath.length());
+        return Q_NAME_JOINER.join(mappedPath, symbolName);
       }
 
-      return exportPath + "." + symbolName;
+      return Q_NAME_JOINER.join(exportPath, symbolName);
     }
+  }
+
+  /**
+   * Computes a list of the path prefixes constructed from the components of the path.
+   *
+   * <pre>
+   * E.g., if the path is:
+   *      "a.b.c"
+   * then then path prefixes will be
+   *    ["a","a.b","a.b.c"]:
+   * </pre>
+   */
+  private static ImmutableList<String> computePathPrefixes(String path) {
+    List<String> pieces = Q_NAME_SPLITTER.splitToList(path);
+    ImmutableList.Builder<String> pathPrefixes = ImmutableList.builder();
+
+    String partial = pieces.get(0); // There will always be at least 1.
+    pathPrefixes.add(partial);
+    for (int i = 1; i < pieces.size(); i++) {
+      partial = Q_NAME_JOINER.join(partial, pieces.get(i));
+      pathPrefixes.add(partial);
+    }
+
+    return pathPrefixes.build();
   }
 
   /**
@@ -443,13 +438,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     // Sort by path length to ensure that the longer
     // paths (which may depend on the shorter ones)
     // come later.
-    Set<Export> sorted =
-        new TreeSet<>(new Comparator<Export>() {
-          @Override
-          public int compare(Export e1, Export e2) {
-            return e1.getExportedPath().compareTo(e2.getExportedPath());
-          }
-        });
+    Set<Export> sorted = new TreeSet<>(comparing(Export::getExportedPath));
 
     sorted.addAll(exports);
 
@@ -477,7 +466,6 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-
       case NAME:
       case GETPROP:
         String name = n.getQualifiedName();
@@ -485,8 +473,15 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
           return;
         }
 
-        if (parent.isAssign() || parent.isVar() || parent.isFunction()) {
-          definitionMap.put(name, parent);
+        switch (parent.getToken()) {
+          case ASSIGN:
+          case FUNCTION:
+          case VAR:
+            definitionMap.put(name, parent);
+            break;
+
+          default:
+            break;
         }
 
         JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
