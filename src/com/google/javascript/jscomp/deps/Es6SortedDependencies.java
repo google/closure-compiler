@@ -68,7 +68,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   }
 
   @Override
-  public ImmutableList<INPUT> getDependenciesOf(List<INPUT> rootInputs, boolean sorted) {
+  public ImmutableList<INPUT> getStrongDependenciesOf(List<INPUT> rootInputs, boolean sorted) {
     checkArgument(userOrderedInputs.containsAll(rootInputs));
 
     Set<INPUT> includedInputs = new HashSet<>();
@@ -110,8 +110,46 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   }
 
   @Override
-  public ImmutableList<INPUT> getSortedDependenciesOf(List<INPUT> roots) {
-    return getDependenciesOf(roots, true);
+  public ImmutableList<INPUT> getSortedStrongDependenciesOf(List<INPUT> roots) {
+    return getStrongDependenciesOf(roots, true);
+  }
+
+  @Override
+  public List<INPUT> getSortedWeakDependenciesOf(List<INPUT> rootInputs) {
+    Set<INPUT> strongInputs = new HashSet<>(getSortedStrongDependenciesOf(rootInputs));
+    Set<INPUT> weakInputs = new HashSet<>();
+    Deque<INPUT> worklist = new ArrayDeque<>(strongInputs);
+    while (!worklist.isEmpty()) {
+      INPUT input = worklist.pop();
+      boolean isStrong = strongInputs.contains(input);
+
+      Iterable<String> edges =
+          isStrong
+              ? input.getTypeRequires()
+              : Iterables.concat(input.getRequiredSymbols(), input.getTypeRequires());
+
+      if (!isStrong && !weakInputs.add(input)) {
+        continue;
+      }
+
+      for (String symbolName : edges) {
+        INPUT importedSymbolName = exportingInputBySymbolName.get(symbolName);
+        if (importedSymbolName != null
+            && !strongInputs.contains(importedSymbolName)
+            && !weakInputs.contains(importedSymbolName)) {
+          worklist.add(importedSymbolName);
+        }
+      }
+    }
+
+    ImmutableList.Builder<INPUT> builder = ImmutableList.builder();
+    for (INPUT input : importOrderedInputs) {
+      if (weakInputs.contains(input)) {
+        builder.add(input);
+      }
+    }
+
+    return builder.build();
   }
 
   @Override

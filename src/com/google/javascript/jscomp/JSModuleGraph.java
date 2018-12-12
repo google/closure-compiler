@@ -35,6 +35,7 @@ import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,6 +97,7 @@ public final class JSModuleGraph implements Serializable {
   /** Creates a module graph from a list of modules in dependency order. */
   public JSModuleGraph(List<JSModule> modulesInDepOrder) {
     Preconditions.checkState(!modulesInDepOrder.isEmpty());
+    modulesInDepOrder = makeWeakModule(modulesInDepOrder);
     modules = new JSModule[modulesInDepOrder.size()];
 
     // n = number of modules
@@ -118,6 +120,9 @@ public final class JSModuleGraph implements Serializable {
 
     // O(n*m)
     subtreeSize = initSubtreeSize();
+
+    // Move all sources marked as weak by outside sources (e.g. flags) into the weak module.
+    moveMarkedWeakSources(getModuleByName(JSModule.WEAK_MODULE_NAME), getAllInputs());
   }
 
   private List<List<JSModule>> initModulesByDepth() {
@@ -144,6 +149,58 @@ public final class JSModuleGraph implements Serializable {
       tmpModulesByDepth.get(depth).add(module);
     }
     return tmpModulesByDepth;
+  }
+
+  /**
+   * If a weak module doesn't already exist, creates a weak module depending on every other module.
+   *
+   * <p>Does not move any sources into the weak module.
+   *
+   * @return a new list of modules that includes the weak module, if it was newly created, or the
+   *     same list if the weak module already existed
+   * @throws IllegalStateException if a weak module already exists but doesn't fulfill the above
+   *     conditions
+   */
+  private List<JSModule> makeWeakModule(List<JSModule> modulesInDepOrder) {
+    boolean hasWeakModule = false;
+    for (JSModule module : modulesInDepOrder) {
+      if (module.getName().equals(JSModule.WEAK_MODULE_NAME)) {
+        hasWeakModule = true;
+        Set<JSModule> allOtherModules = new HashSet<>(modulesInDepOrder);
+        allOtherModules.remove(module);
+        checkState(
+            module.getAllDependencies().containsAll(allOtherModules),
+            "A weak module already exists but it does not depend on every other module.");
+        checkState(
+            module.getAllDependencies().size() == allOtherModules.size(),
+            "The weak module cannot have extra dependencies.");
+        break;
+      }
+    }
+    if (hasWeakModule) {
+      // All weak files (and only weak files) should be in the weak module.
+      for (JSModule module : modulesInDepOrder) {
+        for (CompilerInput input : module.getInputs()) {
+          if (module.getName().equals(JSModule.WEAK_MODULE_NAME)) {
+            checkState(
+                input.getSourceFile().isWeak(),
+                "A weak module already exists but strong sources were found in it.");
+          } else {
+            checkState(
+                !input.getSourceFile().isWeak(),
+                "A weak module already exists but weak sources were found in other modules.");
+          }
+        }
+      }
+    } else {
+      JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+      for (JSModule module : modulesInDepOrder) {
+        weakModule.addDependency(module);
+      }
+      modulesInDepOrder = new ArrayList<>(modulesInDepOrder);
+      modulesInDepOrder.add(weakModule);
+    }
+    return modulesInDepOrder;
   }
 
   private BitSet[] initTransitiveDepsBitSets() {
@@ -427,6 +484,27 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
+   * Moves all sources that have {@link SourceKind#WEAK} into the weak module so that they may be
+   * pruned later.
+   */
+  private static void moveMarkedWeakSources(JSModule weakModule, Iterable<CompilerInput> inputs) {
+    checkNotNull(weakModule);
+    ImmutableList<CompilerInput> allInputs = ImmutableList.copyOf(inputs);
+    for (CompilerInput i : allInputs) {
+      if (i.getSourceFile().isWeak()) {
+        JSModule existingModule = i.getModule();
+        if (existingModule == weakModule) {
+          continue;
+        }
+        if (existingModule != null) {
+          existingModule.remove(i);
+        }
+        weakModule.add(i);
+      }
+    }
+  }
+
+  /**
    * Apply the dependency options to the list of sources, returning a new source list re-ordering
    * and dropping files as necessary. This module graph will be updated to reflect the new list.
    *
@@ -467,7 +545,7 @@ public final class JSModuleGraph implements Serializable {
 
     // The order of inputs, sorted independently of modules.
     List<CompilerInput> absoluteOrder =
-        sorter.getDependenciesOf(originalInputs, dependencyOptions.shouldSort());
+        sorter.getStrongDependenciesOf(originalInputs, dependencyOptions.shouldSort());
 
     // Figure out which sources *must* be in each module.
     ListMultimap<JSModule, CompilerInput> entryPointInputsPerModule =
@@ -478,8 +556,7 @@ public final class JSModuleGraph implements Serializable {
       entryPointInputsPerModule.put(module, input);
     }
 
-    // Clear the modules of their inputs. This also nulls out
-    // the input's reference to its module.
+    // Clear the modules of their inputs. This also nulls out the input's reference to its module.
     for (JSModule module : getAllModules()) {
       module.removeAll();
     }
@@ -488,6 +565,7 @@ public final class JSModuleGraph implements Serializable {
     // of that module's dependencies.
     List<CompilerInput> orderedInputs = new ArrayList<>();
     Set<CompilerInput> reachedInputs = new HashSet<>();
+
     for (JSModule module : entryPointInputsPerModule.keySet()) {
       List<CompilerInput> transitiveClosure;
       // Prefer a depth first ordering of dependencies from entry points.
@@ -511,10 +589,14 @@ public final class JSModuleGraph implements Serializable {
         // Simply order inputs so that any required namespace comes before it's usage.
         // Ordered result varies based on the original order of inputs.
         transitiveClosure =
-            sorter.getDependenciesOf(
+            sorter.getStrongDependenciesOf(
                 entryPointInputsPerModule.get(module), dependencyOptions.shouldSort());
       }
       for (CompilerInput input : transitiveClosure) {
+        if (dependencyOptions.shouldPrune() && input.getSourceFile().isWeak()) {
+          throw new IllegalStateException(
+              "A file that is reachable via an entry point cannot be marked as weak.");
+        }
         JSModule oldModule = input.getModule();
         if (oldModule == null) {
           input.setModule(module);
@@ -530,11 +612,31 @@ public final class JSModuleGraph implements Serializable {
       orderedInputs = absoluteOrder;
     }
 
+    JSModule weakModule = getModuleByName(JSModule.WEAK_MODULE_NAME);
+    checkNotNull(weakModule);
+    // Mark all sources that are detected as weak.
+    if (dependencyOptions.shouldPrune()) {
+      List<CompilerInput> weakInputs = sorter.getSortedWeakDependenciesOf(orderedInputs);
+      for (CompilerInput i : weakInputs) {
+        // Have a separate loop here to add all these dependencies rather than rely on
+        // moveMarkedWeakSources below. moveMarkedWeakSources will be in user order, while this
+        // loop is in dependency order. For sources detected as weak we want dependency order,
+        // for pre-marked as weak we want user order.
+        checkState(i.getModule() == null);
+        i.getSourceFile().setKind(SourceKind.WEAK);
+        i.setModule(weakModule);
+        weakModule.add(i);
+      }
+    }
+
+    // Move all sources marked as weak by outside sources (e.g. flags) into the weak module.
+    moveMarkedWeakSources(weakModule, originalInputs);
+
     // All the inputs are pointing to the modules that own them. Yeah!
     // Update the modules to reflect this.
     for (CompilerInput input : orderedInputs) {
       JSModule module = input.getModule();
-      if (module != null) {
+      if (module != null && !module.getInputs().contains(input)) {
         module.add(input);
       }
     }
@@ -549,7 +651,7 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
-   * Given an input and set of unprocessed inputs, return the input and it's dependencies by
+   * Given an input and set of unprocessed inputs, return the input and it's strong dependencies by
    * performing a recursive, depth-first traversal.
    */
   private List<CompilerInput> getDepthFirstDependenciesOf(
@@ -561,8 +663,7 @@ public final class JSModuleGraph implements Serializable {
       return orderedInputs;
     }
 
-    for (String importedNamespace :
-        Iterables.concat(rootInput.getRequiredSymbols(), rootInput.getTypeRequires())) {
+    for (String importedNamespace : rootInput.getRequiredSymbols()) {
       CompilerInput dependency = null;
       if (inputsByProvide.containsKey(importedNamespace)
           && unreachedInputs.contains(inputsByProvide.get(importedNamespace))) {

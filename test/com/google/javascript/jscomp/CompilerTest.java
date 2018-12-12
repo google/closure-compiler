@@ -2175,4 +2175,194 @@ public final class CompilerTest {
           .isEqualTo("A weak module already exists but it does not depend on every other module.");
     }
   }
+
+  @Test
+  public void testImplicitWeakSourcesWithEntryPoint() throws Exception {
+    SourceFile extern = SourceFile.fromCode("extern.js", "/** @externs */ function alert(x) {}");
+    SourceFile strong =
+        SourceFile.fromCode(
+            "strong.js",
+            lines(
+                "goog.module('strong');",
+                "const T = goog.requireType('weak');",
+                "/** @param {!T} x */ function f(x) { alert(x); }"));
+    SourceFile weak =
+        SourceFile.fromCode(
+            "type.js",
+            lines(
+                "goog.module('weak');",
+                "/** @typedef {number|string} */ exports.T;",
+                "sideeffect();"));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    options.setClosurePass(true);
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("strong"))));
+
+    Compiler compiler = new Compiler();
+
+    compiler.init(ImmutableList.of(extern), ImmutableList.of(strong, weak), options);
+
+    compiler.parse();
+    compiler.check();
+    compiler.performOptimizations();
+
+    assertThat(compiler.toSource())
+        .isEqualTo("var module$exports$strong={};function module$contents$strong_f(x){alert(x)};");
+  }
+
+  @Test
+  public void testImplicitWeakSourcesWithEntryPointLegacyPrune() throws Exception {
+    SourceFile extern = SourceFile.fromCode("extern.js", "/** @externs */ function alert(x) {}");
+    SourceFile strong =
+        SourceFile.fromCode(
+            "moocher.js",
+            lines(
+                "goog.requireType('weak');",
+                "/** @param {!weak.T} x */ function f(x) { alert(x); }"));
+    SourceFile weak =
+        SourceFile.fromCode(
+            "type.js",
+            lines(
+                "goog.module('weak');",
+                "/** @typedef {number|string} */ exports.T;",
+                "sideeffect();"));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    options.setClosurePass(true);
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of()));
+
+    Compiler compiler = new Compiler();
+
+    compiler.init(ImmutableList.of(extern), ImmutableList.of(strong, weak), options);
+
+    compiler.parse();
+    compiler.check();
+    compiler.performOptimizations();
+
+    assertThat(compiler.toSource()).isEqualTo("function f(x){alert(x)};");
+  }
+
+  @Test
+  public void testTransitiveImplicitWeakSourcesWithEntryPoint() throws Exception {
+    SourceFile extern = SourceFile.fromCode("extern.js", "/** @externs */ function alert(x) {}");
+    SourceFile strong =
+        SourceFile.fromCode(
+            "strong.js",
+            lines(
+                "goog.module('strong');",
+                "const T = goog.requireType('weakEntry');",
+                "/** @param {!T} x */ function f(x) { alert(x); }"));
+    SourceFile weakEntry =
+        SourceFile.fromCode(
+            "weakEntry.js",
+            lines(
+                "goog.module('weakEntry');",
+                "const w = goog.require('weakByAssociation');",
+                "exports = w;"));
+    SourceFile weakByAssociation =
+        SourceFile.fromCode(
+            "weakByAssociation.js",
+            lines(
+                "goog.module('weakByAssociation');",
+                "/** @typedef {number|string} */ exports.T;",
+                "sideEffect();"));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    options.setClosurePass(true);
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("strong"))));
+
+    Compiler compiler = new Compiler();
+
+    compiler.init(
+        ImmutableList.of(extern), ImmutableList.of(strong, weakEntry, weakByAssociation), options);
+
+    compiler.parse();
+    compiler.check();
+    compiler.performOptimizations();
+
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(compiler.getErrors()).isEmpty();
+
+    assertThat(compiler.toSource())
+        .isEqualTo("var module$exports$strong={};function module$contents$strong_f(x){alert(x)};");
+  }
+
+  @Test
+  public void testWeakAsEntryPointIsError() throws Exception {
+    SourceFile extern = SourceFile.fromCode("extern.js", "");
+    SourceFile weakEntry =
+        SourceFile.fromCode(
+            "weakEntry.js",
+            lines(
+                "goog.module('weakEntry');",
+                "/** @typedef {number|string} */ exports.T;",
+                "sideEffect();"),
+            SourceKind.WEAK);
+
+    CompilerOptions options = new CompilerOptions();
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("weakEntry"))));
+
+    Compiler compiler = new Compiler();
+
+    compiler.init(ImmutableList.of(extern), ImmutableList.of(weakEntry), options);
+
+    try {
+      compiler.parse();
+      fail();
+    } catch (IllegalStateException e) {
+      // expected
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("A file that is reachable via an entry point cannot be marked as weak.");
+    }
+  }
+
+  @Test
+  public void testWeakStronglyReachableIsError() throws Exception {
+    SourceFile extern = SourceFile.fromCode("extern.js", "/** @externs */ function alert(x) {}");
+    SourceFile strong =
+        SourceFile.fromCode(
+            "strong.js",
+            lines(
+                "goog.module('strong');",
+                "const T = goog.require('weakEntry');",
+                "/** @param {!T} x */ function f(x) { alert(x); }"),
+            SourceKind.STRONG);
+    SourceFile weakEntry =
+        SourceFile.fromCode(
+            "weakEntry.js",
+            lines(
+                "goog.module('weakEntry');",
+                "/** @typedef {number|string} */ exports.T;",
+                "sideEffect();"),
+            SourceKind.WEAK);
+
+    CompilerOptions options = new CompilerOptions();
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("strong"))));
+
+    Compiler compiler = new Compiler();
+
+    compiler.init(ImmutableList.of(extern), ImmutableList.of(strong, weakEntry), options);
+
+    try {
+      compiler.parse();
+      fail();
+    } catch (IllegalStateException e) {
+      // expected
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("A file that is reachable via an entry point cannot be marked as weak.");
+    }
+  }
 }
