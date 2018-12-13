@@ -971,4 +971,25 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
                     "alias = goog.modle.get('es6');"))),
         FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST);
   }
+
+  @Test
+  public void testMissingRequireAssumesGoogProvide() {
+    ignoreWarnings(MISSING_MODULE_OR_PROVIDE);
+
+    test(
+        srcs(
+            lines(
+                "const missing = goog.require('is.missing');", //
+                "use(missing);",
+                "export {};")),
+        expected(lines("use(is.missing);", "/** @const */ var module$testcode = {};")));
+
+    test(
+        srcs(
+            lines(
+                "import missing from 'goog:is.missing';", //
+                "use(missing);",
+                "export {};")),
+        expected(lines("use(is.missing);", "/** @const */ var module$testcode = {};")));
+  }
 }

@@ -65,17 +65,20 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testIfCannotDetectGoogJsThenDoesNotRewrite() {
+  public void testIfCannotDetectGoogJsThenGlobalizesAll() {
     SourceFile testcode =
         SourceFile.fromCode(
             "testcode", "import * as goog from './closure/goog.js'; use(goog.bad);");
 
+    SourceFile expected =
+        SourceFile.fromCode("testcode", "import './closure/goog.js'; use(goog.bad);");
+
     // No base.js = no detecting goog.js
-    testSame(srcs(GOOG, testcode));
+    test(srcs(GOOG, testcode), expected(GOOG, expected));
 
     // No goog.js
-    testSame(srcs(BASE, testcode));
-    testSame(srcs(testcode));
+    test(srcs(BASE, testcode), expected(BASE, expected));
+    test(srcs(testcode), expected(expected));
 
     // Linting still happens.
     testError("import * as notgoog from './goog.js';", GOOG_JS_IMPORT_MUST_BE_GOOG_STAR);
@@ -121,7 +124,7 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testBadPropertyAccess() {
+  public void testKnownBadPropertyAccess() {
     test(
         srcs(
             BASE,

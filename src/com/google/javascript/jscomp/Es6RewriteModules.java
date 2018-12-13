@@ -431,10 +431,11 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
       if (m == null) {
         t.report(importDecl, MISSING_MODULE_OR_PROVIDE, namespace);
-      } else {
-        moduleName = ModuleRenaming.getGlobalName(m, namespace);
-        checkState(m.isEs6Module() || m.isGoogModule() || m.isGoogProvide());
+        m = getFallbackMetadataForNamespace(namespace);
       }
+
+      moduleName = ModuleRenaming.getGlobalName(m, namespace);
+      checkState(m.isEs6Module() || m.isGoogModule() || m.isGoogProvide());
     } else {
       ModuleLoader.ModulePath modulePath =
           t.getInput()
@@ -825,6 +826,24 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     visitRequireOrGet(t, getCall, parent, /* isRequire= */ false);
   }
 
+  /**
+   * Gets some made-up metadata for the given Closure namespace.
+   *
+   * <p>This is used when the namespace is not part of the input so that this pass can be fault
+   * tolerant and still rewrite to something. Some tools don't care about rewriting correctly and
+   * just want the type information of this module (e.g. clutz).
+   */
+  private ModuleMetadata getFallbackMetadataForNamespace(String namespace) {
+    // Assume a provide'd file to be consistent with goog.module rewriting.
+    ModuleMetadata.Builder builder =
+        ModuleMetadata.builder()
+            .moduleType(ModuleMetadataMap.ModuleType.GOOG_PROVIDE)
+            .usesClosure(true)
+            .isTestOnly(false);
+    builder.googNamespacesBuilder().add(namespace);
+    return builder.build();
+  }
+
   private void visitRequireOrGet(
       NodeTraversal t, Node requireCall, Node parent, boolean isRequire) {
     if (!requireCall.hasTwoChildren() || !requireCall.getLastChild().isString()) {
@@ -850,7 +869,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
     if (m == null) {
       t.report(requireCall, MISSING_MODULE_OR_PROVIDE, namespace);
-      return;
+      m = getFallbackMetadataForNamespace(namespace);
     }
 
     if (isStoredInDeclaration) {
