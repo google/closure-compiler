@@ -214,6 +214,27 @@ public final class GlobalNamespaceTest {
     assertThat(barAliasInlinability.shouldRemoveDeclaration()).isFalse();
   }
 
+  @Test
+  public void testClassPrototypeProp() {
+    GlobalNamespace ns = parse("class C { x() {} }");
+
+    assertThat(ns.getSlot("C.x")).isNull();
+  }
+
+  @Test
+  public void testClassStaticAndPrototypePropWithSameName() {
+    GlobalNamespace ns = parse("class C { x() {} static x() {} }");
+
+    Name c = ns.getSlot("C");
+    Name cDotX = ns.getSlot("C.x");
+
+    assertThat(c.getGlobalSets()).isEqualTo(1);
+    assertThat(c.props).containsExactly(cDotX);
+
+    assertThat(cDotX.getGlobalSets()).isEqualTo(1);
+    assertThat(cDotX.getParent()).isEqualTo(c);
+  }
+
   private GlobalNamespace parse(String js) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();

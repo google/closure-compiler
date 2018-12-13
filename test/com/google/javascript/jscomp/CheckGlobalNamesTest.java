@@ -83,8 +83,8 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   private static final String NAMES = "var a = {d: 1}; a.b = 3; a.c = {e: 5};";
   private static final String LET_NAMES = "let a = {d: 1}; a.b = 3; a.c = {e: 5};";
   private static final String CONST_NAMES = "const a = {d: 1, b: 3, c: {e: 5}};";
-  private static final String CLASS_DECLARATION_NAMES = "class A{ b(){} }";
-  private static final String CLASS_EXPRESSION_NAMES_STUB = "A = class{ b(){} };";
+  private static final String CLASS_DECLARATION_NAMES = "class A{ static b(){} }";
+  private static final String CLASS_EXPRESSION_NAMES_STUB = "A = class{ static b(){} };";
   private static final String CLASS_EXPRESSION_NAMES = "var " + CLASS_EXPRESSION_NAMES_STUB;
   private static final String EXT_OBJLIT_NAMES = "var a = {b(){}, d}; a.c = 3;";
 
@@ -192,6 +192,12 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
     testSame(NAMES + "alert(a.d.x);");
     testSame(GET_NAMES + "alert(a.d.x);");
     testSame(SET_NAMES + "alert(a.d.x);");
+  }
+
+  @Test
+  public void testRefToClassPrototypeMemberThroughCtor() {
+    testWarning("class C { b() {} } C.b()", UNDEFINED_NAME_WARNING);
+    testSame("class C { static b() {} b() {} } C.b();");
   }
 
   @Test

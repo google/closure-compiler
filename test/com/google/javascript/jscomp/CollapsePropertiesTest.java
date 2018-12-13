@@ -2193,6 +2193,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassStaticAndPrototypePropWithSameName() {
+    test(
+        "const ns = {}; ns.C = class { x() {} }; ns.C.x = 3;",
+        "var ns$C = class { x() {} }; var ns$C$x = 3;");
+  }
+
+  @Test
   public void testClassStaticProperties_locallyDeclared1() {
     test(
         lines(

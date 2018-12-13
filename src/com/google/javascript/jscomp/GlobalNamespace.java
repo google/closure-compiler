@@ -330,7 +330,6 @@ class GlobalNamespace
       String name;
       boolean isSet = false;
       Name.Type type = Name.Type.OTHER;
-      boolean shouldCreateProp = true;
 
       switch (n.getToken()) {
         case GETTER_DEF:
@@ -352,7 +351,8 @@ class GlobalNamespace
             case MEMBER_FUNCTION_DEF:
               type = getValueType(n.getFirstChild());
               if (n.getParent().isClassMembers() && !n.isStaticMember()) {
-                shouldCreateProp = false;
+                // `class C { x() {} }` does /not/ create a global qualified name C.x, so return.
+                return;
               }
               break;
             case STRING_KEY:
@@ -456,7 +456,7 @@ class GlobalNamespace
         case CALL:
           if (isObjectHasOwnPropertyCall(n)) {
             String qname = n.getFirstFirstChild().getQualifiedName();
-            Name globalName = getOrCreateName(qname, true);
+            Name globalName = getOrCreateName(qname);
             globalName.usedHasOwnProperty = true;
           }
           return;
@@ -475,9 +475,9 @@ class GlobalNamespace
         // because they use the term 'global' in an ES5, pre-block-scoping sense.
         Scope hoistScope = scope.getClosestHoistScope();
         if (hoistScope.isGlobal()) {
-          handleSetFromGlobal(module, scope, n, parent, name, type, shouldCreateProp);
+          handleSetFromGlobal(module, scope, n, parent, name, type);
         } else {
-          handleSetFromLocal(module, scope, n, parent, name, shouldCreateProp);
+          handleSetFromLocal(module, scope, n, parent, name);
         }
       } else {
         handleGet(module, scope, n, parent, name);
@@ -628,18 +628,12 @@ class GlobalNamespace
      * @param type The type of the value that the name is being assigned
      */
     void handleSetFromGlobal(
-        JSModule module,
-        Scope scope,
-        Node n,
-        Node parent,
-        String name,
-        Name.Type type,
-        boolean shouldCreateProp) {
+        JSModule module, Scope scope, Node n, Node parent, String name, Name.Type type) {
       if (maybeHandlePrototypePrefix(module, scope, n, parent, name)) {
         return;
       }
 
-      Name nameObj = getOrCreateName(name, shouldCreateProp);
+      Name nameObj = getOrCreateName(name);
       if (!nameObj.isGetOrSetDefinition()) {
         // Don't change the type of a getter or setter. This is because given:
         //   var a = {set b(item) {}}; a.b = class {};
@@ -698,13 +692,12 @@ class GlobalNamespace
      * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
-    void handleSetFromLocal(
-        JSModule module, Scope scope, Node n, Node parent, String name, boolean shouldCreateProp) {
+    void handleSetFromLocal(JSModule module, Scope scope, Node n, Node parent, String name) {
       if (maybeHandlePrototypePrefix(module, scope, n, parent, name)) {
         return;
       }
 
-      Name nameObj = getOrCreateName(name, shouldCreateProp);
+      Name nameObj = getOrCreateName(name);
       Ref set = new Ref(module, scope, n, nameObj,
           Ref.Type.SET_FROM_LOCAL, currentPreOrderIndex++);
       nameObj.addRef(set);
@@ -791,7 +784,7 @@ class GlobalNamespace
           break;
       }
 
-      handleGet(module, scope, n, parent, name, type, true);
+      handleGet(module, scope, n, parent, name, type);
     }
 
     /**
@@ -804,15 +797,8 @@ class GlobalNamespace
      * @param name The global name (e.g. "a" or "a.b.c.d")
      * @param type The reference type
      */
-    void handleGet(
-        JSModule module,
-        Scope scope,
-        Node n,
-        Node parent,
-        String name,
-        Ref.Type type,
-        boolean shouldCreateProp) {
-      Name nameObj = getOrCreateName(name, shouldCreateProp);
+    void handleGet(JSModule module, Scope scope, Node n, Node parent, String name, Ref.Type type) {
+      Name nameObj = getOrCreateName(name);
 
       // No need to look up additional ancestors, since they won't be used.
       nameObj.addRef(new Ref(module, scope, n, nameObj, type, currentPreOrderIndex++));
@@ -961,7 +947,7 @@ class GlobalNamespace
         n = n.getFirstChild();
       }
 
-      handleGet(module, scope, n, parent, prefix, Ref.Type.PROTOTYPE_GET, true);
+      handleGet(module, scope, n, parent, prefix, Ref.Type.PROTOTYPE_GET);
       return true;
     }
 
@@ -978,20 +964,20 @@ class GlobalNamespace
     }
 
     /**
-     * Gets a {@link Name} instance for a global name. Creates it if necessary,
-     * as well as instances for any of its prefixes that are not yet defined.
+     * Gets a {@link Name} instance for a global name. Creates it if necessary, as well as instances
+     * for any of its prefixes that are not yet defined.
      *
      * @param name A global name (e.g. "a", "a.b.c.d")
      * @return The {@link Name} instance for {@code name}
      */
-    Name getOrCreateName(String name, boolean shouldCreateProp) {
+    Name getOrCreateName(String name) {
       Name node = nameMap.get(name);
       if (node == null) {
         int i = name.lastIndexOf('.');
         if (i >= 0) {
           String parentName = name.substring(0, i);
-          Name parent = getOrCreateName(parentName, true);
-          node = parent.addProperty(name.substring(i + 1), sourceKind, shouldCreateProp);
+          Name parent = getOrCreateName(parentName);
+          node = parent.addProperty(name.substring(i + 1), sourceKind);
         } else {
           node = new Name(name, null, sourceKind);
           globalNames.add(node);
@@ -1063,14 +1049,12 @@ class GlobalNamespace
       this.sourceKind = sourceKind;
     }
 
-    Name addProperty(String name, SourceKind sourceKind, boolean shouldCreateProp) {
+    Name addProperty(String name, SourceKind sourceKind) {
       if (props == null) {
         props = new ArrayList<>();
       }
       Name node = new Name(name, this, sourceKind);
-      if (shouldCreateProp) {
-        props.add(node);
-      }
+      props.add(node);
       return node;
     }
 
