@@ -330,7 +330,6 @@ class GlobalNamespace
       String name;
       boolean isSet = false;
       Name.Type type = Name.Type.OTHER;
-      boolean isPropAssign = false;
       boolean shouldCreateProp = true;
 
       switch (n.getToken()) {
@@ -433,7 +432,6 @@ class GlobalNamespace
                 if (parent.getFirstChild() == n) {
                   isSet = true;
                   type = getValueType(n.getNext());
-                  isPropAssign = true;
                 }
                 break;
               case INC:
@@ -477,7 +475,7 @@ class GlobalNamespace
         // because they use the term 'global' in an ES5, pre-block-scoping sense.
         Scope hoistScope = scope.getClosestHoistScope();
         if (hoistScope.isGlobal()) {
-          handleSetFromGlobal(module, scope, n, parent, name, isPropAssign, type, shouldCreateProp);
+          handleSetFromGlobal(module, scope, n, parent, name, type, shouldCreateProp);
         } else {
           handleSetFromLocal(module, scope, n, parent, name, shouldCreateProp);
         }
@@ -627,13 +625,16 @@ class GlobalNamespace
      * @param n The node currently being visited
      * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
-     * @param isPropAssign Whether this set corresponds to a property
-     *     assignment of the form <code>a.b.c = ...;</code>
      * @param type The type of the value that the name is being assigned
      */
-    void handleSetFromGlobal(JSModule module, Scope scope,
-        Node n, Node parent, String name,
-        boolean isPropAssign, Name.Type type, boolean shouldCreateProp) {
+    void handleSetFromGlobal(
+        JSModule module,
+        Scope scope,
+        Node n,
+        Node parent,
+        String name,
+        Name.Type type,
+        boolean shouldCreateProp) {
       if (maybeHandlePrototypePrefix(module, scope, n, parent, name)) {
         return;
       }
@@ -688,8 +689,8 @@ class GlobalNamespace
     }
 
     /**
-     * Updates our representation of the global namespace to reflect an
-     * assignment to a global name in a local scope.
+     * Updates our representation of the global namespace to reflect an assignment to a global name
+     * in a local scope.
      *
      * @param module The current module
      * @param scope The current scope
@@ -697,8 +698,8 @@ class GlobalNamespace
      * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
-    void handleSetFromLocal(JSModule module, Scope scope, Node n, Node parent,
-                            String name, boolean shouldCreateProp) {
+    void handleSetFromLocal(
+        JSModule module, Scope scope, Node n, Node parent, String name, boolean shouldCreateProp) {
       if (maybeHandlePrototypePrefix(module, scope, n, parent, name)) {
         return;
       }
@@ -721,8 +722,7 @@ class GlobalNamespace
     }
 
     /**
-     * Updates our representation of the global namespace to reflect a read
-     * of a global name.
+     * Updates our representation of the global namespace to reflect a read of a global name.
      *
      * @param module The current module
      * @param scope The current scope
@@ -730,8 +730,7 @@ class GlobalNamespace
      * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
-    void handleGet(JSModule module, Scope scope,
-        Node n, Node parent, String name) {
+    void handleGet(JSModule module, Scope scope, Node n, Node parent, String name) {
       if (maybeHandlePrototypePrefix(module, scope, n, parent, name)) {
         return;
       }
