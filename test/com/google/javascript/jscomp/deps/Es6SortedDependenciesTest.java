@@ -350,16 +350,22 @@ public class Es6SortedDependenciesTest {
         SimpleDependencyInfo.builder("a", "a").setProvides("a").setTypeRequires("b").build();
     SimpleDependencyInfo b =
         SimpleDependencyInfo.builder("b", "b").setProvides("b").setTypeRequires("c").build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c").setProvides("c").build();
+    SimpleDependencyInfo c =
+        SimpleDependencyInfo.builder("c", "c").setProvides("c").setTypeRequires("d").build();
+    SimpleDependencyInfo d = SimpleDependencyInfo.builder("d", "d").setProvides("d").build();
 
     // The order of weak edges is based on user input.
-    assertSortedWeakDeps(ImmutableList.of(b, c), ImmutableList.of(a, b, c), ImmutableList.of(a));
+    assertSortedWeakDeps(
+        ImmutableList.of(b, c, d), ImmutableList.of(a, b, c, d), ImmutableList.of(a));
 
-    assertSortedWeakDeps(ImmutableList.of(c, b), ImmutableList.of(a, c, b), ImmutableList.of(a));
+    assertSortedWeakDeps(
+        ImmutableList.of(c, b, d), ImmutableList.of(a, c, b, d), ImmutableList.of(a));
 
-    assertSortedWeakDeps(ImmutableList.of(b, c), ImmutableList.of(b, c, a), ImmutableList.of(a));
+    assertSortedWeakDeps(
+        ImmutableList.of(d, b, c), ImmutableList.of(d, b, c, a), ImmutableList.of(a));
 
-    assertSortedWeakDeps(ImmutableList.of(c, b), ImmutableList.of(c, b, a), ImmutableList.of(a));
+    assertSortedWeakDeps(
+        ImmutableList.of(c, d, b), ImmutableList.of(c, d, b, a), ImmutableList.of(a));
   }
 
   @Test

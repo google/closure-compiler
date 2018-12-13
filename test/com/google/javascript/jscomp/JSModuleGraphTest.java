@@ -654,7 +654,7 @@ public final class JSModuleGraphTest {
   }
 
   @Test
-  public void testMoveMarkedWeakSourcesDuringManageDepsPrune() throws Exception {
+  public void testIgnoreMarkedWeakSourcesDuringManageDepsPrune() throws Exception {
     makeDeps();
 
     SourceFile weak1 = SourceFile.fromCode("weak1", "", SourceKind.WEAK);
@@ -681,7 +681,49 @@ public final class JSModuleGraphTest {
             getWeakModule().getInputs().stream()
                 .map(i -> i.getSourceFile())
                 .collect(Collectors.toList()))
-        .containsExactly(weak1, weak2);
+        .isEmpty();
+    assertThat(
+            moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
+        .containsExactly(strong1, strong2);
+  }
+
+  @Test
+  public void testIgnoreDepsOfMarkedWeakSourcesDuringManageDepsPrune() throws Exception {
+    makeDeps();
+
+    SourceFile weak1 =
+        SourceFile.fromCode("weak1", "goog.requireType('weak1weak');", SourceKind.WEAK);
+    SourceFile weak1weak =
+        SourceFile.fromCode("weak1weak", "goog.provide('weak1weak');", SourceKind.WEAK);
+    SourceFile weak2 =
+        SourceFile.fromCode("weak2", "goog.require('weak2strong');", SourceKind.WEAK);
+    SourceFile weak2strong =
+        SourceFile.fromCode("weak2strong", "goog.provide('weak2strong');", SourceKind.WEAK);
+    SourceFile strong1 = SourceFile.fromCode("strong1", "", SourceKind.STRONG);
+    SourceFile strong2 = SourceFile.fromCode("strong2", "", SourceKind.STRONG);
+
+    moduleA.add(weak1);
+    moduleA.add(strong1);
+    moduleA.add(weak2);
+    moduleA.add(strong2);
+    moduleA.add(weak1weak);
+    moduleA.add(weak2strong);
+
+    for (CompilerInput input : moduleA.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    makeGraph();
+    graph.manageDependencies(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(
+                ModuleIdentifier.forFile("strong1"), ModuleIdentifier.forFile("strong2"))));
+
+    assertThat(
+            getWeakModule().getInputs().stream()
+                .map(i -> i.getSourceFile())
+                .collect(Collectors.toList()))
+        .isEmpty();
     assertThat(
             moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
         .containsExactly(strong1, strong2);
@@ -777,6 +819,45 @@ public final class JSModuleGraphTest {
     assertThat(
             moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
         .containsExactly(strong1, strong2);
+  }
+
+  @Test
+  public void testTransitiveWeakSources() throws Exception {
+    makeDeps();
+
+    SourceFile weak1 =
+        SourceFile.fromCode(
+            "weak1",
+            "goog.provide('weak1'); goog.requireType('weak2'); goog.require('strongFromWeak');");
+    SourceFile strongFromWeak = SourceFile.fromCode("weak1", "goog.provide('strongFromWeak');");
+    SourceFile weak2 =
+        SourceFile.fromCode("weak2", "goog.provide('weak2'); goog.requireType('weak3');");
+    SourceFile weak3 = SourceFile.fromCode("weak3", "goog.provide('weak3');");
+    SourceFile strong1 = SourceFile.fromCode("strong1", "goog.requireType('weak1');");
+
+    moduleA.add(weak1);
+    moduleA.add(strong1);
+    moduleA.add(weak2);
+    moduleA.add(weak3);
+    moduleA.add(strongFromWeak);
+
+    for (CompilerInput input : moduleA.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    makeGraph();
+    graph.manageDependencies(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("strong1"))));
+
+    assertThat(
+            getWeakModule().getInputs().stream()
+                .map(i -> i.getSourceFile())
+                .collect(Collectors.toList()))
+        .containsExactly(weak1, weak2, weak3, strongFromWeak);
+    assertThat(
+            moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
+        .containsExactly(strong1);
   }
 
   private void assertInputs(JSModule module, String... sourceNames) {

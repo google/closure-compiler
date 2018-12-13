@@ -618,19 +618,17 @@ public final class JSModuleGraph implements Serializable {
     if (dependencyOptions.shouldPrune()) {
       List<CompilerInput> weakInputs = sorter.getSortedWeakDependenciesOf(orderedInputs);
       for (CompilerInput i : weakInputs) {
-        // Have a separate loop here to add all these dependencies rather than rely on
-        // moveMarkedWeakSources below. moveMarkedWeakSources will be in user order, while this
-        // loop is in dependency order. For sources detected as weak we want dependency order,
-        // for pre-marked as weak we want user order.
+        // Add weak inputs to the weak module in dependency order. moveMarkedWeakSources will move
+        // in command line flag order.
         checkState(i.getModule() == null);
         i.getSourceFile().setKind(SourceKind.WEAK);
         i.setModule(weakModule);
         weakModule.add(i);
       }
+    } else {
+      // Only move sourced marked as weak if the compiler isn't doing its own detection.
+      moveMarkedWeakSources(weakModule, originalInputs);
     }
-
-    // Move all sources marked as weak by outside sources (e.g. flags) into the weak module.
-    moveMarkedWeakSources(weakModule, originalInputs);
 
     // All the inputs are pointing to the modules that own them. Yeah!
     // Update the modules to reflect this.
