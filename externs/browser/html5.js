@@ -150,8 +150,11 @@ OffscreenCanvas.prototype.transferToImageBitmap = function() {};
  */
 OffscreenCanvas.prototype.convertToBlob = function(opt_options) {};
 
+// TODO(tjgq): Find a way to add SVGImageElement to this typedef without making
+// svg.js part of core.
 /**
- * @typedef {HTMLImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap}
+ * @typedef {HTMLImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|
+ *     OffscreenCanvas}
  */
 var CanvasImageSource;
 
