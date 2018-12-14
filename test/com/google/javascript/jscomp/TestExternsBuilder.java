@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -430,6 +431,7 @@ public class TestExternsBuilder {
   private boolean includeArgumentsExterns = false;
   private boolean includeConsoleExterns = false;
   private boolean includePromiseExterns = false;
+  private final List<String> extraExterns = new ArrayList<>();
 
   public TestExternsBuilder addIterable() {
     includeIterableExterns = true;
@@ -478,6 +480,11 @@ public class TestExternsBuilder {
     return this;
   }
 
+  public TestExternsBuilder addExtra(String... lines) {
+    Collections.addAll(extraExterns, lines);
+    return this;
+  }
+
   public String build() {
     List<String> externSections = new ArrayList<>();
     if (includeIterableExterns) {
@@ -504,6 +511,7 @@ public class TestExternsBuilder {
     if (includePromiseExterns) {
       externSections.add(PROMISE_EXTERNS);
     }
+    externSections.addAll(extraExterns);
     return LINE_JOINER.join(externSections);
   }
 

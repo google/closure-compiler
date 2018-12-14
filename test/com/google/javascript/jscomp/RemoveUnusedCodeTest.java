@@ -34,16 +34,32 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         lines(
             "var undefined;",
             "var goog = {};",
+            "/** @const {!Global} */ goog.global;",
             "goog.reflect = {};",
             "goog.reflect.object = function(obj, propertiesObj) {};",
             "function goog$inherits(subClass, superClass) {}",
-            "function goog$mixin(dstPrototype, srcPrototype){}",
+            "function goog$mixin(dstPrototype, srcPrototype) {}",
             "function alert() {}",
             "function use() {}",
             "function externFunction() {}",
             "var externVar;",
-            "var window;"));
+            "var window;",
+            "var console = {};",
+            "console.log = function(var_args) {};",
+            "/** @constructor @return {!Array} */ function Array(/** ...* */ var_args) {}",
+            "/** @constructor @return {string} */ function String(/** *= */ opt_arg) {}",
+            "/** @constructor */ function Map() {}",
+            "/** @constructor */ function Set() {}",
+            "/** @constructor */ function WeakMap() {}",
+            ""));
   }
+
+  private static final String JSCOMP_POLYFILL =
+      lines(
+          "var $jscomp = {};",
+          "$jscomp.polyfill = function(",
+          "    /** string */ name, /** Function */ func, /** string */ from, /** string */ to) {};",
+          "");
 
   @Override
   protected int getNumRepetitions() {
@@ -68,6 +84,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         new RemoveUnusedCode.Builder(compiler)
             .removeLocalVars(true)
             .removeGlobals(removeGlobal)
+            .removeUnusedPolyfills(true)
             .preserveFunctionExpressionNames(preserveFunctionExpressionNames)
             .build()
             .process(externs, root);
@@ -1906,5 +1923,805 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     // Same as above case without the destructuring declaration
     test("var a, b = alert();", "alert();");
   }
-}
 
+  @Test
+  public void testRemoveUnusedPolyfills_global_untyped() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra(JSCOMP_POLYFILL, "/** @constructor */ function Map() {}")
+                .build());
+
+    // Unused polyfill is removed.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');", //
+                "console.log();")),
+        expected("console.log();"));
+
+    // Used polyfill is not removed.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');", //
+                "console.log(new Map());")));
+
+    // Local names shadowing global polyfills are not themselves polyfill references.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');",
+                "console.log(function(Map) {",
+                "  console.log(new Map());",
+                "});")),
+        expected(
+            lines(
+                "console.log(function(Map) {", //
+                "  console.log(new Map());",
+                "});")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_global_typed() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra(JSCOMP_POLYFILL, "/** @constructor */ function Map() {}", "")
+                .build());
+    enableTypeCheck();
+
+    // Unused polyfill is removed.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');", //
+                "console.log();")),
+        expected("console.log();"));
+
+    // Used polyfill is not removed.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');", //
+                "console.log(new Map());")));
+
+    // Local names shadowing global polyfills are not themselves polyfill references.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');",
+                "console.log(function(Map) {",
+                "  console.log(new Map());",
+                "});")),
+        expected(
+            lines(
+                "console.log(function(Map) {", //
+                "  console.log(new Map());",
+                "});")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_propertyOfGlobalObject_untyped() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra(
+                    JSCOMP_POLYFILL,
+                    "/** @constructor */ function Map() {}",
+                    "/** @const */ var goog = {};")
+                .build());
+
+    // Global polyfills may be accessed as properties on the global object.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');", //
+                "console.log(new goog.global.Map());")));
+
+    // NOTE: Without type information we don't see that x is not the global object.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');", //
+                "console.log(new goog.structs.Map());")));
+
+    // Global polyfills may be accessed as properties on the global object.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');",
+                "var x = {Map: /** @constructor */ function() {}};",
+                "console.log(new x.Map());")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_propertyOfGlobalObject_typed() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra(
+                    JSCOMP_POLYFILL,
+                    "/** @constructor */ function Map() {}",
+                    "/** @type {!Global} */ var someGlobal;",
+                    "/** @const */ var notGlobal = {};",
+                    "/** @constructor */ notGlobal.Map = function() {};",
+                    "")
+                .build());
+    enableTypeCheck();
+
+    // Global polyfills may be accessed as properties on the global object.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');",
+                "console.log(new someGlobal.Map());")));
+
+    // With proper type information we can tell that notGlobal.Map is not Map.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');",
+                "console.log(new notGlobal.Map());")),
+        expected("console.log(new notGlobal.Map());"));
+
+    // Global polyfills may be accessed as properties on the global object.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');",
+                "var alsoNotGlobal = {Map: /** @constructor */ function() {}};",
+                "console.log(new alsoNotGlobal.Map());")),
+        expected(
+            lines(
+                "var alsoNotGlobal = {Map: /** @constructor */ function() {}};", //
+                "console.log(new alsoNotGlobal.Map());")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_staticProperty_untyped() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addConsole()
+                .addArray()
+                .addExtra(
+                    JSCOMP_POLYFILL,
+                    "/** @constructor */ function Map() {}",
+                    "/** @const */ var goog = {};")
+                .build());
+
+    // Used polyfill is retained.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');", //
+                "console.log(Array.from());")));
+
+    // Used polyfill is retained, even if accessed as a property of global.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "console.log(goog.global.Array.from());")));
+
+    // Unused polyfill is removed if there's sufficient type information.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "class NotArray { static from() {} }",
+                "console.log(NotArray.from());")),
+        expected(
+            lines(
+                "class NotArray { static from() {} }", //
+                "console.log(NotArray.from());")));
+
+    // Without type information, we can't correctly remove this polyfill.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "var x = {Array: {from: function() {}}};",
+                "console.log(x.Array.from());")));
+
+    // Without type information, we don't recognize the aliased call.
+    // https://github.com/google/closure-compiler/issues/3171
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "/** @const */ var MyArray = Array;",
+                "console.log(MyArray.from());")),
+        expected(
+            lines(
+                "/** @const */ var MyArray = Array;", //
+                "console.log(MyArray.from());")));
+
+    // Without type information, we don't recognize the subclass call.
+    // https://github.com/google/closure-compiler/issues/3171
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "class SubArray extends Array {}",
+                "console.log(SubArray.from());")),
+        expected(
+            lines(
+                "class SubArray extends Array {}", //
+                "console.log(SubArray.from());")));
+
+    // Heurisitic is still able to remove Set.from while retaining Array.from.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Set.from', function() {}, 'es6', 'es3');",
+                "console.log(Array.from());")),
+        expected(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');", //
+                "console.log(Array.from());")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_staticProperty_typed() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addArray()
+                .addConsole()
+                .addExtra(
+                    JSCOMP_POLYFILL,
+                    "Array.from = function() {};",
+                    "/** @constructor */ function Set() {}",
+                    // NOTE: this is not a real API but it allows testing that we can tell it apart.
+                    "Set.from = function() {};",
+                    "")
+                .build());
+    enableTypeCheck();
+
+    // Used polyfill is retained.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');", //
+                "console.log(Array.from());")));
+
+    // Used polyfill is retained, even if accessed via a global object.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "console.log($jscomp.global.Array.from());")));
+
+    // Used polyfill is retained, even if accessed via a global object.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "class NotArray { static from() {} }",
+                "console.log(NotArray.from());")),
+        expected(
+            lines(
+                "class NotArray { static from() {} }", //
+                "console.log(NotArray.from());")));
+
+    // Unused polyfill is deleted since compiler knows `x` is not the global object.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "var x = {Array: {from: function() {}}};",
+                "console.log(x.Array.from());")),
+        expected(
+            lines(
+                "var x = {Array: {from: function() {}}};", //
+                "console.log(x.Array.from());")));
+
+    // Used polyfill via aliased owner: retains definition.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "/** @const */ var MyArray = Array;",
+                "console.log(MyArray.from());")));
+
+    // Used polyfill via subclass: retains definition.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "class SubArray extends Array {}",
+                "console.log(SubArray.from());")));
+
+    // Distinguish static polyfills on different types: remove the unused one.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Set.from', function() {}, 'es6', 'es3');",
+                "console.log(Array.from());")),
+        expected(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');", //
+                "console.log(Array.from());")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_prototypeProperty_untyped() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addArray()
+                .addConsole()
+                .addString()
+                .addExtra(JSCOMP_POLYFILL, "function externFunction() {}", "function alert() {}")
+                .build());
+
+    // Unused polyfill is removed.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "console.log();")),
+        expected("console.log();"));
+
+    // Used polyfill is retained.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "''.repeat();")));
+
+    // Used polyfill (directly via String.prototype) is retained.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "String.prototype.repeat();")));
+
+    // Used polyfill (directly String.prototype and Function.prototype.call) is retained.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "String.prototype.repeat.call('');")));
+
+    // Unknown type is not removed.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "var x = externFunction();",
+                "x.repeat();")));
+
+    // Without type information, cannot remove the polyfill.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "String.repeat();")));
+
+    // Without type information, cannot remove the polyfill.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "var /** number */ x = 42;",
+                "x.repeat();")));
+
+    // Multiple same-name methods
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.includes', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Array.prototype.includes', function() {}, 'es6', 'es3');",
+                "[].includes(5);")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_prototypeProperty_typed() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addFunction()
+                .addString()
+                .addArray()
+                .addConsole()
+                .addExtra(
+                    JSCOMP_POLYFILL,
+                    "/** @this {string} */",
+                    "String.prototype.repeat = function() {}",
+                    "String.prototype.includes = function(arg) {}",
+                    "Array.prototype.includes = function(arg) {}",
+                    "function externFunction() {}")
+                .build());
+    enableTypeCheck();
+
+    // Unused polyfill is removed.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "console.log();")),
+        expected("console.log();"));
+
+    // Used polyfill is retained.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "''.repeat();")));
+
+    // Used polyfill (via String.prototype) is retained.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "String.prototype.repeat();")));
+
+    // Used polyfill (via String.prototype and Function.prototype.call) is retained.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "String.prototype.repeat.call('');")));
+
+    // Unknown type is not removed.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "var x = externFunction();",
+                "x.repeat();")));
+
+    // Calling a prototype property like a static allows removing the prototype.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
+                "String.repeat();")),
+        expected("String.repeat();"),
+        warning(TypeCheck.INEXISTENT_PROPERTY));
+
+    // Correctly discern between string and array.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.includes', function() {}, 'es6', 'es3');",
+                "var x = [];",
+                "x.includes(1);")),
+        expected(
+            lines(
+                "var x = [];", //
+                "x.includes(1);")));
+
+    // Union type prevents removal.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.includes', function() {}, 'es6', 'es3');",
+                "var /** string|Array */ x = [];",
+                "x.includes(1);")));
+
+    // Multiple same-name methods removes the right one.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.includes', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Array.prototype.includes', function() {}, 'es6', 'es3');",
+                "'x'.includes(5);")),
+        expected(
+            lines(
+                "$jscomp.polyfill('String.prototype.includes', function() {}, 'es6', 'es3');",
+                "'x'.includes(5);")));
+
+    // Multiple same-name methods removes the right one.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('String.prototype.includes', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Array.prototype.includes', function() {}, 'es6', 'es3');",
+                "Array.prototype.includes.call('x', 1);")),
+        expected(
+            lines(
+                "$jscomp.polyfill('Array.prototype.includes', function() {}, 'es6', 'es3');",
+                "Array.prototype.includes.call('x', 1);")),
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_globalWithPrototypePolyfill_untyped() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder().addPromise().addConsole().addExtra(JSCOMP_POLYFILL).build());
+
+    // Both the base polyfill and the extra method are removed when unused.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "console.log();")),
+        expected("console.log();"));
+
+    // The extra method polyfill is removed if not used, even when the base is retained.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "console.log(Promise.resolve());")),
+        expected(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "console.log(Promise.resolve());")));
+
+    // Can't remove finally without type information
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "const p = {finally() {}};",
+                "p.finally();")),
+        expected(
+            lines(
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "const p = {finally() {}};",
+                "p.finally();")));
+
+    // Retain both the base and the extra method when both are used.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "console.log(Promise.resolve().finally(() => {}));")));
+
+    // The base polyfill is removed and the extra method retained if the constructor never shows up
+    // anywhere in the source code.  NOTE: this is probably the wrong thing to do.  This situation
+    // should only be possible if async function transpilation happens *after* RemoveUnusedCode
+    // (since we have an async function).  The fact that we inserted the Promise polyfill in the
+    // first case indicates the output language is < ES6.  When that later transpilation occurs, we
+    // will end up adding uses of the Promise constructor.  We need to keep this in mind when moving
+    // transpilation after optimizations.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "async function f() {}",
+                "f().finally(() => {});")),
+        expected(
+            lines(
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "async function f() {}",
+                "f().finally(() => {});")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_globalWithPrototypePolyfill_typed() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder().addPromise().addConsole().addExtra(JSCOMP_POLYFILL).build());
+    enableTypeCheck();
+
+    // Both the base polyfill and the extra method are removed when unused.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "console.log();")),
+        expected("console.log();"));
+
+    // The extra method polyfill is removed if not used, even when the base is retained.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "console.log(Promise.resolve());")),
+        expected(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "console.log(Promise.resolve());")));
+
+    // Calls a different finally so both polyfills can be removed.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "const p = {finally() {}};",
+                "p.finally();")),
+        expected(lines("const p = {finally() {}};", "p.finally();")));
+
+    // Retain both the base and the extra method when both are used.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "console.log(Promise.resolve().finally(() => {}));")));
+
+    // The base polyfill is removed and the extra method retained if the constructor never shows up
+    // anywhere in the source code.  NOTE: this is probably the wrong thing to do.  This situation
+    // should only be possible if async function transpilation happens *after* RemoveUnusedCode
+    // (since we have an async function).  The fact that we inserted the Promise polyfill in the
+    // first case indicates the output language is < ES6.  When that later transpilation occurs, we
+    // will end up adding uses of the Promise constructor.  We need to keep this in mind when moving
+    // transpilation after optimizations.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "async function f() {}",
+                "f().finally(() => {});")),
+        expected(
+            lines(
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "async function f() {}",
+                "f().finally(() => {});")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_chained() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra(
+                    JSCOMP_POLYFILL,
+                    "/** @constructor */ function Map() {}",
+                    "/** @constructor */ function Set() {}",
+                    "/** @constructor */ function WeakMap() {}")
+                .build());
+
+    // Removes polyfills that are only referenced in other (removed) polyfills' definitions.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('WeakMap', function() { console.log(); }, 'es6', 'es3');",
+                "$jscomp.polyfill('Map', function() { new WeakMap(); }, 'es6', 'es3');",
+                "$jscomp.polyfill('Set', function() { new Map(); }, 'es6', 'es3');",
+                "function unused() { new Set(); }",
+                "console.log();")),
+        expected("console.log();"));
+
+    // Chains can be partially removed if just an outer-most symbol is unreferenced.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('WeakMap', function() { console.log(); }, 'es6', 'es3');",
+                "$jscomp.polyfill('Map', function() { new WeakMap(); }, 'es6', 'es3');",
+                "$jscomp.polyfill('Set', function() { new Map(); }, 'es6', 'es3');",
+                "console.log(new Map());")),
+        expected(
+            lines(
+                "$jscomp.polyfill('WeakMap', function() { console.log(); }, 'es6', 'es3');",
+                "$jscomp.polyfill('Map', function() { new WeakMap(); }, 'es6', 'es3');",
+                "console.log(new Map());")));
+
+    // Only requires a single reference to the outermost symbol to retain the whole chain.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('WeakMap', function() { console.log(); }, 'es6', 'es3');",
+                "$jscomp.polyfill('Map', function() { new WeakMap(); }, 'es6', 'es3');",
+                "$jscomp.polyfill('Set', function() { new Map(); }, 'es6', 'es3');",
+                "console.log(new Set())")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_continued() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra(JSCOMP_POLYFILL, "/** @constructor */ function Map() {}")
+                .build());
+
+    // Ensure that continuations occur so that retained polyfill definitions are still optimized.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() { var x; }, 'es6', 'es3');",
+                "console.log(new Map());")),
+        expected(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');", //
+                "console.log(new Map());")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_collapsedPolyfillFunction() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra("function $jscomp$polyfill() {}", "/** @constructor */ function Map() {}")
+                .build());
+
+    // The pass should also work after CollapseProperties.
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp$polyfill('Map', function() {}, 'es6', 'es3');", //
+                "console.log();")),
+        expected("console.log();"));
+
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp$polyfill('Map', function() {}, 'es6', 'es3');", //
+                "console.log(new Map());")));
+  }
+}
