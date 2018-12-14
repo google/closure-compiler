@@ -1438,6 +1438,40 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void namespaceInDestructuringPattern() {
+    // TODO(b/117673791): collapse ns.x and ns.y
+    testSame(
+        lines(
+            "const ns = {};",
+            "ns.x = 1;",
+            "ns.y = 2;",
+            "let {x, y} = ns;",
+            "x = 4;", // enforce that we can't inline x -> ns.x because it's set multiple times
+            "use(x + y);"));
+  }
+
+  @Test
+  public void inlineDestructuringPatternConstructorWithProperty() {
+    test(
+        lines(
+            "const ns = {};",
+            "/** @constructor */",
+            "ns.Y = function() {};",
+            "ns.Y.prop = 3;",
+            "let {Y} = ns;",
+            "use(Y.prop);"),
+        lines(
+            "const ns = {};",
+            "/** @constructor */",
+            "var ns$Y = function() {};",
+            "var ns$Y$prop = 3;",
+            "let {Y} = ns;",
+            "use(Y.prop);"),
+        // TODO(b/117673791): replace Y.prop -> ns$Y$prop; right now this is broken.
+        warning(CollapseProperties.UNSAFE_NAMESPACE_WARNING));
+  }
+
+  @Test
   public void testDefaultParamAlias1() {
     test(
         "var a = {b: 5}; var b = a; function f(x=b) { alert(x.b); }",

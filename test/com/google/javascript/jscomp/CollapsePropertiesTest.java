@@ -2016,15 +2016,72 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDestructuredArrays() {
+  public void testCanCollapseSinglePropertyInObjectPattern() {
+    // TODO(b/117673791): collapse x.y -> x$y
+    testSame("const x = {y: 1}; const {y} = x; use(y);");
+  }
+
+  @Test
+  public void testCanCollapseSinglePropertyInObjectPatternWithDefaultValue() {
+    // TODO(b/117673791): collapse x.y - > x$y
+    testSame("const x = {y: 1}; const {y = 0} = x; use(y);");
+  }
+
+  @Test
+  public void testCanCollapsePropertyInObjectPatternWithKeyBefore() {
+    // TODO(b/117673791): collapse x.y -> x$y
+    testSame("let x = {y: 1, /** @nocollapse */ z: 2}; let {z, y} = x; use(y, z);");
+  }
+
+  @Test
+  public void testCanCollapsePropertyInObjectPatternWithKeyAfter() {
+    // TODO(b/117673791): collapse x.y -> x$y
+    testSame("let x = {y: 1, /** @nocollapse */ z: 2}; let {y, z=y} = x; use(y, z);");
+  }
+
+  @Test
+  public void testCanCollapsePropertyInObjectPatternWithKeyBeforeAndAfter() {
+    test(
+        lines(
+            "let  foo = {bar: {y: 1}};", //
+            "let {x1, x2, y, z1, z2} =  foo.bar;",
+            "use(x1, x2, y, z1, z2);"),
+        lines(
+            "var foo$bar = {y: 1};",
+            // TODO(b/117673791): collapse foo$bar.y -> foo$bar$y
+            "let {x1, x2, y, z1, z2} =  foo$bar;",
+            "use(x1, x2, y, z1, z2);"));
+  }
+
+  @Test
+  public void testCannotCollapsePropertyInNestedObjectPattern() {
+    // TODO(b/117673791): collapse x.y -> x$y
+    testSame("const x = {y: {z: 1}}; const {y: {z}} = x; use(z);");
+  }
+
+  @Test
+  public void testCanCollapseSinglePropertyInObjectPatternAssign() {
+    // TODO(b/117673791): collapse x.y -> x$y
+    testSame("const x = {y: 1}; var y; ({y} = x); use(y);");
+  }
+
+  @Test
+  public void testPropertyInArray() {
     testSame("var a, b = [{}, {}]; a.foo = 5; b.bar = 6;");
 
-    test("var a = {}; a.b = {}; [a.b.c, a.b.d] = [1, 2];",
-        "var a$b = {}; [a$b.c, a$b.d] = [1, 2];");
+    test("var a = {}; a.b = 5; var c, d = [6, a.b]", "var a$b = 5; var c, d = [6, a$b];");
+  }
+
+  @Test
+  public void testCollapsePropertySetInPattern() {
+    // TODO(b/120303257): collapse lvalues in destructuring patterns. We delayed implementing this
+    // because it's uncommon to have properties as lvalues in destructuring patterns.
+    test(
+        "var a = {}; a.b = {}; [a.b.c, a.b.d] = [1, 2];", "var a$b = {}; [a$b.c, a$b.d] = [1, 2];");
 
     test(
-        "var a = {}; a.b = 5; var c, d = [6, a.b]",
-        "var a$b = 5; var c, d = [6, a$b];");
+        "var a = {}; a.b = {}; ({x: a.b.c, y: a.b.d} = {});",
+        "var a$b = {}; ({x: a$b.c, y: a$b.d} = {});");
   }
 
   @Test

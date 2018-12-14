@@ -18,11 +18,9 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.truth.Expect;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -32,7 +30,6 @@ import org.junit.runners.JUnit4;
 public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   private AggressiveInlineAliases lastAggressiveInlineAliases;
-  @Rule public final Expect expect = Expect.create();
 
   private static final String EXTERNS =
       "var window;"
@@ -1891,6 +1888,69 @@ test(
             // `Letters.B` without verifying that the read was not also a write.
             "Letters.A, Letters.B;",
             "use(Letters.B);"));
+  }
+
+  @Test
+  public void testInlineDestructuredAliasProp() {
+    // TODO(b/117673791): replace `b.y` with `a.x`
+    testSame("var a = {x: 2}; var b = {}; b.y = a.x; var {y} = b; use(y);");
+  }
+
+  @Test
+  public void testInlineDestructuredAliasPropWithKeyBefore() {
+    // TODO(b/117673791): replace `y` with `a.x`
+    testSame("var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; var {z, y} = b; use(y + z);");
+  }
+
+  @Test
+  public void testInlineDestructuredAliasPropWithKeyAfter() {
+    // TODO(b/117673791): replace `b.y` with `a.x`
+    testSame("var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; var {y, z} = b; use(y + z);");
+  }
+
+  @Test
+  public void testInlineDestructuredAliasPropWithKeyBeforeAndAfter() {
+    // TODO(b/117673791): replace `b.y` with `a.x`
+    testSame(
+        lines(
+            "var a = {x: 2};",
+            "var b = {z: 3};",
+            "b.y = a.x;",
+            "b.z = 4;", // add second assign so that this won't get inlined
+            "var {x, y, z} = b;",
+            "use(y + z);"));
+  }
+
+  @Test
+  public void testDestructuredPropAccessInAssignWithKeyBefore() {
+    // TODO(b/117673791): replace `b.y` with `a.x`
+    testSame(
+        lines(
+            "var a = {x: 2};",
+            "var b = {};",
+            "b.y = a.x;",
+            "var obj = {};",
+            "({missing: obj.foo, y: obj.foo} = b);",
+            "use(obj.foo);"));
+  }
+
+  @Test
+  public void testDestructuredPropAccessInAssignWithKeyAfter() {
+    // TODO(b/117673791): replace `b.y` with `a.x`
+    testSame(
+        lines(
+            "var a = {x: 2};",
+            "var b = {};",
+            "b.y = a.x;",
+            "var obj = {};",
+            "({y: obj.foo, missing: obj.foo} = b);",
+            "use(obj.foo);"));
+  }
+
+  @Test
+  public void testDestructuredPropAccessInDeclarationWithDefault() {
+    // TODO(b/117673791): replace `b.y` with `a.x`
+    testSame(lines("var a = {x: {}};", "var b = {};", "b.y = a.x;", "var {y = 0} = b;", "use(y);"));
   }
 
   /**

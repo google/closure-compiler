@@ -261,6 +261,17 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTypedefAliasGivesNoWarning() {
+    // TODO(b/117673791): don't warn, this might be for typechecking
+    testWarning("var a = {}; /** @typedef {number} */ a.b; const b = a.b;", UNDEFINED_NAME_WARNING);
+  }
+
+  @Test
+  public void testDestructuringTypedefAliasGivesNoWarning() {
+    testSame("var a = {}; /** @typedef {number} */ a.b; const {b} = a;");
+  }
+
+  @Test
   public void testRefToDescendantOfUndefinedPropertyGivesCorrectWarning() {
     testWarning(NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("a.x"));
@@ -555,6 +566,17 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   public void testEs6NonSubclass_stillWarnsForMissingProperty() {
     // We still do warn for undefined properties on an ES6 class with no superclass
     testWarning("class Child {} Child.f();", UNDEFINED_NAME_WARNING);
+  }
+
+  @Test
+  public void testDestructuringUndefinedProperty() {
+    // TODO(lharker): this should warn
+    testSame(
+        lines(
+            "var ns = {};", //
+            "/** @enum */",
+            "ns.Modes = {A, B};",
+            "const {C} = ns.Modes;"));
   }
 
   @Test
