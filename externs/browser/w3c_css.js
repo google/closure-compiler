@@ -2750,6 +2750,36 @@ FontFaceSet.prototype.ready;
  */
 FontFaceSet.prototype.status;
 
+/**
+ * @constructor
+ * @param {string} type
+ * @param {{
+ *   animationName: (string|undefined),
+ *   elapsedTime: (number|undefined),
+ *   pseudoElement: (string|undefined)
+ * }=} opt_animationEventInitDict
+ * @extends {Event}
+ * @see https://drafts.csswg.org/css-animations/#interface-animationevent
+ */
+function AnimationEvent(type, opt_animationEventInitDict) {};
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-animations/#dom-animationevent-animationname
+ */
+AnimationEvent.prototype.animationName;
+
+/**
+ * @type {number}
+ * @see https://drafts.csswg.org/css-animations/#dom-animationevent-elapsedtime
+ */
+AnimationEvent.prototype.elapsedTime;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-animations/#dom-animationevent-pseudoelement
+ */
+AnimationEvent.prototype.pseudoElement;
 
 /**
  * @record
