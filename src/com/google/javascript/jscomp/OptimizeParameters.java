@@ -25,6 +25,7 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -511,7 +512,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     }
 
     // Only one definition is currently supported.
-    Node fn = Iterables.get(fns.values(), 0);
+    Node fn = Iterables.getOnlyElement(fns.values());
 
     boolean continueLooking = adjustForConstraints(fn, parameters);
     if (!continueLooking) {
@@ -579,6 +580,11 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
    * @return Whether there are any movable parameters.
    */
   private static boolean adjustForConstraints(Node fn, List<Parameter> parameters) {
+    JSDocInfo info = NodeUtil.getBestJSDocInfo(fn);
+    if (info != null && info.isNoInline()) {
+      return false;
+    }
+
     Node paramList = NodeUtil.getFunctionParameters(fn);
     Node lastFormal = paramList.getLastChild();
     int restIndex = Integer.MAX_VALUE;

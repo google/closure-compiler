@@ -636,6 +636,9 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test("function foo(p1, p2) {}; foo(1,2); foo(2,2);",
          "function foo(p1) {var p2 = 2}; foo(1); foo(2)");
 
+    // @noinline prevents constant inlining
+    testSame("/** @noinline */ function foo(p1, p2) {}; foo(1,2); foo(2,2);");
+
     // Remove nothing
     testSame("function foo(p1, p2) {}; foo(1); foo(2,3);");
 
