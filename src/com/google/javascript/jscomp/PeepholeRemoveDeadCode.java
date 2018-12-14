@@ -110,6 +110,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         return tryFoldTry(subtree);
       case LABEL:
         return tryFoldLabel(subtree);
+      case ARRAY_PATTERN:
+        return tryOptimizeArrayPattern(subtree);
+      case OBJECT_PATTERN:
+        return tryOptimizeObjectPattern(subtree);
+      case VAR:
+      case CONST:
+      case LET:
+        return tryOptimizeNameDeclaration(subtree);
       default:
           return subtree;
     }
@@ -201,20 +209,48 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Try removing identity assignments
+   * Try removing identity assignments and empty destructuring pattern assignments
+   *
    * @return the replacement node, if changed, or the original if not
    */
   private Node tryFoldAssignment(Node subtree) {
     checkState(subtree.isAssign());
     Node left = subtree.getFirstChild();
     Node right = subtree.getLastChild();
-    // Only names
     if (left.isName()
         && right.isName()
         && left.getString().equals(right.getString())) {
+      // Only names
       subtree.replaceWith(right.detach());
       compiler.reportChangeToEnclosingScope(right);
       return right;
+    } else if (left.isDestructuringPattern() && !left.hasChildren()) {
+      // `[] = <expr>` becomes `<expr>`
+      // Note that this does potentially change behavior. If `<expr>` is not iterable and this
+      // code originally threw, it will no longer throw.
+      subtree.replaceWith(right.detach());
+      compiler.reportChangeToEnclosingScope(right);
+      return right;
+    }
+    return subtree;
+  }
+
+  /**
+   * Try removing identity assignments and empty destructuring pattern assignments
+   *
+   * @return the replacement node, if changed, or the original if not
+   */
+  private Node tryOptimizeNameDeclaration(Node subtree) {
+    checkState(NodeUtil.isNameDeclaration(subtree));
+    Node left = subtree.getFirstChild();
+    if (left.isDestructuringLhs() && left.hasTwoChildren()) {
+      Node pattern = left.getFirstChild();
+      if (!pattern.hasChildren()) {
+        // `var [] = foo();` becomes `foo();`
+        Node value = left.getSecondChild();
+        subtree.replaceWith(IR.exprResult(value.detach()).srcref(value));
+        compiler.reportChangeToEnclosingScope(value);
+      }
     }
     return subtree;
   }
@@ -1079,6 +1115,68 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return forNode;
     }
     return n;
+  }
+
+  /** Removes string keys with an empty pattern as their child */
+  Node tryOptimizeObjectPattern(Node pattern) {
+    checkArgument(pattern.isObjectPattern(), pattern);
+
+    if (pattern.hasChildren() && pattern.getLastChild().isRest()) {
+      // don't remove any elements in `const {f: [], ...rest} = obj` because that affects what's
+      // assigned to `rest`. only the last element can be object rest.
+      return pattern;
+    }
+
+    // remove trailing EMPTY nodes and empty destructuring patterns
+    for (Node child = pattern.getFirstChild(); child != null; ) {
+      Node key = child;
+      child = key.getNext(); // don't put this in the for loop since we might remove `child`
+
+      if (!key.isStringKey()) {
+        // don't try to remove rest or computed properties, since they might have side effects
+        continue;
+      }
+      if (isRemovableDestructuringTarget(key.getOnlyChild())) {
+        // e.g. `const {f: {}} = obj;`
+        key.detach();
+        compiler.reportChangeToEnclosingScope(pattern);
+      }
+    }
+    return pattern;
+  }
+
+  /** Removes trailing EMPTY nodes and empty array patterns */
+  Node tryOptimizeArrayPattern(Node pattern) {
+    checkArgument(pattern.isArrayPattern(), pattern);
+
+    for (Node lastChild = pattern.getLastChild(); lastChild != null; ) {
+      if (lastChild.isEmpty() || isRemovableDestructuringTarget(lastChild)) {
+        Node prev = lastChild.getPrevious();
+        pattern.removeChild(lastChild);
+        lastChild = prev;
+        compiler.reportChangeToEnclosingScope(pattern);
+      } else {
+        // don't remove any non-trailing empty nodes because that will change the ordering of the
+        // other assignments
+        // note that this case also covers array pattern rest, which must be the final element
+        break;
+      }
+    }
+    return pattern;
+  }
+
+  private boolean isRemovableDestructuringTarget(Node destructruringElement) {
+    Node target = destructruringElement;
+    Node defaultValue = null;
+    if (destructruringElement.isDefaultValue()) {
+      target = destructruringElement.getFirstChild();
+      defaultValue = destructruringElement.getSecondChild();
+    }
+    if (!target.isDestructuringPattern() || target.hasChildren()) {
+      return false;
+    }
+    // only remove default values without side effects
+    return defaultValue == null || !NodeUtil.mayHaveSideEffects(defaultValue, compiler);
   }
 
   /**

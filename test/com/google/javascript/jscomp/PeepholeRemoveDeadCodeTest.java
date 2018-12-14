@@ -1238,4 +1238,76 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     testSame("async function f() { await something(); }");
     testSame("async function f() { await some.thing(); }");
   }
+
+  @Test
+  public void testEmptyPatternInDeclarationRemoved() {
+    test("var [] = [];", "");
+    test("let [] = [];", "");
+    test("const [] = [];", "");
+    test("var {} = [];", "");
+    test("var [] = foo();", "foo()");
+  }
+
+  @Test
+  public void testEmptyArrayPatternInAssignRemoved() {
+    test("({} = {});", "");
+    test("({} = foo());", "foo()");
+    test("[] = [];", "");
+    test("[] = foo();", "foo()");
+  }
+
+  @Test
+  public void testEmptyPatternInParamsNotRemoved() {
+    testSame("function f([], a) {}");
+    testSame("function f({}, a) {}");
+  }
+
+  @Test
+  public void testEmptyPatternInForOfLoopNotRemoved() {
+    testSame("for (let [] of foo()) {}");
+    testSame("for (const [] of foo()) {}");
+    testSame("for ([] of foo()) {}");
+    testSame("for ({} of foo()) {}");
+  }
+
+  @Test
+  public void testEmptySlotInArrayPatternRemoved() {
+    test("[,,] = foo();", "foo()");
+    test("[a,b,,] = foo();", "[a,b] = foo();");
+    test("[a,[],b,[],[]] = foo();", "[a,[],b] = foo();");
+    test("[a,{},b,{},{}] = foo();", "[a,{},b] = foo();");
+    test("function f([,,,]) {}", "function f([]) {}");
+    testSame("[[], [], [], ...rest] = foo()");
+  }
+
+  @Test
+  public void testEmptySlotInArrayPatternWithDefaultValueMaybeRemoved() {
+    test("[a,[] = 0] = [];", "[a] = [];");
+    testSame("[a,[] = foo()] = [];");
+  }
+
+  @Test
+  public void testEmptyKeyInObjectPatternRemoved() {
+    test("const {f: {}} = {};", "");
+    test("const {f: []} = {};", "");
+    test("const {f: {}, g} = {};", "const {g} = {};");
+    test("const {f: [], g} = {};", "const {g} = {};");
+    testSame("const {[foo()]: {}} = {};");
+  }
+
+  @Test
+  public void testEmptyKeyInObjectPatternWithDefaultValueMaybeRemoved() {
+    test("const {f: {} = 0} = {};", "");
+    // In theory the following case could be reduced to `foo()`, but that gets more complicated to
+    // implement for object patterns with multiple keys with side effects.
+    // Instead the pass backs off for any default with a possible side effect
+    testSame("const {f: {} = foo()} = {};");
+  }
+
+  @Test
+  public void testEmptyKeyInObjectPatternNotRemovedWithObjectRest() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    testSame("const {f: {}, ...g} = foo()");
+    testSame("const {f: [], ...g} = foo()");
+  }
 }
