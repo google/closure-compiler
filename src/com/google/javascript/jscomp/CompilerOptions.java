@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -1186,8 +1187,14 @@ public class CompilerOptions implements Serializable {
   private ImmutableList<ConformanceConfig> conformanceConfigs = GLOBAL_CONFORMANCE_CONFIGS;
 
   /**
-   * For use in {@link CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module.
+   * Remove the first match of this regex from any paths when checking conformance whitelists.
+   *
+   * <p>You can use this to make absolute paths relative to the root of your source tree. This is
+   * useful to work around CI and build systems that use absolute paths.
    */
+  Pattern conformanceRemoveRegexFromPath = Pattern.compile(".*?google3/");
+
+  /** For use in {@link CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module. */
   boolean wrapGoogModulesForWhitespaceOnly = true;
 
   public void setWrapGoogModulesForWhitespaceOnly(boolean enable) {
@@ -2949,6 +2956,7 @@ public class CompilerOptions implements Serializable {
             .add("colorizeErrorOutput", shouldColorizeErrorOutput())
             .add("computeFunctionSideEffects", computeFunctionSideEffects)
             .add("conformanceConfigs", getConformanceConfigs())
+            .add("conformanceRemoveRegexFromPath", conformanceRemoveRegexFromPath)
             .add("continueAfterErrors", canContinueAfterErrors())
             .add("convertToDottedProperties", convertToDottedProperties)
             .add("crossChunkCodeMotion", crossChunkCodeMotion)

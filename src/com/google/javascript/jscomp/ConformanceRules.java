@@ -249,6 +249,7 @@ public final class ConformanceRules {
     /** Returns the first Whitelist entry that matches the given path, and null otherwise. */
     @Nullable
     private Whitelist findWhitelistForPath(String path) {
+      path = compiler.getOptions().conformanceRemoveRegexFromPath.matcher(path).replaceFirst("");
       for (Whitelist whitelist : whitelists) {
         if (whitelist.matches(path)) {
           return whitelist;
