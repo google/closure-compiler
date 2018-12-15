@@ -1778,10 +1778,10 @@ WebGL2RenderingContext.prototype.texStorage3D = function(
  * @param {number} internalformat
  * @param {number} formatOrWidth
  * @param {number} typeOrHeight
- * @param {?ImageData|?HTMLImageElement|?HTMLCanvasElement|?HTMLVideoElement|number} imgOrBorder
+ * @param {?TexImageSource|number} imgOrBorder
  * @param {number=} opt_format
  * @param {number=} opt_type
- * @param {?ArrayBufferView|?ImageData|?HTMLImageElement|?HTMLCanvasElement|?HTMLVideoElement|number=} opt_imgOrOffset
+ * @param {?ArrayBufferView|?TexImageSource|number=} opt_imgOrOffset
  * @param {number=} opt_srcOffset
  * @return {undefined}
  * @override
@@ -1797,9 +1797,9 @@ WebGL2RenderingContext.prototype.texImage2D = function(
  * @param {number} yoffset
  * @param {number} formatOrWidth
  * @param {number} typeOrHeight
- * @param {?ImageData|?HTMLImageElement|?HTMLCanvasElement|?HTMLVideoElement|number} dataOrFormat
+ * @param {?TexImageSource|number} dataOrFormat
  * @param {number=} opt_type
- * @param {?ArrayBufferView|?ImageData|?HTMLImageElement|?HTMLCanvasElement|?HTMLVideoElement|number=} opt_imgOrOffset
+ * @param {?ArrayBufferView|?TexImageSource|number=} opt_imgOrOffset
  * @param {number=} opt_srcOffset
  * @return {undefined}
  * @override
@@ -1818,7 +1818,7 @@ WebGL2RenderingContext.prototype.texSubImage2D = function(
  * @param {number} border
  * @param {number} format
  * @param {number} type
- * @param {?ArrayBufferView|?ImageData|?HTMLImageElement|?HTMLCanvasElement|?HTMLVideoElement|number} srcData
+ * @param {?ArrayBufferView|?TexImageSource|number} srcData
  * @param {number=} opt_srcOffset
  * @return {undefined}
  */
@@ -1837,7 +1837,7 @@ WebGL2RenderingContext.prototype.texImage3D = function(
  * @param {number} depth
  * @param {number} format
  * @param {number} type
- * @param {?ArrayBufferView|?ImageData|?HTMLImageElement|?HTMLCanvasElement|?HTMLVideoElement|number} srcData
+ * @param {?ArrayBufferView|?TexImageSource|number} srcData
  * @param {number=} opt_srcOffset
  * @return {undefined}
  */
