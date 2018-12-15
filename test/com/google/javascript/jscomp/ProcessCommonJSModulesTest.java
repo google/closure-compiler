@@ -1575,4 +1575,12 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     // For example in Jasmine test framwork.
     testModules("test.js", "module('foo.bar');", "module('foo.bar');");
   }
+
+  @Test
+  public void testEsModuleExportsNotRewritten() {
+    // There was a bug where logic in the ProcessCommonJsModules incorrectly split this double
+    // declaration.
+    String code = "export var foo = 1, bar = 2;";
+    testModules("test.js", code, code);
+  }
 }

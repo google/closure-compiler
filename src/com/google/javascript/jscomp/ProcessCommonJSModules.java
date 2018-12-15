@@ -1276,8 +1276,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         case LET:
         case CONST:
           // Multiple declarations need split apart so that they can be refactored into
-          // property assignments or removed altogether.
-          if (n.hasMoreThanOneChild() && !NodeUtil.isAnyFor(parent)) {
+          // property assignments or removed altogether. Don't split declarations for
+          // ES module export calls as it breaks AST and ES modules shouldn't be affected at all
+          // by this pass.
+          if (n.hasMoreThanOneChild() && !NodeUtil.isAnyFor(parent) && !parent.isExport()) {
             List<Node> vars = splitMultipleDeclarations(n);
             t.reportCodeChange();
             for (Node var : vars) {
