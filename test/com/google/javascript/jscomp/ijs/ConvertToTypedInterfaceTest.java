@@ -33,7 +33,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     allowExternsChanges();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
   }
 
   @Override
