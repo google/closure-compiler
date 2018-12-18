@@ -3131,7 +3131,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES5;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
