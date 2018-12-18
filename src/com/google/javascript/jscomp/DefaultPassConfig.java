@@ -378,7 +378,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Passes running before this point should expect to see language features up to ES_2017.
-    checks.add(createEmptyPass(PassNames.BEFORE_ES_2017_TRANSPILATION));
+    checks.add(createEmptyPass(PassNames.BEFORE_PRE_TYPECHECK_TRANSPILATION));
 
     TranspilationPasses.addPreTypecheckTranspilationPasses(checks, options);
 
