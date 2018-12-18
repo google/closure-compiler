@@ -85,9 +85,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   }
 
   @Test
-  public void moveMethodDefinedInPrototypeLiteral() {
-    // TODO(b/70340193): Create similar case using method shorthand.
-    //   Currently `Foo.prototype = { method() {} };` causes a compiler crash.
+  public void moveMethodDefinedInPrototypeLiteralWithStubs() {
     test(
         createModuleChain(
             lines(
@@ -109,31 +107,137 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   }
 
   @Test
-  public void moveClassClassMethod() {
+  public void moveMethodDefinedInPrototypeLiteralWithoutStubs() {
+    noStubs = true;
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype = { method: function() {} };"),
+            // Chunk 2
+            "(new Foo).method()"),
+        new String[] {
+          lines(
+              "function Foo() {}", //
+              "Foo.prototype = {};"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.method = function() {};", //
+              "(new Foo).method()")
+        });
+  }
+
+  @Test
+  public void moveMethodDefinedInPrototypeLiteralUsingShorthandSyntaxWithStub() {
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype = { method() {} };"),
+            // Chunk 2
+            "(new Foo).method()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "function Foo() {}",
+              "Foo.prototype = { method: JSCompiler_stubMethod(0) };"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.method = ", //
+              "    JSCompiler_unstubMethod(0, function() {});",
+              "(new Foo).method()")
+        });
+  }
+
+  @Test
+  public void moveMethodDefinedInPrototypeLiteralUsingShorthandSyntaxWithoutStub() {
+    noStubs = true;
+    test(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype = { method() {} };"),
+            // Chunk 2
+            "(new Foo).method()"),
+        new String[] {
+          lines("function Foo() {}", "Foo.prototype = {};"),
+          // Chunk 2
+          lines("Foo.prototype.method = function() {};", "(new Foo).method()")
+        });
+  }
+
+  @Test
+  public void doNotMoveMethodDefinedInPrototypeLiteralAsComputedProp() {
     testSame(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype = { [1]:  {} };"),
+            // Chunk 2
+            "(new Foo)[1]()"));
+  }
+
+  @Test
+  public void moveClassMethod() {
+    test(
         createModuleChain(
             // Chunk 1
             "class Foo { method() {} }",
             // Chunk 2
-            "(new Foo).method()"));
+            "(new Foo).method()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "class Foo {}",
+              "Foo.prototype.method = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});",
+              "(new Foo).method();")
+        });
+  }
 
-    // TODO(b/70340193): This test case should be:
-    // test(
-    //     createModuleChain(
-    //         // Chunk 1
-    //         "class Foo { method() {} }",
-    //         // Chunk 2
-    //         "(new Foo).method()"),
-    //     new String[] {
-    //       lines(
-    //           STUB_DECLARATIONS,
-    //           "class Foo {}",
-    //           "Foo.prototype.method = JSCompiler_stubMethod(0);"),
-    //       // Chunk 2
-    //       lines(
-    //           "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});",
-    //           "(new Foo).method();")
-    //     });
+  @Test
+  public void doNotMoveClassComputedPropertyMethod() {
+    testSame(
+        createModuleChain(
+            // Chunk 1
+            "const methodName = 'method';",
+            "class Foo { [methodName]() {} }",
+            // Chunk 2
+            "(new Foo)[methodName]()"));
+  }
+
+  @Test
+  public void moveClassMethodForConstDefinition() {
+    test(
+        createModuleChain(
+            // Chunk 1
+            "const Foo = class FooInternal { method() {} }",
+            // Chunk 2
+            "(new Foo).method()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "const Foo = class FooInternal {}",
+              "Foo.prototype.method = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});",
+              "(new Foo).method();")
+        });
+  }
+
+  @Test
+  public void doNotMoveClassMethodWithLocalClassNameReference() {
+    // We could probably rewrite the internal reference, but it is unlikely that the added
+    // complexity of doing so would be worthwhile.
+    testSame(
+        createModuleChain(
+            // Chunk 1
+            "const Foo = class FooInternal { method() { FooInternal; } }",
+            // Chunk 2
+            "(new Foo).method()"));
   }
 
   @Test
@@ -194,22 +298,18 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
     canMoveExterns = true;
     noStubs = true;
-    testSame(
+    test(
         createModuleChain(
             "class Foo { bar() {} }",
             // Chunk 2
-            "(new Foo).bar()"));
-    // TODO(b/70340193): This test case should be:
-    // test(
-    //     createModuleChain(
-    //         "class Foo { bar() {} }",
-    //         // Chunk 2
-    //         "(new Foo).bar()"),
-    //     new String[] {
-    //       "class Foo {}",
-    //       // Chunk 2
-    //       lines("Foo.prototype.bar = function() {};", "(new Foo).bar()")
-    //     });
+            "(new Foo).bar()"),
+        new String[] {
+          "class Foo {}",
+          // Chunk 2
+          lines(
+              "Foo.prototype.bar = function() {};", //
+              "(new Foo).bar()")
+        });
   }
 
   @Test
@@ -285,7 +385,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         createModuleChain(
             lines(
                 "class Foo { m() {} }", //
-                "Foo.prototype.m2 = m;"),
+                "Foo.prototype.m2 = Foo.prototype.m;"),
             // Chunk 2
             "(new Foo).m()"));
 
@@ -293,67 +393,49 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         createModuleChain(
             lines(
                 "class Foo { m() {} }", //
-                "Foo.prototype.m2 = m;"),
+                "Foo.prototype.m2 = Foo.prototype.m;"),
             // Chunk 2
             "(new Foo).m(), (new Foo).m2()"));
 
     noStubs = false;
 
-    testSame(
+    test(
         createModuleChain(
             lines(
                 "class Foo { m() {} }", //
-                "Foo.prototype.m2 = m;"),
+                "Foo.prototype.m2 = Foo.prototype.m;"),
             // Chunk 2
-            "(new Foo).m()"));
+            "(new Foo).m()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "class Foo {}",
+              "Foo.prototype.m = JSCompiler_stubMethod(0);",
+              "Foo.prototype.m2 = Foo.prototype.m;"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});", //
+              "(new Foo).m()")
+        });
 
-    // TODO(b/70340193): above case should be this
-    // test(
-    //     createModuleChain(
-    //         lines(
-    //             "class Foo { m() {} }", //
-    //             "Foo.prototype.m2 = m;"),
-    //         // Chunk 2
-    //         "(new Foo).m()"),
-    //     new String[] {
-    //         lines(
-    //             STUB_DECLARATIONS,
-    //             "class Foo {}",
-    //             "Foo.prototype.m = JSCompiler_stubMethod(0);",
-    //             "Foo.prototype.m2 = Foo.prototype.m;"),
-    //         // Chunk 2
-    //         lines(
-    //             "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});", //
-    //             "(new Foo).m()")
-    //     });
-
-    testSame(
+    test(
         createModuleChain(
             lines(
                 "class Foo { m() {} }", //
-                "Foo.prototype.m2 = m;"),
+                "Foo.prototype.m2 = Foo.prototype.m;"),
             // Chunk 2
-            "(new Foo).m(), (new Foo).m2()"));
-
-    // TODO(b/70340193): above case should be this
-    // test(
-    //     createModuleChain(
-    //         lines(
-    //             "class Foo { m() {} }", //
-    //             "Foo.prototype.m2 = m;"),
-    //         // Chunk 2
-    //         "(new Foo).m(), (new Foo).m2()"),
-    //     new String[] {
-    //       lines(
-    //           STUB_DECLARATIONS,
-    //           "class Foo {}",
-    //           "Foo.prototype.m = JSCompiler_stubMethod(0);",
-    //           "Foo.prototype.m2 = Foo.prototype.m;"),
-    //       // Chunk 2
-    //       lines(
-    //           "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});",
-    //           "(new Foo).m(), (new Foo).m2()"),
-    //     });
+            "(new Foo).m(), (new Foo).m2()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "class Foo {}",
+              "Foo.prototype.m = JSCompiler_stubMethod(0);",
+              "Foo.prototype.m2 = Foo.prototype.m;"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});",
+              "(new Foo).m(), (new Foo).m2()"),
+        });
   }
 
   @Test
@@ -427,31 +509,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   public void doNotMoveClassMethodRedeclaredBeforeFirstReferencingChunk() {
     // Note: it is reasonable to move the method in this case,
     // but it is difficult enough to prove that we don't.
-    test(
+    testSame(
         createModuleChain(
             "class Foo { method() {} }",
             // Chunk 2
             "Foo.prototype.method = function() {};",
             // Chunk 3
-            "(new Foo).method()"),
-        new String[] {
-          lines(STUB_DECLARATIONS, "class Foo { method() {} }"),
-          // Chunk 2
-          "Foo.prototype.method = JSCompiler_stubMethod(0);",
-          // Chunk 3
-          lines(
-              "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});", //
-              "(new Foo).method()")
-        });
-
-    // TODO(b/70340193): This test case should be:
-    // testSame(
-    //     createModuleChain(
-    //         "class Foo { method() {} }",
-    //         // Chunk 2
-    //         "Foo.prototype.method = function() {};",
-    //         // Chunk 3
-    //         "(new Foo).method()"));
+            "(new Foo).method()"));
   }
 
   @Test
@@ -477,26 +541,21 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void moveInstanceRecursiveMethod() {
-    testSame(
+    test(
         createModuleChain(
             "class Foo { baz() { this.baz(); } }",
             // Chunk 2
-            "(new Foo).baz()"));
-
-    // TODO(b/70340193): This test case should be:
-    // test(
-    //     createModuleChain(
-    //         "class Foo { baz() { this.baz(); } }",
-    //         // Chunk 2
-    //         "(new Foo).baz()"),
-    //     new String[] {
-    //       lines(STUB_DECLARATIONS, "class Foo {}", "Foo.prototype.baz =
-    // JSCompiler_stubMethod(0);"),
-    //       // Chunk 2
-    //       lines(
-    //           "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { this.baz(); });",
-    //           "(new Foo).baz()")
-    //     });
+            "(new Foo).baz()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS, //
+              "class Foo {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { this.baz(); });",
+              "(new Foo).baz()")
+        });
   }
 
   @Test
@@ -554,36 +613,17 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         new String[] {
           lines(
               STUB_DECLARATIONS,
-              "class Foo { baz() { return 1; } }",
+              "class Foo {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(1);",
               "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
           // Chunk 2
           lines(
-              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });",
+              "Foo.prototype.baz = ",
+              "JSCompiler_unstubMethod(1, function() { return 1; });",
+              "Foo.prototype.baz = ",
+              "JSCompiler_unstubMethod(0, function() { return 2; });",
               "(new Foo).baz()")
         });
-
-    // TODO(b/70340193): this test case should be:
-    // test(
-    //     createModuleChain(
-    //         lines(
-    //             "class Foo { baz() { return 1; } }",
-    //             "Foo.prototype.baz = function() { return 2; };"),
-    //         // Chunk 2
-    //         "(new Foo).baz()"),
-    //     new String[] {
-    //       lines(
-    //           STUB_DECLARATIONS,
-    //           "class Foo {}",
-    //           "Foo.prototype.baz = JSCompiler_stubMethod(1);",
-    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
-    //       // Chunk 2
-    //       lines(
-    //           "Foo.prototype.baz = ",
-    //           "JSCompiler_unstubMethod(1, function() { return 1; });",
-    //           "Foo.prototype.baz = ",
-    //           "JSCompiler_unstubMethod(0, function() { return 2; });",
-    //           "(new Foo).baz()")
-    //     });
   }
 
   @Test
@@ -653,29 +693,27 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     m[3].addDependency(m[2]);
     m[4].addDependency(m[2]);
 
-    testSame(m);
-    // TODO(b/70340193): This test case should be:
-    // test(
-    //     m,
-    //     new String[] {
-    //       lines(
-    //           STUB_DECLARATIONS,
-    //           "function Foo() {}",
-    //           "Foo.prototype.baz = JSCompiler_stubMethod(1);",
-    //           "function Goo() {}",
-    //           "Goo.prototype.baz = JSCompiler_stubMethod(0);"),
-    //       // Chunk 2
-    //       "",
-    //       // Chunk 3
-    //       lines(
-    //           "Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });",
-    //           "Goo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });",
-    //           "(new Foo).baz()"),
-    //       // Chunk 4
-    //       "",
-    //       // Chunk 5
-    //       "(new Goo).baz()"
-    //     });
+    test(
+        m,
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "class Foo {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(1);",
+              "class Goo {}",
+              "Goo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          "",
+          // Chunk 3
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });",
+              "Goo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });",
+              "(new Foo).baz()"),
+          // Chunk 4
+          "",
+          // Chunk 5
+          "(new Goo).baz()"
+        });
   }
 
   @Test
@@ -751,22 +789,20 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     modules[2].addDependency(modules[1]);
     modules[3].addDependency(modules[1]);
 
-    testSame(modules);
-    // TODO(b/70340193): This test case should be:
-    // test(
-    //     modules,
-    //     new String[] {
-    //       lines(
-    //           STUB_DECLARATIONS, //
-    //           "class Foo {}",
-    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
-    //       // Chunk 2
-    //       "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
-    //       // Chunk 3
-    //       "(new Foo).baz() , 1",
-    //       // Chunk 4
-    //       "(new Foo).baz() , 2"
-    //     });
+    test(
+        modules,
+        new String[] {
+          lines(
+              STUB_DECLARATIONS, //
+              "class Foo {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
+          // Chunk 3
+          "(new Foo).baz() , 1",
+          // Chunk 4
+          "(new Foo).baz() , 2"
+        });
   }
 
   @Test
@@ -802,42 +838,22 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         createModuleChain(
             "class Foo { baz() {} }",
             // Chunk 2
-            "Foo.prototype.callBaz = function() { this.baz(); };",
+            "Foo.prototype.callBaz = function() { this.baz(); }",
             // Chunk 3
             "(new Foo).callBaz()"),
         new String[] {
           lines(
               STUB_DECLARATIONS, //
-              "class Foo { baz() {} }"),
+              "class Foo {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
           // Chunk 2
-          "Foo.prototype.callBaz = JSCompiler_stubMethod(0);",
+          "Foo.prototype.callBaz = JSCompiler_stubMethod(1);",
           // Chunk 3
           lines(
-              "Foo.prototype.callBaz = JSCompiler_unstubMethod(0, function() { this.baz(); });",
+              "Foo.prototype.callBaz = JSCompiler_unstubMethod(1, function() { this.baz(); });",
+              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
               "(new Foo).callBaz()")
         });
-
-    // TODO(b/70340193): This test case should be:
-    // test(
-    //     createModuleChain(
-    //         "class Foo { baz() {} }",
-    //         // Chunk 2
-    //         "Foo.prototype.callBaz = function() { this.baz(); }",
-    //         // Chunk 3
-    //         "(new Foo).callBaz()"),
-    //     new String[] {
-    //       lines(
-    //           STUB_DECLARATIONS,
-    //           "class Foo {}",
-    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
-    //       // Chunk 2
-    //       "Foo.prototype.callBaz = JSCompiler_stubMethod(1);",
-    //       // Chunk 3
-    //       lines(
-    //           "Foo.prototype.callBaz = JSCompiler_unstubMethod(1, function() { this.baz(); });",
-    //           "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
-    //           "(new Foo).callBaz()")
-    //     });
   }
 
   @Test
@@ -894,7 +910,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void moveClassMethodPastUsageInAGlobalFunction() {
-    testSame(
+    test(
         createModuleChain(
             lines(
                 "class Foo {",
@@ -904,30 +920,18 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 // it's OK to move the definition of baz().
                 "function x() { return (new Foo).baz(); }"),
             // Chunk 2
-            "x();"));
-
-    // TODO(b/70340193): This test case should be:
-    // test(
-    //     createModuleChain(
-    //         lines(
-    //             "class Foo {",
-    //             "  baz() {}",
-    //             "}",
-    //             // usage here doesn't really happen until x() is called, so
-    //             // it's OK to move the definition of baz().
-    //             "function x() { return (new Foo).baz(); }"),
-    //         // Chunk 2
-    //         "x();"),
-    //     new String[] {
-    //       STUB_DECLARATIONS,
-    //       lines(
-    //           "class Foo {}",
-    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-    //           "function x() { return (new Foo).baz(); }"),
-    //       // Chunk 2
-    //       "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
-    //       "x();"
-    //     });
+            "x();"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "class Foo {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);",
+              "function x() { return (new Foo).baz(); }"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});", //
+              "x();")
+        });
   }
 
   // Read of closure variable disables method motions.
@@ -1003,12 +1007,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void moveClassMethodThatDefinesOtherMethodsOnSameGlobalClass() {
-    testSame(
+    test(
         createModuleChain(
             lines(
                 "class Foo {",
                 "  b1() {",
                 "    var x = 1;",
+                // b2 cannot be extracted, because it contains a reference to x
                 "    Foo.prototype.b2 = function() {",
                 "      Foo.prototype.b3 = function() {",
                 "        x;",
@@ -1021,47 +1026,28 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             // Chunk 3
             "y = new Foo(); z.b2();",
             // Chunk 4
-            "y = new Foo(); z.b3();"));
-    // TODO(b/70340193): this test case should be:
-    // test(
-    //     createModuleChain(
-    //         lines(
-    //             "class Foo {",
-    //             "  b1() {",
-    //             "    var x = 1;",
-    //             // b2 cannot be extracted, because it contains a reference to x
-    //             "    Foo.prototype.b2 = function() {",
-    //             "      Foo.prototype.b3 = function() {",
-    //             "        x;",
-    //             "      }",
-    //             "    }",
-    //             "  };",
-    //             "}"),
-    //         // Chunk 2
-    //         "var y = new Foo(); y.b1();",
-    //         // Chunk 3
-    //         "y = new Foo(); z.b2();",
-    //         // Chunk 4
-    //         "y = new Foo(); z.b3();"),
-    //     new String[] {
-    //       lines(STUB_DECLARATIONS, "class Foo {}", "Foo.prototype.b1 =
-    // JSCompiler_stubMethod(0);"),
-    //       // Chunk 2
-    //       lines(
-    //           "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {",
-    //           "  var x = 1;",
-    //           "  Foo.prototype.b2 = function() {",
-    //           "    Foo.prototype.b3 = function() {",
-    //           "      x;",
-    //           "    }",
-    //           "  }",
-    //           "});",
-    //           "var y = new Foo(); y.b1();"),
-    //       // Chunk 3
-    //       "y = new Foo(); z.b2();",
-    //       // Chunk 4
-    //       "y = new Foo(); z.b3();"
-    //     });
+            "y = new Foo(); z.b3();"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS, //
+              "class Foo {}",
+              "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {",
+              "  var x = 1;",
+              "  Foo.prototype.b2 = function() {",
+              "    Foo.prototype.b3 = function() {",
+              "      x;",
+              "    }",
+              "  }",
+              "});",
+              "var y = new Foo(); y.b1();"),
+          // Chunk 3
+          "y = new Foo(); z.b2();",
+          // Chunk 4
+          "y = new Foo(); z.b3();"
+        });
   }
 
   @Test
@@ -1139,17 +1125,22 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         new String[] {
           lines(
               STUB_DECLARATIONS, //
-              "class Foo {",
-              // TODO(b/70340193): b1 should also be stubbed and moved
-              "  b1() {",
-              "    Foo.prototype.b2 = JSCompiler_stubMethod(0);",
-              "  }",
-              "}"),
+              "class Foo {}",
+              "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
           // Chunk 2
-          lines("var y = new Foo(); y.b1();"),
+          lines(
+              "Foo.prototype.b1 =",
+              "    JSCompiler_unstubMethod(",
+              "        0,",
+              "        function() {",
+              "          Foo.prototype.b2 = JSCompiler_stubMethod(1);",
+              "        });",
+              "",
+              "",
+              "var y = new Foo(); y.b1();"),
           // Chunk 3
           lines(
-              "Foo.prototype.b2 = JSCompiler_unstubMethod(0, function() {",
+              "Foo.prototype.b2 = JSCompiler_unstubMethod(1, function() {",
               "  var x = 1;",
               "  Foo.prototype.b3 = function() {",
               "    x;",
@@ -1188,7 +1179,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   // Read of global variable is fine.
   @Test
   public void moveClassMethodThatReadsGlobalVar() {
-    testSame(
+    test(
         createModuleChain(
             lines(
                 "class Foo {", //
@@ -1197,30 +1188,19 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "var x = 'x';",
                 ""),
             // Chunk 2
-            "var y = new Foo(); y.baz();"));
-    // TODO(b/70340193): This test case should be:
-    // test(
-    //     createModuleChain(
-    //         lines(
-    //             "class Foo {", //
-    //             "  baz() { x; }",
-    //             "}",
-    //             "var x = 'x';",
-    //             ""),
-    //         // Chunk 2
-    //         "var y = new Foo(); y.baz();"),
-    //     new String[] {
-    //       lines(
-    //           STUB_DECLARATIONS,
-    //           "class Foo {}",
-    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-    //           "var x = 'x';",
-    //           ""),
-    //       // Chunk 2
-    //       lines(
-    //           "Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});", //
-    //           "var y = new Foo(); y.baz();")
-    //     });
+            "var y = new Foo(); y.baz();"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "class Foo {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);",
+              "var x = 'x';",
+              ""),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});", //
+              "var y = new Foo(); y.baz();")
+        });
   }
 
   // Read of a local is fine.
@@ -1249,28 +1229,22 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   // Read of a local is fine.
   @Test
   public void moveClassMethodThatReferencesOnlyLocalVariables() {
-    testSame(
+    test(
         createModuleChain(
             "class Foo { baz() {var x = 1; x; } }",
             // Chunk 2
-            "var y = new Foo(); y.baz();"));
-    // TODO(b/70340193): This test case should be:
-    // test(
-    //     createModuleChain(
-    //         "class Foo { baz() {var x = 1; x; } }",
-    //         // Chunk 2
-    //         "var y = new Foo(); y.baz();"),
-    //     new String[] {
-    //       lines(
-    //           STUB_DECLARATIONS, //
-    //           "class Foo {}",
-    //           "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
-    //       // Chunk 2
-    //       lines(
-    //           "Foo.prototype.baz = JSCompiler_unstubMethod(",
-    //           "    0, function(){var x = 1; x});",
-    //           "var y = new Foo(); y.baz();")
-    //     });
+            "var y = new Foo(); y.baz();"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS, //
+              "class Foo {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(",
+              "    0, function(){var x = 1; x});",
+              "var y = new Foo(); y.baz();")
+        });
   }
 
   // An anonymous inner function reading a closure variable is fine.
@@ -1301,7 +1275,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void moveClassMethodContainingClosureOverLocalVariable() {
-    testSame(
+    test(
         createModuleChain(
             lines(
                 "class Foo {",
@@ -1311,28 +1285,18 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "  }",
                 "}"),
             // Chunk 2
-            "var y = new Foo(); y.baz();"));
-    // TODO(b/70340193): this test case should be:
-    // test(
-    //     createModuleChain(
-    //         lines(
-    //             "class Foo {",
-    //             "  baz() {",
-    //             "    var x = 1;",
-    //             "    return function(){x}",
-    //             "  }",
-    //             "}"),
-    //         // Chunk 2
-    //         "var y = new Foo(); y.baz();"),
-    //     new String[] {
-    //       lines(STUB_DECLARATIONS, "class Foo {}", "Foo.prototype.baz =
-    // JSCompiler_stubMethod(0);"),
-    //       // Chunk 2
-    //       lines(
-    //           "Foo.prototype.baz = JSCompiler_unstubMethod(",
-    //           "    0, function(){var x = 1; return function(){x}});",
-    //           "var y = new Foo(); y.baz();")
-    //     });
+            "var y = new Foo(); y.baz();"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS, //
+              "class Foo {}",
+              "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.baz = JSCompiler_unstubMethod(",
+              "    0, function(){var x = 1; return function(){x}});",
+              "var y = new Foo(); y.baz();")
+        });
   }
 
   @Test

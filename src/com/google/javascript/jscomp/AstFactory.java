@@ -93,12 +93,23 @@ final class AstFactory {
   /**
    * Returns a new EXPR_RESULT node.
    *
-   * <p>Blocks have no type information, so this is functionally the same as calling {@code
+   * <p>Statements have no type information, so this is functionally the same as calling {@code
    * IR.exprResult(expr)}. It exists so that a pass can be consistent about always using {@code
    * AstFactory} to create new nodes.
    */
   Node exprResult(Node expr) {
     return IR.exprResult(expr);
+  }
+
+  /**
+   * Returns a new EMPTY node.
+   *
+   * <p>EMPTY Nodes have no type information, so this is functionally the same as calling {@code
+   * IR.empty()}. It exists so that a pass can be consistent about always using {@code AstFactory}
+   * to create new nodes.
+   */
+  Node createEmpty() {
+    return IR.empty();
   }
 
   /**
@@ -288,6 +299,10 @@ final class AstFactory {
     return result;
   }
 
+  Node createNameWithUnknownType(String name) {
+    return createName(name, unknownType);
+  }
+
   Node createName(Scope scope, String name) {
     Node result = IR.name(name);
     if (isAddingTypes()) {
@@ -319,6 +334,15 @@ final class AstFactory {
   private Node createGetProps(Node receiver, Iterable<String> propertyNames) {
     Node result = receiver;
     for (String propertyName : propertyNames) {
+      result = createGetProp(result, propertyName);
+    }
+    return result;
+  }
+
+  /** Creates a tree of nodes representing `receiver.name1.name2.etc`. */
+  Node createGetProps(Node receiver, String firstPropName, String... otherPropNames) {
+    Node result = createGetProp(receiver, firstPropName);
+    for (String propertyName : otherPropNames) {
       result = createGetProp(result, propertyName);
     }
     return result;
@@ -506,6 +530,12 @@ final class AstFactory {
     return result;
   }
 
+  /** Creates a statement `lhs = rhs;`. */
+  Node createAssignStatement(Node lhs, Node rhs) {
+    return exprResult(createAssign(lhs, rhs));
+  }
+
+  /** Creates an assignment expression `lhs = rhs` */
   Node createAssign(Node lhs, Node rhs) {
     Node result = IR.assign(lhs, rhs);
     if (isAddingTypes()) {
@@ -514,6 +544,7 @@ final class AstFactory {
     return result;
   }
 
+  /** Creates an empty object literal, `{}`. */
   Node createEmptyObjectLit() {
     Node result = IR.objectlit();
     if (isAddingTypes()) {
@@ -522,6 +553,7 @@ final class AstFactory {
     return result;
   }
 
+  /** Creates an empty function `function() {}` */
   Node createEmptyFunction(JSType type) {
     Node result = NodeUtil.emptyFunction();
     if (isAddingTypes()) {
@@ -532,6 +564,14 @@ final class AstFactory {
     return result;
   }
 
+  /**
+   * Creates a function `function name(paramList) { body }`
+   *
+   * @param name STRING node - empty string if no name
+   * @param paramList PARAM_LIST node
+   * @param body BLOCK node
+   * @param type type to apply to the function itself
+   */
   Node createFunction(String name, Node paramList, Node body, JSType type) {
     Node nameNode = createName(name, type);
     Node result = IR.function(nameNode, paramList, body);
