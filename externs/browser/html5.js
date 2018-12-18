@@ -3652,10 +3652,20 @@ HTMLEmbedElement.prototype.type;
 // Fullscreen APIs.
 
 /**
- * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-element-requestfullscreen
+ * @record
+ * @see https://fullscreen.spec.whatwg.org/#dictdef-fullscreenoptions
+ */
+function FullscreenOptions() {}
+
+/** @type {string} */
+FullscreenOptions.prototype.navigationUI;
+
+/**
+ * @see https://fullscreen.spec.whatwg.org/#dom-element-requestfullscreen
+ * @param {!FullscreenOptions=} options
  * @return {undefined}
  */
-Element.prototype.requestFullscreen = function() {};
+Element.prototype.requestFullscreen = function(options) {};
 
 /**
  * @type {boolean}
