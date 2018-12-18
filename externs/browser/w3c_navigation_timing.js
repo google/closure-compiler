@@ -288,6 +288,12 @@ PerformanceObserver.prototype.observe = function(options) {};
 PerformanceObserver.prototype.disconnect = function() {};
 
 /**
+ * See https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserver/takeRecords
+ * @return {!PerformanceObserverEntryList}
+ */
+PerformanceObserver.prototype.takeRecords = function() {};
+
+/**
  * @record
  */
 function PerformanceObserverInit() {}
