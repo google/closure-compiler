@@ -1028,6 +1028,26 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRestrictedPropertyWrite() {
+    configuration =
+        ""
+            + "requirement: {\n"
+            + "  type: RESTRICTED_PROPERTY_WRITE\n"
+            + "  value: 'Base.prototype.x:number'\n"
+            + "  error_message: 'Only assign number'\n"
+            + "}";
+
+    String code =
+        ""
+            + "/** @constructor */\n"
+            + "function Base() {}; Base.prototype.x;\n"
+            + "var b = new Base();\n";
+
+    testWarning(code + "b.x = 'a'", CheckConformance.CONFORMANCE_VIOLATION);
+    testNoWarning(code + "b.x = 1");
+  }
+
+  @Test
   public void testCustom1() {
     allowSourcelessWarnings();
     configuration =

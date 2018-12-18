@@ -4,8 +4,6 @@
 package com.google.javascript.jscomp;
 
 /**
- *
- *
  * <pre>
  * A specification of code requirements
  * NEXT ID: 15
@@ -13,9 +11,9 @@ package com.google.javascript.jscomp;
  *
  * Protobuf type {@code jscomp.Requirement}
  */
-public final class Requirement
-    extends com.google.protobuf.GeneratedMessageV3.ExtendableMessage<Requirement>
-    implements
+public  final class Requirement extends
+    com.google.protobuf.GeneratedMessageV3.ExtendableMessage<
+      Requirement> implements
     // @@protoc_insertion_point(message_implements:jscomp.Requirement)
     RequirementOrBuilder {
   // Use Requirement.newBuilder() to construct.
@@ -93,18 +91,18 @@ public final class Requirement
           }
           case 34: {
             com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+            if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
               onlyApplyTo_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000010;
+              mutable_bitField0_ |= 0x00000010;
             }
             onlyApplyTo_.add(bs);
             break;
           }
           case 42: {
             com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+            if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
               onlyApplyToRegexp_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000020;
+              mutable_bitField0_ |= 0x00000020;
             }
             onlyApplyToRegexp_.add(bs);
             break;
@@ -122,9 +120,9 @@ public final class Requirement
           }
           case 58: {
             com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+            if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
               value_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000080;
+              mutable_bitField0_ |= 0x00000080;
             }
             value_.add(bs);
             break;
@@ -174,20 +172,15 @@ public final class Requirement
             }
             break;
           }
-          case 114:
-            {
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-                whitelistEntry_ =
-                    new java.util.ArrayList<
-                        com.google.javascript.jscomp.Requirement.WhitelistEntry>();
-                mutable_bitField0_ |= 0x00000008;
-              }
-              whitelistEntry_.add(
-                  input.readMessage(
-                      com.google.javascript.jscomp.Requirement.WhitelistEntry.PARSER,
-                      extensionRegistry));
-              break;
+          case 114: {
+            if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+              whitelistEntry_ = new java.util.ArrayList<com.google.javascript.jscomp.Requirement.WhitelistEntry>();
+              mutable_bitField0_ |= 0x00000008;
             }
+            whitelistEntry_.add(
+                input.readMessage(com.google.javascript.jscomp.Requirement.WhitelistEntry.PARSER, extensionRegistry));
+            break;
+          }
         }
       }
     } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -256,8 +249,6 @@ public final class Requirement
      */
     BANNED_DEPENDENCY(2),
     /**
-     *
-     *
      * <pre>
      * A forbidden fully distinguished name. For example:
      *  - A global name like "eval" or "goog"
@@ -366,6 +357,15 @@ public final class Requirement
      * <code>BANNED_NAME_CALL = 12;</code>
      */
     BANNED_NAME_CALL(12),
+    /**
+     * <pre>
+     * A restricted write to an instance property.
+     * Example: "Element.prototype.innerHTML:!TrustedHTML|string"
+     * </pre>
+     *
+     * <code>RESTRICTED_PROPERTY_WRITE = 13;</code>
+     */
+    RESTRICTED_PROPERTY_WRITE(13),
     ;
 
     /**
@@ -385,8 +385,6 @@ public final class Requirement
      */
     public static final int BANNED_DEPENDENCY_VALUE = 2;
     /**
-     *
-     *
      * <pre>
      * A forbidden fully distinguished name. For example:
      *  - A global name like "eval" or "goog"
@@ -495,6 +493,15 @@ public final class Requirement
      * <code>BANNED_NAME_CALL = 12;</code>
      */
     public static final int BANNED_NAME_CALL_VALUE = 12;
+    /**
+     * <pre>
+     * A restricted write to an instance property.
+     * Example: "Element.prototype.innerHTML:!TrustedHTML|string"
+     * </pre>
+     *
+     * <code>RESTRICTED_PROPERTY_WRITE = 13;</code>
+     */
+    public static final int RESTRICTED_PROPERTY_WRITE_VALUE = 13;
 
 
     public final int getNumber() {
@@ -523,6 +530,7 @@ public final class Requirement
         case 10: return BANNED_PROPERTY_CALL;
         case 11: return BANNED_PROPERTY_NON_CONSTANT_WRITE;
         case 12: return BANNED_NAME_CALL;
+        case 13: return RESTRICTED_PROPERTY_WRITE;
         default: return null;
       }
     }
@@ -862,29 +870,29 @@ public final class Requirement
     // @@protoc_insertion_point(enum_scope:jscomp.Requirement.Severity)
   }
 
-  public interface WhitelistEntryOrBuilder
-      extends
+  public interface WhitelistEntryOrBuilder extends
       // @@protoc_insertion_point(interface_extends:jscomp.Requirement.WhitelistEntry)
       com.google.protobuf.MessageOrBuilder {
 
-    /** <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code> */
+    /**
+     * <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code>
+     */
     boolean hasReason();
-    /** <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code> */
+    /**
+     * <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code>
+     */
     com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason getReason();
 
     /**
-     *
-     *
      * <pre>
      * A list of source path prefixes.
      * </pre>
      *
      * <code>repeated string prefix = 2;</code>
      */
-    java.util.List<java.lang.String> getPrefixList();
+    java.util.List<java.lang.String>
+        getPrefixList();
     /**
-     *
-     *
      * <pre>
      * A list of source path prefixes.
      * </pre>
@@ -893,8 +901,6 @@ public final class Requirement
      */
     int getPrefixCount();
     /**
-     *
-     *
      * <pre>
      * A list of source path prefixes.
      * </pre>
@@ -903,29 +909,25 @@ public final class Requirement
      */
     java.lang.String getPrefix(int index);
     /**
-     *
-     *
      * <pre>
      * A list of source path prefixes.
      * </pre>
      *
      * <code>repeated string prefix = 2;</code>
      */
-    com.google.protobuf.ByteString getPrefixBytes(int index);
+    com.google.protobuf.ByteString
+        getPrefixBytes(int index);
 
     /**
-     *
-     *
      * <pre>
      * A list of regexes matching sources to be ignored
      * </pre>
      *
      * <code>repeated string regexp = 3;</code>
      */
-    java.util.List<java.lang.String> getRegexpList();
+    java.util.List<java.lang.String>
+        getRegexpList();
     /**
-     *
-     *
      * <pre>
      * A list of regexes matching sources to be ignored
      * </pre>
@@ -934,8 +936,6 @@ public final class Requirement
      */
     int getRegexpCount();
     /**
-     *
-     *
      * <pre>
      * A list of regexes matching sources to be ignored
      * </pre>
@@ -944,37 +944,84 @@ public final class Requirement
      */
     java.lang.String getRegexp(int index);
     /**
-     *
-     *
      * <pre>
      * A list of regexes matching sources to be ignored
      * </pre>
      *
      * <code>repeated string regexp = 3;</code>
      */
-    com.google.protobuf.ByteString getRegexpBytes(int index);
+    com.google.protobuf.ByteString
+        getRegexpBytes(int index);
+
+    /**
+     * <pre>
+     * Short explanation.
+     * </pre>
+     *
+     * <code>optional string explanation = 4;</code>
+     */
+    boolean hasExplanation();
+    /**
+     * <pre>
+     * Short explanation.
+     * </pre>
+     *
+     * <code>optional string explanation = 4;</code>
+     */
+    java.lang.String getExplanation();
+    /**
+     * <pre>
+     * Short explanation.
+     * </pre>
+     *
+     * <code>optional string explanation = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getExplanationBytes();
+
+    /**
+     * <code>repeated string comment = 5;</code>
+     */
+    java.util.List<java.lang.String>
+        getCommentList();
+    /**
+     * <code>repeated string comment = 5;</code>
+     */
+    int getCommentCount();
+    /**
+     * <code>repeated string comment = 5;</code>
+     */
+    java.lang.String getComment(int index);
+    /**
+     * <code>repeated string comment = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getCommentBytes(int index);
   }
-  /** Protobuf type {@code jscomp.Requirement.WhitelistEntry} */
-  public static final class WhitelistEntry extends com.google.protobuf.GeneratedMessageV3
-      implements
+  /**
+   * Protobuf type {@code jscomp.Requirement.WhitelistEntry}
+   */
+  public  static final class WhitelistEntry extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:jscomp.Requirement.WhitelistEntry)
       WhitelistEntryOrBuilder {
     // Use WhitelistEntry.newBuilder() to construct.
     private WhitelistEntry(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-
     private WhitelistEntry() {
       reason_ = 0;
       prefix_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       regexp_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      explanation_ = "";
+      comment_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
       return this.unknownFields;
     }
-
     private WhitelistEntry(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -991,55 +1038,64 @@ public final class Requirement
             case 0:
               done = true;
               break;
-            default:
-              {
-                if (!parseUnknownField(
-                    input, unknownFields,
-                    extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
               }
-            case 8:
-              {
-                int rawValue = input.readEnum();
-                com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason value =
-                    com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason.valueOf(
-                        rawValue);
-                if (value == null) {
-                  unknownFields.mergeVarintField(1, rawValue);
-                } else {
-                  bitField0_ |= 0x00000001;
-                  reason_ = rawValue;
-                }
-                break;
+              break;
+            }
+            case 8: {
+              int rawValue = input.readEnum();
+              com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason value = com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(1, rawValue);
+              } else {
+                bitField0_ |= 0x00000001;
+                reason_ = rawValue;
               }
-            case 18:
-              {
-                com.google.protobuf.ByteString bs = input.readBytes();
-                if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                  prefix_ = new com.google.protobuf.LazyStringArrayList();
-                  mutable_bitField0_ |= 0x00000002;
-                }
-                prefix_.add(bs);
-                break;
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                prefix_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000002;
               }
-            case 26:
-              {
-                com.google.protobuf.ByteString bs = input.readBytes();
-                if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-                  regexp_ = new com.google.protobuf.LazyStringArrayList();
-                  mutable_bitField0_ |= 0x00000004;
-                }
-                regexp_.add(bs);
-                break;
+              prefix_.add(bs);
+              break;
+            }
+            case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                regexp_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000004;
               }
+              regexp_.add(bs);
+              break;
+            }
+            case 34: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              explanation_ = bs;
+              break;
+            }
+            case 42: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                comment_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              comment_.add(bs);
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
           prefix_ = prefix_.getUnmodifiableView();
@@ -1047,51 +1103,73 @@ public final class Requirement
         if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
           regexp_ = regexp_.getUnmodifiableView();
         }
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+          comment_ = comment_.getUnmodifiableView();
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-
-    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return com.google.javascript.jscomp.Conformance
-          .internal_static_jscomp_Requirement_WhitelistEntry_descriptor;
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.google.javascript.jscomp.Conformance.internal_static_jscomp_Requirement_WhitelistEntry_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.google.javascript.jscomp.Conformance
-          .internal_static_jscomp_Requirement_WhitelistEntry_fieldAccessorTable
+      return com.google.javascript.jscomp.Conformance.internal_static_jscomp_Requirement_WhitelistEntry_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.google.javascript.jscomp.Requirement.WhitelistEntry.class,
-              com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder.class);
+              com.google.javascript.jscomp.Requirement.WhitelistEntry.class, com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder.class);
     }
 
-    /** Protobuf enum {@code jscomp.Requirement.WhitelistEntry.Reason} */
-    public enum Reason implements com.google.protobuf.ProtocolMessageEnum {
-      /** <code>UNSPECIFIED = 0;</code> */
+    /**
+     * Protobuf enum {@code jscomp.Requirement.WhitelistEntry.Reason}
+     */
+    public enum Reason
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <code>UNSPECIFIED = 0;</code>
+       */
       UNSPECIFIED(0),
-      /** <code>LEGACY = 1;</code> */
+      /**
+       * <code>LEGACY = 1;</code>
+       */
       LEGACY(1),
-      /** <code>OUT_OF_SCOPE = 2;</code> */
+      /**
+       * <code>OUT_OF_SCOPE = 2;</code>
+       */
       OUT_OF_SCOPE(2),
-      /** <code>MANUALLY_REVIEWED = 3;</code> */
+      /**
+       * <code>MANUALLY_REVIEWED = 3;</code>
+       */
       MANUALLY_REVIEWED(3),
       ;
 
-      /** <code>UNSPECIFIED = 0;</code> */
+      /**
+       * <code>UNSPECIFIED = 0;</code>
+       */
       public static final int UNSPECIFIED_VALUE = 0;
-      /** <code>LEGACY = 1;</code> */
+      /**
+       * <code>LEGACY = 1;</code>
+       */
       public static final int LEGACY_VALUE = 1;
-      /** <code>OUT_OF_SCOPE = 2;</code> */
+      /**
+       * <code>OUT_OF_SCOPE = 2;</code>
+       */
       public static final int OUT_OF_SCOPE_VALUE = 2;
-      /** <code>MANUALLY_REVIEWED = 3;</code> */
+      /**
+       * <code>MANUALLY_REVIEWED = 3;</code>
+       */
       public static final int MANUALLY_REVIEWED_VALUE = 3;
+
 
       public final int getNumber() {
         return value;
       }
 
-      /** @deprecated Use {@link #forNumber(int)} instead. */
+      /**
+       * @deprecated Use {@link #forNumber(int)} instead.
+       */
       @java.lang.Deprecated
       public static Reason valueOf(int value) {
         return forNumber(value);
@@ -1099,49 +1177,46 @@ public final class Requirement
 
       public static Reason forNumber(int value) {
         switch (value) {
-          case 0:
-            return UNSPECIFIED;
-          case 1:
-            return LEGACY;
-          case 2:
-            return OUT_OF_SCOPE;
-          case 3:
-            return MANUALLY_REVIEWED;
-          default:
-            return null;
+          case 0: return UNSPECIFIED;
+          case 1: return LEGACY;
+          case 2: return OUT_OF_SCOPE;
+          case 3: return MANUALLY_REVIEWED;
+          default: return null;
         }
       }
 
-      public static com.google.protobuf.Internal.EnumLiteMap<Reason> internalGetValueMap() {
+      public static com.google.protobuf.Internal.EnumLiteMap<Reason>
+          internalGetValueMap() {
         return internalValueMap;
       }
+      private static final com.google.protobuf.Internal.EnumLiteMap<
+          Reason> internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<Reason>() {
+              public Reason findValueByNumber(int number) {
+                return Reason.forNumber(number);
+              }
+            };
 
-      private static final com.google.protobuf.Internal.EnumLiteMap<Reason> internalValueMap =
-          new com.google.protobuf.Internal.EnumLiteMap<Reason>() {
-            public Reason findValueByNumber(int number) {
-              return Reason.forNumber(number);
-            }
-          };
-
-      public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
         return getDescriptor().getValues().get(ordinal());
       }
-
-      public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
         return getDescriptor();
       }
-
-      public static final com.google.protobuf.Descriptors.EnumDescriptor getDescriptor() {
-        return com.google.javascript.jscomp.Requirement.WhitelistEntry.getDescriptor()
-            .getEnumTypes()
-            .get(0);
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return com.google.javascript.jscomp.Requirement.WhitelistEntry.getDescriptor().getEnumTypes().get(0);
       }
 
       private static final Reason[] VALUES = values();
 
-      public static Reason valueOf(com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      public static Reason valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
         if (desc.getType() != getDescriptor()) {
-          throw new java.lang.IllegalArgumentException("EnumValueDescriptor is not for this type.");
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
         }
         return VALUES[desc.getIndex()];
       }
@@ -1158,36 +1233,34 @@ public final class Requirement
     private int bitField0_;
     public static final int REASON_FIELD_NUMBER = 1;
     private int reason_;
-    /** <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code> */
+    /**
+     * <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code>
+     */
     public boolean hasReason() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
-    /** <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code> */
+    /**
+     * <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code>
+     */
     public com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason getReason() {
-      com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason result =
-          com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason.valueOf(reason_);
-      return result == null
-          ? com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason.UNSPECIFIED
-          : result;
+      com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason result = com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason.valueOf(reason_);
+      return result == null ? com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason.UNSPECIFIED : result;
     }
 
     public static final int PREFIX_FIELD_NUMBER = 2;
     private com.google.protobuf.LazyStringList prefix_;
     /**
-     *
-     *
      * <pre>
      * A list of source path prefixes.
      * </pre>
      *
      * <code>repeated string prefix = 2;</code>
      */
-    public com.google.protobuf.ProtocolStringList getPrefixList() {
+    public com.google.protobuf.ProtocolStringList
+        getPrefixList() {
       return prefix_;
     }
     /**
-     *
-     *
      * <pre>
      * A list of source path prefixes.
      * </pre>
@@ -1198,8 +1271,6 @@ public final class Requirement
       return prefix_.size();
     }
     /**
-     *
-     *
      * <pre>
      * A list of source path prefixes.
      * </pre>
@@ -1210,35 +1281,31 @@ public final class Requirement
       return prefix_.get(index);
     }
     /**
-     *
-     *
      * <pre>
      * A list of source path prefixes.
      * </pre>
      *
      * <code>repeated string prefix = 2;</code>
      */
-    public com.google.protobuf.ByteString getPrefixBytes(int index) {
+    public com.google.protobuf.ByteString
+        getPrefixBytes(int index) {
       return prefix_.getByteString(index);
     }
 
     public static final int REGEXP_FIELD_NUMBER = 3;
     private com.google.protobuf.LazyStringList regexp_;
     /**
-     *
-     *
      * <pre>
      * A list of regexes matching sources to be ignored
      * </pre>
      *
      * <code>repeated string regexp = 3;</code>
      */
-    public com.google.protobuf.ProtocolStringList getRegexpList() {
+    public com.google.protobuf.ProtocolStringList
+        getRegexpList() {
       return regexp_;
     }
     /**
-     *
-     *
      * <pre>
      * A list of regexes matching sources to be ignored
      * </pre>
@@ -1249,8 +1316,6 @@ public final class Requirement
       return regexp_.size();
     }
     /**
-     *
-     *
      * <pre>
      * A list of regexes matching sources to be ignored
      * </pre>
@@ -1261,20 +1326,101 @@ public final class Requirement
       return regexp_.get(index);
     }
     /**
-     *
-     *
      * <pre>
      * A list of regexes matching sources to be ignored
      * </pre>
      *
      * <code>repeated string regexp = 3;</code>
      */
-    public com.google.protobuf.ByteString getRegexpBytes(int index) {
+    public com.google.protobuf.ByteString
+        getRegexpBytes(int index) {
       return regexp_.getByteString(index);
     }
 
-    private byte memoizedIsInitialized = -1;
+    public static final int EXPLANATION_FIELD_NUMBER = 4;
+    private volatile java.lang.Object explanation_;
+    /**
+     * <pre>
+     * Short explanation.
+     * </pre>
+     *
+     * <code>optional string explanation = 4;</code>
+     */
+    public boolean hasExplanation() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * Short explanation.
+     * </pre>
+     *
+     * <code>optional string explanation = 4;</code>
+     */
+    public java.lang.String getExplanation() {
+      java.lang.Object ref = explanation_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          explanation_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Short explanation.
+     * </pre>
+     *
+     * <code>optional string explanation = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getExplanationBytes() {
+      java.lang.Object ref = explanation_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        explanation_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
 
+    public static final int COMMENT_FIELD_NUMBER = 5;
+    private com.google.protobuf.LazyStringList comment_;
+    /**
+     * <code>repeated string comment = 5;</code>
+     */
+    public com.google.protobuf.ProtocolStringList
+        getCommentList() {
+      return comment_;
+    }
+    /**
+     * <code>repeated string comment = 5;</code>
+     */
+    public int getCommentCount() {
+      return comment_.size();
+    }
+    /**
+     * <code>repeated string comment = 5;</code>
+     */
+    public java.lang.String getComment(int index) {
+      return comment_.get(index);
+    }
+    /**
+     * <code>repeated string comment = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getCommentBytes(int index) {
+      return comment_.getByteString(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1284,7 +1430,8 @@ public final class Requirement
       return true;
     }
 
-    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeEnum(1, reason_);
       }
@@ -1293,6 +1440,12 @@ public final class Requirement
       }
       for (int i = 0; i < regexp_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, regexp_.getRaw(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, explanation_);
+      }
+      for (int i = 0; i < comment_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, comment_.getRaw(i));
       }
       unknownFields.writeTo(output);
     }
@@ -1303,7 +1456,8 @@ public final class Requirement
 
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream.computeEnumSize(1, reason_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, reason_);
       }
       {
         int dataSize = 0;
@@ -1321,31 +1475,49 @@ public final class Requirement
         size += dataSize;
         size += 1 * getRegexpList().size();
       }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, explanation_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < comment_.size(); i++) {
+          dataSize += computeStringSizeNoTag(comment_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getCommentList().size();
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
-
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-        return true;
+       return true;
       }
       if (!(obj instanceof com.google.javascript.jscomp.Requirement.WhitelistEntry)) {
         return super.equals(obj);
       }
-      com.google.javascript.jscomp.Requirement.WhitelistEntry other =
-          (com.google.javascript.jscomp.Requirement.WhitelistEntry) obj;
+      com.google.javascript.jscomp.Requirement.WhitelistEntry other = (com.google.javascript.jscomp.Requirement.WhitelistEntry) obj;
 
       boolean result = true;
       result = result && (hasReason() == other.hasReason());
       if (hasReason()) {
         result = result && reason_ == other.reason_;
       }
-      result = result && getPrefixList().equals(other.getPrefixList());
-      result = result && getRegexpList().equals(other.getRegexpList());
+      result = result && getPrefixList()
+          .equals(other.getPrefixList());
+      result = result && getRegexpList()
+          .equals(other.getRegexpList());
+      result = result && (hasExplanation() == other.hasExplanation());
+      if (hasExplanation()) {
+        result = result && getExplanation()
+            .equals(other.getExplanation());
+      }
+      result = result && getCommentList()
+          .equals(other.getCommentList());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -1369,6 +1541,14 @@ public final class Requirement
         hash = (37 * hash) + REGEXP_FIELD_NUMBER;
         hash = (53 * hash) + getRegexpList().hashCode();
       }
+      if (hasExplanation()) {
+        hash = (37 * hash) + EXPLANATION_FIELD_NUMBER;
+        hash = (53 * hash) + getExplanation().hashCode();
+      }
+      if (getCommentCount() > 0) {
+        hash = (37 * hash) + COMMENT_FIELD_NUMBER;
+        hash = (53 * hash) + getCommentList().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1379,77 +1559,70 @@ public final class Requirement
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseFrom(
-        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
-    public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseFrom(
-        java.io.InputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-    }
-
-    public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+    public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-
-    public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseDelimitedFrom(
-        java.io.InputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-    }
-
-    public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseDelimitedFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-          PARSER, input, extensionRegistry);
-    }
-
     public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseFrom(
-        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-
+    public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
     public static com.google.javascript.jscomp.Requirement.WhitelistEntry parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public Builder newBuilderForType() {
-      return newBuilder();
-    }
-
+    public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-
-    public static Builder newBuilder(
-        com.google.javascript.jscomp.Requirement.WhitelistEntry prototype) {
+    public static Builder newBuilder(com.google.javascript.jscomp.Requirement.WhitelistEntry prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -1458,24 +1631,23 @@ public final class Requirement
       Builder builder = new Builder(parent);
       return builder;
     }
-    /** Protobuf type {@code jscomp.Requirement.WhitelistEntry} */
-    public static final class Builder
-        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-        implements
+    /**
+     * Protobuf type {@code jscomp.Requirement.WhitelistEntry}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:jscomp.Requirement.WhitelistEntry)
         com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return com.google.javascript.jscomp.Conformance
-            .internal_static_jscomp_Requirement_WhitelistEntry_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.google.javascript.jscomp.Conformance.internal_static_jscomp_Requirement_WhitelistEntry_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.google.javascript.jscomp.Conformance
-            .internal_static_jscomp_Requirement_WhitelistEntry_fieldAccessorTable
+        return com.google.javascript.jscomp.Conformance.internal_static_jscomp_Requirement_WhitelistEntry_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                com.google.javascript.jscomp.Requirement.WhitelistEntry.class,
-                com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder.class);
+                com.google.javascript.jscomp.Requirement.WhitelistEntry.class, com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder.class);
       }
 
       // Construct using com.google.javascript.jscomp.Requirement.WhitelistEntry.newBuilder()
@@ -1483,15 +1655,16 @@ public final class Requirement
         maybeForceBuilderInitialization();
       }
 
-      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
-
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
       }
-
       public Builder clear() {
         super.clear();
         reason_ = 0;
@@ -1500,12 +1673,16 @@ public final class Requirement
         bitField0_ = (bitField0_ & ~0x00000002);
         regexp_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000004);
+        explanation_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        comment_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
-      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-        return com.google.javascript.jscomp.Conformance
-            .internal_static_jscomp_Requirement_WhitelistEntry_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.google.javascript.jscomp.Conformance.internal_static_jscomp_Requirement_WhitelistEntry_descriptor;
       }
 
       public com.google.javascript.jscomp.Requirement.WhitelistEntry getDefaultInstanceForType() {
@@ -1521,8 +1698,7 @@ public final class Requirement
       }
 
       public com.google.javascript.jscomp.Requirement.WhitelistEntry buildPartial() {
-        com.google.javascript.jscomp.Requirement.WhitelistEntry result =
-            new com.google.javascript.jscomp.Requirement.WhitelistEntry(this);
+        com.google.javascript.jscomp.Requirement.WhitelistEntry result = new com.google.javascript.jscomp.Requirement.WhitelistEntry(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1539,6 +1715,15 @@ public final class Requirement
           bitField0_ = (bitField0_ & ~0x00000004);
         }
         result.regexp_ = regexp_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.explanation_ = explanation_;
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          comment_ = comment_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000010);
+        }
+        result.comment_ = comment_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1547,32 +1732,32 @@ public final class Requirement
       public Builder clone() {
         return (Builder) super.clone();
       }
-
-      public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, Object value) {
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
         return (Builder) super.setField(field, value);
       }
-
-      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-
-      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-
       public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, int index, Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.google.javascript.jscomp.Requirement.WhitelistEntry) {
-          return mergeFrom((com.google.javascript.jscomp.Requirement.WhitelistEntry) other);
+          return mergeFrom((com.google.javascript.jscomp.Requirement.WhitelistEntry)other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -1580,8 +1765,7 @@ public final class Requirement
       }
 
       public Builder mergeFrom(com.google.javascript.jscomp.Requirement.WhitelistEntry other) {
-        if (other == com.google.javascript.jscomp.Requirement.WhitelistEntry.getDefaultInstance())
-          return this;
+        if (other == com.google.javascript.jscomp.Requirement.WhitelistEntry.getDefaultInstance()) return this;
         if (other.hasReason()) {
           setReason(other.getReason());
         }
@@ -1605,6 +1789,21 @@ public final class Requirement
           }
           onChanged();
         }
+        if (other.hasExplanation()) {
+          bitField0_ |= 0x00000008;
+          explanation_ = other.explanation_;
+          onChanged();
+        }
+        if (!other.comment_.isEmpty()) {
+          if (comment_.isEmpty()) {
+            comment_ = other.comment_;
+            bitField0_ = (bitField0_ & ~0x00000010);
+          } else {
+            ensureCommentIsMutable();
+            comment_.addAll(other.comment_);
+          }
+          onChanged();
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -1622,8 +1821,7 @@ public final class Requirement
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage =
-              (com.google.javascript.jscomp.Requirement.WhitelistEntry) e.getUnfinishedMessage();
+          parsedMessage = (com.google.javascript.jscomp.Requirement.WhitelistEntry) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -1632,25 +1830,26 @@ public final class Requirement
         }
         return this;
       }
-
       private int bitField0_;
 
       private int reason_ = 0;
-      /** <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code> */
+      /**
+       * <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code>
+       */
       public boolean hasReason() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
-      /** <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code> */
+      /**
+       * <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code>
+       */
       public com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason getReason() {
-        com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason result =
-            com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason.valueOf(reason_);
-        return result == null
-            ? com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason.UNSPECIFIED
-            : result;
+        com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason result = com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason.valueOf(reason_);
+        return result == null ? com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason.UNSPECIFIED : result;
       }
-      /** <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code> */
-      public Builder setReason(
-          com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason value) {
+      /**
+       * <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code>
+       */
+      public Builder setReason(com.google.javascript.jscomp.Requirement.WhitelistEntry.Reason value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -1659,7 +1858,9 @@ public final class Requirement
         onChanged();
         return this;
       }
-      /** <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code> */
+      /**
+       * <code>optional .jscomp.Requirement.WhitelistEntry.Reason reason = 1;</code>
+       */
       public Builder clearReason() {
         bitField0_ = (bitField0_ & ~0x00000001);
         reason_ = 0;
@@ -1667,30 +1868,25 @@ public final class Requirement
         return this;
       }
 
-      private com.google.protobuf.LazyStringList prefix_ =
-          com.google.protobuf.LazyStringArrayList.EMPTY;
-
+      private com.google.protobuf.LazyStringList prefix_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensurePrefixIsMutable() {
         if (!((bitField0_ & 0x00000002) == 0x00000002)) {
           prefix_ = new com.google.protobuf.LazyStringArrayList(prefix_);
           bitField0_ |= 0x00000002;
-        }
+         }
       }
       /**
-       *
-       *
        * <pre>
        * A list of source path prefixes.
        * </pre>
        *
        * <code>repeated string prefix = 2;</code>
        */
-      public com.google.protobuf.ProtocolStringList getPrefixList() {
+      public com.google.protobuf.ProtocolStringList
+          getPrefixList() {
         return prefix_.getUnmodifiableView();
       }
       /**
-       *
-       *
        * <pre>
        * A list of source path prefixes.
        * </pre>
@@ -1701,8 +1897,6 @@ public final class Requirement
         return prefix_.size();
       }
       /**
-       *
-       *
        * <pre>
        * A list of source path prefixes.
        * </pre>
@@ -1713,71 +1907,66 @@ public final class Requirement
         return prefix_.get(index);
       }
       /**
-       *
-       *
        * <pre>
        * A list of source path prefixes.
        * </pre>
        *
        * <code>repeated string prefix = 2;</code>
        */
-      public com.google.protobuf.ByteString getPrefixBytes(int index) {
+      public com.google.protobuf.ByteString
+          getPrefixBytes(int index) {
         return prefix_.getByteString(index);
       }
       /**
-       *
-       *
        * <pre>
        * A list of source path prefixes.
        * </pre>
        *
        * <code>repeated string prefix = 2;</code>
        */
-      public Builder setPrefix(int index, java.lang.String value) {
+      public Builder setPrefix(
+          int index, java.lang.String value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-        ensurePrefixIsMutable();
+    throw new NullPointerException();
+  }
+  ensurePrefixIsMutable();
         prefix_.set(index, value);
         onChanged();
         return this;
       }
       /**
-       *
-       *
        * <pre>
        * A list of source path prefixes.
        * </pre>
        *
        * <code>repeated string prefix = 2;</code>
        */
-      public Builder addPrefix(java.lang.String value) {
+      public Builder addPrefix(
+          java.lang.String value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-        ensurePrefixIsMutable();
+    throw new NullPointerException();
+  }
+  ensurePrefixIsMutable();
         prefix_.add(value);
         onChanged();
         return this;
       }
       /**
-       *
-       *
        * <pre>
        * A list of source path prefixes.
        * </pre>
        *
        * <code>repeated string prefix = 2;</code>
        */
-      public Builder addAllPrefix(java.lang.Iterable<java.lang.String> values) {
+      public Builder addAllPrefix(
+          java.lang.Iterable<java.lang.String> values) {
         ensurePrefixIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, prefix_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, prefix_);
         onChanged();
         return this;
       }
       /**
-       *
-       *
        * <pre>
        * A list of source path prefixes.
        * </pre>
@@ -1791,48 +1980,42 @@ public final class Requirement
         return this;
       }
       /**
-       *
-       *
        * <pre>
        * A list of source path prefixes.
        * </pre>
        *
        * <code>repeated string prefix = 2;</code>
        */
-      public Builder addPrefixBytes(com.google.protobuf.ByteString value) {
+      public Builder addPrefixBytes(
+          com.google.protobuf.ByteString value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-        ensurePrefixIsMutable();
+    throw new NullPointerException();
+  }
+  ensurePrefixIsMutable();
         prefix_.add(value);
         onChanged();
         return this;
       }
 
-      private com.google.protobuf.LazyStringList regexp_ =
-          com.google.protobuf.LazyStringArrayList.EMPTY;
-
+      private com.google.protobuf.LazyStringList regexp_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureRegexpIsMutable() {
         if (!((bitField0_ & 0x00000004) == 0x00000004)) {
           regexp_ = new com.google.protobuf.LazyStringArrayList(regexp_);
           bitField0_ |= 0x00000004;
-        }
+         }
       }
       /**
-       *
-       *
        * <pre>
        * A list of regexes matching sources to be ignored
        * </pre>
        *
        * <code>repeated string regexp = 3;</code>
        */
-      public com.google.protobuf.ProtocolStringList getRegexpList() {
+      public com.google.protobuf.ProtocolStringList
+          getRegexpList() {
         return regexp_.getUnmodifiableView();
       }
       /**
-       *
-       *
        * <pre>
        * A list of regexes matching sources to be ignored
        * </pre>
@@ -1843,8 +2026,6 @@ public final class Requirement
         return regexp_.size();
       }
       /**
-       *
-       *
        * <pre>
        * A list of regexes matching sources to be ignored
        * </pre>
@@ -1855,71 +2036,66 @@ public final class Requirement
         return regexp_.get(index);
       }
       /**
-       *
-       *
        * <pre>
        * A list of regexes matching sources to be ignored
        * </pre>
        *
        * <code>repeated string regexp = 3;</code>
        */
-      public com.google.protobuf.ByteString getRegexpBytes(int index) {
+      public com.google.protobuf.ByteString
+          getRegexpBytes(int index) {
         return regexp_.getByteString(index);
       }
       /**
-       *
-       *
        * <pre>
        * A list of regexes matching sources to be ignored
        * </pre>
        *
        * <code>repeated string regexp = 3;</code>
        */
-      public Builder setRegexp(int index, java.lang.String value) {
+      public Builder setRegexp(
+          int index, java.lang.String value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureRegexpIsMutable();
+    throw new NullPointerException();
+  }
+  ensureRegexpIsMutable();
         regexp_.set(index, value);
         onChanged();
         return this;
       }
       /**
-       *
-       *
        * <pre>
        * A list of regexes matching sources to be ignored
        * </pre>
        *
        * <code>repeated string regexp = 3;</code>
        */
-      public Builder addRegexp(java.lang.String value) {
+      public Builder addRegexp(
+          java.lang.String value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureRegexpIsMutable();
+    throw new NullPointerException();
+  }
+  ensureRegexpIsMutable();
         regexp_.add(value);
         onChanged();
         return this;
       }
       /**
-       *
-       *
        * <pre>
        * A list of regexes matching sources to be ignored
        * </pre>
        *
        * <code>repeated string regexp = 3;</code>
        */
-      public Builder addAllRegexp(java.lang.Iterable<java.lang.String> values) {
+      public Builder addAllRegexp(
+          java.lang.Iterable<java.lang.String> values) {
         ensureRegexpIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, regexp_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, regexp_);
         onChanged();
         return this;
       }
       /**
-       *
-       *
        * <pre>
        * A list of regexes matching sources to be ignored
        * </pre>
@@ -1933,24 +2109,215 @@ public final class Requirement
         return this;
       }
       /**
-       *
-       *
        * <pre>
        * A list of regexes matching sources to be ignored
        * </pre>
        *
        * <code>repeated string regexp = 3;</code>
        */
-      public Builder addRegexpBytes(com.google.protobuf.ByteString value) {
+      public Builder addRegexpBytes(
+          com.google.protobuf.ByteString value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureRegexpIsMutable();
+    throw new NullPointerException();
+  }
+  ensureRegexpIsMutable();
         regexp_.add(value);
         onChanged();
         return this;
       }
 
+      private java.lang.Object explanation_ = "";
+      /**
+       * <pre>
+       * Short explanation.
+       * </pre>
+       *
+       * <code>optional string explanation = 4;</code>
+       */
+      public boolean hasExplanation() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <pre>
+       * Short explanation.
+       * </pre>
+       *
+       * <code>optional string explanation = 4;</code>
+       */
+      public java.lang.String getExplanation() {
+        java.lang.Object ref = explanation_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            explanation_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Short explanation.
+       * </pre>
+       *
+       * <code>optional string explanation = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getExplanationBytes() {
+        java.lang.Object ref = explanation_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          explanation_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Short explanation.
+       * </pre>
+       *
+       * <code>optional string explanation = 4;</code>
+       */
+      public Builder setExplanation(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        explanation_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Short explanation.
+       * </pre>
+       *
+       * <code>optional string explanation = 4;</code>
+       */
+      public Builder clearExplanation() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        explanation_ = getDefaultInstance().getExplanation();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Short explanation.
+       * </pre>
+       *
+       * <code>optional string explanation = 4;</code>
+       */
+      public Builder setExplanationBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        explanation_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList comment_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureCommentIsMutable() {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+          comment_ = new com.google.protobuf.LazyStringArrayList(comment_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+      /**
+       * <code>repeated string comment = 5;</code>
+       */
+      public com.google.protobuf.ProtocolStringList
+          getCommentList() {
+        return comment_.getUnmodifiableView();
+      }
+      /**
+       * <code>repeated string comment = 5;</code>
+       */
+      public int getCommentCount() {
+        return comment_.size();
+      }
+      /**
+       * <code>repeated string comment = 5;</code>
+       */
+      public java.lang.String getComment(int index) {
+        return comment_.get(index);
+      }
+      /**
+       * <code>repeated string comment = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getCommentBytes(int index) {
+        return comment_.getByteString(index);
+      }
+      /**
+       * <code>repeated string comment = 5;</code>
+       */
+      public Builder setComment(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCommentIsMutable();
+        comment_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string comment = 5;</code>
+       */
+      public Builder addComment(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCommentIsMutable();
+        comment_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string comment = 5;</code>
+       */
+      public Builder addAllComment(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureCommentIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, comment_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string comment = 5;</code>
+       */
+      public Builder clearComment() {
+        comment_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string comment = 5;</code>
+       */
+      public Builder addCommentBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCommentIsMutable();
+        comment_.add(value);
+        onChanged();
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -1961,12 +2328,12 @@ public final class Requirement
         return super.mergeUnknownFields(unknownFields);
       }
 
+
       // @@protoc_insertion_point(builder_scope:jscomp.Requirement.WhitelistEntry)
     }
 
     // @@protoc_insertion_point(class_scope:jscomp.Requirement.WhitelistEntry)
     private static final com.google.javascript.jscomp.Requirement.WhitelistEntry DEFAULT_INSTANCE;
-
     static {
       DEFAULT_INSTANCE = new com.google.javascript.jscomp.Requirement.WhitelistEntry();
     }
@@ -1975,16 +2342,15 @@ public final class Requirement
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated
-    public static final com.google.protobuf.Parser<WhitelistEntry> PARSER =
-        new com.google.protobuf.AbstractParser<WhitelistEntry>() {
-          public WhitelistEntry parsePartialFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws com.google.protobuf.InvalidProtocolBufferException {
-            return new WhitelistEntry(input, extensionRegistry);
-          }
-        };
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<WhitelistEntry>
+        PARSER = new com.google.protobuf.AbstractParser<WhitelistEntry>() {
+      public WhitelistEntry parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new WhitelistEntry(input, extensionRegistry);
+      }
+    };
 
     public static com.google.protobuf.Parser<WhitelistEntry> parser() {
       return PARSER;
@@ -1998,6 +2364,7 @@ public final class Requirement
     public com.google.javascript.jscomp.Requirement.WhitelistEntry getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
+
   }
 
   private int bitField0_;
@@ -2161,27 +2528,36 @@ public final class Requirement
 
   public static final int WHITELIST_ENTRY_FIELD_NUMBER = 14;
   private java.util.List<com.google.javascript.jscomp.Requirement.WhitelistEntry> whitelistEntry_;
-  /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
-  public java.util.List<com.google.javascript.jscomp.Requirement.WhitelistEntry>
-      getWhitelistEntryList() {
+  /**
+   * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+   */
+  public java.util.List<com.google.javascript.jscomp.Requirement.WhitelistEntry> getWhitelistEntryList() {
     return whitelistEntry_;
   }
-  /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
-  public java.util.List<? extends com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder>
+  /**
+   * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+   */
+  public java.util.List<? extends com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder> 
       getWhitelistEntryOrBuilderList() {
     return whitelistEntry_;
   }
-  /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+  /**
+   * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+   */
   public int getWhitelistEntryCount() {
     return whitelistEntry_.size();
   }
-  /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+  /**
+   * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+   */
   public com.google.javascript.jscomp.Requirement.WhitelistEntry getWhitelistEntry(int index) {
     return whitelistEntry_.get(index);
   }
-  /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
-  public com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder
-      getWhitelistEntryOrBuilder(int index) {
+  /**
+   * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+   */
+  public com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder getWhitelistEntryOrBuilder(
+      int index) {
     return whitelistEntry_.get(index);
   }
 
@@ -2746,7 +3122,8 @@ public final class Requirement
         .computeEnumSize(13, typeMatchingStrategy_);
     }
     for (int i = 0; i < whitelistEntry_.size(); i++) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(14, whitelistEntry_.get(i));
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(14, whitelistEntry_.get(i));
     }
     size += extensionsSerializedSize();
     size += unknownFields.getSerializedSize();
@@ -2775,7 +3152,8 @@ public final class Requirement
         .equals(other.getWhitelistList());
     result = result && getWhitelistRegexpList()
         .equals(other.getWhitelistRegexpList());
-    result = result && getWhitelistEntryList().equals(other.getWhitelistEntryList());
+    result = result && getWhitelistEntryList()
+        .equals(other.getWhitelistEntryList());
     result = result && getOnlyApplyToList()
         .equals(other.getOnlyApplyToList());
     result = result && getOnlyApplyToRegexpList()
@@ -2968,8 +3346,6 @@ public final class Requirement
     return builder;
   }
   /**
-   *
-   *
    * <pre>
    * A specification of code requirements
    * NEXT ID: 15
@@ -2977,10 +3353,9 @@ public final class Requirement
    *
    * Protobuf type {@code jscomp.Requirement}
    */
-  public static final class Builder
-      extends com.google.protobuf.GeneratedMessageV3.ExtendableBuilder<
-          com.google.javascript.jscomp.Requirement, Builder>
-      implements
+  public static final class Builder extends
+      com.google.protobuf.GeneratedMessageV3.ExtendableBuilder<
+        com.google.javascript.jscomp.Requirement, Builder> implements
       // @@protoc_insertion_point(builder_implements:jscomp.Requirement)
       com.google.javascript.jscomp.RequirementOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -3243,10 +3618,9 @@ public final class Requirement
             whitelistEntryBuilder_ = null;
             whitelistEntry_ = other.whitelistEntry_;
             bitField0_ = (bitField0_ & ~0x00000008);
-            whitelistEntryBuilder_ =
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
-                    ? getWhitelistEntryFieldBuilder()
-                    : null;
+            whitelistEntryBuilder_ = 
+              com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                 getWhitelistEntryFieldBuilder() : null;
           } else {
             whitelistEntryBuilder_.addAllMessages(other.whitelistEntry_);
           }
@@ -3729,34 +4103,31 @@ public final class Requirement
       return this;
     }
 
-    private java.util.List<com.google.javascript.jscomp.Requirement.WhitelistEntry>
-        whitelistEntry_ = java.util.Collections.emptyList();
-
+    private java.util.List<com.google.javascript.jscomp.Requirement.WhitelistEntry> whitelistEntry_ =
+      java.util.Collections.emptyList();
     private void ensureWhitelistEntryIsMutable() {
       if (!((bitField0_ & 0x00000008) == 0x00000008)) {
-        whitelistEntry_ =
-            new java.util.ArrayList<com.google.javascript.jscomp.Requirement.WhitelistEntry>(
-                whitelistEntry_);
+        whitelistEntry_ = new java.util.ArrayList<com.google.javascript.jscomp.Requirement.WhitelistEntry>(whitelistEntry_);
         bitField0_ |= 0x00000008;
-      }
+       }
     }
 
     private com.google.protobuf.RepeatedFieldBuilderV3<
-            com.google.javascript.jscomp.Requirement.WhitelistEntry,
-            com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder,
-            com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder>
-        whitelistEntryBuilder_;
+        com.google.javascript.jscomp.Requirement.WhitelistEntry, com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder, com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder> whitelistEntryBuilder_;
 
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
-    public java.util.List<com.google.javascript.jscomp.Requirement.WhitelistEntry>
-        getWhitelistEntryList() {
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
+    public java.util.List<com.google.javascript.jscomp.Requirement.WhitelistEntry> getWhitelistEntryList() {
       if (whitelistEntryBuilder_ == null) {
         return java.util.Collections.unmodifiableList(whitelistEntry_);
       } else {
         return whitelistEntryBuilder_.getMessageList();
       }
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public int getWhitelistEntryCount() {
       if (whitelistEntryBuilder_ == null) {
         return whitelistEntry_.size();
@@ -3764,7 +4135,9 @@ public final class Requirement
         return whitelistEntryBuilder_.getCount();
       }
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public com.google.javascript.jscomp.Requirement.WhitelistEntry getWhitelistEntry(int index) {
       if (whitelistEntryBuilder_ == null) {
         return whitelistEntry_.get(index);
@@ -3772,7 +4145,9 @@ public final class Requirement
         return whitelistEntryBuilder_.getMessage(index);
       }
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public Builder setWhitelistEntry(
         int index, com.google.javascript.jscomp.Requirement.WhitelistEntry value) {
       if (whitelistEntryBuilder_ == null) {
@@ -3787,10 +4162,11 @@ public final class Requirement
       }
       return this;
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public Builder setWhitelistEntry(
-        int index,
-        com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder builderForValue) {
+        int index, com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder builderForValue) {
       if (whitelistEntryBuilder_ == null) {
         ensureWhitelistEntryIsMutable();
         whitelistEntry_.set(index, builderForValue.build());
@@ -3800,9 +4176,10 @@ public final class Requirement
       }
       return this;
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
-    public Builder addWhitelistEntry(
-        com.google.javascript.jscomp.Requirement.WhitelistEntry value) {
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
+    public Builder addWhitelistEntry(com.google.javascript.jscomp.Requirement.WhitelistEntry value) {
       if (whitelistEntryBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -3815,7 +4192,9 @@ public final class Requirement
       }
       return this;
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public Builder addWhitelistEntry(
         int index, com.google.javascript.jscomp.Requirement.WhitelistEntry value) {
       if (whitelistEntryBuilder_ == null) {
@@ -3830,7 +4209,9 @@ public final class Requirement
       }
       return this;
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public Builder addWhitelistEntry(
         com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder builderForValue) {
       if (whitelistEntryBuilder_ == null) {
@@ -3842,10 +4223,11 @@ public final class Requirement
       }
       return this;
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public Builder addWhitelistEntry(
-        int index,
-        com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder builderForValue) {
+        int index, com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder builderForValue) {
       if (whitelistEntryBuilder_ == null) {
         ensureWhitelistEntryIsMutable();
         whitelistEntry_.add(index, builderForValue.build());
@@ -3855,20 +4237,24 @@ public final class Requirement
       }
       return this;
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public Builder addAllWhitelistEntry(
-        java.lang.Iterable<? extends com.google.javascript.jscomp.Requirement.WhitelistEntry>
-            values) {
+        java.lang.Iterable<? extends com.google.javascript.jscomp.Requirement.WhitelistEntry> values) {
       if (whitelistEntryBuilder_ == null) {
         ensureWhitelistEntryIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, whitelistEntry_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, whitelistEntry_);
         onChanged();
       } else {
         whitelistEntryBuilder_.addAllMessages(values);
       }
       return this;
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public Builder clearWhitelistEntry() {
       if (whitelistEntryBuilder_ == null) {
         whitelistEntry_ = java.util.Collections.emptyList();
@@ -3879,7 +4265,9 @@ public final class Requirement
       }
       return this;
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public Builder removeWhitelistEntry(int index) {
       if (whitelistEntryBuilder_ == null) {
         ensureWhitelistEntryIsMutable();
@@ -3890,60 +4278,62 @@ public final class Requirement
       }
       return this;
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder getWhitelistEntryBuilder(
         int index) {
       return getWhitelistEntryFieldBuilder().getBuilder(index);
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
-    public com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder
-        getWhitelistEntryOrBuilder(int index) {
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
+    public com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder getWhitelistEntryOrBuilder(
+        int index) {
       if (whitelistEntryBuilder_ == null) {
-        return whitelistEntry_.get(index);
-      } else {
+        return whitelistEntry_.get(index);  } else {
         return whitelistEntryBuilder_.getMessageOrBuilder(index);
       }
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
-    public java.util.List<
-            ? extends com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder>
-        getWhitelistEntryOrBuilderList() {
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
+    public java.util.List<? extends com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder> 
+         getWhitelistEntryOrBuilderList() {
       if (whitelistEntryBuilder_ != null) {
         return whitelistEntryBuilder_.getMessageOrBuilderList();
       } else {
         return java.util.Collections.unmodifiableList(whitelistEntry_);
       }
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
-    public com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder
-        addWhitelistEntryBuilder() {
-      return getWhitelistEntryFieldBuilder()
-          .addBuilder(com.google.javascript.jscomp.Requirement.WhitelistEntry.getDefaultInstance());
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
+    public com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder addWhitelistEntryBuilder() {
+      return getWhitelistEntryFieldBuilder().addBuilder(
+          com.google.javascript.jscomp.Requirement.WhitelistEntry.getDefaultInstance());
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
     public com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder addWhitelistEntryBuilder(
         int index) {
-      return getWhitelistEntryFieldBuilder()
-          .addBuilder(
-              index, com.google.javascript.jscomp.Requirement.WhitelistEntry.getDefaultInstance());
+      return getWhitelistEntryFieldBuilder().addBuilder(
+          index, com.google.javascript.jscomp.Requirement.WhitelistEntry.getDefaultInstance());
     }
-    /** <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code> */
-    public java.util.List<com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder>
-        getWhitelistEntryBuilderList() {
+    /**
+     * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+     */
+    public java.util.List<com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder> 
+         getWhitelistEntryBuilderList() {
       return getWhitelistEntryFieldBuilder().getBuilderList();
     }
-
     private com.google.protobuf.RepeatedFieldBuilderV3<
-            com.google.javascript.jscomp.Requirement.WhitelistEntry,
-            com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder,
-            com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder>
+        com.google.javascript.jscomp.Requirement.WhitelistEntry, com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder, com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder> 
         getWhitelistEntryFieldBuilder() {
       if (whitelistEntryBuilder_ == null) {
-        whitelistEntryBuilder_ =
-            new com.google.protobuf.RepeatedFieldBuilderV3<
-                com.google.javascript.jscomp.Requirement.WhitelistEntry,
-                com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder,
-                com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder>(
+        whitelistEntryBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+            com.google.javascript.jscomp.Requirement.WhitelistEntry, com.google.javascript.jscomp.Requirement.WhitelistEntry.Builder, com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder>(
                 whitelistEntry_,
                 ((bitField0_ & 0x00000008) == 0x00000008),
                 getParentForChildren(),
@@ -4534,7 +4924,7 @@ public final class Requirement
       if (value == null) {
     throw new NullPointerException();
   }
-      bitField0_ |= 0x00000200;
+  bitField0_ |= 0x00000200;
       javaClass_ = value;
       onChanged();
       return this;
@@ -4566,7 +4956,7 @@ public final class Requirement
       if (value == null) {
     throw new NullPointerException();
   }
-      bitField0_ |= 0x00000200;
+  bitField0_ |= 0x00000200;
       javaClass_ = value;
       onChanged();
       return this;
@@ -4640,7 +5030,7 @@ public final class Requirement
       if (value == null) {
     throw new NullPointerException();
   }
-      bitField0_ |= 0x00000400;
+  bitField0_ |= 0x00000400;
       ruleId_ = value;
       onChanged();
       return this;
@@ -4672,7 +5062,7 @@ public final class Requirement
       if (value == null) {
     throw new NullPointerException();
   }
-      bitField0_ |= 0x00000400;
+  bitField0_ |= 0x00000400;
       ruleId_ = value;
       onChanged();
       return this;
@@ -4750,7 +5140,7 @@ public final class Requirement
       if (value == null) {
     throw new NullPointerException();
   }
-      bitField0_ |= 0x00000800;
+  bitField0_ |= 0x00000800;
       extends_ = value;
       onChanged();
       return this;
@@ -4784,7 +5174,7 @@ public final class Requirement
       if (value == null) {
     throw new NullPointerException();
   }
-      bitField0_ |= 0x00000800;
+  bitField0_ |= 0x00000800;
       extends_ = value;
       onChanged();
       return this;

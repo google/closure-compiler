@@ -138,6 +138,10 @@ message Requirement {
     // Unlike BANNED_NAME, this only bans calls to the property, i.e. using the
     // property as a value is allowed.
     BANNED_NAME_CALL = 12;
+
+    // A restricted write to an instance property.
+    // Example: "Element.prototype.innerHTML:!TrustedHTML|string"
+    RESTRICTED_PROPERTY_WRITE = 13;
   }
 
   enum TypeMatchingStrategy {

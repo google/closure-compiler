@@ -219,11 +219,11 @@ public final class CheckConformance implements Callback, CompilerPass {
         case BANNED_PROPERTY_CALL:
           return new ConformanceRules.BannedProperty(compiler, requirement);
         case RESTRICTED_NAME_CALL:
-          return new ConformanceRules.RestrictedNameCall(
-              compiler, requirement);
+          return new ConformanceRules.RestrictedNameCall(compiler, requirement);
         case RESTRICTED_METHOD_CALL:
-          return new ConformanceRules.RestrictedMethodCall(
-              compiler, requirement);
+          return new ConformanceRules.RestrictedMethodCall(compiler, requirement);
+        case RESTRICTED_PROPERTY_WRITE:
+          return new ConformanceRules.RestrictedPropertyWrite(compiler, requirement);
         default:
           reportInvalidRequirement(
               compiler, requirement, "unknown requirement type");
