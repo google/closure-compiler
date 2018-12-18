@@ -52,10 +52,7 @@ public final class MustBeReachingVariableDefTest {
     assertNotMatch("D:var x; U:x; x=1; x");
     assertMatch("D: var x = 1; var y = 2; y; U:x");
 
-    assertMatch("D:let x=1; U: x");
     assertMatch("let x; D:x=1; U: x");
-
-    assertMatch("D: const x = 1; U: x");
   }
 
   @Test

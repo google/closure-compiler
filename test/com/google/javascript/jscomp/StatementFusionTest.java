@@ -159,7 +159,6 @@ public final class StatementFusionTest extends CompilerTestCase {
     fuseSame("a; { b; const a = 1; }");
     fuseSame("a; { b; class a {} }");
     fuseSame("a; { b; function a() {} }");
-    fuseSame("a; { b; label: let a = 1; }");
     fuseSame("a; { b; const otherVariable = 1; }");
 
     enableNormalize();

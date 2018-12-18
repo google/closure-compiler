@@ -114,8 +114,10 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("for (x of y) {x}", "for(x of y);");
     foldSame("for (let x = 1; x <10; x++ ) {}");
     foldSame("for (var x = 1; x <10; x++ ) {}");
+  }
 
-    // Block with declarations
+  @Test
+  public void testFoldBlockWithDeclaration() {
     foldSame("{let x}");
     foldSame("function f() {let x}");
     foldSame("{const x = 1}");
@@ -124,8 +126,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("{x = 4; {let y}}", "x = 4; {let y}");
     foldSame("{function f() {} } {function f() {}}");
     foldSame("{class C {}} {class C {}}");
-    foldSame("{label: let x}");
     fold("{label: var x}", "label: var x");
+    // `{label: let x}` is a syntax error
     foldSame("{label: var x; let y;}");
   }
 

@@ -79,6 +79,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
   // These types do not permit a block-scoped declaration inside them without an explicit block.
   // e.g. if (b) let x;
+  // This list omits Token.LABEL intentionally. It's handled differently in IRFactory.
   private static final ImmutableSet<Token> BLOCKLESS_DECLARATION_FORBIDDEN_STATEMENTS =
       Sets.immutableEnumSet(Token.IF, Token.FOR, Token.FOR_IN, Token.FOR_OF, Token.WHILE);
 

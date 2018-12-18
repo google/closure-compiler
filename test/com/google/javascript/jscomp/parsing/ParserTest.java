@@ -371,14 +371,28 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testLabeledFunctionDeclaration() {
     parseError(
-        "foo:function f() {}", "Functions can only be declared at top level or inside a block.");
+        "foo:function f() {}",
+        "Lexical declarations are only allowed at top level or inside a block.");
   }
 
   @Test
   public void testLabeledClassDeclaration() {
-    mode = LanguageMode.ECMASCRIPT6;
     parseError(
-        "foo:class Foo {}", "Classes can only be declared at top level or inside a block.");
+        "foo:class Foo {}",
+        "Lexical declarations are only allowed at top level or inside a block.");
+  }
+
+  @Test
+  public void testLabeledLetDeclaration() {
+    parseError(
+        "foo: let x = 0;", "Lexical declarations are only allowed at top level or inside a block.");
+  }
+
+  @Test
+  public void testLabeledConstDeclaration() {
+    parseError(
+        "foo: const x = 0;",
+        "Lexical declarations are only allowed at top level or inside a block.");
   }
 
   @Test

@@ -81,8 +81,7 @@ public final class Es6SplitVariableDeclarationsTest extends CompilerTestCase {
   @Test
   public void testCannotSplitLabeledDeclaration() {
     testError("label: var   [a] = [], b = 3;", Es6ToEs3Util.CANNOT_CONVERT_YET);
-    testError("label: let   [a] = [], b = 3;", Es6ToEs3Util.CANNOT_CONVERT_YET);
-    testError("label: const [a] = [], b = 3;", Es6ToEs3Util.CANNOT_CONVERT_YET);
+    // `label: let   [a] = [], b = 3;` and `label: const [a] = [], b = 3;` are syntax errors
   }
 
   @Test

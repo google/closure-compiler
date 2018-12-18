@@ -338,13 +338,13 @@ public final class LiveVariablesAnalysisTest {
   @Test
   public void testSimpleLet() {
     // a is defined after X and not used
-    assertNotLiveBeforeX("X:let a;", "a");
-    assertNotLiveAfterX("X:let a;", "a");
-    assertNotLiveAfterX("X:let a=1;", "a");
+    assertNotLiveBeforeDecl("let a;", "a");
+    assertNotLiveAfterDecl("let a;", "a");
+    assertNotLiveAfterDecl("let a=1;", "a");
 
     // a is used and defined after X
-    assertLiveAfterX("X:let a=1; a()", "a");
-    assertNotLiveBeforeX("X:let a=1; a()", "a");
+    assertLiveAfterDecl("let a=1; a()", "a");
+    assertNotLiveBeforeDecl("let a=1; a()", "a");
 
     // no assignment to x; let is initialized with undefined
     assertLiveBeforeX("let a;X:a;", "a");
@@ -368,9 +368,9 @@ public final class LiveVariablesAnalysisTest {
   public void testSimpleConst() {
     // a is defined after X and not used
     assertLiveBeforeX("const a = 4; X:a;", "a");
-    assertNotLiveBeforeX("X:let a = 1;", "a");
-    assertNotLiveBeforeX("X:const a = 1;", "a");
-    assertNotLiveAfterX("X:const a = 1;", "a");
+    assertNotLiveBeforeDecl("let a = 1;", "a");
+    assertNotLiveBeforeDecl("const a = 1;", "a");
+    assertNotLiveAfterDecl("const a = 1;", "a");
   }
 
   @Test
@@ -383,7 +383,7 @@ public final class LiveVariablesAnalysisTest {
     assertNotEscaped("var [a, ,b] = [1, 2, 3];", "b");
     assertNotLiveBeforeX("var x = 3; X: [x] = [4]; x;", "x");
     assertLiveBeforeX("var x = {}; X: [x.a] = [3]; x.a;", "x");
-    assertLiveBeforeX("var x = []; X: const [c] = x;", "x");
+    assertLiveBeforeX("var x = []; X: var [c] = x;", "x");
   }
 
   @Test
@@ -395,7 +395,7 @@ public final class LiveVariablesAnalysisTest {
     assertNotEscaped("var {a: x = 3, b: y} = g();", "x");
     assertNotLiveBeforeX("var x = {}; X: ({x} = {}); x;", "x");
     assertLiveBeforeX("var x = {}; X: ({a: x.a} = {}); x.a;", "x");
-    assertLiveBeforeX("var x = {}; X: const {c} = x;", "x");
+    assertLiveBeforeX("var x = {}; X: var {c} = x;", "x");
   }
 
   @Test
@@ -404,8 +404,8 @@ public final class LiveVariablesAnalysisTest {
     assertLiveBeforeX("var x = 3, y; X: [y = x] = [];", "x");
     assertLiveBeforeX("var x = 3; X: var {y = x} = {};", "x");
     assertLiveBeforeX("var x = 3; X: var {key: y = x} = {};", "x");
-    assertLiveBeforeX("var x = 3; X: const {[x + x]: foo} = obj; x;", "x");
-    assertLiveBeforeX("var x = 3; X: const {[x + x]: x} = obj; x;", "x");
+    assertLiveBeforeX("var x = 3; X: var {[x + x]: foo} = obj; x;", "x");
+    assertLiveBeforeX("var x = 3; X: var {[x + x]: x} = obj; x;", "x");
   }
 
   @Test
@@ -442,7 +442,34 @@ public final class LiveVariablesAnalysisTest {
   private void assertNotLiveBeforeX(String src, String var) {
     FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
     assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
-    assertWithMessage("Variable" + var + " should not be live before X")
+    assertWithMessage("Variable " + var + " should not be live before X")
+        .that(state.getIn().isLive(liveness.getVarIndex(var)))
+        .isFalse();
+  }
+
+  private void assertLiveAfterDecl(String src, String var) {
+    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
+        getFlowStateAtDeclaration(src, var);
+    assertWithMessage("Variable " + var + " should be declared").that(state).isNotNull();
+    assertWithMessage("Variable" + var + " should be live after its declaration")
+        .that(state.getOut().isLive(liveness.getVarIndex(var)))
+        .isTrue();
+  }
+
+  private void assertNotLiveAfterDecl(String src, String var) {
+    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
+        getFlowStateAtDeclaration(src, var);
+    assertWithMessage("Variable " + var + " should be declared").that(state).isNotNull();
+    assertWithMessage("Variable " + var + " should not be live after its declaration")
+        .that(state.getOut().isLive(liveness.getVarIndex(var)))
+        .isFalse();
+  }
+
+  private void assertNotLiveBeforeDecl(String src, String var) {
+    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
+        getFlowStateAtDeclaration(src, var);
+    assertWithMessage("Variable " + var + " should be declared").that(state).isNotNull();
+    assertWithMessage("Variable " + var + " should not be live before its declaration")
         .that(state.getIn().isLive(liveness.getVarIndex(var)))
         .isFalse();
   }
@@ -461,6 +488,34 @@ public final class LiveVariablesAnalysisTest {
     }
     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
       FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(c, cfg);
+      if (state != null) {
+        return state;
+      }
+    }
+    return null;
+  }
+
+  private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtDeclaration(
+      String src, String name) {
+    liveness = computeLiveness(src);
+    return getFlowStateAtDeclaration(
+        liveness.getCfg().getEntry().getValue(), liveness.getCfg(), name);
+  }
+
+  /**
+   * Use this for lexical declarations which can't be labelled; e.g. `LABEL: let x = 0;` is invalid
+   * syntax.
+   */
+  private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtDeclaration(
+      Node node, ControlFlowGraph<Node> cfg, String name) {
+    if (NodeUtil.isNameDeclaration(node)) {
+      if (node.getFirstChild().getString().equals(name)) {
+        return cfg.getNode(node).getAnnotation();
+      }
+    }
+    for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
+      FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
+          getFlowStateAtDeclaration(c, cfg, name);
       if (state != null) {
         return state;
       }

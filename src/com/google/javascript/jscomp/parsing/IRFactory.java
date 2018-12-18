@@ -1607,14 +1607,16 @@ class IRFactory {
 
     Node processLabeledStatement(LabelledStatementTree labelTree) {
       Node statement = transform(labelTree.statement);
-      if (statement.isFunction()) {
+      if (statement.isFunction()
+          || statement.isClass()
+          || statement.isLet()
+          || statement.isConst()) {
         errorReporter.error(
-            "Functions can only be declared at top level or inside a block.",
-            sourceName, lineno(labelTree), charno(labelTree));
-      } else if (statement.isClass()) {
-        errorReporter.error(
-            "Classes can only be declared at top level or inside a block.",
-            sourceName, lineno(labelTree), charno(labelTree));
+            "Lexical declarations are only allowed at top level or inside a block.",
+            sourceName,
+            lineno(labelTree),
+            charno(labelTree));
+        return statement; // drop the LABEL node so that the resulting AST is valid
       }
       return newNode(Token.LABEL,
           transformLabelName(labelTree.name),
