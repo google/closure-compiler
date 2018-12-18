@@ -1575,10 +1575,11 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("earlyPeepholeOptimizations", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
+          boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
           List<AbstractPeepholeOptimization> peepholeOptimizations = new ArrayList<>();
           peepholeOptimizations.add(new PeepholeRemoveDeadCode());
           if (compiler.getOptions().j2clPassMode.shouldAddJ2clPasses()) {
-            peepholeOptimizations.add(new J2clEqualitySameRewriterPass());
+            peepholeOptimizations.add(new J2clEqualitySameRewriterPass(useTypesForOptimization));
           }
           return new PeepholeOptimizationsPass(compiler, getName(), peepholeOptimizations);
         }
@@ -1622,7 +1623,7 @@ public final class DefaultPassConfig extends PassConfig {
     optimizations.add(new PeepholeReplaceKnownMethods(late, useTypesForOptimization));
     optimizations.add(new PeepholeRemoveDeadCode());
     if (compiler.getOptions().j2clPassMode.shouldAddJ2clPasses()) {
-      optimizations.add(new J2clEqualitySameRewriterPass());
+      optimizations.add(new J2clEqualitySameRewriterPass(useTypesForOptimization));
       optimizations.add(new J2clStringValueOfRewriterPass());
     }
     optimizations.add(new PeepholeFoldConstants(late, useTypesForOptimization));
