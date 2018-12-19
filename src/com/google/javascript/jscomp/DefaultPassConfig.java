@@ -366,11 +366,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkRegExp);
     }
 
-    // This pass should run before types are assigned.
-    if (options.processObjectPropertyString) {
-      checks.add(objectPropertyStringPreprocess);
-    }
-
     // It's important that the Dart super accessors pass run *before* es6ConvertSuper,
     // which is a "late" ES6 pass. This is enforced in the assertValidOrder method.
     if (options.dartPass && !options.getOutputFeatureSet().contains(ES6)) {
@@ -823,11 +818,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.variableRenaming != VariableRenamingPolicy.OFF) {
       passes.add(renameVars);
-    }
-
-    // This pass should run after names stop changing.
-    if (options.processObjectPropertyString) {
-      passes.add(objectPropertyStringPostprocess);
     }
 
     if (options.labelRenaming) {

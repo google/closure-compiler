@@ -873,9 +873,6 @@ public class CompilerOptions implements Serializable {
   /** Whitelist used in the renaming of CSS class names. */
   Set<String> cssRenamingWhitelist;
 
-  /** Process instances of goog.testing.ObjectPropertyString. */
-  boolean processObjectPropertyString;
-
   /** Replace id generators */
   boolean replaceIdGenerators = true;  // true by default for legacy reasons.
 
@@ -1357,7 +1354,6 @@ public class CompilerOptions implements Serializable {
     exportLocalPropertyDefinitions = false;
     cssRenamingMap = null;
     cssRenamingWhitelist = null;
-    processObjectPropertyString = false;
     idGenerators = ImmutableMap.of();
     replaceStringsFunctionDescriptions = ImmutableList.of();
     replaceStringsPlaceholderToken = "";
@@ -1591,13 +1587,6 @@ public class CompilerOptions implements Serializable {
   /** Should shadow outer scope variable name during renaming. */
   public void setShadowVariables(boolean shadow) {
     this.shadowVariables = shadow;
-  }
-
-  /**
-   * If true, process goog.testing.ObjectPropertyString instances.
-   */
-  public void setProcessObjectPropertyString(boolean process) {
-    processObjectPropertyString = process;
   }
 
   /**
@@ -3058,7 +3047,6 @@ public class CompilerOptions implements Serializable {
             .add("printInputDelimiter", printInputDelimiter)
             .add("printSourceAfterEachPass", printSourceAfterEachPass)
             .add("processCommonJSModules", processCommonJSModules)
-            .add("processObjectPropertyString", processObjectPropertyString)
             .add("propertyInvalidationErrors", propertyInvalidationErrors)
             .add("propertyRenaming", propertyRenaming)
             .add("protectHiddenSideEffects", protectHiddenSideEffects)
