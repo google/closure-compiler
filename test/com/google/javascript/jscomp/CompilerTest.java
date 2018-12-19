@@ -1960,6 +1960,49 @@ public final class CompilerTest {
   }
 
   @Test
+  public void testDynamicImportOrdering3() throws Exception {
+    List<SourceFile> sources = new ArrayList<>();
+    sources.add(SourceFile.fromCode("/entry.js", "__webpack_require__(2);"));
+    sources.add(
+        SourceFile.fromCode(
+            "/a.js",
+            lines(
+                "console.log(module.id);",
+                "Promise.all([__webpack_require__.e(0)]).then(function() {",
+                "  return __webpack_require__(3);",
+                "});")));
+    sources.add(SourceFile.fromCode("/b.js", "console.log(module.id); module.exports = 'foo';"));
+
+    HashMap<String, String> webpackModulesById = new HashMap<>();
+    webpackModulesById.put("1", "/entry.js");
+    webpackModulesById.put("2", "/a.js");
+    webpackModulesById.put("3", "/b.js");
+
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
+    options.setProcessCommonJSModules(true);
+    options.setModuleResolutionMode(ResolutionMode.WEBPACK);
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    Compiler compiler = new Compiler();
+    compiler.initWebpackMap(ImmutableMap.copyOf(webpackModulesById));
+    Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
+    assertThat(result.success).isTrue();
+
+    List<String> orderedInputs = new ArrayList<>();
+    for (CompilerInput input : compiler.getInputsInOrder()) {
+      orderedInputs.add(input.getName());
+    }
+
+    assertThat(orderedInputs).containsExactly("/a.js", "/entry.js", "/b.js").inOrder();
+  }
+
+  @Test
   public void testWeakSources() throws Exception {
     List<SourceFile> sources =
         ImmutableList.of(
