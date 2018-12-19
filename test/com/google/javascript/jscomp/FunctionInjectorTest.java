@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
+import static com.google.javascript.jscomp.FunctionInjector.isDirectCallNodeReplacementPossible;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -56,61 +57,45 @@ public final class FunctionInjectorTest {
     allowDecomposition = false;
   }
 
-  private FunctionInjector getInjector() {
-    Compiler compiler = new Compiler();
-    return new FunctionInjector(
-        compiler, compiler.getUniqueNameIdSupplier(), true,
-        assumeStrictThis, assumeMinimumCapture);
-  }
-
   @Test
   public void testIsSimpleFunction1() {
-    assertThat(getInjector().isDirectCallNodeReplacementPossible(prep("function f(){}"))).isTrue();
+    assertThat(isDirectCallNodeReplacementPossible(prep("function f(){}"))).isTrue();
   }
 
   @Test
   public void testIsSimpleFunction2() {
-    assertThat(getInjector().isDirectCallNodeReplacementPossible(prep("function f(){return 0;}")))
-        .isTrue();
+    assertThat(isDirectCallNodeReplacementPossible(prep("function f(){return 0;}"))).isTrue();
   }
 
   @Test
   public void testIsSimpleFunction3() {
-    assertThat(
-            getInjector()
-                .isDirectCallNodeReplacementPossible(prep("function f(){return x ? 0 : 1}")))
+    assertThat(isDirectCallNodeReplacementPossible(prep("function f(){return x ? 0 : 1}")))
         .isTrue();
   }
 
   @Test
   public void testIsSimpleFunction4() {
-    assertThat(getInjector().isDirectCallNodeReplacementPossible(prep("function f(){return;}")))
-        .isFalse();
+    assertThat(isDirectCallNodeReplacementPossible(prep("function f(){return;}"))).isFalse();
   }
 
   @Test
   public void testIsSimpleFunction5() {
-    assertThat(
-            getInjector()
-                .isDirectCallNodeReplacementPossible(prep("function f(){return 0; return 0;}")))
+    assertThat(isDirectCallNodeReplacementPossible(prep("function f(){return 0; return 0;}")))
         .isFalse();
   }
 
   @Test
   public void testIsSimpleFunction6() {
     assertThat(
-            getInjector()
-                .isDirectCallNodeReplacementPossible(
-                    prep("function f(){var x=true;return x ? 0 : 1}")))
+            isDirectCallNodeReplacementPossible(prep("function f(){var x=true;return x ? 0 : 1}")))
         .isFalse();
   }
 
   @Test
   public void testIsSimpleFunction7() {
     assertThat(
-            getInjector()
-                .isDirectCallNodeReplacementPossible(
-                    prep("function f(){if (x) return 0; else return 1}")))
+            isDirectCallNodeReplacementPossible(
+                prep("function f(){if (x) return 0; else return 1}")))
         .isFalse();
   }
 
