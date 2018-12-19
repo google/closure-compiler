@@ -699,16 +699,17 @@ class ExpressionDecomposer {
   }
 
   /**
-   * @return The statement containing the expression or null if the subExpression
-   *     is not contain in a Node where inlining is known to be possible.
-   *     For example, a WHILE node condition expression.
+   * Finds the statement containing {@code subExpression}.
+   *
+   * <p>If {@code subExpression} is not contained by a statement where inlining is known to be
+   * possible, {@code null} is returned. For example, the condition expression of a WHILE loop.
    */
   @Nullable
-  static Node findExpressionRoot(Node subExpression) {
+  private static Node findExpressionRoot(Node subExpression) {
     Node child = subExpression;
-    for (Node parent : child.getAncestors()) {
-      Token parentType = parent.getToken();
-      switch (parentType) {
+    for (Node current : child.getAncestors()) {
+      Node parent = current.getParent();
+      switch (current.getToken()) {
         // Supported expression roots:
         // SWITCH and IF can have multiple children, but the CASE, DEFAULT,
         // or BLOCK will be encountered first for any of the children other
@@ -718,26 +719,30 @@ class ExpressionDecomposer {
         case SWITCH:
         case RETURN:
         case THROW:
-          Preconditions.checkState(child == parent.getFirstChild());
-          return parent;
+          Preconditions.checkState(child.isFirstChildOf(current));
+          return current;
+
         case VAR:
-        case CONST:
+          // Normalization will remove LABELs from VARs.
         case LET:
-          Preconditions.checkState(child == parent.getFirstChild());
-          if (parent.getParent().isVanillaFor()
-              && parent == parent.getParent().getFirstChild()) {
-            return parent.getParent();
-          } else {
-            return parent;
+        case CONST:
+          if (NodeUtil.isAnyFor(parent)) {
+            break; // Name declarations may not be roots if they're for-loop initializers.
           }
+          return current;
+
         // Any of these indicate an unsupported expression:
         case FOR:
-          if (child == parent.getFirstChild()) {
-            return parent;
+          if (child.isFirstChildOf(current)) {
+            // Only the initializer of a for-loop could possibly be decomposed since the other
+            // statements need to execute each iteration.
+            return current;
           }
           // fall through
         case FOR_IN:
         case FOR_OF:
+        case DO:
+        case WHILE:
         case SCRIPT:
         case BLOCK:
         case LABEL:
@@ -745,10 +750,11 @@ class ExpressionDecomposer {
         case DEFAULT_CASE:
         case PARAM_LIST:
           return null;
+
         default:
           break;
       }
-      child = parent;
+      child = current;
     }
 
     throw new IllegalStateException("Unexpected AST structure.");
@@ -839,6 +845,15 @@ class ExpressionDecomposer {
 
     Node child = subExpression;
     for (Node parent : child.getAncestors()) {
+      if (NodeUtil.isNameDeclaration(parent) && !child.isFirstChildOf(parent)) {
+        // Case: `let x = 5, y = 2 * x;` where `child = y`.
+        // Compound declarations cannot generally be decomposed. Later declarations might reference
+        // earlier ones and if it were possible to separate them, `Normalize` would already have
+        // done so. Therefore, we only support decomposing the first declaration.
+        // TODO(b/121157467): FOR initializers are probably the only source of these cases.
+        return DecompositionType.UNDECOMPOSABLE;
+      }
+
       if (parent == expressionRoot) {
         // Done. The walk back to the root of the expression is complete, and
         // nothing was encountered that blocks the call from being moved.

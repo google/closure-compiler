@@ -16,13 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
-import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -162,6 +160,31 @@ public final class ExpressionDecomposerTest {
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE,
         "function f(){ return goo() && foo();}", "foo");
+  }
+
+  @Test
+  public void testCanExposeExpression_compoundDeclaration_inForInitializer_firstElement() {
+    // VAR will already be hoisted by `Normalize`.
+    helperCanExposeExpression(DecompositionType.MOVABLE, "for (var x = foo(), y = 5;;) {}", "foo");
+
+    helperCanExposeExpression(DecompositionType.MOVABLE, "for (let x = foo(), y = 5;;) {}", "foo");
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE, "for (const x = foo(), y = 5;;) {}", "foo");
+  }
+
+  @Test
+  public void testCanExposeExpression_compoundDeclaration_inForInitializer_nthElement() {
+    // TODO(b/121157467) FOR introduces complex scoping that isn't currently `Normalize`d.
+    // Since in some cases we'd effectively end up having to `Normalize` these, decomposition just
+    // bails for now.
+
+    // VAR will already be hoisted by `Normalize`.
+    helperCanExposeExpression(DecompositionType.MOVABLE, "for (var x = 8, y = foo();;) {}", "foo");
+
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "for (let x = 8, y = foo();;) {}", "foo");
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "for (const x = 8, y = foo();;) {}", "foo");
   }
 
   @Test
@@ -625,6 +648,50 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void testExposeExpression_inVanillaForInitializer_simpleExpression() {
+    helperExposeExpression(
+        "for (x = goo() + foo();;) {}",
+        "foo",
+        lines(
+            "var temp_const$jscomp$0 = goo();", //
+            "for (x = temp_const$jscomp$0 + foo();;) {}"));
+  }
+
+  @Test
+  public void testExposeExpression_inVanillaForInitializer_usingLabel() {
+    helperExposeExpression(
+        "LABEL: for (x = goo() + foo();;) {}",
+        "foo",
+        lines(
+            "var temp_const$jscomp$0 = goo();", //
+            "LABEL: for (x = temp_const$jscomp$0 + foo();;) {}"));
+  }
+
+  @Test
+  public void testExposeExpression_inVanillaForInitializer_singleDeclaration_withLetOrConst() {
+    for (String dec : ImmutableList.of("let", "const")) {
+      helperExposeExpression(
+          "for (" + dec + " x = goo() + foo();;) {}",
+          "foo",
+          lines(
+              "var temp_const$jscomp$0 = goo();", //
+              "for (" + dec + " x = temp_const$jscomp$0 + foo();;) {}"));
+    }
+  }
+
+  @Test
+  public void testExposeExpression_inVanillaForInitializer_firstDeclaration_withLetOrConst() {
+    for (String dec : ImmutableList.of("let", "const")) {
+      helperExposeExpression(
+          "for (" + dec + " x = goo() + foo(), y = 5;;) {}",
+          "foo",
+          lines(
+              "var temp_const$jscomp$0 = goo();", //
+              "for (" + dec + " x = temp_const$jscomp$0 + foo(), y = 5;;) {}"));
+    }
+  }
+
+  @Test
   public void testExposeExpression14() {
     helperExposeExpression(
         "function f(){ return goo() && foo();}",
@@ -932,31 +999,6 @@ public final class ExpressionDecomposerTest {
         "foo",
         "var result$jscomp$0=foo();var x = {set a(p) {}, b: result$jscomp$0};");
   }
-
-  @Test
-  public void testExposeExpressionInTemplateLibSub() {
-    helperExposeExpression(
-        "` ${ foo() }  ${ goo() } `;",
-        "goo",
-        "var temp_const$jscomp$0 = foo(); ` ${ temp_const$jscomp$0 }  ${ goo() } `;");
-  }
-
-  @Test
-  public void testExposeSubExpressionInTemplateLibSub() {
-    helperExposeExpression(
-        "` ${ foo() + goo() } `;",
-        "goo",
-        "var temp_const$jscomp$0 = foo(); ` ${ temp_const$jscomp$0 + goo() } `;");
-  }
-
-  @Test
-  public void testMoveExpressionInTemplateLibSub() {
-    helperMoveExpression(
-        "` ${ foo() }  ${ goo() } `;",
-        "foo",
-        "var result$jscomp$0 = foo(); ` ${ result$jscomp$0 }  ${ goo() } `;");
-  }
-
   @Test
   public void testMoveSpread_siblingOfCall_outOfArrayLiteral_usesTempArray() {
     shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
@@ -998,49 +1040,30 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void testFindExpressionRoot1() {
-    assertNode(findExpressionRoot("var x = f()", "f")).hasType(Token.VAR);
+  public void testExposeExpressionInTemplateLibSub() {
+    helperExposeExpression(
+        "` ${ foo() }  ${ goo() } `;",
+        "goo",
+        "var temp_const$jscomp$0 = foo(); ` ${ temp_const$jscomp$0 }  ${ goo() } `;");
   }
 
   @Test
-  public void testFindExpressionRoot2() {
-    assertNode(findExpressionRoot("foo(bar(f()));", "f")).hasType(Token.EXPR_RESULT);
+  public void testExposeSubExpressionInTemplateLibSub() {
+    helperExposeExpression(
+        "` ${ foo() + goo() } `;",
+        "goo",
+        "var temp_const$jscomp$0 = foo(); ` ${ temp_const$jscomp$0 + goo() } `;");
   }
 
   @Test
-  public void testFindExpressionRoot3() {
-    assertThat(findExpressionRoot("for (let x of f()) {}", "f")).isNull();
-  }
-
-  @Test
-  public void testFindExpressionRoot4() {
-    assertThat(findExpressionRoot("for (let x in f()) {}", "f")).isNull();
-  }
-
-  @Test
-  public void testFindExpressionRoot5() {
-    assertNode(findExpressionRoot("for (let x = f();;) {}", "f")).hasType(Token.FOR);
+  public void testMoveExpressionInTemplateLibSub() {
+    helperMoveExpression(
+        "` ${ foo() }  ${ goo() } `;",
+        "foo",
+        "var result$jscomp$0 = foo(); ` ${ result$jscomp$0 }  ${ goo() } `;");
   }
 
   /** Test case helpers. */
-
-  /**
-   * @return The result of calling {@link ExpressionDecomposer#findExpressionRoot} on the CALL
-   *     node in {@code js} whose callee is a NAME matching {@code name}.
-   */
-  @Nullable
-  private Node findExpressionRoot(String js, String name) {
-    Compiler compiler = getCompiler();
-    Node tree = parse(compiler, js);
-    Node call = findCall(tree, name);
-    checkNotNull(call);
-
-    Node root = ExpressionDecomposer.findExpressionRoot(call);
-    if (root != null) {
-      checkState(NodeUtil.isStatement(root), root);
-    }
-    return root;
-  }
 
   private void helperCanExposeFunctionExpression(
       DecompositionType expectedResult, String code, int call) {

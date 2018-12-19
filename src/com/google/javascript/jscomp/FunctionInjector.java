@@ -25,7 +25,6 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
@@ -467,17 +466,14 @@ class FunctionInjector {
       // left-hand-side of the assignments and handling them as EXPRESSION?
       return CallSiteType.VAR_DECL_SIMPLE_ASSIGNMENT;
     } else {
-      Node expressionRoot = ExpressionDecomposer.findExpressionRoot(callNode);
-      if (expressionRoot != null) {
-        ExpressionDecomposer decomposer = getDecomposer(ref.scope);
-        DecompositionType type = decomposer.canExposeExpression(callNode);
-        if (type == DecompositionType.MOVABLE) {
+      ExpressionDecomposer decomposer = getDecomposer(ref.scope);
+      switch (decomposer.canExposeExpression(callNode)) {
+        case MOVABLE:
           return CallSiteType.EXPRESSION;
-        } else if (type == DecompositionType.DECOMPOSABLE) {
+        case DECOMPOSABLE:
           return CallSiteType.DECOMPOSABLE_EXPRESSION;
-        } else {
-          checkState(type == DecompositionType.UNDECOMPOSABLE);
-        }
+        case UNDECOMPOSABLE:
+          break;
       }
     }
 
