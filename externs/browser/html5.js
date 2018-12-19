@@ -134,10 +134,10 @@ OffscreenCanvas.prototype.height;
 
 /**
  * @param {string} contextId
- * @param {!Object=} opt_args
+ * @param {!Object=} opt_options
  * @return {!Object}
  */
-OffscreenCanvas.prototype.getContext = function(contextId, opt_args) {};
+OffscreenCanvas.prototype.getContext = function(contextId, opt_options) {};
 
 /**
  * @return {!ImageBitmap}
