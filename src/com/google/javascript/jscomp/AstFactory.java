@@ -638,6 +638,18 @@ final class AstFactory {
     return result;
   }
 
+  Node createArraylit(Node... elements) {
+    Node result = IR.arraylit(elements);
+    if (isAddingTypes()) {
+      result.setJSType(
+          registry.createTemplatizedType(
+              registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE),
+              // TODO(nickreid): Use a reasonable template type. Remeber to consider SPREAD.
+              getNativeType(JSTypeNative.UNKNOWN_TYPE)));
+    }
+    return result;
+  }
+
   Node createJSCompMakeIteratorCall(Node iterable, Scope scope) {
     String function = "makeIterator";
     Node makeIteratorName = createQName(scope, "$jscomp." + function);

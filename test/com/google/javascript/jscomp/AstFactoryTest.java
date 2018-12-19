@@ -980,4 +980,28 @@ public class AstFactoryTest {
     assertNode(hook).hasToken(Token.HOOK);
     assertType(hook.getJSType()).isEqualTo(getRegistry().createUnionType(stringType, numberType));
   }
+
+  @Test
+  public void testCreateArraylit() {
+    // Given
+    AstFactory astFactory = createTestAstFactory();
+    JSType numberType = getNativeType(JSTypeNative.NUMBER_TYPE);
+
+    Node first = IR.number(0).setJSType(numberType);
+    Node second = IR.number(1).setJSType(numberType);
+    Node third = IR.number(2).setJSType(numberType);
+
+    Node expected =
+        parseAndAddTypes("[0, 1, 2]")
+            .getFirstChild() // Script
+            .getFirstChild() // Expression
+            .getFirstChild(); // Array
+
+    // When
+    Node array = astFactory.createArraylit(first, second, third);
+
+    // Then
+    assertNode(array).isEquivalentTo(expected);
+    assertType(array.getJSType()).isEqualTo(expected.getJSType());
+  }
 }

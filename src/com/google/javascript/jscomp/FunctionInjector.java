@@ -256,15 +256,13 @@ class FunctionInjector {
   }
 
   private static boolean hasSpreadCallArgument(Node callNode) {
-    Predicate<Node> hasSpreadCallArgumentPredicate =
-        new Predicate<Node>() {
-          @Override
-          public boolean apply(Node input) {
-            return input.isSpread();
-          }
-        };
-
-    return NodeUtil.has(callNode, hasSpreadCallArgumentPredicate, Predicates.alwaysTrue());
+    checkArgument(callNode.isCall(), callNode);
+    for (Node arg = callNode.getSecondChild(); arg != null; arg = arg.getNext()) {
+      if (arg.isSpread()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

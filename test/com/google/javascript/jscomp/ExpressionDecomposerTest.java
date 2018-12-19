@@ -67,7 +67,7 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void testCanExposeExpression1() {
+  public void testCannotExpose_expression1() {
     // Can't move or decompose some classes of expressions.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "while(foo());", "foo");
@@ -165,7 +165,7 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void testCanExposeExpression4a() {
+  public void testCannotExpose_expression4a() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "if (goo.a(1, foo()));", "foo");
@@ -178,7 +178,7 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void testCanExposeExpression5a() {
+  public void testCannotExpose_expression5a() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "if (goo['a'](foo()));", "foo");
@@ -191,7 +191,7 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void testCanExposeExpression6a() {
+  public void testCannotExpose_expression6a() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "z:if (goo.a(1, foo()));", "foo");
@@ -270,7 +270,7 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void testCanExposeExpression9() {
+  public void testCannotExpose_expression9() {
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE,
         "function *f() { for (let x of yield y) {} }",
@@ -286,7 +286,7 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void testCanExposeExpression11() {
+  public void testCannotExpose_expression11() {
     // expressions in parameter lists
     helperCanExposeExpression(DecompositionType.UNDECOMPOSABLE, "function f(x = foo()) {}", "foo");
 
@@ -298,6 +298,48 @@ public final class ExpressionDecomposerTest {
 
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "(function ({[foo()]: x}) {})()", "foo");
+  }
+
+  @Test
+  public void testCanExpose_aCall_withSpreadSibling() {
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(...x, y());", "y");
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(y(), ...x);", "y");
+
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "new D(...x, y());", "y");
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "new D(y(), ...x);", "y");
+
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "[...x, y()];", "y");
+    // Array literals cannot be side-effected.
+    helperCanExposeExpression(DecompositionType.MOVABLE, "[y(), ...x];", "y");
+
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(...y());", "y");
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(...y(), x);", "y");
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(x, ...y());", "y");
+
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(...x, x, y());", "y");
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(...x, ...x, y());", "y");
+  }
+
+  @Test
+  public void testCanExpose_anExpression_withSpreadRelative_ifInDifferentFunction() {
+    // TODO(b/121004488): There are potential decompositions that weren't implemented.
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, "f(function() { [...x]; }, y());", "y");
+
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(y(), () => [...x]);", "y");
+
+    helperCanExposeExpression(DecompositionType.MOVABLE, "[() => f(...x), y()];", "y");
+
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE,
+        lines(
+            "[", //
+            "   class {",
+            "     f(x) { return [...x]; }",
+            "   },",
+            "  y()",
+            "];"),
+        "y");
   }
 
   @Test
@@ -913,6 +955,46 @@ public final class ExpressionDecomposerTest {
         "` ${ foo() }  ${ goo() } `;",
         "foo",
         "var result$jscomp$0 = foo(); ` ${ result$jscomp$0 }  ${ goo() } `;");
+  }
+
+  @Test
+  public void testMoveSpread_siblingOfCall_outOfArrayLiteral_usesTempArray() {
+    shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
+    helperExposeExpression(
+        "[...x, foo()];",
+        "foo",
+        lines(
+            "var temp_const$jscomp$0 = [...x];", //
+            "[...temp_const$jscomp$0, foo()];"));
+  }
+
+  @Test
+  public void testMoveSpread_siblingOfCall_outOfFunctionCall_usesTempArray() {
+    shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
+    helperExposeExpression(
+        lines(
+            "function f() { }", //
+            "f(...x, foo());"),
+        "foo",
+        lines(
+            "function f() { }", //
+            "var temp_const$jscomp$1 = f;",
+            "var temp_const$jscomp$0 = [...x];",
+            "temp_const$jscomp$1(...temp_const$jscomp$0, foo());"));
+  }
+
+  @Test
+  public void testMoveSpreadParent_siblingOfCall_outOfFunctionCall_usesNoTempArray() {
+    helperExposeExpression(
+        lines(
+            "function f() { }", //
+            "f([...x], foo());"),
+        "foo",
+        lines(
+            "function f() { }", //
+            "var temp_const$jscomp$1 = f;",
+            "var temp_const$jscomp$0 = [...x];",
+            "temp_const$jscomp$1(temp_const$jscomp$0, foo());"));
   }
 
   @Test

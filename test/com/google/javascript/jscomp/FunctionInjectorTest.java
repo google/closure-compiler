@@ -1667,6 +1667,109 @@ public final class FunctionInjectorTest {
   }
 
   @Test
+  public void testCanInlineReference_isNo_ifCalledWithSpread() {
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO, //
+        lines(
+            "function foo(a) { return a; };", //
+            "foo(...b);"),
+        "foo",
+        INLINE_DIRECT);
+  }
+
+  @Test
+  public void testCanInlineReference_direct_ifArgExpression_containsSpread() {
+    helperInlineReferenceToFunction(
+        lines(
+            "function foo(a) { return a; };", //
+            "foo([...b]);"),
+        lines(
+            "function foo(a) { return a; };", //
+            "[...b]"),
+        "foo",
+        INLINE_DIRECT);
+  }
+
+  @Test
+  public void testCanInlineReference_direct_ifResultIsSpread() {
+    helperInlineReferenceToFunction(
+        lines(
+            "function foo(b) { return [1, 2, b]; }", //
+            "bar(...foo(5));"),
+        lines(
+            "function foo(b) { return [1, 2, b]; }", //
+            "bar(...[1, 2, 5]);"),
+        "foo",
+        INLINE_DIRECT);
+  }
+
+  @Test
+  public void testCanInlineReference_block_ifResultIsSpread() {
+    allowDecomposition = true;
+    helperInlineReferenceToFunction(
+        lines(
+            "function foo(b) {",
+            "  return [1, 2, b];",
+            "}", //
+            "const bar = function() { };",
+            "",
+            "bar(...foo(5));"),
+        lines(
+            "function foo(b) {",
+            "  return [1, 2, b];",
+            "}", //
+            "const bar = function() { };",
+            "",
+            "var JSCompiler_inline_result$jscomp$0",
+            "{",
+            "  JSCompiler_inline_result$jscomp$0 = [1, 2, 5];",
+            "}",
+            "bar(...JSCompiler_inline_result$jscomp$0);"),
+        "foo",
+        INLINE_BLOCK);
+  }
+
+  @Test
+  public void testCanInlineReference_direct_ifPreviousSibling_isSpread() {
+    helperInlineReferenceToFunction(
+        lines(
+            "function foo(b) { return b + 1; }", //
+            "bar(...qux(), foo(5));"),
+        lines(
+            "function foo(b) { return b + 1; }", //
+            "bar(...qux(), 5 + 1);"),
+        "foo",
+        INLINE_DIRECT);
+  }
+
+  @Test
+  public void testCanInlineReference_block_ifPreviousSibling_isSpread() {
+    allowDecomposition = true;
+    helperInlineReferenceToFunction(
+        lines(
+            "function foo(b) {",
+            "  return [1, 2, b];",
+            "}", //
+            "const bar = function() { };",
+            "",
+            "bar(...qux(), foo(5));"),
+        lines(
+            "function foo(b) {",
+            "  return [1, 2, b];",
+            "}",
+            "const bar = function() { };",
+            "",
+            "var JSCompiler_temp_const$jscomp$0 = [...qux()];",
+            "var JSCompiler_inline_result$jscomp$1",
+            "{",
+            "  JSCompiler_inline_result$jscomp$1 = [1, 2, 5];",
+            "}",
+            "bar(...JSCompiler_temp_const$jscomp$0, JSCompiler_inline_result$jscomp$1);"),
+        "foo",
+        INLINE_BLOCK);
+  }
+
+  @Test
   public void testArgumentsReferenceInArrowFunction() {
     assertThat(
             doesFunctionMeetMinimumRequirements(
