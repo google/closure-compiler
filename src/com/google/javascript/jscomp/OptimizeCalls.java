@@ -413,7 +413,6 @@ class OptimizeCalls implements CompilerPass {
     // Avoid modifying a few special case functions. Specifically, $jscomp.inherits to
     // recognize 'inherits' calls. (b/27244988)
     if (name.equals(NodeUtil.JSC_PROPERTY_NAME_FN)
-        || name.equals(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING)
         || name.equals("inherits")
         || name.equals("$jscomp$inherits")
         || name.equals("goog$inherits")) {

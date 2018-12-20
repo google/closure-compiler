@@ -64,8 +64,6 @@ import javax.annotation.Nullable;
  */
 public final class NodeUtil {
 
-  public static final String EXTERN_OBJECT_PROPERTY_STRING =
-      "JSCompiler_ObjectPropertyString";
   static final long MAX_POSITIVE_INTEGER_NUMBER = 1L << 53;
 
   static final String JSC_PROPERTY_NAME_FN = "JSCompiler_renameProperty";

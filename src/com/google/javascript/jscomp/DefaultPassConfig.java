@@ -1777,20 +1777,6 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  /** Pre-process goog.testing.ObjectPropertyString. */
-  private final PassFactory objectPropertyStringPreprocess =
-      new PassFactory("ObjectPropertyStringPreprocess", true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new ObjectPropertyStringPreprocess(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES_NEXT;
-        }
-      };
-
   /** Creates a typed scope and adds types to the type registry. */
   final HotSwapPassFactory resolveTypes =
       new HotSwapPassFactory(PassNames.RESOLVE_TYPES) {
@@ -2874,20 +2860,6 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected FeatureSet featureSet() {
       return ES8_MODULES;
-    }
-  };
-
-  /** Handling for the ObjectPropertyString primitive. */
-  private final PassFactory objectPropertyStringPostprocess =
-      new PassFactory("ObjectPropertyStringPostprocess", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new ObjectPropertyStringPostprocess(compiler);
-    }
-
-    @Override
-    protected FeatureSet featureSet() {
-      return ES5;
     }
   };
 

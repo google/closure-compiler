@@ -313,16 +313,6 @@ public final class OptimizeCallsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDoNotOptimizeJSCompiler_ObjectPropertyString() {
-    test(
-        lines(
-            "function JSCompiler_ObjectPropertyString(a, b) {};",
-            "JSCompiler_ObjectPropertyString(window,'b');"),
-        lines("function JSCompiler_ObjectPropertyString() {};",
-            "JSCompiler_ObjectPropertyString(window,'b');"));
-  }
-
-  @Test
   public void testFunctionArgRemovalFromCallSites() {
     // remove all function arguments
     test(

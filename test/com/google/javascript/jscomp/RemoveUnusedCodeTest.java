@@ -1160,14 +1160,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDoNotOptimizeJSCompiler_ObjectPropertyString() {
-    test("function JSCompiler_ObjectPropertyString(a, b) {};" +
-            "JSCompiler_ObjectPropertyString(window,'b');",
-        "function JSCompiler_ObjectPropertyString() {};" +
-            "JSCompiler_ObjectPropertyString(window,'b');");
-  }
-
-  @Test
   public void testDoNotOptimizeSetters() {
     testSame("({set s(a) {}})");
   }

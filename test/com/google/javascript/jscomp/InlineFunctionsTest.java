@@ -2484,10 +2484,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "foo(window, f); f(1)",
          "function f(x) {return x} " +
          "foo(window, f); 1");
-    // a reference passed to JSCompiler_ObjectPropertyString prevents inlining
-    // as well.
-    testSame("function f(x) {return x} " +
-             "new JSCompiler_ObjectPropertyString(window, f); f(1)");
   }
 
   @Test

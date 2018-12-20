@@ -878,12 +878,6 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDoNotOptimizeJSCompiler_ObjectPropertyString() {
-    testSame("function JSCompiler_ObjectPropertyString(a, b) {return a[b]};" +
-             "JSCompiler_renameProperty(window,'b');");
-  }
-
-  @Test
   public void testMutableValues1() {
     test("function foo(p1) {} foo()",
          "function foo() {var p1} foo()");
