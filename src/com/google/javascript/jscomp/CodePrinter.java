@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.javascript.jscomp.CodePrinter.Builder.CodeGeneratorFactory;
@@ -276,7 +275,7 @@ public final class CodePrinter {
         return endPosition;
       }
 
-      Preconditions.checkState(
+      checkState(
           endPosition.getColumn() <= lineLengths.get(line),
           "End position %s points to a column larger than line length %s",
           endPosition,
