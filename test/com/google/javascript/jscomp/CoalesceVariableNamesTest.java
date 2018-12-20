@@ -391,7 +391,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testObjDestructuringConst1() {
+  public void testObjDestructuringConst() {
     test(
         lines(
             "function f(obj) {",
@@ -401,16 +401,16 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "function f(obj) {",
+            "function f(obj) {", //
             "  {",
-            "    var {foo: obj} = obj;", // TODO(lharker): could we remove the var statement?
+            "    ({foo: obj} = obj);",
             "    alert(obj);",
             "  }",
             "}"));
   }
 
   @Test
-  public void testObjDestructuringConst2() {
+  public void testObjDestructuringConstWithMultipleDeclarations() {
     test(
         lines(
             "function f(obj) {",
@@ -430,14 +430,14 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "    alert(foo);",
             "  }",
             "  {",
-            "    var {bar: obj} = obj;",
+            "    ({bar: obj} = obj);",
             "    alert(obj);",
             "  }",
             "}"));
   }
 
   @Test
-  public void testObjDestructuringConst3() {
+  public void testObjDestructuringConstWithMultipleLvaluesInDecl() {
     testSame(
         lines(
             "function f() {",
@@ -449,19 +449,103 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   @Test
   public void testObjDestructuringVar() {
+    testSame(
+        lines(
+            "function f(param) {", //
+            "  var {prop1: foo, prop2: bar} = param;",
+            "  alert(foo);",
+            "}"));
+  }
+
+  @Test
+  public void testObjDestructuringVarInAsyncFn() {
+    testSame(
+        lines(
+            "async function f(param) {",
+            "  var {prop1: foo, prop2: bar} = param;",
+            "  alert(foo);",
+            "}"));
+  }
+
+  @Test
+  public void testObjDestructuringVarInGeneratorFn() {
+    testSame(
+        lines(
+            "function *f(param) {",
+            "  var {prop1: foo, prop2: bar} = param;",
+            "  alert(foo);",
+            "}"));
+  }
+
+  @Test
+  public void testObjDestructuringVarInAsyncGeneratorFn() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    testSame(
+        lines(
+            "async function *f(param) {",
+            "  var {prop1: foo, prop2: bar} = param;",
+            "  alert(foo);",
+            "}"));
+  }
+
+  @Test
+  public void testLetWithSingleLValuesInForLoopCoalesced() {
     test(
         lines(
-            "function f(param) {",
-            "  const obj = {};",
-            "  var {prop1: foo, prop2: bar} = obj;",
-            "  alert(foo);",
+            "function f(x) {", //
+            "  for (let y = x + 1;;) {",
+            "    alert(y);",
+            "  }",
             "}"),
         lines(
-            "function f(param) {",
-            "  param = {};",
-            "  var {prop1: param, prop2: bar} = param;",
-            "  alert(param);",
+            "function f(x) {", //
+            "  for (x = x + 1;;) {",
+            "    alert(x);",
+            "  }",
             "}"));
+  }
+
+  @Test
+  public void testLetWithMultipleLValuesInForLoopNotCoalesced() {
+    testSame(
+        lines(
+            "function f(x) {", //
+            "  for (let y = x + 1, z = 0;;) {",
+            "    alert(y + z);",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testConstDestructuringDeclInForOf_dropsConst() {
+    test(
+        "function f(param) { for (let [y] of []) {} }",
+        "function f(param) { for ([param] of []) {} }");
+  }
+
+  @Test
+  public void testConstDestructuringInForOfCoalescedWithUseInBlock() {
+    // TODO(b/121276933): coalesce `x` and `y`
+    inFunction("var x = 1; for (let [y] of iter) { y }");
+  }
+
+  @Test
+  public void testReplaceRhsOfDestructuringDeclaration() {
+    inFunction(
+        "let unused = 0; let arr = [1, 2, 3]; const [a, b, c] = arr; alert(a + b + c);",
+        "var unused = 0; unused = [1, 2, 3]; const [a, b, c] = unused; alert(a + b + c);");
+  }
+
+  @Test
+  public void testReplaceRhsOfDestructuringDeclaration_withPseudoNames() {
+    usePseudoName = true;
+    inFunction(
+        "let unused = 0; let arr = [1, 2, 3]; const [a, b, c] = arr; alert(a + b + c);",
+        lines(
+            "var arr_unused = 0;",
+            "arr_unused = [1, 2, 3];",
+            "const [a, b, c] = arr_unused;",
+            "alert(a + b + c);"));
   }
 
   @Test
@@ -483,15 +567,40 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   // We would normally coalesce 'key' with 'collidesWithKey', but in doing so we'd change the 'let'
   // on line 2 to a 'var' which would cause the inner function to capture the wrong value of 'val'.
   @Test
-  public void testCapture() {
+  public void testCaptureLet() {
     testSame(
         lines(
             "function f(param) {",
             "  for (let [key, val] of foo()) {",
             "    param = (x) => { return val(x); };",
             "  }",
-            "  let collideswithKey = 5;",
+            "  let collidesWithKey = 5;",
             "  return param(collidesWithKey);",
+            "}"));
+  }
+
+  // Compare to the earlier case. Since the two-lvalue declaration `var [key, val]` gets normalized
+  // we still coalesce `key` with `collidesWithKey`.
+  @Test
+  public void testCaptureVar() {
+    test(
+        lines(
+            "function f(param) {",
+            "  for (var [key, val] of foo()) {",
+            "    param = (x) => { return val(x); };",
+            "  }",
+            "  let collidesWithKey = 5;",
+            "  return param(collidesWithKey);",
+            "}"),
+        lines(
+            "function f(param) {",
+            "  var key;",
+            "  var val;",
+            "  for ([key, val] of foo()) {",
+            "    param = (x) => { return val(x); };",
+            "  }",
+            "  key = 5;",
+            "  return param(key);",
             "}"));
   }
 

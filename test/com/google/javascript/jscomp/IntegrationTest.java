@@ -308,7 +308,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    alert(foo);",
             "  }",
             "  {",
-            "    var {bar: obj} = obj;",
+            "    ({bar: obj} = obj);",
             "    alert(obj);",
             "  }",
             "}"));
