@@ -155,11 +155,12 @@ class CheckGlobalNames implements CompilerPass {
     Name parent = name.getParent();
 
     JSModuleGraph moduleGraph = compiler.getModuleGraph();
+    boolean isTypedef = isTypedef(name);
     for (Ref ref : name.getRefs()) {
       // Don't worry about global exprs.
       boolean isGlobalExpr = ref.getNode().getParent().isExprResult();
 
-      if (!isDefined && !isTypedef(ref)) {
+      if (!isDefined && !isTypedef) {
         if (!isGlobalExpr) {
           reportRefToUndefinedName(name, ref);
         }
@@ -196,13 +197,19 @@ class CheckGlobalNames implements CompilerPass {
     }
   }
 
-  private static boolean isTypedef(Ref ref) {
-    // If this is an annotated EXPR-GET, don't do anything.
-    Node parent = ref.node.getParent();
-    if (parent.isExprResult()) {
-      JSDocInfo info = ref.node.getJSDocInfo();
-      if (info != null && info.hasTypedefType()) {
-        return true;
+  private static boolean isTypedef(Name name) {
+    if (name.getDeclaration() != null) {
+      // typedefs don't have 'declarations' because you can't assign to them
+      return false;
+    }
+    for (Ref ref : name.getRefs()) {
+      // If this is an annotated EXPR-GET, don't do anything.
+      Node parent = ref.node.getParent();
+      if (parent.isExprResult()) {
+        JSDocInfo info = ref.node.getJSDocInfo();
+        if (info != null && info.hasTypedefType()) {
+          return true;
+        }
       }
     }
     return false;

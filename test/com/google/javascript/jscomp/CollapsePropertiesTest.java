@@ -2017,26 +2017,30 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testCanCollapseSinglePropertyInObjectPattern() {
-    // TODO(b/117673791): collapse x.y -> x$y
-    testSame("const x = {y: 1}; const {y} = x; use(y);");
+    test(
+        "const x = {y: 1}; const {y} = x; use(y);",
+        "var x$y = 1; const x = {}; const {} = x; const y = x$y; use(y);");
   }
 
   @Test
   public void testCanCollapseSinglePropertyInObjectPatternWithDefaultValue() {
-    // TODO(b/117673791): collapse x.y - > x$y
-    testSame("const x = {y: 1}; const {y = 0} = x; use(y);");
+    test(
+        "const x = {y: 1}; const {y = 0} = x; use(y);",
+        "var x$y = 1; const x = {}; const {} = x; const y = void 0 === x$y ? 0 : x$y; use(y);");
   }
 
   @Test
   public void testCanCollapsePropertyInObjectPatternWithKeyBefore() {
-    // TODO(b/117673791): collapse x.y -> x$y
-    testSame("let x = {y: 1, /** @nocollapse */ z: 2}; let {z, y} = x; use(y, z);");
+    test(
+        "let x = {y: 1, /** @nocollapse */ z: 2}; let {z, y} = x; use(y, z);",
+        "var x$y = 1; let x = {/** @nocollapse */ z: 2}; let {z} = x; let y = x$y; use(y, z);");
   }
 
   @Test
   public void testCanCollapsePropertyInObjectPatternWithKeyAfter() {
-    // TODO(b/117673791): collapse x.y -> x$y
-    testSame("let x = {y: 1, /** @nocollapse */ z: 2}; let {y, z=y} = x; use(y, z);");
+    test(
+        "let x = {y: 1, /** @nocollapse */ z: 2}; let {y, z=y} = x; use(y, z);",
+        "var x$y = 1; let x = {/** @nocollapse */ z: 2}; let y = x$y; let {z=y} = x; use(y, z);");
   }
 
   @Test
@@ -2047,22 +2051,33 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "let {x1, x2, y, z1, z2} =  foo.bar;",
             "use(x1, x2, y, z1, z2);"),
         lines(
-            "var foo$bar = {y: 1};",
-            // TODO(b/117673791): collapse foo$bar.y -> foo$bar$y
-            "let {x1, x2, y, z1, z2} =  foo$bar;",
+            "var foo$bar$y = 1;",
+            "var foo$bar = {};",
+            "let {x1, x2} = foo$bar;", // don't collapse x1 etc. because they're undefined
+            "let y = foo$bar$y;",
+            "let {z1, z2} = foo$bar;",
             "use(x1, x2, y, z1, z2);"));
   }
 
   @Test
   public void testCannotCollapsePropertyInNestedObjectPattern() {
-    // TODO(b/117673791): collapse x.y -> x$y
-    testSame("const x = {y: {z: 1}}; const {y: {z}} = x; use(z);");
+    test(
+        "const x = {y: {z: 1}}; const {y: {z}} = x; use(z);",
+        "var x$y = {z: 1}; const x = {}; const {} = x; const {z} = x$y; use(z);");
   }
 
   @Test
   public void testCanCollapseSinglePropertyInObjectPatternAssign() {
-    // TODO(b/117673791): collapse x.y -> x$y
-    testSame("const x = {y: 1}; var y; ({y} = x); use(y);");
+    test(
+        "const x = {y: 1}; var y; ({y} = x); use(y);",
+        "var x$y = 1; const x = {}; var y; ({} = x, y = x$y); use(y);");
+  }
+
+  @Test
+  public void testCanCollapseSinglePropertyInObjectPatternInForLoopClosure() {
+    test(
+        "const x = {y: 1}; for (const {y} = x; true;) { use(() => y); }",
+        "var x$y = 1; const x = {}; for (const {} = x, y = x$y; true;) { use(() => y); }");
   }
 
   @Test

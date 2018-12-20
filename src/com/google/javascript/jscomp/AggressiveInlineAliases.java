@@ -612,11 +612,19 @@ class AggressiveInlineAliases implements CompilerPass {
             checkState(ref.type == Type.ALIASING_GET, ref);
             break;
           }
-          Node newNode = aliasingRef.node.cloneTree();
-          Node node = ref.node;
-          node.getParent().replaceChild(node, newNode);
-          compiler.reportChangeToEnclosingScope(newNode);
-          newNodes.add(new AstChange(ref.module, ref.scope, newNode));
+          if (ref.node.isStringKey()) {
+            // e.g. `y` in `const {y} = x;`
+            DestructuringGlobalNameExtractor.reassignDestructringLvalue(
+                ref.node, aliasingRef.node.cloneTree(), newNodes, ref, compiler);
+          } else {
+            // e.g. `x.y`
+            checkState(ref.node.isGetProp() || ref.node.isName());
+            Node newNode = aliasingRef.node.cloneTree();
+            Node node = ref.node;
+            node.replaceWith(newNode);
+            compiler.reportChangeToEnclosingScope(newNode);
+            newNodes.add(new AstChange(ref.module, ref.scope, newNode));
+          }
           aliasingName.removeRef(ref);
           break;
         default:
@@ -678,7 +686,7 @@ class AggressiveInlineAliases implements CompilerPass {
       for (int i = 0; i <= depth; i++) {
         if (target.isGetProp()) {
           target = target.getFirstChild();
-        } else if (NodeUtil.isObjectLitKey(target)) {
+        } else if (NodeUtil.isObjectLitKeyInObjectLit(target)) {
           // Object literal key definitions are a little trickier, as we
           // need to find the assignment target
           Node gparent = target.getGrandparent();
@@ -688,9 +696,21 @@ class AggressiveInlineAliases implements CompilerPass {
             checkState(NodeUtil.isObjectLitKey(gparent));
             target = gparent;
           }
+        } else if (target.getParent().isObjectPattern()) {
+          // The rhs of the pattern has its own 'Ref' and will already have been rewritten.
+          Node grandparent = target.getGrandparent();
+          // Right now GlobalNamespace only handles object patterns in assignments or declarations,
+          // not nested object patterns, so expect the grandparent to be an assign/decl.
+          checkState(grandparent.isAssign() || grandparent.isDestructuringLhs());
+          target = null;
+
         } else {
           throw new IllegalStateException("unexpected: " + target);
         }
+      }
+      if (target == null) {
+        // Ignore the rhs of destructuring patterns
+        continue;
       }
       checkState(target.isGetProp() || target.isName());
       Node newValue = value.cloneTree();

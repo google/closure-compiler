@@ -303,6 +303,11 @@ class CollapseProperties implements CompilerPass {
       //    reference list. Only collapse the set, not the alias.
       if (!NodeUtil.isObjectLitKey(r.node) && (r.getTwin() == null || r.isSet())) {
         flattenNameRef(alias, r.node, rParent, originalName);
+      } else if (r.node.isStringKey() && r.node.getParent().isObjectPattern()) {
+        Node newNode = IR.name(alias).srcref(r.node);
+        NodeUtil.copyNameAnnotations(r.node, newNode);
+        DestructuringGlobalNameExtractor.reassignDestructringLvalue(
+            r.node, newNode, null, r, compiler);
       }
     }
 

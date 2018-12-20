@@ -262,8 +262,8 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
 
   @Test
   public void testTypedefAliasGivesNoWarning() {
-    // TODO(b/117673791): don't warn, this might be for typechecking
-    testWarning("var a = {}; /** @typedef {number} */ a.b; const b = a.b;", UNDEFINED_NAME_WARNING);
+
+    testSame("var a = {}; /** @typedef {number} */ a.b; const b = a.b;");
   }
 
   @Test
@@ -570,13 +570,9 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
 
   @Test
   public void testDestructuringUndefinedProperty() {
-    // TODO(lharker): this should warn
-    testSame(
-        lines(
-            "var ns = {};", //
-            "/** @enum */",
-            "ns.Modes = {A, B};",
-            "const {C} = ns.Modes;"));
+    testWarning(
+        lines("var ns = {};", "/** @enum */", "ns.Modes = {A, B};", "const {C} = ns.Modes;"),
+        UNDEFINED_NAME_WARNING);
   }
 
   @Test

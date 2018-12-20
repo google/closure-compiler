@@ -1892,65 +1892,109 @@ test(
 
   @Test
   public void testInlineDestructuredAliasProp() {
-    // TODO(b/117673791): replace `b.y` with `a.x`
-    testSame("var a = {x: 2}; var b = {}; b.y = a.x; var {y} = b; use(y);");
+    test(
+        "var a = {x: 2}; var b = {}; b.y = a.x; var {y} = b; use(y);",
+        "var a = {x: 2}; var b = {}; b.y = null; var {} = b; var y = null; use(a.x);");
   }
 
   @Test
   public void testInlineDestructuredAliasPropWithKeyBefore() {
-    // TODO(b/117673791): replace `y` with `a.x`
-    testSame("var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; var {z, y} = b; use(y + z);");
+    test(
+        "var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; var {z, y} = b; use(y + z);",
+        lines(
+            "var a = {x: 2};",
+            "var b = {z: 3};",
+            "b.y = null;",
+            "b.z = 4;",
+            "var {z} = b;",
+            "var y = null;",
+            "use(a.x + z);"));
   }
 
   @Test
   public void testInlineDestructuredAliasPropWithKeyAfter() {
-    // TODO(b/117673791): replace `b.y` with `a.x`
-    testSame("var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; var {y, z} = b; use(y + z);");
+    test(
+        "var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; var {y, z} = b; use(y + z);",
+        lines(
+            "var a = {x: 2};",
+            "var b = {z: 3};",
+            "b.y = null;",
+            "b.z = 4;",
+            "var y = null;",
+            "var {z} = b;",
+            "use(a.x + z);"));
   }
 
   @Test
   public void testInlineDestructuredAliasPropWithKeyBeforeAndAfter() {
-    // TODO(b/117673791): replace `b.y` with `a.x`
-    testSame(
+    test(
         lines(
             "var a = {x: 2};",
             "var b = {z: 3};",
             "b.y = a.x;",
             "b.z = 4;", // add second assign so that this won't get inlined
             "var {x, y, z} = b;",
-            "use(y + z);"));
+            "use(y + z);"),
+        lines(
+            "var a = {x: 2};",
+            "var b = {z: 3};",
+            "b.y = null;",
+            "b.z = 4;",
+            "var {x} = b;",
+            "var y = null;",
+            "var {z} = b;",
+            "use(a.x + z);"));
   }
 
   @Test
   public void testDestructuredPropAccessInAssignWithKeyBefore() {
-    // TODO(b/117673791): replace `b.y` with `a.x`
-    testSame(
+    test(
         lines(
             "var a = {x: 2};",
             "var b = {};",
             "b.y = a.x;",
             "var obj = {};",
             "({missing: obj.foo, y: obj.foo} = b);",
+            "use(obj.foo);"),
+        lines(
+            "var a = {x: 2};",
+            "var b = {};",
+            "b.y = null;",
+            "var obj = {};",
+            "({missing: obj.foo} = b, obj.foo = a.x);",
             "use(obj.foo);"));
   }
 
   @Test
   public void testDestructuredPropAccessInAssignWithKeyAfter() {
-    // TODO(b/117673791): replace `b.y` with `a.x`
-    testSame(
+    test(
         lines(
             "var a = {x: 2};",
             "var b = {};",
             "b.y = a.x;",
             "var obj = {};",
             "({y: obj.foo, missing: obj.foo} = b);",
+            "use(obj.foo);"),
+        lines(
+            "var a = {x: 2};",
+            "var b = {};",
+            "b.y = null;",
+            "var obj = {};",
+            "(obj.foo = a.x, {missing: obj.foo} = b);",
             "use(obj.foo);"));
   }
 
   @Test
   public void testDestructuredPropAccessInDeclarationWithDefault() {
-    // TODO(b/117673791): replace `b.y` with `a.x`
-    testSame(lines("var a = {x: {}};", "var b = {};", "b.y = a.x;", "var {y = 0} = b;", "use(y);"));
+    test(
+        lines("var a = {x: {}};", "var b = {};", "b.y = a.x;", "var {y = 0} = b;", "use(y);"),
+        lines(
+            "var a = {x: {}};",
+            "var b = {};",
+            "b.y = null;",
+            "var {} = b;",
+            "var y = void 0 === a.x ? 0 : a.x;",
+            "use(y);"));
   }
 
   /**

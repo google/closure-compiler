@@ -1420,7 +1420,6 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testDestructingAliasWithConstructor() {
-    // TODO(b/69293284): Make this not warn and correctly replace "new ctor" with "new ns$ctor".
     test(
         lines(
             "var ns = {};",
@@ -1432,21 +1431,29 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var ns = {};",
             "/** @constructor */",
             "var ns$ctor = function() {}",
-            "const {ctor} = ns;",
-            "let c = new ctor;"),
-        warning(CollapseProperties.UNSAFE_NAMESPACE_WARNING));
+            "const {} = ns;",
+            "const ctor = ns$ctor;",
+            "let c = new ctor;"));
   }
 
   @Test
   public void namespaceInDestructuringPattern() {
-    // TODO(b/117673791): collapse ns.x and ns.y
-    testSame(
+    test(
         lines(
             "const ns = {};",
             "ns.x = 1;",
             "ns.y = 2;",
             "let {x, y} = ns;",
             "x = 4;", // enforce that we can't inline x -> ns.x because it's set multiple times
+            "use(x + y);"),
+        lines(
+            "const ns = {};",
+            "var ns$x = 1;",
+            "var ns$y = 2;",
+            "let x = ns$x;",
+            "let {} = ns;",
+            "let y = ns$y;",
+            "x = 4;",
             "use(x + y);"));
   }
 
@@ -1465,10 +1472,10 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "/** @constructor */",
             "var ns$Y = function() {};",
             "var ns$Y$prop = 3;",
-            "let {Y} = ns;",
-            "use(Y.prop);"),
-        // TODO(b/117673791): replace Y.prop -> ns$Y$prop; right now this is broken.
-        warning(CollapseProperties.UNSAFE_NAMESPACE_WARNING));
+            "let {} = ns;",
+            "let Y = ns$Y;",
+            // TODO(b/117673791): replace Y.prop -> ns$Y$prop; right now this is broken.
+            "use(Y.prop);")); // assignment
   }
 
   @Test

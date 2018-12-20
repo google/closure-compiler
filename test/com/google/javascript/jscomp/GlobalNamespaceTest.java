@@ -235,6 +235,78 @@ public final class GlobalNamespaceTest {
     assertThat(cDotX.getParent()).isEqualTo(c);
   }
 
+  @Test
+  public void testObjectPatternAliasInDeclaration() {
+    GlobalNamespace namespace = parse("const ns = {a: 3}; const {a: b} = ns;");
+
+    Name bar = namespace.getSlot("ns");
+    assertThat(bar.getGlobalSets()).isEqualTo(1);
+    assertThat(bar.getAliasingGets()).isEqualTo(0);
+    assertThat(bar.getTotalGets()).isEqualTo(1);
+
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(1);
+    assertThat(nsA.getAliasingGets()).isEqualTo(1);
+
+    Name b = namespace.getSlot("b");
+    assertThat(b.getGlobalSets()).isEqualTo(1);
+    assertThat(b.getTotalGets()).isEqualTo(0);
+  }
+
+  @Test
+  public void testNestedObjectPatternAliasInDeclaration() {
+    GlobalNamespace namespace = parse("const ns = {a: {b: 3}}; const {a: {b}} = ns;");
+
+    Name bar = namespace.getSlot("ns");
+    assertThat(bar.getGlobalSets()).isEqualTo(1);
+    assertThat(bar.getAliasingGets()).isEqualTo(0);
+
+    // we treat ns.a as having an 'aliasing' get since we don't traverse into the nested pattern
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(1);
+    assertThat(nsA.getAliasingGets()).isEqualTo(1);
+
+    Name nsAB = namespace.getSlot("ns.a.b");
+    assertThat(nsAB.getGlobalSets()).isEqualTo(1);
+    // we don't consider this an 'aliasing get' because it's in a nested pattern
+    assertThat(nsAB.getAliasingGets()).isEqualTo(0);
+
+    Name b = namespace.getSlot("b");
+    assertThat(b.getGlobalSets()).isEqualTo(1);
+    assertThat(b.getTotalGets()).isEqualTo(0);
+  }
+
+  @Test
+  public void testObjectPatternAliasInAssign() {
+    GlobalNamespace namespace = parse("const ns = {a: 3}; const x = {}; ({a: x.y} = ns);");
+
+    Name bar = namespace.getSlot("ns");
+    assertThat(bar.getGlobalSets()).isEqualTo(1);
+    assertThat(bar.getAliasingGets()).isEqualTo(0);
+
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(1);
+    assertThat(nsA.getAliasingGets()).isEqualTo(1);
+
+    Name xY = namespace.getSlot("x.y");
+    // TODO(b/117673791): this should be 1
+    assertThat(xY.getGlobalSets()).isEqualTo(0);
+  }
+
+  @Test
+  public void testObjectPatternAliasInForOf() {
+    GlobalNamespace namespace = parse("const ns = {a: 3}; for (const {a: b} of [ns]) {}");
+
+    Name bar = namespace.getSlot("ns");
+    assertThat(bar.getGlobalSets()).isEqualTo(1);
+    assertThat(bar.getAliasingGets()).isEqualTo(1);
+
+    // GlobalNamespace ignores for-of and array literals, not realizing that `b` reads `ns.a`
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(1);
+    assertThat(nsA.getAliasingGets()).isEqualTo(0);
+  }
+
   private GlobalNamespace parse(String js) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();

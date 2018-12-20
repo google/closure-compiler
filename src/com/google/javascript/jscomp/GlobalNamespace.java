@@ -232,8 +232,7 @@ class GlobalNamespace
     }
   }
 
-  private void scanFromNode(
-    BuildGlobalNamespace builder, JSModule module, Scope scope, Node n) {
+  private void scanFromNode(BuildGlobalNamespace builder, JSModule module, Scope scope, Node n) {
     // Check affected parent nodes first.
     Node parent = n.getParent();
     if ((n.isName() || n.isGetProp()) && parent.isGetProp()) {
@@ -241,6 +240,15 @@ class GlobalNamespace
       // we want also want to visit "foo.bar.prop", since that's a new global qname we are now
       // referencing.
       scanFromNode(builder, module, scope, n.getParent());
+    } else if (n.getPrevious() != null && n.getPrevious().isObjectPattern()) {
+      // e.g. if we change `const {x} = bar` to `const {x} = foo`, add a new reference to `foo.x`
+      // attached to the STRING_KEY `x`
+      Node pattern = n.getPrevious();
+      for (Node key : pattern.children()) {
+        if (key.isStringKey()) {
+          scanFromNode(builder, module, scope, key);
+        }
+      }
     }
     builder.collect(module, scope, n);
   }
@@ -340,13 +348,17 @@ class GlobalNamespace
           name = null;
           if (parent.isObjectLit()) {
             name = getNameForObjLitKey(n);
+            isSet = true;
           } else if (parent.isClassMembers()) {
             name = getNameForClassMembers(n);
+            isSet = true;
+          } else if (parent.isObjectPattern()) {
+            name = getNameForObjectPatternKey(n);
+            // not a set
           }
           if (name == null) {
             return;
           }
-          isSet = true;
           switch (n.getToken()) {
             case MEMBER_FUNCTION_DEF:
               type = getValueType(n.getFirstChild());
@@ -576,6 +588,34 @@ class GlobalNamespace
     }
 
     /**
+     * Gets the fully qualified name corresponding to an object pattern key, as long as it is not in
+     * a nested pattern and is destructuring an qualified name.
+     *
+     * @param stringKey A child of an OBJECT_PATTERN node
+     * @return The global name, or null if {@code n} doesn't correspond to the key of an object
+     *     literal that can be named
+     */
+    String getNameForObjectPatternKey(Node stringKey) {
+      Node parent = stringKey.getParent();
+      checkState(parent.isObjectPattern());
+
+      Node patternParent = parent.getParent();
+      if (patternParent.isAssign() || patternParent.isDestructuringLhs()) {
+        // this is a top-level string key. we find the name.
+        Node rhs = patternParent.getSecondChild();
+        if (rhs == null || !rhs.isQualifiedName()) {
+          // The rhs is null for patterns in parameter lists, enhanced for loops, and catch exprs
+          return null;
+        }
+        return rhs.getQualifiedName() + "." + stringKey.getString();
+
+      } else {
+        // skip this step for nested patterns for now
+        return null;
+      }
+    }
+
+    /**
      * Gets the type of a value or simple expression.
      *
      * @param n An r-value in an assignment or variable declaration (not null)
@@ -778,6 +818,18 @@ class GlobalNamespace
         case CLASS:
           // This node is the superclass in an extends clause.
           type = Ref.Type.SUBCLASSING_GET;
+          break;
+        case OBJECT_PATTERN:
+          // handle STRING_KEYS in object patterns
+          type = Ref.Type.ALIASING_GET;
+          break;
+        case DESTRUCTURING_LHS:
+        case ASSIGN:
+          // The rhs of an assign or a name declaration is escaped if it's assigned to a name
+          // directly; it's a 'direct get' if it's actually destructured, since we know what
+          // properties are accessed
+          Node lhs = n.getPrevious();
+          type = lhs.isObjectPattern() ? Ref.Type.DIRECT_GET : Ref.Type.ALIASING_GET;
           break;
         default:
           type = Ref.Type.ALIASING_GET;
@@ -1124,6 +1176,10 @@ class GlobalNamespace
 
     int getCallGets() {
       return callGets;
+    }
+
+    int getTotalGets() {
+      return totalGets;
     }
 
     int getDeleteProps() {

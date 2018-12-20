@@ -3643,6 +3643,9 @@ public final class NodeUtil {
    * Determines whether a node represents an object literal key (e.g. key1 in {key1: value1, key2:
    * value2}). Computed properties are excluded here (see b/111621528).
    *
+   * <p>TODO(lharker): rename this to isMaybeObjectLitKey, since it also returns true for object
+   * pattern keys.
+   *
    * @param node A node
    */
   static boolean isObjectLitKey(Node node) {
@@ -3655,6 +3658,22 @@ public final class NodeUtil {
       default:
         return false;
     }
+  }
+
+  /**
+   * Determines whether a node represents an object literal key (e.g. key1 in {key1: value1, key2:
+   * value2}) and is in an object literal. Computed properties are excluded here (see b/111621528).
+   *
+   * <p>TODO(lharker): rename isObjectLitKey to isMaybeObjectLitKey, since that method also returns
+   * true for object pattern keys, and rename this to isObjectLitKey
+   *
+   * @param node A node
+   */
+  static boolean isObjectLitKeyInObjectLit(Node node) {
+    if (!node.getParent().isObjectLit()) {
+      return false;
+    }
+    return isObjectLitKey(node);
   }
 
   /**
