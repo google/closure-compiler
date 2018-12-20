@@ -252,10 +252,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "  var y = $jscomp$destructuring$var2.next().value;",
             "  var z = $jscomp$destructuring$var2.next().value;",
             "}"));
-    // TODO(b/77597706): inject this runtime library in Es6InjectRuntimeLibraries, so it will happen
-    // before typechecking.
-    assertThat(((NoninjectingCompiler) getLastCompiler()).injected)
-        .containsExactly("es6/util/makeiterator");
 
     test(
         "function f({key: x = 5}) {}",
@@ -283,6 +279,29 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
             "  var x = $jscomp$destructuring$var1.x === undefined ?",
             "      5 : $jscomp$destructuring$var1.x",
+            "}"));
+  }
+
+  @Test
+  public void testObjectDestructuringFunctionBadJsdoc() {
+    // see https://github.com/google/closure-compiler/issues/3175
+    setExpectParseWarningsThisTest(); // intentionally pass bad JSDoc
+    ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
+    test(
+        lines(
+            "/**",
+            " * @param {{foo: string[]}} obj",
+            " * @param {string} id",
+            " */",
+            "function f({foo}, id) {}"),
+        lines(
+            "/**",
+            " * @param {{foo: string[]}} obj",
+            " * @param {string} id",
+            " */",
+            "function f($jscomp$destructuring$var0, id) {",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "  var foo = $jscomp$destructuring$var1.foo;",
             "}"));
   }
 
@@ -420,8 +439,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(f());",
             "let one = $jscomp$destructuring$var0.next().value;",
             "let others = $jscomp.arrayFromIterator($jscomp$destructuring$var0);"));
-    assertThat(((NoninjectingCompiler) getLastCompiler()).injected)
-        .containsExactly("es6/util/arrayfromiterator", "es6/util/makeiterator");
 
     test(
         "function f([first, ...rest]) {}",
@@ -637,9 +654,9 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         "/** @param {{x: number}} obj */ function f({x}) {}",
         lines(
             "/** @param {{x: number}} obj */",
-            "function f(obj) {",
-            "  var $jscomp$destructuring$var0 = obj;",
-            "  var x = $jscomp$destructuring$var0.x;",
+            "function f($jscomp$destructuring$var0) {",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "  var x = $jscomp$destructuring$var1.x;",
             "}"));
 
     test(
@@ -647,36 +664,30 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
 
     test(
+        lines("/** @param {{x: number}} obj */", "var f = function({x}) {}"),
         lines(
             "/** @param {{x: number}} obj */",
-            "var f = function({x}) {}"),
-        lines(
-            "/** @param {{x: number}} obj */",
-            "var f = function(obj) {",
-            "  var $jscomp$destructuring$var0 = obj;",
-            "  var x = $jscomp$destructuring$var0.x;",
+            "var f = function($jscomp$destructuring$var0) {",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "  var x = $jscomp$destructuring$var1.x;",
             "}"));
 
     test(
+        lines("/** @param {{x: number}} obj */", "f = function({x}) {}"),
         lines(
             "/** @param {{x: number}} obj */",
-            "f = function({x}) {}"),
-        lines(
-            "/** @param {{x: number}} obj */",
-            "f = function(obj) {",
-            "  var $jscomp$destructuring$var0 = obj;",
-            "  var x = $jscomp$destructuring$var0.x;",
+            "f = function($jscomp$destructuring$var0) {",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "  var x = $jscomp$destructuring$var1.x;",
             "}"));
 
     test(
+        lines("/** @param {{x: number}} obj */", "ns.f = function({x}) {}"),
         lines(
             "/** @param {{x: number}} obj */",
-            "ns.f = function({x}) {}"),
-        lines(
-            "/** @param {{x: number}} obj */",
-            "ns.f = function(obj) {",
-            "  var $jscomp$destructuring$var0 = obj;",
-            "  var x = $jscomp$destructuring$var0.x;",
+            "ns.f = function($jscomp$destructuring$var0) {",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "  var x = $jscomp$destructuring$var1.x;",
             "}"));
 
     test(
@@ -689,14 +700,13 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "};"));
 
     test(
+        lines("/** @param {{x: number}=} obj */", "ns.f = function({x} = {x: 0}) {};"),
         lines(
             "/** @param {{x: number}=} obj */",
-            "ns.f = function({x} = {x: 0}) {};"),
-        lines(
-            "/** @param {{x: number}=} obj */",
-            "ns.f = function(obj) {",
-            "  var $jscomp$destructuring$var0 = obj===undefined ? {x:0} : obj;",
-            "  var x = $jscomp$destructuring$var0.x",
+            "ns.f = function($jscomp$destructuring$var0) {",
+            "  var $jscomp$destructuring$var1 = ",
+            "      $jscomp$destructuring$var0===undefined ? {x:0} : $jscomp$destructuring$var0;",
+            "  var x = $jscomp$destructuring$var1.x",
             "};"));
   }
 
