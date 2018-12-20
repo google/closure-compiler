@@ -32,9 +32,10 @@ import org.junit.runners.JUnit4;
 public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   private static final String MATH =
-      "/** @const */ var Math = {};" +
-      "/** @nosideeffects */ Math.random = function(){};" +
-      "/** @nosideeffects */ Math.sin = function(){};";
+      lines(
+          "/** @const */ var Math = {};",
+          "/** @nosideeffects */ Math.random = function(){};",
+          "/** @nosideeffects */ Math.sin = function(){};");
 
   public PeepholeRemoveDeadCodeTest() {
     super(MATH);
@@ -45,9 +46,9 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        DefinitionUseSiteFinder definitionFinder = new DefinitionUseSiteFinder(compiler);
-        definitionFinder.process(externs, root);
-        new PureFunctionIdentifier(compiler, definitionFinder).process(externs, root);
+        NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, true);
+        defFinder.process(externs, root);
+        new PureFunctionIdentifier(compiler, defFinder).process(externs, root);
         PeepholeOptimizationsPass peepholePass =
             new PeepholeOptimizationsPass(compiler, getName(), new PeepholeRemoveDeadCode());
         peepholePass.process(externs, root);

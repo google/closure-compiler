@@ -32,11 +32,15 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * A root pass that container for other passes that should run on
- * with a single call graph (currently a DefinitionUseSiteFinder).
- * Expected passes include:
- *   - optimize parameters (unused and constant parameters)
- *   - optimize returns (unused)
+ * A root pass that container for other passes that should run on with a single call graph.
+ *
+ * <p>Known passes include:
+ *
+ * <ul>
+ *   <li>{@link OptimizeParameters} (remove unused and inline constant parameters)
+ *   <li>{@link OptimizeReturns} (remove unused)
+ *   <li>{@link DevirtualizePrototypeMethods}
+ * </ul>
  *
  * @author johnlenz@google.com (John Lenz)
  */
