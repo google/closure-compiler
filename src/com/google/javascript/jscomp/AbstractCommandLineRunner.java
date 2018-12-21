@@ -1061,13 +1061,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     compiler = createCompiler();
     B options = createOptions();
+    setRunOptions(options);
 
     List<SourceFile> externs = createExterns(options);
-
     List<JSModule> modules = null;
     Result result = null;
-
-    setRunOptions(options);
 
     rootRelativePathsMap = constructRootRelativePathsMap();
 

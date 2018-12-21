@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -479,7 +480,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
     /** Set the charset to use when reading from an input stream or file. */
     public Builder withCharset(Charset charset) {
-      this.charset = charset;
+      this.charset = checkNotNull(charset);
       return this;
     }
 
