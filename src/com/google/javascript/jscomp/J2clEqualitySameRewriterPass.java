@@ -56,19 +56,19 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
 
   private Node trySubstituteEqualitySame(Node callNode) {
     Node firstExpr = callNode.getSecondChild();
+    NodeValue firstExprValue = getKnownLiteralValue(firstExpr);
     Node secondExpr = callNode.getLastChild();
+    NodeValue secondExprValue = getKnownLiteralValue(secondExpr);
 
-    if (!NodeUtil.isLiteralValue(firstExpr, true) && !NodeUtil.isLiteralValue(secondExpr, true)) {
+    if (firstExprValue == NodeValue.UNKNOWN && secondExprValue == NodeValue.UNKNOWN) {
       return callNode;
     }
 
-    if (NodeUtil.isNullOrUndefined(firstExpr)) {
-      // Note that technically 'undefined' might have side effect (see tests) but since at least one
-      // side is literal, we can still safely re-order.
+    if (firstExprValue == NodeValue.NULL_OR_UNDEFINED) {
       return rewriteNullCheck(secondExpr, firstExpr);
     }
 
-    if (NodeUtil.isNullOrUndefined(secondExpr)) {
+    if (secondExprValue == NodeValue.NULL_OR_UNDEFINED) {
       return rewriteNullCheck(firstExpr, secondExpr);
     }
 
@@ -100,6 +100,31 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
     firstExpr.detach();
     secondExpr.detach();
     return IR.sheq(firstExpr, secondExpr);
+  }
+
+  private enum NodeValue {
+    NULL_OR_UNDEFINED,
+    NON_NULL,
+    UNKNOWN,
+  }
+
+  private static NodeValue getKnownLiteralValue(Node n) {
+    switch (NodeUtil.getKnownValueType(n)) {
+      case VOID:
+        return NodeUtil.canBeSideEffected(n) ? NodeValue.UNKNOWN : NodeValue.NULL_OR_UNDEFINED;
+      case NULL:
+        return NodeValue.NULL_OR_UNDEFINED;
+
+      case NUMBER:
+      case STRING:
+      case BOOLEAN:
+      case OBJECT:
+        return NodeValue.NON_NULL;
+
+      case UNDETERMINED:
+        return NodeValue.UNKNOWN;
+    }
+    throw new AssertionError("Unknown ValueType");
   }
 
   private static boolean isEqualitySameCall(Node node) {

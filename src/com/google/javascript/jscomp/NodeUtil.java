@@ -1549,8 +1549,7 @@ public final class NodeUtil {
    * has side-effects.
    */
   static boolean canBeSideEffected(Node n) {
-    Set<String> emptySet = ImmutableSet.of();
-    return canBeSideEffected(n, emptySet, null);
+    return canBeSideEffected(n, ImmutableSet.of("undefined", "Infinity", "NaN"), null);
   }
 
   /**

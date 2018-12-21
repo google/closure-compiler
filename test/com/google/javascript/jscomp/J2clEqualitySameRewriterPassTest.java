@@ -61,8 +61,10 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "var b = {}",
             "Equality.$same(b, 5);",
             "Equality.$same(b, []);",
+            "Equality.$same(b, !a);",
             "Equality.$same(b, null);",
-            "Equality.$same(null, b);"),
+            "Equality.$same(null, b);",
+            "Equality.$same(b, /** @type {null} */ (null));"),
         lines(
             "0 === '';",
             "var a = 'ABC';",
@@ -70,8 +72,10 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "var b = {};",
             "b === 5;",
             "b === [];",
+            "b === !a;",
             "b == null;",
-            "b == null;"));
+            "b == null;",
+            "b == /** @type {null} */ (null);"));
   }
 
   @Test
@@ -114,8 +118,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "Equality.$same(str, allType);",
             "function hasSideEffects(){};",
             // Note that the first parameter has value 'undefined' but it has side effects.
-            "Equality.$same(void hasSideEffects(), hasSideEffects());",
-            "Equality.$same(void hasSideEffects(), {a: hasSideEffects()});"));
+            "Equality.$same(void hasSideEffects(), hasSideEffects());"));
   }
 
   @Test
