@@ -49,7 +49,7 @@ public abstract class SourceMapTestCase {
 
   protected DetailLevel detailLevel = SourceMap.DetailLevel.ALL;
   protected boolean sourceMapIncludeSourcesContent = false;
-
+  
   protected static class RunResult {
       String generatedSource;
       SourceMap sourceMap;
@@ -83,8 +83,12 @@ public abstract class SourceMapTestCase {
 
   protected void checkSourceMap(String fileName, String js, String expectedMap) throws IOException {
     RunResult result = compile(js, fileName);
-    assertThat(result.sourceMapFileContent).isEqualTo(expectedMap);
-    assertThat(getSourceMap(result)).isEqualTo(result.sourceMapFileContent);
+    assertWithMessage(result.generatedSource)
+        .that(result.sourceMapFileContent)
+        .isEqualTo(expectedMap);
+    assertWithMessage(result.generatedSource)
+        .that(getSourceMap(result))
+        .isEqualTo(result.sourceMapFileContent);
   }
 
   protected String getSourceMap(RunResult result) throws IOException {
@@ -293,7 +297,7 @@ public abstract class SourceMapTestCase {
 
   protected CompilerOptions getCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
     options.setSourceMapOutputPath("testcode_source_map.out");
     options.setSourceMapFormat(getSourceMapFormat());
     options.setSourceMapDetailLevel(detailLevel);
