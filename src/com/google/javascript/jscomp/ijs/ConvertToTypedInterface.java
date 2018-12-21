@@ -70,6 +70,7 @@ public class ConvertToTypedInterface implements CompilerPass {
 
   private static final ImmutableSet<String> CALLS_TO_PRESERVE =
       ImmutableSet.of(
+          "Polymer",
           "goog.addSingletonGetter",
           "goog.define",
           "goog.forwardDeclare",
@@ -150,9 +151,10 @@ public class ConvertToTypedInterface implements CompilerPass {
             case CALL:
               Node callee = expr.getFirstChild();
               checkState(!callee.matchesQualifiedName("goog.scope"));
-              if (!CALLS_TO_PRESERVE.contains(callee.getQualifiedName())) {
-                NodeUtil.deleteNode(n, t.getCompiler());
+              if (CALLS_TO_PRESERVE.contains(callee.getQualifiedName())) {
+                return true;
               }
+              NodeUtil.deleteNode(n, t.getCompiler());
               return false;
             case ASSIGN:
               Node lhs = expr.getFirstChild();
