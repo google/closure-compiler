@@ -686,7 +686,7 @@ class AggressiveInlineAliases implements CompilerPass {
       for (int i = 0; i <= depth; i++) {
         if (target.isGetProp()) {
           target = target.getFirstChild();
-        } else if (NodeUtil.isObjectLitKeyInObjectLit(target)) {
+        } else if (NodeUtil.isObjectLitKey(target)) {
           // Object literal key definitions are a little trickier, as we
           // need to find the assignment target
           Node gparent = target.getGrandparent();

@@ -63,7 +63,7 @@ class DefinitionsRemover {
       return new MemberFunctionDefinition(n, isExtern);
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return new AssignmentDefinition(parent, isExtern);
-    } else if (NodeUtil.isObjectLitKey(n)) {
+    } else if (NodeUtil.mayBeObjectLitKey(n)) {
       return new ObjectLiteralPropertyDefinition(n, n.getFirstChild(), isExtern);
     } else if (NodeUtil.getEnclosingType(n, Token.PARAM_LIST) != null && n.isName()) {
       Node paramList = NodeUtil.getEnclosingType(n, Token.PARAM_LIST);
@@ -110,7 +110,7 @@ class DefinitionsRemover {
       return true;
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return true;
-    } else if (NodeUtil.isObjectLitKey(n)) {
+    } else if (NodeUtil.mayBeObjectLitKey(n)) {
       return true;
     } else if (parent.isParamList()) {
       return true;

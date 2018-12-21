@@ -3640,15 +3640,14 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines whether a node represents an object literal key (e.g. key1 in {key1: value1, key2:
-   * value2}). Computed properties are excluded here (see b/111621528).
-   *
-   * <p>TODO(lharker): rename this to isMaybeObjectLitKey, since it also returns true for object
-   * pattern keys.
+   * Determines whether a node represents a possible object literal key (e.g. key1 in {key1: value1,
+   * key2: value2}). Computed properties are excluded here (see b/111621528). This method does not
+   * check whether the node is actually in an object literal! it also returns true for object
+   * pattern keys, and member functions/getters in ES6 classes.
    *
    * @param node A node
    */
-  static boolean isObjectLitKey(Node node) {
+  static boolean mayBeObjectLitKey(Node node) {
     switch (node.getToken()) {
       case STRING_KEY:
       case GETTER_DEF:
@@ -3664,16 +3663,10 @@ public final class NodeUtil {
    * Determines whether a node represents an object literal key (e.g. key1 in {key1: value1, key2:
    * value2}) and is in an object literal. Computed properties are excluded here (see b/111621528).
    *
-   * <p>TODO(lharker): rename isObjectLitKey to isMaybeObjectLitKey, since that method also returns
-   * true for object pattern keys, and rename this to isObjectLitKey
-   *
    * @param node A node
    */
-  static boolean isObjectLitKeyInObjectLit(Node node) {
-    if (!node.getParent().isObjectLit()) {
-      return false;
-    }
-    return isObjectLitKey(node);
+  static boolean isObjectLitKey(Node node) {
+    return node.getParent().isObjectLit() && mayBeObjectLitKey(node);
   }
 
   /**
@@ -4832,7 +4825,7 @@ public final class NodeUtil {
     Node parent = node.getParent();
     if (parent.isGetProp() && node == parent.getLastChild()) {
       return convention.isConstantKey(node.getString());
-    } else if (isObjectLitKey(node)) {
+    } else if (mayBeObjectLitKey(node)) {
       return convention.isConstantKey(node.getString());
     } else if (node.isName()) {
       return convention.isConstant(node.getString());
@@ -5279,7 +5272,7 @@ public final class NodeUtil {
         return getBestJSDocInfoNode(parent);
       } else if (parent.isAssign()) {
         return getBestJSDocInfoNode(parent);
-      } else if (isObjectLitKey(parent) || parent.isComputedProp()) {
+      } else if (mayBeObjectLitKey(parent) || parent.isComputedProp()) {
         return parent;
       } else if ((parent.isFunction() || parent.isClass()) && n == parent.getFirstChild()) {
         // n is the NAME node of the function/class.
@@ -5307,7 +5300,7 @@ public final class NodeUtil {
       return parent;
     } else if (parent.isAssign()) {
       return parent.getFirstChild();
-    } else if (isObjectLitKey(parent) || parent.isComputedProp()) {
+    } else if (mayBeObjectLitKey(parent) || parent.isComputedProp()) {
       return parent;
     } else if ((parent.isHook() && parent.getFirstChild() != n)
         || parent.isOr()
@@ -5360,7 +5353,7 @@ public final class NodeUtil {
     if (lValue == null || lValue.getParent() == null) {
       return null;
     }
-    if (isObjectLitKey(lValue) || lValue.isComputedProp()) {
+    if (mayBeObjectLitKey(lValue) || lValue.isComputedProp()) {
       return getBestLValue(lValue.getParent());
     } else if (isGet(lValue)) {
       return lValue.getFirstChild();
@@ -5385,7 +5378,7 @@ public final class NodeUtil {
     }
     // TODO(sdh): Tighten this to simply require !lValue.isQuotedString()
     // Could get rid of the isJSIdentifier check, but may need to fix depot.
-    if (isObjectLitKey(lValue)) {
+    if (mayBeObjectLitKey(lValue)) {
       Node owner = getBestLValue(lValue.getParent());
       if (owner != null) {
         String ownerName = getBestLValueName(owner);

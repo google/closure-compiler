@@ -311,7 +311,7 @@ class ExpressionDecomposer {
     }
 
     // Never try to decompose an object literal key.
-    checkState(!NodeUtil.isObjectLitKey(n), n);
+    checkState(!NodeUtil.mayBeObjectLitKey(n), n);
 
     // Decompose the children in reverse evaluation order.  This simplifies
     // determining if the any of the children following have side-effects.

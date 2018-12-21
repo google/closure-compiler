@@ -411,7 +411,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     private String getPrototypePropertyNameFromRValue(Node rValue) {
       Node lValue = NodeUtil.getBestLValue(rValue);
       if (lValue == null
-          || !((NodeUtil.isObjectLitKey(lValue) && !lValue.isQuotedString())
+          || !((NodeUtil.mayBeObjectLitKey(lValue) && !lValue.isQuotedString())
               || NodeUtil.isExprAssign(lValue.getGrandparent()))) {
         return null;
       }

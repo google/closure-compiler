@@ -225,7 +225,7 @@ class GlobalNamespace
     BuildGlobalNamespace builder = new BuildGlobalNamespace();
 
     for (AstChange info : newNodes) {
-      if (!info.node.isQualifiedName() && !NodeUtil.isObjectLitKey(info.node)) {
+      if (!info.node.isQualifiedName() && !NodeUtil.mayBeObjectLitKey(info.node)) {
         continue;
       }
       scanFromNode(builder, info.module, info.scope, info.node);
@@ -988,7 +988,7 @@ class GlobalNamespace
         }
       }
 
-      if (parent != null && NodeUtil.isObjectLitKey(n)) {
+      if (parent != null && NodeUtil.mayBeObjectLitKey(n)) {
         // Object literal keys have no prefix that's referenced directly per
         // key, so we're done.
         return true;

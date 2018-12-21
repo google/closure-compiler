@@ -1060,7 +1060,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (info != null) {
         return true;
       }
-      if (lValue != null && NodeUtil.isObjectLitKey(lValue)) {
+      if (lValue != null && NodeUtil.mayBeObjectLitKey(lValue)) {
         return false;
       }
       // TODO(johnlenz): consider unifying global and local behavior

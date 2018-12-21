@@ -436,23 +436,43 @@ public final class NodeUtilTest {
   }
 
   @Test
-  public void testIsObjectLiteralKey1() {
-    assertIsObjectLiteralKey(parseExpr("({})"), false);
-    assertIsObjectLiteralKey(parseExpr("a"), false);
-    assertIsObjectLiteralKey(parseExpr("'a'"), false);
-    assertIsObjectLiteralKey(parseExpr("1"), false);
-    assertIsObjectLiteralKey(parseExpr("({a: 1})").getFirstChild(), true);
-    assertIsObjectLiteralKey(parseExpr("({1: 1})").getFirstChild(), true);
-    assertIsObjectLiteralKey(parseExpr("({get a(){}})").getFirstChild(), true);
-    assertIsObjectLiteralKey(parseExpr("({set a(b){}})").getFirstChild(), true);
+  public void testMayBeObjectLitKey() {
+    assertMayBeObjectLitKey(parseExpr("({})"), false);
+    assertMayBeObjectLitKey(parseExpr("a"), false);
+    assertMayBeObjectLitKey(parseExpr("'a'"), false);
+    assertMayBeObjectLitKey(parseExpr("1"), false);
+    assertMayBeObjectLitKey(parseExpr("({a: 1})").getFirstChild(), true);
+    assertMayBeObjectLitKey(parseExpr("({1: 1})").getFirstChild(), true);
+    assertMayBeObjectLitKey(parseExpr("({get a(){}})").getFirstChild(), true);
+    assertMayBeObjectLitKey(parseExpr("({set a(b){}})").getFirstChild(), true);
+    // returns false for computed properties (b/111621528)
+    assertMayBeObjectLitKey(parseExpr("({['a']: 1})").getFirstChild(), false);
+    // returns true for non-object-literal keys
+    assertMayBeObjectLitKey(parseExpr("({a} = {})").getFirstFirstChild(), true);
+    assertMayBeObjectLitKey(parseExpr("(class { a() {} })").getLastChild().getFirstChild(), true);
   }
 
+  @Test
+  public void testIsObjectLitKey() {
+    assertIsObjectLitKey(parseExpr("({a: 1})").getFirstChild(), true);
+    // returns false for computed properties (b/111621528)
+    assertMayBeObjectLitKey(parseExpr("({['a']: 1})").getFirstChild(), false);
+    // returns false for object patterns
+    assertIsObjectLitKey(parseExpr("({a} = {})").getFirstFirstChild(), false);
+    assertIsObjectLitKey(parseExpr("(class { a() {} })").getLastChild().getFirstChild(), false);
+  }
+
+  /** Returns the parsed expression (e.g. returns a NAME given 'a') */
   private Node parseExpr(String js) {
     Node root = parse(js);
     return root.getFirstFirstChild();
   }
 
-  private void assertIsObjectLiteralKey(Node node, boolean expected) {
+  private void assertMayBeObjectLitKey(Node node, boolean expected) {
+    assertThat(NodeUtil.mayBeObjectLitKey(node)).isEqualTo(expected);
+  }
+
+  private void assertIsObjectLitKey(Node node, boolean expected) {
     assertThat(NodeUtil.isObjectLitKey(node)).isEqualTo(expected);
   }
 
