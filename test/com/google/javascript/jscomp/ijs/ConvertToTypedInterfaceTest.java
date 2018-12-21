@@ -1702,6 +1702,37 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCommonJsModules() {
+    testSame("const foo = require('./foo.js');");
+
+    testSame(
+        lines(
+            "const {Baz} = require('./baz.js');",
+            "",
+            "exports.Foo = class {",
+            "  /** @return {!Baz} */ getBaz() {}",
+            "};"));
+
+    test(
+        lines(
+            "module.exports = class Foo {",
+            "  /** @return {number} */ get42() { return 40 + 2; }",
+            "};"),
+        lines("module.exports = class Foo {", "  /** @return {number} */ get42() {}", "};"));
+
+    testSame(
+        lines(
+            "const {Bar, Baz} = require('./a/b/c.js');",
+            "",
+            "class Foo extends Bar {",
+            "  /** @return {!Baz} */ getBaz() {}",
+            "}",
+            "",
+            "exports = {Foo};",
+            "module.exports = {Foo};"));
+  }
+
+  @Test
   public void testEmptyFile() {
     test(new String[] {"const x = 42;", ""}, new String[] {"/** @const {number} */ var x;", ""});
   }

@@ -399,7 +399,8 @@ abstract class PotentialDeclaration {
 
   private static boolean isExportLhs(Node lhs) {
     return (lhs.isName() && lhs.matchesQualifiedName("exports"))
-        || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"));
+        || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"))
+        || lhs.matchesQualifiedName("module.exports");
   }
 
   static boolean isImportRhs(@Nullable Node rhs) {
@@ -409,7 +410,8 @@ abstract class PotentialDeclaration {
     Node callee = rhs.getFirstChild();
     return callee.matchesQualifiedName("goog.require")
         || callee.matchesQualifiedName("goog.requireType")
-        || callee.matchesQualifiedName("goog.forwardDeclare");
+        || callee.matchesQualifiedName("goog.forwardDeclare")
+        || callee.matchesQualifiedName("require");
   }
 
   private static void removeStringKeyValue(Node stringKey) {

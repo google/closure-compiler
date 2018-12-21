@@ -60,7 +60,8 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
             Node callee = expr.getFirstChild();
             if (callee.matchesQualifiedName("goog.provide")) {
               currentFile.markProvided(expr.getLastChild().getString());
-            } else if (callee.matchesQualifiedName("goog.require")) {
+            } else if (callee.matchesQualifiedName("goog.require")
+                || callee.matchesQualifiedName("require")) {
               currentFile.recordImport(expr.getLastChild().getString());
             } else if (callee.matchesQualifiedName("goog.define")) {
               currentFile.recordDefine(expr);
