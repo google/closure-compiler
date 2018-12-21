@@ -156,6 +156,12 @@ Intl.DateTimeFormat.supportedLocalesOf = function(locales, opt_options) {};
 Intl.DateTimeFormat.prototype.format = function(date) {};
 
 /**
+ * @param {(!Date|number)=} date
+ * @return {Array<{type: string, value: string}>}
+ */
+Intl.DateTimeFormat.prototype.formatToParts = function(date) {};
+
+/**
  * @return {{locale: string, calendar: string, numberingSystem: string,
  *    timeZone: (string|undefined), weekday: (string|undefined),
  *    era: (string|undefined), year: (string|undefined),
