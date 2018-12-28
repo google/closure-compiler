@@ -207,4 +207,12 @@ public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
             "let FunBehavior = {",
             "};"));
   }
+
+  @Test
+  public void testPolymerBehaviorWithoutRhsDoesntCrash() {
+    disableTypeCheck();
+
+    testError(
+        "/** @polymerBehavior */ let FunBehavior;", PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR);
+  }
 }

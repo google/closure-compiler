@@ -50,22 +50,20 @@ final class PolymerPassSuppressBehaviors extends AbstractPostOrderCallback {
       if (NodeUtil.isNameDeclaration(n)) {
         behaviorValue = n.getFirstFirstChild();
       }
-      suppressBehavior(behaviorValue);
+      suppressBehavior(behaviorValue, n);
     }
   }
 
-  /**
-   * Strip property type annotations and add suppressions on functions.
-   */
-  private void suppressBehavior(Node behaviorValue) {
+  /** Strip property type annotations and add suppressions on functions. */
+  private void suppressBehavior(Node behaviorValue, Node reportNode) {
     if (behaviorValue == null) {
-      compiler.report(JSError.make(behaviorValue, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));
+      compiler.report(JSError.make(reportNode, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));
       return;
     }
 
     if (behaviorValue.isArrayLit()) {
       for (Node child : behaviorValue.children()) {
-        suppressBehavior(child);
+        suppressBehavior(child, behaviorValue);
       }
     } else if (behaviorValue.isObjectLit()) {
       stripPropertyTypes(behaviorValue);
