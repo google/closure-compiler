@@ -197,10 +197,10 @@ public final class XtbMessageBundle implements MessageBundle {
         case PLACEHOLDER_ELEM_NAME:
           checkState(msgBuilder != null);
           String phRef = atts.getValue(PLACEHOLDER_NAME_ATT_NAME);
-          phRef = JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes(phRef);
           if (isIcuMessage) {
             msgBuilder.appendStringPart(asIcuPlaceholder(phRef));
           } else {
+            phRef = JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes(phRef);
             msgBuilder.appendPlaceholderReference(phRef);
           }
           break;
