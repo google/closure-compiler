@@ -395,6 +395,66 @@ public final class ModuleLoaderTest {
   }
 
   @Test
+  public void testLocateNodeModuleWithMultipleRootsSimple() {
+    // Ensure that root modules work with Node resolver.
+    ImmutableList<CompilerInput> compilerInputs =
+        inputs(
+            // node_modules in generated_files directory. Note that generated_files
+            // is used as root directory so this node_modules should be equivalent to just
+            // "/node_modules"
+            "/generated_files/node_modules/second.js",
+
+            // file that will be basis for resolving modules in this test.
+            "/foo.js");
+
+    ModuleLoader loader =
+        new ModuleLoader(
+            null,
+            ImmutableList.of("generated_files/"),
+            compilerInputs,
+            new NodeModuleResolver.Factory(ImmutableMap.of()),
+            ModuleLoader.PathResolver.RELATIVE);
+
+    assertUri("/node_modules/second.js", loader.resolve("/foo.js").resolveJsModule("second"));
+  }
+
+  @Test
+  public void testLocateNodeModuleWithMultipleRoots() {
+    // Ensure that root modules work with Node resolver.
+    ImmutableList<CompilerInput> compilerInputs =
+        inputs(
+            // node_modules in root directory.
+            "/node_modules/first.js",
+
+            // node_modules in generated_files directory. Note that generated_files
+            // is used as root directory so this node_modules should be equivalent to just
+            // "/node_modules"
+            "/generated_files/node_modules/second.js",
+
+            // Here node_modules is not root or insite a root path. So it should be not accessible
+            // from foo.js.
+            "/some_other/node_modules/third.js",
+
+            // file that will be basis for resolving modules in this test.
+            "/foo.js");
+
+    ModuleLoader loader =
+        new ModuleLoader(
+            null,
+            ImmutableList.of("generated_files/"),
+            compilerInputs,
+            new NodeModuleResolver.Factory(ImmutableMap.of()),
+            ModuleLoader.PathResolver.RELATIVE);
+
+    // 'first' and 'second' should resolve from foo.js
+    assertUri("/node_modules/first.js", loader.resolve("/foo.js").resolveJsModule("first"));
+    assertUri("/node_modules/second.js", loader.resolve("/foo.js").resolveJsModule("second"));
+
+    // 'third' doesn't resolve
+    assertThat(loader.resolve("/foo.js").resolveJsModule("third")).isNull();
+  }
+
+  @Test
   public void testWebpack() {
     ImmutableMap<String, String> webpackModulesById =
         ImmutableMap.of(
