@@ -39,7 +39,6 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -474,7 +473,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
     /** Set the charset to use when reading from an input stream or file. */
     public Builder withCharset(Charset charset) {
-      this.charset = checkNotNull(charset);
+      this.charset = charset;
       return this;
     }
 
@@ -490,6 +489,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
     @GwtIncompatible("java.io.File")
     public SourceFile buildFromPath(Path path) {
+      checkNotNull(path);
+      checkNotNull(charset);
       if (isZipEntry(path.toString())) {
         return fromZipEntry(path.toString(), charset);
       }
@@ -498,6 +499,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
     @GwtIncompatible("java.net.URL")
     public SourceFile buildFromUrl(URL url) {
+      checkNotNull(url);
+      checkNotNull(charset);
       return new AtUrl(url, originalPath, charset, kind);
     }
 
@@ -520,14 +523,11 @@ public class SourceFile implements StaticSourceFile, Serializable {
     }
   }
 
-
   //////////////////////////////////////////////////////////////////////////////
   // Implementations
 
-  /**
-   * A source file where the code has been preloaded.
-   */
-  static class Preloaded extends SourceFile {
+  /** A source file where the code has been preloaded. */
+  private static class Preloaded extends SourceFile {
     private static final long serialVersionUID = 1L;
 
     Preloaded(String fileName, String originalPath, String code, SourceKind kind) {
@@ -537,11 +537,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
     }
   }
 
-  /**
-   * A source file where the code will be dynamically generated
-   * from the injected interface.
-   */
-  static class Generated extends SourceFile {
+  /** A source file where the code will be dynamically generated from the injected interface. */
+  private static class Generated extends SourceFile {
     // Avoid serializing generator and remove the burden to make classes that implement
     // Generator serializable. There should be no need to obtain generated source in the
     // second stage of compilation. Making the generator transient relies on not clearing the
@@ -585,18 +582,16 @@ public class SourceFile implements StaticSourceFile, Serializable {
    * delay loading the code into memory as long as possible.
    */
   @GwtIncompatible("com.google.common.io.CharStreams")
-  static class OnDisk extends SourceFile {
+  private static class OnDisk extends SourceFile {
     private static final long serialVersionUID = 1L;
     private transient Path path;
-    private transient Charset inputCharset = UTF_8;
+    private transient Charset inputCharset;
 
     OnDisk(Path path, String originalPath, Charset c, SourceKind kind) {
       super(path.toString(), kind);
       this.path = path;
+      this.inputCharset = c;
       setOriginalPath(originalPath);
-      if (c != null) {
-        this.setCharset(c);
-      }
     }
 
     @Override
@@ -637,41 +632,18 @@ public class SourceFile implements StaticSourceFile, Serializable {
       super.setCode(null);
     }
 
-    /**
-     * Store the Charset specification as the string version of the name,
-     * rather than the Charset itself.  This allows us to serialize the
-     * SourceFile class.
-     * @param c charset to use when reading the input.
-     */
-    public void setCharset(Charset c) {
-      inputCharset = c;
-    }
-
-    /**
-     * Get the Charset specifying how we're supposed to read the file
-     * in off disk and into UTF-16.  This is stored as a strong to allow
-     * SourceFile to be serialized.
-     * @return Charset object representing charset to use.
-     */
-    public Charset getCharset() {
-      return inputCharset;
-    }
-
     @GwtIncompatible("ObjectOutputStream")
     private void writeObject(java.io.ObjectOutputStream out) throws Exception {
-      // Clear the cached source.
       out.defaultWriteObject();
-      out.writeObject(inputCharset != null ? inputCharset.name() : null);
-      out.writeObject(path != null ? path.toUri() : null);
+      out.writeObject(inputCharset.name());
+      out.writeObject(path.toUri());
     }
 
     @GwtIncompatible("ObjectInputStream")
     private void readObject(java.io.ObjectInputStream in) throws Exception {
       in.defaultReadObject();
-      String inputCharsetName = (String) in.readObject();
-      inputCharset = inputCharsetName != null ? Charset.forName(inputCharsetName) : null;
-      URI uri = (URI) in.readObject();
-      path = uri != null ? Paths.get(uri) : null;
+      inputCharset = Charset.forName((String) in.readObject());
+      path = Paths.get((URI) in.readObject());
 
       // Code will be reread or restored.
       super.setCode(null);
@@ -679,29 +651,22 @@ public class SourceFile implements StaticSourceFile, Serializable {
   }
 
   /**
-   * A source file at a URL where the code is only read into memory if absolutely
-   * necessary. We will try to delay loading the code into memory as long as
-   * possible.
-   * <p>
-   * In practice this is used to load code in entries inside of zip files.
+   * A source file at a URL where the code is only read into memory if absolutely necessary. We will
+   * try to delay loading the code into memory as long as possible.
+   *
+   * <p>In practice this is used to load code in entries inside of zip files.
    */
   @GwtIncompatible("java.net.URL")
-  static class AtUrl extends SourceFile {
+  private static class AtUrl extends SourceFile {
     private static final long serialVersionUID = 1L;
     private final URL url;
-
-    // This is stored as a String, but passed in and out as a Charset so that
-    // we can serialize the class.
-    // Default input file format for the compiler has always been UTF_8.
-    private String inputCharset = UTF_8.name();
+    private transient Charset inputCharset;
 
     AtUrl(URL url, String originalPath, Charset c, SourceKind kind) {
       super(originalPath, SourceKind.STRONG);
-      super.setOriginalPath(originalPath);
+      this.inputCharset = c;
       this.url = url;
-      if (c != null) {
-        this.setCharset(c);
-      }
+      setOriginalPath(originalPath);
     }
 
     @Override
@@ -714,7 +679,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
         // cache, because its default internal caching would defeat our own cache management.
         urlConnection.setUseCaches(false);
         InputStream inputStream = urlConnection.getInputStream();
-        cachedCode = CharStreams.toString(new InputStreamReader(inputStream, this.getCharset()));
+        cachedCode = CharStreams.toString(new InputStreamReader(inputStream, inputCharset));
         // Must close the stream or else the cache won't be cleared.
         inputStream.close();
 
@@ -734,7 +699,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
         return super.getCodeReader();
       } else {
         // If we haven't pulled the code into memory yet, don't.
-        return Resources.asCharSource(url, StandardCharsets.UTF_8).openStream();
+        return Resources.asCharSource(url, inputCharset).openStream();
       }
     }
 
@@ -745,29 +710,17 @@ public class SourceFile implements StaticSourceFile, Serializable {
       super.setCode(null);
     }
 
-    /**
-     * Store the Charset specification as the string version of the name,
-     * rather than the Charset itself.  This allows us to serialize the
-     * SourceFile class.
-     * @param c charset to use when reading the input.
-     */
-    public void setCharset(Charset c) {
-      inputCharset = c.name();
-    }
-
-    /**
-     * Get the Charset specifying how we're supposed to read the URL
-     * into UTF-16.  This is stored as a string to allow SourceFile to be
-     * serialized.
-     * @return Charset object representing charset to use.
-     */
-    public Charset getCharset() {
-      return Charset.forName(inputCharset);
+    @GwtIncompatible("ObjectOutputStream")
+    private void writeObject(java.io.ObjectOutputStream os) throws Exception {
+      os.defaultWriteObject();
+      os.writeObject(inputCharset.name());
     }
 
     @GwtIncompatible("ObjectInputStream")
     private void readObject(java.io.ObjectInputStream in) throws Exception {
       in.defaultReadObject();
+      inputCharset = Charset.forName((String) in.readObject());
+
       // Code will be reread or restored.
       super.setCode(null);
     }
