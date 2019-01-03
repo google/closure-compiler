@@ -145,6 +145,17 @@ public class NodeTraversal {
     }
   }
 
+  /**
+   * Abstract callback to visit all non-extern nodes in postorder. Note: Even though type-summary
+   * nodes are included under the externs roots, they are traversed by this callback.
+   */
+  public abstract static class ExternsSkippingCallback implements Callback {
+    @Override
+    public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return !n.isScript() || !n.isFromExterns() || NodeUtil.isFromTypeSummary(n);
+    }
+  }
+
   /** Abstract callback to visit all nodes in postorder. */
   @FunctionalInterface
   public static interface AbstractPostOrderCallbackInterface {

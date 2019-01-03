@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
@@ -25,7 +25,7 @@ import java.util.List;
  * For every Polymer Behavior, strip property type annotations and add suppress checktypes on
  * functions.
  */
-final class PolymerPassSuppressBehaviors extends AbstractPostOrderCallback {
+final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
 
   private final AbstractCompiler compiler;
 
