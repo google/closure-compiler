@@ -87,5 +87,10 @@ final class PolymerPassErrors {
           "When a Polymer property is declared in the constructor, its JSDoc "
               + "should only be in the constructor, not on the Polymer properties configuration.");
 
+  static final DiagnosticType POLYMER_UNPARSABLE_STRING =
+      DiagnosticType.error(
+          "JSC_POLYMER_UNPARSABLE_STRING",
+          "The Polymer computed property or complex observer string could not be parsed.");
+
   private PolymerPassErrors() {}
 }
