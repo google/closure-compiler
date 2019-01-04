@@ -21,12 +21,23 @@
  * @externs
  */
 
+/**
+ * @typedef {{
+ *     stripTrailingSlashes: (boolean|undefined),
+ *     cancellable: (boolean|undefined),
+ * }}
+ */
+angular.$ResourceOptions;
 
 /**
  * The $resource service is a factory for creating a resource class.
  *
- * @typedef {function(string, !Object=,
- *     !Object.<string, angular.ResourceAction>=):angular.Resource}
+ * @typedef {function(
+ *       string,
+ *       !Object=,
+ *       !Object.<string, angular.ResourceAction>=,
+ *       !angular.$ResourceOptions=)
+ *     :angular.Resource}
  */
 angular.$resource;
 
