@@ -2552,7 +2552,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       } else if (enclosingFunction.isGeneratorFunction()) {
         // Unwrap the template variable from a generator function's declared return type.
         // e.g. if returnType is "Generator<string>", make it just "string".
-        returnType = getTemplateTypeOfGenerator(returnType);
+        returnType = JsIterables.getElementType(returnType, typeRegistry);
       } else if (enclosingFunction.isAsyncFunction()) {
         // e.g. `!Promise<string>` => `string|!IThenable<string>`
         // We transform the expected return type rather than the actual return type so that the
@@ -2592,7 +2592,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (jsType.isFunctionType()) {
       FunctionType functionType = jsType.toMaybeFunctionType();
       JSType returnType = functionType.getReturnType();
-      declaredYieldType = getTemplateTypeOfGenerator(returnType);
+      declaredYieldType = JsIterables.getElementType(returnType, typeRegistry);
     }
 
     // fetching the yielded value's type
@@ -2622,32 +2622,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         actualYieldType,
         declaredYieldType,
         "Yielded type does not match declared return type.");
-  }
-
-  private JSType getTemplateTypeOfGenerator(JSType generator) {
-    return getTemplateTypeOfGenerator(typeRegistry, generator);
-  }
-
-  /**
-   * Returns the given type's resolved template type corresponding to the corresponding to the
-   * Generator, Iterable or Iterator template key if possible.
-   *
-   * <p>If the given type is not an Iterator or Iterable, returns the unknown type..
-   */
-  static JSType getTemplateTypeOfGenerator(JSTypeRegistry typeRegistry, JSType generator) {
-    TemplateTypeMap templateTypeMap = generator.autobox().getTemplateTypeMap();
-    if (templateTypeMap.hasTemplateKey(typeRegistry.getIterableTemplate())) {
-      // Generator JSDoc says
-      // @return {!Iterable<SomeElementType>}
-      // or
-      // @return {!Generator<SomeElementType>}
-      return templateTypeMap.getResolvedTemplateType(typeRegistry.getIterableTemplate());
-    } else if (templateTypeMap.hasTemplateKey(typeRegistry.getIteratorTemplate())) {
-      // Generator JSDoc says
-      // @return {!Iterator<SomeElementType>}
-      return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorTemplate());
-    }
-    return typeRegistry.getNativeType(UNKNOWN_TYPE);
   }
 
   private void visitTaggedTemplateLit(NodeTraversal t, Node n) {

@@ -266,7 +266,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         if (genFunc.getJSType() != null && genFunc.getJSType().isFunctionType()) {
           FunctionType fnType = genFunc.getJSType().toMaybeFunctionType();
           this.originalGenReturnType = fnType.getReturnType();
-          yieldType = TypeCheck.getTemplateTypeOfGenerator(registry, originalGenReturnType);
+          yieldType = JsIterables.getElementType(originalGenReturnType, registry);
         }
 
         JSType globalContextType = registry.getGlobalType("$jscomp.generator.Context");
