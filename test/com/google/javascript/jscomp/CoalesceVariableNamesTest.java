@@ -331,8 +331,8 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "  }",
             "  if (true) {",
             "    param = [];",
-            "    for (const kv of []) {",
-            "      param = kv.key;",
+            "    for (param of []) {",
+            "      param = param.key;",
             "    }",
             "  }",
             "}"));
@@ -525,8 +525,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   @Test
   public void testConstDestructuringInForOfCoalescedWithUseInBlock() {
-    // TODO(b/121276933): coalesce `x` and `y`
-    inFunction("var x = 1; for (let [y] of iter) { y }");
+    inFunction("var x = 1; for (let [y] of iter) { y }", "var x = 1; for ([x] of iter) { x }");
   }
 
   @Test
