@@ -1,0 +1,19 @@
+'use strict';
+if (!self.window) {
+  self.window = self;
+  self.window.top = self;
+}
+var __jscov = window.top["__jscov"] || (window.top["__jscov"] = {"fileNames":[], "instrumentedLines":[], "executedLines":[]});
+var JSCompiler_lcov_data_CoverageInstrumentationPassTest_EsModule_jsdata = [];
+__jscov["executedLines"].push(JSCompiler_lcov_data_CoverageInstrumentationPassTest_EsModule_jsdata);
+__jscov["instrumentedLines"].push("0d");
+__jscov["fileNames"].push("CoverageInstrumentationPassTest/EsModule.jsdata");
+JSCompiler_lcov_data_CoverageInstrumentationPassTest_EsModule_jsdata[0] = true;
+import*as foo from "bar";
+JSCompiler_lcov_data_CoverageInstrumentationPassTest_EsModule_jsdata[2] = true;
+export function qux() {
+  JSCompiler_lcov_data_CoverageInstrumentationPassTest_EsModule_jsdata[2] = true;
+  JSCompiler_lcov_data_CoverageInstrumentationPassTest_EsModule_jsdata[3] = true;
+  console.log("baz");
+}
+;

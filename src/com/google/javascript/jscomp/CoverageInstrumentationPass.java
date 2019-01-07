@@ -95,6 +95,11 @@ class CoverageInstrumentationPass implements CompilerPass {
       }
       Node firstScript = rootNode.getFirstChild();
       checkState(firstScript.isScript());
+      // If any passes run after we need to preserve the MODULE_BODY structure of scripts - we can't
+      // just add to a script if it is a module.
+      if (firstScript.hasChildren() && firstScript.getFirstChild().isModuleBody()) {
+        firstScript = firstScript.getFirstChild();
+      }
       addHeaderCode(firstScript);
     }
   }

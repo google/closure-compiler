@@ -150,6 +150,9 @@ class CoverageInstrumentationCallback extends
     if (node.isScript()) {
       String fileName = getFileName(traversal);
       if (instrumentationData.get(fileName) != null) {
+        if (node.hasChildren() && node.getFirstChild().isModuleBody()) {
+          node = node.getFirstChild();
+        }
         node.addChildrenToFront(newHeaderNode(traversal, node).removeChildren());
       }
       traversal.reportCodeChange();
@@ -195,7 +198,7 @@ class CoverageInstrumentationCallback extends
     }
 
     // For any other statement, add instrumentation code just before it.
-    if (parent != null && NodeUtil.isStatementBlock(parent)) {
+    if (parent != null && NodeUtil.isStatementBlock(parent) && !node.isModuleBody()) {
       parent.addChildBefore(
           newInstrumentationNode(traversal, node),
           node);
