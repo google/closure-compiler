@@ -257,15 +257,17 @@ class LiveVariablesAnalysis
       case FOR_OF:
       case FOR_IN:
         {
-
-          // for-in and for-of initializers are different than vanilla for loops because the
-          // initializer may never be assigned to/evaluated. For example, `x` is never written in:
-          //   for (x in []) {}
-          // So lvalues in the initializer are not 'killed' (with the exception of let/const)
+          // for (x in y) {...}
           Node lhs = n.getFirstChild();
-          if (!lhs.isName()) { // a simple name is an lvalue, ignore it
-            computeGenKill(lhs, gen, kill, /* conditional= */ true);
+          if (NodeUtil.isNameDeclaration(lhs)) {
+            // for (var x in y) {...}
+            lhs = lhs.getLastChild();
           }
+
+          // Note that the LHS may never be assigned to or evaluated, like in:
+          //   for (x in []) {}
+          // so should not be killed.
+          computeGenKill(lhs, gen, kill, conditional);
 
           // rhs is executed only once so we don't go into it every loop.
           return;
@@ -278,25 +280,20 @@ class LiveVariablesAnalysis
           if (c.isName()) {
             if (c.hasChildren()) {
               computeGenKill(c.getFirstChild(), gen, kill, conditional);
-            }
-            if ((!conditional && c.hasChildren()) || n.isLet() || n.isConst()) {
-              // treat all let/cont declarations as 'kills', since the variable was
-              // previously in the temporal dead zone.
-              // var statements are only kills if a) they are unconditional and b) there is a rhs
-              addToSetIfLocal(c, kill);
+              if (!conditional) {
+                addToSetIfLocal(c, kill);
+              }
             }
           } else {
             checkState(c.isDestructuringLhs(), c);
-            if (!conditional || n.isLet() || n.isConst()) {
+            if (!conditional) {
               Iterable<Node> allVars = NodeUtil.findLhsNodesInNode(c);
               for (Node lhsNode : allVars) {
                 addToSetIfLocal(lhsNode, kill);
               }
             }
             computeGenKill(c.getFirstChild(), gen, kill, conditional);
-            if (c.hasTwoChildren()) {
-              computeGenKill(c.getSecondChild(), gen, kill, conditional);
-            }
+            computeGenKill(c.getSecondChild(), gen, kill, conditional);
           }
         }
         return;

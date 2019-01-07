@@ -103,23 +103,6 @@ public final class LiveVariablesAnalysisTest {
   }
 
   @Test
-  public void testConditionsWithLexicalDecl() {
-    // x is conditionally declared, then used
-    assertNotLiveBeforeDecl("try { let x = 0; x; } catch (e) {}", "x");
-    assertNotLiveBeforeDecl("var a; if (a) { const x = 0; x; }", "x");
-    assertLiveAfterDecl("var a; if (a) { let x = 0; x; }", "x");
-
-    // x is conditionally declared, but still unused
-    assertNotLiveBeforeDecl("var a; if (a) { let x = 0; }", "x");
-    assertNotLiveBeforeDecl("var a; if (a) { const x = 0; }", "x");
-    assertNotLiveAfterDecl("var a; if (a) { let x = 0; }", "x");
-
-    // x is reassigned after declaration; not live
-    assertNotLiveAfterDecl("var a; if (a) { let x = 0; x = 1; x; }", "x");
-    assertNotLiveBeforeX("var a; if (a) { let x = 0; X: x = 1; x; }", "x");
-  }
-
-  @Test
   public void testArrays() {
     assertLiveBeforeX("var a;X:a[1]", "a");
     assertLiveBeforeX("var a,b;X:b[a]", "a");
@@ -187,11 +170,9 @@ public final class LiveVariablesAnalysisTest {
 
     // It should be live within the loop even if it is not used.
     assertLiveBeforeX("var a,b;for(a=0;a<9;a++){X:1}", "a");
-
-    assertNotLiveAfterX("var a,b;for(a in b){X:b};", "a");
-    assertLiveAfterX("var a,b;for(a in b){X:b}; a", "a");
-    assertNotLiveBeforeX("var a,b; X:for(a in b){ }", "a");
-    assertLiveBeforeX("var a,b; X:for(a in b){ } a", "a");
+    assertLiveAfterX("var a,b;for(a in b){X:b};", "a");
+    // For-In should serve as a gen as well.
+    assertLiveBeforeX("var a,b; X:for(a in b){ }", "a");
 
     // "a in b" should kill "a" before it.
     // Can't prove this unless we have branched backward DFA.
@@ -207,36 +188,16 @@ public final class LiveVariablesAnalysisTest {
 
   @Test
   public void testForOfLoopsVar() {
-    // the final 'a' might still be '0', if 'iter' is empty, so 'var a = 0;' is live
-    assertLiveBeforeX("var a = 0; X: for (a of iter) {{}} a", "a");
-    // `a` is not live because it is never read
-    assertNotLiveBeforeX("var a; X: for (a of iter) {{}}", "a");
-
-    // The following case is overly conservative, treating 'a' as live before X only because
-    // the pass cannot determine that:
-    // `a` is read in the loop if and only if `a` is killed in the loop initializer.
-    assertLiveBeforeX("var a; X: for (a of iter) { a; }", "a");
-    assertLiveAfterX("for (var a of [1, 2, 3]) {X:{} a; } ", "a");
+    assertLiveBeforeX("var a; for (a of [1, 2, 3]) {X:{}}", "a");
+    assertLiveAfterX("for (var a of [1, 2, 3]) {X:{}}", "a");
     assertLiveBeforeX("var a,b; for (var y of a = [0, 1, 2]) { X:a[y] }", "a");
+  }
+
+  @Test
+  public void testForOfLoopsDestructuring() {
+    assertLiveBeforeX("var key, value; X:for ([key, value] of arr) {value;} value;", "value");
     assertLiveBeforeX("let x = 3; X:for (var [y = x] of arr) { y; }", "x");
-  }
-
-  @Test
-  public void testForOfLoopsLetAndConst() {
-    assertNotLiveBeforeX("X: for (let a of iter) { a }", "a");
-    assertNotLiveBeforeX("X: for (const a of iter) { a }", "a");
-    assertNotLiveBeforeX("X: for (let [a] of iter) { a }", "a");
-    assertLiveAfterX("for (let a of iter) { X: {} a; }", "a");
-    assertLiveAfterX("for (const a of iter) { X: {} a; }", "a");
-    assertLiveAfterX("for (let [a] of iter) { X: {} a; }", "a");
-  }
-
-  @Test
-  public void testForOfLoopsInitializerIsConditional() {
-    assertLiveBeforeX("var a; X: for ([a] of []) {} a", "a");
-    // 'b = 0' does not kill b because it is only conditionally executed
-    assertLiveBeforeX("var a, b; X: for ({[b = 0]: a} of []) {} b", "b");
-    assertLiveBeforeX("var a = {}, b; X: for (a[b = 0] of []) {} b", "b");
+    assertLiveBeforeX("for (let [key, value] in arr) { X: key; value; }", "key");
   }
 
   @Test
@@ -324,23 +285,10 @@ public final class LiveVariablesAnalysisTest {
   }
 
   @Test
-  public void testExceptionThrowingAssignmentsWithVar() {
-    // the following to cases consider 'a' live before X only because the pass does not realize that
-    // 'a' is read only if '(var) a = foo()' is executed.
+  public void testExceptionThrowingAssignments() {
     assertLiveBeforeX("try{var a; X:a=foo();a} catch(e) {e()}", "a");
-
     assertLiveBeforeX("try{X:var a=foo();a} catch(e) {e()}", "a");
     assertLiveBeforeX("try{X:var a=foo()} catch(e) {e(a)}", "a");
-  }
-
-  @Test
-  public void testExceptionThrowingAssignmentsWithLet() {
-    // following case is overly conservative, a is read only if 'a = foo()' runs
-    // so 'let a;' is dead
-    assertLiveBeforeX("try {let a; X:a=foo(); a} catch(e) {e()}", "a");
-    assertNotLiveBeforeDecl("try {let a=foo(); a} catch(e) {e()}", "a");
-    assertNotLiveBeforeX("try {X: 0; let [a]=foo(); a} catch(e) {e()}", "a");
-    assertNotLiveBeforeDecl("try {let a=foo()} catch(e) {e(a)}", "a");
   }
 
   @Test
@@ -405,6 +353,10 @@ public final class LiveVariablesAnalysisTest {
     assertNotLiveBeforeX("let a,b;X:a=1;b(a)", "a");
     assertNotLiveAfterX("let a,b;X:b(a);b()", "a");
     assertLiveBeforeX("let a,b;X:b();b=1;a()", "b");
+
+    // let initialized afterX
+    assertLiveAfterX("X:a();let a;a()", "a");
+    assertNotLiveAfterX("X:a();let a=1;a()", "a");
   }
 
   @Test
