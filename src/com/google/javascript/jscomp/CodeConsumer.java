@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -26,9 +29,15 @@ import com.google.javascript.rhino.Node;
  * @see InlineCostEstimator
  */
 public abstract class CodeConsumer {
+
   boolean statementNeedsEnded = false;
   boolean statementStarted = false;
   boolean sawFunction = false;
+
+  // State tracking for template literals. Remember that template literal substitutions can contain
+  // additional template literals.
+  private int templateLitDepth = 0;
+  private int templateLitSubDepth = 0;
 
   /**
    * Starts the source mapping for the given
@@ -57,20 +66,78 @@ public abstract class CodeConsumer {
    */
   abstract char getLastChar();
 
-  void addIdentifier(String identifier) {
-    add(identifier);
+  /**
+   * Appends a (possibly multiline) string to the code, keeping track of the current line length and
+   * count.
+   *
+   * <p>Clients should use this method rather than {@link #append()}. It sanitizes the input to
+   * {@link #append()}.
+   */
+  final void add(String newcode) {
+    maybeEndStatement();
+
+    if (newcode.isEmpty()) {
+      return;
+    }
+
+    char c = newcode.charAt(0);
+    if ((isWordChar(c) || c == '\\') && isWordChar(getLastChar())) {
+      // need space to separate. This is not pretty printing.
+      // For example: "return foo;"
+      append(" ");
+    } else if (c == '/' && getLastChar() == '/') {
+      // Do not allow a forward slash to appear after a DIV.
+      // For example,
+      // REGEXP DIV REGEXP
+      // is valid and should print like
+      // / // / /
+      append(" ");
+    } else if ((c == '"' || c == '\'') && isWordChar(getLastChar())) {
+      maybeInsertSpace();
+    }
+
+    // Iterate through the new code and add each contained line, followed by a break. Remember that
+    // the string may start and end in the middle of a line. We do this rather primitively because
+    // this method is called frequently and most invocations have only one line.
+    // TODO(nickreid): There are other possible newline characters recognized by the JS spec. We
+    // should also be considering them.
+    int startOfLine = 0;
+    int endOfLine = newcode.indexOf('\n');
+    while (endOfLine >= 0) {
+      if (endOfLine > startOfLine) {
+        // Append line only if it is non-empty.
+        append(newcode.substring(startOfLine, endOfLine));
+      }
+      // Breaking is non-optional. Newlines added this way must be preserved (e.g. newlines in
+      // template literals).
+      startNewLine();
+
+      startOfLine = endOfLine + 1; // Jump over the newline char.
+      endOfLine = newcode.indexOf('\n', startOfLine);
+    }
+    if (newcode.length() > startOfLine) {
+      // Append line only if it is non-empty.
+      append(newcode.substring(startOfLine)); // Append the last or only line without breaking.
+    }
   }
 
   /**
    * Appends a string to the code, keeping track of the current line length.
    *
-   * NOTE: the string must be a complete token--partial strings or
-   * partial regexes will run the risk of being split across lines.
+   * <p>Clients should not call this method directly, but instead call add {@link #add()}.
    *
-   * Do not directly append newlines with this method. Instead use
-   * {@link #startNewLine}.
+   * <p>The string must be a complete token; partial strings or partial regexes will run the risk of
+   * being split across lines.
+   *
+   * <p>Implementations of this method need not consider newline characters in {@code str}. Such
+   * characters should either be ignored or cause an {@link Exception}.
    */
+  @ForOverride
   abstract void append(String str);
+
+  void addIdentifier(String identifier) {
+    add(identifier);
+  }
 
   void appendBlockStart() {
     append("{");
@@ -179,31 +246,43 @@ public abstract class CodeConsumer {
   void endCaseBody() {
   }
 
-  void add(String newcode) {
-    maybeEndStatement();
+  final void beginTemplateLit() {
+    checkState(templateLitDepth == templateLitSubDepth);
 
-    if (newcode.isEmpty()) {
-      return;
-    }
+    templateLitDepth++;
+    append("`");
+  }
 
-    char c = newcode.charAt(0);
-    if ((isWordChar(c) || c == '\\') &&
-        isWordChar(getLastChar())) {
-      // need space to separate. This is not pretty printing.
-      // For example: "return foo;"
-      append(" ");
-    } else if (c == '/' && getLastChar() == '/') {
-      // Do not allow a forward slash to appear after a DIV.
-      // For example,
-      // REGEXP DIV REGEXP
-      // is valid and should print like
-      // / // / /
-      append(" ");
-    } else if ((c == '"' || c == '\'') && isWordChar(getLastChar())) {
-      maybeInsertSpace();
-    }
+  final void beginTemplateLitSub() {
+    // This method pair exists because '$' behaves differently inside template literals. We want to
+    // append it without sanitizing in the generic way {@link #add()} would.
+    checkState(isInTemplateLiteral());
 
-    append(newcode);
+    templateLitSubDepth++;
+    append("${");
+  }
+
+  final void endTemplateLitSub() {
+    // This method pair exists because '$' behaves differently inside template literals. We want to
+    // append it without sanitizing in the generic way {@link #add()} would.
+    checkState(templateLitSubDepth > 0);
+    checkState(templateLitDepth == templateLitSubDepth);
+
+    templateLitSubDepth--;
+    append("}");
+  }
+
+  final void endTemplateLit() {
+    checkState(templateLitDepth > 0);
+    checkState(isInTemplateLiteral());
+
+    templateLitDepth--;
+    append("`");
+  }
+
+  final boolean isInTemplateLiteral() {
+    // We're inside a template literal but not a substitution within that literal.
+    return templateLitDepth == templateLitSubDepth + 1;
   }
 
   void appendOp(String op, boolean binOp) {

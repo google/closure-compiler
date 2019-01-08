@@ -375,6 +375,29 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
   }
 
   @Test
+  public void testGoldenOutput_semanticLineBreaks() throws Exception {
+    // Mapping code segments that contained newlines caused b/121282798. It appears to be related to
+    // template literals because they can contain newlines which are meaningful within a single
+    // expression, and are thus preserved.
+    checkSourceMap(
+        "c:\\myfile.js",
+        lines(
+            "var myMultilineTemplate = `Item ${a}", //
+            "Item ${b}",
+            "Item ${c}`;"),
+        lines(
+            "{",
+            "\"version\":3,",
+            "\"file\":\"testcode\",",
+            "\"lineCount\":3,",
+            "\"mappings\":\"A,aAAA,IAAIA,oBAAsB,QAAQC,CAAR;OACnBC,CADmB;OAEnBC,CAFmB;\",",
+            "\"sources\":[\"" + getEncodedFileName() + "\"],",
+            "\"names\":[\"myMultilineTemplate\",\"a\",\"b\",\"c\"]",
+            "}",
+            ""));
+  }
+
+  @Test
   public void testBasicDeterminism() throws Exception {
     RunResult result1 = compile("file1", "foo;", "file2", "bar;");
     RunResult result2 = compile("file2", "foo;", "file1", "bar;");

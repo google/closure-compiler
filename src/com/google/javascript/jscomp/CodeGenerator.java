@@ -1126,19 +1126,17 @@ public class CodeGenerator {
         break;
 
       case TEMPLATELIT:
-        add("`");
+        cc.beginTemplateLit();
         for (Node c = first; c != null; c = c.getNext()) {
           if (c.isTemplateLitString()) {
             add(escapeUnrecognizedCharacters(c.getRawString()));
           } else {
-            // Can't use add() since isWordChar('$') == true and cc would add
-            // an extra space.
-            cc.append("${");
+            cc.beginTemplateLitSub();
             add(c.getFirstChild(), Context.START_OF_EXPR);
-            add("}");
+            cc.endTemplateLitSub();
           }
         }
-        add("`");
+        cc.endTemplateLit();
         break;
 
         // Type Declaration ASTs.

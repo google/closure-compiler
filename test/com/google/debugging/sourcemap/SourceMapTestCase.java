@@ -19,6 +19,7 @@ package com.google.debugging.sourcemap;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.Compiler;
@@ -49,7 +50,13 @@ public abstract class SourceMapTestCase {
 
   protected DetailLevel detailLevel = SourceMap.DetailLevel.ALL;
   protected boolean sourceMapIncludeSourcesContent = false;
-  
+
+  private static final Joiner LINE_JOINER = Joiner.on('\n');
+
+  public static final String lines(String... lines) {
+    return LINE_JOINER.join(lines);
+  }
+
   protected static class RunResult {
       String generatedSource;
       SourceMap sourceMap;

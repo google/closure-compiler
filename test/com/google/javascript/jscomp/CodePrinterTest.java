@@ -1623,21 +1623,30 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTempConstructor() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "var x = function() {",
             "  /** @constructor */ function t1() {}",
             "  /** @constructor */ function t2() {}",
             "  t1.prototype = t2.prototype",
             "}"),
-        LINE_JOINER.join(
-            "/**\n * @return {undefined}\n */",
+        lines(
+            "/**",
+            " * @return {undefined}",
+            " */",
             "var x = function() {",
-            "  /**\n * @constructor\n */",
-            "function t1() {\n  }",
-            "  /**\n * @constructor\n */",
-            "function t2() {\n  }",
+            "  /**",
+            "   * @constructor",
+            "   */",
+            "  function t1() {",
+            "  }",
+            "  /**",
+            "   * @constructor",
+            "   */",
+            "  function t2() {",
+            "  }",
             "  t1.prototype = t2.prototype;",
-            "};\n"));
+            "};",
+            ""));
   }
 
   @Test
@@ -1737,12 +1746,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     preserveTypeAnnotations = true;
     assertPrettyPrint(
         "function f() { return (/** @return {number} */ function() { return 42; }); }",
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  return (/**",
-            " @return {number}",
-            " */",
-            "function() {",
+            "   @return {number}",
+            "   */",
+            "  function() {",
             "    return 42;",
             "  });",
             "}",
@@ -3075,6 +3084,81 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("foo`\\unicode`");
     // b/114808380
     assertPrintSame("String.raw`a\\ b`");
+
+    // Nested substitutions.
+    assertPrintSame("`Hello ${x?`Alice`:`Bob`}?`");
+    assertPrintSame("`Hello ${x?`Alice ${y(`Kitten`)}`:`Bob`}?`");
+
+    // Substitution without padding.
+    assertPrintSame("`Unbroken${x}string`");
+  }
+
+  @Test
+  public void testMultiLineTemplateLiteral_preservesInteralNewlines() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertPrintSame(
+        lines(
+            "var y=`hello", //
+            "world",
+            "foo",
+            "bar`"));
+  }
+
+  @Test
+  public void testMultiLineTemplateLiteral_notIndented_byPrettyPrint() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertPrettyPrint(
+        lines(
+            "function indentScope(){var y = `hello", //
+            "world",
+            "foo",
+            "bar`;}"),
+        lines(
+            "function indentScope() {",
+            "  var y = `hello", //
+            "world",
+            "foo",
+            "bar`;",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testMultiLineTemplateLiteral_brokenOntoLastLine_isNotCollapsed() {
+    // related to b/117613188
+
+    // Given
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+
+    // Configure these so that the printer would otherwise attempt to reuse an existing newline.
+    CompilerOptions codePrinterOptions = new CompilerOptions();
+    codePrinterOptions.setPreferLineBreakAtEndOfFile(true); // Enable rearranging.
+    codePrinterOptions.setLineLengthThreshold(30); // Must be big compared to the last line length.
+
+    String input =
+        lines(
+            "`hello", //
+            "world", //
+            "foo", //
+            "bar`;");
+
+    // When
+    String actual =
+        new CodePrinter.Builder(parse(input))
+            .setCompilerOptions(codePrinterOptions)
+            .setPrettyPrint(false)
+            .setSourceMap(Format.DEFAULT.getInstance())
+            .build();
+
+    // Then
+    assertThat(actual)
+        .isEqualTo(
+            lines(
+                "`hello", //
+                "world", //
+                "foo", //
+                "bar`;", //
+                ""));
   }
 
   @Test
@@ -3322,28 +3406,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
                 .setCompilerOptions(codePrinterOptions)
                 .setPrettyPrint(true)
                 .setLineBreak(true)
-                .build())
-        .isEqualTo(expectedCode);
-  }
-
-  @Test
-  public void testMultiLineTemplateLiteralInLastLine() {
-    // related to b/117613188
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-    String code = "var x = 'this is a pretty long line'; var y = `hello\nworld\nfoo\nbar`;";
-    String expectedCode = "var x=\"this is a pretty long line\"; var y=`hello\nworld\nfoo\nbar`;\n";
-
-    CompilerOptions codePrinterOptions = new CompilerOptions();
-    // This needs to be smaller than the length of the first statement to force a line break
-    codePrinterOptions.setLineLengthThreshold(30);
-    // This needs to be true since `endFile()` of CompactCodePrinter would just return if false
-    codePrinterOptions.setPreferLineBreakAtEndOfFile(true);
-
-    assertThat(
-            new CodePrinter.Builder(parse(code))
-                .setCompilerOptions(codePrinterOptions)
-                .setPrettyPrint(false)
-                .setSourceMap(Format.DEFAULT.getInstance())
                 .build())
         .isEqualTo(expectedCode);
   }
