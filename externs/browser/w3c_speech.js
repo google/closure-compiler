@@ -77,12 +77,12 @@ HTMLInputElement.prototype.onwebkitspeechchange;
 function SpeechRecognition() {}
 
 /** @override */
-SpeechRecognition.prototype.addEventListener =
-  function(type, listener, opt_options) {};
+SpeechRecognition.prototype.addEventListener = function(
+    type, listener, opt_options) {};
 
 /** @override */
-SpeechRecognition.prototype.removeEventListener =
-  function(type, listener, opt_options) {};
+SpeechRecognition.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
 
 /** @override */
 SpeechRecognition.prototype.dispatchEvent = function(evt) {};
@@ -346,6 +346,10 @@ SpeechSynthesisUtterance.prototype.onstart = function(event) {};
  */
 SpeechSynthesisUtterance.prototype.onend = function(event) {};
 
+/**
+ * @param {Event} event
+ */
+SpeechSynthesisUtterance.prototype.onerror = function(event) {};
 
 /**
  * @constructor
