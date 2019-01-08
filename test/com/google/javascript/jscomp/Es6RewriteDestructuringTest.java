@@ -549,15 +549,18 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testDestructuringForInWithShadowing() {
     test(
-        "for (const [value] in {}) { const value = 0; }",
-        lines(
-            "for (const $jscomp$destructuring$var0 in {}) {",
-            "  var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
-            "  const value = $jscomp$destructuring$var1.next().value;",
-            "  {",
-            "    const value = 0;",
-            "  }",
-            "}"));
+        externs(MINIMAL_EXTERNS),
+        srcs("for (const [value] in {}) { const value = 0; }"),
+        expected(
+            lines(
+                "for (const $jscomp$destructuring$var0 in {}) {",
+                "  var $jscomp$destructuring$var1 =",
+                "      $jscomp.makeIterator($jscomp$destructuring$var0);",
+                "  const value = $jscomp$destructuring$var1.next().value;",
+                "  {",
+                "    const value = 0;",
+                "  }",
+                "}")));
   }
 
   @Test

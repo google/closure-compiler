@@ -889,6 +889,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case ARRAY_PATTERN:
         ensureTyped(n);
+        validator.expectAutoboxesToIterable(
+            t, n, getJSType(n), "array pattern destructuring requires an Iterable");
         break;
 
       case OBJECT_PATTERN:
@@ -903,6 +905,21 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             getJSType(n.getSecondChild()),
             /* info= */ null,
             "default value has wrong type");
+
+        // Every other usage of a destructuring pattern is checked while visiting the pattern,
+        // but default values are different because they are a conditional assignment and the
+        // pattern is not given the default value's type
+        Node lhs = n.getFirstChild();
+        Node rhs = n.getSecondChild();
+        if (lhs.isArrayPattern()) {
+          validator.expectAutoboxesToIterable(
+              t, rhs, getJSType(rhs), "array pattern destructuring requires an Iterable");
+        } else if (lhs.isObjectPattern()) {
+          // Verify that the value is not null/undefined, since those can't be destructured.
+          validator.expectObject(
+              t, rhs, getJSType(rhs), "cannot destructure a 'null' or 'undefined' default value");
+        }
+
         typeable = false;
         break;
 
@@ -1070,18 +1087,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   private void checkDestructuringAssignment(
       NodeTraversal t, Node nodeToWarn, Node pattern, JSType rightType, String msg) {
-    if (pattern.isArrayPattern()) {
-      validator.expectAutoboxesToIterable(
-          t, nodeToWarn, rightType, "array destructuring rhs must be Iterable");
-    } else {
-      validator.expectNotNullOrUndefined(
-          t,
-          nodeToWarn,
-          rightType,
-          "cannot destructure 'null' or 'undefined'",
-          getNativeType(JSTypeNative.OBJECT_TYPE));
-    }
-
     for (DestructuredTarget target :
         DestructuredTarget.createAllNonEmptyTargetsInPattern(typeRegistry, rightType, pattern)) {
 
@@ -1290,6 +1295,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   private void visitObjectPattern(NodeTraversal t, Node pattern) {
     JSType patternType = getJSType(pattern);
+    validator.expectObject(t, pattern, patternType, "cannot destructure 'null' or 'undefined'");
     for (Node child : pattern.children()) {
       DestructuredTarget target = DestructuredTarget.createTarget(typeRegistry, patternType, child);
 

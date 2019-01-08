@@ -4908,7 +4908,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testValidArrayPatternInForInInitializer() {
-    testTypes(
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
         lines(
             "function f(/** !Object<string, number> */ obj) {",
             "  for (const [/** string */ a, /** string */ b] in obj) {}",
@@ -4918,7 +4919,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testArrayPatternInForInInitializerWithTypeMismatch() {
     // TODO(b/77903996): this should cause a type mismatch warning
-    testTypes(
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
         lines(
             "function f(/** !Object<string, number> */ obj) {",
             "  for (const [/** number */ a, /** number */ b] in obj) {}",
@@ -5013,9 +5015,44 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testObjectDestructuringNullCausesWarning() {
+  public void testObjectDestructuringNullInDeclarationCausesWarning() {
     testTypes(
         "const {} = null;",
+        lines(
+            "cannot destructure 'null' or 'undefined'", //
+            "found   : null",
+            "required: Object"));
+  }
+
+  @Test
+  public void testObjectDestructuringUndefinedInDeclarationCausesWarning() {
+    testTypes(
+        "const {} = undefined;",
+        lines(
+            "cannot destructure 'null' or 'undefined'", //
+            "found   : undefined",
+            "required: Object"));
+  }
+
+  @Test
+  public void testObjectDestructuringBoxablePrimitiveInDeclarationIsAllowed() {
+    testTypes("const {} = 0;");
+  }
+
+  @Test
+  public void testObjectDestructuringNullInParametersCausesWarning() {
+    testTypes(
+        "/** @param {null} obj */ function f({}) {}",
+        lines(
+            "cannot destructure 'null' or 'undefined'", //
+            "found   : null",
+            "required: Object"));
+  }
+
+  @Test
+  public void testObjectDestructuringNullInNestedPatternCausesWarning() {
+    testTypes(
+        "const {a: {}} = {a: null};",
         lines(
             "cannot destructure 'null' or 'undefined'", //
             "found   : null",
@@ -5038,7 +5075,35 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     testTypes(
         "const [] = 3;",
         lines(
-            "array destructuring rhs must be Iterable", //
+            "array pattern destructuring requires an Iterable", //
+            "found   : number",
+            "required: Iterable"));
+  }
+
+  @Test
+  public void testArrayDestructuringStringIsAllowed() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
+        "const [] = 'foobar';"); // strings autobox to Strings, which implement Iterable
+  }
+
+  @Test
+  public void testArrayDestructuringNonIterableInParametersCausesWarning() {
+    testTypes(
+        "/** @param {number} arr */ function f([]) {}",
+        lines(
+            "array pattern destructuring requires an Iterable", //
+            "found   : number",
+            "required: Iterable"));
+  }
+
+  @Test
+  public void testArrayDestructuringNonIterableInForOfLoopCausesWarning() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        "const /** !Iterable<number> */ iter = [0]; for (const [] of iter) {}",
+        lines(
+            "array pattern destructuring requires an Iterable", //
             "found   : number",
             "required: Iterable"));
   }
@@ -5058,16 +5123,57 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testDefaultValueForNestedArrayPatternMustBeIterable() {
     testTypesWithExterns(
         new TestExternsBuilder().addArray().build(),
-        "const [[/** string */ x] = 0] = [];",
+        "const [[] = 0] = [];",
         lines(
-            "array destructuring rhs must be Iterable", //
+            "array pattern destructuring requires an Iterable", //
             "found   : number",
             "required: Iterable"));
   }
 
   @Test
+  public void testArrayPatternParameterCanBeOptional() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        "/** @param {!Array<string>=} arr */ function f([x, y] = []) {}");
+  }
+
+  @Test
+  public void testDefaultValueForArrayPatternParameterMustBeIterable() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        "function f([] = 0) {}",
+        lines(
+            "array pattern destructuring requires an Iterable", //
+            "found   : number",
+            "required: Iterable"));
+  }
+
+  @Test
+  public void testDefaultValueForNestedObjectPatternMustNotBeNull() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        "const [{} = null] = [];",
+        lines(
+            "cannot destructure a 'null' or 'undefined' default value", //
+            "found   : null",
+            "required: Object"));
+  }
+
+  @Test
+  public void testDefaultValueForObjectPatternParameterMustNotBeNull() {
+    testTypes(
+        "function f({} = null) {}",
+        lines(
+            "cannot destructure a 'null' or 'undefined' default value", //
+            "found   : null",
+            "required: Object"));
+  }
+
+  @Test
   public void testArrayDestructuringParameterWithElision() {
-    testTypes("/** @param {!Array<number>} numbers */ function f([, x, , y]) {}");
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        "/** @param {!Array<number>} numbers */ function f([, x, , y]) {}");
   }
 
   @Test

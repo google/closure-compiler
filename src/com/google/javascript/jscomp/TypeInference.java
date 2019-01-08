@@ -250,6 +250,7 @@ class TypeInference
             entryFlowScope =
                 updateScopeForAssignment(
                     entryFlowScope, astParameter, newType, AssignmentType.ASSIGN);
+            astParameter.setJSType(newType);
           }
         }
       }

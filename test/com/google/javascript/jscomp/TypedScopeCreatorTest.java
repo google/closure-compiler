@@ -4189,6 +4189,18 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjectPatternInParametersWithDefaultGetsCorrectType() {
+    testSame("/** @param {{a: string}=} obj */ function f({a = 'foo'} = {}) {}");
+
+    JSType patternType = findTokenType(Token.OBJECT_PATTERN, globalScope);
+    // the pattern has the type after the default value is evaluated, not ({a:string}|undefined)
+    assertType(patternType).toStringIsEqualTo("({a: string}|{})");
+
+    JSType aNameType = findNameType("a", globalScope);
+    assertType(aNameType).isString();
+  }
+
+  @Test
   public void testMemoization() {
     Node root1 = createEmptyRoot();
     Node root2 = createEmptyRoot();
