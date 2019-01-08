@@ -730,6 +730,13 @@ RTCRtpEncodingParameters.prototype.active;
 RTCRtpEncodingParameters.prototype.priority;
 
 /**
+ * Possible values are "very-low", "low" (default), "medium", and "high".
+ * @see https://w3c.github.io/webrtc-dscp-exp/
+ * @type {?string|undefined}
+ */
+RTCRtpEncodingParameters.prototype.networkPriority;
+
+/**
  * @type {?number|undefined}
  */
 RTCRtpEncodingParameters.prototype.ptime;
