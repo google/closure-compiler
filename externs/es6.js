@@ -152,7 +152,7 @@ Math.cbrt = function(value) {};
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/hypot
  */
-Math.hypot = function(value1, var_args) {};
+Math.hypot = function(var_args) {};
 
 /**
  * @param {number} value1
