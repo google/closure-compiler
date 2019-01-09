@@ -1121,27 +1121,22 @@ function IThenable() {}
 
 
 /**
- * @param {?(function(TYPE):FULFILLED_VALUE)=} opt_onFulfilled
- * @param {?(function(*):REJECTED_VALUE)=} opt_onRejected
- * @return {!IThenable<RESULT>}
+ * @param {?(function(TYPE):VALUE)=} opt_onFulfilled
+ * @param {?(function(*): *)=} opt_onRejected
+ * @return {RESULT}
+ * @template VALUE
  *
- * @template FULFILLED_VALUE,REJECTED_VALUE
+ * When a Promise (or thenable) is returned from the fulfilled callback,
+ * the result is the payload of that promise, not the promise itself.
  *
- * When a `Thenable` is fulfilled or rejected with another `Thenable`, the
- * payload of the second is used as the payload of the first.
- *
- * @template VALUE := union(FULFILLED_VALUE, REJECTED_VALUE) =:
- * @template RESULT := cond(
- *     isUnknown(VALUE),
- *     unknown(),
- *     mapunion(VALUE, (V) =>
- *         cond(
- *             isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
- *             templateTypeOf(V, 0),
- *             cond(
- *                 sub(V, 'Thenable'),
- *                 unknown(),
- *                 V))))
+ * @template RESULT := type('IThenable',
+ *     cond(isUnknown(VALUE), unknown(),
+ *       mapunion(VALUE, (V) =>
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *           templateTypeOf(V, 0),
+ *           cond(sub(V, 'Thenable'),
+ *              unknown(),
+ *              V)))))
  * =:
  */
 IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
@@ -1216,27 +1211,22 @@ Promise.race = function(iterable) {};
 
 
 /**
- * @param {?(function(TYPE):FULFILLED_VALUE)=} opt_onFulfilled
- * @param {?(function(*):REJECTED_VALUE)=} opt_onRejected
- * @return {!Promise<RESULT>}
+ * @param {?(function(this:void, TYPE):VALUE)=} opt_onFulfilled
+ * @param {?(function(this:void, *): *)=} opt_onRejected
+ * @return {RESULT}
+ * @template VALUE
  *
- * @template FULFILLED_VALUE,REJECTED_VALUE
+ * When a Promise (or thenable) is returned from the fulfilled callback,
+ * the result is the payload of that promise, not the promise itself.
  *
- * When a `Thenable` is fulfilled or rejected with another `Thenable`, the
- * payload of the second is used as the payload of the first.
- *
- * @template VALUE := union(FULFILLED_VALUE, REJECTED_VALUE) =:
- * @template RESULT := cond(
- *     isUnknown(VALUE),
- *     unknown(),
- *     mapunion(VALUE, (V) =>
- *         cond(
- *             isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
- *             templateTypeOf(V, 0),
- *             cond(
- *                 sub(V, 'Thenable'),
- *                 unknown(),
- *                 V))))
+ * @template RESULT := type('Promise',
+ *     cond(isUnknown(VALUE), unknown(),
+ *       mapunion(VALUE, (V) =>
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *           templateTypeOf(V, 0),
+ *           cond(sub(V, 'Thenable'),
+ *              unknown(),
+ *              V)))))
  * =:
  * @override
  */
@@ -1244,27 +1234,9 @@ Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
 
 /**
- * @param {function(*):VALUE} onRejected
- * @return {!Promise<TYPE|VALUE>} A Promise of the original type or a possibly a
- *     different type depending on whether the parent promise was rejected.
- *
- * @template VALUE
- *
- * When a `Thenable` is rejected with another `Thenable`, the payload of the
- * second is used as the payload of the first.
- *
- * @template RESULT := cond(
- *     isUnknown(VALUE),
- *     unknown(),
- *     mapunion(VALUE, (V) =>
- *         cond(
- *             isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
- *             templateTypeOf(V, 0),
- *             cond(
- *                 sub(V, 'Thenable'),
- *                 unknown(),
- *                 V))))
- * =:
+ * @param {function(*): RESULT} onRejected
+ * @return {!Promise<RESULT>}
+ * @template RESULT
  */
 Promise.prototype.catch = function(onRejected) {};
 
