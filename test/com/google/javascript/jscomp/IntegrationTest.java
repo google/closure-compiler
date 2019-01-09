@@ -4956,7 +4956,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRenamePrefixNamespaceAssumeCrossModuleNames(false);
     WarningLevel.DEFAULT.setOptionsForWarningLevel(options);
 
-    test(options, code, "var b = {}; try { (0,use)(b.FOO); } catch (c) {}");
+    test(options, code,
+        "var b = {}; try { (0,window.use)(b.FOO); } catch (c) {}");
   }
 
   @Test
