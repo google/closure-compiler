@@ -434,8 +434,8 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
     compiler.reportChangeToEnclosingScope(paramList);
 
     // Eliminate `this`.
-    Node body = function.getLastChild();
-    replaceReferencesToThis(body, selfName);
+    replaceReferencesToThis(function.getSecondChild(), selfName); // In default param values.
+    replaceReferencesToThis(function.getLastChild(), selfName); // In function body.
 
     fixFunctionType(function);
 

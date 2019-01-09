@@ -336,6 +336,41 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRewrite_defaultParams_usesThisReference() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  bar(y = this) { return y; }",
+                "}",
+                "",
+                // We need at least one normal call to trigger rewriting.
+                "x.bar();")),
+        expected(
+            lines(
+                "var JSCompiler_StaticMethods_bar = function(",
+                "    JSCompiler_StaticMethods_bar$self,",
+                "    y = JSCompiler_StaticMethods_bar$self) {",
+                "  return y;",
+                "};",
+                "class Foo { }", //
+                "",
+                "JSCompiler_StaticMethods_bar(x);")));
+  }
+
+  @Test
+  public void testNoRewrite_defaultParams_usesSuperReference() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  bar(y = super.toString()) { return y; }",
+            "}",
+            "",
+            // We need at least one normal call to trigger rewriting.
+            "x.bar();"));
+  }
+
+  @Test
   public void testNoRewrite_ifDefinedByArrow() {
     testSame(
         lines(
