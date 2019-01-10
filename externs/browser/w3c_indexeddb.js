@@ -141,6 +141,7 @@ IDBFactory.prototype.cmp = function(first, second) {};
 
 /**
  * @constructor
+ * @template T
  * @implements {EventTarget}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBRequest
  * @see https://www.w3.org/TR/IndexedDB-2/#request-api
@@ -182,7 +183,7 @@ IDBRequest.prototype.onsuccess = function(e) {};
  */
 IDBRequest.prototype.onerror = function(e) {};
 
-/** @type {*} */
+/** @type {T} */
 IDBRequest.prototype.result;  // readonly
 
 /**
