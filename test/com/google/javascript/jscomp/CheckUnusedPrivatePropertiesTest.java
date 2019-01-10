@@ -87,6 +87,14 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassConstructorPropertyUnused1() {
+    disableTypeCheck();
+
+    // Don't ever warn about unused private constructors
+    used("class C { /** @private */ constructor() {} }; ");
+  }
+
+  @Test
   public void testClassPropUnused1() {
     disableTypeCheck();
 
