@@ -16,11 +16,17 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Ensures that the InlineVariables pass in constants-only mode
- * is functionally equivalent to the old InlineVariablesConstants pass.
+ * Ensures that the InlineVariables pass in constants-only mode is functionally equivalent to the
+ * old InlineVariablesConstants pass.
  */
+@RunWith(JUnit4.class)
 public final class InlineVariablesConstantsTest extends CompilerTestCase {
 
   private boolean inlineAllStrings = false;
@@ -32,12 +38,14 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
     inlineAllStrings = false;
   }
 
+  @Test
   public void testInlineVariablesConstants() {
     test("var ABC=2; var x = ABC;", "var x=2");
     test("var AA = 'aa'; AA;", "'aa'");
@@ -57,6 +65,7 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
          "'123456789012345'");
   }
 
+  @Test
   public void testNoInlineArraysOrRegexps() {
     testSame("var AA = [10,20]; AA[0]");
     testSame("var AA = [10,20]; AA.push(1); AA[0]");
@@ -64,6 +73,7 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
     testSame("/** @const */ var aa = /x/; aa.test('1')");
   }
 
+  @Test
   public void testInlineVariablesConstantsJsDocStyle() {
     test("/** @const */var abc=2; var x = abc;", "var x=2");
     test("/** @const */var aa = 'aa'; aa;", "'aa'");
@@ -79,6 +89,7 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
          "'123456789012345'");
   }
 
+  @Test
   public void testInlineConditionallyDefinedConstant1() {
     // Note that inlining conditionally defined constants can change the
     // run-time behavior of code (e.g. when y is true and x is false in the
@@ -88,16 +99,19 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
          "if (x); if (y) f(2);");
   }
 
+  @Test
   public void testInlineConditionallyDefinedConstant2() {
     test("if (x); else var ABC = 2; if (y) f(ABC);",
          "if (x); else; if (y) f(2);");
   }
 
+  @Test
   public void testInlineConditionallyDefinedConstant3() {
     test("if (x) { var ABC = 2; } if (y) { f(ABC); }",
          "if (x) {} if (y) { f(2); }");
   }
 
+  @Test
   public void testInlineDefinedConstant() {
     test(
         "/**\n" +
@@ -116,22 +130,26 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
         "foo('1234567890');foo('1234567890');foo('1234567890')");
   }
 
+  @Test
   public void testInlineVariablesConstantsWithInlineAllStringsOn() {
     inlineAllStrings = true;
     test("var AA = '1234567890'; foo(AA); foo(AA); foo(AA);",
          "foo('1234567890'); foo('1234567890'); foo('1234567890')");
   }
 
+  @Test
   public void testNoInlineWithoutConstDeclaration() {
     testSame("var abc = 2; var x = abc;");
   }
 
-// TODO(nicksantos): enable this again once we allow constant aliasing.
-//  public void testInlineConstantAlias() {
-//    test("var XXX = new Foo(); var YYY = XXX; bar(YYY)",
-//         "var XXX = new Foo(); bar(XXX)");
-//  }
+  // TODO(nicksantos): enable this again once we allow constant aliasing.
+  @Test
+  @Ignore
+  public void testInlineConstantAlias() {
+    test("var XXX = new Foo(); var YYY = XXX; bar(YYY)", "var XXX = new Foo(); bar(XXX)");
+  }
 
+  @Test
   public void testNoInlineAliases() {
     testSame("var XXX = new Foo(); var yyy = XXX; bar(yyy)");
     testSame("var xxx = new Foo(); var YYY = xxx; bar(YYY)");

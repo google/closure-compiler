@@ -20,12 +20,16 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.testing.EqualsTester;
 import java.net.URI;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link TranspileResult}. */
 
-public final class TranspileResultTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class TranspileResultTest {
 
+  @Test
   public void testEquals() throws Exception {
     new EqualsTester()
         .addEqualityGroup(
@@ -38,12 +42,14 @@ public final class TranspileResultTest extends TestCase {
         .testEquals();
   }
 
+  @Test
   public void testEmbedSourceMap_noSourceMap() throws Exception {
     TranspileResult result = new TranspileResult(new URI("a"), "b", "c", "");
     assertThat(result.embedSourcemap()).isSameAs(result);
     assertThat(result.embedSourcemapUrl("foo")).isSameAs(result);
   }
 
+  @Test
   public void testEmbedSourceMap() throws Exception {
     TranspileResult result = new TranspileResult(new URI("a"), "b", "c", "{\"version\": 3}");
     assertThat(result.embedSourcemap())

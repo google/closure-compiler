@@ -17,52 +17,64 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config.StrictMode;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Ported from rhino/testsrc/org/mozilla/javascript/tests/AttachJsDocsTest.java
- */
+/** Ported from rhino/testsrc/org/mozilla/javascript/tests/AttachJsDocsTest.java */
+@RunWith(JUnit4.class)
 public final class AttachJsdocsTest extends BaseJSTypeTestCase {
   private Config.LanguageMode mode;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     mode = LanguageMode.ECMASCRIPT3;
   }
 
+  @Test
   public void testOldJsdocAdd() {
     Node root = parse("1 + /** attach */ value;");
     Node plus = root.getFirstFirstChild();
     assertThat(plus.getLastChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocArrayLit() {
     Node root = parse("[1, /** attach */ 2]");
     Node lit = root.getFirstFirstChild();
     assertThat(lit.getSecondChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocAssign1() {
     Node root = parse("x = 1; /** attach */ y = 2;");
     Node assign = root.getLastChild().getFirstChild();
     assertThat(assign.getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocAssign2() {
     Node root = parse("x = 1; /** attach */y.p = 2;");
     Node assign = root.getLastChild().getFirstChild();
     assertThat(assign.getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocAssign3() {
     Node root =
         parse("/** @const */ var g = {}; /** @type {number} */ (g.foo) = 3;");
@@ -70,39 +82,46 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(assign.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocBlock1() {
     Node root = parse("if (x) { /** attach */ x; }");
     Node thenBlock = root.getFirstChild().getSecondChild();
     assertThat(thenBlock.getFirstFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocBlock2() {
     Node root = parse("if (x) { x; /** attach */ y; }");
     Node thenBlock = root.getFirstChild().getSecondChild();
     assertThat(thenBlock.getLastChild().getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocBreak() {
     Node root = parse("FOO: for (;;) { break /** don't attach */ FOO; }");
     Node forStm = root.getFirstChild().getLastChild();
     Node breakStm = forStm.getChildAtIndex(3).getFirstChild();
-    assertThat(breakStm.getToken()).isSameAs(Token.BREAK);
+    assertNode(breakStm).hasToken(Token.BREAK);
     assertThat(breakStm.getJSDocInfo()).isNull();
     assertThat(breakStm.getFirstChild().getJSDocInfo()).isNull();
   }
 
-  // public void testOldJsdocCall1() {
-  //   Node root = parse("foo/** don't attach */(1, 2);");
-  //   Node call = root.getFirstFirstChild();
-  //   assertNull(call.getSecondChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocCall1() {
+    Node root = parse("foo/** don't attach */(1, 2);");
+    Node call = root.getFirstFirstChild();
+    assertThat(call.getSecondChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocCall2() {
     Node root = parse("foo(/** attach */ 1, 2);");
     Node call = root.getFirstFirstChild();
     assertThat(call.getSecondChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocCall3() {
     // Incorrect attachment b/c the parser doesn't preserve comma positions.
     // TODO(dimvar): if this case comes up often, modify the parser to
@@ -112,17 +131,20 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(call.getChildAtIndex(2).getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocCall4() {
     Node root = parse("foo(1, 2 /** don't attach */);");
     Node call = root.getFirstFirstChild();
     assertThat(call.getChildAtIndex(2).getJSDocInfo()).isNull();
   }
 
+  @Test
   public void testOldJsdocCall5() {
     Node root = parse("/** attach */ x(); function f() {}");
     assertThat(root.getFirstFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocCall6() {
     Node root = parse("(function f() { /** attach */ var x = 1; })();");
     Node func = root.getFirstFirstChild().getFirstChild();
@@ -130,11 +152,13 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(func.getChildAtIndex(2).getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocCall7() {
     Node root = parse("/** attach */ obj.prop();");
     assertThat(root.getFirstFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocCall8() {
     Node root = parse("/** attach */ (obj).prop();");
     Node getProp = root.getFirstFirstChild().getFirstChild();
@@ -142,52 +166,64 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(getProp.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocComma1() {
-  //   Node root = parse("(/** attach */ x, y, z);");
-  //   Node leftComma = root.getFirstFirstChild().getFirstChild();
-  //   assertTrue(leftComma.getType() == Token.COMMA);
-  //   assertNotNull(leftComma.getFirstChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocComma1() {
+    Node root = parse("(/** attach */ x, y, z);");
+    Node leftComma = root.getFirstFirstChild().getFirstChild();
+    assertNode(leftComma).hasToken(Token.COMMA);
+    assertThat(leftComma.getFirstChild().getJSDocInfo()).isNotNull();
+  }
 
-  // public void testOldJsdocComma2() {
-  //   Node root = parse("(x /** don't attach */, y, z);");
-  //   Node leftComma = root.getFirstFirstChild().getFirstChild();
-  //   assertNull(leftComma.getFirstChild().getJSDocInfo());
-  //   assertNull(leftComma.getLastChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocComma2() {
+    Node root = parse("(x /** don't attach */, y, z);");
+    Node leftComma = root.getFirstFirstChild().getFirstChild();
+    assertThat(leftComma.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(leftComma.getLastChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocComma3() {
     Node root = parse("(x, y, /** attach */ z);");
     Node rightComma = root.getFirstFirstChild();
     assertThat(rightComma.getLastChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocContinue() {
     Node root = parse("FOO: for (;;) { continue /** don't attach */ FOO; }");
     Node forStm = root.getFirstChild().getLastChild();
     Node cont = forStm.getChildAtIndex(3).getFirstChild();
-    assertThat(cont.getToken()).isSameAs(Token.CONTINUE);
+    assertNode(cont).hasToken(Token.CONTINUE);
     assertThat(cont.getJSDocInfo()).isNull();
     assertThat(cont.getFirstChild().getJSDocInfo()).isNull();
   }
 
-  // public void testOldJsdocDoLoop1() {
-  //   Node root = parse("do /** don't attach */ {} while (x);");
-  //   Node doBlock = root.getFirstFirstChild();
-  //   assertNull(doBlock.getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocDoLoop1() {
+    Node root = parse("do /** don't attach */ {} while (x);");
+    Node doBlock = root.getFirstFirstChild();
+    assertThat(doBlock.getJSDocInfo()).isNull();
+  }
 
-  // public void testOldJsdocDoLoop2() {
-  //   Node root = parse("do {} /** don't attach */ while (x);");
-  //   Node whileExp = root.getFirstChild().getLastChild();
-  //   assertNull(whileExp.getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocDoLoop2() {
+    Node root = parse("do {} /** don't attach */ while (x);");
+    Node whileExp = root.getFirstChild().getLastChild();
+    assertThat(whileExp.getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocDot() {
     Node root = parse("/** attach */a.b;");
     assertThat(root.getFirstFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocDot2() {
     Node root = parse(
         "/** attach */\n" +
@@ -196,15 +232,18 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(root.getFirstFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocForInLoop1() {
-  //   Node root = parse("for /** don't attach */ (var p in {}) {}");
-  //   Node fil = root.getFirstChild();
-  //   assertNull(fil.getJSDocInfo());
-  //   assertNull(fil.getFirstChild().getJSDocInfo());
-  //   assertNull(fil.getSecondChild().getJSDocInfo());
-  //   assertNull(fil.getChildAtIndex(2).getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocForInLoop1() {
+    Node root = parse("for /** don't attach */ (var p in {}) {}");
+    Node fil = root.getFirstChild();
+    assertThat(fil.getJSDocInfo()).isNull();
+    assertThat(fil.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(fil.getSecondChild().getJSDocInfo()).isNull();
+    assertThat(fil.getChildAtIndex(2).getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocForInLoop2() {
     Node root = parse("for (/** attach */ var p in {}) {}");
     Node fil = root.getFirstChild();
@@ -212,6 +251,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(fil.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocForInLoop3() {
     Node root = parse("for (var p in /** attach */ {}) {}");
     Node fil = root.getFirstChild();
@@ -219,41 +259,50 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(fil.getSecondChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocForInLoop4() {
-  //   Node root = parse("for (var p in {}) /** don't attach */ {}");
-  //   Node fil = root.getFirstChild();
-  //   assertNull(fil.getJSDocInfo());
-  //   assertNull(fil.getChildAtIndex(2).getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocForInLoop4() {
+    Node root = parse("for (var p in {}) /** don't attach */ {}");
+    Node fil = root.getFirstChild();
+    assertThat(fil.getJSDocInfo()).isNull();
+    assertThat(fil.getChildAtIndex(2).getJSDocInfo()).isNull();
+  }
 
-  // public void testOldJsdocForInLoop5() {
-  //   Node root = parse("for (var p /** don't attach */ in {}) {}");
-  //   Node fil = root.getFirstChild();
-  //   assertNull(fil.getJSDocInfo());
-  //   assertNull(fil.getFirstChild().getJSDocInfo());
-  //   assertNull(fil.getSecondChild().getJSDocInfo());
-  //   assertNull(fil.getChildAtIndex(2).getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocForInLoop5() {
+    Node root = parse("for (var p /** don't attach */ in {}) {}");
+    Node fil = root.getFirstChild();
+    assertThat(fil.getJSDocInfo()).isNull();
+    assertThat(fil.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(fil.getSecondChild().getJSDocInfo()).isNull();
+    assertThat(fil.getChildAtIndex(2).getJSDocInfo()).isNull();
+  }
 
-  // public void testOldJsdocForInLoop6() {
-  //   Node root = parse("for (var p in {} /** don't attach */) {}");
-  //   Node fil = root.getFirstChild();
-  //   assertNull(fil.getJSDocInfo());
-  //   assertNull(fil.getFirstChild().getJSDocInfo());
-  //   assertNull(fil.getSecondChild().getJSDocInfo());
-  //   assertNull(fil.getChildAtIndex(2).getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocForInLoop6() {
+    Node root = parse("for (var p in {} /** don't attach */) {}");
+    Node fil = root.getFirstChild();
+    assertThat(fil.getJSDocInfo()).isNull();
+    assertThat(fil.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(fil.getSecondChild().getJSDocInfo()).isNull();
+    assertThat(fil.getChildAtIndex(2).getJSDocInfo()).isNull();
+  }
 
-  // public void testOldJsdocForLoop1() {
-  //   Node root = parse("for /** don't attach */ (i = 0; i < 5; i++) {}");
-  //   Node fl = root.getFirstChild();
-  //   assertNull(fl.getJSDocInfo());
-  //   assertNull(fl.getFirstChild().getJSDocInfo());
-  //   assertNull(fl.getSecondChild().getJSDocInfo());
-  //   assertNull(fl.getChildAtIndex(2).getJSDocInfo());
-  //   assertNull(fl.getChildAtIndex(3).getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocForLoop1() {
+    Node root = parse("for /** don't attach */ (i = 0; i < 5; i++) {}");
+    Node fl = root.getFirstChild();
+    assertThat(fl.getJSDocInfo()).isNull();
+    assertThat(fl.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(fl.getSecondChild().getJSDocInfo()).isNull();
+    assertThat(fl.getChildAtIndex(2).getJSDocInfo()).isNull();
+    assertThat(fl.getChildAtIndex(3).getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocForLoop2() {
     Node root = parse("for (/** attach */ i = 0; i < 5; i++) {}");
     Node fl = root.getFirstChild();
@@ -261,16 +310,19 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(fl.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocForLoop3() {
-  //   Node root = parse("for (i /** don't attach */ = 0; i < 5; i++) {}");
-  //   Node fl = root.getFirstChild();
-  //   assertNull(fl.getJSDocInfo());
-  //   Node init = fl.getFirstChild();
-  //   assertNull(init.getFirstChild().getJSDocInfo());
-  //   assertNull(init.getLastChild().getJSDocInfo());
-  //   assertNull(fl.getSecondChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocForLoop3() {
+    Node root = parse("for (i /** don't attach */ = 0; i < 5; i++) {}");
+    Node fl = root.getFirstChild();
+    assertThat(fl.getJSDocInfo()).isNull();
+    Node init = fl.getFirstChild();
+    assertThat(init.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(init.getLastChild().getJSDocInfo()).isNull();
+    assertThat(fl.getSecondChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocForLoop4() {
     Node root = parse("for (i = /** attach */ 0; i < 5; i++) {}");
     Node fl = root.getFirstChild();
@@ -279,23 +331,28 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(init.getLastChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocForLoop5() {
-  //   Node root = parse("for (i = 0 /** don't attach */; i < 5; i++) {}");
-  //   Node fl = root.getFirstChild();
-  //   assertNull(fl.getJSDocInfo());
-  //   Node init = fl.getFirstChild();
-  //   assertNull(init.getLastChild().getJSDocInfo());
-  //   assertNull(fl.getSecondChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocForLoop5() {
+    Node root = parse("for (i = 0 /** don't attach */; i < 5; i++) {}");
+    Node fl = root.getFirstChild();
+    assertThat(fl.getJSDocInfo()).isNull();
+    Node init = fl.getFirstChild();
+    assertThat(init.getLastChild().getJSDocInfo()).isNull();
+    assertThat(fl.getSecondChild().getJSDocInfo()).isNull();
+  }
 
-  // public void testOldJsdocForLoop6() {
-  //   Node root = parse("for (i = 0; /** attach */ i < 5; i++) {}");
-  //   Node fl = root.getFirstChild();
-  //   assertNull(fl.getJSDocInfo());
-  //   Node cond = fl.getSecondChild();
-  //   assertNotNull(cond.getFirstChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocForLoop6() {
+    Node root = parse("for (i = 0; /** attach */ i < 5; i++) {}");
+    Node fl = root.getFirstChild();
+    assertThat(fl.getJSDocInfo()).isNull();
+    Node cond = fl.getSecondChild();
+    assertThat(cond.getFirstChild().getJSDocInfo()).isNotNull();
+  }
 
+  @Test
   public void testOldJsdocForLoop7() {
     Node root = parse("for (i = 0; i < /** attach */ 5; i++) {}");
     Node fl = root.getFirstChild();
@@ -304,6 +361,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(cond.getLastChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocForLoop8() {
     Node root = parse("for (i = 0; i < 5; /** attach */ i++) {}");
     Node fl = root.getFirstChild();
@@ -311,21 +369,26 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(fl.getChildAtIndex(2).getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocForLoop9() {
-  //   Node root = parse("for (i = 0; i < 5; i++ /** don't attach */) {}");
-  //   Node fl = root.getFirstChild();
-  //   assertNull(fl.getJSDocInfo());
-  //   assertNull(fl.getChildAtIndex(2).getJSDocInfo());
-  //   assertNull(fl.getChildAtIndex(3).getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocForLoop9() {
+    Node root = parse("for (i = 0; i < 5; i++ /** don't attach */) {}");
+    Node fl = root.getFirstChild();
+    assertThat(fl.getJSDocInfo()).isNull();
+    assertThat(fl.getChildAtIndex(2).getJSDocInfo()).isNull();
+    assertThat(fl.getChildAtIndex(3).getJSDocInfo()).isNull();
+  }
 
-  // public void testOldJsdocForLoop10() {
-  //   Node root = parse("for (i = 0; i < 5; i++) /** don't attach */ {}");
-  //   Node fl = root.getFirstChild();
-  //   assertNull(fl.getJSDocInfo());
-  //   assertNull(fl.getChildAtIndex(3).getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocForLoop10() {
+    Node root = parse("for (i = 0; i < 5; i++) /** don't attach */ {}");
+    Node fl = root.getFirstChild();
+    assertThat(fl.getJSDocInfo()).isNull();
+    assertThat(fl.getChildAtIndex(3).getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocForLoop11() {
     Node root = parse("for (/** attach */ var i = 0; i < 5; i++) {}");
     Node fl = root.getFirstChild();
@@ -333,14 +396,17 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(fl.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocForLoop12() {
-  //   Node root = parse("for (var i = 0 /** dont attach */; i < 5; i++) {}");
-  //   Node fl = root.getFirstChild();
-  //   assertNull(fl.getJSDocInfo());
-  //   assertNull(fl.getFirstChild().getJSDocInfo());
-  //   assertNull(fl.getSecondChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocForLoop12() {
+    Node root = parse("for (var i = 0 /** dont attach */; i < 5; i++) {}");
+    Node fl = root.getFirstChild();
+    assertThat(fl.getJSDocInfo()).isNull();
+    assertThat(fl.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(fl.getSecondChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocFun1() {
     Node root = parse("function f(/** string */ e) {}");
     Node fun = root.getFirstChild();
@@ -348,78 +414,92 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(params.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocFun2() {
     Node root = parse("(function() {/** don't attach */})()");
     Node call = root.getFirstFirstChild();
     assertThat(call.getFirstChild().getJSDocInfo()).isNull();
   }
 
+  @Test
   public void testOldJsdocFun3() {
     Node root = parse("function /** string */ f (e) {}");
     Node fun = root.getFirstChild();
     assertThat(fun.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocFun4() {
     Node root = parse("f = /** attach */ function(e) {};");
     Node assign = root.getFirstFirstChild();
     assertThat(assign.getLastChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocFun5() {
     Node root = parse("x = 1; /** attach */ function f(e) {}");
     assertThat(root.getLastChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocFun6() {
     Node root = parse("function f() { /** attach */ function Foo(){} }");
     Node innerFun = root.getFirstChild().getLastChild().getFirstChild();
     assertThat(innerFun.getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocFun7() {
     Node root = parse("(function f() { /** attach */function Foo(){} })();");
     Node outerFun = root.getFirstFirstChild().getFirstChild();
     assertThat(outerFun.getLastChild().getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocGetElem1() {
     Node root = parse("(/** attach */ {})['prop'];");
     Node getElem = root.getFirstFirstChild();
     assertThat(getElem.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocGetElem2() {
-  //   Node root = parse("({} /** don't attach */)['prop'];");
-  //   Node getElem = root.getFirstFirstChild();
-  //   assertNull(getElem.getFirstChild().getJSDocInfo());
-  //   assertNull(getElem.getLastChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocGetElem2() {
+    Node root = parse("({} /** don't attach */)['prop'];");
+    Node getElem = root.getFirstFirstChild();
+    assertThat(getElem.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(getElem.getLastChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocGetElem3() {
     Node root = parse("({})[/** attach */ 'prop'];");
     Node getElem = root.getFirstFirstChild();
     assertThat(getElem.getLastChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocGetProp1() {
     Node root = parse("(/** attach */ {}).prop;");
     Node getProp = root.getFirstFirstChild();
     assertThat(getProp.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocGetProp2() {
     Node root = parse("/** attach */ ({}).prop;");
     Node getProp = root.getFirstFirstChild();
     assertThat(getProp.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocGetProp3() {
     Node root = parse("/** attach */ obj.prop;");
     Node getProp = root.getFirstFirstChild();
     assertThat(getProp.getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocGetter1() {
     mode = LanguageMode.ECMASCRIPT5;
     Node root = parse("({/** attach */ get foo() {}});");
@@ -427,6 +507,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(objlit.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocGetter2() {
     mode = LanguageMode.ECMASCRIPT5;
     Node root = parse("({/** attach */ get 1() {}});");
@@ -434,6 +515,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(objlit.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocGetter3() {
     mode = LanguageMode.ECMASCRIPT5;
     Node root = parse("({/** attach */ get 'foo'() {}});");
@@ -441,129 +523,161 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(objlit.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testJsdocHook1() {
      Node root = parse("/** attach */ (true) ? 1 : 2;");
      Node hook = root.getFirstFirstChild();
      assertThat(hook.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocHook1() {
-  //   Node root = parse("/** attach */ true ? 1 : 2;");
-  //   Node hook = root.getFirstFirstChild();
-  //   assertNotNull(hook.getFirstChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocHook1() {
+    Node root = parse("/** attach */ true ? 1 : 2;");
+    Node hook = root.getFirstFirstChild();
+    assertThat(hook.getFirstChild().getJSDocInfo()).isNotNull();
+  }
 
-  // public void testOldJsdocHook2() {
-  //   Node root = parse("true /** don't attach */ ? 1 : 2;");
-  //   Node hook = root.getFirstFirstChild();
-  //   assertNull(hook.getFirstChild().getJSDocInfo());
-  //   assertNull(hook.getSecondChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocHook2() {
+    Node root = parse("true /** don't attach */ ? 1 : 2;");
+    Node hook = root.getFirstFirstChild();
+    assertThat(hook.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(hook.getSecondChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocHook3() {
     Node root = parse("true ? /** attach */ 1 : 2;");
     Node hook = root.getFirstFirstChild();
     assertThat(hook.getSecondChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocHook4() {
-  //   Node root = parse("true ? 1 /** don't attach */ : 2;");
-  //   Node hook = root.getFirstFirstChild();
-  //   assertNull(hook.getSecondChild().getJSDocInfo());
-  //   assertNull(hook.getChildAtIndex(2).getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocHook4() {
+    Node root = parse("true ? 1 /** don't attach */ : 2;");
+    Node hook = root.getFirstFirstChild();
+    assertThat(hook.getSecondChild().getJSDocInfo()).isNull();
+    assertThat(hook.getChildAtIndex(2).getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocHook5() {
     Node root = parse("true ? 1 : /** attach */ 2;");
     Node hook = root.getFirstFirstChild();
     assertThat(hook.getChildAtIndex(2).getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocIf1() {
     Node root = parse("if (/** attach */ x) {}");
     assertThat(root.getFirstFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocIf2() {
-  //   Node root = parse("if (x) /** don't attach */ {}");
-  //   assertNull(root.getFirstChild().getSecondChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocIf2() {
+    Node root = parse("if (x) /** don't attach */ {}");
+    assertThat(root.getFirstChild().getSecondChild().getJSDocInfo()).isNull();
+  }
 
-  // public void testOldJsdocIf3() {
-  //   Node root = parse("if (x) {} else /** don't attach */ {}");
-  //   assertNull(root.getFirstChild().getChildAtIndex(2).getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocIf3() {
+    Node root = parse("if (x) {} else /** don't attach */ {}");
+    assertThat(root.getFirstChild().getChildAtIndex(2).getJSDocInfo()).isNull();
+  }
 
-  // public void testOldJsdocIf4() {
-  //   Node root = parse("if (x) {} /** don't attach */ else {}");
-  //   assertNull(root.getFirstChild().getChildAtIndex(2).getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocIf4() {
+    Node root = parse("if (x) {} /** don't attach */ else {}");
+    assertThat(root.getFirstChild().getChildAtIndex(2).getJSDocInfo()).isNull();
+  }
 
-  // public void testOldJsdocLabeledStm1() {
-  //   Node root = parse("/** attach */ FOO: if (x) {};");
-  //   assertNotNull(root.getFirstChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocLabeledStm1() {
+    Node root = parse("/** attach */ FOO: if (x) {};");
+    assertThat(root.getFirstChild().getJSDocInfo()).isNotNull();
+  }
 
-  // public void testOldJsdocLabeledStm2() {
-  //   Node root = parse("FOO: /** don't attach */ if (x) {};");
-  //   assertNull(root.getFirstChild().getJSDocInfo());
-  //   assertNull(root.getFirstChild().getLastChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocLabeledStm2() {
+    Node root = parse("FOO: /** don't attach */ if (x) {};");
+    assertThat(root.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(root.getFirstChild().getLastChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocNew1() {
     Node root = parse("/** attach */ new Foo();");
     Node newexp = root.getFirstFirstChild();
     assertThat(newexp.getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocNew2() {
     Node root = parse("new /** don't attach */ Foo();");
     Node newexp = root.getFirstFirstChild();
     assertThat(newexp.getJSDocInfo()).isNull();
   }
 
-  // public void testOldJsdocObjLit1() {
-  //   Node root = parse("({/** attach */ 1: 2});");
-  //   Node objlit = root.getFirstFirstChild();
-  //   assertNotNull(objlit.getFirstFirstChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocObjLit1() {
+    Node root = parse("({/** attach */ 1: 2});");
+    Node objlit = root.getFirstFirstChild();
+    assertThat(objlit.getFirstFirstChild().getJSDocInfo()).isNotNull();
+  }
 
+  @Test
   public void testOldJsdocObjLit2() {
     Node root = parse("({1: /** attach */ 2, 3: 4});");
     Node objlit = root.getFirstFirstChild();
     assertThat(objlit.getFirstChild().getLastChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocObjLit3() {
     Node root = parse("({'1': /** attach */ (foo())});");
     Node objlit = root.getFirstFirstChild();
     assertThat(objlit.getFirstChild().getLastChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocPostfix1() {
     Node root = parse("/** attach */ (x)++;");
     Node unary = root.getFirstFirstChild();
     assertThat(unary.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocPostfix2() {
     Node root = parse("/** attach */ x++;");
     Node unary = root.getFirstFirstChild();
     assertThat(unary.getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocReturn1() {
     Node root = parse("function f(x) { return /** string */ x; }");
     Node ret = root.getFirstChild().getLastChild().getFirstChild();
     assertThat(ret.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocReturn2() {
-  //   Node root = parse("function f(x) { /** string */ return x; }");
-  //   Node ret = root.getFirstChild().getLastChild().getFirstChild();
-  //   assertNotNull(ret.getFirstChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocReturn2() {
+    Node root = parse("function f(x) { /** string */ return x; }");
+    Node ret = root.getFirstChild().getLastChild().getFirstChild();
+    assertThat(ret.getFirstChild().getJSDocInfo()).isNotNull();
+  }
 
+  @Test
   public void testOldJsdocReturn3() {
     // The first comment should be attached to the parenthesis, and the
     // second comment shouldn't be attached to any local node.
@@ -574,6 +688,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(ret.getFirstChild().getLastChild().getJSDocInfo()).isNull();
   }
 
+  @Test
   public void testOldJsdocSetter() {
     mode = LanguageMode.ECMASCRIPT5;
     Node root = parse("({/** attach */ set foo(x) {}});");
@@ -581,58 +696,69 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(objlit.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocScript1() {
     Node root = parse("{ 1; /** attach */ 2; }");
     Node block = root.getFirstChild();
     assertThat(block.getLastChild().getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocScript2() {
     Node root = parse("1; /** attach */ 2;");
     assertThat(root.getLastChild().getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocScript3() {
     Node root = parse("1;/** attach */ function f(){}");
     assertThat(root.getLastChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocSwitch1() {
     Node root = parse("switch /** attach */ (x) {}");
     Node sw = root.getFirstChild();
     assertThat(sw.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocSwitch2() {
-  //   Node root = parse("switch (x) { /** don't attach */ case 1: ; }");
-  //   Node sw = root.getFirstChild();
-  //   assertNull(sw.getSecondChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocSwitch2() {
+    Node root = parse("switch (x) { /** don't attach */ case 1: ; }");
+    Node sw = root.getFirstChild();
+    assertThat(sw.getSecondChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocSwitch3() {
     Node root = parse("switch (x) { case /** attach */ 1: ; }");
     Node sw = root.getFirstChild();
     assertThat(sw.getSecondChild().getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocSwitch4() {
     Node root = parse("switch (x) { case 1: /** don't attach */ {}; }");
     Node sw = root.getFirstChild();
     assertThat(sw.getSecondChild().getLastChild().getJSDocInfo()).isNull();
   }
 
+  @Test
   public void testOldJsdocSwitch5() {
     Node root = parse("switch (x) { default: /** don't attach */ {}; }");
     Node sw = root.getFirstChild();
     assertThat(sw.getSecondChild().getLastChild().getJSDocInfo()).isNull();
   }
 
+  @Test
   public void testOldJsdocSwitch6() {
     Node root = parse("switch (x) { case 1: /** don't attach */ }");
     Node sw = root.getFirstChild();
     assertThat(sw.getSecondChild().getLastChild().getJSDocInfo()).isNull();
   }
 
+  @Test
   public void testOldJsdocSwitch7() {
     Node root = parse(
         "switch (x) {" +
@@ -646,103 +772,125 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(caseBody.getSecondChild().getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocThrow() {
     Node root = parse("throw /** attach */ new Foo();");
     assertThat(root.getFirstFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocTryCatch1() {
     Node root = parse("try {} catch (/** attach */ e) {}");
     Node catchNode = root.getFirstChild().getLastChild().getFirstChild();
     assertThat(catchNode.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocTryCatch2() {
-  //   Node root = parse("try {} /** don't attach */ catch (e) {}");
-  //   Node catchNode = root.getFirstChild().getLastChild().getFirstChild();
-  //   assertNull(catchNode.getJSDocInfo());
-  //   assertNull(catchNode.getFirstChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocTryCatch2() {
+    Node root = parse("try {} /** don't attach */ catch (e) {}");
+    Node catchNode = root.getFirstChild().getLastChild().getFirstChild();
+    assertThat(catchNode.getJSDocInfo()).isNull();
+    assertThat(catchNode.getFirstChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocTryFinally() {
     Node root = parse("try {} finally { /** attach */ e; }");
     Node finallyBlock = root.getFirstChild().getLastChild();
     assertThat(finallyBlock.getFirstFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocUnary() {
     Node root = parse("!(/** attach */ x);");
     Node exp = root.getFirstFirstChild();
     assertThat(exp.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocVar1() {
     Node root = parse("/** attach */ var a;");
     assertThat(root.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocVar2() {
     Node root = parse("var a = /** attach */ (x);");
     Node var = root.getFirstChild();
     assertThat(var.getFirstFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocVar3() {
     Node root = parse("var a = (/** attach */ {});");
     Node var = root.getFirstChild();
     assertThat(var.getFirstFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocVar4() {
     Node root = parse("var /** number */ a = x;");
     Node var = root.getFirstChild();
     assertThat(var.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocVar5() {
     Node root = parse("x = 1; /** attach */ var y = 5;");
     Node var = root.getLastChild();
     assertThat(var.getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocWhile1() {
-  //   Node root = parse("while (x) /** don't attach */ {}");
-  //   Node wh = root.getFirstChild();
-  //   assertNull(wh.getLastChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocWhile1() {
+    Node root = parse("while (x) /** don't attach */ {}");
+    Node wh = root.getFirstChild();
+    assertThat(wh.getLastChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocWhile2() {
     Node root = parse("while /** attach */ (x) {}");
     Node wh = root.getFirstChild();
     assertThat(wh.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocWhile3() {
-  //   Node root = parse("while (x /** don't attach */) {}");
-  //   Node wh = root.getFirstChild();
-  //   assertNull(wh.getFirstChild().getJSDocInfo());
-  //   assertNull(wh.getLastChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocWhile3() {
+    Node root = parse("while (x /** don't attach */) {}");
+    Node wh = root.getFirstChild();
+    assertThat(wh.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(wh.getLastChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocWith1() {
     Node root = parse("with (/** attach */ obj) {};");
     Node with = root.getFirstChild();
     assertThat(with.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
-  // public void testOldJsdocWith2() {
-  //   Node root = parse("with (obj) /** don't attach */ {};");
-  //   Node with = root.getFirstChild();
-  //   assertNull(with.getLastChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocWith2() {
+    Node root = parse("with (obj) /** don't attach */ {};");
+    Node with = root.getFirstChild();
+    assertThat(with.getLastChild().getJSDocInfo()).isNull();
+  }
 
-  // public void testOldJsdocWith3() {
-  //   Node root = parse("with (obj /** don't attach */) {};");
-  //   Node with = root.getFirstChild();
-  //   assertNull(with.getFirstChild().getJSDocInfo());
-  //   assertNull(with.getLastChild().getJSDocInfo());
-  // }
+  @Test
+  @Ignore
+  public void testOldJsdocWith3() {
+    Node root = parse("with (obj /** don't attach */) {};");
+    Node with = root.getFirstChild();
+    assertThat(with.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(with.getLastChild().getJSDocInfo()).isNull();
+  }
 
+  @Test
   public void testOldJsdocWith4() {
     Node root = parse(
         "/** @suppress {with} */ with (context) {\n" +
@@ -751,6 +899,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(root.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocManyComments1() {
     Node root = parse(
         "function /** number */ f(/** number */ x, /** number */ y) {\n" +
@@ -762,12 +911,14 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(fun.getSecondChild().getLastChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocManyComments2() {
     Node root = parse("var /** number */ x = 1; var /** string */ y = 2;");
     assertThat(root.getFirstFirstChild().getJSDocInfo()).isNotNull();
     assertThat(root.getLastChild().getFirstChild().getJSDocInfo()).isNotNull();
   }
 
+  @Test
   public void testOldJsdocManyCommentsOnOneNode() {
     // When many jsdocs could attach to a node, we pick the last one.
     Node root = parse("var x; /** foo */ /** bar */ function f() {}");
@@ -776,6 +927,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(info.getOriginalCommentString()).isEqualTo("/** bar */");
   }
 
+  @Test
   public void testInlineInExport() {
     mode = LanguageMode.ECMASCRIPT6;
     Node root = parse("export var /** number */ x;");
@@ -795,11 +947,10 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
             null,
             true,
             StrictMode.SLOPPY);
-    Node script = ParserRunner.parse(
-        new SimpleSourceFile("input", false),
-        source,
-        config,
-        testErrorReporter).ast;
+    Node script =
+        ParserRunner.parse(
+                new SimpleSourceFile("input", SourceKind.STRONG), source, config, testErrorReporter)
+            .ast;
 
     // verifying that all warnings were seen
     testErrorReporter.assertHasEncounteredAllErrors();

@@ -467,6 +467,12 @@ md.$toast.preset = function() {};
 md.$toast.preset.prototype.action = function(action) {};
 
 /**
+ * @param {string} actionKey
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.actionKey = function(actionKey) {};
+
+/**
  * @param {boolean} capsule
  * @return {!md.$toast.preset}
  */
@@ -939,7 +945,8 @@ md.$panel = function() {};
  *   onRemoving: (Function|undefined),
  *   onDomRemoved: (Function|undefined),
  *   origin: (!angular.JQLite|!Element|undefined),
- *   onCloseSuccess: (function(md.$panel.MdPanelRef, string)|undefined)
+ *   onCloseSuccess: (function(md.$panel.MdPanelRef, string)|undefined),
+ *   groupName: (string|!Array<string>|undefined),
  * }}
  */
 md.$panel.config;
@@ -961,6 +968,23 @@ md.$panel.prototype.newPanelPosition = function() {};
 
 /** @return {!md.$panel.MdPanelAnimation} */
 md.$panel.prototype.newPanelAnimation = function() {};
+
+/**
+ * @param {string} groupName
+ * @param {{maxOpen: (number|undefined)}=} opt_config
+ * @return {{
+ *   panels: !Array<!md.$panel.MdPanelRef>,
+ *   openPanels: !Array<!md.$panel.MdPanelRef>,
+ *   maxOpen: number,
+ * }}
+ */
+md.$panel.prototype.newPanelGroup = function(groupName, opt_config) {};
+
+/**
+ * @param {string} groupName
+ * @param {number} maxOpen
+ */
+md.$panel.prototype.setGroupMaxOpen = function(groupName, maxOpen) {};
 
 /**
  * Possible values of xPosition.
@@ -1051,6 +1075,27 @@ md.$panel.MdPanelRef.prototype.removeClass = function(classToRemove) {};
 
 /** @param {string} classToToggle */
 md.$panel.MdPanelRef.prototype.toggleClass = function(classToToggle) {};
+
+/**
+ * @param {string} type
+ * @param {function(): !angular.$q.Promise<*>} callback
+ * @return {!md.$panel.MdPanelRef}
+ */
+md.$panel.MdPanelRef.prototype.registerInterceptor =
+    function(type, callback) {};
+
+/**
+ * @param {string} type
+ * @param {function(): !angular.$q.Promise<*>} callback
+ * @return {!md.$panel.MdPanelRef}
+ */
+md.$panel.MdPanelRef.prototype.removeInterceptor = function(type, callback) {};
+
+/**
+ * @param {string=} opt_type
+ * @return {!md.$panel.MdPanelRef}
+ */
+md.$panel.MdPanelRef.prototype.removeAllInterceptors = function(opt_type) {};
 
 /**
  * @param {!angular.$window} $window

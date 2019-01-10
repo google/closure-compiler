@@ -253,3 +253,6 @@ function NotificationEvent(type, opt_eventInitDict) {}
 
 /** @type {!Notification} */
 NotificationEvent.prototype.notification;
+
+/** @type {string} */
+NotificationEvent.prototype.action;

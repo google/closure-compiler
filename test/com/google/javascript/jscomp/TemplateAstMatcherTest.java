@@ -16,18 +16,22 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link TemplateAstMatcher}.
- */
-public final class TemplateAstMatcherTest extends TestCase {
+/** Tests for {@link TemplateAstMatcher}. */
+@RunWith(JUnit4.class)
+public final class TemplateAstMatcherTest {
 
   private Compiler lastCompiler;
 
+  @Test
   public void testMatches_primitives() {
     String template = ""
         + "function template() {\n"
@@ -87,6 +91,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
   }
 
+  @Test
   public void testMatches_varDeclarations() {
     String template = ""
         + "function template() {\n"
@@ -125,6 +130,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
   }
 
+  @Test
   public void testMatches_templateParameterType() {
     String externs = "";
     String template = ""
@@ -209,6 +215,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertNotMatch(pair.templateNode, pair.testNode.getSecondChild());
   }
 
+  @Test
   public void testMatches_functionCall() {
     String externs = ""
         + "function foo() {};\n"
@@ -229,6 +236,7 @@ public final class TemplateAstMatcherTest extends TestCase {
         pair.templateNode, pair.testNode.getFirstFirstChild().getLastChild());
   }
 
+  @Test
   public void testMatches_functionCallWithArguments() {
     String externs = ""
         + "/** @return {string} */\n"
@@ -288,6 +296,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
   }
 
+  @Test
   public void testMatches_methodCall() {
     String externs = ""
         + "/** @return {string} */\n"
@@ -311,6 +320,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
   }
 
+  @Test
   public void testMatches_methodCallWithArguments() {
     String externs = ""
         + "/** @constructor */\n"
@@ -365,6 +375,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertNotMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());
   }
 
+  @Test
   public void testMatches_instantiation() {
     String externs = ""
         + "/** @constructor */\n"
@@ -384,6 +395,7 @@ public final class TemplateAstMatcherTest extends TestCase {
         pair.templateNode, pair.testNode.getFirstFirstChild().getFirstChild());
   }
 
+  @Test
   public void testMatches_propertyAccess() {
     String externs = ""
         + "/** @constructor */\n"
@@ -406,6 +418,7 @@ public final class TemplateAstMatcherTest extends TestCase {
         pair.templateNode, pair.testNode.getLastChild().getFirstFirstChild());
   }
 
+  @Test
   public void testMatches_multiLineTemplates() {
     String externs = ""
         + "/** @constructor */\n"
@@ -460,6 +473,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertNotMatch(pair.templateNode, pair.testNode.getSecondChild());
   }
 
+  @Test
   public void testMatches_subclasses() {
     String externs = ""
         + "/** @constructor */\n"
@@ -487,6 +501,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());
   }
 
+  @Test
   public void testMatches_nonDefaultStrategy() {
     String externs = ""
         + "/** @constructor */\n"
@@ -534,7 +549,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     sb.append("The nodes should").append(shouldMatch ? "" : " not").append(" have matched.\n");
     sb.append("Template node:\n").append(templateRoot.toStringTree()).append("\n");
     sb.append("Test node:\n").append(testNode.getParent().toStringTree()).append("\n");
-    assertEquals(sb.toString(), shouldMatch, matcher.matches(testNode));
+    assertWithMessage(sb.toString()).that(matcher.matches(testNode)).isEqualTo(shouldMatch);
   }
 
   private void assertMatch(Node templateRoot, Node testNode) {

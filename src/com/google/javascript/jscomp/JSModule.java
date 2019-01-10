@@ -40,6 +40,17 @@ import java.util.Set;
  *
  */
 public final class JSModule extends DependencyInfo.Base implements Serializable {
+  // The name of the artificial module containing all strong sources when there is no module spec.
+  // If there is a module spec, strong sources go in their respective modules, and this module does
+  // not exist.
+  public static final String STRONG_MODULE_NAME = "$strong$";
+
+  // The name of the artificial module containing all weak sources. Regardless of the module spec,
+  // weak sources are moved into this module, which is made to depend on every other module. This is
+  // necessary so that removing weak sources (as an optimization) does not accidentally remove
+  // namespace declarations whose existence strong sources rely upon.
+  public static final String WEAK_MODULE_NAME = "$weak$";
+
   private static final long serialVersionUID = 1;
 
   /** Module name */
@@ -95,7 +106,7 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
   }
 
   @Override
-  public ImmutableList<String> getWeakRequires() {
+  public ImmutableList<String> getTypeRequires() {
     // TODO(blickly): Actually allow weak module deps
     return ImmutableList.of();
   }
@@ -219,6 +230,16 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
     return deps;
   }
 
+  /** Returns the number of source code inputs. */
+  public int getInputCount() {
+    return inputs.size();
+  }
+
+  /** Returns the i-th source code input. */
+  public CompilerInput getInput(int i) {
+    return inputs.get(i);
+  }
+
   /**
    * Gets this module's list of source code inputs.
    *
@@ -253,6 +274,14 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
       }
     }
     return found;
+  }
+
+  /**
+   * Returns whether this module is synthetic (i.e. one of the special strong or weak modules
+   * created by the compiler.
+   */
+  public boolean isSynthetic() {
+    return name.equals(STRONG_MODULE_NAME) || name.equals(WEAK_MODULE_NAME);
   }
 
   /** Returns the module name (primarily for debugging). */

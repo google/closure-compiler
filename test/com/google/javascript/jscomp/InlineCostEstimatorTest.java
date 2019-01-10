@@ -19,15 +19,17 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.rhino.Node;
-
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit test for {@link InlineCostEstimator}.
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public final class InlineCostEstimatorTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class InlineCostEstimatorTest {
 
   static Node parse(String js) {
     Compiler compiler = new Compiler();
@@ -48,6 +50,7 @@ public final class InlineCostEstimatorTest extends TestCase {
     return InlineCostEstimator.getCost(parse(js));
   }
 
+  @Test
   public void testCost() {
     checkCost("1", "1");
     checkCost("true", "1");

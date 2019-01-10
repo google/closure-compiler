@@ -72,8 +72,20 @@ HTMLInputElement.prototype.onwebkitspeechchange;
 // W3C Web Speech API implemented in Chrome M23
 /**
  * @constructor
+ * @implements {EventTarget}
  */
 function SpeechRecognition() {}
+
+/** @override */
+SpeechRecognition.prototype.addEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+SpeechRecognition.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+SpeechRecognition.prototype.dispatchEvent = function(evt) {};
 
 /** @type {SpeechGrammarList} */
 SpeechRecognition.prototype.grammars;
@@ -312,8 +324,17 @@ SpeechSynthesisUtterance.prototype.text;
 /** @type {string} */
 SpeechSynthesisUtterance.prototype.lang;
 
+/** @type {number} */
+SpeechSynthesisUtterance.prototype.pitch;
+
+/** @type {number} */
+SpeechSynthesisUtterance.prototype.rate;
+
 /** @type {SpeechSynthesisVoice} */
 SpeechSynthesisUtterance.prototype.voice;
+
+/** @type {number} */
+SpeechSynthesisUtterance.prototype.volume;
 
 /**
  * @param {Event} event
@@ -325,6 +346,10 @@ SpeechSynthesisUtterance.prototype.onstart = function(event) {};
  */
 SpeechSynthesisUtterance.prototype.onend = function(event) {};
 
+/**
+ * @param {Event} event
+ */
+SpeechSynthesisUtterance.prototype.onerror = function(event) {};
 
 /**
  * @constructor

@@ -147,7 +147,7 @@ class FunctionToBlockMutator {
     boolean hasArgs = !args.isEmpty();
     if (hasArgs) {
       FunctionArgumentInjector.maybeAddTempsForCallArguments(
-          newFnNode, args, namesToAlias, compiler.getCodingConvention());
+          compiler, newFnNode, args, namesToAlias, compiler.getCodingConvention());
     }
 
     Node newBlock = NodeUtil.getFunctionBody(newFnNode);

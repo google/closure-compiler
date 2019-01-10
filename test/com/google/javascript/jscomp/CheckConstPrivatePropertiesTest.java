@@ -17,10 +17,17 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckConstPrivateProperties.MISSING_CONST_PROPERTY;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+@RunWith(JUnit4.class)
 public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     // TODO(tbreisacher): After the typechecker is updated to understand ES6, add non-transpiling
     // versions of these tests.
@@ -41,25 +48,30 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     return options;
   }
 
+  @Test
   public void testConstructorPropModified1() {
     testWarning(
         "/** @constructor */ function C() {} /** @private */ C.prop = 1;", MISSING_CONST_PROPERTY);
     testSame("/** @constructor */ function C() {} /** @private */ C.prop = 1; C.prop = 2;");
   }
 
+  @Test
   public void testConstructorPropModified_function() {
     testSame("/** @constructor */ function C() {} /** @private */ C.prop = function() {};");
   }
 
+  @Test
   public void testConstructorPropModified_enum() {
     testSame(
         "/** @constructor */ function C() {} /** @enum {number} @private */ C.prop = { A: 1 };");
   }
 
+  @Test
   public void testConstructorPropModified_const() {
     testSame("/** @constructor */ function C() {} /** @private @const */ C.prop = 1;");
   }
 
+  @Test
   public void testConstructorPropModified2() {
     testWarning(
         "/** @constructor */ function C() { /** @private */ this.foo = 1; } ",
@@ -70,6 +82,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
             + "C.prototype.bar = function() { this.foo = 2; }");
   }
 
+  @Test
   public void testConstructorPropModified_delete() {
     testWarning(
         "/** @constructor */ function C() { /** @private */ this.foo = 1; } ",
@@ -81,6 +94,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
             + "C.prototype.bar = function() { delete this.foo; }");
   }
 
+  @Test
   public void testConstructorPropModified_arrayIndexGetProp() {
     testWarning(
         "/** @constructor */ function C() { /** @private */ this.foo = [1]; } ",
@@ -96,6 +110,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
         MISSING_CONST_PROPERTY);
   }
 
+  @Test
   public void testConstructorPropModified_objectElement() {
     testWarning(
         "/** @constructor */ function C() { /** @private */ this['foo'] = 1; } ",
@@ -107,6 +122,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
             + "C.prototype.bar = function() { this['foo'] = 2; }");
   }
 
+  @Test
   public void testConstructorPropModified_arrayIndexGetElem() {
     testWarning(
         "/** @constructor */ function C() { /** @private */ this['foo'] = [1]; } ",
@@ -122,6 +138,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
         MISSING_CONST_PROPERTY);
   }
 
+  @Test
   public void testConstructorPropModified_mixedObjectAccess() {
     testSame(
         "/** @constructor */ function C() { /** @private */ this.foo = 1; this['foo'] = 2; } ");
@@ -130,6 +147,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
             + "C.prototype.bar = function() { this.foo = 2; }");
   }
 
+  @Test
   public void testConstructorPropModified_lambda() {
     testSame(
         lines(
@@ -142,6 +160,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testClassPropModified1() {
     testWarning(
         "class C { constructor() { /** @private */ this.a = 2; } }", MISSING_CONST_PROPERTY);
@@ -149,10 +168,12 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame("class C { constructor() { /** @private */ this.a = 2; } foo() { this.a = 3; } }");
   }
 
+  @Test
   public void testClassPropModified_const() {
     testSame("class C { constructor() { /** @private @const */ this.a = 2; } }");
   }
 
+  @Test
   public void testClassPropModified_lambda() {
     testSame(
         lines(
@@ -166,6 +187,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testClassPropModified_assignModify() {
     testWarning(
         "class C { constructor() { /** @private */ this.a = 2; } }", MISSING_CONST_PROPERTY);
@@ -175,6 +197,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame("class C { constructor() { /** @private */ this.a = 2; } foo() { this.a -= 3; } }");
   }
 
+  @Test
   public void testClassPropModified_increment() {
     testWarning(
         "class C { constructor() { /** @private */ this.a = 2; } }", MISSING_CONST_PROPERTY);
@@ -182,6 +205,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame("class C { constructor() { /** @private */ this.a = 2; } foo() { this.a++; } }");
   }
 
+  @Test
   public void testClassPropModified_decrement() {
     testWarning(
         "class C { constructor() { /** @private */ this.a = 2; } }", MISSING_CONST_PROPERTY);
@@ -189,6 +213,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame("class C { constructor() { /** @private */ this.a = 2; } foo() { this.a--; } }");
   }
 
+  @Test
   public void testClassPropModified_delete() {
     testWarning(
         "class C { constructor() { /** @private */ this.a = 2; } }", MISSING_CONST_PROPERTY);
@@ -196,6 +221,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame("class C { constructor() { /** @private */ this.a = 2; } foo() { delete this.a; } }");
   }
 
+  @Test
   public void testClassPropModified_multiFile() {
     testWarning(
         new String[] {
@@ -210,6 +236,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testPrototype_Property() {
     testSame("/** @constructor */ function C() {} /** @private */ C.prototype.prop = 1;");
     testSame(
@@ -217,11 +244,13 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
             + "C.prototype.prop = 2;");
   }
 
+  @Test
   public void testPrototype_Method() {
     testSame(
         "/** @constructor */ function C() {} /** @private */ C.prototype.method = function() {};");
   }
 
+  @Test
   public void testPropertyAsRvalueOfDeclaration() {
     // Test bug where the rhs of a @private prop declaration was treated like a declaration.
     // See b/110938671

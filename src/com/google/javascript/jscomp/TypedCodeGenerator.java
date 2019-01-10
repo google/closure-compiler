@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -143,9 +144,8 @@ class TypedCodeGenerator extends CodeGenerator {
     for (int i = 0; i < formals.size(); i++) {
       sb.append(" * ");
       appendAnnotation(sb, "param", getParameterJSDocType(formals, i, minArity, maxArity));
-      sb.append(" ")
-          .append(paramNode == null ? "p" + i : paramNode.getString())
-          .append("\n");
+      String parameterName = getParameterJSDocName(paramNode, i);
+      sb.append(" ").append(parameterName).append("\n");
       if (paramNode != null) {
         paramNode = paramNode.getNext();
       }
@@ -190,6 +190,42 @@ class TypedCodeGenerator extends CodeGenerator {
 
     sb.append(" */\n");
     return sb.toString();
+  }
+
+  /**
+   * Return the name of the parameter to be used in JSDoc, generating one for destructuring
+   * parameters.
+   *
+   * @param paramNode child node of a parameter list
+   * @param paramIndex position of child in the list
+   * @return name to use in JSDoc
+   */
+  private String getParameterJSDocName(Node paramNode, int paramIndex) {
+    Node nameNode = null;
+    if (paramNode != null) {
+      checkArgument(paramNode.getParent().isParamList(), paramNode);
+      if (paramNode.isRest()) {
+        // use `restParam` of `...restParam`
+        // restParam might still be a destructuring pattern
+        paramNode = paramNode.getOnlyChild();
+      } else if (paramNode.isDefaultValue()) {
+        // use `defaultParam` of `defaultParam = something`
+        // defaultParam might still be a destructuring pattern
+        paramNode = paramNode.getFirstChild();
+      }
+      if (paramNode.isName()) {
+        nameNode = paramNode;
+      } else {
+        checkState(paramNode.isObjectPattern() || paramNode.isArrayPattern(), paramNode);
+        nameNode = null; // must generate a fake name
+      }
+    }
+    if (nameNode == null) {
+      return "p" + paramIndex;
+    } else {
+      checkState(nameNode.isName(), nameNode);
+      return nameNode.getString();
+    }
   }
 
   private String formatTypeVar(JSType var) {

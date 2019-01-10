@@ -47,7 +47,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -65,8 +64,6 @@ import javax.annotation.Nullable;
  */
 public final class NodeUtil {
 
-  public static final String EXTERN_OBJECT_PROPERTY_STRING =
-      "JSCompiler_ObjectPropertyString";
   static final long MAX_POSITIVE_INTEGER_NUMBER = 1L << 53;
 
   static final String JSC_PROPERTY_NAME_FN = "JSCompiler_renameProperty";
@@ -143,9 +140,12 @@ public final class NodeUtil {
     switch (n.getToken()) {
       case TEMPLATELIT:
         if (n.hasOneChild()) {
-          return TernaryValue.forBoolean(!n.getFirstChild().getString().isEmpty());
+          return getPureBooleanValue(n.getFirstChild());
         }
         break;
+      case TEMPLATELIT_STRING:
+        return TernaryValue.forBoolean(
+            null != n.getCookedString() && !n.getCookedString().isEmpty());
 
       case STRING:
         return TernaryValue.forBoolean(n.getString().length() > 0);
@@ -214,19 +214,21 @@ public final class NodeUtil {
         // Only convert a template literal if all its expressions can be converted.
         String string = "";
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-          if (child.isString()) {
-            string = string + child.getString();
-          } else if (child.isTemplateLitSub()) {
-            Node expression = child.getFirstChild();
-            String expressionString = getStringValue(expression);
-            if (expressionString == null) {
-              // Cannot convert.
-              return null;
-            }
-            string = string + expressionString;
+          Node expression = child;
+          if (child.isTemplateLitSub()) {
+            expression = child.getFirstChild();
           }
+          String expressionString = getStringValue(expression);
+          if (expressionString == null) {
+            // Cannot convert.
+            return null;
+          }
+          string = string + expressionString;
         }
         return string;
+
+      case TEMPLATELIT_STRING:
+        return n.getCookedString();
 
       case NAME:
         String name = n.getString();
@@ -585,6 +587,8 @@ public final class NodeUtil {
         }
         return true;
       default:
+        // TODO(yitingwang) There are probably other tokens that shouldn't get to the default branch
+        checkArgument(!n.isTemplateLitString());
         break;
     }
 
@@ -1090,17 +1094,19 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if the node may create new mutable state, or change existing
-   * state.
+   * Returns true if the node may create new mutable state, or change existing state.
    *
    * @see <a href="http://www.xkcd.org/326/">XKCD Cartoon</a>
    */
-  static boolean mayEffectMutableState(Node n) {
-    return mayEffectMutableState(n, null);
+  static boolean mayEffectMutableState(Node n, AbstractCompiler compiler) {
+    checkNotNull(compiler);
+    return checkForStateChangeHelper(n, true, compiler);
   }
 
-  static boolean mayEffectMutableState(Node n, AbstractCompiler compiler) {
-    return checkForStateChangeHelper(n, true, compiler);
+  // TODO(johnplaisted): All call sites should pass in the compiler.
+  @Deprecated
+  public static boolean mayHaveSideEffects(Node n) {
+    return mayHaveSideEffects(n, null);
   }
 
   /**
@@ -1108,10 +1114,6 @@ public final class NodeUtil {
    * This version default to the "safe" assumptions when the compiler object is not
    * provided (RegExp have side-effects, etc).
    */
-  public static boolean mayHaveSideEffects(Node n) {
-    return mayHaveSideEffects(n, null);
-  }
-
   public static boolean mayHaveSideEffects(Node n, AbstractCompiler compiler) {
     return checkForStateChangeHelper(n, false, compiler);
   }
@@ -1240,6 +1242,7 @@ public final class NodeUtil {
       case TRY:
       case EMPTY:
       case TEMPLATELIT:
+      case TEMPLATELIT_STRING:
       case COMPUTED_PROP:
         break;
 
@@ -1546,8 +1549,7 @@ public final class NodeUtil {
    * has side-effects.
    */
   static boolean canBeSideEffected(Node n) {
-    Set<String> emptySet = Collections.emptySet();
-    return canBeSideEffected(n, emptySet, null);
+    return canBeSideEffected(n, ImmutableSet.of("undefined", "Infinity", "NaN"), null);
   }
 
   /**
@@ -1717,6 +1719,7 @@ public final class NodeUtil {
         return 21;
 
       default:
+        checkArgument(type != Token.TEMPLATELIT_STRING);
         throw new IllegalStateException("Unknown precedence for " + type);
     }
   }
@@ -1917,6 +1920,7 @@ public final class NodeUtil {
         return ValueType.OBJECT;
 
       default:
+        checkArgument(!n.isTemplateLitString());
         return ValueType.UNDETERMINED;
     }
   }
@@ -2292,7 +2296,7 @@ public final class NodeUtil {
    */
   static boolean referencesThis(Node n) {
     Node start = (n.isFunction()) ? n.getLastChild() : n;
-    return containsType(start, Token.THIS, MATCH_NOT_THIS_BINDING);
+    return containsType(start, Token.THIS, MATCH_NOT_VANILLA_FUNCTION);
   }
 
   /**
@@ -2980,8 +2984,14 @@ public final class NodeUtil {
           return true;
         case COMPUTED_PROP:
           // `({ [expression]() {} })`
+          // `({ get [expression]() {} })`
+          // `({ set [expression](x) {} })`
+          // (but not `({ [expression]: function() {} })`
           // The first child is the expression, and could possibly be a function.
-          return parent.getLastChild() == n;
+          return parent.getLastChild() == n
+              && (parent.getBooleanProp(Node.COMPUTED_PROP_METHOD)
+                  || parent.getBooleanProp(Node.COMPUTED_PROP_GETTER)
+                  || parent.getBooleanProp(Node.COMPUTED_PROP_SETTER));
         default:
           return false;
       }
@@ -3268,7 +3278,7 @@ public final class NodeUtil {
    * @param parent Parent of the node
    * @return True if n is the left hand of an assign
    */
-  static boolean isNameDeclOrSimpleAssignLhs(Node n, Node parent) {
+  public static boolean isNameDeclOrSimpleAssignLhs(Node n, Node parent) {
     return
         (parent.isAssign() && parent.getFirstChild() == n) || NodeUtil.isNameDeclaration(parent);
   }
@@ -3378,6 +3388,7 @@ public final class NodeUtil {
    * Returns the node that is effectively declaring the given target.
    *
    * <p>Examples:
+   *
    * <pre><code>
    *   const a = 1; // getDeclaringParent(a) returns CONST
    *   let {[expression]: [x = 3]} = obj; // getDeclaringParent(x) returns LET
@@ -3390,10 +3401,11 @@ public final class NodeUtil {
    *   import foo from './foo'; // getDeclaringParent(foo) returns IMPORT
    *   import {foo} from './foo'; // getDeclaringParent(foo) returns IMPORT
    *   import {foo as bar} from './foo'; // getDeclaringParent(bar) returns IMPORT
+   *   } catch (err) { // getDeclaringParent(err) returns CATCH
    * </code></pre>
    *
    * @param targetNode a NAME, OBJECT_PATTERN, or ARRAY_PATTERN
-   * @return node of type LET, CONST, VAR, FUNCTION, CLASS, PARAM_LIST, or IMPORT
+   * @return node of type LET, CONST, VAR, FUNCTION, CLASS, PARAM_LIST, CATCH, or IMPORT
    * @throws IllegalStateException if targetNode is not actually used as a declaration target
    */
   public static Node getDeclaringParent(Node targetNode) {
@@ -3422,7 +3434,13 @@ public final class NodeUtil {
       // e.g. `function foo(targetNode) {};`
       // e.g. `let targetNode = something;`
       // e.g. `import targetNode from './foo';
-      checkState(parent.isParamList() || isNameDeclaration(parent) || parent.isImport(), parent);
+      // e.g. `} catch (foo) {`
+      checkState(
+          parent.isParamList()
+              || isNameDeclaration(parent)
+              || parent.isImport()
+              || parent.isCatch(),
+          parent);
     }
     return parent;
   }
@@ -3488,6 +3506,10 @@ public final class NodeUtil {
         // e.g. ([targetNode] = something)
         return parent;
 
+      case OBJECT_PATTERN:
+        // e.g. ({...rest} = something);
+        return parent;
+
       case COMPUTED_PROP:
         // e.g. ({[expression]: targetNode} = something)
         // e.g. ({[expression]: targetNode = default} = something)
@@ -3539,6 +3561,10 @@ public final class NodeUtil {
         // e.g. `import {bar as targetNode} from './foo/bar';`
         // e.g. `import {targetNode} from './foo/bar';` // AST will have {targetNode as targetNode}
         checkState(!targetIsFirstChild, parent);
+        return null;
+
+      case CATCH:
+        // e.g. `try {} catch (foo) {}`
         return null;
 
       default:
@@ -3613,12 +3639,14 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines whether a node represents an object literal key (e.g. key1 in {key1: value1, key2:
-   * value2}). Computed properties are excluded here (see b/111621528).
+   * Determines whether a node represents a possible object literal key (e.g. key1 in {key1: value1,
+   * key2: value2}). Computed properties are excluded here (see b/111621528). This method does not
+   * check whether the node is actually in an object literal! it also returns true for object
+   * pattern keys, and member functions/getters in ES6 classes.
    *
    * @param node A node
    */
-  static boolean isObjectLitKey(Node node) {
+  static boolean mayBeObjectLitKey(Node node) {
     switch (node.getToken()) {
       case STRING_KEY:
       case GETTER_DEF:
@@ -3628,6 +3656,16 @@ public final class NodeUtil {
       default:
         return false;
     }
+  }
+
+  /**
+   * Determines whether a node represents an object literal key (e.g. key1 in {key1: value1, key2:
+   * value2}) and is in an object literal. Computed properties are excluded here (see b/111621528).
+   *
+   * @param node A node
+   */
+  static boolean isObjectLitKey(Node node) {
+    return node.getParent().isObjectLit() && mayBeObjectLitKey(node);
   }
 
   /**
@@ -4225,6 +4263,7 @@ public final class NodeUtil {
       case DEFAULT_VALUE:
       case CATCH:
       case REST:
+      case CAST:
         getLhsNodesHelper(n.getFirstChild(), lhsNodes);
         return;
       case IMPORT_SPEC:
@@ -4311,13 +4350,18 @@ public final class NodeUtil {
     }
   }
 
-  /**
-   * @return {@code true} if the node is a definition with Object.defineProperty
-   */
+  /** Returns {@code true} if the node is a definition with Object.defineProperty. */
   static boolean isObjectDefinePropertyDefinition(Node n) {
-    return n.isCall()
-        && n.hasXChildren(4)
-        && n.getFirstChild().matchesQualifiedName("Object.defineProperty");
+    if (!n.isCall() || !n.hasXChildren(4)) {
+      return false;
+    }
+    Node first = n.getFirstChild();
+    if (!first.isGetProp()) {
+      return false;
+    }
+    Node prop = first.getLastChild();
+    return prop.getString().equals("defineProperty")
+        && isKnownGlobalObjectReference(first.getFirstChild());
   }
 
   /**
@@ -4469,11 +4513,8 @@ public final class NodeUtil {
     return qNameStr.substring(memberIndex);
   }
 
-  /**
-   * Create a node for an empty result expression:
-   *   "void 0"
-   */
-  static Node newUndefinedNode(Node srcReferenceNode) {
+  /** Create a node for an empty result expression: "void 0" */
+  public static Node newUndefinedNode(Node srcReferenceNode) {
     Node node = IR.voidNode(IR.number(0));
     if (srcReferenceNode != null) {
       node.useSourceInfoFromForTree(srcReferenceNode);
@@ -4558,7 +4599,8 @@ public final class NodeUtil {
 
   static final Predicate<Node> MATCH_NOT_FUNCTION = n -> !n.isFunction();
 
-  static final Predicate<Node> MATCH_NOT_THIS_BINDING = n -> !NodeUtil.isVanillaFunction(n);
+  /** A predicate for matching anything except for a vanilla function (i.e. not arrow functions) */
+  static final Predicate<Node> MATCH_NOT_VANILLA_FUNCTION = n -> !NodeUtil.isVanillaFunction(n);
 
   /**
    * A predicate for matching statements without exiting the current scope.
@@ -4782,7 +4824,7 @@ public final class NodeUtil {
     Node parent = node.getParent();
     if (parent.isGetProp() && node == parent.getLastChild()) {
       return convention.isConstantKey(node.getString());
-    } else if (isObjectLitKey(node)) {
+    } else if (mayBeObjectLitKey(node)) {
       return convention.isConstantKey(node.getString());
     } else if (node.isName()) {
       return convention.isConstant(node.getString());
@@ -4800,6 +4842,10 @@ public final class NodeUtil {
       CodingConvention convention, JSDocInfo info, Node node) {
     // TODO(b/77597706): Update this method to handle destructured declarations.
     if (node.isName() && node.getParent().isConst()) {
+      return true;
+    } else if (node.isName()
+        && isLhsByDestructuring(node)
+        && getRootTarget(node).getGrandparent().isConst()) {
       return true;
     }
 
@@ -5098,6 +5144,8 @@ public final class NodeUtil {
       case TRUE:
       case FALSE:
         return true;
+      case TEMPLATELIT_STRING:
+        return value.getCookedString() != null;
       case NAME:
         String name = value.getString();
         // We assume here that programs don't change the value of the keyword
@@ -5223,7 +5271,7 @@ public final class NodeUtil {
         return getBestJSDocInfoNode(parent);
       } else if (parent.isAssign()) {
         return getBestJSDocInfoNode(parent);
-      } else if (isObjectLitKey(parent) || parent.isComputedProp()) {
+      } else if (mayBeObjectLitKey(parent) || parent.isComputedProp()) {
         return parent;
       } else if ((parent.isFunction() || parent.isClass()) && n == parent.getFirstChild()) {
         // n is the NAME node of the function/class.
@@ -5251,7 +5299,7 @@ public final class NodeUtil {
       return parent;
     } else if (parent.isAssign()) {
       return parent.getFirstChild();
-    } else if (isObjectLitKey(parent) || parent.isComputedProp()) {
+    } else if (mayBeObjectLitKey(parent) || parent.isComputedProp()) {
       return parent;
     } else if ((parent.isHook() && parent.getFirstChild() != n)
         || parent.isOr()
@@ -5304,7 +5352,7 @@ public final class NodeUtil {
     if (lValue == null || lValue.getParent() == null) {
       return null;
     }
-    if (isObjectLitKey(lValue) || lValue.isComputedProp()) {
+    if (mayBeObjectLitKey(lValue) || lValue.isComputedProp()) {
       return getBestLValue(lValue.getParent());
     } else if (isGet(lValue)) {
       return lValue.getFirstChild();
@@ -5329,7 +5377,7 @@ public final class NodeUtil {
     }
     // TODO(sdh): Tighten this to simply require !lValue.isQuotedString()
     // Could get rid of the isJSIdentifier check, but may need to fix depot.
-    if (isObjectLitKey(lValue)) {
+    if (mayBeObjectLitKey(lValue)) {
       Node owner = getBestLValue(lValue.getParent());
       if (owner != null) {
         String ownerName = getBestLValueName(owner);
@@ -5492,8 +5540,11 @@ public final class NodeUtil {
             && n.getFirstChild().isNumber()
             && n.getFirstChild().getDouble() == 0
             && n.getLastChild().isNumber()
-            && n.getLastChild().getDouble() == 0);
+            && n.getLastChild().getDouble() == 0)
+        || n.matchesQualifiedName(NUMBER_NAN);
   }
+
+  private static final Node NUMBER_NAN = IR.getprop(IR.name("Number"), IR.string("NaN"));
 
   /**
    * A change scope does not directly correspond to a language scope but is an internal
@@ -5606,7 +5657,7 @@ public final class NodeUtil {
     return n.isModuleBody() || isBundledGoogModuleScopeRoot(n);
   }
 
-  private static boolean isBundledGoogModuleScopeRoot(Node n) {
+  static boolean isBundledGoogModuleScopeRoot(Node n) {
     if (!n.isBlock() || !n.hasChildren() || !isGoogModuleCall(n.getFirstChild())) {
       return false;
     }

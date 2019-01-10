@@ -510,6 +510,15 @@ angular.JQLite.prototype.children = function() {};
 angular.JQLite.prototype.clone = function() {};
 
 /**
+ * `cleanData` is an undocumented method that is relied upon for ngUpgrade.
+ * Without this extern, clients cannot enable property_renaming for ngUpgrade
+ * applications that downgrade components.
+ *
+ * @param {?} element
+ */
+angular.JQLite.prototype.cleanData = function(element) {};
+
+/**
  * @return {!angular.JQLite}
  */
 angular.JQLite.prototype.contents = function() {};
@@ -2372,6 +2381,31 @@ angular.$route.Route.prototype.regexp;
 
 /** @typedef {function(string):string} */
 angular.$sanitize;
+
+/******************************************************************************
+ * $sanitizeProvider Service
+ *****************************************************************************/
+
+/** @interface */
+angular.$sanitizeProvider = function() {};
+
+/**
+ * @param {boolean=} enableSvg
+ * @return {boolean|!angular.$sanitizeProvider}
+ */
+angular.$sanitizeProvider.prototype.enableSvg = function(enableSvg) {};
+
+/**
+ * @param {!Array<string>|!Object} elements
+ * @return {!angular.$sanitizeProvider}
+ */
+angular.$sanitizeProvider.prototype.addValidElements = function(elements) {};
+
+/**
+ * @param {!Array<string>} attrs
+ * @return {!angular.$sanitizeProvider}
+ */
+angular.$sanitizeProvider.prototype.addValidAttrs = function(attrs) {};
 
 /******************************************************************************
  * $sce Service

@@ -16,27 +16,37 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
  * Test for {@link UnreachableCodeElimination}.
  *
  */
+@RunWith(JUnit4.class)
 public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new UnreachableCodeElimination(compiler);
   }
 
-  @Override protected void setUp() throws Exception {
+  @Before
+  @Override
+  public void setUp() throws Exception {
     super.setUp();
     enableComputeSideEffects();
   }
 
+  @Test
   public void testDontRemoveExport() {
     test(
         "export function foo() { return 1; alert(2); }",
         "export function foo() { return 1; }");
   }
 
+  @Test
   public void testRemoveUnreachableCode() {
     // switch statement with stuff after "return"
     test("function foo(){switch(foo){case 1:x=1;return;break;" +
@@ -97,26 +107,31 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
          "function foo(){ return 1}");
   }
 
+  @Test
   public void testRemoveUselessNameStatements() {
     test("a;", "");
     test("a.b;", "");
     test("a.b.MyClass.prototype.memberName;", "");
   }
 
+  @Test
   public void testRemoveUselessStrings() {
     test("'a';", "");
   }
 
+  @Test
   public void testNoRemoveUseStrict() {
     test("'use strict';", "'use strict'");
   }
 
+  @Test
   public void testRemoveDo() {
     testSame("do { print(1); break } while(1)");
     test("while(1) { break; do { print(1); break } while(1) }",
          "while(1) { break; do {} while(1) }");
   }
 
+  @Test
   public void testRemoveUselessLiteralValueStatements() {
     test("true;", "");
     test("'hi';", "");
@@ -128,11 +143,13 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
          "switch(x){case 1:case 2:default:}");
   }
 
+  @Test
   public void testConditionalDeadCode() {
     test("function f() { if (1) return 5; else return 5; x = 1}",
         "function f() { if (1) return 5; else return 5; }");
   }
 
+  @Test
   public void testSwitchCase() {
     test("function f() { switch(x) { default: return 5; foo()}}",
          "function f() { switch(x) { default: return 5;}}");
@@ -141,6 +158,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
          "function f() { switch(x) { default: return; case 1: return 5;}}");
   }
 
+  @Test
   public void testTryCatchFinally() {
     testSame("try {foo()} catch (e) {bar()}");
     testSame("try { try {foo()} catch (e) {bar()}} catch (x) {bar()}");
@@ -155,12 +173,14 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
          "function f() {var x;}");
   }
 
+  @Test
   public void testRemovalRequiresRedeclaration() {
     test("while(1) { break; var x = 1}", "var x; while(1) { break } ");
     test("while(1) { break; var x=1; var y=1}",
         "var y; var x; while(1) { break } ");
   }
 
+  @Test
   public void testAssignPropertyOnCreatedObject() {
     testSame("this.foo = 3;");
     testSame("a.foo = 3;");
@@ -174,6 +194,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("(function() {}).prototype[f] = function(){};", "");
   }
 
+  @Test
   public void testUselessUnconditionalReturn() {
     test("function foo() { return }", " function foo() { }");
     test("function foo() { return; return; x=1 }", "function foo() { }");
@@ -191,6 +212,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
              " case 'a': return; default: alert(1)}}");
   }
 
+  @Test
   public void testUselessUnconditionalContinue() {
     test("for(;1;) {continue}", " for(;1;) {}");
     test("for(;0;) {continue}", " for(;0;) {}");
@@ -202,6 +224,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("do { continue } while(1);", "do {  } while(1);");
   }
 
+  @Test
   public void testUselessUnconditionalBreak() {
     test("switch (a) { case 'a': break }", "switch (a) { case 'a': }");
     test("switch (a) { case 'a': break; case foo(): }",
@@ -229,6 +252,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   }
 
   // These tests all require the analysis to go to a fixpoint in order to pass
+  @Test
   public void testIteratedRemoval() {
     test("switch (a) { case 'a': break; case 'b': break; case 'c': break }",
         " switch (a) { case 'a': case 'b': case 'c': }");
@@ -257,6 +281,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
         " var x; out: {}");
   }
 
+  @Test
   public void testIssue311() {
     test("function a(b) {\n" +
          "  switch (b.v) {\n" +
@@ -280,6 +305,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
          "}");
   }
 
+  @Test
   public void testIssue4177428a() {
     testSame(
         "f = function() {\n" +
@@ -297,6 +323,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
         "};");
   }
 
+  @Test
   public void testIssue4177428b() {
     testSame(
         "f = function() {\n" +
@@ -317,6 +344,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
         "};");
   }
 
+  @Test
   public void testIssue4177428c() {
     testSame(
         "f = function() {\n" +
@@ -337,6 +365,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
         "};");
   }
 
+  @Test
   public void testIssue4177428_continue() {
     testSame(
         "f = function() {\n" +
@@ -354,6 +383,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
         "};");
   }
 
+  @Test
   public void testIssue4177428_return() {
     test(
         "f = function() {\n" +
@@ -384,6 +414,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
         );
   }
 
+  @Test
   public void testIssue4177428_multifinally() {
     testSame(
         "a: {\n" +
@@ -398,6 +429,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
         "}");
   }
 
+  @Test
   public void testIssue5215541_deadVarDeclar() {
     testSame("throw 1; var x");
     testSame("throw 1; function x() {}");
@@ -405,25 +437,30 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("throw 1; var x = foo", "var x; throw 1");
   }
 
+  @Test
   public void testForInLoop() {
     testSame("for(var x in y) {}");
   }
 
-  public void testDontRemoveBreakInTryFinally() throws Exception {
+  @Test
+  public void testDontRemoveBreakInTryFinally() {
     testSame("function f() {b:try{throw 9} finally {break b} return 1;}");
   }
 
-  public void testDontRemoveBreakInTryFinallySwitch() throws Exception {
+  @Test
+  public void testDontRemoveBreakInTryFinallySwitch() {
     testSame("function f() {b:try{throw 9} finally { switch(x) {case 1: break b} } return 1; }");
   }
 
-  public void testIssue1001() throws Exception {
+  @Test
+  public void testIssue1001() {
     test("function f(x) { x.property = 3; } f({})",
          "function f(x) { x.property = 3; }");
     test("function f(x) { x.property = 3; } new f({})",
          "function f(x) { x.property = 3; }");
   }
 
+  @Test
   public void testLetConstBlocks() {
     test("function f() {return 1; let a; }", "function f() {return 1;}");
 
@@ -434,12 +471,14 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
         "function f() { x = 1; {let g; return x;}} ");
   }
 
+  @Test
   public void testArrowFunctions() {
     test("f(x => {return x; j = 1})", "f(x => {return x;})");
 
     testSame("f( () => {return 1;})");
   }
 
+  @Test
   public void testGenerators() {
     test(
         lines(
@@ -463,12 +502,14 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testForOf() {
     test("for(x of i){ 1; }", "for(x of i) {}");
 
     testSame("for(x of i){}");
   }
 
+  @Test
   public void testRemoveUselessTemplateStrings() {
     test("`hi`", "");
 
@@ -494,6 +535,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
         "import {x} from './foo'; x('hi');");
   }
 
+  @Test
   public void testLetConstBlocks_withES6Modules() {
     test(
         "export function f() {return 1; let a; } f();",
@@ -516,6 +558,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("export let x = 2;", "");
   }
 
+  @Test
   public void testRemoveUnreachableCode_withES6Modules() {
     // Switch statements
     test(
@@ -532,10 +575,12 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
             + "else{x=3;return}return 5}");
   }
 
+  @Test
   public void testComputedClassPropertyNotRemoved() {
     testSame("class Foo { ['x']() {} }");
   }
 
+  @Test
   public void testClassExtendsNotRemoved() {
     testSame(
         lines(
@@ -543,6 +588,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
             "class Foo extends f() {}"));
   }
 
+  @Test
   public void testRemoveUnreachableCodeInComputedPropertIife() {
     test(
         lines(

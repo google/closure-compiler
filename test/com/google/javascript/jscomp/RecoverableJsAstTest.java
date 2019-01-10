@@ -15,20 +15,20 @@
  */
 
 package com.google.javascript.jscomp;
+
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.SourceFile.Generator;
 import com.google.javascript.rhino.Node;
-
+import java.util.List;
+import java.util.Objects;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.List;
 
 /**
  * Unit tests for {@link RecoverableJsAst}.
@@ -36,7 +36,7 @@ import java.util.List;
  */
 @RunWith(JUnit4.class)
 public class RecoverableJsAstTest {
-  protected static final Joiner LINE_JOINER = Joiner.on('\n');
+  private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private String srcCode = "";
 
@@ -150,36 +150,28 @@ public class RecoverableJsAstTest {
 
     if (expectedRoot == null) {
       // We use null to signal a parse failure, which results in an empty sources root.
-      assertTrue(mainRoot.isRoot() && !mainRoot.hasChildren());
+      assertThat(mainRoot.isRoot()).isTrue();
+      assertThat(mainRoot.hasChildren()).isFalse();
     } else {
       String explanation = expectedRoot.checkTreeEqualsIncludingJsDoc(mainRoot);
       if (explanation != null) {
         String expectedAsSource = compiler.toSource(expectedRoot);
         String mainAsSource = compiler.toSource(mainRoot);
         if (expectedAsSource.equals(mainAsSource)) {
-          fail("In: " + expectedAsSource + "\n" + explanation);
+          assertWithMessage("In: %s\n%s", expectedAsSource, explanation).fail();
         } else {
-          fail("\nExpected: "
-              + expectedAsSource
-              + "\nResult:   "
-              + mainAsSource
-              + "\n" + explanation);
+          assertWithMessage(
+                  "Expected: %s\nResult:   %s\n%s", expectedAsSource, mainAsSource, explanation)
+              .fail();
         }
       }
     }
 
-    JSError[] errors = compiler.getResult().errors;
-    if (!expectedErrors.isEmpty()) {
-      for (int i = 0; i < expectedErrors.size(); i++) {
-        if (i < errors.length) {
-          assertThat(errors[i].toString()).contains(expectedErrors.get(i));
-        } else {
-          fail("missing error: " + expectedErrors.get(i));
-        }
-      }
-    } else {
-      assertThat(errors).isEmpty();
-    }
+    assertThat(compiler.getResult().errors)
+        .asList()
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactlyElementsIn(expectedErrors)
+        .inOrder();
 
     assertThat(ast.getAstRoot(compiler)).isNotSameAs(realAst.getAstRoot(compiler));
   }
@@ -198,4 +190,17 @@ public class RecoverableJsAstTest {
     Node mainRoot = externsRoot.getNext();
     return mainRoot;
   }
+
+  private static final Correspondence<JSError, String> DESCRIPTION_EQUALITY =
+      new Correspondence<JSError, String>() {
+        @Override
+        public boolean compare(JSError error, String description) {
+          return Objects.equals(error.description, description);
+        }
+
+        @Override
+        public String toString() {
+          return "has description equal to";
+        }
+      };
 }

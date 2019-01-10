@@ -17,23 +17,26 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableMap;
-
-import junit.framework.TestCase;
-
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link VariableMap}.
  *
  */
-public final class VariableMapTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class VariableMapTest {
 
+  @Test
   public void testCycle1() throws ParseException {
     cycleTest(ImmutableMap.of("AAA", "a", "BBB", "b"));
     cycleTest(ImmutableMap.of("AA:AA", "a", "BB:BB", "b"));
@@ -56,6 +59,7 @@ public final class VariableMapTest extends TestCase {
     }
   }
 
+  @Test
   public void testToBytes() {
     VariableMap vm = new VariableMap(ImmutableMap.of("AAA", "a", "BBB", "b"));
     String serialized = new String(vm.toBytes(), UTF_8);
@@ -67,20 +71,23 @@ public final class VariableMapTest extends TestCase {
     assertThat(lines).contains("BBB:b");
   }
 
+  @Test
   public void testFromBytes() throws ParseException {
     VariableMap vm = VariableMap.fromBytes("AAA:a\nBBB:b\n".getBytes(UTF_8));
     assertThat(vm.getOriginalNameToNewNameMap()).hasSize(2);
-    assertEquals("a", vm.lookupNewName("AAA"));
-    assertEquals("b", vm.lookupNewName("BBB"));
-    assertEquals("AAA", vm.lookupSourceName("a"));
-    assertEquals("BBB", vm.lookupSourceName("b"));
+    assertThat(vm.lookupNewName("AAA")).isEqualTo("a");
+    assertThat(vm.lookupNewName("BBB")).isEqualTo("b");
+    assertThat(vm.lookupSourceName("a")).isEqualTo("AAA");
+    assertThat(vm.lookupSourceName("b")).isEqualTo("BBB");
   }
 
+  @Test
   public void testFromBytesWithEmptyValue() throws ParseException {
     VariableMap vm = VariableMap.fromBytes("AAA:".getBytes(UTF_8));
     assertThat(vm.lookupNewName("AAA")).isEmpty();
   }
 
+  @Test
   public void testFileFormat1() {
     assertEqual(
         new VariableMap(ImmutableMap.of("x\ny", "a")).toBytes(), "x\\ny:a\n".getBytes(UTF_8));
@@ -103,6 +110,7 @@ public final class VariableMapTest extends TestCase {
     assertEqual(new VariableMap(ImmutableMap.of("\\", "a")).toBytes(), "\\\\:a\n".getBytes(UTF_8));
   }
 
+  @Test
   public void testFromBytesComplex1() throws ParseException {
     // Verify we get out what we put in.
     cycleTest(ImmutableMap.of("AAA[':f']", "a"));
@@ -112,35 +120,38 @@ public final class VariableMapTest extends TestCase {
     assertEqual(in.toBytes(), "AAA['\\:f']:a\n".getBytes(UTF_8));
   }
 
+  @Test
   public void testFromBytesComplex2() throws ParseException {
     VariableMap vm = VariableMap.fromBytes("AAA['\\:f']:a\n".getBytes(UTF_8));
 
     assertThat(vm.getOriginalNameToNewNameMap()).hasSize(1);
-    assertEquals("a", vm.lookupNewName("AAA[':f']"));
+    assertThat(vm.lookupNewName("AAA[':f']")).isEqualTo("a");
 
     assertThat(vm.getNewNameToOriginalNameMap()).hasSize(1);
-    assertEquals("AAA[':f']", vm.lookupSourceName("a"));
+    assertThat(vm.lookupSourceName("a")).isEqualTo("AAA[':f']");
   }
 
   private void assertEqual(byte[] bytes1, byte[] bytes2) {
     if (bytes1 != bytes2) {
-      assertEquals("length differs.", bytes1.length, bytes2.length);
+      assertWithMessage("length differs.").that(bytes2.length).isEqualTo(bytes1.length);
       for (int i = 0; i < bytes1.length; i++) {
-        assertEquals("byte " + i + "differs.", bytes1[i], bytes2[i]);
+        assertWithMessage("byte " + i + "differs.").that(bytes2[i]).isEqualTo(bytes1[i]);
       }
     }
   }
 
+  @Test
   public void testReverseThrowsErrorOnDuplicate() {
     try {
       new VariableMap(ImmutableMap.of("AA", "b", "BB", "b"));
-      fail();
+      throw new AssertionError();
     } catch (IllegalArgumentException expected) {
     }
   }
 
+  @Test
   public void testReverseLookupOfNullFindsNoName() {
     VariableMap vm = new VariableMap(ImmutableMap.of("AA", "a", "BB", "b"));
-    assertNull(vm.lookupSourceName(null));
+    assertThat(vm.lookupSourceName(null)).isNull();
   }
 }

@@ -18,11 +18,16 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link RemoveUnusedCode} that cover removal of prototype properties and class
  * properties.
  */
+@RunWith(JUnit4.class)
 public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestCase {
   private static final String EXTERNS =
       lines(
@@ -67,7 +72,8 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableNormalize();
@@ -77,6 +83,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     allowRemovalOfExternProperties = false;
   }
 
+  @Test
   public void testClassPropertiesNotRemoved() {
     keepGlobals = true;
     // This whole test class runs with removeUnusedClassProperties disabled.
@@ -85,12 +92,14 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "/** @constructor */ function C() {} Object.defineProperties(C, {unused: {value: 3}});");
   }
 
+  @Test
   public void testUnusedPrototypeFieldReference() {
     test(
         "function C() {} C.prototype.x; new C();", // x is not actually read
         "function C() {}                new C();");
   }
 
+  @Test
   public void testUnusedReferenceToFieldWithGetter() {
     // Reference to a field with a getter should not be removed unless we know it has no side
     // effects.
@@ -103,6 +112,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     testSame("let c = { get x() { alert('x'); } }; c.x;");
   }
 
+  @Test
   public void testAnonymousPrototypePropertyRemoved() {
     test("({}.prototype.x = 5, externFunction())", "externFunction();");
     test("({}).prototype.x = 5;", "");
@@ -119,6 +129,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     test("function C() {} ({ C: C }).prototype.x = 5;", "");
   }
 
+  @Test
   public void testAnonymousPrototypePropertyNoRemoveSideEffect1() {
     test(
         lines(
@@ -135,12 +146,14 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "A();"));
   }
 
+  @Test
   public void testAnonymousPrototypePropertyNoRemoveSideEffect2() {
     test(
         "function A() { externFunction('me'); return function(){}; } A().prototype.foo++;",
         "function A() { externFunction('me'); return function(){}; } A();");
   }
 
+  @Test
   public void testIncPrototype() {
     test("function A() {} A.prototype.x = 1; A.prototype.x++;", "");
     test(
@@ -149,6 +162,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     test("externFunction().prototype.x++", "externFunction()");
   }
 
+  @Test
   public void testRenamePropertyFunctionTest() {
     test(
         lines(
@@ -164,6 +178,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "new C();"));
   }
 
+  @Test
   public void testNonPrototypePropertiesAreKept() {
     // foo cannot be removed because it is called
     // x cannot be removed because a property is set on it and we don't know where it comes from
@@ -175,6 +190,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "function foo(x) { x.a = 1; }; foo({});");
   }
 
+  @Test
   public void testAnalyzePrototypeProperties() {
     // Basic removal for prototype properties
     test("function e(){}" +
@@ -186,18 +202,21 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
            "var x = new e; x.a()");
   }
 
+  @Test
   public void testObjectLiteralPrototype() {
     test(
         "function e(){} e.prototype = {a: function(){}, b: function(){}}; var x = new e; x.a()",
         "function e(){} e.prototype = {a: function(){}                 }; var x = new e; x.a()");
   }
 
+  @Test
   public void testObjectLiteralPrototypeUnusedPropDefinitionWithSideEffects() {
     test(
         "function e(){} e.prototype = {a: alert('a'), b: function(){}}; new e;",
         "function e(){} e.prototype = {a: alert('a')                 }; new e;");
   }
 
+  @Test
   public void testPropertiesDefinedInExterns() {
     test("function e(){}" +
             "e.prototype.a = function(){};" +
@@ -220,6 +239,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "new C();"));
   }
 
+  @Test
   public void testAliasing1() {
     // Aliasing a property is not enough for it to count as used
     test("function e(){}" +
@@ -247,6 +267,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
            "var x = new e; x.alias1()");
   }
 
+  @Test
   public void testAliasing2() {
     // Aliasing a property is not enough for it to count as used
     test("function e(){}" +
@@ -267,6 +288,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             + "(new e).alias1()");
   }
 
+  @Test
   public void testAliasing3() {
     // Aliasing a property is not enough for it to count as used
     testSame(
@@ -280,6 +302,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "new e;"));
   }
 
+  @Test
   public void testAliasing4() {
     // Aliasing a property is not enough for it to count as used
     test(
@@ -295,6 +318,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "new e;"));
   }
 
+  @Test
   public void testAliasing5() {
     // An exported alias must preserved any referenced values in the
     // referenced function.
@@ -308,6 +332,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "new e;"));
   }
 
+  @Test
   public void testAliasing6() {
     // An exported alias must preserved any referenced values in the
     // referenced function.
@@ -322,6 +347,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
            "window['alias1']=e.prototype.method1;");
   }
 
+  @Test
   public void testAliasing7() {
     // An exported alias must preserved any referenced values in the
     // referenced function.
@@ -338,6 +364,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "new e;"));
   }
 
+  @Test
   public void testExportedMethodsByNamingConvention() {
     String classAndItsMethodAliasedAsExtern =
         "function Foo() {}" +
@@ -355,6 +382,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     test(classAndItsMethodAliasedAsExtern, compiled);
   }
 
+  @Test
   public void testMethodsFromExternsFileNotExported() {
     allowRemovalOfExternProperties = true;
 
@@ -368,6 +396,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "function Foo(){} new Foo;");
   }
 
+  @Test
   public void testExportedMethodsByNamingConventionAlwaysExported() {
     String classAndItsMethodAliasedAsExtern =
         "function Foo() {}" +
@@ -385,6 +414,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     test(classAndItsMethodAliasedAsExtern, compiled);
   }
 
+  @Test
   public void testExternMethodsFromExternsFile() {
     String classAndItsMethodAliasedAsExtern =
         "function Foo() {}" +
@@ -403,6 +433,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     test(classAndItsMethodAliasedAsExtern, compiled);
   }
 
+  @Test
   public void testPropertyReferenceGraph() {
     // test a prototype property graph that looks like so:
     // b -> a, c -> b, c -> a, d -> c, e -> a, e -> f
@@ -442,16 +473,19 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
          constructor + defA + defB + defC + callA + callB + callC);
   }
 
+  @Test
   public void testPropertiesDefinedWithGetElem() {
     testSame("function Foo() {} Foo.prototype['elem'] = function() {}; new Foo;");
     testSame("function Foo() {} Foo.prototype[1 + 1] = function() {}; new Foo;");
   }
 
+  @Test
   public void testQuotedProperties() {
     // Basic removal for prototype replacement
     testSame("function e(){} e.prototype = {'a': function(){}, 'b': function(){}}; new e;");
   }
 
+  @Test
   public void testNeverRemoveImplicitlyUsedProperties() {
     testSame(
         lines(
@@ -462,6 +496,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "new Foo;"));
   }
 
+  @Test
   public void testPropertyDefinedInBranch() {
     test("function Foo() {} if (true) Foo.prototype.baz = function() {};",
          "if (true);");
@@ -473,6 +508,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
          "do; while(true);");
   }
 
+  @Test
   public void testUsingAnonymousObjectsToDefeatRemoval() {
     test("function Foo() {} Foo.prototype.baz = 3; new Foo;", "function Foo() {} new Foo;");
     testSame("function Foo() {} Foo.prototype.baz = 3; new Foo; var x = {}; x.baz;");
@@ -481,6 +517,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     testSame("function Foo() {} Foo.prototype.baz = 3; new Foo; var x = {'baz': 5}; x;");
   }
 
+  @Test
   public void testGlobalFunctionsInGraph() {
     test(
         "var x = function() { (new Foo).baz(); };" +
@@ -490,6 +527,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "");
   }
 
+  @Test
   public void testGlobalFunctionsInGraph2() {
     test(
         lines(
@@ -500,6 +538,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "");
   }
 
+  @Test
   public void testGlobalFunctionsInGraph3() {
     test(
         lines(
@@ -510,6 +549,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "");
   }
 
+  @Test
   public void testGlobalFunctionsInGraph4() {
     test(
         "var x = function() { (new Foo).baz(); };" +
@@ -518,6 +558,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "");
   }
 
+  @Test
   public void testGlobalFunctionsInGraph5() {
     test(
         "function Foo() {}" +
@@ -538,6 +579,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "function x() { (new Foo).methodA(); }");
   }
 
+  @Test
   public void testGlobalFunctionsInGraph6() {
     testSame(
         "function Foo() {}" +
@@ -547,11 +589,13 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "(new Foo).methodB();");
   }
 
+  @Test
   public void testGlobalFunctionsInGraph7() {
     keepGlobals = true;
     testSame("function Foo() {} Foo.prototype.methodA = function() {}; this.methodA();");
   }
 
+  @Test
   public void testGlobalFunctionsInGraph8() {
     test(
         lines(
@@ -561,6 +605,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     "");
   }
 
+  @Test
   public void testGetterBaseline() {
     keepGlobals = true;
     test(
@@ -578,6 +623,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "function x() { (new Foo).methodA(); }");
   }
 
+  @Test
   public void testGetter1() {
     test(
         lines(
@@ -612,6 +658,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "function x() { (new Foo).methodA; }"));
   }
 
+  @Test
   public void testGetter2() {
     keepGlobals = true;
     test(
@@ -632,7 +679,8 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "function x() { (new Foo).methodA; }");
   }
 
-  public void testHook1() throws Exception {
+  @Test
+  public void testHook1() {
     test(
         lines(
             "/** @constructor */ function Foo() {}",
@@ -645,7 +693,8 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "");
   }
 
-  public void testHook2() throws Exception {
+  @Test
+  public void testHook2() {
     testSame(
         lines(
             "/** @constructor */ function Foo() {}",
@@ -658,6 +707,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "(new Foo()).method1();"));
   }
 
+  @Test
   public void testDestructuringProperty() {
     // Makes the cases below shorter because we don't have to add references
     // to globals to keep them around and just test prototype property removal.
@@ -746,6 +796,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
 
   }
 
+  @Test
   public void testEs6Class() {
     testSame(
         lines(
@@ -840,6 +891,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "c.foo;"));
   }
 
+  @Test
   public void testEs6Extends() {
     testSame(
         lines(
@@ -897,6 +949,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "new D;"));
   }
 
+  @Test
   public void testAnonClasses() {
     // Make sure class expression names are removed.
     keepLocals = false;
@@ -946,6 +999,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "externFunction(class   { constructor() { } externPropName() { } })");
   }
 
+  @Test
   public void testBaseClassExpressionHasSideEffects() {
     // Make sure names are removed from class expressions.
     keepLocals = false;
@@ -977,6 +1031,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "externFunction(class extends getBaseClass() {})"));
   }
 
+  @Test
   public void testModules() {
     testSame("export default function(){}");
     testSame("export class C {};");

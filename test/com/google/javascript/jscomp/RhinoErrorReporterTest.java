@@ -16,30 +16,39 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.Arrays;
 import java.util.List;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for error message filtering.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class RhinoErrorReporterTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class RhinoErrorReporterTest {
 
   private boolean reportEs3Props;
   private boolean reportLintWarnings;
 
-  @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     reportEs3Props = true;
     reportLintWarnings = true;
-    super.setUp();
   }
 
-  public void testTrailingComma() throws Exception {
+  @Test
+  public void testTrailingComma() {
     String message =
         "Parse error. IE8 (and below) will parse trailing commas in " +
         "array and object literals incorrectly. " +
@@ -56,11 +65,12 @@ public final class RhinoErrorReporterTest extends TestCase {
         RhinoErrorReporter.TRAILING_COMMA,
         message);
 
-    assertEquals(2, error.getLineNumber());
-    assertEquals(8, error.getCharno());
+    assertThat(error.getLineNumber()).isEqualTo(2);
+    assertThat(error.getCharno()).isEqualTo(8);
   }
 
-  public void testInvalidEs3Prop() throws Exception {
+  @Test
+  public void testInvalidEs3Prop() {
     reportEs3Props = false;
 
     assertNoWarningOrError("var x = y.function;");
@@ -77,12 +87,12 @@ public final class RhinoErrorReporterTest extends TestCase {
         RhinoErrorReporter.INVALID_ES3_PROP_NAME,
         message);
 
-    assertEquals(1, error.getLineNumber());
-    assertEquals(10, error.getCharno());
+    assertThat(error.getLineNumber()).isEqualTo(1);
+    assertThat(error.getCharno()).isEqualTo(10);
   }
 
-
-  public void testMissingTypeWarnings() throws Exception {
+  @Test
+  public void testMissingTypeWarnings() {
     reportLintWarnings = false;
 
     assertNoWarningOrError("/** @return */ function f() {}");
@@ -96,10 +106,11 @@ public final class RhinoErrorReporterTest extends TestCase {
         RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
         message);
 
-    assertEquals(1, error.getLineNumber());
-    assertEquals(4, error.getCharno());
+    assertThat(error.getLineNumber()).isEqualTo(1);
+    assertThat(error.getCharno()).isEqualTo(4);
   }
 
+  @Test
   public void testMissingCurlyBraceWarning() {
     reportLintWarnings = false;
     assertNoWarningOrError("/** @type string */ var x;");
@@ -108,9 +119,7 @@ public final class RhinoErrorReporterTest extends TestCase {
     assertWarning(
         "/** @type string */ var x;",
         RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
-        "Bad type annotation. Type annotations should have curly braces. See"
-            + " https://github.com/google/closure-compiler/wiki/Bad-Type-Annotation"
-            + " for more information.");
+        "Bad type annotation. Type annotations should have curly braces." + BAD_TYPE_WIKI_LINK);
   }
 
   /**
@@ -118,8 +127,8 @@ public final class RhinoErrorReporterTest extends TestCase {
    */
   private void assertNoWarningOrError(String code) {
     Compiler compiler = parseCode(code);
-    assertEquals("Expected error", 0, compiler.getErrorCount());
-    assertEquals("Expected warning", 0, compiler.getErrorCount());
+    assertWithMessage("Expected error").that(compiler.getErrorCount()).isEqualTo(0);
+    assertWithMessage("Expected warning").that(compiler.getErrorCount()).isEqualTo(0);
   }
 
   /**
@@ -128,12 +137,12 @@ public final class RhinoErrorReporterTest extends TestCase {
   private JSError assertError(
       String code, DiagnosticType type, String description) {
     Compiler compiler = parseCode(code);
-    assertEquals("Expected error", 1, compiler.getErrorCount());
+    assertWithMessage("Expected error").that(compiler.getErrorCount()).isEqualTo(1);
 
     JSError error =
         Iterables.getOnlyElement(Arrays.asList(compiler.getErrors()));
-    assertEquals(type, error.getType());
-    assertEquals(description, error.description);
+    assertThat(error.getType()).isEqualTo(type);
+    assertThat(error.description).isEqualTo(description);
     return error;
   }
 
@@ -143,12 +152,12 @@ public final class RhinoErrorReporterTest extends TestCase {
   private JSError assertWarning(
       String code, DiagnosticType type, String description) {
     Compiler compiler = parseCode(code);
-    assertEquals("Expected warning", 1, compiler.getWarningCount());
+    assertWithMessage("Expected warning").that(compiler.getWarningCount()).isEqualTo(1);
 
     JSError error =
         Iterables.getOnlyElement(Arrays.asList(compiler.getWarnings()));
-    assertEquals(type, error.getType());
-    assertEquals(description, error.description);
+    assertThat(error.getType()).isEqualTo(type);
+    assertThat(error.description).isEqualTo(description);
     return error;
   }
 

@@ -419,7 +419,7 @@ class Normalize implements CompilerPass {
       // There are only two cases where a string token
       // may be a variable reference: The right side of a GETPROP
       // or an OBJECTLIT key.
-      boolean isObjLitKey = NodeUtil.isObjectLitKey(n);
+      boolean isObjLitKey = NodeUtil.mayBeObjectLitKey(n);
       boolean isProperty = isObjLitKey || (parent.isGetProp() && parent.getLastChild() == n);
       if (n.isName() || isProperty) {
         boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);

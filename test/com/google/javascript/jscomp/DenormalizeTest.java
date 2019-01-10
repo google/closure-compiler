@@ -19,11 +19,13 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Normalize.NormalizeStatements;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- *
- */
+/** @author johnlenz@google.com (John Lenz) */
+@RunWith(JUnit4.class)
 public final class DenormalizeTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -31,7 +33,8 @@ public final class DenormalizeTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
@@ -42,6 +45,7 @@ public final class DenormalizeTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testInlineVarKeyword1() {
     test(
         lines(
@@ -59,6 +63,7 @@ public final class DenormalizeTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testInlineVarKeyword2() {
     test(
         lines(
@@ -76,6 +81,7 @@ public final class DenormalizeTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testInlineVarKeywordArrowFunc1() {
     test(
         lines(
@@ -93,6 +99,7 @@ public final class DenormalizeTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testInlineVarKeywordArrowFunc2() {
     test(
         lines(
@@ -110,6 +117,7 @@ public final class DenormalizeTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testNotInlineConstLet() {
     testSame(
         lines(
@@ -122,6 +130,7 @@ public final class DenormalizeTest extends CompilerTestCase {
             "if (y) { x = -1; }"));
   }
 
+  @Test
   public void testFor() {
     // Verify assignments are moved into the FOR init node.
     test("a = 0; for(; a < 2 ; a++) foo()",
@@ -159,6 +168,7 @@ public final class DenormalizeTest extends CompilerTestCase {
         "for (var [a, b] = [1, 2]; a < 2; a = b++) foo();");
   }
 
+  @Test
   public void testForIn() {
     test("var a; for(a in b) foo()", "for (var a in b) foo()");
     testSame("a = 0; for(a in b) foo()");
@@ -182,6 +192,7 @@ public final class DenormalizeTest extends CompilerTestCase {
     testSame("var a; var b; for ([a, b] in c) foo();");
   }
 
+  @Test
   public void testForOf() {
     test("var a; for (a of b) foo()", "for (var a of b) foo()");
     testSame("a = 0; for (a of b) foo()");
@@ -205,6 +216,7 @@ public final class DenormalizeTest extends CompilerTestCase {
     testSame("var a; var b; for ([a, b] of c) foo();");
   }
 
+  @Test
   public void testInOperatorNotInsideFor() {
     // in operators shouldn't be moved into for loops.
     // Some JavaScript interpreters (such as the NetFront Access browser
@@ -225,6 +237,7 @@ public final class DenormalizeTest extends CompilerTestCase {
          "for (;a<2;a++) foo()}");
   }
 
+  @Test
   public void testAssignShorthand() {
     test("x = x | 1;", "x |= 1;");
     test("x = x ^ 1;", "x ^= 1;");
@@ -241,6 +254,7 @@ public final class DenormalizeTest extends CompilerTestCase {
     test("/** @suppress {const} */ x = x + 1;", "/** @suppress {const} */ x += 1;");
   }
 
+  @Test
   public void testNoCrashOnEs6Features() {
     test(
         lines(

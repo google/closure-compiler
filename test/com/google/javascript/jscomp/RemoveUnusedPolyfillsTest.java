@@ -16,7 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /** Unit tests for the RemoveUnusedPolyfills compiler pass. */
+@RunWith(JUnit4.class)
 public final class RemoveUnusedPolyfillsTest extends CompilerTestCase {
 
   private static final String EXTERNS = lines(
@@ -64,7 +70,8 @@ public final class RemoveUnusedPolyfillsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
   }
@@ -74,11 +81,13 @@ public final class RemoveUnusedPolyfillsTest extends CompilerTestCase {
     return new RemoveUnusedPolyfills(compiler);
   }
 
+  @Test
   public void testRemovesPolyfillInstanceMethods() {
     test(STRING_INCLUDES, "");
     test(STRING_INCLUDES + ARRAY_INCLUDES, "");
   }
 
+  @Test
   public void testRemovesMethodsCalledOnKnownTypes() {
     test(STRING_INCLUDES + "foo.includes();", "foo.includes();");
     test(BOTH_INCLUDES + "foo.includes();", "foo.includes();");
@@ -96,6 +105,7 @@ public final class RemoveUnusedPolyfillsTest extends CompilerTestCase {
         + "goog.string.includes();");
   }
 
+  @Test
   public void testRemovesPolyfillStaticMethods() {
     test(ARRAY_OF + ARRAY_FROM + "Array.from();", ARRAY_FROM + "Array.from();");
     test(ARRAY_OF + ARRAY_FROM + "goog.global.Array.of();", ARRAY_OF + "goog.global.Array.of();");
@@ -103,16 +113,19 @@ public final class RemoveUnusedPolyfillsTest extends CompilerTestCase {
     test(ARRAY_OF + ARRAY_FROM + "var x = new Array();", "var x = new Array();");
   }
 
+  @Test
   public void testDoesNotRemoveMethodsCalledOnUnknownTypes() {
     testSame(STRING_INCLUDES + "any.includes();");
     testSame(BOTH_INCLUDES + "any.includes();");
   }
 
+  @Test
   public void testDoesNotRemoveMethodsCalledOnAllType() {
     testSame(STRING_INCLUDES + "all.includes();");
     testSame(BOTH_INCLUDES + "all.includes();");
   }
 
+  @Test
   public void testDoesNotRemoveMethodsCalledOnObject() {
     testSame(STRING_INCLUDES + "obj.includes();");
     testSame(BOTH_INCLUDES + "obj.includes();");
@@ -120,6 +133,7 @@ public final class RemoveUnusedPolyfillsTest extends CompilerTestCase {
         + "function f(/** !Object */ x) { x.includes = function() {}; x.includes(); }");
   }
 
+  @Test
   public void testDoesNotRemoveMethodsCalledOnCorrectTypes() {
     testSame(STRING_INCLUDES + "str.includes();");
 
@@ -137,6 +151,7 @@ public final class RemoveUnusedPolyfillsTest extends CompilerTestCase {
     test(BOTH_INCLUDES + "fooOrMyArray.includes();", ARRAY_INCLUDES + "fooOrMyArray.includes();");
   }
 
+  @Test
   public void testDoesNotRemoveMethodsCalledOnPrototype() {
     testSame(STRING_INCLUDES + "String.prototype.includes.call(any);");
 

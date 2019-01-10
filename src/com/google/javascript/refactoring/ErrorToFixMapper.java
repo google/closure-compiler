@@ -66,7 +66,9 @@ public final class ErrorToFixMapper {
     }
     switch (error.getType().key) {
       case "JSC_IMPLICITLY_NULLABLE_JSDOC":
-        return getFixesForImplicitlyNullableJsDoc(error, compiler);
+      case "JSC_MISSING_NULLABILITY_MODIFIER_JSDOC":
+      case "JSC_NULL_MISSING_NULLABILITY_MODIFIER_JSDOC":
+        return getFixesForImplicitNullabilityErrors(error, compiler);
       default:
         return ImmutableList.of();
     }
@@ -228,7 +230,7 @@ public final class ErrorToFixMapper {
         .build();
   }
 
-  private static ImmutableList<SuggestedFix> getFixesForImplicitlyNullableJsDoc(
+  private static ImmutableList<SuggestedFix> getFixesForImplicitNullabilityErrors(
       JSError error, AbstractCompiler compiler) {
     SuggestedFix qmark =
         new SuggestedFix.Builder()
@@ -242,7 +244,19 @@ public final class ErrorToFixMapper {
             .insertBefore(error.node, "!")
             .setDescription("Make type non-nullable")
             .build();
-    return ImmutableList.of(qmark, bang);
+    switch (error.getType().key) {
+      case "JSC_NULL_MISSING_NULLABILITY_MODIFIER_JSDOC":
+        // When initializer was null, we can be confident about nullability
+        return ImmutableList.of(qmark);
+      case "JSC_MISSING_NULLABILITY_MODIFIER_JSDOC":
+        // Otherwise, the linter should assume ! is preferred over ?.
+        return ImmutableList.of(bang, qmark);
+      case "JSC_IMPLICITLY_NULLABLE_JSDOC":
+        // The type-based check prefers ? over ! since it only warns for names that are nullable.
+        return ImmutableList.of(qmark, bang);
+      default:
+        throw new IllegalArgumentException("Unexpected JSError Type: " + error.getType().key);
+    }
   }
 
   private static SuggestedFix removeNode(JSError error, AbstractCompiler compiler) {

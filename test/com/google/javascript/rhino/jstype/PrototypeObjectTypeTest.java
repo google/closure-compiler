@@ -38,18 +38,25 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+@RunWith(JUnit4.class)
 public class PrototypeObjectTypeTest extends BaseJSTypeTestCase {
 
+  @Test
   public void testToString() {
     ObjectType type = registry.createAnonymousObjectType(null);
-    assertEquals("{}", type.toString());
+    assertThat(type.toString()).isEqualTo("{}");
 
     type.defineDeclaredProperty("foo", NUMBER_TYPE, null);
-    assertEquals("{foo: number}", type.toString());
+    assertThat(type.toString()).isEqualTo("{foo: number}");
 
     type.defineDeclaredProperty("bar", type, null);
-    assertEquals("{bar: {...}, foo: number}", type.toString());
+    assertThat(type.toString()).isEqualTo("{bar: {...}, foo: number}");
   }
 }

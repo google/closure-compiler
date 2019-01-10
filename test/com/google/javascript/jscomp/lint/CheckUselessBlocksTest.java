@@ -25,10 +25,13 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link CheckUselessBlocks}.
- */
+/** Test case for {@link CheckUselessBlocks}. */
+@RunWith(JUnit4.class)
 public final class CheckUselessBlocksTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -43,11 +46,13 @@ public final class CheckUselessBlocksTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
+  @Test
   public void testCheckUselessBlocks_noWarning() {
     testSame("while (foo) { bar(); }");
     testSame("if (true) { var x = 1; }");
@@ -65,10 +70,12 @@ public final class CheckUselessBlocksTest extends CompilerTestCase {
     testSame("{ class Foo {} }");
   }
 
+  @Test
   public void testCheckUselessBlocks_withES6Modules_noWarning() {
     testSame("export function f() { switch (x) { case 1: { return 5; } } }");
   }
 
+  @Test
   public void testCheckUselessBlocks_warning() {
     testWarning("{}", USELESS_BLOCK);
     testWarning("{ var f = function() {}; }", USELESS_BLOCK);
@@ -97,6 +104,7 @@ public final class CheckUselessBlocksTest extends CompilerTestCase {
     testWarning("{ var f = class {}; }", USELESS_BLOCK);
   }
 
+  @Test
   public void testCheckUselessBlocks_withES6Modules_warning() {
     testWarning("export function bar() { { baz(); } }", USELESS_BLOCK);
   }

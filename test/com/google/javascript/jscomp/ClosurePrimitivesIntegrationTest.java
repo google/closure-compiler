@@ -16,14 +16,18 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Tests that the property renaming primitive goog.reflect.objectProperty
- * is recognized across the optimization passes.
+ * Tests that the property renaming primitive goog.reflect.objectProperty is recognized across the
+ * optimization passes.
  *
  * @author chadkillingsworth@gmail.com (Chad Killingsworth)
  */
 
+@RunWith(JUnit4.class)
 public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase {
 
   private static final String RENAME_FN_DEFINITION = LINE_JOINER.join(
@@ -50,6 +54,7 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
 
   private boolean useSimpleMode = false;
 
+  @Test
   public void testPrototypePropRename() {
     test(createCompilerOptions(),
         new String[] {
@@ -77,6 +82,7 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
     );
   }
 
+  @Test
   public void testPrototypePropRenameSimple() {
     useSimpleMode = true;
     test(
@@ -109,6 +115,7 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
         });
   }
 
+  @Test
   public void testStaticPropRename() {
     test(createCompilerOptions(),
         LINE_JOINER.join(
@@ -123,6 +130,7 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
             "b.a('foobar');"));
   }
 
+  @Test
   public void testStaticPropRenameSimple() {
     useSimpleMode = true;
     test(

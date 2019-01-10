@@ -16,12 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
+/** @author johnlenz@google.com (John Lenz) */
+@RunWith(JUnit4.class)
 public final class SourceInformationAnnotatorTest extends CompilerTestCase {
 
   @Override
@@ -34,6 +38,7 @@ public final class SourceInformationAnnotatorTest extends CompilerTestCase {
       }};
   }
 
+  @Test
   public void testPreserveAnnotatedName() {
     Node root = new Node(Token.SCRIPT);
     Node name = Node.newString("foo");
@@ -42,6 +47,6 @@ public final class SourceInformationAnnotatorTest extends CompilerTestCase {
 
     NodeTraversal.traverse(new Compiler(), root,
         new SourceInformationAnnotator("", false));
-    assertEquals("bar", name.getOriginalName());
+    assertThat(name.getOriginalName()).isEqualTo("bar");
   }
 }

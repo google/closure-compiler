@@ -16,40 +16,51 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Integration tests for compilation in {@link LanguageMode#ECMASCRIPT6_TYPED} mode, with type
  * checking by {@link TypeValidator}.
  */
 
+@RunWith(JUnit4.class)
 public final class Es6TypedIntegrationTest extends IntegrationTestCase {
 
+  @Test
   public void testBasicTypeCheck() {
     test(createCompilerOptions(), "var x: number = 12;\nalert(x);", "alert(12);");
   }
 
+  @Test
   public void testBasicTypeCheck_error() {
     test(createCompilerOptions(), "var x: number = 'hello';", TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  @Test
   public void testFunctionType_correct() {
     test(createCompilerOptions(), "function x(): number { return 12; }; alert(x());", "alert(12)");
   }
 
+  @Test
   public void testFunctionType_error() {
     test(createCompilerOptions(), "function x(): number { return 'hello'; }",
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  @Test
   public void testFunctionParameter() {
     test(createCompilerOptions(), "function x(x: number) {}; x(12);", "");
   }
 
+  @Test
   public void testFunctionParameter_error() {
     test(createCompilerOptions(), "function x(x: number) {}; x('hello');",
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  @Test
   public void testClassMemberVariable() {
     test(createCompilerOptions(),
         "class C { x: number; }\n"
@@ -64,6 +75,7 @@ public final class Es6TypedIntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  @Test
   public void testClassMemberVariable_static() {
     test(createCompilerOptions(),
         "class C { static x: number; }\n"
@@ -76,6 +88,7 @@ public final class Es6TypedIntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  @Test
   public void testVariableDeclaredBeforePassVaraiableReferenceCheck() {
     test(createCompilerOptions(),
         "enum A { B, C }\n"

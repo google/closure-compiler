@@ -437,7 +437,7 @@ class TypeTransformation {
       case ISRECORD:
         return type.isRecordType();
       case ISUNKNOWN:
-        return type.isSomeUnknownType();
+        return type.isUnknownType();
       default:
         throw new IllegalStateException(
             "Invalid type predicate in the type transformation");

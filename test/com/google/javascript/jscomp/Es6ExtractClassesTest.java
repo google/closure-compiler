@@ -20,7 +20,12 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class Es6ExtractClassesTest extends CompilerTestCase {
 
   @Override
@@ -29,15 +34,18 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    disableTypeCheck();
-    enableRunTypeCheckAfterProcessing();
-    disableScriptFeatureValidation();
+
+    enableTypeInfoValidation();
+    enableRewriteClosureCode();
+    enableTypeCheck();
   }
 
+  @Test
   public void testExtractionFromCall() {
     test(
         "f(class{});",
@@ -46,6 +54,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "f(testcode$classdecl$var0);"));
   }
 
+  @Test
   public void testSelfReference1() {
     test(
         "var Outer = class Inner { constructor() { alert(Inner); } };",
@@ -53,6 +62,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "const testcode$classdecl$var0 = class {",
             "  constructor() { alert(testcode$classdecl$var0); }",
             "};",
+            "/** @constructor */",
             "var Outer=testcode$classdecl$var0"));
 
     test(
@@ -61,6 +71,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "const testcode$classdecl$var0 = class {",
             "  constructor() { alert(testcode$classdecl$var0); }",
             "};",
+            "/** @constructor */",
             "let Outer=testcode$classdecl$var0"));
 
     test(
@@ -69,9 +80,11 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "const testcode$classdecl$var0 = class {",
             "  constructor() { alert(testcode$classdecl$var0); }",
             "};",
+            "/** @constructor */",
             "const Outer=testcode$classdecl$var0"));
   }
 
+  @Test
   public void testSelfReference2() {
     test(
         "alert(class C { constructor() { alert(C); } });",
@@ -82,6 +95,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "alert(testcode$classdecl$var0)"));
   }
 
+  @Test
   public void testSelfReference3() {
     test(
         lines(
@@ -97,33 +111,43 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "alert(testcode$classdecl$var0)"));
   }
 
+  @Test
   public void testSelfReference_googModule() {
     test(
         lines(
             "goog.module('example');",
             "exports = class Inner { constructor() { alert(Inner); } };"),
         lines(
-            "goog.module('example');",
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    alert(testcode$classdecl$var0);",
-            "  }",
+            "/** @const */ const testcode$classdecl$var0=class {",
+            "  constructor(){ alert(testcode$classdecl$var0); }",
             "};",
-            "exports = testcode$classdecl$var0;"));
+            "/**",
+            " * @constructor",
+            " * @const",
+            " */ ",
+            "var module$exports$example=testcode$classdecl$var0"));
   }
 
+  @Test
   public void testSelfReference_qualifiedName() {
     test(
-        "outer.qual.Name = class Inner { constructor() { alert(Inner); } };",
         lines(
+            "const outer = {};",
+            "/** @const */ outer.qual = {};",
+            "outer.qual.Name = class Inner { constructor() { alert(Inner); } };"),
+        lines(
+            "const outer = {};",
+            "/** @const */ outer.qual = {};",
             "const testcode$classdecl$var0 = class {",
             "  constructor() {",
             "    alert(testcode$classdecl$var0);",
             "  }",
             "};",
+            "/** @constructor */",
             "outer.qual.Name = testcode$classdecl$var0;"));
   }
 
+  @Test
   public void testConstAssignment() {
     test(
         "var foo = bar(class {});",
@@ -132,6 +156,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "var foo = bar(testcode$classdecl$var0);"));
   }
 
+  @Test
   public void testLetAssignment() {
     test(
         "let foo = bar(class {});",
@@ -140,6 +165,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "let foo = bar(testcode$classdecl$var0);"));
   }
 
+  @Test
   public void testVarAssignment() {
     test(
         "var foo = bar(class {});",
@@ -148,16 +174,18 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "var foo = bar(testcode$classdecl$var0);"));
   }
 
-  public void testJSDoc() {
+  @Test
+  public void testJSDocOnVar() {
     test(
         "/** @unrestricted */ var foo = class bar {};",
         lines(
             "/** @unrestricted */",
             "const testcode$classdecl$var0 = class {};",
-            "/** @unrestricted */",
+            "/** @unrestricted @constructor */",
             "var foo = testcode$classdecl$var0;"));
   }
 
+  @Test
   public void testFilenameContainsAt() {
     test(
         ImmutableList.of(
@@ -170,6 +198,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
                     "alert(unusual$name$classdecl$var0);"))));
   }
 
+  @Test
   public void testFilenameContainsPlus() {
     test(
         ImmutableList.of(
@@ -183,10 +212,12 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
 
   }
 
+  @Test
   public void testConditionalBlocksExtractionFromCall() {
     testError("maybeTrue() && f(class{});", CANNOT_CONVERT);
   }
 
+  @Test
   public void testExtractionFromArrayLiteral() {
     test(
         "var c = [class C {}];",
@@ -195,11 +226,13 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "var c = [testcode$classdecl$var0];"));
   }
 
+  @Test
   public void testTernaryOperatorBlocksExtraction() {
     testError("var c = maybeTrue() ? class A {} : anotherExpr", CANNOT_CONVERT);
     testError("var c = maybeTrue() ? anotherExpr : class B {}", CANNOT_CONVERT);
   }
 
+  @Test
   public void testCannotExtract() {
     testError(
         "var c = maybeTrue() && class A extends sideEffect() {}",
@@ -207,13 +240,13 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
 
     testError(
         lines(
-            "var x;",
+            "/** @type {number} */ var x = 0;",
             "function f(x, y) {}",
-
             "f(x = 2, class Foo { [x=3]() {} });"),
         CANNOT_CONVERT);
   }
 
+  @Test
   public void testClassesHandledByEs6ToEs3Converter() {
     testSame("class C{}");
     testSame("var c = class {};");

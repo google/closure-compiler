@@ -17,19 +17,25 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author nicksantos@google.com (Nick Santos)
- */
+/** @author nicksantos@google.com (Nick Santos) */
+@RunWith(JUnit4.class)
 public final class ValidityCheckTest extends CompilerTestCase {
 
   private CompilerPass otherPass = null;
 
-  @Override protected void setUp() throws Exception {
+  @Before
+  @Override
+  public void setUp() throws Exception {
     super.setUp();
     otherPass = null;
   }
@@ -47,7 +53,8 @@ public final class ValidityCheckTest extends CompilerTestCase {
     };
   }
 
-  public void testUnnormalizeNodeTypes() throws Exception {
+  @Test
+  public void testUnnormalizeNodeTypes() {
     otherPass = new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         AbstractCompiler compiler = getLastCompiler();
@@ -60,13 +67,14 @@ public final class ValidityCheckTest extends CompilerTestCase {
 
     try {
       test("var x = 3;", "var x=3;0;0");
-      fail("Expected IllegalStateException");
+      assertWithMessage("Expected IllegalStateException").fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().contains("Expected BLOCK but was EMPTY");
     }
   }
 
-  public void testUnnormalized() throws Exception {
+  @Test
+  public void testUnnormalized() {
     otherPass = new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         getLastCompiler().setLifeCycleStage(LifeCycleStage.NORMALIZED);
@@ -75,13 +83,14 @@ public final class ValidityCheckTest extends CompilerTestCase {
 
     try {
       testSame("while(1){}");
-      fail("Expected RuntimeException");
+      assertWithMessage("Expected RuntimeException").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasMessageThat().contains("Normalize constraints violated:\nWHILE node");
     }
   }
 
-  public void testConstantAnnotationMismatch() throws Exception {
+  @Test
+  public void testConstantAnnotationMismatch() {
     otherPass = new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         AbstractCompiler compiler = getLastCompiler();
@@ -96,7 +105,7 @@ public final class ValidityCheckTest extends CompilerTestCase {
 
     try {
       test("var x;", "var x; x;");
-      fail("Expected RuntimeException");
+      assertWithMessage("Expected RuntimeException").fail();
     } catch (RuntimeException e) {
       assertThat(e)
           .hasMessageThat()

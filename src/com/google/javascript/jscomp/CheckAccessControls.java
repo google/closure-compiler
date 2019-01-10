@@ -15,13 +15,14 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
@@ -31,21 +32,22 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
- * A compiler pass that checks that the programmer has obeyed all the access
- * control restrictions indicated by JSDoc annotations, like
- * {@code @private} and {@code @deprecated}.
+ * A compiler pass that checks that the programmer has obeyed all the access control restrictions
+ * indicated by JSDoc annotations, like {@code @private} and {@code @deprecated}.
  *
- * Because access control restrictions are attached to type information, this pass must run
- * after TypeInference, and InferJSDocInfo.
+ * <p>Because access control restrictions are attached to type information, this pass must run after
+ * TypeInference, and InferJSDocInfo.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class CheckAccessControls extends AbstractPostOrderCallback
-    implements ScopedCallback, HotSwapCompilerPass {
+class CheckAccessControls implements Callback, HotSwapCompilerPass {
 
   static final DiagnosticType DEPRECATED_NAME = DiagnosticType.disabled(
       "JSC_DEPRECATED_VAR",
@@ -133,9 +135,11 @@ class CheckAccessControls extends AbstractPostOrderCallback
   private final boolean enforceCodingConventions;
 
   // State about the current traversal.
-  private int deprecatedDepth = 0;
-  private final ArrayDeque<JSType> currentClassStack = new ArrayDeque<>();
-  private final JSType noTypeSentinel;
+  private int deprecationDepth = 0;
+  // NOTE: LinkedList is almost always the wrong choice, but in this case we have at most a small
+  // handful of elements, it provides the smoothest API (push, pop, and a peek that doesn't throw
+  // on empty), and (unlike ArrayDeque) is null-permissive. No other option meets all these needs.
+  private final Deque<ObjectType> currentClassStack = new LinkedList<>();
 
   private ImmutableMap<StaticSourceFile, Visibility> defaultVisibilityForFiles;
   private final Multimap<JSType, String> initializedConstantProperties;
@@ -147,7 +151,6 @@ class CheckAccessControls extends AbstractPostOrderCallback
     this.typeRegistry = compiler.getTypeRegistry();
     this.initializedConstantProperties = HashMultimap.create();
     this.enforceCodingConventions = enforceCodingConventions;
-    this.noTypeSentinel = typeRegistry.getNativeType(JSTypeNative.NO_TYPE);
   }
 
   @Override
@@ -171,172 +174,288 @@ class CheckAccessControls extends AbstractPostOrderCallback
     NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
-  @Override
-  public void enterScope(NodeTraversal t) {
-    Node n = t.getScopeRoot();
-    if (n.isFunction()) {
-      Node parent = n.getParent();
-      if (isDeprecatedFunction(n)) {
-        deprecatedDepth++;
-      }
-      JSType prevClass = getCurrentClass();
-      JSType currentClass = prevClass == null
-          ? getClassOfMethod(n, parent)
-          : prevClass;
-      // ArrayDeques can't handle nulls, so we reuse the bottom type
-      // as a null sentinel.
-      currentClassStack.addFirst(currentClass == null
-          ? noTypeSentinel
-          : currentClass);
+  private void enterAccessControlScope(Node root) {
+    @Nullable ObjectType scopeType = bestInstanceTypeForMethodOrCtor(root);
+
+    if (isMarkedDeprecated(root)) {
+      deprecationDepth++;
     }
+    currentClassStack.push(scopeType);
   }
 
-  @Override
-  public void exitScope(NodeTraversal t) {
-    Node n = t.getScopeRoot();
-    if (n.isFunction()) {
-      if (isDeprecatedFunction(n)) {
-        deprecatedDepth--;
-      }
-      currentClassStack.pop();
+  private void exitAccessControlScope(Node root) {
+    if (isMarkedDeprecated(root)) {
+      deprecationDepth--;
+    }
+    currentClassStack.pop();
+  }
+
+  /**
+   * Maps {@code node} to the <em>primary</em> root of an access-control scope if it is some root,
+   * or {@code null} if it is a non-root of the scope.
+   *
+   * <p>We define access-control scopes differently from {@code Scope}s because of mismatches
+   * between ECMAScript scoping and our AST structure (e.g. the `extends` clause of a CLASS). {@link
+   * NodeTraveral} is designed to walk the AST in ECMAScript scope order, which is not the pre-order
+   * traversal that we would prefer here. This requires us to treat access-control scopes as a
+   * forest with a primary root.
+   *
+   * <p>Each access-control scope corresponds to some "owner" JavaScript type which is used when
+   * computing access-controls. At this time, each also corresponds to an AST subtree.
+   *
+   * <p>Known mismatches:
+   *
+   * <ul>
+   *   <li>CLASS extends clause: secondary root of the scope defined by the CLASS.
+   * </ul>
+   */
+  @Nullable
+  private static Node primaryAccessControlScopeRootFor(Node node) {
+    if (isExtendsTarget(node)) {
+      return node.getParent();
+    } else if (isFunctionOrClass(node)) {
+      return node;
+    } else {
+      return null;
     }
   }
 
   /**
-   * Gets the type of the class that "owns" a method, or null if
-   * we know that its un-owned.
+   * Returns the instance object type that best represents a method or constructor definition, or
+   * {@code null} if there is no representative type.
+   *
+   * <ul>
+   *   <li>Prototype methods => The instance type having that prototype
+   *   <li>Instance methods => The type the method is attached to
+   *   <li>Constructors => The type that constructor instantiates
+   *   <li>Object-literal members => The object-literal type
+   * </ul>
    */
-  private JSType getClassOfMethod(Node n, Node parent) {
-    checkState(n.isFunction(), n);
-    if (parent.isAssign()) {
-      Node lValue = parent.getFirstChild();
-      if (NodeUtil.isGet(lValue)) {
-        // We have an assignment of the form "a.b = ...".
-        JSType lValueType = lValue.getJSType();
-        if (lValueType != null && (lValueType.isConstructor() || lValueType.isInterface())) {
-          // If a.b is a constructor, then everything in this function
-          // belongs to the "a.b" type.
-          return (lValueType.toMaybeFunctionType()).getInstanceType();
-        } else if (NodeUtil.isPrototypeProperty(lValue)) {
-          return normalizeClassType(
-              NodeUtil.getPrototypeClassName(lValue).getJSType());
-        } else {
-          return normalizeClassType(lValue.getFirstChild().getJSType());
-        }
-      } else {
-        // We have an assignment of the form "a = ...", so pull the
-        // type off the "a".
-        return normalizeClassType(lValue.getJSType());
-      }
-    } else if (NodeUtil.isFunctionDeclaration(n) || parent.isName()) {
-      return normalizeClassType(n.getJSType());
-    } else if (parent.isStringKey()
-        || parent.isGetterDef()
-        || parent.isSetterDef()
-        || parent.isMemberFunctionDef()
-        || parent.isComputedProp()) {
-      Node objectLitParent = parent.getGrandparent();
-      if (!objectLitParent.isAssign()) {
-        return null;
-      }
-      Node className = NodeUtil.getPrototypeClassName(objectLitParent.getFirstChild());
-      if (className != null) {
-        return normalizeClassType(className.getJSType());
-      }
+  @Nullable
+  private ObjectType bestInstanceTypeForMethodOrCtor(Node n) {
+    checkState(isFunctionOrClass(n), n);
+    Node parent = n.getParent();
+
+    // We need to handle declaration syntaxes separately in a way that we can't determine based on
+    // the type of just one node.
+    // TODO(nickreid): Determine if these can be replaced with FUNCTION and CLASS cases below.
+    if (NodeUtil.isFunctionDeclaration(n) || NodeUtil.isClassDeclaration(n)) {
+      return instanceTypeFor(n.getJSType());
     }
 
-    return null;
-  }
-
-  /**
-   * Normalize the type of a constructor, its instance, and its prototype
-   * all down to the same type (the instance type).
-   */
-  private static JSType normalizeClassType(JSType type) {
-    if (type == null || type.isUnknownType()) {
-      return type;
-    } else if (type.isConstructor() || type.isInterface()) {
-      return type.toMaybeFunctionType().getInstanceType();
-    } else if (type.isFunctionPrototypeType()) {
-      return normalizePrototypeObject(type.toMaybeObjectType());
-    }
-    return type;
-  }
-
-  private static ObjectType normalizePrototypeObject(ObjectType type) {
-    FunctionType owner = type.getOwnerFunction();
-    if (owner.hasInstanceType()) {
-      return owner.getInstanceType();
-    }
-    return type;
-  }
-
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
+    // All the remaining cases can be isolated based on `parent`.
+    switch (parent.getToken()) {
       case NAME:
-        checkNameDeprecation(t, n, parent);
-        checkNameVisibility(t, n, parent);
-        break;
-      case GETPROP:
-        checkPropertyDeprecation(t, n, parent);
-        checkPropertyVisibility(t, n, parent);
-        checkConstantProperty(t, n);
-        break;
+        return instanceTypeFor(n.getJSType());
+
+      case ASSIGN:
+        {
+          Node lValue = parent.getFirstChild();
+          if (NodeUtil.isGet(lValue)) {
+            // We have an assignment of the form `a.b = ...`.
+            JSType lValueType = lValue.getJSType();
+            if (lValueType != null && (lValueType.isConstructor() || lValueType.isInterface())) {
+              // Case `a.B = ...`
+              return instanceTypeFor(lValueType);
+            } else if (NodeUtil.isPrototypeProperty(lValue)) {
+              // Case `a.B.prototype = ...`
+              return instanceTypeFor(NodeUtil.getPrototypeClassName(lValue).getJSType());
+            } else {
+              // Case `a.b = ...`
+              return instanceTypeFor(lValue.getFirstChild().getJSType());
+            }
+          } else {
+            // We have an assignment of the form "a = ...", so pull the type off the "a".
+            return instanceTypeFor(lValue.getJSType());
+          }
+        }
+
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
-        checkKeyVisibilityConvention(t, n, parent);
+      case COMPUTED_PROP:
+        {
+          Node grandparent = parent.getParent();
+          Node greatGrandparent = grandparent.getParent();
+
+          if (grandparent.isObjectLit()) {
+            return grandparent.getJSType().isFunctionPrototypeType()
+                // Case: `grandparent` is an object-literal prototype.
+                // Example: `Foo.prototype = { a: function() {} };` where `parent` is "a".
+                ? instanceTypeFor(grandparent.getJSType())
+                : null;
+          } else if (greatGrandparent.isClass()) {
+            // Case: `n` is a class member definition.
+            // Example: `class Foo { a() {} }` where `parent` is "a".
+            return instanceTypeFor(greatGrandparent.getJSType());
+          } else {
+            // This would indicate the AST is malformed.
+            throw new AssertionError(greatGrandparent);
+          }
+        }
+
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Returns the type that best represents the instance type for {@code type}.
+   *
+   * <ul>
+   *   <li>Prototype type => The instance type having that prototype
+   *   <li>Instance type => The type
+   *   <li>Constructor type => The type that constructor instantiates
+   *   <li>Object-literal type => The type
+   * </ul>
+   */
+  @Nullable
+  private static ObjectType instanceTypeFor(JSType type) {
+    if (type == null) {
+      return null;
+    } else if (type.isUnionType()) {
+      return null; // A union has no meaningful instance type.
+    } else if (type.isInstanceType() || type.isUnknownType()) {
+      return type.toMaybeObjectType();
+    } else if (type.isConstructor() || type.isInterface()) {
+      return type.toMaybeFunctionType().getInstanceType();
+    } else if (type.isFunctionPrototypeType()) {
+      return instanceTypeFor(type.toMaybeObjectType().getOwnerFunction());
+    }
+
+    return type.toMaybeObjectType();
+  }
+
+  @Override
+  public boolean shouldTraverse(NodeTraversal traversal, Node node, Node parent) {
+    @Nullable Node accessControlRoot = primaryAccessControlScopeRootFor(node);
+    if (accessControlRoot != null) {
+      enterAccessControlScope(accessControlRoot);
+    }
+
+    return true;
+  }
+
+  @Override
+  public void visit(NodeTraversal traversal, Node node, Node parent) {
+
+    IdentifierBehaviour identifierBehaviour = IdentifierBehaviour.select(node);
+    @Nullable PropertyReference propRef = createPropertyReference(node);
+
+    checkDeprecation(node, propRef, identifierBehaviour, traversal);
+    checkVisibility(node, propRef, identifierBehaviour, traversal);
+    checkConstantProperty(propRef, identifierBehaviour, traversal);
+
+    checkFinalClassOverrides(node, traversal);
+
+    @Nullable Node accessControlRoot = primaryAccessControlScopeRootFor(node);
+    if (accessControlRoot != null) {
+      exitAccessControlScope(accessControlRoot);
+    }
+  }
+
+  private void checkDeprecation(
+      Node node,
+      @Nullable PropertyReference propRef,
+      IdentifierBehaviour identifierBehaviour,
+      NodeTraversal traversal) {
+
+    switch (identifierBehaviour) {
+      case ES5_CLASS_INVOCATION:
+      case ES6_CLASS_INVOCATION:
+      case ES6_CLASS_NAMESPACE:
+        // At these usages, treat the deprecation applied to type-declaration as referring to the
+        // type, not the identifier (e.g. "the use of class `Foo` is deprecated").
+        checkTypeDeprecation(traversal, node);
         break;
-      case NEW:
-        checkConstructorDeprecation(t, n, parent);
+
+      case NON_CONSTRUCTOR:
+        // For all identifiers that are not constructors, deprecation refers to the identifier (e.g.
+        // "the use of variable `x` is deprecated").
+        checkNameDeprecation(traversal, node);
         break;
-      case FUNCTION:
-        checkFinalClassOverrides(t, n, parent);
-        break;
+
       default:
         break;
     }
+
+    if (propRef != null && !identifierBehaviour.equals(IdentifierBehaviour.ES5_CLASS_NAMESPACE)) {
+      checkPropertyDeprecation(traversal, propRef);
+    }
   }
 
-  /**
-   * Checks the given NEW node to ensure that access restrictions are obeyed.
-   */
-  private void checkConstructorDeprecation(NodeTraversal t, Node n,
-      Node parent) {
-    JSType type = n.getJSType();
+  private void checkVisibility(
+      Node node,
+      @Nullable PropertyReference propRef,
+      IdentifierBehaviour identifierBehaviour,
+      NodeTraversal traversal) {
+    if (identifierBehaviour.equals(IdentifierBehaviour.ES6_CLASS_INVOCATION)) {
+      checkEs6ConstructorInvocationVisibility(node, traversal);
+    }
 
-    if (type != null) {
-      String deprecationInfo = getTypeDeprecationInfo(type);
+    if (!identifierBehaviour.equals(IdentifierBehaviour.ES5_CLASS_NAMESPACE)) {
+      checkNameVisibility(traversal, node);
+    }
 
-      if (deprecationInfo != null && shouldEmitDeprecationWarning(t, n, parent)) {
+    if (node.getParent().isObjectLit()) {
+      // TODO(b/80580110): Eventually object literals should be covered by `PropertyReference`s.
+      // However, doing so initially would have caused too many errors in existing code and
+      // delayed support for class syntax.
 
-        if (!deprecationInfo.isEmpty()) {
-            compiler.report(
-                t.makeError(n, DEPRECATED_CLASS_REASON,
-                    type.toString(), deprecationInfo));
-        } else {
-          compiler.report(
-              t.makeError(n, DEPRECATED_CLASS, type.toString()));
-        }
+      switch (node.getToken()) {
+        case STRING_KEY:
+        case GETTER_DEF:
+        case SETTER_DEF:
+        case MEMBER_FUNCTION_DEF:
+          checkKeyVisibilityConvention(traversal, node, node.getParent());
+          break;
+
+        default:
+          break;
       }
+    }
+
+    if (propRef != null && !identifierBehaviour.equals(IdentifierBehaviour.ES5_CLASS_NAMESPACE)) {
+      checkPropertyVisibility(traversal, propRef);
     }
   }
 
   /**
-   * Checks the given NAME node to ensure that access restrictions are obeyed.
+   * Reports deprecation issue with regard to a type usage.
+   *
+   * <p>Precondition: {@code n} has a constructor {@link JSType}.
    */
-  private void checkNameDeprecation(NodeTraversal t, Node n, Node parent) {
-    // Don't bother checking definitions or constructors.
-    if (parent.isFunction() || NodeUtil.isNameDeclaration(parent) || parent.isNew()) {
+  private void checkTypeDeprecation(NodeTraversal t, Node n) {
+    if (!shouldEmitDeprecationWarning(t, n)) {
+      return;
+    }
+
+    ObjectType instanceType = n.getJSType().toMaybeFunctionType().getInstanceType();
+
+    String deprecationInfo = getTypeDeprecationInfo(instanceType);
+    if (deprecationInfo == null) {
+      return;
+    }
+
+    DiagnosticType message = deprecationInfo.isEmpty() ? DEPRECATED_CLASS : DEPRECATED_CLASS_REASON;
+    compiler.report(t.makeError(n, message, instanceType.toString(), deprecationInfo));
+  }
+
+  /** Checks the given NAME node to ensure that access restrictions are obeyed. */
+  private void checkNameDeprecation(NodeTraversal t, Node n) {
+    if (!n.isName()) {
+      return;
+    }
+
+    if (!shouldEmitDeprecationWarning(t, n)) {
       return;
     }
 
     Var var = t.getScope().getVar(n.getString());
     JSDocInfo docInfo = var == null ? null : var.getJSDocInfo();
 
-    if (docInfo != null && docInfo.isDeprecated() && shouldEmitDeprecationWarning(t, n, parent)) {
+    if (docInfo != null && docInfo.isDeprecated()) {
       if (docInfo.getDeprecationReason() != null) {
         compiler.report(
             t.makeError(n, DEPRECATED_NAME_REASON, n.getString(),
@@ -348,34 +467,41 @@ class CheckAccessControls extends AbstractPostOrderCallback
     }
   }
 
-  /**
-   * Checks the given GETPROP node to ensure that access restrictions are
-   * obeyed.
-   */
-  private void checkPropertyDeprecation(NodeTraversal t, Node n, Node parent) {
-    // Don't bother checking constructors.
-    if (parent.isNew()) {
+  /** Checks the given GETPROP node to ensure that access restrictions are obeyed. */
+  private void checkPropertyDeprecation(NodeTraversal t, PropertyReference propRef) {
+    if (!shouldEmitDeprecationWarning(t, propRef)) {
       return;
     }
 
-    ObjectType objectType = castToObject(dereference(n.getFirstChild().getJSType()));
-    String propertyName = n.getLastChild().getString();
+    // Don't bother checking constructors.
+    if (propRef.getSourceNode().getParent().isNew()) {
+      return;
+    }
+
+    ObjectType objectType = castToObject(dereference(propRef.getReceiverType()));
+    String propertyName = propRef.getName();
 
     if (objectType != null) {
       String deprecationInfo
           = getPropertyDeprecationInfo(objectType, propertyName);
 
-      if (deprecationInfo != null && shouldEmitDeprecationWarning(t, n, parent)) {
+      if (deprecationInfo != null) {
 
         if (!deprecationInfo.isEmpty()) {
           compiler.report(
-              t.makeError(n, DEPRECATED_PROP_REASON, propertyName,
-                  typeRegistry.getReadableTypeName(n.getFirstChild()),
+              t.makeError(
+                  propRef.getSourceNode(),
+                  DEPRECATED_PROP_REASON,
+                  propertyName,
+                  propRef.getReadableTypeNameOrDefault(),
                   deprecationInfo));
         } else {
           compiler.report(
-              t.makeError(n, DEPRECATED_PROP, propertyName,
-                  typeRegistry.getReadableTypeName(n.getFirstChild())));
+              t.makeError(
+                  propRef.getSourceNode(),
+                  DEPRECATED_PROP,
+                  propertyName,
+                  propRef.getReadableTypeNameOrDefault()));
         }
       }
     }
@@ -419,10 +545,15 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
   /**
    * Reports an error if the given name is not visible in the current context.
+   *
    * @param t The current traversal.
    * @param name The name node.
    */
-  private void checkNameVisibility(NodeTraversal t, Node name, Node parent) {
+  private void checkNameVisibility(NodeTraversal t, Node name) {
+    if (!name.isName()) {
+      return;
+    }
+
     Var var = t.getScope().getVar(name.getString());
     if (var == null) {
       return;
@@ -441,7 +572,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
         }
         break;
       case PRIVATE:
-        if (!isPrivateAccessAllowed(var, name, parent)) {
+        if (!isPrivateAccessAllowed(var, name)) {
           compiler.report(
               t.makeError(name, BAD_PRIVATE_GLOBAL_ACCESS,
                   name.getString(), var.getSourceFile().getName()));
@@ -453,7 +584,6 @@ class CheckAccessControls extends AbstractPostOrderCallback
         break;
     }
   }
-
 
   /**
    * Returns the effective visibility of the given name, reporting an error
@@ -471,38 +601,29 @@ class CheckAccessControls extends AbstractPostOrderCallback
     return v;
   }
 
-  private static boolean isPrivateAccessAllowed(Var var, Node name, Node parent) {
+  private static boolean isPrivateAccessAllowed(Var var, Node name) {
     StaticSourceFile varSrc = var.getSourceFile();
     StaticSourceFile refSrc = name.getStaticSourceFile();
-    JSDocInfo docInfo = var.getJSDocInfo();
-    if (varSrc != null
-        && refSrc != null
-        && !varSrc.getName().equals(refSrc.getName())) {
-      return docInfo != null && docInfo.isConstructor()
-          && isValidPrivateConstructorAccess(parent);
-    } else {
-      return true;
-    }
+
+    return varSrc == null || refSrc == null || Objects.equals(varSrc.getName(), refSrc.getName());
   }
 
   private boolean isPackageAccessAllowed(Var var, Node name) {
     StaticSourceFile varSrc = var.getSourceFile();
     StaticSourceFile refSrc = name.getStaticSourceFile();
-    CodingConvention codingConvention = compiler.getCodingConvention();
-    if (varSrc != null && refSrc != null) {
-      String srcPackage = codingConvention.getPackageName(varSrc);
-      String refPackage = codingConvention.getPackageName(refSrc);
-      return srcPackage != null
-          && refPackage != null
-          && srcPackage.equals(refPackage);
-    } else {
-      // If the source file of either var or name is unavailable, conservatively
-      // assume they belong to different packages.
-      // TODO(brndn): by contrast, isPrivateAccessAllowed does allow
-      // private access when a source file is unknown. I didn't change it
-      // in order not to break existing code.
+    if (varSrc == null && refSrc == null) {
+      // If the source file of either var or name is unavailable, conservatively assume they belong
+      // to different packages.
+      //
+      // TODO(brndn): by contrast, isPrivateAccessAllowed does allow private access when a source
+      // file is unknown. I didn't change it in order not to break existing code.
       return false;
     }
+
+    CodingConvention codingConvention = compiler.getCodingConvention();
+    String srcPackage = codingConvention.getPackageName(varSrc);
+    String refPackage = codingConvention.getPackageName(refSrc);
+    return srcPackage != null && refPackage != null && Objects.equals(srcPackage, refPackage);
   }
 
   private void checkOverriddenPropertyVisibilityMismatch(
@@ -510,75 +631,71 @@ class CheckAccessControls extends AbstractPostOrderCallback
       Visibility overridden,
       @Nullable Visibility fileOverview,
       NodeTraversal t,
-      Node getprop) {
+      PropertyReference propRef) {
     if (overriding == Visibility.INHERITED
         && overriding != overridden
         && fileOverview != null
         && fileOverview != Visibility.INHERITED) {
-      String propertyName = getprop.getLastChild().getString();
       compiler.report(
-          t.makeError(getprop,
+          t.makeError(
+              propRef.getSourceNode(),
               BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY,
-              propertyName,
+              propRef.getName(),
               fileOverview.name()));
     }
   }
 
-  @Nullable private static Visibility getOverridingPropertyVisibility(Node parent) {
-    JSDocInfo overridingInfo = parent.getJSDocInfo();
+  @Nullable
+  private static Visibility getOverridingPropertyVisibility(PropertyReference propRef) {
+    JSDocInfo overridingInfo = propRef.getJSDocInfo();
     return overridingInfo == null || !overridingInfo.isOverride()
         ? null
         : overridingInfo.getVisibility();
   }
 
+  /** Checks if a constructor is trying to override a final class. */
+  private void checkFinalClassOverrides(Node ctor, NodeTraversal t) {
+    if (!isFunctionOrClass(ctor)) {
+      return;
+    }
 
-
-  /**
-   * Checks if a constructor is trying to override a final class.
-   */
-  private void checkFinalClassOverrides(NodeTraversal t, Node fn, Node parent) {
-    checkState(fn.isFunction(), fn);
-    JSType type = fn.getJSType().toMaybeFunctionType();
+    JSType type = ctor.getJSType().toMaybeFunctionType();
     if (type != null && type.isConstructor()) {
-      JSType finalParentClass = getSuperClassInstanceIfFinal(getClassOfMethod(fn, parent));
+      JSType finalParentClass = getSuperClassInstanceIfFinal(bestInstanceTypeForMethodOrCtor(ctor));
       if (finalParentClass != null) {
         compiler.report(
-            t.makeError(fn, EXTEND_FINAL_CLASS,
-                type.getDisplayName(), finalParentClass.getDisplayName()));
+            t.makeError(
+                ctor,
+                EXTEND_FINAL_CLASS,
+                type.getDisplayName(),
+                finalParentClass.getDisplayName()));
       }
     }
   }
 
-  /**
-   * Determines whether the given constant property got reassigned
-   * @param t The current traversal.
-   * @param getprop The getprop node.
-   */
-  private void checkConstantProperty(NodeTraversal t, Node getprop) {
-    // Check whether the property is modified
-    Node parent = getprop.getParent();
-    boolean isDelete = parent.isDelProp();
-    if (!(NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == getprop)
-        && !parent.isInc() && !parent.isDec()
-        && !isDelete) {
+  /** Determines whether the given constant property got reassigned */
+  private void checkConstantProperty(
+      @Nullable PropertyReference propRef,
+      IdentifierBehaviour identifierBehaviour,
+      NodeTraversal t) {
+    if (propRef == null || identifierBehaviour.equals(IdentifierBehaviour.ES5_CLASS_NAMESPACE)) {
       return;
     }
 
-    ObjectType objectType = castToObject(dereference(getprop.getFirstChild().getJSType()));
+    if (!propRef.isMutation()) {
+      return;
+    }
 
-    String propertyName = getprop.getLastChild().getString();
+    ObjectType objectType = castToObject(dereference(propRef.getReceiverType()));
+
+    String propertyName = propRef.getName();
 
     boolean isConstant = isPropertyDeclaredConstant(objectType, propertyName);
 
     // Check whether constant properties are reassigned
     if (isConstant) {
-      JSDocInfo info = parent.getJSDocInfo();
-      if (info != null && info.getSuppressions().contains("const")) {
-        return;
-      }
-
-      if (isDelete) {
-        compiler.report(t.makeError(getprop, CONST_PROPERTY_DELETED, propertyName));
+      if (propRef.isDeletion()) {
+        compiler.report(t.makeError(propRef.getSourceNode(), CONST_PROPERTY_DELETED, propertyName));
         return;
       }
 
@@ -596,17 +713,18 @@ class CheckAccessControls extends AbstractPostOrderCallback
         if (initializedConstantProperties.containsEntry(oType, propertyName)
             || initializedConstantProperties.containsEntry(
                 getCanonicalInstance(oType), propertyName)) {
-          compiler.report(t.makeError(getprop, CONST_PROPERTY_REASSIGNED_VALUE, propertyName));
+          compiler.report(
+              t.makeError(propRef.getSourceNode(), CONST_PROPERTY_REASSIGNED_VALUE, propertyName));
           break;
         }
-        oType = oType.getPrototypeObject();
+        oType = oType.getImplicitPrototype();
       }
 
       initializedConstantProperties.put(objectType, propertyName);
 
       // Add the prototype when we're looking at an instance object
       if (objectType.isInstanceType()) {
-        ObjectType prototype = objectType.getPrototypeObject();
+        ObjectType prototype = objectType.getImplicitPrototype();
         if (prototype != null && prototype.hasProperty(propertyName)) {
           initializedConstantProperties.put(prototype, propertyName);
         }
@@ -623,48 +741,43 @@ class CheckAccessControls extends AbstractPostOrderCallback
     return ctor == null ? obj : ctor.getInstanceType();
   }
 
-  private JSType typeOrUnknown(JSType type) {
-    if (type == null) {
-      return typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    }
-    return type;
+  /** Dereference a type, autoboxing it and filtering out null. */
+  @Nullable
+  private static ObjectType dereference(JSType type) {
+    return type == null ? null : type.dereference();
   }
 
-  /**
-   * Reports an error if the given property is not visible in the current
-   * context.
-   * @param t The current traversal.
-   * @param getprop The getprop node.
-   */
-  private void checkPropertyVisibility(NodeTraversal t,
-      Node getprop, Node parent) {
-    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getprop);
-    if (jsdoc != null && jsdoc.getSuppressions().contains("visibility")) {
-      return;
-    }
+  private JSType typeOrUnknown(JSType type) {
+    return (type == null) ? typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE) : type;
+  }
 
-    JSType rawReferenceType = typeOrUnknown(getprop.getFirstChild().getJSType()).autobox();
+  private ObjectType typeOrUnknown(ObjectType type) {
+    return (ObjectType) typeOrUnknown((JSType) type);
+  }
+
+  private ObjectType boxedOrUnknown(@Nullable JSType type) {
+    return typeOrUnknown(dereference(type));
+  }
+
+  /** Reports an error if the given property is not visible in the current context. */
+  private void checkPropertyVisibility(NodeTraversal t, PropertyReference propRef) {
+    JSType rawReferenceType = typeOrUnknown(propRef.getReceiverType()).autobox();
     ObjectType referenceType = castToObject(rawReferenceType);
 
-    String propertyName = getprop.getLastChild().getString();
+    String propertyName = propRef.getName();
     boolean isPrivateByConvention = isPrivateByConvention(propertyName);
 
-    if (isPrivateByConvention
-        && propertyIsDeclaredButNotPrivate(getprop, parent)) {
-      compiler.report(t.makeError(getprop, CONVENTION_MISMATCH));
+    if (isPrivateByConvention && propertyIsDeclaredButNotPrivate(propRef)) {
+      compiler.report(t.makeError(propRef.getSourceNode(), CONVENTION_MISMATCH));
       return;
     }
 
-    StaticSourceFile definingSource = AccessControlUtils.getDefiningSource(
-        getprop, referenceType, propertyName);
-
-    boolean isClassType = false;
+    StaticSourceFile definingSource =
+        AccessControlUtils.getDefiningSource(propRef.getSourceNode(), referenceType, propertyName);
 
     // Is this a normal property access, or are we trying to override
     // an existing property?
-    boolean isOverride =
-        jsdoc != null
-            && (parent.isExprResult() || (parent.isAssign() && parent.getFirstChild() == getprop));
+    boolean isOverride = propRef.isDocumentedDeclaration() || propRef.isOverride();
 
     ObjectType objectType = AccessControlUtils.getObjectType(
         referenceType, isOverride, propertyName);
@@ -672,17 +785,18 @@ class CheckAccessControls extends AbstractPostOrderCallback
     Visibility fileOverviewVisibility =
         defaultVisibilityForFiles.get(definingSource);
 
-    Visibility visibility = AccessControlUtils.getEffectivePropertyVisibility(
-        getprop,
-        referenceType,
-        defaultVisibilityForFiles,
-        enforceCodingConventions ? compiler.getCodingConvention() : null);
+    Visibility visibility =
+        getEffectivePropertyVisibility(
+            propRef,
+            referenceType,
+            defaultVisibilityForFiles,
+            enforceCodingConventions ? compiler.getCodingConvention() : null);
 
     if (isOverride) {
-      Visibility overriding = getOverridingPropertyVisibility(parent);
+      Visibility overriding = getOverridingPropertyVisibility(propRef);
       if (overriding != null) {
         checkOverriddenPropertyVisibilityMismatch(
-            overriding, visibility, fileOverviewVisibility, t, getprop);
+            overriding, visibility, fileOverviewVisibility, t, propRef);
       }
     }
 
@@ -695,7 +809,6 @@ class CheckAccessControls extends AbstractPostOrderCallback
       }
       reportType = objectType;
       definingSource = node.getStaticSourceFile();
-      isClassType = objectType.getOwnPropertyJSDocInfo(propertyName).isConstructor();
     } else if (!isPrivateByConvention && fileOverviewVisibility == null) {
       // We can only check visibility references if we know what file
       // it was defined in.
@@ -703,61 +816,96 @@ class CheckAccessControls extends AbstractPostOrderCallback
       return;
     }
 
-    StaticSourceFile referenceSource = getprop.getStaticSourceFile();
+    StaticSourceFile referenceSource = propRef.getSourceNode().getStaticSourceFile();
 
     if (isOverride) {
       boolean sameInput = referenceSource != null
           && referenceSource.getName().equals(definingSource.getName());
       checkOverriddenPropertyVisibility(
-          t,
-          getprop,
-          parent,
-          visibility,
-          fileOverviewVisibility,
-          reportType,
-          sameInput);
+          t, propRef, visibility, fileOverviewVisibility, reportType, sameInput);
     } else {
       checkNonOverriddenPropertyVisibility(
-          t,
-          getprop,
-          parent,
-          visibility,
-          isClassType,
-          reportType,
-          referenceSource,
-          definingSource);
+          t, propRef, visibility, reportType, referenceSource, definingSource);
     }
   }
 
-  private static boolean propertyIsDeclaredButNotPrivate(Node getprop, Node parent) {
-    // This is a declaration with JSDoc
-    JSDocInfo info = NodeUtil.getBestJSDocInfo(getprop);
-    if ((parent.isAssign() || parent.isExprResult())
-        && parent.getFirstChild() == getprop
-        && info != null) {
-      Visibility declaredVisibility = info.getVisibility();
-      if (declaredVisibility != Visibility.PRIVATE
-      && declaredVisibility != Visibility.INHERITED) {
-          return true;
-      }
+  /**
+   * Reports visibility violations on ES6 class constructor invocations.
+   *
+   * <p>Precondition: {@code target} has an ES6 class {@link JSType}.
+   */
+  private void checkEs6ConstructorInvocationVisibility(Node target, NodeTraversal traversal) {
+    FunctionType ctorType = target.getJSType().toMaybeFunctionType();
+    ObjectType prototypeType = ctorType.getPrototype();
+
+    // We use the class definition site because classes automatically get a implicit constructor,
+    // so there may not be a definition node.
+    @Nullable Node classDefinition = ctorType.getSource();
+
+    @Nullable
+    StaticSourceFile definingSource =
+        (classDefinition == null)
+            ? null
+            : AccessControlUtils.getDefiningSource(classDefinition, prototypeType, "constructor");
+
+    // Synthesize a `PropertyReference` for this constructor call as if we're accessing
+    // `Foo.prototype.constructor`. This object allows us to reuse the
+    // `checkNonOverriddenPropertyVisibility` method which actually reports violations.
+    PropertyReference fauxCtorRef =
+        PropertyReference.builder()
+            .setSourceNode(target)
+            .setName("constructor")
+            .setReceiverType(prototypeType)
+            .setMutation(false) // This shouldn't matter.
+            .setDeclaration(false) // This shouldn't matter.
+            .setOverride(false) // This shouldn't matter.
+            .setReadableTypeName(() -> ctorType.getInstanceType().toString())
+            .build();
+
+    Visibility annotatedCtorVisibility =
+        // This function defaults to `INHERITED` which isn't what we want here, but it does handle
+        // combining inline and `@fileoverview` visibilities.
+        getEffectiveVisibilityForNonOverriddenProperty(
+            fauxCtorRef,
+            prototypeType,
+            defaultVisibilityForFiles.get(definingSource),
+            enforceCodingConventions ? compiler.getCodingConvention() : null);
+    Visibility effectiveCtorVisibility =
+        annotatedCtorVisibility.equals(Visibility.INHERITED)
+            ? Visibility.PUBLIC
+            : annotatedCtorVisibility;
+
+    checkNonOverriddenPropertyVisibility(
+        traversal,
+        fauxCtorRef,
+        effectiveCtorVisibility,
+        ctorType,
+        target.getStaticSourceFile(),
+        definingSource);
+  }
+
+  private static boolean propertyIsDeclaredButNotPrivate(PropertyReference propRef) {
+    if (!propRef.isDocumentedDeclaration() && !propRef.isOverride()) {
+      return false;
     }
-    return false;
+
+    Visibility declaredVisibility = propRef.getJSDocInfo().getVisibility();
+    if (declaredVisibility == Visibility.PRIVATE || declaredVisibility == Visibility.INHERITED) {
+      return false;
+    }
+
+    return true;
   }
 
   private void checkOverriddenPropertyVisibility(
       NodeTraversal t,
-      Node getprop,
-      Node parent,
+      PropertyReference propRef,
       Visibility visibility,
       Visibility fileOverviewVisibility,
       JSType objectType,
       boolean sameInput) {
-    // Check an ASSIGN statement that's trying to override a property
-    // on a superclass.
-    JSDocInfo overridingInfo = parent.getJSDocInfo();
-    Visibility overridingVisibility = overridingInfo == null
-        ? Visibility.INHERITED
-        : overridingInfo.getVisibility();
+    Visibility overridingVisibility =
+        propRef.isOverride() ? propRef.getJSDocInfo().getVisibility() : Visibility.INHERITED;
 
     // Check that:
     // (a) the property *can* be overridden,
@@ -767,24 +915,24 @@ class CheckAccessControls extends AbstractPostOrderCallback
     //     a file with default visibility in the @fileoverview block.
     if (visibility == Visibility.PRIVATE && !sameInput) {
       compiler.report(
-          t.makeError(getprop, PRIVATE_OVERRIDE,
-              objectType.toString()));
+          t.makeError(propRef.getSourceNode(), PRIVATE_OVERRIDE, objectType.toString()));
     } else if (overridingVisibility != Visibility.INHERITED
         && overridingVisibility != visibility
         && fileOverviewVisibility == null) {
       compiler.report(
-          t.makeError(getprop, VISIBILITY_MISMATCH,
-              visibility.name(), objectType.toString(),
+          t.makeError(
+              propRef.getSourceNode(),
+              VISIBILITY_MISMATCH,
+              visibility.name(),
+              objectType.toString(),
               overridingVisibility.name()));
     }
   }
 
   private void checkNonOverriddenPropertyVisibility(
       NodeTraversal t,
-      Node getprop,
-      Node parent,
+      PropertyReference propRef,
       Visibility visibility,
-      boolean isClassType,
       JSType objectType,
       StaticSourceFile referenceSource,
       StaticSourceFile definingSource) {
@@ -795,17 +943,17 @@ class CheckAccessControls extends AbstractPostOrderCallback
       return;
     }
 
-    JSType ownerType = normalizeClassType(objectType);
+    @Nullable ObjectType ownerType = instanceTypeFor(objectType);
 
     switch (visibility) {
       case PACKAGE:
-        checkPackagePropertyVisibility(t, getprop, referenceSource, definingSource);
+        checkPackagePropertyVisibility(t, propRef, referenceSource, definingSource);
         break;
       case PRIVATE:
-        checkPrivatePropertyVisibility(t, getprop, parent, isClassType, ownerType);
+        checkPrivatePropertyVisibility(t, propRef, ownerType);
         break;
       case PROTECTED:
-        checkProtectedPropertyVisibility(t, getprop, ownerType);
+        checkProtectedPropertyVisibility(t, propRef, ownerType);
         break;
       default:
         break;
@@ -814,7 +962,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
   private void checkPackagePropertyVisibility(
       NodeTraversal t,
-      Node getprop,
+      PropertyReference propRef,
       StaticSourceFile referenceSource,
       StaticSourceFile definingSource) {
     CodingConvention codingConvention = compiler.getCodingConvention();
@@ -823,110 +971,103 @@ class CheckAccessControls extends AbstractPostOrderCallback
     if (refPackage == null
         || defPackage == null
         || !refPackage.equals(defPackage)) {
-      String propertyName = getprop.getLastChild().getString();
       compiler.report(
-          t.makeError(getprop, BAD_PACKAGE_PROPERTY_ACCESS,
-              propertyName,
-              typeRegistry.getReadableTypeName(getprop.getFirstChild())));
+          t.makeError(
+              propRef.getSourceNode(),
+              BAD_PACKAGE_PROPERTY_ACCESS,
+              propRef.getName(),
+              propRef.getReadableTypeNameOrDefault()));
       }
-  }
-
-  @Nullable private JSType getCurrentClass() {
-    JSType cur = currentClassStack.peekFirst();
-    return cur == noTypeSentinel
-        ? null
-        : cur;
   }
 
   private void checkPrivatePropertyVisibility(
       NodeTraversal t,
-      Node getprop,
-      Node parent,
-      boolean isClassType,
-      JSType ownerType) {
-
-    if (isClassType && isValidPrivateConstructorAccess(parent)) {
-      return;
-    }
+      PropertyReference propRef,
+      @Nullable ObjectType ownerType) {
 
     // private access is not allowed outside the file from a different
     // enclosing class.
-    JSType accessedType = getprop.getFirstChild().getJSType();
-    String propertyName = getprop.getLastChild().getString();
-    String readableTypeName = ownerType.equals(accessedType)
-        ? typeRegistry.getReadableTypeName(getprop.getFirstChild())
-        : ownerType.toString();
     // TODO(tbreisacher): Should we also include the filename where ownerType is defined?
+    String readableTypeName =
+        Objects.equals(ownerType, propRef.getReceiverType())
+            ? propRef.getReadableTypeNameOrDefault()
+            : ownerType.toString();
     compiler.report(
-        t.makeError(getprop,
+        t.makeError(
+            propRef.getSourceNode(),
             BAD_PRIVATE_PROPERTY_ACCESS,
-            propertyName,
+            propRef.getName(),
             readableTypeName));
   }
 
   private void checkProtectedPropertyVisibility(
-      NodeTraversal t,
-      Node getprop,
-      JSType ownerType) {
+      NodeTraversal t, PropertyReference propRef, @Nullable ObjectType ownerType) {
     // There are 3 types of legal accesses of a protected property:
     // 1) Accesses in the same file
     // 2) Overriding the property in a subclass
     // 3) Accessing the property from inside a subclass
     // The first two have already been checked for.
-    JSType currentClass = getCurrentClass();
-    if (currentClass == null || !currentClass.isSubtypeOf(ownerType)) {
-      String propertyName = getprop.getLastChild().getString();
-      compiler.report(
-          t.makeError(getprop,  BAD_PROTECTED_PROPERTY_ACCESS,
-              propertyName,
-              typeRegistry.getReadableTypeName(getprop.getFirstChild())));
+    if (ownerType != null) {
+      for (JSType scopeType : currentClassStack) {
+        if (scopeType == null) {
+          continue;
+        } else if (scopeType.isSubtypeOf(ownerType)) {
+          return;
+        }
+      }
     }
-  }
 
-  /**
-   * Whether the given access of a private constructor is legal.
-   *
-   * For example,
-   * new PrivateCtor_(); // not legal
-   * PrivateCtor_.newInstance(); // legal
-   * x instanceof PrivateCtor_ // legal
-   *
-   * This is a weird special case, because our visibility system is inherited
-   * from Java, and JavaScript has no distinction between classes and
-   * constructors like Java does.
-   *
-   * We may want to revisit this if we decide to make the restrictions tighter.
-   */
-  private static boolean isValidPrivateConstructorAccess(Node parent) {
-    return !parent.isNew();
+    compiler.report(
+        t.makeError(
+            propRef.getSourceNode(),
+            BAD_PROTECTED_PROPERTY_ACCESS,
+            propRef.getName(),
+            propRef.getReadableTypeNameOrDefault()));
   }
 
   /**
    * Determines whether a deprecation warning should be emitted.
+   *
    * @param t The current traversal.
    * @param n The node which we are checking.
    * @param parent The parent of the node which we are checking.
    */
-  private boolean shouldEmitDeprecationWarning(
-      NodeTraversal t, Node n, Node parent) {
+  private boolean shouldEmitDeprecationWarning(NodeTraversal t, Node n) {
     // In the global scope, there are only two kinds of accesses that should
     // be flagged for warnings:
     // 1) Calls of deprecated functions and methods.
     // 2) Instantiations of deprecated classes.
     // For now, we just let everything else by.
     if (t.inGlobalScope()) {
-      if (!((parent.isCall() && parent.getFirstChild() == n) || n.isNew())) {
+      if (!NodeUtil.isInvocationTarget(n) && !n.isNew()) {
+        return false;
+      }
+    }
+
+    return !canAccessDeprecatedTypes(t);
+  }
+
+  /** Determines whether a deprecation warning should be emitted. */
+  private boolean shouldEmitDeprecationWarning(NodeTraversal t, PropertyReference propRef) {
+    // In the global scope, there are only two kinds of accesses that should
+    // be flagged for warnings:
+    // 1) Calls of deprecated functions and methods.
+    // 2) Instantiations of deprecated classes.
+    // For now, we just let everything else by.
+    if (t.inGlobalScope()) {
+      if (!NodeUtil.isInvocationTarget(propRef.getSourceNode())) {
         return false;
       }
     }
 
     // We can always assign to a deprecated property, to keep it up to date.
-    if (n.isGetProp() && n == parent.getFirstChild() && NodeUtil.isAssignmentOp(parent)) {
+    if (propRef.isMutation()) {
       return false;
     }
 
     // Don't warn if the node is just declaring the property, not reading it.
-    if (n.isGetProp() && parent.isExprResult() && n.getJSDocInfo().isDeprecated()) {
+    JSDocInfo jsdoc = propRef.getJSDocInfo();
+    if (propRef.isDeclaration() && (jsdoc != null) && jsdoc.isDeprecated()) {
       return false;
     }
 
@@ -952,20 +1093,20 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
     return
     // Case #1
-    (deprecatedDepth > 0)
+    (deprecationDepth > 0)
         // Case #2
         || (getTypeDeprecationInfo(getTypeOfThis(scopeRoot)) != null)
         // Case #3
         || (scopeRootParent != null
             && scopeRootParent.isAssign()
-            && getTypeDeprecationInfo(getClassOfMethod(scopeRoot, scopeRootParent)) != null);
+            && getTypeDeprecationInfo(bestInstanceTypeForMethodOrCtor(scopeRoot)) != null);
   }
 
   /**
-   * Returns whether this is a function node annotated as deprecated.
+   * Returns whether this node roots a subtree under which references to deprecated constructs are
+   * allowed.
    */
-  private static boolean isDeprecatedFunction(Node n) {
-    checkState(n.isFunction(), n);
+  private static boolean isMarkedDeprecated(Node n) {
     return getDeprecationReason(NodeUtil.getBestJSDocInfo(n)) != null;
   }
 
@@ -986,7 +1127,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
     ObjectType objType = castToObject(type);
     if (objType != null) {
-      ObjectType implicitProto = objType.getPrototypeObject();
+      ObjectType implicitProto = objType.getImplicitPrototype();
       if (implicitProto != null) {
         return getTypeDeprecationInfo(implicitProto);
       }
@@ -1013,9 +1154,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
         && compiler.getCodingConvention().isConstant(prop)) {
       return true;
     }
-    for (;
-         objectType != null;
-         objectType = objectType.getPrototypeObject()) {
+    for (; objectType != null; objectType = objectType.getImplicitPrototype()) {
       JSDocInfo docInfo = objectType.getOwnPropertyJSDocInfo(prop);
       if (docInfo != null && docInfo.isConstant()) {
         return true;
@@ -1036,19 +1175,11 @@ class CheckAccessControls extends AbstractPostOrderCallback
       return depReason;
     }
 
-    ObjectType implicitProto = type.getPrototypeObject();
+    ObjectType implicitProto = type.getImplicitPrototype();
     if (implicitProto != null) {
       return getPropertyDeprecationInfo(implicitProto, prop);
     }
     return null;
-  }
-
-  /**
-   * Dereference a type, autoboxing it and filtering out null.
-   */
-  @Nullable
-  private static ObjectType dereference(JSType type) {
-    return type == null ? null : type.dereference();
   }
 
   /**
@@ -1072,13 +1203,23 @@ class CheckAccessControls extends AbstractPostOrderCallback
     return type == null ? null : type.toMaybeObjectType();
   }
 
+  private static boolean isFunctionOrClass(Node n) {
+    return n.isFunction() || n.isClass();
+  }
+
+  private static boolean isExtendsTarget(Node node) {
+    Node parent = node.getParent();
+    return parent.isClass() && node.isSecondChildOf(parent);
+  }
+
   @Nullable
   private JSType getTypeOfThis(Node scopeRoot) {
-    if (scopeRoot.isRoot()) {
+    if (scopeRoot.isRoot() || scopeRoot.isScript()) {
       return castToObject(scopeRoot.getJSType());
     }
 
-    checkState(scopeRoot.isFunction(), scopeRoot);
+    checkArgument(scopeRoot.isFunction(), scopeRoot);
+
     JSType nodeType = scopeRoot.getJSType();
     if (nodeType != null && nodeType.isFunctionType()) {
       return nodeType.toMaybeFunctionType().getTypeOfThis();
@@ -1086,5 +1227,305 @@ class CheckAccessControls extends AbstractPostOrderCallback
       // Executed when the current scope has not been typechecked.
       return null;
     }
+  }
+
+  /**
+   * The set of ways in which JSDoc and identifier usage can interact.
+   *
+   * <p>Before ES6, for a given type, there was no way to differentate the declaration of the
+   * constructor function, namespace object, and type; the declaration of all three constructs was
+   * the same node. This lead to some assumptions were made about how access-control modifiers
+   * applied to each.
+   *
+   * <p>At ES6, class-syntax separated the constructor function from the namespace object and type
+   * declaration. This allowed finer grained control over access-control modifiers; however it broke
+   * some of the eariler assumptions.
+   *
+   * <p>This type exists to simplify maintaining both sets of assumptions. It allows other code to
+   * branch on behaviour in a more obvious way.
+   *
+   * <p>TODO(b/113127707): Make this unnecessary by better modeling or decomposing this pass.
+   */
+  private static enum IdentifierBehaviour {
+    NON_CONSTRUCTOR,
+    ES5_CLASS_INVOCATION,
+    ES5_CLASS_NAMESPACE,
+    ES6_CLASS_INVOCATION,
+    ES6_CLASS_NAMESPACE;
+
+    public static IdentifierBehaviour select(Node target) {
+      JSType type = target.getJSType();
+      if (type == null || !type.isFunctionType()) {
+        // If we aren't sure what we're dealing with be more strict.
+        return IdentifierBehaviour.NON_CONSTRUCTOR;
+      }
+
+      FunctionType ctorType = type.toMaybeFunctionType();
+      if (!ctorType.isConstructor()) {
+        return IdentifierBehaviour.NON_CONSTRUCTOR;
+      }
+
+      boolean isInvocation = NodeUtil.isInvocationTarget(target) || isExtendsTarget(target);
+      boolean isEs6 = (ctorType.getSource() != null) && ctorType.getSource().isClass();
+
+      if (!isEs6) {
+        return isInvocation
+            ? IdentifierBehaviour.ES5_CLASS_INVOCATION
+            : IdentifierBehaviour.ES5_CLASS_NAMESPACE;
+      } else {
+        return isInvocation
+            ? IdentifierBehaviour.ES6_CLASS_INVOCATION
+            : IdentifierBehaviour.ES6_CLASS_NAMESPACE;
+      }
+    }
+  }
+
+  /**
+   * A representation of an object property reference in JS code.
+   *
+   * <p>This is an abstraction to smooth over the various AST structures that can act on
+   * <em>properties</em>. It is not useful for names (variables) or anonymous JS constructs.
+   *
+   * <p>This class should only be used within {@link CheckAccessControls}. Having package-private
+   * visibility is a quirk of {@link AutoValue}.
+   */
+  @AutoValue
+  abstract static class PropertyReference {
+
+    public static Builder builder() {
+      return new AutoValue_CheckAccessControls_PropertyReference.Builder();
+    }
+
+    /** The {@link Node} that spawned this reference. */
+    public abstract Node getSourceNode();
+
+    public abstract String getName();
+
+    /** The type from which the property is referenced, not necessarily the one that declared it. */
+    public abstract ObjectType getReceiverType();
+
+    public abstract boolean isMutation();
+
+    public abstract boolean isDeclaration();
+
+    public abstract boolean isOverride();
+
+    /**
+     * A lazy source for a human-readable type name to use when generating messages.
+     *
+     * <p>Most users probably want {@link #getReadableTypeNameOrDefault()}.
+     */
+    public abstract Supplier<String> getReadableTypeName();
+
+    @AutoValue.Builder
+    abstract interface Builder {
+      Builder setSourceNode(Node node);
+
+      Builder setName(String name);
+
+      Builder setReceiverType(ObjectType receiverType);
+
+      Builder setMutation(boolean isMutation);
+
+      Builder setDeclaration(boolean isDeclaration);
+
+      Builder setOverride(boolean isOverride);
+
+      Builder setReadableTypeName(Supplier<String> typeName);
+      PropertyReference build();
+    }
+
+    // Derived properties.
+
+    public final Node getParentNode() {
+      return getSourceNode().getParent();
+    }
+
+    public final JSType getJSType() {
+      return getSourceNode().getJSType();
+    }
+
+    @Nullable
+    public final JSDocInfo getJSDocInfo() {
+      return NodeUtil.getBestJSDocInfo(getSourceNode());
+    }
+
+    public final boolean isDocumentedDeclaration() {
+      return isDeclaration() && (getJSDocInfo() != null);
+    }
+
+    public final boolean isDeletion() {
+      return getSourceNode().getParent().isDelProp();
+    }
+
+    public final String getReadableTypeNameOrDefault() {
+      String preferred = getReadableTypeName().get();
+      return preferred.isEmpty() ? getReceiverType().toString() : preferred;
+    }
+  }
+
+  @Nullable
+  private PropertyReference createPropertyReference(Node sourceNode) {
+    Node parent = sourceNode.getParent();
+    @Nullable JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(sourceNode);
+
+    PropertyReference.Builder builder = PropertyReference.builder();
+
+    switch (sourceNode.getToken()) {
+      case GETPROP:
+        {
+          boolean isLValue = NodeUtil.isLValue(sourceNode);
+
+          builder
+              .setName(sourceNode.getLastChild().getString())
+              .setReceiverType(boxedOrUnknown(sourceNode.getFirstChild().getJSType()))
+              // Props are always mutated as L-values, even when assigned `undefined`.
+              .setMutation(isLValue || sourceNode.getParent().isDelProp())
+              .setDeclaration(parent.isExprResult())
+              // TODO(b/113704668): This definition is way too loose. It was used to prevent
+              // breakages during refactoring and should be tightened.
+              .setOverride((jsdoc != null) && isLValue)
+              .setReadableTypeName(
+                  () -> typeRegistry.getReadableTypeName(sourceNode.getFirstChild()));
+        }
+        break;
+
+      case STRING_KEY:
+      case GETTER_DEF:
+      case SETTER_DEF:
+      case MEMBER_FUNCTION_DEF:
+        {
+          switch (parent.getToken()) {
+            case OBJECTLIT:
+              // TODO(b/80580110): Eventually object-literal members should be covered by
+              // `PropertyReference`s. However, doing so initially would have caused too many errors
+              // in existing code and delayed support for class syntax.
+              return null;
+
+            case OBJECT_PATTERN:
+              builder
+                  .setName(sourceNode.getString())
+                  .setReceiverType(typeOrUnknown(ObjectType.cast(parent.getJSType())))
+                  .setMutation(false)
+                  .setDeclaration(false)
+                  .setOverride(false)
+                  .setReadableTypeName(() -> typeRegistry.getReadableTypeName(parent));
+              break;
+
+            case CLASS_MEMBERS:
+              builder
+                  .setName(sourceNode.getString())
+                  .setReceiverType(typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE))
+                  .setMutation(true)
+                  .setDeclaration(true)
+                  // TODO(b/113704668): This definition is way too loose. It was used to prevent
+                  // breakages during refactoring and should be tightened.
+                  .setOverride(jsdoc != null)
+                  .setReadableTypeName(() -> ""); // The default is fine for class types.
+
+              JSType ctorType = parent.getParent().getJSType();
+              if (ctorType != null && ctorType.isFunctionType()) {
+                FunctionType ctorFunctionType = ctorType.toMaybeFunctionType();
+                builder.setReceiverType(
+                    sourceNode.isStaticMember()
+                        ? ctorFunctionType
+                        : ctorFunctionType.getPrototype());
+              }
+              break;
+
+            default:
+              throw new AssertionError();
+          }
+        }
+        break;
+
+      default:
+        return null;
+    }
+
+    return builder.setSourceNode(sourceNode).build();
+  }
+
+  /**
+   * Returns the effective visibility of the given property. This can differ from the property's
+   * declared visibility if the property is inherited from a superclass, or if the file's
+   * {@code @fileoverview} JsDoc specifies a default visibility.
+   *
+   * <p>TODO(b/111789692): The following methods are forked from `AccessControlUtils`. Consider
+   * consolidating them.
+   *
+   * @param referenceType The JavaScript type of the property.
+   * @param fileVisibilityMap A map of {@code @fileoverview} visibility annotations, used to compute
+   *     the property's default visibility.
+   * @param codingConvention The coding convention in effect (if any), used to determine whether the
+   *     property is private by lexical convention (example: trailing underscore).
+   */
+  static Visibility getEffectivePropertyVisibility(
+      PropertyReference propRef,
+      ObjectType referenceType,
+      ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap,
+      @Nullable CodingConvention codingConvention) {
+    String propertyName = propRef.getName();
+    boolean isOverride = propRef.isOverride();
+
+    StaticSourceFile definingSource =
+        AccessControlUtils.getDefiningSource(propRef.getSourceNode(), referenceType, propertyName);
+    Visibility fileOverviewVisibility = fileVisibilityMap.get(definingSource);
+    ObjectType objectType =
+        AccessControlUtils.getObjectType(referenceType, isOverride, propertyName);
+
+    if (isOverride) {
+      Visibility overridden =
+          AccessControlUtils.getOverriddenPropertyVisibility(objectType, propertyName);
+      return AccessControlUtils.getEffectiveVisibilityForOverriddenProperty(
+          overridden, fileOverviewVisibility, propertyName, codingConvention);
+    } else {
+      return getEffectiveVisibilityForNonOverriddenProperty(
+          propRef, objectType, fileOverviewVisibility, codingConvention);
+    }
+  }
+
+  /**
+   * Returns the effective visibility of the given non-overridden property. Non-overridden
+   * properties without an explicit visibility annotation receive the default visibility declared in
+   * the file's {@code @fileoverview} block, if one exists.
+   *
+   * <p>TODO(b/111789692): The following methods are forked from `AccessControlUtils`. Consider
+   * consolidating them.
+   */
+  private static Visibility getEffectiveVisibilityForNonOverriddenProperty(
+      PropertyReference propRef,
+      ObjectType objectType,
+      @Nullable Visibility fileOverviewVisibility,
+      @Nullable CodingConvention codingConvention) {
+    String propertyName = propRef.getName();
+    if (codingConvention != null && codingConvention.isPrivate(propertyName)) {
+      return Visibility.PRIVATE;
+    }
+    Visibility raw = Visibility.INHERITED;
+    if (objectType != null) {
+      JSDocInfo jsdoc = objectType.getOwnPropertyJSDocInfo(propertyName);
+      if (jsdoc != null) {
+        raw = jsdoc.getVisibility();
+      }
+    }
+    JSType type = propRef.getJSType();
+    boolean createdFromGoogProvide = (type != null && type.isLiteralObject());
+    // Ignore @fileoverview visibility when computing the effective visibility
+    // for properties created by goog.provide.
+    //
+    // ProcessClosurePrimitives rewrites goog.provide()s as object literal
+    // declarations, but the exact form depends on the ordering of the
+    // input files. If goog.provide('a.b.c') occurs in the inputs before
+    // goog.provide('a'), it is rewritten like
+    //
+    // var a={};a.b={}a.b.c={};
+    //
+    // If the file containing goog.provide('a.b.c') also declares
+    // a @fileoverview visibility, it must not apply to b, as this would make
+    // every a.b.* namespace effectively package-private.
+    return (raw != Visibility.INHERITED || fileOverviewVisibility == null || createdFromGoogProvide)
+        ? raw
+        : fileOverviewVisibility;
   }
 }

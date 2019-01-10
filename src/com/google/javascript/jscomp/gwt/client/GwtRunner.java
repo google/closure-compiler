@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.gwt.client;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.jscomp.AbstractCommandLineRunner.createDefineOrTweakReplacements;
-import static com.google.javascript.jscomp.AbstractCommandLineRunner.createDependencyOptions;
 import static com.google.javascript.jscomp.AbstractCommandLineRunner.createJsModules;
 import static com.google.javascript.jscomp.AbstractCommandLineRunner.parseModuleWrappers;
 
@@ -39,6 +38,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.DefaultExterns;
 import com.google.javascript.jscomp.DependencyOptions;
+import com.google.javascript.jscomp.DependencyOptions.DependencyMode;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
@@ -104,6 +104,7 @@ public final class GwtRunner {
     String[] entryPoint;
     String env;
     boolean exportLocalPropertyDefinitions;
+    Object[] externs;
     String[] extraAnnotationName;
     String[] forceInjectLibraries;
     String[] formatting;
@@ -111,6 +112,7 @@ public final class GwtRunner {
     String[] hideWarningsFor;
     boolean injectLibraries;
     String isolationMode;
+    String[] js;
     String[] jscompError;
     String[] jscompOff;
     String[] jscompWarning;
@@ -142,7 +144,6 @@ public final class GwtRunner {
     // These flags do not match the Java compiler JAR.
     @Deprecated
     File[] jsCode;
-    File[] externs;
     JsMap defines;
   }
 
@@ -186,6 +187,7 @@ public final class GwtRunner {
     defaultFlags.generateExports = false;
     defaultFlags.hideWarningsFor = null;
     defaultFlags.injectLibraries = true;
+    defaultFlags.js = null;
     defaultFlags.jsCode = null;
     defaultFlags.jscompError = null;
     defaultFlags.jscompOff = null;
@@ -283,6 +285,28 @@ public final class GwtRunner {
     }-*/;
   }
 
+  /**
+   * @param jsFilePaths Array of file paths. If running under NodeJS, they will be loaded via the
+   *     native node fs module.
+   * @return Array of File objects. If called without running under node, return null to indicate
+   *     failure.
+   */
+  private static native File[] getJsFiles(String[] jsFilePaths) /*-{
+    if (!(typeof process === 'object' && process.version)) {
+      return null;
+    }
+    var jsFiles = [];
+    for (var i = 0; i < jsFilePaths.length; i++) {
+      if (typeof process === 'object' && process.version) {
+        jsFiles.push({
+          path: jsFilePaths[i],
+          src: require('fs').readFileSync(jsFilePaths[i], 'utf8')
+        });
+      }
+    }
+    return jsFiles;
+  }-*/;
+
   @JsMethod(name = "keys", namespace = "Object")
   private static native String[] keys(Object o);
 
@@ -315,7 +339,7 @@ public final class GwtRunner {
         parseModuleWrappers(Arrays.asList(getStringArray(flags, "chunkWrapper")), chunks);
 
     for (JSModule c : chunks) {
-      if (flags.createSourceMap != null) {
+      if (flags.createSourceMap != null && !flags.createSourceMap.equals(false)) {
         compiler.getSourceMap().reset();
       }
 
@@ -363,7 +387,7 @@ public final class GwtRunner {
 
       file.src = out.toString();
 
-      if (flags.createSourceMap != null) {
+      if (flags.createSourceMap != null && !flags.createSourceMap.equals(false)) {
         StringBuilder b = new StringBuilder();
         try {
           compiler.getSourceMap().appendTo(b, file.path);
@@ -413,7 +437,7 @@ public final class GwtRunner {
       }
       postfix = flags.outputWrapper.substring(pos + marker.length());
     }
-    if (flags.createSourceMap != null) {
+    if (flags.createSourceMap != null && !flags.createSourceMap.equals(false)) {
       StringBuilder b = new StringBuilder();
       try {
         compiler.getSourceMap().appendTo(b, flags.jsOutputFile);
@@ -642,13 +666,19 @@ public final class GwtRunner {
       options.setDefineReplacements(flags.defines.asMap());
     }
 
-    CompilerOptions.DependencyMode dependencyMode = CompilerOptions.DependencyMode.NONE;
+    DependencyMode dependencyMode = null;
     if (flags.dependencyMode != null) {
-      dependencyMode =
-          CompilerOptions.DependencyMode.valueOf(Ascii.toUpperCase(flags.dependencyMode));
+      dependencyMode = DependencyMode.valueOf(Ascii.toUpperCase(flags.dependencyMode));
     }
-    List<ModuleIdentifier> entryPoints = createEntryPoints(getStringArray(flags, "entryPoint"));
-    DependencyOptions dependencyOptions = createDependencyOptions(dependencyMode, entryPoints);
+    List<String> entryPoints = Arrays.asList(getStringArray(flags, "entryPoint"));
+    DependencyOptions dependencyOptions =
+        DependencyOptions.fromFlags(
+            dependencyMode,
+            entryPoints,
+            /* closureEntryPointFlag= */ ImmutableList.of(),
+            /* commonJsEntryModuleFlag= */ null,
+            /* manageClosureDependenciesFlag= */ false,
+            /* onlyClosureDependenciesFlag= */ false);
     if (dependencyOptions != null) {
       options.setDependencyOptions(dependencyOptions);
     }
@@ -670,6 +700,29 @@ public final class GwtRunner {
 
     options.setModuleRoots(Arrays.asList(getStringArray(flags, "jsModuleRoot")));
   }
+
+  /**
+   * @param externs Array of strings or File[]. If running under NodeJS, an array of strings will be
+   *     treated as file paths and loaded via the native node fs module.
+   * @return Array of extern File objects. If an array of strings is passed without running under
+   *     node, return null to indicate failure.
+   */
+  private static native File[] fromExternsFlag(Object[] externs) /*-{
+    var externFiles = [];
+    for (var i = 0; i < externs.length; i++) {
+      if (externs[i].path || externs[i].src) {
+        externFiles.push(externs[i]);
+      } else if (typeof process === 'object' && process.version) {
+        externFiles.push({
+          path: externs[i],
+          src: require('fs').readFileSync(externs[i], 'utf8')
+        });
+      } else {
+        return null;
+      }
+    }
+    return externFiles;
+  }-*/;
 
   private static List<SourceFile> fromFileArray(File[] src, String unknownPrefix) {
     List<SourceFile> out = new ArrayList<>();
@@ -769,12 +822,30 @@ public final class GwtRunner {
       }
     }
 
+    if (flags.js != null) {
+      File[] jsFiles = getJsFiles(getStringArray(flags, "js"));
+      if (jsFiles == null) {
+        throw new RuntimeException(
+            "Can only load files from the filesystem when running in NodeJS.");
+      } else {
+        jsCode.addAll(fromFileArray(jsFiles, "Input_"));
+      }
+    }
+
     Compiler compiler = new Compiler(new NodePrintStream());
     CompilerOptions options = new CompilerOptions();
     applyOptionsFromFlags(options, flags, compiler.getDiagnosticGroups());
     options.setInputSourceMaps(sourceMaps);
 
-    List<SourceFile> externs = fromFileArray(flags.externs, "Extern_");
+    List<SourceFile> externs = new ArrayList<>();
+    if (flags.externs != null) {
+      File[] externFiles = fromExternsFlag(getStringArray(flags, "externs"));
+      if (externFiles == null) {
+        throw new RuntimeException(
+            "Can only load files from the filesystem when running in NodeJS.");
+      }
+      externs = fromFileArray(externFiles, "Extern_");
+    }
     externs.addAll(createExterns(options.getEnvironment()));
 
     NodeErrorManager errorManager = new NodeErrorManager();

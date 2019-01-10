@@ -15,6 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+@RunWith(JUnit4.class)
 public class J2clAssertRemovalPassTest extends CompilerTestCase {
 
   @Override
@@ -29,14 +34,17 @@ public class J2clAssertRemovalPassTest extends CompilerTestCase {
     return compiler;
   }
 
+  @Test
   public void testRemoveAssert() {
     test(lines("Asserts.$assert(true);", "Asserts.$assert(goo());"), "");
   }
 
+  @Test
   public void testRemoveAssertWithMessage() {
     test("Asserts.$assertWithMessage(true, goo());", "");
   }
 
+  @Test
   public void testNotRemoveAssert() {
     testSame(lines("Asserts.assert(true);", "$assert(goo());"));
   }

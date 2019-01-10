@@ -20,20 +20,26 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
-import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   private Behavior behavior;
   private boolean es6ScopeCreator;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
     behavior = null;
@@ -66,6 +72,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
     testSame(js);
   }
 
+  @Test
   public void testRestDeclaration() {
     testBehavior(
         "let [x, ...arr] = [1, 2, 3]; [x, ...arr] = [4, 5, 6];",
@@ -82,6 +89,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testImport1() {
     es6ScopeCreator = true;
     testBehavior(
@@ -97,6 +105,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testImport2() {
     es6ScopeCreator = true;
     testBehavior(
@@ -112,6 +121,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testImport2_alternate() {
     es6ScopeCreator = true;
     testBehavior(
@@ -127,6 +137,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testImport3() {
     es6ScopeCreator = true;
     testBehavior(
@@ -143,6 +154,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testImport4() {
     es6ScopeCreator = true;
     testBehavior(
@@ -161,6 +173,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testVarInBlock_oldScopeCreator() {
     es6ScopeCreator = false;
     testBehavior(
@@ -184,6 +197,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testVarInBlock() {
     testBehavior(
         lines(
@@ -206,6 +220,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testVarInLoopNotAssignedOnlyOnceInLifetime() {
     Behavior behavior =
         new Behavior() {
@@ -225,6 +240,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
    * Although there is only one assignment to x in the code, it's in a function which could be
    * called multiple times, so {@code isAssignedOnceInLifetime()} returns false.
    */
+  @Test
   public void testVarInFunctionNotAssignedOnlyOnceInLifetime() {
     Behavior behavior =
         new Behavior() {
@@ -240,6 +256,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
     testBehavior("let x; function f() { x = 0; }", behavior);
   }
 
+  @Test
   public void testParameterAssignedOnlyOnceInLifetime() {
     testBehavior(
         "function f(x) { x; }",
@@ -254,6 +271,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testModifiedParameterNotAssignedOnlyOnceInLifetime() {
     testBehavior(
         "function f(x) { x = 3; }",
@@ -268,6 +286,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testVarAssignedOnceInLifetime1() {
     Behavior behavior =
         new Behavior() {
@@ -283,6 +302,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
     testBehavior("function f() { let x = 0; }", behavior);
   }
 
+  @Test
   public void testVarAssignedOnceInLifetime2() {
     testBehavior(
         "function f() { { let x = 0; } }",
@@ -297,6 +317,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testVarAssignedOnceInLifetime3() {
     Behavior behavior =
         new Behavior() {
@@ -331,6 +352,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         behavior);
   }
 
+  @Test
   public void testLetAssignedOnceInLifetime1() {
     testBehavior(
         lines(
@@ -354,6 +376,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testLetAssignedOnceInLifetime2() {
     testBehavior(
         lines(
@@ -377,6 +400,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testBasicBlocks() {
     testBasicBlocks(true);
     testBasicBlocks(false);
@@ -405,6 +429,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testThis() {
     testBehavior(
         lines(
@@ -429,6 +454,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testThis_oldScopeCreator() {
     es6ScopeCreator = false;
     testBehavior(
@@ -454,6 +480,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testProcessScopeThatsNotABasicBlock() {
     // Tests the case where the scope we pass in is not really a basic block, but we create a new
     // basic block anyway because ReferenceCollectingCallback expects all nodes to be in a block.

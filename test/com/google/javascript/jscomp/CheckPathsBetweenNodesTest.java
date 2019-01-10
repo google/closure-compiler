@@ -16,18 +16,23 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CheckPathsBetweenNodes}.
  *
  */
-public final class CheckPathsBetweenNodesTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class CheckPathsBetweenNodesTest {
 
   /**
    * Predicate satisfied by strings with a given prefix.
@@ -54,6 +59,7 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     Predicates.alwaysFalse();
 
   /** Tests straight-line graphs. */
+  @Test
   public void testSimple() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -80,10 +86,8 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     assertBad(createTest(g, "a", "d", Predicates.equalTo("b"), edgeIs("x")));
   }
 
-  /**
-   * Tests a graph where some paths between the nodes are valid and others
-   * are invalid.
-   */
+  /** Tests a graph where some paths between the nodes are valid and others are invalid. */
+  @Test
   public void testSomeValidPaths() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -103,6 +107,7 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
   }
 
   /** Tests a graph with many valid paths. */
+  @Test
   public void testManyValidPaths() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -124,6 +129,7 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
   }
 
   /** Tests a graph with some cycles. */
+  @Test
   public void testCycles1() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -148,10 +154,10 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
   }
 
   /**
-   * Tests another graph with cycles. The topology of this graph was inspired
-   * by a control flow graph that was being incorrectly analyzed by an early
-   * version of CheckPathsBetweenNodes.
+   * Tests another graph with cycles. The topology of this graph was inspired by a control flow
+   * graph that was being incorrectly analyzed by an early version of CheckPathsBetweenNodes.
    */
+  @Test
   public void testCycles2() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -169,10 +175,10 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
   }
 
   /**
-   * Tests another graph with cycles. The topology of this graph was inspired
-   * by a control flow graph that was being incorrectly analyzed by an early
-   * version of CheckPathsBetweenNodes.
+   * Tests another graph with cycles. The topology of this graph was inspired by a control flow
+   * graph that was being incorrectly analyzed by an early version of CheckPathsBetweenNodes.
    */
+  @Test
   public void testCycles3() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -190,11 +196,11 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     assertBad(createTest(g, "a", "d", Predicates.equalTo("z"), ALL_EDGE));
   }
 
-
   /**
-   * Much of the tests are done by testing all paths. We quickly verified
-   * that some paths are indeed correct for the some path case.
+   * Much of the tests are done by testing all paths. We quickly verified that some paths are indeed
+   * correct for the some path case.
    */
+  @Test
   public void testSomePath1() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -207,32 +213,43 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     g.connect("b", "-", "d");
     g.connect("c", "-", "d");
 
-    assertTrue(createTest(g, "a", "d", Predicates.equalTo("b"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertTrue(createTest(g, "a", "d", Predicates.equalTo("c"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertTrue(createTest(g, "a", "d", Predicates.equalTo("a"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertTrue(createTest(g, "a", "d", Predicates.equalTo("d"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertFalse(createTest(g, "a", "d", Predicates.equalTo("NONE"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
+    assertThat(
+            createTest(g, "a", "d", Predicates.equalTo("b"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isTrue();
+    assertThat(
+            createTest(g, "a", "d", Predicates.equalTo("c"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isTrue();
+    assertThat(
+            createTest(g, "a", "d", Predicates.equalTo("a"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isTrue();
+    assertThat(
+            createTest(g, "a", "d", Predicates.equalTo("d"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isTrue();
+    assertThat(
+            createTest(g, "a", "d", Predicates.equalTo("NONE"), ALL_EDGE)
+                .somePathsSatisfyPredicate())
+        .isFalse();
   }
 
+  @Test
   public void testSomePath2() {
     // No Paths between nodes, by definition, always false.
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
     g.createDirectedGraphNode("b");
 
-    assertFalse(createTest(g, "a", "b", Predicates.equalTo("b"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertFalse(createTest(g, "a", "b", Predicates.equalTo("d"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
-    assertTrue(createTest(g, "a", "b", Predicates.equalTo("a"), ALL_EDGE)
-        .somePathsSatisfyPredicate());
+    assertThat(
+            createTest(g, "a", "b", Predicates.equalTo("b"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isFalse();
+    assertThat(
+            createTest(g, "a", "b", Predicates.equalTo("d"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isFalse();
+    assertThat(
+            createTest(g, "a", "b", Predicates.equalTo("a"), ALL_EDGE).somePathsSatisfyPredicate())
+        .isTrue();
   }
 
+  @Test
   public void testSomePathRevisiting() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("1");
@@ -254,13 +271,13 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     CountingPredicate<String> p =
       new CountingPredicate<>(Predicates.equalTo("4a"));
 
-    assertTrue(createTest(g, "1", "5", p, ALL_EDGE)
-        .somePathsSatisfyPredicate());
+    assertThat(createTest(g, "1", "5", p, ALL_EDGE).somePathsSatisfyPredicate()).isTrue();
 
     // Make sure we are not doing more traversals than we have to.
-    assertEquals(4, p.count);
+    assertThat(p.count).isEqualTo(4);
   }
 
+  @Test
   public void testNonInclusive() {
     // No Paths between nodes, by definition, always false.
     DiGraph<String, String> g = LinkedDirectedGraph.create();
@@ -269,20 +286,26 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     g.createDirectedGraphNode("c");
     g.connect("a", "-", "b");
     g.connect("b", "-", "c");
-    assertFalse(createNonInclusiveTest(g, "a", "b",
-        Predicates.equalTo("a"), ALL_EDGE).somePathsSatisfyPredicate());
-    assertFalse(createNonInclusiveTest(g, "a", "b",
-        Predicates.equalTo("b"), ALL_EDGE).somePathsSatisfyPredicate());
-    assertTrue(createNonInclusiveTest(g, "a", "c",
-        Predicates.equalTo("b"), ALL_EDGE).somePathsSatisfyPredicate());
+    assertThat(
+            createNonInclusiveTest(g, "a", "b", Predicates.equalTo("a"), ALL_EDGE)
+                .somePathsSatisfyPredicate())
+        .isFalse();
+    assertThat(
+            createNonInclusiveTest(g, "a", "b", Predicates.equalTo("b"), ALL_EDGE)
+                .somePathsSatisfyPredicate())
+        .isFalse();
+    assertThat(
+            createNonInclusiveTest(g, "a", "c", Predicates.equalTo("b"), ALL_EDGE)
+                .somePathsSatisfyPredicate())
+        .isTrue();
   }
 
   private static <N, E> void assertGood(CheckPathsBetweenNodes<N, E> test) {
-    assertTrue(test.allPathsSatisfyPredicate());
+    assertThat(test.allPathsSatisfyPredicate()).isTrue();
   }
 
   private static <N, E> void assertBad(CheckPathsBetweenNodes<N, E> test) {
-    assertFalse(test.allPathsSatisfyPredicate());
+    assertThat(test.allPathsSatisfyPredicate()).isFalse();
   }
 
   private static CheckPathsBetweenNodes<String, String> createTest(

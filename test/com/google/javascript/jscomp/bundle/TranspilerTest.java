@@ -24,14 +24,18 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.JSError;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link Transpiler}. */
 @GwtIncompatible
 
-public final class TranspilerTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class TranspilerTest {
 
   private Source.Transformer transpiler;
   private Transpiler.CompilerSupplier compiler;
@@ -43,7 +47,7 @@ public final class TranspilerTest extends TestCase {
   private static final Path SOURCE_JS = Paths.get("source.js");
   private static final JSError[] NO_ERRORS = new JSError[] {};
 
-  @Override
+  @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
     transpiler = new Transpiler(mockCompiler, "es6_runtime");
@@ -52,6 +56,7 @@ public final class TranspilerTest extends TestCase {
 
   // Tests for Transpiler
 
+  @Test
   public void testTranspiler_transpile() {
     when(mockCompiler.runtime("es6_runtime")).thenReturn("$jscomp.es6();");
     when(mockCompiler.compile(FOO_JS, "bar"))
@@ -67,6 +72,7 @@ public final class TranspilerTest extends TestCase {
                 .build());
   }
 
+  @Test
   public void testTranspiler_noTranspilation() {
     when(mockCompiler.compile(FOO_JS, "bar"))
         .thenReturn(new Transpiler.CompileResult("result", NO_ERRORS, false, "srcmap"));
@@ -79,6 +85,7 @@ public final class TranspilerTest extends TestCase {
 
   // Tests for CompilerSupplier
 
+  @Test
   public void testCompilerSupplier_compileChanged() {
     Transpiler.CompileResult result = compiler.compile(SOURCE_JS, "const x = () => 42;");
     assertThat(result.source).isEqualTo("var x = function() {\n  return 42;\n};\n");
@@ -88,6 +95,7 @@ public final class TranspilerTest extends TestCase {
         .contains("\"mappings\":\"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA,SAAA,EAAA;AAAA,CAAhB;;\"");
   }
 
+  @Test
   public void testCompilerSupplier_compileNoChange() {
     Transpiler.CompileResult result = compiler.compile(SOURCE_JS, "var x = 42;");
     assertThat(result.source).isEqualTo("var x = 42;\n");
@@ -96,6 +104,7 @@ public final class TranspilerTest extends TestCase {
     assertThat(result.sourceMap).isEmpty();
   }
 
+  @Test
   public void testCompilerSupplier_runtime() {
     String runtime = compiler.runtime("es6_runtime");
     assertThat(runtime).contains("$jscomp.polyfill(\"Map\"");

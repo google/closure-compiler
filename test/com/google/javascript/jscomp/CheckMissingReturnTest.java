@@ -17,15 +17,21 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CheckMissingReturn}.
  *
  */
+@RunWith(JUnit4.class)
 public final class CheckMissingReturnTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
   }
@@ -35,6 +41,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     return new CombinedCompilerPass(compiler, new CheckMissingReturn(compiler));
   }
 
+  @Test
   public void testMissingReturn() {
     // Requires control flow analysis.
     testMissing("if (a) { return 1; }");
@@ -50,7 +57,8 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testMissing("/** @return {number} */ function f() { return 1; };");
   }
 
-  public void testReturnNotMissing()  {
+  @Test
+  public void testReturnNotMissing() {
     // Empty function body. Ignore this case. The remainder of the functions in
     // this test have non-empty bodies.
     testNotMissing("");
@@ -84,6 +92,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testNotMissing("switch(g) { case 1: return 1; default: return 2; }");
   }
 
+  @Test
   public void testFinallyStatements() {
     // The control flow analysis (CFA) treats finally blocks somewhat strangely.
     // The CFA might indicate that a finally block implicitly returns. However,
@@ -156,6 +165,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
             + "finally { }");
   }
 
+  @Test
   public void testKnownConditions() {
     testNotMissing("if (true) return 1");
     testMissing("if (true) {} else {return 1}");
@@ -173,6 +183,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testMissing("if (3) {} else {return 1}");
   }
 
+  @Test
   public void testKnownWhileLoop() {
     testNotMissing("while (1) return 1");
     testNotMissing("while (1) { if (x) {return 1} else {return 1}}");
@@ -187,16 +198,19 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testMissing("while(x) { return 1 }");
   }
 
+  @Test
   public void testMultiConditions() {
     testMissing("if (a) { } else { while (1) {return 1} }");
     testNotMissing("if (a) { return 1} else { while (1) {return 1} }");
   }
 
+  @Test
   public void testIssue779() {
     testNotMissing(
         "var a = f(); try { alert(); if (a > 0) return 1; }" + "finally { a = 5; } return 2;");
   }
 
+  @Test
   public void testConstructors() {
     testSame("/** @constructor */ function foo() {} ");
 
@@ -206,6 +220,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testSame(constructorWithReturn);
   }
 
+  @Test
   public void testClosureAsserts() {
     String closureDefs =
         "/** @const */ var goog = {};\n"
@@ -218,6 +233,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
         + "switch (x) { case 1: return 1; default: goog.asserts.fail(''); }");
   }
 
+  @Test
   public void testInfiniteLoops() {
     testNotMissing("while (true) { x = y; if (x === 0) { return 1; } }");
     testNotMissing("for (;true;) { x = y; if (x === 0) { return 1; } }");
@@ -277,21 +293,25 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testNotMissing("number", body);
   }
 
+  @Test
   public void testArrowFunctions_noReturn() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testNoWarning(lines("/** @return {undefined} */", "() => {}"));
   }
 
+  @Test
   public void testArrowFunctions_expressionBody1() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(lines("/** @return {number} */", "() => 1"));
   }
 
+  @Test
   public void testArrowFunctions_expressionBody2() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(lines("/** @return {number} */", "(a) => (a > 3) ? 1 : 0"));
   }
 
+  @Test
   public void testArrowFunctions_block() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(
@@ -299,6 +319,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
             "/** @return {number} */", "(a) => { if (a > 3) { return 1; } else { return 0; }}"));
   }
 
+  @Test
   public void testArrowFunctions_blockMissingReturn() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testWarning(
@@ -306,11 +327,13 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
         CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
+  @Test
   public void testArrowFunctions_objectLiteralExpression() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("(a) => ({foo: 1});");
   }
 
+  @Test
   public void testGeneratorFunctionDoesntWarn() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testNoWarning("function *gen() {}");
@@ -333,22 +356,26 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
             "function *gen() {}"));
   }
 
+  @Test
   public void testAsyncFunction_noJSDoc() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     // Note: we add the alert because CheckMissingReturn never warns on functions with empty bodies.
     testNoWarning("async function foo() { alert(1); }");
   }
 
+  @Test
   public void testAsyncFunction_returnsUndefined() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     testNoWarning("/** @return {!Promise<undefined>} */ async function foo() { alert(1); }");
   }
 
+  @Test
   public void testAsyncFunction_returnsUnknown() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     testNoWarning("/** @return {!Promise<?>} */ async function foo() { alert(1); }");
   }
 
+  @Test
   public void testAsyncFunction_returnsNumber() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     testNoWarning("/** @return {!Promise<number>} */ async function foo() { return 1; }");

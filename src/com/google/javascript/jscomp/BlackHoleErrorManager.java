@@ -15,11 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
-/** An ErrorManager that silently swallows all messages. */
-public final class BlackHoleErrorManager extends BasicErrorManager {
-  @Override
-  public void println(CheckLevel level, JSError error) { /* no-op */ }
+import com.google.common.collect.ImmutableSet;
 
-  @Override
-  public void printSummary() { /* no-op */ }
+/** An ErrorManager that silently swallows all messages. */
+public final class BlackHoleErrorManager extends SortingErrorManager {
+  public BlackHoleErrorManager() {
+    super(ImmutableSet.of());
+  }
 }

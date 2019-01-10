@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+'require es6/util/arrayiterator';
 'require util/defineproperty';
 'require util/global';
 
@@ -78,7 +79,8 @@ $jscomp.initSymbolIterator = function() {
            * @return {!IteratorIterable}
            */
           value: function() {
-            return $jscomp.arrayIterator(this);
+            return $jscomp.iteratorPrototype(
+                $jscomp.arrayIteratorImpl(this));
           }
         });
   }
@@ -89,23 +91,19 @@ $jscomp.initSymbolIterator = function() {
 
 
 /**
- * Returns an iterator from the given array.
- * @param {!Array<T>} array
- * @return {!IteratorIterable<T>}
- * @template T
+ * Initializes Symbol.asyncIterator (if it's not already defined)
+ * @suppress {reportUnknownTypes}
  */
-$jscomp.arrayIterator = function(array) {
-  var index = 0;
-  return $jscomp.iteratorPrototype(function() {
-    if (index < array.length) {
-      return {
-        done: false,
-        value: array[index++],
-      };
-    } else {
-      return {done: true};
-    }
-  });
+$jscomp.initSymbolAsyncIterator = function() {
+  $jscomp.initSymbol();
+  var symbolAsyncIterator = $jscomp.global['Symbol'].asyncIterator;
+  if (!symbolAsyncIterator) {
+    symbolAsyncIterator = $jscomp.global['Symbol'].asyncIterator =
+        $jscomp.global['Symbol']('asyncIterator');
+  }
+
+  // Only need to do this once. All future calls are no-ops.
+  $jscomp.initSymbolAsyncIterator = function() {};
 };
 
 

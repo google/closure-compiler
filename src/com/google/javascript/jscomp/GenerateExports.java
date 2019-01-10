@@ -47,6 +47,7 @@ class GenerateExports implements CompilerPass {
 
   /**
    * Creates a new generate exports compiler pass.
+   *
    * @param compiler JS compiler.
    * @param exportSymbolFunction function used for exporting symbols.
    * @param exportPropertyFunction function used for exporting property names.
@@ -76,7 +77,12 @@ class GenerateExports implements CompilerPass {
         compiler, allowNonGlobalExports);
     NodeTraversal.traverse(compiler, root, findExportableNodes);
     Map<String, Node> exports = findExportableNodes.getExports();
+    Map<Node, String> es6Exports = findExportableNodes.getEs6ClassExports();
     Set<String> localExports = findExportableNodes.getLocalExports();
+
+    for (Map.Entry<Node, String> entry : es6Exports.entrySet()) {
+      addExportForEs6Method(entry.getKey(), entry.getValue());
+    }
 
     for (Map.Entry<String, Node> entry : exports.entrySet()) {
       String export = entry.getKey();
@@ -109,70 +115,97 @@ class GenerateExports implements CompilerPass {
     }
   }
 
-  private void addExportMethod(Map<String, Node> exports, String export, Node context) {
-    // Emit the proper CALL expression.
-    // This is an optimization to avoid exporting everything as a symbol
-    // because exporting a property is significantly simpler/faster.
-    // Only export the property if the parent is being exported or
-    // if the parent is "prototype" and the grandparent is being exported.
-    String parent = null;
-    String grandparent = null;
+  private void addExportForEs6Method(Node memberFunction, String ownerName) {
+    // We always export ES6 member methods as properties.
+    checkArgument(memberFunction.isMemberFunctionDef(), memberFunction);
+    checkArgument(!ownerName.isEmpty(), ownerName);
+    String fullExport = ownerName + "." + memberFunction.getString();
+    addExportPropertyCall(ownerName, memberFunction, fullExport, memberFunction.getString());
+  }
 
-    Node node = context.getFirstChild();
-    if (node.isGetProp()) {
-      Node parentNode = node.getFirstChild();
-      parent = parentNode.getQualifiedName();
-      if (parentNode.isGetProp()
-          && parentNode.getLastChild().getString().equals(PROTOTYPE_PROPERTY)) {
-        grandparent = parentNode.getFirstChild().getQualifiedName();
+  /**
+   * Emits a call to either goog.exportProperty or goog.exportSymbol.
+   *
+   * <p>Attempts to optimize by creating a property export instead of a symbol export, because
+   * property exports are significantly simpler/faster.
+   *
+   * @param export The fully qualified name of the object we want to export
+   * @param context The node on which the @export annotation was found
+   */
+  private void addExportMethod(Map<String, Node> exports, String export, Node context) {
+    // We can export as a property if any of the following conditions holds:
+    // a) ES6 class members, which the above `addExportForEs6Method` handles
+    // b) this is a property on a name which is also being exported
+    // c) this is a prototype property
+    String methodOwnerName = null; // the object this method is on, null for exported names.
+    boolean isEs5StylePrototypeAssignment = false; // If this is a prototype property
+    String propertyName = null;
+
+    if (context.getFirstChild().isGetProp()) { // e.g. `/** @export */ a.prototype.b = obj;`
+      Node node = context.getFirstChild(); // e.g. get `a.prototype.b`
+      Node ownerNode = node.getFirstChild(); // e.g. get `a.prototype`
+      methodOwnerName = ownerNode.getQualifiedName(); // e.g. get the string "a.prototype"
+      if (ownerNode.isGetProp()
+          && ownerNode.getLastChild().getString().equals(PROTOTYPE_PROPERTY)) {
+        // e.g. true if ownerNode is `a.prototype`
+        // false if this export were `/** @export */ a.b = obj;` instead
+        isEs5StylePrototypeAssignment = true;
       }
-    } else if (node.getParent().isMemberFunctionDef()) {
-      Node classNode = node.getGrandparent().getParent();
-      parent = NodeUtil.getName(classNode);
-      parent += node.getParent().isStaticMember() ? "" : ".prototype";
-      export = parent + "." + export;
+      propertyName = node.getSecondChild().getString();
     }
 
     boolean useExportSymbol = true;
-    if (grandparent != null) {
-      // grandparent is only set for properties exported off a prototype obj.
+    if (isEs5StylePrototypeAssignment) {
       useExportSymbol = false;
-    } else if (parent != null && exports.containsKey(parent)) {
-      useExportSymbol = false;
-    } else if (node.getParent().isMemberFunctionDef()) {
+    } else if (methodOwnerName != null && exports.containsKey(methodOwnerName)) {
       useExportSymbol = false;
     }
 
-    Node call;
     if (useExportSymbol) {
-      recordExportSymbol(export);
-
-      // exportSymbol(publicPath, object);
-      call = IR.call(
-          NodeUtil.newQName(
-              compiler, exportSymbolFunction,
-              context, export),
-          IR.string(export),
-          NodeUtil.newQName(
-              compiler, export,
-              context, export));
+      addExportSymbolCall(export, context);
     } else {
-      // exportProperty(object, publicName, symbol);
-      String property = getPropertyName(node);
-      call = IR.call(
-          NodeUtil.newQName(
-              compiler, exportPropertyFunction,
-              context, exportPropertyFunction),
-          NodeUtil.newQName(
-              compiler, parent,
-              context, exportPropertyFunction),
-          IR.string(property),
-          NodeUtil.newQName(
-              compiler, export,
-              context, exportPropertyFunction));
+      addExportPropertyCall(methodOwnerName, context, export, propertyName);
     }
+  }
 
-    Node expression = IR.exprResult(call).useSourceInfoIfMissingFromForTree(node);
+  private void addExportPropertyCall(
+      String methodOwnerName, Node context, String export, String propertyName) {
+    // exportProperty(object, publicName, symbol);
+    checkNotNull(methodOwnerName);
+    Node call =
+        IR.call(
+            NodeUtil.newQName(
+                compiler, exportPropertyFunction,
+                context, exportPropertyFunction),
+            NodeUtil.newQName(
+                compiler, methodOwnerName,
+                context, exportPropertyFunction),
+            IR.string(propertyName),
+            NodeUtil.newQName(
+                compiler, export,
+                context, exportPropertyFunction));
+
+    Node expression = IR.exprResult(call).useSourceInfoIfMissingFromForTree(context);
+    annotate(expression);
+
+    addStatement(context, expression);
+  }
+
+  private void addExportSymbolCall(String export, Node context) {
+    // exportSymbol(publicPath, object);
+    recordExportSymbol(export);
+
+    Node call =
+        IR.call(
+            NodeUtil.newQName(
+                compiler, exportSymbolFunction,
+                context, export),
+            IR.string(export),
+            NodeUtil.newQName(
+                compiler, export,
+                context, export));
+
+    Node expression = IR.exprResult(call).useSourceInfoIfMissingFromForTree(context);
     annotate(expression);
 
     addStatement(context, expression);
@@ -208,21 +241,6 @@ class GenerateExports implements CompilerPass {
   private void annotate(Node node) {
     NodeTraversal.traverse(
         compiler, node, new PrepareAst.PrepareAnnotations());
-  }
-
-  /**
-   * Assumes the node type is correct and returns the property name
-   * (not fully qualified).
-   * @param node node
-   * @return property name.
-   */
-  private static String getPropertyName(Node node) {
-    checkArgument(node.isGetProp() || node.getParent().isMemberFunctionDef());
-    if (node.isGetProp()) {
-      return node.getLastChild().getString();
-    } else {
-      return node.getParent().getString();
-    }
   }
 
   /** Lazily create a "new" externs root for undeclared variables. */

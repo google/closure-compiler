@@ -55,6 +55,54 @@ CharacterData.prototype.remove = function() {};
 DocumentType.prototype.replaceWith = function(nodes) {};
 
 /**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.SECURITY_ERR = 18;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.NETWORK_ERR = 19;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.ABORT_ERR = 20;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.URL_MISMATCH_ERR = 21;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.QUOTA_EXCEEDED_ERR = 22;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.TIMEOUT_ERR = 23;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.INVALID_NODE_TYPE_ERR = 24;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
+ */
+DOMException.DATA_CLONE_ERR = 25;
+
+/**
  * @param {...(!Node|string)} nodes
  * @return {undefined}
  * @see https://dom.spec.whatwg.org/#dom-childnode-replacewith
@@ -73,3 +121,96 @@ CharacterData.prototype.replaceWith = function(nodes) {};
  * @see https://dom.spec.whatwg.org/#dom-element-getattributenames
  */
 Element.prototype.getAttributeNames = function() {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-append
+ */
+Element.prototype.append = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-append
+ */
+Document.prototype.append = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-append
+ */
+DocumentFragment.prototype.append = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-prepend
+ */
+Element.prototype.prepend = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-prepend
+ */
+Document.prototype.prepend = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-prepend
+ */
+DocumentFragment.prototype.prepend = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-before
+ */
+Element.prototype.before = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-before
+ */
+DocumentType.prototype.before = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-before
+ */
+CharacterData.prototype.before = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-after
+ */
+Element.prototype.after = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-after
+ */
+DocumentType.prototype.after = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-after
+ */
+CharacterData.prototype.after = function(nodes) {};
+
+/**
+ * @param {string} name
+ * @param {boolean=} force
+ * @return {boolean}
+ * @throws {DOMException}
+ * @see https://dom.spec.whatwg.org/#dom-element-toggleattribute
+ */
+Element.prototype.toggleAttribute = function(name, force) {};

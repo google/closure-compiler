@@ -17,20 +17,25 @@
 package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.graph.Graph.GraphEdge;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for the graph data structure.
  *
  */
-public final class GraphTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class GraphTest {
 
+  @Test
   public void testDirectedSimple() {
     DiGraph<String, String> graph =
         LinkedDirectedGraph.create();
@@ -80,6 +85,7 @@ public final class GraphTest extends TestCase {
     assertThat(graph.isConnectedInDirection("b", "a")).isTrue();
   }
 
+  @Test
   public void testUndirectedSimple() {
     UndiGraph<String, String> graph =
         LinkedUndirectedGraph.create();
@@ -107,6 +113,7 @@ public final class GraphTest extends TestCase {
     assertThat(graph.isConnected("b", "a")).isFalse();
   }
 
+  @Test
   public void testDirectedSelfLoop() {
     DiGraph<String, String> graph =
         LinkedDirectedGraph.create();
@@ -136,6 +143,7 @@ public final class GraphTest extends TestCase {
     assertThat(graph.isConnected("a", "a")).isFalse();
   }
 
+  @Test
   public void testUndirectedSelfLoop() {
     UndiGraph<String, String> graph =
         LinkedUndirectedGraph.create();
@@ -151,6 +159,7 @@ public final class GraphTest extends TestCase {
     assertThat(graph.isConnected("a", "a")).isFalse();
   }
 
+  @Test
   public void testDirectedInAndOutEdges() {
     DiGraph<String, String> graph =
         LinkedDirectedGraph.create();
@@ -173,6 +182,7 @@ public final class GraphTest extends TestCase {
     assertThat(graph.isConnected("a", "b")).isFalse();
   }
 
+  @Test
   public void testUndirectedNeighbors() {
     UndiGraph<String, String> graph =
         LinkedUndirectedGraph.create();
@@ -195,6 +205,7 @@ public final class GraphTest extends TestCase {
     assertThat(graph.isConnected("a", "b")).isFalse();
   }
 
+  @Test
   public void testDirectedGetFirstEdge() {
     DiGraph<String, String> graph =
       LinkedDirectedGraph.create();
@@ -204,9 +215,10 @@ public final class GraphTest extends TestCase {
     graph.connect("a", "-", "b");
     assertThat(graph.getFirstEdge("a", "b").getValue()).isEqualTo("-");
     assertThat(graph.getFirstEdge("b", "a").getValue()).isEqualTo("-");
-    assertNull(graph.getFirstEdge("a", "c"));
+    assertThat(graph.getFirstEdge("a", "c")).isNull();
   }
 
+  @Test
   public void testUndirectedGetFirstEdge() {
     UndiGraph<String, String> graph =
       LinkedUndirectedGraph.create();
@@ -216,9 +228,10 @@ public final class GraphTest extends TestCase {
     graph.connect("a", "-", "b");
     assertThat(graph.getFirstEdge("a", "b").getValue()).isEqualTo("-");
     assertThat(graph.getFirstEdge("b", "a").getValue()).isEqualTo("-");
-    assertNull(graph.getFirstEdge("a", "c"));
+    assertThat(graph.getFirstEdge("a", "c")).isNull();
   }
 
+  @Test
   public void testNodeAnnotations() {
     Graph<String, String> graph = LinkedUndirectedGraph.create();
     GraphNode<String, String> a = graph.createNode("a");
@@ -226,6 +239,7 @@ public final class GraphTest extends TestCase {
     checkAnnotations(graph, a, b);
   }
 
+  @Test
   public void testEdgeAnnotations() {
     Graph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("1");
@@ -244,28 +258,28 @@ public final class GraphTest extends TestCase {
     final Annotation B = new Annotation() {};
 
     // Initially null.
-    assertNull(a.getAnnotation());
-    assertNull(b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isNull();
+    assertThat(b.<Annotation>getAnnotation()).isNull();
 
     // Test basic setting.
     a.setAnnotation(A);
     b.setAnnotation(B);
-    assertSame(A, a.getAnnotation());
-    assertSame(B, b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isSameAs(A);
+    assertThat(b.<Annotation>getAnnotation()).isSameAs(B);
 
     // Test clearing.
     graph.clearEdgeAnnotations();
     graph.clearNodeAnnotations();
-    assertNull(a.getAnnotation());
-    assertNull(b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isNull();
+    assertThat(b.<Annotation>getAnnotation()).isNull();
 
     a.setAnnotation(A);
     b.setAnnotation(B);
     // Pushing clears.
     graph.pushEdgeAnnotations();
     graph.pushNodeAnnotations();
-    assertNull(a.getAnnotation());
-    assertNull(b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isNull();
+    assertThat(b.<Annotation>getAnnotation()).isNull();
     a.setAnnotation(B);
     b.setAnnotation(B);
     graph.pushEdgeAnnotations();
@@ -274,18 +288,19 @@ public final class GraphTest extends TestCase {
     b.setAnnotation(A);
 
     // Test restoring then restoring old values with pop.
-    assertSame(B, a.getAnnotation());
-    assertSame(A, b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isSameAs(B);
+    assertThat(b.<Annotation>getAnnotation()).isSameAs(A);
     graph.popEdgeAnnotations();
     graph.popNodeAnnotations();
-    assertSame(B, a.getAnnotation());
-    assertSame(B, b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isSameAs(B);
+    assertThat(b.<Annotation>getAnnotation()).isSameAs(B);
     graph.popEdgeAnnotations();
     graph.popNodeAnnotations();
-    assertSame(A, a.getAnnotation());
-    assertSame(B, b.getAnnotation());
+    assertThat(a.<Annotation>getAnnotation()).isSameAs(A);
+    assertThat(b.<Annotation>getAnnotation()).isSameAs(B);
   }
 
+  @Test
   public void testDegree() {
     testDirectedDegree(LinkedDirectedGraph.<String, String>create());
     testDirectedDegree(LinkedUndirectedGraph.<String, String>create());
@@ -307,6 +322,7 @@ public final class GraphTest extends TestCase {
     assertThat(graph.getNodeDegree("a")).isEqualTo(3);
   }
 
+  @Test
   public void testDirectedConnectIfNotFound() {
     testDirectedConnectIfNotFound(
         LinkedDirectedGraph.<String, String>create());
@@ -327,6 +343,7 @@ public final class GraphTest extends TestCase {
     assertThat(graph.getNodeDegree("a")).isEqualTo(2);
   }
 
+  @Test
   public void testSimpleSubGraph() {
     UndiGraph<String, String> graph =
         LinkedUndirectedGraph.create();
@@ -341,7 +358,7 @@ public final class GraphTest extends TestCase {
 
     try {
       subGraph.addNode("d");
-      fail("SubGraph should not allow add for node that is not in graph.");
+      assertWithMessage("SubGraph should not allow add for node that is not in graph.").fail();
     } catch (IllegalArgumentException e) {
       // exception expected
     }

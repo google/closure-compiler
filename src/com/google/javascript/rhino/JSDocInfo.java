@@ -125,7 +125,7 @@ public class JSDocInfo implements Serializable {
     private String license;
     private ImmutableSet<String> suppressions;
     private ImmutableSet<String> modifies;
-    private String lendsName;
+    private JSTypeExpression lendsName;
 
     // Bit flags for properties.
     private int propertyBitField;
@@ -178,7 +178,7 @@ public class JSDocInfo implements Serializable {
       other.license = license;
       other.suppressions = suppressions == null ? null : ImmutableSet.copyOf(suppressions);
       other.modifies = modifies == null ? null :  ImmutableSet.copyOf(modifies);
-      other.lendsName = lendsName;
+      other.lendsName = cloneType(lendsName, cloneTypeNodes);
 
       other.propertyBitField = propertyBitField;
       return other;
@@ -1663,18 +1663,21 @@ public class JSDocInfo implements Serializable {
   /**
    * Gets the name we're lending to in a {@code @lends} annotation.
    *
-   * <p>In many reflection APIs, you pass an anonymous object to a function,
-   * and that function mixes the anonymous object into another object.
-   * The {@code @lends} annotation allows the type system to track
-   * those property assignments.
+   * <p>In many reflection APIs, you pass an anonymous object to a function, and that function mixes
+   * the anonymous object into another object. The {@code @lends} annotation allows the type system
+   * to track those property assignments.
    */
-  public String getLendsName() {
+  public JSTypeExpression getLendsName() {
     return (info == null) ? null : info.lendsName;
   }
 
-  void setLendsName(String name) {
+  void setLendsName(JSTypeExpression name) {
     lazyInitInfo();
     info.lendsName = name;
+  }
+
+  public boolean hasLendsName() {
+    return getLendsName() != null;
   }
 
   /**
@@ -2032,10 +2035,10 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns a collection of all type nodes that are a part of this JSDocInfo.
-   * This includes @type, @this, @extends, @implements, @param, @throws,
-   * and @return.  Any future type specific JSDoc should make sure to add the
-   * appropriate nodes here.
+   * Returns a collection of all type nodes that are a part of this JSDocInfo. This
+   * includes @type, @this, @extends, @implements, @param, @throws, @lends, and @return. Any future
+   * type specific JSDoc should make sure to add the appropriate nodes here.
+   *
    * @return collection of all type nodes
    */
   public Collection<Node> getTypeNodes() {
@@ -2084,6 +2087,10 @@ public class JSDocInfo implements Serializable {
             nodes.add(thrownType.getRoot());
           }
         }
+      }
+
+      if (info.lendsName != null) {
+        nodes.add(info.lendsName.getRoot());
       }
     }
 

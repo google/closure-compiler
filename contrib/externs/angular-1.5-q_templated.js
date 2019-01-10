@@ -28,14 +28,14 @@
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.$q = function() {};
 
 /**
- * @constructor
+ * @interface
  * @template T
- * @implements {IThenable<T>}
+ * @extends {IThenable<T>}
  */
 angular.$q.Promise = function() {};
 
@@ -80,7 +80,7 @@ angular.$q.Promise.prototype.finally =
     function(callback, opt_notifyCallback) {};
 
 /**
- * @constructor
+ * @interface
  * @template T
  */
 angular.$q.Deferred = function() {};

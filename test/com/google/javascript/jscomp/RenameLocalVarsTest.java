@@ -16,10 +16,17 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
  * Tests for {@link RenameVars}.
+ *
  * @see RenameVarsTest
  */
+@RunWith(JUnit4.class)
 public final class RenameLocalVarsTest extends CompilerTestCase {
   private static final String DEFAULT_PREFIX = "";
 
@@ -43,21 +50,25 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     nameGenerator = null;
     disableValidateAstChangeMarking();
   }
 
+  @Test
   public void testRenameSimple() {
     test("function Foo(v1, v2) {return v1;} Foo();",
          "function Foo(a, b) {return a;} Foo();");
   }
 
+  @Test
   public void testRenameGlobals() {
     testSame("var Foo; var Bar, y; function x() { Bar++; }");
   }
 
+  @Test
   public void testRenameLocals() {
     test("(function (v1, v2) {}); (function (v3, v4) {});",
          "(function (a, b) {}); (function (a, b) {});");
@@ -66,11 +77,13 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
 
   }
 
+  @Test
   public void testRenameLocalsClashingWithGlobals() {
     test("function a(v1, v2) {return v1;} a();",
          "function a(b, c) {return b;} a();");
   }
 
+  @Test
   public void testRenameNested() {
     test("function f1(v1, v2) { (function(v3, v4) {}) }",
          "function f1(a, b) { (function(c, d) {}) }");
@@ -78,6 +91,7 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
          "function f1(a, b) { function c(d, e) {} }");
   }
 
+  @Test
   public void testRenameWithExterns1() {
     String externs = "var bar; function alert() {}";
     test(
@@ -86,6 +100,7 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
         expected("function foo(a) { alert(a); } foo(3)"));
   }
 
+  @Test
   public void testRenameWithExterns2() {
     test(
         externs("var a; function alert() {}"),
@@ -93,15 +108,18 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
         expected("function foo(b) { alert(a);alert(b); } foo(3);"));
   }
 
+  @Test
   public void testDoNotRenameExportedName() {
     testSame("_foo()");
   }
 
+  @Test
   public void testRenameWithNameOverlap() {
     test("function local() { var a = 1; var b = 2; b + b; }",
         "function local() { var b = 1; var a = 2; a + a; }");
   }
 
+  @Test
   public void testRenameWithPrefix1() {
     prefix = "PRE_";
     test("function Foo(v1, v2) {return v1} Foo();",
@@ -109,6 +127,7 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
     prefix = DEFAULT_PREFIX;
   }
 
+  @Test
   public void testRenameWithPrefix2() {
     prefix = "PRE_";
     test("function Foo(v1, v2) {var v3 = v1 + v2; return v3;} Foo();",
@@ -116,6 +135,7 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
     prefix = DEFAULT_PREFIX;
   }
 
+  @Test
   public void testRenameWithPrefix3() {
     prefix = "a";
     test("function Foo() {return 1;}" +
@@ -134,12 +154,14 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
     prefix = DEFAULT_PREFIX;
   }
 
+  @Test
   public void testBias() {
     nameGenerator = new DefaultNameGenerator();
     nameGenerator.favors("AAAAAAAAHH");
     test("function foo(x,y){}", "function foo(A,H){}");
   }
 
+  @Test
   public void testBias2() {
     nameGenerator = new DefaultNameGenerator();
     nameGenerator.favors("AAAAAAAAHH");

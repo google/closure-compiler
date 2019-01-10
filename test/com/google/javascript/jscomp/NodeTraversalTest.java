@@ -17,8 +17,9 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
-import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -35,32 +36,35 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link NodeTraversal}.
- */
-public final class NodeTraversalTest extends TestCase {
+/** Tests for {@link NodeTraversal}. */
+@RunWith(JUnit4.class)
+public final class NodeTraversalTest {
+  @Test
   public void testPruningCallbackShouldTraverse1() {
     PruningCallback include =
       new PruningCallback(ImmutableSet.of(Token.SCRIPT, Token.VAR), true);
 
     Node script = new Node(Token.SCRIPT);
-    assertTrue(include.shouldTraverse(null, script, null));
-    assertTrue(include.shouldTraverse(null, new Node(Token.VAR), null));
-    assertFalse(include.shouldTraverse(null, new Node(Token.NAME), null));
-    assertFalse(include.shouldTraverse(null, new Node(Token.ADD), null));
+    assertThat(include.shouldTraverse(null, script, null)).isTrue();
+    assertThat(include.shouldTraverse(null, new Node(Token.VAR), null)).isTrue();
+    assertThat(include.shouldTraverse(null, new Node(Token.NAME), null)).isFalse();
+    assertThat(include.shouldTraverse(null, new Node(Token.ADD), null)).isFalse();
   }
 
+  @Test
   public void testPruningCallbackShouldTraverse2() {
     PruningCallback include =
       new PruningCallback(ImmutableSet.of(Token.SCRIPT, Token.VAR), false);
 
     Node script = new Node(Token.SCRIPT);
-    assertFalse(include.shouldTraverse(null, script, null));
-    assertFalse(include.shouldTraverse(null, new Node(Token.VAR), null));
-    assertTrue(include.shouldTraverse(null, new Node(Token.NAME), null));
-    assertTrue(include.shouldTraverse(null, new Node(Token.ADD), null));
+    assertThat(include.shouldTraverse(null, script, null)).isFalse();
+    assertThat(include.shouldTraverse(null, new Node(Token.VAR), null)).isFalse();
+    assertThat(include.shouldTraverse(null, new Node(Token.NAME), null)).isTrue();
+    assertThat(include.shouldTraverse(null, new Node(Token.ADD), null)).isTrue();
   }
 
   /**
@@ -78,6 +82,7 @@ public final class NodeTraversalTest extends TestCase {
     }
   }
 
+  @Test
   public void testReport() {
     final List<JSError> errors = new ArrayList<>();
 
@@ -100,11 +105,12 @@ public final class NodeTraversalTest extends TestCase {
 
     t.report(new Node(Token.EMPTY), dt, "Foo", "Bar", "Hello");
     assertThat(errors).hasSize(1);
-    assertEquals("Foo, Bar - Hello", errors.get(0).description);
+    assertThat(errors.get(0).description).isEqualTo("Foo, Bar - Hello");
   }
 
   private static final String TEST_EXCEPTION = "test me";
 
+  @Test
   public void testUnexpectedException() {
 
     AbstractPostOrderCallbackInterface cb =
@@ -118,7 +124,7 @@ public final class NodeTraversalTest extends TestCase {
       String code = "function foo() {}";
       Node tree = parse(compiler, code);
       NodeTraversal.traversePostOrder(compiler, tree, cb);
-      fail("Expected RuntimeException");
+      assertWithMessage("Expected RuntimeException").fail();
     } catch (RuntimeException e) {
       assertThat(e)
           .hasMessageThat()
@@ -126,7 +132,7 @@ public final class NodeTraversalTest extends TestCase {
     }
   }
 
-
+  @Test
   public void testGetScopeRoot() {
     Compiler compiler = new Compiler();
     String code = lines(
@@ -161,6 +167,7 @@ public final class NodeTraversalTest extends TestCase {
         });
   }
 
+  @Test
   public void testGetHoistScopeRoot() {
     Compiler compiler = new Compiler();
     String code = lines(
@@ -207,6 +214,7 @@ public final class NodeTraversalTest extends TestCase {
     }
   }
 
+  @Test
   public void testReportChange1() {
     String code = lines(
         "var change;",
@@ -216,6 +224,7 @@ public final class NodeTraversalTest extends TestCase {
     assertChangesRecorded(code, new NameChangingCallback());
   }
 
+  @Test
   public void testReportChange2() {
     String code = lines(
         "var a;",
@@ -225,7 +234,8 @@ public final class NodeTraversalTest extends TestCase {
     assertChangesRecorded(code, new NameChangingCallback());
   }
 
-   public void testReportChange3() {
+  @Test
+  public void testReportChange3() {
     String code = lines(
         "var a;",
         "function foo() {",
@@ -235,6 +245,7 @@ public final class NodeTraversalTest extends TestCase {
     assertChangesRecorded(code, new NameChangingCallback());
   }
 
+  @Test
   public void testReportChange4() {
     String code = lines(
         "function foo() {",
@@ -256,7 +267,7 @@ public final class NodeTraversalTest extends TestCase {
     changeVerifier.checkRecordedChanges(tree);
   }
 
-
+  @Test
   public void testGetLineNoAndGetCharno() {
     Compiler compiler = new Compiler();
     String code = ""
@@ -316,9 +327,10 @@ public final class NodeTraversalTest extends TestCase {
                 + " [input_id: InputId: [testcode]]"
                 + " [feature_set: []] @1:0\n");
 
-    assertEquals(expectedResult, builder.toString());
+    assertThat(builder.toString()).isEqualTo(expectedResult);
   }
 
+  @Test
   public void testGetCurrentNode() {
     Compiler compiler = new Compiler();
     ScopeCreator creator = SyntacticScopeCreator.makeUntyped(compiler);
@@ -353,6 +365,7 @@ public final class NodeTraversalTest extends TestCase {
     callback.assertEntered();
   }
 
+  @Test
   public void testTraverseAtScopeWithBlockScope() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -384,6 +397,7 @@ public final class NodeTraversalTest extends TestCase {
     callback.assertEntered();
   }
 
+  @Test
   public void testTraverseAtScopeWithForScope() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -420,6 +434,7 @@ public final class NodeTraversalTest extends TestCase {
     callback.assertEntered();
   }
 
+  @Test
   public void testTraverseAtScopeWithSwitchScope() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -455,6 +470,7 @@ public final class NodeTraversalTest extends TestCase {
     callback.assertEntered();
   }
 
+  @Test
   public void testTraverseAtScopeWithModuleScope() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -481,6 +497,7 @@ public final class NodeTraversalTest extends TestCase {
     callback.assertEntered();
   }
 
+  @Test
   public void testGetVarAccessible() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -559,6 +576,7 @@ public final class NodeTraversalTest extends TestCase {
     callback.assertAccessible(bazBlockScope);
   }
 
+  @Test
   public void testTraverseEs6ScopeRoots_isLimitedToScope() {
     Compiler compiler = new Compiler();
     StringAccumulator callback = new StringAccumulator();
@@ -591,6 +609,7 @@ public final class NodeTraversalTest extends TestCase {
     assertThat(callback.strings).containsExactly("string in foo", "string nested in baz");
   }
 
+  @Test
   public void testTraverseEs6ScopeRoots_parentScopesWork() {
     Compiler compiler = new Compiler();
     LexicallyScopedVarsAccumulator callback = new LexicallyScopedVarsAccumulator();
@@ -627,6 +646,7 @@ public final class NodeTraversalTest extends TestCase {
             "varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz", "varDefinedInBaz");
   }
 
+  @Test
   public void testTraverseEs6ScopeRoots_callsEnterFunction() {
     Compiler compiler = new Compiler();
     EnterFunctionAccumulator callback = new EnterFunctionAccumulator();
@@ -651,6 +671,7 @@ public final class NodeTraversalTest extends TestCase {
     assertThat(callback.enteredFunctions).containsExactly(fooFunction, barFunction, bazFunction);
   }
 
+  @Test
   public void testTraverseEs6ScopeRoots_callsEnterScope() {
     Compiler compiler = new Compiler();
 
@@ -689,6 +710,7 @@ public final class NodeTraversalTest extends TestCase {
     assertThat(scopesEntered).hasSize(3);  // Function, function's body, and the block inside it.
   }
 
+  @Test
   public void testNodeTraversalInterruptable() {
     Compiler compiler = new Compiler();
     String code = "var a; \n";
@@ -708,7 +730,7 @@ public final class NodeTraversalTest extends TestCase {
 
     try {
       NodeTraversal.traversePostOrder(compiler, tree, countingCallback);
-      fail("Expected a RuntimeException;");
+      assertWithMessage("Expected a RuntimeException;").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasCauseThat().hasCauseThat().isInstanceOf(InterruptedException.class);
     }
@@ -774,7 +796,7 @@ public final class NodeTraversalTest extends TestCase {
     }
 
     private void assertEntered() {
-      assertTrue(entered);
+      assertThat(entered).isTrue();
     }
 
     @Override

@@ -26,9 +26,9 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import junit.framework.TestCase;
+import org.junit.Before;
 
-public abstract class BaseReplaceScriptTestCase extends TestCase {
+public abstract class BaseReplaceScriptTestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   protected static final String CLOSURE_BASE =
@@ -56,9 +56,8 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
    */
   protected ImmutableList<SourceFile> testExterns = EXTVAR_EXTERNS;
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
+  @Before
+  public void setUp() throws Exception {
     testExterns = EXTVAR_EXTERNS;
   }
 
@@ -209,7 +208,6 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
 
   protected void assertErrorType(JSError e, DiagnosticType type, int lineNumber) {
     assertError(e).hasType(type);
-    assertEquals(e.lineNumber, lineNumber);
+    assertThat(lineNumber).isEqualTo(e.lineNumber);
   }
-
 }

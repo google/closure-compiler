@@ -55,14 +55,6 @@ public class DiagnosticGroupWarningsGuard extends WarningsGuard {
   }
 
   @Override
-  protected DiagnosticGroupState enablesExplicitly(DiagnosticGroup group) {
-    if (group.getName() != null && group.getName().equals(this.group.getName())) {
-      return this.level.isOn() ? DiagnosticGroupState.ON : DiagnosticGroupState.OFF;
-    }
-    return DiagnosticGroupState.UNSPECIFIED;
-  }
-
-  @Override
   protected WarningsGuard makeNonStrict() {
     return new DiagnosticGroupWarningsGuard(
         this.group,

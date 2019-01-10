@@ -35,39 +35,39 @@ import javax.annotation.Nullable;
 /**
  * Inserts run-time type assertions.
  *
- * <p>We add markers to user-defined interfaces and classes in order to check if
- * an object conforms to that type.
+ * <p>We add markers to user-defined interfaces and classes in order to check if an object conforms
+ * to that type.
  *
- * <p>For each function, we insert a run-time type assertion for each parameter
- * and return value for which the compiler has a type.
+ * <p>For each function, we insert a run-time type assertion for each parameter and return value for
+ * which the compiler has a type.
  *
- * <p>The JavaScript code which implements the type assertions is in
- * js/runtime-type-check.js.
+ * <p>The JavaScript code which implements the type assertions is in js/runtime-type-check.js.
  *
  */
 class RuntimeTypeCheck implements CompilerPass {
 
-  private static final Comparator<JSType> ALPHA = new Comparator<JSType>() {
-    @Override
-    public int compare(JSType t1, JSType t2) {
-      return getName(t1).compareTo(getName(t2));
-    }
+  private static final Comparator<JSType> ALPHA =
+      new Comparator<JSType>() {
+        @Override
+        public int compare(JSType t1, JSType t2) {
+          return getName(t1).compareTo(getName(t2));
+        }
 
-    private String getName(JSType type) {
-      if (type.isInstanceType()) {
-        return ((ObjectType) type).getReferenceName();
-      } else if (type.isNullType()
-          || type.isBooleanValueType()
-          || type.isNumberValueType()
-          || type.isStringValueType()
-          || type.isVoidType()) {
-        return type.toString();
-      } else {
-        // Type unchecked at runtime, so we don't care about the sorting order.
-        return "";
-      }
-    }
-  };
+        private String getName(JSType type) {
+          if (type.isInstanceType()) {
+            return ((ObjectType) type).getReferenceName();
+          } else if (type.isNullType()
+              || type.isBooleanValueType()
+              || type.isNumberValueType()
+              || type.isStringValueType()
+              || type.isVoidType()) {
+            return type.toString();
+          } else {
+            // Type unchecked at runtime, so we don't care about the sorting order.
+            return "";
+          }
+        }
+      };
 
   private final AbstractCompiler compiler;
   private final String logFunction;
@@ -88,17 +88,15 @@ class RuntimeTypeCheck implements CompilerPass {
   /**
    * Inserts marker properties for user-defined interfaces and classes.
    *
-   * <p>For example, for a class C, we add
-   * {@code C.prototype['instance_of__C']}, and for each interface I it
-   * implements , we add {@code C.prototype['implements__I']}.
+   * <p>For example, for a class C, we add {@code C.prototype['instance_of__C']}, and for each
+   * interface I it implements , we add {@code C.prototype['implements__I']}.
    *
-   * <p>Since interfaces are not a run-time JS concept, we use these markers to
-   * recognize an interface implementation at runtime. We also use markers for
-   * user-defined classes, so that we can easily recognize them independently of
-   * which module they are defined in and whether the module is loaded.
+   * <p>Since interfaces are not a run-time JS concept, we use these markers to recognize an
+   * interface implementation at runtime. We also use markers for user-defined classes, so that we
+   * can easily recognize them independently of which module they are defined in and whether the
+   * module is loaded.
    */
-  private static class AddMarkers
-      extends NodeTraversal.AbstractPostOrderCallback {
+  private static class AddMarkers extends NodeTraversal.AbstractPostOrderCallback {
 
     private final AbstractCompiler compiler;
 
@@ -115,7 +113,7 @@ class RuntimeTypeCheck implements CompilerPass {
 
     private void visitFunction(Node n) {
       FunctionType funType = n.getJSType().toMaybeFunctionType();
-      if (funType != null && !funType.isConstructor()) {
+      if (funType == null || !funType.isConstructor()) {
         return;
       }
 
@@ -126,15 +124,12 @@ class RuntimeTypeCheck implements CompilerPass {
       TreeSet<ObjectType> stuff = new TreeSet<>(ALPHA);
       Iterables.addAll(stuff, funType.getAllImplementedInterfaces());
       for (ObjectType interfaceType : stuff) {
-        nodeToInsertAfter =
-            addMarker(funType, nodeToInsertAfter, interfaceType);
+        nodeToInsertAfter = addMarker(funType, nodeToInsertAfter, interfaceType);
       }
     }
 
     private Node addMarker(
-            FunctionType funType,
-            Node nodeToInsertAfter,
-            @Nullable ObjectType interfaceType) {
+        FunctionType funType, Node nodeToInsertAfter, @Nullable ObjectType interfaceType) {
 
       if (funType.getSource() == null) {
         return nodeToInsertAfter;
@@ -148,20 +143,19 @@ class RuntimeTypeCheck implements CompilerPass {
         return nodeToInsertAfter;
       }
 
-      Node classNode = NodeUtil.newQName(
-          compiler, className);
+      Node classNode = NodeUtil.newQName(compiler, className);
 
-      Node marker = IR.string(
-              interfaceType == null ?
-              "instance_of__" + className :
-              "implements__" + interfaceType.getReferenceName());
+      Node marker =
+          IR.string(
+              interfaceType == null
+                  ? "instance_of__" + className
+                  : "implements__" + interfaceType.getReferenceName());
 
-      Node assign = IR.exprResult(IR.assign(
-          IR.getelem(
-              IR.getprop(
-                  classNode,
-                  IR.string("prototype")), marker),
-          IR.trueNode()));
+      Node assign =
+          IR.exprResult(
+              IR.assign(
+                  IR.getelem(IR.getprop(classNode, IR.string("prototype")), marker),
+                  IR.trueNode()));
 
       nodeToInsertAfter.getParent().addChildAfter(assign, nodeToInsertAfter);
       compiler.reportChangeToEnclosingScope(assign);
@@ -170,9 +164,8 @@ class RuntimeTypeCheck implements CompilerPass {
     }
 
     /**
-     * Find the node to insert the markers after. Typically, this node
-     * corresponds to the constructor declaration, but we want to skip any of
-     * the white-listed function calls.
+     * Find the node to insert the markers after. Typically, this node corresponds to the
+     * constructor declaration, but we want to skip any of the white-listed function calls.
      *
      * @param n the constructor function node
      * @return the node to insert after
@@ -197,24 +190,20 @@ class RuntimeTypeCheck implements CompilerPass {
     }
 
     private boolean isClassDefiningCall(Node next) {
-      return NodeUtil.isExprCall(next) &&
-          compiler.getCodingConvention().getClassesDefinedByCall(
-              next.getFirstChild()) != null;
+      return NodeUtil.isExprCall(next)
+          && compiler.getCodingConvention().getClassesDefinedByCall(next.getFirstChild()) != null;
     }
   }
 
   /**
-   * Insert calls to the run-time type checking function {@code checkType}, which
-   * takes an expression to check and a list of checkers (one of which must
-   * match). It returns the expression back to facilitate checking of return
-   * values. We have checkers for value types, class types (user-defined and
-   * externed), and interface types.
+   * Insert calls to the run-time type checking function {@code checkType}, which takes an
+   * expression to check and a list of checkers (one of which must match). It returns the expression
+   * back to facilitate checking of return values. We have checkers for value types, class types
+   * (user-defined and externed), and interface types.
    */
-  private class AddChecks
-      extends NodeTraversal.AbstractPostOrderCallback {
+  private class AddChecks extends NodeTraversal.AbstractPostOrderCallback {
 
-    private AddChecks() {
-    }
+    private AddChecks() {}
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -229,11 +218,12 @@ class RuntimeTypeCheck implements CompilerPass {
       }
     }
 
-    /**
-     * Insert checks for the parameters of the function.
-     */
+    /** Insert checks for the parameters of the function. */
     private void visitFunction(Node n) {
       FunctionType funType = JSType.toMaybeFunctionType(n.getJSType());
+      if (funType == null) {
+        return;
+      }
       Node block = n.getLastChild();
       Node paramName = NodeUtil.getFunctionParameters(n).getFirstChild();
       Node insertionPoint = null;
@@ -241,8 +231,8 @@ class RuntimeTypeCheck implements CompilerPass {
       // To satisfy normalization constraints, the type checking must be
       // added after any inner function declarations.
       for (Node next = block.getFirstChild();
-           next != null && NodeUtil.isFunctionDeclaration(next);
-           next = next.getNext()) {
+          next != null && NodeUtil.isFunctionDeclaration(next);
+          next = next.getNext()) {
         insertionPoint = next;
       }
 
@@ -252,8 +242,7 @@ class RuntimeTypeCheck implements CompilerPass {
           return;
         }
 
-        Node checkNode = createCheckTypeCallNode(
-            paramType.getJSType(), paramName.cloneTree());
+        Node checkNode = createCheckTypeCallNode(paramType.getJSType(), paramName.cloneTree());
 
         if (checkNode == null) {
           // We don't know how to check this parameter type.
@@ -278,13 +267,16 @@ class RuntimeTypeCheck implements CompilerPass {
       Node function = t.getEnclosingFunction();
       FunctionType funType = function.getJSType().toMaybeFunctionType();
 
+      if (funType == null) {
+        return;
+      }
+
       Node retValue = n.getFirstChild();
       if (retValue == null) {
         return;
       }
 
-      Node checkNode = createCheckTypeCallNode(
-          funType.getReturnType(), retValue.cloneTree());
+      Node checkNode = createCheckTypeCallNode(funType.getReturnType(), retValue.cloneTree());
 
       if (checkNode == null) {
         return;
@@ -295,11 +287,10 @@ class RuntimeTypeCheck implements CompilerPass {
     }
 
     /**
-     * Creates a function call to check that the given expression matches the
-     * given type at runtime.
+     * Creates a function call to check that the given expression matches the given type at runtime.
      *
-     * <p>For example, if the type is {@code (string|Foo)}, the function call is
-     * {@code checkType(expr, [valueChecker('string'), classChecker('Foo')])}.
+     * <p>For example, if the type is {@code (string|Foo)}, the function call is {@code
+     * checkType(expr, [valueChecker('string'), classChecker('Foo')])}.
      *
      * @return the function call node or {@code null} if the type is not checked
      */
@@ -323,24 +314,19 @@ class RuntimeTypeCheck implements CompilerPass {
     }
 
     /**
-     * Creates a node which evaluates to a checker for the given type (which
-     * must not be a union). We have checkers for value types, classes and
-     * interfaces.
+     * Creates a node which evaluates to a checker for the given type (which must not be a union).
+     * We have checkers for value types, classes and interfaces.
      *
      * @return the checker node or {@code null} if the type is not checked
      */
     private Node createCheckerNode(JSType type) {
       if (type.isNullType()) {
         return jsCode("nullChecker");
-
       } else if (type.isBooleanValueType()
           || type.isNumberValueType()
           || type.isStringValueType()
           || type.isVoidType()) {
-        return IR.call(
-            jsCode("valueChecker"),
-            IR.string(type.toString()));
-
+        return IR.call(jsCode("valueChecker"), IR.string(type.toString()));
       } else if (type.isInstanceType()) {
         ObjectType objType = (ObjectType) type;
 
@@ -350,18 +336,14 @@ class RuntimeTypeCheck implements CompilerPass {
           return jsCode("objectChecker");
         }
 
-        StaticSourceFile sourceFile =
-            NodeUtil.getSourceFile(objType.getConstructor().getSource());
+        StaticSourceFile sourceFile = NodeUtil.getSourceFile(objType.getConstructor().getSource());
         if (sourceFile == null || sourceFile.isExtern()) {
-          return IR.call(
-                  jsCode("externClassChecker"),
-                  IR.string(refName));
+          return IR.call(jsCode("externClassChecker"), IR.string(refName));
         }
 
         return IR.call(
-                jsCode(objType.getConstructor().isInterface() ?
-                        "interfaceChecker" : "classChecker"),
-                IR.string(refName));
+            jsCode(objType.getConstructor().isInterface() ? "interfaceChecker" : "classChecker"),
+            IR.string(refName));
 
       } else if (type.isFunctionType()) {
         return IR.call(jsCode("valueChecker"), IR.string("function"));
@@ -386,7 +368,8 @@ class RuntimeTypeCheck implements CompilerPass {
     }
     checkState(
         NodeUtil.isValidQualifiedName(compiler.getFeatureSet(), logFunction),
-        "%s is not a valid qualified name", logFunction);
+        "%s is not a valid qualified name",
+        logFunction);
     Node logOverride =
         IR.exprResult(
             IR.assign(
@@ -398,7 +381,6 @@ class RuntimeTypeCheck implements CompilerPass {
   }
 
   private Node jsCode(String prop) {
-    return NodeUtil.newQName(
-        compiler, "$jscomp.typecheck." + prop);
+    return NodeUtil.newQName(compiler, "$jscomp.typecheck." + prop);
   }
 }

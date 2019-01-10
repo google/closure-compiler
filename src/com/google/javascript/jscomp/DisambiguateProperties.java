@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -49,6 +50,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 /**
  * DisambiguateProperties renames properties to disambiguate between unrelated
@@ -305,14 +307,13 @@ class DisambiguateProperties implements CompilerPass {
 
     /**
      * Schedule the node to potentially be renamed.
+     *
      * @param node the node to rename
-     * @param type the highest type in the prototype chain for which the
-     *     property is defined
-     * @return True if type was accepted without invalidation or if the property
-     *     was already invalidated.  False if this property was invalidated this
-     *     time.
+     * @return True if type was accepted without invalidation or if the property was already
+     *     invalidated. False if this property was invalidated this time.
      */
-    boolean scheduleRenaming(Node node, JSType type) {
+    boolean scheduleRenaming(Node node, JSType targetType) {
+      JSType type = processProperty(targetType);
       if (!skipRenaming) {
         if (invalidatingTypes.isInvalidating(type)) {
           invalidate();
@@ -321,6 +322,47 @@ class DisambiguateProperties implements CompilerPass {
         rootTypesByNode.put(node, type);
       }
       return true;
+    }
+
+    @Nullable
+    private JSType processProperty(JSType type) {
+      return processProperty(type, null);
+    }
+
+    /**
+     * Processes a property, adding it to the list of properties to rename.
+     *
+     * @param type a type this property is known to be on, not necessarily the highest type
+     * @param relatedType only for use inside this function, other callers should pass null.
+     * @return a representative type for the property reference, which will be the highest type on
+     *     the prototype chain of the provided type. In the case of a union type, it will be the
+     *     highest type on the prototype chain of one of the members of the union. Returns null if
+     *     the property is marked as not renamable or the given type is invalidated
+     */
+    @Nullable
+    private JSType processProperty(JSType type, @Nullable JSType relatedType) {
+      type = type.restrictByNotNullOrUndefined();
+      if (this.skipRenaming || invalidatingTypes.isInvalidating(type)) {
+        return null;
+      }
+      Iterable<? extends JSType> alternatives = getTypeAlternatives(type);
+      if (alternatives != null) {
+        JSType firstType = relatedType;
+        for (JSType subType : alternatives) {
+          JSType lastType = processProperty(subType, firstType);
+          if (firstType == null) {
+            firstType = lastType; // maybe null
+          }
+        }
+        return firstType;
+      } else {
+        JSType topType = getTypeWithProperty(this.name, type);
+        if (invalidatingTypes.isInvalidating(topType)) {
+          return null;
+        }
+        this.addType(type, relatedType);
+        return topType;
+      }
     }
   }
 
@@ -357,6 +399,8 @@ class DisambiguateProperties implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new FindRenameableProperties());
     // Do the actual renaming.
     renameProperties();
+    // Update any getters and setters we renamed.
+    GatherGettersAndSetterProperties.update(compiler, externs, root);
   }
 
   /** Returns the property for the given name, creating it if necessary. */
@@ -368,8 +412,8 @@ class DisambiguateProperties implements CompilerPass {
   }
 
   /**
-   * Finds all properties defined in the externs file and sets them as
-   * ineligible for renaming from the type on which they are defined.
+   * Finds all properties defined in the externs file and sets them as ineligible for renaming from
+   * the type on which they are defined.
    */
   private class FindExternProperties extends AbstractScopedCallback {
     @Override
@@ -379,51 +423,85 @@ class DisambiguateProperties implements CompilerPass {
         Node recv = n.getFirstChild();
         JSType recvType = getType(recv);
         Property prop = getProperty(n.getLastChild().getString());
-        // TODO(dimvar): invalidating here when isStructuralInterfacePrototype is true is
-        // kind of arbitrary. We should only do it when the @record is implicitly implemented.
-        if (invalidatingTypes.isInvalidating(recvType) || isStructuralInterfacePrototype(recv)) {
-          prop.invalidate();
-        } else if (!prop.skipRenaming) {
-          prop.addTypeToSkip(recvType);
-          // If this is a prototype property, then we want to skip assignments
-          // to the instance type as well.  These assignments are not usually
-          // seen in the extern code itself, so we must handle them here.
-          if ((recvType = getInstanceFromPrototype(recv)) != null) {
-            prop.getTypes().add(recvType);
-            prop.typesToSkip.add(recvType);
+        processExternsProperty(prop, recvType);
+      } else if (n.isClass()) {
+        JSType classType = n.getJSType();
+        JSType classInstanceType =
+            // the class type may not be a function type if it was in a cast, so treat it as unknown
+            classType.toMaybeFunctionType() != null
+                ? classType.toMaybeFunctionType().getPrototype()
+                : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+
+        for (Node member : NodeUtil.getClassMembers(n).children()) {
+          // possibilities are:
+          //   MEMBER_FUNCTION_DEF (could be static)
+          //   COMPUTED_PROP (ignore)
+          //   GETTER_DEF (could be static)
+          //   SETTER_DEF (could be static)
+          if (member.isComputedProp() || member.isQuotedString()) {
+            // TODO(b/119682883): consider handling symbols here
+            continue;
           }
+          String name = member.getString();
+          JSType ownerType = member.isStaticMember() ? classType : classInstanceType;
+
+          Property prop = getProperty(name);
+          processExternsProperty(prop, ownerType);
         }
       }
     }
 
-    private boolean isStructuralInterfacePrototype(Node n) {
-      return n.isGetProp()
-          && n.getLastChild().getString().equals("prototype")
-          && n.getFirstChild().getJSType().isStructuralInterface();
+    /**
+     * Marks an externs property as not-renamable, and possibly invalidates the property based on
+     * the type it is on
+     *
+     * @param ownerType The type of the object the property is on (e.g. `ns.a` for `ns.a.MyType;`)
+     */
+    private void processExternsProperty(Property prop, JSType ownerType) {
+      if (invalidatingTypes.isInvalidating(ownerType)
+          // TODO(b/119886075): invalidating here when isStructuralInterfacePrototype is true is
+          // kind of arbitrary. We should only do it when the @record is implicitly implemented.
+          || isStructuralInterfacePrototype(ownerType)) {
+        prop.invalidate();
+      } else if (!prop.skipRenaming) {
+        prop.addTypeToSkip(ownerType);
+        // If this is a prototype property, then we want to skip assignments
+        // to the instance type as well.  These assignments are not usually
+        // seen in the extern code itself, so we must handle them here.
+        JSType instanceType = getInstanceIfPrototype(ownerType);
+        if (instanceType != null) {
+          prop.getTypes().add(instanceType);
+          prop.typesToSkip.add(instanceType);
+        }
+      }
     }
   }
 
   /**
-   * Traverses the tree, building a map from field names to Nodes for all
-   * fields that can be renamed.
+   * Traverses the tree, building a map from field names to Nodes for all fields that can be
+   * renamed.
    */
   private class FindRenameableProperties extends AbstractScopedCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isGetProp()) {
-        handleGetProp(t, n);
+        handleGetProp(n);
       } else if (n.isObjectLit()) {
-        handleObjectLit(t, n);
+        handleObjectLit(n);
       } else if (n.isCall()) {
         handleCall(t, n);
+      } else if (n.isClass()) {
+        handleClass(n);
+      } else if (n.isObjectPattern()) {
+        handleObjectPattern(n);
       }
     }
 
-    private void handleGetProp(NodeTraversal t, Node n) {
+    private void handleGetProp(Node n) {
       String name = n.getLastChild().getString();
       JSType type = getType(n.getFirstChild());
       Property prop = getProperty(name);
-      if (!prop.scheduleRenaming(n.getLastChild(), processProperty(t, prop, type, null))
+      if (!prop.scheduleRenaming(n.getLastChild(), type)
           && propertiesToErrorFor.containsKey(name)) {
         String suggestion = "";
         if (type.isAllType() || type.isUnknownType()) {
@@ -447,7 +525,7 @@ class DisambiguateProperties implements CompilerPass {
       }
     }
 
-    private void handleObjectLit(NodeTraversal t, Node n) {
+    private void handleObjectLit(Node n) {
       // Object.defineProperties literals are handled at the CALL node.
       if (n.getParent().isCall() && NodeUtil.isObjectDefinePropertiesDefinition(n.getParent())) {
         return;
@@ -456,8 +534,9 @@ class DisambiguateProperties implements CompilerPass {
       for (Node child = n.getFirstChild();
           child != null;
           child = child.getNext()) {
-        // Maybe STRING, GET, SET
-        if (child.isQuotedString()) {
+        if (child.isQuotedString() || child.isComputedProp()) {
+          // Ignore properties that the compiler does not rename
+          //   var obj = {'quoted': 0, ['computed']: 1};
           continue;
         }
 
@@ -465,7 +544,7 @@ class DisambiguateProperties implements CompilerPass {
         String name = child.getString();
         JSType objlitType = getType(n);
         Property prop = getProperty(name);
-        if (!prop.scheduleRenaming(child, processProperty(t, prop, objlitType, null))) {
+        if (!prop.scheduleRenaming(child, objlitType)) {
           // TODO(user): It doesn't look like the user can do much in this
           // case right now.
           if (propertiesToErrorFor.containsKey(name)) {
@@ -476,6 +555,7 @@ class DisambiguateProperties implements CompilerPass {
       }
     }
 
+    /** Examines calls in case they are Object.defineProperties calls */
     private void handleCall(NodeTraversal t, Node call) {
       Node target = call.getFirstChild();
       if (!target.isQualifiedName()) {
@@ -485,14 +565,106 @@ class DisambiguateProperties implements CompilerPass {
       String functionName = target.getOriginalQualifiedName();
       if (functionName != null
           && compiler.getCodingConvention().isPropertyRenameFunction(functionName)) {
-        handlePropertyRenameFunctionCall(t, call, functionName);
+        handlePropertyRenameFunctionCall(call, functionName);
       } else if (NodeUtil.isObjectDefinePropertiesDefinition(call)) {
-        handleObjectDefineProperties(t, call);
+        handleObjectDefineProperties(call);
       }
     }
 
-    private void handlePropertyRenameFunctionCall(
-        NodeTraversal t, Node call, String renameFunctionName) {
+    private void handleClass(Node classNode) {
+      JSType classType = classNode.getJSType();
+      JSType classInstanceType =
+          // the class type may not be a function type if it was in a cast, so treat it as unknown
+          classType.toMaybeFunctionType() != null
+              ? classType.toMaybeFunctionType().getInstanceType()
+              : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+
+      for (Node member : NodeUtil.getClassMembers(classNode).children()) {
+        // possibilities are:
+        //   MEMBER_FUNCTION_DEF (could be static)
+        //   COMPUTED_PROP (ignore)
+        //   GETTER_DEF (could be static)
+        //   SETTER_DEF (could be static)
+        if (member.isComputedProp() || member.isQuotedString()) {
+          // TODO(b/119682883): consider handling symbols here
+          continue;
+        }
+        String name = member.getString();
+        Property prop = getProperty(name);
+        JSType ownerType = member.isStaticMember() ? classType : classInstanceType;
+
+        if (!prop.scheduleRenaming(member, ownerType) && propertiesToErrorFor.containsKey(name)) {
+          String suggestion = "";
+          List<String> errors = new ArrayList<>();
+          printErrorLocations(errors, ownerType);
+          if (!errors.isEmpty()) {
+            suggestion = "Consider fixing errors for the following types:\n";
+            suggestion += Joiner.on("\n").join(errors);
+          }
+          compiler.report(
+              JSError.make(
+                  member,
+                  propertiesToErrorFor.get(name),
+                  Warnings.INVALIDATION,
+                  name,
+                  String.valueOf(ownerType),
+                  member.toString(),
+                  suggestion));
+        }
+      }
+    }
+
+    private void handleObjectPattern(Node pattern) {
+      JSType objectPatternType = checkNotNull(pattern.getJSType());
+
+      for (DestructuredTarget target :
+          DestructuredTarget.createAllNonEmptyTargetsInPattern(
+              compiler.getTypeRegistry(), objectPatternType, pattern)) {
+        if (!target.hasStringKey()) {
+          // ignore computed properties and rest
+          // TODO(b/119682883): consider handling symbols here
+          continue;
+        }
+        Node stringKey = target.getStringKey();
+        if (stringKey.isQuotedString()) {
+          // Never rename quoted property accesses, e.g.
+          //   const {'prop': localVar} = someObj;
+          continue;
+        }
+        String name = stringKey.getString();
+        Property prop = getProperty(name);
+        if (!prop.scheduleRenaming(stringKey, objectPatternType)
+            && propertiesToErrorFor.containsKey(name)) {
+          String suggestion = "";
+          if (objectPatternType.isAllType() || objectPatternType.isUnknownType()) {
+            String qName = target.getNode().getQualifiedName();
+            if (qName != null) {
+              suggestion = "Consider tightening the type assigned to " + qName;
+            } else {
+              suggestion = "Consider tightening the type assigned to " + target.getNode();
+            }
+          } else {
+            List<String> errors = new ArrayList<>();
+            printErrorLocations(errors, objectPatternType);
+            if (!errors.isEmpty()) {
+              suggestion = "Consider fixing errors for the following types:\n";
+              suggestion += Joiner.on("\n").join(errors);
+            }
+          }
+          compiler.report(
+              JSError.make(
+                  stringKey,
+                  propertiesToErrorFor.get(name),
+                  Warnings.INVALIDATION,
+                  name,
+                  String.valueOf(objectPatternType),
+                  stringKey.toString(),
+                  suggestion));
+        }
+      }
+    }
+
+    private void handlePropertyRenameFunctionCall(Node call, String renameFunctionName) {
       int childCount = call.getChildCount();
       if (childCount != 2 && childCount != 3) {
         compiler.report(
@@ -529,7 +701,7 @@ class DisambiguateProperties implements CompilerPass {
       Node obj = call.getChildAtIndex(2);
       JSType type = getType(obj);
       Property prop = getProperty(propName);
-      if (!prop.scheduleRenaming(call.getSecondChild(), processProperty(t, prop, type, null))
+      if (!prop.scheduleRenaming(call.getSecondChild(), type)
           && propertiesToErrorFor.containsKey(propName)) {
         String suggestion = "";
         if (type.isAllType() || type.isUnknownType()) {
@@ -560,7 +732,7 @@ class DisambiguateProperties implements CompilerPass {
       }
     }
 
-    private void handleObjectDefineProperties(NodeTraversal t, Node call) {
+    private void handleObjectDefineProperties(Node call) {
       Node typeObj = call.getSecondChild();
       JSType type = getType(typeObj);
       Node objectLiteral = typeObj.getNext();
@@ -575,7 +747,7 @@ class DisambiguateProperties implements CompilerPass {
 
         String propName = key.getString();
         Property prop = getProperty(propName);
-        prop.scheduleRenaming(key, processProperty(t, prop, type, null));
+        prop.scheduleRenaming(key, type);
       }
     }
 
@@ -597,39 +769,6 @@ class DisambiguateProperties implements CompilerPass {
               .limit(MAX_INVALIDATION_WARNINGS_PER_PROPERTY);
       for (JSError error : invalidations) {
         errors.add(t + " at " + error.sourceName + ":" + error.lineNumber);
-      }
-    }
-
-    /**
-     * Processes a property, adding it to the list of properties to rename.
-     * @return a representative type for the property reference, which will be
-     *   the highest type on the prototype chain of the provided type.  In the
-     *   case of a union type, it will be the highest type on the prototype
-     *   chain of one of the members of the union.
-     */
-    private JSType processProperty(
-        NodeTraversal t, Property prop, JSType type, JSType relatedType) {
-      type = type.restrictByNotNullOrUndefined();
-      if (prop.skipRenaming || invalidatingTypes.isInvalidating(type)) {
-        return null;
-      }
-      Iterable<? extends JSType> alternatives = getTypeAlternatives(type);
-      if (alternatives != null) {
-        JSType firstType = relatedType;
-        for (JSType subType : alternatives) {
-          JSType lastType = processProperty(t, prop, subType, firstType);
-          if (lastType != null) {
-            firstType = firstType == null ? lastType : firstType;
-          }
-        }
-        return firstType;
-      } else {
-        JSType topType = getTypeWithProperty(prop.name, type);
-        if (invalidatingTypes.isInvalidating(topType)) {
-          return null;
-        }
-        prop.addType(type, relatedType);
-        return topType;
       }
     }
   }
@@ -774,7 +913,7 @@ class DisambiguateProperties implements CompilerPass {
       types.add(skipType);
       ObjectType objSkipType = skipType.toMaybeObjectType();
       if (objSkipType != null) {
-        skipType = objSkipType.getPrototypeObject();
+        skipType = objSkipType.getImplicitPrototype();
       } else {
         break;
       }
@@ -859,14 +998,14 @@ class DisambiguateProperties implements CompilerPass {
         && objType.getConstructor().isInterface()) {
       ObjectType topInterface = objType.getTopDefiningInterface(field);
       if (topInterface != null && topInterface.getConstructor() != null) {
-        foundType = topInterface.getPrototypeObject();
+        foundType = topInterface.getImplicitPrototype();
       }
     } else {
-      while (objType != null && !Objects.equals(objType.getPrototypeObject(), objType)) {
+      while (objType != null && !Objects.equals(objType.getImplicitPrototype(), objType)) {
         if (objType.hasOwnProperty(field)) {
           foundType = objType;
         }
-        objType = objType.getPrototypeObject();
+        objType = objType.getImplicitPrototype();
       }
     }
 
@@ -891,33 +1030,48 @@ class DisambiguateProperties implements CompilerPass {
     // Since disambiguation just looks at names, we must return a uniquely named type rather
     // than an "equivalent" type. In particular, we must manually unwrap named types
     // so that the returned type has the correct name.
-    if (foundType != null && foundType.isLegacyNamedType()) {
-      foundType = foundType.getLegacyResolvedType().toMaybeObjectType();
+    if (foundType != null && foundType.isNamedType()) {
+      foundType = foundType.toMaybeNamedType().getReferencedType().toMaybeObjectType();
     }
 
     gtwpCachePut(field, type, foundType == null ? bottomObjectType : foundType);
     return foundType;
   }
 
-  private JSType getInstanceFromPrototype(Node n) {
-    if (n.isGetProp() && n.getLastChild().getString().equals("prototype")) {
-      FunctionType f = n.getFirstChild().getJSType().toMaybeFunctionType();
-      if (f != null && f.hasInstanceType()) {
-        return f.getInstanceType();
+  private static boolean isStructuralInterfacePrototype(JSType type) {
+    if (!type.isFunctionPrototypeType()) {
+      return false;
+    }
+    FunctionType constructor = type.toObjectType().getOwnerFunction();
+    return constructor != null && constructor.isStructuralInterface();
+  }
+
+  /**
+   * Returns the corresponding instance if `maybePrototype` is a prototype of a constructor,
+   * otherwise null
+   */
+  @Nullable
+  private static JSType getInstanceIfPrototype(JSType maybePrototype) {
+    if (maybePrototype.isFunctionPrototypeType()) {
+      FunctionType constructor = maybePrototype.toObjectType().getOwnerFunction();
+      if (constructor != null) {
+        if (!constructor.hasInstanceType()) {
+          // this can happen when adding to the prototype of a non-constructor function
+          return null;
+        }
+        return constructor.getInstanceType();
       }
     }
     return null;
   }
 
   /**
-   * Records that this property could be referenced from any interface that
-   * this type inherits from.
+   * Records that this property could be referenced from any interface that this type inherits from.
    *
-   * If the property p is defined only on a subtype of constructor, then this
-   * method has no effect. But we tried modifying getTypeWithProperty to tell us
-   * when the returned type is a subtype, and then skip those calls to
-   * recordInterface, and there was no speed-up.
-   * And it made the code harder to understand, so we don't do it.
+   * <p>If the property p is defined only on a subtype of constructor, then this method has no
+   * effect. But we tried modifying getTypeWithProperty to tell us when the returned type is a
+   * subtype, and then skip those calls to recordInterface, and there was no speed-up. And it made
+   * the code harder to understand, so we don't do it.
    */
   private void recordInterfaces(FunctionType constructor, JSType relatedType, Property p) {
     Iterable<ObjectType> interfaces = ancestorInterfaces.get(constructor);

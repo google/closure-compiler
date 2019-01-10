@@ -156,21 +156,6 @@ public class ComposeWarningsGuard extends WarningsGuard {
     return false;
   }
 
-  @Override
-  public DiagnosticGroupState enablesExplicitly(DiagnosticGroup group) {
-    for (WarningsGuard guard : guards) {
-      switch (guard.enablesExplicitly(group)) {
-        case ON:
-          return DiagnosticGroupState.ON;
-        case OFF:
-          return DiagnosticGroupState.OFF;
-        case UNSPECIFIED:
-          continue;
-      }
-    }
-    return DiagnosticGroupState.UNSPECIFIED;
-  }
-
   List<WarningsGuard> getGuards() {
     return Collections.unmodifiableList(new ArrayList<>(guards));
   }

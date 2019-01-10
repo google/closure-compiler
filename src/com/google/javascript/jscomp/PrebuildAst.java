@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -42,7 +43,7 @@ class PrebuildAst {
     this.numParallelThreads = numParalleThreads;
   }
 
-  void prebuild(List<CompilerInput> inputList) {
+  void prebuild(Iterable<CompilerInput> allInputs) {
     ThreadFactory threadFactory = new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
@@ -60,9 +61,9 @@ class PrebuildAst {
         new LinkedBlockingQueue<Runnable>(),
         threadFactory);
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(poolExecutor);
-    List<ListenableFuture<?>> futureList = new ArrayList<>(inputList.size());
+    List<ListenableFuture<?>> futureList = new ArrayList<>(Iterables.size(allInputs));
     // TODO(moz): Support canceling all parsing on the first halting error
-    for (final CompilerInput input : inputList) {
+    for (final CompilerInput input : allInputs) {
       futureList.add(executorService.submit(new Runnable() {
         @Override
         public void run() {

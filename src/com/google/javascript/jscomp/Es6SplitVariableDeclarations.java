@@ -42,7 +42,7 @@ public final class Es6SplitVariableDeclarations extends
     NodeTraversal.AbstractPostOrderCallback implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private static final FeatureSet transpiledFeatures =
-      FeatureSet.BARE_MINIMUM.with(Feature.DESTRUCTURING);
+      FeatureSet.BARE_MINIMUM.with(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING);
 
   public Es6SplitVariableDeclarations(AbstractCompiler compiler) {
     this.compiler = compiler;

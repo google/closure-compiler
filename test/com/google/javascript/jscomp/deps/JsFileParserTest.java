@@ -25,14 +25,18 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link JsFileParser}.
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
-public final class JsFileParserTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class JsFileParserTest {
 
   JsFileParser parser;
   private ErrorManager errorManager;
@@ -40,7 +44,7 @@ public final class JsFileParserTest extends TestCase {
   private static final String SRC_PATH = "a";
   private static final String CLOSURE_PATH = "b";
 
-  @Override
+  @Before
   public void setUp() {
     errorManager = new PrintStreamErrorManager(System.err);
     parser = new JsFileParser(errorManager);
@@ -49,10 +53,14 @@ public final class JsFileParserTest extends TestCase {
 
   /**
    * Tests:
-   *  -Parsing of comments,
-   *  -Parsing of different styles of quotes,
-   *  -Correct recording of what was parsed.
+   *
+   * <ul>
+   *   <li>Parsing of comments,
+   *   <li>Parsing of different styles of quotes,
+   *   <li>Correct recording of what was parsed.
+   * </ul>
    */
+  @Test
   public void testParseFile() {
     String contents = "/*"
       + "goog.provide('no1');*//*\n"
@@ -77,10 +85,8 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
-  /**
-   * Tests:
-   *  -Correct recording of what was parsed.
-   */
+  /** Tests correct recording of what was parsed. */
+  @Test
   public void testParseFile2() {
     String contents = ""
       + "goog.module('yes1');\n"
@@ -104,10 +110,8 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
-  /**
-   * Tests:
-   *  -Correct recording of what was parsed.
-   */
+  /** Tests correct recording of what was parsed. */
+  @Test
   public void testParseFile3() {
     String contents = ""
       + "goog.module('yes1');\n"
@@ -131,7 +135,8 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
-  public void testParseGoogModuleWithWeakDeps() {
+  @Test
+  public void testParseGoogModuleWithRequireType() {
     String contents =
         ""
             + "goog.module('yes1');\n"
@@ -142,7 +147,7 @@ public final class JsFileParserTest extends TestCase {
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
             .setProvides(ImmutableList.of("yes1"))
-            .setWeakRequires(ImmutableList.of("yes2", "a.b.C", "a.b.d"))
+            .setTypeRequires(ImmutableList.of("yes2", "a.b.C", "a.b.d"))
             .setLoadFlags(ImmutableMap.of("module", "goog"))
             .build();
 
@@ -151,13 +156,14 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
-  public void testParseScriptWithWeakDeps() {
+  @Test
+  public void testParseScriptWithRequireType() {
     String contents = "" + "goog.provide('yes1');\n" + "goog.requireType('a.b.C');";
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
             .setProvides(ImmutableList.of("yes1"))
-            .setWeakRequires(ImmutableList.of("a.b.C"))
+            .setTypeRequires(ImmutableList.of("a.b.C"))
             .build();
 
     DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
@@ -165,10 +171,8 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
-  /**
-   * Tests:
-   *  -Correct recording of what was parsed.
-   */
+  /** Tests correct recording of what was parsed. */
+  @Test
   public void testParseWrappedGoogModule() {
     String contents = ""
       + "goog.loadModule(function(){\"use strict\";goog.module('yes1');\n"
@@ -194,10 +198,8 @@ public final class JsFileParserTest extends TestCase {
 
   // TODO(sdh): Add a test for import with .js suffix once #1897 is fixed.
 
-  /**
-   * Tests:
-   *  -ES6 modules parsed correctly, particularly the various formats.
-   */
+  /** Tests ES6 modules parsed correctly, particularly the various formats. */
+  @Test
   public void testParseEs6Module() {
     String contents = ""
         + "import def, {yes2} from './yes2';\n"
@@ -223,10 +225,8 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
-  /**
-   * Tests:
-   *  -Relative paths resolved correctly.
-   */
+  /** Tests relative paths resolved correctly. */
+  @Test
   public void testParseEs6Module2() {
     String contents = ""
         + "import './x';\n"
@@ -250,10 +250,8 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
-  /**
-   * Tests:
-   *  -Handles goog.require and import 'goog:...'.
-   */
+  /** Tests handles goog.require and import 'goog:...'. */
+  @Test
   public void testParseEs6Module3() {
     String contents = ""
         + "import 'goog:foo.bar.baz';\n"
@@ -272,10 +270,8 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
-  /**
-   * Tests:
-   *  -setModuleLoader taken into account
-   */
+  /** Tests setModuleLoader taken into account */
+  @Test
   public void testParseEs6Module4() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -315,6 +311,7 @@ public final class JsFileParserTest extends TestCase {
   // TODO(johnplaisted): This should eventually be an error. For now people are relying on this
   // behavior for interop / ordering. Until we have official channels for these allow this behavior,
   // but don't encourage it.
+  @Test
   public void testParseEs6ModuleWithGoogProvide() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -342,6 +339,7 @@ public final class JsFileParserTest extends TestCase {
     assertThat(errorManager.getWarnings()[0].getType()).isEqualTo(ModuleLoader.MODULE_CONFLICT);
   }
 
+  @Test
   public void testEs6ModuleWithDeclareNamespace() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -364,6 +362,27 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  @Test
+  public void testEs6ModuleWithDeclareModuleId() {
+    ModuleLoader loader =
+        new ModuleLoader(
+            null, ImmutableList.of("/foo"), ImmutableList.of(), BrowserModuleResolver.FACTORY);
+
+    String contents = "goog.declareModuleId('my.namespace');\nexport {};";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder("../bar/baz.js", "/foo/js/bar/baz.js")
+            .setProvides(ImmutableList.of("my.namespace", "module$js$bar$baz"))
+            .setLoadFlags(ImmutableMap.of("module", "es6"))
+            .build();
+
+    DependencyInfo result =
+        parser.setModuleLoader(loader).parseFile("/foo/js/bar/baz.js", "../bar/baz.js", contents);
+
+    assertDeps(expected, result);
+  }
+
+  @Test
   public void testEs6ModuleWithBrowserTransformedPrefixResolver() {
     ModuleLoader loader =
         new ModuleLoader(
@@ -388,10 +407,8 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
-  /**
-   * Tests:
-   *  -Shortcut mode doesn't stop at setTestOnly() or declareLegacyNamespace().
-   */
+  /** Tests shortcut mode doesn't stop at setTestOnly() or declareLegacyNamespace(). */
+  @Test
   public void testNoShortcutForCommonModuleModifiers() {
     String contents = ""
       + "goog.module('yes1');\n"
@@ -414,6 +431,7 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  @Test
   public void testMultiplePerLine() {
     String contents = "goog.provide('yes1');goog.provide('yes2');/*"
         + "goog.provide('no1');*/goog.provide('yes3');//goog.provide('no2');";
@@ -428,6 +446,7 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  @Test
   public void testShortcutMode1() {
     // For efficiency reasons, we stop reading after the ctor.
     String contents = " // hi ! \n /* this is a comment */ "
@@ -445,6 +464,7 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  @Test
   public void testShortcutMode2() {
     String contents = "/** goog.provide('no1'); \n" +
         " * goog.provide('no2');\n */\n"
@@ -459,6 +479,7 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  @Test
   public void testShortcutMode3() {
     String contents = "/**\n" +
         " * goog.provide('no1');\n */\n"
@@ -473,11 +494,9 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  @Test
   public void testIncludeGoog1() {
-    String contents = "/**\n" +
-        " * the first constant in base.js\n" +
-        " */\n" +
-        "var COMPILED = false;\n";
+    String contents = "/**\n" + " * @provideGoog\n" + " */\n";
 
     DependencyInfo expected = SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
         .setProvides(ImmutableList.of("goog"))
@@ -488,6 +507,7 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  @Test
   public void testIncludeGoog2() {
     String contents = "goog.require('bar');";
 
@@ -501,6 +521,7 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  @Test
   public void testIncludeGoog3() {
     // This is pretending to provide goog, but it really doesn't.
     String contents = "goog.provide('x');\n" +
@@ -520,6 +541,7 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  @Test
   public void testIncludeGoog4() {
     String contents = "goog.addDependency('foo', [], []);\n";
 
@@ -533,6 +555,7 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  @Test
   public void testParseProvidesAndWrappedGoogModule() {
     String contents =
         ""
@@ -558,6 +581,7 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  @Test
   public void testEs6AndWrappedGoogModuleIsError() {
     String contents =
         "goog.loadModule(function(){\"use strict\";goog.module('yes1');});\n" + "export {};";

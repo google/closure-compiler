@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNEXPECTED_STRING_LITERAL_ERROR;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNKNOWN_SYMBOL_WARNING;
 
@@ -26,11 +27,16 @@ import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for ReplaceCssNames.java.
  *
  */
+@RunWith(JUnit4.class)
 public final class ReplaceCssNamesTest extends CompilerTestCase {
   /** Whether to pass the map of replacements as opposed to null */
   boolean useReplacementMap;
@@ -96,7 +102,8 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
     cssNames = new HashMap<>();
@@ -111,6 +118,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testDoNotUseReplacementMap() {
     useReplacementMap = false;
     test("var x = goog.getCssName('goog-footer-active')",
@@ -131,6 +139,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     assertThat(cssNames).isEqualTo(expected);
   }
 
+  @Test
   public void testOneArgWithUnknownStringLiterals() {
     test(
         "var x = goog.getCssName('unknown')",
@@ -162,6 +171,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     assertThat(cssNames).isEqualTo(expected);
   }
 
+  @Test
   public void testOneArgWithSimpleStringLiterals() {
     oneArgWithSimpleStringLiterals();
   }
@@ -185,10 +195,12 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     assertThat(cssNames).isEqualTo(expected);
   }
 
+  @Test
   public void testOneArgWithCompositeClassNames() {
     oneArgWithCompositeClassNames();
   }
 
+  @Test
   public void testOneArgWithCompositeClassNamesFull() {
     renamingMap = getFullMap();
 
@@ -202,6 +214,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
          "var x = 'k'");
   }
 
+  @Test
   public void testOneArgWithCompositeClassNamesWithUnknownParts() {
     test(
         "var x = goog.getCssName('goog-header-active')",
@@ -217,6 +230,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         warning(UNKNOWN_SYMBOL_WARNING));
   }
 
+  @Test
   public void testTwoArgsWithStringLiterals() {
     testError("var x = goog.getCssName('header', 'active')", UNEXPECTED_STRING_LITERAL_ERROR);
     testError("el.className = goog.getCssName('footer', window)",
@@ -227,6 +241,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         UNEXPECTED_STRING_LITERAL_ERROR);
   }
 
+  @Test
   public void testTwoArsWithVariableFirstArg() {
     test("var x = goog.getCssName(baseClass, 'active')",
          "var x = baseClass + '-a'");
@@ -236,6 +251,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
          "setClass(BASE_CLASS + '-d')");
   }
 
+  @Test
   public void testTwoArgsWithVariableFirstArgFull() {
     renamingMap = getFullMap();
 
@@ -243,10 +259,12 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
          "var x = baseClass + '-m'");
   }
 
+  @Test
   public void testZeroArguments() {
     testError("goog.getCssName()", ReplaceCssNames.INVALID_NUM_ARGUMENTS_ERROR);
   }
 
+  @Test
   public void testManyArguments() {
     testError("goog.getCssName('a', 'b', 'c')", ReplaceCssNames.INVALID_NUM_ARGUMENTS_ERROR);
     testError("goog.getCssName('a', 'b', 'c', 'd')", ReplaceCssNames.INVALID_NUM_ARGUMENTS_ERROR);
@@ -254,6 +272,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         ReplaceCssNames.INVALID_NUM_ARGUMENTS_ERROR);
   }
 
+  @Test
   public void testNonStringArgument() {
     testError("goog.getCssName(window);", ReplaceCssNames.STRING_LITERAL_EXPECTED_ERROR);
     testError("goog.getCssName(555);", ReplaceCssNames.STRING_LITERAL_EXPECTED_ERROR);
@@ -272,6 +291,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     testError("goog.getCssName('foo', 3);", ReplaceCssNames.STRING_LITERAL_EXPECTED_ERROR);
   }
 
+  @Test
   public void testNoSymbolMapStripsCallAndDoesntIssueWarnings() {
     String input = "[goog.getCssName('test'), goog.getCssName(base, 'active')]";
     Compiler compiler = new Compiler();
@@ -287,11 +307,12 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     useReplacementMap = false;
     ReplaceCssNames replacer = new ReplaceCssNames(compiler, null, null);
     replacer.process(null, root);
-    assertEquals("[\"test\",base+\"-active\"]", compiler.toSource(root));
-    assertEquals("There should be no errors", 0, errorMan.getErrorCount());
-    assertEquals("There should be no warnings", 0, errorMan.getWarningCount());
+    assertThat(compiler.toSource(root)).isEqualTo("[\"test\",base+\"-active\"]");
+    assertWithMessage("There should be no errors").that(errorMan.getErrorCount()).isEqualTo(0);
+    assertWithMessage("There should be no warnings").that(errorMan.getWarningCount()).isEqualTo(0);
   }
 
+  @Test
   public void testWhitelistByPart() {
     whitelist = ImmutableSet.of("goog", "elephant");
     test("var x = goog.getCssName('goog')",
@@ -303,6 +324,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
          "var x = 'g-e'");
   }
 
+  @Test
   public void testWhitelistByWhole() {
     whitelist = ImmutableSet.of("long-prefix");
     renamingMap = getFullMap();
@@ -310,6 +332,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
          "var x = 'long-prefix'");
   }
 
+  @Test
   public void testWhitelistWithDashes() {
     whitelist = ImmutableSet.of("goog-elephant");
     test("var x = goog.getCssName('goog')",

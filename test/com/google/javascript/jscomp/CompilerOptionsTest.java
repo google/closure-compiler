@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -25,15 +27,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CompilerOptions}.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class CompilerOptionsTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class CompilerOptionsTest {
 
-  public void testDefines() throws Exception {
+  @Test
+  public void testDefines() {
     CompilerOptions options = new CompilerOptions();
     options.setDefineToBooleanLiteral("trueVar", true);
     options.setDefineToBooleanLiteral("falseVar", false);
@@ -48,25 +55,28 @@ public final class CompilerOptionsTest extends TestCase {
   }
 
   public void assertEquivalent(Node a, Node b) {
-    assertTrue(a.isEquivalentTo(b));
+    assertThat(a.isEquivalentTo(b)).isTrue();
   }
 
+  @Test
   public void testLanguageModeFromString() {
-    assertEquals(LanguageMode.ECMASCRIPT3, LanguageMode.fromString("ECMASCRIPT3"));
+    assertThat(LanguageMode.fromString("ECMASCRIPT3")).isEqualTo(LanguageMode.ECMASCRIPT3);
     // Whitespace should be trimmed, characters converted to uppercase and leading 'ES' replaced
     // with 'ECMASCRIPT'.
-    assertEquals(LanguageMode.ECMASCRIPT3, LanguageMode.fromString("  es3  "));
-    assertNull(LanguageMode.fromString("junk"));
+    assertThat(LanguageMode.fromString("  es3  ")).isEqualTo(LanguageMode.ECMASCRIPT3);
+    assertThat(LanguageMode.fromString("junk")).isNull();
   }
 
+  @Test
   public void testEmitUseStrictWorksInEs3() {
     CompilerOptions options = new CompilerOptions();
     options.setEmitUseStrict(true);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
 
-    assertTrue(options.shouldEmitUseStrict());
+    assertThat(options.shouldEmitUseStrict()).isTrue();
   }
 
+  @Test
   public void testSerialization() throws Exception {
     CompilerOptions options = new CompilerOptions();
     options.setDefineToBooleanLiteral("trueVar", true);
@@ -89,10 +99,10 @@ public final class CompilerOptionsTest extends TestCase {
     assertEquivalent(new Node(Token.FALSE), actual.get("falseVar"));
     assertEquivalent(Node.newNumber(3), actual.get("threeVar"));
     assertEquivalent(Node.newString("str"), actual.get("strVar"));
-    assertEquals(new HashSet<>(Arrays.asList("AliasA", "AliasB")), options.aliasableStrings);
-    assertFalse(options.shouldAmbiguateProperties());
-    assertTrue(options.optimizeArgumentsArray);
-    assertEquals(StandardCharsets.US_ASCII, options.getOutputCharset());
+    assertThat(options.aliasableStrings)
+        .isEqualTo(new HashSet<>(Arrays.asList("AliasA", "AliasB")));
+    assertThat(options.shouldAmbiguateProperties()).isFalse();
+    assertThat(options.optimizeArgumentsArray).isTrue();
+    assertThat(options.getOutputCharset()).isEqualTo(StandardCharsets.US_ASCII);
   }
-
 }

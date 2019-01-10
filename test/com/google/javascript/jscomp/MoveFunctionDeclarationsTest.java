@@ -16,10 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
  * Tests for {@link MoveFunctionDeclarations}
  *
  */
+@RunWith(JUnit4.class)
 public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
 
   @Override
@@ -27,20 +32,24 @@ public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
     return new MoveFunctionDeclarations(compiler);
   }
 
+  @Test
   public void testFunctionDeclarations() {
     test("a; function f(){} function g(){}", "var f = function(){}; var g = function(){}; a;");
   }
 
+  @Test
   public void testFunctionDeclarationsInModule() {
     test(createModules("a; function f(){} function g(){}"),
          new String[] { "var f = function(){}; var g = function(){}; a" });
   }
 
+  @Test
   public void testGeneratorDeclarations() {
     test(
         "a; function *f(){} function *g(){}", "var f = function* (){}; var g = function* (){}; a;");
   }
 
+  @Test
   public void testFunctionDeclarationsInEs6Module() {
     // NOTE: Currently this pass always runs after module transpilation.
     // No current uses of this pass would benefit from ES6 module support:
@@ -49,10 +58,12 @@ public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
     testSame("a; function f(){} function g(){} export default 5;");
   }
 
+  @Test
   public void testFunctionsExpression() {
     testSame("a; f = function(){}");
   }
 
+  @Test
   public void testNoMoveDeepFunctionDeclarations() {
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testSame("a; if (a) function f(){};");

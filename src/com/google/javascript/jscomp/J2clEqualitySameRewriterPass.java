@@ -17,17 +17,17 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 
 /** An optimization pass to re-write J2CL Equality.$same. */
 public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
 
-  /** Whether to use "==" or "===". */
-  private static enum Eq {
-    DOUBLE,
-    TRIPLE
-  }
+  private final boolean useTypes;
+  private boolean shouldRunJ2clPasses;
 
-  private boolean shouldRunJ2clPasses = false;
+  J2clEqualitySameRewriterPass(boolean useTypes) {
+    this.useTypes = useTypes;
+  }
 
   @Override
   void beginTraversal(AbstractCompiler compiler) {
@@ -56,26 +56,75 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
 
   private Node trySubstituteEqualitySame(Node callNode) {
     Node firstExpr = callNode.getSecondChild();
+    NodeValue firstExprValue = getKnownLiteralValue(firstExpr);
     Node secondExpr = callNode.getLastChild();
+    NodeValue secondExprValue = getKnownLiteralValue(secondExpr);
 
-    if (NodeUtil.isNullOrUndefined(firstExpr) || NodeUtil.isNullOrUndefined(secondExpr)) {
-      // At least one side is null or undefined so no coercion danger.
-      return rewriteToEq(firstExpr, secondExpr, Eq.DOUBLE);
+    if (firstExprValue == NodeValue.UNKNOWN && secondExprValue == NodeValue.UNKNOWN) {
+      return callNode;
     }
 
-    if (NodeUtil.isLiteralValue(firstExpr, true) || NodeUtil.isLiteralValue(secondExpr, true)) {
-      // There is a coercion danger but since at least one side is not null, we can use === that
-      // will not trigger any coercion.
-      return rewriteToEq(firstExpr, secondExpr, Eq.TRIPLE);
+    if (firstExprValue == NodeValue.NULL_OR_UNDEFINED) {
+      return rewriteNullCheck(secondExpr, firstExpr);
     }
 
-    return callNode;
+    if (secondExprValue == NodeValue.NULL_OR_UNDEFINED) {
+      return rewriteNullCheck(firstExpr, secondExpr);
+    }
+
+    // There is a coercion danger (e.g. 0 == null) but since at least one side is not null, we can
+    // safely use === that will not trigger any coercion.
+    return rewriteAsStrictEq(firstExpr, secondExpr);
   }
 
-  private Node rewriteToEq(Node firstExpr, Node secondExpr, Eq eq) {
+  private Node rewriteNullCheck(Node expr, Node nullExpression) {
+    expr.detach();
+    nullExpression.detach();
+    if (useTypes && canOnlyBeObject(expr)) {
+      return IR.not(expr);
+    }
+    // At least one side is null or undefined so no coercion danger with ==.
+    return IR.eq(expr, nullExpression);
+  }
+
+  private boolean canOnlyBeObject(Node n) {
+    JSType type = n.getJSType();
+    if (type == null) {
+      return false;
+    }
+    type = type.restrictByNotNullOrUndefined();
+    return !type.isUnknownType() && !type.isEmptyType() && !type.isAllType() && type.isObjectType();
+  }
+
+  private Node rewriteAsStrictEq(Node firstExpr, Node secondExpr) {
     firstExpr.detach();
     secondExpr.detach();
-    return eq == Eq.DOUBLE ? IR.eq(firstExpr, secondExpr) : IR.sheq(firstExpr, secondExpr);
+    return IR.sheq(firstExpr, secondExpr);
+  }
+
+  private enum NodeValue {
+    NULL_OR_UNDEFINED,
+    NON_NULL,
+    UNKNOWN,
+  }
+
+  private static NodeValue getKnownLiteralValue(Node n) {
+    switch (NodeUtil.getKnownValueType(n)) {
+      case VOID:
+        return NodeUtil.canBeSideEffected(n) ? NodeValue.UNKNOWN : NodeValue.NULL_OR_UNDEFINED;
+      case NULL:
+        return NodeValue.NULL_OR_UNDEFINED;
+
+      case NUMBER:
+      case STRING:
+      case BOOLEAN:
+      case OBJECT:
+        return NodeValue.NON_NULL;
+
+      case UNDETERMINED:
+        return NodeValue.UNKNOWN;
+    }
+    throw new AssertionError("Unknown ValueType");
   }
 
   private static boolean isEqualitySameCall(Node node) {

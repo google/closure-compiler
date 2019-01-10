@@ -40,10 +40,6 @@ public final class JSError implements Serializable {
   /** Line number of the source */
   public final int lineNumber;
 
-  /** @deprecated Use #getDefaultLevel */
-  @Deprecated
-  public final CheckLevel level;
-
   private final CheckLevel defaultLevel;
 
   // character number
@@ -137,7 +133,6 @@ public final class JSError implements Serializable {
     this.charno = charno;
     this.sourceName = sourceName;
     this.defaultLevel = level == null ? type.level : level;
-    this.level = level == null ? type.level : level;
   }
 
   /**

@@ -26,242 +26,249 @@
  * @see http://chaijs.com/
  */
 
+/** @const */
+var chai = {};
+
+/**
+ * @constructor
+ * @param {*} obj
+ * @param {string=} msg
+ * @param {!Function=} ssfi
+ * @param {boolean=} lockSsfi
+ */
+chai.Assertion = function(obj, msg, ssfi, lockSsfi) {};
+
 // Below are the externs for the BDD expect API: http://chaijs.com/api/bdd/
 
 /**
  * @param {*} subject
  * @param {string=} opt_description
- * @return {!ExpectChain}
+ * @return {!chai.Assertion}
  */
 var expect = function(subject, opt_description) {};
 
-/**
- * Represents the chainable return type of `expect()`.
- * @constructor
- */
-var ExpectChain = function() {};
 
-
-/** @type {!ExpectChain} */ ExpectChain.prototype.to;
-/** @type {!ExpectChain} */ ExpectChain.prototype.be;
-/** @type {!ExpectChain} */ ExpectChain.prototype.been;
-/** @type {!ExpectChain} */ ExpectChain.prototype.is;
-/** @type {!ExpectChain} */ ExpectChain.prototype.that;
-/** @type {!ExpectChain} */ ExpectChain.prototype.which;
-/** @type {!ExpectChain} */ ExpectChain.prototype.and;
-/** @type {!ExpectChain} */ ExpectChain.prototype.has;
-/** @type {!ExpectChain} */ ExpectChain.prototype.have;
-/** @type {!ExpectChain} */ ExpectChain.prototype.with;
-/** @type {!ExpectChain} */ ExpectChain.prototype.at;
-/** @type {!ExpectChain} */ ExpectChain.prototype.of;
-/** @type {!ExpectChain} */ ExpectChain.prototype.same;
-/** @type {!ExpectChain} */ ExpectChain.prototype.not;
-/** @type {!ExpectChain} */ ExpectChain.prototype.deep;
-/** @type {!ExpectChain} */ ExpectChain.prototype.any;
-/** @type {!ExpectChain} */ ExpectChain.prototype.all;
-/** @type {!ExpectChain} */ ExpectChain.prototype.length;
-/** @type {!ExpectChain} */ ExpectChain.prototype.itself;
-/** @type {!ExpectChain} */ ExpectChain.prototype.ok;
-/** @type {!ExpectChain} */ ExpectChain.prototype.true;
-/** @type {!ExpectChain} */ ExpectChain.prototype.false;
-/** @type {!ExpectChain} */ ExpectChain.prototype.null;
-/** @type {!ExpectChain} */ ExpectChain.prototype.undefined;
-/** @type {!ExpectChain} */ ExpectChain.prototype.NaN;
-/** @type {!ExpectChain} */ ExpectChain.prototype.exist;
-/** @type {!ExpectChain} */ ExpectChain.prototype.empty;
-/** @type {!ExpectChain} */ ExpectChain.prototype.arguments;
-/** @type {!ExpectChain} */ ExpectChain.prototype.extensible;
-/** @type {!ExpectChain} */ ExpectChain.prototype.sealed;
-/** @type {!ExpectChain} */ ExpectChain.prototype.frozen;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.to;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.be;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.been;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.is;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.that;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.which;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.and;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.has;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.have;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.with;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.at;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.of;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.same;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.not;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.deep;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.any;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.all;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.length;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.itself;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.ok;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.true;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.false;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.null;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.undefined;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.NaN;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.exist;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.empty;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.arguments;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.extensible;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.sealed;
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.frozen;
 
 
 /**
  * @param {string} type
  * @param {string=} opt_message
- * @return {!ExpectChain}
+ * @return {!chai.Assertion}
  */
-ExpectChain.prototype.a = function(type, opt_message) {};
+chai.Assertion.prototype.a = function(type, opt_message) {};
 
 /**
  * @param {string} type
  * @param {string=} opt_message
  */
-ExpectChain.prototype.an = function(type, opt_message) {}
+chai.Assertion.prototype.an = function(type, opt_message) {}
+
+                              /**
+                               * @param {*} value
+                               * @param {string=} opt_message
+                               */
+                              chai.Assertion.prototype.include = function(
+    value, opt_message) {};
 
 /**
  * @param {*} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.include = function(value, opt_message) {};
+chai.Assertion.prototype.includes = function(value, opt_message) {};
 
 /**
  * @param {*} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.includes = function(value, opt_message) {};
+chai.Assertion.prototype.contain = function(value, opt_message) {};
 
 /**
  * @param {*} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.contain = function(value, opt_message) {};
+chai.Assertion.prototype.contains = function(value, opt_message) {};
 
 /**
  * @param {*} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.contains = function(value, opt_message) {};
+chai.Assertion.prototype.equal = function(value, opt_message) {};
 
 /**
  * @param {*} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.equal = function(value, opt_message) {};
-
-/**
- * @param {*} value
- * @param {string=} opt_message
- */
-ExpectChain.prototype.eql = function(value, opt_message) {};
+chai.Assertion.prototype.eql = function(value, opt_message) {};
 
 /**
  * @param {number} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.above = function(value, opt_message) {};
+chai.Assertion.prototype.above = function(value, opt_message) {};
 
 /**
  * @param {number} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.least = function(value, opt_message) {};
+chai.Assertion.prototype.least = function(value, opt_message) {};
 
 /**
  * @param {number} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.below = function(value, opt_message) {};
+chai.Assertion.prototype.below = function(value, opt_message) {};
 
 /**
  * @param {number} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.most = function(value, opt_message) {};
+chai.Assertion.prototype.most = function(value, opt_message) {};
 
 /**
  * @param {number} start
  * @param {number} finish
  * @param {string=} opt_message
  */
-ExpectChain.prototype.within = function(start, finish, opt_message) {};
+chai.Assertion.prototype.within = function(start, finish, opt_message) {};
 
 /**
  * @param {function(new: Object)} constructor
  * @param {string=} opt_message
  */
-ExpectChain.prototype.instanceof = function(constructor, opt_message) {};
+chai.Assertion.prototype.instanceof = function(constructor, opt_message) {};
 
 /**
  * @param {function(new: Object)} constructor
  * @param {string=} opt_message
  */
-ExpectChain.prototype.an.instanceof = function(constructor, opt_message) {};
+chai.Assertion.prototype.an.instanceof = function(constructor, opt_message) {};
 
 /**
  * @param {string} name
  * @param {*=} opt_value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.property = function(name, opt_value, opt_message) {};
+chai.Assertion.prototype.property = function(name, opt_value, opt_message) {};
 
 /**
  * @param {string} name
  * @param {string=} opt_message
  */
-ExpectChain.prototype.ownProperty = function(name, opt_message) {};
+chai.Assertion.prototype.ownProperty = function(name, opt_message) {};
 
 /**
  * @param {string} name
  * @param {!Object=} opt_descriptor
  * @param {string=} opt_message
  */
-ExpectChain.prototype.ownPropertyDescriptor =
-    function(name, opt_descriptor, opt_message) {};
+chai.Assertion.prototype.ownPropertyDescriptor = function(
+    name, opt_descriptor, opt_message) {};
 
 /**
  * @param {number} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.lengthOf = function(value, opt_message) {};
+chai.Assertion.prototype.lengthOf = function(value, opt_message) {};
 
 /**
  * @param {!RegExp} re
  * @param {string=} opt_message
  */
-ExpectChain.prototype.match = function(re, opt_message) {};
+chai.Assertion.prototype.match = function(re, opt_message) {};
 
 /**
  * @param {string} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.string = function(value, opt_message) {};
+chai.Assertion.prototype.string = function(value, opt_message) {};
 
 /**
  * @param {*} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.keys = function(value, opt_message) {};
+chai.Assertion.prototype.keys = function(value, opt_message) {};
 
 /**
  * Note: incomplete definition because it is tricky.
  * @param {...*} var_args
  */
-ExpectChain.prototype.throw = function(var_args) {};
+chai.Assertion.prototype.throw = function(var_args) {};
 
 /**
  * @param {string} method
  * @param {string=} opt_message
  */
-ExpectChain.prototype.respondTo = function(method, opt_message) {};
+chai.Assertion.prototype.respondTo = function(method, opt_message) {};
 
 /**
  * @param {function(*): boolean} matcher
  * @param {string=} opt_message
  */
-ExpectChain.prototype.satisfy = function(matcher, opt_message) {};
+chai.Assertion.prototype.satisfy = function(matcher, opt_message) {};
 
 /**
  * @param {!Array<*>} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.members = function(value, opt_message) {};
+chai.Assertion.prototype.members = function(value, opt_message) {};
 
 /**
  * @param {!Array<*>} value
  * @param {string=} opt_message
  */
-ExpectChain.prototype.oneOf = function(value, opt_message) {};
+chai.Assertion.prototype.oneOf = function(value, opt_message) {};
 
 /**
  * @param {*} value
  * @param {string} name
  * @param {string=} opt_message
  */
-ExpectChain.prototype.change = function(value, name, opt_message) {};
+chai.Assertion.prototype.change = function(value, name, opt_message) {};
 
 /**
  * @param {*} value
  * @param {string} name
  * @param {string=} opt_message
  */
-ExpectChain.prototype.increase = function(value, name, opt_message) {};
+chai.Assertion.prototype.increase = function(value, name, opt_message) {};
 
 /**
  * @param {*} value
  * @param {string} name
  * @param {string=} opt_message
  */
-ExpectChain.prototype.decrease = function(value, name, opt_message) {};
+chai.Assertion.prototype.decrease = function(value, name, opt_message) {};
 
 // Below are the externs for the TDD expect API: http://chaijs.com/api/assert/
 
@@ -386,6 +393,18 @@ assert.isNotNull = function(value, message) {}
 assert.isNull = function(value, opt_message) {};
 
 /**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.exists = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.notExists = function(value, opt_message) {};
+
+/**
  * @param {*} object
  * @param {function(new: Object)} constructor
  * @param {string=} opt_message
@@ -456,3 +475,35 @@ assert.sameMembers = function(set1, set2, opt_message) {};
  * @param {string=} opt_message
  */
 assert.sameDeepMembers = function(set1, set2, opt_message) {};
+
+// Below are the externs for the APIs to build custom assertions:
+// http://www.chaijs.com/api/plugins/
+
+/**
+ * @param {string} name
+ * @param {!Function} getter
+ */
+chai.Assertion.addMethod = function(name, getter) {};
+
+/**
+ * @param {string} name
+ * @param {function()} getter
+ */
+chai.Assertion.addProperty = function(name, getter) {};
+
+/** @type {*} */
+chai.Assertion.prototype._obj;
+
+/**
+ * @param {boolean} expr
+ * @param {string} msg
+ * @param {string} negateMsg
+ * @param {*} expected
+ * @param {*=} actual
+ * @param {boolean=} showDiff
+ */
+chai.Assertion.prototype.assert = function(
+    expr, msg, negateMsg, expected, actual, showDiff) {};
+
+/** @const */
+chai.assert = assert;

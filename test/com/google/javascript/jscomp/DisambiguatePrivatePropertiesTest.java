@@ -15,11 +15,17 @@
  */
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
  * Unit test for the Compiler DisambiguatPrivateeProperties pass.
  *
  * @author johnlenz@google.com (John Lenz)
  */
+@RunWith(JUnit4.class)
 public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
 
   private boolean useGoogleCodingConvention = true;
@@ -44,11 +50,13 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     useGoogleCodingConvention = true;
   }
 
+  @Test
   public void testNoRenaming1() {
     useGoogleCodingConvention = true;
 
@@ -77,6 +85,7 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
     testSame("({set prop_(a){ this.a = 1} });");
   }
 
+  @Test
   public void testNoRenamingES6() {
 
     testSame("({get ['prop_'](){ return 1} });");
@@ -92,6 +101,7 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
     testSame("class C { method_(){return 1} }");
   }
 
+  @Test
   public void testRenaming1() {
     useGoogleCodingConvention = true;
 
@@ -112,6 +122,7 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
         "({set prop_$0(a){ this.a = 1} });");
   }
 
+  @Test
   public void testRenamingES6() {
     test(
         "({prop_(){ return 1} });",
@@ -133,7 +144,7 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
         "class C { *method_$0(){} }");
   }
 
-
+  @Test
   public void testNoRenameIndirectProps() {
     useGoogleCodingConvention = true;
 

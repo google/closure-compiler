@@ -19,12 +19,17 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test case for {@link DartSuperAccessorsPass}.
  *
  * @author ochafik@google.com (Olivier Chafik)
  */
+@RunWith(JUnit4.class)
 public final class DartSuperAccessorsPassTest extends CompilerTestCase {
 
   /** Signature of the member functions / accessors we'll wrap expressions into. */
@@ -37,7 +42,8 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
   private PropertyRenamingPolicy propertyRenaming;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableRunTypeCheckAfterProcessing();
@@ -75,6 +81,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testSuperGetElem() {
     checkConversionWithinMembers(
         "return super['prop']",
@@ -82,6 +89,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
     assertThat(getLastCompiler().injected).containsExactly("es6_dart_runtime");
   }
 
+  @Test
   public void testSuperGetProp_renameOff() {
     propertyRenaming = PropertyRenamingPolicy.OFF;
     checkConversionWithinMembers(
@@ -89,6 +97,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
         "return $jscomp.superGet(this, 'prop')");
   }
 
+  @Test
   public void testSuperGetProp_renameAll() {
     propertyRenaming = PropertyRenamingPolicy.ALL_UNQUOTED;
     checkConversionWithinMembers(
@@ -96,12 +105,14 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
         "return $jscomp.superGet(this, JSCompiler_renameProperty('prop'))");
   }
 
+  @Test
   public void testSuperSetElem() {
     checkConversionWithinMembers(
         "super['prop'] = x",
         "$jscomp.superSet(this, 'prop', x)");
   }
 
+  @Test
   public void testSuperSetProp_renameOff() {
     propertyRenaming = PropertyRenamingPolicy.OFF;
     checkConversionWithinMembers(
@@ -109,6 +120,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
         "$jscomp.superSet(this, 'prop', x)");
   }
 
+  @Test
   public void testSuperSetProp_renameAll() {
     propertyRenaming = PropertyRenamingPolicy.ALL_UNQUOTED;
     checkConversionWithinMembers(
@@ -116,6 +128,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
         "$jscomp.superSet(this, JSCompiler_renameProperty('prop'), x)");
   }
 
+  @Test
   public void testSuperSetAssignmentOps() {
     propertyRenaming = PropertyRenamingPolicy.OFF;
     checkConversionWithinMembers(
@@ -153,6 +166,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
         "$jscomp.superSet(this, 'a', $jscomp.superGet(this, 'a') % b)");
   }
 
+  @Test
   public void testSuperSetRecursion() {
     checkConversionWithinMembers(
         "super['x'] = super['y']",
@@ -165,7 +179,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
         "$jscomp.superSet(this, 'x', $jscomp.superGet(this, 'x') + $jscomp.superGet(this, 'y'))");
   }
 
-
+  @Test
   public void testExpressionsWithoutSuperAccessors() {
     String body = lines(
         "foo.bar;",
@@ -180,6 +194,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
     }
   }
 
+  @Test
   public void testSuperAccessorsOutsideInstanceMembers() {
     String body = lines(
         "super.x;",

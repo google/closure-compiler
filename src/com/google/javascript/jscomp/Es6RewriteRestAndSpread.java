@@ -18,12 +18,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -144,6 +142,8 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       paramTypeAnnotation = null;
     }
 
+    // TODO(lharker): we should report this error in typechecking, not during transpilation, so
+    // that it also occurs when natively typechecking ES6.
     if (paramTypeAnnotation != null && paramTypeAnnotation.getRoot().getToken() != Token.ELLIPSIS) {
       compiler.report(JSError.make(restParam, BAD_REST_PARAMETER_ANNOTATION));
     }
@@ -166,27 +166,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
 
     for (Node child : functionBody.children()) {
       newBlock.addChildToBack(child.detach());
-    }
-
-    // `let $jscomp$restParams` => `let /** !Array<T> */ $jscomp$restParams`
-    if (paramTypeAnnotation != null) {
-      Node arrayTypeName = IR.string("Array");
-      Node typeNode = paramTypeAnnotation.getRoot();
-      Node memberType =
-          typeNode.getToken() == Token.ELLIPSIS
-              ? typeNode.getFirstChild().cloneTree()
-              : typeNode.cloneTree();
-
-      if (functionInfo != null) {
-        memberType = replaceTypeVariablesWithUnknown(functionInfo, memberType);
-      }
-      arrayTypeName.addChildToFront(
-          new Node(Token.BLOCK, memberType).useSourceInfoIfMissingFrom(typeNode));
-
-      JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
-      builder.recordType(
-          new JSTypeExpression(new Node(Token.BANG, arrayTypeName), restParam.getSourceFileName()));
-      name.setJSDocInfo(builder.build());
     }
 
     Node newArrayDeclaration = IR.var(newArrayName.cloneTree(), arrayLitWithJSType());
@@ -223,24 +202,9 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     // need to make sure changes don't invalidate the JSDoc annotations.
     // Therefore we keep the parameter list the same length and only initialize
     // the values if they are set to undefined.
-  }
-
-  private Node replaceTypeVariablesWithUnknown(JSDocInfo functionJsdoc, Node typeAst) {
-    final List<String> typeVars = functionJsdoc.getTemplateTypeNames();
-    if (typeVars.isEmpty()) {
-      return typeAst;
-    }
-    NodeUtil.visitPreOrder(
-        typeAst,
-        new Visitor() {
-          @Override
-          public void visit(Node n) {
-            if (n.isString() && n.getParent() != null && typeVars.contains(n.getString())) {
-              n.replaceWith(new Node(Token.QMARK));
-            }
-          }
-        });
-    return typeAst;
+    // TODO(lharker): the above comment is out of date since we move transpilation after
+    // typechecking. see if we can improve transpilation and not keep the parameter list the
+    // same length?
   }
 
   /**
@@ -388,7 +352,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     Node callee = spreadParent.getFirstChild();
     // Check if the callee has side effects before removing it from the AST (since some NodeUtil
     // methods assume the node they are passed has a non-null parent).
-    boolean calleeMayHaveSideEffects = NodeUtil.mayHaveSideEffects(callee);
+    boolean calleeMayHaveSideEffects = NodeUtil.mayHaveSideEffects(callee, compiler);
     // Must remove callee before extracting argument groups.
     spreadParent.removeChild(callee);
 

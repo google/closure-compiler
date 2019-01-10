@@ -25,8 +25,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Unit tests for the RewritePolyfills compiler pass. */
+@RunWith(JUnit4.class)
 public final class RewritePolyfillsTest extends CompilerTestCase {
 
   private static final LanguageMode ES6 = LanguageMode.ECMASCRIPT_2015;
@@ -46,7 +51,8 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     injectableLibraries.clear();
     polyfillTable.clear();
@@ -112,11 +118,13 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     test(code, addLibraries(code, libraries), warning(warning));
   }
 
+  @Test
   public void testEmpty() {
     setLanguage(ES6, ES5);
     testInjects("");
   }
 
+  @Test
   public void testClassesInjected() {
     addLibrary("Map", "es6", "es5", "es6/map");
     addLibrary("Set", "es6", "es3", "es6/set");
@@ -131,6 +139,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("var s = new Set();", "es6/set");
   }
 
+  @Test
   public void testLibrariesOnlyInjectedOnce() {
     addLibrary("Map", "es6", "es5", "es6/map");
 
@@ -138,6 +147,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("var m = new Map(); m = new Map();", "es6/map");
   }
 
+  @Test
   public void testClassesNotInjectedIfSufficientLanguageOut() {
     addLibrary("Proxy", "es6", "es6", null);
     addLibrary("Map", "es6", "es5", "es6/map");
@@ -149,6 +159,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testDoesNotInject("new Set();");
   }
 
+  @Test
   public void testClassesNotInjectedIfDeclaredInScope() {
     addLibrary("Map", "es6", "es5", "es6/map");
 
@@ -156,6 +167,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testDoesNotInject("/** @constructor */ var Map = function() {}; new Map();");
   }
 
+  @Test
   public void testClassesWarnIfInsufficientLanguageOut() {
     addLibrary("Proxy", "es6", "es6", null);
     addLibrary("Map", "es6", "es5", "es6/map");
@@ -167,6 +179,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("new Map();", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR, "es6/map");
   }
 
+  @Test
   public void testStaticMethodsInjected() {
     addLibrary("Math.clz32", "es6", "es5", "es6/math/clz32");
     addLibrary("Array.of", "es6", "es3", "es6/array/of");
@@ -182,6 +195,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("Object.keys(x);", "es5/object/keys");
   }
 
+  @Test
   public void testStaticMethodsNotInjectedIfSufficientLanguageOut() {
     addLibrary("Array.from", "es6", "es6", null);
     addLibrary("Math.clz32", "es6", "es5", "es6/math/clz32");
@@ -197,6 +211,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testDoesNotInject("Object.keys(x);");
   }
 
+  @Test
   public void testStaticMethodsNotInjectedIfDeclaredInScope() {
     addLibrary("Math.clz32", "es6", "es5", "es6/math/clz32");
 
@@ -204,6 +219,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testDoesNotInject("var Math = {clz32: function() {}}; Math.clz32(x);");
   }
 
+  @Test
   public void testStaticMethodsWarnIfInsufficientLanguageOut() {
     addLibrary("Array.from", "es6", "es6", null);
     addLibrary("Math.clz32", "es6", "es5", "es6/math/clz32");
@@ -216,6 +232,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         "Math.clz32(x);", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR, "es6/math/clz32");
   }
 
+  @Test
   public void testStaticMethodsNotInstalledIfGuardedByIf() {
     addLibrary("Array.of", "es6", "es5", "es6/array/of");
 
@@ -230,6 +247,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testDoesNotInject("if (typeof Array.of == 'function') { Array.of(); }");
   }
 
+  @Test
   public void testStaticMethodsNotInstalledIfGuardedByLogicalOperator() {
     addLibrary("Array.of", "es6", "es5", "es6/array/of");
 
@@ -241,6 +259,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("Array.of || Array.of();", "es6/array/of");
   }
 
+  @Test
   public void testStaticMethodsNotInstalledIfGuardedByHook() {
     addLibrary("Array.of", "es6", "es5", "es6/array/of");
 
@@ -253,6 +272,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("x ? (Array.of ? y : z) : Array.of(x)", "es6/array/of");
   }
 
+  @Test
   public void testStaticMethodsNotInstalledIfGuardedByAbruptReturn() {
     addLibrary("Array.of", "es6", "es5", "es6/array/of");
 
@@ -270,6 +290,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         "es6/array/of");
   }
 
+  @Test
   public void testPrototypeMethodsInjected() {
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
     addLibrary("Array.prototype.fill", "es6", "es3", "es6/array/fill");
@@ -283,6 +304,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("x.forEach(y);", "es5/array/foreach");
   }
 
+  @Test
   public void testPrototypeMethodsNotInjectedIfSufficientLanguageOut() {
     addLibrary("String.prototype.normalize", "es6", "es6", null);
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
@@ -298,6 +320,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testDoesNotInject("x.forEach();");
   }
 
+  @Test
   public void testMultiplePrototypeMethodsWithSameName() {
     addLibrary("Array.prototype.includes", "es6", "es3", "es6/array/includes");
     addLibrary("String.prototype.includes", "es5", "es3", "es5/string/includes");
@@ -309,6 +332,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("x.includes();", "es6/array/includes", "es5/string/includes");
   }
 
+  @Test
   public void testPrototypeMethodsInstalledIfStaticMethodShadowed() {
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
@@ -324,6 +348,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   // this distinction to a type-based optimization.  As such, I've simplified the
   // logic to no longer look at variables' scope and instead just blacklist known
   // symbols like goog.string and goog.array.
+  @Test
   public void testPrototypeMethodsInstalledIfActuallyStatic() {
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
@@ -340,6 +365,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         "es6/string/endswith");
   }
 
+  @Test
   public void testPrototypeMethodsNotInstalledIfGuardedByIf() {
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
@@ -354,6 +380,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testDoesNotInject("if (typeof String.prototype.endsWith == 'function') { x.endsWith(); }");
   }
 
+  @Test
   public void testPrototypeMethodsNotInstalledIfGuardedByLogicalOperator() {
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
@@ -366,6 +393,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("String.prototype.endsWith || x.endsWith();", "es6/string/endswith");
   }
 
+  @Test
   public void testPrototypeMethodsNotInstalledIfGuardedByHook() {
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
@@ -378,6 +406,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("x ? (String.prototype.endsWith ? y : z) : x.endsWith()", "es6/string/endswith");
   }
 
+  @Test
   public void testPrototypeMethodsNotInstalledIfGuardedByAbruptReturn() {
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
@@ -397,6 +426,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         "es6/string/endswith");
   }
 
+  @Test
   public void testCleansUpUnnecessaryPolyfills() {
     // Put two polyfill statements in the same library.
     injectableLibraries.put("es6/set",

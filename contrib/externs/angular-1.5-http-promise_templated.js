@@ -30,7 +30,7 @@
 angular.HttpCallback;
 
 /**
- * @constructor
+ * @interface
  * @template T
  */
 angular.$http.Response = function() {};
@@ -54,7 +54,7 @@ angular.$http.Response.prototype.headers = function(name) {};
 angular.$http.Response.prototype.config;
 
 /**
- * @constructor
+ * @interface
  * @extends {angular.$q.Promise.<!angular.$http.Response.<T>>}
  * @template T
  */

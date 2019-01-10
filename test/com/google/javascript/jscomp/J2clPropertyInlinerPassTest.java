@@ -18,11 +18,17 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class J2clPropertyInlinerPassTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize(); // Inlining will fail if normalization hasn't happened yet.
   }
@@ -48,6 +54,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
     test(js, js);
   }
 
+  @Test
   public void testNoInlineNonJ2clProps() {
     testDoesntChange(
         Lists.newArrayList(
@@ -69,6 +76,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "var x = A.x;"))));
   }
 
+  @Test
   public void testNoInlineNonJ2clPropsValue() {
     testDoesntChange(
         Lists.newArrayList(
@@ -90,6 +98,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
 
   // In this test we want to remove the J2CL property but not the entire Object.defineProperties
   // since it also defines another non J2CL property.
+  @Test
   public void testNoStripDefineProperties() {
     test(
         Lists.newArrayList(
@@ -144,6 +153,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "});"))));
   }
 
+  @Test
   public void testInlineDefinePropertiesGetter() {
     test(
         Lists.newArrayList(
@@ -178,6 +188,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "var xx = (A.$clinit(), A.$x);"))));
   }
 
+  @Test
   public void testInlineDefinePropertiesSetter() {
     test(
         Lists.newArrayList(
@@ -212,6 +223,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "{(A.$clinit(), A.$x = 10);}"))));
   }
 
+  @Test
   public void testInlineGettersInQualifier() {
     test(
         Lists.newArrayList(
@@ -246,7 +258,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "var xy = (A.$clinit(), A.$x).y;"))));
   }
 
-
+  @Test
   public void testNoInlineCompoundAssignment() {
     testDoesntChange(
         Lists.newArrayList(
@@ -271,6 +283,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "A.x += 5;"))));
   }
 
+  @Test
   public void testNoInlineIncrementGetter() {
     // Test ++
     testDoesntChange(
@@ -319,6 +332,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "A.x++;"))));
   }
 
+  @Test
   public void testInlineEs6Getter() {
     test(
         lines(
@@ -347,6 +361,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
             "var xx = (A.$clinit(), A.$x);"));
   }
 
+  @Test
   public void testInlineEs6Setter() {
     test(
         lines(
@@ -375,6 +390,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
             "{(A.$clinit(), A.$x = 5)}"));
   }
 
+  @Test
   public void testInlineEs6GetterSetter_multiple() {
     test(
         lines(

@@ -225,8 +225,10 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
     // name = goog.defineClass(superClass, {...}, [modifier, ...])
     Node superClass = NodeUtil.getArgumentForCallOrNew(callNode, 0);
-    if (superClass == null ||
-        (!superClass.isNull() && !superClass.isQualifiedName())) {
+    if (superClass == null
+        || (!superClass.isNull()
+            && !superClass.isQualifiedName()
+            && !NodeUtil.isCallTo(superClass, "goog.module.get"))) {
       compiler.report(JSError.make(callNode, GOOG_CLASS_SUPER_CLASS_NOT_VALID));
       return null;
     }
@@ -551,6 +553,17 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   static final String VIRTUAL_FILE = "<ClosureRewriteClass.java>";
 
+  private JSTypeExpression getSuperclassFor(Node superNode) {
+    final String superName;
+    if (superNode.isQualifiedName()) {
+      superName = superNode.getQualifiedName();
+    } else {
+      checkState(NodeUtil.isCallTo(superNode, "goog.module.get"));
+      superName = superNode.getLastChild().getString();
+    }
+    return new JSTypeExpression(new Node(Token.BANG, IR.string(superName)), VIRTUAL_FILE);
+  }
+
   private JSDocInfo mergeJsDocFor(ClassDefinition cls, Node associatedNode) {
     // avoid null checks
     JSDocInfo classInfo = (cls.classInfo != null)
@@ -641,10 +654,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
         extendedInterfaces = classInfo.getExtendedInterfaces();
       } else if (ctorInfo.getExtendedInterfacesCount() == 0
           && superNode != null) {
-        extendedInterfaces = ImmutableList.of(new JSTypeExpression(
-            new Node(Token.BANG,
-                IR.string(superNode.getQualifiedName())),
-            VIRTUAL_FILE));
+        extendedInterfaces = ImmutableList.of(getSuperclassFor(superNode));
       }
       if (extendedInterfaces != null) {
         for (JSTypeExpression extend : extendedInterfaces) {
@@ -659,10 +669,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
         mergedInfo.recordBaseType(classInfo.getBaseType());
       } else if (superNode != null) {
         // a "super" implies @extends, build a default.
-        JSTypeExpression baseType = new JSTypeExpression(
-            new Node(Token.BANG,
-              IR.string(superNode.getQualifiedName())),
-            VIRTUAL_FILE);
+        JSTypeExpression baseType = getSuperclassFor(superNode);
         mergedInfo.recordBaseType(baseType);
       }
 

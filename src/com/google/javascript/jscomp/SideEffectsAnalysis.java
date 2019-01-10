@@ -604,16 +604,14 @@ import java.util.Set;
     abstract EffectLocation getBottomLocation();
   }
   /**
-   * A very imprecise location abstraction in which there are only two abstract
-   * locations: one representing all concrete locations and one for bottom
-   * (no concrete locations).
+   * A very imprecise location abstraction in which there are only two abstract locations: one
+   * representing all concrete locations and one for bottom (no concrete locations).
    *
-   * This implementation is a thin wrapper on NodeUtil.mayHaveSideEffects()
-   * and NodeUtil.canBeSideEffected() -- it doesn't add any real value other
-   * than to prototype the LocationAbstraction interface.
+   * <p>This implementation is a thin wrapper on NodeUtil.mayHaveSideEffects(, compiler) and
+   * NodeUtil.canBeSideEffected() -- it doesn't add any real value other than to prototype the
+   * LocationAbstraction interface.
    */
-  private static class DegenerateLocationAbstraction
-      extends LocationAbstraction {
+  private static class DegenerateLocationAbstraction extends LocationAbstraction {
 
     private static final EffectLocation EVERY_LOCATION =
         new DegenerateEffectLocation();

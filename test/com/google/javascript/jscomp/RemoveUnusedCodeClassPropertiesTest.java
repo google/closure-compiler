@@ -17,11 +17,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link RemoveUnusedCode} that cover removal of instance properties and properties
  * defined directly on constructors.
  */
+@RunWith(JUnit4.class)
 public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
@@ -90,7 +95,8 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
     enableGatherExternProperties();
@@ -98,6 +104,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     disableTypeCheck();
   }
 
+  @Test
   public void testSimple1() {
     // A property defined on "this" can be removed
     test("this.a = 2", "");
@@ -105,6 +112,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("this.a = 2; let x = this.a;");
   }
 
+  @Test
   public void testSimple2() {
     // A property defined on "this" can be removed, even when defined
     // as part of an expression
@@ -113,6 +121,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     test("const x = (alert(1), this.a = 2);", "const x = (alert(1), 2);");
   }
 
+  @Test
   public void testSimple3() {
     // A property defined on an object other than "this" can not be removed.
     testSame("var y = {}; y.a = 2");
@@ -122,6 +131,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("var x; var y = {}; y.a = 2; this.a = 1; alert(x.a)");
   }
 
+  @Test
   public void testObjLit() {
     // A property defined on an object other than "this" can not be removed.
     testSame("({a:2})");
@@ -133,17 +143,20 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("var x = ({a:0}); this.a = 1; alert(x.a)");
   }
 
+  @Test
   public void testExtern() {
     // A property defined in the externs is can not be removed.
     testSame("this.ext = 2");
   }
 
+  @Test
   public void testExport() {
     // An exported property can not be removed.
     testSame("this.ext = 2; window['export'] = this.ext;");
     testSame("function f() { this.ext = 2; } window['export'] = this.ext;");
   }
 
+  @Test
   public void testAssignOp1() {
     // Properties defined using a compound assignment can be removed if the
     // result of the assignment expression is not immediately used.
@@ -154,6 +167,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("this.x += 2; let x = {}; x.x;");
   }
 
+  @Test
   public void testAssignOp2() {
     // Properties defined using a compound assignment can be removed if the
     // result of the assignment expression is not immediately used.
@@ -162,6 +176,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("const x = (alert(1), this.a += 2)");
   }
 
+  @Test
   public void testInc1() {
     // Increments and Decrements are handled similarly to compound assignments
     // but need a placeholder value when replaced.
@@ -174,6 +189,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("--this.x; let x = this.x;");
   }
 
+  @Test
   public void testInc2() {
     // Increments and Decrements are handled similarly to compound assignments
     // but need a placeholder value when replaced.
@@ -186,17 +202,20 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("let x = (alert(), --this.a)");
   }
 
+  @Test
   public void testExprResult() {
     test("this.x", "");
     test("externFunction().prototype.x", "externFunction()");
   }
 
+  @Test
   public void testJSCompiler_renameProperty() {
     // JSCompiler_renameProperty introduces a use of the property
     testSame("var x; this.a = 2; x[JSCompiler_renameProperty('a')]");
     testSame("this.a = 2; JSCompiler_renameProperty('a')");
   }
 
+  @Test
   public void testForIn() {
     // This is the basic assumption that this pass makes:
     // it can remove properties even when the object is used in a FOR-IN loop
@@ -205,6 +224,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         "let x = {};            for (var a in x) { alert(x[a]) }");
   }
 
+  @Test
   public void testObjectKeys() {
     // This is the basic assumption that this pass makes:
     // it can remove properties even when the object are referenced
@@ -213,6 +233,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         "           alert(Object.keys(this))");
   }
 
+  @Test
   public void testObjectReflection1() {
     // Verify reflection prevents removal.
     testSame(
@@ -222,6 +243,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "use(goog.reflect.object(A, {foo: 'foo'}));"));
   }
 
+  @Test
   public void testObjectReflection2() {
     // Any object literal definition prevents removal.
     // Type based removal would allow this to be removed.
@@ -232,6 +254,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "use({foo: 'foo'});"));
   }
 
+  @Test
   public void testIssue730() {
     // Partial removal of properties can causes problems if the object is
     // sealed.
@@ -243,6 +266,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "new B().dostuff();"));
   }
 
+  @Test
   public void testPrototypeProps1() {
     test(
         lines(
@@ -257,6 +281,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "new A().method()"));
   }
 
+  @Test
   public void testPrototypeProps2() {
     // don't remove properties that are exported by convention
     testSame(
@@ -266,6 +291,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         "new A().method()\n");
   }
 
+  @Test
   public void testConstructorProperty1() {
     enableTypeCheck();
 
@@ -274,6 +300,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         "/** @constructor */ function C() {}            ");
   }
 
+  @Test
   public void testConstructorProperty2() {
     enableTypeCheck();
 
@@ -285,6 +312,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "foo(C)"));
   }
 
+  @Test
   public void testES6StaticProperty() {
     // TODO(bradfordcsmith): Neither type checker understands ES6 classes yet.
     disableTypeCheck();
@@ -294,6 +322,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         "class C {                  }");
   }
 
+  @Test
   public void testES6StaticProperty2() {
     disableTypeCheck();
 
@@ -301,6 +330,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("class C {} C.prop = 1;");
   }
 
+  @Test
   public void testObjectDefineProperties1() {
     enableTypeCheck();
 
@@ -312,6 +342,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "foo(C)"));
   }
 
+  @Test
   public void testObjectDefineProperties2() {
     enableTypeCheck();
 
@@ -324,6 +355,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "Object.defineProperties(C, {});"));
   }
 
+  @Test
   public void testObjectDefineProperties3() {
     enableTypeCheck();
 
@@ -341,6 +373,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   }
 
   // side-effect in definition retains property definition, but doesn't count as a reference
+  @Test
   public void testObjectDefineProperties4() {
     enableTypeCheck();
 
@@ -354,6 +387,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   }
 
   // quoted properties retains property
+  @Test
   public void testObjectDefineProperties5() {
     enableTypeCheck();
 
@@ -363,6 +397,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "Object.defineProperties(C, {'prop': {value: 1}});"));
   }
 
+  @Test
   public void testObjectDefineProperties6() {
     enableTypeCheck();
 
@@ -372,6 +407,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         "Object.defineProperties(externVar(), {              });");
   }
 
+  @Test
   public void testObjectDefineProperties7() {
     enableTypeCheck();
 
@@ -384,6 +420,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "Object.defineProperties(C, {});"));
   }
 
+  @Test
   public void testObjectDefineProperties8() {
     enableTypeCheck();
 
@@ -396,6 +433,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "Object.defineProperties(C, {});"));
   }
 
+  @Test
   public void testObjectDefinePropertiesQuotesPreventRemoval() {
     enableTypeCheck();
 
@@ -405,6 +443,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "Object.defineProperties(C, {'prop':{set:function (a) {return alert(a.prop)}}});"));
   }
 
+  @Test
   public void testObjectDefineProperties_used_setter_removed() {
     // TODO(bradfordcsmith): Either remove, fix this, or document it as a limitation of advanced
     // mode optimizations.
@@ -420,6 +459,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "Object.defineProperties(C, {                                  });"));
   }
 
+  @Test
   public void testEs6GettersWithoutTranspilation() {
     test(
         "class C { get value() { return 0; } }", // preserve newline
@@ -427,10 +467,12 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("class C { get value() { return 0; } } const x = (new C()).value");
   }
 
+  @Test
   public void testES6ClassComputedProperty() {
     testSame("class C { ['test' + 3]() { return 0; } }");
   }
 
+  @Test
   public void testEs6SettersWithoutTranspilation() {
     test(
         "class C { set value(val) { this.internalVal = val; } }", // preserve newline
@@ -456,6 +498,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
 
   // All object literal fields are not removed, but the following
   // tests assert that the pass does not fail.
+  @Test
   public void testEs6EnhancedObjLiteralsComputedValuesNotRemoved() {
     testSame(
         lines(
@@ -466,6 +509,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "}"));
   }
 
+  @Test
   public void testEs6EnhancedObjLiteralsMethodShortHandNotRemoved() {
     testSame(
         lines(
@@ -478,10 +522,12 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "}"));
   }
 
+  @Test
   public void testEs6EnhancedObjLiteralsPropertyShorthand() {
     testSame("function getCar(make, model, value) { return {model}; }");
   }
 
+  @Test
   public void testTranspiledEs6GettersRemoval() {
     enableTypeCheck();
     test(
@@ -507,6 +553,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "$jscomp.global.Object.defineProperties(C.prototype, {});"));
   }
 
+  @Test
   public void testTranspiledEs6SettersRemoval() {
     enableTypeCheck();
     test(
@@ -534,6 +581,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "$jscomp.global.Object.defineProperties(C.prototype, {});"));
   }
 
+  @Test
   public void testEs6ArrowFunction() {
     test(
         "const arrow = () => this.a = 1;", // preserve newline
@@ -561,6 +609,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "new A().getIncr()"));
   }
 
+  @Test
   public void testEs6Generator() {
     test(
         "function* gen() { yield this.a = 1; }", // preserve newline
@@ -568,6 +617,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("function* gen() { yield this.a = 1; yield this.a; }");
   }
 
+  @Test
   public void testEs6Destructuring() {
     // Test normal destructuring removal
     test(
@@ -701,6 +751,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         "({['a']:0});            ");
   }
 
+  @Test
   public void testEs6DefaultParameter() {
     test(
         "function foo(x, y = this.a = 1) {}", // preserve newline
@@ -708,6 +759,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("this.a = 1; function foo(x, y = this.a) {}");
   }
 
+  @Test
   public void testEs8AsyncFunction() {
     test(
         lines(

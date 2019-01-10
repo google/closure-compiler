@@ -25,10 +25,13 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link CheckUnusedLabels}.
- */
+/** Test case for {@link CheckUnusedLabels}. */
+@RunWith(JUnit4.class)
 public final class CheckUnusedLabelsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -43,17 +46,20 @@ public final class CheckUnusedLabelsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
+  @Test
   public void testCheckUnusedLabels_noWarning() {
     testSame("L: if (true) { break L; }");
     testSame("L: for (;;) { if (true) { break L; } }");
     testSame("L1: L2: if (true) { if (true) { break L1; } break L2; }");
   }
 
+  @Test
   public void testCheckUnusedLabels_warning() {
     testWarning("L: var x = 0;", UNUSED_LABEL);
     testWarning("L: { f(); }", UNUSED_LABEL);

@@ -441,7 +441,14 @@ public final class AstValidator implements CompilerPass {
         break;
 
       case CALL:
-        validateCallType(n);
+        if (!n.getFirstChild().isSuper()) {
+          // TODO(sdh): need to validate super() using validateNewType() instead, if it existed
+          validateCallType(n);
+        }
+        break;
+
+      case SPREAD:
+        // we don't type spread nodes
         break;
 
       default:
@@ -473,9 +480,11 @@ public final class AstValidator implements CompilerPass {
     if (calleeTypeI.isFunctionType()) {
       FunctionType calleeFunctionTypeI = calleeTypeI.toMaybeFunctionType();
       JSType returnTypeI = calleeFunctionTypeI.getReturnType();
-      // TODO(b/74537281): This will fail after CAST nodes have been removed from the AST.
-      // Must be fixed before this check can be done after optimizations.
-      expectMatchingTypeInformation(callNode, returnTypeI);
+      // Skip this check if the call node was originally in a cast, because the cast type may be
+      // narrower than the return type.
+      if (callNode.getJSTypeBeforeCast() == null) {
+        expectMatchingTypeInformation(callNode, returnTypeI);
+      }
     } // TODO(b/74537281): What other cases should be covered?
   }
 
@@ -620,11 +629,22 @@ public final class AstValidator implements CompilerPass {
     validateFeature(Feature.TEMPLATE_LITERALS, n);
     validateNodeType(Token.TEMPLATELIT, n);
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (child.isString()) {
-        validateString(child);
+      if (child.isTemplateLitString()) {
+        validateTemplateLitString(child);
       } else {
         validateTemplateLitSub(child);
       }
+    }
+  }
+
+  private void validateTemplateLitString(Node n) {
+    validateNodeType(Token.TEMPLATELIT_STRING, n);
+    validateChildCount(n);
+    try {
+      // Validate that getRawString doesn't throw
+      n.getRawString();
+    } catch (UnsupportedOperationException e) {
+      violation("Invalid TEMPLATELIT_STRING node.", n);
     }
   }
 
@@ -1122,7 +1142,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateArrayPattern(Token type, Node n) {
-    validateFeature(Feature.DESTRUCTURING, n);
+    validateFeature(Feature.ARRAY_DESTRUCTURING, n);
     validateNodeType(Token.ARRAY_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
@@ -1142,7 +1162,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateObjectPattern(Token type, Node n) {
-    validateFeature(Feature.DESTRUCTURING, n);
+    validateFeature(Feature.OBJECT_DESTRUCTURING, n);
     validateNodeType(Token.OBJECT_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
@@ -1189,6 +1209,7 @@ public final class AstValidator implements CompilerPass {
 
   private void validateForAwaitOf(Node n) {
     validateFeature(Feature.FOR_AWAIT_OF, n);
+    validateFeature(Feature.ASYNC_FUNCTIONS, n);
     validateNodeType(Token.FOR_AWAIT_OF, n);
     validateChildCount(n);
     validateVarOrAssignmentTarget(n.getFirstChild());

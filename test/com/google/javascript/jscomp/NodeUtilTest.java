@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
-import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
@@ -38,7 +38,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,10 +47,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for NodeUtil */
-public final class NodeUtilTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class NodeUtilTest {
 
   private static Node parse(String js) {
     CompilerOptions options = new CompilerOptions();
@@ -105,9 +107,10 @@ public final class NodeUtilTest extends TestCase {
     return getNode(root, Token.AWAIT);
   }
 
+  @Test
   public void testGetNodeByLineCol_1() {
     Node root = parse("var x = 1;");
-    assertNull(NodeUtil.getNodeByLineCol(root, 1, 0));
+    assertNode(NodeUtil.getNodeByLineCol(root, 1, 0)).isNull();
     assertNode(NodeUtil.getNodeByLineCol(root, 1, 1)).hasType(Token.VAR);
     assertNode(NodeUtil.getNodeByLineCol(root, 1, 2)).hasType(Token.VAR);
     assertNode(NodeUtil.getNodeByLineCol(root, 1, 5)).hasType(Token.NAME);
@@ -115,6 +118,7 @@ public final class NodeUtilTest extends TestCase {
     assertNode(NodeUtil.getNodeByLineCol(root, 1, 11)).hasType(Token.VAR);
   }
 
+  @Test
   public void testGetNodeByLineCol_2() {
     Node root = parse(Joiner.on("\n").join(
         "var x = {};",
@@ -128,6 +132,7 @@ public final class NodeUtilTest extends TestCase {
     assertNode(NodeUtil.getNodeByLineCol(root, 2, 14)).hasType(Token.EXPR_RESULT);
   }
 
+  @Test
   public void testGetNodeByLineCol_preferLiterals() {
     Node root;
 
@@ -144,6 +149,7 @@ public final class NodeUtilTest extends TestCase {
     assertNode(NodeUtil.getNodeByLineCol(root, 2, 13)).hasType(Token.NULL);
   }
 
+  @Test
   public void testIsLiteralOrConstValue() {
     assertLiteralAndImmutable(getNode("10"));
     assertLiteralAndImmutable(getNode("-10"));
@@ -164,34 +170,35 @@ public final class NodeUtilTest extends TestCase {
     assertNotLiteral(getNode("void foo()"));
   }
 
+  @Test
   public void testObjectLiteralIsLiteralValue() {
-    assertTrue(isLiteralValue("{a: 20}"));
-    assertTrue(isLiteralValue("{'a': 20}"));
-    assertTrue(isLiteralValue("{a: function() {}}"));
-    assertFalse(isLiteralValueExcludingFunctions("{a: function() {}}"));
-    assertTrue(isLiteralValue("{a() {}}"));
-    assertFalse(isLiteralValueExcludingFunctions("{a() {}}"));
-    assertTrue(isLiteralValue("{'a'() {}}"));
-    assertFalse(isLiteralValueExcludingFunctions("{'a'() {}}"));
+    assertThat(isLiteralValue("{a: 20}")).isTrue();
+    assertThat(isLiteralValue("{'a': 20}")).isTrue();
+    assertThat(isLiteralValue("{a: function() {}}")).isTrue();
+    assertThat(isLiteralValueExcludingFunctions("{a: function() {}}")).isFalse();
+    assertThat(isLiteralValue("{a() {}}")).isTrue();
+    assertThat(isLiteralValueExcludingFunctions("{a() {}}")).isFalse();
+    assertThat(isLiteralValue("{'a'() {}}")).isTrue();
+    assertThat(isLiteralValueExcludingFunctions("{'a'() {}}")).isFalse();
 
-    assertTrue(isLiteralValue("{['a']: 20}"));
-    assertFalse(isLiteralValue("{[b]: 20}"));
-    assertTrue(isLiteralValue("{['a']() {}}"));
-    assertFalse(isLiteralValue("{[b]() {}}"));
-    assertFalse(isLiteralValueExcludingFunctions("{['a']() {}}"));
+    assertThat(isLiteralValue("{['a']: 20}")).isTrue();
+    assertThat(isLiteralValue("{[b]: 20}")).isFalse();
+    assertThat(isLiteralValue("{['a']() {}}")).isTrue();
+    assertThat(isLiteralValue("{[b]() {}}")).isFalse();
+    assertThat(isLiteralValueExcludingFunctions("{['a']() {}}")).isFalse();
 
-    assertTrue(isLiteralValue("{ get a() { return 0; } }"));
-    assertTrue(isLiteralValue("{ get 'a'() { return 0; } }"));
-    assertTrue(isLiteralValue("{ get ['a']() { return 0; } }"));
-    assertTrue(isLiteralValue("{ get 123() { return 0; } }"));
-    assertTrue(isLiteralValue("{ get [123]() { return 0; } }"));
-    assertFalse(isLiteralValue("{ get [b]() { return 0; } }"));
-    assertTrue(isLiteralValue("{ set a(x) { } }"));
-    assertTrue(isLiteralValue("{ set 'a'(x) { } }"));
-    assertTrue(isLiteralValue("{ set ['a'](x) { } }"));
-    assertTrue(isLiteralValue("{ set 123(x) { } }"));
-    assertTrue(isLiteralValue("{ set [123](x) { } }"));
-    assertFalse(isLiteralValue("{ set [b](x) { } }"));
+    assertThat(isLiteralValue("{ get a() { return 0; } }")).isTrue();
+    assertThat(isLiteralValue("{ get 'a'() { return 0; } }")).isTrue();
+    assertThat(isLiteralValue("{ get ['a']() { return 0; } }")).isTrue();
+    assertThat(isLiteralValue("{ get 123() { return 0; } }")).isTrue();
+    assertThat(isLiteralValue("{ get [123]() { return 0; } }")).isTrue();
+    assertThat(isLiteralValue("{ get [b]() { return 0; } }")).isFalse();
+    assertThat(isLiteralValue("{ set a(x) { } }")).isTrue();
+    assertThat(isLiteralValue("{ set 'a'(x) { } }")).isTrue();
+    assertThat(isLiteralValue("{ set ['a'](x) { } }")).isTrue();
+    assertThat(isLiteralValue("{ set 123(x) { } }")).isTrue();
+    assertThat(isLiteralValue("{ set [123](x) { } }")).isTrue();
+    assertThat(isLiteralValue("{ set [b](x) { } }")).isFalse();
   }
 
   private boolean isLiteralValueExcludingFunctions(String code) {
@@ -203,57 +210,65 @@ public final class NodeUtilTest extends TestCase {
   }
 
   private void assertLiteralAndImmutable(Node n) {
-    assertTrue(NodeUtil.isLiteralValue(n, true));
-    assertTrue(NodeUtil.isLiteralValue(n, false));
-    assertTrue(NodeUtil.isImmutableValue(n));
+    assertThat(NodeUtil.isLiteralValue(n, true)).isTrue();
+    assertThat(NodeUtil.isLiteralValue(n, false)).isTrue();
+    assertThat(NodeUtil.isImmutableValue(n)).isTrue();
   }
 
   private void assertLiteralButNotImmutable(Node n) {
-    assertTrue(NodeUtil.isLiteralValue(n, true));
-    assertTrue(NodeUtil.isLiteralValue(n, false));
-    assertFalse(NodeUtil.isImmutableValue(n));
+    assertThat(NodeUtil.isLiteralValue(n, true)).isTrue();
+    assertThat(NodeUtil.isLiteralValue(n, false)).isTrue();
+    assertThat(NodeUtil.isImmutableValue(n)).isFalse();
   }
 
   private void assertNotLiteral(Node n) {
-    assertFalse(NodeUtil.isLiteralValue(n, true));
-    assertFalse(NodeUtil.isLiteralValue(n, false));
-    assertFalse(NodeUtil.isImmutableValue(n));
+    assertThat(NodeUtil.isLiteralValue(n, true)).isFalse();
+    assertThat(NodeUtil.isLiteralValue(n, false)).isFalse();
+    assertThat(NodeUtil.isImmutableValue(n)).isFalse();
   }
 
+  @Test
   public void testIsStringLiteralStringLiteral() {
-    assertTrue(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("'b'"))); // String
+    assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("'b'"))).isTrue(); // String
   }
 
+  @Test
   public void testIsStringLiteralTemplateNoSubst() {
-    assertTrue(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("`b`"))); // Template
+    assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("`b`"))).isTrue(); // Template
   }
 
+  @Test
   public void testIsStringLiteralTemplateWithSubstitution() {
     // Template with substitution
-    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("`foo${bar}`")));
+    assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("`foo${bar}`"))).isFalse();
   }
 
+  @Test
   public void testIsStringLiteralVariable() {
-    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("b"))); // Variable
+    assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("b"))).isFalse(); // Variable
   }
 
+  @Test
   public void testIsStringLiteralConcatLiterals() {
-    assertTrue(
-        NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("'b' + 'c'"))); // String concatenation
+    assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("'b' + 'c'")))
+        .isTrue(); // String concatenation
   }
 
+  @Test
   public void testIsStringLiteralConcatLiteralVariable() {
-    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("b + 'c'")));
-    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("'b' + c")));
+    assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("b + 'c'"))).isFalse();
+    assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("'b' + c"))).isFalse();
   }
 
+  @Test
   public void testIsStringLiteralTernary() {
-    assertTrue(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? 'b' : 'c'")));
-    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? b : 'c'")));
-    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? 'b' : c")));
-    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? b : c")));
+    assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? 'b' : 'c'"))).isTrue();
+    assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? b : 'c'"))).isFalse();
+    assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? 'b' : c"))).isFalse();
+    assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? b : c"))).isFalse();
   }
 
+  @Test
   public void testGetBooleanValue() {
     assertPureBooleanTrue("true");
     assertPureBooleanTrue("10");
@@ -284,19 +299,18 @@ public final class NodeUtilTest extends TestCase {
   }
 
   private void assertPureBooleanTrue(String val) {
-    assertEquals(TernaryValue.TRUE, NodeUtil.getPureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getPureBooleanValue(getNode(val))).isEqualTo(TernaryValue.TRUE);
   }
 
   private void assertPureBooleanFalse(String val) {
-    assertEquals(
-        TernaryValue.FALSE, NodeUtil.getPureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getPureBooleanValue(getNode(val))).isEqualTo(TernaryValue.FALSE);
   }
 
   private void assertPureBooleanUnknown(String val) {
-    assertEquals(
-        TernaryValue.UNKNOWN, NodeUtil.getPureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getPureBooleanValue(getNode(val))).isEqualTo(TernaryValue.UNKNOWN);
   }
 
+  @Test
   public void testGetExpressionBooleanValue() {
     assertImpureBooleanTrue("a=true");
     assertImpureBooleanFalse("a=false");
@@ -361,135 +375,161 @@ public final class NodeUtilTest extends TestCase {
   }
 
   private void assertImpureBooleanTrue(String val) {
-    assertEquals(TernaryValue.TRUE,
-        NodeUtil.getImpureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getImpureBooleanValue(getNode(val))).isEqualTo(TernaryValue.TRUE);
   }
 
   private void assertImpureBooleanFalse(String val) {
-    assertEquals(TernaryValue.FALSE,
-        NodeUtil.getImpureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getImpureBooleanValue(getNode(val))).isEqualTo(TernaryValue.FALSE);
   }
 
   private void assertImpureBooleanUnknown(String val) {
-    assertEquals(TernaryValue.UNKNOWN,
-        NodeUtil.getImpureBooleanValue(getNode(val)));
+    assertThat(NodeUtil.getImpureBooleanValue(getNode(val))).isEqualTo(TernaryValue.UNKNOWN);
   }
 
+  @Test
   public void testGetStringValue() {
-    assertEquals("true", NodeUtil.getStringValue(getNode("true")));
-    assertEquals("10", NodeUtil.getStringValue(getNode("10")));
-    assertEquals("1", NodeUtil.getStringValue(getNode("1.0")));
+    assertThat(NodeUtil.getStringValue(getNode("true"))).isEqualTo("true");
+    assertThat(NodeUtil.getStringValue(getNode("10"))).isEqualTo("10");
+    assertThat(NodeUtil.getStringValue(getNode("1.0"))).isEqualTo("1");
 
     /* See https://github.com/google/closure-compiler/issues/1262 */
-    assertEquals(
-        "1.2323919403474454e+21", NodeUtil.getStringValue(getNode("1.2323919403474454e+21")));
+    assertThat(NodeUtil.getStringValue(getNode("1.2323919403474454e+21")))
+        .isEqualTo("1.2323919403474454e+21");
 
-    assertEquals("0", NodeUtil.getStringValue(getNode("'0'")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("/a/")));
-    assertEquals("[object Object]", NodeUtil.getStringValue(getNode("{}")));
+    assertThat(NodeUtil.getStringValue(getNode("'0'"))).isEqualTo("0");
+    assertThat(NodeUtil.getStringValue(getNode("/a/"))).isNull();
+    assertThat(NodeUtil.getStringValue(getNode("{}"))).isEqualTo("[object Object]");
     assertThat(NodeUtil.getStringValue(getNode("[]"))).isEmpty();
-    assertEquals("false", NodeUtil.getStringValue(getNode("false")));
-    assertEquals("null", NodeUtil.getStringValue(getNode("null")));
-    assertEquals("0", NodeUtil.getStringValue(getNode("0")));
+    assertThat(NodeUtil.getStringValue(getNode("false"))).isEqualTo("false");
+    assertThat(NodeUtil.getStringValue(getNode("null"))).isEqualTo("null");
+    assertThat(NodeUtil.getStringValue(getNode("0"))).isEqualTo("0");
     assertThat(NodeUtil.getStringValue(getNode("''"))).isEmpty();
-    assertEquals("undefined", NodeUtil.getStringValue(getNode("undefined")));
-    assertEquals("undefined", NodeUtil.getStringValue(getNode("void 0")));
-    assertEquals("undefined", NodeUtil.getStringValue(getNode("void foo()")));
+    assertThat(NodeUtil.getStringValue(getNode("undefined"))).isEqualTo("undefined");
+    assertThat(NodeUtil.getStringValue(getNode("void 0"))).isEqualTo("undefined");
+    assertThat(NodeUtil.getStringValue(getNode("void foo()"))).isEqualTo("undefined");
 
-    assertEquals("NaN", NodeUtil.getStringValue(getNode("NaN")));
-    assertEquals("Infinity", NodeUtil.getStringValue(getNode("Infinity")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("x")));
+    assertThat(NodeUtil.getStringValue(getNode("NaN"))).isEqualTo("NaN");
+    assertThat(NodeUtil.getStringValue(getNode("Infinity"))).isEqualTo("Infinity");
+    assertThat(NodeUtil.getStringValue(getNode("x"))).isNull();
 
-    assertEquals("Hello", NodeUtil.getStringValue(getNode("`Hello`")));
-    assertEquals("Hello foo", NodeUtil.getStringValue(getNode("`Hello ${'foo'}`")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("`Hello ${name}`")));
-    assertEquals("4 bananas", NodeUtil.getStringValue(getNode("`${4} bananas`")));
-    assertEquals("This is true.", NodeUtil.getStringValue(getNode("`This is ${true}.`")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("`${'hello'} ${name}`")));
+    assertThat(NodeUtil.getStringValue(getNode("`Hello`"))).isEqualTo("Hello");
+    assertThat(NodeUtil.getStringValue(getNode("`Hello ${'foo'}`"))).isEqualTo("Hello foo");
+    assertThat(NodeUtil.getStringValue(getNode("`Hello ${name}`"))).isNull();
+    assertThat(NodeUtil.getStringValue(getNode("`${4} bananas`"))).isEqualTo("4 bananas");
+    assertThat(NodeUtil.getStringValue(getNode("`This is ${true}.`"))).isEqualTo("This is true.");
+    assertThat(NodeUtil.getStringValue(getNode("`${'hello'} ${name}`"))).isNull();
   }
 
+  @Test
   public void testGetArrayStringValue() {
     assertThat(NodeUtil.getStringValue(getNode("[]"))).isEmpty();
     assertThat(NodeUtil.getStringValue(getNode("['']"))).isEmpty();
     assertThat(NodeUtil.getStringValue(getNode("[null]"))).isEmpty();
     assertThat(NodeUtil.getStringValue(getNode("[undefined]"))).isEmpty();
     assertThat(NodeUtil.getStringValue(getNode("[void 0]"))).isEmpty();
-    assertEquals("NaN", NodeUtil.getStringValue(getNode("[NaN]")));
-    assertEquals(",", NodeUtil.getStringValue(getNode("[,'']")));
-    assertEquals(",,", NodeUtil.getStringValue(getNode("[[''],[''],['']]")));
-    assertEquals("1,2", NodeUtil.getStringValue(getNode("[[1.0],[2.0]]")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("[a]")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("[1,a]")));
+    assertThat(NodeUtil.getStringValue(getNode("[NaN]"))).isEqualTo("NaN");
+    assertThat(NodeUtil.getStringValue(getNode("[,'']"))).isEqualTo(",");
+    assertThat(NodeUtil.getStringValue(getNode("[[''],[''],['']]"))).isEqualTo(",,");
+    assertThat(NodeUtil.getStringValue(getNode("[[1.0],[2.0]]"))).isEqualTo("1,2");
+    assertThat(NodeUtil.getStringValue(getNode("[a]"))).isNull();
+    assertThat(NodeUtil.getStringValue(getNode("[1,a]"))).isNull();
   }
 
-  public void testIsObjectLiteralKey1() throws Exception {
-    assertIsObjectLiteralKey(parseExpr("({})"), false);
-    assertIsObjectLiteralKey(parseExpr("a"), false);
-    assertIsObjectLiteralKey(parseExpr("'a'"), false);
-    assertIsObjectLiteralKey(parseExpr("1"), false);
-    assertIsObjectLiteralKey(parseExpr("({a: 1})").getFirstChild(), true);
-    assertIsObjectLiteralKey(parseExpr("({1: 1})").getFirstChild(), true);
-    assertIsObjectLiteralKey(parseExpr("({get a(){}})").getFirstChild(), true);
-    assertIsObjectLiteralKey(parseExpr("({set a(b){}})").getFirstChild(), true);
+  @Test
+  public void testMayBeObjectLitKey() {
+    assertMayBeObjectLitKey(parseExpr("({})"), false);
+    assertMayBeObjectLitKey(parseExpr("a"), false);
+    assertMayBeObjectLitKey(parseExpr("'a'"), false);
+    assertMayBeObjectLitKey(parseExpr("1"), false);
+    assertMayBeObjectLitKey(parseExpr("({a: 1})").getFirstChild(), true);
+    assertMayBeObjectLitKey(parseExpr("({1: 1})").getFirstChild(), true);
+    assertMayBeObjectLitKey(parseExpr("({get a(){}})").getFirstChild(), true);
+    assertMayBeObjectLitKey(parseExpr("({set a(b){}})").getFirstChild(), true);
+    // returns false for computed properties (b/111621528)
+    assertMayBeObjectLitKey(parseExpr("({['a']: 1})").getFirstChild(), false);
+    // returns true for non-object-literal keys
+    assertMayBeObjectLitKey(parseExpr("({a} = {})").getFirstFirstChild(), true);
+    assertMayBeObjectLitKey(parseExpr("(class { a() {} })").getLastChild().getFirstChild(), true);
   }
 
+  @Test
+  public void testIsObjectLitKey() {
+    assertIsObjectLitKey(parseExpr("({a: 1})").getFirstChild(), true);
+    // returns false for computed properties (b/111621528)
+    assertMayBeObjectLitKey(parseExpr("({['a']: 1})").getFirstChild(), false);
+    // returns false for object patterns
+    assertIsObjectLitKey(parseExpr("({a} = {})").getFirstFirstChild(), false);
+    assertIsObjectLitKey(parseExpr("(class { a() {} })").getLastChild().getFirstChild(), false);
+  }
+
+  /** Returns the parsed expression (e.g. returns a NAME given 'a') */
   private Node parseExpr(String js) {
     Node root = parse(js);
     return root.getFirstFirstChild();
   }
 
-  private void assertIsObjectLiteralKey(Node node, boolean expected) {
-    assertEquals(expected, NodeUtil.isObjectLitKey(node));
+  private void assertMayBeObjectLitKey(Node node, boolean expected) {
+    assertThat(NodeUtil.mayBeObjectLitKey(node)).isEqualTo(expected);
   }
 
-  public void testGetFunctionName1() throws Exception {
+  private void assertIsObjectLitKey(Node node, boolean expected) {
+    assertThat(NodeUtil.isObjectLitKey(node)).isEqualTo(expected);
+  }
+
+  @Test
+  public void testGetFunctionName1() {
     Node parent = parse("function name(){}");
     assertGetNameResult(parent.getFirstChild(), "name");
   }
 
-  public void testGetFunctionName2() throws Exception {
+  @Test
+  public void testGetFunctionName2() {
     Node parent = parse("var name = function(){}")
         .getFirstFirstChild();
 
     assertGetNameResult(parent.getFirstChild(), "name");
   }
 
-  public void testGetFunctionName3() throws Exception {
+  @Test
+  public void testGetFunctionName3() {
     Node parent = parse("qualified.name = function(){}")
         .getFirstFirstChild();
 
     assertGetNameResult(parent.getLastChild(), "qualified.name");
   }
 
-  public void testGetFunctionName4() throws Exception {
+  @Test
+  public void testGetFunctionName4() {
     Node parent = parse("var name2 = function name1(){}")
         .getFirstFirstChild();
 
     assertGetNameResult(parent.getFirstChild(), "name2");
   }
 
-  public void testGetFunctionName5() throws Exception {
+  @Test
+  public void testGetFunctionName5() {
     Node n = parse("qualified.name2 = function name1(){}");
     Node parent = n.getFirstFirstChild();
 
     assertGetNameResult(parent.getLastChild(), "qualified.name2");
   }
 
-  public void testGetBestFunctionName1() throws Exception {
+  @Test
+  public void testGetBestFunctionName1() {
     Node parent = parse("function func(){}");
 
-    assertEquals("func",
-        NodeUtil.getNearestFunctionName(parent.getFirstChild()));
+    assertThat(NodeUtil.getNearestFunctionName(parent.getFirstChild())).isEqualTo("func");
   }
 
-  public void testGetBestFunctionName2() throws Exception {
+  @Test
+  public void testGetBestFunctionName2() {
     Node parent = parse("var obj = {memFunc(){}}")
         .getFirstFirstChild().getFirstFirstChild();
 
-    assertEquals("memFunc",
-        NodeUtil.getNearestFunctionName(parent.getLastChild()));
+    assertThat(NodeUtil.getNearestFunctionName(parent.getLastChild())).isEqualTo("memFunc");
   }
 
+  @Test
   public void testConstKeywordNamespace() {
     Node decl = parse("const ns = {};").getFirstChild();
     checkState(decl.isConst(), decl);
@@ -501,57 +541,65 @@ public final class NodeUtilTest extends TestCase {
   }
 
   private void assertGetNameResult(Node function, String name) {
-    assertEquals(Token.FUNCTION, function.getToken());
-    assertEquals(name, NodeUtil.getName(function));
+    assertNode(function).hasToken(Token.FUNCTION);
+    assertThat(NodeUtil.getName(function)).isEqualTo(name);
   }
 
+  @Test
   public void testContainsFunctionDeclaration() {
-    assertTrue(NodeUtil.containsFunction(getNode("function foo(){}")));
-    assertTrue(NodeUtil.containsFunction(getNode("(b?function(){}:null)")));
+    assertThat(NodeUtil.containsFunction(getNode("function foo(){}"))).isTrue();
+    assertThat(NodeUtil.containsFunction(getNode("(b?function(){}:null)"))).isTrue();
 
-    assertFalse(NodeUtil.containsFunction(getNode("(b?foo():null)")));
-    assertFalse(NodeUtil.containsFunction(getNode("foo()")));
+    assertThat(NodeUtil.containsFunction(getNode("(b?foo():null)"))).isFalse();
+    assertThat(NodeUtil.containsFunction(getNode("foo()"))).isFalse();
   }
 
+  @Test
   public void testIsFunctionDeclaration() {
-    assertTrue(NodeUtil.isFunctionDeclaration(getFunctionNode("function foo(){}")));
-    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("class C { constructor() {} }")));
-    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("({ foo() {} })")));
-    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("var x = function(){}")));
-    assertTrue(NodeUtil.isFunctionDeclaration(getFunctionNode("export function f() {}")));
-    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("export default function() {}")));
-    assertTrue(
-        NodeUtil.isFunctionDeclaration(getFunctionNode("export default function foo() {}")));
-    assertFalse(
-        NodeUtil.isFunctionDeclaration(getFunctionNode("export default (foo) => { alert(foo); }")));
+    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("function foo(){}"))).isTrue();
+    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("class C { constructor() {} }")))
+        .isFalse();
+    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("({ foo() {} })"))).isFalse();
+    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("var x = function(){}"))).isFalse();
+    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("export function f() {}"))).isTrue();
+    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("export default function() {}")))
+        .isFalse();
+    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("export default function foo() {}")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isFunctionDeclaration(
+                getFunctionNode("export default (foo) => { alert(foo); }")))
+        .isFalse();
   }
 
+  @Test
   public void testIsMethodDeclaration() {
-    assertTrue(
-        NodeUtil.isMethodDeclaration(getFunctionNode("class C { constructor() {} }")));
-    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("class C { a() {} }")));
-    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("class C { static a() {} }")));
-    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("({ set foo(v) {} })")));
-    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("({ get foo() {} })")));
-    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("({ [foo]() {} })")));
+    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("class C { constructor() {} }")))
+        .isTrue();
+    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("class C { a() {} }"))).isTrue();
+    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("class C { static a() {} }"))).isTrue();
+    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("({ set foo(v) {} })"))).isTrue();
+    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("({ get foo() {} })"))).isTrue();
+    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("({ [foo]() {} })"))).isTrue();
   }
 
+  @Test
   public void testIsClassDeclaration() {
-    assertTrue(NodeUtil.isClassDeclaration(getClassNode("class Foo {}")));
-    assertFalse(NodeUtil.isClassDeclaration(getClassNode("var Foo = class {}")));
-    assertFalse(NodeUtil.isClassDeclaration(getClassNode("var Foo = class Foo{}")));
-    assertTrue(NodeUtil.isClassDeclaration(getClassNode("export default class Foo {}")));
-    assertTrue(NodeUtil.isClassDeclaration(getClassNode("export class Foo {}")));
-    assertFalse(NodeUtil.isClassDeclaration(getClassNode("export default class {}")));
+    assertThat(NodeUtil.isClassDeclaration(getClassNode("class Foo {}"))).isTrue();
+    assertThat(NodeUtil.isClassDeclaration(getClassNode("var Foo = class {}"))).isFalse();
+    assertThat(NodeUtil.isClassDeclaration(getClassNode("var Foo = class Foo{}"))).isFalse();
+    assertThat(NodeUtil.isClassDeclaration(getClassNode("export default class Foo {}"))).isTrue();
+    assertThat(NodeUtil.isClassDeclaration(getClassNode("export class Foo {}"))).isTrue();
+    assertThat(NodeUtil.isClassDeclaration(getClassNode("export default class {}"))).isFalse();
   }
 
   private void assertSideEffect(boolean se, String js) {
     Node n = parse(js);
-    assertEquals(se, NodeUtil.mayHaveSideEffects(n.getFirstChild()));
+    assertThat(NodeUtil.mayHaveSideEffects(n.getFirstChild())).isEqualTo(se);
   }
 
   private void assertSideEffect(boolean se, Node n) {
-    assertEquals(se, NodeUtil.mayHaveSideEffects(n));
+    assertThat(NodeUtil.mayHaveSideEffects(n)).isEqualTo(se);
   }
 
   private void assertSideEffect(boolean se, String js, boolean globalRegExp) {
@@ -559,9 +607,10 @@ public final class NodeUtilTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     compiler.setHasRegExpGlobalReferences(globalRegExp);
-    assertEquals(se, NodeUtil.mayHaveSideEffects(n.getFirstChild(), compiler));
+    assertThat(NodeUtil.mayHaveSideEffects(n.getFirstChild(), compiler)).isEqualTo(se);
   }
 
+  @Test
   public void testMayHaveSideEffects() {
     assertSideEffect(false, "[1]");
     assertSideEffect(false, "[1, 2]");
@@ -680,6 +729,7 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(true, "export {x};");
   }
 
+  @Test
   public void testComputedPropSideEffects() {
     assertSideEffect(false, "({[a]: x})");
     assertSideEffect(true, "({[a()]: x})");
@@ -707,6 +757,7 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(true, computedProp);
   }
 
+  @Test
   public void testObjectMethodSideEffects() {
     // "toString" and "valueOf" are assumed to be side-effect free
     assertSideEffect(false, "o.toString()");
@@ -716,6 +767,7 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(true, "o.watch()");
   }
 
+  @Test
   public void testRegExpSideEffect() {
     // A RegExp Object by itself doesn't have any side-effects
     assertSideEffect(false, "/abc/gi", true);
@@ -763,6 +815,7 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(true, "''.match(a)", false);
   }
 
+  @Test
   public void testRegExpSideEffect2() {
     assertSideEffect(true, "'a'.replace(/a/, function (s) {alert(s)})", false);
     assertSideEffect(false, "'a'.replace(/a/, 'x')", false);
@@ -770,9 +823,10 @@ public final class NodeUtilTest extends TestCase {
 
   private void assertMutableState(boolean se, String js) {
     Node n = parse(js);
-    assertEquals(se, NodeUtil.mayEffectMutableState(n.getFirstChild()));
+    assertThat(NodeUtil.mayEffectMutableState(n.getFirstChild(), new Compiler())).isEqualTo(se);
   }
 
+  @Test
   public void testMayEffectMutableState() {
     assertMutableState(true, "i++");
     assertMutableState(true, "[b, [a, i++]]");
@@ -829,10 +883,12 @@ public final class NodeUtilTest extends TestCase {
     assertMutableState(true, "new SomeClassINeverHeardOf()");
   }
 
+  @Test
   public void testIsFunctionExpression() {
     assertContainsAnonFunc(true, "(function(){})");
     assertContainsAnonFunc(true, "[function a(){}]");
     assertContainsAnonFunc(true, "({x: function a(){}})");
+    assertContainsAnonFunc(true, "({[0]: function a() {}})");
     assertContainsAnonFunc(true, "(function a(){})()");
     assertContainsAnonFunc(true, "x = function a(){};");
     assertContainsAnonFunc(true, "var x = function a(){};");
@@ -859,15 +915,22 @@ public final class NodeUtilTest extends TestCase {
     assertContainsAnonFunc(false, "class C { a() {} }");
     assertContainsAnonFunc(false, "class C { static a() {} }");
     assertContainsAnonFunc(false, "x = { a() {} }");
+    assertContainsAnonFunc(false, "({[0]() {}})");
+    assertContainsAnonFunc(false, "({get [0]() {}})");
+    assertContainsAnonFunc(false, "({set [0](x) {}})");
   }
 
   private void assertContainsAnonFunc(boolean expected, String js) {
     Node funcParent = findParentOfFuncOrClassDescendant(parse(js), Token.FUNCTION);
-    assertNotNull("Expected function node in parse tree of: " + js, funcParent);
+    assertWithMessage("Expected function node in parse tree of: %s", js)
+        .that(funcParent)
+        .isNotNull();
+
     Node funcNode = getFuncOrClassChild(funcParent, Token.FUNCTION);
-    assertEquals(expected, NodeUtil.isFunctionExpression(funcNode));
+    assertThat(NodeUtil.isFunctionExpression(funcNode)).isEqualTo(expected);
   }
 
+  @Test
   public void testIsClassExpression() {
     assertContainsAnonClass(true, "(class {})");
     assertContainsAnonClass(true, "[class Clazz {}]");
@@ -898,9 +961,9 @@ public final class NodeUtilTest extends TestCase {
 
   private void assertContainsAnonClass(boolean expected, String js) {
     Node classParent = findParentOfFuncOrClassDescendant(parse(js), Token.CLASS);
-    assertNotNull("Expected class node in parse tree of: " + js, classParent);
+    assertWithMessage("Expected class node in parse tree of: %s", js).that(classParent).isNotNull();
     Node classNode = getFuncOrClassChild(classParent, Token.CLASS);
-    assertEquals(expected, NodeUtil.isClassExpression(classNode));
+    assertThat(NodeUtil.isClassExpression(classNode)).isEqualTo(expected);
   }
 
   private Node findParentOfFuncOrClassDescendant(Node n, Token token) {
@@ -927,98 +990,84 @@ public final class NodeUtilTest extends TestCase {
     return null;
   }
 
+  @Test
   public void testContainsType() {
-    assertTrue(NodeUtil.containsType(
-        parse("this"), Token.THIS));
-    assertTrue(NodeUtil.containsType(
-        parse("function foo(){}(this)"), Token.THIS));
-    assertTrue(NodeUtil.containsType(
-        parse("b?this:null"), Token.THIS));
+    assertThat(NodeUtil.containsType(parse("this"), Token.THIS)).isTrue();
+    assertThat(NodeUtil.containsType(parse("function foo(){}(this)"), Token.THIS)).isTrue();
+    assertThat(NodeUtil.containsType(parse("b?this:null"), Token.THIS)).isTrue();
 
-    assertFalse(NodeUtil.containsType(
-        parse("a"), Token.THIS));
-    assertFalse(NodeUtil.containsType(
-        parse("function foo(){}"), Token.THIS));
-    assertFalse(NodeUtil.containsType(
-        parse("(b?foo():null)"), Token.THIS));
+    assertThat(NodeUtil.containsType(parse("a"), Token.THIS)).isFalse();
+    assertThat(NodeUtil.containsType(parse("function foo(){}"), Token.THIS)).isFalse();
+    assertThat(NodeUtil.containsType(parse("(b?foo():null)"), Token.THIS)).isFalse();
   }
 
+  @Test
   public void testReferencesThis() {
-    assertTrue(NodeUtil.referencesThis(
-        parse("this")));
+    assertThat(NodeUtil.referencesThis(parse("this"))).isTrue();
     // Don't descend into functions (starts at the script node)
-    assertFalse(NodeUtil.referencesThis(
-        parse("function foo(){this}")));
+    assertThat(NodeUtil.referencesThis(parse("function foo(){this}"))).isFalse();
     // But starting with a function properly check for 'this'
     Node n = parse("function foo(){this}").getFirstChild();
-    assertEquals(Token.FUNCTION, n.getToken());
-    assertTrue(NodeUtil.referencesThis(n));
-    assertTrue(NodeUtil.referencesThis(
-        parse("b?this:null")));
+    assertNode(n).hasToken(Token.FUNCTION);
+    assertThat(NodeUtil.referencesThis(n)).isTrue();
+    assertThat(NodeUtil.referencesThis(parse("b?this:null"))).isTrue();
 
-    assertFalse(NodeUtil.referencesThis(
-        parse("a")));
+    assertThat(NodeUtil.referencesThis(parse("a"))).isFalse();
     n = parse("function foo(){}").getFirstChild();
-    assertEquals(Token.FUNCTION, n.getToken());
-    assertFalse(NodeUtil.referencesThis(n));
-    assertFalse(NodeUtil.referencesThis(
-        parse("(b?foo():null)")));
+    assertNode(n).hasToken(Token.FUNCTION);
+    assertThat(NodeUtil.referencesThis(n)).isFalse();
+    assertThat(NodeUtil.referencesThis(parse("(b?foo():null)"))).isFalse();
 
-    assertTrue(NodeUtil.referencesThis(parse("()=>this")));
-    assertTrue(NodeUtil.referencesThis(parse("() => { () => alert(this); }")));
+    assertThat(NodeUtil.referencesThis(parse("()=>this"))).isTrue();
+    assertThat(NodeUtil.referencesThis(parse("() => { () => alert(this); }"))).isTrue();
   }
 
+  @Test
   public void testGetNodeTypeReferenceCount() {
-    assertEquals(
-        0,
-        NodeUtil.getNodeTypeReferenceCount(
-            parse("function foo(){}"), Token.THIS, Predicates.<Node>alwaysTrue()));
-    assertEquals(
-        1,
-        NodeUtil.getNodeTypeReferenceCount(
-            parse("this"), Token.THIS, Predicates.<Node>alwaysTrue()));
-    assertEquals(
-        2,
-        NodeUtil.getNodeTypeReferenceCount(
-            parse("this;function foo(){}(this)"), Token.THIS, Predicates.<Node>alwaysTrue()));
+    assertThat(
+            NodeUtil.getNodeTypeReferenceCount(
+                parse("function foo(){}"), Token.THIS, Predicates.<Node>alwaysTrue()))
+        .isEqualTo(0);
+    assertThat(
+            NodeUtil.getNodeTypeReferenceCount(
+                parse("this"), Token.THIS, Predicates.<Node>alwaysTrue()))
+        .isEqualTo(1);
+    assertThat(
+            NodeUtil.getNodeTypeReferenceCount(
+                parse("this;function foo(){}(this)"), Token.THIS, Predicates.<Node>alwaysTrue()))
+        .isEqualTo(2);
   }
 
+  @Test
   public void testIsNameReferenceCount() {
-    assertTrue(NodeUtil.isNameReferenced(
-        parse("function foo(){}"), "foo"));
-    assertTrue(NodeUtil.isNameReferenced(
-        parse("var foo = function(){}"), "foo"));
-    assertFalse(NodeUtil.isNameReferenced(
-        parse("function foo(){}"), "undefined"));
-    assertTrue(NodeUtil.isNameReferenced(
-        parse("undefined"), "undefined"));
-    assertTrue(NodeUtil.isNameReferenced(
-        parse("undefined;function foo(){}(undefined)"), "undefined"));
+    assertThat(NodeUtil.isNameReferenced(parse("function foo(){}"), "foo")).isTrue();
+    assertThat(NodeUtil.isNameReferenced(parse("var foo = function(){}"), "foo")).isTrue();
+    assertThat(NodeUtil.isNameReferenced(parse("function foo(){}"), "undefined")).isFalse();
+    assertThat(NodeUtil.isNameReferenced(parse("undefined"), "undefined")).isTrue();
+    assertThat(
+            NodeUtil.isNameReferenced(parse("undefined;function foo(){}(undefined)"), "undefined"))
+        .isTrue();
 
-    assertTrue(NodeUtil.isNameReferenced(
-        parse("goo.foo"), "goo"));
-    assertFalse(NodeUtil.isNameReferenced(
-        parse("goo.foo"), "foo"));
+    assertThat(NodeUtil.isNameReferenced(parse("goo.foo"), "goo")).isTrue();
+    assertThat(NodeUtil.isNameReferenced(parse("goo.foo"), "foo")).isFalse();
   }
 
+  @Test
   public void testGetNameReferenceCount() {
-    assertEquals(0, NodeUtil.getNameReferenceCount(
-        parse("function foo(){}"), "undefined"));
-    assertEquals(1, NodeUtil.getNameReferenceCount(
-        parse("undefined"), "undefined"));
-    assertEquals(2, NodeUtil.getNameReferenceCount(
-        parse("undefined;function foo(){}(undefined)"), "undefined"));
+    assertThat(NodeUtil.getNameReferenceCount(parse("function foo(){}"), "undefined")).isEqualTo(0);
+    assertThat(NodeUtil.getNameReferenceCount(parse("undefined"), "undefined")).isEqualTo(1);
+    assertThat(
+            NodeUtil.getNameReferenceCount(
+                parse("undefined;function foo(){}(undefined)"), "undefined"))
+        .isEqualTo(2);
 
-    assertEquals(1, NodeUtil.getNameReferenceCount(
-        parse("goo.foo"), "goo"));
-    assertEquals(0, NodeUtil.getNameReferenceCount(
-        parse("goo.foo"), "foo"));
-    assertEquals(1, NodeUtil.getNameReferenceCount(
-        parse("function foo(){}"), "foo"));
-    assertEquals(1, NodeUtil.getNameReferenceCount(
-        parse("var foo = function(){}"), "foo"));
+    assertThat(NodeUtil.getNameReferenceCount(parse("goo.foo"), "goo")).isEqualTo(1);
+    assertThat(NodeUtil.getNameReferenceCount(parse("goo.foo"), "foo")).isEqualTo(0);
+    assertThat(NodeUtil.getNameReferenceCount(parse("function foo(){}"), "foo")).isEqualTo(1);
+    assertThat(NodeUtil.getNameReferenceCount(parse("var foo = function(){}"), "foo")).isEqualTo(1);
   }
 
+  @Test
   public void testGetVarsDeclaredInBranch() {
     assertNodeNames(ImmutableSet.of("foo"),
         NodeUtil.getVarsDeclaredInBranch(
@@ -1042,9 +1091,10 @@ public final class NodeUtilTest extends TestCase {
     for (Node node : nodes) {
       actualNames.add(node.getString());
     }
-    assertEquals(nodeNames, actualNames);
+    assertThat(actualNames).isEqualTo(nodeNames);
   }
 
+  @Test
   public void testIsNonlocalModuleExportNameOnExports1() {
     Node root = parse("export {localName as exportName};");
     Node moduleBody = root.getFirstChild();
@@ -1055,11 +1105,11 @@ public final class NodeUtilTest extends TestCase {
     Node localName = exportSpec.getFirstChild();
     Node exportName = exportSpec.getSecondChild();
 
-    assertFalse(NodeUtil.isNonlocalModuleExportName(localName));
-    assertTrue(NodeUtil.isNonlocalModuleExportName(exportName));
-
+    assertThat(NodeUtil.isNonlocalModuleExportName(localName)).isFalse();
+    assertThat(NodeUtil.isNonlocalModuleExportName(exportName)).isTrue();
   }
 
+  @Test
   public void testIsNonlocalModuleExportNameOnExports2() {
     Node root = parse("let bar; export {bar};");
     Node moduleBody = root.getFirstChild();
@@ -1070,9 +1120,10 @@ public final class NodeUtilTest extends TestCase {
     Node name = exportSpec.getFirstChild();
 
     // bar is defined locally, so isNonlocalModuleExportName is false.
-    assertFalse(NodeUtil.isNonlocalModuleExportName(name));
+    assertThat(NodeUtil.isNonlocalModuleExportName(name)).isFalse();
   }
 
+  @Test
   public void testIsNonlocalModuleExportNameOnImports1() {
     Node root = parse("import {exportName as localName} from './foo.js';");
     Node moduleBody = root.getFirstChild();
@@ -1083,10 +1134,11 @@ public final class NodeUtilTest extends TestCase {
     Node exportName = importSpec.getFirstChild();
     Node localName = importSpec.getSecondChild();
 
-    assertTrue(NodeUtil.isNonlocalModuleExportName(exportName));
-    assertFalse(NodeUtil.isNonlocalModuleExportName(localName));
+    assertThat(NodeUtil.isNonlocalModuleExportName(exportName)).isTrue();
+    assertThat(NodeUtil.isNonlocalModuleExportName(localName)).isFalse();
   }
 
+  @Test
   public void testIsNonlocalModuleExportNameOnImports2() {
     Node root = parse("import {bar} from './foo.js';");
     Node moduleBody = root.getFirstChild();
@@ -1097,9 +1149,10 @@ public final class NodeUtilTest extends TestCase {
     Node name = importSpec.getSecondChild();
 
     // bar is defined locally so isNonlocalModuleExportName is false
-    assertFalse(NodeUtil.isNonlocalModuleExportName(name));
+    assertThat(NodeUtil.isNonlocalModuleExportName(name)).isFalse();
   }
 
+  @Test
   public void testIsControlStructureCodeBlock() {
     Node root = parse("if (x) foo(); else boo();");
     Node ifNode = root.getFirstChild();
@@ -1108,27 +1161,30 @@ public final class NodeUtilTest extends TestCase {
     Node ifCase = ifNode.getSecondChild();
     Node elseCase = ifNode.getLastChild();
 
-    assertFalse(NodeUtil.isControlStructureCodeBlock(ifNode, ifCondition));
-    assertTrue(NodeUtil.isControlStructureCodeBlock(ifNode, ifCase));
-    assertTrue(NodeUtil.isControlStructureCodeBlock(ifNode, elseCase));
+    assertThat(NodeUtil.isControlStructureCodeBlock(ifNode, ifCondition)).isFalse();
+    assertThat(NodeUtil.isControlStructureCodeBlock(ifNode, ifCase)).isTrue();
+    assertThat(NodeUtil.isControlStructureCodeBlock(ifNode, elseCase)).isTrue();
   }
 
+  @Test
   public void testIsFunctionExpression1() {
     Node root = parse("(function foo() {})");
     Node statementNode = root.getFirstChild();
-    assertTrue(statementNode.isExprResult());
+    assertThat(statementNode.isExprResult()).isTrue();
     Node functionNode = statementNode.getFirstChild();
-    assertTrue(functionNode.isFunction());
-    assertTrue(NodeUtil.isFunctionExpression(functionNode));
+    assertThat(functionNode.isFunction()).isTrue();
+    assertThat(NodeUtil.isFunctionExpression(functionNode)).isTrue();
   }
 
+  @Test
   public void testIsFunctionExpression2() {
     Node root = parse("function foo() {}");
     Node functionNode = root.getFirstChild();
-    assertTrue(functionNode.isFunction());
-    assertFalse(NodeUtil.isFunctionExpression(functionNode));
+    assertThat(functionNode.isFunction()).isTrue();
+    assertThat(NodeUtil.isFunctionExpression(functionNode)).isFalse();
   }
 
+  @Test
   public void testRemoveChildBlock() {
     // Test removing the inner block.
     Node actual = parse("{{x()}}");
@@ -1138,12 +1194,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(outerBlockNode, innerBlockNode);
     String expected = "{{}}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveTryChild1() {
     // Test removing the finally clause.
     Node actual = parse("try {foo()} catch(e) {} finally {}");
@@ -1153,12 +1207,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(tryNode, finallyBlock);
     String expected = "try {foo()} catch(e) {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveTryChild2() {
     // Test removing the try clause.
     Node actual = parse("try {foo()} catch(e) {} finally {}");
@@ -1168,12 +1220,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(tryNode, tryBlock);
     String expected = "try {} catch(e) {} finally {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveTryChild3() {
     // Test removing the catch clause.
     Node actual = parse("try {foo()} catch(e) {} finally {}");
@@ -1184,12 +1234,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(catchBlocks, catchBlock);
     String expected = "try {foo()} finally {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveTryChild4() {
     // Test removing the block that contains the catch clause.
     Node actual = parse("try {foo()} catch(e) {} finally {}");
@@ -1199,12 +1247,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(tryNode, catchBlocks);
     String expected = "try {foo()} finally {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveFromImport() {
     // Remove imported function
     Node actual = parse("import foo from './foo';");
@@ -1214,12 +1260,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(importNode, functionFoo);
     String expected = "import './foo';";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveParamChild1() {
     // Remove traditional parameter
     Node actual = parse("function f(p1) {}");
@@ -1229,12 +1273,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(paramList, p1);
     String expected = "function f() {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveParamChild2() {
     // Remove default parameter
     Node actual = parse("function f(p1 = 0, p2) {}");
@@ -1244,12 +1286,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(paramList, p1);
     String expected = "function f(p2) {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveVarChild() {
     // Test removing the first child.
     Node actual = parse("var foo, goo, hoo");
@@ -1259,10 +1299,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(varNode, nameNode);
     String expected = "var goo, hoo";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the second child.
     actual = parse("var foo, goo, hoo");
@@ -1272,10 +1309,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(varNode, nameNode);
     expected = "var foo, hoo";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the last child of several children.
     actual = parse("var foo, hoo");
@@ -1285,10 +1319,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(varNode, nameNode);
     expected = "var foo";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the last.
     actual = parse("var hoo");
@@ -1298,12 +1329,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(varNode, nameNode);
     expected = "";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveLetChild() {
     // Test removing the first child.
     Node actual = parse("let foo, goo, hoo");
@@ -1313,10 +1342,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(letNode, nameNode);
     String expected = "let goo, hoo";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the second child.
     actual = parse("let foo, goo, hoo");
@@ -1326,10 +1352,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(letNode, nameNode);
     expected = "let foo, hoo";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the last child of several children.
     actual = parse("let foo, hoo");
@@ -1339,10 +1362,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(letNode, nameNode);
     expected = "let foo";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the last.
     actual = parse("let hoo");
@@ -1352,12 +1372,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(letNode, nameNode);
     expected = "";
-    difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveLabelChild1() {
     // Test removing the first child.
     Node actual = parse("foo: goo()");
@@ -1367,12 +1385,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(labelNode, callExpressNode);
     String expected = "";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveLabelChild2() {
     // Test removing the first child.
     Node actual = parse("achoo: foo: goo()");
@@ -1382,12 +1398,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(labelNode, callExpressNode);
     String expected = "";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemovePatternChild() {
     // remove variable declaration from object pattern
     Node actual = parse("var {a, b, c} = {a:1, b:2, c:3}");
@@ -1400,15 +1414,13 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(pattern, a);
     String expected = "var {b, c} = {a:1, b:2, c:3};";
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Remove all entries in object pattern
     NodeUtil.removeChild(pattern, b);
     NodeUtil.removeChild(pattern, c);
     expected = "var { } = {a:1, b:2, c:3};";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // remove variable declaration from array pattern
     actual = parse("var [a, b] = [1, 2]");
@@ -1419,10 +1431,10 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(pattern, a);
     expected = "var [ , b] = [1, 2];";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testRemoveForChild() {
     // Test removing the initializer.
     Node actual = parse("for(var a=0;a<0;a++)foo()");
@@ -1432,9 +1444,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(forNode, child);
     String expected = "for(;a<0;a++)foo()";
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
-
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the condition.
     actual = parse("for(var a=0;a<0;a++)foo()");
@@ -1444,9 +1454,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(forNode, child);
     expected = "for(var a=0;;a++)foo()";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
-
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the increment.
     actual = parse("for(var a=0;a<0;a++)foo()");
@@ -1456,9 +1464,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(forNode, child);
     expected = "for(var a=0;a<0;)foo()";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
-
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the body.
     actual = parse("for(var a=0;a<0;a++)foo()");
@@ -1468,9 +1474,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(forNode, child);
     expected = "for(var a=0;a<0;a++);";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
-
+    assertNode(parse(expected)).isEqualTo(actual);
 
     // Test removing the body.
     actual = parse("for(a in ack)foo();");
@@ -1480,8 +1484,7 @@ public final class NodeUtilTest extends TestCase {
 
     NodeUtil.removeChild(forNode, child);
     expected = "for(a in ack);";
-    difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
   private static void replaceDeclChild(String js, int declarationChild, String expected) {
@@ -1490,10 +1493,10 @@ public final class NodeUtilTest extends TestCase {
     Node nameNode = declarationNode.getChildAtIndex(declarationChild);
 
     NodeUtil.replaceDeclarationChild(nameNode, IR.block());
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testReplaceDeclarationName() {
     replaceDeclChild("var x;", 0, "{}");
     replaceDeclChild("var x, y;", 0, "{} var y;");
@@ -1505,6 +1508,7 @@ public final class NodeUtilTest extends TestCase {
     replaceDeclChild("const x =1, y = 2, z = 3, w = 4;", 1, "const x = 1; {} const z = 3, w = 4;");
   }
 
+  @Test
   public void testTryMergeBlock1() {
     // Test removing the initializer.
     Node actual = parse("{{a();b();}}");
@@ -1512,12 +1516,12 @@ public final class NodeUtilTest extends TestCase {
     Node parentBlock = actual.getFirstChild();
     Node childBlock = parentBlock.getFirstChild();
 
-    assertTrue(NodeUtil.tryMergeBlock(childBlock, false));
+    assertThat(NodeUtil.tryMergeBlock(childBlock, false)).isTrue();
     String expected = "{a();b();}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testTryMergeBlock2() {
     // Test removing the initializer.
     Node actual = parse("foo:{a();}");
@@ -1525,9 +1529,10 @@ public final class NodeUtilTest extends TestCase {
     Node parentLabel = actual.getFirstChild();
     Node childBlock = parentLabel.getLastChild();
 
-    assertFalse(NodeUtil.tryMergeBlock(childBlock, false));
+    assertThat(NodeUtil.tryMergeBlock(childBlock, false)).isFalse();
   }
 
+  @Test
   public void testTryMergeBlock3() {
     // Test removing the initializer.
     String code = "foo:{a();boo()}";
@@ -1536,192 +1541,204 @@ public final class NodeUtilTest extends TestCase {
     Node parentLabel = actual.getFirstChild();
     Node childBlock = parentLabel.getLastChild();
 
-    assertFalse(NodeUtil.tryMergeBlock(childBlock, false));
+    assertThat(NodeUtil.tryMergeBlock(childBlock, false)).isFalse();
     String expected = code;
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testTryMergeBlock4() {
     Node actual = parse("{const module$exports$Foo=class{}}");
     String expected = "const module$exports$Foo=class{}";
 
     Node block = actual.getFirstChild();
 
-    assertTrue(NodeUtil.tryMergeBlock(block, true));
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertThat(NodeUtil.tryMergeBlock(block, true)).isTrue();
+    assertNode(parse(expected)).isEqualTo(actual);
   }
 
+  @Test
   public void testCanMergeBlock1() {
     Node actual = parse("{a(); let x;}");
 
     Node block = actual.getFirstChild();
 
-    assertFalse(NodeUtil.canMergeBlock(block));
+    assertThat(NodeUtil.canMergeBlock(block)).isFalse();
   }
 
+  @Test
   public void testCanMergeBlock2() {
     Node actual = parse("{a(); f(); var x; {const y = 2;}}");
 
     Node parentBlock = actual.getFirstChild();
     Node childBlock = parentBlock.getLastChild();
 
-    assertTrue(NodeUtil.canMergeBlock(parentBlock));
-    assertFalse(NodeUtil.canMergeBlock(childBlock));
+    assertThat(NodeUtil.canMergeBlock(parentBlock)).isTrue();
+    assertThat(NodeUtil.canMergeBlock(childBlock)).isFalse();
   }
 
+  @Test
   public void testGetSourceName() {
     Node n = new Node(Token.BLOCK);
     Node parent = new Node(Token.BLOCK, n);
     parent.setSourceFileForTesting("foo");
 
-    assertEquals("foo", NodeUtil.getSourceName(n));
+    assertThat(NodeUtil.getSourceName(n)).isEqualTo("foo");
   }
 
-  public void testLocalValue1() throws Exception {
+  @Test
+  public void testLocalValue1() {
     // Names are not known to be local.
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x()")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("this")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("arguments")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x()"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("this"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("arguments"))).isFalse();
 
     // We can't know if new objects are local unless we know
     // that they don't alias themselves.
     // TODO(tdeegan): Revisit this.
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("new x()")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("new x()"))).isFalse();
 
     // property references are assumed to be non-local
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("(new x()).y")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("(new x())['y']")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("(new x()).y"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("(new x())['y']"))).isFalse();
 
     // Primitive values are local
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("null")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("undefined")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("Infinity")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("NaN")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("1")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("'a'")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("true")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("false")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("[]")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{}")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("null"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("undefined"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("Infinity"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("NaN"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("1"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("'a'"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("true"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("false"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("[]"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{}"))).isTrue();
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("[x]")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{'a':x}")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{'a': {'b': 2}}")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{'a': {'b': global}}")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{get someGetter() { return 1; }}")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{get someGetter() { return global; }}")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{set someSetter(value) {}}")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {}}")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: global}")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {'a':x}}")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {'a':1}}")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("[x]"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{'a':x}"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{'a': {'b': 2}}"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{'a': {'b': global}}"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{get someGetter() { return 1; }}")))
+        .isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{get someGetter() { return global; }}")))
+        .isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{set someSetter(value) {}}"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {}}"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: global}")))
+        .isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {'a':x}}")))
+        .isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {'a':1}}")))
+        .isTrue();
 
     // increment/decrement results in primitive number, the previous value is
     // always coersed to a number (even in the post.
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("++x")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("--x")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x++")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x--")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("++x"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("--x"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x++"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x--"))).isTrue();
 
     // The left side of an only assign matters if it is an alias or mutable.
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x=1")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x=[]")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x=y")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x=1"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x=[]"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x=y"))).isFalse();
     // The right hand side of assignment opts don't matter, as they force
     // a local result.
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x+=y")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x*=y")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x+=y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x*=y"))).isTrue();
     // Comparisons always result in locals, as they force a local boolean
     // result.
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x==y")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x!=y")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x>y")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x==y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x!=y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x>y"))).isTrue();
     // Only the right side of a comma matters
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("(1,2)")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("(x,1)")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("(x,y)")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("(1,2)"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("(x,1)"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("(x,y)"))).isFalse();
 
     // Both the operands of OR matter
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("1||2")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x||1")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x||y")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("1||y")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("1||2"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x||1"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x||y"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("1||y"))).isFalse();
 
     // Both the operands of AND matter
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("1&&2")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x&&1")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x&&y")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("1&&y")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("1&&2"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x&&1"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x&&y"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("1&&y"))).isFalse();
 
     // Only the results of HOOK matter
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x?1:2")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x?x:2")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x?1:x")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x?x:y")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x?1:2"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x?x:2"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x?1:x"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x?x:y"))).isFalse();
 
     // Results of ops are local values
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("!y")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("~y")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("y + 1")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("y + z")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("y * z")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("!y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("~y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("y + 1"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("y + z"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("y * z"))).isTrue();
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("'a' in x")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("typeof x")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x instanceof y")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("'a' in x"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("typeof x"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x instanceof y"))).isTrue();
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("void x")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("void 0")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("void x"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("void 0"))).isTrue();
 
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("{}.x")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{}.x"))).isFalse();
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{}.toString()")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("o.toString()")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{}.toString()"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("o.toString()"))).isTrue();
 
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("o.valueOf()")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("o.valueOf()"))).isFalse();
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("delete a.b")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("delete a.b"))).isTrue();
   }
 
+  @Test
   public void testLocalValueTemplateLit() {
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`hello`")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`hello ${name}`")));
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`${'name'}`")));
-    assertTrue(NodeUtil.isLiteralValue(getNode("`${'name'}`"), false));
-    assertTrue(NodeUtil.isImmutableValue(getNode("`${'name'}`")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("`hello`"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("`hello ${name}`"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("`${'name'}`"))).isTrue();
+    assertThat(NodeUtil.isLiteralValue(getNode("`${'name'}`"), false)).isTrue();
+    assertThat(NodeUtil.isImmutableValue(getNode("`${'name'}`"))).isTrue();
   }
 
+  @Test
   public void testLocalValueTaggedTemplateLit1() {
     Node n = getNode("tag`simple string`");
-    assertFalse(NodeUtil.evaluatesToLocalValue(n));
+    assertThat(NodeUtil.evaluatesToLocalValue(n)).isFalse();
 
     // Set 'tag' function as producing a local result
     Node.SideEffectFlags flags = new Node.SideEffectFlags();
     flags.clearAllFlags();
     n.setSideEffectFlags(flags);
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(n));
+    assertThat(NodeUtil.evaluatesToLocalValue(n)).isTrue();
   }
 
+  @Test
   public void testLocalValueTaggedTemplateLit2() {
     // Here, replacement() may have side effects.
     Node n = getNode("tag`string with ${replacement()}`");
-    assertFalse(NodeUtil.evaluatesToLocalValue(n));
+    assertThat(NodeUtil.evaluatesToLocalValue(n)).isFalse();
 
     // Set 'tag' function as producing a local result
     Node.SideEffectFlags flags = new Node.SideEffectFlags();
     flags.clearAllFlags();
     n.setSideEffectFlags(flags);
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(n));
+    assertThat(NodeUtil.evaluatesToLocalValue(n)).isTrue();
   }
 
+  @Test
   public void testLocalValueNewExpr() {
     Node newExpr = getNode("new x()");
-    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isFalse();
 
     checkState(newExpr.isNew());
     Node.SideEffectFlags flags = new Node.SideEffectFlags();
@@ -1729,75 +1746,79 @@ public final class NodeUtilTest extends TestCase {
     flags.clearAllFlags();
     newExpr.setSideEffectFlags(flags);
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isTrue();
 
     flags.clearAllFlags();
     flags.setMutatesThis();
     newExpr.setSideEffectFlags(flags);
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isTrue();
 
     flags.clearAllFlags();
     flags.setReturnsTainted();
     newExpr.setSideEffectFlags(flags);
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isTrue();
 
     flags.clearAllFlags();
     flags.setThrows();
     newExpr.setSideEffectFlags(flags);
 
-    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isFalse();
 
     flags.clearAllFlags();
     flags.setMutatesArguments();
     newExpr.setSideEffectFlags(flags);
 
-    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isFalse();
 
     flags.clearAllFlags();
     flags.setMutatesGlobalState();
     newExpr.setSideEffectFlags(flags);
 
-    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isFalse();
   }
 
+  @Test
   public void testLocalValueSpread() {
     // Array literals are always known local values.
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("[...x]")));
-    assertFalse(NodeUtil.isLiteralValue(getNode("[...x]"), false));
-    assertFalse(NodeUtil.isImmutableValue(getNode("[...x]")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("[...x]"))).isTrue();
+    assertThat(NodeUtil.isLiteralValue(getNode("[...x]"), false)).isFalse();
+    assertThat(NodeUtil.isImmutableValue(getNode("[...x]"))).isFalse();
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{...x}")));
-    assertFalse(NodeUtil.isLiteralValue(getNode("{...x}"), false));
-    assertFalse(NodeUtil.isImmutableValue(getNode("{...x}")));
+    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{...x}"))).isTrue();
+    assertThat(NodeUtil.isLiteralValue(getNode("{...x}"), false)).isFalse();
+    assertThat(NodeUtil.isImmutableValue(getNode("{...x}"))).isFalse();
   }
 
+  @Test
   public void testLocalValueAwait() {
     Node expr;
     expr = getAwaitNode("async function f() { await someAsyncAction(); }");
-    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+    assertThat(NodeUtil.evaluatesToLocalValue(expr)).isFalse();
 
     expr = getAwaitNode("async function f() { await {then:function() { return p }}; }");
-    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+    assertThat(NodeUtil.evaluatesToLocalValue(expr)).isFalse();
 
     // it isn't clear why someone would want to wait on a non-thenable value...
     expr = getAwaitNode("async function f() { await 5; }");
-    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+    assertThat(NodeUtil.evaluatesToLocalValue(expr)).isFalse();
   }
 
+  @Test
   public void testLocalValueYield() {
     Node expr;
     expr = getYieldNode("function *f() { yield; }");
-    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+    assertThat(NodeUtil.evaluatesToLocalValue(expr)).isFalse();
 
     expr = getYieldNode("function *f() { yield 'something'; }");
-    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+    assertThat(NodeUtil.evaluatesToLocalValue(expr)).isFalse();
   }
 
+  @Test
   public void testCallSideEffects() {
     Node callExpr = getNode("new x().method()");
-    assertTrue(NodeUtil.functionCallHasSideEffects(callExpr));
+    assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isTrue();
 
     Node newExpr = callExpr.getFirstFirstChild();
     checkState(newExpr.isNew());
@@ -1809,9 +1830,9 @@ public final class NodeUtilTest extends TestCase {
     flags.clearAllFlags();
     callExpr.setSideEffectFlags(flags);
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
-    assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
-    assertFalse(NodeUtil.mayHaveSideEffects(callExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(callExpr)).isTrue();
+    assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isFalse();
+    assertThat(NodeUtil.mayHaveSideEffects(callExpr)).isFalse();
 
     // Modifies this, local result
     flags.clearAllFlags();
@@ -1820,9 +1841,9 @@ public final class NodeUtilTest extends TestCase {
     flags.setMutatesThis();
     callExpr.setSideEffectFlags(flags);
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
-    assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
-    assertFalse(NodeUtil.mayHaveSideEffects(callExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(callExpr)).isTrue();
+    assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isFalse();
+    assertThat(NodeUtil.mayHaveSideEffects(callExpr)).isFalse();
 
     // Modifies this, non-local result
     flags.clearAllFlags();
@@ -1832,9 +1853,9 @@ public final class NodeUtilTest extends TestCase {
     flags.setReturnsTainted();
     callExpr.setSideEffectFlags(flags);
 
-    assertFalse(NodeUtil.evaluatesToLocalValue(callExpr));
-    assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
-    assertFalse(NodeUtil.mayHaveSideEffects(callExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(callExpr)).isFalse();
+    assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isFalse();
+    assertThat(NodeUtil.mayHaveSideEffects(callExpr)).isFalse();
 
     // No modifications, non-local result
     flags.clearAllFlags();
@@ -1843,9 +1864,9 @@ public final class NodeUtilTest extends TestCase {
     flags.setReturnsTainted();
     callExpr.setSideEffectFlags(flags);
 
-    assertFalse(NodeUtil.evaluatesToLocalValue(callExpr));
-    assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
-    assertFalse(NodeUtil.mayHaveSideEffects(callExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(callExpr)).isFalse();
+    assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isFalse();
+    assertThat(NodeUtil.mayHaveSideEffects(callExpr)).isFalse();
 
     // The new modifies global state, no side-effect call, non-local result
     // This call could be removed, but not the new.
@@ -1855,32 +1876,33 @@ public final class NodeUtilTest extends TestCase {
     flags.clearAllFlags();
     callExpr.setSideEffectFlags(flags);
 
-    assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
-    assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
-    assertTrue(NodeUtil.mayHaveSideEffects(callExpr));
+    assertThat(NodeUtil.evaluatesToLocalValue(callExpr)).isTrue();
+    assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isFalse();
+    assertThat(NodeUtil.mayHaveSideEffects(callExpr)).isTrue();
   }
 
+  @Test
   public void testValidDefine() {
-    assertTrue(getIsValidDefineValueResultFor("1"));
-    assertTrue(getIsValidDefineValueResultFor("-3"));
-    assertTrue(getIsValidDefineValueResultFor("true"));
-    assertTrue(getIsValidDefineValueResultFor("false"));
-    assertTrue(getIsValidDefineValueResultFor("'foo'"));
+    assertThat(getIsValidDefineValueResultFor("1")).isTrue();
+    assertThat(getIsValidDefineValueResultFor("-3")).isTrue();
+    assertThat(getIsValidDefineValueResultFor("true")).isTrue();
+    assertThat(getIsValidDefineValueResultFor("false")).isTrue();
+    assertThat(getIsValidDefineValueResultFor("'foo'")).isTrue();
 
-    assertFalse(getIsValidDefineValueResultFor("x"));
-    assertFalse(getIsValidDefineValueResultFor("null"));
-    assertFalse(getIsValidDefineValueResultFor("undefined"));
-    assertFalse(getIsValidDefineValueResultFor("NaN"));
+    assertThat(getIsValidDefineValueResultFor("x")).isFalse();
+    assertThat(getIsValidDefineValueResultFor("null")).isFalse();
+    assertThat(getIsValidDefineValueResultFor("undefined")).isFalse();
+    assertThat(getIsValidDefineValueResultFor("NaN")).isFalse();
 
-    assertTrue(getIsValidDefineValueResultFor("!true"));
-    assertTrue(getIsValidDefineValueResultFor("-true"));
-    assertTrue(getIsValidDefineValueResultFor("1 & 8"));
-    assertTrue(getIsValidDefineValueResultFor("1 + 8"));
-    assertTrue(getIsValidDefineValueResultFor("'a' + 'b'"));
-    assertTrue(getIsValidDefineValueResultFor("true ? 'a' : 'b'"));
+    assertThat(getIsValidDefineValueResultFor("!true")).isTrue();
+    assertThat(getIsValidDefineValueResultFor("-true")).isTrue();
+    assertThat(getIsValidDefineValueResultFor("1 & 8")).isTrue();
+    assertThat(getIsValidDefineValueResultFor("1 + 8")).isTrue();
+    assertThat(getIsValidDefineValueResultFor("'a' + 'b'")).isTrue();
+    assertThat(getIsValidDefineValueResultFor("true ? 'a' : 'b'")).isTrue();
 
-    assertFalse(getIsValidDefineValueResultFor("1 & foo"));
-    assertFalse(getIsValidDefineValueResultFor("foo ? 'a' : 'b'"));
+    assertThat(getIsValidDefineValueResultFor("1 & foo")).isFalse();
+    assertThat(getIsValidDefineValueResultFor("foo ? 'a' : 'b'")).isFalse();
   }
 
   private boolean getIsValidDefineValueResultFor(String js) {
@@ -1893,436 +1915,432 @@ public final class NodeUtilTest extends TestCase {
     return NodeUtil.isValidDefineValue(value, defines);
   }
 
+  @Test
   public void testGetOctalNumberValue() {
-    assertEquals(18.0, NodeUtil.getNumberValue(getNode("022")), 0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("022"))).isEqualTo(18.0);
   }
 
   @SuppressWarnings("JUnit3FloatingPointComparisonWithoutDelta")
+  @Test
   public void testGetNumberValue() {
     // Strings
-    assertEquals(1.0, NodeUtil.getNumberValue(getNode("'\\uFEFF1'")));
-    assertEquals(0.0, NodeUtil.getNumberValue(getNode("''")));
-    assertEquals(0.0, NodeUtil.getNumberValue(getNode("' '")));
-    assertEquals(0.0, NodeUtil.getNumberValue(getNode("' \\t'")));
-    assertEquals(0.0, NodeUtil.getNumberValue(getNode("'+0'")));
-    assertEquals(-0.0, NodeUtil.getNumberValue(getNode("'-0'")));
-    assertEquals(2.0, NodeUtil.getNumberValue(getNode("'+2'")));
-    assertEquals(-1.6, NodeUtil.getNumberValue(getNode("'-1.6'")));
-    assertEquals(16.0, NodeUtil.getNumberValue(getNode("'16'")));
-    assertEquals(16.0, NodeUtil.getNumberValue(getNode("' 16 '")));
-    assertEquals(16.0, NodeUtil.getNumberValue(getNode("' 16 '")));
-    assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'123e2'")));
-    assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'123E2'")));
-    assertEquals(1.23, NodeUtil.getNumberValue(getNode("'123e-2'")));
-    assertEquals(1.23, NodeUtil.getNumberValue(getNode("'123E-2'")));
-    assertEquals(-1.23, NodeUtil.getNumberValue(getNode("'-123e-2'")));
-    assertEquals(-1.23, NodeUtil.getNumberValue(getNode("'-123E-2'")));
-    assertEquals(1.23, NodeUtil.getNumberValue(getNode("'+123e-2'")));
-    assertEquals(1.23, NodeUtil.getNumberValue(getNode("'+123E-2'")));
-    assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'+123e+2'")));
-    assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'+123E+2'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'\\uFEFF1'"))).isEqualTo(1.0);
+    assertThat(NodeUtil.getNumberValue(getNode("''"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("' '"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("' \\t'"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'+0'"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'-0'"))).isEqualTo(-0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'+2'"))).isEqualTo(2.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'-1.6'"))).isEqualTo(-1.6);
+    assertThat(NodeUtil.getNumberValue(getNode("'16'"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(getNode("' 16 '"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(getNode("' 16 '"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'123e2'"))).isEqualTo(12300.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'123E2'"))).isEqualTo(12300.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'123e-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'123E-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'-123e-2'"))).isEqualTo(-1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'-123E-2'"))).isEqualTo(-1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'+123e-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'+123E-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(getNode("'+123e+2'"))).isEqualTo(12300.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'+123E+2'"))).isEqualTo(12300.0);
 
-    assertEquals(15.0, NodeUtil.getNumberValue(getNode("'0xf'")));
-    assertEquals(15.0, NodeUtil.getNumberValue(getNode("'0xF'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'0xf'"))).isEqualTo(15.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'0xF'"))).isEqualTo(15.0);
 
     // Chrome and rhino behavior differently from FF and IE. FF and IE
     // consider a negative hex number to be invalid
-    assertNull(NodeUtil.getNumberValue(getNode("'-0xf'")));
-    assertNull(NodeUtil.getNumberValue(getNode("'-0xF'")));
-    assertNull(NodeUtil.getNumberValue(getNode("'+0xf'")));
-    assertNull(NodeUtil.getNumberValue(getNode("'+0xF'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'-0xf'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("'-0xF'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("'+0xf'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("'+0xF'"))).isNull();
 
-    assertEquals(16.0, NodeUtil.getNumberValue(getNode("'0X10'")));
-    assertEquals(Double.NaN, NodeUtil.getNumberValue(getNode("'0X10.8'")));
-    assertEquals(77.0, NodeUtil.getNumberValue(getNode("'077'")));
-    assertEquals(-77.0, NodeUtil.getNumberValue(getNode("'-077'")));
-    assertEquals(-77.5, NodeUtil.getNumberValue(getNode("'-077.5'")));
-    assertEquals(
-        Double.NEGATIVE_INFINITY,
-        NodeUtil.getNumberValue(getNode("'-Infinity'")));
-    assertEquals(
-        Double.POSITIVE_INFINITY,
-        NodeUtil.getNumberValue(getNode("'Infinity'")));
-    assertEquals(
-        Double.POSITIVE_INFINITY,
-        NodeUtil.getNumberValue(getNode("'+Infinity'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'0X10'"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'0X10.8'"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(getNode("'077'"))).isEqualTo(77.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'-077'"))).isEqualTo(-77.0);
+    assertThat(NodeUtil.getNumberValue(getNode("'-077.5'"))).isEqualTo(-77.5);
+    assertThat(NodeUtil.getNumberValue(getNode("'-Infinity'"))).isNegativeInfinity();
+    assertThat(NodeUtil.getNumberValue(getNode("'Infinity'"))).isPositiveInfinity();
+    assertThat(NodeUtil.getNumberValue(getNode("'+Infinity'"))).isPositiveInfinity();
     // Firefox treats "infinity" as "Infinity", IE treats it as NaN
-    assertNull(NodeUtil.getNumberValue(getNode("'-infinity'")));
-    assertNull(NodeUtil.getNumberValue(getNode("'infinity'")));
-    assertNull(NodeUtil.getNumberValue(getNode("'+infinity'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'-infinity'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("'infinity'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("'+infinity'"))).isNull();
 
-    assertEquals(Double.NaN, NodeUtil.getNumberValue(getNode("'NaN'")));
-    assertEquals(
-        Double.NaN, NodeUtil.getNumberValue(getNode("'some unknown string'")));
-    assertEquals(Double.NaN, NodeUtil.getNumberValue(getNode("'123 blah'")));
+    assertThat(NodeUtil.getNumberValue(getNode("'NaN'"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(getNode("'some unknown string'"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(getNode("'123 blah'"))).isNaN();
 
     // Literals
-    assertEquals(1.0, NodeUtil.getNumberValue(getNode("1")));
+    assertThat(NodeUtil.getNumberValue(getNode("1"))).isEqualTo(1.0);
     // "-1" is parsed as a literal
-    assertEquals(-1.0, NodeUtil.getNumberValue(getNode("-1")));
+    assertThat(NodeUtil.getNumberValue(getNode("-1"))).isEqualTo(-1.0);
     // "+1" is parse as an op + literal
-    assertNull(NodeUtil.getNumberValue(getNode("+1")));
-    assertEquals(22.0, NodeUtil.getNumberValue(getNode("22")));
-    assertEquals(18.0, NodeUtil.getNumberValue(getNode("022")));
-    assertEquals(34.0, NodeUtil.getNumberValue(getNode("0x22")));
+    assertThat(NodeUtil.getNumberValue(getNode("+1"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("22"))).isEqualTo(22.0);
+    assertThat(NodeUtil.getNumberValue(getNode("022"))).isEqualTo(18.0);
+    assertThat(NodeUtil.getNumberValue(getNode("0x22"))).isEqualTo(34.0);
 
-    assertEquals(
-        1.0, NodeUtil.getNumberValue(getNode("true")));
-    assertEquals(
-        0.0, NodeUtil.getNumberValue(getNode("false")));
-    assertEquals(
-        0.0, NodeUtil.getNumberValue(getNode("null")));
-    assertEquals(
-        Double.NaN, NodeUtil.getNumberValue(getNode("void 0")));
-    assertEquals(
-        Double.NaN, NodeUtil.getNumberValue(getNode("void f")));
+    assertThat(NodeUtil.getNumberValue(getNode("true"))).isEqualTo(1.0);
+    assertThat(NodeUtil.getNumberValue(getNode("false"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("null"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(getNode("void 0"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(getNode("void f"))).isNaN();
     // values with side-effects are ignored.
-    assertNull(NodeUtil.getNumberValue(getNode("void f()")));
-    assertEquals(
-        Double.NaN, NodeUtil.getNumberValue(getNode("NaN")));
-    assertEquals(
-        Double.POSITIVE_INFINITY,
-        NodeUtil.getNumberValue(getNode("Infinity")));
-    assertEquals(
-        Double.NEGATIVE_INFINITY,
-        NodeUtil.getNumberValue(getNode("-Infinity")));
+    assertThat(NodeUtil.getNumberValue(getNode("void f()"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("NaN"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(getNode("Infinity"))).isPositiveInfinity();
+    assertThat(NodeUtil.getNumberValue(getNode("-Infinity"))).isNegativeInfinity();
 
     // "infinity" is not a known name.
-    assertNull(NodeUtil.getNumberValue(getNode("infinity")));
-    assertNull(NodeUtil.getNumberValue(getNode("-infinity")));
+    assertThat(NodeUtil.getNumberValue(getNode("infinity"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("-infinity"))).isNull();
 
     // getNumberValue only converts literals
-    assertNull(NodeUtil.getNumberValue(getNode("x")));
-    assertNull(NodeUtil.getNumberValue(getNode("x.y")));
-    assertNull(NodeUtil.getNumberValue(getNode("1/2")));
-    assertNull(NodeUtil.getNumberValue(getNode("1-2")));
-    assertNull(NodeUtil.getNumberValue(getNode("+1")));
+    assertThat(NodeUtil.getNumberValue(getNode("x"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("x.y"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("1/2"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("1-2"))).isNull();
+    assertThat(NodeUtil.getNumberValue(getNode("+1"))).isNull();
   }
 
+  @Test
   public void testIsNumericResult() {
-    assertTrue(NodeUtil.isNumericResult(getNode("1")));
-    assertFalse(NodeUtil.isNumericResult(getNode("true")));
-    assertTrue(NodeUtil.isNumericResult(getNode("+true")));
-    assertTrue(NodeUtil.isNumericResult(getNode("+1")));
-    assertTrue(NodeUtil.isNumericResult(getNode("-1")));
-    assertTrue(NodeUtil.isNumericResult(getNode("-Infinity")));
-    assertTrue(NodeUtil.isNumericResult(getNode("Infinity")));
-    assertTrue(NodeUtil.isNumericResult(getNode("NaN")));
-    assertFalse(NodeUtil.isNumericResult(getNode("undefined")));
-    assertFalse(NodeUtil.isNumericResult(getNode("void 0")));
+    assertThat(NodeUtil.isNumericResult(getNode("1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("true"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("+true"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("+1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("-1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("-Infinity"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("Infinity"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("NaN"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("undefined"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("void 0"))).isFalse();
 
-    assertTrue(NodeUtil.isNumericResult(getNode("a << b")));
-    assertTrue(NodeUtil.isNumericResult(getNode("a >> b")));
-    assertTrue(NodeUtil.isNumericResult(getNode("a >>> b")));
+    assertThat(NodeUtil.isNumericResult(getNode("a << b"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("a >> b"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("a >>> b"))).isTrue();
 
-    assertFalse(NodeUtil.isNumericResult(getNode("a == b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a != b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a === b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a !== b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a < b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a > b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a <= b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a >= b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a in b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a instanceof b")));
+    assertThat(NodeUtil.isNumericResult(getNode("a == b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a != b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a === b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a !== b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a < b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a > b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a <= b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a >= b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a in b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a instanceof b"))).isFalse();
 
-    assertFalse(NodeUtil.isNumericResult(getNode("'a'")));
-    assertFalse(NodeUtil.isNumericResult(getNode("'a'+b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a+'b'")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a+b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a()")));
-    assertFalse(NodeUtil.isNumericResult(getNode("''.a")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a.b")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a.b()")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a().b()")));
-    assertFalse(NodeUtil.isNumericResult(getNode("new a()")));
+    assertThat(NodeUtil.isNumericResult(getNode("'a'"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("'a'+b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a+'b'"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a+b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a()"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("''.a"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a.b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a.b()"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("a().b()"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("new a()"))).isFalse();
 
     // Definitely not numeric
-    assertFalse(NodeUtil.isNumericResult(getNode("([1,2])")));
-    assertFalse(NodeUtil.isNumericResult(getNode("({a:1})")));
+    assertThat(NodeUtil.isNumericResult(getNode("([1,2])"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(getNode("({a:1})"))).isFalse();
 
     // Recurse into the expression when necessary.
-    assertTrue(NodeUtil.isNumericResult(getNode("1 && 2")));
-    assertTrue(NodeUtil.isNumericResult(getNode("1 || 2")));
-    assertTrue(NodeUtil.isNumericResult(getNode("a ? 2 : 3")));
-    assertTrue(NodeUtil.isNumericResult(getNode("a,1")));
-    assertTrue(NodeUtil.isNumericResult(getNode("a=1")));
+    assertThat(NodeUtil.isNumericResult(getNode("1 && 2"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("1 || 2"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("a ? 2 : 3"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("a,1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("a=1"))).isTrue();
 
-    assertFalse(NodeUtil.isNumericResult(getNode("a += 1")));
+    assertThat(NodeUtil.isNumericResult(getNode("a += 1"))).isFalse();
 
-    assertTrue(NodeUtil.isNumericResult(getNode("a -= 1")));
-    assertTrue(NodeUtil.isNumericResult(getNode("a *= 1")));
-    assertTrue(NodeUtil.isNumericResult(getNode("--a")));
-    assertTrue(NodeUtil.isNumericResult(getNode("++a")));
-    assertTrue(NodeUtil.isNumericResult(getNode("a++")));
-    assertTrue(NodeUtil.isNumericResult(getNode("a--")));
+    assertThat(NodeUtil.isNumericResult(getNode("a -= 1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("a *= 1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("--a"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("++a"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("a++"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(getNode("a--"))).isTrue();
   }
 
+  @Test
   public void testIsBooleanResult() {
-    assertFalse(NodeUtil.isBooleanResult(getNode("1")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("true")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("+true")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("+1")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("-1")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("-Infinity")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("Infinity")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("NaN")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("undefined")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("void 0")));
+    assertThat(NodeUtil.isBooleanResult(getNode("1"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("true"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("+true"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("+1"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("-1"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("-Infinity"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("Infinity"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("NaN"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("undefined"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("void 0"))).isFalse();
 
-    assertFalse(NodeUtil.isBooleanResult(getNode("a << b")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("a >> b")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("a >>> b")));
+    assertThat(NodeUtil.isBooleanResult(getNode("a << b"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("a >> b"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("a >>> b"))).isFalse();
 
-    assertTrue(NodeUtil.isBooleanResult(getNode("a == b")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a != b")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a === b")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a !== b")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a < b")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a > b")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a <= b")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a >= b")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a in b")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a instanceof b")));
+    assertThat(NodeUtil.isBooleanResult(getNode("a == b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a != b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a === b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a !== b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a < b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a > b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a <= b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a >= b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a in b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a instanceof b"))).isTrue();
 
-    assertFalse(NodeUtil.isBooleanResult(getNode("'a'")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("'a'+b")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("a+'b'")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("a+b")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("a()")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("''.a")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("a.b")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("a.b()")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("a().b()")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("new a()")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("delete a")));
+    assertThat(NodeUtil.isBooleanResult(getNode("'a'"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("'a'+b"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("a+'b'"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("a+b"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("a()"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("''.a"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("a.b"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("a.b()"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("a().b()"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("new a()"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("delete a"))).isTrue();
 
     // Definitely not boolean
-    assertFalse(NodeUtil.isBooleanResult(getNode("([true,false])")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("({a:true})")));
+    assertThat(NodeUtil.isBooleanResult(getNode("([true,false])"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(getNode("({a:true})"))).isFalse();
 
     // These are boolean
-    assertTrue(NodeUtil.isBooleanResult(getNode("true && false")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("true || false")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a ? true : false")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a,true")));
-    assertTrue(NodeUtil.isBooleanResult(getNode("a=true")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("a=1")));
+    assertThat(NodeUtil.isBooleanResult(getNode("true && false"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("true || false"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a ? true : false"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a,true"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a=true"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(getNode("a=1"))).isFalse();
   }
 
+  @Test
   public void testMayBeString() {
-    assertFalse(NodeUtil.mayBeString(getNode("1")));
-    assertFalse(NodeUtil.mayBeString(getNode("true")));
-    assertFalse(NodeUtil.mayBeString(getNode("+true")));
-    assertFalse(NodeUtil.mayBeString(getNode("+1")));
-    assertFalse(NodeUtil.mayBeString(getNode("-1")));
-    assertFalse(NodeUtil.mayBeString(getNode("-Infinity")));
-    assertFalse(NodeUtil.mayBeString(getNode("Infinity")));
-    assertFalse(NodeUtil.mayBeString(getNode("NaN")));
-    assertFalse(NodeUtil.mayBeString(getNode("undefined")));
-    assertFalse(NodeUtil.mayBeString(getNode("void 0")));
-    assertFalse(NodeUtil.mayBeString(getNode("null")));
+    assertThat(NodeUtil.mayBeString(getNode("1"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("true"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("+true"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("+1"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("-1"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("-Infinity"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("Infinity"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("NaN"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("undefined"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("void 0"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("null"))).isFalse();
 
-    assertFalse(NodeUtil.mayBeString(getNode("a << b")));
-    assertFalse(NodeUtil.mayBeString(getNode("a >> b")));
-    assertFalse(NodeUtil.mayBeString(getNode("a >>> b")));
+    assertThat(NodeUtil.mayBeString(getNode("a << b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a >> b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a >>> b"))).isFalse();
 
-    assertFalse(NodeUtil.mayBeString(getNode("a == b")));
-    assertFalse(NodeUtil.mayBeString(getNode("a != b")));
-    assertFalse(NodeUtil.mayBeString(getNode("a === b")));
-    assertFalse(NodeUtil.mayBeString(getNode("a !== b")));
-    assertFalse(NodeUtil.mayBeString(getNode("a < b")));
-    assertFalse(NodeUtil.mayBeString(getNode("a > b")));
-    assertFalse(NodeUtil.mayBeString(getNode("a <= b")));
-    assertFalse(NodeUtil.mayBeString(getNode("a >= b")));
-    assertFalse(NodeUtil.mayBeString(getNode("a in b")));
-    assertFalse(NodeUtil.mayBeString(getNode("a instanceof b")));
+    assertThat(NodeUtil.mayBeString(getNode("a == b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a != b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a === b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a !== b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a < b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a > b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a <= b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a >= b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a in b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a instanceof b"))).isFalse();
 
-    assertTrue(NodeUtil.mayBeString(getNode("'a'")));
-    assertTrue(NodeUtil.mayBeString(getNode("'a'+b")));
-    assertTrue(NodeUtil.mayBeString(getNode("a+'b'")));
-    assertTrue(NodeUtil.mayBeString(getNode("a+b")));
-    assertTrue(NodeUtil.mayBeString(getNode("a()")));
-    assertTrue(NodeUtil.mayBeString(getNode("''.a")));
-    assertTrue(NodeUtil.mayBeString(getNode("a.b")));
-    assertTrue(NodeUtil.mayBeString(getNode("a.b()")));
-    assertTrue(NodeUtil.mayBeString(getNode("a().b()")));
-    assertTrue(NodeUtil.mayBeString(getNode("new a()")));
+    assertThat(NodeUtil.mayBeString(getNode("'a'"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("'a'+b"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("a+'b'"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("a+b"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("a()"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("''.a"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("a.b"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("a.b()"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("a().b()"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("new a()"))).isTrue();
 
     // These can't be strings but they aren't handled yet.
-    assertFalse(NodeUtil.mayBeString(getNode("1 && 2")));
-    assertFalse(NodeUtil.mayBeString(getNode("1 || 2")));
-    assertFalse(NodeUtil.mayBeString(getNode("1 ? 2 : 3")));
-    assertFalse(NodeUtil.mayBeString(getNode("1,2")));
-    assertFalse(NodeUtil.mayBeString(getNode("a=1")));
-    assertFalse(NodeUtil.mayBeString(getNode("1+1")));
-    assertFalse(NodeUtil.mayBeString(getNode("true+true")));
-    assertFalse(NodeUtil.mayBeString(getNode("null+null")));
-    assertFalse(NodeUtil.mayBeString(getNode("NaN+NaN")));
+    assertThat(NodeUtil.mayBeString(getNode("1 && 2"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("1 || 2"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("1 ? 2 : 3"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("1,2"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("a=1"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("1+1"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("true+true"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("null+null"))).isFalse();
+    assertThat(NodeUtil.mayBeString(getNode("NaN+NaN"))).isFalse();
 
     // These are not strings but they aren't primitives either
-    assertTrue(NodeUtil.mayBeString(getNode("([1,2])")));
-    assertTrue(NodeUtil.mayBeString(getNode("({a:1})")));
-    assertTrue(NodeUtil.mayBeString(getNode("({}+1)")));
-    assertTrue(NodeUtil.mayBeString(getNode("(1+{})")));
-    assertTrue(NodeUtil.mayBeString(getNode("([]+1)")));
-    assertTrue(NodeUtil.mayBeString(getNode("(1+[])")));
+    assertThat(NodeUtil.mayBeString(getNode("([1,2])"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("({a:1})"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("({}+1)"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("(1+{})"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("([]+1)"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("(1+[])"))).isTrue();
 
-    assertTrue(NodeUtil.mayBeString(getNode("a += 'x'")));
-    assertTrue(NodeUtil.mayBeString(getNode("a += 1")));
+    assertThat(NodeUtil.mayBeString(getNode("a += 'x'"))).isTrue();
+    assertThat(NodeUtil.mayBeString(getNode("a += 1"))).isTrue();
   }
 
+  @Test
   public void testIsStringResult() {
-    assertFalse(NodeUtil.isStringResult(getNode("1")));
-    assertFalse(NodeUtil.isStringResult(getNode("true")));
-    assertFalse(NodeUtil.isStringResult(getNode("+true")));
-    assertFalse(NodeUtil.isStringResult(getNode("+1")));
-    assertFalse(NodeUtil.isStringResult(getNode("-1")));
-    assertFalse(NodeUtil.isStringResult(getNode("-Infinity")));
-    assertFalse(NodeUtil.isStringResult(getNode("Infinity")));
-    assertFalse(NodeUtil.isStringResult(getNode("NaN")));
-    assertFalse(NodeUtil.isStringResult(getNode("undefined")));
-    assertFalse(NodeUtil.isStringResult(getNode("void 0")));
-    assertFalse(NodeUtil.isStringResult(getNode("null")));
+    assertThat(NodeUtil.isStringResult(getNode("1"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("true"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("+true"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("+1"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("-1"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("-Infinity"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("Infinity"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("NaN"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("undefined"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("void 0"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("null"))).isFalse();
 
-    assertFalse(NodeUtil.isStringResult(getNode("a << b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a >> b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a >>> b")));
+    assertThat(NodeUtil.isStringResult(getNode("a << b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a >> b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a >>> b"))).isFalse();
 
-    assertFalse(NodeUtil.isStringResult(getNode("a == b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a != b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a === b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a !== b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a < b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a > b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a <= b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a >= b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a in b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a instanceof b")));
+    assertThat(NodeUtil.isStringResult(getNode("a == b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a != b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a === b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a !== b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a < b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a > b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a <= b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a >= b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a in b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a instanceof b"))).isFalse();
 
-    assertTrue(NodeUtil.isStringResult(getNode("'a'")));
-    assertTrue(NodeUtil.isStringResult(getNode("'a'+b")));
-    assertTrue(NodeUtil.isStringResult(getNode("a+'b'")));
-    assertFalse(NodeUtil.isStringResult(getNode("a+b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a()")));
-    assertFalse(NodeUtil.isStringResult(getNode("''.a")));
-    assertFalse(NodeUtil.isStringResult(getNode("a.b")));
-    assertFalse(NodeUtil.isStringResult(getNode("a.b()")));
-    assertFalse(NodeUtil.isStringResult(getNode("a().b()")));
-    assertFalse(NodeUtil.isStringResult(getNode("new a()")));
+    assertThat(NodeUtil.isStringResult(getNode("'a'"))).isTrue();
+    assertThat(NodeUtil.isStringResult(getNode("'a'+b"))).isTrue();
+    assertThat(NodeUtil.isStringResult(getNode("a+'b'"))).isTrue();
+    assertThat(NodeUtil.isStringResult(getNode("a+b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a()"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("''.a"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a.b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a.b()"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a().b()"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("new a()"))).isFalse();
 
     // These can't be strings but they aren't handled yet.
-    assertFalse(NodeUtil.isStringResult(getNode("1 && 2")));
-    assertFalse(NodeUtil.isStringResult(getNode("1 || 2")));
-    assertFalse(NodeUtil.isStringResult(getNode("1 ? 2 : 3")));
-    assertFalse(NodeUtil.isStringResult(getNode("1,2")));
-    assertFalse(NodeUtil.isStringResult(getNode("a=1")));
-    assertFalse(NodeUtil.isStringResult(getNode("1+1")));
-    assertFalse(NodeUtil.isStringResult(getNode("true+true")));
-    assertFalse(NodeUtil.isStringResult(getNode("null+null")));
-    assertFalse(NodeUtil.isStringResult(getNode("NaN+NaN")));
+    assertThat(NodeUtil.isStringResult(getNode("1 && 2"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("1 || 2"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("1 ? 2 : 3"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("1,2"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("a=1"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("1+1"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("true+true"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("null+null"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("NaN+NaN"))).isFalse();
 
     // These are not strings but they aren't primitives either
-    assertFalse(NodeUtil.isStringResult(getNode("([1,2])")));
-    assertFalse(NodeUtil.isStringResult(getNode("({a:1})")));
-    assertFalse(NodeUtil.isStringResult(getNode("({}+1)")));
-    assertFalse(NodeUtil.isStringResult(getNode("(1+{})")));
-    assertFalse(NodeUtil.isStringResult(getNode("([]+1)")));
-    assertFalse(NodeUtil.isStringResult(getNode("(1+[])")));
+    assertThat(NodeUtil.isStringResult(getNode("([1,2])"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("({a:1})"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("({}+1)"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("(1+{})"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("([]+1)"))).isFalse();
+    assertThat(NodeUtil.isStringResult(getNode("(1+[])"))).isFalse();
 
-    assertTrue(NodeUtil.isStringResult(getNode("a += 'x'")));
+    assertThat(NodeUtil.isStringResult(getNode("a += 'x'"))).isTrue();
+
+    // Template literals
+    assertThat(NodeUtil.isStringResult(getNode("`x`"))).isTrue();
+    assertThat(NodeUtil.isStringResult(getNode("`a${b}c`"))).isTrue();
   }
 
+  @Test
   public void testIsObjectResult() {
-    assertFalse(NodeUtil.isObjectResult(getNode("1")));
-    assertFalse(NodeUtil.isObjectResult(getNode("true")));
-    assertFalse(NodeUtil.isObjectResult(getNode("+true")));
-    assertFalse(NodeUtil.isObjectResult(getNode("+1")));
-    assertFalse(NodeUtil.isObjectResult(getNode("-1")));
-    assertFalse(NodeUtil.isObjectResult(getNode("-Infinity")));
-    assertFalse(NodeUtil.isObjectResult(getNode("Infinity")));
-    assertFalse(NodeUtil.isObjectResult(getNode("NaN")));
-    assertFalse(NodeUtil.isObjectResult(getNode("undefined")));
-    assertFalse(NodeUtil.isObjectResult(getNode("void 0")));
+    assertThat(NodeUtil.isObjectResult(getNode("1"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("true"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("+true"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("+1"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("-1"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("-Infinity"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("Infinity"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("NaN"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("undefined"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("void 0"))).isFalse();
 
-    assertFalse(NodeUtil.isObjectResult(getNode("a << b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a >> b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a >>> b")));
+    assertThat(NodeUtil.isObjectResult(getNode("a << b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a >> b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a >>> b"))).isFalse();
 
-    assertFalse(NodeUtil.isObjectResult(getNode("a == b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a != b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a === b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a !== b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a < b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a > b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a <= b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a >= b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a in b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a instanceof b")));
+    assertThat(NodeUtil.isObjectResult(getNode("a == b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a != b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a === b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a !== b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a < b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a > b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a <= b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a >= b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a in b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a instanceof b"))).isFalse();
 
-    assertFalse(NodeUtil.isObjectResult(getNode("delete a")));
-    assertFalse(NodeUtil.isObjectResult(getNode("'a'")));
-    assertFalse(NodeUtil.isObjectResult(getNode("'a'+b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a+'b'")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a+b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("{},true")));
+    assertThat(NodeUtil.isObjectResult(getNode("delete a"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("'a'"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("'a'+b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a+'b'"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a+b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("{},true"))).isFalse();
 
     // "false" here means "unknown"
-    assertFalse(NodeUtil.isObjectResult(getNode("a()")));
-    assertFalse(NodeUtil.isObjectResult(getNode("''.a")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a.b")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a.b()")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a().b()")));
-    assertFalse(NodeUtil.isObjectResult(getNode("a ? true : {}")));
+    assertThat(NodeUtil.isObjectResult(getNode("a()"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("''.a"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a.b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a.b()"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a().b()"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("a ? true : {}"))).isFalse();
 
     // These are objects but aren't handled yet.
-    assertFalse(NodeUtil.isObjectResult(getNode("true && {}")));
-    assertFalse(NodeUtil.isObjectResult(getNode("true || {}")));
+    assertThat(NodeUtil.isObjectResult(getNode("true && {}"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(getNode("true || {}"))).isFalse();
 
     // Definitely objects
-    assertTrue(NodeUtil.isObjectResult(getNode("new a.b()")));
-    assertTrue(NodeUtil.isObjectResult(getNode("([true,false])")));
-    assertTrue(NodeUtil.isObjectResult(getNode("({a:true})")));
-    assertTrue(NodeUtil.isObjectResult(getNode("a={}")));
-    assertTrue(NodeUtil.isObjectResult(getNode("[] && {}")));
-    assertTrue(NodeUtil.isObjectResult(getNode("[] || {}")));
-    assertTrue(NodeUtil.isObjectResult(getNode("a ? [] : {}")));
-    assertTrue(NodeUtil.isObjectResult(getNode("{},[]")));
-    assertTrue(NodeUtil.isObjectResult(getNode("/a/g")));
+    assertThat(NodeUtil.isObjectResult(getNode("new a.b()"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(getNode("([true,false])"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(getNode("({a:true})"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(getNode("a={}"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(getNode("[] && {}"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(getNode("[] || {}"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(getNode("a ? [] : {}"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(getNode("{},[]"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(getNode("/a/g"))).isTrue();
   }
 
+  @Test
   public void testValidNames() {
-    assertTrue(isValidPropertyName("a"));
-    assertTrue(isValidPropertyName("a3"));
-    assertFalse(isValidPropertyName("3a"));
-    assertFalse(isValidPropertyName("a."));
-    assertFalse(isValidPropertyName(".a"));
-    assertFalse(isValidPropertyName("a.b"));
-    assertFalse(isValidPropertyName("true"));
-    assertFalse(isValidPropertyName("a.true"));
-    assertFalse(isValidPropertyName("a..b"));
+    assertThat(isValidPropertyName("a")).isTrue();
+    assertThat(isValidPropertyName("a3")).isTrue();
+    assertThat(isValidPropertyName("3a")).isFalse();
+    assertThat(isValidPropertyName("a.")).isFalse();
+    assertThat(isValidPropertyName(".a")).isFalse();
+    assertThat(isValidPropertyName("a.b")).isFalse();
+    assertThat(isValidPropertyName("true")).isFalse();
+    assertThat(isValidPropertyName("a.true")).isFalse();
+    assertThat(isValidPropertyName("a..b")).isFalse();
 
-    assertTrue(NodeUtil.isValidSimpleName("a"));
-    assertTrue(NodeUtil.isValidSimpleName("a3"));
-    assertFalse(NodeUtil.isValidSimpleName("3a"));
-    assertFalse(NodeUtil.isValidSimpleName("a."));
-    assertFalse(NodeUtil.isValidSimpleName(".a"));
-    assertFalse(NodeUtil.isValidSimpleName("a.b"));
-    assertFalse(NodeUtil.isValidSimpleName("true"));
-    assertFalse(NodeUtil.isValidSimpleName("a.true"));
-    assertFalse(NodeUtil.isValidSimpleName("a..b"));
+    assertThat(NodeUtil.isValidSimpleName("a")).isTrue();
+    assertThat(NodeUtil.isValidSimpleName("a3")).isTrue();
+    assertThat(NodeUtil.isValidSimpleName("3a")).isFalse();
+    assertThat(NodeUtil.isValidSimpleName("a.")).isFalse();
+    assertThat(NodeUtil.isValidSimpleName(".a")).isFalse();
+    assertThat(NodeUtil.isValidSimpleName("a.b")).isFalse();
+    assertThat(NodeUtil.isValidSimpleName("true")).isFalse();
+    assertThat(NodeUtil.isValidSimpleName("a.true")).isFalse();
+    assertThat(NodeUtil.isValidSimpleName("a..b")).isFalse();
 
-    assertTrue(isValidQualifiedName("a"));
-    assertTrue(isValidQualifiedName("a3"));
-    assertFalse(isValidQualifiedName("3a"));
-    assertFalse(isValidQualifiedName("a."));
-    assertFalse(isValidQualifiedName(".a"));
-    assertTrue(isValidQualifiedName("a.b"));
-    assertFalse(isValidQualifiedName("true"));
-    assertFalse(isValidQualifiedName("a.true"));
-    assertFalse(isValidQualifiedName("a..b"));
+    assertThat(isValidQualifiedName("a")).isTrue();
+    assertThat(isValidQualifiedName("a3")).isTrue();
+    assertThat(isValidQualifiedName("3a")).isFalse();
+    assertThat(isValidQualifiedName("a.")).isFalse();
+    assertThat(isValidQualifiedName(".a")).isFalse();
+    assertThat(isValidQualifiedName("a.b")).isTrue();
+    assertThat(isValidQualifiedName("true")).isFalse();
+    assertThat(isValidQualifiedName("a.true")).isFalse();
+    assertThat(isValidQualifiedName("a..b")).isFalse();
   }
 
+  @Test
   public void testGetNearestFunctionName() {
     testFunctionName("(function() {})()", null);
     testFunctionName("function a() {}", "a");
@@ -2338,51 +2356,55 @@ public final class NodeUtilTest extends TestCase {
     testFunctionName("this.a = function a() {}", "this.a");
   }
 
+  @Test
   public void testGetBestLValue() {
-    assertEquals("x", getFunctionLValue("var x = function() {};"));
-    assertEquals("x", getFunctionLValue("x = function() {};"));
-    assertEquals("x", getFunctionLValue("function x() {};"));
-    assertEquals("x", getFunctionLValue("var x = y ? z : function() {};"));
-    assertEquals("x", getFunctionLValue("var x = y ? function() {} : z;"));
-    assertEquals("x", getFunctionLValue("var x = y && function() {};"));
-    assertEquals("x", getFunctionLValue("var x = y || function() {};"));
-    assertEquals("x", getFunctionLValue("var x = (y, function() {});"));
+    assertThat(getFunctionLValue("var x = function() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("x = function() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("function x() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("var x = y ? z : function() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("var x = y ? function() {} : z;")).isEqualTo("x");
+    assertThat(getFunctionLValue("var x = y && function() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("var x = y || function() {};")).isEqualTo("x");
+    assertThat(getFunctionLValue("var x = (y, function() {});")).isEqualTo("x");
   }
 
+  @Test
   public void testGetBestLValueName() {
     Function<String, String> getBestName =
         (js) -> NodeUtil.getBestLValueName(NodeUtil.getBestLValue(getFunctionNode(js)));
-    assertEquals("x", getBestName.apply("var x = function() {};"));
-    assertEquals("x", getBestName.apply("x = function() {};"));
-    assertEquals("x", getBestName.apply("function x() {};"));
-    assertEquals("x", getBestName.apply("var x = y ? z : function() {};"));
-    assertEquals("x", getBestName.apply("var x = y ? function() {} : z;"));
-    assertEquals("x", getBestName.apply("var x = y && function() {};"));
-    assertEquals("x", getBestName.apply("var x = y || function() {};"));
-    assertEquals("x", getBestName.apply("var x = (y, function() {});"));
-    assertEquals("C.prototype.d", getBestName.apply("C.prototype.d = function() {};"));
-    assertEquals("C.prototype.d", getBestName.apply("class C { d() {} };"));
-    assertEquals("C.d", getBestName.apply("C.d = function() {};"));
-    assertEquals("C.d", getBestName.apply("class C { static d() {} };"));
+    assertThat(getBestName.apply("var x = function() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("x = function() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("function x() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("var x = y ? z : function() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("var x = y ? function() {} : z;")).isEqualTo("x");
+    assertThat(getBestName.apply("var x = y && function() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("var x = y || function() {};")).isEqualTo("x");
+    assertThat(getBestName.apply("var x = (y, function() {});")).isEqualTo("x");
+    assertThat(getBestName.apply("C.prototype.d = function() {};")).isEqualTo("C.prototype.d");
+    assertThat(getBestName.apply("class C { d() {} };")).isEqualTo("C.prototype.d");
+    assertThat(getBestName.apply("C.d = function() {};")).isEqualTo("C.d");
+    assertThat(getBestName.apply("class C { static d() {} };")).isEqualTo("C.d");
   }
 
+  @Test
   public void testGetRValueOfLValue() {
-    assertTrue(functionIsRValueOfAssign("x = function() {};"));
-    assertTrue(functionIsRValueOfAssign("x += function() {};"));
-    assertTrue(functionIsRValueOfAssign("x -= function() {};"));
-    assertTrue(functionIsRValueOfAssign("x *= function() {};"));
-    assertTrue(functionIsRValueOfAssign("x /= function() {};"));
-    assertTrue(functionIsRValueOfAssign("x <<= function() {};"));
-    assertTrue(functionIsRValueOfAssign("x >>= function() {};"));
-    assertTrue(functionIsRValueOfAssign("x >>= function() {};"));
-    assertTrue(functionIsRValueOfAssign("x >>>= function() {};"));
-    assertFalse(functionIsRValueOfAssign("x = y ? x : function() {};"));
+    assertThat(functionIsRValueOfAssign("x = function() {};")).isTrue();
+    assertThat(functionIsRValueOfAssign("x += function() {};")).isTrue();
+    assertThat(functionIsRValueOfAssign("x -= function() {};")).isTrue();
+    assertThat(functionIsRValueOfAssign("x *= function() {};")).isTrue();
+    assertThat(functionIsRValueOfAssign("x /= function() {};")).isTrue();
+    assertThat(functionIsRValueOfAssign("x <<= function() {};")).isTrue();
+    assertThat(functionIsRValueOfAssign("x >>= function() {};")).isTrue();
+    assertThat(functionIsRValueOfAssign("x >>= function() {};")).isTrue();
+    assertThat(functionIsRValueOfAssign("x >>>= function() {};")).isTrue();
+    assertThat(functionIsRValueOfAssign("x = y ? x : function() {};")).isFalse();
   }
 
   /**
    * When the left side is a destructuring pattern, generally it's not possible to identify the RHS
    * for a specific name on the LHS.
    */
+  @Test
   public void testGetRValueOfLValueInDestructuringPattern() {
     assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [x] = rhs;"), "x"))).isNull();
     assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [x, y] = rhs;"), "x"))).isNull();
@@ -2399,6 +2421,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getRValueOfLValue(x)).isNull();
   }
 
+  @Test
   public void testGetRValueOfLValueDestructuringPattern() {
     assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var [x] = 'rhs';"))))
         .hasType(Token.STRING);
@@ -2414,6 +2437,7 @@ public final class NodeUtilTest extends TestCase {
         .hasType(Token.STRING);
   }
 
+  @Test
   public void testGetRValueOfLValueDestructuringLhs() {
     assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var [x] = 'rhs';"))))
         .hasType(Token.STRING);
@@ -2429,72 +2453,74 @@ public final class NodeUtilTest extends TestCase {
         .hasType(Token.STRING);
   }
 
+  @Test
   public void testIsNaN() {
-    assertTrue(NodeUtil.isNaN(getNode("NaN")));
-    assertFalse(NodeUtil.isNaN(getNode("Infinity")));
-    assertFalse(NodeUtil.isNaN(getNode("x")));
-    assertTrue(NodeUtil.isNaN(getNode("0/0")));
-    assertFalse(NodeUtil.isNaN(getNode("1/0")));
-    assertFalse(NodeUtil.isNaN(getNode("0/1")));
-    assertFalse(NodeUtil.isNaN(IR.number(0.0)));
+    assertThat(NodeUtil.isNaN(getNode("NaN"))).isTrue();
+    assertThat(NodeUtil.isNaN(getNode("Infinity"))).isFalse();
+    assertThat(NodeUtil.isNaN(getNode("x"))).isFalse();
+    assertThat(NodeUtil.isNaN(getNode("0/0"))).isTrue();
+    assertThat(NodeUtil.isNaN(getNode("1/0"))).isFalse();
+    assertThat(NodeUtil.isNaN(getNode("0/1"))).isFalse();
+    assertThat(NodeUtil.isNaN(IR.number(0.0))).isFalse();
   }
 
+  @Test
   public void testIsExecutedExactlyOnce() {
-    assertTrue(executedOnceTestCase("x;"));
+    assertThat(executedOnceTestCase("x;")).isTrue();
 
-    assertTrue(executedOnceTestCase("x && 1;"));
-    assertFalse(executedOnceTestCase("1 && x;"));
+    assertThat(executedOnceTestCase("x && 1;")).isTrue();
+    assertThat(executedOnceTestCase("1 && x;")).isFalse();
 
-    assertFalse(executedOnceTestCase("1 && (x && 1);"));
+    assertThat(executedOnceTestCase("1 && (x && 1);")).isFalse();
 
-    assertTrue(executedOnceTestCase("x || 1;"));
-    assertFalse(executedOnceTestCase("1 || x;"));
+    assertThat(executedOnceTestCase("x || 1;")).isTrue();
+    assertThat(executedOnceTestCase("1 || x;")).isFalse();
 
-    assertFalse(executedOnceTestCase("1 && (x || 1);"));
+    assertThat(executedOnceTestCase("1 && (x || 1);")).isFalse();
 
-    assertTrue(executedOnceTestCase("x ? 1 : 2;"));
-    assertFalse(executedOnceTestCase("1 ? 1 : x;"));
-    assertFalse(executedOnceTestCase("1 ? x : 2;"));
+    assertThat(executedOnceTestCase("x ? 1 : 2;")).isTrue();
+    assertThat(executedOnceTestCase("1 ? 1 : x;")).isFalse();
+    assertThat(executedOnceTestCase("1 ? x : 2;")).isFalse();
 
-    assertFalse(executedOnceTestCase("1 && (x ? 1 : 2);"));
+    assertThat(executedOnceTestCase("1 && (x ? 1 : 2);")).isFalse();
 
-    assertTrue(executedOnceTestCase("if (x) {}"));
-    assertFalse(executedOnceTestCase("if (true) {x;}"));
-    assertFalse(executedOnceTestCase("if (true) {} else {x;}"));
+    assertThat(executedOnceTestCase("if (x) {}")).isTrue();
+    assertThat(executedOnceTestCase("if (true) {x;}")).isFalse();
+    assertThat(executedOnceTestCase("if (true) {} else {x;}")).isFalse();
 
-    assertFalse(executedOnceTestCase("if (1) { if (x) {} }"));
+    assertThat(executedOnceTestCase("if (1) { if (x) {} }")).isFalse();
 
-    assertTrue(executedOnceTestCase("for(x;;){}"));
-    assertFalse(executedOnceTestCase("for(;x;){}"));
-    assertFalse(executedOnceTestCase("for(;;x){}"));
-    assertFalse(executedOnceTestCase("for(;;){x;}"));
+    assertThat(executedOnceTestCase("for(x;;){}")).isTrue();
+    assertThat(executedOnceTestCase("for(;x;){}")).isFalse();
+    assertThat(executedOnceTestCase("for(;;x){}")).isFalse();
+    assertThat(executedOnceTestCase("for(;;){x;}")).isFalse();
 
-    assertFalse(executedOnceTestCase("if (1) { for(x;;){} }"));
+    assertThat(executedOnceTestCase("if (1) { for(x;;){} }")).isFalse();
 
-    assertFalse(executedOnceTestCase("for(x in {}){}"));
-    assertTrue(executedOnceTestCase("for({}.a in x){}"));
-    assertFalse(executedOnceTestCase("for({}.a in {}){x}"));
+    assertThat(executedOnceTestCase("for(x in {}){}")).isFalse();
+    assertThat(executedOnceTestCase("for({}.a in x){}")).isTrue();
+    assertThat(executedOnceTestCase("for({}.a in {}){x}")).isFalse();
 
-    assertFalse(executedOnceTestCase("if (1) { for(x in {}){} }"));
+    assertThat(executedOnceTestCase("if (1) { for(x in {}){} }")).isFalse();
 
-    assertTrue(executedOnceTestCase("switch (x) {}"));
-    assertFalse(executedOnceTestCase("switch (1) {case x:}"));
-    assertFalse(executedOnceTestCase("switch (1) {case 1: x}"));
-    assertFalse(executedOnceTestCase("switch (1) {default: x}"));
+    assertThat(executedOnceTestCase("switch (x) {}")).isTrue();
+    assertThat(executedOnceTestCase("switch (1) {case x:}")).isFalse();
+    assertThat(executedOnceTestCase("switch (1) {case 1: x}")).isFalse();
+    assertThat(executedOnceTestCase("switch (1) {default: x}")).isFalse();
 
-    assertFalse(executedOnceTestCase("if (1) { switch (x) {} }"));
+    assertThat(executedOnceTestCase("if (1) { switch (x) {} }")).isFalse();
 
-    assertFalse(executedOnceTestCase("while (x) {}"));
-    assertFalse(executedOnceTestCase("while (1) {x}"));
+    assertThat(executedOnceTestCase("while (x) {}")).isFalse();
+    assertThat(executedOnceTestCase("while (1) {x}")).isFalse();
 
-    assertFalse(executedOnceTestCase("do {} while (x)"));
-    assertFalse(executedOnceTestCase("do {x} while (1)"));
+    assertThat(executedOnceTestCase("do {} while (x)")).isFalse();
+    assertThat(executedOnceTestCase("do {x} while (1)")).isFalse();
 
-    assertFalse(executedOnceTestCase("try {x} catch (e) {}"));
-    assertFalse(executedOnceTestCase("try {} catch (e) {x}"));
-    assertTrue(executedOnceTestCase("try {} finally {x}"));
+    assertThat(executedOnceTestCase("try {x} catch (e) {}")).isFalse();
+    assertThat(executedOnceTestCase("try {} catch (e) {x}")).isFalse();
+    assertThat(executedOnceTestCase("try {} finally {x}")).isTrue();
 
-    assertFalse(executedOnceTestCase("if (1) { try {} finally {x} }"));
+    assertThat(executedOnceTestCase("if (1) { try {} finally {x} }")).isFalse();
   }
 
   private void assertLValueNamedX(Node n) {
@@ -2502,6 +2528,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.isLValue(n)).isTrue();
   }
 
+  @Test
   public void testIsLValue() {
     assertLValueNamedX(parse("var x;").getFirstFirstChild());
     assertLValueNamedX(parse("var w, x;").getFirstChild().getLastChild());
@@ -2532,6 +2559,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.isLValue(n)).isFalse();
   }
 
+  @Test
   public void testIsNotLValue() {
     assertNotLValueNamedX(parse("var a = x;").getFirstFirstChild().getFirstChild());
 
@@ -2551,6 +2579,7 @@ public final class NodeUtilTest extends TestCase {
     assertNotLValueNamedX(x);
   }
 
+  @Test
   public void testIsConstantDeclaration() {
     assertIsConstantDeclaration(false, parse("var x = 1;").getFirstFirstChild());
     assertIsConstantDeclaration(false, parse("let x = 1;").getFirstFirstChild());
@@ -2560,8 +2589,16 @@ public final class NodeUtilTest extends TestCase {
     assertIsConstantDeclaration(true, parse("var /** @const */ x = 1;").getFirstFirstChild());
     assertIsConstantDeclaration(false, parse("var x, /** @const */ y = 1;").getFirstFirstChild());
 
-    // TODO(b/77597706): Update this NodeUtil.isConstantDeclaration() to handle destructured
-    //     declarations.
+    assertIsConstantDeclaration(true, getNameNodeFrom("const [a] = [];", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const [[[a]]] = [];", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const [a = 1] = [];", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const [...a] = [];", "a"));
+
+    assertIsConstantDeclaration(true, getNameNodeFrom("const {a} = {};", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const {a = 1} = {};", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const {[3]: a} = {};", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const {a: [a]} = {};", "a"));
+
     // TODO(bradfordcsmith): Add test cases for other coding conventions.
   }
 
@@ -2573,25 +2610,28 @@ public final class NodeUtilTest extends TestCase {
         .isEqualTo(isConstantDeclaration);
   }
 
+  @Test
   public void testIsNestedObjectPattern() {
     Node root = parse("var {a, b} = {a:1, b:2}");
     Node destructuring = root.getFirstFirstChild();
     Node objPattern = destructuring.getFirstChild();
-    assertFalse(NodeUtil.isNestedObjectPattern(objPattern));
+    assertThat(NodeUtil.isNestedObjectPattern(objPattern)).isFalse();
 
     root = parse("var {a, b:{c}} = {a:{}, b:{c:5}};");
     destructuring = root.getFirstFirstChild();
     objPattern = destructuring.getFirstChild();
-    assertTrue(NodeUtil.isNestedObjectPattern(objPattern));
+    assertThat(NodeUtil.isNestedObjectPattern(objPattern)).isTrue();
   }
 
+  @Test
   public void testIsNestedArrayPattern() {
     Node root = parse("var [a, b] = [1, 2]");
     Node destructuring = root.getFirstFirstChild();
     Node arrayPattern = destructuring.getFirstChild();
-    assertFalse(NodeUtil.isNestedArrayPattern(arrayPattern));
+    assertThat(NodeUtil.isNestedArrayPattern(arrayPattern)).isFalse();
   }
 
+  @Test
   public void testDestructuring1() {
     Node root = parse("var [a, b] = obj;");
     Node varNode = root.getFirstChild();
@@ -2620,6 +2660,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring1b() {
     Node root = parse("var {a: c, b: d} = obj;");
     Node varNode = root.getFirstChild();
@@ -2654,6 +2695,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeD)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring1c() {
     Node root = parse("var {a, b} = obj;");
     Node varNode = root.getFirstChild();
@@ -2688,6 +2730,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring1d() {
     Node root = parse("var {a = defaultValue} = obj;");
     Node varNode = root.getFirstChild();
@@ -2722,6 +2765,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring1e() {
     Node root = parse("var {a: b = defaultValue} = obj;");
     Node varNode = root.getFirstChild();
@@ -2755,6 +2799,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring1f() {
     Node root = parse("var [a  = defaultValue] = arr;");
     Node varNode = root.getFirstChild();
@@ -2785,6 +2830,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring2() {
     Node root = parse("var [a, [b, c]] = obj;");
     Node varNode = root.getFirstChild();
@@ -2820,6 +2866,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeC)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring2b() {
     Node root = parse("var {a: e, b: {c: f, d: g}} = obj;");
     Node varNode = root.getFirstChild();
@@ -2867,6 +2914,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeG)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring3() {
     Node root = parse("var [a, b] = [c, d];");
     Node varNode = root.getFirstChild();
@@ -2898,6 +2946,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring3b() {
     Node root = parse("var {a: c, b: d} = {a: 1, b: 2};");
     Node varNode = root.getFirstChild();
@@ -2928,6 +2977,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeD)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring4() {
     Node root = parse("for ([a, b] of X){}");
     Node destructPat = root.getFirstFirstChild();
@@ -2946,6 +2996,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
   }
 
+  @Test
   public void testDestructuring5() {
     Node root = parse("function fn([a, b] = [c, d]){}");
     Node destructPat = root.getFirstChild().getSecondChild()
@@ -2971,6 +3022,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
   }
 
+  @Test
   public void testRestParameter() {
     Node root = parse("function fn(a, b, ...rest){}");
     Node parameterList = root.getFirstChild().getSecondChild();
@@ -2993,6 +3045,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeRest)).isSameAs(parameterList);
   }
 
+  @Test
   public void testDestructuring6() {
     Node root = parse("for ([{a: b}] of c) {}");
     Node forOfNode = root.getFirstChild();
@@ -3017,6 +3070,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(forOfTargetPat);
   }
 
+  @Test
   public void testDestructuring6b() {
     Node root = parse("for ([{a: b}] in c) {}");
     Node forInNode = root.getFirstChild();
@@ -3041,6 +3095,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(forInTargetPat);
   }
 
+  @Test
   public void testDestructuring6c() {
     Node root = parse("for (var [{a: b}] = [{a: 1}];;) {}");
     Node varNode = root.getFirstFirstChild();
@@ -3064,6 +3119,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring7() {
     Node root = parse("for ([a] of c) {}");
     Node destructPat = root.getFirstFirstChild();
@@ -3081,6 +3137,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
   }
 
+  @Test
   public void testDestructuring7b() {
     Node root = parse("for ([a] in c) {}");
     Node destructPat = root.getFirstFirstChild();
@@ -3098,6 +3155,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
   }
 
+  @Test
   public void testDestructuring7c() {
     Node root = parse("for (var [a] = [1];;) {}");
     Node varNode = root.getFirstFirstChild();
@@ -3117,6 +3175,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring7d() {
     Node root = parse("for (let [a] = [1];;) {}");
     Node letNode = root.getFirstFirstChild();
@@ -3136,6 +3195,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(letNode);
   }
 
+  @Test
   public void testDestructuring7e() {
     Node root = parse("for (const [a] = [1];;) {}");
     Node constNode = root.getFirstFirstChild();
@@ -3155,6 +3215,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(constNode);
   }
 
+  @Test
   public void testDestructuring8() {
     Node root = parse("var [...a] = obj;");
     Node varNode = root.getFirstChild();
@@ -3176,6 +3237,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuring8b() {
     Node root = parse("([...this.x] = obj);");
     Node assign = root.getFirstFirstChild();
@@ -3193,6 +3255,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getRootTarget(getProp)).isSameAs(destructPat);
   }
 
+  @Test
   public void testDestructuring9() {
     Node root = parse("var {['a']:a} = obj;");
     Node varNode = root.getFirstChild();
@@ -3214,6 +3277,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
+  @Test
   public void testDestructuringComputedPropertyWithDefault() {
     Node root = parse("var {['a']: a = 1} = obj;");
     Node varNode = root.getFirstChild();
@@ -3236,14 +3300,62 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
+  @Test
+  public void testDestructuringWithArrayPatternInCatch() {
+    Node actual = parse("try {} catch([a]) {}");
+
+    Node tryNode = actual.getFirstChild();
+    Node catchBlock = tryNode.getSecondChild();
+    Node catchNode = catchBlock.getFirstChild();
+    assertNode(catchNode).hasType(Token.CATCH);
+
+    Node arrayPattern = catchNode.getFirstChild();
+    Node nameNodeA = arrayPattern.getOnlyChild();
+    assertNode(nameNodeA).isName("a");
+
+    assertLhsByDestructuring(nameNodeA);
+
+    assertThat(NodeUtil.getRootTarget(arrayPattern)).isSameAs(arrayPattern);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(arrayPattern);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(catchNode);
+  }
+
+  @Test
+  public void testDestructuringObjectRest() {
+    Node root = parse("var {...rest} = obj;");
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
+    Node destructPat = destructLhs.getFirstChild();
+    checkState(destructPat.isObjectPattern(), destructPat);
+
+    Node restNode = destructPat.getFirstChild();
+    Node nameNodeRest = restNode.getFirstChild();
+    checkState(nameNodeRest.getString().equals("rest"), nameNodeRest);
+
+    Node nameNodeObj = destructPat.getNext();
+    checkState(nameNodeObj.getString().equals("obj"), nameNodeObj);
+
+    assertNotLhsByDestructuring(restNode);
+    assertLhsByDestructuring(nameNodeRest);
+    assertNotLhsByDestructuring(nameNodeObj);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeRest)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeRest)).isSameAs(varNode);
+  }
+
   private static void assertLhsByDestructuring(Node n) {
-    assertTrue(NodeUtil.isLhsByDestructuring(n));
+    assertThat(NodeUtil.isLhsByDestructuring(n)).isTrue();
   }
 
   private static void assertNotLhsByDestructuring(Node n) {
-    assertFalse(NodeUtil.isLhsByDestructuring(n));
+    assertThat(NodeUtil.isLhsByDestructuring(n)).isFalse();
   }
 
+  @Test
   public void testNewQName1() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -3256,6 +3368,7 @@ public final class NodeUtilTest extends TestCase {
     assertNodeTreesEqual(expected, actual);
   }
 
+  @Test
   public void testNewQualifiedNameNode2() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -3268,22 +3381,26 @@ public final class NodeUtilTest extends TestCase {
     assertNodeTreesEqual(expected, actual);
   }
 
+  @Test
   public void testNewQNameDeclarationWithQualifiedName() {
     assertNode(createNewQNameDeclaration("ns.prop", IR.number(0), Token.VAR))
         .isEqualTo(
             IR.exprResult(IR.assign(IR.getprop(IR.name("ns"), IR.string("prop")), IR.number(0))));
   }
 
+  @Test
   public void testNewQNameDeclarationWithVar() {
     assertNode(createNewQNameDeclaration("x", IR.number(0), Token.VAR))
         .isEqualTo(IR.var(IR.name("x"), IR.number(0)));
   }
 
+  @Test
   public void testNewQNameDeclarationWithLet() {
     assertNode(createNewQNameDeclaration("x", IR.number(0), Token.LET))
         .isEqualTo(IR.let(IR.name("x"), IR.number(0)));
   }
 
+  @Test
   public void testNewQNameDeclarationWithConst() {
     assertNode(createNewQNameDeclaration("x", IR.number(0), Token.CONST))
         .isEqualTo(IR.constNode(IR.name("x"), IR.number(0)));
@@ -3297,39 +3414,43 @@ public final class NodeUtilTest extends TestCase {
     return NodeUtil.newQNameDeclaration(compiler, name, value, null, type);
   }
 
+  @Test
   public void testGetBestJsDocInfoForClasses() {
     Node classNode = getClassNode("/** @export */ class Foo {}");
-    assertTrue(NodeUtil.getBestJSDocInfo(classNode).isExport());
+    assertThat(NodeUtil.getBestJSDocInfo(classNode).isExport()).isTrue();
 
     classNode = getClassNode("/** @export */ var Foo = class {}");
-    assertTrue(NodeUtil.getBestJSDocInfo(classNode).isExport());
+    assertThat(NodeUtil.getBestJSDocInfo(classNode).isExport()).isTrue();
 
     classNode = getClassNode("/** @export */ var Foo = class Bar {}");
-    assertTrue(NodeUtil.getBestJSDocInfo(classNode).isExport());
+    assertThat(NodeUtil.getBestJSDocInfo(classNode).isExport()).isTrue();
   }
 
+  @Test
   public void testGetBestJsDocInfoForMethods() {
     Node function = getFunctionNode("class C { /** @export */ foo() {} }");
-    assertTrue(NodeUtil.getBestJSDocInfo(function).isExport());
+    assertThat(NodeUtil.getBestJSDocInfo(function).isExport()).isTrue();
 
     function = getFunctionNode("class C { /** @export */ [computedMethod]() {} }");
-    assertTrue(NodeUtil.getBestJSDocInfo(function).isExport());
+    assertThat(NodeUtil.getBestJSDocInfo(function).isExport()).isTrue();
   }
 
+  @Test
   public void testGetBestJsDocInfoExport() {
     Node classNode = getClassNode("/** @constructor */ export class Foo {}");
-    assertTrue(NodeUtil.getBestJSDocInfo(classNode).isConstructor());
+    assertThat(NodeUtil.getBestJSDocInfo(classNode).isConstructor()).isTrue();
 
     Node function = getFunctionNode("/** @constructor */ export function Foo() {}");
-    assertTrue(NodeUtil.getBestJSDocInfo(function).isConstructor());
+    assertThat(NodeUtil.getBestJSDocInfo(function).isConstructor()).isTrue();
 
     function = getFunctionNode("/** @constructor */ export var Foo = function() {}");
-    assertTrue(NodeUtil.getBestJSDocInfo(function).isConstructor());
+    assertThat(NodeUtil.getBestJSDocInfo(function).isConstructor()).isTrue();
 
     function = getFunctionNode("/** @constructor */ export let Foo = function() {}");
-    assertTrue(NodeUtil.getBestJSDocInfo(function).isConstructor());
+    assertThat(NodeUtil.getBestJSDocInfo(function).isConstructor()).isTrue();
   }
 
+  @Test
   public void testGetDeclaredTypeExpression1() {
     Node ast = parse("function f(/** string */ x) {}");
     Node x = getNameNode(ast, "x");
@@ -3337,6 +3458,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(typeExpr.getRoot().getString()).isEqualTo("string");
   }
 
+  @Test
   public void testGetDeclaredTypeExpression2() {
     Node ast = parse("/** @param {string} x */ function f(x) {}");
     Node x = getNameNode(ast, "x");
@@ -3344,6 +3466,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(typeExpr.getRoot().getString()).isEqualTo("string");
   }
 
+  @Test
   public void testGetDeclaredTypeExpression3() {
     Node ast = parse("/** @param {...number} x */ function f(...x) {}");
     Node x = getNameNode(ast, "x");
@@ -3352,6 +3475,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(typeExpr.getRoot().getFirstChild().getString()).isEqualTo("number");
   }
 
+  @Test
   public void testGetDeclaredTypeExpression4() {
     Node ast = parse("/** @param {number=} x */ function f(x = -1) {}");
     Node x = getNameNode(ast, "x");
@@ -3360,25 +3484,50 @@ public final class NodeUtilTest extends TestCase {
     assertThat(typeExpr.getRoot().getFirstChild().getString()).isEqualTo("number");
   }
 
-  public void testFindLhsNodesInNode() {
+  @Test
+  public void testFindLhsNodesInNodeWithNameDeclaration() {
     assertThat(findLhsNodesInNode("var x;")).hasSize(1);
     assertThat(findLhsNodesInNode("var x, y;")).hasSize(2);
     assertThat(findLhsNodesInNode("var f = function(x, y, z) {};")).hasSize(1);
+  }
+
+  @Test
+  public void testFindLhsNodesInNodeWithArrayPatternDeclaration() {
     assertThat(findLhsNodesInNode("var [x=a => a, y = b=>b+1] = arr;")).hasSize(2);
     assertThat(findLhsNodesInNode("var [x=a => a, y = b=>b+1, ...z] = arr;")).hasSize(3);
     assertThat(findLhsNodesInNode("var [ , , , y = b=>b+1, ...z] = arr;")).hasSize(2);
+  }
+
+  @Test
+  public void testFindLhsNodesInNodeWithObjectPatternDeclaration() {
     assertThat(findLhsNodesInNode("var {x = a=>a, y = b=>b+1} = obj;")).hasSize(2);
     assertThat(findLhsNodesInNode("var {p1: x = a=>a, p2: y = b=>b+1} = obj;")).hasSize(2);
     assertThat(findLhsNodesInNode("var {[pname]: x = a=>a, [p2name]: y} = obj;")).hasSize(2);
     assertThat(findLhsNodesInNode("var {lhs1 = a, p2: [lhs2, lhs3 = b] = [notlhs]} = obj;"))
         .hasSize(3);
+  }
+
+  @Test
+  public void testFindLhsNodesInNodeWithCastOnLhs() {
+    Iterable<Node> lhsNodes = findLhsNodesInNode("/** @type {*} */ (a.b) = 3;");
+    assertThat(lhsNodes).hasSize(1);
+    Iterator<Node> nodeIterator = lhsNodes.iterator();
+    assertNode(nodeIterator.next()).matchesQualifiedName("a.b");
+  }
+
+  @Test
+  public void testFindLhsNodesInNodeWithArrayPatternAssign() {
     assertThat(findLhsNodesInNode("[this.x] = rhs;")).hasSize(1);
     assertThat(findLhsNodesInNode("[this.x, y] = rhs;")).hasSize(2);
     assertThat(findLhsNodesInNode("[this.x, y, this.z] = rhs;")).hasSize(3);
     assertThat(findLhsNodesInNode("[y, this.z] = rhs;")).hasSize(2);
     assertThat(findLhsNodesInNode("[x[y]] = rhs;")).hasSize(1);
     assertThat(findLhsNodesInNode("[x.y.z] = rhs;")).hasSize(1);
+    assertThat(findLhsNodesInNode("[ /** @type {*} */ (x.y.z) ] = rhs;")).hasSize(1);
+  }
 
+  @Test
+  public void testFindLhsNodesInNodeWithComplexAssign() {
     assertThat(findLhsNodesInNode("x += 1;")).hasSize(1);
     assertThat(findLhsNodesInNode("x.y += 1;")).hasSize(1);
     assertThat(findLhsNodesInNode("x -= 1;")).hasSize(1);
@@ -3387,6 +3536,7 @@ public final class NodeUtilTest extends TestCase {
     assertThat(findLhsNodesInNode("x.y *= 2;")).hasSize(1);
   }
 
+  @Test
   public void testFindLhsNodesInForOfWithDeclaration() {
     Iterable<Node> lhsNodes = findLhsNodesInNode("for (const {x, y} of iterable) {}");
     assertThat(lhsNodes).hasSize(2);
@@ -3395,6 +3545,7 @@ public final class NodeUtilTest extends TestCase {
     assertNode(nodeIterator.next()).isName("y");
   }
 
+  @Test
   public void testFindLhsNodesInForOfWithoutDeclaration() {
     Iterable<Node> lhsNodes = findLhsNodesInNode("for ({x, y: a.b} of iterable) {}");
     assertThat(lhsNodes).hasSize(2);
@@ -3403,6 +3554,7 @@ public final class NodeUtilTest extends TestCase {
     assertNode(nodeIterator.next()).matchesQualifiedName("a.b");
   }
 
+  @Test
   public void testFindLhsNodesInForInWithDeclaration() {
     Iterable<Node> lhsNodes = findLhsNodesInNode("for (const x in obj) {}");
     assertThat(lhsNodes).hasSize(1);
@@ -3410,6 +3562,7 @@ public final class NodeUtilTest extends TestCase {
     assertNode(nodeIterator.next()).isName("x");
   }
 
+  @Test
   public void testFindLhsNodesInForInWithoutDeclaration() {
     Iterable<Node> lhsNodes = findLhsNodesInNode("for (a.b in iterable) {}");
     assertThat(lhsNodes).hasSize(1);
@@ -3417,69 +3570,111 @@ public final class NodeUtilTest extends TestCase {
     assertNode(nodeIterator.next()).matchesQualifiedName("a.b");
   }
 
+  @Test
   public void testIsConstructor() {
-    assertTrue(NodeUtil.isConstructor(getFunctionNode("/** @constructor */ function Foo() {}")));
-    assertTrue(NodeUtil.isConstructor(getFunctionNode(
-        "/** @constructor */ var Foo = function() {}")));
-    assertTrue(NodeUtil.isConstructor(getFunctionNode(
-        "var x = {}; /** @constructor */ x.Foo = function() {}")));
-    assertTrue(NodeUtil.isConstructor(getFunctionNode("class Foo { constructor() {} }")));
+    assertThat(NodeUtil.isConstructor(getFunctionNode("/** @constructor */ function Foo() {}")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isConstructor(getFunctionNode("/** @constructor */ var Foo = function() {}")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isConstructor(
+                getFunctionNode("var x = {}; /** @constructor */ x.Foo = function() {}")))
+        .isTrue();
+    assertThat(NodeUtil.isConstructor(getFunctionNode("class Foo { constructor() {} }"))).isTrue();
 
-    assertFalse(NodeUtil.isConstructor(getFunctionNode("function Foo() {}")));
-    assertFalse(NodeUtil.isConstructor(getFunctionNode("var Foo = function() {}")));
-    assertFalse(NodeUtil.isConstructor(getFunctionNode("var x = {}; x.Foo = function() {};")));
-    assertFalse(NodeUtil.isConstructor(getFunctionNode("function constructor() {}")));
-    assertFalse(NodeUtil.isConstructor(getFunctionNode("class Foo { bar() {} }")));
+    assertThat(NodeUtil.isConstructor(getFunctionNode("function Foo() {}"))).isFalse();
+    assertThat(NodeUtil.isConstructor(getFunctionNode("var Foo = function() {}"))).isFalse();
+    assertThat(NodeUtil.isConstructor(getFunctionNode("var x = {}; x.Foo = function() {};")))
+        .isFalse();
+    assertThat(NodeUtil.isConstructor(getFunctionNode("function constructor() {}"))).isFalse();
+    assertThat(NodeUtil.isConstructor(getFunctionNode("class Foo { bar() {} }"))).isFalse();
   }
 
+  @Test
   public void testIsGetterOrSetter() {
     Node fnNode = getFunctionNode("Object.defineProperty(this, 'bar', {get: function() {}});");
-    assertTrue(NodeUtil.isGetterOrSetter(fnNode.getParent()));
+    assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
 
     fnNode = getFunctionNode("Object.defineProperty(this, 'bar', {set: function() {}});");
-    assertTrue(NodeUtil.isGetterOrSetter(fnNode.getParent()));
+    assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
 
     fnNode = getFunctionNode("Object.defineProperties(this, {bar: {get: function() {}}});");
-    assertTrue(NodeUtil.isGetterOrSetter(fnNode.getParent()));
+    assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
 
     fnNode = getFunctionNode("Object.defineProperties(this, {bar: {set: function() {}}});");
-    assertTrue(NodeUtil.isGetterOrSetter(fnNode.getParent()));
+    assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
 
     fnNode = getFunctionNode("var x = {get bar() {}};");
-    assertTrue(NodeUtil.isGetterOrSetter(fnNode.getParent()));
+    assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
 
     fnNode = getFunctionNode("var x = {set bar(z) {}};");
-    assertTrue(NodeUtil.isGetterOrSetter(fnNode.getParent()));
+    assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
   }
 
+  @Test
   public void testIsObjectDefinePropertiesDefinition() {
-    assertTrue(NodeUtil.isObjectDefinePropertiesDefinition(
-        getCallNode("Object.defineProperties(this, {});")));
-    assertTrue(NodeUtil.isObjectDefinePropertiesDefinition(
-        getCallNode("Object.defineProperties(this, foo);")));
+    assertThat(
+            NodeUtil.isObjectDefinePropertiesDefinition(
+                getCallNode("Object.defineProperties(this, {});")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isObjectDefinePropertiesDefinition(
+                getCallNode("Object.defineProperties(this, foo);")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isObjectDefinePropertiesDefinition(
+                getCallNode("$jscomp.global.Object.defineProperties(this, foo);")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isObjectDefinePropertiesDefinition(
+                getCallNode("$jscomp$global.Object.defineProperties(this, foo);")))
+        .isTrue();
 
-    assertFalse(NodeUtil.isObjectDefinePropertiesDefinition(
-        getCallNode("Object.defineProperties(this, {}, foo);")));
-    assertFalse(NodeUtil.isObjectDefinePropertiesDefinition(
-        getCallNode("Object.defineProperties(this);")));
-    assertFalse(NodeUtil.isObjectDefinePropertiesDefinition(
-        getCallNode("Object.defineProperties();")));
+    assertThat(
+            NodeUtil.isObjectDefinePropertiesDefinition(
+                getCallNode("Object.defineProperties(this, {}, foo);")))
+        .isFalse();
+    assertThat(
+            NodeUtil.isObjectDefinePropertiesDefinition(
+                getCallNode("Object.defineProperties(this);")))
+        .isFalse();
+    assertThat(
+            NodeUtil.isObjectDefinePropertiesDefinition(getCallNode("Object.defineProperties();")))
+        .isFalse();
   }
 
+  @Test
   public void testIsObjectDefinePropertyDefinition() {
-    assertTrue(NodeUtil.isObjectDefinePropertyDefinition(
-        getCallNode("Object.defineProperty(this, 'foo', {});")));
-    assertTrue(NodeUtil.isObjectDefinePropertyDefinition(
-        getCallNode("Object.defineProperty(this, 'foo', foo);")));
+    assertThat(
+            NodeUtil.isObjectDefinePropertyDefinition(
+                getCallNode("Object.defineProperty(this, 'foo', {});")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isObjectDefinePropertyDefinition(
+                getCallNode("Object.defineProperty(this, 'foo', foo);")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isObjectDefinePropertyDefinition(
+                getCallNode("$jscomp.global.Object.defineProperty(this, 'foo', foo);")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isObjectDefinePropertyDefinition(
+                getCallNode("$jscomp$global.Object.defineProperty(this, 'foo', foo);")))
+        .isTrue();
 
-    assertFalse(NodeUtil.isObjectDefinePropertyDefinition(
-        getCallNode("Object.defineProperty(this, {});")));
-    assertFalse(NodeUtil.isObjectDefinePropertyDefinition(
-        getCallNode("Object.defineProperty(this);")));
-    assertFalse(NodeUtil.isObjectDefinePropertyDefinition(
-        getCallNode("Object.defineProperty();")));
+    assertThat(
+            NodeUtil.isObjectDefinePropertyDefinition(
+                getCallNode("Object.defineProperty(this, {});")))
+        .isFalse();
+    assertThat(
+            NodeUtil.isObjectDefinePropertyDefinition(getCallNode("Object.defineProperty(this);")))
+        .isFalse();
+    assertThat(NodeUtil.isObjectDefinePropertyDefinition(getCallNode("Object.defineProperty();")))
+        .isFalse();
   }
 
+  @Test
   public void testGetAllVars1() {
     String fnString = "var h; function g(x, y) {var z; h = 2; {let a; const b = 1} let c}";
     Compiler compiler = new Compiler();
@@ -3496,10 +3691,11 @@ public final class NodeUtilTest extends TestCase {
     List<Var> orderedVars = new ArrayList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
         allVariables, orderedVars, compiler, scopeCreator, functionScope);
-    Set<String> keySet = new HashSet<>(Arrays.asList("a", "b", "c", "z", "x", "y"));
-    assertEquals(keySet, allVariables.keySet());
+
+    assertThat(allVariables.keySet()).containsExactly("a", "b", "c", "z", "x", "y");
   }
 
+  @Test
   public void testGetAllVars2() {
     String fnString =
         "function g(x, y) "
@@ -3523,21 +3719,25 @@ public final class NodeUtilTest extends TestCase {
     List<Var> orderedVars = new ArrayList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
         allVariables, orderedVars, compiler, scopeCreator, functionScope);
-    Set<String> keySet = new HashSet<>(Arrays.asList("x", "y", "z", "a", "b", "c"));
-    assertEquals(keySet, allVariables.keySet());
+
+    assertThat(allVariables.keySet()).containsExactly("x", "y", "z", "a", "b", "c");
   }
 
+  @Test
   public void testIsVarArgs() {
-    assertTrue(NodeUtil.doesFunctionReferenceOwnArgumentsObject(
-        getNode("function() {return () => arguments}")));
-    assertFalse(NodeUtil.doesFunctionReferenceOwnArgumentsObject(
-        getNode("() => arguments")));
+    assertThat(
+            NodeUtil.doesFunctionReferenceOwnArgumentsObject(
+                getNode("function() {return () => arguments}")))
+        .isTrue();
+    assertThat(NodeUtil.doesFunctionReferenceOwnArgumentsObject(getNode("() => arguments")))
+        .isFalse();
   }
 
   /**
-   * When the left side is a destructuring pattern, generally it's not possible to identify the
-   * RHS for a specific name on the LHS.
+   * When the left side is a destructuring pattern, generally it's not possible to identify the RHS
+   * for a specific name on the LHS.
    */
+  @Test
   public void testIsExpressionResultUsed() {
     assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x in y) z", "x"))).isTrue();
     assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x in y) z", "y"))).isTrue();
@@ -3551,38 +3751,42 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "y"))).isTrue();
     assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "z"))).isFalse();
 
-    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("function f() { return y }", "y")));
-    assertFalse(NodeUtil.isExpressionResultUsed(getNameNodeFrom("function f() { y }", "y")));
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("function f() { return y }", "y")))
+        .isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("function f() { y }", "y")))
+        .isFalse();
 
-    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("var x = ()=> y", "y")));
-    assertFalse(NodeUtil.isExpressionResultUsed(getNameNodeFrom("var x = ()=>{ y }", "y")));
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("var x = ()=> y", "y"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("var x = ()=>{ y }", "y")))
+        .isFalse();
 
-    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("({a: x = y} = z)", "y")));
-    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("[x = y] = z", "y")));
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("({a: x = y} = z)", "y"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("[x = y] = z", "y"))).isTrue();
 
-    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("({x: y})", "y")));
-    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("[y]", "y")));
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("({x: y})", "y"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("[y]", "y"))).isTrue();
 
-    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y()", "y")));
-    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y``", "y")));
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y()", "y"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y``", "y"))).isTrue();
   }
 
+  @Test
   public void testIsSimpleOperator() {
-    assertTrue(NodeUtil.isSimpleOperator(parseExpr("!x")));
-    assertTrue(NodeUtil.isSimpleOperator(parseExpr("5 + x")));
-    assertTrue(NodeUtil.isSimpleOperator(parseExpr("typeof x")));
-    assertTrue(NodeUtil.isSimpleOperator(parseExpr("x instanceof y")));
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("!x"))).isTrue();
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("5 + x"))).isTrue();
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("typeof x"))).isTrue();
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("x instanceof y"))).isTrue();
     // short curcuits aren't simple
-    assertFalse(NodeUtil.isSimpleOperator(parseExpr("5 && x")));
-    assertFalse(NodeUtil.isSimpleOperator(parseExpr("5 || x")));
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("5 && x"))).isFalse();
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("5 || x"))).isFalse();
     // side-effects aren't simple
-    assertFalse(NodeUtil.isSimpleOperator(parseExpr("x = 5")));
-    assertFalse(NodeUtil.isSimpleOperator(parseExpr("x++")));
-    assertFalse(NodeUtil.isSimpleOperator(parseExpr("--y")));
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("x = 5"))).isFalse();
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("x++"))).isFalse();
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("--y"))).isFalse();
     // prop access are simple
-    assertTrue(NodeUtil.isSimpleOperator(parseExpr("y in x")));
-    assertTrue(NodeUtil.isSimpleOperator(parseExpr("x.y")));
-    assertTrue(NodeUtil.isSimpleOperator(parseExpr("x[y]")));
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("y in x"))).isTrue();
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("x.y"))).isTrue();
+    assertThat(NodeUtil.isSimpleOperator(parseExpr("x[y]"))).isTrue();
   }
 
   private Node getNameNodeFrom(String code, String name) {
@@ -3605,20 +3809,18 @@ public final class NodeUtilTest extends TestCase {
     Node ast = parse(js);
     Node nameNode = getNameNode(ast, "x");
     Node funcNode = getFunctionNode(ast);
-    assertNotNull("No function node to test", funcNode);
+    assertWithMessage("No function node to test").that(funcNode).isNotNull();
     return funcNode == NodeUtil.getRValueOfLValue(nameNode);
   }
 
   private void assertNodeTreesEqual(
       Node expected, Node actual) {
     String error = expected.checkTreeEquals(actual);
-    assertNull(error, error);
+    assertThat(error).isNull();
   }
 
   private static void testFunctionName(String js, String expected) {
-    assertEquals(
-        expected,
-        NodeUtil.getNearestFunctionName(getFunctionNode(js)));
+    assertThat(NodeUtil.getNearestFunctionName(getFunctionNode(js))).isEqualTo(expected);
   }
 
   private static Node getClassNode(String js) {

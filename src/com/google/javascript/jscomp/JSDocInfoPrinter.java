@@ -93,8 +93,8 @@ public final class JSDocInfoPrinter {
       parts.add("@abstract");
     }
 
-    if (info.getLendsName() != null) {
-      parts.add("@lends {" + info.getLendsName() + "}");
+    if (info.hasLendsName()) {
+      parts.add(buildAnnotationWithType("lends", info.getLendsName().getRoot()));
     }
 
     if (info.hasConstAnnotation() && !info.isDefine()) {
@@ -357,6 +357,9 @@ public final class JSDocInfoPrinter {
       sb.append("}");
     } else if (typeNode.isVoid()) {
       sb.append("void");
+    } else if (typeNode.isTypeOf()) {
+      sb.append("typeof ");
+      appendTypeNode(sb, typeNode.getFirstChild());
     } else {
       if (typeNode.hasChildren()) {
         sb.append(typeNode.getString())

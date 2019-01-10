@@ -28,7 +28,7 @@ refactoring_testcase.test_window_location = function(target, val) {
 };
 
 /**
- * @param {Window|Element} target The target.
+ * @param {!Window|!Element} target The target.
  * @param {string} val The value.
  */
 refactoring_testcase.union_type_location = function(target, val) {

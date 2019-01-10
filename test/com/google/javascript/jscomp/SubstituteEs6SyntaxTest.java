@@ -16,13 +16,18 @@
 
 package com.google.javascript.jscomp;
 
-/**
- * Tests for {@link SubstituteEs6Syntax} in isolation.
- */
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+/** Tests for {@link SubstituteEs6Syntax} in isolation. */
+@RunWith(JUnit4.class)
 public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     disableScriptFeatureValidation();
@@ -33,6 +38,7 @@ public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
     return new SubstituteEs6Syntax(compiler);
   }
 
+  @Test
   public void testArrowFunctions() {
     testSame("function f() {}");
     testSame("(function() { this.x = 5; })");
@@ -46,6 +52,7 @@ public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
     test("(x)=>{ return x++,5; }", "(x) => (x++,5)");
   }
 
+  @Test
   public void testObjectPattern() {
     // Tree comparisons don't fail on node property differences, so compare as strings instead.
     disableCompareAsTree();
@@ -55,6 +62,7 @@ public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
     testSame("const {[\"x\"]:x}=y");
   }
 
+  @Test
   public void testObjectLiteral() {
     // Tree comparisons don't fail on node property differences, so compare as strings instead.
     disableCompareAsTree();

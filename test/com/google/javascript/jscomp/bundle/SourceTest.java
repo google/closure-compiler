@@ -24,12 +24,16 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
 import java.nio.file.Paths;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link Source} and its nested classes. */
 @GwtIncompatible
-public final class SourceTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class SourceTest {
 
+  @Test
   public void testEquals() {
     Source foo = Source.builder().setCode("foo").build();
     new EqualsTester()
@@ -55,12 +59,14 @@ public final class SourceTest extends TestCase {
         .testEquals();
   }
 
+  @Test
   public void testCode() {
     assertThat(Source.builder().setCode("foo").build().code()).isEqualTo("foo");
     assertThat(Source.builder().setCode(Suppliers.ofInstance("foo")).build().code())
         .isEqualTo("foo");
   }
 
+  @Test
   public void testOriginal() {
     assertThat(Source.builder().setCode("foo").build().originalCode()).isEqualTo("foo");
     assertThat(Source.builder().setCode(Suppliers.ofInstance("foo")).build().originalCode())
@@ -77,6 +83,7 @@ public final class SourceTest extends TestCase {
         .isEqualTo("bar");
   }
 
+  @Test
   public void testRuntimes() {
     Source foo = Source.builder().addRuntime("foo").build();
     assertThat(foo.runtimes()).containsExactly("foo");

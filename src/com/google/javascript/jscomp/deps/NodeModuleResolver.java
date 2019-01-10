@@ -37,7 +37,14 @@ import javax.annotation.Nullable;
  * within the nearest node_modules folder ancestor.
  */
 public class NodeModuleResolver extends ModuleResolver {
-  private static final String[] FILE_EXTENSIONS_TO_SEARCH = {"", ".js", ".json"};
+  private static final String[] FILE_EXTENSIONS_TO_SEARCH = {
+    "",
+    ".js",
+    ".json",
+    // .i.js is typed interfaces. See ConvertToTypedInterface.java
+    ".i.js",
+    ".js.i.js"
+  };
   private static final String[] FILES_TO_SEARCH = {
     ModuleLoader.MODULE_SLASH + "package.json",
     ModuleLoader.MODULE_SLASH + "index.js",
@@ -61,11 +68,13 @@ public class NodeModuleResolver extends ModuleResolver {
    *
    * @param modulePaths Set of all module paths where the key is the module path normalized to have
    *     a leading slash
+   * @param moduleRootPaths Possibly empty list of root paths that should be ignored when processing
+   *     module paths.
    * @return A sorted set with the longest paths first where each entry is the folder containing a
    *     node_modules sub-folder.
    */
   private static ImmutableSortedSet<String> buildNodeModulesFoldersRegistry(
-      Iterable<String> modulePaths) {
+      Iterable<String> modulePaths, Iterable<String> moduleRootPaths) {
     SortedSet<String> registry =
         new TreeSet<>(
             // TODO(b/28382956): Take better advantage of Java8 comparing() to simplify this
@@ -85,7 +94,19 @@ public class NodeModuleResolver extends ModuleResolver {
     // Should add:
     //   /foo/ -> bar/node_modules/baz/foo_bar_baz.js
     //   /foo/node_modules/bar/ -> baz/foo_bar_baz.js
+    //
+    // If there are root paths provided - they should be ignored from paths. For example if
+    // root paths contains "/generated" root then the following module path should produce exact
+    // same result as above:
+    //    /generated/foo/node_modules/bar/node_modules/baz/foo_bar_baz.js
     for (String modulePath : modulePaths) {
+      // Strip root path from the beginning if it matches any.
+      for (String moduleRootPath : moduleRootPaths) {
+        if (modulePath.startsWith(moduleRootPath)) {
+          modulePath = modulePath.substring(moduleRootPath.length());
+          break;
+        }
+      }
       String[] nodeModulesDirs = modulePath.split("/node_modules/");
       String parentPath = "";
 
@@ -132,7 +153,7 @@ public class NodeModuleResolver extends ModuleResolver {
       ErrorHandler errorHandler,
       PathEscaper pathEscaper) {
     super(modulePaths, moduleRootPaths, errorHandler, pathEscaper);
-    this.nodeModulesFolders = buildNodeModulesFoldersRegistry(modulePaths);
+    this.nodeModulesFolders = buildNodeModulesFoldersRegistry(modulePaths, moduleRootPaths);
 
     if (packageJsonMainEntries == null) {
       this.packageJsonMainEntries = ImmutableMap.of();
@@ -246,10 +267,10 @@ public class NodeModuleResolver extends ModuleResolver {
 
   @Nullable
   private String resolveJsModuleFromRegistry(String scriptAddress, String moduleAddress) {
+    String normalizedScriptAddress =
+        (ModuleLoader.isAmbiguousIdentifier(scriptAddress) ? ModuleLoader.MODULE_SLASH : "")
+            + scriptAddress;
     for (String nodeModulesFolder : nodeModulesFolders) {
-      String normalizedScriptAddress =
-          (ModuleLoader.isAmbiguousIdentifier(scriptAddress) ? ModuleLoader.MODULE_SLASH : "")
-              + scriptAddress;
 
       if (!normalizedScriptAddress.startsWith(nodeModulesFolder)) {
         continue;

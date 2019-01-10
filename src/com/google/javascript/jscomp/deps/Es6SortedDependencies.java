@@ -68,7 +68,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   }
 
   @Override
-  public ImmutableList<INPUT> getDependenciesOf(List<INPUT> rootInputs, boolean sorted) {
+  public ImmutableList<INPUT> getStrongDependenciesOf(List<INPUT> rootInputs, boolean sorted) {
     checkArgument(userOrderedInputs.containsAll(rootInputs));
 
     Set<INPUT> includedInputs = new HashSet<>();
@@ -110,8 +110,46 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   }
 
   @Override
-  public ImmutableList<INPUT> getSortedDependenciesOf(List<INPUT> roots) {
-    return getDependenciesOf(roots, true);
+  public ImmutableList<INPUT> getSortedStrongDependenciesOf(List<INPUT> roots) {
+    return getStrongDependenciesOf(roots, true);
+  }
+
+  @Override
+  public List<INPUT> getSortedWeakDependenciesOf(List<INPUT> rootInputs) {
+    Set<INPUT> strongInputs = new HashSet<>(getSortedStrongDependenciesOf(rootInputs));
+    Set<INPUT> weakInputs = new HashSet<>();
+    Deque<INPUT> worklist = new ArrayDeque<>(strongInputs);
+    while (!worklist.isEmpty()) {
+      INPUT input = worklist.pop();
+      boolean isStrong = strongInputs.contains(input);
+
+      Iterable<String> edges =
+          isStrong
+              ? input.getTypeRequires()
+              : Iterables.concat(input.getRequiredSymbols(), input.getTypeRequires());
+
+      if (!isStrong && !weakInputs.add(input)) {
+        continue;
+      }
+
+      for (String symbolName : edges) {
+        INPUT importedSymbolName = exportingInputBySymbolName.get(symbolName);
+        if (importedSymbolName != null
+            && !strongInputs.contains(importedSymbolName)
+            && !weakInputs.contains(importedSymbolName)) {
+          worklist.add(importedSymbolName);
+        }
+      }
+    }
+
+    ImmutableList.Builder<INPUT> builder = ImmutableList.builder();
+    for (INPUT input : importOrderedInputs) {
+      if (weakInputs.contains(input)) {
+        builder.add(input);
+      }
+    }
+
+    return builder.build();
   }
 
   @Override
@@ -148,13 +186,13 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
       Collection<String> provides = userOrderedInput.getProvides();
       String firstProvide = Iterables.getFirst(provides, null);
       if (firstProvide == null
-          // TODO(sdh): It would be better to have a more robust way to distinguish
-          // between actual provided symbols and synthetic symbols generated for
-          // ES6 (or other) modules.  We can't read loadFlags here (to see if
-          // the module type is 'es6') either, since that requires a full parse.
-          // So for now we rely on the heuristic that all generated provides start
-          // with "module$".
-          || (provides.size() == 1 && firstProvide.startsWith("module$"))) {
+          // "module$" indicates the provide is generated from the path. If this is the only thing
+          // the module provides and it is not an ES6 module then it is just a script and doesn't
+          // export anything.
+          || (provides.size() == 1
+              && firstProvide.startsWith("module$")
+              // ES6 modules should always be considered as exporting something.
+              && !"es6".equals(userOrderedInput.getLoadFlags().get("module")))) {
         nonExportingInputs.put(
             ModuleNames.fileToModuleName(userOrderedInput.getName()), userOrderedInput);
       }

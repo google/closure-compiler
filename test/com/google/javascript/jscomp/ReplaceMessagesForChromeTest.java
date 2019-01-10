@@ -19,12 +19,17 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
 
 import com.google.javascript.jscomp.JsMessage.Style;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test which checks that replacer works correctly.
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
+@RunWith(JUnit4.class)
 public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
 
   private Style style = RELAX;
@@ -42,11 +47,13 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     style = RELAX;
   }
 
+  @Test
   public void testReplaceSimpleMessage() {
     test(
         lines(
@@ -64,6 +71,7 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
             "foo.bar.MSG_B=chrome.i18n.getMessage('2356086230621084760');"));
   }
 
+  @Test
   public void testReplaceSinglePlaceholder() {
     test(
         lines(
@@ -74,6 +82,7 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
             "var MSG_C=chrome.i18n.getMessage('4985325380591528435', ['Tyler']);"));
   }
 
+  @Test
   public void testReplaceTwoPlaceholders() {
     test(
         lines(
@@ -100,12 +109,14 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
             "['Hi', 'Tyler']);"));
   }
 
+  @Test
   public void testReplacePlaceholderMissingValue() {
     testError("/** @desc A message with two placeholders, but one is missing. */\n"
         + "var MSG_F = goog.getMsg('{$greeting}, {$name}!', {name: 'Tyler'});",
          JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
+  @Test
   public void testReplaceTwoPlaceholdersNonAlphaOrder() {
     test(
         lines(
@@ -118,6 +129,7 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
             "['Salutations', 'Tyler']);"));
   }
 
+  @Test
   public void testReplaceSinglePlaceholderComputedProp() {
     testError(
         lines(
@@ -126,6 +138,7 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
         JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
+  @Test
   public void testReplaceSimpleMessageWithLet() {
     test(
         lines(
@@ -136,6 +149,7 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
             "let MSG_I = chrome.i18n.getMessage('987871171253827787');"));
   }
 
+  @Test
   public void testReplaceSimpleMessageWithConst() {
     test(
         lines(
@@ -146,6 +160,7 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
             "const MSG_J =chrome.i18n.getMessage('3477894568604521782');"));
   }
 
+  @Test
   public void testReplaceTemplatedMessage() {
     testError(
         lines(
@@ -155,6 +170,7 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
         JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
+  @Test
   public void testReplaceExternalMessage() {
     test(
         lines(
@@ -165,10 +181,8 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
             "var MSG_EXTERNAL_1357902468 = chrome.i18n.getMessage('1357902468');"));
   }
 
-  /**
-   * Test that messages are handled correctly if they contain the same
-   * placeholder twice.
-   */
+  /** Test that messages are handled correctly if they contain the same placeholder twice. */
+  @Test
   public void testReplaceMessageWithDuplicatePlaceholders() {
     test(
         lines(

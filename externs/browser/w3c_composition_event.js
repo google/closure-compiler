@@ -64,3 +64,30 @@ CompositionEventInit.prototype.data;
  * @constructor
  */
 function CompositionEvent(type, opt_eventInitDict) {}
+
+/**
+ * Initializes attributes of a `CompositionEvent` object. This method has the
+ * same behavior as `UIEvent.initUIEvent()`. The value of `detail` remains
+ * undefined.
+ *
+ * @see https://www.w3.org/TR/uievents/#idl-interface-CompositionEvent-initializers
+ * @param {string} typeArg
+ * @param {boolean} canBubbleArg
+ * @param {boolean} cancelableArg
+ * @param {?Window} viewArg
+ * @param {string} dataArg
+ * @param {string} localeArg
+ * @return {undefined}
+ */
+CompositionEvent.prototype.initCompositionEvent = function(
+    typeArg, canBubbleArg, cancelableArg, viewArg, dataArg, localeArg) {};
+
+/**
+ * @type {string}
+ */
+CompositionEvent.prototype.data;
+
+/**
+ * @type {string}
+ */
+CompositionEvent.prototype.locale;

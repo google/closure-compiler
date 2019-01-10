@@ -18,16 +18,21 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.RewriteGoogJsImports.GOOG_JS_IMPORT_MUST_BE_GOOG_STAR;
 
 import com.google.javascript.jscomp.RewriteGoogJsImports.Mode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link RewriteGoogJsImports} that involve rewriting. {@link CheckGoogJsImportTest} has
  * the link tests.
  */
 
+@RunWith(JUnit4.class)
 public final class RewriteGoogJsImportsTest extends CompilerTestCase {
-  // JsFileParser determines if this file is base.js by looking at the first line of the file.
+  // JsFileParser determines if this file is base.js by looking at the first comment of the file.
   private static final SourceFile BASE =
-      SourceFile.fromCode("/closure/base.js", "var COMPILED = false;");
+      SourceFile.fromCode("/closure/base.js", "/** @provideGoog */");
 
   private static final SourceFile GOOG =
       SourceFile.fromCode(
@@ -39,7 +44,8 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
               "export const constant = 0;"));
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
   }
 
@@ -53,26 +59,32 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testBaseAndGoogUntouched() {
     testSame(srcs(BASE, GOOG));
   }
 
-  public void testIfCannotDetectGoogJsThenDoesNotRewrite() {
+  @Test
+  public void testIfCannotDetectGoogJsThenGlobalizesAll() {
     SourceFile testcode =
         SourceFile.fromCode(
             "testcode", "import * as goog from './closure/goog.js'; use(goog.bad);");
 
+    SourceFile expected =
+        SourceFile.fromCode("testcode", "import './closure/goog.js'; use(goog.bad);");
+
     // No base.js = no detecting goog.js
-    testSame(srcs(GOOG, testcode));
+    test(srcs(GOOG, testcode), expected(GOOG, expected));
 
     // No goog.js
-    testSame(srcs(BASE, testcode));
-    testSame(srcs(testcode));
+    test(srcs(BASE, testcode), expected(BASE, expected));
+    test(srcs(testcode), expected(expected));
 
     // Linting still happens.
     testError("import * as notgoog from './goog.js';", GOOG_JS_IMPORT_MUST_BE_GOOG_STAR);
   }
 
+  @Test
   public void testImportStar() {
     test(
         srcs(
@@ -93,7 +105,26 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
                     "use(goog.require, goog.foo, goog.MyClass, goog.constant);"))));
   }
 
-  public void testBadPropertyAccess() {
+  @Test
+  public void testGoogAndBaseInExterns() {
+    test(
+        externs(BASE, GOOG),
+        srcs(
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "import * as goog from './closure/goog.js';",
+                    "use(goog.require, goog.foo, goog.MyClass, goog.constant);"))),
+        expected(
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "import './closure/goog.js';",
+                    "use(goog.require, goog.foo, goog.MyClass, goog.constant);"))));
+  }
+
+  @Test
+  public void testKnownBadPropertyAccess() {
     test(
         srcs(
             BASE,

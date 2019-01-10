@@ -17,10 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Tests for CheckSuspiciousCode
- */
+/** Tests for CheckSuspiciousCode */
+@RunWith(JUnit4.class)
 public final class CheckSuspiciousCodeTest extends CompilerTestCase {
 
   @Override
@@ -30,7 +33,8 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableParseTypeInfo();
@@ -41,6 +45,7 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testSuspiciousSemi() {
     final DiagnosticType e = CheckSuspiciousCode.SUSPICIOUS_SEMICOLON;
 
@@ -72,6 +77,7 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testSame("var y = [1, 2, 3]; for(x of y){} console.log(x);");
   }
 
+  @Test
   public void testSuspiciousIn() {
     testWarning("'foo' in 1", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
     testWarning("'foo' in 'test'", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
@@ -86,6 +92,7 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testSame("'foo' in {}");
   }
 
+  @Test
   public void testForOf() {
     testSame("var y = [1, 2, 3]; for (var x of y) console.log(x);");
     testSame("var y = [1, 2, 3]; for (var x of 'test') console.log(x);");
@@ -102,6 +109,7 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testWarning(js, CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN);
   }
 
+  @Test
   public void testComparison1() {
     testReportNaN("x == NaN");
     testReportNaN("x != NaN");
@@ -113,6 +121,7 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testReportNaN("x >= NaN");
   }
 
+  @Test
   public void testComparison2() {
     testReportNaN("NaN == x");
     testReportNaN("NaN != x");
@@ -124,6 +133,7 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testReportNaN("NaN >= x");
   }
 
+  @Test
   public void testComparison3() {
     testReportNaN("x == 0/0");
     testReportNaN("x != 0/0");
@@ -135,6 +145,7 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testReportNaN("x >= 0/0");
   }
 
+  @Test
   public void testComparison4() {
     testReportNaN("0/0 == x");
     testReportNaN("0/0 != x");
@@ -146,6 +157,31 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testReportNaN("0/0 >= x");
   }
 
+  @Test
+  public void testComparison5() {
+    testReportNaN("x == Number.NaN");
+    testReportNaN("x != Number.NaN");
+    testReportNaN("x === Number.NaN");
+    testReportNaN("x !== Number.NaN");
+    testReportNaN("x < Number.NaN");
+    testReportNaN("x <= Number.NaN");
+    testReportNaN("x > Number.NaN");
+    testReportNaN("x >= Number.NaN");
+  }
+
+  @Test
+  public void testComparison6() {
+    testReportNaN("Number.NaN == x");
+    testReportNaN("Number.NaN != x");
+    testReportNaN("Number.NaN === x");
+    testReportNaN("Number.NaN !== x");
+    testReportNaN("Number.NaN < x");
+    testReportNaN("Number.NaN <= x");
+    testReportNaN("Number.NaN > x");
+    testReportNaN("Number.NaN >= x");
+  }
+
+  @Test
   public void testInstanceOf() {
     testReportInstanceOf("''", "String");
     testReportInstanceOf("4", "Number");
@@ -210,6 +246,7 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
         CheckSuspiciousCode.SUSPICIOUS_INSTANCEOF_LEFT_OPERAND);
   }
 
+  @Test
   public void testCheckNegatedLeftOperandOfInOperator() {
     testSame("if (!(x in y)) {}");
     testSame("if (('' + !x) in y) {}");

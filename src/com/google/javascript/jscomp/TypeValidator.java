@@ -25,7 +25,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.I_THENABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING;
@@ -77,13 +76,11 @@ class TypeValidator implements Serializable {
   private final JSTypeRegistry typeRegistry;
   private final JSType allBitwisableValueTypes;
   private final JSType nullOrUndefined;
+  private final JSType promiseOfUnknownType;
 
   // In TypeCheck, when we are analyzing a file with .java.js suffix, we set
   // this field to IGNORE_NULL_UNDEFINED
   private SubtypingMode subtypingMode = SubtypingMode.NORMAL;
-  // If true, we typecheck the operands of primitive operators more strictly, without relying
-  // on implicit conversion rules.
-  private boolean strictOperatorChecks = false;
 
   // TODO(nicksantos): Provide accessors to better filter the list of type
   // mismatches. For example, if we pass (Cake|null) where only Cake is
@@ -114,8 +111,13 @@ class TypeValidator implements Serializable {
   static final DiagnosticType TYPE_MISMATCH_WARNING =
       DiagnosticType.warning("JSC_TYPE_MISMATCH", "{0}");
 
+  static final DiagnosticType INVALID_ASYNC_RETURN_TYPE =
+      DiagnosticType.warning(
+          "JSC_INVALID_ASYNC_RETURN_TYPE",
+          "The return type of an async function must be a supertype of Promise\n" + "found: {0}");
+
   static final DiagnosticType INVALID_OPERAND_TYPE =
-      DiagnosticType.warning("JSC_INVALID_OPERAND_TYPE", "{0}");
+      DiagnosticType.disabled("JSC_INVALID_OPERAND_TYPE", "{0}");
 
   static final DiagnosticType MISSING_EXTENDS_TAG_WARNING =
       DiagnosticType.warning(
@@ -155,17 +157,19 @@ class TypeValidator implements Serializable {
       DiagnosticType.warning("JSC_ILLEGAL_PROPERTY_ACCESS",
                              "Cannot do {0} access on a {1}");
 
-  static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
-      ABSTRACT_METHOD_NOT_IMPLEMENTED,
-      INVALID_CAST,
-      TYPE_MISMATCH_WARNING,
-      MISSING_EXTENDS_TAG_WARNING,
-      DUP_VAR_DECLARATION,
-      DUP_VAR_DECLARATION_TYPE_MISMATCH,
-      INTERFACE_METHOD_NOT_IMPLEMENTED,
-      HIDDEN_INTERFACE_PROPERTY_MISMATCH,
-      UNKNOWN_TYPEOF_VALUE,
-      ILLEGAL_PROPERTY_ACCESS);
+  static final DiagnosticGroup ALL_DIAGNOSTICS =
+      new DiagnosticGroup(
+          ABSTRACT_METHOD_NOT_IMPLEMENTED,
+          DUP_VAR_DECLARATION,
+          DUP_VAR_DECLARATION_TYPE_MISMATCH,
+          HIDDEN_INTERFACE_PROPERTY_MISMATCH,
+          ILLEGAL_PROPERTY_ACCESS,
+          INTERFACE_METHOD_NOT_IMPLEMENTED,
+          INVALID_ASYNC_RETURN_TYPE,
+          INVALID_CAST,
+          MISSING_EXTENDS_TAG_WARNING,
+          TYPE_MISMATCH_WARNING,
+          UNKNOWN_TYPEOF_VALUE);
 
   TypeValidator(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -173,6 +177,10 @@ class TypeValidator implements Serializable {
     this.allBitwisableValueTypes =
         typeRegistry.createUnionType(STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE, VOID_TYPE);
     this.nullOrUndefined = typeRegistry.getNativeType(JSTypeNative.NULL_VOID);
+    this.promiseOfUnknownType =
+        typeRegistry.createTemplatizedType(
+            typeRegistry.getNativeObjectType(JSTypeNative.PROMISE_TYPE),
+            typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
   }
 
   /**
@@ -213,10 +221,6 @@ class TypeValidator implements Serializable {
 
   void setSubtypingMode(SubtypingMode mode) {
     this.subtypingMode = mode;
-  }
-
-  void setStrictOperatorChecks(boolean strictChecks) {
-    this.strictOperatorChecks = strictChecks;
   }
 
   /**
@@ -307,25 +311,19 @@ class TypeValidator implements Serializable {
   }
 
   /**
-   * Expect the type to be an IThenable, Promise, or the all type/unknown type/Object type.
+   * Expect the type to be a supertype of `Promise`.
    *
-   * <p>We forbid returning a union type containing Promise/IThenable because it complicates how we
-   * typecheck returns within async functions.
+   * <p>`Promise` is the <em>lower</em> bound of the declared return type, since that's what async
+   * functions always return; the user can't return an instance of a more specific type.
    */
-  @SuppressWarnings("ReferenceEquality")
   void expectValidAsyncReturnType(NodeTraversal t, Node n, JSType type) {
-    // Allow returning `?`, `*`, or `Object`.
-    if (type.isUnknownType()
-        || type.isAllType()
-        || type == getNativeType(JSTypeNative.OBJECT_TYPE)) {
+    if (promiseOfUnknownType.isSubtypeOf(type)) {
       return;
     }
 
-    // Get "Promise" from "Promise<string>" or "IThenable" from "IThenable<!Array<number>>"
-    if (!type.getTemplateTypeMap().hasTemplateKey(typeRegistry.getIThenableTemplate())) {
-      mismatch(
-          t, n, "An async function must return a (supertype of) Promise", type, I_THENABLE_TYPE);
-    }
+    JSError err = JSError.make(n, INVALID_ASYNC_RETURN_TYPE, type.toString());
+    registerMismatch(type, promiseOfUnknownType, err);
+    report(err);
   }
 
   /** Expect the type to be an ITemplateArray or supertype of ITemplateArray. */
@@ -354,7 +352,7 @@ class TypeValidator implements Serializable {
   void expectNumber(NodeTraversal t, Node n, JSType type, String msg) {
     if (!type.matchesNumberContext()) {
       mismatch(t, n, msg, type, NUMBER_TYPE);
-    } else if (this.strictOperatorChecks) {
+    } else {
       expectNumberStrict(n, type, msg);
     }
   }
@@ -363,15 +361,13 @@ class TypeValidator implements Serializable {
    * Expect the type to be a number or a subtype.
    */
   void expectNumberStrict(Node n, JSType type, String msg) {
-    checkState(this.strictOperatorChecks);
     if (!type.isSubtypeOf(getNativeType(NUMBER_TYPE))) {
       registerMismatchAndReport(
           n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_TYPE), null, null);
     }
   }
 
-  void expectMatchingTypes(Node n, JSType left, JSType right, String msg) {
-    checkState(this.strictOperatorChecks);
+  void expectMatchingTypesStrict(Node n, JSType left, JSType right, String msg) {
     if (!left.isSubtypeOf(right) && !right.isSubtypeOf(left)) {
       registerMismatchAndReport(n, INVALID_OPERAND_TYPE, msg, right, left, null, null);
     }
@@ -385,7 +381,7 @@ class TypeValidator implements Serializable {
   void expectBitwiseable(NodeTraversal t, Node n, JSType type, String msg) {
     if (!type.matchesNumberContext() && !type.isSubtypeOf(allBitwisableValueTypes)) {
       mismatch(t, n, msg, type, allBitwisableValueTypes);
-    } else if (this.strictOperatorChecks) {
+    } else {
       expectNumberStrict(n, type, msg);
     }
   }
@@ -420,13 +416,12 @@ class TypeValidator implements Serializable {
         && !type.matchesStringContext()
         && !type.matchesStringContext()) {
       mismatch(t, n, msg, type, NUMBER_STRING);
-    } else if (this.strictOperatorChecks) {
+    } else {
       expectStringOrNumberOrSymbolStrict(n, type, msg);
     }
   }
 
   void expectStringOrNumberStrict(Node n, JSType type, String msg) {
-    checkState(this.strictOperatorChecks);
     if (!type.isSubtypeOf(getNativeType(NUMBER_STRING))) {
       registerMismatchAndReport(
           n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_STRING), null, null);
@@ -443,13 +438,12 @@ class TypeValidator implements Serializable {
         && !type.matchesStringContext()
         && !type.matchesSymbolContext()) {
       mismatch(t, n, msg, type, NUMBER_STRING_SYMBOL);
-    } else if (this.strictOperatorChecks) {
+    } else {
       expectStringOrNumberOrSymbolStrict(n, type, msg);
     }
   }
 
   void expectStringOrNumberOrSymbolStrict(Node n, JSType type, String msg) {
-    checkState(this.strictOperatorChecks);
     if (!type.isSubtypeOf(getNativeType(NUMBER_STRING_SYMBOL))) {
       registerMismatchAndReport(
           n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_STRING_SYMBOL), null, null);
@@ -674,8 +668,9 @@ class TypeValidator implements Serializable {
         && !(superObject instanceof UnknownType)
         && !declaredSuper.isEquivalentTo(superObject)) {
       if (declaredSuper.isEquivalentTo(getNativeType(OBJECT_TYPE))) {
-        TypeMismatch.registerMismatch(this.mismatches, this.implicitInterfaceUses,
-            superObject, declaredSuper,
+        registerMismatch(
+            superObject,
+            declaredSuper,
             report(t.makeError(n, MISSING_EXTENDS_TAG_WARNING, subObject.toString())));
       } else {
         mismatch(n, "mismatch in declaration of superclass type", superObject, declaredSuper);
@@ -690,36 +685,42 @@ class TypeValidator implements Serializable {
 
   /**
    * Expect that an ES6 class's extends clause is actually a supertype of the given class.
+   * Compares the registered supertype, which is taken from the JSDoc if present, otherwise
+   * from the AST, with the type in the extends node of the AST.
    *
    * @param n The node where warnings should point to.
    * @param subCtor The sub constructor type.
-   * @param superCtor The expected super constructor.
+   * @param astSuperCtor The expected super constructor from the extends node in the AST.
    */
-  void expectExtends(Node n, FunctionType subCtor, FunctionType superCtor) {
-    if (superCtor == null || (!superCtor.isConstructor() && !superCtor.isInterface())) {
+  void expectExtends(Node n, FunctionType subCtor, FunctionType astSuperCtor) {
+    if (astSuperCtor == null || (!astSuperCtor.isConstructor() && !astSuperCtor.isInterface())) {
       // toMaybeFunctionType failed, or we've got a loose type.  Let it go for now.
       return;
     }
-    if (superCtor.isConstructor() != subCtor.isConstructor()) {
+    if (astSuperCtor.isConstructor() != subCtor.isConstructor()) {
       // Don't bother looking if one is a constructor and the other is an interface.
       // We'll report an error elsewhere.
       return;
     }
-    ObjectType superInstance = superCtor.getInstanceType();
+    ObjectType astSuperInstance = astSuperCtor.getInstanceType();
     if (subCtor.isConstructor()) {
       // There should be exactly one superclass, and it needs to have this constructor.
-      ObjectType declaredSuper = subCtor.getSuperClassConstructor().getInstanceType();
-      if (!superInstance.isEquivalentTo(declaredSuper)) {
-        mismatch(n, "mismatch in declaration of superclass type", superInstance, declaredSuper);
+      // Note: if the registered supertype (from the @extends jsdoc) was unresolved,
+      // then getSuperClassConstructor will be null - make sure not to crash.
+      FunctionType registeredSuperCtor = subCtor.getSuperClassConstructor();
+      if (registeredSuperCtor != null) {
+        ObjectType registeredSuperInstance = registeredSuperCtor.getInstanceType();
+        if (!astSuperInstance.isEquivalentTo(registeredSuperInstance)) {
+          mismatch(
+              n,
+              "mismatch in declaration of superclass type",
+              astSuperInstance,
+              registeredSuperInstance);
+        }
       }
     } else if (subCtor.isInterface()) {
-      // Find an equivalent constructor in the superinterfaces.  There may have been multiple
-      // super-interfaces marked, but we can't know which was intended so just give the error
-      // on the first one.
-      if (!subCtor.explicitlyImplOrExtInterface(superCtor)) {
-        ObjectType extended = subCtor.getExtendedInterfaces().get(0);
-        mismatch(n, "mismatch in declaration of superclass type", superInstance, extended);
-      }
+      // We intentionally skip this check for interfaces because they can extend multiple other
+      // interfaces.
     }
   }
 
@@ -755,8 +756,9 @@ class TypeValidator implements Serializable {
    */
   void expectCanCast(NodeTraversal t, Node n, JSType targetType, JSType sourceType) {
     if (!sourceType.canCastTo(targetType)) {
-      TypeMismatch.registerMismatch(
-          this.mismatches, this.implicitInterfaceUses, sourceType, targetType,
+      registerMismatch(
+          sourceType,
+          targetType,
           report(t.makeError(n, INVALID_CAST, sourceType.toString(), targetType.toString())));
     } else if (!sourceType.isSubtypeWithoutStructuralTyping(targetType)){
       TypeMismatch.recordImplicitInterfaceUses(
@@ -806,7 +808,7 @@ class TypeValidator implements Serializable {
             n.getFirstChild().setJSType(varType);
           }
         } else {
-          checkState(parent.isFunction());
+          checkState(parent.isFunction() || parent.isClass());
           parent.setJSType(varType);
         }
       } else {
@@ -875,9 +877,7 @@ class TypeValidator implements Serializable {
       // Not implemented
       String sourceName = n.getSourceFileName();
       sourceName = nullToEmpty(sourceName);
-      TypeMismatch.registerMismatch(
-          this.mismatches,
-          this.implicitInterfaceUses,
+      registerMismatch(
           instance,
           implementedInterface,
           report(
@@ -921,8 +921,7 @@ class TypeValidator implements Serializable {
                 constructor.getTopMostDefiningType(prop).toString(),
                 required.toString(),
                 found.toString());
-        TypeMismatch.registerMismatch(
-            this.mismatches, this.implicitInterfaceUses, found, required, err);
+        registerMismatch(found, required, err);
         report(err);
       }
     }
@@ -963,9 +962,7 @@ class TypeValidator implements Serializable {
       if (abstractMethod == null || abstractMethod.isAbstract()) {
         String sourceName = n.getSourceFileName();
         sourceName = nullToEmpty(sourceName);
-        TypeMismatch.registerMismatch(
-            this.mismatches,
-            this.implicitInterfaceUses,
+        registerMismatch(
             instance,
             superType,
             report(
@@ -1032,9 +1029,14 @@ class TypeValidator implements Serializable {
       Set<String> mismatch) {
     String foundRequiredFormatted = formatFoundRequired(msg, found, required, missing, mismatch);
     JSError err = JSError.make(n, diagnostic, foundRequiredFormatted);
-    TypeMismatch.registerMismatch(
-        this.mismatches, this.implicitInterfaceUses, found, required, err);
+    registerMismatch(found, required, err);
     report(err);
+  }
+
+  /** Registers a type mismatch into the universe of mismatches owned by this pass. */
+  private void registerMismatch(JSType found, JSType required, JSError error) {
+    TypeMismatch.registerMismatch(
+        this.mismatches, this.implicitInterfaceUses, found, required, error);
   }
 
   /** Formats a found/required error message. */

@@ -21,11 +21,16 @@ import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
 import java.io.IOException;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link InstrumentFunctions}
  *
  */
+@RunWith(JUnit4.class)
 public final class InstrumentFunctionsTest extends CompilerTestCase {
   private String instrumentationPb;
 
@@ -34,7 +39,8 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     this.instrumentationPb = null;
   }
@@ -50,6 +56,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testInstrument() {
     final String kPreamble =
         "var $$toRemoveDefinition1, $$notToRemove;\n"
@@ -124,16 +131,19 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
          + "d:function(){$$testInstrument(1,\"<anonymous>\",arguments);e}}");
   }
 
+  @Test
   public void testEmpty() {
     this.instrumentationPb = "";
     testSame("function a(){b}");
   }
 
+  @Test
   public void testAppNameSetter() {
     this.instrumentationPb = "app_name_setter: \"setAppName\"";
     test("function a(){b}", "setAppName(\"testfile.js\");function a(){b}");
   }
 
+  @Test
   public void testInit() {
     this.instrumentationPb = "init: \"var foo = 0;\"\n"
         + "init: \"function f(){g();}\"\n";
@@ -141,16 +151,19 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
          "var foo = 0;function f(){g()}function a(){b}");
   }
 
+  @Test
   public void testDeclare() {
     this.instrumentationPb = "report_defined: \"$$testDefine\"";
     test("function a(){b}", "$$testDefine(0,\"a\");function a(){b}");
   }
 
+  @Test
   public void testCall() {
     this.instrumentationPb = "report_call: \"$$testCall\"";
     test("function a(){b}", "function a(){$$testCall(0,\"a\",arguments);b}");
   }
 
+  @Test
   public void testNested() {
     this.instrumentationPb = "report_call: \"$$testCall\"\n"
         + "report_defined: \"$$testDefine\"";
@@ -160,6 +173,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
          + "function b(){$$testCall(0,\"a::b\",arguments)}}");
   }
 
+  @Test
   public void testExitPaths() {
     this.instrumentationPb = "report_exit: \"$$testExit\"";
     test("function a(){return}",
@@ -181,6 +195,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
          + "else{return $$testExit(0,5,\"a\")}}");
   }
 
+  @Test
   public void testExitNoReturn() {
     this.instrumentationPb = "report_exit: \"$$testExit\"";
     test("function a(){}",
@@ -190,6 +205,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
          "function a(){b();$$testExit(0,undefined,\"a\");}");
   }
 
+  @Test
   public void testPartialExitPaths() {
     this.instrumentationPb = "report_exit: \"$$testExit\"";
     test("function a(){if (2 != 3) {return}}",
@@ -197,6 +213,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
          + "$$testExit(0,undefined,\"a\")}");
   }
 
+  @Test
   public void testExitTry() {
     this.instrumentationPb = "report_exit: \"$$testExit\"";
     test("function a(){try{return}catch(err){}}",
@@ -234,6 +251,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
          + "return $$testExit(0,undefined,\"a\")}}");
   }
 
+  @Test
   public void testNestedExit() {
     this.instrumentationPb = "report_exit: \"$$testExit\"\n"
         + "report_defined: \"$$testDefine\"";

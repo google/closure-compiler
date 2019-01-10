@@ -18,6 +18,7 @@ package com.google.javascript.refactoring;
 import static com.google.common.collect.ObjectArrays.concat;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
+import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
 
 import com.google.common.base.Joiner;
@@ -29,7 +30,6 @@ import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.Collection;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -93,94 +93,112 @@ public class ErrorToFixMapperTest {
 
   @Test
   public void testImplicitNullability1() {
-    String originalCode = "/** @type {Object} */ var o;";
-    compiler.compile(
-        ImmutableList.<SourceFile>of(), // Externs
-        ImmutableList.of(SourceFile.fromCode("test", originalCode)),
-        options);
-    assertThat(compiler.getErrors()).isEmpty();
-    JSError[] warnings = compiler.getWarnings();
-    assertThat(warnings).hasLength(1);
-    JSError warning = warnings[0];
-    List<SuggestedFix> fixes = ErrorToFixMapper.getFixesForJsError(warning, compiler);
-    assertThat(fixes).hasSize(2);
-
-    // First fix is to add "!"
-    String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
-        ImmutableList.of(fixes.get(0)), ImmutableMap.of("test", originalCode)).get("test");
-    assertThat(newCode).isEqualTo("/** @type {?Object} */ var o;");
-
-    // Second fix is to add "?"
-    newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
-        ImmutableList.of(fixes.get(1)), ImmutableMap.of("test", originalCode)).get("test");
-    assertThat(newCode).isEqualTo("/** @type {!Object} */ var o;");
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, OFF);
+    assertChanges(
+        "/** @type {Object} */ var o;",
+        "/** @type {?Object} */ var o;",
+        "/** @type {!Object} */ var o;");
   }
 
   @Test
   public void testImplicitNullability2() {
-    String originalCode = "/** @param {Object} o */ function f(o) {}";
-    compiler.compile(
-        ImmutableList.<SourceFile>of(), // Externs
-        ImmutableList.of(SourceFile.fromCode("test", originalCode)),
-        options);
-    assertThat(compiler.getErrors()).isEmpty();
-    JSError[] warnings = compiler.getWarnings();
-    assertThat(warnings).hasLength(1);
-    JSError warning = warnings[0];
-    List<SuggestedFix> fixes = ErrorToFixMapper.getFixesForJsError(warning, compiler);
-    assertThat(fixes).hasSize(2);
-
-    // First fix is to add "!"
-    String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
-        ImmutableList.of(fixes.get(0)), ImmutableMap.of("test", originalCode)).get("test");
-    assertThat(newCode).isEqualTo("/** @param {?Object} o */ function f(o) {}");
-
-    // Second fix is to add "?"
-    newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
-        ImmutableList.of(fixes.get(1)), ImmutableMap.of("test", originalCode)).get("test");
-    assertThat(newCode).isEqualTo("/** @param {!Object} o */ function f(o) {}");
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, OFF);
+    assertChanges(
+        "/** @param {Object} o */ function f(o) {}",
+        "/** @param {?Object} o */ function f(o) {}",
+        "/** @param {!Object} o */ function f(o) {}");
   }
 
   @Test
   public void testImplicitNullability3() {
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, OFF);
     String originalCode = LINE_JOINER.join(
         "/**",
         " * Some non-ASCII characters: αβγδε",
         " * @param {Object} o",
         " */",
         "function f(o) {}");
-    compiler.compile(
-        ImmutableList.<SourceFile>of(), // Externs
-        ImmutableList.of(SourceFile.fromCode("test", originalCode)),
-        options);
-    assertThat(compiler.getErrors()).isEmpty();
-    JSError[] warnings = compiler.getWarnings();
-    assertThat(warnings).hasLength(1);
-    JSError warning = warnings[0];
-    List<SuggestedFix> fixes = ErrorToFixMapper.getFixesForJsError(warning, compiler);
-    assertThat(fixes).hasSize(2);
+    String expected1 =
+        LINE_JOINER.join(
+            "/**",
+            " * Some non-ASCII characters: αβγδε",
+            " * @param {?Object} o",
+            " */",
+            "function f(o) {}");
+    String expected2 =
+        LINE_JOINER.join(
+            "/**",
+            " * Some non-ASCII characters: αβγδε",
+            " * @param {!Object} o",
+            " */",
+            "function f(o) {}");
+    assertChanges(originalCode, expected1, expected2);
+  }
 
-    // First fix is to add "!"
-    String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
-        ImmutableList.of(fixes.get(0)), ImmutableMap.of("test", originalCode)).get("test");
-    String expected = LINE_JOINER.join(
-        "/**",
-        " * Some non-ASCII characters: αβγδε",
-        " * @param {?Object} o",
-        " */",
-        "function f(o) {}");
-    assertThat(newCode).isEqualTo(expected);
+  @Test
+  public void testMissingNullabilityModifier1() {
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, OFF);
+    assertChanges(
+        "/** @type {Object} */ var o;",
+        "/** @type {!Object} */ var o;",
+        "/** @type {?Object} */ var o;");
+  }
 
-    // Second fix is to add "?"
-    newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
-        ImmutableList.of(fixes.get(1)), ImmutableMap.of("test", originalCode)).get("test");
-    expected = LINE_JOINER.join(
-        "/**",
-        " * Some non-ASCII characters: αβγδε",
-        " * @param {!Object} o",
-        " */",
-        "function f(o) {}");
-    assertThat(newCode).isEqualTo(expected);
+  @Test
+  public void testMissingNullabilityModifier2() {
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, OFF);
+    assertChanges(
+        "/** @param {Object} o */ function f(o) {}",
+        "/** @param {!Object} o */ function f(o) {}",
+        "/** @param {?Object} o */ function f(o) {}");
+  }
+
+  @Test
+  public void testMissingNullabilityModifier3() {
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, OFF);
+    String originalCode =
+        LINE_JOINER.join(
+            "/**",
+            " * Some non-ASCII characters: αβγδε",
+            " * @param {Object} o",
+            " */",
+            "function f(o) {}");
+    String expected1 =
+        LINE_JOINER.join(
+            "/**",
+            " * Some non-ASCII characters: αβγδε",
+            " * @param {!Object} o",
+            " */",
+            "function f(o) {}");
+    String expected2 =
+        LINE_JOINER.join(
+            "/**",
+            " * Some non-ASCII characters: αβγδε",
+            " * @param {?Object} o",
+            " */",
+            "function f(o) {}");
+    assertChanges(originalCode, expected1, expected2);
+  }
+
+  @Test
+  public void testNullMissingNullabilityModifier1() {
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, OFF);
+    assertChanges("/** @type {Object} */ var x = null;", "/** @type {?Object} */ var x = null;");
+  }
+
+  @Test
+  public void testNullMissingNullabilityModifier2() {
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, OFF);
+    assertNoChanges("/** @type {?Object} */ var x = null;");
+  }
+
+  @Test
+  public void testMissingNullabilityModifier_nonNullValue() {
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, OFF);
+    assertChanges(
+        "/** @type {Object} */ var o = {};",
+        "/** @type {!Object} */ var o = {};",
+        "/** @type {?Object} */ var o = {};");
   }
 
   @Test
@@ -940,7 +958,7 @@ public class ErrorToFixMapperTest {
             "",
             "goog.require('world.util.Animal');",
             "",
-            "/** @type {world.util.Animal} */",
+            "/** @type {!world.util.Animal} */",
             "var cat;"));
   }
 
@@ -985,23 +1003,6 @@ public class ErrorToFixMapperTest {
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
-            "/** @type {world.util.Animal} */",
-            "var animal;"),
-        LINE_JOINER.join(
-            "goog.module('m');",
-            "var Animal = goog.require('world.util.Animal');",
-            "",
-            "/** @type {Animal} */",
-            "var animal;"));
-  }
-
-  @Test
-  public void testSwitchToShorthand_JSDoc4() {
-    assertChanges(
-        LINE_JOINER.join(
-            "goog.module('m');",
-            "var Animal = goog.require('world.util.Animal');",
-            "",
             "/** @type {!world.util.Animal} */",
             "var animal;"),
         LINE_JOINER.join(
@@ -1013,7 +1014,7 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
-  public void testSwitchToShorthand_JSDoc5() {
+  public void testSwitchToShorthand_JSDoc4() {
     assertChanges(
         LINE_JOINER.join(
             "goog.module('m');",
@@ -1030,20 +1031,37 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testSwitchToShorthand_JSDoc5() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {?Array<!world.util.Animal>} */",
+            "var animals;"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {?Array<!Animal>} */",
+            "var animals;"));
+  }
+
+  @Test
   public void testSwitchToShorthand_JSDoc6() {
     assertChanges(
         LINE_JOINER.join(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
-            "/** @type {?Array<world.util.Animal>} */",
-            "var animals;"),
+            "/** @type {?Array<!world.util.Animal.Turtle>} */",
+            "var turtles;"),
         LINE_JOINER.join(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
-            "/** @type {?Array<Animal>} */",
-            "var animals;"));
+            "/** @type {?Array<!Animal.Turtle>} */",
+            "var turtles;"));
   }
 
   @Test
@@ -1051,32 +1069,15 @@ public class ErrorToFixMapperTest {
     assertChanges(
         LINE_JOINER.join(
             "goog.module('m');",
-            "var Animal = goog.require('world.util.Animal');",
-            "",
-            "/** @type {?Array<world.util.Animal.Turtle>} */",
-            "var turtles;"),
-        LINE_JOINER.join(
-            "goog.module('m');",
-            "var Animal = goog.require('world.util.Animal');",
-            "",
-            "/** @type {?Array<Animal.Turtle>} */",
-            "var turtles;"));
-  }
-
-  @Test
-  public void testSwitchToShorthand_JSDoc8() {
-    assertChanges(
-        LINE_JOINER.join(
-            "goog.module('m');",
             "var AnimalAltName = goog.require('world.util.Animal');",
             "",
-            "/** @type {?Array<world.util.Animal.Turtle>} */",
+            "/** @type {?Array<!world.util.Animal.Turtle>} */",
             "var turtles;"),
         LINE_JOINER.join(
             "goog.module('m');",
             "var AnimalAltName = goog.require('world.util.Animal');",
             "",
-            "/** @type {?Array<AnimalAltName.Turtle>} */",
+            "/** @type {?Array<!AnimalAltName.Turtle>} */",
             "var turtles;"));
   }
 
@@ -1700,6 +1701,25 @@ public class ErrorToFixMapperTest {
         ApplySuggestedFixes.applySuggestedFixesToCode(fixes, ImmutableMap.of("test", originalCode))
             .get("test");
     assertThat(newCode).isEqualTo(expectedCode);
+  }
+
+  private void assertChanges(String originalCode, String... expectedFixes) {
+    compiler.compile(
+        ImmutableList.<SourceFile>of(), // Externs
+        ImmutableList.of(SourceFile.fromCode("test", originalCode)),
+        options);
+    JSError[] warningsAndErrors =
+        concat(compiler.getWarnings(), compiler.getErrors(), JSError.class);
+    assertThat(warningsAndErrors).named("warnings/errors").isNotEmpty();
+    SuggestedFix[] fixes = errorManager.getAllFixes().toArray(new SuggestedFix[0]);
+    assertThat(fixes).named("fixes").hasLength(expectedFixes.length);
+    for (int i = 0; i < fixes.length; i++) {
+      String newCode =
+          ApplySuggestedFixes.applySuggestedFixesToCode(
+                  ImmutableList.of(fixes[i]), ImmutableMap.of("test", originalCode))
+              .get("test");
+      assertThat(newCode).isEqualTo(expectedFixes[i]);
+    }
   }
 
   protected void assertNoChanges(String originalCode) {

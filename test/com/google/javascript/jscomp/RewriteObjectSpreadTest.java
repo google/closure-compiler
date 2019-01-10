@@ -16,8 +16,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Test cases for {@link RewriteObjectSpread} */
+@RunWith(JUnit4.class)
 public final class RewriteObjectSpreadTest extends CompilerTestCase {
 
   public RewriteObjectSpreadTest() {
@@ -25,7 +30,8 @@ public final class RewriteObjectSpreadTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT_2017);
@@ -42,6 +48,7 @@ public final class RewriteObjectSpreadTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testObjectLiteralWithSpread() {
     test("({first, ...spread});", "Object.assign({}, {first}, spread)");
     test("({first, second, ...spread});", "Object.assign({}, {first, second}, spread)");

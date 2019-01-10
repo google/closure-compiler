@@ -20,24 +20,27 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import junit.framework.TestCase;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link JSModule}
  *
  */
-public final class JSModuleTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class JSModuleTest {
   private JSModule mod1;
   private JSModule mod2;  // depends on mod1
   private JSModule mod3;  // depends on mod1
   private JSModule mod4;  // depends on mod2, mod3
   private JSModule mod5;  // depends on mod1
 
-  @Override
-  protected void setUp() {
+  @Before
+  public void setUp() throws Exception {
     List<JSModule> modulesInDepOrder = new ArrayList<>();
 
     mod1 = new JSModule("mod1");
@@ -61,19 +64,20 @@ public final class JSModuleTest extends TestCase {
     modulesInDepOrder.add(mod5);
   }
 
+  @Test
   public void testDependencies() {
     assertThat(mod1.getAllDependencies()).isEmpty();
-    assertEquals(ImmutableSet.of(mod1), mod2.getAllDependencies());
-    assertEquals(ImmutableSet.of(mod1), mod3.getAllDependencies());
-    assertEquals(ImmutableSet.of(mod1, mod2, mod3), mod4.getAllDependencies());
+    assertThat(mod2.getAllDependencies()).isEqualTo(ImmutableSet.of(mod1));
+    assertThat(mod3.getAllDependencies()).isEqualTo(ImmutableSet.of(mod1));
+    assertThat(mod4.getAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod2, mod3));
 
-    assertEquals(ImmutableSet.of(mod1), mod1.getThisAndAllDependencies());
-    assertEquals(ImmutableSet.of(mod1, mod2), mod2.getThisAndAllDependencies());
-    assertEquals(ImmutableSet.of(mod1, mod3), mod3.getThisAndAllDependencies());
-    assertEquals(ImmutableSet.of(mod1, mod2, mod3, mod4),
-                 mod4.getThisAndAllDependencies());
+    assertThat(mod1.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1));
+    assertThat(mod2.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod2));
+    assertThat(mod3.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod3));
+    assertThat(mod4.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod2, mod3, mod4));
   }
 
+  @Test
   public void testSortInputs() throws Exception {
     CompilerInput a = new CompilerInput(
         SourceFile.fromCode("a.js",
@@ -135,6 +139,6 @@ public final class JSModuleTest extends TestCase {
     compiler.initCompilerOptionsIfTesting();
     mod.sortInputsByDeps(compiler);
 
-    assertEquals(expected, mod.getInputs());
+    assertThat(mod.getInputs()).isEqualTo(expected);
   }
 }

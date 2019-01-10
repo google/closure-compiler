@@ -119,6 +119,30 @@ public interface RequirementOrBuilder extends
       getWhitelistRegexpBytes(int index);
 
   /**
+   * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+   */
+  java.util.List<com.google.javascript.jscomp.Requirement.WhitelistEntry> 
+      getWhitelistEntryList();
+  /**
+   * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+   */
+  com.google.javascript.jscomp.Requirement.WhitelistEntry getWhitelistEntry(int index);
+  /**
+   * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+   */
+  int getWhitelistEntryCount();
+  /**
+   * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+   */
+  java.util.List<? extends com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder> 
+      getWhitelistEntryOrBuilderList();
+  /**
+   * <code>repeated .jscomp.Requirement.WhitelistEntry whitelist_entry = 14;</code>
+   */
+  com.google.javascript.jscomp.Requirement.WhitelistEntryOrBuilder getWhitelistEntryOrBuilder(
+      int index);
+
+  /**
    * <pre>
    * Optional: A list of source paths that will be checked for the requirement
    * (the opposite of whitelist).

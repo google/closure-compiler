@@ -23,7 +23,11 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class CheckPrototypePropertiesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -37,6 +41,7 @@ public final class CheckPrototypePropertiesTest extends CompilerTestCase {
     return options;
   }
 
+  @Test
   public void testNoWarning() {
     testSame("function C() {}; C.prototype.foo = null;");
     testSame("function C() {}; C.prototype.foo = undefined;");
@@ -47,16 +52,19 @@ public final class CheckPrototypePropertiesTest extends CompilerTestCase {
     testSame("function C() {}; /** @enum {number} */ C.prototype.foo = { BAR: 0 };");
   }
 
+  @Test
   public void testNoWarning_withES6Modules() {
     testSame("export function C() {}; C.prototype.foo = null;");
   }
 
+  @Test
   public void testWarnings() {
     testSame("function C() {}; C.prototype.foo = [];", ILLEGAL_PROTOTYPE_MEMBER);
     testSame("function C() {}; C.prototype.foo = {};", ILLEGAL_PROTOTYPE_MEMBER);
     testSame("function C() {}; C.prototype.foo = { BAR: 0 };", ILLEGAL_PROTOTYPE_MEMBER);
   }
 
+  @Test
   public void testWarnings_withES6Modules() {
     testSame("export function C() {}; C.prototype.foo = [];", ILLEGAL_PROTOTYPE_MEMBER);
   }

@@ -16,47 +16,56 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
-
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link RecordFunctionInformation}
  *
  */
 
-public final class RecordFunctionInformationTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class RecordFunctionInformationTest {
 
+  @Test
   public void testFunction() {
     String g = "function g(){}";
     String fAndG = "function f(){" + g + "}";
     String js = "var h=" + fAndG + ";h()";
 
-    FunctionInformationMap.Builder expected =
-        FunctionInformationMap.newBuilder();
-    expected.addEntry(
-        FunctionInformationMap.Entry.newBuilder()
-        .setId(0)
-        .setSourceName("testcode")
-        .setLineNumber(1)
-        .setModuleName("")
-        .setSize(g.length())
-        .setName("f::g")
-        .setCompiledSource(g).build());
-    expected.addEntry(
-        FunctionInformationMap.Entry.newBuilder()
-        .setId(1)
-        .setSourceName("testcode")
-        .setLineNumber(1)
-        .setModuleName("")
-        .setSize(fAndG.length())
-        .setName("f")
-        .setCompiledSource(fAndG).build());
+    FunctionInformationMap expected =
+        FunctionInformationMap.newBuilder()
+            .addEntry(
+                FunctionInformationMap.Entry.newBuilder()
+                    .setId(0)
+                    .setSourceName("testcode")
+                    .setLineNumber(1)
+                    .setModuleName("")
+                    .setSize(g.length())
+                    .setName("f::g")
+                    .setCompiledSource(g)
+                    .build())
+            .addEntry(
+                FunctionInformationMap.Entry.newBuilder()
+                    .setId(1)
+                    .setSourceName("testcode")
+                    .setLineNumber(1)
+                    .setModuleName("")
+                    .setSize(fAndG.length())
+                    .setName("f")
+                    .setCompiledSource(fAndG)
+                    .build())
+            .build();
 
-    test(js, expected.build());
+    test(js, expected);
   }
 
+  @Test
   public void testMotionPreservesOriginalSourceName() {
     String f = "function f(){}";
     String g = "function g(){}";
@@ -74,27 +83,31 @@ public final class RecordFunctionInformationTest extends TestCase {
     mainRoot.getFirstChild().removeChild(nodeG);
     mainRoot.getLastChild().addChildToBack(nodeG.cloneTree());
 
-    FunctionInformationMap.Builder expected = FunctionInformationMap.newBuilder();
-    expected.addEntry(
-        FunctionInformationMap.Entry.newBuilder()
-        .setId(0)
-        .setSourceName("i0.js")
-        .setLineNumber(1)
-        .setModuleName("m0")
-        .setSize(g.length())
-        .setName("f")
-        .setCompiledSource(f).build());
-    expected.addEntry(
-        FunctionInformationMap.Entry.newBuilder()
-        .setId(1)
-        .setSourceName("i0.js")
-        .setLineNumber(1)
-        .setModuleName("m1")
-        .setSize(g.length())
-        .setName("g")
-        .setCompiledSource(g).build());
+    FunctionInformationMap expected =
+        FunctionInformationMap.newBuilder()
+            .addEntry(
+                FunctionInformationMap.Entry.newBuilder()
+                    .setId(0)
+                    .setSourceName("i0.js")
+                    .setLineNumber(1)
+                    .setModuleName("m0")
+                    .setSize(g.length())
+                    .setName("f")
+                    .setCompiledSource(f)
+                    .build())
+            .addEntry(
+                FunctionInformationMap.Entry.newBuilder()
+                    .setId(1)
+                    .setSourceName("i0.js")
+                    .setLineNumber(1)
+                    .setModuleName("m1")
+                    .setSize(g.length())
+                    .setName("g")
+                    .setCompiledSource(g)
+                    .build())
+            .build();
 
-    test(compiler, externsRoot, mainRoot, expected.build());
+    test(compiler, externsRoot, mainRoot, expected);
   }
 
 
@@ -122,7 +135,7 @@ public final class RecordFunctionInformationTest extends TestCase {
         new RecordFunctionInformation(compiler, collectFunctionNames.getFunctionNames());
     processor.process(externsRoot, mainRoot);
     FunctionInformationMap result = processor.getMap();
-    assertEquals(expected, result);
+    assertThat(result).isEqualTo(expected);
   }
 
   private Compiler compilerFor(JSModule[] modules) {

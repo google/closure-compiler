@@ -1205,10 +1205,8 @@ public final class JSDocInfoBuilder {
     }
   }
 
-  /**
-   * Records that we're lending to another name.
-   */
-  public boolean recordLends(String name) {
+  /** Records that we're lending to another name. */
+  public boolean recordLends(JSTypeExpression name) {
     if (!hasAnyTypeRelatedTags()) {
       currentInfo.setLendsName(name);
       populated = true;
@@ -1376,7 +1374,7 @@ public final class JSDocInfoBuilder {
         || currentInfo.hasReturnType()
         || currentInfo.hasBaseType()
         || currentInfo.getExtendedInterfacesCount() > 0
-        || currentInfo.getLendsName() != null
+        || currentInfo.hasLendsName()
         || currentInfo.hasThisType()
         || hasAnySingletonTypeTags();
   }

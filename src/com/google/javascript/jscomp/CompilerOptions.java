@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -47,11 +46,11 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -118,6 +117,14 @@ public class CompilerOptions implements Serializable {
   private Optional<FeatureSet> outputFeatureSet = Optional.absent();
 
   private Optional<Boolean> languageOutIsDefaultStrict = Optional.absent();
+
+  /**
+   * Skips passes (logging a warning) whose PassFactory feature set doesn't include some features
+   * currently in the AST.
+   *
+   * <p>At the moment, this should only ever be set to false for testing.
+   */
+  private boolean skipUnsupportedPasses = true;
 
   /**
    * The builtin set of externs to be used
@@ -251,11 +258,11 @@ public class CompilerOptions implements Serializable {
    */
   private boolean checkDeterminism;
 
-  //--------------------------------
+  // --------------------------------
   // Input Options
-  //--------------------------------
+  // --------------------------------
 
-  DependencyOptions dependencyOptions = new DependencyOptions();
+  private DependencyOptions dependencyOptions = DependencyOptions.none();
 
   /** Returns localized replacement for MSG_* variables */
   public MessageBundle messageBundle = null;
@@ -767,6 +774,9 @@ public class CompilerOptions implements Serializable {
   @Nullable
   Integer polymerVersion;
 
+  /** How to handle exports/externs for Polymer properties and methods. */
+  PolymerExportPolicy polymerExportPolicy;
+
   /** Processes cr.* functions */
   private boolean chromePass;
 
@@ -778,9 +788,6 @@ public class CompilerOptions implements Serializable {
 
   /** Remove goog.abstractMethod assignments and @abstract methods. */
   boolean removeAbstractMethods;
-
-  /** Remove methods that only make a super call without changing the arguments. */
-  boolean removeSuperMethods;
 
   /** Remove goog.asserts calls. */
   boolean removeClosureAsserts;
@@ -865,9 +872,6 @@ public class CompilerOptions implements Serializable {
 
   /** Whitelist used in the renaming of CSS class names. */
   Set<String> cssRenamingWhitelist;
-
-  /** Process instances of goog.testing.ObjectPropertyString. */
-  boolean processObjectPropertyString;
 
   /** Replace id generators */
   boolean replaceIdGenerators = true;  // true by default for legacy reasons.
@@ -977,9 +981,10 @@ public class CompilerOptions implements Serializable {
   private boolean allowMethodCallDecomposing;
 
   /**
-   * See https://github.com/google/closure-compiler/wiki/FAQ#i-get-an-undecomposable-expression-error-for-my-yield-or-await-expression-what-do-i-do
+   * See
+   * https://github.com/google/closure-compiler/wiki/FAQ#i-get-an-undecomposable-expression-error-for-my-yield-or-await-expression-what-do-i-do
    */
-  boolean allowMethodCallDecomposing() {
+  public boolean allowMethodCallDecomposing() {
     return allowMethodCallDecomposing;
   }
 
@@ -1068,6 +1073,17 @@ public class CompilerOptions implements Serializable {
   /** The output path for the created externs file. */
   String externExportsPath;
 
+  private final List<SortingErrorManager.ErrorReportGenerator> extraReportGenerators =
+      new ArrayList<>();
+
+  List<SortingErrorManager.ErrorReportGenerator> getExtraReportGenerators() {
+    return extraReportGenerators;
+  }
+
+  void addReportGenerator(SortingErrorManager.ErrorReportGenerator generator) {
+    extraReportGenerators.add(generator);
+  }
+
   //--------------------------------
   // Debugging Options
   //--------------------------------
@@ -1100,8 +1116,7 @@ public class CompilerOptions implements Serializable {
    */
   boolean resolveSourceMapAnnotations = true;
 
-  public List<? extends SourceMap.LocationMapping> sourceMapLocationMappings =
-      Collections.emptyList();
+  public List<? extends SourceMap.LocationMapping> sourceMapLocationMappings = ImmutableList.of();
 
   /**
    * Whether to include full file contents in the source map.
@@ -1169,8 +1184,14 @@ public class CompilerOptions implements Serializable {
   private ImmutableList<ConformanceConfig> conformanceConfigs = GLOBAL_CONFORMANCE_CONFIGS;
 
   /**
-   * For use in {@link CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module.
+   * Remove the first match of this regex from any paths when checking conformance whitelists.
+   *
+   * <p>You can use this to make absolute paths relative to the root of your source tree. This is
+   * useful to work around CI and build systems that use absolute paths.
    */
+  Pattern conformanceRemoveRegexFromPath = Pattern.compile(".*?google3/");
+
+  /** For use in {@link CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module. */
   boolean wrapGoogModulesForWhitespaceOnly = true;
 
   public void setWrapGoogModulesForWhitespaceOnly(boolean enable) {
@@ -1273,7 +1294,7 @@ public class CompilerOptions implements Serializable {
     removeUnusedLocalVars = false;
     collapseVariableDeclarations = false;
     collapseAnonymousFunctions = false;
-    aliasableStrings = Collections.emptySet();
+    aliasableStrings = ImmutableSet.of();
     aliasStringsBlacklist = "";
     aliasAllStrings = false;
     outputJsStringUsage = false;
@@ -1309,15 +1330,15 @@ public class CompilerOptions implements Serializable {
     preserveClosurePrimitives = false;
     angularPass = false;
     polymerVersion = null;
+    polymerExportPolicy = PolymerExportPolicy.LEGACY;
     dartPass = false;
     j2clPassMode = J2clPassMode.AUTO;
     removeAbstractMethods = false;
-    removeSuperMethods = false;
     removeClosureAsserts = false;
-    stripTypes = Collections.emptySet();
-    stripNameSuffixes = Collections.emptySet();
-    stripNamePrefixes = Collections.emptySet();
-    stripTypePrefixes = Collections.emptySet();
+    stripTypes = ImmutableSet.of();
+    stripNameSuffixes = ImmutableSet.of();
+    stripNamePrefixes = ImmutableSet.of();
+    stripTypePrefixes = ImmutableSet.of();
     customPasses = null;
     markNoSideEffectCalls = false;
     defineReplacements = new HashMap<>();
@@ -1333,11 +1354,10 @@ public class CompilerOptions implements Serializable {
     exportLocalPropertyDefinitions = false;
     cssRenamingMap = null;
     cssRenamingWhitelist = null;
-    processObjectPropertyString = false;
     idGenerators = ImmutableMap.of();
-    replaceStringsFunctionDescriptions = Collections.emptyList();
+    replaceStringsFunctionDescriptions = ImmutableList.of();
     replaceStringsPlaceholderToken = "";
-    replaceStringsReservedStrings = Collections.emptySet();
+    replaceStringsReservedStrings = ImmutableSet.of();
     propertyInvalidationErrors = new HashMap<>();
     inputSourceMaps = ImmutableMap.of();
 
@@ -1570,13 +1590,6 @@ public class CompilerOptions implements Serializable {
   }
 
   /**
-   * If true, process goog.testing.ObjectPropertyString instances.
-   */
-  public void setProcessObjectPropertyString(boolean process) {
-    processObjectPropertyString = process;
-  }
-
-  /**
    * @param replaceIdGenerators the replaceIdGenerators to set
    */
   public void setReplaceIdGenerators(boolean replaceIdGenerators) {
@@ -1718,14 +1731,6 @@ public class CompilerOptions implements Serializable {
     this.removeAbstractMethods = remove;
   }
 
-  public void setRemoveSuperMethods(boolean remove) {
-    this.removeSuperMethods = remove;
-  }
-
-  public boolean getRemoveSuperMethods() {
-    return removeSuperMethods;
-  }
-
   public void setRemoveClosureAsserts(boolean remove) {
     this.removeClosureAsserts = remove;
   }
@@ -1741,7 +1746,6 @@ public class CompilerOptions implements Serializable {
   public boolean shouldColorizeErrorOutput() {
     return colorizeErrorOutput;
   }
-
 
   /**
    * Enable run-time type checking, which adds JS type assertions for debugging.
@@ -1812,50 +1816,13 @@ public class CompilerOptions implements Serializable {
     return codingConvention;
   }
 
-  /**
-   * Sets dependency options. See the DependencyOptions class for more info.
-   * This supersedes manageClosureDependencies.
-   */
-  public void setDependencyOptions(DependencyOptions options) {
-    this.dependencyOptions = options;
+  /** Sets the dependency management options. */
+  public void setDependencyOptions(DependencyOptions dependencyOptions) {
+    this.dependencyOptions = dependencyOptions;
   }
 
   public DependencyOptions getDependencyOptions() {
     return dependencyOptions;
-  }
-
-  /**
-   * Sort inputs by their goog.provide/goog.require calls, and prune inputs
-   * whose symbols are not required.
-   */
-  public void setManageClosureDependencies(boolean newVal) {
-    dependencyOptions.setDependencySorting(
-        newVal || dependencyOptions.shouldSortDependencies());
-    dependencyOptions.setDependencyPruning(
-        newVal || dependencyOptions.shouldPruneDependencies());
-    dependencyOptions.setMoocherDropping(false);
-  }
-
-  /**
-   * Sort inputs by their goog.provide/goog.require calls.
-   *
-   * @param entryPoints Entry points to the program. Must be goog.provide'd
-   *     symbols. Any goog.provide'd symbols that are not a transitive
-   *     dependency of the entry points will be deleted.
-   *     Files without goog.provides, and their dependencies,
-   *     will always be left in.
-   */
-  public void setManageClosureDependencies(List<String> entryPoints) {
-    checkNotNull(entryPoints);
-    setManageClosureDependencies(true);
-
-    List<ModuleIdentifier> normalizedEntryPoints = new ArrayList<>();
-
-    for (String entryPoint : entryPoints) {
-      normalizedEntryPoints.add(ModuleIdentifier.forClosure(entryPoint));
-    }
-
-    dependencyOptions.setEntryPoints(normalizedEntryPoints);
   }
 
   /**
@@ -1915,7 +1882,7 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguage(LanguageMode language) {
     checkState(language != LanguageMode.NO_TRANSPILE);
-    this.languageIn = language;
+    this.setLanguageIn(language);
     this.setLanguageOut(language);
   }
 
@@ -1925,7 +1892,7 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguageIn(LanguageMode languageIn) {
     checkState(languageIn != LanguageMode.NO_TRANSPILE);
-    this.languageIn = languageIn;
+    this.languageIn = languageIn == LanguageMode.STABLE ? LanguageMode.STABLE_IN : languageIn;
   }
 
   public LanguageMode getLanguageIn() {
@@ -1945,6 +1912,7 @@ public class CompilerOptions implements Serializable {
       languageOutIsDefaultStrict = Optional.absent();
       outputFeatureSet = Optional.absent();
     } else {
+      languageOut = languageOut == LanguageMode.STABLE ? LanguageMode.STABLE_OUT : languageOut;
       languageOutIsDefaultStrict = Optional.of(languageOut.isDefaultStrict());
       setOutputFeatureSet(languageOut.toFeatureSet());
     }
@@ -1968,6 +1936,24 @@ public class CompilerOptions implements Serializable {
 
     // Backwards compatibility for those that predate language out.
     return languageIn.toFeatureSet();
+  }
+
+  /**
+   * Sets the behavior of PhaseOptimizer when given a pass that can't handle features in the current
+   * AST.
+   *
+   * <p>Currently the only options are either to run the pass anyway, and see what happens, or to
+   * skip the pass and log a warning. Only test code should do the former.
+   *
+   * <p>In the future we may make this option public. We may also make it into an enum, and add an
+   * option to throw runtime errors upon seeing unsupported passses.
+   */
+  void setSkipUnsupportedPasses(boolean skipUnsupportedPasses) {
+    this.skipUnsupportedPasses = skipUnsupportedPasses;
+  }
+
+  boolean shouldSkipUnsupportedPasses() {
+    return skipUnsupportedPasses;
   }
 
   public boolean needsTranspilationFrom(FeatureSet languageLevel) {
@@ -2215,20 +2201,9 @@ public class CompilerOptions implements Serializable {
     this.crossChunkCodeMotion = crossChunkCodeMotion;
   }
 
-  @Deprecated
-  public void setCrossModuleCodeMotion(boolean crossChunkCodeMotion) {
-    setCrossChunkCodeMotion(crossChunkCodeMotion);
-  }
-
   public void setCrossChunkCodeMotionNoStubMethods(boolean
       crossChunkCodeMotionNoStubMethods) {
     this.crossChunkCodeMotionNoStubMethods = crossChunkCodeMotionNoStubMethods;
-  }
-
-  @Deprecated
-  public void setCrossModuleCodeMotionNoStubMethods(boolean
-      crossChunkCodeMotionNoStubMethods) {
-    setCrossChunkCodeMotionNoStubMethods(crossChunkCodeMotionNoStubMethods);
   }
 
   public void setParentChunkCanSeeSymbolsDeclaredInChildren(
@@ -2245,11 +2220,6 @@ public class CompilerOptions implements Serializable {
 
   public void setCrossChunkMethodMotion(boolean crossChunkMethodMotion) {
     this.crossChunkMethodMotion = crossChunkMethodMotion;
-  }
-
-  @Deprecated
-  public void setCrossModuleMethodMotion(boolean crossChunkMethodMotion) {
-    setCrossChunkMethodMotion(crossChunkMethodMotion);
   }
 
   public void setCoalesceVariableNames(boolean coalesceVariableNames) {
@@ -2747,6 +2717,10 @@ public class CompilerOptions implements Serializable {
     this.processCommonJSModules = processCommonJSModules;
   }
 
+  public boolean getProcessCommonJSModules() {
+    return processCommonJSModules;
+  }
+
   /**
    * How ES6 modules should be transformed.
    */
@@ -2971,6 +2945,7 @@ public class CompilerOptions implements Serializable {
             .add("colorizeErrorOutput", shouldColorizeErrorOutput())
             .add("computeFunctionSideEffects", computeFunctionSideEffects)
             .add("conformanceConfigs", getConformanceConfigs())
+            .add("conformanceRemoveRegexFromPath", conformanceRemoveRegexFromPath)
             .add("continueAfterErrors", canContinueAfterErrors())
             .add("convertToDottedProperties", convertToDottedProperties)
             .add("crossChunkCodeMotion", crossChunkCodeMotion)
@@ -2984,7 +2959,7 @@ public class CompilerOptions implements Serializable {
             .add("debugFunctionSideEffectsPath", debugFunctionSideEffectsPath)
             .add("declaredGlobalExternsOnWindow", declaredGlobalExternsOnWindow)
             .add("defineReplacements", getDefineReplacements())
-            .add("dependencyOptions", dependencyOptions)
+            .add("dependencyOptions", getDependencyOptions())
             .add("devirtualizePrototypeMethods", devirtualizePrototypeMethods)
             .add("devMode", devMode)
             .add("disambiguatePrivateProperties", disambiguatePrivateProperties)
@@ -3059,6 +3034,7 @@ public class CompilerOptions implements Serializable {
             .add("parseJsDocDocumentation", isParseJsDocDocumentation())
             .add("pathEscaper", pathEscaper)
             .add("polymerVersion", polymerVersion)
+            .add("polymerExportPolicy", polymerExportPolicy)
             .add("preferLineBreakAtEndOfFile", preferLineBreakAtEndOfFile)
             .add("preferSingleQuotes", preferSingleQuotes)
             .add("preferStableNames", preferStableNames)
@@ -3071,14 +3047,12 @@ public class CompilerOptions implements Serializable {
             .add("printInputDelimiter", printInputDelimiter)
             .add("printSourceAfterEachPass", printSourceAfterEachPass)
             .add("processCommonJSModules", processCommonJSModules)
-            .add("processObjectPropertyString", processObjectPropertyString)
             .add("propertyInvalidationErrors", propertyInvalidationErrors)
             .add("propertyRenaming", propertyRenaming)
             .add("protectHiddenSideEffects", protectHiddenSideEffects)
             .add("quoteKeywordProperties", quoteKeywordProperties)
             .add("recordFunctionInformation", recordFunctionInformation)
             .add("removeAbstractMethods", removeAbstractMethods)
-            .add("removeSuperMethods", removeSuperMethods)
             .add("removeClosureAsserts", removeClosureAsserts)
             .add("removeJ2clAsserts", removeJ2clAsserts)
             .add("removeDeadCode", removeDeadCode)
@@ -3184,11 +3158,16 @@ public class CompilerOptions implements Serializable {
     /** ECMAScript latest draft standard. */
     ECMASCRIPT_NEXT,
 
+    /** Use stable features. */
+    STABLE,
+
     /**
      * For languageOut only. The same language mode as the input.
      */
     NO_TRANSPILE;
 
+    public static final LanguageMode STABLE_IN = ECMASCRIPT_2017;
+    public static final LanguageMode STABLE_OUT = ECMASCRIPT5;
 
     /** Whether this language mode defaults to strict mode */
     boolean isDefaultStrict() {
@@ -3240,6 +3219,10 @@ public class CompilerOptions implements Serializable {
           return FeatureSet.ES_NEXT;
         case ECMASCRIPT6_TYPED:
           return FeatureSet.TYPESCRIPT;
+        case STABLE:
+          throw new UnsupportedOperationException(
+              "STABLE has different feature sets for language in and out. "
+                  + "Use STABLE_IN or STABLE_OUT.");
       }
       throw new IllegalStateException();
     }
@@ -3425,30 +3408,6 @@ public class CompilerOptions implements Serializable {
      * stdin and stdout are both json streams.
      */
     BOTH
-  }
-
-  /** How compiler should prune files based on the provide-require dependency graph */
-  public static enum DependencyMode {
-    /**
-     * All files will be included in the compilation
-     */
-    NONE,
-
-    /**
-     * Files must be discoverable from specified entry points. Files
-     * which do not goog.provide a namespace and are not either
-     * an ES6 or CommonJS module will be automatically treated as entry points.
-     * Module files will be included only if referenced from an entry point.
-     */
-    LOOSE,
-
-    /**
-     * Files must be discoverable from specified entry points. Files which
-     * do not goog.provide a namespace and are neither
-     * an ES6 or CommonJS module will be dropped. Module files will be included
-     * only if referenced from an entry point.
-     */
-    STRICT
   }
 
   /**

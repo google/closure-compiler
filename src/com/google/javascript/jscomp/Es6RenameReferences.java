@@ -16,10 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.util.List;
 
 /**
  * Renames references in code and JSDoc when necessary.
@@ -28,16 +30,24 @@ import com.google.javascript.rhino.Node;
  */
 final class Es6RenameReferences extends AbstractPostOrderCallback {
 
+  private static final Splitter SPLIT_ON_DOT = Splitter.on('.').limit(2);
+
   private final Table<Node, String, String> renameTable;
+  private final boolean typesOnly;
+
+  Es6RenameReferences(Table<Node, String, String> renameTable, boolean typesOnly) {
+    this.renameTable = renameTable;
+    this.typesOnly = typesOnly;
+  }
 
   Es6RenameReferences(Table<Node, String, String> renameTable) {
-    this.renameTable = renameTable;
+    this(renameTable, /* typesOnly= */ false);
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (NodeUtil.isReferenceName(n)) {
-      renameReference(t, n);
+    if (!typesOnly && NodeUtil.isReferenceName(n)) {
+      renameReference(t, n, false);
     }
 
     JSDocInfo info = n.getJSDocInfo();
@@ -49,20 +59,25 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
   private void renameTypeNode(NodeTraversal t, Iterable<Node> typeNodes) {
     for (Node type : typeNodes) {
       if (type.isString()) {
-        renameReference(t, type);
+        renameReference(t, type, true);
       }
       renameTypeNode(t, type.children());
     }
   }
 
-  private void renameReference(NodeTraversal t, Node n) {
-    String oldName = n.getString();
+  private void renameReference(NodeTraversal t, Node n, boolean isType) {
+    String fullName = n.getString();
+    List<String> split = SPLIT_ON_DOT.splitToList(fullName);
+    String oldName = split.get(0);
     Scope current = t.getScope();
     while (current != null) {
       String newName = renameTable.get(current.getRootNode(), oldName);
       if (newName != null) {
-        n.setString(newName);
-        t.reportCodeChange();
+        String rest = split.size() == 2 ? "." + split.get(1) : "";
+        n.setString(newName + rest);
+        if (!isType) {
+          t.reportCodeChange();
+        }
         return;
       } else if (current.hasOwnSlot(oldName)) {
         return;

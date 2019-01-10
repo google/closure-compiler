@@ -46,7 +46,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Ascii;
 import com.google.common.base.Objects;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -71,173 +73,178 @@ public class Node implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  public static final byte JSDOC_INFO_PROP = 29, // contains a JSDocInfo object
-      VAR_ARGS_NAME = 30, // the name node is a variable length
-      // argument placeholder.
-      INCRDECR_PROP = 32, // whether incrdecr is pre (false) or post (true)
-      QUOTED_PROP = 36, // set to indicate a quoted object lit key
-      OPT_ARG_NAME = 37, // The name node is an optional argument.
-      SYNTHETIC_BLOCK_PROP = 38, // A synthetic block. Used to make
-      // processing simpler, and does not
-      // represent a real block in the source.
-      ADDED_BLOCK = 39, // Used to indicate BLOCK that is added
-      ORIGINALNAME_PROP = 40, // The original name of the node, before
-      // renaming.
-      SIDE_EFFECT_FLAGS = 42, // Function or constructor call side effect
-      // flags
-      // Coding convention props
-      IS_CONSTANT_NAME = 43, // The variable or property is constant.
-      IS_NAMESPACE = 46, // The variable creates a namespace.
-      DIRECTIVES = 48, // The ES5 directives on this node.
-      DIRECT_EVAL = 49, // ES5 distinguishes between direct and
-      // indirect calls to eval.
-      FREE_CALL = 50, // A CALL without an explicit "this" value.
-      STATIC_SOURCE_FILE = 51, // A StaticSourceFile indicating the file
-      // where this node lives.
-      INPUT_ID = 53, // The id of the input associated with this
-      // node.
-      SLASH_V = 54, // Whether a STRING node contains a \v
-      // vertical tab escape. This is a total hack.
-      // See comments in IRFactory about this.
-      INFERRED_FUNCTION = 55, // Marks a function whose parameter types
-      // have been inferred.
-      CHANGE_TIME = 56, // For passes that work only on changed funs.
-      REFLECTED_OBJECT = 57, // An object that's used for goog.object.reflect-style reflection.
-      STATIC_MEMBER = 58, // Set if class member definition is static
-      GENERATOR_FN = 59, // Set if the node is a Generator function or
-      // member method.
-      ARROW_FN = 60,
-      ASYNC_FN = 61, // http://tc39.github.io/ecmascript-asyncawait/
-      YIELD_ALL = 62, // Set if a yield is a "yield all"
-      EXPORT_DEFAULT = 63, // Set if a export is a "default" export
-      EXPORT_ALL_FROM = 64, // Set if an export is a "*"
-      IS_CONSTANT_VAR = 65, // A lexical variable is inferred const
-      GENERATOR_MARKER = 66, // Used by the ES6-to-ES3 translator.
-      GENERATOR_SAFE = 67, // Used by the ES6-to-ES3 translator.
-      RAW_STRING_VALUE = 71, // Used to support ES6 tagged template literal.
-      COMPUTED_PROP_METHOD = 72, // A computed property that has the method
-      // syntax ( [prop]() {...} ) rather than the
-      // property definition syntax ( [prop]: value ).
-      COMPUTED_PROP_GETTER = 73, // A computed property in a getter, e.g.
-      // var obj = { get [prop]() {...} };
-      COMPUTED_PROP_SETTER = 74, // A computed property in a setter, e.g.
-      // var obj = { set [prop](val) {...} };
-      COMPUTED_PROP_VARIABLE = 75, // A computed property that's a variable, e.g. [prop]: string;
-      ANALYZED_DURING_GTI = 76, // In GlobalTypeInfo, we mark some AST nodes
-      // to avoid analyzing them during
-      // NewTypeInference. We remove this attribute
-      // in the fwd direction of NewTypeInference.
-      CONSTANT_PROPERTY_DEF = 77, // Used to communicate information between
-      // GlobalTypeInfo and NewTypeInference.
-      // We use this to tag getprop nodes that
-      // declare properties.
-      DECLARED_TYPE_EXPR = 78, // Used to attach TypeDeclarationNode ASTs to
-      // Nodes which represent a typed NAME or
-      // FUNCTION.
-      //
-      TYPE_BEFORE_CAST = 79, // The type of an expression before the cast.
-      // This will be present only if the expression is casted.
-      OPT_ES6_TYPED = 80, // The node is an optional parameter or property
-      // in ES6 Typed syntax.
-      GENERIC_TYPE_LIST = 81, // Generic type list in ES6 typed syntax.
-      IMPLEMENTS = 82, // "implements" clause in ES6 typed syntax.
-      CONSTRUCT_SIGNATURE = 83, // This node is a TypeScript ConstructSignature
-      ACCESS_MODIFIER = 84, // TypeScript accessibility modifiers (public, protected, private)
-      NON_INDEXABLE = 85, // Indicates the node should not be indexed by analysis tools.
-      PARSE_RESULTS = 86, // Parse results stored on SCRIPT nodes to allow replaying
-      // parse warnings/errors when cloning cached ASTs.
-      GOOG_MODULE = 87, // Indicates that a SCRIPT node is a goog.module. Remains set
-      // after the goog.module is desugared.
-      GOOG_MODULE_REQUIRE = 88, // Node is a goog.require() as desugared by goog.module()
-      FEATURE_SET = 89, // Attaches a FeatureSet to SCRIPT nodes.
-      IS_MODULE_NAME = 90, // Indicates that a STRING node represents a namespace from
-      // goog.module() or goog.require() call.
-      WAS_PREVIOUSLY_PROVIDED = 91, // Indicates a namespace that was provided at some point in the
-      // past.
-      IS_ES6_CLASS = 92, // Indicates that a FUNCTION node is converted from an ES6 class
-      TRANSPILED = 93, // Indicates that a SCRIPT represents a transpiled file
-      DELETED = 94, // For passes that work only on deleted funs.
-      MODULE_ALIAS = 95, // Indicates that the node is an alias or a name from goog.require'd module
-      // or ES6 module. Aliases are desugared and inlined by compiler passes but we
-      // need to preserve them for building index.
-      IS_UNUSED_PARAMETER = 96, // Mark a parameter as unused. Used to defer work from
-      // RemovedUnusedVars to OptimizeParameters.
-      MODULE_EXPORT = 97, // Mark a property as a module export so that collase properties
-      // can act on it.
-      IS_SHORTHAND_PROPERTY = 98, // Indicates that a property {x:x} was originally parsed as {x}.
-      ES6_MODULE = 99; // Indicates that a SCRIPT node is or was an ES6 module. Remains set
-      // after the module is rewritten.
+  private enum Prop {
+    // Contains a JSDocInfo object
+    JSDOC_INFO,
+    // The name node is a variable length argument placeholder.
+    VAR_ARGS,
+    // Whether incrdecr is pre (false) or post (true)
+    INCRDECR,
+    // Set to indicate a quoted object lit key
+    QUOTED,
+    // The name node is an optional argument.
+    OPT_ARG,
+    // A synthetic block. Used to make processing simpler, and does not represent a real block in
+    // the source.
+    SYNTHETIC,
+    // Used to indicate BLOCK that is added
+    ADDED_BLOCK,
+    // The original name of the node, before renaming.
+    ORIGINALNAME,
+    // Function or constructor call side effect flags.
+    SIDE_EFFECT_FLAGS,
+    // The variable or property is constant.
+    IS_CONSTANT_NAME,
+    // The variable creates a namespace.
+    IS_NAMESPACE,
+    // The ES5 directives on this node.
+    DIRECTIVES,
+    // ES5 distinguishes between direct and indirect calls to eval.
+    DIRECT_EVAL,
+    // A CALL without an explicit "this" value.
+    FREE_CALL,
+    // A StaticSourceFile indicating the file where this node lives.
+    SOURCE_FILE,
+    // The id of the input associated with this node.
+    INPUT_ID,
+    // Whether a STRING node contains a \v vertical tab escape. This is a total hack. See comments
+    // in IRFactory about this.
+    SLASH_V,
+    // Marks a function whose parameter types have been inferred.
+    INFERRED,
+    // For passes that work only on changed funs.
+    CHANGE_TIME,
+    // An object that's used for goog.object.reflect-style reflection.
+    REFLECTED_OBJECT,
+    // Set if class member definition is static
+    STATIC_MEMBER,
+    // Set if the node is a Generator function or member method.
+    GENERATOR_FN,
+    // Set if the node is an arrow function.
+    ARROW_FN,
+    // http://tc39.github.io/ecmascript-asyncawait/
+    ASYNC_FN,
+    // Set if a yield is a "yield all"
+    YIELD_ALL,
+    // Set if a export is a "default" export
+    EXPORT_DEFAULT,
+    // Set if an export is a "*"
+    EXPORT_ALL_FROM,
+    // A lexical variable is inferred const
+    IS_CONSTANT_VAR,
+    // Used by the ES6-to-ES3 translator.
+    IS_GENERATOR_MARKER,
+    // Used by the ES6-to-ES3 translator.
+    IS_GENERATOR_SAFE,
+    // A computed property that has the method syntax
+    //   ( [prop]() {...} )
+    // rather than the property definition syntax
+    //   ( [prop]: value ).
+    COMPUTED_PROP_METHOD,
+    // A computed property in a getter, e.g. var obj = { get [prop]() {...} };
+    COMPUTED_PROP_GETTER,
+    // A computed property in a setter, e.g. var obj = 32;
+    COMPUTED_PROP_SETTER,
+    // A computed property that's a variable, e.g. [prop]: string;
+    COMPUTED_PROP_VARIABLE,
+    // Used to attach TypeDeclarationNode ASTs to Nodes which represent a typed NAME or FUNCTION.
+    DECLARED_TYPE_EXPR,
+    // The type of an expression before the cast. This will be present only if the expression is
+    // casted.
+    TYPE_BEFORE_CAST,
+    // The node is an optional parameter or property in ES6 Typed syntax.
+    OPT_ES6_TYPED,
+    // Generic type list in ES6 typed syntax.
+    GENERIC_TYPE,
+    // "implements" clause in ES6 typed syntax.
+    IMPLEMENTS,
+    // This node is a TypeScript ConstructSignature
+    CONSTRUCT_SIGNATURE,
+    // TypeScript accessibility modifiers (public, protected, private)
+    ACCESS_MODIFIER,
+    // Indicates the node should not be indexed by analysis tools.
+    NON_INDEXABLE,
+    // Parse results stored on SCRIPT nodes to allow replaying parse warnings/errors when cloning
+    // cached ASTs.
+    PARSE_RESULTS,
+    // Indicates that a SCRIPT node is a goog.module. Remains set after the goog.module is
+    // desugared.
+    GOOG_MODULE,
+    // Node is a goog.require() as desugared by goog.module()
+    GOOG_MODULE_REQUIRE,
+    // Attaches a FeatureSet to SCRIPT nodes.
+    FEATURE_SET,
+    // Indicates that a STRING node represents a namespace from goog.module() or goog.require()
+    // call.
+    IS_MODULE_NAME,
+    // Indicates a namespace that was provided at some point in the past.
+    WAS_PREVIOUSLY_PROVIDED,
+    // Indicates that a FUNCTION node is converted from an ES6 class
+    IS_ES6_CLASS,
+    // Indicates that a SCRIPT represents a transpiled file
+    TRANSPILED,
+    // For passes that work only on deleted funs.
+    DELETED,
+    // Indicates that the node is an alias or a name from goog.require'd module or ES6
+    // module. Aliases are desugared and inlined by compiler passes but we need to preserve them for
+    // building index.
+    MODULE_ALIAS,
+    // Mark a parameter as unused. Used to defer work from RemovedUnusedVars to OptimizeParameters.
+    IS_UNUSED_PARAMETER,
+    // Mark a property as a module export so that collase properties can act on it.
+    MODULE_EXPORT,
+    // Indicates that a property {x:x} was originally parsed as {x}.
+    IS_SHORTHAND_PROPERTY,
+    // Indicates that a SCRIPT node is or was an ES module. Remains set after the module is
+    // rewritten.
+    ES6_MODULE,
+    // Record the type associated with a @typedef to enable looking up typedef in the AST possible
+    // without saving the type scope.
+    TYPEDEF_TYPE,
+  }
 
-  private static final String propToString(byte propType) {
-      switch (propType) {
-        case VAR_ARGS_NAME:      return "var_args_name";
-        case JSDOC_INFO_PROP:    return "jsdoc_info";
+  // TODO(sdh): Get rid of these by using accessor methods instead.
+  // These export instances of a private type, which is awkward but a side effect is that it
+  // prevents anyone from introducing problemmatic uses of the general-purpose accessors.
+  public static final Prop JSDOC_INFO_PROP = Prop.JSDOC_INFO;
+  public static final Prop INCRDECR_PROP = Prop.INCRDECR;
+  public static final Prop QUOTED_PROP = Prop.QUOTED;
+  public static final Prop ORIGINALNAME_PROP = Prop.ORIGINALNAME;
+  public static final Prop IS_CONSTANT_NAME = Prop.IS_CONSTANT_NAME;
+  public static final Prop IS_NAMESPACE = Prop.IS_NAMESPACE;
+  public static final Prop DIRECT_EVAL = Prop.DIRECT_EVAL;
+  public static final Prop FREE_CALL = Prop.FREE_CALL;
+  public static final Prop SLASH_V = Prop.SLASH_V;
+  public static final Prop REFLECTED_OBJECT = Prop.REFLECTED_OBJECT;
+  public static final Prop STATIC_MEMBER = Prop.STATIC_MEMBER;
+  public static final Prop GENERATOR_FN = Prop.GENERATOR_FN;
+  public static final Prop YIELD_ALL = Prop.YIELD_ALL;
+  public static final Prop EXPORT_DEFAULT = Prop.EXPORT_DEFAULT;
+  public static final Prop EXPORT_ALL_FROM = Prop.EXPORT_ALL_FROM;
+  public static final Prop IS_CONSTANT_VAR = Prop.IS_CONSTANT_VAR;
+  public static final Prop COMPUTED_PROP_METHOD = Prop.COMPUTED_PROP_METHOD;
+  public static final Prop COMPUTED_PROP_GETTER = Prop.COMPUTED_PROP_GETTER;
+  public static final Prop COMPUTED_PROP_SETTER = Prop.COMPUTED_PROP_SETTER;
+  public static final Prop COMPUTED_PROP_VARIABLE = Prop.COMPUTED_PROP_VARIABLE;
+  public static final Prop OPT_ES6_TYPED = Prop.OPT_ES6_TYPED;
+  public static final Prop GENERIC_TYPE_LIST = Prop.GENERIC_TYPE;
+  public static final Prop IMPLEMENTS = Prop.IMPLEMENTS;
+  public static final Prop CONSTRUCT_SIGNATURE = Prop.CONSTRUCT_SIGNATURE;
+  public static final Prop ACCESS_MODIFIER = Prop.ACCESS_MODIFIER;
+  public static final Prop PARSE_RESULTS = Prop.PARSE_RESULTS;
+  public static final Prop GOOG_MODULE = Prop.GOOG_MODULE;
+  public static final Prop FEATURE_SET = Prop.FEATURE_SET;
+  public static final Prop IS_MODULE_NAME = Prop.IS_MODULE_NAME;
+  public static final Prop WAS_PREVIOUSLY_PROVIDED = Prop.WAS_PREVIOUSLY_PROVIDED;
+  public static final Prop IS_ES6_CLASS = Prop.IS_ES6_CLASS;
+  public static final Prop TRANSPILED = Prop.TRANSPILED;
+  public static final Prop MODULE_ALIAS = Prop.MODULE_ALIAS;
+  public static final Prop MODULE_EXPORT = Prop.MODULE_EXPORT;
+  public static final Prop IS_SHORTHAND_PROPERTY = Prop.IS_SHORTHAND_PROPERTY;
+  public static final Prop ES6_MODULE = Prop.ES6_MODULE;
 
-        case INCRDECR_PROP:      return "incrdecr";
-        case QUOTED_PROP:        return "quoted";
-        case OPT_ARG_NAME:       return "opt_arg";
-
-        case SYNTHETIC_BLOCK_PROP: return "synthetic";
-        case ADDED_BLOCK:        return "added_block";
-        case ORIGINALNAME_PROP:  return "originalname";
-        case SIDE_EFFECT_FLAGS:  return "side_effect_flags";
-
-        case IS_CONSTANT_NAME:   return "is_constant_name";
-        case IS_NAMESPACE:       return "is_namespace";
-        case DIRECTIVES:         return "directives";
-        case DIRECT_EVAL:        return "direct_eval";
-        case FREE_CALL:          return "free_call";
-        case STATIC_SOURCE_FILE: return "source_file";
-        case INPUT_ID:           return "input_id";
-        case SLASH_V:            return "slash_v";
-        case INFERRED_FUNCTION:  return "inferred";
-        case CHANGE_TIME:        return "change_time";
-        case REFLECTED_OBJECT:   return "reflected_object";
-        case STATIC_MEMBER:      return "static_member";
-        case GENERATOR_FN:       return "generator_fn";
-        case ARROW_FN:           return "arrow_fn";
-        case ASYNC_FN:           return "async_fn";
-        case YIELD_ALL:          return "yield_all";
-        case EXPORT_DEFAULT:     return "export_default";
-        case EXPORT_ALL_FROM:    return "export_all_from";
-        case IS_CONSTANT_VAR:    return "is_constant_var";
-        case GENERATOR_MARKER:   return "is_generator_marker";
-        case GENERATOR_SAFE:     return "is_generator_safe";
-        case RAW_STRING_VALUE:   return "raw_string_value";
-        case COMPUTED_PROP_METHOD: return "computed_prop_method";
-        case COMPUTED_PROP_GETTER: return "computed_prop_getter";
-        case COMPUTED_PROP_SETTER: return "computed_prop_setter";
-        case COMPUTED_PROP_VARIABLE: return "computed_prop_variable";
-        case ANALYZED_DURING_GTI:  return "analyzed_during_gti";
-        case CONSTANT_PROPERTY_DEF: return "constant_property_def";
-        case DECLARED_TYPE_EXPR: return "declared_type_expr";
-        case TYPE_BEFORE_CAST:   return "type_before_cast";
-        case OPT_ES6_TYPED:      return "opt_es6_typed";
-        case GENERIC_TYPE_LIST:       return "generic_type";
-        case IMPLEMENTS:         return "implements";
-        case CONSTRUCT_SIGNATURE: return "construct_signature";
-        case ACCESS_MODIFIER:    return "access_modifier";
-        case NON_INDEXABLE:      return "non_indexable";
-        case PARSE_RESULTS:      return "parse_results";
-        case GOOG_MODULE:        return "goog_module";
-        case GOOG_MODULE_REQUIRE: return "goog_module_require";
-        case FEATURE_SET:        return "feature_set";
-        case IS_MODULE_NAME:     return "is_module_name";
-        case WAS_PREVIOUSLY_PROVIDED: return "was_previously_provided";
-        case IS_ES6_CLASS:       return "is_es6_class";
-        case TRANSPILED:         return "transpiled";
-        case DELETED:            return "DELETED";
-        case MODULE_ALIAS:       return "module_alias";
-        case IS_UNUSED_PARAMETER: return "is_unused_parameter";
-        case MODULE_EXPORT:
-          return "module_export";
-        case IS_SHORTHAND_PROPERTY:
-        return "is_shorthand_property";
-      case ES6_MODULE:
-        return "es6_module";
-      default:
-          throw new IllegalStateException("unexpected prop id " + propType);
-      }
+  private static final String propToString(Prop propType) {
+    return Ascii.toLowerCase(String.valueOf(propType));
   }
 
   /**
@@ -376,13 +383,13 @@ public class Node implements Serializable {
 
     /**
      * If the property is not defined, this was not a quoted key.  The
-     * QUOTED_PROP int property is only assigned to STRING tokens used as
+     * Prop.QUOTED int property is only assigned to STRING tokens used as
      * object lit keys.
      * @return true if this was a quoted string key in an object literal.
      */
     @Override
     public boolean isQuotedString() {
-      return getBooleanProp(QUOTED_PROP);
+      return getBooleanProp(Prop.QUOTED);
     }
 
     /**
@@ -390,7 +397,7 @@ public class Node implements Serializable {
      */
     @Override
     public void setQuotedString() {
-      putBooleanProp(QUOTED_PROP, true);
+      putBooleanProp(Prop.QUOTED, true);
     }
 
     private String str;
@@ -407,6 +414,82 @@ public class Node implements Serializable {
       in.defaultReadObject();
 
       this.str = this.str.intern();
+    }
+  }
+
+  private static final class TemplateLiteralSubstringNode extends Node {
+
+    private static final long serialVersionUID = 1L;
+    // The "cooked" version of the template literal substring. May be null.
+    @Nullable
+    private String cooked;
+    // The raw version of the template literal substring, is not null
+    private String raw;
+
+    // Only for cloneNode
+    private TemplateLiteralSubstringNode() {
+      super(Token.TEMPLATELIT_STRING);
+    }
+
+    TemplateLiteralSubstringNode(@Nullable String cooked, String raw) {
+      super(Token.TEMPLATELIT_STRING);
+      this.cooked = cooked;
+      setRaw(raw);
+    }
+
+    TemplateLiteralSubstringNode(@Nullable String cooked, String raw,
+        int lineno, int charno) {
+      super(Token.TEMPLATELIT_STRING, lineno, charno);
+      this.cooked = cooked;
+      setRaw(raw);
+    }
+
+    /**
+     * returns the raw string content.
+     * @return non null.
+     */
+    @Override
+    public String getRawString() {
+      return this.raw;
+    }
+
+    /**
+     * @return the cooked string content.
+     */
+    @Override @Nullable
+    public String getCookedString() {
+      return this.cooked;
+    }
+
+    /**
+     * sets the raw string content.
+     * @param str the new value. Non null.
+     */
+    public void setRaw(String str) {
+      if (null == str) {
+        throw new IllegalArgumentException("TemplateLiteralSubstringNode: raw str is null");
+      }
+      // Intern the string reference so that serialization won't save repeated strings.
+      this.raw = str.intern();
+    }
+
+    @Override
+    @SuppressWarnings("ReferenceEquality")
+    public boolean isEquivalentTo(
+        Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
+      // NOTE: we take advantage of the string interning done in #setRaw and use
+      // '==' rather than 'equals' here to avoid doing unnecessary string equalities.
+      return (super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
+          && this.raw == ((TemplateLiteralSubstringNode) node).raw
+          && Objects.equal(this.cooked, ((TemplateLiteralSubstringNode) node).cooked));
+    }
+
+    @Override
+    public TemplateLiteralSubstringNode cloneNode(boolean cloneTypeExprs) {
+      TemplateLiteralSubstringNode clone = new TemplateLiteralSubstringNode();
+      clone.raw = raw;
+      clone.cooked = cooked;
+      return copyNodeFields(clone, cloneTypeExprs);
     }
   }
 
@@ -612,6 +695,10 @@ public class Node implements Serializable {
 
   public static Node newString(Token token, String str, int lineno, int charno) {
     return new StringNode(token, str, lineno, charno);
+  }
+
+  public static Node newTemplateLitString(String cooked, String raw) {
+    return new TemplateLiteralSubstringNode(cooked, raw);
   }
 
   public final Token getToken() {
@@ -948,7 +1035,8 @@ public class Node implements Serializable {
 
   @VisibleForTesting
   @Nullable
-  final PropListItem lookupProperty(byte propType) {
+  final PropListItem lookupProperty(Prop prop) {
+    byte propType = (byte) prop.ordinal();
     PropListItem x = propListHead;
     while (x != null && propType != x.propType) {
       x = x.next;
@@ -973,8 +1061,8 @@ public class Node implements Serializable {
     return propListHead != null;
   }
 
-  public final void removeProp(byte propType) {
-    PropListItem result = removeProp(propListHead, propType);
+  public final void removeProp(Prop propType) {
+    PropListItem result = removeProp(propListHead, (byte) propType.ordinal());
     if (result != propListHead) {
       propListHead = result;
     }
@@ -1002,7 +1090,7 @@ public class Node implements Serializable {
   }
 
   @Nullable
-  public final Object getProp(byte propType) {
+  public final Object getProp(Prop propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
       return null;
@@ -1010,7 +1098,7 @@ public class Node implements Serializable {
     return item.getObjectValue();
   }
 
-  public final boolean getBooleanProp(byte propType) {
+  public final boolean getBooleanProp(Prop propType) {
     return getIntProp(propType) != 0;
   }
 
@@ -1018,7 +1106,7 @@ public class Node implements Serializable {
    * Returns the integer value for the property, or 0 if the property
    * is not defined.
    */
-  public final int getIntProp(byte propType) {
+  public final int getIntProp(Prop propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
       return 0;
@@ -1026,7 +1114,7 @@ public class Node implements Serializable {
     return item.getIntValue();
   }
 
-  public final int getExistingIntProp(byte propType) {
+  public final int getExistingIntProp(Prop propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
       throw new IllegalStateException("missing prop: " + propType);
@@ -1034,21 +1122,21 @@ public class Node implements Serializable {
     return item.getIntValue();
   }
 
-  public final void putProp(byte propType, @Nullable Object value) {
+  public final void putProp(Prop propType, @Nullable Object value) {
     removeProp(propType);
     if (value != null) {
-      propListHead = createProp(propType, value, propListHead);
+      propListHead = createProp((byte) propType.ordinal(), value, propListHead);
     }
   }
 
-  public final void putBooleanProp(byte propType, boolean value) {
+  public final void putBooleanProp(Prop propType, boolean value) {
     putIntProp(propType, value ? 1 : 0);
   }
 
-  public final void putIntProp(byte propType, int value) {
+  public final void putIntProp(Prop propType, int value) {
     removeProp(propType);
     if (value != 0) {
-      propListHead = createProp(propType, value, propListHead);
+      propListHead = createProp((byte) propType.ordinal(), value, propListHead);
     }
   }
 
@@ -1057,7 +1145,7 @@ public class Node implements Serializable {
    * @param typeExpression
    */
   public final void setDeclaredTypeExpression(TypeDeclarationNode typeExpression) {
-    putProp(DECLARED_TYPE_EXPR, typeExpression);
+    putProp(Prop.DECLARED_TYPE_EXPR, typeExpression);
   }
 
   /**
@@ -1066,7 +1154,7 @@ public class Node implements Serializable {
    */
   @Nullable
   public final TypeDeclarationNode getDeclaredTypeExpression() {
-    return (TypeDeclarationNode) getProp(DECLARED_TYPE_EXPR);
+    return (TypeDeclarationNode) getProp(Prop.DECLARED_TYPE_EXPR);
   }
 
   final PropListItem createProp(byte propType, Object value, @Nullable PropListItem next) {
@@ -1078,12 +1166,19 @@ public class Node implements Serializable {
   }
 
   /**
+   * Sets the type of this node before casting.
+   */
+  public final void setJSTypeBeforeCast(JSType type) {
+    putProp(Prop.TYPE_BEFORE_CAST, type);
+  }
+
+  /**
    * Returns the type of this node before casting. This annotation will only exist on the first
    * child of a CAST node after type checking.
    */
   @Nullable
   public final JSType getJSTypeBeforeCast() {
-    return (JSType) getProp(TYPE_BEFORE_CAST);
+    return (JSType) getProp(Prop.TYPE_BEFORE_CAST);
   }
 
   // Gets all the property types, in sorted order.
@@ -1151,6 +1246,27 @@ public class Node implements Serializable {
     }
   }
 
+  /** Can only be called when <tt>getType() == Token.TEMPLATELIT_STRING</tt> */
+  public String getRawString() {
+    if (this.token == Token.TEMPLATELIT_STRING) {
+      throw new IllegalStateException(
+          "Template Literal String node not created with Node.newTemplateLitString");
+    } else {
+      throw new UnsupportedOperationException(this + " is not a template literal string node");
+    }
+  }
+
+  /** Can only be called when <tt>getType() == Token.TEMPLATELIT_STRING</tt> */
+  @Nullable
+  public String getCookedString() {
+    if (this.token == Token.TEMPLATELIT_STRING) {
+      throw new IllegalStateException(
+          "Template Literal String node not created with Node.newTemplateLitString");
+    } else {
+      throw new UnsupportedOperationException(this + " is not a template literal string node");
+    }
+  }
+
   @Override
   public final String toString() {
     return toString(true, true, true);
@@ -1204,7 +1320,7 @@ public class Node implements Serializable {
     if (printAnnotations) {
       byte[] keys = getSortedPropTypes();
       for (int i = 0; i < keys.length; i++) {
-        byte type = keys[i];
+        Prop type = Prop.values()[keys[i]];
         PropListItem x = lookupProperty(type);
         sb.append(" [");
         sb.append(propToString(type));
@@ -1313,14 +1429,14 @@ public class Node implements Serializable {
     // Make sure source file prop nodes are not duplicated.
     if (other.propListHead != null
         && (this.propListHead == null
-            || (this.propListHead.propType == STATIC_SOURCE_FILE
+            || (this.propListHead.propType == Prop.SOURCE_FILE.ordinal()
                && this.propListHead.next == null))) {
-      // Either the node has only STATIC_SOURCE_FILE as a property or has not properties.
+      // Either the node has only Prop.SOURCE_FILE as a property or has not properties.
       PropListItem tail = other.propListHead;
       while (tail.next != null) {
         tail = tail.next;
       }
-      if (tail.propType == STATIC_SOURCE_FILE) {
+      if (tail.propType == Prop.SOURCE_FILE.ordinal()) {
         propListHead = tail;
         return;
       }
@@ -1329,12 +1445,12 @@ public class Node implements Serializable {
   }
 
   public final void setStaticSourceFile(@Nullable StaticSourceFile file) {
-    this.putProp(STATIC_SOURCE_FILE, file);
+    this.putProp(Prop.SOURCE_FILE, file);
   }
 
   /** Sets the source file to a non-extern file of the given name. */
   public final void setSourceFileForTesting(String name) {
-    this.putProp(STATIC_SOURCE_FILE, new SimpleSourceFile(name, false));
+    this.putProp(Prop.SOURCE_FILE, new SimpleSourceFile(name, SourceKind.STRONG));
   }
 
   // TODO(johnlenz): make this final
@@ -1347,41 +1463,41 @@ public class Node implements Serializable {
   /** Returns the source file associated with this input. */
   @Nullable
   public StaticSourceFile getStaticSourceFile() {
-    return ((StaticSourceFile) this.getProp(STATIC_SOURCE_FILE));
+    return ((StaticSourceFile) this.getProp(Prop.SOURCE_FILE));
   }
 
   /**
    * @param inputId
    */
   public void setInputId(InputId inputId) {
-    this.putProp(INPUT_ID, inputId);
+    this.putProp(Prop.INPUT_ID, inputId);
   }
 
   /** @return The Id of the CompilerInput associated with this Node. */
   @Nullable
   public InputId getInputId() {
-    return ((InputId) this.getProp(INPUT_ID));
+    return ((InputId) this.getProp(Prop.INPUT_ID));
   }
 
   /** The original name of this node, if the node has been renamed. */
   @Nullable
   public String getOriginalName() {
-    return (String) this.getProp(ORIGINALNAME_PROP);
+    return (String) this.getProp(Prop.ORIGINALNAME);
   }
 
   public void setOriginalName(String originalName) {
-    this.putProp(ORIGINALNAME_PROP, originalName);
+    this.putProp(Prop.ORIGINALNAME, originalName);
   }
 
   /**
    * Whether this node should be indexed by static analysis / code indexing tools.
    */
   public final boolean isIndexable() {
-    return !this.getBooleanProp(NON_INDEXABLE);
+    return !this.getBooleanProp(Prop.NON_INDEXABLE);
   }
 
   public final void makeNonIndexable() {
-    this.putBooleanProp(NON_INDEXABLE, true);
+    this.putBooleanProp(Prop.NON_INDEXABLE, true);
   }
 
   public final void makeNonIndexableRecursive() {
@@ -1622,12 +1738,18 @@ public class Node implements Serializable {
     return false;
   }
 
+  public final boolean isOnlyChildOf(Node possibleParent) {
+    return possibleParent == getParent() && getPrevious() == null && getNext() == null;
+  }
+
   public final boolean isFirstChildOf(Node possibleParent) {
     return possibleParent == getParent() && getPrevious() == null;
   }
 
   public final boolean isSecondChildOf(Node possibleParent) {
-    return getPrevious().isFirstChildOf(possibleParent);
+    Node previousNode = getPrevious();
+
+    return previousNode != null && previousNode.isFirstChildOf(possibleParent);
   }
 
   /**
@@ -1911,31 +2033,38 @@ public class Node implements Serializable {
     }
 
     if (token == Token.INC || token == Token.DEC) {
-      int post1 = this.getIntProp(INCRDECR_PROP);
-      int post2 = node.getIntProp(INCRDECR_PROP);
+      int post1 = this.getIntProp(Prop.INCRDECR);
+      int post2 = node.getIntProp(Prop.INCRDECR);
       if (post1 != post2) {
         return false;
       }
     } else if (token == Token.STRING || token == Token.STRING_KEY) {
       if (token == Token.STRING_KEY) {
-        int quoted1 = this.getIntProp(QUOTED_PROP);
-        int quoted2 = node.getIntProp(QUOTED_PROP);
+        int quoted1 = this.getIntProp(Prop.QUOTED);
+        int quoted2 = node.getIntProp(Prop.QUOTED);
         if (quoted1 != quoted2) {
           return false;
         }
       }
 
-      int slashV1 = this.getIntProp(SLASH_V);
-      int slashV2 = node.getIntProp(SLASH_V);
+      int slashV1 = this.getIntProp(Prop.SLASH_V);
+      int slashV2 = node.getIntProp(Prop.SLASH_V);
       if (slashV1 != slashV2) {
         return false;
       }
     } else if (token == Token.CALL) {
-      if (this.getBooleanProp(FREE_CALL) != node.getBooleanProp(FREE_CALL)) {
+      if (this.getBooleanProp(Prop.FREE_CALL) != node.getBooleanProp(Prop.FREE_CALL)) {
         return false;
       }
     } else if (token == Token.FUNCTION) {
+      // Must be the same kind of function to be equivalent
       if (this.isArrowFunction() != node.isArrowFunction()) {
+        return false;
+      }
+      if (this.isGeneratorFunction() != node.isGeneratorFunction()) {
+        return false;
+      }
+      if (this.isAsyncFunction() != node.isAsyncFunction()) {
         return false;
       }
     }
@@ -1989,6 +2118,11 @@ public class Node implements Serializable {
     }
   }
 
+  @Nullable
+  public final QualifiedName getQualifiedNameObject() {
+    return isQualifiedName() ? new QualifiedName.NodeQname(this) : null;
+  }
+
   /**
    * Helper method for {@link #getQualifiedName} to handle GETPROP nodes.
    *
@@ -2029,7 +2163,7 @@ public class Node implements Serializable {
    */
   @Nullable
   public final String getOriginalQualifiedName() {
-    if (token == Token.NAME || getBooleanProp(IS_MODULE_NAME)) {
+    if (token == Token.NAME || getBooleanProp(Prop.IS_MODULE_NAME)) {
       String name = getOriginalName();
       if (name == null) {
         name = getString();
@@ -2312,7 +2446,7 @@ public class Node implements Serializable {
    */
   public final Node useSourceInfoFrom(Node other) {
     setStaticSourceFileFrom(other);
-    putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
+    putProp(Prop.ORIGINALNAME, other.getProp(Prop.ORIGINALNAME));
     sourcePosition = other.sourcePosition;
     length = other.length;
     return this;
@@ -2350,8 +2484,11 @@ public class Node implements Serializable {
       length = other.length;
     }
 
-    if (getProp(ORIGINALNAME_PROP) == null) {
-      putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
+    // TODO(lharker): should this be inside the above if condition?
+    // If the node already has a source file, it seems strange to
+    // go ahead and set the original name anyway.
+    if (getProp(Prop.ORIGINALNAME) == null) {
+      putProp(Prop.ORIGINALNAME, other.getProp(Prop.ORIGINALNAME));
     }
 
     return this;
@@ -2382,6 +2519,12 @@ public class Node implements Serializable {
     return jstype;
   }
 
+  /** Returns the compiled inferred type on this node, or throws an NPE if there isn't one. */
+  public final JSType getJSTypeRequired() {
+    checkNotNull(jstype, "no jstype: %s", this);
+    return jstype;
+  }
+
   public final Node setJSType(@Nullable JSType jstype) {
     this.jstype = jstype;
     return this;
@@ -2394,54 +2537,65 @@ public class Node implements Serializable {
    */
   @Nullable
   public final JSDocInfo getJSDocInfo() {
-    return (JSDocInfo) getProp(JSDOC_INFO_PROP);
+    return (JSDocInfo) getProp(Prop.JSDOC_INFO);
   }
 
   /**
    * Sets the {@link JSDocInfo} attached to this node.
    */
   public final Node setJSDocInfo(JSDocInfo info) {
-    putProp(JSDOC_INFO_PROP, info);
+    putProp(Prop.JSDOC_INFO, info);
     return this;
   }
 
   /** This node was last changed at {@code time} */
   public final void setChangeTime(int time) {
-    putIntProp(CHANGE_TIME, time);
+    putIntProp(Prop.CHANGE_TIME, time);
   }
 
   /** Returns the time of the last change for this node */
   public final int getChangeTime() {
-    return getIntProp(CHANGE_TIME);
+    return getIntProp(Prop.CHANGE_TIME);
   }
 
   public final void setDeleted(boolean deleted) {
-    putBooleanProp(DELETED, deleted);
+    putBooleanProp(Prop.DELETED, deleted);
   }
 
   public final boolean isDeleted() {
-    return getBooleanProp(DELETED);
+    return getBooleanProp(Prop.DELETED);
   }
 
+  /** If this node represents a typedef declaration, the associated JSType */
+  public final void setTypedefTypeProp(JSType type) {
+    putProp(Prop.TYPEDEF_TYPE, type);
+  }
+
+  /** If this node represents a typedef declaration, the associated JSType */
+  public final JSType getTypedefTypeProp() {
+    return (JSType) getProp(Prop.TYPEDEF_TYPE);
+  }
+
+  /** @param unused Whether a parameter was function to be unused. Set by RemoveUnusedVars */
   public final void setUnusedParameter(boolean unused) {
-    putBooleanProp(IS_UNUSED_PARAMETER, unused);
+    putBooleanProp(Prop.IS_UNUSED_PARAMETER, unused);
   }
 
   /**
    * @return Whether a parameter was function to be unused. Set by RemoveUnusedVars
    */
   public final boolean isUnusedParameter() {
-    return getBooleanProp(IS_UNUSED_PARAMETER);
+    return getBooleanProp(Prop.IS_UNUSED_PARAMETER);
   }
 
   /** Sets the isShorthandProperty annotation. */
   public final void setShorthandProperty(boolean shorthand) {
-    putBooleanProp(IS_SHORTHAND_PROPERTY, shorthand);
+    putBooleanProp(Prop.IS_SHORTHAND_PROPERTY, shorthand);
   }
 
   /** Whether this {x:x} property was originally parsed as {x}. */
   public final boolean isShorthandProperty() {
-    return getBooleanProp(IS_SHORTHAND_PROPERTY);
+    return getBooleanProp(Prop.IS_SHORTHAND_PROPERTY);
   }
 
   /**
@@ -2450,7 +2604,7 @@ public class Node implements Serializable {
    * used to define a {@link Token#FUNCTION}'s argument list.
    */
   public final void setVarArgs(boolean varArgs) {
-    putBooleanProp(VAR_ARGS_NAME, varArgs);
+    putBooleanProp(Prop.VAR_ARGS, varArgs);
   }
 
   /**
@@ -2459,7 +2613,7 @@ public class Node implements Serializable {
    * used to define a {@link Token#FUNCTION}'s argument list.
    */
   public final boolean isVarArgs() {
-    return getBooleanProp(VAR_ARGS_NAME);
+    return getBooleanProp(Prop.VAR_ARGS);
   }
 
   /**
@@ -2468,7 +2622,7 @@ public class Node implements Serializable {
    * used to define a {@link Token#FUNCTION}'s argument list.
    */
   public final void setOptionalArg(boolean optionalArg) {
-    putBooleanProp(OPT_ARG_NAME, optionalArg);
+    putBooleanProp(Prop.OPT_ARG, optionalArg);
   }
 
   /**
@@ -2477,14 +2631,14 @@ public class Node implements Serializable {
    * used to define a {@link Token#FUNCTION}'s argument list.
    */
   public final boolean isOptionalArg() {
-    return getBooleanProp(OPT_ARG_NAME);
+    return getBooleanProp(Prop.OPT_ARG);
   }
 
   /**
    * Returns whether this node is an optional node in the ES6 Typed syntax.
    */
   public final boolean isOptionalEs6Typed() {
-    return getBooleanProp(OPT_ES6_TYPED);
+    return getBooleanProp(Prop.OPT_ES6_TYPED);
   }
 
   /**
@@ -2493,7 +2647,7 @@ public class Node implements Serializable {
    */
   public final void setIsSyntheticBlock(boolean val) {
     checkState(token == Token.BLOCK);
-    putBooleanProp(SYNTHETIC_BLOCK_PROP, val);
+    putBooleanProp(Prop.SYNTHETIC, val);
   }
 
   /**
@@ -2501,21 +2655,21 @@ public class Node implements Serializable {
    * a real source block.
    */
   public final boolean isSyntheticBlock() {
-    return getBooleanProp(SYNTHETIC_BLOCK_PROP);
+    return getBooleanProp(Prop.SYNTHETIC);
   }
 
   /**
    * Sets the ES5 directives on this node.
    */
   public final void setDirectives(Set<String> val) {
-    putProp(DIRECTIVES, val);
+    putProp(Prop.DIRECTIVES, val);
   }
 
   /** Returns the set of ES5 directives for this node. */
   @SuppressWarnings("unchecked")
   @Nullable
   public final Set<String> getDirectives() {
-    return (Set<String>) getProp(DIRECTIVES);
+    return (Set<String>) getProp(Prop.DIRECTIVES);
   }
 
   /**
@@ -2524,7 +2678,7 @@ public class Node implements Serializable {
    * block in the AST.
    */
   public final void setIsAddedBlock(boolean val) {
-    putBooleanProp(ADDED_BLOCK, val);
+    putBooleanProp(Prop.ADDED_BLOCK, val);
   }
 
   /**
@@ -2532,7 +2686,7 @@ public class Node implements Serializable {
    * a real source block.
    */
   public final boolean isAddedBlock() {
-    return getBooleanProp(ADDED_BLOCK);
+    return getBooleanProp(Prop.ADDED_BLOCK);
   }
 
   /**
@@ -2542,7 +2696,7 @@ public class Node implements Serializable {
    * within {@link Token#CLASS}.
    */
   public final void setStaticMember(boolean isStatic) {
-    putBooleanProp(STATIC_MEMBER, isStatic);
+    putBooleanProp(Prop.STATIC_MEMBER, isStatic);
   }
 
   /**
@@ -2552,7 +2706,7 @@ public class Node implements Serializable {
    * within {@link Token#CLASS}.
    */
   public final boolean isStaticMember() {
-    return getBooleanProp(STATIC_MEMBER);
+    return getBooleanProp(Prop.STATIC_MEMBER);
   }
 
   /**
@@ -2561,14 +2715,14 @@ public class Node implements Serializable {
    * {@link Token#MEMBER_FUNCTION_DEF} nodes.
    */
   public final void setIsGeneratorFunction(boolean isGenerator) {
-    putBooleanProp(GENERATOR_FN, isGenerator);
+    putBooleanProp(Prop.GENERATOR_FN, isGenerator);
   }
 
   /**
    * Returns whether this node is a generator function node.
    */
   public final boolean isGeneratorFunction() {
-    return getBooleanProp(GENERATOR_FN);
+    return getBooleanProp(Prop.GENERATOR_FN);
   }
 
   /**
@@ -2577,7 +2731,7 @@ public class Node implements Serializable {
    * <p> It's used in the translation of generators.
    */
   public final void setGeneratorMarker(boolean isGeneratorMarker) {
-    putBooleanProp(GENERATOR_MARKER, isGeneratorMarker);
+    putBooleanProp(Prop.IS_GENERATOR_MARKER, isGeneratorMarker);
   }
 
   /**
@@ -2586,14 +2740,14 @@ public class Node implements Serializable {
    * <p> It's used in the translation of generators.
    */
   public final boolean isGeneratorMarker() {
-    return getBooleanProp(GENERATOR_MARKER);
+    return getBooleanProp(Prop.IS_GENERATOR_MARKER);
   }
 
   /**
    * @see #isGeneratorSafe()
    */
   public final void setGeneratorSafe(boolean isGeneratorSafe) {
-    putBooleanProp(GENERATOR_SAFE, isGeneratorSafe);
+    putBooleanProp(Prop.IS_GENERATOR_SAFE, isGeneratorSafe);
   }
 
   /**
@@ -2602,7 +2756,7 @@ public class Node implements Serializable {
    * transpiled output with no further changes.
    */
   public final boolean isGeneratorSafe() {
-    return getBooleanProp(GENERATOR_SAFE);
+    return getBooleanProp(Prop.IS_GENERATOR_SAFE);
   }
 
   /**
@@ -2611,14 +2765,14 @@ public class Node implements Serializable {
    */
   public final void setIsArrowFunction(boolean isArrow) {
     checkState(isFunction());
-    putBooleanProp(ARROW_FN, isArrow);
+    putBooleanProp(Prop.ARROW_FN, isArrow);
   }
 
   /**
    * Returns whether this node is a arrow function node.
    */
   public final boolean isArrowFunction() {
-    return isFunction() && getBooleanProp(ARROW_FN);
+    return isFunction() && getBooleanProp(Prop.ARROW_FN);
   }
 
   /**
@@ -2627,14 +2781,19 @@ public class Node implements Serializable {
    */
   public void setIsAsyncFunction(boolean isAsync) {
     checkState(isFunction());
-    putBooleanProp(ASYNC_FN, isAsync);
+    putBooleanProp(Prop.ASYNC_FN, isAsync);
   }
 
   /**
    * Returns whether this is an async function node.
    */
   public final boolean isAsyncFunction() {
-    return isFunction() && getBooleanProp(ASYNC_FN);
+    return isFunction() && getBooleanProp(Prop.ASYNC_FN);
+  }
+
+  /** Returns whether this is an async generator function node. */
+  public final boolean isAsyncGeneratorFunction() {
+    return isAsyncFunction() && isGeneratorFunction();
   }
 
   /**
@@ -2643,7 +2802,7 @@ public class Node implements Serializable {
    * {@link Token#MEMBER_FUNCTION_DEF} nodes.
    */
   public final void setYieldAll(boolean isGenerator) {
-    putBooleanProp(YIELD_ALL, isGenerator);
+    putBooleanProp(Prop.YIELD_ALL, isGenerator);
   }
 
   /**
@@ -2652,12 +2811,12 @@ public class Node implements Serializable {
    * {@link Token#MEMBER_FUNCTION_DEF} nodes.
    */
   public final boolean isYieldAll() {
-    return getBooleanProp(YIELD_ALL);
+    return getBooleanProp(Prop.YIELD_ALL);
   }
 
   /** Returns true if this is or ever was a CLASS node (i.e. even after transpilation). */
   public final boolean isEs6Class() {
-    return isClass() || getBooleanProp(IS_ES6_CLASS);
+    return isClass() || getBooleanProp(Prop.IS_ES6_CLASS);
   }
 
   // There are four values of interest:
@@ -2695,7 +2854,7 @@ public class Node implements Serializable {
         "setIsNoSideEffectsCall only supports call-like nodes, got %s",
         this);
 
-    putIntProp(SIDE_EFFECT_FLAGS, flags);
+    putIntProp(Prop.SIDE_EFFECT_FLAGS, flags);
   }
 
   public final void setSideEffectFlags(SideEffectFlags flags) {
@@ -2706,7 +2865,7 @@ public class Node implements Serializable {
    * Returns the side effects flags for this node.
    */
   public final int getSideEffectFlags() {
-    return getIntProp(SIDE_EFFECT_FLAGS);
+    return getIntProp(Prop.SIDE_EFFECT_FLAGS);
   }
 
   /**
@@ -3242,6 +3401,10 @@ public class Node implements Serializable {
 
   public final boolean isTemplateLit() {
     return this.token == Token.TEMPLATELIT;
+  }
+
+  public final boolean isTemplateLitString() {
+    return this.token == Token.TEMPLATELIT_STRING;
   }
 
   public final boolean isTemplateLitSub() {

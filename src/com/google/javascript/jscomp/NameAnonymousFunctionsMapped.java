@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -62,9 +62,8 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
     Set<String> reserved =
         previousMap != null
             ? previousMap.getNewNameToOriginalNameMap().keySet()
-            : Collections.emptySet();
-    this.nameGenerator = new DefaultNameGenerator(
-        reserved, PREFIX_STRING, null);
+            : ImmutableSet.of();
+    this.nameGenerator = new DefaultNameGenerator(reserved, PREFIX_STRING, null);
     this.previousMap = previousMap;
     this.renameMap = new HashMap<>();
   }

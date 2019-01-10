@@ -23,18 +23,24 @@ import static com.google.javascript.jscomp.CheckJSDoc.DISALLOWED_MEMBER_JSDOC;
 import static com.google.javascript.jscomp.CheckJSDoc.INVALID_DEFINE_ON_LET;
 import static com.google.javascript.jscomp.CheckJSDoc.INVALID_MODIFIES_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.INVALID_NO_SIDE_EFFECT_ANNOTATION;
+import static com.google.javascript.jscomp.CheckJSDoc.JSDOC_IN_BLOCK_COMMENT;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_MSG_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_SUPPRESS;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CheckJSDoc}.
  *
  * @author chadkillingsworth@gmail.com (Chad Killingsworth)
  */
-
+@RunWith(JUnit4.class)
 public final class CheckJsDocTest extends CompilerTestCase {
 
   @Override
@@ -43,7 +49,8 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
@@ -52,9 +59,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MISPLACED_SUPPRESS, CheckLevel.WARNING);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
+    options.setPreserveDetailedSourceInfo(true);
     return options;
   }
 
+  @Test
   public void testInlineJsDocOnObjectPatternTargetNames() {
     testSame("let {/** string */ prop} = {prop: 'hi'};");
     testSame("let {/** string */ prop = 'default'} = {prop: 'hi'};");
@@ -65,11 +75,61 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("let {/** string */ prop: x = 'default'} = {prop: 'hi'};");
   }
 
+  @Test
+  public void testInlineJsDocOnObjectPatternTargetNamesInAssign() {
+    // We don't allow any inline type annotations in object pattern assigns.
+    // Simple variable names must have their type declared upon the variable declaration, and
+    // qualified names must be declared outside of a destructuring pattern.
+    testWarning("({/** string */ prop} = {prop: 'hi'});", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning(
+        "({['prop']: /** string */ prop} = {prop: 'hi'});", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("({prop: /** string */ ns.prop} = {prop: 'hi'});", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning(
+        "({prop: /** string */ ns.prop = 'default'} = {prop: 'hi'});",
+        CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning(
+        "({prop: /** string */ f().y['z']} = {prop: 'hi'});", CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
   public void testInlineJsDocOnArrayPatternTargetNames() {
     testSame("let [/** string */ x] = ['hi'];");
     testSame("let [/** string */ x = 'lo'] = ['hi'];");
+    testSame("try {} catch ([/** string */ x]) {}");
   }
 
+  @Test
+  public void testInlineJsDocOnArrayPatternTargetInAssign() {
+    // We don't allow any inline type annotations in array pattern assigns.
+    // Simple variable names must have their type declared upon the variable declaration, and
+    // qualified names must be declared outside of a destructuring pattern.
+    testWarning("[/** string */ x] = ['hi'];", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("[/** string */ x = 'foo'] = ['hi'];", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("[/** string */ x.y] = ['hi'];", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("[/** string */ x.y = 'lo'] = ['hi'];", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("[/** string */ f().y['z']] = [];", CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testInlineJsDocOnDeclaration() {
+    testSame("var /** number */ x;");
+    testSame("var /** number */ x = 3;");
+    // See testInlineJsDocOnArrayPatternTargetNames() for cases where the inline JSDoc is attached
+    // to the names within the pattern.
+    testWarning("var /** !Array<number> */ [x, y] = someArr;", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("var /** {x: number} */ {x} = someObj;", CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testInvalidJsDocOnDestructuringDeclaration() {
+    // Type annotations are not allowed on any declaration containing >=1 destructuring pattern.
+    testWarning("/** @type {number} */ const [a] = arr;", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("/** @type {number} */ const {a} = obj;", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("/** @type {number} */ const a = 1, [b] = arr;", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("/** @type {number} */ const a = 1, {b} = obj;", CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
   public void testInlineJsDoc_ES6() {
     testSame("function f(/** string */ x) {}");
     testSame("function f(/** number= */ x=3) {}");
@@ -78,15 +138,18 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("function f([/** number */ x]) {}");
   }
 
+  @Test
   public void testValidInlineJsDoc_ES6_withES6Modules() {
     testSame("export function f(/** string */ x) {};");
   }
 
+  @Test
   public void testInlineJsDoc_ES6_withES6Modules() {
     testSame("export function f([/** number */ x]) {};");
   }
 
   // TODO(tbreisacher): These should be a MISPLACED_ANNOTATION warning instead of silently failing.
+  @Test
   public void testInlineJsDocInsideObjectParams() {
     testSame("function f({ prop: {/** string */ x} }) {}");
     testSame("function f({ prop: {x: /** string */ y} }) {}");
@@ -94,10 +157,27 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("function f({ prop: /** number */ x }) {}");
   }
 
+  @Test
   public void testInlineJsDocInsideObjectParams_withES6Modules() {
     testSame("export function f({ prop: {/** string */ x} }) {};");
   }
 
+  @Test
+  public void testJsDocOnCatchVariables() {
+    testSame("try {} catch (/** @type {number} */ n) {}");
+    // See testInlineJsDocOnArrayPatternTargetNames for cases where the inline JsDoc is attached to
+    // the names within the pattern.
+    testWarning(
+        "try {} catch (/** @type {!Array<number>} */ [x, y]) {}", CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testInvalidJSDocOnName() {
+    testWarning("var f = () => /** @type {number} */ n;", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("var f = /** @type {number} */ n;", CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
   public void testInvalidClassJsdoc() {
     testSame("class Foo { /** @param {number} x */ constructor(x) {}}");
 
@@ -118,15 +198,18 @@ public final class CheckJsDocTest extends CompilerTestCase {
         DISALLOWED_MEMBER_JSDOC);
   }
 
+  @Test
   public void testValidClassJsdoc_withES6Modules() {
     testSame("export class Foo { /** @param {number} x */ constructor(x) {}; };");
   }
 
+  @Test
   public void testInvalidClassJsdoc_withES6Modules() {
     testWarning(
         "export class Foo { /** @constructor */ constructor() {}; };", DISALLOWED_MEMBER_JSDOC);
   }
 
+  @Test
   public void testMisplacedParamAnnotation() {
     testWarning(lines(
         "/** @param {string} x */ var Foo = goog.defineClass(null, {",
@@ -139,6 +222,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "};"), MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testMisplacedParamAnnotation_withES6Modules() {
     testWarning(
         lines(
@@ -148,6 +232,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_method() {
     testSame("class Foo { /** @abstract */ doSomething() {}}");
     testSame(lines(
@@ -167,10 +252,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "Foo.prototype.something = function() {}"));
   }
 
+  @Test
   public void testAbstract_method_withES6Modules() {
     testSame("export class Foo { /** @abstract */ doSomething() {}; };");
   }
 
+  @Test
   public void testAbstract_getter_setter() {
     testSame("class Foo { /** @abstract */ get foo() {}}");
     testSame("class Foo { /** @abstract */ set foo(val) {}}");
@@ -178,15 +265,18 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testWarning("class Foo { /** @abstract */ static set foo(val) {}}", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testValidAbstract_getter_setter_withES6Modules() {
     testSame("export class Foo { /** @abstract */ get foo() {}; };");
   }
 
+  @Test
   public void testInvalidAbstract_getter_setter_withES6Modules() {
     testWarning(
         "export class Foo { /** @abstract */ static get foo() {}; };", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_nonEmptyMethod() {
     testWarning(
         "class Foo { /** @abstract */ doSomething() { return 0; }}",
@@ -200,12 +290,14 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_nonEmptyMethod_withES6Modules() {
     testWarning(
         "export class Foo { /** @abstract */ doSomething() { return 0; }; };",
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_staticMethod() {
     testWarning(
         "class Foo { /** @abstract */ static doSomething() {}}",
@@ -219,11 +311,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_staticMethod_withES6Modules() {
     testWarning(
         "export class Foo { /** @abstract */ static doSomething() {}; };", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_class() {
     testSame("/** @abstract */ class Foo { constructor() {}}");
     testSame("/** @abstract */ exports.Foo = class {}");
@@ -233,10 +327,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("/** @abstract @constructor */ var Foo = function() { var x = 1; };");
   }
 
+  @Test
   public void testAbstract_class_withES6Modules() {
     testSame("export /** @abstract */ class Foo { constructor() {}; };");
   }
 
+  @Test
   public void testAbstract_defineClass() {
     testSame("/** @abstract */ goog.defineClass(null, { constructor: function() {} });");
     testSame("/** @abstract */ var Foo = goog.defineClass(null, { constructor: function() {} });");
@@ -260,6 +356,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "});"), MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testValidAbstract_defineClass_withES6Modules() {
     testSame(
         lines(
@@ -267,10 +364,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
             "constructor: function() {} });"));
   }
 
+  @Test
   public void testInvalidAbstract_defineClass_withES6Modules() {
     testWarning("export /** @abstract */ var Foo;", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_constructor() {
     testWarning(
         "class Foo { /** @abstract */ constructor() {}}",
@@ -282,10 +381,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "/** @constructor */ var C = foo(); /** @abstract */ C.prototype.method = function() {};");
   }
 
+  @Test
   public void testInvalidAbstract_constructor_withES6Modules() {
     testWarning("export class Foo { /** @abstract */ constructor() {}; };", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testValidAbstract_constructor_withES6Modules() {
     testSame(
         lines(
@@ -293,6 +394,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
             "/** @abstract */ C.prototype.method = function() {};"));
   }
 
+  @Test
   public void testAbstract_field() {
     testWarning(
         "class Foo { constructor() { /** @abstract */ this.x = 1;}}",
@@ -307,12 +409,14 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_field_withES6Modules() {
     testWarning(
         "export class Foo { constructor() { /** @abstract */ this.x = 1; }; };",
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_var() {
     testWarning(
         "class Foo { constructor() {/** @abstract */ var x = 1;}}",
@@ -327,12 +431,14 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_var_withES6Modules() {
     testWarning(
         "export class Foo { constructor() { /** @abstract */ var x = 1; }; };",
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_function() {
     testWarning(
         "class Foo { constructor() {/** @abstract */ var x = function() {};}}",
@@ -347,12 +453,14 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAbstract_function_withES6Modules() {
     testWarning(
         "export class Foo { constructor() { /** @abstract */ var x = function() {}; }}",
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testInlineJSDoc() {
     testSame("function f(/** string */ x) {}");
     testSame("function f(/** @type {string} */ x) {}");
@@ -363,10 +471,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("var /** @type {string} */ x, /** @type {number} */ y;");
   }
 
+  @Test
   public void testInlineJSDoc_withES6Modules() {
     testSame("export function f(/** string */ x) {}");
   }
 
+  @Test
   public void testFunctionJSDocOnMethods() {
     testSame("class Foo { /** @return {?} */ bar() {} }");
     testSame("class Foo { /** @return {?} */ static bar() {} }");
@@ -379,23 +489,28 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("class Foo { /** @return {?} x */ set [bar](x) {} }");
   }
 
+  @Test
   public void testValidFunctionJSDocOnMethods_withES6Modules() {
     testSame("export class Foo { /** @return {?} */ bar() {} }");
   }
 
+  @Test
   public void testObjectLiterals() {
     testSame("var o = { /** @type {?} */ x: y };");
     testWarning("var o = { x: /** @type {?} */ y };", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testValidObjectLiterals_withES6Modules() {
     testSame("export var o = { /** @type {?} */ x: y };");
   }
 
+  @Test
   public void testInvalidObjectLiterals_withES6Modules() {
     testWarning("export var o = { x: /** @type {?} */ y };", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testMethodsOnObjectLiterals() {
     testSame("var x = { /** @return {?} */ foo() {} };");
     testSame("var x = { /** @return {?} */ [foo]() {} };");
@@ -403,23 +518,28 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("var x = { /** @return {?} */ [foo]: someFn };");
   }
 
+  @Test
   public void testMethodsOnObjectLiterals_withES6Modules() {
     testSame("export var x = { /** @return {?} */ foo() {} };");
   }
 
+  @Test
   public void testExposeDeprecated() {
     testWarning("/** @expose */ var x = 0;", ANNOTATION_DEPRECATED);
   }
 
+  @Test
   public void testExposeDeprecated_withES6Modules() {
     testWarning("export /** @expose */ var x = 0;", ANNOTATION_DEPRECATED);
   }
 
+  @Test
   public void testJSDocFunctionNodeAttachment() {
     testWarning("var a = /** @param {number} index */5;"
         + "/** @return boolean */function f(index){}", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testJSDocFunctionNodeAttachment_withES6Modules() {
     testWarning(
         lines(
@@ -428,6 +548,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testJSDocDescAttachment() {
     testWarning(
         "function f() { return /** @type {string} */ (g(1 /** @desc x */)); };",
@@ -450,11 +571,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_MSG_ANNOTATION);
   }
 
+  @Test
   public void testJSDocDescInExterns() {
     testWarning("/** @desc Foo. */ x.y.z.MSG_bar;", MISPLACED_MSG_ANNOTATION);
     testSame(externs("/** @desc Foo. */ x.y.z.MSG_bar;"), srcs(""));
   }
 
+  @Test
   public void testJSDocTypeAttachment() {
     testWarning(
         "function f() {  /** @type {string} */ if (true) return; };", MISPLACED_ANNOTATION);
@@ -463,11 +586,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "function f() {  /** @type {string} */  return; };", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testJSDocTypeAttachment_withES6Modules() {
     testWarning(
         "export function f() { /** @type {string} */ if (true) return; };", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testJSDocOnExports() {
     testSame(lines(
         "goog.module('foo');",
@@ -475,12 +600,14 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "exports = [];"));
   }
 
+  @Test
   public void testMisplacedTypeAnnotation1() {
     // misuse with COMMA
     testWarning(
         "var o = {}; /** @type {string} */ o.prop1 = 1, o.prop2 = 2;", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testMisplacedTypeAnnotation2() {
     // missing parentheses for the cast.
     testWarning(
@@ -488,6 +615,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testMisplacedTypeAnnotation3() {
     // missing parentheses for the cast.
     testWarning(
@@ -495,6 +623,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testMisplacedTypeAnnotation4() {
     // missing parentheses for the cast.
     testWarning(
@@ -502,6 +631,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testMisplacedTypeAnnotation5() {
     // missing parentheses for the cast.
     testWarning(
@@ -509,27 +639,32 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testMisplacedTypeAnnotation6() {
     testWarning(
         "var o = /** @type {function():string} */ function() {return 'str';}",
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testMisplacedTypeAnnotation7() {
     testWarning(
         "var x = /** @type {string} */ y;",
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testMisplacedTypeAnnotation_withES6Modules() {
     testWarning(
         "export var o = {}; /** @type {string} */ o.prop1 = 1, o.prop2 = 2;", MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testAllowedNocollapseAnnotation1() {
     testSame("var foo = {}; /** @nocollapse */ foo.bar = true;");
   }
 
+  @Test
   public void testAllowedNocollapseAnnotation2() {
     testSame(
         "/** @constructor */ function Foo() {};\n"
@@ -537,10 +672,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
         + "/** @nocollapse */ ns.bar = Foo.prototype.blah;");
   }
 
+  @Test
   public void testAllowedNocollapseAnnotation_withES6Modules() {
     testSame("export var foo = {}; /** @nocollapse */ foo.bar = true;");
   }
 
+  @Test
   public void testMisplacedNocollapseAnnotation() {
     testWarning(
         "/** @constructor */ function foo() {};"
@@ -548,6 +685,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testMisplacedNocollapseAnnotation_withES6Modules() {
     testWarning(
         lines(
@@ -556,6 +694,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testNocollapseInExterns() {
     test(
         externs("var foo = {}; /** @nocollapse */ foo.bar = true;"),
@@ -563,6 +702,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         warning(MISPLACED_ANNOTATION));
   }
 
+  @Test
   public void testNocollapseInExterns_withES6Modules() {
     test(
         externs("export var foo = {}; /** @nocollapse */ foo.bar = true;"),
@@ -570,6 +710,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         warning(MISPLACED_ANNOTATION));
   }
 
+  @Test
   public void testArrowFuncAsConstructor() {
     testError("/** @constructor */ var a = ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
@@ -583,20 +724,24 @@ public final class CheckJsDocTest extends CompilerTestCase {
         ARROW_FUNCTION_AS_CONSTRUCTOR);
   }
 
+  @Test
   public void testArrowFuncAsConstructor_withES6Modules() {
     testError(
         "export /** @constructor */ var a = ()=>{}; var b = a();", ARROW_FUNCTION_AS_CONSTRUCTOR);
   }
 
+  @Test
   public void testDefaultParam() {
     testError("function f(/** number */ x=0) {}", DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
     testSame("function f(/** number= */ x=0) {}");
   }
 
+  @Test
   public void testInvalidDefaultParam_withES6Modules() {
     testError("export function f(/** number */ x=0) {}", DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
   }
 
+  @Test
   public void testValidDefaultParam_withES6Modules() {
     testSame("export function f(/** number= */ x=0) {}");
   }
@@ -605,6 +750,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testWarning(code, MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testGoodTemplate1() {
     testSame("/** @template T */ class C {}");
     testSame("class C { /** @template T \n @param {T} a\n @param {T} b \n */ "
@@ -615,18 +761,22 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("/** @interface @template T */ var x = function(){};");
   }
 
+  @Test
   public void testGoodTemplate2() {
     testSame("/** @template T */ x.y.z = goog.defineClass(null, {constructor: function() {}});");
   }
 
+  @Test
   public void testGoodTemplate3() {
     testSame("var /** @template T */ x = goog.defineClass(null, {constructor: function() {}});");
   }
 
+  @Test
   public void testGoodTemplate4() {
     testSame("x.y.z = goog.defineClass(null, {/** @return T @template T */ m: function() {}});");
   }
 
+  @Test
   public void testGoodTemplate_withES6Modules() {
     testSame(
         lines(
@@ -634,10 +784,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
             "constructor(a,b){} }"));
   }
 
+  @Test
   public void testBadTemplate1() {
     testBadTemplate("/** @template T */ foo();");
   }
 
+  @Test
   public void testBadTemplate2() {
     testBadTemplate(lines(
         "x.y.z = goog.defineClass(null, {",
@@ -645,16 +797,19 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "});"));
   }
 
+  @Test
   public void testBadTemplate3() {
     testBadTemplate("/** @template T */ function f() {}");
     testBadTemplate("/** @template T */ var f = function() {};");
     testBadTemplate("/** @template T */ Foo.prototype.f = function() {};");
   }
 
+  @Test
   public void testBadTemplate_withES6Modules() {
     testBadTemplate("export /** @template T */ function f() {}");
   }
 
+  @Test
   public void testBadTypedef() {
     testWarning(
         "/** @typedef {{foo: string}} */ class C { constructor() { this.foo = ''; }}",
@@ -669,50 +824,60 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
+  @Test
   public void testBadTypedef_withES6Modules() {
     testWarning(
         "export /** @typedef {{foo: string}} */ class C { constructor() { this.foo = ''; }}",
         MISPLACED_ANNOTATION);
   }
 
-  public void testInvalidAnnotation1() throws Exception {
+  @Test
+  public void testInvalidAnnotation1() {
     testError("/** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
-  public void testInvalidAnnotation2() throws Exception {
+  @Test
+  public void testInvalidAnnotation2() {
     testError("var f = /** @nosideeffects */ function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
-  public void testInvalidAnnotation3() throws Exception {
+  @Test
+  public void testInvalidAnnotation3() {
     testError("/** @nosideeffects */ var f = function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
-  public void testInvalidAnnotation4() throws Exception {
+  @Test
+  public void testInvalidAnnotation4() {
     testError(
         "var f = function() {};" + "/** @nosideeffects */ f.x = function() {}",
         INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
-  public void testInvalidAnnotation5() throws Exception {
+  @Test
+  public void testInvalidAnnotation5() {
     testError(
         "var f = function() {};" + "f.x = /** @nosideeffects */ function() {}",
         INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
+  @Test
   public void testInvalidAnnotation_withES6Modules() {
     testError(
         "export /** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
-  public void testInvalidModifiesAnnotation() throws Exception {
+  @Test
+  public void testInvalidModifiesAnnotation() {
     testError("/** @modifies {this} */ var f = function() {};", INVALID_MODIFIES_ANNOTATION);
   }
 
+  @Test
   public void testInvalidModifiesAnnotation_withES6Modules() {
     testError(
         "export /** @modifies {this} */ var f = function() {};", INVALID_MODIFIES_ANNOTATION);
   }
 
+  @Test
   public void testInvalidDefinesVariableDeclaration() {
     testError("/** @define {boolean} */ let DEF = true;", INVALID_DEFINE_ON_LET);
     testError("/** @define {number} */ let DEF = 3;", INVALID_DEFINE_ON_LET);
@@ -723,6 +888,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("let a = {}; /** @define {boolean} */ a.B = false;");
   }
 
+  @Test
   public void testInvalidSuppress() {
     testSame("/** @suppress {missingRequire} */ var x = new y.Z();");
     testSame("/** @suppress {missingRequire} */ function f() { var x = new y.Z(); }");
@@ -738,6 +904,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
             "var obj = {",
             "  /** @suppress {uselessCode} */",
             "  f() {},",
+            "}"));
+    testSame(
+        lines(
+            "var obj = {", //
+            "  /** @suppress {uselessCode} */",
+            "  ['h' + 6]() {},",
             "}"));
     testSame(
         lines(
@@ -766,6 +938,20 @@ public final class CheckJsDocTest extends CompilerTestCase {
             "   */",
             "  set f(val) {}",
             "}"));
+    testSame(
+        lines(
+            "class Example {", //
+            "  /** @suppress {uselessCode} */",
+            "  ['f' + 7]() {}",
+            "}"));
+
+    testWarning(
+        lines(
+            "var obj = {", //
+            "  /** @suppress {uselessCode} */",
+            "  ['h' + 6]: 'hello',",
+            "}"),
+        MISPLACED_SUPPRESS);
 
     testSame("/** @suppress {extraRequire} */ goog.require('unused.Class');");
     testSame("/** @const @suppress {duplicate} */ var google = {};");
@@ -778,6 +964,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testWarning("foo(/** @suppress {duplicate} */ ns.x = 7);", MISPLACED_SUPPRESS);
   }
 
+  @Test
   public void testImplicitCastOnlyAllowedInExterns() {
     testSame(
         externs(
@@ -799,5 +986,18 @@ public final class CheckJsDocTest extends CompilerTestCase {
             " */",
             "Element.prototype.innerHTML;"),
         TypeCheck.ILLEGAL_IMPLICIT_CAST);
+  }
+
+  @Test
+  public void testJsDocInBlockComments() {
+    testSame("/** @type {X} */ let x;");
+    testSame("// @type {X}\nlet x;");
+
+    testWarning("/* @type {X} */ let x;", JSDOC_IN_BLOCK_COMMENT);
+
+    // jsdoc tags contain letters only, no underscores etc.
+    testSame("/* @cc_on */ var x = 3;");
+    // a jsdoc tag can't be immediately followed by a paren
+    testSame("/* @TODO(username) */ var x = 3;");
   }
 }

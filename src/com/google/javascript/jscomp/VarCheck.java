@@ -143,6 +143,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
     t.traverseRoots(externs, root);
+
     for (String varName : varsToDeclareInExterns) {
       createSynthesizedExternVar(varName);
     }
@@ -184,10 +185,14 @@ class VarCheck extends AbstractPostOrderCallback implements
         return;
       }
 
-      // Check if this is a declaration for a var that has been declared
-      // elsewhere. If so, mark it as a duplicate.
-      if ((parent.isVar()
-           || NodeUtil.isFunctionDeclaration(parent))
+      Scope scope = t.getScope();
+      Var var = scope.getVar(varName);
+      Scope varScope = var != null ? var.getScope() : null;
+
+      // Check if this variable is reference in the externs, if so mark it as a duplicate.
+      if (varScope != null
+          && varScope.isGlobal()
+          && (parent.isVar() || NodeUtil.isFunctionDeclaration(parent))
           && varsToDeclareInExterns.contains(varName)) {
         createSynthesizedExternVar(varName);
 
@@ -197,8 +202,6 @@ class VarCheck extends AbstractPostOrderCallback implements
       }
 
       // Check that the var has been declared.
-      Scope scope = t.getScope();
-      Var var = scope.getVar(varName);
       if (var == null) {
         if ((NodeUtil.isFunctionExpression(parent) || NodeUtil.isClassExpression(parent))
             && n == parent.getFirstChild()) {
@@ -208,10 +211,9 @@ class VarCheck extends AbstractPostOrderCallback implements
           // e.g. "export {a as b}" or "import {b as a} from './foo.js'
           // where b is defined in a module's export entries but not in any module scope.
         } else {
-          boolean isArguments = scope.isFunctionScope() && ARGUMENTS.equals(varName);
           boolean isTypeOf = parent.isTypeOf();
           // The extern checks are stricter, don't report a second error.
-          if (!isArguments && !isTypeOf && !(strictExternCheck && t.getInput().isExtern())) {
+          if (!isTypeOf && !(strictExternCheck && t.getInput().isExtern())) {
             t.report(n, UNDEFINED_VAR_ERROR, varName);
           }
 

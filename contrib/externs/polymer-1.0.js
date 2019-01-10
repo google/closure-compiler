@@ -94,8 +94,11 @@ PolymerElement.prototype.shadyRoot;
  */
 PolymerElement.prototype.$$ = function(selector) {};
 
-/** @type {string} The Custom element tag name. */
+/** @type {string} The custom element tag name. */
 PolymerElement.prototype.is;
+
+/** @type {null|!HTMLTemplateElement} The element's template. */
+PolymerElement.prototype._template;
 
 /** @type {string} The native element this element extends. */
 PolymerElement.prototype.extends;
@@ -120,6 +123,8 @@ PolymerElement.prototype.observers;
 PolymerElement.prototype.created = function() {};
 /** On ready callback. */
 PolymerElement.prototype.ready = function() {};
+/** On before register callback. */
+PolymerElement.prototype.beforeRegister = function() {};
 /** On registered callback. */
 PolymerElement.prototype.registered = function() {};
 /** On attached to the DOM callback. */
@@ -212,11 +217,11 @@ PolymerElement.prototype.notifySplices = function(path, splices) {};
  *   or an array of path parts (e.g. `['foo.bar', 'baz']`).  Note that
  *   bracketed expressions are not supported; string-based path parts
  *   *must* be separated by dots.  Note that when dereferencing array
- *   indicies, the index may be used as a dotted part directly
+ *   indices, the index may be used as a dotted part directly
  *   (e.g. `users.12.name` or `['users', 12, 'name']`).
  * @param {*} value Value to set at the specified path.
  * @param {Object=} root Root object from which the path is evaluated.
-*/
+ */
 PolymerElement.prototype.set = function(path, value, root) {};
 
 /**
@@ -231,7 +236,7 @@ PolymerElement.prototype.set = function(path, value, root) {};
  *   or an array of path parts (e.g. `['foo.bar', 'baz']`).  Note that
  *   bracketed expressions are not supported; string-based path parts
  *   *must* be separated by dots.  Note that when dereferencing array
- *   indicies, the index may be used as a dotted part directly
+ *   indices, the index may be used as a dotted part directly
  *   (e.g. `users.12.name` or `['users', 12, 'name']`).
  * @param {Object=} root Root object from which the path is evaluated.
  * @return {*} Value at the path, or `undefined` if any part of the path
@@ -1352,6 +1357,23 @@ DomRepeatElement.prototype.indexForElement = function(el) {};
 DomRepeatElement.prototype.renderedItemCount;
 
 
+/**
+ * Event object for an event handler on a child of a dom-repeat template.
+ * @see https://www.polymer-project.org/1.0/docs/devguide/templates#handling-events
+ * @extends {CustomEvent}
+ * @constructor
+ * @template T
+ */
+var DomRepeatEvent = function() {};
+
+/**
+ * @type {{
+ *   index: number,
+ *   item: T
+ * }}
+ */
+DomRepeatEvent.prototype.model;
+
 
 /**
  * @see https://github.com/Polymer/polymer/blob/master/src/lib/template/array-selector.html
@@ -1535,7 +1557,8 @@ Polymer.ResolveUrl.resolveUrl = function(url, baseURI) {}
 Polymer.RenderStatus = {};
 
 /**
- * Makes callback when first render occurs or immediately if render has occured.
+ * Makes callback when first render occurs or immediately if render has
+ * occurred.
  * @param {!function()} cb Callback function to be invoked.
  */
 Polymer.RenderStatus.whenReady = function(cb) {}

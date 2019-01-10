@@ -35,6 +35,29 @@ function checkSetGet(map, key, value) {
   assertTrue(map.has(key));
 }
 
+/**
+ * Feeze an object recursively
+ *
+ * @param {?} o
+ * @return {?}
+ *
+ * See https://github.com/substack/deep-freeze/blob/master/index.js
+ */
+function deepFreeze (o) {
+  Object.freeze(o);
+
+  Object.getOwnPropertyNames(o).forEach(function (prop) {
+    if (o.hasOwnProperty(prop)
+    && o[prop] !== null
+    && (typeof o[prop] === "object" || typeof o[prop] === "function")
+    && !Object.isFrozen(o[prop])) {
+      deepFreeze(o[prop]);
+    }
+  });
+
+  return o;
+}
+
 testSuite({
   testObjectKeys() {
     const map = new WeakMap();
@@ -120,5 +143,14 @@ testSuite({
     assertFalse(map.has({}));
     assertEquals(3, map.get(a));
     assertEquals(5, map.get(b));
+  },
+
+  testDeepFreeze() {
+    if (IE8) return;  // No Object.freeze on IE8
+
+    // Verify we don't recurse forever in deepFreeze just because we patch
+    // "Object.freeze" to support WeakMap.
+    const a = {};
+    assertEquals(a, deepFreeze(a));
   },
 });

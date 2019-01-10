@@ -17,10 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author mkretzschmar@google.com (Martin Kretzschmar)
- */
+/** @author mkretzschmar@google.com (Martin Kretzschmar) */
+@RunWith(JUnit4.class)
 public final class CheckMissingGetCssNameTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -30,11 +33,13 @@ public final class CheckMissingGetCssNameTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
+  @Test
   public void testMissingGetCssName() {
     testMissing("var s = 'goog-inline-block'");
     testMissing("var s = 'CSS_FOO goog-menu'");
@@ -42,32 +47,38 @@ public final class CheckMissingGetCssNameTest extends CompilerTestCase {
     testMissing("html = '<div class=\"goog-special-thing\">Hello</div>'");
   }
 
+  @Test
   public void testRecognizeGetCssName() {
     testNotMissing("var s = goog.getCssName('goog-inline-block')");
   }
 
+  @Test
   public void testIgnoreGetUniqueIdArguments() {
     testNotMissing("var s = goog.events.getUniqueId('goog-some-event')");
     testNotMissing("var s = joe.random.getUniqueId('joe-is-a-goob')");
   }
 
+  @Test
   public void testIgnoreAssignmentsToIdConstant() {
     testNotMissing("SOME_ID = 'goog-some-id'");
     testNotMissing("SOME_PRIVATE_ID_ = 'goog-some-id'");
     testNotMissing("var SOME_ID_ = 'goog-some-id'");
   }
 
+  @Test
   public void testNotMissingGetCssName() {
     testNotMissing("s = 'not-a-css-name'");
     testNotMissing("s = 'notagoog-css-name'");
   }
 
+  @Test
   public void testDontCrashIfTheresNoQualifiedName() {
     testMissing("things[2].DONT_CARE_ABOUT_THIS_KIND_OF_ID = "
                 + "'goog-inline-block'");
     testMissing("objects[3].doSomething('goog-inline-block')");
   }
 
+  @Test
   public void testLetAndConstLefthandsides() {
     testMissingEs6("let s = 'goog-templit-css-name'");
     testMissingEs6("const s = 'goog-templit-css-name'");
@@ -77,6 +88,7 @@ public final class CheckMissingGetCssNameTest extends CompilerTestCase {
     testNotMissingEs6("const s_ID_ = 'goog-templit-css-name'");
   }
 
+  @Test
   public void testIgnoreTemplateStrings() {
     testMissingEs6("var s = `goog-templit-css-name`");
     testNotMissingEs6("var s = `goog-templit-css-name-${number}`");

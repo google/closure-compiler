@@ -18,13 +18,18 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-public final class ChangeVerifierTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class ChangeVerifierTest {
 
+  @Test
   public void testCorrectValidationOfScriptWithChangeAfterFunction() {
     Node script = parse("function A() {} if (0) { A(); }");
     checkState(script.isScript());
@@ -45,6 +50,7 @@ public final class ChangeVerifierTest extends TestCase {
     verifier.checkRecordedChanges("test1", script);
   }
 
+  @Test
   public void testChangeToScriptNotReported() {
     Node script = parse("function A() {} if (0) { A(); }");
     checkState(script.isScript());
@@ -61,12 +67,13 @@ public final class ChangeVerifierTest extends TestCase {
 
     try {
       verifier.checkRecordedChanges("test2", script);
-      fail("exception expected");
+      assertWithMessage("exception expected").fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().contains("changed scope not marked as changed");
     }
   }
 
+  @Test
   public void testDeletedFunction() {
     Node script = parse("function A() {}");
 
@@ -86,7 +93,7 @@ public final class ChangeVerifierTest extends TestCase {
 
     try {
       verifier.checkRecordedChanges("test2", script);
-      fail("exception expected");
+      assertWithMessage("exception expected").fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().contains("deleted scope was not reported");
     }
@@ -98,6 +105,7 @@ public final class ChangeVerifierTest extends TestCase {
     verifier.checkRecordedChanges("test2", script);
   }
 
+  @Test
   public void testNotDeletedFunction() {
     Node script = parse("function A() {}");
 
@@ -116,13 +124,14 @@ public final class ChangeVerifierTest extends TestCase {
 
     try {
       verifier.checkRecordedChanges("test2", script);
-      fail("exception expected");
+      assertWithMessage("exception expected").fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().contains("existing scope is improperly marked as deleted");
     }
   }
 
-  public static void testChangeVerification() {
+  @Test
+  public void testChangeVerification() {
     Compiler compiler = new Compiler();
 
     Node mainScript = IR.script();
@@ -139,7 +148,7 @@ public final class ChangeVerifierTest extends TestCase {
 
     try {
       verifier.checkRecordedChanges(main);
-      fail("method should throw");
+      assertWithMessage("method should throw").fail();
     } catch (IllegalStateException e) {
       // ensure that e was thrown from the right code-path
       // especially important if it's something as frequent

@@ -18,10 +18,16 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
  * Integration test to check that {@link PolymerPass} and {@link CheckAccessControls} work together
  * as expected.
  */
+@RunWith(JUnit4.class)
 public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
   private static final String EXTERNS = lines(
       CompilerTypeTestCase.DEFAULT_EXTERNS,
@@ -34,7 +40,8 @@ public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
     enableParseTypeInfo();
@@ -60,6 +67,7 @@ public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
     return options;
   }
 
+  @Test
   public void testPrivateMethodInElement() {
     testNoWarning(lines(
         "var AnElement = Polymer({",
@@ -71,6 +79,7 @@ public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
         "});"));
   }
 
+  @Test
   public void testPrivateMethodInBehavior() {
     testNoWarning(new String[] {
       lines(
@@ -88,6 +97,7 @@ public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
     });
   }
 
+  @Test
   public void testPrivateMethodFromBehaviorUsedInElement() {
     testError(new String[] {
       lines(
@@ -105,6 +115,7 @@ public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
     }, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
+  @Test
   public void testPrivatePropertyInBehavior() {
     testNoWarning(new String[] {
       lines(
@@ -122,6 +133,7 @@ public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
     });
   }
 
+  @Test
   public void testPrivatePropertyFromBehaviorUsedInElement() {
     testError(new String[] {
       lines(

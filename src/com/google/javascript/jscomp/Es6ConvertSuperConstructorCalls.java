@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -50,11 +51,13 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
   private final Deque<ConstructorData> constructorDataStack;
+  private final AstFactory astFactory;
   private GlobalNamespace globalNamespace;
   private static final FeatureSet transpiledFeatures = FeatureSet.BARE_MINIMUM.with(Feature.SUPER);
 
   public Es6ConvertSuperConstructorCalls(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.astFactory = compiler.createAstFactory();
     this.constructorDataStack = new ArrayDeque<>();
   }
 
@@ -118,14 +121,18 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
         compiler.reportChangeToEnclosingScope(enclosingScope);
       }
     } else {
-      String superClassQName = getSuperClassQName(constructor);
+      // Find the `foo.SuperClass` part of `$jscomp.inherits(foo.SubClass, foo.SuperClass)`
+      Node superClassNameNode = getSuperClassQNameNode(constructor);
+
+      String superClassQName = superClassNameNode.getQualifiedName();
+      JSType thisType = getTypeOfThisForConstructor(constructorData.constructor);
       if (isNativeObjectClass(t, superClassQName)) {
         // There's no need to call Object as a super constructor, so just replace the call with
         // `this`, which is its correct return value.
         // TODO(bradfordcsmith): Although unlikely, super() could have argument expressions with
         //     side-effects.
         for (Node superCall : superCalls) {
-          Node thisNode = IR.thisNode().useSourceInfoFrom(superCall);
+          Node thisNode = astFactory.createThis(thisType).useSourceInfoFrom(superCall);
           superCall.replaceWith(thisNode);
           compiler.reportChangeToEnclosingScope(thisNode);
         }
@@ -135,13 +142,13 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
                 constructor, CANNOT_CONVERT, "extending native class: " + superClassQName));
       } else if (isNativeErrorClass(t, superClassQName)) {
         for (Node superCall : superCalls) {
-          Node newSuperCall = createNewSuperCall(superClassQName, superCall);
+          Node newSuperCall = createNewSuperCall(superClassNameNode, superCall, thisType);
           replaceNativeErrorSuperCall(superCall, newSuperCall);
         }
       } else if (isKnownToReturnOnlyUndefined(superClassQName)) {
         // super() will not change the value of `this`.
         for (Node superCall : superCalls) {
-          Node newSuperCall = createNewSuperCall(superClassQName, superCall);
+          Node newSuperCall = createNewSuperCall(superClassNameNode, superCall, thisType);
           Node superCallParent = superCall.getParent();
           if (superCallParent.hasOneChild() && NodeUtil.isStatement(superCallParent)) {
             // super() is a statement unto itself
@@ -150,8 +157,9 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
             // super() is part of an expression, so it must return `this`.
             superCallParent.replaceChild(
                 superCall,
-                IR.comma(newSuperCall, IR.thisNode().useSourceInfoFrom(superCall))
-                    .useSourceInfoFrom(superCall));
+                astFactory
+                    .createComma(newSuperCall, astFactory.createThis(thisType))
+                    .useSourceInfoIfMissingFromForTree(superCall));
           }
           compiler.reportChangeToEnclosingScope(superCallParent);
         }
@@ -167,26 +175,35 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
           checkState(superCalls.size() == 1, constructor);
           // Super call is the entire constructor, so just replace it with.
           // `return <newSuperCall> || this;`
+          Node newReturn =
+              astFactory.createOr(
+                  createNewSuperCall(
+                      superClassNameNode, superCalls.get(0), superCalls.get(0).getJSType()),
+                  astFactory.createThis(thisType));
           constructorBody.replaceChild(
               firstStatement,
-              IR.returnNode(
-                      IR.or(createNewSuperCall(superClassQName, superCalls.get(0)), IR.thisNode()))
-                  .useSourceInfoIfMissingFromForTree(firstStatement));
+              IR.returnNode(newReturn).useSourceInfoIfMissingFromForTree(firstStatement));
         } else {
+          final JSType typeOfThis = getTypeOfThisForConstructor(constructor);
           // `this` -> `$jscomp$super$this` throughout the constructor body,
           // except for super() calls.
-          updateThisToSuperThis(constructorBody, superCalls);
+          updateThisToSuperThis(typeOfThis, constructorBody, superCalls);
           // Start constructor with `var $jscomp$super$this;`
           constructorBody.addChildToFront(
-              IR.var(IR.name(SUPER_THIS)).useSourceInfoFromForTree(constructorBody));
+              IR.var(astFactory.createName(SUPER_THIS, typeOfThis))
+                  .useSourceInfoFromForTree(constructorBody));
           // End constructor with `return $jscomp$super$this;`
           constructorBody.addChildToBack(
-              IR.returnNode(IR.name(SUPER_THIS)).useSourceInfoFromForTree(constructorBody));
+              IR.returnNode(astFactory.createName(SUPER_THIS, typeOfThis))
+                  .useSourceInfoFromForTree(constructorBody));
           // Replace each super() call with `($jscomp$super$this = <newSuperCall> || this)`
           for (Node superCall : superCalls) {
-            Node newSuperCall = createNewSuperCall(superClassQName, superCall);
+            Node newSuperCall = createNewSuperCall(superClassNameNode, superCall, typeOfThis);
             superCall.replaceWith(
-                IR.assign(IR.name(SUPER_THIS), IR.or(newSuperCall, IR.thisNode()))
+                astFactory
+                    .createAssign(
+                        astFactory.createName(SUPER_THIS, typeOfThis),
+                        astFactory.createOr(newSuperCall, astFactory.createThis(typeOfThis)))
                     .useSourceInfoIfMissingFromForTree(superCall));
           }
         }
@@ -274,38 +291,71 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
       return foundNonEmptyReturn;
     }
   }
-  private Node createNewSuperCall(String superClassQName, Node superCall) {
+
+  private Node createNewSuperCall(Node superClassQNameNode, Node superCall, JSType thisType) {
+    checkArgument(superClassQNameNode.isQualifiedName(), superClassQNameNode);
     checkArgument(superCall.isCall(), superCall);
-    Node newSuperCall = superCall.cloneNode();
-    Node callee = superCall.removeFirstChild();
+    Node callee = superCall.getFirstChild();
 
     if (callee.isSuper()) {
-      // super(...) -> SuperClass.call(this, ...)
-      Node superClassDotCall =
-          IR.getprop(NodeUtil.newQName(compiler, superClassQName), IR.string("call"))
-              .useSourceInfoFromForTree(callee);
-      newSuperCall.addChildToBack(superClassDotCall);
-      newSuperCall.putBooleanProp(Node.FREE_CALL, false); // callee is now a getprop
-      newSuperCall.addChildAfter(IR.thisNode().useSourceInfoFrom(callee), superClassDotCall);
+      return createNewSuperCallWithDotCall(superClassQNameNode, superCall, thisType);
     } else {
-      // spread transpilation does
-      // super(...arguments) -> super.apply(null, arguments)
-      // Now we must do
-      // super.apply(null, arguments) -> SuperClass.apply(this, arguments)
-      checkState(callee.isGetProp(), callee);
-      Node applyNode = checkNotNull(callee.getSecondChild());
-      checkState(applyNode.getString().equals("apply"), applyNode);
-
-      newSuperCall.addChildToBack(callee);
-      Node superNode = callee.getFirstChild();
-      callee.replaceChild(
-          superNode,
-          NodeUtil.newQName(compiler, superClassQName).useSourceInfoFromForTree(superNode));
-      Node nullNode = superCall.getFirstChild();
-      checkState(nullNode.isNull(), nullNode);
-      superCall.removeChild(nullNode);
-      newSuperCall.addChildToBack(IR.thisNode().useSourceInfoFrom(nullNode));
+      return createNewSuperCallWithDotApply(superClassQNameNode, superCall, thisType);
     }
+  }
+
+  private Node createNewSuperCallWithDotCall(
+      Node superClassQNameNode, Node superCall, JSType thisType) {
+    // super(...) -> SuperClass.call(this, ...)
+    checkArgument(superClassQNameNode.isQualifiedName(), superClassQNameNode);
+    checkArgument(superCall.isCall(), superCall);
+    Node callee = superCall.removeFirstChild();
+
+    // Create `SuperClass.call`
+    Node superClassDotCall =
+        astFactory
+            .createGetProp(superClassQNameNode.cloneTree(), "call")
+            .useSourceInfoFromForTree(callee);
+    // Create `SuperClass.call(this)`
+    Node newSuperCall = astFactory.createCall(superClassDotCall).useSourceInfoFrom(superCall);
+    newSuperCall.addChildToBack(astFactory.createThis(thisType).useSourceInfoFrom(callee));
+    newSuperCall.putBooleanProp(Node.FREE_CALL, false); // callee is now a getprop
+
+    // add any additional arguments to the new super call
+    while (superCall.hasChildren()) {
+      newSuperCall.addChildToBack(superCall.removeFirstChild());
+    }
+    return newSuperCall;
+  }
+
+  private Node createNewSuperCallWithDotApply(
+      Node superClassQNameNode, Node superCall, JSType thisType) {
+    // spread transpilation does
+    // super(...arguments) -> super.apply(null, arguments)
+    // Now we must do
+    // super.apply(null, arguments) -> SuperClass.apply(this, arguments)
+    checkArgument(superClassQNameNode.isQualifiedName(), superClassQNameNode);
+    checkArgument(superCall.isCall(), superCall);
+    Node callee = superCall.removeFirstChild();
+    checkState(callee.isGetProp(), callee);
+
+    Node applyNode = checkNotNull(callee.getSecondChild());
+    checkState(applyNode.getString().equals("apply"), applyNode);
+    Node superNode = callee.getFirstChild();
+
+    // Replace `super.apply` with `SuperClass.apply`
+    callee.replaceChild(
+        superNode, superClassQNameNode.cloneTree().useSourceInfoFromForTree(superNode));
+    // Get `null` from `super.apply(null, arguments)`
+    Node nullNode = superCall.getFirstChild();
+    checkState(nullNode.isNull(), nullNode);
+    superCall.removeChild(nullNode);
+
+    // Create `SuperClass.apply(null)`
+    Node newSuperCall = astFactory.createCall(callee).useSourceInfoFrom(superCall);
+    newSuperCall.addChildToBack(astFactory.createThis(thisType).useSourceInfoFrom(nullNode));
+
+    // add any additional arguments to the new super call
     while (superCall.hasChildren()) {
       newSuperCall.addChildToBack(superCall.removeFirstChild());
     }
@@ -319,31 +369,38 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     Node body = superStatement.getParent();
     checkState(body.isBlock(), body);
 
+    JSType thisType = newSuperCall.getJSType();
+
     // var $jscomp$tmp$error;
-    Node getError = IR.var(IR.name(TMP_ERROR)).useSourceInfoIfMissingFromForTree(superCall);
+    Node getError =
+        IR.var(astFactory.createName(TMP_ERROR, thisType))
+            .useSourceInfoIfMissingFromForTree(superCall);
     body.addChildBefore(getError, superStatement);
 
     // Create an expression to initialize `this` from temporary Error object at the point
     // where super.apply() was called.
     // $jscomp$tmp$error = Error.call(this, ...),
-    Node getTmpError = IR.assign(IR.name(TMP_ERROR), newSuperCall);
+    Node getTmpError =
+        astFactory.createAssign(astFactory.createName(TMP_ERROR, thisType), newSuperCall);
     // this.message = $jscomp$tmp$error.message,
     Node copyMessage =
-        IR.assign(
-            IR.getprop(IR.thisNode(), IR.string("message")),
-            IR.getprop(IR.name(TMP_ERROR), IR.string("message")));
+        astFactory.createAssign(
+            astFactory.createGetProp(astFactory.createThis(thisType), "message"),
+            astFactory.createGetProp(astFactory.createName(TMP_ERROR, thisType), "message"));
 
     // Old versions of IE Don't set stack until the object is thrown, and won't set it then
     // if it already exists on the object.
     // ('stack' in $jscomp$tmp$error) && (this.stack = $jscomp$tmp$error.stack)
     Node setStack =
-        IR.and(
-            IR.in(IR.string("stack"), IR.name(TMP_ERROR)),
-            IR.assign(
-                IR.getprop(IR.thisNode(), IR.string("stack")),
-                IR.getprop(IR.name(TMP_ERROR), IR.string("stack"))));
+        astFactory.createAnd(
+            astFactory.createIn(
+                astFactory.createString("stack"), astFactory.createName(TMP_ERROR, thisType)),
+            astFactory.createAssign(
+                astFactory.createGetProp(astFactory.createThis(thisType), "stack"),
+                astFactory.createGetProp(astFactory.createName(TMP_ERROR, thisType), "stack")));
     Node superErrorExpr =
-        IR.comma(IR.comma(IR.comma(getTmpError, copyMessage), setStack), IR.thisNode())
+        astFactory
+            .createCommas(getTmpError, copyMessage, setStack, astFactory.createThis(thisType))
             .useSourceInfoIfMissingFromForTree(superCall);
     superCall.replaceWith(superErrorExpr);
     compiler.reportChangeToEnclosingScope(superErrorExpr);
@@ -429,7 +486,8 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     return objectVar != null && !objectVar.isExtern();
   }
 
-  private void updateThisToSuperThis(Node constructorBody, final List<Node> superCalls) {
+  private void updateThisToSuperThis(
+      final JSType typeOfThis, Node constructorBody, final List<Node> superCalls) {
     NodeTraversal.Callback replaceThisWithSuperThis =
         new NodeTraversal.Callback() {
           @Override
@@ -447,33 +505,50 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {
             if (n.isThis()) {
-              Node superThis = IR.name(SUPER_THIS).useSourceInfoFrom(n);
+              Node superThis =
+                  astFactory.createName(SUPER_THIS, n.getJSType()).useSourceInfoFrom(n);
               parent.replaceChild(n, superThis);
             } else if (n.isReturn() && !n.hasChildren()) {
               // An empty return needs to be changed to return $jscomp$super$this
-              n.addChildToFront(IR.name(SUPER_THIS).useSourceInfoFrom(n));
+              n.addChildToFront(astFactory.createName(SUPER_THIS, typeOfThis).useSourceInfoFrom(n));
             }
           }
         };
     NodeTraversal.traverse(compiler, constructorBody, replaceThisWithSuperThis);
   }
 
-  private String getSuperClassQName(Node constructor) {
+  private JSType getTypeOfThisForConstructor(Node constructor) {
+    checkArgument(constructor.isFunction(), constructor);
+    // If typechecking has run, all function nodes should have a JSType. Nodes that were in a CAST
+    // will also have the TYPE_BEFORE_CAST property, which is null for other nodes.
+    final JSType constructorTypeBeforeCast = constructor.getJSTypeBeforeCast();
+    final JSType constructorType =
+        constructorTypeBeforeCast != null ? constructorTypeBeforeCast : constructor.getJSType();
+    if (constructorType == null) {
+      return null; // Type checking passes must not have run.
+    }
+    checkState(constructorType.isFunctionType());
+    return constructorType.toMaybeFunctionType().getTypeOfThis();
+  }
+
+  private Node getSuperClassQNameNode(Node constructor) {
     String className = NodeUtil.getNameNode(constructor).getQualifiedName();
     Node constructorStatement = checkNotNull(NodeUtil.getEnclosingStatement(constructor));
 
+    Node superClassNameNode = null;
     for (Node statement = constructorStatement.getNext();
         statement != null;
         statement = statement.getNext()) {
-      String superClassName = getSuperClassNameIfIsInheritsStatement(statement, className);
-      if (superClassName != null) {
-        return superClassName;
+      superClassNameNode = getSuperClassNameNodeIfIsInheritsStatement(statement, className);
+      if (superClassNameNode != null) {
+        break;
       }
     }
-    throw new IllegalStateException("$jscomp.inherits() call not found.");
+
+    return checkNotNull(superClassNameNode, "$jscomp.inherits() call not found.");
   }
 
-  private String getSuperClassNameIfIsInheritsStatement(Node statement, String className) {
+  private Node getSuperClassNameNodeIfIsInheritsStatement(Node statement, String className) {
     // $jscomp.inherits(ChildClass, SuperClass);
     if (!statement.isExprResult()) {
       return null;
@@ -488,8 +563,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     }
     Node classNameNode = checkNotNull(jscompDotInherits.getNext());
     if (classNameNode.matchesQualifiedName(className)) {
-      Node superClass = checkNotNull(classNameNode.getNext());
-      return superClass.getQualifiedName();
+      return checkNotNull(classNameNode.getNext());
     } else {
       return null;
     }

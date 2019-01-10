@@ -19,52 +19,180 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.util.Collections.shuffle;
+import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
-import junit.framework.TestCase;
+import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link JSModuleGraph}
  *
  */
-public final class JSModuleGraphTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class JSModuleGraphTest {
 
-  // NOTE: These are not static. It would probably be clearer to initialize them in setUp()
-  private final JSModule A = new JSModule("A");
-  private final JSModule B = new JSModule("B");
-  private final JSModule C = new JSModule("C");
-  private final JSModule D = new JSModule("D");
-  private final JSModule E = new JSModule("E");
-  private final JSModule F = new JSModule("F");
+  private JSModule moduleA;
+  private JSModule moduleB;
+  private JSModule moduleC;
+  private JSModule moduleD;
+  private JSModule moduleE;
+  private JSModule moduleF;
   private JSModuleGraph graph = null;
 
   // For resolving dependencies only.
   private Compiler compiler;
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
-    B.addDependency(A); //     __A__
-    C.addDependency(A); //    /  |  \
-    D.addDependency(B); //   B   C  |
-    E.addDependency(B); //  / \ /|  |
-    E.addDependency(C); // D   E | /
-    F.addDependency(A); //      \|/
-    F.addDependency(C); //       F
-    F.addDependency(E);
-    graph = new JSModuleGraph(new JSModule[] {A, B, C, D, E, F});
     compiler = new Compiler();
   }
 
+  private void makeDeps() {
+    moduleA = new JSModule("moduleA");
+    moduleB = new JSModule("moduleB");
+    moduleC = new JSModule("moduleC");
+    moduleD = new JSModule("moduleD");
+    moduleE = new JSModule("moduleE");
+    moduleF = new JSModule("moduleF");
+    moduleB.addDependency(moduleA); //     __A__
+    moduleC.addDependency(moduleA); //    /  |  \
+    moduleD.addDependency(moduleB); //   B   C  |
+    moduleE.addDependency(moduleB); //  / \ /|  |
+    moduleE.addDependency(moduleC); // D   E | /
+    moduleF.addDependency(moduleA); //      \|/
+    moduleF.addDependency(moduleC); //       F
+    moduleF.addDependency(moduleE);
+  }
+
+  private void makeGraph() {
+    graph =
+        new JSModuleGraph(new JSModule[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF});
+  }
+
+  private JSModule getWeakModule() {
+    return graph.getModuleByName(JSModule.WEAK_MODULE_NAME);
+  }
+
+  @Test
+  public void testMakesWeakModuleIfNotPassed() {
+    makeDeps();
+    makeGraph();
+    assertThat(graph.getModuleCount()).isEqualTo(7);
+    assertThat(graph.getModulesByName()).containsKey(JSModule.WEAK_MODULE_NAME);
+    assertThat(getWeakModule().getAllDependencies())
+        .containsExactly(moduleA, moduleB, moduleC, moduleD, moduleE, moduleF);
+  }
+
+  @Test
+  public void testAcceptExistingWeakModule() {
+    makeDeps();
+    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+
+    weakModule.addDependency(moduleA);
+    weakModule.addDependency(moduleB);
+    weakModule.addDependency(moduleC);
+    weakModule.addDependency(moduleD);
+    weakModule.addDependency(moduleE);
+    weakModule.addDependency(moduleF);
+
+    weakModule.add(SourceFile.fromCode("weak", "", SourceKind.WEAK));
+
+    JSModuleGraph graph =
+        new JSModuleGraph(
+            new JSModule[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
+
+    assertThat(graph.getModuleCount()).isEqualTo(7);
+    assertThat(graph.getModuleByName(JSModule.WEAK_MODULE_NAME)).isSameAs(weakModule);
+  }
+
+  @Test
+  public void testExistingWeakModuleMustHaveDependenciesOnAllOtherModules() {
+    makeDeps();
+    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+
+    weakModule.addDependency(moduleA);
+    weakModule.addDependency(moduleB);
+    weakModule.addDependency(moduleC);
+    weakModule.addDependency(moduleD);
+    weakModule.addDependency(moduleE);
+    // Missing F
+
+    try {
+      new JSModuleGraph(
+          new JSModule[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("A weak module already exists but it does not depend on every other module.");
+    }
+  }
+
+  @Test
+  public void testWeakFileCannotExistOutsideWeakModule() {
+    makeDeps();
+    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+
+    weakModule.addDependency(moduleA);
+    weakModule.addDependency(moduleB);
+    weakModule.addDependency(moduleC);
+    weakModule.addDependency(moduleD);
+    weakModule.addDependency(moduleE);
+    weakModule.addDependency(moduleF);
+
+    moduleA.add(SourceFile.fromCode("a", "", SourceKind.WEAK));
+
+    try {
+      new JSModuleGraph(
+          new JSModule[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("A weak module already exists but weak sources were found in other modules.");
+    }
+  }
+
+  @Test
+  public void testStrongFileCannotExistInWeakModule() {
+    makeDeps();
+    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+
+    weakModule.addDependency(moduleA);
+    weakModule.addDependency(moduleB);
+    weakModule.addDependency(moduleC);
+    weakModule.addDependency(moduleD);
+    weakModule.addDependency(moduleE);
+    weakModule.addDependency(moduleF);
+
+    weakModule.add(SourceFile.fromCode("a", "", SourceKind.STRONG));
+
+    try {
+      new JSModuleGraph(
+          new JSModule[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("A weak module already exists but strong sources were found in it.");
+    }
+  }
+
+  @Test
   public void testSmallerTreeBeatsDeeperTree() {
     final JSModule a = new JSModule("a");
     final JSModule b = new JSModule("b");
@@ -103,244 +231,253 @@ public final class JSModuleGraphTest extends TestCase {
     assertSmallestCoveringSubtree(d, graph, c, e, f, g);
   }
 
+  @Test
   public void testModuleDepth() {
-    assertEquals("A should have depth 0", 0, A.getDepth());
-    assertEquals("B should have depth 1", 1, B.getDepth());
-    assertEquals("C should have depth 1", 1, C.getDepth());
-    assertEquals("D should have depth 2", 2, D.getDepth());
-    assertEquals("E should have depth 2", 2, E.getDepth());
-    assertEquals("F should have depth 3", 3, F.getDepth());
+    makeDeps();
+    makeGraph();
+    assertWithMessage("moduleA should have depth 0").that(moduleA.getDepth()).isEqualTo(0);
+    assertWithMessage("moduleB should have depth 1").that(moduleB.getDepth()).isEqualTo(1);
+    assertWithMessage("moduleC should have depth 1").that(moduleC.getDepth()).isEqualTo(1);
+    assertWithMessage("moduleD should have depth 2").that(moduleD.getDepth()).isEqualTo(2);
+    assertWithMessage("moduleE should have depth 2").that(moduleE.getDepth()).isEqualTo(2);
+    assertWithMessage("moduleF should have depth 3").that(moduleF.getDepth()).isEqualTo(3);
   }
 
+  @Test
   public void testDeepestCommonDep() {
-    assertDeepestCommonDep(null, A, A);
-    assertDeepestCommonDep(null, A, B);
-    assertDeepestCommonDep(null, A, C);
-    assertDeepestCommonDep(null, A, D);
-    assertDeepestCommonDep(null, A, E);
-    assertDeepestCommonDep(null, A, F);
-    assertDeepestCommonDep(A, B, B);
-    assertDeepestCommonDep(A, B, C);
-    assertDeepestCommonDep(A, B, D);
-    assertDeepestCommonDep(A, B, E);
-    assertDeepestCommonDep(A, B, F);
-    assertDeepestCommonDep(A, C, C);
-    assertDeepestCommonDep(A, C, D);
-    assertDeepestCommonDep(A, C, E);
-    assertDeepestCommonDep(A, C, F);
-    assertDeepestCommonDep(B, D, D);
-    assertDeepestCommonDep(B, D, E);
-    assertDeepestCommonDep(B, D, F);
-    assertDeepestCommonDep(C, E, E);
-    assertDeepestCommonDep(C, E, F);
-    assertDeepestCommonDep(E, F, F);
+    makeDeps();
+    makeGraph();
+    assertDeepestCommonDep(null, moduleA, moduleA);
+    assertDeepestCommonDep(null, moduleA, moduleB);
+    assertDeepestCommonDep(null, moduleA, moduleC);
+    assertDeepestCommonDep(null, moduleA, moduleD);
+    assertDeepestCommonDep(null, moduleA, moduleE);
+    assertDeepestCommonDep(null, moduleA, moduleF);
+    assertDeepestCommonDep(moduleA, moduleB, moduleB);
+    assertDeepestCommonDep(moduleA, moduleB, moduleC);
+    assertDeepestCommonDep(moduleA, moduleB, moduleD);
+    assertDeepestCommonDep(moduleA, moduleB, moduleE);
+    assertDeepestCommonDep(moduleA, moduleB, moduleF);
+    assertDeepestCommonDep(moduleA, moduleC, moduleC);
+    assertDeepestCommonDep(moduleA, moduleC, moduleD);
+    assertDeepestCommonDep(moduleA, moduleC, moduleE);
+    assertDeepestCommonDep(moduleA, moduleC, moduleF);
+    assertDeepestCommonDep(moduleB, moduleD, moduleD);
+    assertDeepestCommonDep(moduleB, moduleD, moduleE);
+    assertDeepestCommonDep(moduleB, moduleD, moduleF);
+    assertDeepestCommonDep(moduleC, moduleE, moduleE);
+    assertDeepestCommonDep(moduleC, moduleE, moduleF);
+    assertDeepestCommonDep(moduleE, moduleF, moduleF);
   }
 
+  @Test
   public void testDeepestCommonDepInclusive() {
-    assertDeepestCommonDepInclusive(A, A, A);
-    assertDeepestCommonDepInclusive(A, A, B);
-    assertDeepestCommonDepInclusive(A, A, C);
-    assertDeepestCommonDepInclusive(A, A, D);
-    assertDeepestCommonDepInclusive(A, A, E);
-    assertDeepestCommonDepInclusive(A, A, F);
-    assertDeepestCommonDepInclusive(B, B, B);
-    assertDeepestCommonDepInclusive(A, B, C);
-    assertDeepestCommonDepInclusive(B, B, D);
-    assertDeepestCommonDepInclusive(B, B, E);
-    assertDeepestCommonDepInclusive(B, B, F);
-    assertDeepestCommonDepInclusive(C, C, C);
-    assertDeepestCommonDepInclusive(A, C, D);
-    assertDeepestCommonDepInclusive(C, C, E);
-    assertDeepestCommonDepInclusive(C, C, F);
-    assertDeepestCommonDepInclusive(D, D, D);
-    assertDeepestCommonDepInclusive(B, D, E);
-    assertDeepestCommonDepInclusive(B, D, F);
-    assertDeepestCommonDepInclusive(E, E, E);
-    assertDeepestCommonDepInclusive(E, E, F);
-    assertDeepestCommonDepInclusive(F, F, F);
+    makeDeps();
+    makeGraph();
+    assertDeepestCommonDepInclusive(moduleA, moduleA, moduleA);
+    assertDeepestCommonDepInclusive(moduleA, moduleA, moduleB);
+    assertDeepestCommonDepInclusive(moduleA, moduleA, moduleC);
+    assertDeepestCommonDepInclusive(moduleA, moduleA, moduleD);
+    assertDeepestCommonDepInclusive(moduleA, moduleA, moduleE);
+    assertDeepestCommonDepInclusive(moduleA, moduleA, moduleF);
+    assertDeepestCommonDepInclusive(moduleB, moduleB, moduleB);
+    assertDeepestCommonDepInclusive(moduleA, moduleB, moduleC);
+    assertDeepestCommonDepInclusive(moduleB, moduleB, moduleD);
+    assertDeepestCommonDepInclusive(moduleB, moduleB, moduleE);
+    assertDeepestCommonDepInclusive(moduleB, moduleB, moduleF);
+    assertDeepestCommonDepInclusive(moduleC, moduleC, moduleC);
+    assertDeepestCommonDepInclusive(moduleA, moduleC, moduleD);
+    assertDeepestCommonDepInclusive(moduleC, moduleC, moduleE);
+    assertDeepestCommonDepInclusive(moduleC, moduleC, moduleF);
+    assertDeepestCommonDepInclusive(moduleD, moduleD, moduleD);
+    assertDeepestCommonDepInclusive(moduleB, moduleD, moduleE);
+    assertDeepestCommonDepInclusive(moduleB, moduleD, moduleF);
+    assertDeepestCommonDepInclusive(moduleE, moduleE, moduleE);
+    assertDeepestCommonDepInclusive(moduleE, moduleE, moduleF);
+    assertDeepestCommonDepInclusive(moduleF, moduleF, moduleF);
   }
 
+  @Test
   public void testSmallestCoveringSubtree() {
-    assertSmallestCoveringSubtree(A, A, A, A);
-    assertSmallestCoveringSubtree(A, A, A, B);
-    assertSmallestCoveringSubtree(A, A, A, C);
-    assertSmallestCoveringSubtree(A, A, A, D);
-    assertSmallestCoveringSubtree(A, A, A, E);
-    assertSmallestCoveringSubtree(A, A, A, F);
-    assertSmallestCoveringSubtree(B, A, B, B);
-    assertSmallestCoveringSubtree(A, A, B, C);
-    assertSmallestCoveringSubtree(B, A, B, D);
-    assertSmallestCoveringSubtree(B, A, B, E);
-    assertSmallestCoveringSubtree(B, A, B, F);
-    assertSmallestCoveringSubtree(C, A, C, C);
-    assertSmallestCoveringSubtree(A, A, C, D);
-    assertSmallestCoveringSubtree(C, A, C, E);
-    assertSmallestCoveringSubtree(C, A, C, F);
-    assertSmallestCoveringSubtree(D, A, D, D);
-    assertSmallestCoveringSubtree(B, A, D, E);
-    assertSmallestCoveringSubtree(B, A, D, F);
-    assertSmallestCoveringSubtree(E, A, E, E);
-    assertSmallestCoveringSubtree(E, A, E, F);
-    assertSmallestCoveringSubtree(F, A, F, F);
+    makeDeps();
+    makeGraph();
+    assertSmallestCoveringSubtree(moduleA, moduleA, moduleA, moduleA);
+    assertSmallestCoveringSubtree(moduleA, moduleA, moduleA, moduleB);
+    assertSmallestCoveringSubtree(moduleA, moduleA, moduleA, moduleC);
+    assertSmallestCoveringSubtree(moduleA, moduleA, moduleA, moduleD);
+    assertSmallestCoveringSubtree(moduleA, moduleA, moduleA, moduleE);
+    assertSmallestCoveringSubtree(moduleA, moduleA, moduleA, moduleF);
+    assertSmallestCoveringSubtree(moduleB, moduleA, moduleB, moduleB);
+    assertSmallestCoveringSubtree(moduleA, moduleA, moduleB, moduleC);
+    assertSmallestCoveringSubtree(moduleB, moduleA, moduleB, moduleD);
+    assertSmallestCoveringSubtree(moduleB, moduleA, moduleB, moduleE);
+    assertSmallestCoveringSubtree(moduleB, moduleA, moduleB, moduleF);
+    assertSmallestCoveringSubtree(moduleC, moduleA, moduleC, moduleC);
+    assertSmallestCoveringSubtree(moduleA, moduleA, moduleC, moduleD);
+    assertSmallestCoveringSubtree(moduleC, moduleA, moduleC, moduleE);
+    assertSmallestCoveringSubtree(moduleC, moduleA, moduleC, moduleF);
+    assertSmallestCoveringSubtree(moduleD, moduleA, moduleD, moduleD);
+    assertSmallestCoveringSubtree(moduleB, moduleA, moduleD, moduleE);
+    assertSmallestCoveringSubtree(moduleB, moduleA, moduleD, moduleF);
+    assertSmallestCoveringSubtree(moduleE, moduleA, moduleE, moduleE);
+    assertSmallestCoveringSubtree(moduleE, moduleA, moduleE, moduleF);
+    assertSmallestCoveringSubtree(moduleF, moduleA, moduleF, moduleF);
   }
 
+  @Test
   public void testGetTransitiveDepsDeepestFirst() {
-    assertTransitiveDepsDeepestFirst(A);
-    assertTransitiveDepsDeepestFirst(B, A);
-    assertTransitiveDepsDeepestFirst(C, A);
-    assertTransitiveDepsDeepestFirst(D, B, A);
-    assertTransitiveDepsDeepestFirst(E, C, B, A);
-    assertTransitiveDepsDeepestFirst(F, E, C, B, A);
+    makeDeps();
+    makeGraph();
+    assertTransitiveDepsDeepestFirst(moduleA);
+    assertTransitiveDepsDeepestFirst(moduleB, moduleA);
+    assertTransitiveDepsDeepestFirst(moduleC, moduleA);
+    assertTransitiveDepsDeepestFirst(moduleD, moduleB, moduleA);
+    assertTransitiveDepsDeepestFirst(moduleE, moduleC, moduleB, moduleA);
+    assertTransitiveDepsDeepestFirst(moduleF, moduleE, moduleC, moduleB, moduleA);
   }
 
-  public void testManageDependencies1() throws Exception {
-    List<CompilerInput> inputs = setUpManageDependenciesTest();
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-    depOptions.setDependencyPruning(true);
-    depOptions.setEntryPoints(ImmutableList.<ModuleIdentifier>of());
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+  @Test
+  public void testManageDependenciesLooseWithoutEntryPoint() throws Exception {
+    makeDeps();
+    makeGraph();
+    setUpManageDependenciesTest();
+    DependencyOptions depOptions = DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of());
+    List<CompilerInput> results = graph.manageDependencies(depOptions);
 
-    assertInputs(A, "a1", "a3");
-    assertInputs(B, "a2", "b2");
-    assertInputs(C); // no inputs
-    assertInputs(E, "c1", "e1", "e2");
+    assertInputs(moduleA, "a1", "a3");
+    assertInputs(moduleB, "a2", "b2");
+    assertInputs(moduleC); // no inputs
+    assertInputs(moduleE, "c1", "e1", "e2");
 
-    assertEquals(ImmutableList.of("a1", "a3", "a2", "b2", "c1", "e1", "e2"), sourceNames(results));
+    assertThat(sourceNames(results))
+        .isEqualTo(ImmutableList.of("a1", "a3", "a2", "b2", "c1", "e1", "e2"));
   }
 
-  public void testManageDependencies2() throws Exception {
-    List<CompilerInput> inputs = setUpManageDependenciesTest();
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-    depOptions.setDependencyPruning(true);
-    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+  @Test
+  public void testManageDependenciesLooseWithEntryPoint() throws Exception {
+    makeDeps();
+    makeGraph();
+    setUpManageDependenciesTest();
+    DependencyOptions depOptions =
+        DependencyOptions.pruneLegacyForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("c2")));
+    List<CompilerInput> results = graph.manageDependencies(depOptions);
 
-    assertInputs(A, "a1", "a3");
-    assertInputs(B, "a2", "b2");
-    assertInputs(C, "c1", "c2");
-    assertInputs(E, "e1", "e2");
+    assertInputs(moduleA, "a1", "a3");
+    assertInputs(moduleB, "a2", "b2");
+    assertInputs(moduleC, "c1", "c2");
+    assertInputs(moduleE, "e1", "e2");
 
-    assertEquals(
-        ImmutableList.of("a1", "a3", "a2", "b2", "c1", "c2", "e1", "e2"), sourceNames(results));
+    assertThat(sourceNames(results))
+        .isEqualTo(ImmutableList.of("a1", "a3", "a2", "b2", "c1", "c2", "e1", "e2"));
   }
 
-  public void testManageDependencies3Impl() throws Exception {
-    List<CompilerInput> inputs = setUpManageDependenciesTest();
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-    depOptions.setDependencyPruning(true);
-    depOptions.setMoocherDropping(true);
-    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+  @Test
+  public void testManageDependenciesStrictWithEntryPoint() throws Exception {
+    makeDeps();
+    makeGraph();
+    setUpManageDependenciesTest();
+    DependencyOptions depOptions =
+        DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
+    List<CompilerInput> results = graph.manageDependencies(depOptions);
 
     // Everything gets pushed up into module c, because that's
     // the only one that has entry points.
-    assertInputs(A);
-    assertInputs(B);
-    assertInputs(C, "a1", "c1", "c2");
-    assertInputs(E);
+    assertInputs(moduleA);
+    assertInputs(moduleB);
+    assertInputs(moduleC, "a1", "c1", "c2");
+    assertInputs(moduleE);
 
     assertThat(sourceNames(results)).containsExactly("a1", "c1", "c2").inOrder();
   }
 
-  public void testManageDependencies4() throws Exception {
+  @Test
+  public void testManageDependenciesSortOnly() throws Exception {
+    makeDeps();
+    makeGraph();
     setUpManageDependenciesTest();
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
+    List<CompilerInput> results = graph.manageDependencies(DependencyOptions.sortOnly());
 
-    List<CompilerInput> inputs = new ArrayList<>();
+    assertInputs(moduleA, "a1", "a2", "a3");
+    assertInputs(moduleB, "b1", "b2");
+    assertInputs(moduleC, "c1", "c2");
+    assertInputs(moduleE, "e1", "e2");
 
-    // Add the inputs in a random order.
-    inputs.addAll(E.getInputs());
-    inputs.addAll(B.getInputs());
-    inputs.addAll(A.getInputs());
-    inputs.addAll(C.getInputs());
-
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
-
-    assertInputs(A, "a1", "a2", "a3");
-    assertInputs(B, "b1", "b2");
-    assertInputs(C, "c1", "c2");
-    assertInputs(E, "e1", "e2");
-
-    assertEquals(
-        ImmutableList.of("a1", "a2", "a3", "b1", "b2", "c1", "c2", "e1", "e2"),
-        sourceNames(results));
+    assertThat(sourceNames(results))
+        .isEqualTo(ImmutableList.of("a1", "a2", "a3", "b1", "b2", "c1", "c2", "e1", "e2"));
   }
 
   // NOTE: The newline between the @provideGoog comment and the var statement is required.
   private static final String BASEJS =
       "/** @provideGoog */\nvar COMPILED = false; var goog = goog || {}";
 
-  public void testManageDependencies5Impl() throws Exception {
-    A.add(code("a2", provides("a2"), requires("a1")));
-    A.add(code("a1", provides("a1"), requires()));
-    A.add(code("base.js", BASEJS, provides(), requires()));
+  @Test
+  public void testManageDependenciesSortOnlyImpl() throws Exception {
+    makeDeps();
+    makeGraph();
+    moduleA.add(code("a2", provides("a2"), requires("a1")));
+    moduleA.add(code("a1", provides("a1"), requires()));
+    moduleA.add(code("base.js", BASEJS, provides(), requires()));
 
-    for (CompilerInput input : A.getInputs()) {
+    for (CompilerInput input : moduleA.getInputs()) {
       input.setCompiler(compiler);
     }
 
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
+    List<CompilerInput> results = graph.manageDependencies(DependencyOptions.sortOnly());
 
-    List<CompilerInput> inputs = new ArrayList<>();
-    inputs.addAll(A.getInputs());
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
-
-    assertInputs(A, "base.js", "a1", "a2");
+    assertInputs(moduleA, "base.js", "a1", "a2");
 
     assertThat(sourceNames(results)).containsExactly("base.js", "a1", "a2").inOrder();
   }
 
+  @Test
   public void testNoFiles() throws Exception {
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-
-    List<CompilerInput> inputs = new ArrayList<>();
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+    makeDeps();
+    makeGraph();
+    List<CompilerInput> results = graph.manageDependencies(DependencyOptions.sortOnly());
     assertThat(results).isEmpty();
   }
 
+  @Test
   public void testToJson() {
+    makeDeps();
+    makeGraph();
     JsonArray modules = graph.toJson();
-    assertEquals(6, modules.size());
+    assertThat(modules.size()).isEqualTo(7);
     for (int i = 0; i < modules.size(); i++) {
       JsonObject m = modules.get(i).getAsJsonObject();
-      assertNotNull(m.get("name"));
-      assertNotNull(m.get("dependencies"));
-      assertNotNull(m.get("transitive-dependencies"));
-      assertNotNull(m.get("inputs"));
+      assertThat(m.get("name")).isNotNull();
+      assertThat(m.get("dependencies")).isNotNull();
+      assertThat(m.get("transitive-dependencies")).isNotNull();
+      assertThat(m.get("inputs")).isNotNull();
     }
     JsonObject m = modules.get(3).getAsJsonObject();
-    assertEquals("D", m.get("name").getAsString());
-    assertEquals("[\"B\"]", m.get("dependencies").getAsJsonArray().toString());
-    assertEquals(2, m.get("transitive-dependencies").getAsJsonArray().size());
-    assertEquals("[]", m.get("inputs").getAsJsonArray().toString());
+    assertThat(m.get("name").getAsString()).isEqualTo("moduleD");
+    assertThat(m.get("dependencies").getAsJsonArray().toString()).isEqualTo("[\"moduleB\"]");
+    assertThat(m.get("transitive-dependencies").getAsJsonArray().size()).isEqualTo(2);
+    assertThat(m.get("inputs").getAsJsonArray().toString()).isEqualTo("[]");
   }
 
   private List<CompilerInput> setUpManageDependenciesTest() {
     List<CompilerInput> inputs = new ArrayList<>();
 
-    A.add(code("a1", provides("a1"), requires()));
-    A.add(code("a2", provides("a2"), requires("a1")));
-    A.add(code("a3", provides(), requires("a1")));
+    moduleA.add(code("a1", provides("a1"), requires()));
+    moduleA.add(code("a2", provides("a2"), requires("a1")));
+    moduleA.add(code("a3", provides(), requires("a1")));
 
-    B.add(code("b1", provides("b1"), requires("a2")));
-    B.add(code("b2", provides(), requires("a1", "a2")));
+    moduleB.add(code("b1", provides("b1"), requires("a2")));
+    moduleB.add(code("b2", provides(), requires("a1", "a2")));
 
-    C.add(code("c1", provides("c1"), requires("a1")));
-    C.add(code("c2", provides("c2"), requires("c1")));
+    moduleC.add(code("c1", provides("c1"), requires("a1")));
+    moduleC.add(code("c2", provides("c2"), requires("c1")));
 
-    E.add(code("e1", provides(), requires("c1")));
-    E.add(code("e2", provides(), requires("c1")));
+    moduleE.add(code("e1", provides(), requires("c1")));
+    moduleE.add(code("e2", provides(), requires("c1")));
 
-    inputs.addAll(A.getInputs());
-    inputs.addAll(B.getInputs());
-    inputs.addAll(C.getInputs());
-    inputs.addAll(E.getInputs());
+    inputs.addAll(moduleA.getInputs());
+    inputs.addAll(moduleB.getInputs());
+    inputs.addAll(moduleC.getInputs());
+    inputs.addAll(moduleE.getInputs());
 
     for (CompilerInput input : inputs) {
       input.setCompiler(compiler);
@@ -348,7 +485,10 @@ public final class JSModuleGraphTest extends TestCase {
     return inputs;
   }
 
+  @Test
   public void testGoogBaseOrderedCorrectly() throws Exception {
+    makeDeps();
+    makeGraph();
     List<SourceFile> sourceFiles = new ArrayList<>();
     sourceFiles.add(code("a9", provides("a9"), requires()));
     sourceFiles.add(code("a8", provides("a8"), requires()));
@@ -362,27 +502,22 @@ public final class JSModuleGraphTest extends TestCase {
         code("a1", provides("a1"), requires("a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9")));
     sourceFiles.add(code("base.js", BASEJS, provides(), requires()));
 
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-    depOptions.setDependencyPruning(true);
-    depOptions.setMoocherDropping(true);
-    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("a1")));
+    DependencyOptions depOptions =
+        DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("a1")));
     for (int i = 0; i < 10; i++) {
       shuffle(sourceFiles);
-      A.removeAll();
+      moduleA.removeAll();
       for (SourceFile sourceFile : sourceFiles) {
-        A.add(sourceFile);
+        moduleA.add(sourceFile);
       }
 
-      for (CompilerInput input : A.getInputs()) {
+      for (CompilerInput input : moduleA.getInputs()) {
         input.setCompiler(compiler);
       }
 
-      List<CompilerInput> inputs = new ArrayList<>();
-      inputs.addAll(A.getInputs());
-      List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+      List<CompilerInput> results = graph.manageDependencies(depOptions);
 
-      assertInputs(A, "base.js", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a1");
+      assertInputs(moduleA, "base.js", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a1");
 
       assertThat(sourceNames(results))
           .containsExactly("base.js", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a1")
@@ -390,7 +525,10 @@ public final class JSModuleGraphTest extends TestCase {
     }
   }
 
+  @Test
   public void testProperEs6ModuleOrdering() throws Exception {
+    makeDeps();
+    makeGraph();
     List<SourceFile> sourceFiles = new ArrayList<>();
     sourceFiles.add(code("/entry.js", provides(), requires()));
     sourceFiles.add(code("/a/a.js", provides(), requires()));
@@ -417,19 +555,17 @@ public final class JSModuleGraphTest extends TestCase {
     orderedRequires.put("/b/c.js", ImmutableList.of());
     orderedRequires.put("/important.js", ImmutableList.of());
 
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-    depOptions.setDependencyPruning(true);
-    depOptions.setMoocherDropping(true);
-    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
+    DependencyOptions depOptions =
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
     for (int iterationCount = 0; iterationCount < 10; iterationCount++) {
       shuffle(sourceFiles);
-      A.removeAll();
+      moduleA.removeAll();
       for (SourceFile sourceFile : sourceFiles) {
-        A.add(sourceFile);
+        moduleA.add(sourceFile);
       }
 
-      for (CompilerInput input : A.getInputs()) {
+      for (CompilerInput input : moduleA.getInputs()) {
         input.setCompiler(compiler);
         for (String require : orderedRequires.get(input.getSourceFile().getName())) {
           input.addOrderedRequire(Require.compilerModule(require));
@@ -437,12 +573,17 @@ public final class JSModuleGraphTest extends TestCase {
         input.setHasFullParseDependencyInfo(true);
       }
 
-      List<CompilerInput> inputs = new ArrayList<>();
-      inputs.addAll(A.getInputs());
-      List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+      List<CompilerInput> results = graph.manageDependencies(depOptions);
 
       assertInputs(
-          A, "/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js");
+          moduleA,
+          "/b/c.js",
+          "/b/b.js",
+          "/b/a.js",
+          "/important.js",
+          "/a/b.js",
+          "/a/a.js",
+          "/entry.js");
 
       assertThat(sourceNames(results))
           .containsExactly(
@@ -451,8 +592,276 @@ public final class JSModuleGraphTest extends TestCase {
     }
   }
 
+  @Test
+  public void testMoveMarkedWeakSources() throws Exception {
+    makeDeps();
+
+    SourceFile weak1 = SourceFile.fromCode("weak1", "", SourceKind.WEAK);
+    SourceFile weak2 = SourceFile.fromCode("weak2", "", SourceKind.WEAK);
+    SourceFile strong1 = SourceFile.fromCode("strong1", "", SourceKind.STRONG);
+    SourceFile strong2 = SourceFile.fromCode("strong2", "", SourceKind.STRONG);
+
+    moduleA.add(weak1);
+    moduleA.add(strong1);
+    moduleA.add(weak2);
+    moduleA.add(strong2);
+
+    for (CompilerInput input : moduleA.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    makeGraph();
+
+    assertThat(
+            getWeakModule().getInputs().stream()
+                .map(i -> i.getSourceFile())
+                .collect(Collectors.toList()))
+        .containsExactly(weak1, weak2);
+    assertThat(
+            moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
+        .containsExactly(strong1, strong2);
+  }
+
+  @Test
+  public void testMoveMarkedWeakSourcesDuringManageDepsSortOnly() throws Exception {
+    makeDeps();
+
+    SourceFile weak1 = SourceFile.fromCode("weak1", "", SourceKind.WEAK);
+    SourceFile weak2 = SourceFile.fromCode("weak2", "", SourceKind.WEAK);
+    SourceFile strong1 = SourceFile.fromCode("strong1", "", SourceKind.STRONG);
+    SourceFile strong2 = SourceFile.fromCode("strong2", "", SourceKind.STRONG);
+
+    moduleA.add(weak1);
+    moduleA.add(strong1);
+    moduleA.add(weak2);
+    moduleA.add(strong2);
+
+    for (CompilerInput input : moduleA.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    makeGraph();
+    graph.manageDependencies(DependencyOptions.sortOnly());
+
+    assertThat(
+            getWeakModule().getInputs().stream()
+                .map(i -> i.getSourceFile())
+                .collect(Collectors.toList()))
+        .containsExactly(weak1, weak2);
+    assertThat(
+            moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
+        .containsExactly(strong1, strong2);
+  }
+
+  @Test
+  public void testIgnoreMarkedWeakSourcesDuringManageDepsPrune() throws Exception {
+    makeDeps();
+
+    SourceFile weak1 = SourceFile.fromCode("weak1", "", SourceKind.WEAK);
+    SourceFile weak2 = SourceFile.fromCode("weak2", "", SourceKind.WEAK);
+    SourceFile strong1 = SourceFile.fromCode("strong1", "", SourceKind.STRONG);
+    SourceFile strong2 = SourceFile.fromCode("strong2", "", SourceKind.STRONG);
+
+    moduleA.add(weak1);
+    moduleA.add(strong1);
+    moduleA.add(weak2);
+    moduleA.add(strong2);
+
+    for (CompilerInput input : moduleA.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    makeGraph();
+    graph.manageDependencies(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(
+                ModuleIdentifier.forFile("strong1"), ModuleIdentifier.forFile("strong2"))));
+
+    assertThat(
+            getWeakModule().getInputs().stream()
+                .map(i -> i.getSourceFile())
+                .collect(Collectors.toList()))
+        .isEmpty();
+    assertThat(
+            moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
+        .containsExactly(strong1, strong2);
+  }
+
+  @Test
+  public void testIgnoreDepsOfMarkedWeakSourcesDuringManageDepsPrune() throws Exception {
+    makeDeps();
+
+    SourceFile weak1 =
+        SourceFile.fromCode("weak1", "goog.requireType('weak1weak');", SourceKind.WEAK);
+    SourceFile weak1weak =
+        SourceFile.fromCode("weak1weak", "goog.provide('weak1weak');", SourceKind.WEAK);
+    SourceFile weak2 =
+        SourceFile.fromCode("weak2", "goog.require('weak2strong');", SourceKind.WEAK);
+    SourceFile weak2strong =
+        SourceFile.fromCode("weak2strong", "goog.provide('weak2strong');", SourceKind.WEAK);
+    SourceFile strong1 = SourceFile.fromCode("strong1", "", SourceKind.STRONG);
+    SourceFile strong2 = SourceFile.fromCode("strong2", "", SourceKind.STRONG);
+
+    moduleA.add(weak1);
+    moduleA.add(strong1);
+    moduleA.add(weak2);
+    moduleA.add(strong2);
+    moduleA.add(weak1weak);
+    moduleA.add(weak2strong);
+
+    for (CompilerInput input : moduleA.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    makeGraph();
+    graph.manageDependencies(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(
+                ModuleIdentifier.forFile("strong1"), ModuleIdentifier.forFile("strong2"))));
+
+    assertThat(
+            getWeakModule().getInputs().stream()
+                .map(i -> i.getSourceFile())
+                .collect(Collectors.toList()))
+        .isEmpty();
+    assertThat(
+            moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
+        .containsExactly(strong1, strong2);
+  }
+
+  @Test
+  public void testMoveImplicitWeakSourcesFromMoocherDuringManageDepsLegacyPrune() throws Exception {
+    makeDeps();
+
+    SourceFile weak = SourceFile.fromCode("weak", "goog.provide('weak');");
+    SourceFile strong = SourceFile.fromCode("strong", "");
+    SourceFile moocher = SourceFile.fromCode("moocher", "goog.requireType('weak');");
+
+    moduleA.add(weak);
+    moduleA.add(strong);
+    moduleA.add(moocher);
+
+    for (CompilerInput input : moduleA.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    makeGraph();
+    graph.manageDependencies(
+        DependencyOptions.pruneLegacyForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("strong"))));
+
+    assertThat(
+            getWeakModule().getInputs().stream()
+                .map(i -> i.getSourceFile())
+                .collect(Collectors.toList()))
+        .containsExactly(weak);
+    assertThat(
+            moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
+        .containsExactly(strong, moocher);
+  }
+
+  @Test
+  public void testImplicitWeakSourcesNotMovedDuringManageDepsSortOnly() throws Exception {
+    makeDeps();
+
+    SourceFile weak1 = SourceFile.fromCode("weak1", "goog.provide('weak1');");
+    SourceFile weak2 = SourceFile.fromCode("weak2", "goog.provide('weak2');");
+    SourceFile strong1 = SourceFile.fromCode("strong1", "goog.requireType('weak1');");
+    SourceFile strong2 = SourceFile.fromCode("strong2", "goog.requireType('weak2');");
+
+    moduleA.add(weak1);
+    moduleA.add(strong1);
+    moduleA.add(weak2);
+    moduleA.add(strong2);
+
+    for (CompilerInput input : moduleA.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    makeGraph();
+    graph.manageDependencies(DependencyOptions.sortOnly());
+
+    assertThat(getWeakModule().getInputs()).isEmpty();
+    assertThat(
+            moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
+        .containsExactly(weak1, strong1, weak2, strong2);
+  }
+
+  @Test
+  public void testImplicitWeakSourcesMovedDuringManageDepsPrune() throws Exception {
+    makeDeps();
+
+    SourceFile weak1 = SourceFile.fromCode("weak1", "goog.provide('weak1');");
+    SourceFile weak2 = SourceFile.fromCode("weak2", "goog.provide('weak2');");
+    SourceFile strong1 = SourceFile.fromCode("strong1", "goog.requireType('weak1');");
+    SourceFile strong2 = SourceFile.fromCode("strong2", "goog.requireType('weak2');");
+
+    moduleA.add(weak1);
+    moduleA.add(strong1);
+    moduleA.add(weak2);
+    moduleA.add(strong2);
+
+    for (CompilerInput input : moduleA.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    makeGraph();
+    graph.manageDependencies(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(
+                ModuleIdentifier.forFile("strong1"), ModuleIdentifier.forFile("strong2"))));
+
+    assertThat(
+            getWeakModule().getInputs().stream()
+                .map(i -> i.getSourceFile())
+                .collect(Collectors.toList()))
+        .containsExactly(weak1, weak2);
+    assertThat(
+            moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
+        .containsExactly(strong1, strong2);
+  }
+
+  @Test
+  public void testTransitiveWeakSources() throws Exception {
+    makeDeps();
+
+    SourceFile weak1 =
+        SourceFile.fromCode(
+            "weak1",
+            "goog.provide('weak1'); goog.requireType('weak2'); goog.require('strongFromWeak');");
+    SourceFile strongFromWeak = SourceFile.fromCode("weak1", "goog.provide('strongFromWeak');");
+    SourceFile weak2 =
+        SourceFile.fromCode("weak2", "goog.provide('weak2'); goog.requireType('weak3');");
+    SourceFile weak3 = SourceFile.fromCode("weak3", "goog.provide('weak3');");
+    SourceFile strong1 = SourceFile.fromCode("strong1", "goog.requireType('weak1');");
+
+    moduleA.add(weak1);
+    moduleA.add(strong1);
+    moduleA.add(weak2);
+    moduleA.add(weak3);
+    moduleA.add(strongFromWeak);
+
+    for (CompilerInput input : moduleA.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    makeGraph();
+    graph.manageDependencies(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("strong1"))));
+
+    assertThat(
+            getWeakModule().getInputs().stream()
+                .map(i -> i.getSourceFile())
+                .collect(Collectors.toList()))
+        .containsExactly(weak1, weak2, weak3, strongFromWeak);
+    assertThat(
+            moduleA.getInputs().stream().map(i -> i.getSourceFile()).collect(Collectors.toList()))
+        .containsExactly(strong1);
+  }
+
   private void assertInputs(JSModule module, String... sourceNames) {
-    assertEquals(ImmutableList.copyOf(sourceNames), sourceNames(module.getInputs()));
+    assertThat(sourceNames(module.getInputs())).isEqualTo(ImmutableList.copyOf(sourceNames));
   }
 
   private List<String> sourceNames(List<CompilerInput> inputs) {
@@ -528,18 +937,20 @@ public final class JSModuleGraphTest extends TestCase {
             ? graph.getDeepestCommonDependencyInclusive(m1, m2)
             : graph.getDeepestCommonDependency(m1, m2);
     if (actual != expected) {
-      fail(
-          String.format(
-              "Deepest common dep of %s and %s should be %s but was %s",
-              m1.getName(),
-              m2.getName(),
-              expected == null ? "null" : expected.getName(),
-              actual == null ? "null" : actual.getName()));
+      assertWithMessage(
+              String.format(
+                  "Deepest common dep of %s and %s should be %s but was %s",
+                  m1.getName(),
+                  m2.getName(),
+                  expected == null ? "null" : expected.getName(),
+                  actual == null ? "null" : actual.getName()))
+          .fail();
     }
   }
 
   private void assertTransitiveDepsDeepestFirst(JSModule m, JSModule... deps) {
     Iterable<JSModule> actual = graph.getTransitiveDepsDeepestFirst(m);
-    assertEquals(Arrays.toString(deps), Arrays.toString(Iterables.toArray(actual, JSModule.class)));
+    assertThat(Arrays.toString(Iterables.toArray(actual, JSModule.class)))
+        .isEqualTo(Arrays.toString(deps));
   }
 }

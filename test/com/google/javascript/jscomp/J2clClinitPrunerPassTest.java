@@ -17,7 +17,11 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   @Override
@@ -39,6 +43,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testRemoveDuplicates() {
     test(
         lines(
@@ -56,6 +61,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRemoveDuplicates_commaExpressions() {
     test(
         lines(
@@ -74,6 +80,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRemoveDuplicates_controlBlocks() {
     test(
         lines(
@@ -112,6 +119,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRemoveDuplicates_selfRemoval() {
     test(
         lines(
@@ -129,6 +137,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
         "function someClass$$0clinit() {}");
   }
 
+  @Test
   public void testRemoveDuplicates_jumpFunctionDeclarations() {
     test(
         lines(
@@ -154,6 +163,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRemoveDuplicates_avoidControlBlocks() {
     testSame(
         lines(
@@ -189,6 +199,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRemoveDuplicates_avoidRemovalAcrossScriptRoots() {
     testSame(
         new FlatSources(
@@ -202,6 +213,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
                 SourceFile.fromCode("file2", lines("someClass.$clinit();")))));
   }
 
+  @Test
   public void testRedundantClinit_returnCtor() {
     test(
         lines(
@@ -221,6 +233,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRedundantClinit_returnCall() {
     test(
         lines(
@@ -240,6 +253,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRedundantClinit_exprResult() {
     test(
         lines(
@@ -259,6 +273,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRedundantClinit_var() {
     test(
         lines(
@@ -278,6 +293,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRedundantClinit_let() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test(
@@ -298,6 +314,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRedundantClinit_const() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test(
@@ -318,6 +335,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRedundantClinit_literalArgs() {
     test(
         lines(
@@ -337,6 +355,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRedundantClinit_paramArgs() {
     test(
         lines(
@@ -356,6 +375,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRedundantClinit_unsafeArgs() {
     testSame(
         lines(
@@ -369,6 +389,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRedundantClinit_otherClinit() {
     testSame(
         lines(
@@ -381,6 +402,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRedundantClinit_clinitNotFirstStatement() {
     testSame(
         lines(
@@ -394,6 +416,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testRedundantClinit_recursiveCall() {
     testSame(
         lines(
@@ -403,6 +426,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testFoldClinit() {
     test(
         lines(
@@ -413,6 +437,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
         lines("var someClass = {};", "someClass.$clinit = function() {};"));
   }
 
+  @Test
   public void testFoldClinit_classHierarchy() {
     test(
         lines(
@@ -437,6 +462,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "someChildClass.someFunction = function() {};"));
   }
 
+  @Test
   public void testFoldClinit_classHierarchyNonEmpty() {
     test(
         lines(
@@ -468,6 +494,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testFoldClinit_invalidCandidates() {
     testSame(
         lines(

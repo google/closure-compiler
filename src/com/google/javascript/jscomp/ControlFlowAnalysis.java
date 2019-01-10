@@ -250,6 +250,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
         case FOR:
         case FOR_IN:
         case FOR_OF:
+        case FOR_AWAIT_OF:
           // Only traverse the body of the for loop.
           return n == parent.getLastChild();
 
@@ -319,10 +320,13 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
       case DO:
         handleDo(n);
         return;
-      case FOR_OF:
       case FOR:
-      case FOR_IN:
         handleFor(n);
+        return;
+      case FOR_OF:
+      case FOR_IN:
+      case FOR_AWAIT_OF:
+        handleEnhancedFor(n);
         return;
       case SWITCH:
         handleSwitch(n);
@@ -416,46 +420,45 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
         node, NodeUtil.getConditionExpression(node));
   }
 
+  private void handleEnhancedFor(Node forNode) {
+    // We have:  for (index in collection) { body }
+    // or:       for (item of collection) { body }
+    // or:       for await (item of collection) { body }
+    Node item = forNode.getFirstChild();
+    Node collection = item.getNext();
+    Node body = collection.getNext();
+    // The collection behaves like init.
+    createEdge(collection, Branch.UNCOND, forNode);
+    // The edge that transfer control to the beginning of the loop body.
+    createEdge(forNode, Branch.ON_TRUE, computeFallThrough(body));
+    // The edge to end of the loop.
+    createEdge(forNode, Branch.ON_FALSE, computeFollowNode(forNode, this));
+    connectToPossibleExceptionHandler(forNode, collection);
+  }
+
   private void handleFor(Node forNode) {
-    if (forNode.isForIn() || forNode.isForOf()) {
-      // We have:  for (index in collection) { body }
-      // or:       for (item of collection) { body }
-      Node item = forNode.getFirstChild();
-      Node collection = item.getNext();
-      Node body = collection.getNext();
-      // The collection behaves like init.
-      createEdge(collection, Branch.UNCOND, forNode);
-      // The edge that transfer control to the beginning of the loop body.
-      createEdge(forNode, Branch.ON_TRUE, computeFallThrough(body));
-      // The edge to end of the loop.
-      createEdge(forNode, Branch.ON_FALSE,
-          computeFollowNode(forNode, this));
-      connectToPossibleExceptionHandler(forNode, collection);
-    } else {
-      // We have for (init; cond; iter) { body }
-      Node init = forNode.getFirstChild();
-      Node cond = init.getNext();
-      Node iter = cond.getNext();
-      Node body = iter.getNext();
-      // After initialization, we transfer to the FOR which is in charge of
-      // checking the condition (for the first time).
-      createEdge(init, Branch.UNCOND, forNode);
-      // The edge that transfer control to the beginning of the loop body.
-      createEdge(forNode, Branch.ON_TRUE, computeFallThrough(body));
-      // The edge to end of the loop.
-      if (!cond.isEmpty()) {
-        createEdge(forNode, Branch.ON_FALSE,
-            computeFollowNode(forNode, this));
-      }
-      // The end of the body will have a unconditional branch to our iter
-      // (handled by calling computeFollowNode of the last instruction of the
-      // body. Our iter will jump to the forNode again to another condition
-      // check.
-      createEdge(iter, Branch.UNCOND, forNode);
-      connectToPossibleExceptionHandler(init, init);
-      connectToPossibleExceptionHandler(forNode, cond);
-      connectToPossibleExceptionHandler(iter, iter);
+    // We have for (init; cond; iter) { body }
+    Node init = forNode.getFirstChild();
+    Node cond = init.getNext();
+    Node iter = cond.getNext();
+    Node body = iter.getNext();
+    // After initialization, we transfer to the FOR which is in charge of
+    // checking the condition (for the first time).
+    createEdge(init, Branch.UNCOND, forNode);
+    // The edge that transfer control to the beginning of the loop body.
+    createEdge(forNode, Branch.ON_TRUE, computeFallThrough(body));
+    // The edge to end of the loop.
+    if (!cond.isEmpty()) {
+      createEdge(forNode, Branch.ON_FALSE, computeFollowNode(forNode, this));
     }
+    // The end of the body will have a unconditional branch to our iter
+    // (handled by calling computeFollowNode of the last instruction of the
+    // body. Our iter will jump to the forNode again to another condition
+    // check.
+    createEdge(iter, Branch.UNCOND, forNode);
+    connectToPossibleExceptionHandler(init, init);
+    connectToPossibleExceptionHandler(forNode, cond);
+    connectToPossibleExceptionHandler(iter, iter);
   }
 
   private void handleSwitch(Node node) {
@@ -770,6 +773,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
         }
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
         return parent;
       case FOR:
         return parent.getSecondChild().getNext();
@@ -830,14 +834,12 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
   static Node computeFallThrough(Node n) {
     switch (n.getToken()) {
       case DO:
-        return computeFallThrough(n.getFirstChild());
       case FOR:
+        return computeFallThrough(n.getFirstChild());
       case FOR_IN:
       case FOR_OF:
-        if (n.isForOf() || n.isForIn()) {
-          return n.getSecondChild();
-        }
-        return computeFallThrough(n.getFirstChild());
+      case FOR_AWAIT_OF:
+        return n.getSecondChild();
       case LABEL:
         return computeFallThrough(n.getLastChild());
       default:

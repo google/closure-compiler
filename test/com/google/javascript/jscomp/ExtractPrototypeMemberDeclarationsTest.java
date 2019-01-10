@@ -19,17 +19,20 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link ExtractPrototypeMemberDeclarations}.
- *
- */
+/** Tests for {@link ExtractPrototypeMemberDeclarations}. */
+@RunWith(JUnit4.class)
 public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
   private static final String TMP = "JSCompiler_prototypeAlias";
   private Pattern pattern = Pattern.USE_GLOBAL_TEMP;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
     pattern = Pattern.USE_GLOBAL_TEMP;
@@ -40,6 +43,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
     return new ExtractPrototypeMemberDeclarations(compiler, pattern);
   }
 
+  @Test
   public void testNotEnoughPrototypeToExtract() {
     // switch statement with stuff after "return"
     for (int i = 0; i < 7; i++) {
@@ -47,17 +51,20 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
     }
   }
 
+  @Test
   public void testExtractingSingleClassPrototype() {
     extract(
         generatePrototypeDeclarations("x", 7),
         loadPrototype("x") + generateExtractedDeclarations(7));
   }
 
+  @Test
   public void testNoOpOnEs6Class() {
     testSame("class Example { method1() {} method2() {} }");
     testSame("export class Example { method1() {} method2() {} }");
   }
 
+  @Test
   public void testClassDefinedInBlock() {
     test(
         lines(
@@ -72,6 +79,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             "}"));
   }
 
+  @Test
   public void testClassDefinedInFunction() {
     testSame(
         lines(
@@ -80,16 +88,16 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             "}"));
   }
 
-  /**
-   * Currently, this does not run on classes defined in ES6 modules.
-   */
+  /** Currently, this does not run on classes defined in ES6 modules. */
   // TODO(tbreisacher): Make this work on modules. The initial 'var' needs to go into a non-module
   // script node.
+  @Test
   public void testEs6Module() {
     String importStatement = "import {someValue} from './another_module.js';";
     testSame(importStatement + generatePrototypeDeclarations("x", 17));
   }
 
+  @Test
   public void testExtractingTwoClassPrototype() {
     extract(
         generatePrototypeDeclarations("x", 6) + generatePrototypeDeclarations("y", 6),
@@ -99,6 +107,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + generateExtractedDeclarations(6));
   }
 
+  @Test
   public void testExtractingTwoClassPrototypeInDifferentBlocks() {
     extract(
         generatePrototypeDeclarations("x", 6)
@@ -113,6 +122,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "}");
   }
 
+  @Test
   public void testNoMemberDeclarations() {
     testSame(
         "x.prototype = {}; x.prototype = {}; x.prototype = {};"
@@ -120,12 +130,14 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "x.prototype = {}; x.prototype = {}; x.prototype = {};");
   }
 
+  @Test
   public void testExtractingPrototypeWithQName() {
     extract(
         generatePrototypeDeclarations("com.google.javascript.jscomp.x", 7),
         loadPrototype("com.google.javascript.jscomp.x") + generateExtractedDeclarations(7));
   }
 
+  @Test
   public void testInterweaved() {
     testSame(
         "x.prototype.a=1; y.prototype.a=1;"
@@ -136,6 +148,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "x.prototype.f=1; y.prototype.f=1;");
   }
 
+  @Test
   public void testExtractingPrototypeWithNestedMembers() {
     extract(
         "x.prototype.y.a = 1;"
@@ -155,6 +168,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + TMP + ".y.g = 1;");
   }
 
+  @Test
   public void testWithDevirtualization() {
     extract(
         "x.prototype.a = 1;"
@@ -199,6 +213,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + TMP + ".g = 1;");
   }
 
+  @Test
   public void testAnonSimple() {
     pattern = Pattern.USE_IIFE;
 
@@ -214,6 +229,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
         generateExtractedDeclarations(7) + loadPrototype("x"));
   }
 
+  @Test
   public void testAnonWithDevirtualization() {
     pattern = Pattern.USE_IIFE;
 
@@ -246,6 +262,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "function devirtualize3() { }");
   }
 
+  @Test
   public void testAnonWithSideFx() {
     pattern = Pattern.USE_IIFE;
     testSame(

@@ -25,7 +25,12 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -38,7 +43,8 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
@@ -53,6 +59,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
     return options;
   }
 
+  @Test
   public void testNoWarning_require() {
     testNoWarning("goog.require('a.b');\ngoog.require('a.c')");
     testNoWarning(
@@ -66,6 +73,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "goog.require('namespace.example');"));
   }
 
+  @Test
   public void testNoWarning_provide() {
     testNoWarning("goog.provide('a.b');\ngoog.provide('a.c')");
     testNoWarning(
@@ -79,6 +87,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "goog.provide('namespace.example');"));
   }
 
+  @Test
   public void testWarning_require() {
     test(
         srcs("goog.require('a.c');\ngoog.require('a.b')"),
@@ -97,6 +106,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "goog.require('a.c');")));
   }
 
+  @Test
   public void testWarning_requireWithJSDoc() {
     test(
         srcs(lines(
@@ -113,6 +123,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "goog.require('a.c');")));
   }
 
+  @Test
   public void testWarning_provide() {
     test(
         srcs("goog.provide('a.c');\ngoog.provide('a.b')"),
@@ -130,12 +141,14 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "goog.provide('a.c');")));
   }
 
+  @Test
   public void testWarning_requiresFirst() {
     test(
         srcs("goog.require('a');\ngoog.provide('b')"),
         warning(PROVIDES_AFTER_REQUIRES));
   }
 
+  @Test
   public void testB3473189() {
     testNoWarning(
         lines(
@@ -145,6 +158,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testGoogModule_shorthandAndStandalone() {
     test(
         srcs(lines(
@@ -163,6 +177,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "goog.require('a.c');")));
   }
 
+  @Test
   public void testGoogModule_destructuring() {
     test(
         srcs(lines(
@@ -183,6 +198,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "goog.require('z');")));
   }
 
+  @Test
   public void testGoogModule_emptyDestructuring() {
     test(
         srcs(lines(
@@ -208,6 +224,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "alert(1);"));
   }
 
+  @Test
   public void testGoogModule_allThreeStyles() {
     test(
         srcs(
@@ -230,6 +247,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "goog.require('standalone.two');")));
   }
 
+  @Test
   public void testGoogModule_shorthand() {
     test(
         srcs(lines(
@@ -246,6 +264,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "var d = goog.require('a.b.d');")));
   }
 
+  @Test
   public void testGoogModule_shorthand_destructuring() {
     test(
         srcs(lines(
@@ -264,6 +283,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "var {b} = goog.require('a.a.a');")));
   }
 
+  @Test
   public void testGoogModule_standalone() {
     test(
         srcs(
@@ -283,6 +303,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "goog.require('a.c');")));
   }
 
+  @Test
   public void testGoogModule_forwardDeclares() {
     test(
         srcs(lines(
@@ -299,6 +320,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "const f = goog.forwardDeclare('f');")));
   }
 
+  @Test
   public void testForwardDeclares() {
     test(
         srcs(
@@ -316,6 +338,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "goog.forwardDeclare('f');")));
   }
 
+  @Test
   public void testDuplicate() {
     testWarning(
         lines(
@@ -324,6 +347,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
         DUPLICATE_REQUIRE);
   }
 
+  @Test
   public void testDuplicate_shorthand() {
     testWarning(
         lines(
@@ -332,6 +356,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
         DUPLICATE_REQUIRE);
   }
 
+  @Test
   public void testDuplicate_destructuring() {
     testWarning(
         lines(
@@ -341,12 +366,14 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   }
 
   // Just make sure we don't crash.
+  @Test
   public void testEmptyRequire() {
     testNoWarning("goog.require();");
   }
 
   // Compiler doesn't sort ES6 modules yet, because semantics not yet finalized.
   // Simple test to make sure compiler does not crash.
+  @Test
   public void testES6Modules() {
     testNoWarning(
         lines(

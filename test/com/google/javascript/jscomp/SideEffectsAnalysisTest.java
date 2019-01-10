@@ -16,18 +16,25 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.SideEffectsAnalysis.LocationAbstractionMode;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link SideEffectsAnalysis}.
  *
  * @author dcc@google.com (Devin Coughlin)
- *
  */
+@RunWith(JUnit4.class)
 public final class SideEffectsAnalysisTest extends CompilerTestCase {
 
   private static final String SHARED_EXTERNS = "var arguments = [];";
@@ -65,12 +72,14 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
 
     currentAnalysis = null;
   }
 
+  @Test
   public void testDegenerateSafeMoves() {
     // Env is empty
     assertSafeMoveDegenerate("src: 1; env: ; dest: 3;");
@@ -88,6 +97,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     assertSafeMoveDegenerate("src: x++; env: 1; dest: 3;");
   }
 
+  @Test
   public void testVisibilitySafeMoves() {
     // Env is empty
     assertSafeMoveVisibility("src: 1; env: ; dest: 3;");
@@ -212,6 +222,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
 
   }
 
+  @Test
   public void testDegenerateUnsafeMoves() {
 
     // Unsafe to move increment across read
@@ -224,6 +235,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     assertUnsafeMoveDegenerate("src: x = 7; env: y = 3; dest:3;");
   }
 
+  @Test
   public void testVisibilityUnsafeMoves() {
 
     // Unsafe to move increment across read for global variables
@@ -290,6 +302,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     assertUnsafeMoveVisibility("var x,y; src: x.a = 7; env: y.b = 3; dest: 3;");
   }
 
+  @Test
   public void testVisibilityMoveCalls() {
     // Interprocedural side effect analysis isn't implemented yet, so any calls
     // should make movement unsafe, since we don't know what those calls are
@@ -339,6 +352,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
   }
 
+  @Test
   public void testVisibilityMergesParametersWithHeap() {
     // For now, we expect the visibility based location abstraction
     // to merge parameter variable locations with heap locations because
@@ -381,6 +395,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
   }
 
+  @Test
   public void testMovedSideEffectsMustHaveSameControlFlow() {
 
     // Safe to move within IF block
@@ -570,9 +585,9 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         environment(environmentNode), destinationNode);
 
     if (expected) {
-      assertTrue(result);
+      assertThat(result).isTrue();
     } else {
-      assertFalse(result);
+      assertThat(result).isFalse();
     }
   }
 
@@ -609,7 +624,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     LabeledStatementSearcher s = new LabeledStatementSearcher(label);
 
     NodeTraversal.traverse(getLastCompiler(), getLastCompiler().jsRoot, s);
-    assertNotNull("Label " + label + " should be in the source code", s.found);
+    assertWithMessage("Label " + label + " should be in the source code").that(s.found).isNotNull();
 
     return s.found;
   }

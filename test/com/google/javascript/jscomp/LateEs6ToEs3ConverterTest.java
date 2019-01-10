@@ -19,8 +19,13 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Test cases for ES6 transpilation. This tests {@link LateEs6ToEs3Converter} */
+@RunWith(JUnit4.class)
 public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
 
   public LateEs6ToEs3ConverterTest() {
@@ -28,7 +33,8 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
@@ -46,7 +52,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     return 1;
   }
 
-
+  @Test
   public void testObjectLiteralMemberFunctionDef() {
     test(
         "var x = {/** @return {number} */ a() { return 0; } };",
@@ -54,6 +60,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     assertThat(getLastCompiler().injected).isEmpty();
   }
 
+  @Test
   public void testInitSymbolIterator() {
     test(
         externs("/** @type {symbol} */ Symbol.iterator;"),
@@ -64,6 +71,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "         $jscomp$compprop0)")));
   }
 
+  @Test
   public void testMethodInObject() {
     test("var obj = { f() {alert(1); } };",
         "var obj = { f: function() {alert(1); } };");
@@ -73,6 +81,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         "var obj = { f: function() { alert(1); }, x: x };");
   }
 
+  @Test
   public void testComputedPropertiesWithMethod() {
     test(
         "var obj = { ['f' + 1]: 1, m() {}, ['g' + 1]: 1, };",
@@ -83,6 +92,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "     ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0)));"));
   }
 
+  @Test
   public void testComputedProperties() {
     test(
         "var obj = { ['f' + 1] : 1, ['g' + 1] : 1 };",
@@ -169,6 +179,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"));
   }
 
+  @Test
   public void testComputedPropGetterSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -187,16 +198,19 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "var obj = ($jscomp$compprop0['a' + 'b'] = 2, $jscomp$compprop0);"));
   }
 
+  @Test
   public void testComputedPropCannotConvert() {
     testError("var o = { get [foo]() {}}", CANNOT_CONVERT_YET);
     testError("var o = { set [foo](val) {}}", CANNOT_CONVERT_YET);
   }
 
+  @Test
   public void testNoComputedProperties() {
     testSame("({'a' : 1})");
     testSame("({'a' : 1, f : 1, b : 1})");
   }
 
+  @Test
   public void testUntaggedTemplateLiteral() {
     test("``", "''");
     test("`\"`", "'\\\"'");
@@ -224,48 +238,60 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test("`hello ${a ? b : c}${a * b}`", "'hello ' + (a ? b : c) + (a * b)");
   }
 
+  @Test
   public void testTaggedTemplateLiteral() {
     test(
         "tag``",
         lines(
             "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['']);",
-            "$jscomp$templatelit$0.raw = [''];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag`${hello} world`",
         lines(
             "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
-            "$jscomp$templatelit$0.raw = ['', ' world'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, hello);"));
 
     test(
         "tag`${hello} ${world}`",
         lines(
             "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' ', '']);",
-            "$jscomp$templatelit$0.raw = ['', ' ', ''];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, hello, world);"));
 
     test(
         "tag`\"`",
         lines(
             "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['\\\"']);",
-            "$jscomp$templatelit$0.raw = ['\\\"'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0);"));
 
     // The cooked string and the raw string are different.
+    // Note that this test is tricky to read, because any escape sequences will be escaped twice.
+    // This table is helpful:
+    //
+    //     Java String    JavaScript String      JavaScript Value
+    //
+    //     ----------------------------------------------------------------
+    //     \t        ->   <tab character>    -> <tab character> (length: 1)
+    //     \\t       ->   \t                 -> <tab character> (length: 1)
+    //     \\\t      ->   \<tab character>   -> <tab character> (length: 1)
+    //     \\\\t     ->   \\t                -> \t              (length: 2)
+    //
     test(
-        "tag`a\tb`",
+        "tag`a\\tb`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['a\tb']);",
-            "$jscomp$templatelit$0.raw = ['a\\tb'];",
+            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['a\\tb']);",
+            "$jscomp$templatelit$0.raw = ['a\\\\tb'];",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag()`${hello} world`",
         lines(
             "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
-            "$jscomp$templatelit$0.raw = ['', ' world'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag()($jscomp$templatelit$0, hello);"));
 
     test(
@@ -274,7 +300,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         expected(
             lines(
                 "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
-                "$jscomp$templatelit$0.raw = ['', ' world'];",
+                "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
                 "a.b($jscomp$templatelit$0, hello);")));
 
     // https://github.com/google/closure-compiler/issues/1299
@@ -283,17 +309,26 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         lines(
             "var $jscomp$templatelit$0 = "
                 + "/** @type {!ITemplateArray} */ (['<p class=\"foo\">', '</p>']);",
-            "$jscomp$templatelit$0.raw = ['<p class=\"foo\">', '</p>'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, x);"));
     test(
         "tag`<p class='foo'>${x}</p>`",
         lines(
             "var $jscomp$templatelit$0 = "
                 + "/** @type {!ITemplateArray} */ (['<p class=\\'foo\\'>', '</p>']);",
-            "$jscomp$templatelit$0.raw = ['<p class=\\'foo\\'>', '</p>'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, x);"));
+
+    // invalid escape sequences result in undefined cooked string
+    test(
+        "tag`\\unicode`",
+        lines(
+            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ ([void 0]);",
+            "$jscomp$templatelit$0.raw = ['\\\\unicode'];",
+            "tag($jscomp$templatelit$0);"));
   }
 
+  @Test
   public void testUnicodeEscapes() {
     test("var \\u{73} = \'\\u{2603}\'", "var s = \'\u2603\'");  // ☃
     test("var \\u{63} = \'\\u{1f42a}\'", "var c = \'\uD83D\uDC2A\'");  // 🐪

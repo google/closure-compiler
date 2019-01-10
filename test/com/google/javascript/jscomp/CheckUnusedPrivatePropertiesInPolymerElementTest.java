@@ -17,11 +17,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Checks that references to properties in strings, in Polymer elements, are counted as usages of
  * those properties.
  */
+@RunWith(JUnit4.class)
 public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends CompilerTestCase {
 
   private static final String EXTERNS = lines(
@@ -35,7 +40,8 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
     enableGatherExternProperties();
@@ -47,7 +53,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        new PolymerPass(compiler, 1, true).process(externs, root);
+        new PolymerPass(compiler, 1, PolymerExportPolicy.LEGACY, true).process(externs, root);
         new CheckUnusedPrivateProperties(compiler).process(externs, root);
       }
     };
@@ -68,6 +74,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
     return 1;
   }
 
+  @Test
   public void testPolymerPropertyUsedAsObserver1() {
     allowExternsChanges();
     testNoWarning(
@@ -86,6 +93,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
             "});"));
   }
 
+  @Test
   public void testPolymerPropertyUsedAsObserver2() {
     allowExternsChanges();
     testNoWarning(
@@ -104,6 +112,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
             "});"));
   }
 
+  @Test
   public void testBehaviorPropertyUsedAsObserver() {
     allowExternsChanges();
     test(

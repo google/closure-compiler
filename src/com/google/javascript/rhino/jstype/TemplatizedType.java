@@ -64,8 +64,8 @@ public final class TemplatizedType extends ProxyObjectType {
   TemplatizedType(
       JSTypeRegistry registry, ObjectType objectType,
       ImmutableList<JSType> templateTypes) {
-    super(registry, objectType, objectType.getTemplateTypeMap().addValues(
-        templateTypes));
+    super(
+        registry, objectType, objectType.getTemplateTypeMap().copyFilledWithValues(templateTypes));
 
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
     boolean maybeIsSpecializedOnlyWithUnknown = true;

@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -276,15 +277,17 @@ class PhaseOptimizer implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
-      if (!factory.featureSet().contains(compiler.getFeatureSet())) {
+      FeatureSet featuresInAst = compiler.getFeatureSet();
+      FeatureSet featuresSupportedByPass = factory.featureSet();
+      if (compiler.getOptions().shouldSkipUnsupportedPasses()
+          && !featuresSupportedByPass.contains(featuresInAst)) {
         // NOTE: this warning ONLY appears in code using the Google-internal runner.
         // Both CommandLineRunner.java and gwt/client/GwtRunner.java explicitly set the logging
         // level to Level.OFF to avoid seeing this warning.
         // See https://github.com/google/closure-compiler/pull/2998 for why.
         logger.warning("Skipping pass " + name);
-        logger.info(
-            "pass supports: " + factory.featureSet()
-                + "\ncurrent AST contains: " + compiler.getFeatureSet());
+        FeatureSet unsupportedFeatures = featuresInAst.without(featuresSupportedByPass);
+        logger.warning("AST contains unsupported features: " + unsupportedFeatures);
         return;
       }
 

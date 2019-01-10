@@ -112,6 +112,21 @@ public enum CompilationParam {
     }
   },
 
+  /** Skip all optimizations & non-checks, and don't output code. */
+  CHECKS_ONLY(ParamGroup.ERROR_CHECKING) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setChecksOnly(value);
+      options.setOutputJs(
+          value ? CompilerOptions.OutputJs.SENTINEL : CompilerOptions.OutputJs.NORMAL);
+    }
+
+    @Override
+    public String getJavaInfo() {
+      return diagGroupWarningInfo("CHECKS_ONLY");
+    }
+  },
+
   /** Checks visibility. */
   CHECK_CONSTANTS(ParamGroup.ERROR_CHECKING) {
     @Override
@@ -348,6 +363,22 @@ public enum CompilationParam {
     }
   },
 
+  /**
+   * See
+   * https://github.com/google/closure-compiler/wiki/FAQ#i-get-an-undecomposable-expression-error-for-my-yield-or-await-expression-what-do-i-do
+   */
+  ALLOW_METHOD_CALL_DECOMPOSING(ParamGroup.OPTIMIZATION) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setAllowMethodCallDecomposing(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.allowMethodCallDecomposing();
+    }
+  },
+
   AMBIGUATE_PROPERTIES(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
@@ -468,10 +499,10 @@ public enum CompilationParam {
     }
   },
 
-  CROSS_MODULE_CODE_MOTION(ParamGroup.OPTIMIZATION) {
+  CROSS_CHUNK_CODE_MOTION(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setCrossModuleCodeMotion(value);
+      options.setCrossChunkCodeMotion(value);
     }
 
     @Override
@@ -480,10 +511,10 @@ public enum CompilationParam {
     }
   },
 
-  CROSS_MODULE_METHOD_MOTION(ParamGroup.OPTIMIZATION) {
+  CROSS_CHUNK_METHOD_MOTION(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setCrossModuleMethodMotion(value);
+      options.setCrossChunkMethodMotion(value);
     }
 
     @Override
@@ -713,18 +744,6 @@ public enum CompilationParam {
     @Override
     public boolean isApplied(CompilerOptions options) {
       return options.removeUnusedVars;
-    }
-  },
-
-  REMOVE_SUPER_METHODS(ParamGroup.OPTIMIZATION){
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setRemoveSuperMethods(value);
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.getRemoveSuperMethods();
     }
   },
 

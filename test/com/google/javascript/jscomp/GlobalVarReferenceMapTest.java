@@ -25,14 +25,18 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit-tests for the GlobalVarReferenceMap class.
  *
  * @author bashir@google.com (Bashir Sadjad)
  */
-public final class GlobalVarReferenceMapTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class GlobalVarReferenceMapTest {
 
   private final CompilerInput INPUT1 =
       new CompilerInput(SourceFile.fromCode("input1", ""), false);
@@ -67,9 +71,8 @@ public final class GlobalVarReferenceMapTest extends TestCase {
   private final Reference var3In2Ref = createRefForTest(INPUT2);
   private final Reference var3In1Ext = createRefForTest(EXTERN1);
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
+  @Before
+  public void setUp() throws Exception {
     globalScope.declare(VAR1, new Node(Token.NAME), INPUT1);
     var1Refs.references = ImmutableList.of(var1In1Ref,
         var1In2Ref, var1In3Ref);
@@ -95,35 +98,38 @@ public final class GlobalVarReferenceMapTest extends TestCase {
   }
 
   /** Tests whether the global variable references are set/reset properly. */
+  @Test
   public void testUpdateGlobalVarReferences_ResetReferences() {
     // First we check the original setup then reset again.
     for (int i = 0; i < 2; i++) {
-      assertEquals(var1Refs.references,
-          map.getReferences(globalScope.getVar(VAR1)).references);
-      assertEquals(var2Refs.references,
-          map.getReferences(globalScope.getVar(VAR2)).references);
-      assertEquals(var3Refs.references,
-          map.getReferences(globalScope.getVar(VAR3)).references);
+      assertThat(map.getReferences(globalScope.getVar(VAR1)).references)
+          .isEqualTo(var1Refs.references);
+      assertThat(map.getReferences(globalScope.getVar(VAR2)).references)
+          .isEqualTo(var2Refs.references);
+      assertThat(map.getReferences(globalScope.getVar(VAR3)).references)
+          .isEqualTo(var3Refs.references);
       map.updateGlobalVarReferences(globalMap, root);
     }
   }
 
   /** Removes all variable references in second script. */
+  @Test
   public void testUpdateGlobalVarReferences_UpdateScriptNoRef() {
     Map<Var, ReferenceCollection> scriptMap = new HashMap<>();
     map.updateGlobalVarReferences(scriptMap, scriptRoot);
     ReferenceCollection refs = map.getReferences(globalScope.getVar(VAR2));
-    assertEquals(var2Refs.references, refs.references);
+    assertThat(refs.references).isEqualTo(var2Refs.references);
     refs = map.getReferences(globalScope.getVar(VAR1));
     assertThat(refs.references).hasSize(2);
-    assertEquals(var1Refs.references.get(0), refs.references.get(0));
-    assertEquals(var1Refs.references.get(2), refs.references.get(1));
+    assertThat(refs.references.get(0)).isEqualTo(var1Refs.references.get(0));
+    assertThat(refs.references.get(1)).isEqualTo(var1Refs.references.get(2));
     refs = map.getReferences(globalScope.getVar(VAR3));
     assertThat(refs.references).hasSize(1);
-    assertEquals(var3Refs.references.get(0), refs.references.get(0));
+    assertThat(refs.references.get(0)).isEqualTo(var3Refs.references.get(0));
   }
 
   /** Changes variable references in second script. */
+  @Test
   public void testUpdateGlobalVarReferences_UpdateScriptNewRefs() {
     Map<Var, ReferenceCollection> scriptMap = new HashMap<>();
 
@@ -145,21 +151,22 @@ public final class GlobalVarReferenceMapTest extends TestCase {
     map.updateGlobalVarReferences(scriptMap, scriptRoot);
     ReferenceCollection refs = map.getReferences(globalScope.getVar(VAR1));
     assertThat(refs.references).hasSize(3);
-    assertEquals(var1Refs.references.get(0), refs.references.get(0));
-    assertEquals(newVar1In2Ref, refs.references.get(1));
-    assertEquals(var1Refs.references.get(2), refs.references.get(2));
+    assertThat(refs.references.get(0)).isEqualTo(var1Refs.references.get(0));
+    assertThat(refs.references.get(1)).isEqualTo(newVar1In2Ref);
+    assertThat(refs.references.get(2)).isEqualTo(var1Refs.references.get(2));
     refs = map.getReferences(globalScope.getVar(VAR2));
     assertThat(refs.references).hasSize(3);
-    assertEquals(var2Refs.references.get(0), refs.references.get(0));
-    assertEquals(newVar2In2Ref, refs.references.get(1));
-    assertEquals(var2Refs.references.get(1), refs.references.get(2));
+    assertThat(refs.references.get(0)).isEqualTo(var2Refs.references.get(0));
+    assertThat(refs.references.get(1)).isEqualTo(newVar2In2Ref);
+    assertThat(refs.references.get(2)).isEqualTo(var2Refs.references.get(1));
     refs = map.getReferences(globalScope.getVar(VAR3));
     assertThat(refs.references).hasSize(2);
-    assertEquals(var3Refs.references.get(0), refs.references.get(0));
-    assertEquals(newVar3In2Ref, refs.references.get(1));
+    assertThat(refs.references.get(0)).isEqualTo(var3Refs.references.get(0));
+    assertThat(refs.references.get(1)).isEqualTo(newVar3In2Ref);
   }
 
   /** Changes variable references in second script. */
+  @Test
   public void testUpdateGlobalVarReferences_UpdateScriptNewVar() {
     Map<Var, ReferenceCollection> scriptMap = new HashMap<>();
     final String var4 = "var4";
@@ -171,24 +178,25 @@ public final class GlobalVarReferenceMapTest extends TestCase {
     map.updateGlobalVarReferences(scriptMap, scriptRoot);
     ReferenceCollection refs = map.getReferences(globalScope.getVar(var4));
     assertThat(refs.references).hasSize(1);
-    assertEquals(newVar3In2Ref, refs.references.get(0));
+    assertThat(refs.references.get(0)).isEqualTo(newVar3In2Ref);
   }
 
+  @Test
   public void testUpdateReferencesWithGlobalScope() {
     Scope newGlobalScope = Scope.createGlobalScope(root);
     map.updateReferencesWithGlobalScope(newGlobalScope);
     ReferenceCollection references =
         map.getReferences(globalScope.getVar(VAR1));
     for (Reference ref : references) {
-      assertEquals(newGlobalScope, ref.getScope());
+      assertThat(ref.getScope()).isEqualTo(newGlobalScope);
     }
     references = map.getReferences(globalScope.getVar(VAR2));
     for (Reference ref : references) {
-      assertEquals(newGlobalScope, ref.getScope());
+      assertThat(ref.getScope()).isEqualTo(newGlobalScope);
     }
     references = map.getReferences(globalScope.getVar(VAR3));
     for (Reference ref : references) {
-      assertEquals(newGlobalScope, ref.getScope());
+      assertThat(ref.getScope()).isEqualTo(newGlobalScope);
     }
   }
 }

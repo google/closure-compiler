@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.AstValidator.ViolationHandler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -28,11 +29,15 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
+/** @author johnlenz@google.com (John Lenz) */
+@RunWith(JUnit4.class)
 public final class AstValidatorTest extends CompilerTestCase {
 
   private boolean lastCheckWasValid = true;
@@ -61,13 +66,15 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     disableAstValidation();
     disableNormalize();
     disableLineNumberCheck();
   }
 
+  @Test
   public void testClass() {
     valid(lines(
         "class C {",
@@ -97,6 +104,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(c, Check.STATEMENT);
   }
 
+  @Test
   public void testForIn() {
     valid("for(var a in b);");
     valid("for(let a in b);");
@@ -106,6 +114,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("for(a in {});");
   }
 
+  @Test
   public void testForOf() {
     valid("for(var a of b);");
     valid("for(let a of b);");
@@ -115,36 +124,41 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("for(a of {});");
   }
 
+  @Test
   public void testForAwaitOf() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
-    valid("for await(var a of b);");
-    valid("for await(let a of b);");
-    valid("for await(const a of b);");
-    valid("for await(a of b);");
-    valid("for await(a of []);");
-    valid("for await(a of {});");
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    valid("async () => { for await(var a of b); }");
+    valid("async () => { for await(let a of b); }");
+    valid("async () => { for await(const a of b); }");
+    valid("async () => { for await(a of b); }");
+    valid("async () => { for await(a of []); }");
+    valid("async () => { for await(a of {}); }");
   }
 
+  @Test
   public void testQuestionableForIn() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     setExpectParseWarningsThisTest();
     valid("for(var a = 1 in b);");
   }
 
+  @Test
   public void testDebugger() {
     valid("debugger;");
   }
 
+  @Test
   public void testValidScript() {
     Node n = new Node(Token.SCRIPT);
     expectInvalid(n, Check.SCRIPT);
     n.setInputId(new InputId("something_input"));
-    n.setStaticSourceFile(new SimpleSourceFile("something", false));
+    n.setStaticSourceFile(new SimpleSourceFile("something", SourceKind.STRONG));
     expectValid(n, Check.SCRIPT);
     expectInvalid(n, Check.STATEMENT);
     expectInvalid(n, Check.EXPRESSION);
   }
 
+  @Test
   public void testValidStatement1() {
     Node n = new Node(Token.RETURN);
     expectInvalid(n, Check.EXPRESSION);
@@ -152,6 +166,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.SCRIPT);
   }
 
+  @Test
   public void testValidExpression1() {
     Node n = new Node(Token.ARRAYLIT, new Node(Token.EMPTY));
     expectValid(n, Check.EXPRESSION);
@@ -159,6 +174,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.SCRIPT);
   }
 
+  @Test
   public void testValidExpression2() {
     Node n = new Node(Token.NOT, new Node(Token.TRUE));
     expectValid(n, Check.EXPRESSION);
@@ -166,6 +182,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.SCRIPT);
   }
 
+  @Test
   public void testValidConst() {
     valid("const x = r;");
     valid("const [x] = r;");
@@ -175,6 +192,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("const x = r, {y} = r;");
   }
 
+  @Test
   public void testInvalidConst() {
     Node n = new Node(Token.CONST);
     expectInvalid(n, Check.STATEMENT);
@@ -189,6 +207,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.STATEMENT);
   }
 
+  @Test
   public void testInvalidConstLanguageLevel() {
     Node n = IR.constNode(IR.name("x"), IR.number(3));
 
@@ -199,6 +218,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectValid(n, Check.STATEMENT);
   }
 
+  @Test
   public void testInvalidLetLanguageLevel() {
     Node n = IR.let(IR.name("x"), IR.number(3));
 
@@ -209,11 +229,13 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectValid(n, Check.STATEMENT);
   }
 
+  @Test
   public void testNewTargetIsValidExpression() {
     Node n = new Node(Token.NEW_TARGET);
     expectValid(n, Check.EXPRESSION);
   }
 
+  @Test
   public void testCastOnLeftSideOfAssign() {
     JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);
     jsdoc.recordType(new JSTypeExpression(IR.string("number"), "<AstValidatorTest>"));
@@ -225,6 +247,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectValid(n, Check.STATEMENT);
   }
 
+  @Test
   public void testInvalidEmptyStatement() {
     Node n = new Node(Token.EMPTY, new Node(Token.TRUE));
     expectInvalid(n, Check.STATEMENT);
@@ -232,6 +255,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectValid(n, Check.STATEMENT);
   }
 
+  @Test
   public void testInvalidNumberStatement() {
     Node n = IR.number(1);
     expectInvalid(n, Check.STATEMENT);
@@ -239,17 +263,20 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectValid(n, Check.STATEMENT);
   }
 
+  @Test
   public void testValidRestParameter() {
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     valid("function f(a,...rest){}");
     valid("function f(a,...[re,...st]){}");
   }
 
+  @Test
   public void testDefaultParameter() {
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     valid("function f(a = 0, b){}");
   }
 
+  @Test
   public void testAwaitExpression() {
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node awaitNode = new Node(Token.AWAIT);
@@ -260,6 +287,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectValid(awaitNode, Check.EXPRESSION);
   }
 
+  @Test
   public void testAwaitExpressionNonAsyncFunction() {
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node awaitNode = new Node(Token.AWAIT);
@@ -270,6 +298,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(awaitNode, Check.EXPRESSION);
   }
 
+  @Test
   public void testAwaitExpressionNoFunction() {
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node n = new Node(Token.AWAIT);
@@ -277,6 +306,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.EXPRESSION);
   }
 
+  @Test
   public void testInvalidArrayPattern0() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
@@ -290,6 +320,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.EXPRESSION);
   }
 
+  @Test
   public void testValidDestructuringAssignment0() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     valid("var [x] = obj;");
@@ -318,6 +349,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("([...x()['y']] = obj);");
   }
 
+  @Test
   public void testValidDestructuringAssignment1() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     valid("var {a:b} = obj;");
@@ -332,6 +364,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("({a:b()['c'] = 1} = obj);");
   }
 
+  @Test
   public void testValidDestructuringAssignment2() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     valid("var {['a']:b} = obj;");
@@ -347,6 +380,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("({['a']:b()['c'] = 1} = obj);");
   }
 
+  @Test
   public void testObjectRestAssignment() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     valid("var {a, ...rest} = obj;");
@@ -361,6 +395,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("({a:b()['c'] = 1, ...rest} = obj);");
   }
 
+  @Test
   public void testInvalidObjectRestForLanguageLevel() {
     Node n = IR.assign(IR.objectPattern(IR.rest(IR.name("x"))), IR.objectlit());
 
@@ -371,6 +406,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectValid(n, Check.EXPRESSION);
   }
 
+  @Test
   public void testInvalidArrayRestForLanguageLevel() {
     Node n = IR.assign(IR.arrayPattern(IR.rest(IR.name("x"))), IR.arraylit());
 
@@ -381,6 +417,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectValid(n, Check.EXPRESSION);
   }
 
+  @Test
   public void testInvalidDestructuringAssignment() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
@@ -400,28 +437,34 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   /** Tests checking that AstValidator validates one particular Feature in the AST. */
+  @Test
   public void testFeatureValidation_getter() {
     testFeatureValidation("var obj = {get f() {}};", Feature.GETTER);
   }
 
+  @Test
   public void testFeatureValidation_setter() {
     testFeatureValidation("var obj = {set f(x) {}};", Feature.SETTER);
   }
 
+  @Test
   public void testFeatureValidation_classGetterSetter() {
     testFeatureValidation("class C { get f() {} }", Feature.CLASS_GETTER_SETTER);
     testFeatureValidation("class C { set f(x) {} }", Feature.CLASS_GETTER_SETTER);
   }
 
+  @Test
   public void testFeatureValidation_classExtends() {
     testFeatureValidation("class C extends B {}", Feature.CLASS_EXTENDS);
   }
 
+  @Test
   public void testFeatureValidation_arrowFunctions() {
     testFeatureValidation("var arrow = () => 3", Feature.ARROW_FUNCTIONS);
     testFeatureValidation("var asyncArrow = async () => 3", Feature.ARROW_FUNCTIONS);
   }
 
+  @Test
   public void testFeatureValidation_blockScopedFunctionDeclaration() {
     testFeatureValidation("{ function f() {} }", Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
     testFeatureValidation(
@@ -430,88 +473,119 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("function f() {}");
   }
 
+  @Test
   public void testFeatureValidation_classes() {
     testFeatureValidation("class C {}", Feature.CLASSES);
     testFeatureValidation("var C = class {}", Feature.CLASSES);
   }
 
+  @Test
   public void testFeatureValidation_computedProperties() {
     testFeatureValidation("var obj = { ['foo' + 3]: 4};", Feature.COMPUTED_PROPERTIES);
     testFeatureValidation("var { ['foo' + 3]: x} = obj;", Feature.COMPUTED_PROPERTIES);
     testFeatureValidation("class C { ['foobar']() {} }", Feature.COMPUTED_PROPERTIES);
   }
 
+  @Test
   public void testFeatureValidation_defaultParameters() {
     testFeatureValidation("function f(a = 1) {}", Feature.DEFAULT_PARAMETERS);
     testFeatureValidation("((a = 3) => a)", Feature.DEFAULT_PARAMETERS);
   }
 
-  public void testFeatureValidation_destructuring() {
-    testFeatureValidation("var x, {a, b} = obj;", Feature.DESTRUCTURING);
-    testFeatureValidation("var x, [a, b] = arr;", Feature.DESTRUCTURING);
-    testFeatureValidation("(x = 0, {a, b} = obj);", Feature.DESTRUCTURING);
-    testFeatureValidation("x = 0, [a, b] = obj;", Feature.DESTRUCTURING);
-    testFeatureValidation("for ({a, b} of c) {}", Feature.DESTRUCTURING);
-    testFeatureValidation("for ([a, b] of c) {}", Feature.DESTRUCTURING);
+  @Test
+  public void testFeatureValidation_arrayDestructuring() {
+    testFeatureValidation("var x, [a, b] = arr;", Feature.ARRAY_DESTRUCTURING);
+    testFeatureValidation("x = 0, [a, b] = obj;", Feature.ARRAY_DESTRUCTURING);
+    testFeatureValidation("for ([a, b] of c) {}", Feature.ARRAY_DESTRUCTURING);
+    testFeatureValidation("function f([a, b]) {}", Feature.ARRAY_DESTRUCTURING);
   }
 
+  @Test
+  public void testFeatureValidation_objectDestructuring() {
+    testFeatureValidation("var x, {a, b} = obj;", Feature.OBJECT_DESTRUCTURING);
+    testFeatureValidation("(x = 0, {a, b} = obj);", Feature.OBJECT_DESTRUCTURING);
+    testFeatureValidation("for ({a, b} of c) {}", Feature.OBJECT_DESTRUCTURING);
+    testFeatureValidation("function f({a, b}) {}", Feature.OBJECT_DESTRUCTURING);
+  }
+
+  @Test
   public void testFeatureValidation_extendedObjectLiterals() {
     testFeatureValidation("var obj = { x };", Feature.EXTENDED_OBJECT_LITERALS);
   }
 
+  @Test
   public void testFeatureValidation_forOf() {
     testFeatureValidation("for (const a of b) {}", Feature.FOR_OF);
   }
 
+  @Test
   public void testFeatureValidation_forAwaitOf() {
-    testFeatureValidation("for await (const a of b) {}", Feature.FOR_AWAIT_OF);
+    testFeatureValidation("async () => { for await (const a of b) {} }", Feature.FOR_AWAIT_OF);
   }
 
+  @Test
   public void testFeatureValidation_generatorFunctions() {
     testFeatureValidation("const f = function *() {}", Feature.GENERATORS);
     testFeatureValidation("function *f() {}", Feature.GENERATORS);
     testFeatureValidation("class C { *f() {} }", Feature.GENERATORS);
   }
 
+  @Test
   public void testFeatureValidation_memberDeclarations() {
     testFeatureValidation("class C { f() {} }", Feature.MEMBER_DECLARATIONS);
     testFeatureValidation("var obj = { f() {} };", Feature.MEMBER_DECLARATIONS);
   }
 
+  @Test
   public void testFeatureValidation_newTarget() {
     testFeatureValidation("function f() { new.target }", Feature.NEW_TARGET);
   }
 
+  @Test
   public void testFeatureValidation_restParameters() {
     testFeatureValidation("function f(...rest) {}", Feature.REST_PARAMETERS);
   }
 
+  @Test
   public void testFeatureValidation_spreadExpressions() {
     testFeatureValidation("f(...arr);", Feature.SPREAD_EXPRESSIONS);
     testFeatureValidation("var arr = [...something];", Feature.SPREAD_EXPRESSIONS);
     testFeatureValidation("var obj = {...something};", Feature.SPREAD_EXPRESSIONS);
   }
 
+  @Test
   public void testFeatureValidation_super() {
     testFeatureValidation("class C extends B { constructor() { super(); } }", Feature.SUPER);
     testFeatureValidation("class C extends B { f() { super.method(); } }", Feature.SUPER);
   }
 
+  @Test
   public void testFeatureValidation_templateLiterals() {
     testFeatureValidation("`foo ${3} bar `", Feature.TEMPLATE_LITERALS);
     testFeatureValidation("tag`foo ${3} bar`", Feature.TEMPLATE_LITERALS);
   }
 
+  @Test
+  public void testFeatureValidation_taggedTemplateLiteralWithInvalidEscapes() {
+    // Tagged template literals are allowed to contain invalid escape sequences,
+    // so these should not cause compiler errors or warnings.
+    testFeatureValidation("foo`\\unicode`", Feature.TEMPLATE_LITERALS);
+    testFeatureValidation("foo`\\xray ${3} \\u{42`", Feature.TEMPLATE_LITERALS);
+  }
+
+  @Test
   public void testFeatureValidation_modules() {
     testFeatureValidation("export {x};", Feature.MODULES);
     testFeatureValidation("import {x} from './foo.js';", Feature.MODULES);
   }
 
+  @Test
   public void testFeatureValidation_exponentOp() {
     testFeatureValidation("2 ** 3", Feature.EXPONENT_OP);
     testFeatureValidation("x **= 3;", Feature.EXPONENT_OP);
   }
 
+  @Test
   public void testFeatureValidation_asyncFunctions() {
     testFeatureValidation("const f = async function() {}", Feature.ASYNC_FUNCTIONS);
     testFeatureValidation("async function f() {}", Feature.ASYNC_FUNCTIONS);
@@ -519,22 +593,25 @@ public final class AstValidatorTest extends CompilerTestCase {
     testFeatureValidation("(async () => {})", Feature.ASYNC_FUNCTIONS);
   }
 
+  @Test
   public void testFeatureValidation_asyncGeneratorFunctions() {
     testFeatureValidation("const f = async function *() {}", Feature.ASYNC_GENERATORS);
     testFeatureValidation("async function *f() {}", Feature.ASYNC_GENERATORS);
     testFeatureValidation("class C { async *f() {} }", Feature.ASYNC_GENERATORS);
   }
 
+  @Test
   public void testFeatureValidation_objectLiteralsWithSpread() {
     testFeatureValidation("var obj = {...something};", Feature.OBJECT_LITERALS_WITH_SPREAD);
   }
 
+  @Test
   public void testValidFeatureInScript() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
     Node n = new Node(Token.SCRIPT);
     n.setInputId(new InputId("something_input"));
-    n.setStaticSourceFile(new SimpleSourceFile("something", false));
+    n.setStaticSourceFile(new SimpleSourceFile("something", SourceKind.STRONG));
     expectValid(n, Check.SCRIPT);
 
     n.addChildToFront(IR.let(IR.name("a"), IR.number(3)));
@@ -546,7 +623,7 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   private void valid(String code) {
     testSame(code);
-    assertTrue(lastCheckWasValid);
+    assertThat(lastCheckWasValid).isTrue();
   }
 
   private enum Check {
@@ -572,11 +649,11 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   private void expectInvalid(Node n, Check level) {
-    assertFalse(doCheck(n, level));
+    assertThat(doCheck(n, level)).isFalse();
   }
 
   private void expectValid(Node n, Check level) {
-    assertTrue(doCheck(n, level));
+    assertThat(doCheck(n, level)).isTrue();
   }
 
   /**
@@ -592,19 +669,19 @@ public final class AstValidatorTest extends CompilerTestCase {
     // Remove `feature` from the SCRIPT node's feature set, checking that it was originally present,
     // and then validate that AstValidator errors because it expects `feature` to be present.
     FeatureSet currentFeatures = NodeUtil.getFeatureSetOfScript(script);
-    assertTrue(currentFeatures.contains(feature));
+    assertThat(currentFeatures.contains(feature)).isTrue();
 
     script.putProp(Node.FEATURE_SET, currentFeatures.without(feature));
     expectInvalid(script, Check.SCRIPT);
   }
 
   private Node parseScriptWithoutCheckingLanguageLevel(String code) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     Node n = parseExpectedJs(code);
     Node script = n.getFirstChild();
     assertNode(script).hasType(Token.SCRIPT);
     script.setInputId(new InputId("something_input"));
-    script.setStaticSourceFile(new SimpleSourceFile("something", false));
+    script.setStaticSourceFile(new SimpleSourceFile("something", SourceKind.STRONG));
     return script;
   }
 }

@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.TypeDeclarationsIR.anyType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.arrayType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.booleanType;
@@ -26,6 +26,7 @@ import static com.google.javascript.rhino.TypeDeclarationsIR.numberType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.parameterizedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.stringType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.voidType;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodePrinter;
@@ -39,24 +40,27 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.TypeDeclarationNode;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeDeclarationsIR;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Tests the AST generated when parsing code that includes type declarations
- * in the syntax.
- * <p>
- * (It tests both parsing from source to a parse tree, and conversion from a
- * parse tree to an AST in {@link IR} and {@link TypeDeclarationsIR}.)
+ * Tests the AST generated when parsing code that includes type declarations in the syntax.
+ *
+ * <p>(It tests both parsing from source to a parse tree, and conversion from a parse tree to an AST
+ * in {@link IR} and {@link TypeDeclarationsIR}.)
  *
  * @author martinprobst@google.com (Martin Probst)
  */
-public final class TypeSyntaxTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class TypeSyntaxTest {
 
   private TestErrorManager testErrorManager;
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
+  @Before
+  public void setUp() throws Exception {
     testErrorManager = new TestErrorManager();
   }
 
@@ -80,6 +84,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse(source, LanguageMode.ECMASCRIPT_2015);
   }
 
+  @Test
   public void testVariableDeclaration() {
     assertVarType("any", anyType(), "var foo: any = 'hello';");
     assertVarType("number", numberType(), "var foo: number = 'hello';");
@@ -89,6 +94,7 @@ public final class TypeSyntaxTest extends TestCase {
     assertVarType("named type", namedType("hello"), "var foo: hello = 'hello';");
   }
 
+  @Test
   public void testVariableDeclaration_keyword() {
     expectErrors("Parse error. Unexpected token 'catch' in type expression");
     parse("var foo: catch;");
@@ -96,16 +102,19 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var foo: implements;"); // strict mode keyword
   }
 
+  @Test
   public void testVariableDeclaration_errorIncomplete() {
     expectErrors("Parse error. Unexpected token '=' in type expression");
     parse("var foo: = 'hello';");
   }
 
+  @Test
   public void testTypeInDocAndSyntax() {
     expectErrors("Can only have JSDoc or inline type annotations, not both");
     parse("var /** string */ foo: string = 'hello';");
   }
 
+  @Test
   public void testTypedGetterSetterDeclaration() {
     Node n = parse("var x = {get a(): number {\n}};", LanguageMode.ECMASCRIPT6_TYPED);
     assertDeclaredType("number type", numberType(),
@@ -116,83 +125,101 @@ public final class TypeSyntaxTest extends TestCase {
             .getFirstChild());
   }
 
+  @Test
   public void testSetterDeclarationWithReturnType() {
     expectErrors("Parse error. setter should not have any returns");
     parse("var x = {set a(x): number {\n}};", LanguageMode.ECMASCRIPT6_TYPED);
   }
 
+  @Test
   public void testFunctionParamDeclaration() {
     Node fn = parse("function foo(x: string) {\n}").getFirstChild();
     Node param = fn.getSecondChild().getFirstChild();
     assertDeclaredType("string type", stringType(), param);
   }
 
+  @Test
   public void testFunctionParamDeclaration_defaultValue() {
     Node fn = parse("function foo(x: string = 'hello') {\n}").getFirstChild();
     Node param = fn.getSecondChild().getFirstChild();
     assertDeclaredType("string type", stringType(), param);
   }
 
+  @Test
   public void testFunctionParamDeclaration_destructuringArray() {
     parse("function foo([x]: string[]) {\n}");
   }
 
+  @Test
   public void testFunctionParamDeclaration_destructuringArrayInner() {
     // This syntax is not supported by TypeScript.
     expectErrors("Parse error. ']' expected");
     parse("function foo([x: string]) {}");
   }
 
+  @Test
   public void testFunctionParamDeclaration_destructuringObject() {
     parse("function foo({x}: any) {\n}");
   }
 
-  public void disabled_testFunctionParamDeclaration_arrow() {
+  @Test
+  @Ignore
+  public void testFunctionParamDeclaration_arrow() {
     Node fn = parse("(x: string) => 'hello' + x;").getFirstFirstChild();
     Node param = fn.getSecondChild().getFirstChild();
     assertDeclaredType("string type", stringType(), param);
   }
 
+  @Test
   public void testFunctionParamDeclaration_optionalParam() {
     parse("function foo(x?) {\n}");
   }
 
+  @Test
   public void testFunctionParamDeclaration_notEs6Typed() {
     testNotEs6Typed("function foo(x: string) {}", "type annotation");
     testNotEs6Typed("function foo(x?) {}", "optional parameter");
   }
 
+  @Test
   public void testFunctionReturn() {
     Node fn = parse("function foo(): string {\n  return 'hello';\n}").getFirstChild();
     assertDeclaredType("string type", stringType(), fn);
   }
 
-  public void disabled_testFunctionReturn_arrow() {
+  @Test
+  @Ignore
+  public void testFunctionReturn_arrow() {
     Node fn = parse("(): string => 'hello';").getFirstFirstChild();
     assertDeclaredType("string type", stringType(), fn);
   }
 
+  @Test
   public void testFunctionReturn_typeInDocAndSyntax() {
     expectErrors("Can only have JSDoc or inline type annotations, not both");
     parse("function /** string */ foo(): string { return 'hello'; }");
   }
 
+  @Test
   public void testFunctionReturn_typeInJsdocOnly() {
     parse("function /** string */ foo() { return 'hello'; }",
         "function/** string */ foo() {\n  return 'hello';\n}");
   }
 
+  @Test
   public void testCompositeType() {
     Node varDecl = parse("var foo: mymod.ns.Type;").getFirstChild();
     TypeDeclarationNode expected = namedType(ImmutableList.of("mymod", "ns", "Type"));
     assertDeclaredType("mymod.ns.Type", expected, varDecl.getFirstChild());
   }
 
+  @Test
   public void testCompositeType_trailingDot() {
     expectErrors("Parse error. 'identifier' expected");
     parse("var foo: mymod.Type.;");
   }
 
+  @Test
   public void testArrayType() {
     TypeDeclarationNode arrayOfString = arrayType(stringType());
     assertVarType("string[]", arrayOfString, "var foo: string[];");
@@ -200,26 +227,31 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var foo: string[][];");
   }
 
+  @Test
   public void testArrayType_empty() {
     expectErrors("Parse error. Unexpected token '[' in type expression");
     parse("var x: [];");
   }
 
+  @Test
   public void testArrayType_missingClose() {
     expectErrors("Parse error. ']' expected");
     parse("var foo: string[;");
   }
 
+  @Test
   public void testArrayType_qualifiedType() {
     TypeDeclarationNode arrayOfString = arrayType(namedType("mymod.ns.Type"));
     assertVarType("string[]", arrayOfString, "var foo: mymod.ns.Type[];");
   }
 
+  @Test
   public void testArrayType_trailingParameterizedType() {
     expectErrors("Parse error. Semi-colon expected");
     parse("var x: Foo[]<Bar>;");
   }
 
+  @Test
   public void testRecordType() {
     parse("var x: {p: string, q: string, r: string};");
     parse("var x: {p: string, q: string}[];");
@@ -227,6 +259,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var x: (o: {p: string, q: string}) => r;");
   }
 
+  @Test
   public void testParameterizedType() {
     TypeDeclarationNode parameterizedType =
         parameterizedType(
@@ -241,6 +274,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var x: A<B<C<D>>>;");
   }
 
+  @Test
   public void testParameterizedType_empty() {
     expectErrors("Parse error. Unexpected token '>' in type expression");
     parse("var x: my.parameterized.Type<>;");
@@ -248,25 +282,30 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var x: my.parameterized.Type<ns.A, >;");
   }
 
+  @Test
   public void testParameterizedType_noArgs() {
     expectErrors("Parse error. Unexpected token '>' in type expression");
     parse("var x: my.parameterized.Type<>;");
   }
 
+  @Test
   public void testParameterizedType_trailing1() {
     expectErrors("Parse error. '>' expected");
     parse("var x: my.parameterized.Type<ns.A;");
   }
 
+  @Test
   public void testParameterizedType_trailing2() {
     expectErrors("Parse error. Unexpected token ';' in type expression");
     parse("var x: my.parameterized.Type<ns.A,;");
   }
 
+  @Test
   public void testParameterizedArrayType() {
     parse("var x: Foo<Bar>[];");
   }
 
+  @Test
   public void testUnionType() {
     parse("var x: string | number[];");
     parse("var x: number[] | string;");
@@ -274,11 +313,11 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var x: (string | number)[];");
 
     Node ast = parse("var x: string | number[] | Array<Foo>;");
-    TypeDeclarationNode union = (TypeDeclarationNode)
-        (ast.getFirstFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
-    assertEquals(3, union.getChildCount());
+    TypeDeclarationNode union = ast.getFirstFirstChild().getDeclaredTypeExpression();
+    assertThat(union.getChildCount()).isEqualTo(3);
   }
 
+  @Test
   public void testUnionType_empty() {
     expectErrors("Parse error. Unexpected token '|' in type expression");
     parse("var x: |;");
@@ -288,20 +327,24 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var x: | number;");
   }
 
+  @Test
   public void testUnionType_trailingParameterizedType() {
     expectErrors("Parse error. Semi-colon expected");
     parse("var x: (Foo|Bar)<T>;");
   }
 
+  @Test
   public void testUnionType_notEs6Typed() {
     testNotEs6Typed("var x: string | number[] | Array<Foo>;", "type annotation");
   }
 
+  @Test
   public void testParenType_empty() {
     expectErrors("Parse error. Unexpected token ')' in type expression");
     parse("var x: ();");
   }
 
+  @Test
   public void testFunctionType() {
     parse("var n: (p1) => boolean;");
     parse("var n: (p1, p2) => boolean;");
@@ -312,27 +355,26 @@ public final class TypeSyntaxTest extends TestCase {
     // parse("(number): () => number => number;");
 
     Node ast = parse("var n: (p1: string, p2: number) => boolean[];");
-    TypeDeclarationNode function = (TypeDeclarationNode)
-        (ast.getFirstFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
+    TypeDeclarationNode function = ast.getFirstFirstChild().getDeclaredTypeExpression();
     assertNode(function).hasType(Token.FUNCTION_TYPE);
 
     Node ast2 = parse("var n: (p1: string, p2: number) => boolean | number;");
-    TypeDeclarationNode function2 = (TypeDeclarationNode)
-        (ast2.getFirstFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
+    TypeDeclarationNode function2 = ast2.getFirstFirstChild().getDeclaredTypeExpression();
     assertNode(function2).hasType(Token.FUNCTION_TYPE);
 
     Node ast3 = parse("var n: (p1: string, p2: number) => Array<Foo>;");
-    TypeDeclarationNode function3 = (TypeDeclarationNode)
-        (ast3.getFirstFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
+    TypeDeclarationNode function3 = ast3.getFirstFirstChild().getDeclaredTypeExpression();
     assertNode(function3).hasType(Token.FUNCTION_TYPE);
   }
 
+  @Test
   public void testFunctionType_optionalParam() {
     parse("var n: (p1?) => boolean;");
     parse("var n: (p1?: string) => boolean;");
     parse("var n: (p1?: string, p2?) => boolean;");
   }
 
+  @Test
   public void testFunctionType_illegalParam() {
     expectErrors("Parse error. Unexpected token '...' in type expression");
     parse("var n : (...p1 p2) => number;");
@@ -350,6 +392,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var n: ([x, y], z) => number;");
   }
 
+  @Test
   public void testFunctionType_restParam() {
     parse("var n: (...p1) => boolean;");
     parse("var n: (...p1: number[]) => boolean;");
@@ -357,11 +400,13 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var n: (p0?: number, ...p1) => boolean;");
   }
 
+  @Test
   public void testFunctionType_restParamNotArrayType() {
     expectErrors("Parse error. A rest parameter must be of an array type.");
     parse("var n: (...p1:number) => boolean;");
   }
 
+  @Test
   public void testFunctionType_restNotLastParam() {
     expectErrors("Parse error. A rest parameter must be last in a parameter list.");
     parse("var n: (...p0, p1) => boolean;");
@@ -369,16 +414,19 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var n: (...p0, ...p1) => boolean;");
   }
 
+  @Test
   public void testFunctionType_requiredParamAfterOptional() {
     expectErrors("Parse error. A required parameter cannot follow an optional parameter.");
     parse("var n: (p0?, p1) => boolean;");
   }
 
+  @Test
   public void testFunctionType_bothRestAndOptionalParam() {
     expectErrors("Parse error. Unexpected token '...' in type expression");
     parse("var n: (...p0?:number) => boolean;");
   }
 
+  @Test
   public void testFunctionType_incomplete() {
     expectErrors("Parse error. Unexpected token ';' in type expression");
     parse("var n: (p1:string) =>;");
@@ -386,6 +434,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var n: => boolean;");
   }
 
+  @Test
   public void testFunctionType_missingParens() {
     expectErrors("Parse error. Semi-colon expected");
     parse("var n: p1 => boolean;");
@@ -395,11 +444,13 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var n: p1:string, p2:number => boolean;");
   }
 
+  @Test
   public void testFunctionType_notEs6Typed() {
     testNotEs6TypedFullError("var n: (p1:string) => boolean;", "Parse error. ')' expected");
     testNotEs6TypedFullError("var n: (p1?) => boolean;", "Parse error. ')' expected");
   }
 
+  @Test
   public void testInterface() {
     parse("interface I {\n}");
     parse("interface Foo extends Bar, Baz {\n}");
@@ -418,15 +469,18 @@ public final class TypeSyntaxTest extends TestCase {
     parse("interface I {\n  [foo: string]: number;\n}");
   }
 
+  @Test
   public void testInterface_notEs6Typed() {
     testNotEs6Typed("interface I { foo: string;}", "interface", "type annotation");
   }
 
+  @Test
   public void testInterface_disallowExpression() {
     expectErrors("Parse error. primary expression expected");
     parse("var i = interface {};");
   }
 
+  @Test
   public void testInterfaceMember() {
     Node ast = parse("interface I {\n  foo;\n}");
     Node classMembers = ast.getFirstChild().getLastChild();
@@ -436,6 +490,7 @@ public final class TypeSyntaxTest extends TestCase {
         classMembers.getFirstChild());
   }
 
+  @Test
   public void testEnum() {
     parse("enum E {\n  a,\n  b,\n  c\n}");
 
@@ -443,10 +498,12 @@ public final class TypeSyntaxTest extends TestCase {
     parse("if (true) { enum E {} }");
   }
 
+  @Test
   public void testEnum_notEs6Typed() {
     testNotEs6Typed("enum E {a, b, c}", "enum");
   }
 
+  @Test
   public void testMemberVariable() {
     Node ast = parse("class Foo {\n  foo;\n}");
     Node classMembers = ast.getFirstChild().getLastChild();
@@ -454,15 +511,18 @@ public final class TypeSyntaxTest extends TestCase {
         classMembers.getFirstChild());
   }
 
+  @Test
   public void testMemberVariable_generator() {
     expectErrors("Parse error. Member variable cannot be prefixed by '*' (generator function)");
     parse("class X { *foo: number; }");
   }
 
+  @Test
   public void testComputedPropertyMemberVariable() {
     parse("class Foo {\n  ['foo'];\n}");
   }
 
+  @Test
   public void testMemberVariable_type() {
     Node classDecl = parse("class X {\n  m1: string;\n  m2: number;\n}").getFirstChild();
     Node members = classDecl.getChildAtIndex(2);
@@ -470,11 +530,13 @@ public final class TypeSyntaxTest extends TestCase {
     assertDeclaredType("string field type", stringType(), memberVariable);
   }
 
+  @Test
   public void testMemberVariable_notEs6Typed() {
     testNotEs6TypedFullError("class Foo {\n  foo;\n}", "Parse error. '(' expected");
     testNotEs6TypedFullError("class Foo {\n  ['foo'];\n}", "Parse error. '(' expected");
   }
 
+  @Test
   public void testMethodType() {
     Node classDecl = parse(
         "class X {\n"
@@ -487,6 +549,7 @@ public final class TypeSyntaxTest extends TestCase {
     assertDeclaredType("string return type", stringType(), method);
   }
 
+  @Test
   public void testGenericInterface() {
     parse("interface Foo<T> {\n}");
     parse("interface J<F extends Array<I<number>>> {\n}");
@@ -494,6 +557,7 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6Typed("interface Foo<T> {\n}", "interface", "generics");
   }
 
+  @Test
   public void testGenericClass() {
     parse("class Foo<T> {\n}");
     parse("class Foo<U, V> {\n}");
@@ -503,6 +567,7 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6Typed("class Foo<T> {}", "generics");
   }
 
+  @Test
   public void testGenericFunction() {
     parse("function foo<T>() {\n}");
     // parse("var x = <K, V>(p) => 3;");
@@ -524,6 +589,7 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6Typed("function foo<T>() {}", "generics");
   }
 
+  @Test
   public void testImplements() {
     parse("class Foo implements Bar, Baz {\n}");
     parse("class Foo extends Bar implements Baz {\n}");
@@ -531,6 +597,7 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6TypedFullError("class Foo implements Bar {\n}", "Parse error. '{' expected");
   }
 
+  @Test
   public void testTypeAlias() {
     parse("type Foo = number;");
 
@@ -540,6 +607,7 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6TypedFullError("type Foo = number;", "Parse error. Semi-colon expected");
   }
 
+  @Test
   public void testAmbientDeclaration() {
     parse("declare var x, y;");
     parse("declare var x;\ndeclare var y;");
@@ -570,6 +638,7 @@ public final class TypeSyntaxTest extends TestCase {
 
   }
 
+  @Test
   public void testExportDeclaration() {
     parse("export interface I {\n}\nexport class C implements I {\n}");
     parse("export declare class A {\n}\nexport declare class B extends A {\n}");
@@ -578,6 +647,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("export var x export var y");
   }
 
+  @Test
   public void testTypeQuery() {
     parse("var x: typeof y;");
     parse("var x: typeof Foo.Bar.Baz;");
@@ -588,6 +658,7 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6Typed("var x: typeof y;", "type annotation");
   }
 
+  @Test
   public void testAccessibilityModifier() {
     parse("class Foo {\n  private constructor() {\n  }\n}");
     parse("class Foo {\n  protected static bar: number;\n}");
@@ -630,6 +701,7 @@ public final class TypeSyntaxTest extends TestCase {
         accessModifierInterpretedAsPropertyNameErrorMessage);
   }
 
+  @Test
   public void testOptionalProperty() {
     parse("interface I {\n  foo?: number;\n}");
     parse("interface I {\n  foo?(): number;\n}");
@@ -640,6 +712,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("class C { foo?: number; }");
   }
 
+  @Test
   public void testParamNoInitializer() {
     expectErrors("Parse error. ',' expected");
     parse("declare function foo(bar = 3);");
@@ -649,6 +722,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("declare class C { foo(bar = 3); }");
   }
 
+  @Test
   public void testParamDestructuring() {
     parse("declare function foo([bar]);");
     parse("declare function foo({bar:bar});");
@@ -664,6 +738,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var x: ({foo:foo}) => number;");
   }
 
+  @Test
   public void testIndexSignature() {
     parse("interface I {\n  [foo: number]: number;\n}");
     parse("var i: {[foo: number]: number;\n};");
@@ -679,6 +754,7 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6TypedFullError("class C {\n  [foo: number]: number;\n}", "Parse error. ']' expected");
   }
 
+  @Test
   public void testCallSignature() {
     parse("interface I {\n  (foo: number): number;\n}");
     parse("interface I {\n  <T>(foo: number): number;\n}");
@@ -687,6 +763,7 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6Typed("interface I { (foo); }", "interface", "call signature");
   }
 
+  @Test
   public void testConstructSignature() {
     parse("interface I {\n  new (foo: number): number;\n}");
     parse("interface I {\n  new <T>(foo: number): number;\n}");
@@ -695,6 +772,7 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6Typed("interface I { new (foo); }", "interface", "constructor signature");
   }
 
+  @Test
   public void testSpecializedSignature() {
     parse("declare function foo(bar: 'string');");
     parse("interface I {\n  foo(bar: 'string'): number;\n}");
@@ -703,6 +781,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var x: 'string'");
   }
 
+  @Test
   public void testNamespace() {
     parse("namespace foo {\n}");
     parse("namespace foo.bar.baz {\n}");
@@ -732,6 +811,7 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6TypedFullError("namespace foo {}", "Parse error. Semi-colon expected");
   }
 
+  @Test
   public void testAmbientNameSpace() {
     parse("declare namespace foo {\n}");
     parse("declare namespace foo.bar.baz {\n}");
@@ -781,7 +861,7 @@ public final class TypeSyntaxTest extends TestCase {
 
   private static void assertTreeEquals(String message, Node expected, Node actual) {
     String treeDiff = expected.checkTreeEquals(actual);
-    assertNull(message + ": " + treeDiff, treeDiff);
+    assertWithMessage(message + ": " + treeDiff).that(treeDiff).isNull();
   }
 
   private Node parse(String source, String expected, LanguageMode languageIn) {
@@ -800,8 +880,10 @@ public final class TypeSyntaxTest extends TestCase {
     Node script = compiler.parse(SourceFile.fromCode("[test]", source));
 
     // Verifying that all warnings were seen
-    assertTrue("Missing an error", testErrorManager.hasEncounteredAllErrors());
-    assertTrue("Missing a warning", testErrorManager.hasEncounteredAllWarnings());
+    assertWithMessage("Missing an error").that(testErrorManager.hasEncounteredAllErrors()).isTrue();
+    assertWithMessage("Missing a warning")
+        .that(testErrorManager.hasEncounteredAllWarnings())
+        .isTrue();
 
     if (script != null && testErrorManager.getErrorCount() == 0) {
       // if it can be parsed, it should round trip.

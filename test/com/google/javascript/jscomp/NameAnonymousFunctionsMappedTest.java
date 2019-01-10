@@ -19,11 +19,16 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableMap;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test cases for {@link NameAnonymousFunctionsMapped}.
  *
  */
+@RunWith(JUnit4.class)
 public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
 
   private static final String EXTERNS = "var document;";
@@ -41,7 +46,8 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     previous = null;
   }
@@ -53,20 +59,22 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
 
   private void assertMapping(String... pairs) {
     VariableMap functionMap = pass.getFunctionMap();
-    assertEquals(0, pairs.length % 2);
+    assertThat(pairs.length % 2).isEqualTo(0);
     for (int i = 0; i < pairs.length; i += 2) {
       String s = functionMap.lookupSourceName(pairs[i]);
-      assertEquals(pairs[i + 1], s);
+      assertThat(s).isEqualTo(pairs[i + 1]);
     }
     assertThat(functionMap.getNewNameToOriginalNameMap()).hasSize(pairs.length / 2);
   }
 
+  @Test
   public void testSimpleVarAssignment1() {
     test("var a = function() { return 1; }",
          "var a = function $() { return 1; }");
     assertMapping("$", "a");
   }
 
+  @Test
   public void testSimpleVarAssignment2() {
     previous = VariableMap.fromMap(ImmutableMap.of(
         "a", "previous"));
@@ -77,6 +85,7 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("previous", "a");
   }
 
+  @Test
   public void testSimpleVarAssignment3() {
     previous = VariableMap.fromMap(ImmutableMap.of(
         "unused", "$"));
@@ -87,22 +96,26 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$a", "fn");
   }
 
+  @Test
   public void testSimpleLetAssignment() {
     test("let a = function() { return 1; }", "let a = function $() { return 1; }");
     assertMapping("$", "a");
   }
 
+  @Test
   public void testSimpleConstAssignment() {
     test("const a = function() { return 1; }", "const a = function $() { return 1; }");
     assertMapping("$", "a");
   }
 
+  @Test
   public void testAssignmentToProperty() {
     test("var a = {}; a.b = function() { return 1; }",
          "var a = {}; a.b = function $() { return 1; }");
     assertMapping("$", "a.b");
   }
 
+  @Test
   public void testAssignmentToPrototype() {
     test("function a() {} a.prototype.b = function() { return 1; };",
          "function a() {} " +
@@ -110,6 +123,7 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "a.prototype.b");
   }
 
+  @Test
   public void testAssignmentToPrototype2() {
     test("var a = {}; " +
          "a.b = function() {}; " +
@@ -120,6 +134,7 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "a.b", "$a", "a.b.prototype.c");
   }
 
+  @Test
   public void testAssignmentToPrototype3() {
     test("function a() {} a.prototype['XXX'] = function() { return 1; };",
          "function a() {} " +
@@ -131,6 +146,7 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "a.prototype[\"\\n\"]");
   }
 
+  @Test
   public void testAssignmentToPrototype4() {
     test("var Y = 1; function a() {} " +
          "a.prototype[Y] = function() { return 1; };",
@@ -139,6 +155,7 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "a.prototype[Y]");
   }
 
+  @Test
   public void testAssignmentToPrototype5() {
     test("function a() {} a['prototype'].b = function() { return 1; };",
          "function a() {} " +
@@ -146,7 +163,7 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "a[\"prototype\"].b");
   }
 
-
+  @Test
   public void testPrototypeInitializer() {
     test("function a(){} a.prototype = {b: function() { return 1; }};",
          "function a(){} " +
@@ -154,6 +171,7 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "a.prototype.b");
   }
 
+  @Test
   public void testAssignmentToPropertyOfCallReturnValue() {
     test("document.getElementById('x').onClick = function() {};",
          "document.getElementById('x').onClick = " +
@@ -161,6 +179,7 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "document.getElementById(\"x\").onClick");
   }
 
+  @Test
   public void testAssignmentToPropertyOfArrayElement() {
     test("var a = {}; a.b = [{}]; a.b[0].c = function() {};",
          "var a = {}; a.b = [{}]; a.b[0].c = function $() {};");
@@ -173,11 +192,13 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "a.b[x()].d");
   }
 
+  @Test
   public void testAssignmentToObjectLiteralOnDeclaration() {
     testSame("var a = { b: function() {} }");
     testSame("var a = { b: { c: function() {} } }");
   }
 
+  @Test
   public void testAssignmentToGetElem() {
     test("function f() { win['x' + this.id] = function(a){}; }",
          "function f() { win['x' + this.id] = function $(a){}; }");
@@ -186,24 +207,28 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "win[\"x\"+this.id]");
   }
 
+  @Test
   public void testGetElemWithDashes() {
     test("var foo = {}; foo['-'] = function() {};",
          "var foo = {}; foo['-'] = function $() {};");
     assertMapping("$", "foo[\"-\"]");
   }
 
+  @Test
   public void testDuplicateNames() {
     test("var a = function() { return 1; };a = function() { return 2; }",
          "var a = function $() { return 1; };a = function $() { return 2; }");
     assertMapping("$", "a");
   }
 
+  @Test
   public void testIgnoreArrowFunctions() {
     testSame("var a = () => 1");
     testSame("var a = {b: () => 1};");
     testSame("function A() {} A.prototype.foo = () => 5");
   }
 
+  @Test
   public void testComputedProperty() {
     test(
         "function A() {} A.prototype = {['foo']: function() {} };",
@@ -216,24 +241,29 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "A.prototype.\"foo\"+bar()");
   }
 
+  @Test
   public void testGetter() {
     testSame("function A() {} A.prototype = { get foo() { return 5; } }");
   }
 
+  @Test
   public void testSetter() {
     testSame("function A() {} A.prototype = { set foo(bar) {} }");
   }
 
+  @Test
   public void testMethodDefinitionShorthand() {
     testSame("var obj = { b() {}, c() {} }");
     testSame("var obj; obj = { b() {}, c() {} }");
   }
 
+  @Test
   public void testClasses() {
     testSame("class A { static foo() {} }");
     testSame("class A { constructor() {} foo() {} }");
   }
 
+  @Test
   public void testExportedFunctions() {
     // Don't provide a name in the first case, since it would declare the function in the module
     // scope and potentially be unsafe.
@@ -243,17 +273,20 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     testSame("export default function foo() {}");
   }
 
+  @Test
   public void testDefaultParameters() {
     test("function f(g = function() {}) {}", "function f(g = function $() {}) {}");
     assertMapping("$", "g");
   }
 
+  @Test
   public void testSimpleGeneratorAssignment() {
     test("var a = function *() { yield 1; }",
         "var a = function *$() { yield 1; }");
     assertMapping("$", "a");
   }
 
+  @Test
   public void testDestructuring() {
     test("var {a = function() {}} = {};", "var {a = function $() {}} = {};");
     assertMapping("$", "a");

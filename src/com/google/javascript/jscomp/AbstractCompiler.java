@@ -79,17 +79,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   @Nullable
   abstract Node getScriptNode(String filename);
 
-  /**
-   * Gets the module graph. May return null if there aren't at least two
-   * modules.
-   */
+  /** Gets the module graph. */
+  @Nullable
   abstract JSModuleGraph getModuleGraph();
 
   /**
-   * Gets the inputs in the order in which they are being processed.
-   * Only for use by {@code AbstractCompilerRunner}.
+   * Gets the inputs in the order in which they are being processed. Only for use by {@code
+   * AbstractCompilerRunner}.
    */
-  abstract List<CompilerInput> getInputsInOrder();
+  abstract Iterable<CompilerInput> getInputsInOrder();
 
   /**
    * Gets the total number of inputs.
@@ -620,6 +618,20 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
       ImmutableMap<String, PropertyAccessKind> externGetterAndSetterProperties);
 
   /**
+   * Returns any property seen in the externs or source with the given name was a getter, setter, or
+   * both.
+   *
+   * <p>This defaults to {@link PropertyAccessKind#NORMAL} for any property not known to have a
+   * getter or setter, even for property names that do not exist in the given program.
+   */
+  final PropertyAccessKind getPropertyAccessKind(String property) {
+    return getExternGetterAndSetterProperties()
+        .getOrDefault(property, PropertyAccessKind.NORMAL)
+        .unionWith(
+            getSourceGetterAndSetterProperties().getOrDefault(property, PropertyAccessKind.NORMAL));
+  }
+
+  /**
    * Returns all the comments from the given file.
    */
   abstract List<Comment> getComments(String filename);
@@ -667,4 +679,18 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   Object getAnnotation(String key) {
     return annotationMap.get(key);
   }
+
+  /**
+   * Returns a new AstFactory that will add type information to the nodes it creates if and only if
+   * type type checking has already happened.
+   */
+  public AstFactory createAstFactory() {
+    return hasTypeCheckingRun()
+        ? AstFactory.createFactoryWithTypes(getTypeRegistry())
+        : AstFactory.createFactoryWithoutTypes();
+  }
+
+  public abstract ModuleMetadataMap getModuleMetadataMap();
+
+  public abstract void setModuleMetadataMap(ModuleMetadataMap moduleMetadataMap);
 }

@@ -16,14 +16,21 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
  * Tests for {@link ConvertToDottedProperties}.
  *
  */
+@RunWith(JUnit4.class)
 public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
   }
 
@@ -31,6 +38,7 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     return new ConvertToDottedProperties(compiler);
   }
 
+  @Test
   public void testConvert() {
     test("a['p']", "a.p");
     test("a['_p_']", "a._p_");
@@ -44,6 +52,7 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     test("a['\u0041A']", "a.AA");
   }
 
+  @Test
   public void testDoNotConvert() {
     testSame("a[0]");
     testSame("a['']");
@@ -70,11 +79,13 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     testSame("a['\u00d1StuffAfter']");
   }
 
+  @Test
   public void testAlreadyDotted() {
     testSame("a.b");
     testSame("var a = {b: 0};");
   }
 
+  @Test
   public void testQuotedProps() {
     testSame("({'':0})");
     testSame("({'1.0':0})");
@@ -82,6 +93,7 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     testSame("({'a\u0004b':0})");
   }
 
+  @Test
   public void test5746867() {
     testSame("var a = { '$\\\\' : 5 };");
     testSame("var a = { 'x\\\\u0041$\\\\' : 5 };");

@@ -201,11 +201,6 @@ public final class NamedType extends ProxyObjectType {
   }
 
   @Override
-  public boolean hasReferenceName() {
-    return true;
-  }
-
-  @Override
   public NamedType toMaybeNamedType() {
     return this;
   }
@@ -217,7 +212,9 @@ public final class NamedType extends ProxyObjectType {
 
   @Override
   int recursionUnsafeHashCode() {
-    return nominalHashCode(this);
+    // Recall that equality on `NamedType` uses only the name until successful resolution, then
+    // delegates to the resolved type.
+    return isSuccessfullyResolved() ? super.recursionUnsafeHashCode() : nominalHashCode(this);
   }
 
   /**
@@ -225,35 +222,30 @@ public final class NamedType extends ProxyObjectType {
    */
   @Override
   JSType resolveInternal(ErrorReporter reporter) {
+    if (!getReferencedType().isUnknownType()) {
+      // In some cases (e.g. typeof(ns) when the actual type is just a literal object), a NamedType
+      // is created solely for the purpose of naming an already-known type. When that happens,
+      // there's nothing to look up, so just resolve the referenced type.
+      return super.resolveInternal(reporter);
+    }
 
     // TODO(user): Investigate whether it is really necessary to keep two
     // different mechanisms for resolving named types, and if so, which order
     // makes more sense. Now, resolution via registry is first in order to
     // avoid triggering the warnings built into the resolution via properties.
     boolean resolved = resolveViaRegistry(reporter);
+    if (!resolved) {
+      resolveViaProperties(reporter);
+    }
+
     if (detectInheritanceCycle()) {
       handleTypeCycle(reporter);
     }
-
-    if (resolved) {
-      super.resolveInternal(reporter);
-      finishPropertyContinuations();
-    } else {
-
-      resolveViaProperties(reporter);
-      if (detectInheritanceCycle()) {
-        handleTypeCycle(reporter);
-      }
-
-      super.resolveInternal(reporter);
-      if (isResolved()) {
-        finishPropertyContinuations();
-      }
-    }
+    super.resolveInternal(reporter);
+    finishPropertyContinuations();
 
     JSType result = getReferencedType();
-
-    if (isResolved() && !result.isNoResolvedType()) {
+    if (isSuccessfullyResolved()) {
       int numKeys = result.getTemplateTypeMap().numUnfilledTemplateKeys();
       if (result.isObjectType()
           && (templateTypes != null && !templateTypes.isEmpty())
@@ -293,19 +285,56 @@ public final class NamedType extends ProxyObjectType {
    * as properties. The scope must have been fully parsed and a symbol table constructed.
    */
   private void resolveViaProperties(ErrorReporter reporter) {
-    JSType value = lookupViaProperties(reporter);
-    // last component of the chain
-    if (value != null && value.isFunctionType() &&
-        (value.isConstructor() || value.isInterface())) {
-      FunctionType functionType = value.toMaybeFunctionType();
-      setReferencedAndResolvedType(functionType.getInstanceType(), reporter);
-    } else if (value != null && value.isNoObjectType()) {
+    String[] componentNames = reference.split("\\.", -1);
+    if (componentNames[0].length() == 0) {
+      handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
+      return;
+    }
+
+    StaticTypedSlot slot = resolutionScope.getSlot(componentNames[0]);
+    if (slot == null) {
+      handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
+      return;
+    }
+
+    // If the first component has a type of 'Unknown', then any type
+    // names using it should be regarded as silently 'Unknown' rather than be
+    // noisy about it.
+    JSType slotType = slot.getType();
+    if (slotType == null || slotType.isAllType() || slotType.isNoType()) {
+      handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
+      return;
+    }
+
+    // resolving component by component
+    for (int i = 1; i < componentNames.length; i++) {
+      ObjectType parentObj = ObjectType.cast(slotType);
+      if (parentObj == null || componentNames[i].length() == 0) {
+        handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
+        return;
+      }
+      if (i == componentNames.length - 1) {
+        // Look for a typedefTypeProp on the definition node of the last component.
+        Node def = parentObj.getPropertyDefSite(componentNames[i]);
+        JSType typedefType = def != null ? def.getTypedefTypeProp() : null;
+        if (typedefType != null) {
+          setReferencedAndResolvedType(typedefType, reporter);
+          return;
+        }
+      }
+      slotType = parentObj.getPropertyType(componentNames[i]);
+    }
+
+    // Translate "constructor" types to "instance" types.
+    if (slotType == null) {
+      handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
+    } else if (slotType.isFunctionType() && (slotType.isConstructor() || slotType.isInterface())) {
+      setReferencedAndResolvedType(slotType.toMaybeFunctionType().getInstanceType(), reporter);
+    } else if (slotType.isNoObjectType()) {
       setReferencedAndResolvedType(
-          registry.getNativeObjectType(
-              JSTypeNative.NO_OBJECT_TYPE), reporter);
-    } else if (value instanceof EnumType) {
-      setReferencedAndResolvedType(
-          ((EnumType) value).getElementsType(), reporter);
+          registry.getNativeObjectType(JSTypeNative.NO_OBJECT_TYPE), reporter);
+    } else if (slotType instanceof EnumType) {
+      setReferencedAndResolvedType(((EnumType) slotType).getElementsType(), reporter);
     } else {
       // We've been running into issues where people forward-declare
       // non-named types. (This is legitimate...our dependency management
@@ -313,49 +342,8 @@ public final class NamedType extends ProxyObjectType {
       //
       // So if the type does resolve to an actual value, but it's not named,
       // then don't respect the forward declaration.
-      handleUnresolvedType(reporter, value == null || value.isUnknownType());
+      handleUnresolvedType(reporter, slotType.isUnknownType());
     }
-  }
-
-  /**
-   * Resolves a type by looking up its first component in the scope, and
-   * subsequent components as properties. The scope must have been fully
-   * parsed and a symbol table constructed.
-   * @return The type of the symbol, or null if the type could not be found.
-   */
-  private JSType lookupViaProperties(ErrorReporter reporter) {
-    String[] componentNames = reference.split("\\.", -1);
-    if (componentNames[0].length() == 0) {
-      return null;
-    }
-    StaticTypedSlot slot = resolutionScope.getSlot(componentNames[0]);
-    if (slot == null) {
-      return null;
-    }
-    // If the first component has a type of 'Unknown', then any type
-    // names using it should be regarded as silently 'Unknown' rather than be
-    // noisy about it.
-    JSType slotType = slot.getType();
-    if (slotType == null || slotType.isAllType() || slotType.isNoType()) {
-      return null;
-    }
-    JSType value = getTypedefType(reporter, slot);
-    if (value == null) {
-      return null;
-    }
-
-    // resolving component by component
-    for (int i = 1; i < componentNames.length; i++) {
-      ObjectType parentClass = ObjectType.cast(value);
-      if (parentClass == null) {
-        return null;
-      }
-      if (componentNames[i].length() == 0) {
-        return null;
-      }
-      value = parentClass.getPropertyType(componentNames[i]);
-    }
-    return value;
   }
 
   private void setReferencedAndResolvedType(
@@ -408,15 +396,6 @@ public final class NamedType extends ProxyObjectType {
     }
 
     setResolvedTypeInternal(getReferencedType());
-  }
-
-  private JSType getTypedefType(ErrorReporter reporter, StaticTypedSlot slot) {
-    JSType type = slot.getType();
-    if (type != null) {
-      return type;
-    }
-    handleUnresolvedType(reporter, true);
-    return null;
   }
 
   @Override

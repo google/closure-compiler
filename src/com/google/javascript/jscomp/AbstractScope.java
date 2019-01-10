@@ -356,7 +356,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
    * declare a var inside function parameters, it would make even less sense to say that such
    * declarations would be "hoisted" somewhere else.
    */
-  final S getClosestHoistScope() {
+  public final S getClosestHoistScope() {
     S current = thisScope();
     while (current != null) {
       if (current.isHoistScope()) {

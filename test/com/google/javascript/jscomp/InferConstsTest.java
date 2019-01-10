@@ -21,18 +21,25 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link InferConsts}.
+ *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
+@RunWith(JUnit4.class)
 public final class InferConstsTest extends CompilerTestCase {
   private FindConstants constFinder;
 
   private String[] names;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
   }
@@ -49,6 +56,7 @@ public final class InferConstsTest extends CompilerTestCase {
     };
   }
 
+  @Test
   public void testSimple() {
     testConsts("var x = 3;", "x");
     testConsts("/** @const */ var x;", "x");
@@ -57,6 +65,7 @@ public final class InferConstsTest extends CompilerTestCase {
     testConsts("var x = 3;  function f(){x;}", "x");
   }
 
+  @Test
   public void testSimpleLetConst() {
     testConsts("let x = 3, y", "x");
     testConsts("let x = 3; let y = 4;", "x", "y");
@@ -66,6 +75,7 @@ public final class InferConstsTest extends CompilerTestCase {
     testConsts("const x = 1;", "x");
   }
 
+  @Test
   public void testUnfound() {
     testNotConsts("var x = 2; x++;", "x");
     testNotConsts("var x = 2; x = 3;", "x");
@@ -76,43 +86,51 @@ public final class InferConstsTest extends CompilerTestCase {
     testNotConsts("let x = 3;  function f() {let x = 4; x++;} x++;", "x");
   }
 
+  @Test
   public void testForOf() {
     testNotConsts("var x = 0; for (x of [1, 2, 3]) {}", "x");
     testNotConsts("var x = 0; for (x of {a, b, c}) {}", "x");
   }
 
+  @Test
   public void testForIn() {
     testNotConsts("var x = 0; for (x in {a, b}) {}", "x");
   }
 
+  @Test
   public void testForVar() {
     testNotConsts("for (var x = 0; x < 2; x++) {}", "x");
     testNotConsts("for (var x in [1, 2, 3]) {}", "x");
     testNotConsts("for (var x of {a, b, c}) {}", "x");
   }
 
+  @Test
   public void testForLet() {
     testNotConsts("for (let x = 0; x < 2; x++) {}", "x");
     testNotConsts("for (let x in [1, 2, 3]) {}", "x");
     testNotConsts("for (let x of {a, b, c}) {}", "x");
   }
 
+  @Test
   public void testForConst() {
     // Using 'const' here is not allowed, and ConstCheck will warn for this
     testConsts("for (const x = 0; x < 2; x++) {}", "x");
   }
 
+  @Test
   public void testForConst1() {
     testConsts("for (const x in [1, 2, 3]) {}", "x");
     testConsts("for (const x of {a, b, c}) {}", "x");
   }
 
+  @Test
   public void testForConstJSDoc() {
     testConsts("for (/** @const */ let x = 0; x < 2; x++) {}", "x");
     testConsts("for (/** @const */ let x in [1, 2, 3]) {}", "x");
     testConsts("for (/** @const */ let x of {a, b, c}) {}", "x");
   }
 
+  @Test
   public void testFunctionParam() {
     testConsts("var x = function(){};", "x");
     testConsts("var x = ()=>{};", "x");
@@ -123,6 +141,7 @@ public final class InferConstsTest extends CompilerTestCase {
     testConsts("function fn(a, {b, c}){var d = a + 1}; ", "a", "b", "c", "d");
   }
 
+  @Test
   public void testClass() {
     testConsts("var Foo = class {}", "Foo");
     testConsts("const Foo = class {}", "Foo");
@@ -132,18 +151,22 @@ public final class InferConstsTest extends CompilerTestCase {
     testConsts("function Foo() {}", "Foo");
   }
 
+  @Test
   public void testVarArguments() {
     testConsts("var arguments = 3;", "arguments");
   }
 
+  @Test
   public void testConstArguments() {
     testConsts("const arguments = 4;", "arguments");
   }
 
+  @Test
   public void testArgumentsJSDoc() {
     testConsts("/** @const */let arguments = 5;", "arguments");
   }
 
+  @Test
   public void testDestructuring() {
     testConsts("var [a, b, c] = [1, 2, 3];", "a", "b", "c");
     testConsts("const [a, b, c] = [1, 2, 3];", "a", "b", "c");
@@ -174,6 +197,7 @@ public final class InferConstsTest extends CompilerTestCase {
     testConsts("const [a, , b] = [1, 2, 3];", "a", "b");
   }
 
+  @Test
   public void testDefaultValue() {
     testConsts("function fn(a = 1){}", "a");
     testNotConsts("function fn(a = 1){a = 2}", "a");
@@ -182,10 +206,12 @@ public final class InferConstsTest extends CompilerTestCase {
     testNotConsts("function fn({b, c} = {b:1, c:2}){c = 1}", "c");
   }
 
+  @Test
   public void testVarInBlock() {
     testConsts("function f() { if (true) { var x = function() {}; x(); } }", "x");
   }
 
+  @Test
   public void testGeneratorFunctionVar() {
     testNotConsts(
         lines(
@@ -197,6 +223,7 @@ public final class InferConstsTest extends CompilerTestCase {
         "x");
   }
 
+  @Test
   public void testGeneratorFunctionConst() {
     testConsts(
         lines(

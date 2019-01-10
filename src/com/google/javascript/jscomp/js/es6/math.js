@@ -25,6 +25,7 @@
 'require es6/math/clz32';
 'require es6/math/cosh';
 'require es6/math/expm1';
+'require es6/math/fround';
 'require es6/math/hypot';
 'require es6/math/imul';
 'require es6/math/log10';

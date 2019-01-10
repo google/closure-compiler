@@ -17,15 +17,21 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import javax.annotation.Nullable;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link RuntimeTypeCheck}.
  *
  */
+@RunWith(JUnit4.class)
 public final class RuntimeTypeCheckTest extends CompilerTestCase {
   @Nullable private String logFunction = null;
 
@@ -34,13 +40,15 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
     disableLineNumberCheck();
     enableNormalize();
   }
 
+  @Test
   public void testValue() {
     testChecks(
         "/** @param {number} i */ function f(i) {}",
@@ -50,25 +58,30 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             + "}");
   }
 
+  @Test
   public void testConstValue() {
     // User a variable that's immutable by the google coding convention,
     // to ensure the immutable annotations are preserved.
-    testChecks("/** @param {number} CONST */ function f(CONST) {}",
-        "/** @param {number} CONST */ function f(CONST) {" +
-        "  $jscomp.typecheck.checkType(CONST, " +
-        "      [$jscomp.typecheck.valueChecker('number')]);" +
-        "}");
+    testChecks(
+        "/** @param {number} CONST */ function f(CONST) {}",
+        "/** @param {number} CONST */ function f(CONST) {"
+            + "  $jscomp.typecheck.checkType(CONST, "
+            + "      [$jscomp.typecheck.valueChecker('number')]);"
+            + "}");
   }
 
+  @Test
   public void testValueWithInnerFn() {
-    testChecks("/** @param {number} i */ function f(i) { function g() {} }",
-        "/** @param {number} i */ function f(i) {" +
-        "  function g() {}" +
-        "  $jscomp.typecheck.checkType(i, " +
-        "      [$jscomp.typecheck.valueChecker('number')]);" +
-        "}");
+    testChecks(
+        "/** @param {number} i */ function f(i) { function g() {} }",
+        "/** @param {number} i */ function f(i) {"
+            + "  function g() {}"
+            + "  $jscomp.typecheck.checkType(i, "
+            + "      [$jscomp.typecheck.valueChecker('number')]);"
+            + "}");
   }
 
+  @Test
   public void testNullValue() {
     testChecks(
         "/** @param {null} i */ function f(i) {}",
@@ -77,6 +90,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             + "}");
   }
 
+  @Test
   public void testValues() {
     testChecks(
         "/** @param {number} i\n@param {string} j*/ function f(i, j) {}",
@@ -88,10 +102,10 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             + "}");
   }
 
+  @Test
   public void testSkipParamOK() {
     testChecks(
-        lines(
-            "/**", " * @param {*} i", " * @param {string} j", " */", "function f(i, j) {}"),
+        lines("/**", " * @param {*} i", " * @param {string} j", " */", "function f(i, j) {}"),
         lines(
             "/**",
             " * @param {*} i",
@@ -103,28 +117,34 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testUnion() {
-    testChecks("/** @param {number|string} x */ function f(x) {}",
-        "/** @param {number|string} x */ function f(x) {" +
-        "  $jscomp.typecheck.checkType(x, [" +
-        "      $jscomp.typecheck.valueChecker('number'), " +
-        "      $jscomp.typecheck.valueChecker('string')" +
-        "  ]);" +
-        "}");
+    testChecks(
+        "/** @param {number|string} x */ function f(x) {}",
+        "/** @param {number|string} x */ function f(x) {"
+            + "  $jscomp.typecheck.checkType(x, ["
+            + "      $jscomp.typecheck.valueChecker('number'), "
+            + "      $jscomp.typecheck.valueChecker('string')"
+            + "  ]);"
+            + "}");
   }
 
+  @Test
   public void testUntypedParam() {
     testChecksSame("/** ... */ function f(x) {}");
   }
 
+  @Test
   public void testReturn() {
-    testChecks("/** @return {string} */ function f() { return 'x'; }",
-        "/** @return {string} */ function f() {" +
-        "  return $jscomp.typecheck.checkType('x', " +
-        "      [$jscomp.typecheck.valueChecker('string')]);" +
-        "}");
+    testChecks(
+        "/** @return {string} */ function f() { return 'x'; }",
+        "/** @return {string} */ function f() {"
+            + "  return $jscomp.typecheck.checkType('x', "
+            + "      [$jscomp.typecheck.valueChecker('string')]);"
+            + "}");
   }
 
+  @Test
   public void testNativeClass() {
     testChecks(
         "/** @param {!String} x */ function f(x) {}",
@@ -134,6 +154,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             + "}");
   }
 
+  @Test
   public void testFunctionObjectParam() {
     testChecks(
         "/** @param {!Function} x */ function f(x) {}",
@@ -143,6 +164,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             + "}");
   }
 
+  @Test
   public void testFunctionTypeParam() {
     testChecks(
         "/** @param {function()} x */ function f(x) {}",
@@ -152,7 +174,22 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             + "}");
   }
 
+  @Test
+  public void testNullableFunctionType() {
+    // TODO(b/120913284): Nullable function outer cast incorrectly prevents instrumentation.
+    testChecks(
+        lines(
+            "/** @type {?function(number):number} */ (/** @param {number} x*/ function(x) {",
+            " return x;",
+            "})"),
+        lines(
+            "/** @type {?function(number):number} */ (/** @param {number} x */ function(x) {",
+            " return x;",
+            "})"));
+  }
+
   // Closure collapses {function()|!Function} into {!Function}
+  @Test
   public void testFunctionTypeOrFunctionObjectParam() {
     testChecks(
         "/** @param {function()|!Function} x */ function f(x) {}",
@@ -163,6 +200,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   // Closure collapses {!Function|!Object} into {!Object}
+  @Test
   public void testFunctionObjectOrObjectParam() {
     testChecks(
         "/** @param {!Function|!Object} x */ function f(x) {}",
@@ -172,6 +210,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             + "}");
   }
 
+  @Test
   public void testQualifiedClass() {
     testChecks(
         lines(
@@ -192,30 +231,33 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testInnerClasses() {
     testChecks(
-        "function f() { /** @constructor */ function inner() {} }" +
-        "function g() { /** @constructor */ function inner() {} }",
-        "function f() {" +
-        "  /** @constructor */ function inner() {}" +
-        "  inner.prototype['instance_of__inner'] = true;" +
-        "}" +
-        "function g() {" +
-        "  /** @constructor */ function inner$jscomp$1() {}" +
-        "  inner$jscomp$1.prototype['instance_of__inner$jscomp$1'] = true;" +
-        "}");
+        "function f() { /** @constructor */ function inner() {} }"
+            + "function g() { /** @constructor */ function inner() {} }",
+        "function f() {"
+            + "  /** @constructor */ function inner() {}"
+            + "  inner.prototype['instance_of__inner'] = true;"
+            + "}"
+            + "function g() {"
+            + "  /** @constructor */ function inner$jscomp$1() {}"
+            + "  inner$jscomp$1.prototype['instance_of__inner$jscomp$1'] = true;"
+            + "}");
   }
 
+  @Test
   public void testInterface() {
-    testChecks("/** @interface */ function I() {}" +
-        "/** @param {!I} i */ function f(i) {}",
-        "/** @interface */ function I() {}" +
-        "/** @param {!I} i */ function f(i) {" +
-        "  $jscomp.typecheck.checkType(i, " +
-        "    [$jscomp.typecheck.interfaceChecker('I')])" +
-        "}");
+    testChecks(
+        "/** @interface */ function I() {}" + "/** @param {!I} i */ function f(i) {}",
+        "/** @interface */ function I() {}"
+            + "/** @param {!I} i */ function f(i) {"
+            + "  $jscomp.typecheck.checkType(i, "
+            + "    [$jscomp.typecheck.interfaceChecker('I')])"
+            + "}");
   }
 
+  @Test
   public void testImplementedInterface() {
     testChecks(
         lines(
@@ -233,6 +275,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "C.prototype['implements__I'] = true;"));
   }
 
+  @Test
   public void testExtendedInterface() {
     testChecks(
         lines(
@@ -253,12 +296,13 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "C.prototype['implements__J'] = true;"));
   }
 
+  @Test
   public void testImplementedInterfaceOrdering() {
     testChecks(
         lines(
-            "/** @interface */ function I() {}" ,
-            "/** @param {!I} i */ function f(i) {}" ,
-            "/** @constructor\n@implements {I} */ function C() {}" ,
+            "/** @interface */ function I() {}",
+            "/** @param {!I} i */ function f(i) {}",
+            "/** @constructor\n@implements {I} */ function C() {}",
             "C.prototype.f = function() {};"),
         lines(
             "/** @interface */ function I() {}",
@@ -272,6 +316,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "C.prototype.f = function() {};"));
   }
 
+  @Test
   public void testImplementedInterfaceOrderingGoogInherits() {
     testChecks(
         lines(
@@ -300,6 +345,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "C.prototype.f = function() {};"));
   }
 
+  @Test
   public void testInnerConstructor() {
     testChecks(
         "(function() { /** @constructor */ function C() {} })()",
@@ -310,14 +356,17 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "})()"));
   }
 
+  @Test
   public void testReturnNothing() {
     testChecksSame("function f() { return; }");
   }
 
+  @Test
   public void testFunctionType() {
     testChecksSame("/** @type {!Function} */function f() {}");
   }
 
+  @Test
   public void testInjectLogFunction_name() {
     logFunction = "myLogFn";
     Compiler compiler = createCompiler();
@@ -328,6 +377,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
     assertThat(compiler.toSource(testNode.getParent())).contains("$jscomp.typecheck.log=myLogFn");
   }
 
+  @Test
   public void testInjectLogFunction_qualifiedName() {
     logFunction = "my.log.fn";
     Compiler compiler = createCompiler();
@@ -338,6 +388,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
     assertThat(compiler.toSource(testNode.getParent())).contains("$jscomp.typecheck.log=my.log.fn");
   }
 
+  @Test
   public void testInvalidLogFunction() {
     logFunction = "{}"; // Not a valid qualified name
     Compiler compiler = createCompiler();
@@ -346,7 +397,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
     IR.script(testNode);
     try {
       getProcessor(compiler).injectCustomLogFunction(testNode);
-      fail("Expected an IllegalStateException");
+      assertWithMessage("Expected an IllegalStateException").fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().contains("not a valid qualified name");
     }

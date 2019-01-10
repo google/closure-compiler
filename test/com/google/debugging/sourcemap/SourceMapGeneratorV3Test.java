@@ -32,14 +32,14 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
+/** @author johnlenz@google.com (John Lenz) */
+@RunWith(JUnit4.class)
+
 public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
-
-  public SourceMapGeneratorV3Test() {
-  }
 
   @Override
   protected SourceMapConsumer getSourceMapConsumer() {
@@ -59,50 +59,55 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     }
   }
 
+  @Test
   public void testBasicMapping1() throws Exception {
     compileAndCheck("function __BASIC__() { }");
   }
 
+  @Test
   public void testBasicMappingGoldenOutput() throws Exception {
     // Empty source map test
-    checkSourceMap("function __BASIC__() { }",
-
-                   "{\n" +
-                   "\"version\":3,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AAAAA,QAASA,UAAS,EAAG;\",\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"names\":[\"__BASIC__\"]\n" +
-                   "}\n");
+    checkSourceMap(
+        "function __BASIC__() { }",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"A,aAAAA,QAASA,UAAS,EAAG;\",\n"
+            + "\"sources\":[\"testcode\"],\n"
+            + "\"names\":[\"__BASIC__\"]\n"
+            + "}\n");
   }
 
+  @Test
   public void testBasicMapping2() throws Exception {
     compileAndCheck("function __BASIC__(__PARAM1__) {}");
   }
 
+  @Test
   public void testLiteralMappings() throws Exception {
     compileAndCheck("function __BASIC__(__PARAM1__, __PARAM2__) { " +
                     "var __VAR__ = '__STR__'; }");
   }
 
+  @Test
   public void testLiteralMappingsGoldenOutput() throws Exception {
     // Empty source map test
-    checkSourceMap("function __BASIC__(__PARAM1__, __PARAM2__) { " +
-                   "var __VAR__ = '__STR__'; }",
-
-                   "{\n" +
-                   "\"version\":3,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AAAAA,QAASA,UAAS,CAACC,UAAD,CAAaC,UAAb," +
-                   "CAAyB,CAAE,IAAIC,QAAU,SAAhB;\",\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"names\":[\"__BASIC__\",\"__PARAM1__\",\"__PARAM2__\"," +
-                   "\"__VAR__\"]\n" +
-                   "}\n");
+    checkSourceMap(
+        "function __BASIC__(__PARAM1__, __PARAM2__) { " + "var __VAR__ = '__STR__'; }",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"A,aAAAA,QAASA,UAAS,CAACC,UAAD,CAAaC,UAAb,"
+            + "CAAyB,CAAE,IAAIC,QAAU,SAAhB;\",\n"
+            + "\"sources\":[\"testcode\"],\n"
+            + "\"names\":[\"__BASIC__\",\"__PARAM1__\",\"__PARAM2__\","
+            + "\"__VAR__\"]\n"
+            + "}\n");
   }
 
+  @Test
   public void testMultilineMapping() throws Exception {
     compileAndCheck("function __BASIC__(__PARAM1__, __PARAM2__) {\n" +
                     "var __VAR__ = '__STR__';\n" +
@@ -110,6 +115,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                     "}");
   }
 
+  @Test
   public void testMultilineMapping2() throws Exception {
     compileAndCheck("function __BASIC__(__PARAM1__, __PARAM2__) {\n" +
                     "var __VAR__ = 1;\n" +
@@ -117,6 +123,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                     "}");
   }
 
+  @Test
   public void testMultiFunctionMapping() throws Exception {
     compileAndCheck("function __BASIC__(__PARAM1__, __PARAM2__) {\n" +
                     "var __VAR__ = '__STR__';\n" +
@@ -129,231 +136,268 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                     "}\n");
   }
 
+  @Test
   public void testGoldenOutput0() throws Exception {
     // Empty source map test
-    checkSourceMap("",
-
-                   "{\n" +
-                   "\"version\":3,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"mappings\":\";\",\n" +
-                   "\"sources\":[],\n" +
-                   "\"names\":[]\n" +
-                   "}\n");
+    checkSourceMap(
+        "",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"A;\",\n"
+            + "\"sources\":[],\n"
+            + "\"names\":[]\n"
+            + "}\n");
   }
 
+  @Test
   public void testGoldenOutput0a() throws Exception {
-    checkSourceMap("a;",
-
-                   "{\n" +
-                   "\"version\":3,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AAAAA;\",\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"names\":[\"a\"]\n" +
-                   "}\n");
+    checkSourceMap(
+        "a;",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"A,aAAAA;\",\n"
+            + "\"sources\":[\"testcode\"],\n"
+            + "\"names\":[\"a\"]\n"
+            + "}\n");
 
     sourceMapIncludeSourcesContent = true;
 
-    checkSourceMap("a;",
-
-                   "{\n" +
-                   "\"version\":3,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AAAAA;\",\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"sourcesContent\":[\"a;\"],\n" +
-                   "\"names\":[\"a\"]\n" +
-                   "}\n");
+    checkSourceMap(
+        "a;",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"A,aAAAA;\",\n"
+            + "\"sources\":[\"testcode\"],\n"
+            + "\"sourcesContent\":[\"a;\"],\n"
+            + "\"names\":[\"a\"]\n"
+            + "}\n");
   }
 
+  @Test
   public void testGoldenOutput1() throws Exception {
     detailLevel = SourceMap.DetailLevel.ALL;
 
-    checkSourceMap("function f(foo, bar) { foo = foo + bar + 2; return foo; }",
-
-                   "{\n" +
-                   "\"version\":3,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AAAAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN," +
-                       "CAAW,CAAED,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkB,CAAG," +
-                       "OAAOD,IAA9B;\",\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"names\":[\"f\",\"foo\",\"bar\"]\n" +
-                   "}\n");
+    checkSourceMap(
+        "function f(foo, bar) { foo = foo + bar + 2; return foo; }",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"A,aAAAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN,"
+            + "CAAW,CAAED,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkB,CAAG,"
+            + "OAAOD,IAA9B;\",\n"
+            + "\"sources\":[\"testcode\"],\n"
+            + "\"names\":[\"f\",\"foo\",\"bar\"]\n"
+            + "}\n");
 
     detailLevel = SourceMap.DetailLevel.SYMBOLS;
 
-    checkSourceMap("function f(foo, bar) { foo = foo + bar + 2; return foo; }",
-
-                   "{\n" +
-                   "\"version\":3,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AAAAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE," +
-                       "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF," +
-                       "SAAmDC,IAAnDD;\",\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"names\":[\"f\",\"foo\",\"bar\"]\n" +
-                   "}\n");
+    checkSourceMap(
+        "function f(foo, bar) { foo = foo + bar + 2; return foo; }",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"A,aAAAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE,"
+            + "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF,"
+            + "SAAmDC,IAAnDD;\",\n"
+            + "\"sources\":[\"testcode\"],\n"
+            + "\"names\":[\"f\",\"foo\",\"bar\"]\n"
+            + "}\n");
 
     sourceMapIncludeSourcesContent = true;
 
-    checkSourceMap("function f(foo, bar) { foo = foo + bar + 2; return foo; }",
-
-                   "{\n" +
-                   "\"version\":3,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AAAAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE," +
-                       "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF," +
-                       "SAAmDC,IAAnDD;\",\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"sourcesContent\":" +
-                       "[\"function f(foo, bar) { foo = foo + bar + 2; return foo; }\"],\n" +
-                   "\"names\":[\"f\",\"foo\",\"bar\"]\n" +
-                   "}\n");
+    checkSourceMap(
+        "function f(foo, bar) { foo = foo + bar + 2; return foo; }",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"A,aAAAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE,"
+            + "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF,"
+            + "SAAmDC,IAAnDD;\",\n"
+            + "\"sources\":[\"testcode\"],\n"
+            + "\"sourcesContent\":"
+            + "[\"function f(foo, bar) { foo = foo + bar + 2; return foo; }\"],\n"
+            + "\"names\":[\"f\",\"foo\",\"bar\"]\n"
+            + "}\n");
   }
 
+  @Test
   public void testGoldenOutput2() throws Exception {
-    checkSourceMap("function f(foo, bar) {\r\n\n\n\nfoo = foo + bar + foo;" +
-                   "\nreturn foo;\n}",
-
-                   "{\n" +
-                   "\"version\":3,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AAAAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN," +
-                       "CAAW,CAIrBD,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkBD," +
-                       "GAClB,OAAOA,IALc;\",\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"names\":[\"f\",\"foo\",\"bar\"]\n" +
-                   "}\n");
+    checkSourceMap(
+        "function f(foo, bar) {\r\n\n\n\nfoo = foo + bar + foo;" + "\nreturn foo;\n}",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"A,aAAAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN,"
+            + "CAAW,CAIrBD,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkBD,"
+            + "GAClB,OAAOA,IALc;\",\n"
+            + "\"sources\":[\"testcode\"],\n"
+            + "\"names\":[\"f\",\"foo\",\"bar\"]\n"
+            + "}\n");
   }
 
+  @Test
   public void testGoldenOutput3() throws Exception {
-    checkSourceMap("c:\\myfile.js",
-                   "foo;",
-
-                   "{\n" +
-                   "\"version\":3,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AAAAA;\",\n" +
-                   "\"sources\":[\"" + getEncodedFileName() + "\"],\n" +
-                   "\"names\":[\"foo\"]\n" +
-                   "}\n");
+    checkSourceMap(
+        "c:\\myfile.js",
+        "foo;",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"A,aAAAA;\",\n"
+            + "\"sources\":[\""
+            + getEncodedFileName()
+            + "\"],\n"
+            + "\"names\":[\"foo\"]\n"
+            + "}\n");
   }
 
+  @Test
   public void testGoldenOutput4() throws Exception {
-    checkSourceMap("c:\\myfile.js",
-                   "foo;   boo;   goo;",
-
-                   "{\n" +
-                   "\"version\":3,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AAAAA,GAAOC,IAAOC;\",\n" +
-                   "\"sources\":[\"" + getEncodedFileName() + "\"],\n" +
-                   "\"names\":[\"foo\",\"boo\",\"goo\"]\n" +
-                   "}\n");
+    checkSourceMap(
+        "c:\\myfile.js",
+        "foo;   boo;   goo;",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"A,aAAAA,GAAOC,IAAOC;\",\n"
+            + "\"sources\":[\""
+            + getEncodedFileName()
+            + "\"],\n"
+            + "\"names\":[\"foo\",\"boo\",\"goo\"]\n"
+            + "}\n");
   }
 
+  @Test
   public void testGoldenOutput5() throws Exception {
     detailLevel = SourceMap.DetailLevel.ALL;
 
     checkSourceMap(
         "c:\\myfile.js",
-        "/** @preserve\n" +
-        " * this is a test.\n" +
-        " */\n" +
-        "var foo=a + 'this is a really long line that will force the"
-        + " mapping to span multiple lines 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + "' + c + d + e;",
-
-        "{\n" +
-        "\"version\":3,\n" +
-        "\"file\":\"testcode\",\n" +
-        "\"lineCount\":6,\n" +
-        "\"mappings\":\"A;;;;AAGA,IAAIA,IAAIC,CAAJD,CAAQ,mxCAARA;AAA8xCE," +
-            "CAA9xCF,CAAkyCG,CAAlyCH,CAAsyCI;\",\n" +
-        "\"sources\":[\"" + getEncodedFileName() + "\"],\n" +
-        "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n" +
-        "}\n");
+        "/** @preserve\n"
+            + " * this is a test.\n"
+            + " */\n"
+            + "var foo=a + 'this is a really long line that will force the"
+            + " mapping to span multiple lines 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + "' + c + d + e;",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":6,\n"
+            + "\"mappings\":\"A;;;;aAGA,IAAIA,IAAIC,CAAJD,CAAQ,mxCAARA;AAA8xCE,"
+            + "CAA9xCF,CAAkyCG,CAAlyCH,CAAsyCI;\",\n"
+            + "\"sources\":[\""
+            + getEncodedFileName()
+            + "\"],\n"
+            + "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n"
+            + "}\n");
 
     detailLevel = SourceMap.DetailLevel.SYMBOLS;
 
-    checkSourceMap("c:\\myfile.js",
-        "/** @preserve\n" +
-        " * this is a test.\n" +
-        " */\n" +
-        "var foo=a + 'this is a really long line that will force the"
-        + " mapping to span multiple lines 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + " 123456789 123456789 123456789 123456789 123456789"
-        + "' + c + d + e;",
-
-        "{\n" +
-        "\"version\":3,\n" +
-        "\"file\":\"testcode\",\n" +
-        "\"lineCount\":6,\n" +
-        "\"mappings\":\"A;;;;IAGIA,IAAIC,CAAJD;AAA8xCE,CAA9xCF,CAAkyCG," +
-        "CAAlyCH,CAAsyCI;\",\n" +
-        "\"sources\":[\"" + getEncodedFileName() + "\"],\n" +
-        "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n" +
-        "}\n");
+    checkSourceMap(
+        "c:\\myfile.js",
+        "/** @preserve\n"
+            + " * this is a test.\n"
+            + " */\n"
+            + "var foo=a + 'this is a really long line that will force the"
+            + " mapping to span multiple lines 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + " 123456789 123456789 123456789 123456789 123456789"
+            + "' + c + d + e;",
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":6,\n"
+            + "\"mappings\":\"A;;;;iBAGIA,IAAIC,CAAJD;AAA8xCE,CAA9xCF,CAAkyCG,"
+            + "CAAlyCH,CAAsyCI;\",\n"
+            + "\"sources\":[\""
+            + getEncodedFileName()
+            + "\"],\n"
+            + "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n"
+            + "}\n");
   }
 
+  @Test
+  public void testGoldenOutput_semanticLineBreaks() throws Exception {
+    // Mapping code segments that contained newlines caused b/121282798. It appears to be related to
+    // template literals because they can contain newlines which are meaningful within a single
+    // expression, and are thus preserved.
+    checkSourceMap(
+        "c:\\myfile.js",
+        lines(
+            "var myMultilineTemplate = `Item ${a}", //
+            "Item ${b}",
+            "Item ${c}`;"),
+        lines(
+            "{",
+            "\"version\":3,",
+            "\"file\":\"testcode\",",
+            "\"lineCount\":3,",
+            "\"mappings\":\"A,aAAA,IAAIA,oBAAsB,QAAQC,CAAR;OACnBC,CADmB;OAEnBC,CAFmB;\",",
+            "\"sources\":[\"" + getEncodedFileName() + "\"],",
+            "\"names\":[\"myMultilineTemplate\",\"a\",\"b\",\"c\"]",
+            "}",
+            ""));
+  }
+
+  @Test
   public void testBasicDeterminism() throws Exception {
     RunResult result1 = compile("file1", "foo;", "file2", "bar;");
     RunResult result2 = compile("file2", "foo;", "file1", "bar;");
@@ -371,6 +415,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     assertThat(files2).isEqualTo(files1);
   }
 
+  @Test
   public void testWriteMetaMap() throws IOException {
     StringWriter out = new StringWriter();
     String name = "./app.js";
@@ -419,6 +464,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     return out.toString();
   }
 
+  @Test
   public void testWriteMetaMap2() throws IOException {
     StringWriter out = new StringWriter();
     String name = "./app.js";
@@ -461,6 +507,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
             + "}\n");
   }
 
+  @Test
   public void testParseSourceMetaMap() throws Exception {
     final String INPUT1 = "file1";
     final String INPUT2 = "file2";
@@ -497,6 +544,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
       }});
   }
 
+  @Test
   public void testSourceMapMerging() throws Exception {
     final String INPUT1 = "file1";
     final String INPUT2 = "file2";
@@ -522,6 +570,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     check(inputs, output.toString(), mapContents.toString());
   }
 
+  @Test
   public void testSourceMapExtensions() throws Exception {
     //generating the json
     SourceMapGeneratorV3 mapper = new SourceMapGeneratorV3();
@@ -549,18 +598,21 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     assertThat(sourceMap.get("x_google_str").getAsString()).isEqualTo("Some text");
   }
 
+  @Test
   public void testSourceMapMergeExtensions() throws Exception {
     SourceMapGeneratorV3 mapper = new SourceMapGeneratorV3();
-    mapper.mergeMapSection(0, 0,
-        "{\n" +
-        "\"version\":3,\n" +
-        "\"file\":\"testcode\",\n" +
-        "\"lineCount\":1,\n" +
-        "\"mappings\":\"AAAAA,QAASA,UAAS,EAAG;\",\n" +
-        "\"sources\":[\"testcode\"],\n" +
-        "\"names\":[\"__BASIC__\"],\n" +
-        "\"x_company_foo\":2\n" +
-        "}\n");
+    mapper.mergeMapSection(
+        0,
+        0,
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"AAAAA,a,QAASA,UAAS,EAAG;\",\n"
+            + "\"sources\":[\"testcode\"],\n"
+            + "\"names\":[\"__BASIC__\"],\n"
+            + "\"x_company_foo\":2\n"
+            + "}\n");
 
     assertThat(mapper.hasExtension("x_company_foo")).isFalse();
 
@@ -589,7 +641,8 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     assertThat(((JsonPrimitive) mapper.getExtension("x_company_bar")).getAsBoolean()).isFalse();
   }
 
-  public void testSourceRoot() throws Exception{
+  @Test
+  public void testSourceRoot() throws Exception {
     SourceMapGeneratorV3 mapper = new SourceMapGeneratorV3();
 
     //checking absence of sourceRoot

@@ -17,7 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -32,6 +33,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Various tests for {@code replaceScript} functionality of Closure Compiler.
@@ -39,7 +43,9 @@ import java.util.logging.Level;
  * @author bashir@google.com (Bashir Sadjad)
  */
 
+@RunWith(JUnit4.class)
 public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
+  @Test
   public void testInfer() {
     CompilerOptions options = getOptions(DiagnosticGroups.ACCESS_CONTROLS);
     String source = ""
@@ -49,9 +55,10 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "obj.temp(10);\n";
     Result result = runReplaceScript(options,
         ImmutableList.of(source), 0, 0, source, 0, false).getResult();
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
   }
 
+  @Test
   public void testInferWithModules() {
     CompilerOptions options = getOptions();
     Compiler compiler = new Compiler();
@@ -59,7 +66,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         SourceFile.fromCode("in", ""));
 
     Result result = compiler.compile(EXTVAR_EXTERNS, inputs, options);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     CompilerInput oldInput = compiler.getInput(new InputId("in"));
     JSModule myModule = oldInput.getModule();
@@ -74,6 +81,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertThat(myModule.getInputs()).containsExactly(compiler.getInput(new InputId("in")));
   }
 
+  @Test
   public void testreplaceScript() {
     CompilerOptions options = getOptions(DiagnosticGroups.ACCESS_CONTROLS);
     Compiler compiler = new Compiler();
@@ -84,7 +92,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("in", source));
     Result result = compiler.compile(EXTVAR_EXTERNS, inputs, options);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     // Now try to re-infer with a modified version of source
     // with a new variable.
@@ -98,10 +106,12 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     compiler.replaceScript(ast);
   }
 
+  @Test
   public void testWithProvidesAndClosureOn() {
     runReplaceScriptWithProvides(true);
   }
 
+  @Test
   public void testWithProvidesAndClosureOff() {
     runReplaceScriptWithProvides(false);
   }
@@ -123,6 +133,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
   }
 
   /** Test related to DefaultPassConfig.checkTypes */
+  @Test
   public void testUndefinedVars() {
     // Setting options for checking variables.
     CompilerOptions options = getOptions(DiagnosticGroups.CHECK_VARIABLES);
@@ -141,7 +152,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "var c = cVar + 1;";
     Result result = this.runReplaceScript(options, ImmutableList.of(
         firstSource, secondSource), 1, 0, modifiedSource, 1, true).getResult();
-    assertFalse(result.success);
+    assertThat(result.success).isFalse();
     assertThat(result.errors).hasLength(2);
     int i = 2;
     for (JSError e : result.errors) {
@@ -160,12 +171,14 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
   }
 
   /** Test related to DefaultPassConfig.checkVariableReferences */
+  @Test
   public void testRedefinedVars() {
     String src = "var a = 10;\n var a = 20;";
     runRedefinedVarsTest(ImmutableList.of(src), 1, src, 0,
         ImmutableList.of(2));
   }
 
+  @Test
   public void testReferToExternVar() {
     String src = "var foo = extVar;";
     List<Integer> errorLines = new ArrayList<>();
@@ -173,6 +186,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
   }
 
   /** Test for DefaultPassConfig.checkVariableReferences with two files */
+  @Test
   public void testRedefinedVarsTwoFiles() {
     String src0 = "var a = 10; \n var b = 11;";
     String src1 = "var a = 20;";
@@ -184,9 +198,10 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
   }
 
   /**
-   * Test for DefaultPassConfig.checkVariableReferences with multiple files
-   * where changes in one file causes errors in a down-stream file.
+   * Test for DefaultPassConfig.checkVariableReferences with multiple files where changes in one
+   * file causes errors in a down-stream file.
    */
+  @Test
   public void testRedefinedVarsMultipleFiles() {
     String src0 = "var a = 10;\n var b = 11;";
     String src1 = "var a = 20;\n var d = 23;";
@@ -204,9 +219,10 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
   }
 
   /**
-   * Test for DefaultPassConfig.checkVariableReferences with multiple files
-   * and with multiple add/remove for same variable in different files.
+   * Test for DefaultPassConfig.checkVariableReferences with multiple files and with multiple
+   * add/remove for same variable in different files.
    */
+  @Test
   public void testRedefinedVarsMultipleChangesForOneVar() {
     String src0 = "var a = 10;\n var b = 11;";
     String src1 = "var b = 20;\n";
@@ -225,11 +241,11 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertErrorType(result.errors[0], VarCheck.VAR_MULTIPLY_DECLARED_ERROR, 1);
   }
 
-
   /**
-   * Test related to DefaultPassConfig.checkVariableReferences where no error
-   * is expected (note same variable names in two scopes).
+   * Test related to DefaultPassConfig.checkVariableReferences where no error is expected (note same
+   * variable names in two scopes).
    */
+  @Test
   public void testRedefinedVarsFunction() {
     String src0 = "var a = 10;\n var b = 10;";
     String src1 = "var a = 20;";
@@ -240,16 +256,18 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
   }
 
   /**
-   * Undefined vars are added to {@code VarCheck.SYNTHETIC_VARS_DECLAR} and
-   * previously this input was not properly added to list of externs which was
-   * causing an NPE in hot-swap mode of {@code ReferenceCollectingCallback}.
+   * Undefined vars are added to {@code VarCheck.SYNTHETIC_VARS_DECLAR} and previously this input
+   * was not properly added to list of externs which was causing an NPE in hot-swap mode of {@code
+   * ReferenceCollectingCallback}.
    */
+  @Test
   public void testAccessToUndefinedVar() {
     String src = "/** \n @fileoverview \n @suppress {checkVars} */ var a = undefVar;\n";
     List<Integer> errorLines = new ArrayList<>();
     runRedefinedVarsTest(ImmutableList.of(src), 0, src, 0, errorLines);
   }
 
+  @Test
   public void testParseErrorDoesntCrashCompilation() {
     CompilerOptions options = getOptions();
     Compiler compiler = new Compiler();
@@ -280,16 +298,19 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNoWarningsOrErrors(result);
   }
 
+  @Test
   public void testProvideRequireErrors() {
     CompilerOptions options = getOptions(DiagnosticGroups.MISSING_PROPERTIES);
     checkProvideRequireErrors(options);
   }
 
+  @Test
   public void testClassInstantiation() {
     CompilerOptions options = getOptions(DiagnosticGroups.CHECK_TYPES);
     checkProvideRequireErrors(options);
   }
 
+  @Test
   public void testCheckRequires() {
     CompilerOptions options = getOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);
@@ -303,9 +324,10 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
             .getResult();
     // TODO(joeltine): Change back to asserting an error when b/28869281
     // is fixed.
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
   }
 
+  @Test
   public void testCheckRequiresWithNewVar() {
     CompilerOptions options = getOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);
@@ -315,9 +337,10 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         ImmutableList.of(src), 0, 0, modifiedSrc, 0, false).getResult();
     // TODO(joeltine): Change back to asserting an error when b/28869281
     // is fixed.
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
   }
 
+  @Test
   public void testCheckProvides() {
     CompilerOptions options = getOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.ERROR);
@@ -326,13 +349,14 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "/** @constructor */ ns.Bar = function() {};";
     Result result = runReplaceScript(options,
         ImmutableList.of(source0), 1, 0, source0, 0, true).getResult();
-    assertFalse(result.success);
+    assertThat(result.success).isFalse();
 
     assertThat(result.errors).hasLength(1);
     assertErrorType(result.errors[0], CheckProvides.MISSING_PROVIDE_WARNING, 1);
   }
 
   /** Test related to DefaultPassConfig.inferTypes */
+  @Test
   public void testNewTypeAdded() {
     CompilerOptions options = getOptions(DiagnosticGroups.CHECK_TYPES);
     String src = "/** @constructor */\n"
@@ -343,7 +367,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "var b = a * 20;";
     Result result = this.runReplaceScript(options,
         ImmutableList.of(src), 0, 0, modifiedSrc, 0, false).getResult();
-    assertFalse(result.success);
+    assertThat(result.success).isFalse();
 
     assertThat(result.errors).hasLength(1);
     assertErrorType(result.errors[0], TypeValidator.TYPE_MISMATCH_WARNING, 4);
@@ -351,6 +375,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertThat(result.warnings).isEmpty();
   }
 
+  @Test
   public void testProvidedTypeDef() {
     CompilerOptions options = getOptions();
 
@@ -369,7 +394,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNoWarningsOrErrors(compiler.getResult());
   }
 
-
+  @Test
   public void testDeclarationMoved() {
     CompilerOptions options = getOptions();
 
@@ -389,6 +414,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     verifyPropertyLineno(compiler, "Bar", "foo", 7);
   }
 
+  @Test
   public void testTypeDefRedeclaration() {
     // Tests that replacing/redeclaring a @typedef can be replaced via replaceScript.
     CompilerOptions options = getOptions();
@@ -402,6 +428,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNoWarningsOrErrors(compiler.getResult());
   }
 
+  @Test
   public void testConstructorDeclarationRedefined() {
     // Tests that redefining a @constructor does not fail when using replaceScript. Regression
     // test for b/28939919.
@@ -426,6 +453,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNoWarningsOrErrors(compiler.getResult());
   }
 
+  @Test
   public void testDeclarationInAnotherFile() {
     CompilerOptions options = getOptions();
 
@@ -449,6 +477,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     verifyPropertyLineno(compiler, "ns.Bar", "foo", 2);
   }
 
+  @Test
   public void testRedeclarationOfStructProperties() {
     // Tests that definition of a property on a @struct does not fail on replaceScript. A regression
     // test for b/28940462.
@@ -469,6 +498,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNoWarningsOrErrors(compiler.getResult());
   }
 
+  @Test
   public void testInterfaceOverrideDeclarations() {
     // Tests that incremental compilation of a class implementing an interface does not fail
     // on replaceScript. Regression test for b/28942209.
@@ -493,6 +523,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNoWarningsOrErrors(compiler.getResult());
   }
 
+  @Test
   public void testAssignmentToConstProperty() {
     // Tests that defining a field on a @const property does not fail with incorrect
     // "assignment to property" error. Regression test for b/28981397.
@@ -514,7 +545,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNoWarningsOrErrors(compiler.getResult());
   }
 
-
+  @Test
   public void testDeclarationOverride() {
     CompilerOptions options = getOptions();
 
@@ -550,6 +581,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     verifyPropertyLineno(compiler, "ns.Foo", "func", 13);
   }
 
+  @Test
   public void testDeclarationWithThisMoved() {
     CompilerOptions options = getOptions();
 
@@ -577,6 +609,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     verifyPropertyLineno(compiler, "test", "temp", 8);
   }
 
+  @Test
   public void testDeclarationOtherTypeWithField() {
     CompilerOptions options = getOptions();
 
@@ -603,6 +636,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     verifyPropertyLineno(compiler, "Baz", "foo", 4);
   }
 
+  @Test
   public void testDeclarationInGoogScopeMoved() {
     CompilerOptions options = getOptions();
 
@@ -633,6 +667,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNode(propNode).hasLineno(expectedLineno);
   }
 
+  @Test
   public void testGlobalVarDeclarationMoved() {
     CompilerOptions options = getOptions();
     String prefix = "var a = 3;\n";
@@ -648,6 +683,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNode(var.getNode()).hasLineno(6);
   }
 
+  @Test
   public void testNamespaceTypeInference() {
     CompilerOptions options = getOptions(DiagnosticGroups.CHECK_TYPES);
     String decl = "goog.provide('ns.Bar');\n"
@@ -659,6 +695,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNoWarningsOrErrors(result);
   }
 
+  @Test
   public void testSourceNodeOfFunctionTypesUpdated() {
     String provideSrc = "goog.provide('ns.Foo');\n";
     String mainSrc = "/** @constructor */\n" +
@@ -681,6 +718,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNode(srcNode).hasLineno(6);
   }
 
+  @Test
   public void testAssociatedNodeOfJsDocNotLeaked() {
     String src = "goog.provide('ns.Foo');\n" +
     "/** @constructor */\n" +
@@ -703,6 +741,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNoWarningsOrErrors(compiler.getResult());
   }
 
+  @Test
   public void testFunctionAssignedToAnotherFunction() {
     String src2 = "goog.provide('ns.Bar');\n" +
     "/** @return {null} */\n" +
@@ -730,6 +769,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNoWarningsOrErrors(compiler.getResult());
   }
 
+  @Test
   public void testPrototypeSlotChangedOnCompile() {
     String src = "goog.provide('ns.Foo');\n" +
       "/** @constructor */\n" +
@@ -753,12 +793,11 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     type = compiler.getTypeRegistry().getGlobalType("ns.Foo");
     fnType = type.toObjectType().getConstructor();
     StaticTypedSlot newSlot = fnType.getSlot("prototype");
-    assertNotSame(originalSlot, newSlot);
+    assertThat(newSlot).isNotSameAs(originalSlot);
   }
 
-  /**
-   * This test will fail if global scope generation happens before closure-pass.
-   */
+  /** This test will fail if global scope generation happens before closure-pass. */
+  @Test
   public void testGlobalScopeGenerationWithProvide() {
     CompilerOptions options = getOptions();
     options.setCheckSymbols(true);
@@ -770,6 +809,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertNoWarningsOrErrors(result);
   }
 
+  @Test
   public void testAccessControls() {
     CompilerOptions options = getOptions(DiagnosticGroups.ACCESS_CONTROLS);
     options.setCheckTypes(true);
@@ -795,6 +835,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS, 4);
   }
 
+  @Test
   public void testGlobalThisCheck() {
     CompilerOptions options = getOptions(DiagnosticGroups.GLOBAL_THIS);
     String src = "/** @constructor */ namespace.Bar = function() {};\n"
@@ -805,6 +846,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertErrorType(result.errors[0], CheckGlobalThis.GLOBAL_THIS, 2);
   }
 
+  @Test
   public void testNoSideEffect() {
     CompilerOptions options = getOptions();
     options.setCheckSuspiciousCode(true);
@@ -817,6 +859,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertErrorType(result.warnings[0], CheckSideEffects.USELESS_CODE_ERROR, 2);
   }
 
+  @Test
   public void testAccidentalSemicolon() {
     CompilerOptions options = getOptions();
     options.setCheckSuspiciousCode(true);
@@ -828,6 +871,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         CheckSuspiciousCode.SUSPICIOUS_SEMICOLON, 1);
   }
 
+  @Test
   public void testUnreachableCode() {
     CompilerOptions options = getOptions();
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.ERROR);
@@ -838,6 +882,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertErrorType(result.errors[0], CheckUnreachableCode.UNREACHABLE_CODE, 1);
   }
 
+  @Test
   public void testMissingReturn() {
     CompilerOptions options = getOptions();
     options.setCheckTypes(true);
@@ -853,6 +898,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
   }
 
   /** Test related to DefaultPassConfig.closureGoogScopeAliases */
+  @Test
   public void testGoogScope() {
     // Checking a type of error to make sure goog.scope is processed.
     CompilerOptions options = getOptions(DiagnosticGroups.ACCESS_CONTROLS);
@@ -874,20 +920,20 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
     Result result = this.runReplaceScript(options, ImmutableList.of(src0,
         src1), 0, 0, modifiedSrc1, 1, true).getResult();
-        //ImmutableList.of(src0, modifiedSrc1), 1, 0, modifiedSrc1, 1, true);
-    assertFalse(result.success);
+    // ImmutableList.of(src0, modifiedSrc1), 1, 0, modifiedSrc1, 1, true);
+    assertThat(result.success).isFalse();
     assertThat(result.errors).hasLength(1);
     assertErrorType(result.errors[0],
         CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS, 5);
   }
 
   /**
-   * Test related to PassConfig.patchGlobalTypedScope.
-   * First it generates the global typed scope in a normal full compile. Then
-   * with no modifications calls patchGlobalTypedScope on one of the scripts and
-   * compare the results to full-compile. Then changes one script and checks
-   * the results again.
+   * Test related to PassConfig.patchGlobalTypedScope. First it generates the global typed scope in
+   * a normal full compile. Then with no modifications calls patchGlobalTypedScope on one of the
+   * scripts and compare the results to full-compile. Then changes one script and checks the results
+   * again.
    */
+  @Test
   public void testPatchGlobalTypedScope() {
     CompilerOptions options = getOptions(DiagnosticGroups.CHECK_TYPES);
     String externSrc = "/** @type {number} */ var aNum;\n";
@@ -916,7 +962,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     SourceFile newSource1 = SourceFile.fromCode("in1", src1);
     JsAst ast = new JsAst(newSource1);
     compiler.replaceScript(ast);
-    assertTrue(compiler.getResult().success);
+    assertThat(compiler.getResult().success).isTrue();
     assertScopesSimilar(oldGlobalScope, compiler.getTopScope());
     assertScopeAndThisForScopeSimilar(compiler.getTopScope());
 
@@ -924,16 +970,16 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     SourceFile newSource2 = SourceFile.fromCode("in2", src2);
     ast = new JsAst(newSource2);
     compiler.replaceScript(ast);
-    assertTrue(compiler.getResult().success);
+    assertThat(compiler.getResult().success).isTrue();
     assertScopesSimilar(oldGlobalScope, compiler.getTopScope());
     assertScopeAndThisForScopeSimilar(compiler.getTopScope());
 
     newSource2 = SourceFile.fromCode("in2", "");
     ast = new JsAst(newSource2);
     compiler.replaceScript(ast);
-    assertTrue(compiler.getResult().success);
-    assertSubsetScope(compiler.getTopScope(), oldGlobalScope,
-        ImmutableSet.of("obj2", "objNoType2"));
+    assertThat(compiler.getResult().success).isTrue();
+    assertSubsetScope(
+        compiler.getTopScope(), oldGlobalScope, ImmutableSet.of("obj2", "objNoType2"));
     assertScopeAndThisForScopeSimilar(compiler.getTopScope());
   }
 
@@ -941,7 +987,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     ObjectType typeOfThis = scope.getTypeOfThis().toObjectType();
     for (TypedVar v : scope.getAllSymbols()) {
       if (!v.getName().contains(".")) {
-        assertEquals(v.getNameNode(), typeOfThis.getPropertyNode(v.getName()));
+        assertThat(typeOfThis.getPropertyNode(v.getName())).isEqualTo(v.getNameNode());
       }
     }
   }
@@ -955,14 +1001,15 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     for (TypedVar var1 : scope.getVarIterable()) {
       TypedVar var2 = subScope.getVar(var1.getName());
       if (missingVars.contains(var1.getName())) {
-        assertNull(var2);
+        assertThat(var2).isNull();
       } else {
-        assertNotNull(var2);
-        assertEquals(var1.getType(), var2.getType());
+        assertThat(var2).isNotNull();
+        assertThat(var2.getType()).isEqualTo(var1.getType());
       }
     }
   }
 
+  @Test
   public void testInferJsDocInfo() {
     CompilerOptions options = getOptions();
     options.inferTypes = true;
@@ -976,10 +1023,11 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         ImmutableList.of(src), 0, 0, modifiedSrc, 0, true);
     TypedVar var = compiler.getTopScope().getVar("temp");
     ObjectType type = var.getType().toObjectType().getImplicitPrototype();
-    assertNotNull(type.getOwnPropertyJSDocInfo("prop"));
+    assertThat(type.getOwnPropertyJSDocInfo("prop")).isNotNull();
   }
 
   /** Effectively this tests the clean-up of properties on un-named objects. */
+  @Test
   public void testNoErrorOnGoogProvide() {
     CompilerOptions options = getOptions(DiagnosticGroups.CHECK_TYPES);
     String src0 =
@@ -989,13 +1037,14 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "ns.Bar.bar = function() {};\n";
     Result result = this.runReplaceScript(options,
         ImmutableList.of(src0, src1), 0, 0, src1, 1, false).getResult();
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     assertThat(result.errors).isEmpty();
     assertThat(result.warnings).isEmpty();
   }
 
   /** Check async functionality on replaceScript */
+  @Test
   public void testAsyncReplaceScript() {
     CompilerOptions options = getOptions();
     options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
@@ -1005,12 +1054,13 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     String src0 = "async function foo() {}";
     Result result =
         this.runReplaceScript(options, ImmutableList.of(src0), 0, 0, src0, 0, false).getResult();
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     assertThat(result.errors).isEmpty();
     assertThat(result.warnings).isEmpty();
   }
 
+  @Test
   public void testAddSimpleScript() {
     CompilerOptions options = getOptions();
     options.setClosurePass(false);
@@ -1030,6 +1080,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     verifyPropertyLineno(compiler, "Bar", "foo", 2);
   }
 
+  @Test
   public void testAddExistingScript() {
     CompilerOptions options = getOptions();
 
@@ -1050,7 +1101,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
     try {
       doAddScript(compiler, updatedOtherSrc, 1);
-      fail("Expected an IllegalStateException to be thrown");
+      assertWithMessage("Expected an IllegalStateException to be thrown").fail();
     } catch (IllegalStateException expectedISE) {
       //ignore expected exception
     }

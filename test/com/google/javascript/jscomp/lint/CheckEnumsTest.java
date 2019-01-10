@@ -27,10 +27,13 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link CheckEnums}.
- */
+/** Test case for {@link CheckEnums}. */
+@RunWith(JUnit4.class)
 public final class CheckEnumsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -45,12 +48,14 @@ public final class CheckEnumsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
-  public void testCheckEnums() throws Exception {
+  @Test
+  public void testCheckEnums() {
     testSame("/** @enum {number} */ ns.Enum = {A: 1, B: 2};");
     testSame("/** @enum {string} */ ns.Enum = {A: 'foo', B: 'bar'};");
     testWarning("/** @enum {number} */ ns.Enum = {A: 1, B: 1};",
@@ -78,25 +83,30 @@ public final class CheckEnumsTest extends CompilerTestCase {
         ENUM_PROP_NOT_CONSTANT);
   }
 
-  public void testCheckValidEnums_withES6Modules() throws Exception {
+  @Test
+  public void testCheckValidEnums_withES6Modules() {
     testSame("export /** @enum {number} */ var Enum = {A: 1, B: 2};");
   }
 
-  public void testCheckInvalidEnums_withES6Modules01() throws Exception {
+  @Test
+  public void testCheckInvalidEnums_withES6Modules01() {
     testWarning("export /** @enum {number} */ var Enum = {A: 1, B: 1};", DUPLICATE_ENUM_VALUE);
   }
 
-  public void testCheckInvalidEnums_withES6Modules02() throws Exception {
+  @Test
+  public void testCheckInvalidEnums_withES6Modules02() {
     testWarning("export /** @enum {number} */ var Enum = {A};", SHORTHAND_ASSIGNMENT_IN_ENUM);
   }
 
-  public void testCheckInvalidEnums_withES6Modules03() throws Exception {
+  @Test
+  public void testCheckInvalidEnums_withES6Modules03() {
     testWarning(
         "export /** @enum {string} */ var Enum = {['prop' + f()]: 'foo'};",
         COMPUTED_PROP_NAME_IN_ENUM);
   }
 
-  public void testCheckInvalidEnums_withES6Modules04() throws Exception {
+  @Test
+  public void testCheckInvalidEnums_withES6Modules04() {
     testWarning("export /** @enum {number} */ var E = { a: 1 };", ENUM_PROP_NOT_CONSTANT);
   }
 }

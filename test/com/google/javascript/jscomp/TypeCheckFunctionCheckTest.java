@@ -21,11 +21,17 @@ import static com.google.javascript.jscomp.FunctionTypeBuilder.VAR_ARGS_MUST_BE_
 import static com.google.javascript.jscomp.TypeCheck.WRONG_ARGUMENT_COUNT;
 
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for function and method arity checking in TypeCheck.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
 
   private CodingConvention convention = null;
@@ -51,25 +57,29 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     convention = new GoogleCodingConvention();
     enableParseTypeInfo();
     enableTypeCheck();
   }
 
+  @Test
   public void testFunctionAritySimple() {
     assertOk("", "");
     assertOk("a", "'a'");
     assertOk("a,b", "10, 20");
   }
 
+  @Test
   public void testFunctionArityWithOptionalArgs() {
     assertOk("a,b,opt_c", "1,2");
     assertOk("a,b,opt_c", "1,2,3");
     assertOk("a,opt_b,opt_c", "1");
   }
 
+  @Test
   public void testFunctionArityWithVarArgs() {
     assertOk("var_args", "");
     assertOk("var_args", "1,2");
@@ -82,6 +92,7 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
     assertOk("a,opt_b,var_args", "1,2,3,4,5");
   }
 
+  @Test
   public void testWrongNumberOfArgs() {
     assertWarning("a,b,opt_c", "1",
         WRONG_ARGUMENT_COUNT);
@@ -99,11 +110,13 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
         WRONG_ARGUMENT_COUNT);
   }
 
+  @Test
   public void testVarArgsLast() {
     assertWarning("a,b,var_args,c", "1,2,3,4",
         VAR_ARGS_MUST_BE_LAST);
   }
 
+  @Test
   public void testOptArgsLast() {
     assertWarning("a,b,opt_d,c", "1, 2, 3",
         OPTIONAL_ARG_AT_END);
@@ -111,32 +124,39 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
         OPTIONAL_ARG_AT_END);
   }
 
+  @Test
   public void testFunctionsWithJsDoc1() {
     testSame("/** @param {*=} c */ function foo(a,b,c) {} foo(1,2);");
   }
 
+  @Test
   public void testFunctionsWithJsDoc2() {
     testSame("/** @param {*=} c */ function foo(a,b,c) {} foo(1,2,3);");
   }
 
+  @Test
   public void testFunctionsWithJsDoc3() {
     testSame("/** @param {*=} c \n * @param {*=} b */ " +
              "function foo(a,b,c) {} foo(1);");
   }
 
+  @Test
   public void testFunctionsWithJsDoc4() {
     testSame("/** @param {...*} a */ var foo = function(a) {}; foo();");
   }
 
+  @Test
   public void testFunctionsWithJsDoc5() {
     testSame("/** @param {...*} a */ var foo = function(a) {}; foo(1,2);");
   }
 
+  @Test
   public void testFunctionsWithJsDoc6() {
     testWarning(
         "/** @param {...*} b */ var foo = function(a, b) {}; foo();", WRONG_ARGUMENT_COUNT);
   }
 
+  @Test
   public void testFunctionsWithJsDoc7() {
     String fooDfn = "/** @param {*} [b] */ var foo = function(b) {};";
     testSame(fooDfn + "foo();");
@@ -144,6 +164,7 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
     testWarning(fooDfn + "foo(1, 2);", WRONG_ARGUMENT_COUNT);
   }
 
+  @Test
   public void testFunctionWithDefaultCodingConvention() {
     convention = CodingConventions.getDefault();
     testWarning("var foo = function(x) {}; foo(1, 2);", WRONG_ARGUMENT_COUNT);
@@ -151,6 +172,7 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
     testWarning("var foo = function(var_args) {}; foo(1, 2);", WRONG_ARGUMENT_COUNT);
   }
 
+  @Test
   public void testMethodCalls() {
     final String METHOD_DEFS =
       "/** @constructor */\n" +

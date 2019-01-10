@@ -38,70 +38,78 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.jstype.BooleanLiteralSet.BOTH;
 import static com.google.javascript.rhino.jstype.BooleanLiteralSet.EMPTY;
 import static com.google.javascript.rhino.jstype.BooleanLiteralSet.FALSE;
 import static com.google.javascript.rhino.jstype.BooleanLiteralSet.TRUE;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests {@link BooleanLiteralSet}.
  *
  */
-public class BooleanLiteralSetTest extends TestCase {
+@RunWith(JUnit4.class)
+public class BooleanLiteralSetTest {
 
+  @Test
   public void testIntersection() {
-    assertEquals(EMPTY, EMPTY.intersection(EMPTY));
-    assertEquals(EMPTY, EMPTY.intersection(TRUE));
-    assertEquals(EMPTY, EMPTY.intersection(FALSE));
-    assertEquals(EMPTY, EMPTY.intersection(BOTH));
-    assertEquals(EMPTY, TRUE.intersection(EMPTY));
-    assertEquals(TRUE, TRUE.intersection(TRUE));
-    assertEquals(EMPTY, TRUE.intersection(FALSE));
-    assertEquals(TRUE, TRUE.intersection(BOTH));
-    assertEquals(EMPTY, FALSE.intersection(EMPTY));
-    assertEquals(EMPTY, FALSE.intersection(TRUE));
-    assertEquals(FALSE, FALSE.intersection(FALSE));
-    assertEquals(FALSE, FALSE.intersection(BOTH));
-    assertEquals(EMPTY, BOTH.intersection(EMPTY));
-    assertEquals(TRUE, BOTH.intersection(TRUE));
-    assertEquals(FALSE, BOTH.intersection(FALSE));
-    assertEquals(BOTH, BOTH.intersection(BOTH));
+    assertThat(EMPTY.intersection(EMPTY)).isEqualTo(EMPTY);
+    assertThat(EMPTY.intersection(TRUE)).isEqualTo(EMPTY);
+    assertThat(EMPTY.intersection(FALSE)).isEqualTo(EMPTY);
+    assertThat(EMPTY.intersection(BOTH)).isEqualTo(EMPTY);
+    assertThat(TRUE.intersection(EMPTY)).isEqualTo(EMPTY);
+    assertThat(TRUE.intersection(TRUE)).isEqualTo(TRUE);
+    assertThat(TRUE.intersection(FALSE)).isEqualTo(EMPTY);
+    assertThat(TRUE.intersection(BOTH)).isEqualTo(TRUE);
+    assertThat(FALSE.intersection(EMPTY)).isEqualTo(EMPTY);
+    assertThat(FALSE.intersection(TRUE)).isEqualTo(EMPTY);
+    assertThat(FALSE.intersection(FALSE)).isEqualTo(FALSE);
+    assertThat(FALSE.intersection(BOTH)).isEqualTo(FALSE);
+    assertThat(BOTH.intersection(EMPTY)).isEqualTo(EMPTY);
+    assertThat(BOTH.intersection(TRUE)).isEqualTo(TRUE);
+    assertThat(BOTH.intersection(FALSE)).isEqualTo(FALSE);
+    assertThat(BOTH.intersection(BOTH)).isEqualTo(BOTH);
   }
 
+  @Test
   public void testUnion() {
-    assertEquals(EMPTY, EMPTY.union(EMPTY));
-    assertEquals(TRUE, EMPTY.union(TRUE));
-    assertEquals(FALSE, EMPTY.union(FALSE));
-    assertEquals(BOTH, EMPTY.union(BOTH));
-    assertEquals(TRUE, TRUE.union(EMPTY));
-    assertEquals(TRUE, TRUE.union(TRUE));
-    assertEquals(BOTH, TRUE.union(FALSE));
-    assertEquals(BOTH, TRUE.union(BOTH));
-    assertEquals(FALSE, FALSE.union(EMPTY));
-    assertEquals(BOTH, FALSE.union(TRUE));
-    assertEquals(FALSE, FALSE.union(FALSE));
-    assertEquals(BOTH, FALSE.union(BOTH));
-    assertEquals(BOTH, BOTH.union(EMPTY));
-    assertEquals(BOTH, BOTH.union(TRUE));
-    assertEquals(BOTH, BOTH.union(FALSE));
-    assertEquals(BOTH, BOTH.union(BOTH));
+    assertThat(EMPTY.union(EMPTY)).isEqualTo(EMPTY);
+    assertThat(EMPTY.union(TRUE)).isEqualTo(TRUE);
+    assertThat(EMPTY.union(FALSE)).isEqualTo(FALSE);
+    assertThat(EMPTY.union(BOTH)).isEqualTo(BOTH);
+    assertThat(TRUE.union(EMPTY)).isEqualTo(TRUE);
+    assertThat(TRUE.union(TRUE)).isEqualTo(TRUE);
+    assertThat(TRUE.union(FALSE)).isEqualTo(BOTH);
+    assertThat(TRUE.union(BOTH)).isEqualTo(BOTH);
+    assertThat(FALSE.union(EMPTY)).isEqualTo(FALSE);
+    assertThat(FALSE.union(TRUE)).isEqualTo(BOTH);
+    assertThat(FALSE.union(FALSE)).isEqualTo(FALSE);
+    assertThat(FALSE.union(BOTH)).isEqualTo(BOTH);
+    assertThat(BOTH.union(EMPTY)).isEqualTo(BOTH);
+    assertThat(BOTH.union(TRUE)).isEqualTo(BOTH);
+    assertThat(BOTH.union(FALSE)).isEqualTo(BOTH);
+    assertThat(BOTH.union(BOTH)).isEqualTo(BOTH);
   }
 
+  @Test
   public void testGet() {
-    assertEquals(TRUE, BooleanLiteralSet.get(true));
-    assertEquals(FALSE, BooleanLiteralSet.get(false));
+    assertThat(BooleanLiteralSet.get(true)).isEqualTo(TRUE);
+    assertThat(BooleanLiteralSet.get(false)).isEqualTo(FALSE);
   }
 
+  @Test
   public void testContains() {
-    assertFalse(EMPTY.contains(true));
-    assertFalse(EMPTY.contains(false));
-    assertTrue(TRUE.contains(true));
-    assertFalse(TRUE.contains(false));
-    assertFalse(FALSE.contains(true));
-    assertTrue(FALSE.contains(false));
-    assertTrue(BOTH.contains(true));
-    assertTrue(BOTH.contains(false));
+    assertThat(EMPTY.contains(true)).isFalse();
+    assertThat(EMPTY.contains(false)).isFalse();
+    assertThat(TRUE.contains(true)).isTrue();
+    assertThat(TRUE.contains(false)).isFalse();
+    assertThat(FALSE.contains(true)).isFalse();
+    assertThat(FALSE.contains(false)).isTrue();
+    assertThat(BOTH.contains(true)).isTrue();
+    assertThat(BOTH.contains(false)).isTrue();
   }
 }

@@ -20,8 +20,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Unit tests for {@link Es6RewriteScriptsToModules} */
+@RunWith(JUnit4.class)
 public final class Es6RewriteScriptsToModulesTest extends CompilerTestCase {
 
   @Override
@@ -41,6 +45,7 @@ public final class Es6RewriteScriptsToModulesTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testImportedScript() {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
@@ -55,9 +60,10 @@ public final class Es6RewriteScriptsToModulesTest extends CompilerTestCase {
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     getProcessor(compiler).process(externsRoot, mainRoot);
-    assertTrue(mainRoot.getFirstFirstChild().isModuleBody());
+    assertThat(mainRoot.getFirstFirstChild().isModuleBody()).isTrue();
   }
 
+  @Test
   public void testNonImportedScript() {
     testSame(
         srcs(

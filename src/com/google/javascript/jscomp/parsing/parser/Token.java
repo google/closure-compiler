@@ -45,4 +45,8 @@ public class Token {
 
   public IdentifierToken asIdentifier() { return (IdentifierToken) this; }
   public LiteralToken asLiteral() { return (LiteralToken) this; }
+
+  public TemplateLiteralToken asTemplateLiteral() {
+    return (TemplateLiteralToken) this;
+  }
 }

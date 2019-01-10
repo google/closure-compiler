@@ -644,10 +644,7 @@ FetchEvent.prototype.clientId;
 FetchEvent.prototype.isReload;
 
 /** @type {?string} */
-FetchEvent.prototype.targetClientId;
-
-/** @type {?string} */
-FetchEvent.prototype.reservedClientId;
+FetchEvent.prototype.resultingClientId;
 
 /**
  * @param {(Response|IThenable<Response>)} r

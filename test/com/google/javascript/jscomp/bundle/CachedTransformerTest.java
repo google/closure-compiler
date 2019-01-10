@@ -24,13 +24,17 @@ import static org.mockito.Mockito.when;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.cache.CacheBuilder;
 import java.util.function.Function;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link Source} and its nested classes. */
 @GwtIncompatible
-public final class CachedTransformerTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class CachedTransformerTest {
 
   private static final Source FOO = Source.builder().setCode("foo").build();
   private static final Source BAR = Source.builder().setCode("bar").build();
@@ -39,11 +43,12 @@ public final class CachedTransformerTest extends TestCase {
 
   @Mock Function<Source, Source> delegate;
 
-  @Override
-  protected void setUp() {
+  @Before
+  public void setUp() {
     MockitoAnnotations.initMocks(this);
   }
 
+  @Test
   public void testDelegates() {
     Source.Transformer cached =
         new CachedTransformer(Source.Transformer.of(delegate), CacheBuilder.newBuilder());
@@ -54,6 +59,7 @@ public final class CachedTransformerTest extends TestCase {
     assertThat(cached.transform(BAZ)).isSameAs(QUX);
   }
 
+  @Test
   public void testCaches() {
     Source.Transformer cached =
         new CachedTransformer(Source.Transformer.of(delegate), CacheBuilder.newBuilder());

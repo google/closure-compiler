@@ -2039,6 +2039,11 @@ CSSProperties.prototype.order;
  */
 CSSProperties.prototype.willChange;
 
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-ui-4/#propdef-user-select
+ */
+CSSProperties.prototype.userSelect;
 
 /**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
@@ -2245,6 +2250,14 @@ Document.prototype.elementFromPoint = function(x, y) {};
 /**
  * @param {number} x
  * @param {number} y
+ * @return {!IArrayLike<!Element>}
+ * @see http://www.w3.org/TR/cssom-view/#dom-document-elementsfrompoint
+ */
+Document.prototype.elementsFromPoint = function(x, y) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
  * @return {CaretPosition}
  * @see http://www.w3.org/TR/cssom-view/#dom-document-caretpositionfrompoint
  */
@@ -2295,6 +2308,18 @@ Element.prototype.getBoundingClientRect = function() {};
  * @return {undefined}
  */
 Element.prototype.scrollIntoView = function(opt_top) {};
+
+/**
+ * @param {number|{
+ *   left: (number|undefined),
+ *   top: (number|undefined),
+ *   behavior: (string|undefined),
+ * }} scrollToOptionsOrX
+ * @param {number=} opt_y
+ * @see https://www.w3.org/TR/cssom-view/#extension-to-the-element-interface
+ * @return {undefined}
+ */
+Element.prototype.scrollTo = function(scrollToOptionsOrX, opt_y) {};
 
 /**
  * @type {number}
@@ -2725,6 +2750,36 @@ FontFaceSet.prototype.ready;
  */
 FontFaceSet.prototype.status;
 
+/**
+ * @constructor
+ * @param {string} type
+ * @param {{
+ *   animationName: (string|undefined),
+ *   elapsedTime: (number|undefined),
+ *   pseudoElement: (string|undefined)
+ * }=} opt_animationEventInitDict
+ * @extends {Event}
+ * @see https://drafts.csswg.org/css-animations/#interface-animationevent
+ */
+function AnimationEvent(type, opt_animationEventInitDict) {};
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-animations/#dom-animationevent-animationname
+ */
+AnimationEvent.prototype.animationName;
+
+/**
+ * @type {number}
+ * @see https://drafts.csswg.org/css-animations/#dom-animationevent-elapsedtime
+ */
+AnimationEvent.prototype.elapsedTime;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-animations/#dom-animationevent-pseudoelement
+ */
+AnimationEvent.prototype.pseudoElement;
 
 /**
  * @record

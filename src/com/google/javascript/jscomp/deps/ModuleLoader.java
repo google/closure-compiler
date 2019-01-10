@@ -159,15 +159,6 @@ public final class ModuleLoader {
     }
 
     /**
-     * Turns a filename into a JS identifier that can be used in rewritten code.
-     * Removes leading /, replaces / with $, removes trailing .js
-     * and replaces - with _.
-     */
-    public String toJSIdentifier() {
-      return ModuleNames.toJSIdentifier(path);
-    }
-
-    /**
      * Turns a filename into a JS identifier that is used for moduleNames in
      * rewritten code. Removes leading /, replaces / with $, removes trailing .js
      * and replaces - with _. All moduleNames get a "module$" prefix.

@@ -106,7 +106,55 @@ HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
 HTMLCanvasElement.prototype.captureStream = function(opt_framerate) {};
 
 /**
- * @typedef {HTMLImageElement|HTMLVideoElement|HTMLCanvasElement}
+ * @see https://html.spec.whatwg.org/multipage/canvas.html#the-offscreencanvas-interface
+ * @implements {EventTarget}
+ * @implements {Transferable}
+ * @param {number} width
+ * @param {number} height
+ * @constructor
+ */
+function OffscreenCanvas(width, height) {}
+
+/** @override */
+OffscreenCanvas.prototype.addEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+OffscreenCanvas.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+OffscreenCanvas.prototype.dispatchEvent = function(evt) {};
+
+/** @type {number} */
+OffscreenCanvas.prototype.width;
+
+/** @type {number} */
+OffscreenCanvas.prototype.height;
+
+/**
+ * @param {string} contextId
+ * @param {!Object=} opt_options
+ * @return {!Object}
+ */
+OffscreenCanvas.prototype.getContext = function(contextId, opt_options) {};
+
+/**
+ * @return {!ImageBitmap}
+ */
+OffscreenCanvas.prototype.transferToImageBitmap = function() {};
+
+/**
+ * @param {{type: (string|undefined), quality: (number|undefined)}=} opt_options
+ * @return {!Promise<!Blob>}
+ */
+OffscreenCanvas.prototype.convertToBlob = function(opt_options) {};
+
+// TODO(tjgq): Find a way to add SVGImageElement to this typedef without making
+// svg.js part of core.
+/**
+ * @typedef {HTMLImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|
+ *     OffscreenCanvas}
  */
 var CanvasImageSource;
 
@@ -791,7 +839,7 @@ function TextMetrics() {}
 TextMetrics.prototype.width;
 
 /**
- * @param {Uint8ClampedArray|number} dataOrWidth In the first form, this is the
+ * @param {!Uint8ClampedArray|number} dataOrWidth In the first form, this is the
  *     array of pixel data.  In the second form, this is the image width.
  * @param {number} widthOrHeight In the first form, this is the image width.  In
  *     the second form, this is the image height.
@@ -802,7 +850,7 @@ TextMetrics.prototype.width;
  */
 function ImageData(dataOrWidth, widthOrHeight, opt_height) {}
 
-/** @const {Uint8ClampedArray} */
+/** @const {!Uint8ClampedArray} */
 ImageData.prototype.data;
 
 /** @const {number} */
@@ -1280,10 +1328,12 @@ WebWorker.prototype.onerror;
 
 /**
  * @see http://dev.w3.org/html5/workers/
+ * @param {!string} scriptURL
+ * @param {!WorkerOptions=} opt_options
  * @constructor
  * @implements {EventTarget}
  */
-function Worker(opt_arg0) {}
+function Worker(scriptURL, opt_options) {}
 
 /** @override */
 Worker.prototype.addEventListener = function(type, listener, opt_options) {};
@@ -1327,6 +1377,30 @@ Worker.prototype.onmessage;
  * @type {?function(!ErrorEvent): void}
  */
 Worker.prototype.onerror;
+
+/**
+ * @see http://dev.w3.org/html5/workers/
+ * @record
+ */
+function WorkerOptions() {}
+
+/**
+ * Defines a name for the new global environment of the worker, primarily for
+ * debugging purposes.
+ * @type {string|undefined}
+ */
+WorkerOptions.prototype.name;
+
+/**
+ * 'classic' or 'module'. Default: 'classic'.
+ * Specifying 'module' ensures the worker environment supports JavaScript
+ * modules.
+ * @type {string|undefined}
+ */
+WorkerOptions.prototype.type;
+
+// WorkerOptions.prototype.credentials is defined in fetchapi.js.
+// if type = 'module', it specifies how scriptURL is fetched.
 
 /**
  * @see http://dev.w3.org/html5/workers/
@@ -1415,7 +1489,7 @@ WorkerGlobalScope.prototype.close = function() {};
 
 /**
  * Sent when the worker encounters an error.
- * @type {?function(!ErrorEvent): void}
+ * @type {?function(string, string, number, number, !Error): void}
  */
 WorkerGlobalScope.prototype.onerror;
 
@@ -1433,6 +1507,9 @@ WorkerGlobalScope.prototype.ononline;
 
 /** @type {!WorkerPerformance} */
 WorkerGlobalScope.prototype.performance;
+
+/** @type {!WorkerNavigator} */
+WorkerGlobalScope.prototype.navigator;
 
 /**
  * @see http://dev.w3.org/html5/workers/
@@ -3575,10 +3652,20 @@ HTMLEmbedElement.prototype.type;
 // Fullscreen APIs.
 
 /**
- * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-element-requestfullscreen
+ * @record
+ * @see https://fullscreen.spec.whatwg.org/#dictdef-fullscreenoptions
+ */
+function FullscreenOptions() {}
+
+/** @type {string} */
+FullscreenOptions.prototype.navigationUI;
+
+/**
+ * @see https://fullscreen.spec.whatwg.org/#dom-element-requestfullscreen
+ * @param {!FullscreenOptions=} options
  * @return {undefined}
  */
-Element.prototype.requestFullscreen = function() {};
+Element.prototype.requestFullscreen = function(options) {};
 
 /**
  * @type {boolean}
@@ -3889,6 +3976,15 @@ ShadowRoot.prototype.getSelection = function() {};
  * @nosideeffects
  */
 ShadowRoot.prototype.elementFromPoint = function(x, y) {};
+
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {!IArrayLike<!Element>}
+ * @nosideeffects
+ */
+ShadowRoot.prototype.elementsFromPoint = function(x, y) {};
 
 
 /**
@@ -4494,10 +4590,23 @@ HTMLMeterElement.prototype.labels;
 
 
 /**
+ * @interface
+ * @see https://storage.spec.whatwg.org/#api
+ */
+function NavigatorStorage() {};
+
+/**
+ * @type {!StorageManager}
+ */
+NavigatorStorage.prototype.storage;
+
+/**
  * @constructor
+ * @implements NavigatorStorage
  * @see https://www.w3.org/TR/html5/webappapis.html#navigator
  */
 function Navigator() {}
+
 /**
  * @type {string}
  * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-appcodename
@@ -4634,6 +4743,32 @@ Navigator.prototype.share = function(data) {};
 Navigator.prototype.hardwareConcurrency;
 
 /**
+ * @constructor
+ * @implements NavigatorStorage
+ * @see https://html.spec.whatwg.org/multipage/workers.html#the-workernavigator-object
+ */
+function WorkerNavigator() {}
+
+/**
+ * @type {number}
+ * @see https://developers.google.com/web/updates/2017/12/device-memory
+ * https://github.com/w3c/device-memory
+ */
+WorkerNavigator.prototype.deviceMemory;
+
+/**
+ * @type {number}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorConcurrentHardware/hardwareConcurrency
+ */
+WorkerNavigator.prototype.hardwareConcurrency;
+
+/**
+ * @type {!StorageManager}
+ * @see https://storage.spec.whatwg.org
+ */
+WorkerNavigator.prototype.storage;
+
+/**
  * @record
  * @see https://wicg.github.io/web-share/#sharedata-dictionary
  */
@@ -4764,6 +4899,12 @@ CustomElementRegistry.prototype.get = function(tagName) {};
  * @return {Promise<!function(new:HTMLElement)>}
  */
 CustomElementRegistry.prototype.whenDefined = function(tagName) {};
+
+/**
+ * @param {!Node} root
+ * @return {undefined}
+ */
+CustomElementRegistry.prototype.upgrade = function(root) {};
 
 /** @type {!CustomElementRegistry} */
 var customElements;

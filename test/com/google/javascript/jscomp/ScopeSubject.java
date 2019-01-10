@@ -19,13 +19,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertAbout;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.javascript.jscomp.testing.TypeSubject;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.testing.TypeSubject;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
@@ -170,7 +171,7 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
 
     public TypeSubject withTypeThat() {
       TypedVar typedVar = (TypedVar) var.getSymbol();
-      return TypeSubject.assertType(typedVar.getType());
+      return assertType(typedVar.getType());
     }
   }
 

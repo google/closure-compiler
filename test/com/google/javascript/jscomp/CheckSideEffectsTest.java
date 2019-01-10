@@ -17,11 +17,17 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class CheckSideEffectsTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableParseTypeInfo();
@@ -40,6 +46,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
 
   private final DiagnosticType e = CheckSideEffects.USELESS_CODE_ERROR;
 
+  @Test
   public void testUselessCode() {
     testSame("function f(x) { if(x) return; }");
     testWarning("function f(x) { if(x); }", e);
@@ -143,6 +150,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testWarning("var f = s => {s}", e);
   }
 
+  @Test
   public void testUselessCodeInFor() {
     testSame("for(var x = 0; x < 100; x++) { foo(x) }");
     testSame("for(; true; ) { bar() }");
@@ -165,6 +173,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testSame("for (i = 0; el = el.previousSibling; i++);");
   }
 
+  @Test
   public void testTypeAnnotations() {
     test("x;", "JSCOMPILER_PRESERVE(x);", warning(e));
     test("a.b.c.d;", "JSCOMPILER_PRESERVE(a.b.c.d);", warning(e));
@@ -178,6 +187,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testSame("function A() { /** @type {Number} */ this.foo; }");
   }
 
+  @Test
   public void testJSDocComments() {
     testSame("function A() { /** This is a JsDoc comment */ this.foo; }");
     test(
@@ -186,11 +196,13 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         warning(e));
   }
 
+  @Test
   public void testIssue80() {
     testSame("(0, eval)('alert');");
     test("(0, foo)('alert');", "(JSCOMPILER_PRESERVE(0), foo)('alert');", warning(e));
   }
 
+  @Test
   public void testIsue504() {
     test(
         "void f();",
@@ -199,6 +211,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
             "Suspicious code. The result of the 'void' operator is not being used."));
   }
 
+  @Test
   public void testExternFunctions() {
     String externs = lines(
         "/** @return {boolean}",
@@ -238,6 +251,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         srcs("(function() { function noSideEffectsExtern() {}; noSideEffectsExtern(); })()"));
   }
 
+  @Test
   public void testExternPropertyFunctions() {
     String externs = lines(
         "/** @const */ var foo = {};",

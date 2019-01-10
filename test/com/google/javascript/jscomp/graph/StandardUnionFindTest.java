@@ -17,35 +17,44 @@
 package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Iterator;
 import java.util.Set;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit test for the {@link StandardUnionFind} data structure.
  *
  */
-public final class StandardUnionFindTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class StandardUnionFindTest {
   private StandardUnionFind<String> union;
 
-  @Override protected void setUp() {
+  @Before
+  public void setUp() {
     union = new StandardUnionFind<>();
   }
 
+  @Test
   public void testEmpty() {
     assertThat(union.allEquivalenceClasses()).isEmpty();
   }
 
+  @Test
   public void testAdd() {
     union.add("foo");
     union.add("bar");
-    assertThat(null != union.find("foo")).isTrue();
+    assertThat(union.find("foo")).isNotNull();
     assertThat(union.allEquivalenceClasses()).hasSize(2);
   }
 
+  @Test
   public void testUnion() {
     union.union("A", "B");
     union.union("C", "D");
@@ -54,6 +63,7 @@ public final class StandardUnionFindTest extends TestCase {
     assertThat(union.find("A").equals(union.find("D"))).isFalse();
   }
 
+  @Test
   public void testSetSize() {
     union.union("A", "B");
     union.union("B", "C");
@@ -67,6 +77,7 @@ public final class StandardUnionFindTest extends TestCase {
     assertThat(union.findAll("F")).hasSize(1);
   }
 
+  @Test
   public void testFind() {
     union.add("A");
     union.add("B");
@@ -78,11 +89,12 @@ public final class StandardUnionFindTest extends TestCase {
 
     try {
       union.find("Z");
-      fail("find() on unknown element should not be allowed.");
+      assertWithMessage("find() on unknown element should not be allowed.").fail();
     } catch (IllegalArgumentException expected) {
     }
   }
 
+  @Test
   public void testAllEquivalenceClasses() {
     union.union("A", "B");
     union.union("A", "B");
@@ -96,6 +108,7 @@ public final class StandardUnionFindTest extends TestCase {
         ImmutableSet.of("A", "B", "C"), ImmutableSet.of("D", "E"), ImmutableSet.of("F"));
   }
 
+  @Test
   public void testFindAll() {
     union.union("A", "B");
     union.union("A", "B");
@@ -112,11 +125,12 @@ public final class StandardUnionFindTest extends TestCase {
 
     try {
       union.findAll("Z");
-      fail("findAll() on unknown element should not be allowed.");
+      assertWithMessage("findAll() on unknown element should not be allowed.").fail();
     } catch (IllegalArgumentException expected) {
     }
   }
 
+  @Test
   public void testFindAllIterator() {
     union.union("A", "B");
     union.union("B", "C");
@@ -139,6 +153,7 @@ public final class StandardUnionFindTest extends TestCase {
     assertThat(dIter.hasNext()).isFalse();
   }
 
+  @Test
   public void testFindAllSize() {
     union.union("A", "B");
     union.union("B", "C");
@@ -153,6 +168,7 @@ public final class StandardUnionFindTest extends TestCase {
     assertThat(union.findAll("D")).hasSize(5);
   }
 
+  @Test
   public void testElements() {
     union.union("A", "B");
     union.union("B", "C");
@@ -164,6 +180,7 @@ public final class StandardUnionFindTest extends TestCase {
     assertThat(elements).doesNotContain("F");
   }
 
+  @Test
   public void testCopy() {
     union.union("A", "B");
     union.union("B", "Z");
@@ -173,6 +190,7 @@ public final class StandardUnionFindTest extends TestCase {
     assertThat(copy.findAll("X")).containsExactly("X", "Y");
   }
 
+  @Test
   public void testChangesToCopyDontAffectOriginal() {
     union.union("A", "B");
     union.union("X", "Y");
@@ -184,12 +202,13 @@ public final class StandardUnionFindTest extends TestCase {
     assertThat(copy.findAll("X")).containsExactly("X", "Y");
     try {
       union.findAll("D");
-      fail("D has been inserted to the original collection");
+      assertWithMessage("D has been inserted to the original collection").fail();
     } catch (IllegalArgumentException e) {
       // Expected.
     }
   }
 
+  @Test
   public void testCheckEquivalent() {
     union.union("A", "B");
     union.add("C");
@@ -198,7 +217,7 @@ public final class StandardUnionFindTest extends TestCase {
     assertThat(union.areEquivalent("C", "B")).isFalse();
     try {
       union.areEquivalent("A", "F");
-      fail();
+      throw new AssertionError();
     } catch (IllegalArgumentException e) {
       // Expected.
     }

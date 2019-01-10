@@ -180,7 +180,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
 
           final ObjectType owningType;
           if (parent.isClassMembers()) {
-            FunctionType ctorType = (FunctionType) parent.getParent().getJSType();
+            FunctionType ctorType = JSType.toMaybeFunctionType(parent.getParent().getJSType());
             if (ctorType == null) {
               return;
             }

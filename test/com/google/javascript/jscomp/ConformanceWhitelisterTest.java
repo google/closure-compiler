@@ -26,10 +26,14 @@ import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.util.List;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 @GwtIncompatible("Conformance")
-public class ConformanceWhitelisterTest extends TestCase {
+@RunWith(JUnit4.class)
+public class ConformanceWhitelisterTest {
+  @Test
   public void testConformanceWhitelistAddNew() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
@@ -38,16 +42,18 @@ public class ConformanceWhitelisterTest extends TestCase {
             "/entry.js",
             lines("var foo = document.getElementById('name');", "foo.innerHTML = 'test';")));
 
-    Requirement.Builder requirement = Requirement.newBuilder();
-    requirement
-        .setType(Type.BANNED_PROPERTY)
-        .setErrorMessage("Lorem Ipsum")
-        .addValue("Object.prototype.innerHTML");
+    Requirement requirement =
+        Requirement.newBuilder()
+            .setType(Type.BANNED_PROPERTY)
+            .setErrorMessage("Lorem Ipsum")
+            .addValue("Object.prototype.innerHTML")
+            .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement.build()))
+    assertThat(testConformanceWhitelister(sources.build(), requirement))
         .containsExactly("/entry.js", 2);
   }
 
+  @Test
   public void testConformanceWhitelistRemove() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
@@ -56,16 +62,18 @@ public class ConformanceWhitelisterTest extends TestCase {
             "/entry.js",
             lines("var foo = document.getElementById('name');", "foo.outerHTML = 'test';")));
 
-    Requirement.Builder requirement = Requirement.newBuilder();
-    requirement
-        .setType(Type.BANNED_PROPERTY)
-        .setErrorMessage("Lorem Ipsum")
-        .addValue("Object.prototype.innerHTML")
-        .addWhitelist("/entry.js");
+    Requirement requirement =
+        Requirement.newBuilder()
+            .setType(Type.BANNED_PROPERTY)
+            .setErrorMessage("Lorem Ipsum")
+            .addValue("Object.prototype.innerHTML")
+            .addWhitelist("/entry.js")
+            .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement.build())).isEmpty();
+    assertThat(testConformanceWhitelister(sources.build(), requirement)).isEmpty();
   }
 
+  @Test
   public void testConformanceWhitelistPreserve() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
@@ -74,20 +82,22 @@ public class ConformanceWhitelisterTest extends TestCase {
             "/entry.js",
             lines("var foo = document.getElementById('name');", "foo.innerHTML = 'test';")));
 
-    Requirement.Builder requirement = Requirement.newBuilder();
-    requirement
-        .setType(Type.BANNED_PROPERTY)
-        .setErrorMessage("Lorem Ipsum")
-        .addValue("Object.prototype.innerHTML")
-        .addWhitelist("/entry.js");
+    Requirement requirement =
+        Requirement.newBuilder()
+            .setType(Type.BANNED_PROPERTY)
+            .setErrorMessage("Lorem Ipsum")
+            .addValue("Object.prototype.innerHTML")
+            .addWhitelist("/entry.js")
+            .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement.build()))
+    assertThat(testConformanceWhitelister(sources.build(), requirement))
         .containsExactly("/entry.js", 2);
   }
 
   // TODO(bangert): Evaluate if this is always the best behaviour.
   // The current behaviour pushes the behaviour of how to cluster the whitelist to the program
   // driving ConformanceWhitelister.
+  @Test
   public void testConformanceWhitelistBreaksDownFolder() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
@@ -96,14 +106,15 @@ public class ConformanceWhitelisterTest extends TestCase {
             "/test/entry.js",
             lines("var foo = document.getElementById('name');", "foo.innerHTML = 'test';")));
 
-    Requirement.Builder requirement = Requirement.newBuilder();
-    requirement
-        .setType(Type.BANNED_PROPERTY)
-        .setErrorMessage("Lorem Ipsum")
-        .addValue("Object.prototype.innerHTML")
-        .addWhitelist("/test/");
+    Requirement requirement =
+        Requirement.newBuilder()
+            .setType(Type.BANNED_PROPERTY)
+            .setErrorMessage("Lorem Ipsum")
+            .addValue("Object.prototype.innerHTML")
+            .addWhitelist("/test/")
+            .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement.build()))
+    assertThat(testConformanceWhitelister(sources.build(), requirement))
         .containsExactly("/test/entry.js", 2);
   }
 
@@ -120,7 +131,7 @@ public class ConformanceWhitelisterTest extends TestCase {
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
     Compiler compiler = new Compiler();
     Result result = compiler.compile(externs, sources, options);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
 
     ImmutableMultimap.Builder<String, Integer> errors = ImmutableMultimap.builder();
     for (Node node :

@@ -16,59 +16,28 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Objects;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Set;
+import com.google.common.collect.ImmutableSet;
 
 /**
- * <p>A basic error manager that sorts all errors and warnings reported to it to
- * generate a sorted report when the {@link #generateReport()} method
- * is called.</p>
+ * An error manager that generates a sorted report when the {@link #generateReport()} method is
+ * called.
  *
- * <p>This error manager does not produce any output, but subclasses can
- * override the {@link #println(CheckLevel, JSError)} method to generate custom
- * output.</p>
- *
+ * <p>This error manager does not produce any output, but subclasses can override the {@link
+ * #println(CheckLevel, JSError)} method to generate custom output. Consider using the
+ * SortingErrorManager with a custom {@link SortingErrorManager.ErrorReportGenerator} instead.
  */
-public abstract class BasicErrorManager implements ErrorManager {
-  final PriorityQueue<ErrorWithLevel> messages =
-      new PriorityQueue<>(1, new LeveledJSErrorComparator());
-  private final Set<ErrorWithLevel> alreadyAdded = new HashSet<>();
-  private int originalErrorCount = 0;
-  private int promotedErrorCount = 0;
-  private int warningCount = 0;
-  private double typedPercent = 0.0;
+@Deprecated
+public abstract class BasicErrorManager extends SortingErrorManager {
 
-  @Override
-  public void report(CheckLevel level, JSError error) {
-    ErrorWithLevel e = new ErrorWithLevel(error, level);
-    if (alreadyAdded.add(e)) {
-      messages.add(e);
-      if (level == CheckLevel.ERROR) {
-        if (error.getType().level == CheckLevel.ERROR) {
-          originalErrorCount++;
-        } else {
-          promotedErrorCount++;
-        }
-      } else if (level == CheckLevel.WARNING) {
-        warningCount++;
-      }
-    }
+  public BasicErrorManager() {
+    super(ImmutableSet.of());
   }
 
   @Override
   public void generateReport() {
-    List<ErrorWithLevel> list = new ArrayList<>();
-    for (ErrorWithLevel message = messages.poll(); message != null; message = messages.poll()) {
+    for (ErrorWithLevel message : super.getSortedDiagnostics()) {
       println(message.level, message.error);
-      list.add(message);
     }
-    // Restore the messages since some tests assert the values after generating the report.
-    messages.addAll(list);
     printSummary();
   }
 
@@ -82,139 +51,4 @@ public abstract class BasicErrorManager implements ErrorManager {
    * Print the summary of the compilation - number of errors and warnings.
    */
   protected abstract void printSummary();
-
-  @Override
-  public boolean hasHaltingErrors() {
-    return originalErrorCount != 0;
-  }
-
-  @Override
-  public int getErrorCount() {
-    return originalErrorCount + promotedErrorCount;
-  }
-
-  @Override
-  public int getWarningCount() {
-    return warningCount;
-  }
-
-  @Override
-  public JSError[] getErrors() {
-    return toArray(CheckLevel.ERROR);
-  }
-
-  @Override
-  public JSError[] getWarnings() {
-    return toArray(CheckLevel.WARNING);
-  }
-
-  @Override
-  public void setTypedPercent(double typedPercent) {
-    this.typedPercent = typedPercent;
-  }
-
-  @Override
-  public double getTypedPercent() {
-    return typedPercent;
-  }
-
-  private JSError[] toArray(CheckLevel level) {
-    List<JSError> errors = new ArrayList<>(messages.size());
-    for (ErrorWithLevel p : messages) {
-      if (p.level == level) {
-        errors.add(p.error);
-      }
-    }
-    return errors.toArray(new JSError[0]);
-  }
-
-  /**
-   * Comparator of {@link JSError} with an associated {@link CheckLevel}. The ordering is the
-   * standard lexical ordering on the quintuple (file name, line number, {@link CheckLevel},
-   * character number, description).
-   *
-   * <p>Note: this comparator imposes orderings that are inconsistent with {@link
-   * JSError#equals(Object)}.
-   */
-  static final class LeveledJSErrorComparator implements Comparator<ErrorWithLevel> {
-    private static final int P1_LT_P2 = -1;
-    private static final int P1_GT_P2 = 1;
-
-    @Override
-    public int compare(ErrorWithLevel p1, ErrorWithLevel p2) {
-      // null is the smallest value
-      if (p2 == null) {
-        if (p1 == null) {
-          return 0;
-        } else {
-          return P1_GT_P2;
-        }
-      }
-
-      // check level
-      if (p1.level != p2.level) {
-        return p2.level.compareTo(p1.level);
-      }
-
-      // sourceName comparison
-      String source1 = p1.error.sourceName;
-      String source2 = p2.error.sourceName;
-      if (source1 != null && source2 != null) {
-        int sourceCompare = source1.compareTo(source2);
-        if (sourceCompare != 0) {
-          return sourceCompare;
-        }
-      } else if (source1 == null && source2 != null) {
-        return P1_LT_P2;
-      } else if (source1 != null && source2 == null) {
-        return P1_GT_P2;
-      }
-      // lineno comparison
-      int lineno1 = p1.error.lineNumber;
-      int lineno2 = p2.error.lineNumber;
-      if (lineno1 != lineno2) {
-        return lineno1 - lineno2;
-      } else if (lineno1 < 0 && 0 <= lineno2) {
-        return P1_LT_P2;
-      } else if (0 <= lineno1 && lineno2 < 0) {
-        return P1_GT_P2;
-      }
-      // charno comparison
-      int charno1 = p1.error.getCharno();
-      int charno2 = p2.error.getCharno();
-      if (charno1 != charno2) {
-        return charno1 - charno2;
-      } else if (charno1 < 0 && 0 <= charno2) {
-        return P1_LT_P2;
-      } else if (0 <= charno1 && charno2 < 0) {
-        return P1_GT_P2;
-      }
-      // description
-      return p1.error.description.compareTo(p2.error.description);
-    }
-  }
-
-  static class ErrorWithLevel {
-    final JSError error;
-    final CheckLevel level;
-
-    ErrorWithLevel(JSError error, CheckLevel level) {
-      this.error = error;
-      this.level = level;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(
-          level, error.description, error.sourceName, error.lineNumber, error.getCharno());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == null) {
-        return false;
-      }
-      return obj.hashCode() == this.hashCode();
-    }
-  }
 }

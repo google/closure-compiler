@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -25,10 +27,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link RenameVars}.
- */
+/** Tests for {@link RenameVars}. */
+@RunWith(JUnit4.class)
 public final class RenameVarsTest extends CompilerTestCase {
   private static final String DEFAULT_PREFIX = "";
   private String prefix = DEFAULT_PREFIX;
@@ -90,7 +95,8 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     disableValidateAstChangeMarking();
     previouslyUsedMap = new VariableMap(ImmutableMap.<String, String>of());
@@ -105,16 +111,19 @@ public final class RenameVarsTest extends CompilerTestCase {
     nameGenerator = null;
   }
 
+  @Test
   public void testRenameSimple() {
     test("function Foo(v1, v2) {return v1;} Foo();",
          "function a(b, c) {return b;} a();");
   }
 
+  @Test
   public void testRenameGlobals() {
     test("var Foo; var Bar, y; function x() { Bar++; }",
          "var a; var b, c; function d() { b++; }");
   }
 
+  @Test
   public void testRenameLocals() {
     test("(function (v1, v2) {}); (function (v3, v4) {});",
         "(function (a, b) {}); (function (a, b) {});");
@@ -122,18 +131,21 @@ public final class RenameVarsTest extends CompilerTestCase {
         "function c(a, b) {}; function d(a, b) {};");
   }
 
+  @Test
   public void testRenameLocals_let() {
     test(
         "(function () { let var1 = 0; let another = 1; });",
         "(function () { let a = 0; let b = 1; });");
   }
 
+  @Test
   public void testRenameLocals_const() {
     test(
         "(function () { const var1 = 0; const another = 1; });",
         "(function () { const a = 0; const b = 1; });");
   }
 
+  @Test
   public void testRenameLocalsToSame() {
     preferStableNames = true;
     testSame("(function(a) {})");
@@ -144,6 +156,7 @@ public final class RenameVarsTest extends CompilerTestCase {
     testSame("(function() { var a, b, c; })");
   }
 
+  @Test
   public void testRenameRedeclaredGlobals() {
     test(
         lines(
@@ -168,6 +181,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "function f1(a, b) {f1()};"));
   }
 
+  @Test
   public void testRecursiveFunctions1() {
     test("var walk = function walk(node, aFunction) {" +
          "  walk(node, aFunction);" +
@@ -186,6 +200,7 @@ public final class RenameVarsTest extends CompilerTestCase {
          "};");
   }
 
+  @Test
   public void testRecursiveFunctions2() {
     preserveFunctionExpressionNames = true;
 
@@ -206,11 +221,13 @@ public final class RenameVarsTest extends CompilerTestCase {
         "};");
   }
 
+  @Test
   public void testRenameLocalsClashingWithGlobals() {
     test("function a(v1, v2) {return v1;} a();",
         "function a(b, c) {return b;} a();");
   }
 
+  @Test
   public void testRenameNested() {
     test("function f1(v1, v2) { (function(v3, v4) {}) }",
          "function a(b, c) { (function(d, e) {}) }");
@@ -218,6 +235,7 @@ public final class RenameVarsTest extends CompilerTestCase {
          "function a(b, c) { function d(e, f) {} }");
   }
 
+  @Test
   public void testBleedingRecursiveFunctions1() {
     // On IE, bleeding functions will interfere with each other if
     // they are in the same scope. In the below example, we want to be
@@ -228,6 +246,7 @@ public final class RenameVarsTest extends CompilerTestCase {
          "var e = function d(a) { return a ? 2 : d(2); };");
   }
 
+  @Test
   public void testBleedingRecursiveFunctions2() {
     test(
         lines(
@@ -242,6 +261,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testBleedingRecursiveFunctions3() {
     test(
         lines(
@@ -258,6 +278,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testBleedingFunctionInBlocks() {
     test(lines(
             "if (true) {",
@@ -269,6 +290,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testRenameWithExterns1() {
     String externs = "var foo;";
     test(
@@ -277,6 +299,7 @@ public final class RenameVarsTest extends CompilerTestCase {
         expected("var a; foo(a);"));
   }
 
+  @Test
   public void testRenameWithExterns2() {
     String externs = "var a;";
     test(
@@ -285,18 +308,22 @@ public final class RenameVarsTest extends CompilerTestCase {
         expected("var b = 5"));
   }
 
+  @Test
   public void testDoNotRenameExportedName() {
     testSame("_foo()");
   }
 
+  @Test
   public void testDoNotRenameArguments() {
     testSame("function a() { arguments; }");
   }
 
+  @Test
   public void testRenameWithNameOverlap() {
     testSame("var a = 1; var b = 2; b + b;");
   }
 
+  @Test
   public void testRenameWithPrefix1() {
     prefix = "PRE_";
     test("function Foo(v1, v2) {return v1} Foo();",
@@ -305,6 +332,7 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   }
 
+  @Test
   public void testRenameWithPrefix2() {
     prefix = "PRE_";
     test("function Foo(v1, v2) {var v3 = v1 + v2; return v3;} Foo();",
@@ -312,6 +340,7 @@ public final class RenameVarsTest extends CompilerTestCase {
     prefix = DEFAULT_PREFIX;
   }
 
+  @Test
   public void testRenameWithPrefix3() {
     prefix = "a";
     test("function Foo() {return 1;}" +
@@ -330,6 +359,7 @@ public final class RenameVarsTest extends CompilerTestCase {
     prefix = DEFAULT_PREFIX;
   }
 
+  @Test
   public void testNamingBasedOnOrderOfOccurrence() {
     test("var q,p,m,n,l,k; " +
              "try { } catch(r) {try {} catch(s) {}}; var t = q + q;",
@@ -344,7 +374,8 @@ public final class RenameVarsTest extends CompilerTestCase {
          "var aa,ba,ca,da,ea,fa,ga,ha,ia,ja,ka,la;function ma(){};");
   }
 
-  public void testTryCatchLifeTime () {
+  @Test
+  public void testTryCatchLifeTime() {
     test("var q,p,m,n,l,k; " +
         "(function (r) {}); try { } catch(s) {}; var t = q + q;",
     "var a,c,d,e,f,g; " +
@@ -380,6 +411,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testStableRenameSimple() {
     VariableMap expectedVariableMap = makeVariableMap(
         "Foo", "a", "L 0", "b", "L 1", "c");
@@ -392,6 +424,7 @@ public final class RenameVarsTest extends CompilerTestCase {
          "function a(b, c, d) {return b;} a();", expectedVariableMap);
   }
 
+  @Test
   public void testStableRenameGlobals() {
     VariableMap expectedVariableMap = makeVariableMap(
         "Foo", "a", "Bar", "b", "y", "c", "x", "d");
@@ -407,6 +440,7 @@ public final class RenameVarsTest extends CompilerTestCase {
         expectedVariableMap);
   }
 
+  @Test
   public void testStableRenameWithPointlesslyAnonymousFunctions() {
     VariableMap expectedVariableMap = makeVariableMap("L 0", "a", "L 1", "b");
     testRenameMap("(function (v1, v2) {}); (function (v3, v4) {});",
@@ -421,6 +455,7 @@ public final class RenameVarsTest extends CompilerTestCase {
                              expectedVariableMap);
   }
 
+  @Test
   public void testStableRenameLocalsClashingWithGlobals() {
     test("function a(v1, v2) {return v1;} a();",
          "function a(b, c) {return b;} a();");
@@ -429,6 +464,7 @@ public final class RenameVarsTest extends CompilerTestCase {
          "function d(){return;}function a(b, c) {return b;} a();");
   }
 
+  @Test
   public void testStableRenameNested() {
     VariableMap expectedVariableMap = makeVariableMap(
         "f1", "a", "L 0", "b", "L 1", "c", "L 2", "d", "L 3", "e");
@@ -444,6 +480,7 @@ public final class RenameVarsTest extends CompilerTestCase {
         expectedVariableMap);
   }
 
+  @Test
   public void testStableRenameWithExterns1() {
     String externs = "var foo;";
     test(
@@ -457,6 +494,7 @@ public final class RenameVarsTest extends CompilerTestCase {
         expected("var a, b; foo(a, b);"));
   }
 
+  @Test
   public void testStableRenameWithExterns2() {
     String externs = "var a;";
     test(
@@ -470,12 +508,14 @@ public final class RenameVarsTest extends CompilerTestCase {
         expected("var b = 5, c=9;"));
   }
 
+  @Test
   public void testStableRenameWithNameOverlap() {
     testSame("var a = 1; var b = 2; b + b;");
     previouslyUsedMap = renameVars.getVariableMap();
     testSame("var a = 1; var c, b = 2; b + b;");
   }
 
+  @Test
   public void testStableRenameWithAnonymousFunctions() {
     VariableMap expectedVariableMap = makeVariableMap("L 0", "a", "foo", "b");
     testRenameMap("function foo(bar){return bar;}foo(function(h){return h;});",
@@ -489,6 +529,7 @@ public final class RenameVarsTest extends CompilerTestCase {
         expectedVariableMap);
   }
 
+  @Test
   public void testStableRenameSimpleExternsChanges() {
     VariableMap expectedVariableMap = makeVariableMap(
         "Foo", "a", "L 0", "b", "L 1", "c");
@@ -503,6 +544,7 @@ public final class RenameVarsTest extends CompilerTestCase {
                              expectedVariableMap);
   }
 
+  @Test
   public void testStableRenameSimpleLocalNameExterned() {
     test("function Foo(v1, v2) {return v1;} Foo();",
          "function a(b, c) {return b;} a();");
@@ -516,6 +558,7 @@ public final class RenameVarsTest extends CompilerTestCase {
         expected("function a(d, c) {return d;} a(b);"));
   }
 
+  @Test
   public void testStableRenameSimpleGlobalNameExterned() {
     test("function Foo(v1, v2) {return v1;} Foo();",
          "function a(b, c) {return b;} a();");
@@ -529,6 +572,7 @@ public final class RenameVarsTest extends CompilerTestCase {
         expected("function Foo(b, c, a) {return b;} Foo();"));
   }
 
+  @Test
   public void testStableRenameWithPrefix1AndUnstableLocalNames() {
     prefix = "PRE_";
     test("function Foo(v1, v2) {return v1} Foo();",
@@ -541,6 +585,7 @@ public final class RenameVarsTest extends CompilerTestCase {
          "function PRE_(a, b, c) {return b} PRE_();");
   }
 
+  @Test
   public void testStableRenameWithPrefix2() {
     prefix = "a";
     test("function Foo() {return 1;}" +
@@ -577,6 +622,7 @@ public final class RenameVarsTest extends CompilerTestCase {
          "} aa();");
   }
 
+  @Test
   public void testContrivedExampleWhereConsistentRenamingIsWorse() {
     previouslyUsedMap = makeVariableMap(
         "Foo", "LongString", "L 0", "b", "L 1", "c");
@@ -590,15 +636,17 @@ public final class RenameVarsTest extends CompilerTestCase {
     assertVariableMapsEqual(expectedVariableMap, previouslyUsedMap);
   }
 
+  @Test
   public void testPrevUsedMapWithDuplicates() {
     try {
       makeVariableMap("Foo", "z", "Bar", "z");
       testSame("");
-      fail();
+      throw new AssertionError();
     } catch (java.lang.IllegalArgumentException expected) {
     }
   }
 
+  @Test
   public void testExportSimpleSymbolReservesName() {
     test("var goog, x; goog.exportSymbol('a', x);",
          "var a, b; a.exportSymbol('a', b);");
@@ -607,6 +655,7 @@ public final class RenameVarsTest extends CompilerTestCase {
          "var b, c; b.exportSymbol('a', c);");
   }
 
+  @Test
   public void testExportComplexSymbolReservesName() {
     test("var goog, x; goog.exportSymbol('a.b', x);",
          "var a, b; a.exportSymbol('a.b', b);");
@@ -615,12 +664,14 @@ public final class RenameVarsTest extends CompilerTestCase {
          "var b, c; b.exportSymbol('a.b', c);");
   }
 
+  @Test
   public void testExportToNonStringDoesntExplode() {
     withClosurePass = true;
     test("var goog, a, b; goog.exportSymbol(a, b);",
          "var a, b, c; a.exportSymbol(b, c);");
   }
 
+  @Test
   public void testDollarSignSuperExport1() {
     useGoogleCodingConvention = false;
     // See http://blickly.github.io/closure-compiler-issues/#32
@@ -635,6 +686,7 @@ public final class RenameVarsTest extends CompilerTestCase {
          "var c = function($super,a,b){}");
   }
 
+  @Test
   public void testDollarSignSuperExport2() {
     withNormalize = true;
 
@@ -655,12 +707,14 @@ public final class RenameVarsTest extends CompilerTestCase {
             "var d = function($super,a){};");
   }
 
+  @Test
   public void testBias() {
     nameGenerator = new DefaultNameGenerator(new HashSet<String>(), "", null);
     nameGenerator.favors("AAAAAAAAHH");
     test("var x, y", "var A, H");
   }
 
+  @Test
   public void testPseudoNames() {
     generatePseudoNames = false;
     // See http://blickly.github.io/closure-compiler-issues/#32
@@ -675,7 +729,8 @@ public final class RenameVarsTest extends CompilerTestCase {
          "var $a$$ = function($a$$, $b$$, $c$$){}");
   }
 
-  public void testArrowFunctions(){
+  @Test
+  public void testArrowFunctions() {
     test("foo => {return foo + 3;}",
         "a => {return a + 3;}");
 
@@ -683,6 +738,7 @@ public final class RenameVarsTest extends CompilerTestCase {
         "(a, b) => {return a + b + 3;}");
   }
 
+  @Test
   public void testClasses() {
     test("class fooBar {}",
         "class a {}");
@@ -734,6 +790,7 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   }
 
+  @Test
   public void testLetConst() {
     test("let xyz;",
         "let a;"
@@ -762,6 +819,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "a = 4;"));
   }
 
+  @Test
   public void testGenerators() {
     test(
         lines(
@@ -779,12 +837,14 @@ public final class RenameVarsTest extends CompilerTestCase {
             "a().next()"));
   }
 
+  @Test
   public void testForOf() {
     test(
         "for (var item of items) {}",
         "for (var a of items) {}");
   }
 
+  @Test
   public void testTemplateStrings() {
     test(
         lines(
@@ -796,11 +856,13 @@ public final class RenameVarsTest extends CompilerTestCase {
             "`My name is ${a}`;"));
   }
 
+  @Test
   public void testArrayDestructuring() {
     test("var [x, y, z] = [1, 2, 3];",
         "var [a, b, c] = [1, 2, 3];");
   }
 
+  @Test
   public void testObjectDestructuring() {
     // TODO(sdh): Teach RenameVars to take advantage of shorthand properties by
     // building up a Map from var name strings to property name multisets.  We
@@ -827,6 +889,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "var {p: b, h: c} = a;"));
   }
 
+  @Test
   public void testDefaultFunction() {
     test(
         lines(
@@ -840,6 +903,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testRestFunction() {
     test(
         lines(
@@ -853,6 +917,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectLiterals() {
     test(
         lines(
@@ -882,6 +947,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "b.x();"));
   }
 
+  @Test
   public void testImport1() {
     test("import name from './other.js'; use(name);", "import a from './other.js'; use(a);");
 
@@ -894,6 +960,7 @@ public final class RenameVarsTest extends CompilerTestCase {
         "import {default as a} from './other.js'; use(a);");
   }
 
+  @Test
   public void testImport2() {
     withNormalize = true;
     test(
@@ -929,6 +996,7 @@ public final class RenameVarsTest extends CompilerTestCase {
     assertVariableMapsEqual(expectedRenameMap, renameMap);
   }
 
+  @Test
   public void testPreferStableNames() {
     preferStableNames = true;
     // Locals in scopes with too many local variables (>1000) should
@@ -936,21 +1004,21 @@ public final class RenameVarsTest extends CompilerTestCase {
     // appear in the name maps with the same name as in the code (eg,
     // 'a0' in this case).
     test(createManyVarFunction(1000), null);
-    assertEquals(null, renameVars.getVariableMap().lookupNewName("a0"));
-    assertEquals("b", renameVars.getVariableMap().lookupNewName("L 0"));
+    assertThat(renameVars.getVariableMap().lookupNewName("a0")).isNull();
+    assertThat(renameVars.getVariableMap().lookupNewName("L 0")).isEqualTo("b");
     test(createManyVarFunction(1001), null);
-    assertEquals("b", renameVars.getVariableMap().lookupNewName("a0"));
-    assertEquals(null, renameVars.getVariableMap().lookupNewName("L 0"));
+    assertThat(renameVars.getVariableMap().lookupNewName("a0")).isEqualTo("b");
+    assertThat(renameVars.getVariableMap().lookupNewName("L 0")).isNull();
 
     // With {@code preferStableNames} off locals should
     // unconditionally receive temporary names.
     preferStableNames = false;
     test(createManyVarFunction(1000), null);
-    assertEquals(null, renameVars.getVariableMap().lookupNewName("a0"));
-    assertEquals("b", renameVars.getVariableMap().lookupNewName("L 0"));
+    assertThat(renameVars.getVariableMap().lookupNewName("a0")).isNull();
+    assertThat(renameVars.getVariableMap().lookupNewName("L 0")).isEqualTo("b");
     test(createManyVarFunction(1001), null);
-    assertEquals(null, renameVars.getVariableMap().lookupNewName("a0"));
-    assertEquals("b", renameVars.getVariableMap().lookupNewName("L 0"));
+    assertThat(renameVars.getVariableMap().lookupNewName("a0")).isNull();
+    assertThat(renameVars.getVariableMap().lookupNewName("L 0")).isEqualTo("b");
   }
 
   private static String createManyVarFunction(int numVars) {
@@ -975,7 +1043,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   private static void assertVariableMapsEqual(VariableMap a, VariableMap b) {
     Map<String, String> ma = a.getOriginalNameToNewNameMap();
     Map<String, String> mb = b.getOriginalNameToNewNameMap();
-    assertEquals("VariableMaps not equal", ma, mb);
+    assertWithMessage("VariableMaps not equal").that(mb).isEqualTo(ma);
   }
 
   private class ClosurePassAndRenameVars implements CompilerPass {

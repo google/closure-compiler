@@ -93,10 +93,22 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
    * <p>Absolute import paths need to match the registered path exactly. Some {@link
    * ModuleLoader.ModulePath}s will have a leading slash and some won't. So in order to have
    * everything line up AND preserve schemes (if they exist) then just strip leading /.
+   *
+   * <p>Additionally if any path contains a protocol it will be stripped only the path part will
+   * remain. This is done heuristically as we cannot use {@link java.net.URL} or {@link
+   * java.nio.file.Path} due to GWT. As a result of stripping this cross-domain imports are not
+   * compatible with this pass.
    */
   private static String normalizePath(String path) {
-    if (path.startsWith("/")) {
-      return path.substring(1);
+    int indexOfProtocol = path.indexOf("://");
+    if (indexOfProtocol > -1) {
+      path = path.substring(indexOfProtocol + 3);
+      int indexOfSlash = path.indexOf('/');
+      if (indexOfSlash > -1) {
+        path = path.substring(indexOfSlash + 1);
+      }
+    } else if (path.startsWith("/")) {
+      path = path.substring(1);
     }
     return path;
   }
@@ -105,6 +117,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
   @AutoValue
   abstract static class ModuleRequest {
     abstract String specifier();
+
     abstract String varName();
 
     private static ModuleRequest create(String specifier, String varName) {
@@ -159,20 +172,27 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     /**
      * Given an import node gets the name of the var to use for the imported module.
      *
-     * Example:
-     *   import {v} from './foo.js'; use(v);
-     * Can become:
-     *   const module$foo = require('./foo.js'); use(module$foo.v);
+     * <p>Example: {@code import {v} from './foo.js'; use(v);} Can become:
+     * <pre>
+     *   const module$foo = require('./foo.js');
+     *   use(module$foo.v);
+     * </pre>
      * This method would return "module$foo".
      *
-     * Note that if there is a star import the name will be preserved.
+     * <p>Note that if there is a star import the name will be preserved.
      *
-     * Example:
-     *   import defaultValue, * as foo from './foo.js'; use(defaultValue, foo.bar);
+     * <p>Example:
+     * <pre>
+     *   import defaultValue, * as foo from './foo.js';
+     *   use(defaultValue, foo.bar);
+     * </pre>
+     *
      * Can become:
+     * <pre>
      *   const foo = require('./foo.js'); use(foo.defaultValue, foo.bar);
+     * </pre>
      *
-     * This makes debugging quite a bit easier as source maps are not great with renaming.
+     * <p>This makes debugging quite a bit easier as source maps are not great with renaming.
      */
     private String getVarNameOfImport(Node importDecl) {
       checkState(importDecl.isImport());
@@ -196,8 +216,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
      *           would return "m".
      *       <li>If referencing an import default like d in "import d from './foo.js'" then this
      *           would return "module$foo.default".
-     *
-     * Used to rename references to imported values within this module.
+     *           <p>Used to rename references to imported values within this module.
      */
     private String getNameOfImportedValue(Node nameNode) {
       Node importDecl = nameNode;
@@ -239,9 +258,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       return null;
     }
 
-    /**
-     * Renames the given name node if it is an imported value.
-     */
+    /** Renames the given name node if it is an imported value. */
     private void maybeRenameImportedValue(NodeTraversal t, Node n) {
       checkState(n.isName());
       Node parent = n.getParent();
@@ -309,9 +326,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       }
     }
 
-    /**
-     * Wraps the entire current module definition in a $jscomp.registerAndLoadModule function.
-     */
+    /** Wraps the entire current module definition in a $jscomp.registerAndLoadModule function. */
     private void registerAndLoadModule(NodeTraversal t) {
       Node block = IR.block();
       block.addChildrenToFront(script.removeChildren());
@@ -383,6 +398,12 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     }
 
     private void visitImport(ModuleLoader.ModulePath path, Node importDecl) {
+      if (importDecl.getLastChild().getString().contains("://")) {
+        compiler.report(
+            JSError.make(
+                importDecl, Es6ToEs3Util.CANNOT_CONVERT, "Module requests with protocols."));
+      }
+
       // Normalize the import path according to the module resolution scheme so that bundles are
       // compatible with the compiler's module loader options.
       importRequests.add(
@@ -483,12 +504,32 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       t.reportCodeChange();
     }
 
+    private void visitExportStar(NodeTraversal t, Node export, Node parent) {
+      //   export * from 'moduleIdentifier';
+      Node moduleIdentifier = export.getLastChild();
+
+      // Make an "import 'spec'" from this export node and then visit it to rewrite to a require().
+      Node importNode = IR.importNode(IR.empty(), IR.empty(), moduleIdentifier.cloneNode());
+      importNode.useSourceInfoFrom(export);
+      parent.addChildBefore(importNode, export);
+      visit(t, importNode, parent);
+
+      String moduleName = getVarNameOfImport(moduleIdentifier.getString());
+      export.replaceWith(
+          IR.exprResult(
+                  IR.call(
+                      IR.getprop(IR.name("$$module"), IR.string("exportAllFrom")),
+                      IR.name(moduleName)))
+              .useSourceInfoFromForTree(export));
+
+      t.reportCodeChange();
+    }
+
     private void visitExport(NodeTraversal t, Node export, Node parent) {
       if (export.getBooleanProp(Node.EXPORT_DEFAULT)) {
         visitExportDefault(t, export, parent);
       } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)) {
-        // TODO(johnplaisted)
-        compiler.report(JSError.make(export, Es6ToEs3Util.CANNOT_CONVERT_YET, "Wildcard export"));
+        visitExportStar(t, export, parent);
       } else if (export.hasTwoChildren()) {
         visitExportFrom(t, export, parent);
       } else {

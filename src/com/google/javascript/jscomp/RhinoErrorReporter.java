@@ -72,9 +72,6 @@ class RhinoErrorReporter {
   static final DiagnosticType BAD_JSDOC_ANNOTATION =
       DiagnosticType.warning("JSC_BAD_JSDOC_ANNOTATION", "Parse error. {0}");
 
-  static final DiagnosticType JSDOC_IN_BLOCK_COMMENT =
-      DiagnosticType.warning("JSC_JSDOC_IN_BLOCK_COMMENT", "Parse error. {0}");
-
   static final DiagnosticType INVALID_ES3_PROP_NAME = DiagnosticType.warning(
       "JSC_INVALID_ES3_PROP_NAME",
       "Keywords and reserved words are not allowed as unquoted property " +
@@ -83,11 +80,11 @@ class RhinoErrorReporter {
       "set the appropriate language_in option.");
 
   static final DiagnosticType PARSE_TREE_TOO_DEEP =
-      DiagnosticType.error("PARSE_TREE_TOO_DEEP",
-          "Parse tree too deep.");
+      DiagnosticType.error("JSC_PARSE_TREE_TOO_DEEP", "Parse tree too deep.");
 
   static final DiagnosticType INVALID_OCTAL_LITERAL =
-      DiagnosticType.warning("INVALID_OCTAL_LITERAL",
+      DiagnosticType.warning(
+          "JSC_INVALID_OCTAL_LITERAL",
           "This style of octal literal is not supported in strict mode.");
 
   static final DiagnosticType STRING_CONTINUATION =
@@ -97,12 +94,13 @@ class RhinoErrorReporter {
       DiagnosticType.error("JSC_LANGUAGE_FEATURE", "{0}.");
 
   static final DiagnosticType ES6_TYPED =
-      DiagnosticType.error("ES6_TYPED",
+      DiagnosticType.error(
+          "JSC_ES6_TYPED",
           "{0}. Use --language_in=ECMASCRIPT6_TYPED to enable ES6 typed features.");
 
   static final DiagnosticType MISPLACED_TYPE_SYNTAX =
-      DiagnosticType.error("MISPLACED_TYPE_SYNTAX",
-          "Can only have JSDoc or inline type annotations, not both");
+      DiagnosticType.error(
+          "JSC_MISPLACED_TYPE_SYNTAX", "Can only have JSDoc or inline type annotations, not both");
 
   // A map of Rhino messages to their DiagnosticType.
   private final Map<Pattern, DiagnosticType> typeMap;
@@ -139,12 +137,6 @@ class RhinoErrorReporter {
             .put(
                 replacePlaceHolders(SimpleErrorReporter.getMessage0("msg.bad.jsdoc.tag")),
                 BAD_JSDOC_ANNOTATION)
-
-            .put(
-                Pattern.compile("^" + Pattern.quote(
-                    "Non-JSDoc comment has annotations. "
-                        + "Did you mean to start it with '/**'?")),
-                JSDOC_IN_BLOCK_COMMENT)
 
             .put(
                 Pattern.compile(

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import java.io.IOException;
@@ -24,19 +25,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit test for {@link JsMessageExtractor}.
  *
  */
-public final class JsMessageExtractorTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class JsMessageExtractorTest {
 
   private JsMessage.Style mode;
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
+  @Before
+  public void setUp() throws Exception {
     mode = JsMessage.Style.LEGACY;
   }
 
@@ -46,7 +50,7 @@ public final class JsMessageExtractorTest extends TestCase {
       return new JsMessageExtractor(null, mode)
           .extractMessages(SourceFile.fromCode("testcode", sourceCode));
     } catch (IOException e) {
-      fail(e.getMessage());
+      assertWithMessage(e.getMessage()).fail();
       return null;
     }
   }
@@ -57,10 +61,11 @@ public final class JsMessageExtractorTest extends TestCase {
     return messages.iterator().next();
   }
 
+  @Test
   public void testSyntaxError1() {
     try {
       extractMessage("if (true) {}}");
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
       assertThat(e).hasMessageThat().contains("testcode:1: ERROR - Parse error");
@@ -68,10 +73,11 @@ public final class JsMessageExtractorTest extends TestCase {
     }
   }
 
+  @Test
   public void testSyntaxError2() {
     try {
       extractMessage("", "if (true) {}}");
-      fail("Expected exception");
+      assertWithMessage("Expected exception").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
       assertThat(e).hasMessageThat().contains("testcode:2: ERROR - Parse error");
@@ -79,6 +85,7 @@ public final class JsMessageExtractorTest extends TestCase {
     }
   }
 
+  @Test
   public void testExtractNewStyleMessage1() {
     // A simple message with no description.
     assertEquals(
@@ -88,6 +95,7 @@ public final class JsMessageExtractorTest extends TestCase {
         extractMessage("var MSG_SILLY = goog.getMsg('silly test message');"));
   }
 
+  @Test
   public void testExtractNewStyleMessage2() {
     // A message with placeholders and meta data.
     assertEquals(
@@ -112,6 +120,7 @@ public final class JsMessageExtractorTest extends TestCase {
             "    {userName: someUserName, product: getProductName()});"));
   }
 
+  @Test
   public void testExtractOldStyleMessage1() {
     // Description before the message.
     assertEquals(
@@ -124,6 +133,7 @@ public final class JsMessageExtractorTest extends TestCase {
             "var MSG_SILLY = 'silly test message';"));
   }
 
+  @Test
   public void testExtractOldStyleMessage2() {
     // Description after the message, broken into parts.
     assertEquals(
@@ -136,6 +146,7 @@ public final class JsMessageExtractorTest extends TestCase {
             "var MSG_SILLY_HELP = 'Descrip' + 'tion.';"));
   }
 
+  @Test
   public void testExtractOldStyleMessage3() {
     // Function-style message with two placeholders and no description.
     assertEquals(
@@ -151,6 +162,7 @@ public final class JsMessageExtractorTest extends TestCase {
             "};"));
   }
 
+  @Test
   public void testExtractMixedMessages() {
     // Several mixed-style messages in succession, one containing newlines.
     Iterator<JsMessage> msgs = extractMessages(
@@ -186,6 +198,7 @@ public final class JsMessageExtractorTest extends TestCase {
         msgs.next());
   }
 
+  @Test
   public void testDuplicateUnnamedVariables() {
     // Make sure that duplicate unnamed variables don't get swallowed when using
     // a Google-specific ID generator.
@@ -199,17 +212,18 @@ public final class JsMessageExtractorTest extends TestCase {
 
     assertThat(msgs).hasSize(2);
     final Iterator<JsMessage> iter = msgs.iterator();
-    assertEquals("foo", iter.next().toString());
-    assertEquals("bar", iter.next().toString());
+    assertThat(iter.next().toString()).isEqualTo("foo");
+    assertThat(iter.next().toString()).isEqualTo("bar");
   }
 
+  @Test
   public void testMeaningAnnotation() {
     List<JsMessage> msgs = new ArrayList<>(
         extractMessages(
             "var MSG_UNNAMED_1 = goog.getMsg('foo');",
             "var MSG_UNNAMED_2 = goog.getMsg('foo');"));
     assertThat(msgs).hasSize(2);
-    assertEquals(msgs.get(1).getId(), msgs.get(0).getId());
+    assertThat(msgs.get(0).getId()).isEqualTo(msgs.get(1).getId());
     assertEquals(msgs.get(0), msgs.get(1));
 
     msgs = new ArrayList<>(
@@ -217,16 +231,16 @@ public final class JsMessageExtractorTest extends TestCase {
             "var MSG_UNNAMED_1 = goog.getMsg('foo');",
             "/** @meaning bar */ var MSG_UNNAMED_2 = goog.getMsg('foo');"));
     assertThat(msgs).hasSize(2);
-    assertFalse(msgs.get(0).getId().equals(msgs.get(1).getId()));
+    assertThat(msgs.get(0).getId().equals(msgs.get(1).getId())).isFalse();
   }
 
   private void assertEquals(JsMessage expected, JsMessage actual) {
-    assertEquals(expected.getId(), actual.getId());
-    assertEquals(expected.getKey(), actual.getKey());
-    assertEquals(expected.parts(), actual.parts());
-    assertEquals(expected.placeholders(), actual.placeholders());
-    assertEquals(expected.getDesc(), actual.getDesc());
-    assertEquals(expected.isHidden(), actual.isHidden());
-    assertEquals(expected.getMeaning(), actual.getMeaning());
+    assertThat(actual.getId()).isEqualTo(expected.getId());
+    assertThat(actual.getKey()).isEqualTo(expected.getKey());
+    assertThat(actual.parts()).isEqualTo(expected.parts());
+    assertThat(actual.placeholders()).isEqualTo(expected.placeholders());
+    assertThat(actual.getDesc()).isEqualTo(expected.getDesc());
+    assertThat(actual.isHidden()).isEqualTo(expected.isHidden());
+    assertThat(actual.getMeaning()).isEqualTo(expected.getMeaning());
   }
 }

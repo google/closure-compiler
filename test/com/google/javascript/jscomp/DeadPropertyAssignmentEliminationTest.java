@@ -18,14 +18,22 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.DeadPropertyAssignmentElimination.ASSUME_CONSTRUCTORS_HAVENT_ESCAPED;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+@RunWith(JUnit4.class)
 public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableGatherExternProperties();
   }
 
+  @Test
   public void testBasic() {
     testSame(lines(
         "var foo = function() {",
@@ -52,6 +60,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testMultipleProperties() {
     test(
         lines(
@@ -68,6 +77,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testNonStandardAssign() {
     test(
         lines(
@@ -84,6 +94,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testChainingPropertiesAssignments() {
     test(
         lines(
@@ -98,6 +109,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testConditionalProperties() {
     // We don't handle conditionals at all.
     testSame(
@@ -123,6 +135,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testQualifiedNamePrefixAssignment() {
     testSame(
         lines(
@@ -141,6 +154,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testCall() {
     testSame(
         lines(
@@ -210,6 +224,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testYield() {
     // Assume that properties may be read during a yield
     testSame(
@@ -254,6 +269,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testNew() {
     // Assume that properties may be read during a constructor call
     testSame(
@@ -265,6 +281,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testTaggedTemplateLit() {
     // Assume that properties may be read during a tagged template lit invocation
     testSame(
@@ -276,6 +293,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testAwait() {
     // Assume that properties may be read while waiting for "await"
     testSame(
@@ -287,6 +305,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testUnknownLookup() {
     testSame(
         lines(
@@ -307,6 +326,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testName() {
     testSame(
         lines(
@@ -319,6 +339,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testName2() {
     testSame(
         lines(
@@ -331,6 +352,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testAliasing() {
     testSame(
         lines(
@@ -344,6 +366,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "f({a: obj, b: obj});"));
   }
 
+  @Test
   public void testHook() {
     testSame(
         lines(
@@ -363,6 +386,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testConditionalExpression() {
     testSame(
         lines(
@@ -377,6 +401,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testBrackets() {
     testSame(
         lines(
@@ -387,6 +412,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testFor() {
     testSame(
         lines(
@@ -450,6 +476,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testWhile() {
     testSame(
         lines(
@@ -533,6 +560,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testTry() {
     testSame(
         lines(
@@ -605,6 +633,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testThrow() {
     testSame(
         lines(
@@ -623,6 +652,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testSwitch() {
     testSame(
         lines(
@@ -673,6 +703,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testIf() {
     test(
         lines(
@@ -718,6 +749,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testCircularPropChain() {
     testSame(
         lines(
@@ -728,6 +760,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDifferentQualifiedNames() {
     testSame(
         lines(
@@ -737,6 +770,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testGetPropContainsNonQualifiedNames() {
     testSame(
         lines(
@@ -753,6 +787,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testEs6Constructor() {
     testSame(
         lines(
@@ -801,6 +836,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     }
   }
 
+  @Test
   public void testES6ClassExtends() {
     testSame(
         lines(
@@ -819,6 +855,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     );
   }
 
+  @Test
   public void testGetter() {
     testSame(
         lines(
@@ -847,6 +884,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testGetter_afterDeadAssignment() {
     testSame(
         lines(
@@ -862,6 +900,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}});"));
   }
 
+  @Test
   public void testGetter_onDifferentType() {
     testSame(
         lines(
@@ -890,6 +929,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     );
   }
 
+  @Test
   public void testSetter() {
     testSame(
         lines(
@@ -918,6 +958,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testEs5Getter() {
     testSame(
         lines(
@@ -936,6 +977,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     );
   }
 
+  @Test
   public void testEs5Setter() {
     testSame(
         lines(
@@ -953,6 +995,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     );
   }
 
+  @Test
   public void testObjectDefineProperty_aliasedParams() {
     testSame(
         lines(
@@ -997,6 +1040,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectDefineProperty_aliasedObject() {
     testSame(
         lines(
@@ -1018,6 +1062,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectDefineProperty_aliasedPropName() {
     testSame(
         lines(
@@ -1075,6 +1120,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectDefineProperty_aliasedPropSet() {
     testSame(
         lines(
@@ -1096,6 +1142,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectDefineProperties_aliasedPropertyMap() {
     testSame(
         lines(
@@ -1136,6 +1183,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectDefineProperties_aliasedObject() {
     test(
         lines(
@@ -1182,6 +1230,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testPropertyDefinedInExterns() {
     String externs = lines(
         "var window = {};",
@@ -1212,6 +1261,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
         srcs(lines("function z(x) {", "  x.src = '';", "  x.src = 'foo.bar';", "}")));
   }
 
+  @Test
   public void testJscompInherits() {
     test(
         lines(
@@ -1238,6 +1288,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testGithubIssue2874() {
     testSame(
         lines(
@@ -1253,6 +1304,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "alert(globalObj);"));
   }
 
+  @Test
   public void testReplaceShorthandAssignmentOpWithRegularOp() {
     // See https://github.com/google/closure-compiler/issues/3017
     test(

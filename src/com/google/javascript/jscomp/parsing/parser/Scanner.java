@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import java.util.ArrayList;
+import javax.annotation.Nullable;
 
 /**
  * Scans javascript source code into tokens. All entrypoints assume the
@@ -150,7 +151,7 @@ public class Scanner {
         getTokenRange(beginToken));
   }
 
-  public LiteralToken nextTemplateLiteralToken() {
+  public TemplateLiteralToken nextTemplateLiteralToken() {
     Token token = nextToken();
     if (isAtEnd() || token.type != TokenType.CLOSE_CURLY) {
       reportError(getPosition(index), "Expected '}' after expression in template literal");
@@ -291,6 +292,7 @@ public class Scanner {
       case '\r':      // Carriage Return
       case '\u2028':  // Line Separator
       case '\u2029':  // Paragraph Separator
+      case '\u3000': // Ideographic Space
         // TODO: there are other Unicode Category 'Zs' chars that should go here.
         return true;
       default:
@@ -788,12 +790,13 @@ public class Scanner {
     return value;
   }
 
+  @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
   private static boolean isIdentifierStart(char ch) {
     // Most code is written in pure ASCII create a fast path here.
     if (ch <= 127) {
-      return ((ch >= 'A' & ch <= 'Z')
-          | (ch >= 'a' & ch <= 'z')
-          | (ch == '_' | ch == '$'));
+      // Intentionally avoiding short circuiting behavior of "||" and "&&".
+      // This minimizes branches in this code which minimizes branch prediction misses.
+      return ((ch >= 'A' & ch <= 'Z') | (ch >= 'a' & ch <= 'z') | (ch == '_' | ch == '$'));
     }
 
     // Workaround b/36459436
@@ -804,6 +807,7 @@ public class Scanner {
         || Character.isLetter(ch);
   }
 
+  @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
   private static boolean isIdentifierPart(char ch) {
     // Most code is written in pure ASCII create a fast path here.
     if (ch <= 127) {
@@ -847,10 +851,10 @@ public class Scanner {
         TokenType.NO_SUBSTITUTION_TEMPLATE, TokenType.TEMPLATE_HEAD);
   }
 
-  private LiteralToken nextTemplateLiteralTokenShared(TokenType endType,
-      TokenType middleType) {
+  private TemplateLiteralToken nextTemplateLiteralTokenShared(
+      TokenType endType, TokenType middleType) {
     int beginIndex = index;
-    skipTemplateCharacters();
+    SkipTemplateCharactersResult skipTemplateCharactersResult = skipTemplateCharacters();
     if (isAtEnd()) {
       reportError(getPosition(beginIndex), "Unterminated template literal");
     }
@@ -859,13 +863,28 @@ public class Scanner {
     switch (peekChar()) {
       case '`':
         nextChar();
-        return new LiteralToken(endType, value, getTokenRange(beginIndex - 1));
+        return new TemplateLiteralToken(
+            endType,
+            value,
+            skipTemplateCharactersResult.getErrorMessage(),
+            skipTemplateCharactersResult.getPosition(),
+            getTokenRange(beginIndex - 1));
       case '$':
         nextChar(); // $
         nextChar(); // {
-        return new LiteralToken(middleType, value, getTokenRange(beginIndex - 1));
+        return new TemplateLiteralToken(
+            middleType,
+            value,
+            skipTemplateCharactersResult.getErrorMessage(),
+            skipTemplateCharactersResult.getPosition(),
+            getTokenRange(beginIndex - 1));
       default: // Should have reported error already
-        return new LiteralToken(endType, value, getTokenRange(beginIndex - 1));
+        return new TemplateLiteralToken(
+            endType,
+            value,
+            skipTemplateCharactersResult.getErrorMessage(),
+            skipTemplateCharactersResult.getPosition(),
+            getTokenRange(beginIndex - 1));
     }
   }
 
@@ -879,33 +898,99 @@ public class Scanner {
 
   private boolean skipStringLiteralChar() {
     if (peek('\\')) {
-      return skipStringLiteralEscapeSequence(false);
+      return skipStringLiteralEscapeSequence();
     }
     nextChar();
     return true;
   }
 
-  private void skipTemplateCharacters() {
+  private SkipTemplateCharactersResult skipTemplateCharacters() {
+    SkipTemplateCharactersResult result = createSkipTemplateCharactersResult(null);
     while (!isAtEnd()) {
       switch (peekChar()) {
         case '`':
-          return;
+          return result;
         case '\\':
-          skipStringLiteralEscapeSequence(true);
+          // There might be multiple errors. Take the first one but continue scanning
+          SkipTemplateCharactersResult newError = skipTemplateLiteralEscapeSequence();
+          if (newError != null && !result.hasError()) {
+            result = newError;
+          }
           break;
         case '$':
           if (peekChar(1) == '{') {
-            return;
+            return result;
           }
           // Fall through.
         default:
           nextChar();
       }
     }
+    return result;
   }
 
   @SuppressWarnings("IdentityBinaryExpression") // for "skipHexDigit() && skipHexDigit()"
-  private boolean skipStringLiteralEscapeSequence(boolean templateLiteral) {
+  private SkipTemplateCharactersResult skipTemplateLiteralEscapeSequence() {
+    nextChar();
+    if (isAtEnd()) {
+      reportError("Unterminated template literal escape sequence");
+      return null;
+    }
+    if (isLineTerminator(peekChar())) {
+      skipLineTerminator();
+      return null;
+    }
+    char next = nextChar();
+    switch (next) {
+      case '0':
+        if (peekOctalDigit()) {
+          return createSkipTemplateCharactersResult("Invalid escape sequence");
+        }
+        return null;
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+        return createSkipTemplateCharactersResult("Invalid escape sequence");
+      case 'x':
+        boolean doubleHexDigit = skipHexDigit() && skipHexDigit();
+        if (!doubleHexDigit) {
+          return createSkipTemplateCharactersResult("Hex digit expected");
+        }
+        return null;
+      case 'u':
+        if (peek('{')) {
+          nextChar();
+          if (peek('}')) {
+            return createSkipTemplateCharactersResult("Empty unicode escape");
+          }
+          boolean allHexDigits = true;
+          while (!peek('}') && allHexDigits) {
+            allHexDigits = allHexDigits && skipHexDigit();
+          }
+          if (!allHexDigits) {
+            return createSkipTemplateCharactersResult("Hex digit expected");
+          }
+          nextChar();
+          return null;
+        } else {
+          boolean quadHexDigit =
+              skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
+          if (!quadHexDigit) {
+            return createSkipTemplateCharactersResult("Hex digit expected");
+          }
+          return null;
+        }
+      default:
+        return null;
+    }
+  }
+
+  @SuppressWarnings("IdentityBinaryExpression") // for "skipHexDigit() && skipHexDigit()"
+  private boolean skipStringLiteralEscapeSequence() {
     nextChar();
     if (isAtEnd()) {
       reportError("Unterminated string literal escape sequence");
@@ -928,12 +1013,7 @@ public class Scanner {
       case 'r':
       case 't':
       case 'v':
-        return true;
       case '0':
-        if (templateLiteral && peekOctalDigit()) {
-          reportError("Invalid escape sequence");
-          return false;
-        }
         return true;
       case '1':
       case '2':
@@ -942,13 +1022,13 @@ public class Scanner {
       case '5':
       case '6':
       case '7':
-        if (templateLiteral) {
-          reportError("Invalid escape sequence");
-          return false;
-        }
         break;
       case 'x':
-        return skipHexDigit() && skipHexDigit();
+        boolean doubleHexDigit = skipHexDigit() && skipHexDigit();
+        if (!doubleHexDigit) {
+          reportError("Hex digit expected");
+        }
+        return doubleHexDigit;
       case 'u':
         if (peek('{')) {
           nextChar();
@@ -960,10 +1040,18 @@ public class Scanner {
           while (!peek('}') && allHexDigits) {
             allHexDigits = allHexDigits && skipHexDigit();
           }
+          if (!allHexDigits) {
+            reportError("Hex digit expected");
+          }
           nextChar();
           return allHexDigits;
         } else {
-          return skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
+          boolean quadHexDigit =
+              skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
+          if (!quadHexDigit) {
+            reportError("Hex digit expected");
+          }
+          return quadHexDigit;
         }
       default:
         break;
@@ -971,9 +1059,6 @@ public class Scanner {
 
     if (next == '/') {
       // Don't warn for '\/' (for now) since it's common in "<\/script>"
-    } else if (templateLiteral) {
-      // Don't warn in template literals since tagged template literals
-      // can access the raw string value.
     } else {
       reportWarning("Unnecessary escape: '\\%s' is equivalent to just '%s'", next, next);
     }
@@ -982,7 +1067,6 @@ public class Scanner {
 
   private boolean skipHexDigit() {
     if (!peekHexDigit()) {
-      reportError("Hex digit expected");
       return false;
     }
     nextChar();
@@ -1140,5 +1224,31 @@ public class Scanner {
 
   void decTypeParameterLevel() {
     typeParameterLevel--;
+  }
+
+  private SkipTemplateCharactersResult createSkipTemplateCharactersResult(String message) {
+    return new SkipTemplateCharactersResult(message, getPosition());
+  }
+
+  private static class SkipTemplateCharactersResult {
+    @Nullable private final String errorMessage;
+    private final SourcePosition position;
+
+    SkipTemplateCharactersResult(String message, SourcePosition position) {
+      this.errorMessage = message;
+      this.position = position;
+    }
+
+    String getErrorMessage() {
+      return this.errorMessage;
+    }
+
+    SourcePosition getPosition() {
+      return this.position;
+    }
+
+    boolean hasError() {
+      return this.errorMessage != null;
+    }
   }
 }

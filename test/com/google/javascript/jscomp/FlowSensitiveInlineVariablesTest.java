@@ -17,13 +17,17 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for {@link FlowSensitiveInlineVariables}.
  *
  */
 
-public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
+@RunWith(JUnit4.class)
+public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
   public static final String EXTERN_FUNCTIONS =
       lines(
@@ -33,7 +37,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
           "                      function hasSFX() {}");
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
   }
@@ -56,6 +60,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     };
   }
 
+  @Test
   public void testSimpleAssign() {
     inline("var x; x = 1; print(x)", "var x; print(1)");
     inline("var x; x = 1; x", "var x; 1");
@@ -63,6 +68,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     inline("var x; x = 1; x = x + 1", "var x; x = 1 + 1");
   }
 
+  @Test
   public void testSimpleVar() {
     inline("var x = 1; print(x)", "var x; print(1)");
     inline("var x = 1; x", "var x; 1");
@@ -70,6 +76,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     inline("var x = 1; x = x + 1", "var x; x = 1 + 1");
   }
 
+  @Test
   public void testSimpleLet() {
     inline("let x = 1; print(x)", "let x; print(1)");
     inline("let x = 1; x", "let x; 1");
@@ -77,12 +84,14 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     inline("let x = 1; x = x + 1", "let x; x = 1 + 1");
   }
 
+  @Test
   public void testSimpleConst() {
     inline("const x = 1; print(x)", "const x = undefined; print(1)");
     inline("const x = 1; x", "const x = undefined; 1");
     inline("const x = 1; const a = x", "const x = undefined; const a = 1");
   }
 
+  @Test
   public void testSimpleForIn() {
     inline("var a,b,x = a in b; x",
            "var a,b,x; a in b");
@@ -90,39 +99,48 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var a,b,x = a in b; delete a[b]; x");
   }
 
+  @Test
   public void testExported() {
     noInline("var _x = 1; print(_x)");
   }
 
+  @Test
   public void testDoNotInlineIncrement() {
     noInline("var x = 1; x++;");
     noInline("var x = 1; x--;");
   }
 
+  @Test
   public void testMultiUse() {
     noInline("var x; x = 1; print(x); print (x);");
   }
 
+  @Test
   public void testMultiUseInSameCfgNode() {
     noInline("var x; x = 1; print(x) || print (x);");
   }
 
+  @Test
   public void testMultiUseInTwoDifferentPath() {
     noInline("var x = 1; if (print) { print(x) } else { alert(x) }");
   }
 
+  @Test
   public void testAssignmentBeforeDefinition() {
     inline("x = 1; var x = 0; print(x)","x = 1; var x; print(0)" );
   }
 
+  @Test
   public void testVarInConditionPath() {
     noInline("if (foo) { var x = 0 } print(x)");
   }
 
+  @Test
   public void testMultiDefinitionsBeforeUse() {
     inline("var x = 0; x = 1; print(x)", "var x = 0; print(1)");
   }
 
+  @Test
   public void testMultiDefinitionsInSameCfgNode() {
     noInline("var x; (x = 1) || (x = 2); print(x)");
     noInline("var x; x = (1 || (x = 2)); print(x)");
@@ -131,10 +149,12 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x; x = 1 , x = 2; print(x)");
   }
 
+  @Test
   public void testNotReachingDefinitions() {
     noInline("var x; if (foo) { x = 0 } print (x)");
   }
 
+  @Test
   public void testNoInlineLoopCarriedDefinition() {
     // First print is undefined instead.
     noInline("var x; while(true) { print(x); x = 1; }");
@@ -143,14 +163,17 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 0; while(true) { print(x); x = 1; }");
   }
 
+  @Test
   public void testDoNotExitLoop() {
     noInline("while (z) { var x = 3; } var y = x;");
   }
 
+  @Test
   public void testDoNotInlineWithinLoop() {
     noInline("var y = noSFX(); do { var z = y.foo(); } while (true);");
   }
 
+  @Test
   public void testDoNotInlineCatchExpression1() {
     noInline(
         "var a;\n" +
@@ -162,6 +185,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "return a.stack\n");
   }
 
+  @Test
   public void testDoNotInlineCatchExpression1a() {
     noInline(
         "var a;\n" +
@@ -173,6 +197,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "return a.stack\n");
   }
 
+  @Test
   public void testDoNotInlineCatchExpression2() {
     noInline(
         "var a;\n" +
@@ -184,6 +209,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "return a.stack\n");
   }
 
+  @Test
   public void testDoNotInlineCatchExpression3() {
     noInline(
         "var a;\n" +
@@ -196,6 +222,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "return a.stack\n");
   }
 
+  @Test
   public void testDoNotInlineCatchExpression4() {
     // Note: it is valid to inline "x" here but we currently don't.
     noInline(
@@ -207,56 +234,68 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "}");
   }
 
+  @Test
   public void testDefinitionAfterUse() {
     inline("var x = 0; print(x); x = 1", "var x; print(0); x = 1");
   }
 
+  @Test
   public void testInlineSameVariableInStraightLine() {
     inline("var x; x = 1; print(x); x = 2; print(x)",
         "var x; print(1); print(2)");
   }
 
+  @Test
   public void testInlineInDifferentPaths() {
     inline("var x; if (print) {x = 1; print(x)} else {x = 2; print(x)}",
         "var x; if (print) {print(1)} else {print(2)}");
   }
 
+  @Test
   public void testNoInlineInMergedPath() {
     noInline(
         "var x,y;x = 1;while(y) { if(y){ print(x) } else { x = 1 } } print(x)");
   }
 
+  @Test
   public void testInlineIntoExpressions() {
     inline("var x = 1; print(x + 1);", "var x; print(1 + 1)");
   }
 
+  @Test
   public void testInlineExpressions1() {
     inline("var a, b; var x = a+b; print(x)", "var a, b; var x; print(a+b)");
   }
 
+  @Test
   public void testInlineExpressions2() {
     // We can't inline because of the redefinition of "a".
     noInline("var a, b; var x = a + b; a = 1; print(x)");
   }
 
+  @Test
   public void testInlineExpressions3() {
     inline("var a,b,x; x=a+b; x=a-b ; print(x)",
            "var a,b,x; x=a+b; print(a-b)");
   }
 
+  @Test
   public void testInlineExpressions4() {
     // Precision is lost due to comma's.
     noInline("var a,b,x; x=a+b, x=a-b; print(x)");
   }
 
+  @Test
   public void testInlineExpressions5() {
     noInline("var a; var x = a = 1; print(x)");
   }
 
+  @Test
   public void testInlineExpressions6() {
     noInline("var a, x; a = 1 + (x = 1); print(x)");
   }
 
+  @Test
   public void testInlineExpression7() {
     // Possible side effects in foo() that might conflict with bar();
     noInline("var x = foo() + 1; bar(); print(x)");
@@ -267,6 +306,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = foo() + 1; print(x)");
   }
 
+  @Test
   public void testInlineExpression8() {
     // The same variable inlined twice.
     inline(
@@ -276,6 +316,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "var x;         print(a + b);             print(a - b)");
   }
 
+  @Test
   public void testInlineExpression9() {
     // Check for actual control flow sensitivity.
     inline(
@@ -285,22 +326,26 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "var x; if (g) {           print(a + b)}             print(a - b)");
   }
 
+  @Test
   public void testInlineExpression10() {
     // The DFA is not fine grain enough for this.
     noInline("var x, y; x = ((y = 1), print(y))");
   }
 
+  @Test
   public void testInlineExpressions11() {
     inline("var x; x = x + 1; print(x)", "var x; print(x + 1)");
     noInline("var x; x = x + 1; print(x); print(x)");
   }
 
+  @Test
   public void testInlineExpressions12() {
     // ++ is an assignment and considered to modify state so it will not be
     // inlined.
     noInline("var x = 10; x = c++; print(x)");
   }
 
+  @Test
   public void testInlineExpressions13() {
     inline("var a = 1, b = 2;" +
            "var x = a;" +
@@ -319,45 +364,55 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
            "var k = z;");
   }
 
+  @Test
   public void testInlineExpressions14() {
     inline("var a = function() {}; var b = a;", "var a; var b = function() {}");
   }
 
+  @Test
   public void testNoInlineIfDefinitionMayNotReach() {
     noInline("var x; if (x=1) {} x;");
   }
 
+  @Test
   public void testNoInlineEscapedToInnerFunction() {
     noInline("var x = 1; function foo() { x = 2 }; print(x)");
   }
 
+  @Test
   public void testNoInlineLValue() {
     noInline("var x; if (x = 1) { print(x) }");
   }
 
+  @Test
   public void testSwitchCase() {
     inline("var x = 1; switch(x) { }", "var x; switch(1) { }");
   }
 
+  @Test
   public void testShadowedVariableInnerFunction() {
     inline("var x = 1; print(x) || (function() {  var x; x = 1; print(x)})()",
         "var x; print(1) || (function() {  var x; print(1)})()");
   }
 
+  @Test
   public void testCatch() {
     noInline("var x = 0; try { } catch (x) { }");
     noInline("try { } catch (x) { print(x) }");
   }
 
+  @Test
   public void testNoInlineGetProp1() {
     // We don't know if j aliases a.b
     noInline("var x = a.b.c; j.c = 1; print(x);");
   }
 
+  @Test
   public void testNoInlineGetProp2() {
     noInline("var x = 1 * a.b.c; j.c = 1; print(x);");
   }
 
+  @Test
   public void testNoInlineGetProp3() {
     // Anything inside a function is fine.
     inline(
@@ -365,37 +420,44 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "var a = {b: {}}; var x; print(function(){1 * a.b.c});");
   }
 
+  @Test
   public void testNoInlineGetElem() {
     // Again we don't know if i = j
     noInline("var x = a[i]; a[j] = 2; print(x); ");
   }
 
   // TODO(user): These should be inlinable.
+  @Test
   public void testNoInlineConstructors() {
     noInline("var x = new Iterator(); x.next();");
   }
 
   // TODO(user): These should be inlinable.
+  @Test
   public void testNoInlineArrayLits() {
     noInline("var x = []; print(x)");
   }
 
   // TODO(user): These should be inlinable.
+  @Test
   public void testNoInlineObjectLits() {
     noInline("var x = {}; print(x)");
   }
 
   // TODO(user): These should be inlinable after the REGEX checks.
+  @Test
   public void testNoInlineRegExpLits() {
     noInline("var x = /y/; print(x)");
   }
 
+  @Test
   public void testInlineConstructorCallsIntoLoop() {
     // Don't inline construction into loops.
     noInline("var x = new Iterator();" +
              "for(i = 0; i < 10; i++) {j = x.next()}");
   }
 
+  @Test
   public void testRemoveWithLabels() {
     inline("var x = 1; L: x = 2; print(x)", "var x = 1; L:{} print(2)");
     inline("var x = 1; L: M: x = 2; print(x)", "var x = 1; L:M:{} print(2)");
@@ -403,6 +465,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
            "var x = 1; L:M:N:{} print(2)");
   }
 
+  @Test
   public void testInlineAcrossSideEffect1() {
     // This can't be inlined because print() has side-effects and might change
     // the definition of noSFX.
@@ -412,6 +475,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     //inline("var y; var x = noSFX(y); print(x)", "var y;var x;print(noSFX(y))");
   }
 
+  @Test
   public void testInlineAcrossSideEffect2() {
     // Think noSFX() as a function that reads y.foo and return it
     // and SFX() write some new value of y.foo. If that's the case,
@@ -423,6 +487,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var y; var x = new noSFX(y), z = new hasSFX(y); print(x)");
   }
 
+  @Test
   public void testInlineAcrossSideEffect3() {
     // This is a case where hasSFX is left of the destination of the inlining.
     noInline("var y; var x = noSFX(y); hasSFX(y), print(x)");
@@ -430,6 +495,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var y; var x = new noSFX(y); new hasSFX(y), print(x)");
   }
 
+  @Test
   public void testInlineAcrossSideEffect4() {
     // This is a case where hasSFX is some control flow path between the
     // source and its destination.
@@ -438,6 +504,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var y; var x = new noSFX(y); new hasSFX(y); print(x)");
   }
 
+  @Test
   public void testCanInlineAcrossNoSideEffect() {
     // This can't be inlined because print() has side-effects and might change
     // the definition of noSFX. We should be able to mark noSFX as const
@@ -449,6 +516,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     //    "var y; var x, z = noSFX(); noSFX(); noSFX(), print(noSFX(y))");
   }
 
+  @Test
   public void testDependOnOuterScopeVariables() {
     noInline("var x; function foo() { var y = x; x = 0; print(y) }");
     noInline("var x; function foo() { var y = x; x++; print(y) }");
@@ -459,6 +527,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x; function foo() { var y = x; print(y) }");
   }
 
+  @Test
   public void testInlineIfNameIsLeftSideOfAssign() {
     inline("var x = 1; x = print(x) + 1", "var x; x = print(1) + 1");
     inline("var x = 1; L: x = x + 2", "var x; L: x = 1 + 2");
@@ -470,6 +539,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 1; x-=1,foo(x)");
   }
 
+  @Test
   public void testInlineArguments() {
     testSame("function _func(x) { print(x) }");
     testSame("function _func(x,y) { if(y) { x = 1 }; print(x) }");
@@ -481,6 +551,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
          "function f(x, y) { if (y) { print(1) }}");
   }
 
+  @Test
   public void testInvalidInlineArguments1() {
     testSame("function f(x, y) { x = 1; arguments[0] = 2; print(x) }");
     testSame("function f(x, y) { x = 1; var z = arguments;" +
@@ -488,17 +559,20 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     testSame("function g(a){a[0]=2} function f(x){x=1;g(arguments);print(x)}");
   }
 
+  @Test
   public void testInvalidInlineArguments2() {
     testSame("function f(c) {var f = c; arguments[0] = this;" +
              "f.apply(this, arguments); return this;}");
   }
 
+  @Test
   public void testForIn() {
     noInline("var x; var y = {}; for(x in y){}");
     noInline("var x; var y = {}; var z; for(x in z = y){print(z)}");
     noInline("var x; var y = {}; var z; for(x in y){print(z)}");
   }
 
+  @Test
   public void testForInDestructuring() {
     noInline("var x = 1, y = [], z; for ({z = x} in y) {}");
     noInline("var x = 1, y = [], z; for ([z = x] in y) {}");
@@ -510,11 +584,13 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 1; if (true) { x = 3; } var y = [[0]], z = x; for ([x] in y) {}; alert(z);");
   }
 
+  @Test
   public void testNotOkToSkipCheckPathBetweenNodes() {
     noInline("var x; for(x = 1; foo(x);) {}");
     noInline("var x; for(; x = 1;foo(x)) {}");
   }
 
+  @Test
   public void testIssue698() {
     // Most of the flow algorithms operate on Vars. We want to make
     // sure the algorithm bails out appropriately if it sees
@@ -534,6 +610,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         + "return x;");
   }
 
+  @Test
   public void testIssue777() {
     test(
         "function f(cmd, ta) {" +
@@ -568,18 +645,21 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "}");
   }
 
+  @Test
   public void testTransitiveDependencies1() {
     test(
         "function f(x) { var a = x; var b = a; x = 3; return b; }",
         "function f(x) { var a;     var b = x; x = 3; return b; }");
   }
 
+  @Test
   public void testTransitiveDependencies2() {
     test(
         "function f(x) { var a = x; var b = a; var c = b; x = 3; return c; }",
         "function f(x) { var a    ; var b = x; var c    ; x = 3; return b; }");
   }
 
+  @Test
   public void testIssue794a() {
     noInline(
         "var x = 1; " +
@@ -589,6 +669,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "return x;");
   }
 
+  @Test
   public void testIssue794b() {
     noInline(
         "var x = 1; " +
@@ -598,6 +679,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "return x;");
   }
 
+  @Test
   public void testVarAssignInsideHookIssue965() {
     noInline("var i = 0; return 1 ? (i = 5) : 0, i;");
     noInline("var i = 0; return (1 ? (i = 5) : 0) ? i : 0;");
@@ -606,6 +688,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   }
 
   // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
+  @Test
   public void testInlineStringConcat() {
     test(lines(
         "function f() {",
@@ -622,6 +705,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "function f() { var x; return '' + '1' + '2' + '3' + '4' + '5' + '6' + '7'; }");
   }
 
+  @Test
   public void testInlineInArrowFunctions() {
     test("() => {var v; v = 1; return v;} ",
         "() => {var v; return 1;}");
@@ -630,6 +714,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "(v) => {return 1;}");
   }
 
+  @Test
   public void testInlineInClassMemberFunctions() {
     test(
         lines(
@@ -652,6 +737,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     );
   }
 
+  @Test
   public void testInlineLet() {
     inline("let a = 1; print(a + 1)",
          "let a; print(1 + 1)");
@@ -662,6 +748,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("let a = noSFX(); print(a)");
   }
 
+  @Test
   public void testInlineConst() {
     inline("const a = 1; print(a + 1)",
         "const a = undefined; print(1 + 1)");
@@ -673,11 +760,13 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
   }
 
+  @Test
   public void testSpecific() {
     inline("let a = 1; print(a + 1)",
         "let a; print(1 + 1)");
   }
 
+  @Test
   public void testBlockScoping() {
     inline(
         lines(
@@ -736,6 +825,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
             "return(a)"));
   }
 
+  @Test
   public void testBlockScoping_shouldntInline() {
     noInline(
         lines(
@@ -766,6 +856,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("{ let value = 1; var g = () => value; } return g;");
   }
 
+  @Test
   public void testInlineInGenerators() {
     test(
         lines(
@@ -783,12 +874,14 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     );
   }
 
+  @Test
   public void testNoInlineForOf() {
     noInline("for (var x of n){} ");
 
     noInline("var x = 1; var n = {}; for(x of n) {}");
   }
 
+  @Test
   public void testForOfDestructuring() {
     noInline("var x = 1, y = [], z; for ({z = x} of y) {}");
     noInline("var x = 1, y = [], z; for ([z = x] of y) {}");
@@ -802,6 +895,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 1; if (true) { x = 3; } var y = [[0]], z = x; for ([x] of y) {}; alert(z);");
   }
 
+  @Test
   public void testTemplateStrings() {
     inline("var name = 'Foo'; `Hello ${name}`",
         "var name; `Hello ${'Foo'}`");
@@ -813,6 +907,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "var age; `Age: ${3}`");
   }
 
+  @Test
   public void testArrayDestructuring() {
     noInline("var [a, b, c] = [1, 2, 3]; print(a + b + c);");
     noInline("var arr = [1, 2, 3, 4]; var [a, b, ,d] = arr;");
@@ -820,11 +915,13 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     inline("var [x] = []; x = 3; print(x);", "var [x] = []; print(3);");
   }
 
+  @Test
   public void testObjectDestructuring() {
     noInline("var {a, b} = {a: 3, b: 4}; print(a + b);");
     noInline("var obj = {a: 3, b: 4}; var {a, b} = obj;");
   }
 
+  @Test
   public void testDontInlineOverChangingRvalue_destructuring() {
     noInline("var x = 1; if (true) { x = 2; } var y = x; var [z = (x = 3, 4)] = []; print(y);");
 
@@ -835,6 +932,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 1; if (true) { x = 2; } var y = x; var [z] = [x = 3]; print(y);");
   }
 
+  @Test
   public void testDestructuringDefaultValue() {
     inline("var x = 1; var [y = x] = [];", "var x; var [y = 1] = [];");
     inline("var x = 1; var {y = x} = {};", "var x; var {y = 1} = {};");
@@ -857,6 +955,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 1; alert(x); [x = x * 2] = [];");
   }
 
+  @Test
   public void testDestructuringComputedProperty() {
     inline("var x = 1; var {[x]: y} = {};", "var x; var {[1]: y} = {};");
     noInline("var x = 1; var {[x]: y} = {}; print(x);");
@@ -865,6 +964,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     inline("var x = 1; var y = x; ({[y]: x} = {});", "var x; var y; ({[1]: x} = {});");
   }
 
+  @Test
   public void testDeadAssignments() {
     inline(
         "let a = 3; if (3 < 4) { a = 8; } else { print(a); }",
@@ -875,6 +975,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "let a; if (3 < 4) { [a] = 8 } else { print(3); }");
   }
 
+  @Test
   public void testDestructuringEvaluationOrder() {
     // Should not inline "x = 2" in these cases because x is changed beforehand
     noInline("var x = 2; var {x, y = x} = {x: 3};");
@@ -895,6 +996,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "var x    ; print(1); var y; [x, y = x] = [2];");
   }
 
+  @Test
   public void testDestructuringWithSideEffects() {
     noInline("function f() { x++; }  var x = 2; var {y = x} = {key: f()}");
 
@@ -918,12 +1020,14 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "function f() { x++; } var x = 2; var y    ; var {a: {b: z = f()} = x} = {};");
   }
 
+  @Test
   public void testGithubIssue2818() {
     noInline("var x = 1; var y = x; print(x++, y);");
     noInline("var x = 1; var y = x; print(x = x + 3, y);");
     noInline("var x = 1; var y = x; print(({x} = {x: x * 2}), y); print(x);");
   }
 
+  @Test
   public void testOkayToInlineWithSideEffects() {
     inline(
         "var x = 1; var y = x; var z = 1; print(z++, y);",

@@ -25,12 +25,16 @@ import static org.mockito.Mockito.when;
 import com.google.common.cache.CacheBuilder;
 import java.net.URI;
 import java.net.URISyntaxException;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link CachingTranspiler}. */
-public final class CachingTranspilerTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class CachingTranspilerTest {
 
   private Transpiler transpiler;
   @Mock(answer = RETURNS_SMART_NULLS) Transpiler delegate;
@@ -56,17 +60,19 @@ public final class CachingTranspilerTest extends TestCase {
     RESULT3 = new TranspileResult(BAR_JS, "baz", "xyzzy", "");
   }
 
-  @Override
+  @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
     transpiler = new CachingTranspiler(delegate, CacheBuilder.newBuilder());
   }
 
+  @Test
   public void testTranspileDelegates() {
     when(delegate.transpile(FOO_JS, "bar")).thenReturn(RESULT1);
     assertThat(transpiler.transpile(FOO_JS, "bar")).isSameAs(RESULT1);
   }
 
+  @Test
   public void testTranspileCaches() {
     when(delegate.transpile(FOO_JS, "bar")).thenReturn(RESULT1);
     assertThat(transpiler.transpile(FOO_JS, "bar")).isSameAs(RESULT1);
@@ -74,6 +80,7 @@ public final class CachingTranspilerTest extends TestCase {
     verify(delegate, times(1)).transpile(FOO_JS, "bar");
   }
 
+  @Test
   public void testTranspileDependsOnBothPathAndCode() {
     when(delegate.transpile(FOO_JS, "bar")).thenReturn(RESULT1);
     when(delegate.transpile(BAR_JS, "bar")).thenReturn(RESULT2);
@@ -83,11 +90,13 @@ public final class CachingTranspilerTest extends TestCase {
     assertThat(transpiler.transpile(FOO_JS, "bard")).isSameAs(RESULT3);
   }
 
+  @Test
   public void testRuntimeDelegates() {
     when(delegate.runtime()).thenReturn("xyzzy");
     assertThat(transpiler.runtime()).isSameAs("xyzzy");
   }
 
+  @Test
   public void testRuntimeCaches() {
     when(delegate.runtime()).thenReturn("xyzzy");
     assertThat(transpiler.runtime()).isSameAs("xyzzy");

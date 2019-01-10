@@ -201,11 +201,13 @@ class GlobalNamespace
 
     @Override
     public boolean equals(Object obj) {
-      checkState(obj instanceof AstChange);
-      AstChange other = (AstChange) obj;
-      return Objects.equals(this.module, other.module)
-          && Objects.equals(this.scope, other.scope)
-          && Objects.equals(this.node, other.node);
+      if (obj instanceof AstChange) {
+        AstChange other = (AstChange) obj;
+        return Objects.equals(this.module, other.module)
+            && Objects.equals(this.scope, other.scope)
+            && Objects.equals(this.node, other.node);
+      }
+      return false;
     }
 
     @Override
@@ -223,18 +225,30 @@ class GlobalNamespace
     BuildGlobalNamespace builder = new BuildGlobalNamespace();
 
     for (AstChange info : newNodes) {
-      if (!info.node.isQualifiedName() && !NodeUtil.isObjectLitKey(info.node)) {
+      if (!info.node.isQualifiedName() && !NodeUtil.mayBeObjectLitKey(info.node)) {
         continue;
       }
       scanFromNode(builder, info.module, info.scope, info.node);
     }
   }
 
-  private void scanFromNode(
-    BuildGlobalNamespace builder, JSModule module, Scope scope, Node n) {
+  private void scanFromNode(BuildGlobalNamespace builder, JSModule module, Scope scope, Node n) {
     // Check affected parent nodes first.
-    if (n.isName() || n.isGetProp()) {
+    Node parent = n.getParent();
+    if ((n.isName() || n.isGetProp()) && parent.isGetProp()) {
+      // e.g. when replacing "my.alias.prop" with "foo.bar.prop"
+      // we want also want to visit "foo.bar.prop", since that's a new global qname we are now
+      // referencing.
       scanFromNode(builder, module, scope, n.getParent());
+    } else if (n.getPrevious() != null && n.getPrevious().isObjectPattern()) {
+      // e.g. if we change `const {x} = bar` to `const {x} = foo`, add a new reference to `foo.x`
+      // attached to the STRING_KEY `x`
+      Node pattern = n.getPrevious();
+      for (Node key : pattern.children()) {
+        if (key.isStringKey()) {
+          scanFromNode(builder, module, scope, key);
+        }
+      }
     }
     builder.collect(module, scope, n);
   }
@@ -324,8 +338,6 @@ class GlobalNamespace
       String name;
       boolean isSet = false;
       Name.Type type = Name.Type.OTHER;
-      boolean isPropAssign = false;
-      boolean shouldCreateProp = true;
 
       switch (n.getToken()) {
         case GETTER_DEF:
@@ -336,28 +348,31 @@ class GlobalNamespace
           name = null;
           if (parent.isObjectLit()) {
             name = getNameForObjLitKey(n);
+            isSet = true;
           } else if (parent.isClassMembers()) {
             name = getNameForClassMembers(n);
+            isSet = true;
+          } else if (parent.isObjectPattern()) {
+            name = getNameForObjectPatternKey(n);
+            // not a set
           }
           if (name == null) {
             return;
           }
-          isSet = true;
           switch (n.getToken()) {
             case MEMBER_FUNCTION_DEF:
               type = getValueType(n.getFirstChild());
               if (n.getParent().isClassMembers() && !n.isStaticMember()) {
-                shouldCreateProp = false;
+                // `class C { x() {} }` does /not/ create a global qualified name C.x, so return.
+                return;
               }
               break;
             case STRING_KEY:
               type = getValueType(n.getFirstChild());
               break;
             case GETTER_DEF:
-              type = Name.Type.GET;
-              break;
             case SETTER_DEF:
-              type = Name.Type.SET;
+              type = Name.Type.GET_SET;
               break;
             default:
               throw new IllegalStateException("unexpected:" + n);
@@ -402,10 +417,16 @@ class GlobalNamespace
                 type = Name.Type.CLASS;
               }
               break;
+            case STRING_KEY:
             case ARRAY_PATTERN:
-              // Specific case to handle inlining with array destructuring
-              isSet = true;
-              type = Name.Type.OTHER;
+            case DEFAULT_VALUE:
+            case COMPUTED_PROP:
+            case REST:
+              // This may be a set.
+              if (NodeUtil.isLhsByDestructuring(n)) {
+                isSet = true;
+                type = Name.Type.OTHER;
+              }
               break;
             default:
               if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
@@ -423,7 +444,6 @@ class GlobalNamespace
                 if (parent.getFirstChild() == n) {
                   isSet = true;
                   type = getValueType(n.getNext());
-                  isPropAssign = true;
                 }
                 break;
               case INC:
@@ -448,7 +468,7 @@ class GlobalNamespace
         case CALL:
           if (isObjectHasOwnPropertyCall(n)) {
             String qname = n.getFirstFirstChild().getQualifiedName();
-            Name globalName = getOrCreateName(qname, true);
+            Name globalName = getOrCreateName(qname);
             globalName.usedHasOwnProperty = true;
           }
           return;
@@ -467,9 +487,9 @@ class GlobalNamespace
         // because they use the term 'global' in an ES5, pre-block-scoping sense.
         Scope hoistScope = scope.getClosestHoistScope();
         if (hoistScope.isGlobal()) {
-          handleSetFromGlobal(module, scope, n, parent, name, isPropAssign, type, shouldCreateProp);
+          handleSetFromGlobal(module, scope, n, parent, name, type);
         } else {
-          handleSetFromLocal(module, scope, n, parent, name, shouldCreateProp);
+          handleSetFromLocal(module, scope, n, parent, name);
         }
       } else {
         handleGet(module, scope, n, parent, name);
@@ -568,6 +588,34 @@ class GlobalNamespace
     }
 
     /**
+     * Gets the fully qualified name corresponding to an object pattern key, as long as it is not in
+     * a nested pattern and is destructuring an qualified name.
+     *
+     * @param stringKey A child of an OBJECT_PATTERN node
+     * @return The global name, or null if {@code n} doesn't correspond to the key of an object
+     *     literal that can be named
+     */
+    String getNameForObjectPatternKey(Node stringKey) {
+      Node parent = stringKey.getParent();
+      checkState(parent.isObjectPattern());
+
+      Node patternParent = parent.getParent();
+      if (patternParent.isAssign() || patternParent.isDestructuringLhs()) {
+        // this is a top-level string key. we find the name.
+        Node rhs = patternParent.getSecondChild();
+        if (rhs == null || !rhs.isQualifiedName()) {
+          // The rhs is null for patterns in parameter lists, enhanced for loops, and catch exprs
+          return null;
+        }
+        return rhs.getQualifiedName() + "." + stringKey.getString();
+
+      } else {
+        // skip this step for nested patterns for now
+        return null;
+      }
+    }
+
+    /**
      * Gets the type of a value or simple expression.
      *
      * @param n An r-value in an assignment or variable declaration (not null)
@@ -617,23 +665,27 @@ class GlobalNamespace
      * @param n The node currently being visited
      * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
-     * @param isPropAssign Whether this set corresponds to a property
-     *     assignment of the form <code>a.b.c = ...;</code>
      * @param type The type of the value that the name is being assigned
      */
-    void handleSetFromGlobal(JSModule module, Scope scope,
-        Node n, Node parent, String name,
-        boolean isPropAssign, Name.Type type, boolean shouldCreateProp) {
+    void handleSetFromGlobal(
+        JSModule module, Scope scope, Node n, Node parent, String name, Name.Type type) {
       if (maybeHandlePrototypePrefix(module, scope, n, parent, name)) {
         return;
       }
 
-      Name nameObj = getOrCreateName(name, shouldCreateProp);
-      nameObj.type = type;
+      Name nameObj = getOrCreateName(name);
+      if (!nameObj.isGetOrSetDefinition()) {
+        // Don't change the type of a getter or setter. This is because given:
+        //   var a = {set b(item) {}}; a.b = class {};
+        // `a.b = class {};` does not change the runtime value of a.b, and we do not want to change
+        // the 'type' of a.b to Type.CLASS.
+        // TODO(lharker): for non-setter cases, do we really want to just treat the last set of
+        // a name as canonical? e.g. what if a name is first set to a class, then an object literal?
+        nameObj.type = type;
+      }
       if (n.getBooleanProp(Node.MODULE_EXPORT)) {
         nameObj.isModuleProp = true;
       }
-      maybeRecordEs6Subclass(n, parent, nameObj);
 
       Ref set = new Ref(module, scope, n, nameObj, Ref.Type.SET_FROM_GLOBAL,
           currentPreOrderIndex++);
@@ -652,55 +704,12 @@ class GlobalNamespace
     }
 
     /**
-     * Given a new node and its name that is an ES6 class, checks if it is an ES6 class with an ES6
-     * superclass. If the superclass is a simple or qualified names, adds itself to the parent's
-     * list of subclasses. Otherwise this does nothing.
-     *
-     * @param n The node being visited.
-     * @param parent {@code n}'s parent
-     * @param subclassNameObj The Name of the new node being visited.
-     */
-    private void maybeRecordEs6Subclass(Node n, Node parent, Name subclassNameObj) {
-      if (subclassNameObj.type != Name.Type.CLASS || parent == null) {
-        return;
-      }
-
-      Node superclass = null;
-      if (parent.isClass()) {
-        superclass = parent.getSecondChild();
-      } else if (n.isName() || n.isGetProp()){
-        Node classNode = NodeUtil.getAssignedValue(n);
-        if (classNode != null && classNode.isClass()) {
-          superclass = classNode.getSecondChild();
-        }
-      }
-      // TODO(lharker): figure out what should we do when n is an object literal key.
-      // e.g. var obj = {foo: class extends Parent {}};
-
-      // If there's no superclass, or the superclass expression is more complicated than a simple
-      // or qualified name, return.
-      if (superclass == null
-          || superclass.isEmpty()
-          || !(superclass.isName() || superclass.isGetProp())) {
-        return;
-      }
-      String superclassName = superclass.getQualifiedName();
-
-      Name superclassNameObj = getOrCreateName(superclassName, true);
-      // If the superclass is an ES3/5 class we don't record its subclasses.
-      if (superclassNameObj != null && superclassNameObj.type == Name.Type.CLASS) {
-        superclassNameObj.addSubclass(subclassNameObj);
-      }
-    }
-
-    /**
-     * Determines whether a set operation is a constructor or enumeration
-     * or interface declaration. The set operation may either be an assignment
-     * to a name, a variable declaration, or an object literal key mapping.
+     * Determines whether a set operation is a constructor or enumeration or interface declaration.
+     * The set operation may either be an assignment to a name, a variable declaration, or an object
+     * literal key mapping.
      *
      * @param n The node that represents the name being set
-     * @return Whether the set operation is either a constructor or enum
-     *     declaration
+     * @return Whether the set operation is either a constructor or enum declaration
      */
     private boolean isTypeDeclaration(Node n) {
       Node valueNode = NodeUtil.getRValueOfLValue(n);
@@ -714,8 +723,8 @@ class GlobalNamespace
     }
 
     /**
-     * Updates our representation of the global namespace to reflect an
-     * assignment to a global name in a local scope.
+     * Updates our representation of the global namespace to reflect an assignment to a global name
+     * in a local scope.
      *
      * @param module The current module
      * @param scope The current scope
@@ -723,13 +732,12 @@ class GlobalNamespace
      * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
-    void handleSetFromLocal(JSModule module, Scope scope, Node n, Node parent,
-                            String name, boolean shouldCreateProp) {
+    void handleSetFromLocal(JSModule module, Scope scope, Node n, Node parent, String name) {
       if (maybeHandlePrototypePrefix(module, scope, n, parent, name)) {
         return;
       }
 
-      Name nameObj = getOrCreateName(name, shouldCreateProp);
+      Name nameObj = getOrCreateName(name);
       Ref set = new Ref(module, scope, n, nameObj,
           Ref.Type.SET_FROM_LOCAL, currentPreOrderIndex++);
       nameObj.addRef(set);
@@ -747,8 +755,7 @@ class GlobalNamespace
     }
 
     /**
-     * Updates our representation of the global namespace to reflect a read
-     * of a global name.
+     * Updates our representation of the global namespace to reflect a read of a global name.
      *
      * @param module The current module
      * @param scope The current scope
@@ -756,8 +763,7 @@ class GlobalNamespace
      * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
-    void handleGet(JSModule module, Scope scope,
-        Node n, Node parent, String name) {
+    void handleGet(JSModule module, Scope scope, Node n, Node parent, String name) {
       if (maybeHandlePrototypePrefix(module, scope, n, parent, name)) {
         return;
       }
@@ -811,14 +817,26 @@ class GlobalNamespace
           break;
         case CLASS:
           // This node is the superclass in an extends clause.
-          type = Ref.Type.DIRECT_GET;
+          type = Ref.Type.SUBCLASSING_GET;
+          break;
+        case OBJECT_PATTERN:
+          // handle STRING_KEYS in object patterns
+          type = Ref.Type.ALIASING_GET;
+          break;
+        case DESTRUCTURING_LHS:
+        case ASSIGN:
+          // The rhs of an assign or a name declaration is escaped if it's assigned to a name
+          // directly; it's a 'direct get' if it's actually destructured, since we know what
+          // properties are accessed
+          Node lhs = n.getPrevious();
+          type = lhs.isObjectPattern() ? Ref.Type.DIRECT_GET : Ref.Type.ALIASING_GET;
           break;
         default:
           type = Ref.Type.ALIASING_GET;
           break;
       }
 
-      handleGet(module, scope, n, parent, name, type, true);
+      handleGet(module, scope, n, parent, name, type);
     }
 
     /**
@@ -831,15 +849,8 @@ class GlobalNamespace
      * @param name The global name (e.g. "a" or "a.b.c.d")
      * @param type The reference type
      */
-    void handleGet(
-        JSModule module,
-        Scope scope,
-        Node n,
-        Node parent,
-        String name,
-        Ref.Type type,
-        boolean shouldCreateProp) {
-      Name nameObj = getOrCreateName(name, shouldCreateProp);
+    void handleGet(JSModule module, Scope scope, Node n, Node parent, String name, Ref.Type type) {
+      Name nameObj = getOrCreateName(name);
 
       // No need to look up additional ancestors, since they won't be used.
       nameObj.addRef(new Ref(module, scope, n, nameObj, type, currentPreOrderIndex++));
@@ -977,7 +988,7 @@ class GlobalNamespace
         }
       }
 
-      if (parent != null && NodeUtil.isObjectLitKey(n)) {
+      if (parent != null && NodeUtil.mayBeObjectLitKey(n)) {
         // Object literal keys have no prefix that's referenced directly per
         // key, so we're done.
         return true;
@@ -988,7 +999,7 @@ class GlobalNamespace
         n = n.getFirstChild();
       }
 
-      handleGet(module, scope, n, parent, prefix, Ref.Type.PROTOTYPE_GET, true);
+      handleGet(module, scope, n, parent, prefix, Ref.Type.PROTOTYPE_GET);
       return true;
     }
 
@@ -1005,20 +1016,20 @@ class GlobalNamespace
     }
 
     /**
-     * Gets a {@link Name} instance for a global name. Creates it if necessary,
-     * as well as instances for any of its prefixes that are not yet defined.
+     * Gets a {@link Name} instance for a global name. Creates it if necessary, as well as instances
+     * for any of its prefixes that are not yet defined.
      *
      * @param name A global name (e.g. "a", "a.b.c.d")
      * @return The {@link Name} instance for {@code name}
      */
-    Name getOrCreateName(String name, boolean shouldCreateProp) {
+    Name getOrCreateName(String name) {
       Name node = nameMap.get(name);
       if (node == null) {
         int i = name.lastIndexOf('.');
         if (i >= 0) {
           String parentName = name.substring(0, i);
-          Name parent = getOrCreateName(parentName, true);
-          node = parent.addProperty(name.substring(i + 1), sourceKind, shouldCreateProp);
+          Name parent = getOrCreateName(parentName);
+          node = parent.addProperty(name.substring(i + 1), sourceKind);
         } else {
           node = new Name(name, null, sourceKind);
           globalNames.add(node);
@@ -1036,18 +1047,18 @@ class GlobalNamespace
    * traversal proceeds, we'll discover that some names correspond to JavaScript objects whose
    * properties we should consider collapsing.
    */
-  static class Name implements StaticTypedSlot {
-    enum Type {
-      CLASS,
-      OBJECTLIT,
-      FUNCTION,
-      GET,
-      SET,
-      OTHER,
+  static final class Name implements StaticTypedSlot {
+    private enum Type {
+      CLASS, // class C {}
+      OBJECTLIT, // var x = {};
+      FUNCTION, // function f() {}
+      SUBCLASSING_GET, // class C extends SuperClass {
+      GET_SET, // a getter, setter, or both; e.g. `obj.b` in `const obj = {set b(x) {}};`
+      OTHER, // anything else, including `var x = 1;`, var x = new Something();`, etc.
     }
 
     private final String baseName;
-    final Name parent;
+    private final Name parent;
 
     // The children of this name. Must be null if there are no children.
     @Nullable
@@ -1062,18 +1073,19 @@ class GlobalNamespace
     /** All Es6 subclasses of a name that is an Es6 class. Must be null if not an ES6 class. */
     @Nullable List<Name> subclasses;
 
-    Type type;
+    private Type type; // not final to handle forward references to names
     private boolean declaredType = false;
     private boolean isDeclared = false;
     private boolean isModuleProp = false;
     private boolean usedHasOwnProperty = false;
-    int globalSets = 0;
-    int localSets = 0;
-    int localSetsWithNoCollapse = 0;
-    int aliasingGets = 0;
-    int totalGets = 0;
-    int callGets = 0;
-    int deleteProps = 0;
+    private int globalSets = 0;
+    private int localSets = 0;
+    private int localSetsWithNoCollapse = 0;
+    private int aliasingGets = 0;
+    private int totalGets = 0;
+    private int callGets = 0;
+    private int deleteProps = 0;
+    int subclassingGets = 0;
     private final SourceKind sourceKind;
 
     JSDocInfo docInfo = null;
@@ -1089,24 +1101,13 @@ class GlobalNamespace
       this.sourceKind = sourceKind;
     }
 
-    Name addProperty(String name, SourceKind sourceKind, boolean shouldCreateProp) {
+    Name addProperty(String name, SourceKind sourceKind) {
       if (props == null) {
         props = new ArrayList<>();
       }
       Name node = new Name(name, this, sourceKind);
-      if (shouldCreateProp) {
-        props.add(node);
-      }
+      props.add(node);
       return node;
-    }
-
-    Name addSubclass(Name subclassName) {
-      checkArgument(this.type == Type.CLASS && subclassName.type == Type.CLASS);
-      if (subclasses == null) {
-        subclasses = new ArrayList<>();
-      }
-      subclasses.add(subclassName);
-      return subclassName;
     }
 
     String getBaseName() {
@@ -1143,6 +1144,50 @@ class GlobalNamespace
     @Override
     public JSType getType() {
       return null;
+    }
+
+    boolean isFunction() {
+      return this.type == Type.FUNCTION;
+    }
+
+    boolean isClass() {
+      return this.type == Type.CLASS;
+    }
+
+    boolean isObjectLiteral() {
+      return this.type == Type.OBJECTLIT;
+    }
+
+    int getAliasingGets() {
+      return aliasingGets;
+    }
+
+    int getSubclassingGets() {
+      return subclassingGets;
+    }
+
+    int getLocalSets() {
+      return localSets;
+    }
+
+    int getGlobalSets() {
+      return globalSets;
+    }
+
+    int getCallGets() {
+      return callGets;
+    }
+
+    int getTotalGets() {
+      return totalGets;
+    }
+
+    int getDeleteProps() {
+      return deleteProps;
+    }
+
+    Name getParent() {
+      return parent;
     }
 
     @Override
@@ -1185,6 +1230,10 @@ class GlobalNamespace
           break;
         case DELETE_PROP:
           deleteProps++;
+          break;
+        case SUBCLASSING_GET:
+          subclassingGets++;
+          totalGets++;
           break;
         default:
           throw new IllegalStateException();
@@ -1232,6 +1281,10 @@ class GlobalNamespace
           case DELETE_PROP:
             deleteProps--;
             break;
+          case SUBCLASSING_GET:
+            subclassingGets--;
+            totalGets--;
+            break;
           default:
             throw new IllegalStateException();
         }
@@ -1242,7 +1295,7 @@ class GlobalNamespace
       return refs == null ? ImmutableList.of() : refs;
     }
 
-    void addRefInternal(Ref ref) {
+    private void addRefInternal(Ref ref) {
       if (refs == null) {
         refs = new ArrayList<>();
       }
@@ -1285,10 +1338,59 @@ class GlobalNamespace
       return docInfo != null && docInfo.isNoCollapse();
     }
 
-    boolean isInlinableGlobalAlias() {
+    /**
+     * How much to inline a variable The INLINE_BUT_KEEP_DECLARATION case is really an indicator
+     * that something 'unsafe' is happening in order to not break CollapseProperties as badly. Sadly
+     * INLINE_COMPLETELY may /also/ be unsafe.
+     */
+    enum Inlinability {
+      INLINE_COMPLETELY,
+      INLINE_BUT_KEEP_DECLARATION,
+      DO_NOT_INLINE;
+
+      boolean shouldInlineUsages() {
+        return this != DO_NOT_INLINE;
+      }
+
+      boolean shouldRemoveDeclaration() {
+        return this == INLINE_COMPLETELY;
+      }
+
+      boolean canCollapse() {
+        return this != DO_NOT_INLINE;
+      }
+    }
+
+    /**
+     * Returns whether to treat this alias as completely inlinable or to keep the aliasing
+     * assignment
+     *
+     * <p>This method used to only return true/false, but now returns an enum in order to track more
+     * information about "unsafely" inlinable names.
+     *
+     * <p>CollapseProperties will flatten `@constructor` properties even if they are potentially
+     * accessed by a reference other than their fully qualified name, which breaks those other refs.
+     * To avoid breakages AggressiveInlineAliases must unsafely inline constructor properties that
+     * alias another global name. Existing code depends on this behavior, and it's not easily
+     * determinable where these dependencies are.
+     *
+     * <p>However, AggressiveInlineAliases must not also remove the initializtion of an alias if it
+     * is not safely inlinable. (i.e. if Inlinability#shouldRemoveDeclaration()). It's possible that
+     * a third name aliases the alias - we might later inline the third name (as an alias of the
+     * original alias) and don't want to set the third name to null.
+     */
+    Inlinability calculateInlinability() {
       // Only simple aliases with direct usage are inlinable.
-      if (inExterns() || globalSets != 1 || localSets != 0 || !canCollapse()) {
-        return false;
+      if (inExterns() || globalSets != 1 || localSets != 0) {
+        return Inlinability.DO_NOT_INLINE;
+      }
+
+      // TODO(lharker): consider separating canCollapseOrInline() into this method, since it
+      // duplicates some logic here
+      Inlinability collapsibility = canCollapseOrInline();
+      if (!collapsibility.shouldInlineUsages()) {
+        // if you can't even inline the usages, do nothing.
+        return Inlinability.DO_NOT_INLINE;
       }
 
       // Only allow inlining of simple references.
@@ -1303,26 +1405,105 @@ class GlobalNamespace
           case DIRECT_GET:
           case PROTOTYPE_GET:
           case CALL_GET:
+          case SUBCLASSING_GET:
             continue;
           case DELETE_PROP:
-            return false;
+            return Inlinability.DO_NOT_INLINE;
           default:
             throw new IllegalStateException();
         }
       }
-      return true;
+      return collapsibility;
     }
 
     boolean canCollapse() {
-      return !inExterns()
-          && !isGetOrSetDefinition()
-          && !isCollapsingExplicitlyDenied()
-          && (declaredType
-              || ((parent == null || parent.canCollapseUnannotatedChildNames())
-                  && (globalSets > 0 || localSets > 0)
-                  && localSetsWithNoCollapse == 0
-                  && deleteProps == 0))
-          && !isStaticClassMemberFunction();
+      return canCollapseOrInline().canCollapse();
+    }
+
+    /**
+     * Determines whether it's safe to collapse properties on an objects
+     *
+     * <p>For legacy reasons, both CollapseProperties and AggressiveInlineAliases share the same
+     * logic when deciding whether to inline properties or to collapse them.
+     *
+     * <p>The main reasons we cannot inline/collapse properties of a name name are:
+     *
+     * <pre>
+     *   a) it is set multiple times or set once in a local scope,
+     *   b) one or more of the above conditions in canCollapseOrInlineChildNames
+     *      applies to the namespace it's on,
+     *   c) it's annotated at-nocollapse
+     *   d) it's in the externs,
+     *   e) or it's a known getter or setter, not a regular property
+     * </pre>
+     *
+     * <p>We ignore conditions (a) and (b) on at-constructor and at-enum names in
+     * CollapseProperties.
+     *
+     * <p>In AggressiveInlineAliases we want to do some partial backoff if (a) and (b) are false for
+     * at-constructor or at-enum names, which is why we return an enum value instead of a boolean.
+     */
+    private Inlinability canCollapseOrInline() {
+      if (inExterns()) {
+        // condition (e)
+        return Inlinability.DO_NOT_INLINE;
+      }
+      if (isGetOrSetDefinition()) {
+        // condition (f)
+        return Inlinability.DO_NOT_INLINE;
+      }
+      if (isCollapsingExplicitlyDenied()) {
+        // condition (d)
+        return Inlinability.DO_NOT_INLINE;
+      }
+
+      if (isStaticClassMemberFunction()) {
+        // condition (b) b/c of uses of super/this in static fns
+        return Inlinability.DO_NOT_INLINE;
+      }
+
+      // condition (a)
+      boolean isUnchangedThroughFullName =
+          (globalSets > 0 || localSets > 0) && localSetsWithNoCollapse == 0 && deleteProps == 0;
+      // additional information about condition (b)
+      Inlinability parentInlinability =
+          parent == null ? Inlinability.INLINE_COMPLETELY : parent.canCollapseOrInlineChildNames();
+
+      // if condition (a) or condition (b) is not true, but this is a declared name, we may need
+      // to allow inlining usages of a variable but keep the declaration.
+      switch (parentInlinability) {
+        case INLINE_COMPLETELY:
+          if (isUnchangedThroughFullName) {
+            return Inlinability.INLINE_COMPLETELY;
+          }
+          // maybe inline usages of this name, but only if a declared type. non-declared-types just
+          // back off and don't inline at all
+          return declaredType
+              ? Inlinability.INLINE_BUT_KEEP_DECLARATION
+              : Inlinability.DO_NOT_INLINE;
+
+        case INLINE_BUT_KEEP_DECLARATION:
+          // this is definitely not safe to completely inline/collapse of its parent
+          // if it's a declared type, we should still partially inline it and completely collapse it
+          // if not a declared type we should partially inline it iff the other conditions hold
+          if (declaredType) {
+            return Inlinability.INLINE_BUT_KEEP_DECLARATION;
+          }
+          // Not a declared type. We may still 'partially' inline it because it must be a property
+          // on an @enum or @constructor, but only if it actually matches conditions (a) and (b)
+          return isUnchangedThroughFullName
+              ? Inlinability.INLINE_BUT_KEEP_DECLARATION
+              : Inlinability.DO_NOT_INLINE;
+
+        case DO_NOT_INLINE:
+          // If the parent is unsafely to collapse/inline, we will still inline it if it's on
+          // a declaredType (i.e. @constructor or @enum), but we propagate the information that
+          // the parent is unsafe. If this is not a declared type, return DO_NOT_INLINE.
+          return declaredType
+              ? Inlinability.INLINE_BUT_KEEP_DECLARATION
+              : Inlinability.DO_NOT_INLINE;
+      }
+      throw new IllegalStateException("unknown enum value " + parentInlinability);
     }
 
     boolean isStaticClassMemberFunction() {
@@ -1340,14 +1521,50 @@ class GlobalNamespace
       return false;
     }
 
+    private boolean isSetInLoop() {
+      Ref ref = this.getDeclaration();
+      if (ref != null) {
+        Node n = ref.getNode();
+        if (n != null) {
+          return NodeUtil.isWithinLoop(n);
+        }
+      }
+      return false;
+    }
+
     boolean isGetOrSetDefinition() {
-      return this.type == Type.GET || this.type == Type.SET;
+      return this.type == Type.GET_SET;
     }
 
     boolean canCollapseUnannotatedChildNames() {
+      return canCollapseOrInlineChildNames().canCollapse();
+    }
+
+    /**
+     * Returns whether to assume that child properties of this name are collapsible/inlinable
+     *
+     * <p>For legacy reasons, both CollapseProperties and AggressiveInlineAliases share the same
+     * logic when deciding whether to inline properties or to collapse them.
+     *
+     * <p>The main reasons we cannot inline/collapse properties of a name name are:
+     *
+     * <pre>
+     *   a) it is set multiple times
+     *   b) its properties might not be referred to by their full qname but on a different object
+     *   c) one or more of the above conditions applies to a parent name
+     *   d) it's annotated @nocollapse
+     *   e) it's in the externs.
+     * </pre>
+     *
+     * <p>However, in some cases for properties of `@constructor` or `@enum` names, we ignore some
+     * of these conditions in order to more aggressively collapse `@constructor`s used in
+     * goog.provide namespace chains.
+     */
+    private Inlinability canCollapseOrInlineChildNames() {
       if (type == Type.OTHER || isGetOrSetDefinition()
           || globalSets != 1 || localSets != 0 || deleteProps != 0) {
-        return false;
+        // condition (a) and (b)
+        return Inlinability.DO_NOT_INLINE;
       }
 
       // Don't try to collapse if the one global set is a twin reference.
@@ -1355,33 +1572,55 @@ class GlobalNamespace
       // it's probably not worth the effort.
       checkNotNull(declaration);
       if (declaration.getTwin() != null) {
-        return false;
+        return Inlinability.DO_NOT_INLINE;
       }
 
       if (isCollapsingExplicitlyDenied()) {
-        return false;
+        // condition (d)
+        return Inlinability.DO_NOT_INLINE;
+      }
+
+      if (isSetInLoop()) {
+        // condition (a)
+        return Inlinability.DO_NOT_INLINE;
       }
 
       if (usedHasOwnProperty) {
-        return false;
-      }
-
-      if (declaredType) {
-        return true;
+        // condition (b)
+        return Inlinability.DO_NOT_INLINE;
       }
 
       // If this is a key of an aliased object literal, then it will be aliased
       // later. So we won't be able to collapse its properties.
+      // condition (b)
       if (parent != null && parent.shouldKeepKeys()) {
-        return false;
+        return declaredType ? Inlinability.INLINE_BUT_KEEP_DECLARATION : Inlinability.DO_NOT_INLINE;
       }
 
-      // If this is aliased, then its properties can't be collapsed either.
+      // If this is aliased, then its properties can't be collapsed either. but we may do so anyway
+      // if it's a declared type.
+      // condition (b)
       if (aliasingGets > 0) {
-        return false;
+        return declaredType ? Inlinability.INLINE_BUT_KEEP_DECLARATION : Inlinability.DO_NOT_INLINE;
       }
 
-      return (parent == null || parent.canCollapseUnannotatedChildNames());
+      if (parent == null) {
+        // this is completely safe to inline! yay
+        return Inlinability.INLINE_COMPLETELY;
+      }
+
+      // Cases are:
+      //  - parent is safe to completely inline. then same for this name
+      //  - parent is unsafe but should still be inlined. then same for this name
+      //  - parent is unsafe, should not be inlined at all. then return either DO_NOT_INLINE,
+      //    or maybe unsafely inline if this is a ctor property
+      Inlinability parentInlinability = parent.canCollapseOrInlineChildNames();
+      if (parentInlinability == Inlinability.DO_NOT_INLINE) {
+        // the parent name is used in a way making this unsafe to inline, but we might want to
+        // inline usages of this name
+        return declaredType ? Inlinability.INLINE_BUT_KEEP_DECLARATION : Inlinability.DO_NOT_INLINE;
+      }
+      return parentInlinability;
     }
 
     /** Whether this is an object literal that needs to keep its keys. */
@@ -1437,13 +1676,18 @@ class GlobalNamespace
     }
 
     @Override public String toString() {
-      return getFullName() + " (" + type + "): "
-          + Joiner.on(", ").join(
-              "globalSets=" + globalSets,
-              "localSets=" + localSets,
-              "totalGets=" + totalGets,
-              "aliasingGets=" + aliasingGets,
-              "callGets=" + callGets);
+      return getFullName()
+          + " ("
+          + type
+          + "): "
+          + Joiner.on(", ")
+              .join(
+                  "globalSets=" + globalSets,
+                  "localSets=" + localSets,
+                  "totalGets=" + totalGets,
+                  "aliasingGets=" + aliasingGets,
+                  "callGets=" + callGets,
+                  "subclassingGets=" + subclassingGets);
     }
 
     @Override
@@ -1536,9 +1780,12 @@ class GlobalNamespace
        * Prevents a name from being collapsed at all.
        */
       DELETE_PROP,
+
+      /** ES6 subclassing ref: class extends A {} */
+      SUBCLASSING_GET,
     }
 
-    Node node;
+    Node node; // Not final because CollapseProperties needs to update the namespace in-place.
     final JSModule module;
     final Name name;
     final Type type;
@@ -1606,6 +1853,7 @@ class GlobalNamespace
       return module;
     }
 
+    /** Returns the corresponding read/write Ref of a name in a nested assign, or null otherwise */
     Ref getTwin() {
       return twin;
     }

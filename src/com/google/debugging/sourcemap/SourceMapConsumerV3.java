@@ -70,10 +70,8 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
     parse(sourceMapObject, null);
   }
 
-  /**
-   * Parses the given contents containing a source map.
-   */
-  void parse(SourceMapObject sourceMapObject, SourceMapSupplier sectionSupplier)
+  /** Parses the given contents containing a source map. */
+  public void parse(SourceMapObject sourceMapObject, SourceMapSupplier sectionSupplier)
       throws SourceMapParseException {
     if (sourceMapObject.getVersion() != 3) {
       throw new SourceMapParseException("Unknown version: " + sourceMapObject.getVersion());

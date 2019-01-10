@@ -17,8 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Unit tests for {@link Es6CheckModule} */
+@RunWith(JUnit4.class)
 public final class Es6CheckModuleTest extends CompilerTestCase {
 
   @Override
@@ -35,16 +39,19 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
     return options;
   }
 
+  @Test
   public void testEs6ThisWithExportModule() {
     testWarning("export {};\nfoo.call(this, 1, 2, 3);", Es6CheckModule.ES6_MODULE_REFERENCES_THIS);
   }
 
+  @Test
   public void testEs6ThisWithImportModule() {
     testWarning(
         lines("import ln from 'other.x'", "if (x) {", "  alert(this);", "}"),
         Es6CheckModule.ES6_MODULE_REFERENCES_THIS);
   }
 
+  @Test
   public void testEs6ThisWithConstructor() {
     testSame(
         lines(
@@ -57,6 +64,7 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
             "exports = Foo;"));
   }
 
+  @Test
   public void testCannotRenameImport() {
     testError("import { p } from 'other'; p = 2;", Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
 

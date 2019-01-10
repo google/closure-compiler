@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static java.util.Comparator.comparingInt;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -40,16 +41,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * A test suite with a very small programming language that has two types of
- * instructions: {@link BranchInstruction} and {@link ArithmeticInstruction}.
- * Test cases must construct a small program with these instructions and
- * manually put each instruction in a {@code ControlFlowGraph}.
+ * A test suite with a very small programming language that has two types of instructions: {@link
+ * BranchInstruction} and {@link ArithmeticInstruction}. Test cases must construct a small program
+ * with these instructions and manually put each instruction in a {@code ControlFlowGraph}.
  *
  */
-public final class DataFlowAnalysisTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class DataFlowAnalysisTest {
 
   /**
    * Operations supported by ArithmeticInstruction.
@@ -536,6 +539,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     return out;
   }
 
+  @Test
   public void testSimpleIf() {
     // if (a) { b = 1; } else { b = 1; } c = b;
     Variable a = new Variable("a");
@@ -592,6 +596,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     verifyOutHas(n4, c, 1);
   }
 
+  @Test
   public void testSimpleLoop() {
     // a = 0; do { a = a + 1 } while (b); c = a;
     Variable a = new Variable("a");
@@ -647,20 +652,24 @@ public final class DataFlowAnalysisTest extends TestCase {
     verifyOutHas(n4, c, null);
   }
 
+  @Test
   public void testLatticeArrayMinimizationWhenMidpointIsEven() {
-    assertEquals(6, JoinOp.BinaryJoinOp.computeMidPoint(12));
+    assertThat(JoinOp.BinaryJoinOp.computeMidPoint(12)).isEqualTo(6);
   }
 
+  @Test
   public void testLatticeArrayMinimizationWhenMidpointRoundsDown() {
-    assertEquals(8, JoinOp.BinaryJoinOp.computeMidPoint(18));
+    assertThat(JoinOp.BinaryJoinOp.computeMidPoint(18)).isEqualTo(8);
   }
 
+  @Test
   public void testLatticeArrayMinimizationWithTwoElements() {
-    assertEquals(1, JoinOp.BinaryJoinOp.computeMidPoint(2));
+    assertThat(JoinOp.BinaryJoinOp.computeMidPoint(2)).isEqualTo(1);
   }
 
   // tests for computeEscaped method
 
+  @Test
   public void testEscaped() {
     assertThat(
             computeEscapedLocals(
@@ -674,6 +683,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     assertThat(computeEscapedLocals("function f() {try{} catch(e){}}")).hasSize(1);
   }
 
+  @Test
   public void testEscapedFunctionLayered() {
     assertThat(
             computeEscapedLocals(
@@ -687,10 +697,12 @@ public final class DataFlowAnalysisTest extends TestCase {
         .isEmpty();
   }
 
+  @Test
   public void testEscapedLetConstSimple() {
     assertThat(computeEscapedLocals("function f() { let x = 0; x ++; x; }")).isEmpty();
   }
 
+  @Test
   public void testEscapedFunctionAssignment() {
     assertThat(computeEscapedLocals("function f() {var x = function () { return 1; }; }"))
         .isEmpty();
@@ -700,6 +712,7 @@ public final class DataFlowAnalysisTest extends TestCase {
         .isEmpty();
   }
 
+  @Test
   public void testEscapedArrowFunction() {
     // When the body of the arrow fn is analyzed, x is considered an escaped var. When the outer
     // block containing "const value ..." is analyzed, 'x' is not considered an escaped var
@@ -808,6 +821,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     }
   }
 
+  @Test
   public void testBranchedSimpleIf() {
     // if (a) { a = 0; } else { b = 0; } c = b;
     Variable a = new Variable("a");
@@ -852,6 +866,7 @@ public final class DataFlowAnalysisTest extends TestCase {
 
   private static final int MAX_STEP = 10;
 
+  @Test
   public void testMaxIterationsExceededException() {
     Variable a = new Variable("a");
     Instruction inst1 = new ArithmeticInstruction(a, a, Operation.ADD, a);
@@ -877,7 +892,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     DummyConstPropagation constProp = new DummyConstPropagation(cfg);
     try {
       constProp.analyze(MAX_STEP);
-      fail("Expected MaxIterationsExceededException to be thrown.");
+      assertWithMessage("Expected MaxIterationsExceededException to be thrown.").fail();
     } catch (MaxIterationsExceededException e) {
       assertThat(e)
           .hasMessageThat()

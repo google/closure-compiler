@@ -24,4 +24,15 @@ public final class Requirement {
     WARNING,
     ERROR
   }
+
+  /** No-op replacement for {@code Requirement.WhitelistEntry} */
+  public static class WhitelistEntry {
+    /** No-op replacement for {@code Requirement.WhitelistEntry.Reason} */
+    public enum Reason {
+      UNSPECIFIED,
+      LEGACY,
+      OUT_OF_SCOPE,
+      MANUALLY_REVIEWED
+    }
+  }
 }

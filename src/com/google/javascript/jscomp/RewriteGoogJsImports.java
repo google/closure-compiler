@@ -88,7 +88,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
     LINT_AND_REWRITE
   }
 
-  private static final ImmutableList<String> EXPECTED_BASE_PROVIDES = ImmutableList.of("goog");
+  private static final String EXPECTED_BASE_PROVIDE = "goog";
 
   private final Mode mode;
   private final AbstractCompiler compiler;
@@ -155,9 +155,11 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
   private class ReferenceReplacer extends AbstractPostOrderCallback {
     private boolean hasBadExport;
     private final Node googImportNode;
+    private final boolean globalizeAllReferences;
 
-    public ReferenceReplacer(Node script, Node googImportNode) {
+    public ReferenceReplacer(Node script, Node googImportNode, boolean globalizeAllReferences) {
       this.googImportNode = googImportNode;
+      this.globalizeAllReferences = globalizeAllReferences;
       NodeTraversal.traverse(compiler, script, this);
 
       if (googImportNode.getSecondChild().isImportStar()) {
@@ -184,7 +186,8 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
         return;
       }
 
-      if (exportsFinder.exportedNames.contains(parent.getSecondChild().getString())) {
+      if (globalizeAllReferences
+          || exportsFinder.exportedNames.contains(parent.getSecondChild().getString())) {
         return;
       }
 
@@ -311,10 +314,11 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
       Node googImportNode = findGoogImportNode(scriptRoot);
       NodeTraversal.traverse(compiler, scriptRoot, new FindReexports(googImportNode != null));
 
-      // exportsFinder can be null in LINT_AND_REWRITE which indicates that goog.js is not part of
-      // the input. Meaning we should just lint and do not do any rewriting.
-      if (exportsFinder != null && googImportNode != null && mode == Mode.LINT_AND_REWRITE) {
-        new ReferenceReplacer(scriptRoot, googImportNode);
+      if (googImportNode != null && mode == Mode.LINT_AND_REWRITE) {
+        // If exportsFinder is null then goog.js was not part of the input. Try to be fault tolerant
+        // and just assume that everything exported is on the global goog.
+        new ReferenceReplacer(
+            scriptRoot, googImportNode, /* globalizeAllReferences= */ exportsFinder == null);
       }
     }
   }
@@ -326,7 +330,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
     // Find Closure's base.js file. goog.js should be right next to it.
     for (Node script : root.children()) {
       ImmutableList<String> provides = compiler.getInput(script.getInputId()).getProvides();
-      if (EXPECTED_BASE_PROVIDES.equals(provides)) {
+      if (provides.contains(EXPECTED_BASE_PROVIDE)) {
         // Use resolveModuleAsPath as if it is not part of the input we don't want to report an
         // error.
         expectedGoogPath =
@@ -364,6 +368,11 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
     exportsFinder = null;
 
     Node googJsScriptNode = findGoogJsScriptNode(root);
+
+    if (googJsScriptNode == null) {
+      // Potentially in externs if library level type checking.
+      googJsScriptNode = findGoogJsScriptNode(externs);
+    }
 
     if (mode == Mode.LINT_AND_REWRITE) {
       if (googJsScriptNode != null) {

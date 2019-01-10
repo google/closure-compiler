@@ -18,13 +18,18 @@ package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test for equals and hashCode.
+ *
  */
-public final class VirtualFileTest extends TestCase {
-  public void testEquals() throws Exception {
+@RunWith(JUnit4.class)
+public final class VirtualFileTest {
+  @Test
+  public void testEquals() {
     VirtualFile vf = new VirtualFile("name", "code");
     VirtualFile same = new VirtualFile("name", "code");
     VirtualFile other = new VirtualFile("otherName", "otherCode");
@@ -34,11 +39,12 @@ public final class VirtualFileTest extends TestCase {
     assertThat(other.equals(vf)).isFalse();
   }
 
-  public void testHashCode() throws Exception {
+  @Test
+  public void testHashCode() {
     VirtualFile vf = new VirtualFile("name", "code");
     VirtualFile same = new VirtualFile("name", "code");
     VirtualFile other = new VirtualFile("otherName", "otherCode");
     assertThat(same.hashCode()).isEqualTo(vf.hashCode());
-    assertThat(vf.hashCode() == other.hashCode()).isFalse();
+    assertThat(vf.hashCode()).isNotEqualTo(other.hashCode());
   }
 }

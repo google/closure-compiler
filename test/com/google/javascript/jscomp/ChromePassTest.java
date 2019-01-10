@@ -16,10 +16,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests {@link ChromePass}. */
+@RunWith(JUnit4.class)
 public class ChromePassTest extends CompilerTestCase {
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     setLanguage(LanguageMode.ECMASCRIPT_2017, LanguageMode.ECMASCRIPT_2017);
@@ -36,7 +42,8 @@ public class ChromePassTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testCrDefineCreatesObjectsForQualifiedName() throws Exception {
+  @Test
+  public void testCrDefineCreatesObjectsForQualifiedName() {
     test(
         "cr.define('my.namespace.name', function() {\n" + "  return {};\n" + "});",
         "var my = my || {};\n"
@@ -47,11 +54,13 @@ public class ChromePassTest extends CompilerTestCase {
             + "});");
   }
 
-  public void testChromePassIgnoresModules() throws Exception {
+  @Test
+  public void testChromePassIgnoresModules() {
     testSame("export var x;");
   }
 
-  public void testCrDefineAssignsExportedFunctionByQualifiedName() throws Exception {
+  @Test
+  public void testCrDefineAssignsExportedFunctionByQualifiedName() {
     test(
         "cr.define('namespace', function() {\n"
             + "  function internalStaticMethod() {\n"
@@ -72,7 +81,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "});");
   }
 
-  public void testCrDefineCopiesJSDocForExportedFunction() throws Exception {
+  @Test
+  public void testCrDefineCopiesJSDocForExportedFunction() {
     test(
         "cr.define('namespace', function() {\n"
             + "  /** I'm function's JSDoc */\n"
@@ -95,7 +105,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "});");
   }
 
-  public void testCrDefineReassignsExportedVarByQualifiedName() throws Exception {
+  @Test
+  public void testCrDefineReassignsExportedVarByQualifiedName() {
     test(
         "cr.define('namespace', function() {\n"
             + "  var internalStaticMethod = function() {\n"
@@ -116,7 +127,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "});");
   }
 
-  public void testCrDefineExportsVarsWithoutAssignment() throws Exception {
+  @Test
+  public void testCrDefineExportsVarsWithoutAssignment() {
     test(
         "cr.define('namespace', function() {\n"
             + "  var a;\n"
@@ -133,7 +145,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "});\n");
   }
 
-  public void testCrDefineExportsVarsWithoutAssignmentWithJSDoc() throws Exception {
+  @Test
+  public void testCrDefineExportsVarsWithoutAssignmentWithJSDoc() {
     test(
         "cr.define('namespace', function() {\n"
             + "  /** @type {number} */\n"
@@ -152,7 +165,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "});\n");
   }
 
-  public void testCrDefineCopiesJSDocForExportedVariable() throws Exception {
+  @Test
+  public void testCrDefineCopiesJSDocForExportedVariable() {
     test(
         "cr.define('namespace', function() {\n"
             + "  /** I'm function's JSDoc */\n"
@@ -175,7 +189,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "});");
   }
 
-  public void testCrDefineDoesNothingWithNonExportedFunction() throws Exception {
+  @Test
+  public void testCrDefineDoesNothingWithNonExportedFunction() {
     test(
         "cr.define('namespace', function() {\n"
             + "  function internalStaticMethod() {\n"
@@ -192,7 +207,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "});");
   }
 
-  public void testCrDefineDoesNothingWithNonExportedVar() throws Exception {
+  @Test
+  public void testCrDefineDoesNothingWithNonExportedVar() {
     test(
         "cr.define('namespace', function() {\n"
             + "  var a;\n"
@@ -211,7 +227,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "});\n");
   }
 
-  public void testCrDefineDoesNothingWithExportedNotAName() throws Exception {
+  @Test
+  public void testCrDefineDoesNothingWithExportedNotAName() {
     test(
         "cr.define('namespace', function() {\n"
             + "  return {\n"
@@ -226,7 +243,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "});\n");
   }
 
-  public void testCrDefineChangesReferenceToExportedFunction() throws Exception {
+  @Test
+  public void testCrDefineChangesReferenceToExportedFunction() {
     test(
         "cr.define('namespace', function() {\n"
             + "  function internalStaticMethod() {\n"
@@ -253,6 +271,7 @@ public class ChromePassTest extends CompilerTestCase {
             + "});");
   }
 
+  @Test
   public void testCrDefineConstEnum() {
     test(
         lines(
@@ -285,6 +304,7 @@ public class ChromePassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testCrDefineLetEnum() {
     test(
         lines(
@@ -317,32 +337,38 @@ public class ChromePassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testCrDefineWrongNumberOfArguments() throws Exception {
+  @Test
+  public void testCrDefineWrongNumberOfArguments() {
     testError(
         "cr.define('namespace', function() { return {}; }, 'invalid argument')\n",
         ChromePass.CR_DEFINE_WRONG_NUMBER_OF_ARGUMENTS);
   }
 
-  public void testCrDefineInvalidFirstArgument() throws Exception {
+  @Test
+  public void testCrDefineInvalidFirstArgument() {
     testError(
         "cr.define(42, function() { return {}; })\n", ChromePass.CR_DEFINE_INVALID_FIRST_ARGUMENT);
   }
 
-  public void testCrDefineInvalidSecondArgument() throws Exception {
+  @Test
+  public void testCrDefineInvalidSecondArgument() {
     testError("cr.define('namespace', 42)\n", ChromePass.CR_DEFINE_INVALID_SECOND_ARGUMENT);
   }
 
-  public void testCrDefineInvalidReturnInFunction() throws Exception {
+  @Test
+  public void testCrDefineInvalidReturnInFunction() {
     testError(
         "cr.define('namespace', function() {})\n", ChromePass.CR_DEFINE_INVALID_RETURN_IN_FUNCTION);
   }
 
-  public void testObjectDefinePropertyDefinesUnquotedProperty() throws Exception {
+  @Test
+  public void testObjectDefinePropertyDefinesUnquotedProperty() {
     test(
         "Object.defineProperty(a.b, 'c', {});",
         "Object.defineProperty(a.b, 'c', {});\n" + "/** @type {?} */\n" + "a.b.c;");
   }
 
+  @Test
   public void testCrDefinePropertyDefinesUnquotedPropertyWithStringTypeForPropertyKindAttr()
       throws Exception {
     test(
@@ -352,6 +378,7 @@ public class ChromePassTest extends CompilerTestCase {
             + "a.prototype.c;");
   }
 
+  @Test
   public void testCrDefinePropertyDefinesUnquotedPropertyWithBooleanTypeForPropertyKindBoolAttr()
       throws Exception {
     test(
@@ -361,6 +388,7 @@ public class ChromePassTest extends CompilerTestCase {
             + "a.prototype.c;");
   }
 
+  @Test
   public void testCrDefinePropertyDefinesUnquotedPropertyWithAnyTypeForPropertyKindJs()
       throws Exception {
     test(
@@ -370,6 +398,7 @@ public class ChromePassTest extends CompilerTestCase {
             + "a.prototype.c;");
   }
 
+  @Test
   public void testCrDefinePropertyDefinesUnquotedPropertyWithTypeInfoForPropertyKindJs()
       throws Exception {
     test(
@@ -384,6 +413,7 @@ public class ChromePassTest extends CompilerTestCase {
             "a.prototype.c;"));
   }
 
+  @Test
   public void testCrDefinePropertyDefinesUnquotedPropertyIgnoringJsDocWhenBoolAttrIsPresent()
       throws Exception {
     test(
@@ -398,6 +428,7 @@ public class ChromePassTest extends CompilerTestCase {
             "a.prototype.c;"));
   }
 
+  @Test
   public void testCrDefinePropertyDefinesUnquotedPropertyIgnoringJsDocWhenAttrIsPresent()
       throws Exception {
     test(
@@ -412,6 +443,7 @@ public class ChromePassTest extends CompilerTestCase {
             "a.prototype.c;"));
   }
 
+  @Test
   public void testCrDefinePropertyCalledWithouthThirdArgumentMeansCrPropertyKindJs()
       throws Exception {
     test(
@@ -419,6 +451,7 @@ public class ChromePassTest extends CompilerTestCase {
         "cr.defineProperty(a.prototype, 'c');\n" + "/** @type {?} */\n" + "a.prototype.c;");
   }
 
+  @Test
   public void testCrDefinePropertyDefinesUnquotedPropertyOnPrototypeWhenFunctionIsPassed()
       throws Exception {
     test(
@@ -428,13 +461,15 @@ public class ChromePassTest extends CompilerTestCase {
             + "a.prototype.c;");
   }
 
-  public void testCrDefinePropertyInvalidPropertyKind() throws Exception {
+  @Test
+  public void testCrDefinePropertyInvalidPropertyKind() {
     testError(
         "cr.defineProperty(a.b, 'c', cr.PropertyKind.INEXISTENT_KIND);",
         ChromePass.CR_DEFINE_PROPERTY_INVALID_PROPERTY_KIND);
   }
 
-  public void testCrExportPath() throws Exception {
+  @Test
+  public void testCrExportPath() {
     test(
         "cr.exportPath('a.b.c');",
         "var a = a || {};\n"
@@ -443,7 +478,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "cr.exportPath('a.b.c');");
   }
 
-  public void testCrDefineCreatesEveryObjectOnlyOnce() throws Exception {
+  @Test
+  public void testCrDefineCreatesEveryObjectOnlyOnce() {
     test(
         "cr.define('a.b.c.d', function() {\n"
             + "  return {};\n"
@@ -465,7 +501,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "});");
   }
 
-  public void testCrDefineAndCrExportPathCreateEveryObjectOnlyOnce() throws Exception {
+  @Test
+  public void testCrDefineAndCrExportPathCreateEveryObjectOnlyOnce() {
     test(
         "cr.exportPath('a.b.c.d');\n"
             + "cr.define('a.b.e.f', function() {\n"
@@ -483,13 +520,15 @@ public class ChromePassTest extends CompilerTestCase {
             + "});");
   }
 
-  public void testCrDefineDoesntRedefineCrVar() throws Exception {
+  @Test
+  public void testCrDefineDoesntRedefineCrVar() {
     test(
         "cr.define('cr.ui', function() {\n" + "  return {};\n" + "});",
         "cr.ui = cr.ui || {};\n" + "cr.define('cr.ui', function() {\n" + "  return {};\n" + "});");
   }
 
-  public void testCrDefineFunction() throws Exception {
+  @Test
+  public void testCrDefineFunction() {
     test(
         lines(
             "cr.define('settings', function() {",
@@ -506,7 +545,8 @@ public class ChromePassTest extends CompilerTestCase {
             "});"));
   }
 
-  public void testCrDefineClassStatement() throws Exception {
+  @Test
+  public void testCrDefineClassStatement() {
     test(
         lines(
             "cr.define('settings', function() {",
@@ -523,7 +563,8 @@ public class ChromePassTest extends CompilerTestCase {
             "});"));
   }
 
-  public void testCrDefineClassExpression() throws Exception {
+  @Test
+  public void testCrDefineClassExpression() {
     test(
         lines(
             "cr.define('settings', function() {",
@@ -540,7 +581,8 @@ public class ChromePassTest extends CompilerTestCase {
             "});"));
   }
 
-  public void testCrDefineClassWithInternalSelfReference() throws Exception {
+  @Test
+  public void testCrDefineClassWithInternalSelfReference() {
     test(
         lines(
             "cr.define('settings', function() {",
@@ -561,11 +603,13 @@ public class ChromePassTest extends CompilerTestCase {
             "});"));
   }
 
-  public void testCrExportPathInvalidNumberOfArguments() throws Exception {
+  @Test
+  public void testCrExportPathInvalidNumberOfArguments() {
     testError("cr.exportPath();", ChromePass.CR_EXPORT_PATH_TOO_FEW_ARGUMENTS);
   }
 
-  public void testCrMakePublicWorksOnOneMethodDefinedInPrototypeObject() throws Exception {
+  @Test
+  public void testCrMakePublicWorksOnOneMethodDefinedInPrototypeObject() {
     test(
         "/** @constructor */\n"
             + "function Class() {};\n"
@@ -590,7 +634,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "cr.makePublic(Class, ['method']);");
   }
 
-  public void testCrMakePublicWorksOnTwoMethods() throws Exception {
+  @Test
+  public void testCrMakePublicWorksOnTwoMethods() {
     test(
         "/** @constructor */\n"
             + "function Class() {}\n"
@@ -624,7 +669,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "cr.makePublic(Class, ['m1', 'm2']);");
   }
 
-  public void testCrMakePublicRequiresMethodsToHaveJSDoc() throws Exception {
+  @Test
+  public void testCrMakePublicRequiresMethodsToHaveJSDoc() {
     testError(
         "/** @constructor */\n"
             + "function Class() {}\n"
@@ -637,7 +683,8 @@ public class ChromePassTest extends CompilerTestCase {
         ChromePass.CR_MAKE_PUBLIC_HAS_NO_JSDOC);
   }
 
-  public void testCrMakePublicDoesNothingWithMethodsNotInAPI() throws Exception {
+  @Test
+  public void testCrMakePublicDoesNothingWithMethodsNotInAPI() {
     test(
         "/** @constructor */\n"
             + "function Class() {}\n"
@@ -657,7 +704,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "cr.makePublic(Class, []);");
   }
 
-  public void testCrMakePublicRequiresExportedMethodToBeDeclared() throws Exception {
+  @Test
+  public void testCrMakePublicRequiresExportedMethodToBeDeclared() {
     testError(
         "/** @constructor */\n"
             + "function Class() {}\n"
@@ -669,7 +717,8 @@ public class ChromePassTest extends CompilerTestCase {
         ChromePass.CR_MAKE_PUBLIC_MISSED_DECLARATION);
   }
 
-  public void testCrMakePublicWorksOnOneMethodDefinedDirectlyOnPrototype() throws Exception {
+  @Test
+  public void testCrMakePublicWorksOnOneMethodDefinedDirectlyOnPrototype() {
     test(
         "/** @constructor */\n"
             + "function Class() {}\n"
@@ -690,7 +739,8 @@ public class ChromePassTest extends CompilerTestCase {
             + "cr.makePublic(Class, ['method']);");
   }
 
-  public void testCrMakePublicWorksOnDummyDeclaration() throws Exception {
+  @Test
+  public void testCrMakePublicWorksOnDummyDeclaration() {
     test(
         "/** @constructor */\n"
             + "function Class() {}\n"
@@ -711,15 +761,18 @@ public class ChromePassTest extends CompilerTestCase {
             + "cr.makePublic(Class, ['method']);");
   }
 
-  public void testCrMakePublicReportsInvalidSecondArgumentMissing() throws Exception {
+  @Test
+  public void testCrMakePublicReportsInvalidSecondArgumentMissing() {
     testError("cr.makePublic(Class);", ChromePass.CR_MAKE_PUBLIC_INVALID_SECOND_ARGUMENT);
   }
 
-  public void testCrMakePublicReportsInvalidSecondArgumentNotAnArray() throws Exception {
+  @Test
+  public void testCrMakePublicReportsInvalidSecondArgumentNotAnArray() {
     testError("cr.makePublic(Class, 42);", ChromePass.CR_MAKE_PUBLIC_INVALID_SECOND_ARGUMENT);
   }
 
-  public void testCrMakePublicReportsInvalidSecondArgumentArrayWithNotAString() throws Exception {
+  @Test
+  public void testCrMakePublicReportsInvalidSecondArgumentArrayWithNotAString() {
     testError("cr.makePublic(Class, [42]);", ChromePass.CR_MAKE_PUBLIC_INVALID_SECOND_ARGUMENT);
   }
 }

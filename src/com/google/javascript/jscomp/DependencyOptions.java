@@ -16,136 +16,236 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkState;
 
+import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.Immutable;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Options for how to manage dependencies between input files.
  *
- * Dependency information is usually pulled out from the JS code by
- * looking for primitive dependency functions (like Closure Library's
- * goog.provide/goog.require). Analysis of this dependency information is
- * controlled by {@code CodingConvention}, which lets you define those
- * dependency primitives.
+ * <p>Dependency information is pulled out from the JS code by looking for import and export
+ * primitives (like ES import and export statements, Closure Library's goog.module, goog.provide and
+ * goog.require calls, or CommonJS require calls). The compiler can optionally use this information
+ * to sort input files in dependency order and/or prune unnecessary input files.
  *
- * This options class determines how we use that dependency information
- * to change how code is built.
+ * <p>Also see {@link CodingConvention#extractClassNameIfProvide(Node, Node)} and {@link
+ * CodingConvention#extractClassNameIfRequire(Node, Node)}, which affect what the compiler considers
+ * to be goog.provide and goog.require statements.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class DependencyOptions implements Serializable {
-  private static final long serialVersionUID = 1L;
+@AutoValue
+@Immutable
+public abstract class DependencyOptions implements Serializable {
+  /** Describes how the compiler should manage dependencies. */
+  public enum DependencyMode {
+    /** All input files will be included in the compilation in the order they were specified in. */
+    NONE,
 
-  private boolean sortDependencies = false;
-  private boolean pruneDependencies = false;
-  private boolean dropMoochers = false;
-  private final Set<ModuleIdentifier> entryPoints = new LinkedHashSet<>();
+    /** All input files will be included in the compilation in dependency order. */
+    SORT_ONLY,
 
-  /**
-   * Enables or disables dependency sorting mode.
-   *
-   * If true, we will sort the input files based on dependency information
-   * in them. Otherwise, we will use the order of files specified
-   * on the command-line.
-   * @return this for easy building.
-   */
-  public DependencyOptions setDependencySorting(boolean enabled) {
-    this.sortDependencies = enabled;
-    return this;
+    /**
+     * Input files that are transitive dependencies of the entry points will be included in the
+     * compilation in dependency order. All other input files will be dropped.
+     *
+     * <p>In addition to the explicitly defined entry points, moochers (see below) are implicit
+     * entry points.
+     */
+    PRUNE_LEGACY,
+
+    /**
+     * Input files that are transitive dependencies of the entry points will be included in the
+     * compilation in dependency order. All other input files will be dropped.
+     *
+     * <p>All entry points must be explicitly defined.
+     */
+    PRUNE;
+  }
+
+  /** Returns the dependency management mode. */
+  public abstract DependencyMode getMode();
+
+  /** Returns the list of explicit entry points. */
+  public abstract ImmutableList<ModuleIdentifier> getEntryPoints();
+
+  /** Returns whether dependency management is enabled. */
+  public boolean needsManagement() {
+    return getMode() != DependencyMode.NONE;
   }
 
   /**
-   * Enables or disables dependency pruning mode.
+   * Returns whether files should be sorted.
    *
-   * In dependency pruning mode, we will look for all files that provide a
-   * symbol. Unless that file is a transitive dependency of a file that
-   * we're using, we will remove it from the compilation job.
-   *
-   * This does not affect how we handle files that do not provide symbols.
-   * See setMoocherDropping for information on how these are handled.
-   *
-   * @return this for easy chaining.
+   * <p>If true, the input files should be sorted in dependency order. Otherwise, input files should
+   * not be reordered.
    */
-  public DependencyOptions setDependencyPruning(boolean enabled) {
-    this.pruneDependencies = enabled;
-    return this;
+  public boolean shouldSort() {
+    return getMode() != DependencyMode.NONE;
   }
 
   /**
-   * Enables or disables moocher dropping mode.
+   * Returns whether files should be pruned.
    *
-   * A 'moocher' is a file that does not provide any symbols (though they
-   * may require symbols). This is usually because they don't want to
-   * tie themselves to a particular dependency system (e.g., Closure's
-   * goog.provide, CommonJS modules). So they rely on other people to
-   * manage dependencies on them.
-   *
-   * If true, we drop these files when we prune dependencies.
-   * If false, we always keep these files and anything they depend on.
-   * The default is false.
-   *
-   * Notice that this option only makes sense if dependency pruning is on,
-   * and a set of entry points is specified.
-   *
-   * @return this for easy chaining.
+   * <p>If true, an input file should be excluded from the compilation if it is not a transitive
+   * dependency of an entry point. Otherwise, all input files should be included.
    */
-  public DependencyOptions setMoocherDropping(boolean enabled) {
-    this.dropMoochers = enabled;
-    return this;
+  public boolean shouldPrune() {
+    return getMode() == DependencyMode.PRUNE_LEGACY || getMode() == DependencyMode.PRUNE;
   }
 
   /**
-   * Adds a collection of symbols to always keep.
+   * Returns whether moochers should be dropped.
    *
-   * In dependency pruning mode, we will automatically keep all the
-   * transitive dependencies of these symbols.
+   * <p>A moocher is a file that does not goog.provide a namespace and is not a goog.module, ES
+   * module or CommonJS module.
    *
-   * The syntactic form of a symbol depends on the type of dependency
-   * primitives we're using. For example, goog.provide('foo.bar')
-   * provides the symbol 'foo.bar'.
-   *
-   * Entry points can be scoped to a module by specifying 'mod2:foo.bar'.
-   *
-   * @return this for easy chaining.
+   * <p>If true, moochers should not be considered implicit entry points.
    */
-  public DependencyOptions setEntryPoints(Collection<ModuleIdentifier> symbols) {
-    entryPoints.clear();
-    entryPoints.addAll(symbols);
-    return this;
+  public boolean shouldDropMoochers() {
+    return getMode() == DependencyMode.PRUNE;
   }
 
-  /** Returns whether re-ordering of files is needed. */
-  boolean needsManagement() {
-    return sortDependencies || pruneDependencies;
+  /** Returns a {@link DependencyOptions} using the {@link DependencyMode#NONE} mode. */
+  public static DependencyOptions none() {
+    return new AutoValue_DependencyOptions(DependencyMode.NONE, ImmutableList.of());
   }
 
-  boolean shouldSortDependencies() {
-    return sortDependencies;
+  /** Returns a {@link DependencyOptions} using the {@link DependencyMode#SORT_ONLY} mode. */
+  public static DependencyOptions sortOnly() {
+    return new AutoValue_DependencyOptions(DependencyMode.SORT_ONLY, ImmutableList.of());
   }
 
-  boolean shouldPruneDependencies() {
-    return pruneDependencies;
+  /**
+   * Returns a {@link DependencyOptions} using the {@link DependencyMode#PRUNE_LEGACY} mode with the
+   * given entry points.
+   *
+   * @deprecated Prefer {@link #pruneForEntryPoints(Iterable)} with a complete list of entry points.
+   */
+  @Deprecated
+  public static DependencyOptions pruneLegacyForEntryPoints(
+      Iterable<ModuleIdentifier> entryPoints) {
+    return new AutoValue_DependencyOptions(
+        DependencyMode.PRUNE_LEGACY, ImmutableList.copyOf(entryPoints));
   }
 
-  boolean shouldDropMoochers() {
-    return pruneDependencies && dropMoochers;
+  /**
+   * Returns a {@link DependencyOptions} using the {@link DependencyMode#PRUNE} mode with the given
+   * entry points.
+   */
+  public static DependencyOptions pruneForEntryPoints(Iterable<ModuleIdentifier> entryPoints) {
+    checkState(
+        !Iterables.isEmpty(entryPoints), "DependencyMode.PRUNE requires at least one entry point");
+    return new AutoValue_DependencyOptions(DependencyMode.PRUNE, ImmutableList.copyOf(entryPoints));
   }
 
-  Collection<ModuleIdentifier> getEntryPoints() {
-    return entryPoints;
-  }
+  /**
+   * A helper function for validating dependency management flags and converting them into a {@link
+   * DependencyOptions} object.
+   *
+   * <p>Returns null when no dependency management flags have been specified.
+   *
+   * <p>TODO(tjgq): Simplify this once we deprecate and remove all legacy flags and standardize on
+   * --dependency_mode and --entry_point.
+   */
+  @Nullable
+  public static DependencyOptions fromFlags(
+      @Nullable DependencyMode dependencyModeFlag,
+      List<String> entryPointFlag,
+      List<String> closureEntryPointFlag,
+      String commonJsEntryModuleFlag,
+      boolean manageClosureDependenciesFlag,
+      boolean onlyClosureDependenciesFlag) {
 
-  @Override
-  public String toString() {
-    return toStringHelper(this)
-        .add("sortDependencies", sortDependencies)
-        .add("pruneDependencies", pruneDependencies)
-        .add("dropMoochers", dropMoochers)
-        .add("entryPoints", entryPoints)
-        .toString();
+    boolean hasEntryPoint =
+        commonJsEntryModuleFlag != null
+            || !entryPointFlag.isEmpty()
+            || !closureEntryPointFlag.isEmpty();
+
+    if (!hasEntryPoint && onlyClosureDependenciesFlag) {
+      throw new FlagUsageException("--only_closure_dependencies requires --entry_point.");
+    }
+
+    if (!hasEntryPoint && dependencyModeFlag == DependencyMode.PRUNE) {
+      throw new FlagUsageException("--dependency_mode=PRUNE requires --entry_point.");
+    }
+
+    if (hasEntryPoint
+        && (dependencyModeFlag == DependencyMode.NONE
+            || dependencyModeFlag == DependencyMode.SORT_ONLY)) {
+      throw new FlagUsageException(
+          "--dependency_mode="
+              + dependencyModeFlag
+              + " cannot be used with --entry_point, --closure_entry_point or "
+              + "--common_js_entry_module.");
+    }
+
+    if (!entryPointFlag.isEmpty() && !closureEntryPointFlag.isEmpty()) {
+      throw new FlagUsageException("--closure_entry_point cannot be used with --entry_point.");
+    }
+
+    if (commonJsEntryModuleFlag != null
+        && (!entryPointFlag.isEmpty() || !closureEntryPointFlag.isEmpty())) {
+      throw new FlagUsageException(
+          "--common_js_entry_module cannot be used with either --entry_point or "
+              + "--closure_entry_point.");
+    }
+
+    if (manageClosureDependenciesFlag && onlyClosureDependenciesFlag) {
+      throw new FlagUsageException(
+          "--only_closure_dependencies cannot be used with --manage_closure_dependencies.");
+    }
+
+    if (manageClosureDependenciesFlag && dependencyModeFlag != null) {
+      throw new FlagUsageException(
+          "--manage_closure_dependencies cannot be used with --dependency_mode.");
+    }
+
+    if (onlyClosureDependenciesFlag && dependencyModeFlag != null) {
+      throw new FlagUsageException(
+          "--only_closure_dependencies cannot be used with --dependency_mode.");
+    }
+
+    DependencyMode dependencyMode;
+    if (dependencyModeFlag == DependencyMode.PRUNE || onlyClosureDependenciesFlag) {
+      dependencyMode = DependencyMode.PRUNE;
+    } else if (dependencyModeFlag == DependencyMode.PRUNE_LEGACY
+        || manageClosureDependenciesFlag
+        || hasEntryPoint) {
+      dependencyMode = DependencyMode.PRUNE_LEGACY;
+    } else if (dependencyModeFlag != null) {
+      dependencyMode = dependencyModeFlag;
+    } else {
+      return null;
+    }
+
+    ImmutableList.Builder<ModuleIdentifier> entryPointsBuilder = ImmutableList.builder();
+    if (commonJsEntryModuleFlag != null) {
+      entryPointsBuilder.add(ModuleIdentifier.forFile(commonJsEntryModuleFlag));
+    }
+    for (String entryPoint : entryPointFlag) {
+      entryPointsBuilder.add(ModuleIdentifier.forFlagValue(entryPoint));
+    }
+    for (String closureEntryPoint : closureEntryPointFlag) {
+      entryPointsBuilder.add(ModuleIdentifier.forClosure(closureEntryPoint));
+    }
+
+    switch (dependencyMode) {
+      case NONE:
+        return DependencyOptions.none();
+      case SORT_ONLY:
+        return DependencyOptions.sortOnly();
+      case PRUNE_LEGACY:
+        return DependencyOptions.pruneLegacyForEntryPoints(entryPointsBuilder.build());
+      case PRUNE:
+        return DependencyOptions.pruneForEntryPoints(entryPointsBuilder.build());
+    }
+    throw new AssertionError("Invalid DependencyMode");
   }
 }

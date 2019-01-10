@@ -17,18 +17,24 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test for FixedPointGraphTraversal.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class FixedPointGraphTraversalTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class FixedPointGraphTraversalTest {
 
   // The maximum value of a counter that counts as a "change"
   // to the state of the graph, for the purposes of fixed-point
@@ -65,7 +71,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
   //   E
   //
   // with all edges pointing downwards, and an "up-edge" from E to D.
-  @Override
+  @Before
   public void setUp() {
     A = new Counter();
     B = new Counter();
@@ -89,72 +95,79 @@ public final class FixedPointGraphTraversalTest extends TestCase {
     graph.connect(E, "->", D);
   }
 
+  @Test
   public void testGraph1() {
     maxChange = 0;
     traversal.computeFixedPoint(graph, A);
 
-    assertEquals(0, A.value);
-    assertEquals(1, B.value);
-    assertEquals(1, C.value);
-    assertEquals(1, D.value);
-    assertEquals(0, E.value);
+    assertThat(A.value).isEqualTo(0);
+    assertThat(B.value).isEqualTo(1);
+    assertThat(C.value).isEqualTo(1);
+    assertThat(D.value).isEqualTo(1);
+    assertThat(E.value).isEqualTo(0);
   }
 
+  @Test
   public void testGraph2() {
     maxChange = 0;
     traversal.computeFixedPoint(graph, D);
 
-    assertEquals(0, A.value);
-    assertEquals(0, B.value);
-    assertEquals(0, C.value);
-    assertEquals(0, D.value);
-    assertEquals(1, E.value);
+    assertThat(A.value).isEqualTo(0);
+    assertThat(B.value).isEqualTo(0);
+    assertThat(C.value).isEqualTo(0);
+    assertThat(D.value).isEqualTo(0);
+    assertThat(E.value).isEqualTo(1);
   }
 
+  @Test
   public void testGraph3() {
     maxChange = 1;
     traversal.computeFixedPoint(graph, A);
 
-    assertEquals(0, A.value);
-    assertEquals(1, B.value);
-    assertEquals(1, C.value);
-    assertEquals(3, D.value);
-    assertEquals(2, E.value);
+    assertThat(A.value).isEqualTo(0);
+    assertThat(B.value).isEqualTo(1);
+    assertThat(C.value).isEqualTo(1);
+    assertThat(D.value).isEqualTo(3);
+    assertThat(E.value).isEqualTo(2);
   }
 
+  @Test
   public void testGraph4() {
     maxChange = 1;
     traversal.computeFixedPoint(graph, D);
 
-    assertEquals(0, A.value);
-    assertEquals(0, B.value);
-    assertEquals(0, C.value);
-    assertEquals(1, D.value);
-    assertEquals(2, E.value);
+    assertThat(A.value).isEqualTo(0);
+    assertThat(B.value).isEqualTo(0);
+    assertThat(C.value).isEqualTo(0);
+    assertThat(D.value).isEqualTo(1);
+    assertThat(E.value).isEqualTo(2);
   }
 
+  @Test
   public void testGraph5() {
     maxChange = 5;
     traversal.computeFixedPoint(graph, A);
 
-    assertEquals(0, A.value);
-    assertEquals(1, B.value);
-    assertEquals(1, C.value);
-    assertEquals(6, D.value);
-    assertEquals(5, E.value);
+    assertThat(A.value).isEqualTo(0);
+    assertThat(B.value).isEqualTo(1);
+    assertThat(C.value).isEqualTo(1);
+    assertThat(D.value).isEqualTo(6);
+    assertThat(E.value).isEqualTo(5);
   }
 
+  @Test
   public void testGraph6() {
     maxChange = 5;
     traversal.computeFixedPoint(graph, B);
 
-    assertEquals(0, A.value);
-    assertEquals(0, B.value);
-    assertEquals(0, C.value);
-    assertEquals(6, D.value);
-    assertEquals(5, E.value);
+    assertThat(A.value).isEqualTo(0);
+    assertThat(B.value).isEqualTo(0);
+    assertThat(C.value).isEqualTo(0);
+    assertThat(D.value).isEqualTo(6);
+    assertThat(E.value).isEqualTo(5);
   }
 
+  @Test
   public void testGraph8() {
     maxChange = 2;
     traversal.computeFixedPoint(graph, A);
@@ -168,13 +181,14 @@ public final class FixedPointGraphTraversalTest extends TestCase {
           }
         });
       traversal.computeFixedPoint(graph, A);
-      fail("Expecting Error: " +
-          FixedPointGraphTraversal.NON_HALTING_ERROR_MSG);
+      assertWithMessage("Expecting Error: " + FixedPointGraphTraversal.NON_HALTING_ERROR_MSG)
+          .fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().isEqualTo(FixedPointGraphTraversal.NON_HALTING_ERROR_MSG);
     }
   }
 
+  @Test
   public void testGraph9() {
     maxChange = 0;
 
@@ -182,13 +196,14 @@ public final class FixedPointGraphTraversalTest extends TestCase {
     // counting the number of "in" edges for each node.
     traversal.computeFixedPoint(graph);
 
-    assertEquals(0, A.value);
-    assertEquals(1, B.value);
-    assertEquals(1, C.value);
-    assertEquals(3, D.value);
-    assertEquals(2, E.value);
+    assertThat(A.value).isEqualTo(0);
+    assertThat(B.value).isEqualTo(1);
+    assertThat(C.value).isEqualTo(1);
+    assertThat(D.value).isEqualTo(3);
+    assertThat(E.value).isEqualTo(2);
   }
 
+  @Test
   public void testGraph10() {
     // Test a graph with self-edges.
     maxChange = 5;
@@ -205,7 +220,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
 
     traversal.computeFixedPoint(graph);
 
-    assertEquals(6, A.value);
-    assertEquals(6, B.value);
+    assertThat(A.value).isEqualTo(6);
+    assertThat(B.value).isEqualTo(6);
   }
 }

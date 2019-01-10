@@ -34,18 +34,15 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Using the infrastructure provided by VariableReferencePass, identify
- * variables that are used only once and in a way that is safe to move, and then
- * inline them.
+ * Using the infrastructure provided by VariableReferencePass, identify variables that are used only
+ * once and in a way that is safe to move, and then inline them.
  *
- * This pass has two "modes." One mode only inlines variables declared as
- * constants, for legacy compiler clients. The second mode inlines any
- * variable that we can provably inline. Note that the second mode is a
- * superset of the first mode. We only support the first mode for
- * backwards-compatibility with compiler clients that don't want
- * --inline_variables.
+ * <p>This pass has two "modes." One mode only inlines variables declared as constants, for legacy
+ * compiler clients. The second mode inlines any variable that we can provably inline. Note that the
+ * second mode is a superset of the first mode. We only support the first mode for
+ * backwards-compatibility with compiler clients that don't want --inline_variables.
  *
- * The approach of this pass is similar to {@link CrossModuleCodeMotion}
+ * <p>The approach of this pass is similar to {@link CrossChunkCodeMotion}
  *
  * @author kushal@google.com (Kushal Dave)
  * @author nicksantos@google.com (Nick Santos)
@@ -452,7 +449,7 @@ class InlineVariables implements CompilerPass {
     private void replaceChildPreserveCast(Node parent, Node child, Node replacement) {
       JSType typeBeforeCast = child.getJSTypeBeforeCast();
       if (typeBeforeCast != null) {
-        replacement.putProp(Node.TYPE_BEFORE_CAST, typeBeforeCast);
+        replacement.setJSTypeBeforeCast(typeBeforeCast);
         replacement.setJSType(child.getJSType());
       }
       parent.replaceChild(child, replacement);

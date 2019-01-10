@@ -18,11 +18,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for {#link {@link OptimizeCalls}
  *
  */
+@RunWith(JUnit4.class)
 public final class OptimizeCallsTest extends CompilerTestCase {
 
   public OptimizeCallsTest() {
@@ -39,7 +44,8 @@ public final class OptimizeCallsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
     enableGatherExternProperties();
@@ -75,6 +81,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
     };
   }
 
+  @Test
   public void testSimpleRemoval() {
     // unused parameter value
     test("var foo = (p1)=>{}; foo(1); foo(2)",
@@ -85,6 +92,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
          "const foo = (  )=>{}; foo( ); foo( )");
   }
 
+  @Test
   public void testRemovingReturnCallToFunctionWithUnusedParams() {
     test(
         "function foo() {var x; return x = bar(1)} foo(); function bar(x) {}",
@@ -94,6 +102,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         "function foo(){return}foo()");
   }
 
+  @Test
   public void testNestingFunctionCallWithUnsedParams() {
     test(
         lines(
@@ -108,11 +117,13 @@ public final class OptimizeCallsTest extends CompilerTestCase {
             "function f3(){f1()}f3()"));
   }
 
+  @Test
   public void testUnusedAssignOnFunctionWithUnusedParams() {
     test("var foo = function(a){  }; function bar(){var x;x = foo} bar(); foo(1)",
          "var foo = function( ){1;}; function bar(){             } bar(); foo()");
   }
 
+  @Test
   public void testCallSiteInteraction() {
     testSame("var b=function(){return};b()");
     test(
@@ -189,6 +200,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         "var b=function(){};var b=function(){};b()");
   }
 
+  @Test
   public void testComplexDefinition1() {
     testSame("var x; var b = x ? function(c) { use(c) } : function(c) { use(c) }; b(1)");
     test(
@@ -200,6 +212,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         "var x; var b; b = (x, function( ) { var c = 1; use(c) }); b( )");
   }
 
+  @Test
   public void testComplexDefinition2() {
     testSame("var x; var b = x ? function(c) { use(c) } : function(c) { use(c) }; b(1); b(2);");
     testSame("var x;var b = (x, function(c) { use(c) }); b(1); b(2);");
@@ -207,6 +220,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
     testSame("var x; var b; b = (x, function(c) { use(c) }); b(1); b(2);");
   }
 
+  @Test
   public void testCallSiteInteraction_constructors0() {
     // Unused parmeters to constructors invoked with .call
     // can be removed.
@@ -221,6 +235,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
             "Ctor1(3)"));
   }
 
+  @Test
   public void testCallSiteInteraction_constructors1() {
     // NOTE: Ctor1 used trailing parameter is removed by
     // RemoveUnusedCode
@@ -239,6 +254,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
             "new Ctor2(1,2);new Ctor2(3,4);"));
   }
 
+  @Test
   public void testCallSiteInteraction_constructors2() {
     // For now, goog.inherits prevents call site optimizations
     String code = lines(
@@ -256,6 +272,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
     test(code, expected);
   }
 
+  @Test
   public void testFunctionArgRemovalCausingInconsistency() {
     // Test the case where an unused argument is removed and the argument
     // contains a call site in its subtree (will cause the call site's parent
@@ -271,6 +288,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
             "a()"));
   }
 
+  @Test
   public void testRemoveUnusedVarsPossibleNpeCase() {
     test(
         lines(
@@ -282,6 +300,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
             "var register=function(){};register();register()"));
   }
 
+  @Test
   public void testDoNotOptimizeJSCompiler_renameProperty() {
     // Only the function definition can be modified, none of the call sites.
     test(
@@ -293,15 +312,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
             "JSCompiler_renameProperty('a');"));
   }
 
-  public void testDoNotOptimizeJSCompiler_ObjectPropertyString() {
-    test(
-        lines(
-            "function JSCompiler_ObjectPropertyString(a, b) {};",
-            "JSCompiler_ObjectPropertyString(window,'b');"),
-        lines("function JSCompiler_ObjectPropertyString() {};",
-            "JSCompiler_ObjectPropertyString(window,'b');"));
-  }
-
+  @Test
   public void testFunctionArgRemovalFromCallSites() {
     // remove all function arguments
     test(
@@ -323,6 +334,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         "var b=function(c,d){use(c+d)};b(2);b(4,6)");
   }
 
+  @Test
   public void testFunctionArgRemovalFromCallSitesSpread1() {
     test(
         "function f(a,b,c,d){};f(...[1,2,3,4]);f(4,3,2,1)",
@@ -344,6 +356,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         "function f(a,b,c,d){use(c+d)}; f(...[],2,3);f(0,0,2,1)");
   }
 
+  @Test
   public void testFunctionArgRemovalFromCallSitesSpread2() {
     test(
         "function f(a,b,c,d){};f(...[alert()]);f(4,3,2,1)",
@@ -365,6 +378,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         "function f(a,b,c,d){use(c+d)}; f(...[alert()],2,3);f(0,0,2,1)");
   }
 
+  @Test
   public void testFunctionArgRemovalFromCallSitesSpread3() {
     test(
         "function f(a,b,c,d){};f(...alert());f(4,3,2,1)",
@@ -386,6 +400,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         "function f(a,b,c,d){use(c+d)}; f(...[alert()],2,3);f(0,0,2,1)");
   }
 
+  @Test
   public void testFunctionArgRemovalFromCallSitesRest() {
     // remove all function arguments
     test(
@@ -401,6 +416,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         "var b=function(    ...c){return c};b(    3,4);use(b(    2,1))");
   }
 
+  @Test
   public void testFunctionArgRemovalFromCallSitesDefaultValue() {
     // remove all function arguments
     test(
@@ -417,6 +433,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         "function f(c = alert()){};f(undefined);f(undefined)");
   }
 
+  @Test
   public void testFunctionArgRemovalFromCallSitesDestructuring() {
     // remove all function arguments
     test(
@@ -436,12 +453,14 @@ public final class OptimizeCallsTest extends CompilerTestCase {
 
   }
 
+  @Test
   public void testLocalVarReferencesGlobalVar() {
     test(
         "var a=3;function f(b, c){b=a; alert(c);} f(1,2);f()",
         "function f(c) { alert(c); } f(2);f();");
   }
 
+  @Test
   public void testReflectedMethods() {
     testSame(
         lines(

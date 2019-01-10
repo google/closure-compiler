@@ -15,11 +15,17 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
 
   private static final String EXTERNS =
@@ -60,7 +66,8 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
   private Node polymerCall;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     polymerCall = null;
     rootNode = null;
@@ -68,6 +75,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
 
   // TODO(jlklein): Add tests for non-global definitions, interface externs, read-only setters, etc.
 
+  @Test
   public void testVarTarget() {
     test(
         lines(
@@ -90,6 +98,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
             "};"));
   }
 
+  @Test
   public void testDefaultTypeNameTarget() {
     test(
         lines(
@@ -107,6 +116,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
             "});"));
   }
 
+  @Test
   public void testPathAssignmentTarget() {
     test(
         lines(
@@ -169,7 +179,11 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
 
     rewriter =
         new PolymerClassRewriter(
-            compiler, findExternsCallback.getPolymerElementExterns(), version, true);
+            compiler,
+            findExternsCallback.getPolymerElementExterns(),
+            version,
+            PolymerExportPolicy.LEGACY,
+            true);
 
     NodeUtil.visitPostOrder(
         rootNode,
@@ -182,7 +196,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
           }
         });
 
-    assertNotNull(polymerCall);
+    assertThat(polymerCall).isNotNull();
     PolymerClassDefinition classDef =
         PolymerClassDefinition.extractFromCallNode(polymerCall, compiler, globalNamespace);
 

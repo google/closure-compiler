@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
@@ -51,15 +50,25 @@ import org.xml.sax.XMLReader;
 @SuppressWarnings("sunapi")
 public final class XtbMessageBundle implements MessageBundle {
   /**
-   * Pattern to detect an ICU-formatted plural or select message. Any placeholders occurring inside
-   * these messages must be rewritten in ICU format.
+   * Detects an ICU-formatted plural or select message. Any placeholders occurring inside these
+   * messages must be rewritten in ICU format.
    */
-  private static final Pattern ICU_MESSAGE_PATTERN =
-      // We want the '.' to match newlines as well since some messages contain them.
-      Pattern.compile("^\\{[^,}]+,(plural|select),.*$", Pattern.DOTALL);
-
   static boolean isStartOfIcuMessage(String part) {
-    return ICU_MESSAGE_PATTERN.matcher(part).matches();
+    // ICU messages start with a '{' followed by an identifier, followed by a ',' and then 'plural'
+    // or 'select' follows by another comma.
+    // the 'startsWith' check is redundant but should allow us to skip using the matcher
+    if (!part.startsWith("{")) {
+      return false;
+    }
+    int commaIndex = part.indexOf(',', 1);
+    // if commaIndex == 1 that means the identifier is empty, which isn't allowed.
+    if (commaIndex <= 1) {
+      return false;
+    }
+    int nextBracketIndex = part.indexOf('{', 1);
+    return (nextBracketIndex == -1 || nextBracketIndex > commaIndex)
+        && (part.startsWith("plural,", commaIndex + 1)
+            || part.startsWith("select,", commaIndex + 1));
   }
 
   static String asIcuPlaceholder(String phName) {
@@ -85,7 +94,6 @@ public final class XtbMessageBundle implements MessageBundle {
    * @param projectId  the translation console project id (i.e. name)
    */
   public XtbMessageBundle(InputStream xtb, @Nullable String projectId) {
-    checkState(!"".equals(projectId));
     this.messages = new HashMap<>();
     this.idGenerator = new GoogleJsMessageIdGenerator(projectId);
 
@@ -174,24 +182,29 @@ public final class XtbMessageBundle implements MessageBundle {
     @Override
     public void startElement(String uri, String localName, String qName,
                              Attributes atts) {
-      if (BUNDLE_ELEM_NAME.equals(qName)) {
-        checkState(lang == null);
-        lang = atts.getValue(LANG_ATT_NAME);
-        checkState(lang != null && !lang.isEmpty());
-      } else if (TRANSLATION_ELEM_NAME.equals(qName)) {
-        checkState(msgBuilder == null);
-        String id = atts.getValue(MESSAGE_ID_ATT_NAME);
-        checkState(id != null && !id.isEmpty());
-        msgBuilder = new JsMessage.Builder(id);
-      } else if (PLACEHOLDER_ELEM_NAME.equals(qName)) {
-        checkState(msgBuilder != null);
-        String phRef = atts.getValue(PLACEHOLDER_NAME_ATT_NAME);
-        phRef = JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes(phRef);
-        if (isIcuMessage) {
-          msgBuilder.appendStringPart(asIcuPlaceholder(phRef));
-        } else {
-          msgBuilder.appendPlaceholderReference(phRef);
-        }
+      switch (qName) {
+        case BUNDLE_ELEM_NAME:
+          checkState(lang == null);
+          lang = atts.getValue(LANG_ATT_NAME);
+          checkState(lang != null && !lang.isEmpty());
+          break;
+        case TRANSLATION_ELEM_NAME:
+          checkState(msgBuilder == null);
+          String id = atts.getValue(MESSAGE_ID_ATT_NAME);
+          checkState(id != null && !id.isEmpty());
+          msgBuilder = new JsMessage.Builder(id);
+          break;
+        case PLACEHOLDER_ELEM_NAME:
+          checkState(msgBuilder != null);
+          String phRef = atts.getValue(PLACEHOLDER_NAME_ATT_NAME);
+          if (isIcuMessage) {
+            msgBuilder.appendStringPart(asIcuPlaceholder(phRef));
+          } else {
+            phRef = JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes(phRef);
+            msgBuilder.appendPlaceholderReference(phRef);
+          }
+          break;
+        default: // fall out
       }
     }
 

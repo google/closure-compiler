@@ -15,15 +15,19 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableMap;
+import static com.google.common.truth.Truth.assertThat;
 
-import junit.framework.TestCase;
+import com.google.common.collect.ImmutableMap;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for ReplacedStringsDecoder.
  *
  */
-public class ReplacedStringsDecoderTest extends TestCase {
+@RunWith(JUnit4.class)
+public class ReplacedStringsDecoderTest {
 
   private void verifyDecoder(String original, String replacement) {
     verifyDecoder(original, replacement, "");
@@ -35,36 +39,42 @@ public class ReplacedStringsDecoderTest extends TestCase {
         encoding, replacement
     ));
     ReplacedStringsDecoder decoder = new ReplacedStringsDecoder(variableMap);
-    assertEquals(original, decoder.decode(encoding + args));
+    assertThat(decoder.decode(encoding + args)).isEqualTo(original);
   }
 
+  @Test
   public void testSimpleDecoding() {
     verifyDecoder("A Message.", "A Message.");
   }
 
+  @Test
   public void testDecodingWithArgs() {
     verifyDecoder("A foo B bar C.", "A ` B ` C.", "`foo`bar");
   }
 
+  @Test
   public void testDecodingWithExcessSlots() {
     verifyDecoder("A foo B bar C - D -.", "A ` B ` C ` D `.", "`foo`bar");
   }
 
+  @Test
   public void testDecodingWithExcessArgs() {
     verifyDecoder("A foo B bar C.baz-bam-", "A ` B ` C.", "`foo`bar`baz`bam");
   }
 
+  @Test
   public void testTrailingArg() {
     verifyDecoder("foo bar", "foo `", "`bar");
   }
 
+  @Test
   public void testEmptyArgs() {
     verifyDecoder("foo bar", "foo `bar``", "```");
   }
 
+  @Test
   public void testNullDecoder() {
     ReplacedStringsDecoder nullDecoder = ReplacedStringsDecoder.NULL_DECODER;
-    assertEquals("foo", nullDecoder.decode("foo"));
+    assertThat(nullDecoder.decode("foo")).isEqualTo("foo");
   }
-
 }

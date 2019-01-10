@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -24,16 +25,18 @@ import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link MinimizedCondition} in isolation.
- * Tests for the containing PeepholeMinimizeConditions pass are in
- * {@link PeepholeMinimizeConditionsTest}.
+ * Tests for {@link MinimizedCondition} in isolation. Tests for the containing
+ * PeepholeMinimizeConditions pass are in {@link PeepholeMinimizeConditionsTest}.
  *
  * @author blickly@google.com (Ben Lickly)
  */
-public final class MinimizedConditionTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class MinimizedConditionTest {
 
   private static Node parseExpr(String code) {
     Compiler compiler = new Compiler();
@@ -42,7 +45,9 @@ public final class MinimizedConditionTest extends TestCase {
     List<SourceFile> externs = new ArrayList<>();
     compiler.init(externs, input, new CompilerOptions());
     Node root = compiler.parseInputs();
-    assertNotNull("Unexpected parse error(s): " + Joiner.on("\n").join(compiler.getErrors()), root);
+    assertWithMessage("Unexpected parse error(s): " + Joiner.on("\n").join(compiler.getErrors()))
+        .that(root)
+        .isNotNull();
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     Node script = mainRoot.getFirstChild();
@@ -68,21 +73,34 @@ public final class MinimizedConditionTest extends TestCase {
     Node negativeResult =
         result2.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT).buildReplacement();
     if (!positiveResult.isEquivalentTo(positiveNode)) {
-      fail("Not equal:" +
-          "\nExpected: " + positive +
-          "\nBut was : " + (new Compiler()).toSource(positiveResult) +
-          "\nExpected tree:\n" + positiveNode.toStringTree() +
-          "\nActual tree:\n" + positiveResult.toStringTree());
+      assertWithMessage(
+              "Not equal:"
+                  + "\nExpected: "
+                  + positive
+                  + "\nBut was : "
+                  + new Compiler().toSource(positiveResult)
+                  + "\nExpected tree:\n"
+                  + positiveNode.toStringTree()
+                  + "\nActual tree:\n"
+                  + positiveResult.toStringTree())
+          .fail();
     }
     if (!negativeResult.isEquivalentTo(negativeNode)) {
-      fail("Not equal:" +
-          "\nExpected: " + negative +
-          "\nBut was : " + (new Compiler()).toSource(negativeResult) +
-          "\nExpected tree:\n" + negativeNode.toStringTree() +
-          "\nActual tree:\n" + negativeResult.toStringTree());
+      assertWithMessage(
+              "Not equal:"
+                  + "\nExpected: "
+                  + negative
+                  + "\nBut was : "
+                  + new Compiler().toSource(negativeResult)
+                  + "\nExpected tree:\n"
+                  + negativeNode.toStringTree()
+                  + "\nActual tree:\n"
+                  + negativeResult.toStringTree())
+          .fail();
     }
   }
 
+  @Test
   public void testTryMinimizeCondSimple() {
     minCond("x", "x", "x");
     minCond("!x", "!x", "!x");
@@ -90,6 +108,7 @@ public final class MinimizedConditionTest extends TestCase {
     minCond("!(x && y)", "!x || !y", "!(x && y)");
   }
 
+  @Test
   public void testMinimizeDemorganSimple() {
     minCond("!(x&&y)", "!x||!y", "!(x&&y)");
     minCond("!(x||y)", "!x&&!y", "!(x||y)");
@@ -100,6 +119,7 @@ public final class MinimizedConditionTest extends TestCase {
     minCond("(!a||!b)&&(c||d)", "!(a&&b||!c&&!d)", "!(a&&b||!c&&!d)");
   }
 
+  @Test
   public void testMinimizeBug8494751() {
     minCond(
         "x && (y===2 || !f()) && (y===3 || !h())",
@@ -109,6 +129,7 @@ public final class MinimizedConditionTest extends TestCase {
         "!(!x || (y!==2 && f()) || (y!==3 && h()))");
   }
 
+  @Test
   public void testMinimizeComplementableOperator() {
     minCond(
         "0===c && (2===a || 1===a)",
@@ -116,10 +137,12 @@ public final class MinimizedConditionTest extends TestCase {
         "!(0!==c || 2!==a && 1!==a)");
   }
 
+  @Test
   public void testMinimizeHook() {
     minCond("!(x ? y : z)", "(x ? !y : !z)",  "!(x ? y : z)");
   }
 
+  @Test
   public void testMinimizeComma() {
     minCond("!(inc(), test())", "inc(), !test()", "!(inc(), test())");
     minCond("!((x,y)&&z)", "(x,!y)||!z", "!((x,y)&&z)");

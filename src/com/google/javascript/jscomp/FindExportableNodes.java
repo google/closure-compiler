@@ -61,6 +61,12 @@ class FindExportableNodes extends AbstractPostOrderCallback {
   private final LinkedHashMap<String, Node> exports = new LinkedHashMap<>();
 
   /**
+   * The set of class member function nodes with @export annotations and the fully qualified name of
+   * the owning class (not including the member fn name).
+   */
+  private final LinkedHashMap<Node, String> es6ClassExports = new LinkedHashMap<>();
+
+  /**
    * The set of property names associated with @export annotations that do not have
    * an associated fully qualified name.
    */
@@ -145,10 +151,14 @@ class FindExportableNodes extends AbstractPostOrderCallback {
 
         case MEMBER_FUNCTION_DEF:
           if (parent.getParent().isClass()) {
-            export = n.getString();
-            context = n;
-            mode = Mode.EXPORT;
-            break;
+            String methodOwnerName =
+                NodeUtil.getBestLValueName(NodeUtil.getBestLValue(parent.getParent()));
+            if (methodOwnerName == null) {
+              t.report(n, EXPORT_ANNOTATION_NOT_ALLOWED);
+              return;
+            }
+            es6ClassExports.put(n, methodOwnerName + (n.isStaticMember() ? "" : ".prototype"));
+            return;
           }
           // fallthrough
 
@@ -181,7 +191,7 @@ class FindExportableNodes extends AbstractPostOrderCallback {
       // If we cleanup the code base in the future, we can warn again.
       else if (!(n.isGetProp() && parent.isExprResult())) {
         // Don't produce extra warnings for functions values of object literals
-        if (!n.isFunction() || !NodeUtil.isObjectLitKey(parent)) {
+        if (!n.isFunction() || !NodeUtil.mayBeObjectLitKey(parent)) {
           if (allowLocalExports) {
             compiler.report(t.makeError(n, EXPORT_ANNOTATION_NOT_ALLOWED));
           } else {
@@ -198,6 +208,10 @@ class FindExportableNodes extends AbstractPostOrderCallback {
 
   LinkedHashSet<String> getLocalExports() {
     return localExports;
+  }
+
+  LinkedHashMap<Node, String> getEs6ClassExports() {
+    return es6ClassExports;
   }
 
   static enum Mode {

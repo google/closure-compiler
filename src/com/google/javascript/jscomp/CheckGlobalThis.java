@@ -118,11 +118,11 @@ final class CheckGlobalThis implements Callback {
 
       // Don't traverse functions that are getting lent to a prototype.
       Node grandparent = parent.getParent();
-      if (NodeUtil.isObjectLitKey(parent)) {
+      if (NodeUtil.mayBeObjectLitKey(parent)) {
         JSDocInfo maybeLends = grandparent.getJSDocInfo();
-        if (maybeLends != null &&
-            maybeLends.getLendsName() != null &&
-            maybeLends.getLendsName().endsWith(".prototype")) {
+        if (maybeLends != null
+            && maybeLends.hasLendsName()
+            && maybeLends.getLendsName().getRoot().getString().endsWith(".prototype")) {
           return false;
         }
       }

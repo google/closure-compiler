@@ -190,6 +190,15 @@ final class ClosureOptimizePrimitives implements CompilerPass {
    * Returns whether the given call to goog.object.createSet can be converted to an object literal.
    */
   private boolean canOptimizeObjectCreateSet(Node firstParam) {
+    if (firstParam != null
+        && firstParam.getNext() == null
+        && !(firstParam.isNumber() || firstParam.isString())) {
+      // if there is only one argument, and it's an array, then the method uses the array elements
+      // as keys. Don't optimize it to {[arr]: true}. We only special-case number and string
+      // arguments in order to not regress ES5-out behavior
+      return false;
+    }
+
     Node curParam = firstParam;
     Set<String> keys = new HashSet<>();
     while (curParam != null) {

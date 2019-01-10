@@ -18,14 +18,20 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CheckProvides.MISSING_PROVIDE_WARNING;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CheckProvides}.
  *
  */
+@RunWith(JUnit4.class)
 public final class CheckProvidesTest extends CompilerTestCase {
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
@@ -35,25 +41,30 @@ public final class CheckProvidesTest extends CompilerTestCase {
     return new CheckProvides(compiler);
   }
 
+  @Test
   public void testIrrelevant() {
     testSame("var str = 'g4';");
   }
 
+  @Test
   public void testHarmlessProcedural() {
     testSame("goog.provide('X'); /** @constructor */ function X(){};");
   }
 
+  @Test
   public void testHarmless() {
     String js = "goog.provide('X'); /** @constructor */ X = function(){};";
     testSame(js);
   }
 
+  @Test
   public void testHarmlessEs6Class() {
     testSame("goog.provide('X'); var X = class {};");
     testSame("goog.provide('X'); class X {};");
     testSame("goog.provide('foo.bar.X'); foo.bar.X = class {};");
   }
 
+  @Test
   public void testMissingProvideEs6Class() {
     String js = "goog.require('Y'); class X {};";
     String warning = "missing goog.provide('X')";
@@ -68,6 +79,7 @@ public final class CheckProvidesTest extends CompilerTestCase {
     testSame(srcs(js), warning(MISSING_PROVIDE_WARNING).withMessage(warning));
   }
 
+  @Test
   public void testNoProvideInnerClass() {
     testSame(
         "goog.provide('X');\n" +
@@ -75,26 +87,30 @@ public final class CheckProvidesTest extends CompilerTestCase {
         "/** @constructor */ X.Y = function(){};");
   }
 
-  public void testMissingGoogProvide(){
+  @Test
+  public void testMissingGoogProvide() {
     String[] js = new String[] {"goog.require('Y'); /** @constructor */ X = function(){};"};
     String warning = "missing goog.provide('X')";
     testWarning(srcs(js), warning(MISSING_PROVIDE_WARNING).withMessage(warning));
   }
 
-  public void testMissingGoogProvideWithNamespace(){
+  @Test
+  public void testMissingGoogProvideWithNamespace() {
     String[] js =
         new String[] {"goog = {}; goog.require('Y'); /** @constructor */ goog.X = function(){};"};
     String warning = "missing goog.provide('goog.X')";
     testWarning(srcs(js), warning(MISSING_PROVIDE_WARNING).withMessage(warning));
   }
 
-  public void testMissingGoogProvideWithinGoogScope(){
+  @Test
+  public void testMissingGoogProvideWithinGoogScope() {
     String[] js = new String[]{
         "/** @constructor */ $jscomp.scope.bar = function() {};"};
     test(js, js);
   }
 
-  public void testGoogProvideInWrongFileShouldCreateWarning(){
+  @Test
+  public void testGoogProvideInWrongFileShouldCreateWarning() {
     String good = "goog.provide('X'); goog.provide('Y');"
         + "/** @constructor */ X = function(){};"
         + "/** @constructor */ Y = function(){};";
@@ -104,17 +120,20 @@ public final class CheckProvidesTest extends CompilerTestCase {
     testWarning(srcs(js), warning(MISSING_PROVIDE_WARNING).withMessage(warning));
   }
 
-  public void testGoogProvideMissingConstructorIsOkForNow(){
+  @Test
+  public void testGoogProvideMissingConstructorIsOkForNow() {
     // TODO(user) to prevent orphan goog.provide calls, the pass would have to
     // account for enums, static functions and constants
     testSame(new String[]{"goog.provide('Y'); X = function(){};"});
   }
 
+  @Test
   public void testIgnorePrivateConstructor() {
     String js = "/** @constructor*/ X_ = function(){};";
     testSame(js);
   }
 
+  @Test
   public void testIgnorePrivatelyAnnotatedConstructor() {
     testSame("/** @private\n@constructor */ X = function(){};");
     testSame("/** @constructor\n@private */ X = function(){};");
@@ -130,6 +149,7 @@ public final class CheckProvidesTest extends CompilerTestCase {
     testSame("/** @private */ class X {}");
   }
 
+  @Test
   public void testIgnorePrivateByConventionConstructor() {
     testSame("/** @constructor */ privateFn_ = function(){};");
     testSame("/** @constructor */ privateFn_ = function(){};");
@@ -141,6 +161,7 @@ public final class CheckProvidesTest extends CompilerTestCase {
     testSame("class privateCls_ {}");
   }
 
+  @Test
   public void testArrowFunction() {
     testSame("/** @constructor*/ X = ()=>{};");
   }

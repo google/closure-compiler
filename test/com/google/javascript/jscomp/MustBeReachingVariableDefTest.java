@@ -16,18 +16,24 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link MustBeReachingVariableDef}.
  *
  */
-public final class MustBeReachingVariableDefTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class MustBeReachingVariableDefTest {
 
   private MustBeReachingVariableDef defUse = null;
   private Node def = null;
@@ -35,6 +41,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
 
   public static final String EXTERNS = "var goog = {}";
 
+  @Test
   public void testStraightLine() {
     assertMatch("D:var x=1; U: x");
     assertMatch("var x; D:x=1; U: x");
@@ -45,12 +52,10 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     assertNotMatch("D:var x; U:x; x=1; x");
     assertMatch("D: var x = 1; var y = 2; y; U:x");
 
-    assertMatch("D:let x=1; U: x");
     assertMatch("let x; D:x=1; U: x");
-
-    assertMatch("D: const x = 1; U: x");
   }
 
+  @Test
   public void testIf() {
     assertNotMatch("var x; if(a){ D:x=1 } else { x=2 }; U:x");
     assertNotMatch("var x; if(a){ x=1 } else { D:x=2 }; U:x");
@@ -59,6 +64,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     assertNotMatch("var x; if(a) { D: x = 1 }; U:x;");
   }
 
+  @Test
   public void testLoops() {
     assertNotMatch("var x=0; while(a){ D:x=1 }; U:x");
     assertNotMatch("var x=0; for(;;) { D:x=1 }; U:x");
@@ -66,26 +72,31 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     assertMatch("D:var x=1; for(;;)  { U:x }");
   }
 
+  @Test
   public void testConditional() {
     assertMatch("var x=0,y; D:(x=1)&&y; U:x");
     assertNotMatch("var x=0,y; D:y&&(x=1); U:x");
   }
 
+  @Test
   public void testUseAndDefInSameInstruction() {
     assertMatch("D:var x=0; U:x=1,x");
     assertMatch("D:var x=0; U:x,x=1");
   }
 
+  @Test
   public void testAssignmentInExpressions() {
     assertMatch("var x=0; D:foo(bar(x=1)); U:x");
     assertMatch("var x=0; D:foo(bar + (x = 1)); U:x");
   }
 
+  @Test
   public void testHook() {
     assertNotMatch("var x=0; D:foo() ? x=1 : bar(); U:x");
     assertNotMatch("var x=0; D:foo() ? x=1 : x=2; U:x");
   }
 
+  @Test
   public void testExpressionVariableReassignment() {
     assertMatch("var a,b; D: var x = a + b; U:x");
     assertNotMatch("var a,b,c; D: var x = a + b; a = 1; U:x");
@@ -96,65 +107,78 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     assertNotMatch("var a,b,c; D: var x = a + b; c ? a = 1 : 0; U:x");
   }
 
+  @Test
   public void testMergeDefinitions() {
     assertNotMatch("var x,y; D: y = x + x; if(x) { x = 1 }; U:y");
   }
 
+  @Test
   public void testMergesWithOneDefinition() {
     assertNotMatch(
         "var x,y; while(y) { if (y) { print(x) } else { D: x = 1 } } U:x");
   }
 
+  @Test
   public void testRedefinitionUsingItself() {
     assertMatch("var x = 1; D: x = x + 1; U:x;");
     assertNotMatch("var x = 1; D: x = x + 1; x = 1; U:x;");
   }
 
+  @Test
   public void testMultipleDefinitionsWithDependence() {
     assertMatch("var x, a, b; D: x = a, x = b; U: x");
     assertMatch("var x, a, b; D: x = a, x = b; a = 1; U: x");
     assertNotMatch("var x, a, b; D: x = a, x = b; b = 1; U: x");
   }
 
+  @Test
   public void testExterns() {
     assertNotMatch("D: goog = {}; U: goog");
   }
 
+  @Test
   public void testAssignmentOp() {
     assertMatch("var x = 0; D: x += 1; U: x");
     assertMatch("var x = 0; D: x *= 1; U: x");
     assertNotMatch("D: var x = 0; x += 1; U: x");
   }
 
+  @Test
   public void testIncAndDec() {
     assertMatch("var x; D: x++; U: x");
     assertMatch("var x; D: x--; U: x");
   }
 
+  @Test
   public void testFunctionParams1() {
     computeDefUse("if (param2) { D: param1 = 1; U: param1 }");
-    assertSame(def, defUse.getDefNode("param1", use));
+    assertThat(defUse.getDefNode("param1", use)).isSameAs(def);
   }
 
+  @Test
   public void testFunctionParams2() {
     computeDefUse("if (param2) { D: param1 = 1} U: param1");
-    assertNotSame(def, defUse.getDefNode("param1", use));
+    assertThat(defUse.getDefNode("param1", use)).isNotSameAs(def);
   }
 
+  @Test
   public void testArgumentsObjectModifications() {
     computeDefUse("D: param1 = 1; arguments[0] = 2; U: param1");
-    assertNotSame(def, defUse.getDefNode("param1", use));
+    assertThat(defUse.getDefNode("param1", use)).isNotSameAs(def);
   }
 
+  @Test
   public void testArgumentsObjectEscaped() {
     computeDefUse("D: param1 = 1; var x = arguments; x[0] = 2; U: param1");
-    assertNotSame(def, defUse.getDefNode("param1", use));
+    assertThat(defUse.getDefNode("param1", use)).isNotSameAs(def);
   }
 
+  @Test
   public void testArgumentsObjectEscapedDependents() {
     assertNotMatch("param1=1; var x; D:x=param1; var y=arguments; U:x");
   }
 
+  @Test
   public void testSideEffects() {
     assertNotMatch("var a = 1; D: var x = a; a++; U: print(x);");
     // FlowSensitiveInlineVariables needs to handle this case, where a subexpression in the same CFG
@@ -162,6 +186,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     assertMatch("var a = 1; D: var x = a; U: print(a++, x);");
   }
 
+  @Test
   public void testDestructuringDefinitions() {
     assertMatch("D: var [x] = [1]; U: x;");
     assertMatch("D: var x = [1]; U: var [y] = [x];");
@@ -174,6 +199,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     assertMatch("var x; D: var [y] = [x = 1]; U: x;");
   }
 
+  @Test
   public void testDestructuringDefaultValue() {
     // conditional definitions of x do not match the usage of x.
     assertNotMatch("var x; D: var [y = x = 3] = []; U: x;");
@@ -188,7 +214,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
    */
   private void assertMatch(String src) {
     computeDefUse(src);
-    assertSame(def, defUse.getDefNode("x", use));
+    assertThat(defUse.getDefNode("x", use)).isSameAs(def);
   }
 
   /**
@@ -196,7 +222,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
    */
   private void assertNotMatch(String src) {
     computeDefUse(src);
-    assertNotSame(def, defUse.getDefNode("x", use));
+    assertThat(defUse.getDefNode("x", use)).isNotSameAs(def);
   }
 
   /**
@@ -215,7 +241,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     Node script = compiler.parseTestCode(src);
     Node root = script.getFirstChild();
     Node functionBlock = root.getLastChild();
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrorCount()).isEqualTo(0);
     Scope globalScope = scopeCreator.createScope(script, null);
     Scope functionScope = scopeCreator.createScope(root, globalScope);
     Scope funcBlockScope = scopeCreator.createScope(functionBlock, functionScope);
@@ -227,8 +253,8 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     def = null;
     use = null;
     NodeTraversal.traverse(compiler, root, new LabelFinder());
-    assertNotNull("Code should have an instruction labeled D", def);
-    assertNotNull("Code should have an instruction labeled U", use);
+    assertWithMessage("Code should have an instruction labeled D").that(def).isNotNull();
+    assertWithMessage("Code should have an instruction labeled U").that(use).isNotNull();
   }
 
   /**

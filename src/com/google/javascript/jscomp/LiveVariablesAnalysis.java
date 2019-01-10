@@ -315,7 +315,7 @@ class LiveVariablesAnalysis
       case NAME:
         if (isArgumentsName(n)) {
           markAllParametersEscaped();
-          } else if (!NodeUtil.isLhsByDestructuring(n)) {
+        } else if (!NodeUtil.isLhsByDestructuring(n)) {
           // Only add names in destructuring patterns if they're not lvalues.
           // e.g. "x" in "const {foo = x} = obj;"
           addToSetIfLocal(n, gen);

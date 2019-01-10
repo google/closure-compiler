@@ -102,7 +102,7 @@ class CheckGlobalNames implements CompilerPass {
         continue;
       }
 
-      checkDescendantNames(name, name.globalSets + name.localSets > 0);
+      checkDescendantNames(name, name.getGlobalSets() + name.getLocalSets() > 0);
     }
   }
 
@@ -137,8 +137,9 @@ class CheckGlobalNames implements CompilerPass {
         if (nameIsDefined) {
           // if the ancestor of a property is defined, then let's check that
           // the property is also explicitly defined if it needs to be.
-          propIsDefined = (!propertyMustBeInitializedByFullName(prop) ||
-              prop.globalSets + prop.localSets > 0);
+          propIsDefined =
+              (!propertyMustBeInitializedByFullName(prop)
+                  || prop.getGlobalSets() + prop.getLocalSets() > 0);
         }
 
         validateName(prop, propIsDefined);
@@ -151,14 +152,15 @@ class CheckGlobalNames implements CompilerPass {
     // If the name is not defined, emit warnings for each reference. While
     // we're looking through each reference, check all the module dependencies.
     Ref declaration = name.getDeclaration();
-    Name parent = name.parent;
+    Name parent = name.getParent();
 
     JSModuleGraph moduleGraph = compiler.getModuleGraph();
+    boolean isTypedef = isTypedef(name);
     for (Ref ref : name.getRefs()) {
       // Don't worry about global exprs.
       boolean isGlobalExpr = ref.getNode().getParent().isExprResult();
 
-      if (!isDefined && !isTypedef(ref)) {
+      if (!isDefined && !isTypedef) {
         if (!isGlobalExpr) {
           reportRefToUndefinedName(name, ref);
         }
@@ -175,9 +177,7 @@ class CheckGlobalNames implements CompilerPass {
           boolean isPrototypeGet = (ref.type == Ref.Type.PROTOTYPE_GET);
           Name owner = isPrototypeGet ? name : parent;
           boolean singleGlobalParentDecl =
-              owner != null &&
-              owner.getDeclaration() != null &&
-              owner.localSets == 0;
+              owner != null && owner.getDeclaration() != null && owner.getLocalSets() == 0;
 
           if (singleGlobalParentDecl &&
               owner.getDeclaration().preOrderIndex > ref.preOrderIndex) {
@@ -197,13 +197,19 @@ class CheckGlobalNames implements CompilerPass {
     }
   }
 
-  private static boolean isTypedef(Ref ref) {
-    // If this is an annotated EXPR-GET, don't do anything.
-    Node parent = ref.node.getParent();
-    if (parent.isExprResult()) {
-      JSDocInfo info = ref.node.getJSDocInfo();
-      if (info != null && info.hasTypedefType()) {
-        return true;
+  private static boolean isTypedef(Name name) {
+    if (name.getDeclaration() != null) {
+      // typedefs don't have 'declarations' because you can't assign to them
+      return false;
+    }
+    for (Ref ref : name.getRefs()) {
+      // If this is an annotated EXPR-GET, don't do anything.
+      Node parent = ref.node.getParent();
+      if (parent.isExprResult()) {
+        JSDocInfo info = ref.node.getJSDocInfo();
+        if (info != null && info.hasTypedefType()) {
+          return true;
+        }
       }
     }
     return false;
@@ -219,9 +225,9 @@ class CheckGlobalNames implements CompilerPass {
 
   private void reportRefToUndefinedName(Name name, Ref ref) {
     // grab the highest undefined ancestor to output in the warning message.
-    while (name.parent != null &&
-           name.parent.globalSets + name.parent.localSets == 0) {
-      name = name.parent;
+    while (name.getParent() != null
+        && name.getParent().getGlobalSets() + name.getParent().getLocalSets() == 0) {
+      name = name.getParent();
     }
 
     compiler.report(
@@ -244,47 +250,37 @@ class CheckGlobalNames implements CompilerPass {
     // We assume that for global object literals and types (constructors and
     // interfaces), we can find all the properties inherited from the prototype
     // chain of functions and objects.
-    if (name.parent == null) {
+    if (name.getParent() == null) {
       return false;
     }
 
-    boolean parentIsAliased = false;
-    if (name.parent.aliasingGets > 0) {
-      for (Ref ref : name.parent.getRefs()) {
-        if (ref.type == Ref.Type.ALIASING_GET) {
-          Node aliaser = ref.getNode().getParent();
-
-          // We don't need to worry about known aliased, because
-          // they're already covered by the getIndirectlyDeclaredProperties
-          // call at the top.
-          boolean isKnownAlias =
-              aliaser.isCall() &&
-              (convention.getClassesDefinedByCall(aliaser) != null ||
-               convention.getSingletonGetterClassName(aliaser) != null);
-          if (!isKnownAlias) {
-            parentIsAliased = true;
-          }
-        }
-      }
-    }
-
-    if (parentIsAliased) {
+    if (isNameUnsafelyAliased(name.getParent())) {
+      // e.g. if we have `const ns = {}; escape(ns); alert(ns.a.b);`
+      // we don't expect ns.a.b to be defined somewhere because `ns` has escaped
       return false;
     }
 
     if (objectPrototypeProps.contains(name.getBaseName())) {
+      // checks for things on Object.prototype, e.g. a call to
+      // something.hasOwnProperty('a');
       return false;
     }
 
-    if (name.parent.type == Name.Type.OBJECTLIT) {
+    if (name.getParent().isObjectLiteral()) {
+      // if this is a property on an object literal, always expect an initialization somewhere
       return true;
     }
 
-    if (name.parent.type == Name.Type.CLASS) {
-      return !hasSuperclass(name.parent);
+    if (name.getParent().isClass()) {
+      // only warn on class properties if there is no superclass, because we don't handle
+      // class side inheritance here very well yet.
+      return !hasSuperclass(name.getParent());
     }
 
-    return name.parent.type == Name.Type.FUNCTION && name.parent.isDeclaredType()
+    // warn on remaining names if they are on a constructor and are not a Function.prototype
+    // property (e.g. f.call(1);)
+    return name.getParent().isFunction()
+        && name.getParent().isDeclaredType()
         && !functionPrototypeProps.contains(name.getBaseName());
   }
 
@@ -296,5 +292,27 @@ class CheckGlobalNames implements CompilerPass {
     Node superclass = classNode.getSecondChild();
 
     return !superclass.isEmpty();
+  }
+
+  private boolean isNameUnsafelyAliased(Name name) {
+    if (name.getAliasingGets() > 0) {
+      for (Ref ref : name.getRefs()) {
+        if (ref.type == Ref.Type.ALIASING_GET) {
+          Node aliaser = ref.getNode().getParent();
+
+          // We don't need to worry about known aliased, because
+          // they're already covered by the getIndirectlyDeclaredProperties
+          // call at the top.
+          boolean isKnownAlias =
+              aliaser.isCall()
+                  && (convention.getClassesDefinedByCall(aliaser) != null
+                      || convention.getSingletonGetterClassName(aliaser) != null);
+          if (!isKnownAlias) {
+            return true;
+          }
+        }
+      }
+    }
+    return name.getParent() != null && isNameUnsafelyAliased(name.getParent());
   }
 }

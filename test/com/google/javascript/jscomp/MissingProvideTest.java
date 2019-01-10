@@ -15,10 +15,14 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.ClosureRewriteModule.MISSING_MODULE_OR_PROVIDE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.MISSING_PROVIDE_ERROR;
 
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for the "missing provides" checks in {@link ProcessClosurePrimitives} and {@link
@@ -27,10 +31,12 @@ import com.google.javascript.rhino.Node;
  * @author stalcup@google.com (John Stalcup)
  */
 
+@RunWith(JUnit4.class)
 public final class MissingProvideTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableRewriteClosureCode();
     enableClosurePass();
@@ -67,6 +73,7 @@ public final class MissingProvideTest extends CompilerTestCase {
   // legacy  goog.module.get   legacy  normal       pass
   // legacy  goog.module.get   legacy  missing      fail
 
+  @Test
   public void test_Legacy_Require_Module_DeclLeg_Pass() {
     String googModule =
         lines(
@@ -83,6 +90,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testNoWarning(srcs(new String[] {googModule, legacyScript}));
   }
 
+  @Test
   public void test_Legacy_Require_Module_Normal_Pass() {
     String googModule =
         lines(
@@ -97,6 +105,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testNoWarning(srcs(new String[] {googModule, legacyScript}));
   }
 
+  @Test
   public void test_Legacy_Require_Module_Missing_Fail() {
     String legacyScript =
         lines(
@@ -109,6 +118,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testError(legacyScript, MISSING_MODULE_OR_PROVIDE, msg);
   }
 
+  @Test
   public void test_Legacy_ModuleGet_Module_Normal_Pass() {
     String googModule =
         lines(
@@ -125,6 +135,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testNoWarning(srcs(new String[] {googModule, legacyScript}));
   }
 
+  @Test
   public void test_Legacy_ModuleGet_Module_Missing_Fail() {
     String legacyScript =
         lines(
@@ -137,6 +148,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testError(legacyScript, MISSING_MODULE_OR_PROVIDE, msg);
   }
 
+  @Test
   public void test_Module_Require_Module_Normal_Pass() {
     String googModule1 =
         lines(
@@ -154,6 +166,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testNoWarning(srcs(new String[] {googModule1, googModule2}));
   }
 
+  @Test
   public void test_Module_Require_Module_Missing_Fail() {
     // When something is goog.require()'d in a module and the referenced thing is missing it's not
     // really possible to know if the missing thing is a module or script.
@@ -169,6 +182,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testError(googModule, MISSING_MODULE_OR_PROVIDE, warning);
   }
 
+  @Test
   public void test_Module_ModuleGet_Module_Normal_Pass() {
     String googModule1 =
         lines(
@@ -189,6 +203,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testNoWarning(srcs(new String[] {googModule1, googModule2}));
   }
 
+  @Test
   public void test_Module_Require_Legacy_Normal_Pass() {
     String legacyScript =
         lines(
@@ -205,6 +220,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testNoWarning(srcs(new String[] {legacyScript, googModule}));
   }
 
+  @Test
   public void test_Module_Require_Legacy_Missing_Fail() {
     // When something is goog.require()'d in a module and the referenced thing is missing it's not
     // really possible to know if the missing thing is a module or script.
@@ -220,6 +236,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testError(googModule, MISSING_MODULE_OR_PROVIDE, msg);
   }
 
+  @Test
   public void test_Module_ModuleGet_Legacy_Normal_Pass() {
     // goog.module.get inside of a goog.module() can reference legacy files, to be consistent with
     // goog.require() behavior in the same context.
@@ -241,6 +258,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testNoWarning(srcs(new String[] {legacyScript, googModule}));
   }
 
+  @Test
   public void test_Module_ModuleGet_Missing_Fail() {
     // goog.module.get inside of a goog.module() cannot reference files that do not exist.
     String googModule =
@@ -255,6 +273,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testError(googModule, MISSING_MODULE_OR_PROVIDE, msg);
   }
 
+  @Test
   public void test_Module_ForwardDeclare_Missing_Fail() {
     // Short goog.forwardDeclare inside a goog.module() cannot reference files that do not exist.
     String googModule =
@@ -268,6 +287,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testError(googModule, MISSING_MODULE_OR_PROVIDE, msg);
   }
 
+  @Test
   public void test_Legacy_ForwardDeclare_Missing_Pass() {
     // Legacy goog.forwardDeclare inside a goog.module() works the same as outside a module.
     String googModule =
@@ -280,6 +300,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testNoWarning(srcs(new String[] { googModule }));
   }
 
+  @Test
   public void test_Legacy_Require_Legacy_Normal_Pass() {
     String legacyScript =
         lines(
@@ -294,6 +315,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testNoWarning(srcs(new String[] {legacyScript, legacyScript2}));
   }
 
+  @Test
   public void test_Legacy_Require_Legacy_Missing_Fail() {
     String legacyScript =
         lines(
@@ -305,6 +327,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testError(legacyScript, MISSING_PROVIDE_ERROR, msg);
   }
 
+  @Test
   public void test_Legacy_ModuleGet_Legacy_Normal_Pass() {
     String legacyScript =
         lines(
@@ -322,6 +345,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     testNoWarning(srcs(new String[] {legacyScript, legacyScript2}));
   }
 
+  @Test
   public void test_Legacy_ModuleGet_Legacy_Missing_Fail() {
     String legacyScript =
         lines(

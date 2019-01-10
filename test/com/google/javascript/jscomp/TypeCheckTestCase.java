@@ -17,9 +17,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -30,14 +31,19 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import org.junit.Before;
 
 abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
+  private boolean reportUnknownTypes = false;
+
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
+    this.reportUnknownTypes = false;
     // Enable missing override checks that are disabled by default.
     compiler.getOptions().setWarningLevel(DiagnosticGroups.MISSING_OVERRIDE, CheckLevel.WARNING);
     compiler
@@ -54,12 +60,16 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
         .setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
   }
 
+  protected void enableReportUnknownTypes() {
+    this.reportUnknownTypes = true;
+  }
+
   protected static ObjectType getInstanceType(Node js1Node) {
     JSType type = js1Node.getFirstChild().getJSType();
-    assertNotNull(type);
+    assertThat(type).isNotNull();
     assertThat(type).isInstanceOf(FunctionType.class);
     FunctionType functionType = (FunctionType) type;
-    assertTrue(functionType.isConstructor());
+    assertThat(functionType.isConstructor()).isTrue();
     return functionType.getInstanceType();
   }
 
@@ -79,9 +89,10 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   }
 
   protected void checkObjectType(ObjectType objectType, String propertyName, JSType expectedType) {
-    assertTrue(
-        "Expected " + objectType.getReferenceName() + " to have property " + propertyName,
-        objectType.hasProperty(propertyName));
+    assertWithMessage(
+            "Expected " + objectType.getReferenceName() + " to have property " + propertyName)
+        .that(objectType.hasProperty(propertyName))
+        .isTrue();
     assertTypeEquals(
         "Expected "
             + objectType.getReferenceName()
@@ -123,22 +134,18 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
   protected void testTypes(String js, String[] warnings) {
     Node n = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrors()).isEmpty();
     Node externsNode = IR.root();
     // create a parent node for the extern and source blocks
     IR.root(externsNode, n);
 
     makeTypeCheck().processForTesting(null, n);
-    assertEquals(0, compiler.getErrorCount());
-    if (warnings != null) {
-      assertEquals(warnings.length, compiler.getWarningCount());
-      JSError[] messages = compiler.getWarnings();
-      for (int i = 0; i < warnings.length && i < compiler.getWarningCount(); i++) {
-        assertEquals(warnings[i], messages[i].description);
-      }
-    } else {
-      assertEquals(0, compiler.getWarningCount());
-    }
+    assertThat(compiler.getErrors()).isEmpty();
+    checkReportedWarningsHelper(warnings);
+  }
+
+  protected void testTypesWithCommonExterns(String js, List<String> descriptions) {
+    testTypesWithExterns(DEFAULT_EXTERNS, js, descriptions, false);
   }
 
   protected void testTypesWithCommonExterns(String js, String description) {
@@ -161,66 +168,29 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   void testTypesWithExterns(String externs, String js, List<String> descriptions, boolean isError) {
     parseAndTypeCheck(externs, js);
 
-    JSError[] errors = compiler.getErrors();
-    if (!descriptions.isEmpty() && isError) {
-      assertTrue(
-          "expected " + descriptions.size() + " error(s) but got " + errors.length,
-          errors.length >= descriptions.size());
-      for (int i = 0; i < descriptions.size(); i++) {
-        assertEquals(descriptions.get(i), errors[i].description);
-      }
-      errors =
-          Arrays.asList(errors).subList(descriptions.size(), errors.length).toArray(new JSError[0]);
-    }
-    if (errors.length > 0) {
-      fail("unexpected error(s):\n" + LINE_JOINER.join(errors));
-    }
-
-    JSError[] warnings = compiler.getWarnings();
-    if (!descriptions.isEmpty() && !isError) {
-      assertTrue(
-          "expected " + descriptions.size() + " warning(s) but got " + warnings.length,
-          warnings.length >= descriptions.size());
-      for (int i = 0; i < descriptions.size(); i++) {
-        assertEquals(descriptions.get(i), warnings[i].description);
-      }
-      warnings =
-          Arrays.asList(warnings)
-              .subList(descriptions.size(), warnings.length)
-              .toArray(new JSError[0]);
-    }
-    if (warnings.length > 0) {
-      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
-    }
+    (isError
+            ? assertWithMessage("Regarding errors:").that(compiler.getErrors())
+            : assertWithMessage("Regarding warnings:").that(compiler.getWarnings()))
+        .asList()
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactlyElementsIn(descriptions)
+        .inOrder();
   }
 
   void testTypesWithExterns(
       String externs, String js, DiagnosticType diagnosticType, boolean isError) {
     parseAndTypeCheck(externs, js);
 
-    JSError[] errors = compiler.getErrors();
-    if (diagnosticType != null && isError) {
-      assertTrue("expected an error", errors.length > 0);
-      assertEquals(diagnosticType, errors[0].getType());
-      errors =
-          Arrays.asList(errors).subList(1, errors.length).toArray(new JSError[errors.length - 1]);
-    }
-    if (errors.length > 0) {
-      fail("unexpected error(s):\n" + LINE_JOINER.join(errors));
-    }
+    ImmutableList<DiagnosticType> expectedTypes =
+        (diagnosticType == null) ? ImmutableList.of() : ImmutableList.of(diagnosticType);
 
-    JSError[] warnings = compiler.getWarnings();
-    if (diagnosticType != null && !isError) {
-      assertTrue("expected a warning", warnings.length > 0);
-      assertEquals(diagnosticType, warnings[0].getType());
-      warnings =
-          Arrays.asList(warnings)
-              .subList(1, warnings.length)
-              .toArray(new JSError[warnings.length - 1]);
-    }
-    if (warnings.length > 0) {
-      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
-    }
+    (isError
+            ? assertWithMessage("Regarding errors:").that(compiler.getErrors())
+            : assertWithMessage("Regarding warnings:").that(compiler.getWarnings()))
+        .asList()
+        .comparingElementsUsing(DIAGNOSTIC_TYPE_EQUALITY)
+        .containsExactlyElementsIn(expectedTypes)
+        .inOrder();
   }
 
   protected void testTypesWithExterns(String externs, String js, String description) {
@@ -275,10 +245,7 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     compiler.externsRoot = externsNode;
     compiler.externAndJsRoot = externAndJsRoot;
 
-    assertEquals(
-        "parsing error: " + Joiner.on(", ").join(compiler.getErrors()),
-        0,
-        compiler.getErrorCount());
+    assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
 
     if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
       List<PassFactory> passes = new ArrayList<>();
@@ -302,7 +269,8 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   }
 
   protected TypeCheck makeTypeCheck() {
-    return new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry);
+    return new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry)
+        .reportUnknownTypes(reportUnknownTypes);
   }
 
   protected String suppressMissingProperty(String... props) {
@@ -323,8 +291,8 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
   protected void assertHasXMorePropertiesThanNativeObject(
       ObjectType instanceType, int numExtraProperties) {
-    assertEquals(
-        getNativeObjectPropertiesCount() + numExtraProperties, instanceType.getPropertiesCount());
+    assertThat(instanceType.getPropertiesCount())
+        .isEqualTo(getNativeObjectPropertiesCount() + numExtraProperties);
   }
 
   private int getNativeObjectPropertiesCount() {
@@ -340,4 +308,17 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
       this.scope = scope;
     }
   }
+
+  private static final Correspondence<JSError, DiagnosticType> DIAGNOSTIC_TYPE_EQUALITY =
+      new Correspondence<JSError, DiagnosticType>() {
+        @Override
+        public boolean compare(JSError error, DiagnosticType type) {
+          return Objects.equals(error.getType(), type);
+        }
+
+        @Override
+        public String toString() {
+          return "has diagnostic type equal to";
+        }
+      };
 }

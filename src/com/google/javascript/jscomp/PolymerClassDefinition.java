@@ -61,6 +61,9 @@ final class PolymerClassDefinition {
   /** Properties declared in the Polymer "properties" block. */
   final List<MemberDefinition> props;
 
+  /** Methods on the element. */
+  @Nullable final List<MemberDefinition> methods;
+
   /** Flattened list of behavior definitions used by this element. */
   @Nullable final ImmutableList<BehaviorDefinition> behaviors;
 
@@ -76,6 +79,7 @@ final class PolymerClassDefinition {
       MemberDefinition constructor,
       String nativeBaseElement,
       List<MemberDefinition> props,
+      List<MemberDefinition> methods,
       ImmutableList<BehaviorDefinition> behaviors,
       FeatureSet features) {
     this.defType = defType;
@@ -86,6 +90,7 @@ final class PolymerClassDefinition {
     this.constructor = constructor;
     this.nativeBaseElement = nativeBaseElement;
     this.props = props;
+    this.methods = methods;
     this.behaviors = behaviors;
     this.features = features;
   }
@@ -156,13 +161,29 @@ final class PolymerClassDefinition {
     overwriteMembersIfPresent(
         allProperties,
         PolymerPassStaticUtils.extractProperties(
-            descriptor, DefinitionType.ObjectLiteral, compiler));
+            descriptor,
+            DefinitionType.ObjectLiteral,
+            compiler,
+            /** constructor= */
+            null));
 
     FeatureSet newFeatures = null;
     if (!behaviors.isEmpty()) {
       newFeatures = behaviors.get(0).features;
       for (int i = 1; i < behaviors.size(); i++) {
         newFeatures = newFeatures.union(behaviors.get(i).features);
+      }
+    }
+
+    List<MemberDefinition> methods = new ArrayList<>();
+    for (Node keyNode : descriptor.children()) {
+      boolean isFunctionDefinition =
+          keyNode.isMemberFunctionDef()
+              || (keyNode.isStringKey() && keyNode.getFirstChild().isFunction());
+      if (isFunctionDefinition) {
+        methods.add(
+            new MemberDefinition(
+                NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
       }
     }
 
@@ -175,6 +196,7 @@ final class PolymerClassDefinition {
         new MemberDefinition(ctorInfo, null, constructor),
         nativeBaseElement,
         allProperties,
+        methods,
         behaviors,
         newFeatures);
   }
@@ -238,7 +260,16 @@ final class PolymerClassDefinition {
 
     List<MemberDefinition> allProperties =
         PolymerPassStaticUtils.extractProperties(
-            propertiesDescriptor, DefinitionType.ES6Class, compiler);
+            propertiesDescriptor, DefinitionType.ES6Class, compiler, constructor);
+
+    List<MemberDefinition> methods = new ArrayList<>();
+    for (Node keyNode : NodeUtil.getClassMembers(classNode).children()) {
+      if (!keyNode.isMemberFunctionDef()) {
+        continue;
+      }
+      methods.add(new MemberDefinition(
+                      NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
+    }
 
     return new PolymerClassDefinition(
         DefinitionType.ES6Class,
@@ -249,6 +280,7 @@ final class PolymerClassDefinition {
         new MemberDefinition(ctorInfo, null, constructor),
         null,
         allProperties,
+        methods,
         null,
         null);
   }

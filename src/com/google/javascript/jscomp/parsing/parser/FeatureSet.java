@@ -66,25 +66,17 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES8 = ES8_MODULES.without(Feature.MODULES);
 
-  public static final FeatureSet ES_NEXT = ES8_MODULES.with(LangVersion.ES_NEXT.features());
-
-  public static final FeatureSet ES2018_MODULES = ES_NEXT.with(LangVersion.ES2018.features());
+  public static final FeatureSet ES2018_MODULES = ES8_MODULES.with(LangVersion.ES2018.features());
 
   public static final FeatureSet ES2018 = ES2018_MODULES.without(Feature.MODULES);
 
+  public static final FeatureSet ES_NEXT = ES2018_MODULES.with(LangVersion.ES_NEXT.features());
 
-  public static final FeatureSet TYPESCRIPT =  ES_NEXT.with(LangVersion.TYPESCRIPT.features());
+  public static final FeatureSet TYPESCRIPT = ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
-  public static final FeatureSet TYPE_CHECK_SUPPORTED =
-      ES8.without(Feature.ARRAY_PATTERN_REST)
-          .without(Feature.ASYNC_FUNCTIONS)
-          .without(Feature.CLASSES)
-          .without(Feature.CLASS_EXTENDS)
-          .without(Feature.CLASS_GETTER_SETTER)
-          .without(Feature.DEFAULT_PARAMETERS)
-          .without(Feature.DESTRUCTURING)
-          .without(Feature.MODULES)
-          .without(Feature.NEW_TARGET);
+  // OBJECT_PATTERN_REST is a 2018 feature, but its transpilation is done by the same pass that
+  // handles the destructuring transpilation done for ES6.
+  public static final FeatureSet TYPE_CHECK_SUPPORTED = ES8.with(Feature.OBJECT_PATTERN_REST);
 
   private enum LangVersion {
     ES3,
@@ -128,7 +120,8 @@ public final class FeatureSet implements Serializable {
     COMPUTED_PROPERTIES("computed property", LangVersion.ES6),
     CONST_DECLARATIONS("const declaration", LangVersion.ES6),
     DEFAULT_PARAMETERS("default parameter", LangVersion.ES6),
-    DESTRUCTURING("destructuring", LangVersion.ES6),
+    ARRAY_DESTRUCTURING("array destructuring", LangVersion.ES6),
+    OBJECT_DESTRUCTURING("object destructuring", LangVersion.ES6),
     EXTENDED_OBJECT_LITERALS("extended object literal", LangVersion.ES6),
     FOR_OF("for-of loop", LangVersion.ES6),
     GENERATORS("generator", LangVersion.ES6),
@@ -154,12 +147,22 @@ public final class FeatureSet implements Serializable {
     TRAILING_COMMA_IN_PARAM_LIST("trailing comma in param list", LangVersion.ES8),
 
     // ES 2018 adds https://github.com/tc39/proposal-object-rest-spread
-    OBJECT_LITERALS_WITH_SPREAD("object literals with spread", LangVersion.ES_NEXT),
-    OBJECT_PATTERN_REST("object pattern rest", LangVersion.ES_NEXT),
+    OBJECT_LITERALS_WITH_SPREAD("object literals with spread", LangVersion.ES2018),
+    OBJECT_PATTERN_REST("object pattern rest", LangVersion.ES2018),
 
     // https://github.com/tc39/proposal-async-iteration
     ASYNC_GENERATORS("async generator functions", LangVersion.ES2018),
     FOR_AWAIT_OF("for-await-of loop", LangVersion.ES2018),
+
+    // ES 2018 adds Regex Features:
+    // https://github.com/tc39/proposal-regexp-dotall-flag
+    REGEXP_FLAG_S("RegExp flag 's'", LangVersion.ES2018),
+    // https://github.com/tc39/proposal-regexp-lookbehind
+    REGEXP_LOOKBEHIND("RegExp Lookbehind", LangVersion.ES2018),
+    // https://github.com/tc39/proposal-regexp-named-groups
+    REGEXP_NAMED_GROUPS("RegExp named groups", LangVersion.ES2018),
+    // https://github.com/tc39/proposal-regexp-unicode-property-escapes
+    REGEXP_UNICODE_PROPERTY_ESCAPE("RegExp unicode property escape", LangVersion.ES2018),
 
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),

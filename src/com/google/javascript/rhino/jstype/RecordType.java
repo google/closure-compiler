@@ -41,7 +41,6 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
-
 import java.util.Map;
 
 /**
@@ -171,7 +170,7 @@ public class RecordType extends PrototypeObjectType {
       // 2) Take the intersection of all of these unions.
       for (String propName : getOwnPropertyNames()) {
         JSType propType = getPropertyType(propName);
-        UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+        UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
         for (ObjectType alt :
           registry.getEachReferenceTypeWithProperty(propName)) {
           JSType altPropType = alt.getPropertyType(propName);

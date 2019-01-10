@@ -17,14 +17,18 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link J2clPass}.
- */
+/** Tests for {@link J2clPass}. */
+@RunWith(JUnit4.class)
 public class J2clPassTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     this.enableNormalize();
   }
@@ -41,6 +45,7 @@ public class J2clPassTest extends CompilerTestCase {
     return compiler;
   }
 
+  @Test
   public void testQualifiedInlines() {
     // Arrays functions.
     test(
@@ -128,6 +133,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "{Foo.$implements__FooInterface = true;}"))));
   }
 
+  @Test
   public void testRenamedQualifierStillInlines() {
     // Arrays functions.
     test(
@@ -223,6 +229,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "{$jscomp.scope.Foo.$implements__FooInterface = true;}"))));
   }
 
+  @Test
   public void testUnexpectedFunctionDoesntInline() {
     // Arrays functions.
     testSame(
@@ -252,6 +259,7 @@ public class J2clPassTest extends CompilerTestCase {
     // files and so there are no specific files in which "other" functions should be ignored.
   }
 
+  @Test
   public void testUnqualifiedDoesntInline() {
     // Arrays functions.
     testSame(
@@ -294,6 +302,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "$markImplementor(Foo);"))));
   }
 
+  @Test
   public void testWrongFileNameDoesntInline() {
     // Arrays functions.
     testSame(
@@ -329,6 +338,7 @@ public class J2clPassTest extends CompilerTestCase {
     // files.
   }
 
+  @Test
   public void testMarksChanges() {
     test(
         ImmutableList.of(

@@ -569,18 +569,6 @@ class InlineFunctions implements CompilerPass {
         return;
       }
 
-      // Unlike normal call/new parameters, references passed to
-      // JSCompiler_ObjectPropertyString are not aliases of a value, but
-      // a reference to the name itself, as such the value of the name is
-      // unknown and can not be inlined.
-      if (parent.isNew()) {
-        Node target = parent.getFirstChild();
-        if (target.isName() && target.getString().equals(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING)) {
-          // This method is going to be replaced so don't inline it anywhere.
-          functionState.disallowInlining();
-        }
-      }
-
       // If the name is being assigned to it can not be inlined.
       if (parent.isAssign() && parent.getFirstChild() == n) {
         // e.g. bar = something; <== we can't inline "bar"

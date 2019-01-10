@@ -18,22 +18,26 @@ package com.google.javascript.jscomp.parsing.parser;
 import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link FeatureSet}.
- */
-public final class FeatureSetTest extends TestCase {
+/** Tests for {@link FeatureSet}. */
+@RunWith(JUnit4.class)
+public final class FeatureSetTest {
+  @Test
   public void testContains() {
     assertFS(FeatureSet.TYPESCRIPT).has(Feature.AMBIENT_DECLARATION);
     assertFS(FeatureSet.TYPESCRIPT).has(Feature.MODULES);
   }
 
+  @Test
   public void testWithoutModules() {
     assertFS(FeatureSet.TYPESCRIPT.without(Feature.MODULES)).has(Feature.AMBIENT_DECLARATION);
     assertFS(FeatureSet.TYPESCRIPT.without(Feature.MODULES)).doesNotHave(Feature.MODULES);
   }
 
+  @Test
   public void testWithoutTypes() {
     assertFS(FeatureSet.TYPESCRIPT.withoutTypes()).doesNotHave(Feature.AMBIENT_DECLARATION);
     assertFS(FeatureSet.TYPESCRIPT.withoutTypes()).has(Feature.MODULES);

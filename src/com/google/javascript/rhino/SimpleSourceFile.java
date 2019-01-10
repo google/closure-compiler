@@ -45,11 +45,11 @@ package com.google.javascript.rhino;
  */
 public final class SimpleSourceFile implements StaticSourceFile {
   private final String name;
-  private final boolean extern;
+  private final SourceKind kind;
 
-  public SimpleSourceFile(String name, boolean extern) {
+  public SimpleSourceFile(String name, SourceKind kind) {
     this.name = name;
-    this.extern = extern;
+    this.kind = kind;
   }
 
   @Override
@@ -58,8 +58,8 @@ public final class SimpleSourceFile implements StaticSourceFile {
   }
 
   @Override
-  public boolean isExtern() {
-    return extern;
+  public SourceKind getKind() {
+    return kind;
   }
 
   @Override

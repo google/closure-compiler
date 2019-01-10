@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -32,6 +33,7 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -39,8 +41,14 @@ import java.util.List;
  */
 public class FixingErrorManager extends BasicErrorManager {
   private AbstractCompiler compiler;
-  private final ListMultimap<JSError, SuggestedFix> fixes = ArrayListMultimap.create();
+  private final HashMap<JSError, SuggestedFix> sureFixes = new HashMap<>();
+  private final ListMultimap<JSError, SuggestedFix> multiFixes = ArrayListMultimap.create();
   private final ImmutableSet<DiagnosticType> unfixableErrors;
+
+  private enum FixTypes {
+    ONE_FIX,
+    ONE_FIX_AND_MULTI_FIXES,
+  }
 
   public FixingErrorManager() {
     this(ImmutableSet.of());
@@ -58,12 +66,23 @@ public class FixingErrorManager extends BasicErrorManager {
   public void report(CheckLevel level, JSError error) {
     super.report(level, error);
     if (!unfixableErrors.contains(error.getType())) {
-      fixes.putAll(error, ErrorToFixMapper.getFixesForJsError(error, compiler));
+      ImmutableList<SuggestedFix> fixes = ErrorToFixMapper.getFixesForJsError(error, compiler);
+      if (fixes.size() == 1) {
+        sureFixes.put(error, fixes.get(0));
+      } else {
+        multiFixes.putAll(error, fixes);
+      }
     }
   }
 
   private boolean containsFixableShorthandModuleWarning() {
-    for (JSError error : fixes.keySet()) {
+    for (JSError error : sureFixes.keySet()) {
+      if (error.getType().equals(JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)
+          || error.getType().equals(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)) {
+        return true;
+      }
+    }
+    for (JSError error : multiFixes.keySet()) {
       if (error.getType().equals(JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)
           || error.getType().equals(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)) {
         return true;
@@ -73,11 +92,14 @@ public class FixingErrorManager extends BasicErrorManager {
   }
 
   public List<SuggestedFix> getFixesForJsError(JSError error) {
-    return fixes.get(error);
+    if (sureFixes.containsKey(error)) {
+      return ImmutableList.of(sureFixes.get(error));
+    } else {
+      return multiFixes.get(error);
+    }
   }
 
-  /** Returns fixes for errors first, then fixes for warnings. */
-  public Collection<SuggestedFix> getAllFixes() {
+  private Collection<SuggestedFix> getFixes(FixTypes fixTypes) {
     boolean containsFixableShorthandModuleWarning = containsFixableShorthandModuleWarning();
     Collection<SuggestedFix> fixes = new ArrayList<>();
     for (JSError error : getErrors()) {
@@ -90,7 +112,11 @@ public class FixingErrorManager extends BasicErrorManager {
               || error.getType().equals(MISSING_REQUIRE_WARNING))) {
         // Don't apply this fix.
       } else {
-        fixes.addAll(getFixesForJsError(error));
+        if (fixTypes == FixTypes.ONE_FIX && sureFixes.containsKey(error)) {
+          fixes.add(sureFixes.get(error));
+        } else if (fixTypes == FixTypes.ONE_FIX_AND_MULTI_FIXES) {
+          fixes.addAll(getFixesForJsError(error));
+        }
       }
     }
     for (JSError warning : getWarnings()) {
@@ -98,10 +124,27 @@ public class FixingErrorManager extends BasicErrorManager {
           && containsFixableShorthandModuleWarning) {
         // As above, don't apply the extra-require fix.
       } else {
-        fixes.addAll(getFixesForJsError(warning));
+        if (fixTypes == FixTypes.ONE_FIX && sureFixes.containsKey(warning)) {
+          fixes.add(sureFixes.get(warning));
+        } else if (fixTypes == FixTypes.ONE_FIX_AND_MULTI_FIXES) {
+          fixes.addAll(getFixesForJsError(warning));
+        }
       }
     }
     return fixes;
+  }
+
+  /** Returns fixes for errors and warnings that only have one 'sure' guaranteed fix. */
+  public Collection<SuggestedFix> getSureFixes() {
+    return getFixes(FixTypes.ONE_FIX);
+  }
+
+  /**
+   * Returns fixes for errors first, then fixes for warnings. This includes 'sure' fixes with only
+   * one option, and 'multi' fixes which have multiple choices.
+   */
+  public Collection<SuggestedFix> getAllFixes() {
+    return getFixes(FixTypes.ONE_FIX_AND_MULTI_FIXES);
   }
 
   @Override

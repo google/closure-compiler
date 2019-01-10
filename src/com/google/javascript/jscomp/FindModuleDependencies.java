@@ -181,14 +181,8 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
 
         if (modulePath != null) {
           if (dynamicImportScope != null
-              || (n.getParent().isCall()
-                  && n.getPrevious() != null
-                  && n.getPrevious().isGetProp()
-                  && n.getPrevious().getFirstChild().isCall()
-                  && n.getPrevious().getFirstFirstChild().isQualifiedName()
-                  && n.getPrevious()
-                      .getFirstFirstChild()
-                      .matchesQualifiedName("__webpack_require__.e"))) {
+              || ProcessCommonJSModules.isCommonJsDynamicImportCallback(
+                  NodeUtil.getEnclosingFunction(n), resolutionMode)) {
             t.getInput().addDynamicRequire(modulePath.toModuleName());
           } else {
             t.getInput().addOrderedRequire(Require.commonJs(modulePath.toModuleName(), path));

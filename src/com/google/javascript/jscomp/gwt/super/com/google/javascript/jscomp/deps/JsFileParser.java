@@ -23,6 +23,10 @@ public final class JsFileParser {
   public JsFileParser(ErrorManager errorManager) {
   }
 
+  public JsFileParser setModuleLoader(ModuleLoader loader) {
+    throw new UnsupportedOperationException("JsFileParser.setModuleLoader not implemented");
+  }
+
   public JsFileParser setIncludeGoogBase(boolean include) {
     throw new UnsupportedOperationException("JsFileParser.setIncludeGoogBase not implemented");
   }

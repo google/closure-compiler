@@ -147,15 +147,15 @@ class CollapseProperties implements CompilerPass {
   }
 
   /**
-   * Runs through all namespaces (prefixes of classes and enums), and checks if
-   * any of them have been used in an unsafe way.
+   * Runs through all namespaces (prefixes of classes and enums), and checks if any of them have
+   * been used in an unsafe way.
    */
   private void checkNamespaces() {
     for (Name name : nameMap.values()) {
       if (name.isNamespaceObjectLit()
-          && (name.aliasingGets > 0
-              || name.localSets + name.globalSets > 1
-              || name.deleteProps > 0)) {
+          && (name.getAliasingGets() > 0
+              || name.getLocalSets() + name.getGlobalSets() > 1
+              || name.getDeleteProps() > 0)) {
         boolean initialized = name.getDeclaration() != null;
         for (Ref ref : name.getRefs()) {
           if (ref == name.getDeclaration()) {
@@ -301,8 +301,13 @@ class CollapseProperties implements CompilerPass {
       // 2) References inside a complex assign. (a = x.y = 0). These are
       //    called TWIN references, because they show up twice in the
       //    reference list. Only collapse the set, not the alias.
-      if (!NodeUtil.isObjectLitKey(r.node) && (r.getTwin() == null || r.isSet())) {
+      if (!NodeUtil.mayBeObjectLitKey(r.node) && (r.getTwin() == null || r.isSet())) {
         flattenNameRef(alias, r.node, rParent, originalName);
+      } else if (r.node.isStringKey() && r.node.getParent().isObjectPattern()) {
+        Node newNode = IR.name(alias).srcref(r.node);
+        NodeUtil.copyNameAnnotations(r.node, newNode);
+        DestructuringGlobalNameExtractor.reassignDestructringLvalue(
+            r.node, newNode, null, r, compiler);
       }
     }
 
@@ -370,7 +375,7 @@ class CollapseProperties implements CompilerPass {
     // proceeding. In the OBJLIT case, we don't need to do anything.
     Token nType = n.getToken();
     boolean isQName = nType == Token.NAME || nType == Token.GETPROP;
-    boolean isObjKey = NodeUtil.isObjectLitKey(n);
+    boolean isObjKey = NodeUtil.mayBeObjectLitKey(n);
     checkState(isObjKey || isQName);
     if (isQName) {
       for (int i = 1; i < depth && n.hasChildren(); i++) {

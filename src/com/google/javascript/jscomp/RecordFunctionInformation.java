@@ -26,7 +26,6 @@ class RecordFunctionInformation extends AbstractPostOrderCallback
     implements CompilerPass {
   private final AbstractCompiler compiler;
   private final FunctionNames functionNames;
-  private final JSModuleGraph moduleGraph;
 
   /**
    * Protocol buffer builder.
@@ -42,7 +41,6 @@ class RecordFunctionInformation extends AbstractPostOrderCallback
   RecordFunctionInformation(AbstractCompiler compiler,
       FunctionNames functionNames) {
     this.compiler = compiler;
-    this.moduleGraph = compiler.getModuleGraph();
     this.functionNames = functionNames;
     this.mapBuilder = FunctionInformationMap.newBuilder();
   }
@@ -73,13 +71,15 @@ class RecordFunctionInformation extends AbstractPostOrderCallback
 
     String compiledSource = compiler.toSource(n);
     JSModule module = t.getModule();
-    mapBuilder.addEntry(FunctionInformationMap.Entry.newBuilder()
-      .setId(id)
-      .setSourceName(NodeUtil.getSourceName(n))
-      .setLineNumber(n.getLineno())
-      .setModuleName(moduleGraph == null ? "" : module.getName())
-      .setSize(compiledSource.length())
-      .setName(functionNames.getFunctionName(n))
-      .setCompiledSource(compiledSource).build());
+    mapBuilder.addEntry(
+        FunctionInformationMap.Entry.newBuilder()
+            .setId(id)
+            .setSourceName(NodeUtil.getSourceName(n))
+            .setLineNumber(n.getLineno())
+            .setModuleName(module.isSynthetic() ? "" : module.getName())
+            .setSize(compiledSource.length())
+            .setName(functionNames.getFunctionName(n))
+            .setCompiledSource(compiledSource)
+            .build());
   }
 }

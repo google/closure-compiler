@@ -17,14 +17,18 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Tests {@link AngularPass}.
- */
+/** Tests {@link AngularPass}. */
+@RunWith(JUnit4.class)
 public final class AngularPassTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
@@ -48,19 +52,22 @@ public final class AngularPassTest extends CompilerTestCase {
     return options;
   }
 
-  public void testNgInjectAddsInjectToFunctions() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToFunctions() {
     test("/** @ngInject */ function fn(a, b) {}",
         "/** @ngInject */ function fn(a, b) {} /** @public */ fn['$inject']=['a', 'b']");
 
     testSame("function fn(a, b) {}");
   }
 
-  public void testNgInjectSetVisibility() throws Exception {
+  @Test
+  public void testNgInjectSetVisibility() {
     test("/** @ngInject */ function fn(a, b) {}",
         "/** @ngInject */ function fn(a, b) {} /** @public */ fn['$inject']=['a', 'b']");
   }
 
-  public void testNgInjectAddsInjectAfterGoogInherits() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectAfterGoogInherits() {
     test(
         lines(
             "/** @ngInject @constructor */",
@@ -88,7 +95,8 @@ public final class AngularPassTest extends CompilerTestCase {
             "var foo = 42;"));
   }
 
-  public void testNgInjectAddsInjectToProps() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToProps() {
     test("var ns = {}; /** @ngInject */ ns.fn = function (a, b) {}",
          "var ns = {}; /** @ngInject */ ns.fn = function (a, b) {};"
         + "/** @public */ ns.fn['$inject']=['a', 'b']");
@@ -96,7 +104,8 @@ public final class AngularPassTest extends CompilerTestCase {
     testSame("var ns = {}; ns.fn = function (a, b) {}");
   }
 
-  public void testNgInjectAddsInjectToNestedProps() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToNestedProps() {
     test(
         lines(
             "var ns = {}; ns.subns = {};",
@@ -111,30 +120,32 @@ public final class AngularPassTest extends CompilerTestCase {
     testSame("var ns = {}; ns.fn = function (a, b) {}");
   }
 
-  public void testNgInjectAddsInjectToVars() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToVars() {
     test("/** @ngInject */ var fn = function (a, b) {}",
          "/** @ngInject */ var fn = function (a, b) {}; /** @public */ fn['$inject']=['a', 'b']");
 
     testSame("var fn = function (a, b) {}");
   }
 
-  public void testNgInjectAddsInjectToLet() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToLet() {
     test("/** @ngInject */ let fn = function (a, b) {}",
          "/** @ngInject */ let fn = function (a, b) {}; /** @public */ fn['$inject']=['a', 'b']");
 
     testSame("let fn = function (a, b) {}");
   }
 
-  public void testNgInjectAddsInjectToConst() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToConst() {
     test("/** @ngInject */ const fn = function (a, b) {}",
          "/** @ngInject */ const fn = function (a, b) {}; /** @public */ fn['$inject']=['a', 'b']");
 
     testSame("const fn = function (a, b) {}");
   }
 
-
-  public void testNgInjectAddsInjectToVarsWithChainedAssignment()
-      throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToVarsWithChainedAssignment() throws Exception {
     test("var ns = {}; /** @ngInject */ var fn = ns.func = function (a, b) {}",
         lines(
             "var ns = {};",
@@ -146,7 +157,8 @@ public final class AngularPassTest extends CompilerTestCase {
     testSame("var ns = {}; var fn = ns.func = function (a, b) {}");
   }
 
-  public void testNgInjectInBlock() throws Exception {
+  @Test
+  public void testNgInjectInBlock() {
     test(
         lines(
             "(function() {",
@@ -168,7 +180,8 @@ public final class AngularPassTest extends CompilerTestCase {
         "})()"));
   }
 
-  public void testNgInjectAddsToTheRightBlock() throws Exception {
+  @Test
+  public void testNgInjectAddsToTheRightBlock() {
     test(
         lines(
             "var fn = 10;",
@@ -187,7 +200,8 @@ public final class AngularPassTest extends CompilerTestCase {
             "})()"));
   }
 
-  public void testNgInjectInNonBlock() throws Exception {
+  @Test
+  public void testNgInjectInNonBlock() {
     testError("function fake(){};" +
               "var ns = {};" +
               "fake( /** @ngInject */ ns.func = function (a, b) {} )",
@@ -197,7 +211,8 @@ public final class AngularPassTest extends CompilerTestCase {
               AngularPass.INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR);
   }
 
-  public void testNgInjectNonFunction() throws Exception {
+  @Test
+  public void testNgInjectNonFunction() {
     testError("var ns = {}; ns.subns = {};" +
               "ns.subns.fake = function(x, y){};" +
               "/** @ngInject */ ns.subns.fake(1);",
@@ -216,23 +231,27 @@ public final class AngularPassTest extends CompilerTestCase {
         AngularPass.INJECT_NON_FUNCTION_ERROR);
   }
 
-  public void testNgInjectOnGetElem() throws Exception {
+  @Test
+  public void testNgInjectOnGetElem() {
     testError("/** @ngInject */ foo.bar['baz'] = function(a) {};",
         AngularPass.INJECTED_FUNCTION_ON_NON_QNAME);
   }
 
-  public void testNgInjectAddsInjectToClass() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToClass() {
     testError("/** @ngInject */ class FnClass {constructor(a, b) {}}",
         AngularPass.INJECT_NON_FUNCTION_ERROR);
   }
 
-  public void testNgInjectAddsInjectToClassConstructor() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToClassConstructor() {
     test("class FnClass {/** @ngInject */ constructor(a, b) {}}",
         "class FnClass{ /** @ngInject */ constructor(a, b){}}"
         + "/** @public */ FnClass['$inject'] = ['a', 'b'];");
   }
 
-  public void testNgInjectAddsInjectToClassMethod1() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToClassMethod1() {
     test(
         lines(
             "class FnClass {",
@@ -250,7 +269,8 @@ public final class AngularPassTest extends CompilerTestCase {
             "FnClass.prototype.methodA['$inject'] = ['c','d']"));
   }
 
-  public void testNgInjectAddsInjectToClassMethod2() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToClassMethod2() {
     test(
         lines(
             "FnClass.foo = class {",
@@ -266,7 +286,8 @@ public final class AngularPassTest extends CompilerTestCase {
             "FnClass.foo['$inject'] = ['a','b'];"));
   }
 
-  public void testNgInjectAddsInjectToClassMethod3() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToClassMethod3() {
     test(
         lines(
             "var foo = class {",
@@ -310,8 +331,8 @@ public final class AngularPassTest extends CompilerTestCase {
             "foo['$inject'] = ['a','b'];"));
   }
 
-
-  public void testNgInjectAddsInjectToStaticMethod() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToStaticMethod() {
     test(
         lines(
             "class FnClass {",
@@ -329,7 +350,8 @@ public final class AngularPassTest extends CompilerTestCase {
             "FnClass.methodA['$inject'] = ['c','d']"));
   }
 
-  public void testNgInjectAddsInjectToClassGenerator() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToClassGenerator() {
     test(
         lines(
             "class FnClass {",
@@ -347,7 +369,8 @@ public final class AngularPassTest extends CompilerTestCase {
             "FnClass.prototype.methodA['$inject'] = ['c','d']"));
   }
 
-  public void testNgInjectAddsInjectToClassMixOldStyle() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToClassMixOldStyle() {
     test(
         lines(
             "class FnClass {",
@@ -367,7 +390,8 @@ public final class AngularPassTest extends CompilerTestCase {
             "}"));
   }
 
-  public void testNgInjectAddsInjectToClassWithExtraName() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToClassWithExtraName() {
     test(
         lines(
             "var foo = class bar{",
@@ -425,8 +449,8 @@ public final class AngularPassTest extends CompilerTestCase {
             "x.y['$inject'] = ['a','b'];"));
   }
 
-
-  public void testNgInjectAddsInjectToClassArrowFunc() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToClassArrowFunc() {
     test(
         lines(
             "class FnClass {",
@@ -446,7 +470,8 @@ public final class AngularPassTest extends CompilerTestCase {
             "}"));
   }
 
-  public void testNgInjectAddsInjectToClassCompMethodName() throws Exception {
+  @Test
+  public void testNgInjectAddsInjectToClassCompMethodName() {
     testError(
         lines(
             "class FnClass {",
@@ -457,12 +482,14 @@ public final class AngularPassTest extends CompilerTestCase {
         AngularPass.INJECT_NON_FUNCTION_ERROR);
   }
 
+  @Test
   public void testNgInjectToArrowFunctions() {
     test("/** @ngInject */ var fn = (a, b, c)=>{};",
         "/** @ngInject */ var fn = (a, b, c)=>{}; /** @public */ fn['$inject']=['a', 'b', 'c'];");
     testSame("/** @ngInject */ var fn = ()=>{}");
   }
 
+  @Test
   public void testNgInjectToFunctionsWithDestructuredParam() {
     testError("/** @ngInject */ function fn(a, {b, c}){}",
         AngularPass.INJECTED_FUNCTION_HAS_DESTRUCTURED_PARAM);
@@ -472,6 +499,7 @@ public final class AngularPassTest extends CompilerTestCase {
         AngularPass.INJECTED_FUNCTION_HAS_DESTRUCTURED_PARAM);
   }
 
+  @Test
   public void testNgInjectToFunctionsWithDefaultValue() {
     testError("/** @ngInject */ function fn(a, b = 1){}",
         AngularPass.INJECTED_FUNCTION_HAS_DEFAULT_VALUE);
@@ -481,6 +509,7 @@ public final class AngularPassTest extends CompilerTestCase {
         AngularPass.INJECTED_FUNCTION_HAS_DEFAULT_VALUE);
   }
 
+  @Test
   public void testInGoogModule() {
     enableRewriteClosureCode();
     test(
@@ -495,6 +524,7 @@ public final class AngularPassTest extends CompilerTestCase {
             "/** @public */ fn['$inject'] = ['a', 'b'];"));
   }
 
+  @Test
   public void testInEsModule() {
     String js = lines(
         "import {Foo} from './foo';",
@@ -508,6 +538,7 @@ public final class AngularPassTest extends CompilerTestCase {
             "Bar['$inject'] = ['x', 'y'];"));
   }
 
+  @Test
   public void testInGoogScope() {
     enableRewriteClosureCode();
     test(

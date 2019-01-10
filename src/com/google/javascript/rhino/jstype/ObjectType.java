@@ -97,10 +97,6 @@ public abstract class ObjectType extends JSType implements Serializable {
     super(registry, templateTypeMap);
   }
 
-  public final ObjectType getParentScope() {
-    return getImplicitPrototype();
-  }
-
   /**
    * Returns the property map that manages the set of properties for an object.
    */
@@ -195,14 +191,28 @@ public abstract class ObjectType extends JSType implements Serializable {
   }
 
   /**
-   * Gets the reference name for this object. This includes named types
-   * like constructors, prototypes, and enums. It notably does not include
-   * literal types like strings and booleans and structural types.
-   * @return the object's name or {@code null} if this is an anonymous
-   *         object
+   * Gets the reference name for this object. This includes named types like constructors,
+   * prototypes, and enums. It notably does not include literal types like strings and booleans and
+   * structural types.
+   *
+   * <p>Returning an empty string means something different than returning null. An empty string may
+   * indicate an anonymous constructor, which we treat differently than a literal type without a
+   * reference name. e.g. in {@link InstanceObjectType#appendTo(StringBuilder, boolean)}
+   *
+   * @return the object's name or {@code null} if this is an anonymous object
    */
   @Nullable
   public abstract String getReferenceName();
+
+  /**
+   * INVARIANT: {@code hasReferenceName()} is true if and only if {@code getReferenceName()} returns
+   * a non-null string.
+   *
+   * @return true if the object is named, false if it is anonymous
+   */
+  public final boolean hasReferenceName() {
+    return getReferenceName() != null;
+  }
 
   /**
    * Due to the complexity of some of our internal type systems, sometimes
@@ -242,14 +252,7 @@ public abstract class ObjectType extends JSType implements Serializable {
     return "(" + suffix + ")";
   }
 
-  /**
-   * @return true if the object is named, false if it is anonymous
-   */
-  public boolean hasReferenceName() {
-    return false;
-  }
-
-  public final boolean isAmbiguousObject() {
+  public boolean isAmbiguousObject() {
     return !hasReferenceName();
   }
 
@@ -289,11 +292,11 @@ public abstract class ObjectType extends JSType implements Serializable {
   public abstract FunctionType getConstructor();
 
   public FunctionType getSuperClassConstructor() {
-    ObjectType iproto = getPrototypeObject();
+    ObjectType iproto = getImplicitPrototype();
     if (iproto == null) {
       return null;
     }
-    iproto = iproto.getPrototypeObject();
+    iproto = iproto.getImplicitPrototype();
     return iproto == null ? null : iproto.getConstructor();
   }
 
@@ -314,10 +317,6 @@ public abstract class ObjectType extends JSType implements Serializable {
    * Gets the implicit prototype (a.k.a. the {@code [[Prototype]]} property).
    */
   public abstract ObjectType getImplicitPrototype();
-
-  public final ObjectType getPrototypeObject() {
-    return getImplicitPrototype();
-  }
 
   /**
    * Defines a property whose type is explicitly declared by the programmer.
@@ -464,7 +463,7 @@ public abstract class ObjectType extends JSType implements Serializable {
   }
 
   @Override
-  public JSType findPropertyType(String propertyName) {
+  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
     return hasProperty(propertyName) ? getPropertyType(propertyName) : null;
   }
 
@@ -755,10 +754,6 @@ public abstract class ObjectType extends JSType implements Serializable {
   /** Whether this is a built-in object. */
   public boolean isNativeObjectType() {
     return false;
-  }
-
-  public final JSType getLegacyResolvedType() {
-    return toMaybeNamedType().getReferencedType();
   }
 
   /**

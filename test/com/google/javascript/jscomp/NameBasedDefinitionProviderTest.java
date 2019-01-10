@@ -20,10 +20,14 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.rhino.Node;
 import javax.annotation.Nullable;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-public final class NameBasedDefinitionProviderTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class NameBasedDefinitionProviderTest {
 
+  @Test
   public void testGetSimplifiedName() {
     assertThat(getSimplifiedName("x;")).isEqualTo("x");
     assertThat(getSimplifiedName("foo.bar;")).isEqualTo("this.bar");

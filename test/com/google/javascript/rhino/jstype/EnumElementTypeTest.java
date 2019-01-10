@@ -38,43 +38,51 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for EnumElementTypes.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public class EnumElementTypeTest extends BaseJSTypeTestCase {
-  public void testSubtypeRelation() throws Exception {
+  @Test
+  public void testSubtypeRelation() {
     EnumElementType typeA = registry.createEnumType(
         "typeA", null, NUMBER_TYPE).getElementsType();
     EnumElementType typeB = registry.createEnumType(
         "typeB", null, NUMBER_TYPE).getElementsType();
 
-    assertFalse(typeA.isSubtype(typeB));
-    assertFalse(typeB.isSubtype(typeA));
+    assertThat(typeA.isSubtype(typeB)).isFalse();
+    assertThat(typeB.isSubtype(typeA)).isFalse();
 
-    assertFalse(NUMBER_TYPE.isSubtypeOf(typeB));
-    assertFalse(NUMBER_TYPE.isSubtypeOf(typeA));
+    assertThat(NUMBER_TYPE.isSubtypeOf(typeB)).isFalse();
+    assertThat(NUMBER_TYPE.isSubtypeOf(typeA)).isFalse();
 
-    assertTrue(typeA.isSubtype(NUMBER_TYPE));
-    assertTrue(typeB.isSubtype(NUMBER_TYPE));
+    assertThat(typeA.isSubtype(NUMBER_TYPE)).isTrue();
+    assertThat(typeB.isSubtype(NUMBER_TYPE)).isTrue();
   }
 
-  public void testMeet() throws Exception {
+  @Test
+  public void testMeet() {
     EnumElementType typeA = registry.createEnumType(
         "typeA", null, createUnionType(NUMBER_TYPE, STRING_TYPE))
         .getElementsType();
 
     JSType stringsOfA = typeA.getGreatestSubtype(STRING_TYPE);
-    assertFalse(stringsOfA.isEmptyType());
-    assertEquals("typeA<string>", stringsOfA.toString());
-    assertTrue(stringsOfA.isSubtypeOf(typeA));
+    assertThat(stringsOfA.isEmptyType()).isFalse();
+    assertThat(stringsOfA.toString()).isEqualTo("typeA<string>");
+    assertThat(stringsOfA.isSubtypeOf(typeA)).isTrue();
 
     JSType numbersOfA = NUMBER_TYPE.getGreatestSubtype(typeA);
-    assertFalse(numbersOfA.isEmptyType());
-    assertEquals("typeA<number>", numbersOfA.toString());
-    assertTrue(numbersOfA.isSubtypeOf(typeA));
+    assertThat(numbersOfA.isEmptyType()).isFalse();
+    assertThat(numbersOfA.toString()).isEqualTo("typeA<number>");
+    assertThat(numbersOfA.isSubtypeOf(typeA)).isTrue();
   }
 }

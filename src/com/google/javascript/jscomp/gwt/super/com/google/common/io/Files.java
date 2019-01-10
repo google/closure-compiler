@@ -22,6 +22,11 @@ import java.nio.charset.Charset;
 
 /** GWT compatible no-op replacement for {@code Files} */
 public final class Files {
+
+  public static CharSink asCharSink(File to, Charset charset) {
+    throw new UnsupportedOperationException("Files.asCharSink not implemented");
+  }
+
   public static void write(CharSequence from, File to, Charset charset)
       throws IOException {
   }

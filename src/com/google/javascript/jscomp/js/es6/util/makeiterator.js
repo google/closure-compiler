@@ -17,11 +17,11 @@
 /**
  * @fileoverview Polyfill for for-of loops.
  */
-'require es6/symbol';
-
+'require es6/util/arrayiterator';
 
 /**
- * Creates an iterator for the given iterable.
+ * Creates an iterator for the given iterable.  This iterator should never
+ * be exposed to user code.
  *
  * @param {string|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable
  * @return {!Iterator<T>}
@@ -29,10 +29,9 @@
  * @suppress {reportUnknownTypes}
  */
 $jscomp.makeIterator = function(iterable) {
-  $jscomp.initSymbolIterator();
-
   // NOTE: Disabling typechecking because [] not allowed on @struct.
-  var iteratorFunction = /** @type {?} */ (iterable)[Symbol.iterator];
+  var iteratorFunction = typeof Symbol != 'undefined' && Symbol.iterator &&
+      (/** @type {?} */ (iterable)[Symbol.iterator]);
   return iteratorFunction ? iteratorFunction.call(iterable) :
       $jscomp.arrayIterator(/** @type {!Array} */ (iterable));
 };

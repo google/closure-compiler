@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.util.Comparator.comparing;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -71,13 +70,18 @@ public class ConvertToTypedInterface implements CompilerPass {
 
   private static final ImmutableSet<String> CALLS_TO_PRESERVE =
       ImmutableSet.of(
+          "Polymer",
           "goog.addSingletonGetter",
           "goog.define",
           "goog.forwardDeclare",
           "goog.module",
           "goog.module.declareLegacyNamespace",
+          // TODO(johnplaisted): Consolidate on declareModuleId / delete declareNamespace.
+          "goog.declareModuleId",
+          "goog.module.declareNamespace",
           "goog.provide",
-          "goog.require");
+          "goog.require",
+          "goog.requireType");
 
   private final AbstractCompiler compiler;
 
@@ -103,18 +107,8 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
   }
 
-  private void removeUselessFiles(Node externs, Node root) {
-    for (Node script : Iterables.concat(externs.children(), root.children())) {
-      if (!script.hasChildren()) {
-        script.detach();
-        compiler.reportChangeToChangeScope(script);
-      }
-    }
-  }
-
   @Override
   public void process(Node externs, Node root) {
-    removeUselessFiles(externs, root);
     for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       processFile(script);
     }
@@ -157,9 +151,10 @@ public class ConvertToTypedInterface implements CompilerPass {
             case CALL:
               Node callee = expr.getFirstChild();
               checkState(!callee.matchesQualifiedName("goog.scope"));
-              if (!CALLS_TO_PRESERVE.contains(callee.getQualifiedName())) {
-                NodeUtil.deleteNode(n, t.getCompiler());
+              if (CALLS_TO_PRESERVE.contains(callee.getQualifiedName())) {
+                return true;
               }
+              NodeUtil.deleteNode(n, t.getCompiler());
               return false;
             case ASSIGN:
               Node lhs = expr.getFirstChild();
@@ -452,10 +447,9 @@ public class ConvertToTypedInterface implements CompilerPass {
       checkArgument(paramList.isParamList());
       for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
         if (arg.isDefaultValue()) {
-          Node replacement = arg.getFirstChild().detach();
-          arg.replaceWith(replacement);
-          arg = replacement;
-          compiler.reportChangeToEnclosingScope(replacement);
+          Node rhs = arg.getLastChild();
+          rhs.replaceWith(NodeUtil.newUndefinedNode(rhs));
+          compiler.reportChangeToEnclosingScope(arg);
         }
       }
     }

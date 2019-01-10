@@ -1039,7 +1039,8 @@ class PureFunctionIdentifier implements CompilerPass {
 
       if (reportPath != null) {
         try {
-          Files.write(pureFunctionIdentifier.getDebugReport(), new File(reportPath), UTF_8);
+          Files.asCharSink(new File(reportPath), UTF_8)
+              .write(pureFunctionIdentifier.getDebugReport());
         } catch (IOException e) {
           throw new RuntimeException(e);
         }

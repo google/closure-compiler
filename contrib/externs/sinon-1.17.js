@@ -317,6 +317,11 @@ SinonSpy.prototype.invokeCallback = function(args) {};
  */
 SinonSpy.prototype.getCall = function(n) {};
 
+/**
+ * @return {!Array<!SinonSpyCall>}
+ */
+SinonSpy.prototype.getCalls = function() {};
+
 SinonSpy.prototype.reset = function() {};
 
 /**

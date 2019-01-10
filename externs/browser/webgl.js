@@ -30,6 +30,12 @@
 
 
 /**
+ * @typedef {ImageBitmap|ImageData|HTMLImageElement|HTMLCanvasElement|
+ *     HTMLVideoElement|OffscreenCanvas}
+ */
+var TexImageSource;
+
+/**
  * @constructor
  */
 function WebGLRenderingContext() {}
@@ -2595,8 +2601,7 @@ WebGLRenderingContext.prototype.stencilOpSeparate = function(
  * @param {number} internalformat
  * @param {number} format or width
  * @param {number} type or height
- * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|
- *     number} img or border
+ * @param {?TexImageSource|number} img or border
  * @param {number=} opt_format
  * @param {number=} opt_type
  * @param {ArrayBufferView=} opt_pixels
@@ -2631,8 +2636,7 @@ WebGLRenderingContext.prototype.texParameteri = function(
  * @param {number} yoffset
  * @param {number} format or width
  * @param {number} type or height
- * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|
- *     number} data or format
+ * @param {?TexImageSource|number} data or format
  * @param {number=} opt_type
  * @param {ArrayBufferView=} opt_pixels
  * @return {undefined}

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -27,11 +28,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- */
-public final class CombinedCompilerPassTest extends TestCase  {
+@RunWith(JUnit4.class)
+public final class CombinedCompilerPassTest {
 
   private Compiler compiler;
 
@@ -80,9 +83,8 @@ public final class CombinedCompilerPassTest extends TestCase  {
     return m;
   }
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
   }
@@ -104,13 +106,13 @@ public final class CombinedCompilerPassTest extends TestCase  {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      assertEquals(Token.STRING, n.getToken());
+      assertThat(n.getToken()).isEqualTo(Token.STRING);
       visited.append(n.getString());
     }
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      assertEquals(Token.STRING, n.getToken());
+      assertThat(n.getToken()).isEqualTo(Token.STRING);
       shouldTraversed.append(n.getString());
       return !ignoring.contains(n.getString());
     }
@@ -151,15 +153,19 @@ public final class CombinedCompilerPassTest extends TestCase  {
     }
 
     void checkResults() {
-      assertEquals(
-          "ConcatTraversal ignoring " + traversal.getIgnoring()
-          + " has unexpected visiting order",
-          expectedVisited, traversal.getVisited());
+      assertWithMessage(
+              "ConcatTraversal ignoring "
+                  + traversal.getIgnoring()
+                  + " has unexpected visiting order")
+          .that(traversal.getVisited())
+          .isEqualTo(expectedVisited);
 
-      assertEquals(
-          "ConcatTraversal ignoring " + traversal.getIgnoring()
-          + " has unexpected traversal order",
-          shouldTraverseExpected, traversal.getShouldTraversed());
+      assertWithMessage(
+              "ConcatTraversal ignoring "
+                  + traversal.getIgnoring()
+                  + " has unexpected traversal order")
+          .that(traversal.getShouldTraversed())
+          .isEqualTo(shouldTraverseExpected);
     }
   }
 
@@ -180,6 +186,7 @@ public final class CombinedCompilerPassTest extends TestCase  {
     return tests;
   }
 
+  @Test
   public void testIndividualPasses() {
     for (TestHelper test : createStringTests()) {
       CombinedCompilerPass pass =
@@ -189,6 +196,7 @@ public final class CombinedCompilerPassTest extends TestCase  {
     }
   }
 
+  @Test
   public void testCombinedPasses() {
     List<TestHelper> tests  = createStringTests();
     Callback[] callbacks = new Callback[tests.size()];
@@ -241,6 +249,7 @@ public final class CombinedCompilerPassTest extends TestCase  {
 
   }
 
+  @Test
   public void testScopes() {
     Node root =
         compiler.parseTestCode("var y = function() { var x = function() { };}");

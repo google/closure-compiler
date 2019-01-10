@@ -17,11 +17,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for {#link {@link PeepholeReplaceKnownMethods}
  *
  */
+@RunWith(JUnit4.class)
 public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   private boolean late = true;
@@ -39,7 +44,8 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     late = true;
     useTypes = true;
@@ -52,6 +58,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
         compiler, getName(), new PeepholeReplaceKnownMethods(late, useTypes));
   }
 
+  @Test
   public void testStringIndexOf() {
     fold("x = 'abcdef'.indexOf('b')", "x = 1");
     fold("x = 'abcdefbe'.indexOf('b', 2)", "x = 6");
@@ -89,15 +96,18 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = tag `Hello ${name}`.indexOf('a')");
   }
 
+  @Test
   public void testStringJoinAddSparse() {
     fold("x = [,,'a'].join(',')", "x = ',,a'");
   }
 
+  @Test
   public void testNoStringJoin() {
     foldSame("x = [].join(',',2)");
     foldSame("x = [].join(f)");
   }
 
+  @Test
   public void testStringJoinAdd() {
     fold("x = ['a', 'b', 'c'].join('')", "x = \"abc\"");
     fold("x = [].join(',')", "x = \"\"");
@@ -149,6 +159,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = [[1,2],[3,4]].join()"); // would like: "x = '1,2,3,4'"
   }
 
+  @Test
   public void testStringJoinAdd_b1992789() {
     fold("x = ['a'].join('')", "x = \"a\"");
     foldSame("x = [foo()].join('')");
@@ -156,6 +167,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("[null].join('')", "''");
   }
 
+  @Test
   public void testFoldStringSubstr() {
     fold("x = 'abcde'.substr(0,2)", "x = 'ab'");
     fold("x = 'abcde'.substr(1,2)", "x = 'bc'");
@@ -173,6 +185,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = `abc ${xyz} def`.substr(0,2)");
   }
 
+  @Test
   public void testFoldStringSubstring() {
     fold("x = 'abcde'.substring(0,2)", "x = 'ab'");
     fold("x = 'abcde'.substring(1,2)", "x = 'b'");
@@ -191,6 +204,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = `abcdef ${abc}`.substring(0,2)");
   }
 
+  @Test
   public void testFoldStringSlice() {
     fold("x = 'abcde'.slice(0,2)", "x = 'ab'");
     fold("x = 'abcde'.slice(1,2)", "x = 'b'");
@@ -209,6 +223,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = `abcdef ${abc}`.slice(0,2)");
   }
 
+  @Test
   public void testFoldStringCharAt() {
     fold("x = 'abcde'.charAt(0)", "x = 'a'");
     fold("x = 'abcde'.charAt(1)", "x = 'b'");
@@ -230,6 +245,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = `abcdef ${abc}`.charAt(0)");
   }
 
+  @Test
   public void testFoldStringCharCodeAt() {
     fold("x = 'abcde'.charCodeAt(0)", "x = 97");
     fold("x = 'abcde'.charCodeAt(1)", "x = 98");
@@ -251,6 +267,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = `abcdef ${abc}`.charCodeAt(0)");
   }
 
+  @Test
   public void testFoldStringSplit() {
     late = false;
     fold("x = 'abcde'.split('foo')", "x = ['abcde']");
@@ -287,6 +304,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = 'a b c d e'.split(' ')");
   }
 
+  @Test
   public void testJoinBug() {
     fold("var x = [].join();", "var x = '';");
     foldSame("var x = [x].join();");
@@ -305,6 +323,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
             "  ].join()"));
   }
 
+  @Test
   public void testJoinSpread1() {
     foldSame("var x = [...foo].join('');");
     foldSame("var x = [...someMap.keys()].join('');");
@@ -315,6 +334,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("var x = ['1', ...['2'], '3'].join('');");
   }
 
+  @Test
   public void testJoinSpread2() {
     fold("var x = [...foo].join(',');", "var x = [...foo].join();");
     fold("var x = [...someMap.keys()].join(',');", "var x = [...someMap.keys()].join();");
@@ -325,6 +345,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("var x = ['1', ...['2'], '3'].join(',');", "var x = ['1', ...['2'], '3'].join();");
   }
 
+  @Test
   public void testToUpper() {
     fold("'a'.toUpperCase()", "'A'");
     fold("'A'.toUpperCase()", "'A'");
@@ -334,6 +355,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("`a ${bc}`.toUpperCase()");
   }
 
+  @Test
   public void testToLower() {
     fold("'A'.toLowerCase()", "'a'");
     fold("'a'.toLowerCase()", "'a'");
@@ -343,6 +365,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("`A ${BC}`.toUpperCase()");
   }
 
+  @Test
   public void testFoldMathFunctions_abs() {
     enableNormalize();
     foldSame("Math.abs(Math.random())");
@@ -358,6 +381,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Math.abs('string');", "NaN");
   }
 
+  @Test
   public void testFoldMathFunctions_ceil() {
     enableNormalize();
     foldSame("Math.ceil(Math.random())");
@@ -368,6 +392,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Math.ceil(-1.3)", "-1");
   }
 
+  @Test
   public void testFoldMathFunctions_floor() {
     enableNormalize();
     foldSame("Math.floor(Math.random())");
@@ -378,6 +403,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Math.floor(-1.3)", "-2");
   }
 
+  @Test
   public void testFoldMathFunctions_fround() {
     enableNormalize();
     foldSame("Math.fround(Math.random())");
@@ -386,6 +412,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("Math.fround(1.2)");
   }
 
+  @Test
   public void testFoldMathFunctions_round() {
     enableNormalize();
     foldSame("Math.round(Math.random())");
@@ -394,6 +421,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Math.round(-3.5)", "-3");
   }
 
+  @Test
   public void testFoldMathFunctions_sign() {
     enableNormalize();
     foldSame("Math.sign(Math.random())");
@@ -402,6 +430,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Math.sign(-3.5)", "-1");
   }
 
+  @Test
   public void testFoldMathFunctions_trunc() {
     enableNormalize();
     foldSame("Math.trunc(Math.random())");
@@ -410,6 +439,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Math.trunc(-3.5)", "-3");
   }
 
+  @Test
   public void testFoldMathFunctions_clz32() {
     enableNormalize();
     fold("Math.clz32(0)", "32");
@@ -433,6 +463,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Math.clz32(Infinity)", "32");
   }
 
+  @Test
   public void testFoldMathFunctions_max() {
     enableNormalize();
     foldSame("Math.max(Math.random(), 1)");
@@ -443,6 +474,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Math.max(0, 1, -1, 200)", "200");
   }
 
+  @Test
   public void testFoldMathFunctions_min() {
     enableNormalize();
     foldSame("Math.min(Math.random(), 1)");
@@ -453,7 +485,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Math.min(0, 1, -1, 200)", "-1");
   }
 
-
+  @Test
   public void testFoldParseNumbers() {
     enableNormalize();
 
@@ -511,6 +543,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = parseInt('08')");
   }
 
+  @Test
   public void testFoldParseOctalNumbers() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     enableNormalize();
@@ -519,6 +552,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseInt(021, 8)", "x = 15");
   }
 
+  @Test
   public void testReplaceWithCharAt() {
     enableTypeCheck();
 

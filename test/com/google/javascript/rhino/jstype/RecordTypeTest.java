@@ -38,12 +38,20 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
+
 import com.google.javascript.rhino.jstype.JSType.Nullability;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class RecordTypeTest extends BaseJSTypeTestCase {
 
+  @Test
   public void testRecursiveRecord() {
     ProxyObjectType loop = new ProxyObjectType(registry, NUMBER_TYPE);
     JSType record = new RecordTypeBuilder(registry)
@@ -51,18 +59,19 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
         .addProperty("number", NUMBER_TYPE, null)
         .addProperty("string", STRING_TYPE, null)
         .build();
-    assertEquals("{\n  loop: number,\n  number: number,\n  string: string\n}",
-        record.toString());
+    assertThat(record.toString())
+        .isEqualTo("{\n  loop: number,\n  number: number,\n  string: string\n}");
 
     loop.setReferencedType(record);
-    assertEquals("{\n  loop: {...},\n  number: number,\n  string: string\n}",
-        record.toString());
-    assertEquals("{loop: ?, number: number, string: string}",
-        record.toAnnotationString(Nullability.EXPLICIT));
+    assertThat(record.toString())
+        .isEqualTo("{\n  loop: {...},\n  number: number,\n  string: string\n}");
+    assertThat(record.toAnnotationString(Nullability.EXPLICIT))
+        .isEqualTo("{loop: ?, number: number, string: string}");
 
     Asserts.assertEquivalenceOperations(record, loop);
   }
 
+  @Test
   public void testLongToString() {
     JSType record = new RecordTypeBuilder(registry)
         .addProperty("a01", NUMBER_TYPE, null)
@@ -77,27 +86,28 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
         .addProperty("a10", NUMBER_TYPE, null)
         .addProperty("a11", NUMBER_TYPE, null)
         .build();
-    assertEquals(
-        LINE_JOINER.join(
-            "{",
-            "  a01: number,",
-            "  a02: number,",
-            "  a03: number,",
-            "  a04: number,",
-            "  a05: number,",
-            "  a06: number,",
-            "  a07: number,",
-            "  a08: number,",
-            "  a09: number,",
-            "  a10: number, ...",
-            "}"),
-        record.toString());
-    assertEquals(
-        "{a01: number, a02: number, a03: number, a04: number, a05: number, a06: number," +
-        " a07: number, a08: number, a09: number, a10: number, a11: number}",
-        record.toAnnotationString(Nullability.EXPLICIT));
+    assertThat(record.toString())
+        .isEqualTo(
+            LINE_JOINER.join(
+                "{",
+                "  a01: number,",
+                "  a02: number,",
+                "  a03: number,",
+                "  a04: number,",
+                "  a05: number,",
+                "  a06: number,",
+                "  a07: number,",
+                "  a08: number,",
+                "  a09: number,",
+                "  a10: number, ...",
+                "}"));
+    assertThat(record.toAnnotationString(Nullability.EXPLICIT))
+        .isEqualTo(
+            "{a01: number, a02: number, a03: number, a04: number, a05: number, a06: number,"
+                + " a07: number, a08: number, a09: number, a10: number, a11: number}");
   }
 
+  @Test
   public void testSupAndInf() {
     JSType recordA = new RecordTypeBuilder(registry)
         .addProperty("a", NUMBER_TYPE, null)
@@ -118,29 +128,27 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
 
     JSType aSupC = registry.createUnionType(recordA, recordC);
 
-    Asserts.assertTypeEquals(
-        aInfC, recordA.getGreatestSubtype(recordC));
-    Asserts.assertTypeEquals(
-        aSupC, recordA.getLeastSupertype(recordC));
+    assertType(recordA.getGreatestSubtype(recordC)).isStructurallyEqualTo(aInfC);
+    assertType(recordA.getLeastSupertype(recordC)).isStructurallyEqualTo(aSupC);
 
-    Asserts.assertTypeEquals(
-        aInfC, proxyRecordA.getGreatestSubtype(proxyRecordC));
-    Asserts.assertTypeEquals(
-        aSupC, proxyRecordA.getLeastSupertype(proxyRecordC));
+    assertType(proxyRecordA.getGreatestSubtype(proxyRecordC)).isStructurallyEqualTo(aInfC);
+    assertType(proxyRecordA.getLeastSupertype(proxyRecordC)).isStructurallyEqualTo(aSupC);
   }
 
-  public void testSubtypeWithUnknowns() throws Exception {
+  @Test
+  public void testSubtypeWithUnknowns() {
     JSType recordA = new RecordTypeBuilder(registry)
         .addProperty("a", NUMBER_TYPE, null)
         .build();
     JSType recordB = new RecordTypeBuilder(registry)
         .addProperty("a", UNKNOWN_TYPE, null)
         .build();
-    assertTrue(recordA.isSubtypeOf(recordB));
-    assertTrue(recordB.isSubtypeOf(recordA));
+    assertThat(recordA.isSubtypeOf(recordB)).isTrue();
+    assertThat(recordB.isSubtypeOf(recordA)).isTrue();
   }
 
-  public void testSubtypeWithUnknowns2() throws Exception {
+  @Test
+  public void testSubtypeWithUnknowns2() {
     JSType recordA = new RecordTypeBuilder(registry)
         .addProperty("a",
             new FunctionBuilder(registry)
@@ -155,11 +163,12 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
             .build(),
             null)
         .build();
-    assertTrue(recordA.isSubtypeOf(recordB));
-    assertTrue(recordB.isSubtypeOf(recordA));
+    assertThat(recordA.isSubtypeOf(recordB)).isTrue();
+    assertThat(recordB.isSubtypeOf(recordA)).isTrue();
   }
 
-  public void testSubtypeWithFunctionProps() throws Exception {
+  @Test
+  public void testSubtypeWithFunctionProps() {
     JSType recordA = new RecordTypeBuilder(registry)
         .addProperty("a",
             new FunctionBuilder(registry)
@@ -174,11 +183,12 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
             .build(),
             null)
         .build();
-    assertFalse(recordA.isSubtypeOf(recordB));
-    assertFalse(recordB.isSubtypeOf(recordA));
+    assertThat(recordA.isSubtypeOf(recordB)).isFalse();
+    assertThat(recordB.isSubtypeOf(recordA)).isFalse();
   }
 
-  public void testSubtypeWithManyProps() throws Exception {
+  @Test
+  public void testSubtypeWithManyProps() {
     JSType recordA = new RecordTypeBuilder(registry)
         .addProperty("a", NUMBER_TYPE, null)
         .addProperty("b", NUMBER_TYPE, null)
@@ -192,10 +202,10 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
         .addProperty("b",
             registry.createUnionType(NUMBER_TYPE, STRING_TYPE), null)
         .build();
-    assertFalse(recordA.isSubtypeOf(recordB));
-    assertFalse(recordB.isSubtypeOf(recordA));
-    assertFalse(recordC.isSubtypeOf(recordB));
-    assertTrue(recordB.isSubtypeOf(recordC));
-    assertTrue(recordA.isSubtypeOf(recordC));
+    assertThat(recordA.isSubtypeOf(recordB)).isFalse();
+    assertThat(recordB.isSubtypeOf(recordA)).isFalse();
+    assertThat(recordC.isSubtypeOf(recordB)).isFalse();
+    assertThat(recordB.isSubtypeOf(recordC)).isTrue();
+    assertThat(recordA.isSubtypeOf(recordC)).isTrue();
   }
 }

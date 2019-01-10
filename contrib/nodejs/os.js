@@ -17,6 +17,7 @@
 /**
  * @fileoverview Definitions for node's os module.
  * @see http://nodejs.org/api/os.html
+ * @externs
  */
 
 /** @const */
@@ -26,7 +27,7 @@ var os = {};
  * @return {string}
  * @nosideeffects
  */
-os.tmpDir;
+os.tmpdir;
 
 /**
  * @return {string}

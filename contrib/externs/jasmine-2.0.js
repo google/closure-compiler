@@ -146,6 +146,12 @@ jasmine.Matchers.prototype.toEqual = function(value) {};
 /** @return {void} */
 jasmine.Matchers.prototype.toHaveBeenCalled = function() {};
 
+/**
+ * @param {!jasmine.Spy} expected
+ * @return {void}
+ */
+jasmine.Matchers.prototype.toHaveBeenCalledBefore = function(expected) {};
+
 
 /** @param {...*} var_args */
 jasmine.Matchers.prototype.toHaveBeenCalledWith = function(var_args) {};
@@ -257,6 +263,12 @@ jasmine.CallTracker = function() {};
  * @return {boolean}
  */
 jasmine.CallTracker.prototype.any = function() {};
+
+
+/**
+ * @return {!Array<{args: !Array, object: Object}>}
+ */
+jasmine.CallTracker.prototype.all = function() {};
 
 
 /**
@@ -415,8 +427,13 @@ jasmine.getEnv = function() {};
 jasmine.Reporter = function() {};
 
 /**
- * @param {{id: number, description: string, fullName: string, status: string}}
- *     result
+ * @param {{
+ *   id: number,
+ *   description: string,
+ *   fullName: string,
+ *   pendingReason: string,
+ *   status: string
+ * }} result
  */
 jasmine.Reporter.prototype.specDone = function(result) {};
 

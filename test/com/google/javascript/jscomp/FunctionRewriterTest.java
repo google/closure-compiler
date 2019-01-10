@@ -16,10 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
  * Tests for {@link FunctionRewriter}
  *
  */
+@RunWith(JUnit4.class)
 public final class FunctionRewriterTest extends CompilerTestCase {
 
   private static final String RETURNARG_HELPER =
@@ -48,7 +54,8 @@ public final class FunctionRewriterTest extends CompilerTestCase {
     "}";
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     disableLineNumberCheck();
   }
@@ -64,6 +71,7 @@ public final class FunctionRewriterTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testEs6Class() {
     // There is never any benefit to replacing ES6 class methods
     checkCompilesToSame(
@@ -92,6 +100,7 @@ public final class FunctionRewriterTest extends CompilerTestCase {
             "}"), 10);
   }
 
+  @Test
   public void testReplaceReturnConst1() {
     String source = "a.prototype.foo = function() {return \"foobar\"}";
     checkCompilesToSame(source, 3);
@@ -101,10 +110,12 @@ public final class FunctionRewriterTest extends CompilerTestCase {
                     4);
   }
 
+  @Test
   public void testReplaceReturnConst2() {
     checkCompilesToSame("a.prototype.foo = function() {return foobar}", 10);
   }
 
+  @Test
   public void testReplaceReturnConst3() {
     String source = "a.prototype.foo = function() {return void 0;}";
     checkCompilesToSame(source, 3);
@@ -114,6 +125,7 @@ public final class FunctionRewriterTest extends CompilerTestCase {
                     4);
   }
 
+  @Test
   public void testReplaceGetter1() {
     String source = "a.prototype.foo = function() {return this.foo_}";
     checkCompilesToSame(source, 3);
@@ -123,10 +135,12 @@ public final class FunctionRewriterTest extends CompilerTestCase {
                     4);
   }
 
+  @Test
   public void testReplaceGetter2() {
     checkCompilesToSame("a.prototype.foo = function() {return}", 10);
   }
 
+  @Test
   public void testReplaceSetter1() {
     String source = "a.prototype.foo = function(v) {this.foo_ = v}";
     checkCompilesToSame(source, 4);
@@ -136,16 +150,19 @@ public final class FunctionRewriterTest extends CompilerTestCase {
                     5);
   }
 
+  @Test
   public void testReplaceSetterWithDefault() {
     String source = "a.prototype.foo = function(v = 1) {this.foo_ = v}";
     checkCompilesToSame(source, 10);
   }
 
+  @Test
   public void testReplaceSetterWithDestructuring() {
     String source = "a.prototype.foo = function({v}) {this.foo_ = v}";
     checkCompilesToSame(source, 10);
   }
 
+  @Test
   public void testReplaceSetter2() {
     String source = "a.prototype.foo = function(v, v2) {this.foo_ = v}";
     checkCompilesToSame(source, 3);
@@ -155,15 +172,18 @@ public final class FunctionRewriterTest extends CompilerTestCase {
                     4);
   }
 
+  @Test
   public void testReplaceSetter3() {
     checkCompilesToSame("a.prototype.foo = function() {this.foo_ = v}", 10);
   }
 
+  @Test
   public void testReplaceSetter4() {
     checkCompilesToSame(
         "a.prototype.foo = function(v, v2) {this.foo_ = v2}", 10);
   }
 
+  @Test
   public void testReplaceEmptyFunction1() {
     String source = "a.prototype.foo = function() {}";
     checkCompilesToSame(source, 4);
@@ -173,10 +193,12 @@ public final class FunctionRewriterTest extends CompilerTestCase {
                     5);
   }
 
+  @Test
   public void testReplaceEmptyFunction2() {
     checkCompilesToSame("function foo() {}", 10);
   }
 
+  @Test
   public void testReplaceEmptyFunction3() {
     String source = "var foo = function() {}";
     checkCompilesToSame(source, 4);
@@ -186,8 +208,7 @@ public final class FunctionRewriterTest extends CompilerTestCase {
                     5);
   }
 
-
-
+  @Test
   public void testReplaceIdentityFunction1() {
     String source = "a.prototype.foo = function(a) {return a}";
     checkCompilesToSame(source, 2);
@@ -197,18 +218,22 @@ public final class FunctionRewriterTest extends CompilerTestCase {
                     3);
   }
 
+  @Test
   public void testReplaceIdentityFunctionWithDefault() {
     checkCompilesToSame("a.prototype.foo = function(a = 1) {return a}", 10);
   }
 
+  @Test
   public void testReplaceIdentityFunctionWithDestructuring() {
     checkCompilesToSame("a.prototype.foo = function({a}) {return a}", 10);
   }
 
+  @Test
   public void testReplaceIdentityFunction2() {
     checkCompilesToSame("a.prototype.foo = function(a) {return a + 1}", 10);
   }
 
+  @Test
   public void testIssue538() {
     checkCompilesToSame(      "/** @constructor */\n" +
         "WebInspector.Setting = function() {}\n" +

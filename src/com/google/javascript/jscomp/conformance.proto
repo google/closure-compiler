@@ -25,8 +25,8 @@ message ConformanceConfig {
 }
 
 // A specification of code requirements
+// NEXT ID: 15
 message Requirement {
-
   // Required: The message to report when a requirement is violated. This should
   // reference a document describing the reasoning for the requirement
   // and contacts.
@@ -39,6 +39,30 @@ message Requirement {
   // Optional: A list of source paths regexs that are exempt from the
   // requirement.
   repeated string whitelist_regexp = 3;
+
+  message WhitelistEntry {
+    enum Reason {
+      UNSPECIFIED = 0;
+      LEGACY = 1;
+      OUT_OF_SCOPE = 2;
+      MANUALLY_REVIEWED = 3;
+    }
+
+    optional Reason reason = 1;
+
+    // A list of source path prefixes.
+    repeated string prefix = 2;
+
+    // A list of regexes matching sources to be ignored
+    repeated string regexp = 3;
+
+    // Short explanation.
+    optional string explanation = 4;
+
+    repeated string comment = 5;
+  }
+
+  repeated WhitelistEntry whitelist_entry = 14;
 
   // Optional: A list of source paths that will be checked for the requirement
   // (the opposite of whitelist).
@@ -60,6 +84,8 @@ message Requirement {
     //  - A global name like "eval" or "goog"
     //  - A namespaced value or type:  namespace.Banned
     //  - A 'static' property:  "namespace.Foo.banned"
+    // TODO(b/112325992): If namespace.Banned is a goog.module that does not
+    // call goog.module.declareNamespace, the rule will not match.
     BANNED_NAME = 3;
 
     // A banned instance property, for example:
@@ -112,6 +138,10 @@ message Requirement {
     // Unlike BANNED_NAME, this only bans calls to the property, i.e. using the
     // property as a value is allowed.
     BANNED_NAME_CALL = 12;
+
+    // A restricted write to an instance property.
+    // Example: "Element.prototype.innerHTML:!TrustedHTML|string"
+    RESTRICTED_PROPERTY_WRITE = 13;
   }
 
   enum TypeMatchingStrategy {

@@ -15,22 +15,33 @@
  */
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+@RunWith(JUnit4.class)
 public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   private static final String EXTERN = "Equality.$same = function(opt_a, opt_b) {};";
+
+  private static boolean useTypes;
 
   public J2clEqualitySameRewriterPassTest() {
     super(MINIMAL_EXTERNS + EXTERN);
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
+    useTypes = false;
     enableTypeCheck();
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new PeepholeOptimizationsPass(compiler, getName(), new J2clEqualitySameRewriterPass());
+    return new PeepholeOptimizationsPass(
+        compiler, getName(), new J2clEqualitySameRewriterPass(useTypes));
   }
 
   @Override
@@ -40,28 +51,58 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
     return compiler;
   }
 
+  @Test
   public void testRewriteEqualitySame() {
     test(
         lines(
             "Equality.$same(0, '');",
             "var a = 'ABC';",
             "Equality.$same(a, 'ABC');",
-            "var b = 5;",
+            "var b = {}",
             "Equality.$same(b, 5);",
             "Equality.$same(b, []);",
+            "Equality.$same(b, !a);",
             "Equality.$same(b, null);",
-            "Equality.$same(null, b);"),
+            "Equality.$same(null, b);",
+            "Equality.$same(b, /** @type {null} */ (null));"),
         lines(
             "0 === '';",
             "var a = 'ABC';",
             "a === 'ABC';",
-            "var b = 5;",
+            "var b = {};",
             "b === 5;",
             "b === [];",
+            "b === !a;",
             "b == null;",
-            "null == b;"));
+            "b == null;",
+            "b == /** @type {null} */ (null);"));
   }
 
+  @Test
+  public void testRewriteEqualitySame_useTypes() {
+    useTypes = true;
+    test(
+        lines(
+            "var b = {};",
+            "Equality.$same(b, null);",
+            "Equality.$same(null, b);",
+            "Equality.$same(b, undefined);",
+            "var c = 5;",
+            "Equality.$same(c, null);",
+            "Equality.$same(null, c);",
+            "Equality.$same(c, undefined);"),
+        lines(
+            "var b = {};",
+            "!b",
+            "!b;",
+            "!b;",
+            "var c = 5;",
+            "c == null;", // Note that the semantics are preserved for number.
+            "c == null;",
+            "c == undefined;"));
+  }
+
+  @Test
   public void testNotRewriteEqualitySame() {
     testSame(
         lines(
@@ -74,10 +115,15 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "var allType = null;",
             "Equality.$same(num, str);",
             "Equality.$same(num, allType);",
-            "Equality.$same(str, allType);"));
+            "Equality.$same(str, allType);",
+            "function hasSideEffects(){};",
+            // Note that the first parameter has value 'undefined' but it has side effects.
+            "Equality.$same(void hasSideEffects(), hasSideEffects());"));
   }
 
-  public void testNotRewriteEqualitySame_sameTypes() {
+  @Test
+  public void testNotRewriteEqualitySame_useTypes() {
+    useTypes = true;
     testSame(
         lines(
             "/** @type {number|undefined} */",
@@ -104,6 +150,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "Equality.$same(allType1, allType2);"));
   }
 
+  @Test
   public void testNotRewriteEqualitySame_parametersOptimizedAway() {
     testSame(
         lines(

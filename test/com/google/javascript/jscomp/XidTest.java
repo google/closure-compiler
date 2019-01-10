@@ -15,25 +15,26 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Unit test for {@link Xid}.
- */
-public class XidTest extends TestCase {
-  public XidTest(String name) {
-    super(name);
-  }
+/** Unit test for {@link Xid}. */
+@RunWith(JUnit4.class)
+public class XidTest {
 
   /**
-   * Verifies that {@link Xid#toString} generates unique
-   * strings for the integers close to zero, {@code Integer.MIN_VALUE}, and
-   * {@code Integer.MAX_VALUE}.
+   * Verifies that {@link Xid#toString} generates unique strings for the integers close to zero,
+   * {@code Integer.MIN_VALUE}, and {@code Integer.MAX_VALUE}.
    */
-  public void testUniqueness() throws Exception {
+  @Test
+  public void testUniqueness() {
     Map<String, Integer> map = new HashMap<>();
     helpTestUniqueness(map, -1000, 1000);
     helpTestUniqueness(map, Integer.MIN_VALUE, Integer.MIN_VALUE + 1000);
@@ -44,16 +45,14 @@ public class XidTest extends TestCase {
     for (int i = lo; i <= hi; ++i) {
       String key = Xid.toString(i);
       Integer dup = map.get(key);
-      assertNull("Both " + dup + " and " + i + " map to: " + key, dup);
+      assertWithMessage("Both " + dup + " and " + i + " map to: " + key).that(dup).isNull();
       map.put(key, i);
     }
   }
 
-  /**
-   * Verifies that {@link Xid#toString} generates strings
-   * with lengths between 1 and 6.
-   */
-  public void testLength() throws Exception {
+  /** Verifies that {@link Xid#toString} generates strings with lengths between 1 and 6. */
+  @Test
+  public void testLength() {
     helpTestLength(0);
     helpTestLength(1);
     helpTestLength(-1);
@@ -68,29 +67,29 @@ public class XidTest extends TestCase {
   }
 
   private void helpTestLength(int i) {
-    String key = Xid.toString(i);
-    assertTrue("Long value for " + i + ": " + key, key.length() <= 6);
-    assertTrue("Empty value for " + i + ": " + key, key.length() > 0);
+    assertThat(Xid.toString(i)).matches(".{1,6}");
   }
 
+  @Test
   public void testToString() {
-    assertEquals("z6ArXc", Xid.toString(1));
-    assertEquals("A6ArXc", Xid.toString(2));
-    assertEquals("x6ArXc", Xid.toString(-1));
-    assertEquals("OcErXc", Xid.toString(10000));
-    assertEquals("tTaYp", Xid.toString(-1951591049));
+    assertThat(Xid.toString(1)).isEqualTo("z6ArXc");
+    assertThat(Xid.toString(2)).isEqualTo("A6ArXc");
+    assertThat(Xid.toString(-1)).isEqualTo("x6ArXc");
+    assertThat(Xid.toString(10000)).isEqualTo("OcErXc");
+    assertThat(Xid.toString(-1951591049)).isEqualTo("tTaYp");
   }
 
+  @Test
   public void testGet() {
     Xid dummyMap = new Xid();
-    assertEquals("nZzm6c", dummyMap.get("today"));
-    assertEquals("fkPKBb", dummyMap.get("tomorrow"));
-    assertEquals("b6Lt6c", dummyMap.get("value"));
+    assertThat(dummyMap.get("today")).isEqualTo("nZzm6c");
+    assertThat(dummyMap.get("tomorrow")).isEqualTo("fkPKBb");
+    assertThat(dummyMap.get("value")).isEqualTo("b6Lt6c");
 
-    assertEquals("QB6rXc", dummyMap.get("foo"));
-    assertEquals("RW4o4b", dummyMap.get("foo.Bar"));
+    assertThat(dummyMap.get("foo")).isEqualTo("QB6rXc");
+    assertThat(dummyMap.get("foo.Bar")).isEqualTo("RW4o4b");
 
-    assertEquals("MiB45c", dummyMap.get("prop1"));
-    assertEquals("NiB45c", dummyMap.get("prop2"));
+    assertThat(dummyMap.get("prop1")).isEqualTo("MiB45c");
+    assertThat(dummyMap.get("prop2")).isEqualTo("NiB45c");
   }
 }

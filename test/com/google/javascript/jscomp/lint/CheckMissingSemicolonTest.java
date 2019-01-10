@@ -22,7 +22,12 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class CheckMissingSemicolonTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -37,7 +42,8 @@ public class CheckMissingSemicolonTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
@@ -46,18 +52,20 @@ public class CheckMissingSemicolonTest extends CompilerTestCase {
     testWarning(js, CheckMissingSemicolon.MISSING_SEMICOLON);
   }
 
-
+  @Test
   public void testWarning() {
     testWarning("var x");
     testWarning("alert(1)");
     testWarning("do { things; } while (true)");
   }
 
+  @Test
   public void testNoWarning_withSemicolon() {
     testSame("var x;");
     testSame("alert(1);");
   }
 
+  @Test
   public void testNoWarning_controlStructure() {
     testSame("if (true) {}");
     testSame("while (true) {}");
@@ -70,17 +78,20 @@ public class CheckMissingSemicolonTest extends CompilerTestCase {
     testSame("for (x in y) {}");
   }
 
+  @Test
   public void testNoWarning_functionOrClass() {
     testSame("function f() {}");
     testSame("function* f() {}");
     testSame("class Example {}");
   }
 
+  @Test
   public void testWarning_export() {
     testWarning("export var x = 3");
     testWarning("export * from 'other'");
   }
 
+  @Test
   public void testNoWarning_export() {
     testSame("export function f() {}");
     testSame("export class C {}");

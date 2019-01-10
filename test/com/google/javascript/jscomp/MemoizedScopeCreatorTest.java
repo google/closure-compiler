@@ -16,28 +16,32 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-import junit.framework.TestCase;
+/** A tests for {@link MemoizedScopeCreator}. */
+@RunWith(JUnit4.class)
+public final class MemoizedScopeCreatorTest {
 
-/**
- * A tests for {@link MemoizedScopeCreator}.
- */
-public final class MemoizedScopeCreatorTest extends TestCase {
-
-  public void testMemoization() throws Exception {
+  @Test
+  public void testMemoization() {
     Node root1 = new Node(Token.ROOT);
     Node root2 = new Node(Token.ROOT);
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
     ScopeCreator creator = new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
     Scope scopeA = (Scope) creator.createScope(root1, null);
-    assertSame(scopeA, creator.createScope(root1, null));
-    assertNotSame(scopeA, creator.createScope(root2, null));
+    assertThat(creator.createScope(root1, null)).isSameAs(scopeA);
+    assertThat(creator.createScope(root2, null)).isNotSameAs(scopeA);
   }
 
-  public void testPreconditionCheck() throws Exception {
+  @Test
+  public void testPreconditionCheck() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
     Node root = new Node(Token.ROOT);
@@ -50,6 +54,6 @@ public final class MemoizedScopeCreatorTest extends TestCase {
     } catch (IllegalStateException e) {
       handled = true;
     }
-    assertTrue(handled);
+    assertThat(handled).isTrue();
   }
 }

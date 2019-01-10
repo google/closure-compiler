@@ -15,7 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISPLACED_PROPERTY_JSDOC;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
@@ -27,6 +29,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Simple static utility functions shared between the {@link PolymerPass} and its helper classes.
@@ -44,6 +49,7 @@ final class PolymerPassStaticUtils {
     // When imported from an ES module, we'll have a GETPROP like
     // `module$polymer$polymer_legacy.Polymer`.
     return name.matchesQualifiedName("Polymer")
+        || "Polymer".equals(name.getOriginalQualifiedName())
         || (name.isGetProp() && name.getLastChild().getString().equals("Polymer"));
   }
 
@@ -65,6 +71,7 @@ final class PolymerPassStaticUtils {
     return !heritage.isEmpty()
         && (heritage.matchesQualifiedName("Polymer.Element")
             || heritage.matchesQualifiedName("PolymerElement")
+            || "PolymerElement".equals(heritage.getOriginalQualifiedName())
             || (heritage.isGetProp()
                 && heritage.getLastChild().getString().equals("PolymerElement")));
   }
@@ -117,11 +124,20 @@ final class PolymerPassStaticUtils {
   }
 
   /**
-   * Extracts a list of {@link MemberDefinition}s for the {@code properties} block of the given
+   * Finds a list of {@link MemberDefinition}s for the {@code properties} block of the given
    * descriptor Object literal.
+   *
+   * @param descriptor The Polymer properties configuration object literal node.
+   * @param constructor If we are finding the properties of an ES6 class, the constructor function
+   *     node for that class, otherwise null. We'll prefer JSDoc from property initialization
+   *     statements in this constructor over the JSDoc within the Polymer properties configuration
+   *     object.
    */
   static ImmutableList<MemberDefinition> extractProperties(
-      Node descriptor, PolymerClassDefinition.DefinitionType defType, AbstractCompiler compiler) {
+      Node descriptor,
+      PolymerClassDefinition.DefinitionType defType,
+      AbstractCompiler compiler,
+      @Nullable Node constructor) {
     Node properties = descriptor;
     if (defType == PolymerClassDefinition.DefinitionType.ObjectLiteral) {
       properties = NodeUtil.getFirstPropMatchingKey(descriptor, "properties");
@@ -130,12 +146,56 @@ final class PolymerPassStaticUtils {
       return ImmutableList.of();
     }
 
+    Map<String, JSDocInfo> constructorPropertyJsDoc = new HashMap<>();
+    if (constructor != null) {
+      collectConstructorPropertyJsDoc(constructor, constructorPropertyJsDoc);
+    }
+
     ImmutableList.Builder<MemberDefinition> members = ImmutableList.builder();
     for (Node keyNode : properties.children()) {
-      members.add(new MemberDefinition(NodeUtil.getBestJSDocInfo(keyNode), keyNode,
-          keyNode.getFirstChild()));
+      // The JSDoc for a Polymer property in the constructor should win over the JSDoc in the
+      // Polymer properties configuration object.
+      JSDocInfo constructorJsDoc = constructorPropertyJsDoc.get(keyNode.getString());
+      JSDocInfo propertiesConfigJsDoc = NodeUtil.getBestJSDocInfo(keyNode);
+      JSDocInfo bestJsDoc;
+      if (constructorJsDoc != null) {
+        bestJsDoc = constructorJsDoc;
+        if (propertiesConfigJsDoc != null) {
+          // Warn if the user put JSDoc in both places.
+          compiler.report(JSError.make(keyNode, POLYMER_MISPLACED_PROPERTY_JSDOC));
+        }
+      } else {
+        bestJsDoc = propertiesConfigJsDoc;
+      }
+      members.add(new MemberDefinition(bestJsDoc, keyNode, keyNode.getFirstChild()));
     }
     return members.build();
+  }
+
+  /**
+   * Find the properties that are initialized in the given constructor, and return a map from each
+   * property name to its JSDoc.
+   *
+   * @param node The constructor function node to traverse.
+   * @param map The map from property name to JSDoc.
+   */
+  private static void collectConstructorPropertyJsDoc(Node node, Map<String, JSDocInfo> map) {
+    checkNotNull(node);
+    for (Node child : node.children()) {
+      if (child.isGetProp()
+          && child.getFirstChild().isThis()
+          && child.getSecondChild().isString()) {
+        // We found a "this.foo" expression. Map "foo" to its JSDoc.
+        map.put(child.getSecondChild().getString(), NodeUtil.getBestJSDocInfo(child));
+      } else {
+        // Recurse through every other kind of node, because properties are not necessarily declared
+        // at the top level of the constructor body; e.g. they could be declared as part of an
+        // assignment, or within an if statement. We're being overly loose here, e.g. we shouldn't
+        // traverse into a nested function where "this" doesn't refer to our prototype, but
+        // hopefully this is good enough for our purposes.
+        collectConstructorPropertyJsDoc(child, map);
+      }
+    }
   }
 
   /**

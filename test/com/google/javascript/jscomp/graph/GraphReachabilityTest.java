@@ -16,20 +16,22 @@
 
 package com.google.javascript.jscomp.graph;
 
-import com.google.javascript.jscomp.graph.GraphReachability;
-import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-import com.google.javascript.jscomp.graph.DiGraph;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link GraphReachability}.
+ * Tests for {@link com.google.javascript.jscomp.graph.GraphReachability}.
  *
  */
-public final class GraphReachabilityTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class GraphReachabilityTest {
   GraphReachability<String, String> reachability = null;
   DiGraph<String, String> graph = null;
 
+  @Test
   public void testSimple() {
     graph = LinkedDirectedGraph.create();
     graph.createNode("A");
@@ -76,12 +78,14 @@ public final class GraphReachabilityTest extends TestCase {
   }
 
   public void assertReachable(String s) {
-    assertSame(s + " should be reachable", graph.getNode(s).getAnnotation(),
-        GraphReachability.REACHABLE);
+    assertWithMessage(s + " should be reachable")
+        .that(GraphReachability.REACHABLE)
+        .isSameAs(graph.getNode(s).getAnnotation());
   }
 
   public void assertNotReachable(String s) {
-    assertNotSame(s + " should not be reachable",
-        graph.getNode(s).getAnnotation(), GraphReachability.REACHABLE);
+    assertWithMessage(s + " should not be reachable")
+        .that(GraphReachability.REACHABLE)
+        .isNotSameAs(graph.getNode(s).getAnnotation());
   }
 }

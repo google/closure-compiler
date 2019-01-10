@@ -18,16 +18,20 @@ package com.google.javascript.jscomp.deps;
 import static com.google.common.base.StandardSystemProperty.USER_DIR;
 import static com.google.common.truth.Truth.assertThat;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for the {@link PathUtil} class.
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
-public final class PathUtilTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class PathUtilTest {
 
-  public void testCollapseDots() throws Exception {
+  @Test
+  public void testCollapseDots() {
     assertThat(PathUtil.collapseDots("/foo")).isEqualTo("/foo");
     assertThat(PathUtil.collapseDots("/foo/bar//")).isEqualTo("/foo/bar");
     assertThat(PathUtil.collapseDots("..//foo/bar")).isEqualTo("foo/bar");
@@ -40,7 +44,8 @@ public final class PathUtilTest extends TestCase {
     assertThat(PathUtil.collapseDots("foo/./././bar//..")).isEqualTo("foo");
   }
 
-  public void testMakeAbsolute() throws Exception {
+  @Test
+  public void testMakeAbsolute() {
     String cwd = USER_DIR.value();
     assertThat(PathUtil.makeAbsolute("/foo/")).isEqualTo("/foo");
     assertThat(PathUtil.makeAbsolute("/foo//bar")).isEqualTo("/foo/bar");
@@ -54,7 +59,8 @@ public final class PathUtilTest extends TestCase {
     assertThat(PathUtil.makeAbsolute("../foo//./", cwd)).isEqualTo("/some/foo");
   }
 
-  public void testMakeRelative() throws Exception {
+  @Test
+  public void testMakeRelative() {
     assertThat(PathUtil.makeRelative("/gfs/bp/pso", "/gfs/bp/pso/simba")).isEqualTo("simba");
     assertThat(PathUtil.makeRelative("/gfs/bp/pso", "/gfs/bp/pso/simba/")).isEqualTo("simba");
     assertThat(PathUtil.makeRelative("gfs/bp/pso/", "gfs/bp/pso/simba")).isEqualTo("simba");

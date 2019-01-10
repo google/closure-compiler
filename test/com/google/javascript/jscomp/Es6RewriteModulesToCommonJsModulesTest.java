@@ -21,8 +21,13 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 
+@RunWith(JUnit4.class)
 public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCase {
   private List<String> moduleRoots;
   private ModuleLoader.ResolutionMode resolutionMode;
@@ -30,11 +35,14 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
   private PathEscaper pathEscaper;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     // ECMASCRIPT5 to trigger module processing after parsing.
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
-    enableRunTypeCheckAfterProcessing();
+    // Pass doesn't need to update these as it should only be used for bundling and thus
+    // optimizations never run after it.
+    disableGetterAndSetterUpdateValidation();
     moduleRoots = ImmutableList.of();
     resolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     prefixReplacements = ImmutableMap.of();
@@ -64,6 +72,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
     return 1;
   }
 
+  @Test
   public void testExports() {
     test(
         "export var x;",
@@ -254,6 +263,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "}, 'testcode', []);"));
   }
 
+  @Test
   public void testExportDestructureDeclaration() {
     test("export let {a, c:b} = obj;",
         lines(
@@ -325,6 +335,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "}, 'testcode', []);"));
   }
 
+  @Test
   public void testImport() {
     test(
         "import * as x from 'other.js'; use(x, x.y);",
@@ -373,6 +384,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "}, 'testcode', ['first.js', 'second.js']);"));
   }
 
+  @Test
   public void testImportAndExport() {
     test(
         "export var x; import {y} from 'other.js';",
@@ -425,6 +437,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "}, 'testcode', ['other.js']);"));
   }
 
+  @Test
   public void testExportFrom() {
     test(
         "export {x, y as z} from 'other.js';",
@@ -449,6 +462,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "}, 'testcode', ['other.js']);"));
   }
 
+  @Test
   public void testExportWithArguments() {
     test(
         lines("export default function f() { return arguments[1]; }"),
@@ -467,7 +481,8 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "}, 'testcode', []);"));
   }
 
-  public void testFileNameIsPreservedInRegisteredPathWhenNotEscaping() {
+  @Test
+  public void testProtocolAndDomainAreRemovedInRegisteredPathWhenNotEscaping() {
     pathEscaper = PathEscaper.CANONICALIZE_ONLY;
     test(
         srcs(SourceFile.fromCode("https://example.domain.google.com/test.js", "export var x;")),
@@ -486,23 +501,15 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                     "    },",
                     "  });",
                     "  var x;",
-                    "}, 'https://example.domain.google.com/test.js', []);"))));
+                    "}, 'test.js', []);"))));
   }
 
-  public void testFileNameIsPreservedInRequiredPathWhenNotEscaping() {
-    pathEscaper = PathEscaper.CANONICALIZE_ONLY;
-    test(
-        srcs(SourceFile.fromCode("test.js", "import 'file://imported.js';")),
-        expected(
-            SourceFile.fromCode(
-                "https://example.domain.google.com/test.js",
-                lines(
-                    "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
-                    "  'test pragma';",
-                    "  var module$file_$$imported = $$require('file://imported.js');",
-                    "}, 'test.js', ['file://imported.js']);"))));
+  @Test
+  public void testProtocolInImportPathIsError() {
+    testError("import * as foo from 'file://imported.js';", Es6ToEs3Util.CANNOT_CONVERT);
   }
 
+  @Test
   public void testRegisteredPathDoesNotIncludeModuleRoot() {
     moduleRoots = ImmutableList.of("module/root/");
 
@@ -517,6 +524,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                     "}, 'test.js', []);"))));
   }
 
+  @Test
   public void testImportPathDoesNotIncludeModuleRoot() {
     moduleRoots = ImmutableList.of("module/root/");
 
@@ -532,6 +540,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                     "}, 'not/root/test.js', ['foo.js']);"))));
   }
 
+  @Test
   public void testImportPathWithBrowserPrefixReplacementResolution() {
     resolutionMode = ModuleLoader.ResolutionMode.BROWSER_WITH_TRANSFORMED_PREFIXES;
     prefixReplacements = ImmutableMap.of("@root/", "");
@@ -546,5 +555,16 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                     "  'test pragma';",
                     "  var foo = $$require('foo.js');",
                     "}, 'not/root/test.js', ['foo.js']);"))));
+  }
+
+  @Test
+  public void testExportStarFrom() {
+    test("export * from './other.js';",
+        lines(
+            "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
+            "  var module$other = $$require('other.js');",
+            "  $$module.exportAllFrom(module$other);",
+            "}, 'testcode', ['other.js']);"));
   }
 }

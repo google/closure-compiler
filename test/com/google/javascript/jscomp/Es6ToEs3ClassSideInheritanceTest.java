@@ -16,15 +16,21 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test case for {@link Es6ToEs3ClassSideInheritance}.
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
+@RunWith(JUnit4.class)
 public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
@@ -41,6 +47,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testSimple() {
     test(
         lines(
@@ -67,6 +74,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "Subclass.staticMethod = Example.staticMethod;"));
   }
 
+  @Test
   public void testTyped() {
     test(
         lines(
@@ -96,7 +104,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "Subclass.staticMethod = Example.staticMethod;"));
   }
 
-
+  @Test
   public void testNestedSubclass() {
     test(
         lines(
@@ -133,6 +141,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "A.e = 42;"));
   }
 
+  @Test
   public void testOverride() {
     testSame(
         lines(
@@ -161,9 +170,8 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "Subclass.staticProp = 6;"));
   }
 
-  /**
-   * In this example, the base class has a static field which is not a function.
-   */
+  /** In this example, the base class has a static field which is not a function. */
+  @Test
   public void testStaticNonMethod() {
     test(
         lines(
@@ -193,6 +201,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "Subclass.staticField = Example.staticField;"));
   }
 
+  @Test
   public void testGetterSetterSimple() {
     // This is what the Es6ToEs3Converter produces for:
     //
@@ -241,6 +250,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "$jscomp.inherits(Subclass, Example);"));
   }
 
+  @Test
   public void testGetterSetterQualifiedClassName() {
     test(
         lines(
@@ -276,9 +286,10 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
   }
 
   /**
-   * In this case the stub is not really a stub.  It's just a no-op getter, we would be able to
+   * In this case the stub is not really a stub. It's just a no-op getter, we would be able to
    * detect this and not copy the stub since there is a member with this name.
    */
+  @Test
   public void testGetterSetterFakeStub() {
     test(
         lines(
@@ -309,6 +320,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "B.property = A.property;"));
   }
 
+  @Test
   public void testGetterSetterSubclassSubclass() {
     test(
         lines(
@@ -357,9 +369,8 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             ""));
   }
 
-  /**
-   * If the subclass overrides the property we don't want to redeclare the stub.
-   */
+  /** If the subclass overrides the property we don't want to redeclare the stub. */
+  @Test
   public void testGetterSetterSubclassOverride() {
     testSame(
         lines(
@@ -406,6 +417,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testGetterSetter_noType() {
     test(
         lines(
@@ -441,6 +453,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "$jscomp.inherits(Subclass, Example);"));
   }
 
+  @Test
   public void testInheritFromExterns() {
     test(
         externs(
@@ -468,6 +481,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
                 "CodeClass.m = ExternsClass.m;")));
   }
 
+  @Test
   public void testAliasing() {
     test(
         lines(
@@ -536,6 +550,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "Bar.prop = Foo.prop;"));
   }
 
+  @Test
   public void testScopeHandling() {
     testSame(
         lines(
@@ -579,6 +594,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "$jscomp.inherits(Bar, Foo);"));
   }
 
+  @Test
   public void testInlineTypes() {
     test(
         lines(
@@ -604,9 +620,8 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "B.foo = A.foo;"));
   }
 
-  /**
-   * Examples which are handled incorrectly but are unlikely to come up in practice.
-   */
+  /** Examples which are handled incorrectly but are unlikely to come up in practice. */
+  @Test
   public void testIncorrectScopeHandling() {
     test(
         lines(

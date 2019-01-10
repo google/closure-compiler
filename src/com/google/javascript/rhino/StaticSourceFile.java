@@ -44,15 +44,39 @@ package com.google.javascript.rhino;
  * @author nicksantos@google.com (Nick Santos)
  */
 public interface StaticSourceFile {
+
+  /** Source kinds. */
+  public enum SourceKind {
+    /** A file whose contents are necessary both for type checking and emitting code. */
+    STRONG,
+    /** A file whose contents are necessary for type checking only. */
+    WEAK,
+    /** A file whose contents are extern declarations. */
+    EXTERN
+  }
+
   /**
    * The name of the file. Must be unique across all files in the compilation.
    */
   String getName();
 
-  /**
-   * Returns whether this is an externs file.
-   */
-  boolean isExtern();
+  /** The source kind. */
+  SourceKind getKind();
+
+  /** Whether the source kind is STRONG. */
+  default boolean isStrong() {
+    return getKind() == SourceKind.STRONG;
+  }
+
+  /** Whether the source kind is WEAK. */
+  default boolean isWeak() {
+    return getKind() == SourceKind.WEAK;
+  }
+
+  /** Whether the source kind is EXTERN. */
+  default boolean isExtern() {
+    return getKind() == SourceKind.EXTERN;
+  }
 
   /**
    * Returns the offset of the given line number relative to the file start.

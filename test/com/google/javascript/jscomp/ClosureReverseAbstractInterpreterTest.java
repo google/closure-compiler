@@ -17,18 +17,22 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.testing.Asserts;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-public final class ClosureReverseAbstractInterpreterTest extends
-    CompilerTypeTestCase {
+@RunWith(JUnit4.class)
+public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTestCase {
 
-  public void testGoogIsDef1() throws Exception {
+  @Test
+  public void testGoogIsDef1() {
     testClosureFunction(
         "goog.isDef",
         createOptionalType(getNativeNumberType()),
@@ -36,7 +40,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeVoidType());
   }
 
-  public void testGoogIsDef2() throws Exception {
+  @Test
+  public void testGoogIsDef2() {
     testClosureFunction(
         "goog.isDef",
         createNullableType(getNativeNumberType()),
@@ -44,7 +49,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNoType());
   }
 
-  public void testGoogIsDef3() throws Exception {
+  @Test
+  public void testGoogIsDef3() {
     testClosureFunction(
         "goog.isDef",
         getNativeAllType(),
@@ -52,7 +58,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeVoidType());
   }
 
-  public void testGoogIsDef4() throws Exception {
+  @Test
+  public void testGoogIsDef4() {
     testClosureFunction(
         "goog.isDef",
         getNativeUnknownType(),
@@ -60,7 +67,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeUnknownType());
   }
 
-  public void testGoogIsNull1() throws Exception {
+  @Test
+  public void testGoogIsNull1() {
     testClosureFunction(
         "goog.isNull",
         createOptionalType(getNativeNumberType()),
@@ -68,7 +76,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         createOptionalType(getNativeNumberType()));
   }
 
-  public void testGoogIsNull2() throws Exception {
+  @Test
+  public void testGoogIsNull2() {
     testClosureFunction(
         "goog.isNull",
         createNullableType(getNativeNumberType()),
@@ -76,7 +85,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNumberType());
   }
 
-  public void testGoogIsNull3() throws Exception {
+  @Test
+  public void testGoogIsNull3() {
     testClosureFunction(
         "goog.isNull",
         getNativeAllType(),
@@ -84,7 +94,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         createUnionType(getNativeObjectNumberStringBooleanSymbolType(), getNativeVoidType()));
   }
 
-  public void testGoogIsNull4() throws Exception {
+  @Test
+  public void testGoogIsNull4() {
     testClosureFunction(
         "goog.isNull",
         getNativeUnknownType(),
@@ -92,7 +103,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeUnknownType()); // TODO(johnlenz): this should be CHECK_UNKNOWN
   }
 
-  public void testGoogIsDefAndNotNull1() throws Exception {
+  @Test
+  public void testGoogIsDefAndNotNull1() {
     testClosureFunction(
         "goog.isDefAndNotNull",
         createOptionalType(getNativeNumberType()),
@@ -100,7 +112,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeVoidType());
   }
 
-  public void testGoogIsDefAndNotNull2() throws Exception {
+  @Test
+  public void testGoogIsDefAndNotNull2() {
     testClosureFunction(
         "goog.isDefAndNotNull",
         createNullableType(getNativeNumberType()),
@@ -108,7 +121,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNullType());
   }
 
-  public void testGoogIsDefAndNotNull3() throws Exception {
+  @Test
+  public void testGoogIsDefAndNotNull3() {
     testClosureFunction(
         "goog.isDefAndNotNull",
         createOptionalType(createNullableType(getNativeNumberType())),
@@ -116,7 +130,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNullVoidType());
   }
 
-  public void testGoogIsDefAndNotNull4() throws Exception {
+  @Test
+  public void testGoogIsDefAndNotNull4() {
     testClosureFunction(
         "goog.isDefAndNotNull",
         getNativeAllType(),
@@ -124,7 +139,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNullVoidType());
   }
 
-  public void testGoogIsDefAndNotNull5() throws Exception {
+  @Test
+  public void testGoogIsDefAndNotNull5() {
     testClosureFunction(
         "goog.isDefAndNotNull",
         getNativeUnknownType(),
@@ -132,7 +148,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeUnknownType());
   }
 
-  public void testGoogIsString1() throws Exception {
+  @Test
+  public void testGoogIsString1() {
     testClosureFunction(
         "goog.isString",
         createNullableType(getNativeStringType()),
@@ -140,7 +157,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNullType());
   }
 
-  public void testGoogIsString2() throws Exception {
+  @Test
+  public void testGoogIsString2() {
     testClosureFunction(
         "goog.isString",
         createNullableType(getNativeNumberType()),
@@ -148,7 +166,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         createNullableType(getNativeNumberType()));
   }
 
-  public void testGoogIsBoolean1() throws Exception {
+  @Test
+  public void testGoogIsBoolean1() {
     testClosureFunction(
         "goog.isBoolean",
         createNullableType(getNativeBooleanType()),
@@ -156,7 +175,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNullType());
   }
 
-  public void testGoogIsBoolean2() throws Exception {
+  @Test
+  public void testGoogIsBoolean2() {
     testClosureFunction(
         "goog.isBoolean",
         createUnionType(getNativeBooleanType(), getNativeStringType(), getNativeNoObjectType()),
@@ -164,7 +184,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         createUnionType(getNativeStringType(), getNativeNoObjectType()));
   }
 
-  public void testGoogIsBoolean3() throws Exception {
+  @Test
+  public void testGoogIsBoolean3() {
     testClosureFunction(
         "goog.isBoolean",
         getNativeAllType(),
@@ -173,7 +194,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeAllType());
   }
 
-  public void testGoogIsBoolean4() throws Exception {
+  @Test
+  public void testGoogIsBoolean4() {
     testClosureFunction(
         "goog.isBoolean",
         getNativeUnknownType(),
@@ -181,7 +203,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeCheckedUnknownType());
   }
 
-  public void testGoogIsNumber() throws Exception {
+  @Test
+  public void testGoogIsNumber() {
     testClosureFunction(
         "goog.isNumber",
         createNullableType(getNativeNumberType()),
@@ -189,7 +212,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNullType());
   }
 
-  public void testGoogIsFunction() throws Exception {
+  @Test
+  public void testGoogIsFunction() {
     testClosureFunction(
         "goog.isFunction",
         createNullableType(getNativeObjectConstructorType()),
@@ -197,7 +221,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNullType());
   }
 
-  public void testGoogIsFunction2a() throws Exception {
+  @Test
+  public void testGoogIsFunction2a() {
     testClosureFunction(
         "goog.isFunction",
         getNativeObjectNumberStringBooleanType(),
@@ -205,7 +230,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeObjectNumberStringBooleanType());
   }
 
-  public void testGoogIsFunction2b() throws Exception {
+  @Test
+  public void testGoogIsFunction2b() {
     testClosureFunction(
         "goog.isFunction",
         getNativeObjectNumberStringBooleanSymbolType(),
@@ -213,7 +239,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeObjectNumberStringBooleanSymbolType());
   }
 
-  public void testGoogIsFunction3() throws Exception {
+  @Test
+  public void testGoogIsFunction3() {
     testClosureFunction(
         "goog.isFunction",
         createUnionType(getNativeU2UConstructorType(), getNativeNumberStringBooleanType()),
@@ -221,21 +248,25 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNumberStringBooleanType());
   }
 
-  public void testGoogIsFunctionOnNull() throws Exception {
+  @Test
+  public void testGoogIsFunctionOnNull() {
     testClosureFunction("goog.isFunction", null, getNativeU2UConstructorType(), null);
   }
 
-  public void testGoogIsArray1() throws Exception {
+  @Test
+  public void testGoogIsArray1() {
     testClosureFunction(
         "goog.isArray", getNativeObjectType(), getNativeArrayType(), getNativeObjectType());
   }
 
-  public void testGoogIsArray2() throws Exception {
+  @Test
+  public void testGoogIsArray2() {
     testClosureFunction(
         "goog.isArray", getNativeAllType(), getNativeArrayType(), getNativeAllType());
   }
 
-  public void testGoogIsArray3() throws Exception {
+  @Test
+  public void testGoogIsArray3() {
     testClosureFunction(
         "goog.isArray",
         getNativeUnknownType(),
@@ -243,7 +274,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeCheckedUnknownType());
   }
 
-  public void testGoogIsArray4() throws Exception {
+  @Test
+  public void testGoogIsArray4() {
     testClosureFunction(
         "goog.isArray",
         createUnionType(getNativeArrayType(), getNativeNullType()),
@@ -251,15 +283,18 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNullType());
   }
 
-  public void testGoogIsArrayOnNull() throws Exception {
+  @Test
+  public void testGoogIsArrayOnNull() {
     testClosureFunction("goog.isArray", null, getNativeArrayType(), null);
   }
 
-  public void testGoogIsObjectOnNull() throws Exception {
+  @Test
+  public void testGoogIsObjectOnNull() {
     testClosureFunction("goog.isObject", null, getNativeObjectType(), null);
   }
 
-  public void testGoogIsObject1() throws Exception {
+  @Test
+  public void testGoogIsObject1() {
     testClosureFunction(
         "goog.isObject",
         getNativeAllType(),
@@ -268,7 +303,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
             getNativeNumberStringBooleanSymbolType(), getNativeNullType(), getNativeVoidType()));
   }
 
-  public void testGoogIsObject2a() throws Exception {
+  @Test
+  public void testGoogIsObject2a() {
     testClosureFunction(
         "goog.isObject",
         createUnionType(getNativeObjectType(), getNativeNumberStringBooleanType()),
@@ -276,7 +312,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNumberStringBooleanType());
   }
 
-  public void testGoogIsObject2b() throws Exception {
+  @Test
+  public void testGoogIsObject2b() {
     testClosureFunction(
         "goog.isObject",
         createUnionType(getNativeObjectType(), getNativeNumberStringBooleanSymbolType()),
@@ -284,7 +321,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
         getNativeNumberStringBooleanSymbolType());
   }
 
-  public void testGoogIsObject3a() throws Exception {
+  @Test
+  public void testGoogIsObject3a() {
     testClosureFunction(
         "goog.isObject",
         createUnionType(
@@ -297,7 +335,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
             getNativeNumberStringBooleanType(), getNativeNullType(), getNativeVoidType()));
   }
 
-  public void testGoogIsObject3b() throws Exception {
+  @Test
+  public void testGoogIsObject3b() {
     testClosureFunction(
         "goog.isObject",
         createUnionType(
@@ -310,7 +349,8 @@ public final class ClosureReverseAbstractInterpreterTest extends
             getNativeNumberStringBooleanSymbolType(), getNativeNullType(), getNativeVoidType()));
   }
 
-  public void testGoogIsObject4() throws Exception {
+  @Test
+  public void testGoogIsObject4() {
     testClosureFunction(
         "goog.isObject",
         getNativeUnknownType(),
@@ -328,16 +368,18 @@ public final class ClosureReverseAbstractInterpreterTest extends
     TypedScope scope = (TypedScope) SyntacticScopeCreator.makeTyped(compiler).createScope(n, null);
     FlowScope flowScope = LinkedFlowScope.createEntryLattice(scope);
 
-    assertEquals(Token.CALL, call.getToken());
-    assertEquals(Token.NAME, name.getToken());
+    assertThat(call.getToken()).isEqualTo(Token.CALL);
+    assertThat(name.getToken()).isEqualTo(Token.NAME);
 
     flowScope = flowScope.inferSlotType("a", type);
     ClosureReverseAbstractInterpreter rai = new ClosureReverseAbstractInterpreter(registry);
 
     // trueScope
-    Asserts.assertTypeEquals(
-        trueType,
-        rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, true).getSlot("a").getType());
+    assertType(
+            rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, true)
+                .getSlot("a")
+                .getType())
+        .isStructurallyEqualTo(trueType);
 
     // falseScope
     JSType aType = rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, false)
@@ -345,7 +387,7 @@ public final class ClosureReverseAbstractInterpreterTest extends
     if (falseType == null) {
       assertThat(aType).isNull();
     } else {
-      Asserts.assertTypeEquals(falseType, aType);
+      assertType(aType).isStructurallyEqualTo(falseType);
     }
   }
 }

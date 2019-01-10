@@ -15,7 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /** Tests for {@link J2clUtilGetDefineRewriterPass}. */
+@RunWith(JUnit4.class)
 public class J2clUtilGetDefineRewriterPassTest extends CompilerTestCase {
 
   @Override
@@ -30,6 +35,7 @@ public class J2clUtilGetDefineRewriterPassTest extends CompilerTestCase {
     return compiler;
   }
 
+  @Test
   public void testUtilGetDefine() {
     String defineAbc = "var a={}; a.b={}; /** @define {boolean} */ a.b.c = true;\n";
     test(
@@ -40,6 +46,7 @@ public class J2clUtilGetDefineRewriterPassTest extends CompilerTestCase {
         defineAbc + "(null, String(a.b.c));");
   }
 
+  @Test
   public void testUtilGetDefine_notDefined() {
     test("nativebootstrap.Util.$getDefine('not.defined');", "null;");
     test("nativebootstrap.Util.$getDefine('not.defined', 'def');", "'def';");

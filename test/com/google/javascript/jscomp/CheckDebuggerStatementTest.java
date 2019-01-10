@@ -15,18 +15,23 @@
  */
 package com.google.javascript.jscomp;
 
+import org.junit.After;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * {@link CheckDebuggerStatementTest} is a unit test for
- * {@link CheckDebuggerStatement}.
+ * {@link CheckDebuggerStatementTest} is a unit test for {@link CheckDebuggerStatement}.
  *
  * @author bolinfest@google.com (Michael Bolin)
  */
+@RunWith(JUnit4.class)
 public final class CheckDebuggerStatementTest extends CompilerTestCase {
 
   private CheckLevel checkLevel;
 
   @Override
+  @After
   public void tearDown() {
     checkLevel = null;
   }
@@ -47,6 +52,7 @@ public final class CheckDebuggerStatementTest extends CompilerTestCase {
     return options;
   }
 
+  @Test
   public void testCheckDebuggerStatement() {
     checkLevel = CheckLevel.WARNING;
 
@@ -55,6 +61,7 @@ public final class CheckDebuggerStatementTest extends CompilerTestCase {
         "function foo() { debugger; }", CheckDebuggerStatement.DEBUGGER_STATEMENT_PRESENT);
   }
 
+  @Test
   public void testCheckIsDisabledByDefault() {
     checkLevel = null;
 
@@ -62,6 +69,7 @@ public final class CheckDebuggerStatementTest extends CompilerTestCase {
     testSame("function foo() { debugger; }");
   }
 
+  @Test
   public void testNoWarningWhenExplicitlyDisabled() {
     checkLevel = CheckLevel.OFF;
 
@@ -69,12 +77,14 @@ public final class CheckDebuggerStatementTest extends CompilerTestCase {
     testSame("function foo() { debugger; }");
   }
 
+  @Test
   public void testCheckDebuggerKeywordMayAppearInComments() {
     checkLevel = CheckLevel.WARNING;
 
     test("// I like the debugger; it is helpful.", "");
   }
 
+  @Test
   public void testCheckDebuggerStatementInEval() {
     checkLevel = CheckLevel.WARNING;
 

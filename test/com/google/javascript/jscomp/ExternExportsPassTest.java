@@ -18,15 +18,21 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import java.util.function.Consumer;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link ExternExportsPass}.
  *
  */
+@RunWith(JUnit4.class)
 public final class ExternExportsPassTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
     enableTypeCheck();
@@ -46,7 +52,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
     return new ExternExportsPass(compiler);
   }
 
-  public void testExportSymbol() throws Exception {
+  @Test
+  public void testExportSymbol() {
     compileAndCheck(
         lines(
             "/** @const */ var a = {}; /** @const */ a.b = {}; a.b.c = function(d, e, f) {};",
@@ -63,6 +70,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testInterface() {
     compileAndCheck(
         "/** @interface */ function Iface() {}; goog.exportSymbol('Iface', Iface)",
@@ -75,6 +83,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testRecord() {
     compileAndCheck(
         "/** @record */ function Iface() {}; goog.exportSymbol('Iface', Iface)",
@@ -87,7 +96,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportSymbolDefinedInVar() throws Exception {
+  @Test
+  public void testExportSymbolDefinedInVar() {
     compileAndCheck(
         "var a = function(d, e, f) {}; goog.exportSymbol('foobar', a)",
         lines(
@@ -102,7 +112,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportProperty() throws Exception {
+  @Test
+  public void testExportProperty() {
     compileAndCheck(
         lines(
             "/** @const */ var a = {}; /** @const */ a.b = {}; a.b.c = function(d, e, f) {};",
@@ -121,7 +132,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportMultiple() throws Exception {
+  @Test
+  public void testExportMultiple() {
     compileAndCheck(
         lines(
             "/** @const */ var a = {}; a.b = function(p1) {};",
@@ -157,7 +169,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportMultiple2() throws Exception {
+  @Test
+  public void testExportMultiple2() {
     compileAndCheck(
         lines(
             "/** @const */ var a = {};",
@@ -190,7 +203,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportMultiple3() throws Exception {
+  @Test
+  public void testExportMultiple3() {
     compileAndCheck(
         lines(
             "/** @const */ var a = {}; a.b = function(p1) {};",
@@ -216,7 +230,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportNonStaticSymbol() throws Exception {
+  @Test
+  public void testExportNonStaticSymbol() {
     compileAndCheck(
         lines(
             "/** @const */ var a = {};",
@@ -227,7 +242,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
         "var foobar;\n");
   }
 
-  public void testExportNonStaticSymbol2() throws Exception {
+  @Test
+  public void testExportNonStaticSymbol2() {
     compileAndCheck(
         lines(
             "/** @const */ var a = {};",
@@ -238,7 +254,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
         "var foobar;\n");
   }
 
-  public void testExportNonexistentProperty() throws Exception {
+  @Test
+  public void testExportNonexistentProperty() {
     compileAndCheck(
         lines(
             "/** @fileoverview @suppress {missingProperties} */",
@@ -253,6 +270,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportSymbolWithTypeAnnotation() {
 
     compileAndCheck(
@@ -278,6 +296,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportSymbolWithTemplateAnnotation() {
 
     compileAndCheck(
@@ -303,6 +322,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportSymbolWithMultipleTemplateAnnotation() {
 
     compileAndCheck(
@@ -329,6 +349,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportSymbolWithoutTypeCheck() {
     // ExternExportsPass should not emit annotations
     // if there is no type information available.
@@ -353,6 +374,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportSymbolWithConstructor() {
     compileAndCheck(
         lines(
@@ -373,6 +395,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testNonNullTypes() {
     compileAndCheck(
         lines(
@@ -402,6 +425,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportSymbolWithConstructorWithoutTypeCheck() {
     // For now, skipping type checking should prevent generating
     // annotations of any kind, so, e.g., @constructor is not preserved.
@@ -427,6 +451,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   }
 
   // x.Y is present in the generated externs but lacks the @constructor annotation.
+  @Test
   public void testExportPrototypePropsWithoutConstructor() {
     compileAndCheck(
         lines(
@@ -445,6 +470,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportFunctionWithOptionalArguments1() {
     compileAndCheck(
         lines(
@@ -466,6 +492,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportFunctionWithOptionalArguments2() {
     compileAndCheck(
         lines(
@@ -488,6 +515,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportFunctionWithOptionalArguments3() {
     compileAndCheck(
         lines(
@@ -510,6 +538,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportFunctionWithVariableArguments() {
     compileAndCheck(
         lines(
@@ -534,6 +563,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   }
 
   /** Enums are not currently handled. */
+  @Test
   public void testExportEnum() {
     // We don't care what the values of the object properties are.
     // They're ignored by the type checker, and even if they weren't, it'd
@@ -553,6 +583,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportWithReferenceToEnum() {
     String js = lines(
         "/**",
@@ -583,10 +614,11 @@ public final class ExternExportsPassTest extends CompilerTestCase {
     compileAndCheck(js, expected.replace("{E}", "{number}"));
   }
 
-  /** If we export a property with "prototype" as a path component, there
-    * is no need to emit the initializer for prototype because every namespace
-    * has one automatically.
-    */
+  /**
+   * If we export a property with "prototype" as a path component, there is no need to emit the
+   * initializer for prototype because every namespace has one automatically.
+   */
+  @Test
   public void testExportDontEmitPrototypePathPrefix() {
     compileAndCheck(
         lines(
@@ -615,13 +647,13 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   }
 
   /**
-   * Test the workflow of creating an externs file for a library
-   * via the export pass and then using that externs file in a client.
+   * Test the workflow of creating an externs file for a library via the export pass and then using
+   * that externs file in a client.
    *
-   * There should be no warnings in the client if the library includes
-   * type information for the exported functions and the client uses them
-   * correctly.
+   * <p>There should be no warnings in the client if the library includes type information for the
+   * exported functions and the client uses them correctly.
    */
+  @Test
   public void testUseExportsAsExterns() {
     String librarySource =
         lines(
@@ -648,6 +680,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             compileAndExportExterns(clientSource, MINIMAL_EXTERNS + generatedExterns));
   }
 
+  @Test
   public void testDontWarnOnExportFunctionWithUnknownReturnType() {
     String librarySource = lines(
         "var InternalName = function() {",
@@ -658,6 +691,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
     compileAndExportExterns(librarySource);
   }
 
+  @Test
   public void testDontWarnOnExportConstructorWithUnknownReturnType() {
     String librarySource = lines(
         "/**",
@@ -670,6 +704,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
     compileAndExportExterns(librarySource);
   }
 
+  @Test
   public void testTypedef() {
     compileAndCheck(
         lines(
@@ -690,7 +725,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportParamWithNull() throws Exception {
+  @Test
+  public void testExportParamWithNull() {
     compileAndCheck(
         lines(
             "/** @param {string|null=} d */",
@@ -707,7 +743,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportConstructor() throws Exception {
+  @Test
+  public void testExportConstructor() {
     compileAndCheck(
         "/** @constructor */ var a = function() {}; goog.exportSymbol('foobar', a)",
         lines(
@@ -719,7 +756,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportLocalPropertyInConstructor() throws Exception {
+  @Test
+  public void testExportLocalPropertyInConstructor() {
     compileAndCheck(
         "/** @constructor */function F() { /** @export */ this.x = 5;} goog.exportSymbol('F', F);",
         lines(
@@ -732,7 +770,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportLocalPropertyInConstructor2() throws Exception {
+  @Test
+  public void testExportLocalPropertyInConstructor2() {
     compileAndCheck(
         lines(
             "/** @constructor */function F() { /** @export */ this.x = 5;}",
@@ -748,7 +787,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportLocalPropertyInConstructor3() throws Exception {
+  @Test
+  public void testExportLocalPropertyInConstructor3() {
     compileAndCheck(
         "/** @constructor */function F() { /** @export */ this.x;} goog.exportSymbol('F', F);",
         lines(
@@ -761,7 +801,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportLocalPropertyInConstructor4() throws Exception {
+  @Test
+  public void testExportLocalPropertyInConstructor4() {
     compileAndCheck(
         lines(
             "/** @constructor */",
@@ -782,7 +823,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportLocalPropertyNotInConstructor() throws Exception {
+  @Test
+  public void testExportLocalPropertyNotInConstructor() {
     compileAndCheck(
         "/** @this {?} */ function f() { /** @export */ this.x = 5;} goog.exportSymbol('f', f);",
         lines(
@@ -794,7 +836,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testExportParamWithSymbolDefinedInFunction() throws Exception {
+  @Test
+  public void testExportParamWithSymbolDefinedInFunction() {
     compileAndCheck(
         lines(
             "var id = function() {return /** @type {?} */ ('id')};",
@@ -812,6 +855,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportSymbolWithFunctionDefinedAsFunction() {
 
     compileAndCheck(
@@ -834,6 +878,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testExportSymbolWithFunctionAlias() {
 
     compileAndCheck(
@@ -860,7 +905,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testNamespaceDefinitionInExterns() throws Exception {
+  @Test
+  public void testNamespaceDefinitionInExterns() {
     compileAndCheck(
         lines(
             "/** @const */",
@@ -889,7 +935,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testNullabilityInFunctionTypes() throws Exception {
+  @Test
+  public void testNullabilityInFunctionTypes() {
     compileAndCheck(
         lines(
             "/**",
@@ -909,7 +956,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  public void testNullabilityInRecordTypes() throws Exception {
+  @Test
+  public void testNullabilityInRecordTypes() {
     compileAndCheck(
         lines(
             "/** @typedef {{ nonNullable: !Object, nullable: Object }} */",
@@ -942,6 +990,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testDontWarnOnExportFunctionWithUnknownParameterTypes() {
     /* This source is missing types for the b and c parameters */
     String librarySource = lines(

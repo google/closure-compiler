@@ -41,6 +41,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.LiteralToken;
+import com.google.javascript.jscomp.parsing.parser.TemplateLiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
 import com.google.javascript.jscomp.parsing.parser.trees.AmbientDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
@@ -161,7 +162,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -178,10 +178,6 @@ class IRFactory {
       "setters are not supported in older versions of JavaScript. " +
       "If you are targeting newer versions of JavaScript, " +
       "set the appropriate language_in option.";
-
-  static final String SUSPICIOUS_COMMENT_WARNING =
-      "Non-JSDoc comment has annotations. " +
-      "Did you mean to start it with '/**'?";
 
   static final String INVALID_ES3_PROP_NAME =
       "Keywords and reserved words are not allowed as unquoted property " +
@@ -242,9 +238,6 @@ class IRFactory {
           "class", "const", "enum", "export", "extends", "import", "super",
           "implements", "interface", "let", "package", "private", "protected",
           "public", "static", "yield");
-
-  private static final Pattern COMMENT_PATTERN =
-      Pattern.compile("(/|(\n[ \t]*))\\*[ \t]*@[a-zA-Z]+[ \t\n{]");
 
   /**
    * If non-null, use this set of keywords instead of TokenStream.isKeyword().
@@ -340,8 +333,6 @@ class IRFactory {
         if ((comment.type == Comment.Type.JSDOC || comment.type == Comment.Type.IMPORTANT)
             && !irFactory.parsedComments.contains(comment)) {
           irFactory.handlePossibleFileOverviewJsDoc(comment);
-        } else if (comment.type == Comment.Type.BLOCK) {
-          irFactory.handleBlockComment(comment);
         }
       }
     }
@@ -353,15 +344,6 @@ class IRFactory {
 
     return irFactory;
   }
-
-  static final Config NULL_CONFIG = Config.builder().build();
-
-  static final ErrorReporter NULL_REPORTER = new ErrorReporter() {
-    @Override
-    public void warning(String message, String sourceName, int line, int lineOffset) {}
-    @Override
-    public void error(String message, String sourceName, int line, int lineOffset) {}
-  };
 
   Node getResultNode() {
     return resultNode;
@@ -612,19 +594,6 @@ class IRFactory {
       irNode.setIsAddedBlock(true);
     }
     return irNode;
-  }
-
-  /**
-   * Check to see if the given block comment looks like it should be JSDoc.
-   */
-  private void handleBlockComment(Comment comment) {
-    if (COMMENT_PATTERN.matcher(comment.value).find()) {
-      errorReporter.warning(
-          SUSPICIOUS_COMMENT_WARNING,
-          sourceName,
-          lineno(comment.location.start),
-          charno(comment.location.start));
-    }
   }
 
   /**
@@ -1035,7 +1004,7 @@ class IRFactory {
     }
 
     Node processArrayPattern(ArrayPatternTree tree) {
-      maybeWarnForFeature(tree, Feature.DESTRUCTURING);
+      maybeWarnForFeature(tree, Feature.ARRAY_DESTRUCTURING);
 
       Node node = newNode(Token.ARRAY_PATTERN);
       for (ParseTree child : tree.elements) {
@@ -1052,7 +1021,7 @@ class IRFactory {
     }
 
     Node processObjectPattern(ObjectPatternTree tree) {
-      maybeWarnForFeature(tree, Feature.DESTRUCTURING);
+      maybeWarnForFeature(tree, Feature.OBJECT_DESTRUCTURING);
 
       Node node = newNode(Token.OBJECT_PATTERN);
       for (ParseTree child : tree.fields) {
@@ -1144,14 +1113,12 @@ class IRFactory {
         // let {key: /** inlineType */ name} = something
         // let [/** inlineType */ name] = something
         // Allow inline JSDoc on the name, since we may well be declaring it here.
-        // TODO(bradfordcsmith): Do we need to allow this for qualified names, too?
         valueNode = processNameWithInlineJSDoc(targetTree.asIdentifierExpression());
       } else {
-        // arbitrarily complex target
-        // e.g.
-        // ({key: foo().someProperty} = someObject);
-        // ([foo().someProperty] = someIterable);
-        valueNode = transform(targetTree);
+        // ({prop: /** string */ ns.a.b} = someObject);
+        // NOTE: CheckJSDoc will report an error for this case, since we want qualified names to be
+        // declared with individual statements, like `/** @type {string} */ ns.a.b;`
+        valueNode = transformNodeWithInlineJsDoc(targetTree);
       }
       return valueNode;
     }
@@ -1523,7 +1490,10 @@ class IRFactory {
         // TODO(bradfordcsmith): Do we need to allow inline JSDoc for qualified names, too?
         targetNode = processNameWithInlineJSDoc(targetTree.asIdentifierExpression());
       } else {
-        targetNode = transform(targetTree);
+        // ({prop: /** string */ ns.a.b = 'foo'} = someObject);
+        // NOTE: CheckJSDoc will report an error for this case, since we want qualified names to be
+        // declared with individual statements, like `/** @type {string} */ ns.a.b;`
+        targetNode = transformNodeWithInlineJsDoc(targetTree);
       }
       Node defaultValueNode =
           newNode(Token.DEFAULT_VALUE, targetNode, transform(tree.defaultValue));
@@ -1535,8 +1505,10 @@ class IRFactory {
       maybeWarnForFeature(tree, Feature.REST_PARAMETERS);
 
       Node assignmentTarget = transformNodeWithInlineJsDoc(tree.assignmentTarget);
-      if (assignmentTarget.isDestructuringPattern()) {
-        maybeWarnForFeature(tree.assignmentTarget, Feature.DESTRUCTURING);
+      if (assignmentTarget.isObjectPattern()) {
+        maybeWarnForFeature(tree.assignmentTarget, Feature.OBJECT_DESTRUCTURING);
+      } else if (assignmentTarget.isArrayPattern()) {
+        maybeWarnForFeature(tree.assignmentTarget, Feature.ARRAY_DESTRUCTURING);
       }
       return newNode(Token.REST, assignmentTarget);
     }
@@ -1635,14 +1607,16 @@ class IRFactory {
 
     Node processLabeledStatement(LabelledStatementTree labelTree) {
       Node statement = transform(labelTree.statement);
-      if (statement.isFunction()) {
+      if (statement.isFunction()
+          || statement.isClass()
+          || statement.isLet()
+          || statement.isConst()) {
         errorReporter.error(
-            "Functions can only be declared at top level or inside a block.",
-            sourceName, lineno(labelTree), charno(labelTree));
-      } else if (statement.isClass()) {
-        errorReporter.error(
-            "Classes can only be declared at top level or inside a block.",
-            sourceName, lineno(labelTree), charno(labelTree));
+            "Lexical declarations are only allowed at top level or inside a block.",
+            sourceName,
+            lineno(labelTree),
+            charno(labelTree));
+        return statement; // drop the LABEL node so that the resulting AST is valid
       }
       return newNode(Token.LABEL,
           transformLabelName(labelTree.name),
@@ -1684,14 +1658,18 @@ class IRFactory {
       return node;
     }
 
-    Node processTemplateLiteralToken(LiteralToken token) {
+    Node processTemplateLiteralToken(TemplateLiteralToken token) {
       checkArgument(
           token.type == TokenType.NO_SUBSTITUTION_TEMPLATE
               || token.type == TokenType.TEMPLATE_HEAD
               || token.type == TokenType.TEMPLATE_MIDDLE
               || token.type == TokenType.TEMPLATE_TAIL);
-      Node node = newStringNode(normalizeString(token, true));
-      node.putProp(Node.RAW_STRING_VALUE, token.value);
+      Node node;
+      if (token.hasError()) {
+        node = newTemplateLitStringNode(null, token.value);
+      } else {
+        node = newTemplateLitStringNode(normalizeString(token, true), token.value);
+      }
       setSourceInfo(node, token);
       return node;
     }
@@ -1975,6 +1953,9 @@ class IRFactory {
             Feature feature = flag == 'u' ? Feature.REGEXP_FLAG_U : Feature.REGEXP_FLAG_Y;
             maybeWarnForFeature(tree, feature);
             break;
+          case 's':
+            maybeWarnForFeature(tree, Feature.REGEXP_FLAG_S);
+            break;
           default:
             errorReporter.error(
                 "Invalid RegExp flag '" + flag + "'",
@@ -2035,7 +2016,7 @@ class IRFactory {
     }
 
     Node processTemplateLiteralPortion(TemplateLiteralPortionTree tree) {
-      return processTemplateLiteralToken(tree.value.asLiteral());
+      return processTemplateLiteralToken(tree.value.asTemplateLiteral());
     }
 
     Node processTemplateSubstitution(TemplateSubstitutionTree tree) {
@@ -3120,6 +3101,8 @@ class IRFactory {
         case 'D':
         case 'f':
         case 'n':
+        case 'p': // 2018 unicode property escapes
+        case 'P': // 2018 unicode property escapes
         case 'r':
         case 's':
         case 'S':
@@ -3573,6 +3556,10 @@ class IRFactory {
 
   Node newStringNode(Token type, String value) {
     return Node.newString(type, value).clonePropsFrom(templateNode);
+  }
+
+  Node newTemplateLitStringNode(String cooked, String raw) {
+    return Node.newTemplateLitString(cooked, raw).clonePropsFrom(templateNode);
   }
 
   Node newNumberNode(Double value) {

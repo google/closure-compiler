@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,15 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
   private transient AbstractCompiler compiler;
   private transient ModulePath modulePath;
 
+  // TODO(tjgq): Whether a CompilerInput is an externs file is determined by the `isExtern`
+  // constructor argument and the `setIsExtern` method. Both are necessary because, while externs
+  // files passed under the --externs flag are not required to contain an @externs annotation,
+  // externs files passed under any other flag must have one, and the presence of the latter can
+  // only be known once the file has been parsed. To add to the confusion, note that CompilerInput
+  // doesn't actually store the extern bit itself, but instead mutates the SourceFile associated
+  // with the AST node. Once (when?) we enforce that extern files always contain an @externs
+  // annotation, we can store the extern bit in the AST node, and make SourceFile immutable.
+
   public CompilerInput(SourceAst ast) {
     this(ast, ast.getSourceFile().getName(), false);
   }
@@ -86,10 +96,8 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     this.ast = ast;
     this.id = inputId;
 
-    // TODO(nicksantos): Add a precondition check here. People are passing
-    // in null, but they should not be.
-    if (ast != null && ast.getSourceFile() != null) {
-      ast.getSourceFile().setIsExtern(isExtern);
+    if (isExtern) {
+      setIsExtern();
     }
   }
 
@@ -159,8 +167,8 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
   }
 
   @Override
-  public ImmutableList<String> getWeakRequires() {
-    return getDependencyInfo().getWeakRequires();
+  public ImmutableList<String> getTypeRequires() {
+    return getDependencyInfo().getTypeRequires();
   }
 
   /**
@@ -261,6 +269,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
           SimpleDependencyInfo.builder(getName(), getName())
               .setProvides(concat(dependencyInfo.getProvides(), extraProvides))
               .setRequires(concat(dependencyInfo.getRequires(), extraRequires))
+              .setTypeRequires(dependencyInfo.getTypeRequires())
               .setLoadFlags(dependencyInfo.getLoadFlags())
               .build();
       extraRequires.clear();
@@ -290,9 +299,10 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
       // symbol dependencies.)
       try {
         DependencyInfo info =
-            (new JsFileParser(compiler.getErrorManager()))
-            .setIncludeGoogBase(true)
-            .parseFile(getName(), getName(), getCode());
+            new JsFileParser(compiler.getErrorManager())
+                .setModuleLoader(compiler.getModuleLoader())
+                .setIncludeGoogBase(true)
+                .parseFile(getName(), getName(), getCode());
         return new LazyParsedDependencyInfo(info, (JsAst) ast, compiler);
       } catch (IOException e) {
         compiler.getErrorManager().report(CheckLevel.ERROR,
@@ -323,6 +333,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
       return SimpleDependencyInfo.builder("", "")
           .setProvides(finder.provides)
           .setRequires(finder.requires)
+          .setTypeRequires(finder.typeRequires)
           .setLoadFlags(finder.loadFlags)
           .build();
     }
@@ -332,6 +343,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     private final Map<String, String> loadFlags = new TreeMap<>();
     private final List<String> provides = new ArrayList<>();
     private final List<Require> requires = new ArrayList<>();
+    private final List<String> typeRequires = new ArrayList<>();
     private final ModulePath modulePath;
 
     DepsFinder(ModulePath modulePath) {
@@ -383,6 +395,13 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
                 requires.add(Require.googRequireSymbol(argument.getString()));
                 return;
 
+              case "requireType":
+                if (!argument.isString()) {
+                  return;
+                }
+                typeRequires.add(argument.getString());
+                return;
+
               case "loadModule":
                 // Process the block of the loadModule argument
                 n = argument.getLastChild();
@@ -392,7 +411,9 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
                 return;
             }
           } else if (parent.isGetProp()
-              && parent.matchesQualifiedName("goog.module.declareNamespace")
+              // TODO(johnplaisted): Consolidate on declareModuleId
+              && (parent.matchesQualifiedName("goog.module.declareNamespace")
+                  || parent.matchesQualifiedName("goog.declareModuleId"))
               && parent.getParent().isCall()) {
             Node argument = parent.getParent().getSecondChild();
             if (!argument.isString()) {
@@ -497,11 +518,12 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     return ast.getSourceFile().isExtern();
   }
 
-  void setIsExtern(boolean isExtern) {
+  void setIsExtern() {
+    // TODO(tjgq): Add a precondition check here. People are passing in null, but they shouldn't be.
     if (ast == null || ast.getSourceFile() == null) {
       return;
     }
-    ast.getSourceFile().setIsExtern(isExtern);
+    ast.getSourceFile().setKind(SourceKind.EXTERN);
   }
 
   public int getLineOffset(int lineno) {

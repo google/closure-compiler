@@ -42,9 +42,6 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
   // Since there's currently no Feature for Symbol, run this pass if the code has any ES6 features.
   private static final FeatureSet requiredForFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
 
-  private static final FeatureSet knownToRequireSymbol =
-      FeatureSet.BARE_MINIMUM.with(Feature.FOR_OF, Feature.SPREAD_EXPRESSIONS);
-
   public Es6InjectRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.getterSetterSupported =
@@ -58,31 +55,57 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
       used = used.with(getScriptFeatures(script));
     }
 
+    FeatureSet mustBeCompiledAway = used.without(compiler.getOptions().getOutputFeatureSet());
+
+    // TODO(johnlenz): remove this check for Symbol.  Symbol should be handled like the other
+    // polyfills.
+
+    // Check for "Symbol" references before injecting libraries.  This prevents conditional checks
+    // from pulling in 'Symbol'.
+    TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
+
     // We will need these runtime methods when we transpile, but we want the runtime
     // functions to be have JSType applied to it by the type inferrence.
 
-    if (used.contains(Feature.FOR_OF)) {
+    if (mustBeCompiledAway.contains(Feature.FOR_OF)) {
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
     }
 
-    if (used.contains(Feature.SPREAD_EXPRESSIONS)) {
+    if (mustBeCompiledAway.contains(Feature.ARRAY_DESTRUCTURING)) {
+      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
+    }
+
+    if (mustBeCompiledAway.contains(Feature.ARRAY_PATTERN_REST)) {
+      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayFromIterator");
+    }
+
+    if (mustBeCompiledAway.contains(Feature.SPREAD_EXPRESSIONS)) {
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayfromiterable");
     }
 
-    if (used.contains(Feature.CLASS_EXTENDS)) {
+    if (mustBeCompiledAway.contains(Feature.CLASS_EXTENDS)) {
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "inherits");
     }
 
-    if (used.contains(Feature.CLASS_GETTER_SETTER)) {
+    if (mustBeCompiledAway.contains(Feature.CLASS_GETTER_SETTER)) {
       compiler.ensureLibraryInjected("util/global", /* force= */ false);
     }
 
-    if (used.contains(Feature.GENERATORS)) {
+    if (mustBeCompiledAway.contains(Feature.GENERATORS)) {
       compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
     }
 
-    // TODO(johnlenz): remove this.  Symbol should be handled like the other polyfills.
-    TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
+    if (mustBeCompiledAway.contains(Feature.ASYNC_FUNCTIONS)) {
+      compiler.ensureLibraryInjected("es6/execute_async_generator", /* force= */ false);
+    }
+
+    if (mustBeCompiledAway.contains(Feature.ASYNC_GENERATORS)) {
+      compiler.ensureLibraryInjected("es6/async_generator_wrapper", /* force= */ false);
+    }
+
+    if (mustBeCompiledAway.contains(Feature.FOR_AWAIT_OF)) {
+      compiler.ensureLibraryInjected("es6/util/makeasynciterator", /* force= */ false);
+    }
   }
 
   private static FeatureSet getScriptFeatures(Node script) {
@@ -144,15 +167,35 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
 
   // TODO(tbreisacher): Do this for all well-known symbols.
   private void visitGetprop(NodeTraversal t, Node n) {
-    if (!n.matchesQualifiedName("Symbol.iterator")) {
-      return;
-    }
-    if (isGlobalSymbol(t, n.getFirstChild())) {
+    Node receiverNode = n.getFirstChild();
+    String propName = receiverNode.getNext().getString();
+    if (isGlobalSymbol(t, receiverNode)) {
       compiler.ensureLibraryInjected("es6/symbol", false);
       Node statement = NodeUtil.getEnclosingStatement(n);
-      Node init = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolIterator")));
-      statement.getParent().addChildBefore(init.useSourceInfoFromForTree(statement), statement);
-      compiler.reportChangeToEnclosingScope(init);
+      switch (propName) {
+        case "iterator":
+          {
+            Node init =
+                IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolIterator")))
+                    .useSourceInfoFromForTree(statement);
+            statement.getParent().addChildBefore(init, statement);
+            compiler.reportChangeToEnclosingScope(init);
+            break;
+          }
+        case "asyncIterator":
+          {
+            Node init =
+                IR.exprResult(
+                        IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolAsyncIterator")))
+                    .useSourceInfoFromForTree(statement);
+            statement.getParent().addChildBefore(init, statement);
+            compiler.reportChangeToEnclosingScope(init);
+            break;
+          }
+        default:
+          // TODO(bradfordcsmith): Should we warn for unrecognized symbol names?
+          break;
+      }
     }
   }
 }

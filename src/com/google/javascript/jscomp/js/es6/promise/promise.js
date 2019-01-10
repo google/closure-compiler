@@ -69,25 +69,15 @@ $jscomp.polyfill('Promise',
    *     rethrown when it cannot interrupt any other code. This class provides
    *     no way to catch such exceptions.
    * @param {function():?} f
-   * @return {!AsyncExecutor} this object
    */
   AsyncExecutor.prototype.asyncExecute = function(f) {
     if (this.batch_ == null) {
       // no batch created yet, or last batch was fully executed
       this.batch_ = [];
-      this.asyncExecuteBatch_();
+      var self = this;
+      this.asyncExecuteFunction(function() { self.executeBatch_(); });
     }
     this.batch_.push(f);
-    return this;
-  };
-
-  /**
-   * Schedule execution of the jobs in `this.batch_`.
-   * @private
-   */
-  AsyncExecutor.prototype.asyncExecuteBatch_ = function() {
-    var self = this;
-    this.asyncExecuteFunction(function() { self.executeBatch_(); });
   };
 
   // NOTE: We want to make sure AsyncExecutor will work as expected even if
@@ -447,7 +437,8 @@ $jscomp.polyfill('Promise',
 
   PolyfillPromise['race'] = function(thenablesOrValues) {
     return new PolyfillPromise(function(resolve, reject) {
-      var iterator = $jscomp.makeIterator(thenablesOrValues);
+      var /** !Iterator<*> */ iterator =
+          $jscomp.makeIterator(thenablesOrValues);
       for (var /** !IIterableResult<*> */ iterRec = iterator.next();
            !iterRec.done;
            iterRec = iterator.next()) {
@@ -464,7 +455,7 @@ $jscomp.polyfill('Promise',
 
 
   PolyfillPromise['all'] = function(thenablesOrValues) {
-    var iterator = $jscomp.makeIterator(thenablesOrValues);
+    var /** !Iterator<*> */ iterator = $jscomp.makeIterator(thenablesOrValues);
     var /** !IIterableResult<*> */ iterRec = iterator.next();
 
     if (iterRec.done) {

@@ -23,7 +23,7 @@ import static com.google.javascript.jscomp.FunctionArgumentInjector.getFunctionC
 import static com.google.javascript.jscomp.FunctionArgumentInjector.inject;
 import static com.google.javascript.jscomp.FunctionArgumentInjector.maybeAddTempsForCallArguments;
 import static com.google.javascript.jscomp.NodeUtil.getFunctionBody;
-import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
@@ -31,17 +31,21 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for the static methods in {@link FunctionArgumentInjector}.
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public final class FunctionArgumentInjectorTest extends TestCase {
+@RunWith(JUnit4.class)
+public final class FunctionArgumentInjectorTest {
 
   private static final ImmutableSet<String> EMPTY_STRING_SET = ImmutableSet.of();
 
+  @Test
   public void testInject0() {
     Compiler compiler = getCompiler();
     Node result =
@@ -53,6 +57,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     assertNode(result).isEqualTo(getFunctionBody(parseFunction("function f(x) { alert(null); }")));
   }
 
+  @Test
   public void testInject1() {
     Compiler compiler = getCompiler();
     Node result =
@@ -66,42 +71,51 @@ public final class FunctionArgumentInjectorTest extends TestCase {
 
   // TODO(johnlenz): Add more unit tests for "inject"
 
+  @Test
   public void testFindModifiedParameters0() {
     assertThat(findModifiedParameters(parseFunction("function f(a){ return a; }"))).isEmpty();
   }
 
+  @Test
   public void testFindModifiedParameters1() {
     assertThat(findModifiedParameters(parseFunction("function f(a){ return a==0; }"))).isEmpty();
   }
 
+  @Test
   public void testFindModifiedParameters2() {
     assertThat(findModifiedParameters(parseFunction("function f(a){ b=a }"))).isEmpty();
   }
 
+  @Test
   public void testFindModifiedParameters3() {
     assertThat(findModifiedParameters(parseFunction("function f(a){ a=0 }"))).containsExactly("a");
   }
 
+  @Test
   public void testFindModifiedParameters4() {
     assertThat(findModifiedParameters(parseFunction("function f(a,b){ a=0;b=0 }")))
         .containsExactly("a", "b");
   }
 
+  @Test
   public void testFindModifiedParameters5() {
     assertThat(findModifiedParameters(parseFunction("function f(a,b){ a; if (a) b=0 }")))
         .containsExactly("b");
   }
 
+  @Test
   public void testFindModifiedParameters6() {
     assertThat(findModifiedParameters(parseFunction("function f(a,b){ function f(){ a;b; } }")))
         .containsExactly("a", "b");
   }
 
+  @Test
   public void testFindModifiedParameters7() {
     assertThat(findModifiedParameters(parseFunction("function f(a,b){ a; function f(){ b; } }")))
         .containsExactly("b");
   }
 
+  @Test
   public void testFindModifiedParameters8() {
     assertThat(
             findModifiedParameters(
@@ -109,16 +123,19 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         .containsExactly("b");
   }
 
+  @Test
   public void testFindModifiedParameters9() {
     assertThat(findModifiedParameters(parseFunction("function f(a,b){ (function(){ a;b; }) }")))
         .containsExactly("a", "b");
   }
 
+  @Test
   public void testFindModifiedParameters10() {
     assertThat(findModifiedParameters(parseFunction("function f(a,b){ a; (function (){ b; }) }")))
         .containsExactly("b");
   }
 
+  @Test
   public void testFindModifiedParameters11() {
     assertThat(
             findModifiedParameters(
@@ -126,16 +143,19 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         .containsExactly("b");
   }
 
+  @Test
   public void testFindModifiedParameters12() {
     assertThat(
             findModifiedParameters(parseFunction("function f(a){ { let a = 1; } }"))).isEmpty();
   }
 
+  @Test
   public void testFindModifiedParameters13() {
     assertThat(
             findModifiedParameters(parseFunction("function f(a){ { const a = 1; } }"))).isEmpty();
   }
 
+  @Test
   public void testFindModifiedParameters14() {
     assertThat(findModifiedParameters(parseFunction("function f(a){ for (a in []) {} }")))
         .containsExactly("a");
@@ -144,26 +164,31 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   // Note: This is technically incorrect. The parameter a is shadowed, not modified. However, this
   // will just cause the function inliner to do a little bit of unnecessary work; it will not
   // result in incorrect output.
+  @Test
   public void testFindModifiedParameters15() {
     assertThat(findModifiedParameters(parseFunction("function f(a){ for (const a in []) {} }")))
         .containsExactly("a");
   }
 
+  @Test
   public void testFindModifiedParameters16() {
     assertThat(findModifiedParameters(parseFunction("function f(a){ for (a of []) {} }")))
         .containsExactly("a");
   }
 
+  @Test
   public void testFindModifiedParameters17() {
     assertThat(findModifiedParameters(parseFunction("function f(a){ [a] = [2]; }")))
         .containsExactly("a");
   }
 
+  @Test
   public void testFindModifiedParameters18() {
     assertThat(findModifiedParameters(parseFunction("function f(a){ var [a] = [2]; }")))
         .containsExactly("a");
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments1() {
     // Parameters with side-effects must be executed
     // even if they aren't referenced.
@@ -173,6 +198,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a", "b"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments2() {
     // Unreferenced parameters without side-effects
     // can be ignored.
@@ -182,6 +208,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments3() {
     // Referenced parameters without side-effects
     // don't need temps.
@@ -191,6 +218,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments4() {
     // Parameters referenced after side-effect must
     // be assigned to temps.
@@ -200,6 +228,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("b"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments5() {
     // Parameters referenced after out-of-scope side-effect must
     // be assigned to temps.
@@ -209,6 +238,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments6() {
     // Parameter referenced after a out-of-scope side-effect must
     // be assigned to a temp.
@@ -218,6 +248,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments7() {
     // No temp needed after local side-effects.
     testNeededTemps(
@@ -236,6 +267,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments8() {
     // Temp needed for side-effects to object using local name.
     testNeededTemps(
@@ -244,6 +276,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments9() {
     // Parameters referenced in a loop with side-effects must
     // be assigned to temps.
@@ -253,6 +286,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a", "b"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments10() {
     // No temps for parameters referenced in a loop with no side-effects.
     testNeededTemps(
@@ -261,6 +295,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments11() {
     // Parameters referenced in a loop with side-effects must
     // be assigned to temps.
@@ -270,6 +305,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a", "b"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments12() {
     // Parameters referenced in a loop with side-effects must
     // be assigned to temps.
@@ -279,6 +315,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a", "b"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments13() {
     // Parameters referenced in a inner loop without side-effects must
     // be assigned to temps if the outer loop has side-effects.
@@ -288,6 +325,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a", "b"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments14() {
     // Parameters referenced in a loop must
     // be assigned to temps.
@@ -297,6 +335,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a", "b"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments20() {
     // A long string referenced more than once should have a temp.
     testNeededTemps(
@@ -305,6 +344,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments21() {
     // A short string referenced once should not have a temp.
     testNeededTemps(
@@ -313,6 +353,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments22() {
     // A object literal not referenced.
     testNeededTemps(
@@ -336,6 +377,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments22b() {
     // A object literal not referenced.
     testNeededTemps(
@@ -344,6 +386,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a", "this"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments23() {
     // A array literal, not referenced.
     testNeededTemps(
@@ -362,6 +405,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments24() {
     // A regex literal, not referenced.
     testNeededTemps(
@@ -380,6 +424,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments25() {
     // A side-effect-less constructor, not referenced.
     testNeededTemps(
@@ -399,6 +444,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments26() {
     // A constructor, not referenced.
     testNeededTemps(
@@ -417,6 +463,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments27() {
     // Ensure the correct parameter is given a temp, when there is
     // a this value in the call.
@@ -426,6 +473,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("b"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments28() {
     // true/false are don't need temps
     testNeededTemps(
@@ -434,6 +482,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments29() {
     // true/false are don't need temps
     testNeededTemps(
@@ -442,6 +491,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments30() {
     // true/false are don't need temps
     testNeededTemps(
@@ -450,6 +500,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments31() {
     // true/false are don't need temps
     testNeededTemps(
@@ -458,6 +509,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments32() {
     // void 0 doesn't need a temp
     testNeededTemps(
@@ -466,6 +518,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArguments33() {
     // doesn't need a temp
     testNeededTemps(
@@ -474,6 +527,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArgumentsInLoops() {
     // A mutable parameter referenced in loop needs a
     // temporary.
@@ -493,15 +547,18 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a"));
   }
 
+  @Test
   public void testMaybeAddTempsForCallArgumentsRestParam1() {
     testNeededTemps("function foo(...args) {return args;} foo(1, 2);", "foo", EMPTY_STRING_SET);
   }
 
+  @Test
   public void testMaybeAddTempsForCallArgumentsRestParam2() {
     testNeededTemps(
         "function foo(x, ...args) {return args;} foo(1, 2);", "foo", ImmutableSet.of("args"));
   }
 
+  @Test
   public void testArgMapWithRestParam1() {
     assertArgMapHasKeys(
         "function foo(...args){return args;} foo(1, 2);", "foo", ImmutableSet.of("this", "args"));
@@ -510,25 +567,25 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   private void assertArgMapHasKeys(String code, String fnName, ImmutableSet<String> expectedKeys) {
     Node n = parse(code);
     Node fn = findFunction(n, fnName);
-    assertNotNull(fn);
+    assertThat(fn).isNotNull();
     Node call = findCall(n, fnName);
-    assertNotNull(call);
-    ImmutableMap<String, Node> actualMap =
-        getFunctionCallParameterMap(fn, call, getNameSupplier());
+    assertThat(call).isNotNull();
+    ImmutableMap<String, Node> actualMap = getFunctionCallParameterMap(fn, call, getNameSupplier());
     assertThat(actualMap.keySet()).isEqualTo(expectedKeys);
   }
 
   private void testNeededTemps(String code, String fnName, ImmutableSet<String> expectedTemps) {
     Node n = parse(code);
     Node fn = findFunction(n, fnName);
-    assertNotNull(fn);
+    assertThat(fn).isNotNull();
     Node call = findCall(n, fnName);
-    assertNotNull(call);
-    ImmutableMap<String, Node> args = ImmutableMap.copyOf(
-        getFunctionCallParameterMap(fn, call, getNameSupplier()));
+    assertThat(call).isNotNull();
+    ImmutableMap<String, Node> args =
+        ImmutableMap.copyOf(getFunctionCallParameterMap(fn, call, getNameSupplier()));
 
     Set<String> actualTemps = new HashSet<>();
-    maybeAddTempsForCallArguments(fn, args, actualTemps, new ClosureCodingConvention());
+    maybeAddTempsForCallArguments(
+        getCompiler(), fn, args, actualTemps, new ClosureCodingConvention());
 
     assertThat(actualTemps).isEqualTo(expectedTemps);
   }

@@ -38,6 +38,22 @@ function getCallCount() {
   return callCount;
 }
 
+/**
+ * Performs the check `assertEquals('undefined', typeofResult);`.
+ *
+ * This is intended to work with the `typeof` operator. It's useful when testing
+ * the existence of properties the compiler doesn't know about because the
+ * compiler doesn't warn about missing properties inside `typeof`.
+ *
+ * Example   : `assertIsStringUndefined(typeof rest.a);`
+ * Instead of: `assertUndefined(rest.a);`
+ *
+ * @param {string} typeofResult
+ */
+function assertIsStringUndefined(typeofResult) {
+  assertEquals('undefined', typeofResult);
+}
+
 testSuite({
 
   setUp() {
@@ -126,8 +142,8 @@ testSuite({
     assertEquals(1, callCount);
     assertEquals(1, d);
     assertEquals(2, e);
-    assertUndefined(rest.a);
-    assertUndefined(rest.b);
+    assertIsStringUndefined(typeof rest.a);
+    assertIsStringUndefined(typeof rest.b);
     assertEquals(3, rest.c);
   },
 
@@ -136,8 +152,8 @@ testSuite({
     assertEquals(1, callCount);
     assertEquals(1, d);
     assertEquals(2, e);
-    assertUndefined(rest.a);
-    assertUndefined(rest.b);
+    assertIsStringUndefined(typeof rest.a);
+    assertIsStringUndefined(typeof rest.b);
     assertEquals(3, rest.c);
   },
 
@@ -146,8 +162,8 @@ testSuite({
     assertEquals(1, callCount);
     assertEquals(1, d);
     assertEquals(2, e);
-    assertUndefined(rest.a);
-    assertUndefined(rest.b);
+    assertIsStringUndefined(typeof rest.a);
+    assertIsStringUndefined(typeof rest.b);
     assertEquals(3, rest.c);
   },
 
@@ -157,8 +173,8 @@ testSuite({
     assertEquals(1, callCount);
     assertEquals(1, d);
     assertEquals(2, e);
-    assertUndefined(rest.a);
-    assertUndefined(rest.b);
+    assertIsStringUndefined(typeof rest.a);
+    assertIsStringUndefined(typeof rest.b);
     assertEquals(3, rest.c);
   },
 
@@ -167,8 +183,8 @@ testSuite({
     assertEquals(3, callCount);
     assertEquals(1, d);
     assertEquals(2, e);
-    assertUndefined(rest.a);
-    assertUndefined(rest.b);
+    assertIsStringUndefined(typeof rest.a);
+    assertIsStringUndefined(typeof rest.b);
     assertEquals(3, rest.c);
 
     // these assertions just make sure pre and post are read to squelch lint.
@@ -182,8 +198,8 @@ testSuite({
     assertEquals(3, callCount);
     assertEquals(1, d);
     assertEquals(2, e);
-    assertUndefined(rest.a);
-    assertUndefined(rest.b);
+    assertIsStringUndefined(typeof rest.a);
+    assertIsStringUndefined(typeof rest.b);
     assertEquals(3, rest.c);
 
     // these assertions just make sure pre and post are read to squelch lint.

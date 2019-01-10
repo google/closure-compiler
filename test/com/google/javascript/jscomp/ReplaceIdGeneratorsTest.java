@@ -16,14 +16,20 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER;
 
 import com.google.common.collect.ImmutableMap;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link ReplaceIdGenerators}.
  *
  */
+@RunWith(JUnit4.class)
 public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   private boolean generatePseudoNames = false;
@@ -58,7 +64,8 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     generatePseudoNames = false;
     previousMappings = null;
@@ -69,12 +76,14 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testBackwardCompat() {
     testWithPseudo("foo.bar = goog.events.getUniqueId('foo_bar')",
          "foo.bar = 'a'",
          "foo.bar = 'foo_bar$0'");
   }
 
+  @Test
   public void testSerialization1() {
     testMap(
         lines(
@@ -94,6 +103,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testSerialization2() {
     testMap(
         lines(
@@ -114,6 +124,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
   public void testReusePreviousSerialization1() {
     previousMappings = lines(
         "[goog.events.getUniqueId]",
@@ -137,6 +148,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "\n");
   }
 
+  @Test
   public void testReusePreviousSerialization2() {
     previousMappings =
         "[goog.events.getUniqueId]\n" +
@@ -162,6 +174,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "\n");
   }
 
+  @Test
   public void testReusePreviousSerializationConsistent1() {
     previousMappings =
         "[id]\n" +
@@ -180,6 +193,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "[id]\n" + "\n" + "a:f1\n" + "\n");
   }
 
+  @Test
   public void testSimple() {
     testWithPseudo(
         lines(
@@ -207,6 +221,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "foo1 = 'foo1$1';"));
   }
 
+  @Test
   public void testObjectLit() {
     testWithPseudo(
         lines(
@@ -220,6 +235,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "things = {'foo1$0': 'test', 'foo bar$1': 'test'}"));
   }
 
+  @Test
   public void testObjectLit_mapped() {
     testNonPseudoSupportingGenerator(
         lines(
@@ -230,6 +246,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "things = {':foo:': 'test', ':bar:': 'test'}"));
   }
 
+  @Test
   public void testObjectLit_xid() {
     testNonPseudoSupportingGenerator(
         lines(
@@ -240,6 +257,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "things = {'QB6rXc': 'test', 'b6Lt6c': 'test'}"));
   }
 
+  @Test
   public void testObjectLit_empty() {
     testWithPseudo(
         "/** @idGenerator */ goog.id = function() {}; things = goog.id({})",
@@ -247,6 +265,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "/** @idGenerator */ goog.id = function() {}; things = {}");
   }
 
+  @Test
   public void testObjectLit_function() {
     testWithPseudo(
         lines(
@@ -271,6 +290,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "things = {'foo$0': function*() {}}"));
   }
 
+  @Test
   public void testObjectLit_ES6() {
     testError(lines(
         "/** @idGenerator */",
@@ -285,6 +305,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         ReplaceIdGenerators.COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN);
   }
 
+  @Test
   public void testClass() {
     testSame(
         externs(""),
@@ -296,6 +317,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         warning(ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER));
   }
 
+  @Test
   public void testSimpleConsistent() {
     testWithPseudo(
         "/** @consistentIdGenerator */ id = function() {}; foo.bar = id('foo_bar')",
@@ -325,6 +347,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "f1 = 'f1$0'"));
   }
 
+  @Test
   public void testSimpleStable() {
     testNonPseudoSupportingGenerator(
         "/** @stableIdGenerator */ id = function() {};" + "foo.bar = id('foo_bar')",
@@ -335,6 +358,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "/** @stableIdGenerator */ id = function() {};" + "f1 = 'AAAMiw';" + "f1 = 'AAAMiw'");
   }
 
+  @Test
   public void testSimpleXid() {
     testNonPseudoSupportingGenerator(
         lines("/** @idGenerator {xid} */ id = function() {};", "foo.bar = id('foo')"),
@@ -347,6 +371,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "/** @idGenerator {xid} */ id = function() {};", "f1 = 'QB6rXc';", "f1 = 'QB6rXc'"));
   }
 
+  @Test
   public void testVar() {
     testWithPseudo(
         lines(
@@ -362,6 +387,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "/** @stableIdGenerator */ var id = function() {};", "foo.bar = '125lGg'"));
   }
 
+  @Test
   public void testLet() {
     testWithPseudo(
         lines(
@@ -375,6 +401,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "/** @stableIdGenerator */ let id = function() {};" + "foo.bar = '125lGg'");
   }
 
+  @Test
   public void testConst() {
     testWithPseudo(
         lines(
@@ -391,6 +418,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "/** @stableIdGenerator */ const id = function() {};", "foo.bar = '125lGg'"));
   }
 
+  @Test
   public void testInObjLit() {
     testWithPseudo(
         lines(
@@ -415,6 +443,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "/** @idGenerator {xid} */ get.id = function() {};", "foo.bar = {a: 'QB6rXc'}"));
   }
 
+  @Test
   public void testInObjLit_mapped() {
     testWithPseudo(
         lines(
@@ -425,6 +454,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = {a: ':foo:'}"));
   }
 
+  @Test
   public void testMapped() {
     testWithPseudo(
         lines("/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = id('foo');"),
@@ -432,6 +462,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         lines("/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = ':foo:';"));
   }
 
+  @Test
   public void testMappedMap() {
     testMap(
         lines(
@@ -445,6 +476,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         lines("[id]", "", ":foo::foo", "", ""));
   }
 
+  @Test
   public void testMapped2() {
     testWithPseudo(
         lines(
@@ -458,6 +490,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "foo.bar = function() { return ':foo:'; };"));
   }
 
+  @Test
   public void testTwoGenerators() {
     testWithPseudo(
         lines(
@@ -483,6 +516,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "f4 = '1$1';"));
   }
 
+  @Test
   public void testMixedGenerators() {
     testWithPseudo(
         lines(
@@ -517,6 +551,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "f6 = 'AAAAMQ';"));
   }
 
+  @Test
   public void testNonLiteralParam1() {
     testSame("/** @idGenerator */ var id = function() {}; "
             + "var x = 'foo';"
@@ -524,18 +559,21 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
   }
 
+  @Test
   public void testNonLiteralParam2() {
     testSame("/** @idGenerator */ var id = function() {}; "
             + "id('foo' + 'bar');",
         ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
   }
 
+  @Test
   public void testLocalCall() {
     testError("/** @idGenerator */ var id = function() {}; "
             + "function Foo() { id('foo'); }",
         ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
   }
 
+  @Test
   public void testConditionalCall() {
     testError(
         lines(
@@ -577,6 +615,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
   }
 
+  @Test
   public void testConflictingIdGenerator() {
     testError("/** @idGenerator \n @consistentIdGenerator \n*/"
             + "var id = function() {}; ",
@@ -602,6 +641,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "if (x) {foo.bar = 'foo_bar$0'}"));
   }
 
+  @Test
   public void testUnknownMapping() {
     testSame(lines(
         "/** @idGenerator {mapped} */",
@@ -610,12 +650,14 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         ReplaceIdGenerators.MISSING_NAME_MAP_FOR_GENERATOR);
   }
 
+  @Test
   public void testBadGenerator1() {
     testSame("/** @idGenerator */ id = function() {};" +
          "foo.bar = id()",
          INVALID_GENERATOR_PARAMETER);
   }
 
+  @Test
   public void testBadGenerator2() {
     testSame("/** @consistentIdGenerator */ id = function() {};" +
          "foo.bar = id()",
@@ -624,7 +666,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   private void testMap(String code, String expected, String expectedMap) {
     test(code, expected);
-    assertEquals(expectedMap, lastPass.getSerializedIdMappings());
+    assertThat(lastPass.getSerializedIdMappings()).isEqualTo(expectedMap);
   }
 
   private void testWithPseudo(String code, String expected, String expectedPseudo) {

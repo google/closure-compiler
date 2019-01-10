@@ -17,18 +17,19 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
-
 import java.io.PrintStream;
 
 /**
- * <p>An error manager that prints errors and warnings to the print stream
- * provided in addition to the functionality of the
- * {@link BasicErrorManager}.</p>
+ * An error manager that prints errors and warnings to the print stream provided in addition to the
+ * functionality of the {@link BasicErrorManager}.
  *
- * <p>It collaborates with a {@link SourceExcerptProvider} via a
- * {@link MessageFormatter} to display error messages with source context.</p>
+ * <p>It collaborates with a {@link SourceExcerptProvider} via a {@link MessageFormatter} to display
+ * error messages with source context.
  *
+ * @deprecated, Please use the {#SortingErrorManger} with a {#PrintStreamErrorReportGenerator}
+ *     instead.
  */
+@Deprecated
 public class PrintStreamErrorManager extends BasicErrorManager {
   private final MessageFormatter formatter;
   private final PrintStream stream;

@@ -17,10 +17,16 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
- * Tests for {@link OptimizeParameters}.  Note: interaction with {@link RemoveUnusedCode} is
- * tested in {@link OptimizeCallsTest}.
+ * Tests for {@link OptimizeParameters}. Note: interaction with {@link RemoveUnusedCode} is tested
+ * in {@link OptimizeCallsTest}.
  */
+@RunWith(JUnit4.class)
 public final class OptimizeParametersTest extends CompilerTestCase {
 
   public OptimizeParametersTest() {
@@ -33,7 +39,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
     enableGatherExternProperties();
@@ -44,6 +51,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testNoRemoval1() {
     testSame("function foo(p1) { } foo(1); foo(2)"); // required "remove unused vars"
     testSame("function foo(p1) { } foo(this);");
@@ -52,6 +60,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame("function foo(p1) { use(p1); } function g() {var x = 1; foo(x);}; g();");
   }
 
+  @Test
   public void testNoRemoval2() {
     testSame("var foo = (p1)=>{ }; foo(1); foo(2)"); // required "remove unused vars"
     testSame("var foo = (p1)=>{ }; foo(this);");
@@ -60,6 +69,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame("var foo = (p1)=>{ use(p1); }; function g() {var x = 1; foo(x);}; g();");
   }
 
+  @Test
   public void testNoRemovalSpread() {
     // TODO(johnlenz): make spread removable
     testSame("function f(p1) {} f(...x);");
@@ -67,6 +77,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test("function f(p1, ...p2) {} f(1, ...x);", "function f(...p2) {var p1 = 1;} f(...x);");
   }
 
+  @Test
   public void testRemovalRest1() {
     // rest as the first parameter
     test(
@@ -83,6 +94,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function f(     ){var p1=[alert()];} f(       );");
   }
 
+  @Test
   public void testRemovalRest2() {
     // rest as the second parameter
     test(
@@ -99,11 +111,13 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function f(p1,      ){var p2=[alert()];} f(x         ); f(y         );");
   }
 
+  @Test
   public void testRemovalRest3() {
     testSame(
         "function f(...p1){} function _g(x) { f(x); f(x); }");
   }
 
+  @Test
   public void testRemovalRestWithDestructuring1() {
     test(
         "function f(...[a]){          } f();",
@@ -119,6 +133,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function f(      ){var {a}=[1];} f( )");
   }
 
+  @Test
   public void testRemoveParamWithDefault1() {
     test(
         "function f(a = 1){          } f();",
@@ -140,6 +155,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function f(       ){var [a = 1] = [];} f(  );");
   }
 
+  @Test
   public void testRemoveParamWithDefault2() {
     test(
         "function f(a = 0){          } f(1);",
@@ -158,6 +174,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function f(          ){var {a = 1}={};} f(  )");
   }
 
+  @Test
   public void testNoRemoveParamWithDefault() {
     // different scopes
     testSame(
@@ -169,6 +186,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function f(a = 2){} f(alert);");
   }
 
+  @Test
   public void testSimpleRemoval0() {
     test("function foo(p1) {       } foo(); foo()",
          "function foo(  ) {var p1;} foo(); foo()");
@@ -182,6 +200,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "function foo(  ) {var p1 = 1;} foo(  x()); foo(  y())");
   }
 
+  @Test
   public void testSimpleRemoval1() {
     // parameter never supplied
     test("var foo = (p1)=>{       }; foo(); foo()",
@@ -200,6 +219,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "const foo = (  )=>{var p1 = 1;}; foo( ); foo( )");
   }
 
+  @Test
   public void testSimpleRemoval2() {
     test("function f(p1) {       } new f(); new f()",
          "function f(  ) {var p1;} new f(); new f()");
@@ -213,6 +233,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "function f(  ) {var p1 = 1;} new f(  x()); new f(  y())");
   }
 
+  @Test
   public void testSimpleRemovalInstanceof() {
     test("function f(p1) {       } x instanceof f; new f(); new f()",
          "function f(  ) {var p1;} x instanceof f; new f(); new f()");
@@ -220,6 +241,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "function f(  ) {var p1 = 1;} x instanceof f; new f( ); new f( )");
   }
 
+  @Test
   public void testSimpleRemovalTypeof() {
     test("function f(p1) {       } typeof f != 'undefined' && f();",
          "function f(  ) {var p1;} typeof f != 'undefined' && f();");
@@ -227,6 +249,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "function f(  ) {var p1 = 1;} typeof f != 'undefined'; f();");
   }
 
+  @Test
   public void testSimpleRemoval4() {
     test("function f(p1) {       } f.prop = 1; new f(); new f()",
          "function f(  ) {var p1;} f.prop = 1; new f(); new f()");
@@ -238,6 +261,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function f(  ) {var p1 = 1;} f['prop'] = 1; new f( ); new f( )");
   }
 
+  @Test
   public void testSimpleRemovalAsync() {
     // parameter never supplied
     test("var f = async function (p1) {       }; f(); f()",
@@ -256,6 +280,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "const f = async function (  ) {var p1 = 1;}; f( ); f( )");
   }
 
+  @Test
   public void testSimpleRemovalGenerator() {
     // parameter never supplied
     test("var f = function * (p1) {       }; f(); f()",
@@ -274,14 +299,17 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "const f = function * (  ) {var p1 = 1;}; f( ); f( )");
   }
 
+  @Test
   public void testNotAFunction() {
     testSame("var x = 1; x; x = 2");
   }
 
+  @Test
   public void testRemoveOneOptionalNamedFunction() {
     test("function foo(p1) { } foo()", "function foo() {var p1} foo()");
   }
 
+  @Test
   public void testDifferentScopes() {
     test("function f(a, b) {} f(1, 2); f(1, 3); " +
         "function h() {function g(a) {} g(4); g(5);} f(1, 2);",
@@ -289,12 +317,14 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function h() {function g(a) {} g(4); g(5);} f(2);");
   }
 
+  @Test
   public void testOptimizeOnlyImmutableValues1() {
     test(
         "function foo(a) {}; foo(undefined);",
         "function foo() {var a = undefined}; foo()");
   }
 
+  @Test
   public void testOptimizeOnlyImmutableValues2() {
     test("function foo(a) {}; foo(null);",
         "function foo() {var a = null}; foo()");
@@ -313,6 +343,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "var foo = function() {var a = 'abc'}; foo()");
   }
 
+  @Test
   public void testOptimizeOnlyImmutableValues3() {
     // "var a = null;" gets inserted after the declaration of 'goo' so the tree stays normalized.
     test(
@@ -348,6 +379,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
             "foo();"));
   }
 
+  @Test
   public void testOptimizeOnlyImmutableValues4() {
     test(
         lines(
@@ -363,11 +395,13 @@ public final class OptimizeParametersTest extends CompilerTestCase {
             "foo();"));
   }
 
+  @Test
   public void testRemoveOneOptionalVarAssignment() {
     test("var foo = function (p1) { }; foo()",
         "var foo = function () {var p1}; foo()");
   }
 
+  @Test
   public void testDoOptimizeCall() {
     testSame("var foo = function () {}; foo(); foo.call();");
     // TODO(johnlenz): support removing unused "this" from .call
@@ -392,6 +426,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "var foo = function () {var a = 1;}; foo.call(null);");
   }
 
+  @Test
   public void testDoOptimizeApply() {
     testSame("var foo = function () {}; foo(); foo.apply();");
     testSame("var foo = function () {}; foo(); foo.apply(this);");
@@ -406,24 +441,28 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame("var foo = function (a, b) {}; foo.apply(null, []);");
   }
 
+  @Test
   public void testRemoveOneOptionalExpressionAssign() {
     test(
         "var foo; foo = function (p1) { }; foo()",
         "var foo; foo = function () { var p1; }; foo()");
   }
 
+  @Test
   public void testRemoveOneOptionalOneRequired() {
     test(
         "function foo(p1, p2) { } foo(1); foo(2)",
         "function foo(p1) {var p2} foo(1); foo(2)");
   }
 
+  @Test
   public void testRemoveOneOptionalMultipleCalls() {
     test(
         "function foo(p1, p2) { } foo(1); foo(2); foo()",
         "function foo(p1) {var p2} foo(1); foo(2); foo()");
   }
 
+  @Test
   public void testRemoveOneOptionalMultiplePossibleDefinition() {
     String src = lines(
         "var goog = {};",
@@ -440,6 +479,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(src, result);
   }
 
+  @Test
   public void testRemoveTwoOptionalMultiplePossibleDefinition() {
     String src = lines(
         "var goog = {};",
@@ -456,6 +496,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(src, result);
   }
 
+  @Test
   public void testMultipleCalls() {
     String src = lines(
         "function f(p1, p2, p3, p4) { };",
@@ -466,6 +507,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(src, result);
   }
 
+  @Test
   public void testConstructorOptArgsNotRemoved() {
     String src =
         "/** @constructor */" +
@@ -478,6 +520,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame(src);
   }
 
+  @Test
   public void testMultipleUnknown() {
     String src = lines(
         "var goog1 = {};",
@@ -496,6 +539,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(src, result);
   }
 
+  @Test
   public void testSingleUnknown() {
     String src =
         "var goog2 = {};" +
@@ -511,11 +555,13 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(src, expected);
   }
 
+  @Test
   public void testRemoveVarArg() {
     test("function foo(p1, var_args) { } foo(1); foo(2)",
         "function foo(p1) { var var_args } foo(1); foo(2)");
   }
 
+  @Test
   public void testAliasMethodsDontGetOptimize() {
     String src =
         "var foo = function(a, b) {};" +
@@ -527,6 +573,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame(src);
   }
 
+  @Test
   public void testAliasMethodsDontGetOptimize2() {
     String src =
         "var foo = function(a, b) {};" +
@@ -536,6 +583,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame(src);
   }
 
+  @Test
   public void testAliasMethodsDontGetOptimize3() {
     String src =
         "var array = {};" +
@@ -545,6 +593,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame(src);
   }
 
+  @Test
   public void testAliasMethodsDontGetOptimize4() {
     // Don't change the call to baz as it has been aliased.
 
@@ -561,6 +610,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
             "foo();"));
   }
 
+  @Test
   public void testMethodsDefinedInArraysDontGetOptimized() {
     String src =
         "var array = [true, function (a) {}];" +
@@ -568,6 +618,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame(src);
   }
 
+  @Test
   public void testMethodsDefinedInObjectDontGetOptimized() {
     String src =
       "var object = { foo: function bar() {} };" +
@@ -579,10 +630,14 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame(src);
   }
 
+  @Test
   public void testRemoveConstantArgument() {
     // Remove only one parameter
     test("function foo(p1, p2) {}; foo(1,2); foo(2,2);",
          "function foo(p1) {var p2 = 2}; foo(1); foo(2)");
+
+    // @noinline prevents constant inlining
+    testSame("/** @noinline */ function foo(p1, p2) {}; foo(1,2); foo(2,2);");
 
     // Remove nothing
     testSame("function foo(p1, p2) {}; foo(1); foo(2,3);");
@@ -607,6 +662,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
             "Person.run(1); Person.run(2);"));
   }
 
+  @Test
   public void testCanDeleteArgumentsAtAnyPosition() {
     // Argument removed in middle and end
     String src =
@@ -620,15 +676,18 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(src, expected);
   }
 
+  @Test
   public void testNoOptimizationForExternsFunctions() {
     testSame("function _foo(x, y, z){}; _foo(1);");
   }
 
+  @Test
   public void testNoOptimizationForGoogExportSymbol() {
     testSame("goog.exportSymbol('foo', foo);" +
              "function foo(x, y, z){}; foo(1);");
   }
 
+  @Test
   public void testNoArgumentRemovalNonEqualNodes() {
     testSame("function foo(a){}; foo('bar'); foo('baz');");
     testSame("function foo(a){}; foo(1.0); foo(2.0);");
@@ -637,6 +696,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame("function foo(a){}; foo(/&/g); foo(/</g);");
   }
 
+  @Test
   public void testFunctionPassedAsParam() {
     test(
         lines(
@@ -653,6 +713,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
             "person.foo();"));
   }
 
+  @Test
   public void testCallIsIgnore() {
     test(
         lines(
@@ -667,6 +728,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
             "goog.foo();"));
   }
 
+  @Test
   public void testApplyIsIgnore() {
     testSame("var goog;" +
         "goog.foo = function(a, opt) {};" +
@@ -674,12 +736,14 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "goog.foo(1);");
   }
 
+  @Test
   public void testFunctionWithReferenceToArgumentsShouldNotBeOptimize() {
     testSame("function foo(a,b,c) { return arguments.size; }; foo(1);");
     testSame("var foo = function(a,b,c) { return arguments.size }; foo(1);");
     testSame("var foo = function bar(a,b,c) { return arguments.size }; foo(2); bar(2);");
   }
 
+  @Test
   public void testFunctionWithTwoNames() {
     testSame("var foo = function bar(a,b) {};");
     testSame("var foo = function bar(a,b) {}; foo(1)");
@@ -690,11 +754,13 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame("var foo = function bar(a,b) {}; foo(1,2); bar(2,1)");
   }
 
+  @Test
   public void testRecursion() {
     test("var foo = function (a,b) {foo(1, b)}; foo(1, 2)",
          "var foo = function (b) {var a=1; foo(b)}; foo(2)");
   }
 
+  @Test
   public void testConstantArgumentsToConstructorCanBeOptimized() {
     String src = "function foo(a) {};" +
         "var bar = new foo(1);";
@@ -703,6 +769,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(src, expected);
   }
 
+  @Test
   public void testOptionalArgumentsToConstructorCanBeOptimized() {
     String src = "function foo(a) {};" +
         "var bar = new foo();";
@@ -711,11 +778,13 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(src, expected);
   }
 
+  @Test
   public void testRegexesCanBeInlined() {
     test("function foo(a) {}; foo(/abc/);",
          "function foo() {var a = /abc/}; foo();");
   }
 
+  @Test
   public void testConstructorUsedAsFunctionCanBeOptimized() {
     String src = "function foo(a) {};" +
         "var bar = new foo(1);" +
@@ -726,12 +795,14 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(src, expected);
   }
 
+  @Test
   public void testDoNotOptimizeConstructorWhenArgumentsAreNotEqual() {
     testSame("function Foo(a) {};" +
         "var bar = new Foo(1);" +
         "var baz = new Foo(2);");
   }
 
+  @Test
   public void testDoNotOptimizeArrayElements() {
     testSame("var array = [function (a, b) {}];");
     testSame("var array = [function f(a, b) {}]");
@@ -745,6 +816,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "array[0] = foo;");
   }
 
+  @Test
   public void testOptimizeThis1() {
     String src = lines(
         "var bar = function (a, b) {};",
@@ -763,6 +835,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(src, expected);
   }
 
+  @Test
   public void testOptimizeThis2() {
     String src = lines(
         "function foo() {",
@@ -781,6 +854,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(src, expected);
   }
 
+  @Test
   public void testDoNotOptimizeWhenArgumentsPassedAsParameter() {
     testSame("function foo(a) {}; foo(arguments)");
     testSame("function foo(a) {}; foo(arguments[0])");
@@ -792,20 +866,18 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "function foo(a) {var b}; foo(arguments)");
   }
 
+  @Test
   public void testDoNotOptimizeGoogExportFunctions() {
     testSame("function foo(a, b) {}; foo(); goog.export_function(foo);");
   }
 
+  @Test
   public void testDoNotOptimizeJSCompiler_renameProperty() {
     testSame("function JSCompiler_renameProperty(a) {return a};" +
              "JSCompiler_renameProperty('a');");
   }
 
-  public void testDoNotOptimizeJSCompiler_ObjectPropertyString() {
-    testSame("function JSCompiler_ObjectPropertyString(a, b) {return a[b]};" +
-             "JSCompiler_renameProperty(window,'b');");
-  }
-
+  @Test
   public void testMutableValues1() {
     test("function foo(p1) {} foo()",
          "function foo() {var p1} foo()");
@@ -830,6 +902,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame("function foo(p1) {} (function () {var x;foo(x)})()");
   }
 
+  @Test
   public void testMutableValues2() {
     test("function foo(p1, p2) {} foo(1, 2)",
          "function foo() {var p1=1; var p2 = 2} foo()");
@@ -837,6 +910,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "var x; var y; function foo() {var p1=x(); var p2 = y()} foo()");
   }
 
+  @Test
   public void testMutableValues3() {
     test(
         "var x; var y; var z;" +
@@ -847,6 +921,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "foo(); foo()");
   }
 
+  @Test
   public void testMutableValues4() {
     // Preserve the ordering of side-effects.
     // If z(), can't be moved into the function then z() may change the value
@@ -874,6 +949,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "foo(y(), z()); foo(y(),3)");
   }
 
+  @Test
   public void testMutableValues5() {
     test(
         "var x; var y; var z;" +
@@ -910,6 +986,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "new foo(y(), z()); new foo(y(),3)");
   }
 
+  @Test
   public void testShadows() {
     testSame("function foo(a) {}" +
              "var x;" +
@@ -922,6 +999,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
              "foo(x())");
   }
 
+  @Test
   public void testNoCrash() {
     test(
         "function foo(a) {}" +
@@ -932,10 +1010,12 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "foo()");
   }
 
+  @Test
   public void testGlobalCatch() {
     testSame("function foo(a) {} try {} catch (e) {foo(e)}");
   }
 
+  @Test
   public void testNamelessParameter1() {
     test(
         externs("var g;"),
@@ -943,6 +1023,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         expected("f(); function f(){g()}"));
   }
 
+  @Test
   public void testNamelessParameter2() {
     test(
         externs("var g, h;"),
@@ -950,13 +1031,15 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         expected("f(); function f(){g();h()}"));
   }
 
-  public void testNoRewriteUsedClassConstructor1() throws Exception {
+  @Test
+  public void testNoRewriteUsedClassConstructor1() {
     testSame(lines(
         "class C { constructor(a) { use(a); } }",
         "var c = new C();"));
   }
 
-  public void testNoRewriteUsedClassConstructor2() throws Exception {
+  @Test
+  public void testNoRewriteUsedClassConstructor2() {
     // `constructor` aliases the class constructor
     testSame(lines(
         "class C { constructor(a) { use(a); } }",
@@ -964,7 +1047,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "new c.constructor(1);"));
   }
 
-  public void testNoRewriteUsedClassConstructor3() throws Exception {
+  @Test
+  public void testNoRewriteUsedClassConstructor3() {
     // `super` aliases the super type constructor
     testSame(lines(
         "class C { constructor(a) { use(a); } }",
@@ -972,7 +1056,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "var d = new D(); new C();"));
   }
 
-  public void testNoRewriteUsedClassConstructor4() throws Exception {
+  @Test
+  public void testNoRewriteUsedClassConstructor4() {
     // `new.target` aliases self and subtype constructors
     testSame(lines(
         "class C { constructor() { var x = new.target(1); } }",
@@ -980,7 +1065,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "var d = new D(); new C();"));
   }
 
-  public void testNoRewriteUsedClassConstructor5() throws Exception {
+  @Test
+  public void testNoRewriteUsedClassConstructor5() {
     // Static class methods "this" values can alias constructors.
     testSame(lines(
         "class C { constructor(a) { use(a); }; static create(a) { new this(1); } }",
@@ -988,29 +1074,34 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "C.create();"));
   }
 
-  public void testNoRewriteUsedClassMethodParam1() throws Exception {
+  @Test
+  public void testNoRewriteUsedClassMethodParam1() {
     testSame(lines(
         "class C { method(a) { use(a); } }",
         "var c = new C(); c.method(1); c.method(2)"));
   }
 
-  public void testNoRewriteUnusedClassComputedMethodParam1() throws Exception {
+  @Test
+  public void testNoRewriteUnusedClassComputedMethodParam1() {
     testSame(lines(
         "class C { [method](a) { } }",
         "var c = new C(); c[method](1); c[method](2)"));
   }
 
-  public void testRewriteUsedClassMethodParam1() throws Exception {
+  @Test
+  public void testRewriteUsedClassMethodParam1() {
     test(
         "class C { method(a) {          }} new C().method(1)",
         "class C { method( ) {var a = 1;}} new C().method( )");
   }
 
-  public void testNoRewriteUnsedObjectMethodParam() throws Exception {
+  @Test
+  public void testNoRewriteUnsedObjectMethodParam() {
     testSame("var o = { method(a) {          }}; o.method(1)");
   }
 
-  public void testNoRewriteDestructured1() throws Exception {
+  @Test
+  public void testNoRewriteDestructured1() {
     testSame(lines(
         "class C { m(a) {}};",
         "var c = new C();",
@@ -1028,7 +1119,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "c.m(1)"));
   }
 
-  public void testNoRewriteDestructured2() throws Exception {
+  @Test
+  public void testNoRewriteDestructured2() {
     testSame(lines(
         "var x = function(a) {};",
         "({x} = {})",
@@ -1043,7 +1135,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "x(1)"));
   }
 
-  public void testNoRewriteDestructured3() throws Exception {
+  @Test
+  public void testNoRewriteDestructured3() {
     testSame(lines(
         "var x = function(a) {};",
         "[x = function() {}] = []",
@@ -1060,7 +1153,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "y.method()"));
   }
 
-  public void testNoRewriteTagged1() throws Exception {
+  @Test
+  public void testNoRewriteTagged1() {
     // Optimizing methods called though tagged template literal requires
     // specific knowledge of how tagged templated is supplied to the method.
     testSame(lines(
@@ -1073,7 +1167,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "f()"));
   }
 
-  public void testArrow() throws Exception {
+  @Test
+  public void testArrow() {
     // Optimizing methods called though tagged template literal requires
     // specific knowledge of how tagged templated is supplied to the method.
     testSame(lines(

@@ -78,7 +78,11 @@ public class ModuleNames {
 
   private static String stripJsExtension(String fileName) {
     if (fileName.endsWith(".js")) {
-      return fileName.substring(0, fileName.length() - ".js".length());
+      fileName = fileName.substring(0, fileName.length() - ".js".length());
+      // internal intermediary file format ".js.i.js"
+      if (fileName.endsWith(".js.i")) {
+        fileName = fileName.substring(0, fileName.length() - ".js.i".length());
+      }
     }
     return fileName;
   }

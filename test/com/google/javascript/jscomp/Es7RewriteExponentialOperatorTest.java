@@ -16,12 +16,18 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Test cases for transpilation pass that replaces the exponential operator (`**`). */
+@RunWith(JUnit4.class)
 public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
@@ -41,15 +47,18 @@ public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testExponentiationOperator() {
     test(srcs("2 ** 2"), expected("Math.pow(2, 2)"));
   }
 
+  @Test
   public void testExponentiationAssignmentOperator() {
     test(srcs("x **= 2;"), expected("x = Math.pow(x, 2)"));
   }
 
   /** @see <a href="https://github.com/google/closure-compiler/issues/2821">Issue 2821</a> */
+  @Test
   public void testExponentialOperatorInIfCondition() {
     test(srcs("if (2 ** 3 > 0) { }"), expected("if (Math.pow(2, 3) > 0) { }"));
   }

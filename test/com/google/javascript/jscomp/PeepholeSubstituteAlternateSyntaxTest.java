@@ -16,13 +16,19 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link PeepholeSubstituteAlternateSyntax} in isolation.
- * Tests for the interaction of multiple peephole passes are in
- * PeepholeIntegrationTest.
+ * Tests for {@link PeepholeSubstituteAlternateSyntax} in isolation. Tests for the interaction of
+ * multiple peephole passes are in PeepholeIntegrationTest.
  */
+@RunWith(JUnit4.class)
 public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   // Externs for built-in constructors
@@ -43,7 +49,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     late = true;
     retraverseOnChange = false;
@@ -72,6 +79,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     test(js, expected);
   }
 
+  @Test
   public void testFoldRegExpConstructor() {
     enableNormalize();
 
@@ -105,6 +113,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     foldSame("x = new RegExp(\"foobar\")");
   }
 
+  @Test
   public void testVersionSpecificRegExpQuirks() {
     enableNormalize();
 
@@ -130,26 +139,25 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     fold("x = new RegExp(\"\\\\\\\\u2028\")", "x = /\\\\u2028/");
   }
 
+  @Test
   public void testFoldRegExpConstructorStringCompare() {
     enableNormalize();
     test("x = new RegExp(\"\\n\", \"i\")", "x = /\\n/i");
   }
 
-  public void testContainsUnicodeEscape() throws Exception {
-    assertFalse(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(""));
-    assertFalse(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo"));
-    assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
-        "\u2028"));
-    assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
-        "\\u2028"));
-    assertTrue(
-        PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo\\u2028"));
-    assertFalse(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
-        "foo\\\\u2028"));
-    assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
-        "foo\\\\u2028bar\\u2028"));
+  @Test
+  public void testContainsUnicodeEscape() {
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("")).isFalse();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo")).isFalse();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("\u2028")).isTrue();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("\\u2028")).isTrue();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo\\u2028")).isTrue();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo\\\\u2028")).isFalse();
+    assertThat(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo\\\\u2028bar\\u2028"))
+        .isTrue();
   }
 
+  @Test
   public void testFoldLiteralObjectConstructors() {
     enableNormalize();
 
@@ -171,6 +179,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
          "(function f(){function Object(){this.x=4};return new Object();})();");
   }
 
+  @Test
   public void testFoldLiteralObjectConstructors_onWindow() {
     enableNormalize();
 
@@ -192,6 +201,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
         "x = (function f(){function Object(){this.x=4};return {};})();");
   }
 
+  @Test
   public void testFoldLiteralArrayConstructors() {
     enableNormalize();
 
@@ -255,6 +265,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
         "Object(), Array(\"abc\", Object(), Array(Array())))");
   }
 
+  @Test
   public void testRemoveWindowRefs() {
     enableNormalize();
     fold("x = window.Object", "x = Object");
@@ -281,6 +292,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
         + "(function f(){var window = {Object: function() {}};return new window.Object;})();");
   }
 
+  @Test
   public void testFoldStandardConstructors() {
     foldSame("new Foo('a')");
     foldSame("var x = new goog.Foo(1)");
@@ -296,11 +308,13 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     fold("var x = new Array(20)", "var x = Array(20)");
   }
 
+  @Test
   public void testFoldTrueFalse() {
     fold("x = true", "x = !0");
     fold("x = false", "x = !1");
   }
 
+  @Test
   public void testFoldTrueFalseComparison() {
     fold("x == true", "x == 1");
     fold("x == false", "x == 0");
@@ -311,11 +325,13 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     fold("x >= true", "x >= 1");
   }
 
+  @Test
   public void testFoldSubtractionAssignment() {
     fold("x -= 1", "--x");
     fold("x -= -1", "++x");
   }
 
+  @Test
   public void testFoldReturnResult() {
     foldSame("function f(){return !1;}");
     foldSame("function f(){return null;}");
@@ -328,6 +344,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
          "function f(){if(a()){return}}");
   }
 
+  @Test
   public void testUndefined() {
     foldSame("var x = undefined");
     foldSame("function f(f) {var undefined=2;var x = undefined;}");
@@ -346,6 +363,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     fold("undefined += undefined;", "undefined = void 0 + void 0;");
   }
 
+  @Test
   public void testSplitCommaExpressions() {
     late = false;
     // Don't try to split in expressions.
@@ -366,6 +384,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     foldSame("function x(){foo(); !0}");
   }
 
+  @Test
   public void testComma1() {
     late = false;
     fold("1, 2", "1; 2");
@@ -373,6 +392,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     foldSame("1, 2");
   }
 
+  @Test
   public void testComma2() {
     late = false;
     test("1, a()", "1; a()");
@@ -380,6 +400,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     foldSame("1, a()");
   }
 
+  @Test
   public void testComma3() {
     late = false;
     test("1, a(), b()", "1, a(); b()");
@@ -387,6 +408,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     foldSame("1, a(), b()");
   }
 
+  @Test
   public void testComma4() {
     late = false;
     test("a(), b()", "a();b()");
@@ -394,6 +416,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     foldSame("a(), b()");
   }
 
+  @Test
   public void testComma5() {
     late = false;
     test("a(), b(), 1", "a(), b(); 1");
@@ -401,6 +424,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     foldSame("a(), b(), 1");
   }
 
+  @Test
   public void testStringArraySplitting() {
     testSame("var x=['1','2','3','4']");
     testSame("var x=['1','2','3','4','5']");
@@ -423,6 +447,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     testSame("var x=[',', ' ', ';', '{', '}']");
   }
 
+  @Test
   public void testTemplateStringToString() {
     test("`abcde`", "'abcde'");
     test("`ab cd ef`", "'ab cd ef'");
@@ -434,6 +459,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     test("`This is ${true}`", "'This is true'");
   }
 
+  @Test
   public void testBindToCall1() {
     test("(goog.bind(f))()", "f()");
     test("(goog.bind(f,a))()", "f.call(a)");
@@ -469,6 +495,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     testSame("(goog.bind(f)).call(g)");
   }
 
+  @Test
   public void testBindToCall2() {
     test("(goog$bind(f))()", "f()");
     test("(goog$bind(f,a))()", "f.call(a)");
@@ -489,6 +516,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     testSame("(goog$bind(f)).call(g)");
   }
 
+  @Test
   public void testBindToCall3() {
     // TODO(johnlenz): The code generator wraps free calls with (0,...) to
     // prevent leaking "this", but the parser doesn't unfold it, making a
@@ -522,6 +550,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     testSame("goog.bind(f.m).call(g)");
   }
 
+  @Test
   public void testSimpleFunctionCall1() {
     test("var a = String(23)", "var a = '' + 23");
     test("var a = String('hello')", "var a = '' + 'hello'");
@@ -529,6 +558,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     testSame("var a = String({valueOf: function() { return 1; }});");
   }
 
+  @Test
   public void testSimpleFunctionCall2() {
     test("var a = Boolean(true)", "var a = !0");
     test("var a = Boolean(false)", "var a = !1");
@@ -539,6 +569,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     testSame("var a = Boolean(!0, !1);");
   }
 
+  @Test
   public void testRotateAssociativeOperators() {
     test("a || (b || c); a * (b * c); a | (b | c)",
         "(a || b) || c; (a * b) * c; (a | b) | c");
@@ -552,6 +583,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     test("!a * c * (d % e)", "d % e * c * !a");
   }
 
+  @Test
   public void testNoRotateInfiniteLoop() {
     test("1/x * (y/1 * (1/z))", "1/x * (y/1) * (1/z)");
     testSame("1/x * (y/1) * (1/z)");

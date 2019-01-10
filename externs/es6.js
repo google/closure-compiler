@@ -169,6 +169,14 @@ Math.imul = function(value1, value2) {};
  */
 Math.clz32 = function(value) {};
 
+/**
+ * @param {number} value
+ * @return {number}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/fround
+ */
+Math.fround = function(value) {};
+
 
 /**
  * @param {*} a
@@ -658,7 +666,7 @@ function Int8Array(length, opt_byteOffset, opt_length) {}
 Int8Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -691,7 +699,7 @@ function Uint8Array(length, opt_byteOffset, opt_length) {}
 Uint8Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -724,7 +732,7 @@ function Uint8ClampedArray(length, opt_byteOffset, opt_length) {}
 Uint8ClampedArray.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -766,7 +774,7 @@ function Int16Array(length, opt_byteOffset, opt_length) {}
 Int16Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -799,7 +807,7 @@ function Uint16Array(length, opt_byteOffset, opt_length) {}
 Uint16Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -832,7 +840,7 @@ function Int32Array(length, opt_byteOffset, opt_length) {}
 Int32Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -865,7 +873,7 @@ function Uint32Array(length, opt_byteOffset, opt_length) {}
 Uint32Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -898,7 +906,7 @@ function Float32Array(length, opt_byteOffset, opt_length) {}
 Float32Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -931,7 +939,7 @@ function Float64Array(length, opt_byteOffset, opt_length) {}
 Float64Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {!Array<number>} source
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
  * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
@@ -1118,8 +1126,8 @@ function IThenable() {}
  * @return {RESULT}
  * @template VALUE
  *
- * When a Promise (or thenable) is returned from the fulfilled callback,
- * the result is the payload of that promise, not the promise itself.
+ * When a `Thenable` is fulfilled or rejected with another `Thenable`, the
+ * payload of the second is used as the payload of the first.
  *
  * @template RESULT := type('IThenable',
  *     cond(isUnknown(VALUE), unknown(),
@@ -1208,8 +1216,8 @@ Promise.race = function(iterable) {};
  * @return {RESULT}
  * @template VALUE
  *
- * When a Promise (or thenable) is returned from the fulfilled callback,
- * the result is the payload of that promise, not the promise itself.
+ * When a `Thenable` is fulfilled or rejected with another `Thenable`, the
+ * payload of the second is used as the payload of the first.
  *
  * @template RESULT := type('Promise',
  *     cond(isUnknown(VALUE), unknown(),
@@ -1226,9 +1234,27 @@ Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
 
 /**
- * @param {function(*): RESULT} onRejected
- * @return {!Promise<RESULT>}
- * @template RESULT
+ * @param {function(*):VALUE} onRejected
+ * @return {!Promise<TYPE|VALUE>} A Promise of the original type or a possibly a
+ *     different type depending on whether the parent promise was rejected.
+ *
+ * @template VALUE
+ *
+ * When a `Thenable` is rejected with another `Thenable`, the payload of the
+ * second is used as the payload of the first.
+ *
+ * @template RESULT := cond(
+ *     isUnknown(VALUE),
+ *     unknown(),
+ *     mapunion(VALUE, (V) =>
+ *         cond(
+ *             isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *             templateTypeOf(V, 0),
+ *             cond(
+ *                 sub(V, 'Thenable'),
+ *                 unknown(),
+ *                 V))))
+ * =:
  */
 Promise.prototype.catch = function(onRejected) {};
 
@@ -1702,7 +1728,6 @@ Symbol.asyncIterator;
 
 /**
  * @interface
- * @extends {AsyncIterable<VALUE>}
  * @template VALUE
  * @see https://tc39.github.io/proposal-async-iteration/
  */
@@ -1727,10 +1752,20 @@ function AsyncIterable() {}
  */
 AsyncIterable.prototype[Symbol.asyncIterator] = function() {};
 
+
+/**
+ * @interface
+ * @extends {AsyncIterator<VALUE>}
+ * @extends {AsyncIterable<VALUE>}
+ * @template VALUE
+ * @see https://tc39.github.io/proposal-async-iteration/
+ */
+function AsyncIteratorIterable() {}
+
 /**
  * @interface
  * @see https://tc39.github.io/proposal-async-iteration/
- * @extends {AsyncIterator<VALUE>}
+ * @extends {AsyncIteratorIterable<VALUE>}
  * @template VALUE
  */
 function AsyncGenerator() {}

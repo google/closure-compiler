@@ -30,11 +30,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Provides a framework for checking code against a set of user configured
- * conformance rules.  The rules are specified by the ConformanceConfig
- * proto, which allows for both standard checks (forbidden properties,
- * variables, or dependencies) and allow for more complex checks using
- * custom rules than specify
+ * Provides a framework for checking code against a set of user configured conformance rules. The
+ * rules are specified by the ConformanceConfig proto, which allows for both standard checks
+ * (forbidden properties, variables, or dependencies) and allow for more complex checks using custom
+ * rules than specify
+ *
+ * <p>Conformance violations are both reported as compiler errors, and are also reported separately
+ * to the {cI gue@link ErrorManager}
  *
  */
 @GwtIncompatible("com.google.protobuf")
@@ -166,6 +168,7 @@ public final class CheckConformance implements Callback, CompilerPass {
           existing.addAllWhitelistRegexp(requirement.getWhitelistRegexpList());
           existing.addAllOnlyApplyTo(requirement.getOnlyApplyToList());
           existing.addAllOnlyApplyToRegexp(requirement.getOnlyApplyToRegexpList());
+          existing.addAllWhitelistEntry(requirement.getWhitelistEntryList());
         }
       }
     }
@@ -216,11 +219,11 @@ public final class CheckConformance implements Callback, CompilerPass {
         case BANNED_PROPERTY_CALL:
           return new ConformanceRules.BannedProperty(compiler, requirement);
         case RESTRICTED_NAME_CALL:
-          return new ConformanceRules.RestrictedNameCall(
-              compiler, requirement);
+          return new ConformanceRules.RestrictedNameCall(compiler, requirement);
         case RESTRICTED_METHOD_CALL:
-          return new ConformanceRules.RestrictedMethodCall(
-              compiler, requirement);
+          return new ConformanceRules.RestrictedMethodCall(compiler, requirement);
+        case RESTRICTED_PROPERTY_WRITE:
+          return new ConformanceRules.RestrictedPropertyWrite(compiler, requirement);
         default:
           reportInvalidRequirement(
               compiler, requirement, "unknown requirement type");
@@ -235,6 +238,10 @@ public final class CheckConformance implements Callback, CompilerPass {
   public static class InvalidRequirementSpec extends Exception {
     InvalidRequirementSpec(String message) {
       super(message);
+    }
+
+    InvalidRequirementSpec(String message, Throwable cause) {
+      super(message, cause);
     }
   }
 

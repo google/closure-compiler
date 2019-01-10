@@ -20,12 +20,17 @@ import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_W
 
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link AggressiveInlineAliases} plus {@link CollapseProperties}.
  *
  */
 
+@RunWith(JUnit4.class)
 public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
@@ -55,7 +60,8 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
   }
@@ -64,6 +70,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testCollapse() {
     test("var a = {}; a.b = {}; var c = a.b;",
         "var c = null");
@@ -74,6 +81,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     testSame("var a = {}; /** @nocollapse */ a.b;");
   }
 
+  @Test
   public void testObjLitDeclaration() {
     test("var a = {b: {}, c: {}}; var d = a.b; var e = a.c",
         "var d = null; var e = null;");
@@ -88,10 +96,12 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "var a$b = {};var a = {/** @nocollapse */ c: {}};var d = null;var e = null;use(a$b, a.c);");
   }
 
+  @Test
   public void testObjLitDeclarationWithGet1() {
     testSame("var a = {get b(){}};");
   }
 
+  @Test
   public void testObjLitDeclarationWithGet2() {
     test("var a = {b: {}, get c(){}}; var d = a.b; var e = a.c;",
          "var a = {get c() {}}; var d=null; var e = a.c");
@@ -100,15 +110,18 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          "var a$b = {};var a = {get c(){}};var d = null; var e = a.c; use(a$b)");
   }
 
+  @Test
   public void testObjLitDeclarationWithGet3() {
     test("var a = {b: {get c() { return 3; }}};",
          "var a$b = {get c() { return 3; }};");
   }
 
+  @Test
   public void testObjLitDeclarationWithSet1() {
     testSame("var a = {set b(a){}};");
   }
 
+  @Test
   public void testObjLitDeclarationWithSet2() {
     test("var a = {b: {}, set c(a){}}; var d = a.b; var e = a.c",
          "var a = {set c(a$jscomp$1){}}; var d=null; var e = a.c");
@@ -117,16 +130,19 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          "var a$b = {}; var a = {set c(a$jscomp$1){}}; var d=null; var e = a.c; use(a$b);");
   }
 
+  @Test
   public void testObjLitDeclarationWithSet3() {
     test("var a = {b: {set c(d) {}}};",
          "var a$b = {set c(d) {}};");
   }
 
+  @Test
   public void testObjLitDeclarationWithGetAndSet1() {
     test("var a = {b: {get c() { return 3; },set c(d) {}}};",
          "var a$b = {get c() { return 3; },set c(d) {}};");
   }
 
+  @Test
   public void testObjLitAssignmentDepth3() {
     test("var a = {}; a.b = {}; a.b.c = {d: 1, e: 2}; var f = a.b.c.d",
          "var a$b$c$d = 1; var a$b$c$e = 2; var f = null");
@@ -148,6 +164,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "var f = null; var g = null;");
   }
 
+  @Test
   public void testObjLitAssignmentDepth4() {
     test("var a = {}; a.b = {}; a.b.c = {}; a.b.c.d = {e: 1, f: 2}; var g = a.b.c.d.e;",
          "var a$b$c$d$e = 1; var a$b$c$d$f = 2; var g = null;");
@@ -156,12 +173,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          "var a$b$c$d$e = 1; var a$b$c$d$f = 2; var g = null; use(a$b$c$d$e);");
   }
 
+  @Test
   public void testHasOwnProperty() {
     test(
         "var a = {'b': 1, 'c': 1}; var alias = a;    alert(alias.hasOwnProperty('c'));",
         "var a = {'b': 1, 'c': 1}; var alias = null; alert(a.hasOwnProperty('c'));");
   }
 
+  @Test
   public void testAliasCreatedForObjectDepth1_1() {
     // An object's properties are not collapsed if the object is referenced
     // in a such a way that an alias is created for it, if that alias is used.
@@ -172,20 +191,24 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "var a={b:0}; var c=null; a.b=1; a.b == a.b; use(a);");
   }
 
+  @Test
   public void testAliasCreatedForObjectDepth1_2() {
     testSame("var a = {b: 0}; f(a); a.b;");
   }
 
+  @Test
   public void testAliasCreatedForObjectDepth1_3() {
     testSame("var a = {b: 0}; new f(a); a.b;");
   }
 
+  @Test
   public void testMisusedConstructorTag() {
     test("var a = {}; var d = a; a.b = function() {};"
          + "/** @constructor */ a.b.c = 0; a.b.c;",
         "var d=null; var a$b=function(){}; /** @constructor */ var a$b$c=0; a$b$c;");
   }
 
+  @Test
   public void testAliasCreatedForCtorDepth1_1() {
     // A constructor's properties *are* collapsed even if the function is
     // referenced in a such a way that an alias is created for it,
@@ -206,6 +229,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "/** @nocollapse */ a.b = 1; var c = null; a.b = 2; a.b == a.b;");
   }
 
+  @Test
   public void testAliasCreatedForFunctionDepth2() {
     test(
         "var a = {}; a.b = function() {}; a.b.c = 1; var d = a.b; a.b.c != d.c;",
@@ -216,6 +240,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "var a$b = function() {}; /** @nocollapse */ a$b.c = 1; var d = null; a$b.c == a$b.c;");
   }
 
+  @Test
   public void testAliasCreatedForCtorDepth2() {
     test("var a = {}; /** @constructor */ a.b = function() {}; a.b.c = 1; var d = a.b;"
          + "a.b.c == d.c;",
@@ -229,6 +254,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "a$b.c == a$b.c;");
   }
 
+  @Test
   public void testAliasCreatedForClassDepth1_1() {
     // A class's name is always collapsed, even if one of its prefixes is
     // referenced in such a way that an alias is created for it.
@@ -258,6 +284,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         warning(UNSAFE_NAMESPACE_WARNING));
   }
 
+  @Test
   public void testObjLitDeclarationUsedInSameVarList() {
     // The collapsed properties must be defined in the same place in the var list
     // where they were originally defined (and not, for example, at the end).
@@ -268,6 +295,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "var a$b = {};var a = {/** @nocollapse */ c: {}};var d = null;var e = null;use(a$b, a.c);");
   }
 
+  @Test
   public void testAddPropertyToUncollapsibleObjectInLocalScopeDepth1() {
     test("var a = {}; var c = a; use(c); (function() {a.b = 0;})(); a.b;",
         "var a={}; var c=null; use(a); (function(){ a.b = 0; })(); a.b;");
@@ -276,6 +304,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "var a = {}; var c=1; c = a; (function(){a.b = 0;})(); a.b;");
   }
 
+  @Test
   public void testAddPropertyToUncollapsibleNamedCtorInLocalScopeDepth1() {
     test(
         "/** @constructor */ function a() {} var a$b; var c = a; "
@@ -284,6 +313,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "(function() {a$b = 0;})(); a$b;");
   }
 
+  @Test
   public void testAddPropertyToUncollapsibleCtorInLocalScopeDepth1() {
     test("/** @constructor */ var a = function() {}; var c = a; "
          + "(function() {a.b = 0;})(); a.b;",
@@ -291,6 +321,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          + "var c = null; (function() {a$b = 0;})(); a$b;");
   }
 
+  @Test
   public void testAddPropertyToUncollapsibleObjectInLocalScopeDepth2() {
     test("var a = {}; a.b = {}; var d = a.b; use(d);"
          + "(function() {a.b.c = 0;})(); a.b.c;",
@@ -298,6 +329,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          + "(function() {a$b.c = 0;})(); a$b.c;");
   }
 
+  @Test
   public void testAddPropertyToUncollapsibleCtorInLocalScopeDepth2() {
     test("var a = {}; /** @constructor */ a.b = function (){}; var d = a.b;"
          + "(function() {a.b.c = 0;})(); a.b.c;",
@@ -305,6 +337,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          + "(function() {a$b$c = 0;})(); a$b$c;");
   }
 
+  @Test
   public void testPropertyOfChildFuncOfUncollapsibleObjectDepth1() {
     test("var a = {}; var c = a; a.b = function (){}; a.b.x = 0; a.b.x;",
         "var c = null; var a$b=function() {}; var a$b$x = 0; a$b$x;");
@@ -313,6 +346,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "var a = {}; var c = null; a.b=function() {}; a.b.x = 0; a.b.x; use(a);");
   }
 
+  @Test
   public void testPropertyOfChildFuncOfUncollapsibleObjectDepth2() {
     test("var a = {}; a.b = {}; var c = a.b; a.b.c = function (){}; a.b.c.x = 0; a.b.c.x;",
          "var c=null; var a$b$c = function(){}; var a$b$c$x = 0; a$b$c$x");
@@ -321,6 +355,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          "var a$b = {}; var c=null; a$b.c = function(){}; a$b.c.x=0; a$b.c.x; use(a$b);");
   }
 
+  @Test
   public void testAddPropertyToChildFuncOfUncollapsibleObjectInLocalScope() {
     test("var a = {}; a.b = function (){}; a.b.x = 0;"
              + "var c = a; (function() {a.b.y = 1;})(); a.b.x; a.b.y;",
@@ -328,6 +363,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          + "(function() { a$b$y=1; })(); a$b$x; a$b$y");
   }
 
+  @Test
   public void testAddPropertyToChildTypeOfUncollapsibleObjectInLocalScope() {
     test(
         lines(
@@ -374,12 +410,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         warning(UNSAFE_NAMESPACE_WARNING));
   }
 
+  @Test
   public void testAddPropertyToChildOfUncollapsibleFunctionInLocalScope() {
     test(
         "function a() {} a.b = {x: 0}; var c = a; (function() {a.b.y = 0;})(); a.b.y;",
         "function a() {} var a$b$x=0; var a$b$y; var c=null; (function(){a$b$y=0})(); a$b$y");
   }
 
+  @Test
   public void testAddPropertyToChildOfUncollapsibleCtorInLocalScope() {
     test("/** @constructor */ var a = function() {}; a.b = {x: 0}; var c = a;"
          + "(function() {a.b.y = 0;})(); a.b.y;",
@@ -387,6 +425,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          + "(function() {a$b$y = 0;})(); a$b$y;");
   }
 
+  @Test
   public void testLocalAliasCreatedAfterVarDeclaration1() {
     test(
         lines(
@@ -405,6 +444,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testLocalAliasCreatedAfterVarDeclaration2() {
     test(
         lines(
@@ -427,6 +467,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testLocalAliasCreatedAfterVarDeclaration3() {
     testSame(
         lines(
@@ -440,6 +481,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testPartialLocalCtorAlias() {
     testWarning(
         lines(
@@ -457,22 +499,26 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
+  @Test
   public void testFunctionAlias2() {
     test("var a = {}; a.b = {}; a.b.c = function(){}; a.b.d = a.b.c;use(a.b.d)",
          "var a$b$c = function(){}; var a$b$d = null;use(a$b$c);");
   }
 
+  @Test
   public void testLocalAlias1() {
     test("var a = {b: 3}; function f() { var x = a; f(x.b); }",
          "var a$b = 3; function f() { var x = null; f(a$b); }");
   }
 
+  @Test
   public void testLocalAlias2() {
     test("var a = {b: 3, c: 4}; function f() { var x = a; f(x.b); f(x.c);}",
          "var a$b = 3; var a$c = 4; "
          + "function f() { var x = null; f(a$b); f(a$c);}");
   }
 
+  @Test
   public void testLocalAlias3() {
     test("var a = {b: 3, c: {d: 5}}; "
          + "function f() { var x = a; f(x.b); f(x.c); f(x.c.d); }",
@@ -480,6 +526,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          + "function f() { var x = null; f(a$b); f(a$c); f(a$c.d);}");
   }
 
+  @Test
   public void testLocalAlias4() {
     test("var a = {b: 3}; var c = {d: 5}; "
          + "function f() { var x = a; var y = c; f(x.b); f(y.d); }",
@@ -487,6 +534,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          + "function f() { var x = null; var y = null; f(a$b); f(c$d);}");
   }
 
+  @Test
   public void testLocalAlias5() {
     test("var a = {b: {c: 5}}; "
          + "function f() { var x = a; var y = x.b; f(a.b.c); f(y.c); }",
@@ -494,56 +542,67 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          + "function f() { var x = null; var y = null; f(a$b$c); f(a$b$c);}");
   }
 
+  @Test
   public void testLocalAlias6() {
     test("var a = {b: 3}; function f() { var x = a; if (x.b) { f(x.b); } }",
          "var a$b = 3; function f() { var x = null; if (a$b) { f(a$b); } }");
   }
 
+  @Test
   public void testLocalAlias7() {
     test("var a = {b: {c: 5}}; function f() { var x = a.b; f(x.c); }",
          "var a$b$c = 5; function f() { var x = null; f(a$b$c); }");
   }
 
+  @Test
   public void testLocalAlias8() {
     testSame(
         "var a = { b: 3 }; function f() { if (true) { var x = a; f(x.b); } x = { b : 4}; }");
   }
 
+  @Test
   public void testGlobalWriteToAncestor() {
     testSame("var a = {b: 3}; function f() { var x = a; f(a.b); } a = 5;");
   }
 
+  @Test
   public void testGlobalWriteToNonAncestor() {
     test("var a = {b: 3}; function f() { var x = a; f(a.b); } a.b = 5;",
          "var a$b = 3; function f() { var x = null; f(a$b); } a$b = 5;");
   }
 
+  @Test
   public void testLocalWriteToAncestor() {
     testSame("var a = {b: 3}; function f() { a = 5; var x = a; f(a.b); } ");
   }
 
+  @Test
   public void testLocalWriteToNonAncestor() {
     test("var a = {b: 3}; "
          + "function f() { a.b = 5; var x = a; f(a.b); }",
          "var a$b = 3; function f() { a$b = 5; var x = null; f(a$b); } ");
   }
 
+  @Test
   public void testLocalAliasOfAncestor() {
     testSame("var a = {b: {c: 5}}; function g() { f(a); } "
              + "function f() { var x = a.b; f(x.c); }");
   }
 
+  @Test
   public void testGlobalAliasOfAncestor() {
     test("var a = {b: {c: 5}}; function f() { var x = a.b; f(x.c); }",
         "var a$b$c=5; function f() {var x=null; f(a$b$c); }");
   }
 
+  @Test
   public void testLocalAliasOfOtherName() {
     testSame("var foo = function() { return {b: 3}; };"
              + "var a = foo(); a.b = 5; "
              + "function f() { var x = a.b; f(x); }");
   }
 
+  @Test
   public void testLocalAliasOfFunction() {
     test("var a = function() {}; a.b = 5; "
          + "function f() { var x = a.b; f(x); }",
@@ -551,6 +610,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          + "function f() { var x = null; f(a$b); }");
   }
 
+  @Test
   public void testNoInlineGetpropIntoCall() {
     test("var b = x; function f() { var a = b; a(); }",
          "var b = x; function f() { var a = null; b(); }");
@@ -558,6 +618,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          "var b$c = x; function f() { var a = null; b$c(); }");
   }
 
+  @Test
   public void testCommaOperator() {
     test("var a = {}; a.b = function() {}, a.b();",
          "var a$b; a$b=function() {}, a$b();");
@@ -585,6 +646,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "function f() { (ns$Foo$bar = 10, 123); }");
   }
 
+  @Test
   public void testTypeDefAlias1() {
     test(
         "/** @constructor */ var D = function() {};\n"
@@ -603,6 +665,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "use(D$L$A);");
   }
 
+  @Test
   public void testGlobalAliasWithProperties1() {
     test("var ns = {}; "
         + "/** @constructor */ ns.Foo = function() {};\n"
@@ -619,6 +682,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "use(x);");
   }
 
+  @Test
   public void testGlobalAliasWithProperties2() {
     // Reassignment of properties was necessary to prevent invalid code in
     // previous iterations of this optimization.  Verify we don't break
@@ -640,6 +704,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "use(x);");
   }
 
+  @Test
   public void testGlobalAliasWithProperties3() {
     test("var ns = {}; "
         + "/** @constructor */ ns.Foo = function() {};\n"
@@ -659,6 +724,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "use(x)\n");
   }
 
+  @Test
   public void testGlobalAliasWithProperties4() {
     testSame(""
         + "var nullFunction = function(){};\n"
@@ -667,7 +733,8 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "use(blob)");
   }
 
-  public void testGlobalAliasWithProperties5() {
+  @Test
+  public void testGlobalAlias_propertyOnExternedConstructor_isNotChanged() {
     testSame(
         externs("/** @constructor */ var blob = function() {}"),
         srcs(
@@ -676,6 +743,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
                 + "use(blob.init)"));
   }
 
+  @Test
   public void testLocalAliasOfEnumWithInstanceofCheck() {
     test(
         "/** @constructor */\n"
@@ -707,6 +775,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "}");
   }
 
+  @Test
   public void testCollapsePropertiesOfClass1() {
     test(
         "/** @constructor */\n"
@@ -746,6 +815,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "}");
   }
 
+  @Test
   public void testCollapsePropertiesOfClass2() {
     test(
         "var goog = goog || {};\n"
@@ -785,6 +855,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "}");
   }
 
+  @Test
   public void test_b19179602() {
     // Note that this only collapses a.b.staticProp because a.b is a constructor.
     // Normally AggressiveInlineAliases would not inline "b" inside the loop.
@@ -811,6 +882,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void test_b19179602_declareOutsideLoop() {
     test(
         "var a = {};\n"
@@ -836,6 +908,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "}");
   }
 
+  @Test
   public void testCtorManyAssignmentsDontInlineWarn() {
     test(
         "var a = {};\n"
@@ -859,6 +932,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         warning(AggressiveInlineAliases.UNSAFE_CTOR_ALIASING));
   }
 
+  @Test
   public void testCodeGeneratedByGoogModule() {
     // The static property is added to the exports object
     test(
@@ -895,6 +969,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var y = null;"));
   }
 
+  @Test
   public void testInlineCtorInObjLit() {
     test(
         lines(
@@ -915,6 +990,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var objlit$prop = Foo;"));
   }
 
+  @Test
   public void testNoCollapseExportedNode() {
     test(
         "var x = {}; x.y = {}; var dontExportMe = x.y; use(dontExportMe);",
@@ -925,6 +1001,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "var x$y = {}; var _exportMe = x$y;");
   }
 
+  @Test
   public void testDontCrashCtorAliasWithEnum() {
     test(
         "var ns = {};\n"
@@ -940,6 +1017,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "var ns$Foo$prop$A = 1");
   }
 
+  @Test
   public void testDontCrashNamespaceAliasAcrossScopes() {
     test(
         "var ns = {};\n"
@@ -953,12 +1031,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         null);
   }
 
+  @Test
   public void testGlobalAliasWithLet() {
     test(
         "let ns = {}; ns.foo = 'bar'; let ns2 = ns; use(ns2.foo);",
         "var ns$foo = 'bar'; let ns2 = null; use(ns$foo);");
   }
 
+  @Test
   public void testGlobalAliasForLet2() {
     // We don't do any sort of branch prediction, so can't collapse here.
     testSame(
@@ -972,6 +1052,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "use(ns2.foo);"));
   }
 
+  @Test
   public void testGlobalAliasWithLet3() {
     // Back off since in general we don't check that ns2 is only ever accessed within the if block.
     testSame(
@@ -985,12 +1066,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testLocalAliasWithLet1() {
     test(
         "let ns = {}; ns.foo = 'bar'; function f() { let ns2 = ns; use(ns2.foo); }",
         "var ns$foo = 'bar'; function f() { let ns2 = null; use(ns$foo); }");
   }
 
+  @Test
   public void testLocalAliasWithLet2() {
     test(
         lines(
@@ -1012,6 +1095,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testLocalAliasWithLet3() {
     test(
         lines(
@@ -1028,6 +1112,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "  use(ns$foo);", "}"));
   }
 
+  @Test
   public void testLocalAliasWithLet4() {
     test(
         lines(
@@ -1044,6 +1129,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "  use(ns$foo);", "}"));
   }
 
+  @Test
   public void testLocalAliasWithLet5() {
     // For local variables (VAR, CONST, or LET) we only handle cases where the alias is a variable,
     // not a property.
@@ -1058,12 +1144,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testGlobalAliasWithConst() {
     test(
         "const ns = {}; ns.foo = 'bar'; const ns2 = ns; use(ns2.foo);",
         "var ns$foo = 'bar'; const ns2 = null; use(ns$foo);");
   }
 
+  @Test
   public void testLocalAliasWithConst1() {
     test(
         lines(
@@ -1078,6 +1166,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "use(ns$foo);", "}"));
   }
 
+  @Test
   public void testLocalAliasWithConst2() {
     test(
         lines(
@@ -1099,6 +1188,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testLocalAliasWithConst3() {
     test(
         lines(
@@ -1116,6 +1206,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testLocalAliasWithConst4() {
     test(
         lines(
@@ -1133,6 +1224,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testLocalAliasWithConst5() {
     // For local variables (VAR, CONST, or LET) we only handle cases where the alias is a variable,
     // not a property.
@@ -1147,12 +1239,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testLocalAliasInsideClass() {
     test(
         "var a = {b: 5}; class A { fn() { var c = a; use(a.b); } }",
         "var a$b = 5; class A { fn() { var c = null; use(a$b); } }");
   }
 
+  @Test
   public void testEs6ClassStaticProperties() {
     // Collapsing static properties (A.foo in this case) is known to be unsafe.
     test(
@@ -1203,6 +1297,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "A.useFoo();"));
   }
 
+  @Test
   public void testClassStaticInheritance_method() {
     test(
         "class A { static s() {} } class B extends A {} const C = B;    C.s();",
@@ -1216,6 +1311,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "class A {} var A$s = function() {}; class B extends A {} B.s();");
   }
 
+  @Test
   public void testClassStaticInheritance_propertyAlias() {
     test(
         "class A {}     A.staticProp = 6; class B extends A {} let b = new B;",
@@ -1226,6 +1322,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "class A {} var A$staticProp = 6; class B extends A {} use(A$staticProp);");
   }
 
+  @Test
   public void testClassStaticInheritance_propertyWithSubproperty() {
     test(
         "class A {}     A.ns = {foo: 'bar'}; class B extends A {} use(B.ns.foo);",
@@ -1236,6 +1333,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "class A {} class B extends A {} var A$ns$foo = 'baz'; use(A$ns$foo);");
   }
 
+  @Test
   public void testClassStaticInheritance_propertyWithShadowing() {
     test(
         "class A {}     A.staticProp = 6; class B extends A {}     B.staticProp = 7;",
@@ -1249,6 +1347,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "class A {} var A$foo = 6; class B extends A {} use(B$foo); var B$foo = 7;");
   }
 
+  @Test
   public void testClassStaticInheritance_cantDetermineSuperclass() {
     // Here A.foo and B.foo are not collapsed because getSuperclass() creates an alias for them.
     testSame(
@@ -1262,6 +1361,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "use(C.foo);"));
   }
 
+  @Test
   public void testAliasForSuperclassNamespace() {
     test(
         lines(
@@ -1288,6 +1388,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var Bar = class extends Foo$Builder {}"));
   }
 
+  @Test
   public void testAliasForSuperclassNamespace_withStaticInheritance() {
     test(
         lines(
@@ -1307,16 +1408,18 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "use(Foo$Builder$baz);"));
   }
 
+  @Test
   public void testDestructuringAlias1() {
     testSame("var a = { x: 5 }; var [b] = [a]; use(b.x);");
   }
 
+  @Test
   public void testDestructuringAlias2() {
     testSame("var a = { x: 5 }; var {b} = {b: a}; use(b.x);");
   }
 
+  @Test
   public void testDestructingAliasWithConstructor() {
-    // TODO(b/69293284): Make this not warn and correctly replace "new ctor" with "new ns$ctor".
     test(
         lines(
             "var ns = {};",
@@ -1328,27 +1431,73 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var ns = {};",
             "/** @constructor */",
             "var ns$ctor = function() {}",
-            "const {ctor} = ns;",
-            "let c = new ctor;"),
-        warning(CollapseProperties.UNSAFE_NAMESPACE_WARNING));
+            "const {} = ns;",
+            "const ctor = ns$ctor;",
+            "let c = new ctor;"));
   }
 
+  @Test
+  public void namespaceInDestructuringPattern() {
+    test(
+        lines(
+            "const ns = {};",
+            "ns.x = 1;",
+            "ns.y = 2;",
+            "let {x, y} = ns;",
+            "x = 4;", // enforce that we can't inline x -> ns.x because it's set multiple times
+            "use(x + y);"),
+        lines(
+            "const ns = {};",
+            "var ns$x = 1;",
+            "var ns$y = 2;",
+            "let x = ns$x;",
+            "let {} = ns;",
+            "let y = ns$y;",
+            "x = 4;",
+            "use(x + y);"));
+  }
+
+  @Test
+  public void inlineDestructuringPatternConstructorWithProperty() {
+    test(
+        lines(
+            "const ns = {};",
+            "/** @constructor */",
+            "ns.Y = function() {};",
+            "ns.Y.prop = 3;",
+            "let {Y} = ns;",
+            "use(Y.prop);"),
+        lines(
+            "const ns = {};",
+            "/** @constructor */",
+            "var ns$Y = function() {};",
+            "var ns$Y$prop = 3;",
+            "let {} = ns;",
+            "let Y = ns$Y;",
+            // TODO(b/117673791): replace Y.prop -> ns$Y$prop; right now this is broken.
+            "use(Y.prop);")); // assignment
+  }
+
+  @Test
   public void testDefaultParamAlias1() {
     test(
         "var a = {b: 5}; var b = a; function f(x=b) { alert(x.b); }",
         "var a = {b: 5}; var b = null; function f(x=a) { alert(x.b); }");
   }
 
+  @Test
   public void testDefaultParamAlias2() {
     test(
         "var a = {b: {c: 5}}; var b = a; function f(x=b.b) { alert(x.c); }",
         "var a$b = {c: 5}; var b = null; function f(x=a$b) { alert(x.c); }");
   }
 
+  @Test
   public void testAliasPropertyOnUnsafelyRedefinedNamespace() {
     testSame("var obj = {foo: 3}; var foo = obj.foo; obj = {}; alert(foo);");
   }
 
+  @Test
   public void testAliasPropertyOnSafelyRedefinedNamespace() {
     // non-constructor property doesn't get collapsed
     test(
@@ -1391,6 +1540,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "alert(goog$module$ModuleManager$getInstance());"));
   }
 
+  @Test
   public void testClassInObjectLiteral() {
     test("var obj = {foo: class {}};", "var obj$foo = class {};");
 
@@ -1398,5 +1548,130 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     test(
         "class A {}     A.foo = 3; var obj = {foo: class extends A {}}; use(obj.foo.foo);",
         "class A {} var A$foo = 3; var obj$foo =   class extends A{};   use(obj$foo.foo)");
+  }
+
+  @Test
+  public void testLoopInAliasChainOfTypedefConstructorProperty() {
+    test(
+        lines(
+            "/** @constructor */ var Item = function() {};",
+            "/** @typedef {number} */ Item.Models;",
+            "Item.Models = Item.Models;"),
+        lines(
+            "/** @constructor */ var Item = function() {};",
+            "Item$Models;",
+            "var Item$Models = Item$Models;"));
+  }
+
+  @Test
+  public void testDontInlinePropertiesOnEscapedNamespace() {
+    testSame(
+        externs("function use(obj) {}"),
+        srcs(
+            lines(
+                "function Foo() {}",
+                "Foo.Bar = {};",
+                "Foo.Bar.baz = {A: 1, B: 2};",
+                "",
+                "var $jscomp$destructuring$var1 = Foo.Bar;",
+                // This call could potentially have changed the value of Foo.Bar, so don't
+                // collapse Foo.Bar.baz.A/Foo.Bar.baz.B
+                "use(Foo);",
+                "var baz = $jscomp$destructuring$var1.baz;",
+                "use(baz.A);")));
+  }
+
+  @Test
+  public void testInliningPropertiesOnEscapedNamespace_withDeclaredType() {
+    test(
+        externs("function use(obj) {}"),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "/** @constructor */",
+                "Foo.Bar = function() {};",
+                "/** @enum {number} */",
+                "Foo.Bar.baz = {A: 1, B: 2};",
+                "",
+                "var $jscomp$destructuring$var1 = Foo.Bar;",
+                "use(Foo);",
+                "var baz = $jscomp$destructuring$var1.baz;",
+                "use(baz.A);")),
+        expected(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "/** @constructor */",
+                "var Foo$Bar = function() {};",
+                "var Foo$Bar$baz$A = 1;",
+                "var Foo$Bar$baz$B = 2;",
+                "",
+                "var $jscomp$destructuring$var1 = null;",
+                // This call could potentially read Foo.Bar, which will now be broken.
+                // AggressiveInlineAliases/CollapseProperties intentionally generate unsafe code
+                // in this case. The main motivation is to collapse long namespaces generated by
+                // goog.provide or goog.module.declareLegacyNamespace()
+                // https://developers.google.com/closure/compiler/docs/limitations#implications-of-object-property-flattening
+                "use(Foo);",
+                "var baz = null;",
+                "use(Foo$Bar$baz$A);")));
+  }
+
+  @Test
+  public void testDontInlinePropertiesOnNamespace_withNoCollapse() {
+    testSame(
+        externs("function use(obj) {}"),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "/** @constructor @nocollapse */",
+                "Foo.Bar = function() {};",
+                "/** @enum {number} @nocollapse */",
+                "Foo.Bar.baz = {A: 1, B: 2};",
+                "",
+                "var $jscomp$destructuring$var1 = Foo.Bar;",
+                // This call could potentially have changed the value of Foo.Bar, and without
+                // @nocollapse on Foo.Bar and Foo.Bar.baz the compiler would generate unsafe code.
+                "use(Foo);",
+                "var baz = $jscomp$destructuring$var1.baz;",
+                "use(baz.A);")));
+  }
+
+  @Test
+  public void testInlinePropertyOnAliasedConstructor() {
+    // TODO(b/117905881): as long as we unsafely collapse Foo.prop -> Foo$prop, there's no way to
+    // safely rewrite the "use(ns.alias.prop)" call in the compiler
+    // Either
+    // a) we replace "ns.alias.prop" with "Foo$prop" or
+    // b) we leave "ns.alias.prop" as is.
+
+    // Option a) can break code if the "use(ns)" call actually reassigns ns.alias (which is not
+    // declared const).
+    // Option b) breaks code if "use(ns)" does NOT reassign ns.alias, since now
+    // ns.alias.prop is Foo.prop, which is undefined.
+    // but we might want to consider movign to (b) instead of (a), since CollapseProperties will
+    // also break case (a)
+    test(
+        externs("function use(ctor) {}"),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "Foo.prop = 2;",
+                "var ns = {};",
+                "ns.alias = Foo;",
+                "use(ns);",
+                "use(ns.alias.prop);")),
+        expected(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "var Foo$prop = 2;",
+                "var ns = {};",
+                "ns.alias = Foo;",
+                "use(ns);",
+                "use(ns.alias.prop);")));
   }
 }

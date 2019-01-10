@@ -730,6 +730,13 @@ RTCRtpEncodingParameters.prototype.active;
 RTCRtpEncodingParameters.prototype.priority;
 
 /**
+ * Possible values are "very-low", "low" (default), "medium", and "high".
+ * @see https://w3c.github.io/webrtc-dscp-exp/
+ * @type {?string|undefined}
+ */
+RTCRtpEncodingParameters.prototype.networkPriority;
+
+/**
  * @type {?number|undefined}
  */
 RTCRtpEncodingParameters.prototype.ptime;
@@ -1524,7 +1531,10 @@ RTCIceServerInterface_.prototype.credential;
 var RTCIceServer;
 
 /**
- * @typedef {{iceServers: !Array<!RTCIceServer>}}
+ * @typedef {{
+ *   iceServers: !Array<!RTCIceServer>,
+ *   sdpSemantics: (string|undefined)
+ * }}
  * @private
  */
 var RTCConfigurationRecord_;
@@ -1539,6 +1549,15 @@ function RTCConfigurationInterface_() {}
  * @type {!Array<!RTCIceServer>}
  */
 RTCConfigurationInterface_.prototype.iceServers;
+
+/**
+ * Allows specifying the SDP semantics. Valid values are "plan-b" and
+ * "unified-plan".
+ *
+ * @see {@link https://webrtc.org/web-apis/chrome/unified-plan/}
+ * @type {string|undefined}
+ */
+RTCConfigurationInterface_.prototype.sdpSemantics;
 
 /**
  * @typedef {RTCConfigurationRecord_|RTCConfigurationInterface_}
@@ -1883,6 +1902,7 @@ var RTCCertificate;
  * @param {!MediaConstraints=} constraints
  * @constructor
  * @implements {EventTarget}
+ * @see https://www.w3.org/TR/webrtc/#interface-definition
  */
 function RTCPeerConnection(configuration, constraints) {}
 
@@ -2110,6 +2130,11 @@ RTCPeerConnection.prototype.onnegotiationneeded;
  * @type {?function(!RTCPeerConnectionIceEvent)}
  */
 RTCPeerConnection.prototype.onicecandidate;
+
+/**
+ * @type {?function(!Event)}
+ */
+RTCPeerConnection.prototype.onicegatheringstatechange;
 
 /**
  * @type {?function(!Event)}

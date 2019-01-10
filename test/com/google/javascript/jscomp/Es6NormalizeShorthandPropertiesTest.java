@@ -20,6 +20,10 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test cases for the transpilation pass that eliminates shorthand property declarations.
@@ -27,6 +31,7 @@ import com.google.javascript.rhino.Node;
  * <p>A shorthand property is where another identifier (variable) is used to define both the name
  * <em>and</em> value of the property.
  */
+@RunWith(JUnit4.class)
 public final class Es6NormalizeShorthandPropertiesTest extends CompilerTestCase {
 
   @Override
@@ -40,7 +45,8 @@ public final class Es6NormalizeShorthandPropertiesTest extends CompilerTestCase 
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
@@ -60,6 +66,7 @@ public final class Es6NormalizeShorthandPropertiesTest extends CompilerTestCase 
     return 1;
   }
 
+  @Test
   public void testNormalizationInSource() {
     test(
         externs(""),
@@ -74,6 +81,7 @@ public final class Es6NormalizeShorthandPropertiesTest extends CompilerTestCase 
             }));
   }
 
+  @Test
   public void testNormalizationInExterns() {
     String externWithShorthandProperty = "const x = 5; const y = {x};";
     String pinningSource = "const t = y.x;";

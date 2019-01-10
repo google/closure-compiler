@@ -24,11 +24,16 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test case for {@link CheckArrayWithGoogObject}.
  *
  */
+@RunWith(JUnit4.class)
 public final class CheckArrayWithGoogObjectTest extends CompilerTestCase {
 
   private static final String GOOG_OBJECT = lines(
@@ -49,12 +54,14 @@ public final class CheckArrayWithGoogObjectTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableTranspile();
     enableTypeCheck();
   }
 
+  @Test
   public void testGoogObjectForEach1() {
     testGoogObjectWarning(lines(
         GOOG_OBJECT,
@@ -62,6 +69,7 @@ public final class CheckArrayWithGoogObjectTest extends CompilerTestCase {
         "goog.object.forEach(arr, alert);"));
   }
 
+  @Test
   public void testGoogObjectForEach2() {
     testGoogObjectWarning(lines(
         GOOG_OBJECT,
@@ -73,6 +81,7 @@ public final class CheckArrayWithGoogObjectTest extends CompilerTestCase {
         "}"));
   }
 
+  @Test
   public void testGoogObjectForEach3() {
     testGoogObjectWarning(lines(
         GOOG_OBJECT,
@@ -81,6 +90,7 @@ public final class CheckArrayWithGoogObjectTest extends CompilerTestCase {
         "}"));
   }
 
+  @Test
   public void testGoogObjectForEach4() {
     testNoGoogObjectWarning(lines(
         GOOG_OBJECT,

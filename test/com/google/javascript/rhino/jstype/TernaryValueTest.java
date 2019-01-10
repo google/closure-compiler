@@ -38,89 +38,99 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Tests the behavior of {@link TernaryValue} by verifying the truth tables
- * of the operations {@link TernaryValue#and(TernaryValue)},
- * {@link TernaryValue#not()}, {@link TernaryValue#or(TernaryValue)}
- * and {@link TernaryValue#xor(TernaryValue)} as well as the
- * {@link TernaryValue#toBoolean(boolean)} method.
+ * Tests the behavior of {@link TernaryValue} by verifying the truth tables of the operations {@link
+ * TernaryValue#and(TernaryValue)}, {@link TernaryValue#not()}, {@link
+ * TernaryValue#or(TernaryValue)} and {@link TernaryValue#xor(TernaryValue)} as well as the {@link
+ * TernaryValue#toBoolean(boolean)} method.
  *
  */
-public class TernaryValueTest extends TestCase {
-  public void testOrdinal() throws Exception {
-    assertEquals(0, FALSE.ordinal());
-    assertEquals(1, TRUE.ordinal());
-    assertEquals(2, UNKNOWN.ordinal());
+@RunWith(JUnit4.class)
+public class TernaryValueTest {
+  @Test
+  public void testOrdinal() {
+    assertThat(FALSE.ordinal()).isEqualTo(0);
+    assertThat(TRUE.ordinal()).isEqualTo(1);
+    assertThat(UNKNOWN.ordinal()).isEqualTo(2);
   }
 
-  public void testAnd() throws Exception {
-    assertEquals(TRUE, TRUE.and(TRUE));
-    assertEquals(FALSE, TRUE.and(FALSE));
-    assertEquals(UNKNOWN, TRUE.and(UNKNOWN));
+  @Test
+  public void testAnd() {
+    assertThat(TRUE.and(TRUE)).isEqualTo(TRUE);
+    assertThat(TRUE.and(FALSE)).isEqualTo(FALSE);
+    assertThat(TRUE.and(UNKNOWN)).isEqualTo(UNKNOWN);
 
-    assertEquals(FALSE, FALSE.and(TRUE));
-    assertEquals(FALSE, FALSE.and(FALSE));
-    assertEquals(FALSE, FALSE.and(UNKNOWN));
+    assertThat(FALSE.and(TRUE)).isEqualTo(FALSE);
+    assertThat(FALSE.and(FALSE)).isEqualTo(FALSE);
+    assertThat(FALSE.and(UNKNOWN)).isEqualTo(FALSE);
 
-    assertEquals(UNKNOWN, UNKNOWN.and(TRUE));
-    assertEquals(FALSE, UNKNOWN.and(FALSE));
-    assertEquals(UNKNOWN, UNKNOWN.and(UNKNOWN));
+    assertThat(UNKNOWN.and(TRUE)).isEqualTo(UNKNOWN);
+    assertThat(UNKNOWN.and(FALSE)).isEqualTo(FALSE);
+    assertThat(UNKNOWN.and(UNKNOWN)).isEqualTo(UNKNOWN);
   }
 
-  public void testNot() throws Exception {
-    assertEquals(FALSE, TRUE.not());
-    assertEquals(TRUE, FALSE.not());
-    assertEquals(UNKNOWN, UNKNOWN.not());
+  @Test
+  public void testNot() {
+    assertThat(TRUE.not()).isEqualTo(FALSE);
+    assertThat(FALSE.not()).isEqualTo(TRUE);
+    assertThat(UNKNOWN.not()).isEqualTo(UNKNOWN);
   }
 
-  public void testOr() throws Exception {
-    assertEquals(TRUE, TRUE.or(TRUE));
-    assertEquals(TRUE, TRUE.or(FALSE));
-    assertEquals(TRUE, TRUE.or(UNKNOWN));
+  @Test
+  public void testOr() {
+    assertThat(TRUE.or(TRUE)).isEqualTo(TRUE);
+    assertThat(TRUE.or(FALSE)).isEqualTo(TRUE);
+    assertThat(TRUE.or(UNKNOWN)).isEqualTo(TRUE);
 
-    assertEquals(TRUE, FALSE.or(TRUE));
-    assertEquals(FALSE, FALSE.or(FALSE));
-    assertEquals(UNKNOWN, FALSE.or(UNKNOWN));
+    assertThat(FALSE.or(TRUE)).isEqualTo(TRUE);
+    assertThat(FALSE.or(FALSE)).isEqualTo(FALSE);
+    assertThat(FALSE.or(UNKNOWN)).isEqualTo(UNKNOWN);
 
-    assertEquals(TRUE, UNKNOWN.or(TRUE));
-    assertEquals(UNKNOWN, UNKNOWN.or(FALSE));
-    assertEquals(UNKNOWN, UNKNOWN.or(UNKNOWN));
+    assertThat(UNKNOWN.or(TRUE)).isEqualTo(TRUE);
+    assertThat(UNKNOWN.or(FALSE)).isEqualTo(UNKNOWN);
+    assertThat(UNKNOWN.or(UNKNOWN)).isEqualTo(UNKNOWN);
   }
 
-  public void testXor() throws Exception {
-    assertEquals(FALSE, TRUE.xor(TRUE));
-    assertEquals(TRUE, TRUE.xor(FALSE));
-    assertEquals(UNKNOWN, TRUE.xor(UNKNOWN));
+  @Test
+  public void testXor() {
+    assertThat(TRUE.xor(TRUE)).isEqualTo(FALSE);
+    assertThat(TRUE.xor(FALSE)).isEqualTo(TRUE);
+    assertThat(TRUE.xor(UNKNOWN)).isEqualTo(UNKNOWN);
 
-    assertEquals(TRUE, FALSE.xor(TRUE));
-    assertEquals(FALSE, FALSE.xor(FALSE));
-    assertEquals(UNKNOWN, FALSE.xor(UNKNOWN));
+    assertThat(FALSE.xor(TRUE)).isEqualTo(TRUE);
+    assertThat(FALSE.xor(FALSE)).isEqualTo(FALSE);
+    assertThat(FALSE.xor(UNKNOWN)).isEqualTo(UNKNOWN);
 
-    assertEquals(UNKNOWN, UNKNOWN.xor(TRUE));
-    assertEquals(UNKNOWN, UNKNOWN.xor(FALSE));
-    assertEquals(UNKNOWN, UNKNOWN.xor(UNKNOWN));
+    assertThat(UNKNOWN.xor(TRUE)).isEqualTo(UNKNOWN);
+    assertThat(UNKNOWN.xor(FALSE)).isEqualTo(UNKNOWN);
+    assertThat(UNKNOWN.xor(UNKNOWN)).isEqualTo(UNKNOWN);
   }
 
-  public void testToBoolean() throws Exception {
-    assertTrue(TRUE.toBoolean(true));
-    assertTrue(TRUE.toBoolean(false));
+  @Test
+  public void testToBoolean() {
+    assertThat(TRUE.toBoolean(true)).isTrue();
+    assertThat(TRUE.toBoolean(false)).isTrue();
 
-    assertFalse(FALSE.toBoolean(true));
-    assertFalse(FALSE.toBoolean(false));
+    assertThat(FALSE.toBoolean(true)).isFalse();
+    assertThat(FALSE.toBoolean(false)).isFalse();
 
-    assertTrue(UNKNOWN.toBoolean(true));
-    assertFalse(UNKNOWN.toBoolean(false));
+    assertThat(UNKNOWN.toBoolean(true)).isTrue();
+    assertThat(UNKNOWN.toBoolean(false)).isFalse();
   }
 
+  @Test
   public void testToString() {
-    assertEquals("true", TRUE.toString());
-    assertEquals("false", FALSE.toString());
-    assertEquals("unknown", UNKNOWN.toString());
+    assertThat(TRUE.toString()).isEqualTo("true");
+    assertThat(FALSE.toString()).isEqualTo("false");
+    assertThat(UNKNOWN.toString()).isEqualTo("unknown");
   }
 }

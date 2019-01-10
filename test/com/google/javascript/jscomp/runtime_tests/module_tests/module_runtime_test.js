@@ -423,4 +423,20 @@ testSuite({
       assertFalse(second.wasFirstLoaded);
     });
   },
+
+  testExportAllFrom() {
+    $jscomp.registerModule(function(require, exports, module) {
+      module.exports.foo = 'foo';
+      module.exports.bar = 'bar';
+    }, 'first.js');
+
+    $jscomp.registerModule(function(require, exports, module) {
+      module.exportAllFrom(require('first.js'));
+    }, 'second.js');
+
+    const second = $jscomp.require('second.js');
+    assertEquals('foo', second.foo);
+    assertEquals('bar', second.bar);
+    assertEquals(2, Object.keys(second).length);
+  },
 });
