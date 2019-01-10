@@ -38,6 +38,7 @@ public class CheckMissingSemicolonTest extends CompilerTestCase {
   protected CompilerOptions getOptions(CompilerOptions options) {
     super.getOptions(options);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    options.setProcessCommonJSModules(true);
     return options;
   }
 
@@ -95,5 +96,17 @@ public class CheckMissingSemicolonTest extends CompilerTestCase {
   public void testNoWarning_export() {
     testSame("export function f() {}");
     testSame("export class C {}");
+  }
+
+  @Test
+  public void testNoWarning_commonJS() {
+    testSame("module.exports = 'cjs';");
+    testSame("module.exports = 1;\n");
+  }
+
+  @Test
+  public void testWarning_commonJS() {
+    testWarning("module.exports = 'cjs'");
+    testWarning("module.exports = 1\n");
   }
 }
