@@ -38,19 +38,22 @@ import java.util.Set;
 public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallback
     implements HotSwapCompilerPass {
   public static final DiagnosticType REQUIRES_NOT_SORTED =
-      DiagnosticType.warning("JSC_REQUIRES_NOT_SORTED",
-      "goog.require() statements are not sorted."
-          + " The correct order is:\n\n{0}\n");
+      DiagnosticType.warning(
+          "JSC_REQUIRES_NOT_SORTED",
+          "goog.require() and goog.requireType() statements are not sorted."
+              + " The correct order is:\n\n{0}\n");
 
   public static final DiagnosticType PROVIDES_NOT_SORTED =
-      DiagnosticType.warning("JSC_PROVIDES_NOT_SORTED",
+      DiagnosticType.warning(
+          "JSC_PROVIDES_NOT_SORTED",
           "goog.provide() statements are not sorted."
               + " The correct order is:\n\n{0}\n");
 
   public static final DiagnosticType PROVIDES_AFTER_REQUIRES =
       DiagnosticType.warning(
           "JSC_PROVIDES_AFTER_REQUIRES",
-          "goog.provide() statements should be before goog.require() statements.");
+          "goog.provide() statements should be before"
+              + " goog.require() and goog.requireType() statements.");
 
   public static final DiagnosticType DUPLICATE_REQUIRE =
       DiagnosticType.warning("JSC_DUPLICATE_REQUIRE", "''{0}'' required more than once.");
@@ -96,7 +99,10 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
         checkState(pattern.isObjectPattern(), pattern);
         Node call = n.getFirstChild().getLastChild();
         checkState(call.isCall(), call);
-        checkState(call.getFirstChild().matchesQualifiedName("goog.require"), call.getFirstChild());
+        checkState(
+            call.getFirstChild().matchesQualifiedName("goog.require")
+                || call.getFirstChild().matchesQualifiedName("goog.requireType"),
+            call.getFirstChild());
         if (!pattern.hasChildren()) {
           key = "{";
         } else {
@@ -153,6 +159,7 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
       case CALL:
         Node callee = n.getFirstChild();
         if (!callee.matchesQualifiedName("goog.require")
+            && !callee.matchesQualifiedName("goog.requireType")
             && !callee.matchesQualifiedName("goog.forwardDeclare")
             && !callee.matchesQualifiedName("goog.provide")
             && !callee.matchesQualifiedName("goog.module")) {
@@ -169,6 +176,7 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
             return;
           }
           if (callee.matchesQualifiedName("goog.require")
+              || callee.matchesQualifiedName("goog.requireType")
               || callee.matchesQualifiedName("goog.forwardDeclare")) {
             requires.add(parent);
           } else {
@@ -181,6 +189,7 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
           }
         } else if (NodeUtil.isNameDeclaration(parent.getParent())
             && (callee.matchesQualifiedName("goog.require")
+                || callee.matchesQualifiedName("goog.requireType")
                 || callee.matchesQualifiedName("goog.forwardDeclare"))) {
           requires.add(parent.getParent());
         }

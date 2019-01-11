@@ -62,25 +62,31 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   @Test
   public void testNoWarning_require() {
     testNoWarning("goog.require('a.b');\ngoog.require('a.c')");
+
     testNoWarning(
         lines(
             "goog.require('namespace');",
             "goog.require('namespace.ExampleClass');",
             "goog.require('namespace.ExampleClass.ExampleInnerClass');"));
+
     testNoWarning(
         lines(
             "goog.require('namespace.Example');",
             "goog.require('namespace.example');"));
+
+    testNoWarning(lines("goog.requireType('namespace1');", "goog.require('namespace2');"));
   }
 
   @Test
   public void testNoWarning_provide() {
     testNoWarning("goog.provide('a.b');\ngoog.provide('a.c')");
+
     testNoWarning(
         lines(
             "goog.provide('namespace');",
             "goog.provide('namespace.ExampleClass');",
             "goog.provide('namespace.ExampleClass.ExampleInnerClass');"));
+
     testNoWarning(
         lines(
             "goog.provide('namespace.Example');",
@@ -90,20 +96,37 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   @Test
   public void testWarning_require() {
     test(
-        srcs("goog.require('a.c');\ngoog.require('a.b')"),
-        warning(REQUIRES_NOT_SORTED).withMessageContaining(lines(
-            "The correct order is:",
-            "",
-            "goog.require('a.b');",
-            "goog.require('a.c');")));
+        srcs(lines("goog.require('a.c');", "goog.require('a.b')")),
+        warning(REQUIRES_NOT_SORTED)
+            .withMessageContaining(
+                lines(
+                    "The correct order is:", "", "goog.require('a.b');", "goog.require('a.c');")));
 
     test(
-        srcs("goog.require('a.c');\ngoog.require('a')"),
-        warning(REQUIRES_NOT_SORTED).withMessageContaining(lines(
-            "The correct order is:",
-            "",
-            "goog.require('a');",
-            "goog.require('a.c');")));
+        srcs(lines("goog.require('a.c');", "goog.require('a')")),
+        warning(REQUIRES_NOT_SORTED)
+            .withMessageContaining(
+                lines("The correct order is:", "", "goog.require('a');", "goog.require('a.c');")));
+
+    test(
+        srcs(lines("goog.require('a.c');", "goog.requireType('a')")),
+        warning(REQUIRES_NOT_SORTED)
+            .withMessageContaining(
+                lines(
+                    "The correct order is:",
+                    "",
+                    "goog.requireType('a');",
+                    "goog.require('a.c');")));
+
+    test(
+        srcs(lines("goog.requireType('a.c');", "goog.require('a')")),
+        warning(REQUIRES_NOT_SORTED)
+            .withMessageContaining(
+                lines(
+                    "The correct order is:",
+                    "",
+                    "goog.require('a');",
+                    "goog.requireType('a.c');")));
   }
 
   @Test
@@ -121,6 +144,40 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             " */",
             "goog.require('a.b');",
             "goog.require('a.c');")));
+
+    test(
+        srcs(
+            lines(
+                "goog.require('a.c');",
+                "/** @suppress {extraRequire} */",
+                "goog.requireType('a.b')")),
+        warning(REQUIRES_NOT_SORTED)
+            .withMessageContaining(
+                lines(
+                    "The correct order is:",
+                    "",
+                    "/**",
+                    " @suppress {extraRequire}",
+                    " */",
+                    "goog.requireType('a.b');",
+                    "goog.require('a.c');")));
+
+    test(
+        srcs(
+            lines(
+                "goog.requireType('a.c');",
+                "/** @suppress {extraRequire} */",
+                "goog.require('a.b')")),
+        warning(REQUIRES_NOT_SORTED)
+            .withMessageContaining(
+                lines(
+                    "The correct order is:",
+                    "",
+                    "/**",
+                    " @suppress {extraRequire}",
+                    " */",
+                    "goog.require('a.b');",
+                    "goog.requireType('a.c');")));
   }
 
   @Test
@@ -146,6 +203,8 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
     test(
         srcs("goog.require('a');\ngoog.provide('b')"),
         warning(PROVIDES_AFTER_REQUIRES));
+
+    test(srcs("goog.requireType('a');\ngoog.provide('b')"), warning(PROVIDES_AFTER_REQUIRES));
   }
 
   @Test
@@ -175,27 +234,49 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "const d = goog.require('a.b.d');",
             "goog.require('a.b.c');",
             "goog.require('a.c');")));
+
+    test(
+        srcs(
+            lines(
+                "goog.module('m');",
+                "",
+                "goog.require('a.c');",
+                "const d = goog.requireType('a.b.d');",
+                "goog.require('a.b.c');",
+                "",
+                "alert(1);")),
+        warning(REQUIRES_NOT_SORTED)
+            .withMessageContaining(
+                lines(
+                    "The correct order is:",
+                    "",
+                    "const d = goog.requireType('a.b.d');",
+                    "goog.require('a.b.c');",
+                    "goog.require('a.c');")));
   }
 
   @Test
   public void testGoogModule_destructuring() {
     test(
-        srcs(lines(
-            "goog.module('m');",
-            "",
-            "goog.require('z');",
-            "goog.require('a');",
-            "var {someFunction, anotherFunction} = goog.require('example.utils');",
-            "var {A_CONST, ANOTHER_CONST} = goog.require('example.constants');",
-            "",
-            "alert(1);")),
-        warning(REQUIRES_NOT_SORTED).withMessageContaining(lines(
-            "The correct order is:",
-            "",
-            "var {A_CONST, ANOTHER_CONST} = goog.require('example.constants');",
-            "var {someFunction, anotherFunction} = goog.require('example.utils');",
-            "goog.require('a');",
-            "goog.require('z');")));
+        srcs(
+            lines(
+                "goog.module('m');",
+                "",
+                "goog.require('z');",
+                "goog.requireType('a');",
+                "var {someFunction, anotherFunction} = goog.require('example.utils');",
+                "var {A_CONST, ANOTHER_CONST} = goog.requireType('example.constants');",
+                "",
+                "alert(1);")),
+        warning(REQUIRES_NOT_SORTED)
+            .withMessageContaining(
+                lines(
+                    "The correct order is:",
+                    "",
+                    "var {A_CONST, ANOTHER_CONST} = goog.requireType('example.constants');",
+                    "var {someFunction, anotherFunction} = goog.require('example.utils');",
+                    "goog.requireType('a');",
+                    "goog.require('z');")));
   }
 
   @Test
@@ -250,18 +331,21 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   @Test
   public void testGoogModule_shorthand() {
     test(
-        srcs(lines(
-            "goog.module('m');",
-            "",
-            "var d = goog.require('a.b.d');",
-            "var c = goog.require('a.c');",
-            "",
-            "alert(1);")),
-        warning(REQUIRES_NOT_SORTED).withMessageContaining(lines(
-            "The correct order is:",
-            "",
-            "var c = goog.require('a.c');",
-            "var d = goog.require('a.b.d');")));
+        srcs(
+            lines(
+                "goog.module('m');",
+                "",
+                "var d = goog.require('a.b.d');",
+                "var c = goog.requireType('a.c');",
+                "",
+                "alert(1);")),
+        warning(REQUIRES_NOT_SORTED)
+            .withMessageContaining(
+                lines(
+                    "The correct order is:",
+                    "",
+                    "var c = goog.requireType('a.c');",
+                    "var d = goog.require('a.b.d');")));
   }
 
   @Test
@@ -288,19 +372,21 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
     test(
         srcs(
             lines(
-            "goog.module('m');",
-            "",
-            "goog.require('a.c');",
-            "goog.require('a.b.d');",
-            "goog.require('a.b.c');",
-            "",
-            "alert(1);")),
-        warning(REQUIRES_NOT_SORTED).withMessageContaining(lines(
-            "The correct order is:",
-            "",
-            "goog.require('a.b.c');",
-            "goog.require('a.b.d');",
-            "goog.require('a.c');")));
+                "goog.module('m');",
+                "",
+                "goog.requireType('a.c');",
+                "goog.require('a.b.d');",
+                "goog.require('a.b.c');",
+                "",
+                "alert(1);")),
+        warning(REQUIRES_NOT_SORTED)
+            .withMessageContaining(
+                lines(
+                    "The correct order is:",
+                    "",
+                    "goog.require('a.b.c');",
+                    "goog.require('a.b.d');",
+                    "goog.requireType('a.c');")));
   }
 
   @Test
@@ -345,6 +431,10 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "goog.require('Bar');",
             "goog.require('Bar');"),
         DUPLICATE_REQUIRE);
+
+    testWarning(lines("goog.requireType('Bar');", "goog.requireType('Bar');"), DUPLICATE_REQUIRE);
+
+    testWarning(lines("goog.require('Bar');", "goog.requireType('Bar');"), DUPLICATE_REQUIRE);
   }
 
   @Test
@@ -353,6 +443,14 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
         lines(
             "const Bar1 = goog.require('Bar');",
             "const Bar2 = goog.require('Bar');"),
+        DUPLICATE_REQUIRE);
+
+    testWarning(
+        lines("const Bar1 = goog.requireType('Bar');", "const Bar2 = goog.requireType('Bar');"),
+        DUPLICATE_REQUIRE);
+
+    testWarning(
+        lines("const Bar1 = goog.require('Bar');", "const Bar2 = goog.requireType('Bar');"),
         DUPLICATE_REQUIRE);
   }
 
@@ -363,12 +461,21 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
             "const Bar = goog.require('Bar');",
             "const {Foo} = goog.require('Bar');"),
         DUPLICATE_REQUIRE);
+
+    testWarning(
+        lines("const Bar = goog.requireType('Bar');", "const {Foo} = goog.requireType('Bar');"),
+        DUPLICATE_REQUIRE);
+
+    testWarning(
+        lines("const Bar = goog.require('Bar');", "const {Foo} = goog.requireType('Bar');"),
+        DUPLICATE_REQUIRE);
   }
 
   // Just make sure we don't crash.
   @Test
   public void testEmptyRequire() {
     testNoWarning("goog.require();");
+    testNoWarning("goog.requireType();");
   }
 
   // Compiler doesn't sort ES6 modules yet, because semantics not yet finalized.
