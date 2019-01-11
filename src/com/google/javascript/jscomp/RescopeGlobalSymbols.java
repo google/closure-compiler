@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -56,30 +55,6 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
   // Appended to variables names that conflict with globalSymbolNamespace.
   private static final String DISAMBIGUATION_SUFFIX = "$";
-  private static final String WINDOW = "window";
-  private static final ImmutableSet<String> SPECIAL_EXTERNS =
-      ImmutableSet.of(
-          WINDOW,
-          "eval",
-          "arguments",
-          "undefined",
-          // The javascript built-in objects (listed in Ecma 262 section 4.2)
-          "Object",
-          "Function",
-          "Array",
-          "String",
-          "Boolean",
-          "Number",
-          "Math",
-          "Date",
-          "RegExp",
-          "JSON",
-          "Error",
-          "EvalError",
-          "ReferenceError",
-          "SyntaxError",
-          "TypeError",
-          "URIError");
 
   private final AbstractCompiler compiler;
   private final String globalSymbolNamespace;
@@ -456,7 +431,6 @@ final class RescopeGlobalSymbols implements CompilerPass {
         return;
       }
       if (isExternVar(name, t)) {
-        visitExtern(n, parent);
         return;
       }
       // When the globalSymbolNamespace is used as a local variable name
@@ -491,21 +465,6 @@ final class RescopeGlobalSymbols implements CompilerPass {
         // because the this is never read.
         parent.putBooleanProp(Node.FREE_CALL, false);
       }
-      compiler.reportChangeToEnclosingScope(parent);
-    }
-
-    /**
-     * Rewrites extern names to be explicit children of window instead of only implicitly
-     * referencing it. This enables injecting window into a scope and make all global symbols
-     * depend on the injected object.
-     */
-    private void visitExtern(Node nameNode, Node parent) {
-      String name = nameNode.getString();
-      if (globalSymbolNamespace.equals(name) || SPECIAL_EXTERNS.contains(name)) {
-        return;
-      }
-      Node windowPropAccess = IR.getprop(IR.name(WINDOW), IR.string(name));
-      parent.replaceChild(nameNode, windowPropAccess.srcrefTree(nameNode));
       compiler.reportChangeToEnclosingScope(parent);
     }
 
