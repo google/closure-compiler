@@ -5622,7 +5622,7 @@ public final class NodeUtil {
     return (int) l;
   }
 
-  private static boolean isGoogModuleCall(Node n) {
+  static boolean isGoogModuleCall(Node n) {
     if (isExprCall(n)) {
       Node target = n.getFirstFirstChild();
       return (target.matchesQualifiedName("goog.module"));
@@ -5716,6 +5716,20 @@ public final class NodeUtil {
 
   public static boolean isCallTo(Node n, String qualifiedName) {
     return n.isCall() && n.getFirstChild().matchesQualifiedName(qualifiedName);
+  }
+
+  /**
+   * A faster version of {@link #isCallTo(Node, String)}.
+   *
+   * @param n node to check if a call
+   * @param targetMethod the prebuilt AST getprop node that represents the method to check
+   */
+  public static boolean isCallTo(Node n, Node targetMethod) {
+    if (!n.isCall()) {
+      return false;
+    }
+
+    return n.getFirstChild().matchesQualifiedName(targetMethod);
   }
 
   static ImmutableSet<String> collectExternVariableNames(AbstractCompiler compiler, Node externs) {

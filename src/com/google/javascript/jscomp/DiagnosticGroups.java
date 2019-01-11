@@ -572,6 +572,7 @@ public class DiagnosticGroups {
           "lintChecks", // undocumented
           CheckJSDocStyle.ALL_DIAGNOSTICS,
           new DiagnosticGroup(
+              CheckClosureImports.LET_CLOSURE_IMPORT,
               CheckEmptyStatements.USELESS_EMPTY_STATEMENT,
               CheckEnums.COMPUTED_PROP_NAME_IN_ENUM,
               CheckEnums.DUPLICATE_ENUM_VALUE,

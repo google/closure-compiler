@@ -3789,6 +3789,36 @@ public final class NodeUtilTest {
     assertThat(NodeUtil.isSimpleOperator(parseExpr("x[y]"))).isTrue();
   }
 
+  @Test
+  public void testIsCallToString() {
+    assertThat(NodeUtil.isCallTo(getCallNode("foo()"), "foo")).isTrue();
+    assertThat(NodeUtil.isCallTo(getCallNode("foo.bar()"), "foo.bar")).isTrue();
+
+    assertThat(NodeUtil.isCallTo(IR.name("foo"), "foo")).isFalse();
+    assertThat(NodeUtil.isCallTo(IR.getprop(IR.name("foo"), IR.string("bar")), "foo.bar"))
+        .isFalse();
+    assertThat(NodeUtil.isCallTo(getCallNode("foo.bar()"), "foo")).isFalse();
+    assertThat(NodeUtil.isCallTo(getCallNode("foo[0]()"), "foo")).isFalse();
+  }
+
+  @Test
+  public void testIsCallToNode() {
+    assertThat(NodeUtil.isCallTo(getCallNode("foo()"), IR.name("foo"))).isTrue();
+    assertThat(
+            NodeUtil.isCallTo(
+                getCallNode("foo.bar()"), IR.getprop(IR.name("foo"), IR.string("bar"))))
+        .isTrue();
+
+    assertThat(NodeUtil.isCallTo(IR.name("foo"), IR.name("foo"))).isFalse();
+    assertThat(
+            NodeUtil.isCallTo(
+                IR.getprop(IR.name("foo"), IR.string("bar")),
+                IR.getprop(IR.name("foo"), IR.string("bar"))))
+        .isFalse();
+    assertThat(NodeUtil.isCallTo(getCallNode("foo.bar()"), IR.name("foo"))).isFalse();
+    assertThat(NodeUtil.isCallTo(getCallNode("foo[0]()"), IR.name("foo"))).isFalse();
+  }
+
   private Node getNameNodeFrom(String code, String name) {
     Node ast = parse(code);
     Node nameNode = getNameNode(ast, name);

@@ -124,15 +124,26 @@ public final class ModuleMetadataMap {
     /**
      * Closure namespaces that this file is associated with. Created by goog.provide, goog.module,
      * and goog.declareModuleId.
+     *
+     * <p>This is a multiset as it does not warn on duplicate namespaces, but will still encapsulate
+     * that information with this multiset.
      */
     public abstract ImmutableMultiset<String> googNamespaces();
 
-    /** Closure namespaces this file requires. e.g. all arguments to goog.require calls. */
+    /**
+     * Closure namespaces this file requires. e.g. all arguments to goog.require calls.
+     *
+     * <p>This is a multiset as it does not warn on duplicate namespaces, but will still encapsulate
+     * that information with this multiset.
+     */
     public abstract ImmutableMultiset<String> requiredGoogNamespaces();
 
     /**
      * Closure namespaces this file has weak dependencies on. e.g. all arguments to goog.requireType
      * calls.
+     *
+     * <p>This is a multiset as it does not warn on duplicate namespaces, but will still encapsulate
+     * that information with this multiset.
      */
     public abstract ImmutableMultiset<String> requiredTypes();
 
@@ -155,7 +166,12 @@ public final class ModuleMetadataMap {
 
       public abstract ImmutableMultiset.Builder<String> googNamespacesBuilder();
 
-      public abstract ImmutableMultiset.Builder<String> requiredGoogNamespacesBuilder();
+      Builder addGoogNamespace(String namespace) {
+        googNamespacesBuilder().add(namespace);
+        return this;
+      }
+
+      abstract ImmutableMultiset.Builder<String> requiredGoogNamespacesBuilder();
 
       public abstract ImmutableMultiset.Builder<String> requiredTypesBuilder();
 
