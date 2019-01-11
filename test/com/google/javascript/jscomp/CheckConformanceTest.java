@@ -1045,6 +1045,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     testWarning(code + "b.x = 'a'", CheckConformance.CONFORMANCE_VIOLATION);
     testNoWarning(code + "b.x = 1");
+    testNoWarning(code + "var a = {}; a.x = 'a'");
+    testWarning(
+        code + "/** @type {?} */ var a = {}; a.x = 'a'",
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+    testWarning(
+        code + "/** @type {*} */ var a = {}; a.x = 'a'",
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
 
   @Test

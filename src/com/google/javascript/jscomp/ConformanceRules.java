@@ -703,6 +703,10 @@ public final class ConformanceRules {
            && parent.getFirstChild() == n;
     }
 
+    static boolean isLooseType(JSType type) {
+      return type.isUnknownType() || type.isUnresolved() || type.isAllType();
+    }
+
     static JSType evaluateTypeString(
         AbstractCompiler compiler, String expression)
         throws InvalidRequirementSpec {
@@ -969,9 +973,7 @@ public final class ConformanceRules {
       Node lhs = isCallInvocation ? n.getFirstFirstChild() : n.getFirstChild();
       if (methodClassType != null && lhs.getJSType() != null) {
         JSType targetType = lhs.getJSType().restrictByNotNullOrUndefined();
-        if (targetType.isUnknownType()
-            || targetType.isUnresolved()
-            || targetType.isAllType()
+        if (ConformanceUtil.isLooseType(targetType)
             || targetType.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
           if (reportLooseTypeViolations
               && !ConformanceUtil.validateCall(
@@ -1038,18 +1040,25 @@ public final class ConformanceRules {
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       if (n.isGetProp() && NodeUtil.isLhsOfAssign(n)) {
-        JSTypeRegistry registry = t.getCompiler().getTypeRegistry();
         JSType rhsType = n.getNext().getJSType();
         JSType targetType = n.getFirstChild().getJSType();
         if (rhsType != null && targetType != null) {
           JSType targetNotNullType = null;
           for (Restriction r : restrictions) {
             if (n.getLastChild().getString() == r.property) { // Both strings are interned.
-              if (targetNotNullType == null) {
-                targetNotNullType = targetType.restrictByNotNullOrUndefined();
-              }
-              if (targetNotNullType.isSubtypeOf(r.type) && !rhsType.isSubtypeOf(r.restrictedType)) {
-                return ConformanceResult.VIOLATION;
+              if (!rhsType.isSubtypeOf(r.restrictedType)) {
+                if (ConformanceUtil.isLooseType(targetType)) {
+                  if (reportLooseTypeViolations) {
+                    return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
+                  }
+                } else {
+                  if (targetNotNullType == null) {
+                    targetNotNullType = targetType.restrictByNotNullOrUndefined();
+                  }
+                  if (targetNotNullType.isSubtypeOf(r.type)) {
+                    return ConformanceResult.VIOLATION;
+                  }
+                }
               }
             }
           }
@@ -1670,7 +1679,7 @@ public final class ConformanceRules {
         return ConformanceResult.VIOLATION;
       }
       JSType type = srcObj.getJSType();
-      if (type == null || type.isUnknownType() || type.isUnresolved() || type.isAllType()) {
+      if (type == null || ConformanceUtil.isLooseType(type)) {
         return reportLooseTypeViolations
             ? ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES
             : ConformanceResult.CONFORMANCE;
