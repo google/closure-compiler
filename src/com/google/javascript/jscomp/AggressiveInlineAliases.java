@@ -72,6 +72,8 @@ class AggressiveInlineAliases implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    new StaticSuperPropReplacer(compiler).replaceAll(root);
+
     // Building the `GlobalNamespace` dominates the cost of this pass, so it is built once and
     // updated as changes are made so it can be reused for the next iteration.
     this.namespace = new GlobalNamespace(compiler, root);

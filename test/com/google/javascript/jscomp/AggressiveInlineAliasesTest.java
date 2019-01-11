@@ -431,8 +431,8 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testLocalAliasCreatedAfterVarDeclaration1() {
-test(
-    lines(
+    test(
+        lines(
             "var a = { b : 3 };",
             "function f() {",
             "  var tmp;",
@@ -441,8 +441,8 @@ test(
             "    use(tmp);",
             "  }",
             "}"),
-               lines(
-                   "var a = { b : 3 };",
+        lines(
+            "var a = { b : 3 };",
             "function f() {",
             "  var tmp;",
             "  if (true) {",
@@ -1995,6 +1995,94 @@ test(
             "var {} = b;",
             "var y = void 0 === a.x ? 0 : a.x;",
             "use(y);"));
+  }
+
+  @Test
+  public void testReplaceSuperGetPropInStaticMethod() {
+    test(
+        "class Foo { static m() {} } class Bar extends Foo { static m() { super.m(); } }",
+        "class Foo { static m() {} } class Bar extends Foo { static m() { Foo.m(); } }");
+  }
+
+  @Test
+  public void testReplaceSuperInArrowInStaticMethod() {
+    test(
+        lines(
+            "class Foo { static m() {} }",
+            " class Bar extends Foo { static m() { return () => super.m(); } }"),
+        lines(
+            "class Foo { static m() {} }",
+            " class Bar extends Foo { static  m() { return () => Foo.m(); } }"));
+  }
+
+  @Test
+  public void testReplaceSuperInStaticMethodWithQualifiedNameSuperclass() {
+    test(
+        lines(
+            "const a = {b: {}};",
+            "/** @const */",
+            "a.b.Foo = class { static m() {} };",
+            "class Bar extends a.b.Foo { static m() { super.m(); } }"),
+        lines(
+            "const a = {b: {}};",
+            "/** @const */",
+            "a.b.Foo = class { static m() {} };",
+            "class Bar extends a.b.Foo { static m() { a.b.Foo.m(); } }"));
+  }
+
+  @Test
+  public void testDontReplaceSuperInObjectLiteralMethod() {
+    testSame("var obj = {m() { super.n(); } };");
+  }
+
+  @Test
+  public void testDontReplaceSuperInObjectLitFnInStaticClassMethod() {
+    testSame(
+        lines(
+            "class Foo { static m() {} }",
+            // `super.n` refers to a different object than `Foo.n`
+            "class Bar extends Foo { static m() { return {m() { super.n(); }}; } }"));
+  }
+
+  @Test
+  public void testReplaceChainedSuperRefInStaticMethod() {
+    test(
+        lines(
+            "class Foo { static m() {} }",
+            " class Bar extends Foo {}",
+            " class Baz extends Bar { static m() { super.m(); } }"),
+        lines(
+            "class Foo { static m() {} }",
+            " class Bar extends Foo {}",
+            // TODO(b/121329562): replace this with `Foo.m()`. Right now the replacement does not
+            // happen for static class methods
+            " class Baz extends Bar { static m() { Bar.m(); } }"));
+  }
+
+  @Test
+  public void testDontReplaceSuperInStaticMethodWithNonQnameSuperclass() {
+    // note - if we wanted, we could extract `mysteryFn()` into a tmp variable then use that to
+    // replace `super`.
+    testSame("class Bar extends getClass() { static m() { super.m(); } }");
+  }
+
+  @Test
+  public void testDontReplaceSuperInStaticMethodWithNonQnameGetPropSuperclass() {
+    testSame("class Bar extends getClasses().Foo { static m() { super.m(); } }");
+  }
+
+  @Test
+  public void testReplaceSuperGetElemInStaticMethod() {
+    // while CollapseProperties won't collapse Foo['m'], replacing `super` enables collapsing Bar.m
+    // (since CollapseProperties cannot collapse methods using super) and helps code size.
+    test(
+        "class Foo { static 'm'() {} } class Bar extends Foo { static m() { super['m'](); } }",
+        "class Foo { static 'm'() {} } class Bar extends Foo { static m() { Foo['m'](); } }");
+  }
+
+  @Test
+  public void testDontReplaceSuperInClassPrototypeMethod() {
+    testSame("class Foo { m() {} } class Bar extends Foo { m() { super.m(); } }");
   }
 
   /**
