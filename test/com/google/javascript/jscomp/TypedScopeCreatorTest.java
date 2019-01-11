@@ -742,6 +742,39 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDefaultParameterInferredNotUndefinedInCallback() {
+    testSame(
+        lines(
+            "function takesCallback(/** function(string=): ? */ cb) {}",
+            "",
+            "takesCallback((str = '') => {})",
+            ""));
+
+    TypedVar strVar = checkNotNull(lastFunctionScope.getVar("str"));
+    assertType(strVar.getType()).isString();
+    assertThat(strVar.isTypeInferred()).isTrue();
+
+    JSType strType = findNameType("str", globalScope);
+    assertType(strType).isString(); // the actual parameter is also typed as not-undefined
+  }
+
+  @Test
+  public void testDefaultParameterInferredNotUndefinedInCallbackButLaterSetToUndefined() {
+    testSame(
+        lines(
+            "function takesCallback(/** function(string=): ? */ cb) {}",
+            "",
+            "takesCallback((str = '') => {",
+            "  str = undefined;",
+            "})",
+            ""));
+
+    TypedVar strVar = checkNotNull(lastFunctionScope.getVar("str"));
+    assertType(strVar.getType()).toStringIsEqualTo("(string|undefined)");
+    assertThat(strVar.isTypeInferred()).isTrue();
+  }
+
+  @Test
   public void testDefaultDestructuringParameterFullJSDoc() {
     testSame(
         lines(
@@ -804,6 +837,42 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedVar yVar = checkNotNull(lastFunctionScope.getVar("y"));
     assertType(yVar.getType()).toStringIsEqualTo("Array<number>");
     assertThat(yVar.isTypeInferred()).isFalse();
+  }
+
+  @Test
+  public void testArrayPatternParameterWithDefaultName() {
+    testSame(
+        lines(
+            "const /** !Iterable<number> */ iter = [0];",
+            "",
+            "/** @param {!Iterable<number>=} p */",
+            "function f([x] = iter) { ",
+            "}"));
+
+    // JSType on the actual node
+    JSType xType = findNameType("x", lastFunctionScope);
+    assertType(xType).isNumber();
+
+    // JSType in the scope
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("number");
+    assertThat(xVar.isTypeInferred()).isTrue();
+
+    // JSType on the array pattern
+    JSType arrayPatternType = findTokenType(Token.ARRAY_PATTERN, globalScope);
+    assertType(arrayPatternType).toStringIsEqualTo("Iterable<number>");
+  }
+
+  @Test
+  public void testArrayDestructuringPatternParameterWithDefaultArray() {
+    testSame(
+        lines(
+            "/** @param {!Iterable<number>=} p */", //
+            "function f([x] = [0]) {}"));
+
+    JSType xType = findNameType("x", lastFunctionScope);
+    // This is unknown because we infer `[0]` to have type `!Array<?>`
+    assertType(xType).isUnknown();
   }
 
   @Test

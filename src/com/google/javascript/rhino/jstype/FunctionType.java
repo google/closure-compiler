@@ -312,7 +312,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     return types;
   }
 
-  /** Gets a PARAM_LIST node that contains all params. May be null. */
+  /** Gets a PARAM_LIST node that contains all params. */
   public final Node getParametersNode() {
     return call.parameters;
   }

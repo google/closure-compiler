@@ -146,6 +146,9 @@ class TypeInference
   @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
   private FlowScope inferParameters(FlowScope entryFlowScope) {
     Node functionNode = containerScope.getRootNode();
+    if (!functionNode.isFunction()) {
+      return entryFlowScope; // we're in the global scope
+    }
     Node astParameters = functionNode.getSecondChild();
     Node iifeArgumentNode = null;
 
@@ -154,106 +157,137 @@ class TypeInference
     }
 
     FunctionType functionType = JSType.toMaybeFunctionType(functionNode.getJSType());
-    if (functionType != null) {
-      Node parameterTypes = functionType.getParametersNode();
-      if (parameterTypes != null) {
-        Node parameterTypeNode = parameterTypes.getFirstChild();
-        for (Node astParameter : astParameters.children()) {
-          boolean isRest = false;
-          Node defaultValue = null;
-          if (astParameter.isDefaultValue()) {
-            defaultValue = astParameter.getSecondChild();
-            astParameter = astParameter.getFirstChild();
-          }
-          if (astParameter.isRest()) {
-            // e.g. `function f(p1, ...restParamName) {}`
-            // set astParameter = restParamName
-            astParameter = astParameter.getOnlyChild();
-            isRest = true;
-          }
+    Node parameterTypeNode = functionType.getParametersNode().getFirstChild();
 
-          if (iifeArgumentNode != null && iifeArgumentNode.isSpread()) {
-            // block inference on all parameters that might possibly be set by a spread, e.g. `z` in
-            // (function f(x, y, z = 1))(...[1, 2], 'foo')
-            iifeArgumentNode = null;
-          }
-          JSType inferredType = null;
-
-          if (iifeArgumentNode != null) {
-            inferredType = iifeArgumentNode.getJSType();
-          } else if (parameterTypeNode != null) {
-            inferredType = parameterTypeNode.getJSType();
-          }
-
-          if (inferredType != null && astParameter.isDestructuringPattern()) {
-            entryFlowScope =
-                traverseDestructuringPatternHelper(
-                    astParameter,
-                    entryFlowScope,
-                    inferredType,
-                    (FlowScope scope, Node lvalue, JSType type) -> {
-                      TypedVar var = containerScope.getVar(lvalue.getString());
-                      checkNotNull(var);
-                      // This condition will trigger on cases like
-                      //   (function f({x}) {})({x: 3})
-                      // where `x` is of unknown type during the typed scope creation phase, but
-                      // here we can infer that it is of type `number`
-                      // Don't update the variable if it has a declared type or was already
-                      // inferred to be something other than unknown.
-                      if (var.isTypeInferred() && var.getType() == unknownType) {
-                        var.setType(type);
-                        lvalue.setJSType(type);
-                      }
-                      if (lvalue.getParent().isDefaultValue()) {
-                        // e.g. given
-                        //   /** @param {{age: (number|undefined)}} data */
-                        //   function f({age = 99}) {}
-                        // infer that `age` is now a `number` and not `number|undefined`
-                        // but don't change the 'declared type' of `age`
-                        // TODO(b/117162687): allow people to narrow the declared type to
-                        // exclude 'undefined' inside the function body.
-                        scope =
-                            updateScopeForAssignment(scope, lvalue, type, AssignmentType.ASSIGN);
-                      }
-                      return scope;
-                    });
-          } else if (inferredType != null) {
-            TypedVar var = containerScope.getVar(astParameter.getString());
-            checkNotNull(var);
-            if (var.isTypeInferred() && (var.getType() == unknownType || isRest)) {
-              if (isRest) {
-                // convert 'number' into 'Array<number>' for rest parameters
-                inferredType =
-                    registry.createTemplatizedType(
-                        registry.getNativeObjectType(ARRAY_TYPE), inferredType);
-              }
-              var.setType(inferredType);
-              astParameter.setJSType(inferredType);
-            }
-          }
-
-          if (parameterTypeNode != null) {
-            parameterTypeNode = parameterTypeNode.getNext();
-          }
-          if (iifeArgumentNode != null) {
-            iifeArgumentNode = iifeArgumentNode.getNext();
-          }
-
-          // 1. do type inference within the default value expression
-          // 2. add a flow scope slot for the assignment to the parameter. (which will not matter
-          //     for declared parameters, just inferred parameters.
-          if (defaultValue != null) {
-            traverse(defaultValue, entryFlowScope);
-            JSType newType =
-                registry.createUnionType(
-                    getJSType(astParameter).restrictByNotUndefined(), getJSType(defaultValue));
-            entryFlowScope =
-                updateScopeForAssignment(
-                    entryFlowScope, astParameter, newType, AssignmentType.ASSIGN);
-            astParameter.setJSType(newType);
-          }
-        }
+    // This really iterates over three different things at once:
+    //   - the actual AST parameter nodes (which may be REST, DEFAULT_VALUE, etc.)
+    //   - the argument nodes in an IIFE
+    //   - the parameter type nodes from the FunctionType on the FUNCTION node
+    // Always visit every AST parameter once, regardless of how many IIFE arguments or
+    // FunctionType param nodes there are.
+    for (Node astParameter : astParameters.children()) {
+      boolean isRest = false;
+      Node defaultValue = null;
+      if (astParameter.isDefaultValue()) {
+        defaultValue = astParameter.getSecondChild();
+        // must call `traverse` to correctly type the default value
+        entryFlowScope = traverse(defaultValue, entryFlowScope);
+        astParameter = astParameter.getFirstChild();
+      } else if (astParameter.isRest()) {
+        // e.g. `function f(p1, ...restParamName) {}`
+        // set astParameter = restParamName
+        astParameter = astParameter.getOnlyChild();
+        isRest = true;
       }
+
+      if (iifeArgumentNode != null && iifeArgumentNode.isSpread()) {
+        // block inference on all parameters that might possibly be set by a spread, e.g. `z` in
+        // (function f(x, y, z = 1))(...[1, 2], 'foo')
+        iifeArgumentNode = null;
+      }
+      JSType inferredType = null;
+
+      if (iifeArgumentNode != null) {
+        inferredType = iifeArgumentNode.getJSType();
+      } else if (parameterTypeNode != null) {
+        inferredType = parameterTypeNode.getJSType();
+      }
+      if (inferredType != null) {
+        // update the actual type of the parameter node
+        astParameter.setJSType(inferredType);
+      }
+
+      if (defaultValue != null) {
+        // The param could possibly be the default type, and `undefined` args won't propagate in.
+        inferredType =
+            registry.createUnionType(
+                getJSType(astParameter).restrictByNotUndefined(), getJSType(defaultValue));
+      }
+
+      if (astParameter.isDestructuringPattern()) {
+        // even if the inferredType is null, we still need to type all the nodes inside the
+        // destructuring pattern. (e.g. in computed properties or default value expressions)
+        inferredType = inferredType != null ? inferredType : getJSType(astParameter);
+        astParameter.setJSType(inferredType);
+        entryFlowScope = updateDestructuringParameter(astParameter, inferredType, entryFlowScope);
+      } else if (inferredType != null) {
+        // for simple named parameters, we only need to update the scope/AST if we have a new
+        // inferred type.
+        astParameter.setJSType(inferredType);
+        entryFlowScope =
+            updateNamedParameter(
+                astParameter, isRest, defaultValue != null, inferredType, entryFlowScope);
+      }
+
+      parameterTypeNode = parameterTypeNode != null ? parameterTypeNode.getNext() : null;
+      iifeArgumentNode = iifeArgumentNode != null ? iifeArgumentNode.getNext() : null;
+    }
+
+    return entryFlowScope;
+  }
+
+  @CheckReturnValue
+  @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
+  private FlowScope updateDestructuringParameter(
+      Node pattern, JSType inferredType, FlowScope entryFlowScope) {
+    // look through all expressions and lvalues in the pattern.
+    // given an lvalue, change its type if either a) it's inferred (not declared in
+    // TypedScopeCreator) or b) it has a default value
+    entryFlowScope =
+        traverseDestructuringPatternHelper(
+            pattern,
+            entryFlowScope,
+            inferredType,
+            (FlowScope scope, Node lvalue, JSType type) -> {
+              TypedVar var = containerScope.getVar(lvalue.getString());
+              checkNotNull(var);
+              // This condition will trigger on cases like
+              //   (function f({x}) {})({x: 3})
+              // where `x` is of unknown type during the typed scope creation phase, but
+              // here we can infer that it is of type `number`
+              if (var.isTypeInferred()) {
+                var.setType(type);
+                lvalue.setJSType(type);
+              }
+              if (lvalue.getParent().isDefaultValue()) {
+                // Given
+                //   /** @param {{age: (number|undefined)}} data */
+                //   function f({age = 99}) {}
+                // infer that `age` is now a `number` and not `number|undefined`
+                // treat this similarly to if there was an assignment inside the function body
+                // TODO(b/117162687): allow people to narrow the declared type to
+                // exclude 'undefined' inside the function body.
+                scope = updateScopeForAssignment(scope, lvalue, type, AssignmentType.ASSIGN);
+              }
+              return scope;
+            });
+
+    return entryFlowScope;
+  }
+
+  @CheckReturnValue
+  @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
+  private FlowScope updateNamedParameter(
+      Node paramName,
+      boolean isRest,
+      boolean hasDefaultValue,
+      JSType inferredType,
+      FlowScope entryFlowScope) {
+    TypedVar var = containerScope.getVar(paramName.getString());
+    checkNotNull(var);
+
+    if (var.isTypeInferred()) {
+      if (isRest) {
+        // convert 'number' into 'Array<number>' for rest parameters
+        inferredType =
+            registry.createTemplatizedType(registry.getNativeObjectType(ARRAY_TYPE), inferredType);
+      }
+      var.setType(inferredType);
+    } else if (hasDefaultValue) {
+      // If this is a declared type with a default value, update the LinkedFlowScope slots but not
+      // the actual TypedVar. This is similar to what would happen if the default value was moved
+      // into an assignment in the fn body
+      entryFlowScope = redeclareSimpleVar(entryFlowScope, paramName, inferredType);
     }
     return entryFlowScope;
   }
