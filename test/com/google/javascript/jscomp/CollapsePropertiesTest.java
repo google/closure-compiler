@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CollapseProperties.NAMESPACE_REDEFINED_WARNING;
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_WARNING;
+import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_THIS;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
@@ -2212,24 +2213,220 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testClassStaticMembers() {
-    // TODO (simranarora) Make the pass collapse for static methods. Currently we have backed off
-    // because we will need to handle super and this occurrences within the method.
-    testSame(
+  public void testClassDeclarationWithStaticMembers() {
+    test(
+        "class Bar { static double(n) { return n*2; } } Bar.double(1);",
+        "var Bar$double = function(n) { return n * 2; }; class Bar {} Bar$double(1);");
+  }
+
+  @Test
+  public void testClassAssignmentWithStaticMembers() {
+    test(
+        "const ns = {}; ns.Bar = class { static double(n) { return n*2; } }; ns.Bar.double(1);",
+        lines(
+            "var ns$Bar$double = function(n) { return n * 2; }",
+            "var ns$Bar = class {}",
+            "ns$Bar$double(1);"));
+  }
+
+  @Test
+  public void testClassWithMultipleStaticMembers() {
+    test(
+        lines(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "  static triple(n) {",
+            "    return n*3;",
+            "  }",
+            "}",
+            "Bar.double(1);",
+            "Bar.triple(2);"),
+        lines(
+            "var Bar$double = function(n) { return n * 2; }",
+            "var Bar$triple = function(n) { return n * 3; }",
+            "class Bar {}",
+            "Bar$double(1);",
+            "Bar$triple(2);"));
+  }
+
+  @Test
+  public void testClassStaticMembersWithAdditionalUndeclaredProperty() {
+    test(
         lines(
             "class Bar {",
             "  static double(n) {",
             "    return n*2",
             "  }",
             "}",
-            "Bar.double(1);"));
+            "use(Bar.double.trouble);"),
+        lines(
+            "var Bar$double = function(n) { return n * 2; }",
+            "class Bar {}",
+            "use(Bar$double.trouble);"));
+  }
 
-    // If we add a static function to the class after the class definition, we still collapse it, as
-    // we don't detect that it's specifically a static class function.
-    // TODO(b/68948902): Consider adding a warning for this kind of class static method declaration.
+  @Test
+  public void testClassStaticMembersWithAdditionalPropertySetLocally() {
     test(
         lines(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "(function() { Bar.double.trouble = -1; })();",
+            "use(Bar.double.trouble);"),
+        lines(
+            "var Bar$double = function(n) { return n * 2; }",
             "class Bar {}",
+            "var Bar$double$trouble;",
+            "(function() { Bar$double$trouble = -1; })();",
+            "use(Bar$double$trouble);"));
+  }
+
+  @Test
+  public void testClassStaticMembersWithAdditionalPropertySetGlobally() {
+    test(
+        lines(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar.double.trouble = -1;",
+            "use(Bar.double.trouble);"),
+        lines(
+            "var Bar$double = function(n) { return n * 2; }",
+            "class Bar {}",
+            "var Bar$double$trouble = -1;",
+            "use(Bar$double$trouble);"));
+  }
+
+  @Test
+  public void testClassDeclarationWithEscapedStaticMember_collapsesMemberButNotMemberProp() {
+    test(
+        lines(
+            "class Bar {", //
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar.double.trouble = 4;",
+            "use(Bar.double);",
+            "use(Bar.double.trouble);"),
+        lines(
+            "var Bar$double = function(n) { return n * 2; }",
+            "class Bar {}",
+            // don't collapse this property because Bar$double is escaped
+            "Bar$double.trouble = 4;",
+            "use(Bar$double);",
+            "use(Bar$double.trouble);"));
+  }
+
+  @Test
+  public void testClassDeclarationWithStaticMembersWithNoCollapse() {
+    testSame(
+        lines(
+            "class Bar {",
+            "  /** @nocollapse */",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar.double(1);"));
+  }
+
+  @Test
+  public void testClassStaticMemberWithUnreferencedInnerName() {
+    test(
+        lines(
+            "const Bar = class BarInternal {",
+            "  static baz(n) {",
+            "    use(n);",
+            "  }",
+            "}",
+            "Bar.baz();"),
+        lines(
+            "var Bar$baz = function(n) { use(n); }",
+            "const Bar = class BarInternal {}",
+            "Bar$baz();"));
+  }
+
+  @Test
+  public void testDontCollapseClassStaticMemberReferencingInnerName() {
+    // probably we could do some rewriting to make this work, but for now just back off.
+    testSame(
+        lines(
+            "const Bar = class BarInternal {",
+            "  static baz(n) {",
+            "    use(BarInternal);",
+            "  }",
+            "}",
+            "Bar.baz();"));
+  }
+
+  @Test
+  public void testDontCollapseClassStaticMemberReferencingInnerNameInNestedFunction() {
+    // probably we could do some rewriting to make this work, but for now just back off.
+    testSame(
+        lines(
+            "const Bar = class BarInternal {",
+            "  static baz(n) {",
+            "    return function() { use(BarInternal); };",
+            "  }",
+            "}",
+            "Bar.baz();"));
+  }
+
+  @Test
+  public void testClassStaticMemberUsingSuperNotCollapsed() {
+    testSame(
+        lines(
+            "class Baz extends Bar() {",
+            "  static quadruple(n) {",
+            "    return 2 * super.double(n);",
+            " }",
+            "}"));
+  }
+
+  @Test
+  public void testClassStaticMemberUsingSuperInArrowFnNotCollapsed() {
+    testSame(
+        lines(
+            "class Baz extends Bar() {",
+            "  static quadruple(n) {",
+            "    return () => 2 * super.double(n);",
+            " }",
+            "}"));
+  }
+
+  @Test
+  public void testClassStaticMemberWithInnerClassUsingSuperIsCollapsed() {
+    test(
+        lines(
+            "class Bar extends fn() {",
+            "  static m() {",
+            "    class Inner extends fn() {",
+            "      static n() { super.n(); } ", // does not block collapsing Bar.m
+            "    }",
+            "  }",
+            "}"),
+        lines(
+            "var Bar$m = function() {",
+            "  class Inner extends fn() {",
+            "    static n() { super.n(); } ",
+            "  }",
+            "};",
+            "class Bar extends fn() {}"));
+  }
+
+  @Test
+  public void testEs6StaticMemberAddedAfterDefinition() {
+    test(
+        lines(
+            "class Bar {}", //
             "Bar.double = function(n) {",
             "  return n*2",
             "}",
@@ -2243,25 +2440,47 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEs6StaticMemberOnEscapedClassIsCollapsed() {
+    // TODO(b/122549779): add unsafe property collapsing for ES6 class props
+    testSame("class Bar { static m() {} } use(Bar);");
+  }
+
+  @Test
   public void testClassStaticProperties() {
-    test("class A {} A.foo = 'bar'; use(A.foo);",
-        "class A {} var A$foo = 'bar'; use(A$foo);");
+    test("class A {} A.foo = 'bar'; use(A.foo);", "class A {} var A$foo = 'bar'; use(A$foo);");
+  }
 
-    // Collapsing A.foo is known to be unsafe.
+  @Test
+  public void testUnsafeThisReferenceInEs6ClassMethod() {
     test(
-        "class A { static useFoo() { alert(this.foo); } } A.foo = 'bar'; A.useFoo();",
-        "class A { static useFoo() { alert(this.foo); } } var A$foo = 'bar'; A.useFoo();");
+        srcs("class A { static useFoo() { alert(this.foo); } } A.foo = 'bar'; A.useFoo();"),
+        expected(
+            lines(
+                "var A$useFoo = function() { alert(this.foo); };",
+                "class A {}",
+                "var A$foo = 'bar';",
+                "A$useFoo();")),
+        warning(UNSAFE_THIS));
 
-    testSame(
-        lines(
-            "class A {",
-            "  static useFoo() {",
-            "    alert(this.foo);",
-            "  }",
-            "};",
-            "/** @nocollapse */",
-            "A.foo = 'bar';",
-            "A.useFoo();"));
+    test(
+        srcs(
+            lines(
+                "class A {",
+                "  static useFoo() {",
+                "    alert(this.foo);",
+                "  }",
+                "}",
+                "/** @nocollapse */",
+                "A.foo = 'bar';",
+                "A.useFoo();")),
+        expected(
+            lines(
+                "var A$useFoo = function() { alert(this.foo); }; ",
+                "class A {}",
+                "/** @nocollapse */",
+                "A.foo = 'bar';",
+                "A$useFoo();")),
+        warning(UNSAFE_THIS));
   }
 
   @Test

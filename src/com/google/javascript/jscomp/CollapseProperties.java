@@ -36,31 +36,31 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Flattens global objects/namespaces by replacing each '.' with '$' in
- * their names. This reduces the number of property lookups the browser has
- * to do and allows the {@link RenameVars} pass to shorten namespaced names.
- * For example, goog.events.handleEvent() -> goog$events$handleEvent() -> Za().
+ * Flattens global objects/namespaces by replacing each '.' with '$' in their names.
  *
- * <p>If a global object's name is assigned to more than once, or if a property
- * is added to the global object in a complex expression, then none of its
- * properties will be collapsed (for safety/correctness).
+ * <p>This reduces the number of property lookups the browser has to do and allows the {@link
+ * RenameVars} pass to shorten namespaced names. For example, goog.events.handleEvent() ->
+ * goog$events$handleEvent() -> Za().
  *
- * <p>If, after a global object is declared, it is never referenced except when
- * its properties are read or set, then the object will be removed after its
- * properties have been collapsed.
+ * <p>If a global object's name is assigned to more than once, or if a property is added to the
+ * global object in a complex expression, then none of its properties will be collapsed (for
+ * safety/correctness).
  *
- * <p>Uninitialized variable stubs are created at a global object's declaration
- * site for any of its properties that are added late in a local scope.
+ * <p>If, after a global object is declared, it is never referenced except when its properties are
+ * read or set, then the object will be removed after its properties have been collapsed.
  *
- * <p> Static properties of constructors are always collapsed, unsafely!
- * For other objects: if, after an object is declared, it is referenced directly
- * in a way that might create an alias for it, then none of its properties will
- * be collapsed.
- * This behavior is a safeguard to prevent the values associated with the
- * flattened names from getting out of sync with the object's actual property
- * values. For example, in the following case, an alias a$b, if created, could
- * easily keep the value 0 even after a.b became 5:
- * <code> a = {b: 0}; c = a; c.b = 5; </code>.
+ * <p>Uninitialized variable stubs are created at a global object's declaration site for any of its
+ * properties that are added late in a local scope.
+ *
+ * <p>Static properties of constructors are always collapsed, unsafely! For other objects: if, after
+ * an object is declared, it is referenced directly in a way that might create an alias for it, then
+ * none of its properties will be collapsed. This behavior is a safeguard to prevent the values
+ * associated with the flattened names from getting out of sync with the object's actual property
+ * values. For example, in the following case, an alias a$b, if created, could easily keep the value
+ * 0 even after a.b became 5: <code> a = {b: 0}; c = a; c.b = 5; </code>.
+ *
+ * <p>This pass may break code, but relies on {@link AggressiveInlineAliases} running before this
+ * pass to make some common patterns safer.
  *
  * <p>This pass doesn't flatten property accesses of the form: a[b].
  *
@@ -544,6 +544,9 @@ class CollapseProperties implements CompilerPass {
       case CLASS:
         updateGlobalNameDeclarationAtClassNode(n, canCollapseChildNames);
         break;
+      case CLASS_MEMBERS:
+        updateGlobalNameDeclarationAtStaticMemberNode(n, alias, canCollapseChildNames);
+        break;
       default:
         break;
     }
@@ -729,6 +732,41 @@ class CollapseProperties implements CompilerPass {
     String className = ref.node.getString();
     addStubsForUndeclaredProperties(
         n, className, ref.node.getAncestor(2), ref.node.getParent());
+  }
+
+  /**
+   * Updates the first initialization (a.k.a "declaration") of a global name that occurs in a static
+   * MEMBER_FUNCTION_DEF in a class. See comment for {@link #updateGlobalNameDeclaration}.
+   *
+   * @param n A static MEMBER_FUNCTION_DEF in a class assigned to a global name (e.g. `a.b`)
+   * @param alias The new flattened name for `n` (e.g. "a$b")
+   * @param canCollapseChildNames whether properties of `n` are also collapsible, meaning that any
+   *     properties only assigned locally need stub declarations
+   */
+  private void updateGlobalNameDeclarationAtStaticMemberNode(
+      Name n, String alias, boolean canCollapseChildNames) {
+
+    Ref declaration = n.getDeclaration();
+    Node classNode = declaration.node.getGrandparent();
+    checkState(classNode.isClass(), classNode);
+    Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
+
+    if (canCollapseChildNames) {
+      addStubsForUndeclaredProperties(n, alias, enclosingStatement.getParent(), classNode);
+    }
+
+    // detach `static m() {}` from `class Foo { static m() {} }`
+    Node memberFn = declaration.node.detach();
+    Node fnNode = memberFn.getOnlyChild().detach();
+    checkForHosedThisReferences(fnNode, memberFn.getJSDocInfo(), n);
+
+    // add a var declaration, creating `var Foo$m = function() {}; class Foo {}`
+    Node varDecl = IR.var(NodeUtil.newName(compiler, alias, memberFn), fnNode).srcref(memberFn);
+    enclosingStatement.getParent().addChildBefore(varDecl, enclosingStatement);
+    compiler.reportChangeToEnclosingScope(varDecl);
+
+    // collapsing this name's properties requires updating this Ref
+    declaration.node = varDecl.getFirstChild();
   }
 
   /**

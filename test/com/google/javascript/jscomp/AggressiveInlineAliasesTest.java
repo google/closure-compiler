@@ -1390,10 +1390,67 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testClassStaticInheritance_method() {
     test(
         "class A { static s() {} } class B extends A {} const C = B; C.s();",
-        "class A { static s() {} } class B extends A {} const C = null; B.s();");
+        "class A { static s() {} } class B extends A {} const C = null; A.s();");
 
-    testSame("class A { static s() {} } class B extends A {} B.s();");
-    testSame("class A {} A.s = function() {}; class B extends A {} B.s();");
+    test(
+        "class A { static s() {} } class B extends A {} B.s();",
+        "class A { static s() {} } class B extends A {} A.s();");
+    test(
+        "class A {} A.s = function() {}; class B extends A {} B.s();",
+        "class A {} A.s = function() {}; class B extends A {} A.s();");
+  }
+
+  @Test
+  public void testClassStaticInheritance_methodsFromMultipleClasses() {
+    // C is an alias of B
+    test(
+        lines(
+            "class A { static a() {} }",
+            "class B extends A { static b() {} }",
+            "const C = B;",
+            "C.a();",
+            "C.b()"),
+        lines(
+            "class A { static a() {} }",
+            "class B extends A { static b() {} }",
+            "const C = null;",
+            "A.a();",
+            "B.b()"));
+
+    // C is a subclass of A and B
+    test(
+        lines(
+            "class A { static a() {} }",
+            "class B extends A { static b() {} }",
+            "class C extends B {}",
+            "C.a();",
+            "C.b()"),
+        lines(
+            "class A { static a() {} }",
+            "class B extends A { static b() {} }",
+            "class C extends B {}",
+            "A.a();",
+            "B.b()"));
+  }
+
+  @Test
+  public void testClassStaticInheritance_methodWithNoCollapse() {
+    // back off on replacing `B.s` -> `A.s` if A.s is not collapsible for two reasons:
+    //  1. the main reason we do this replacing is to make collapsing safer
+    //  2. people may use @nocollapse to avoid breaking static `this` refs, and if that were the
+    //     case then inlining would also break those refs.
+    testSame("class A { /** @nocollapse */ static s() {} } class B extends A {} B.s();");
+  }
+
+  @Test
+  public void testChainedClassStaticInheritance_methodWithNoCollapse() {
+    // verify we also don't replace C.s with B.s, and inherit the 'non-collapsibility' from 'A.s'
+    testSame(
+        lines(
+            "class A {/** @nocollapse */ static s() {}}",
+            "class B extends A {}",
+            "class C extends B {}",
+            "C.s();"));
   }
 
   @Test
@@ -2049,14 +2106,12 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     test(
         lines(
             "class Foo { static m() {} }",
-            " class Bar extends Foo {}",
-            " class Baz extends Bar { static m() { super.m(); } }"),
+            "class Bar extends Foo {}",
+            "class Baz extends Bar { static m() { super.m(); } }"),
         lines(
             "class Foo { static m() {} }",
-            " class Bar extends Foo {}",
-            // TODO(b/121329562): replace this with `Foo.m()`. Right now the replacement does not
-            // happen for static class methods
-            " class Baz extends Bar { static m() { Bar.m(); } }"));
+            "class Bar extends Foo {}",
+            "class Baz extends Bar { static m() { Foo.m(); } }"));
   }
 
   @Test

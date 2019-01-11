@@ -214,22 +214,16 @@ class AggressiveInlineAliases implements CompilerPass {
    */
   private boolean rewriteAllSubclassInheritedAccesses(
       Name superclassNameObj, Ref superclassRef, Name prop, GlobalNamespace namespace) {
+    if (!prop.canCollapse()) {
+      return false; // inlining is a) unnecessary if there is @nocollapse and b) might break
+      // usages of `this` in the method
+    }
     Node subclass = getSubclassForEs6Superclass(superclassRef.getNode());
     if (subclass == null || !subclass.isQualifiedName()) {
       return false;
     }
-    String subclassName = subclass.getQualifiedName();
-    Ref propDeclRef = prop.getDeclaration();
-    if (propDeclRef == null
-        || propDeclRef.node == null
-        || !propDeclRef.node.getParent().isAssign()) {
-      return false;
-    }
-    Node propRhs = propDeclRef.node.getParent().getLastChild();
-    if (propRhs.isFunction()) {
-      return false;
-    }
 
+    String subclassName = subclass.getQualifiedName();
     String subclassQualifiedPropName = subclassName + "." + prop.getBaseName();
     Name subclassPropNameObj = namespace.getOwnSlot(subclassQualifiedPropName);
     // Don't rewrite if the subclass ever shadows the parent static property.

@@ -1435,6 +1435,7 @@ class GlobalNamespace
      *   c) it's annotated at-nocollapse
      *   d) it's in the externs,
      *   e) or it's a known getter or setter, not a regular property
+     *   f) it's an ES6 class static method that references `super` or the internal class name
      * </pre>
      *
      * <p>We ignore conditions (a) and (b) on at-constructor and at-enum names in
@@ -1445,20 +1446,20 @@ class GlobalNamespace
      */
     private Inlinability canCollapseOrInline() {
       if (inExterns()) {
-        // condition (e)
-        return Inlinability.DO_NOT_INLINE;
-      }
-      if (isGetOrSetDefinition()) {
-        // condition (f)
-        return Inlinability.DO_NOT_INLINE;
-      }
-      if (isCollapsingExplicitlyDenied()) {
         // condition (d)
         return Inlinability.DO_NOT_INLINE;
       }
+      if (isGetOrSetDefinition()) {
+        // condition (e)
+        return Inlinability.DO_NOT_INLINE;
+      }
+      if (isCollapsingExplicitlyDenied()) {
+        // condition (c)
+        return Inlinability.DO_NOT_INLINE;
+      }
 
-      if (isStaticClassMemberFunction()) {
-        // condition (b) b/c of uses of super/this in static fns
+      if (referencesSuperOrInnerClassName()) {
+        // condition (f)
         return Inlinability.DO_NOT_INLINE;
       }
 
@@ -1506,19 +1507,35 @@ class GlobalNamespace
       throw new IllegalStateException("unknown enum value " + parentInlinability);
     }
 
-    boolean isStaticClassMemberFunction() {
-      // TODO (simranarora) eventually we want to be able to collapse for static class member
-      // function declarations and get rid of this method. We need to be careful about handling
-      // super and this so we back off for now and decided not to collapse static class methods.
-
+    /**
+     * Examines ES6 class members for some syntax that blocks collapsing
+     *
+     * <p>Specifically, this looks for super references and references to inner class names. These
+     * are unique to ES6 static class members so we don't need more general handling.
+     *
+     * <p>TODO(b/122665204): also return false on `super` in an object lit method
+     */
+    boolean referencesSuperOrInnerClassName() {
       Ref ref = this.getDeclaration();
-      if (ref != null) {
-        Node n = ref.getNode();
-        if (n != null && n.isStaticMember() && n.getParent().isClassMembers()) {
-          return true;
-        }
+      if (ref == null) {
+        return false;
       }
-      return false;
+      Node member = ref.getNode();
+      if (member == null || !(member.isStaticMember() && member.getParent().isClassMembers())) {
+        return false;
+      }
+      if (NodeUtil.referencesSuper(NodeUtil.getFunctionBody(member.getFirstChild()))) {
+        return true;
+      }
+
+      Node classNode = member.getGrandparent();
+      if (NodeUtil.isClassDeclaration(classNode)) {
+        return false; // e.g. class C {}
+      }
+
+      Node innerNameNode = classNode.getFirstChild();
+      return !innerNameNode.isEmpty() // e.g. const C = class {};
+          && NodeUtil.isNameReferenced(member, innerNameNode.getString());
     }
 
     private boolean isSetInLoop() {
@@ -1717,6 +1734,7 @@ class GlobalNamespace
                 ? refParent.getJSDocInfo()
                 : ref.node.getJSDocInfo();
           case OBJECTLIT:
+          case CLASS_MEMBERS:
             return ref.node.getJSDocInfo();
           default:
             break;

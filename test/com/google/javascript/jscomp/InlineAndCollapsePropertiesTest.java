@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_WARNING;
+import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_THIS;
 
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.rhino.Node;
@@ -1248,33 +1249,34 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEs6ClassStaticProperties() {
-    // Collapsing static properties (A.foo in this case) is known to be unsafe.
+    // Collapsing static properties (A.foo and A.useFoo in this case) is known to be unsafe.
     test(
-        lines(
-            "class A {",
-            "  static useFoo() {",
-            "    alert(this.foo);",
-            "  }",
-            "}",
-            "A.foo = 'bar';",
-            "const B = A;",
-            "B.foo = 'baz';",
-            "B.useFoo();"),
-        lines(
-            "class A {",
-            "static useFoo() {",
-            "alert(this.foo);",
-            "}",
-            "}",
-            "var A$foo = 'bar';",
-            "const B = null;",
-            "A$foo = 'baz';",
-            "A.useFoo();"));
+        srcs(
+            lines(
+                "class A {",
+                "  static useFoo() {",
+                "    alert(this.foo);",
+                "  }",
+                "}",
+                "A.foo = 'bar';",
+                "const B = A;",
+                "B.foo = 'baz';",
+                "B.useFoo();")),
+        expected(
+            lines(
+                "var A$useFoo = function() { alert(this.foo); };",
+                "class A {}",
+                "var A$foo = 'bar';",
+                "const B = null;",
+                "A$foo = 'baz';",
+                "A$useFoo();")),
+        warning(UNSAFE_THIS));
 
     // Adding @nocollapse makes this safe.
     test(
         lines(
             "class A {",
+            "  /** @nocollapse */",
             "  static useFoo() {",
             "    alert(this.foo);",
             "  }",
@@ -1286,9 +1288,10 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "B.useFoo();"),
         lines(
             "class A {",
-            "static useFoo() {",
-            "alert(this.foo);",
-            "}",
+            "  /** @nocollapse */",
+            "  static useFoo() {",
+            "    alert(this.foo);",
+            "  }",
             "}",
             "/** @nocollapse */",
             "A.foo = 'bar';",
@@ -1301,14 +1304,15 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   public void testClassStaticInheritance_method() {
     test(
         "class A { static s() {} } class B extends A {} const C = B;    C.s();",
-        "class A { static s() {} } class B extends A {} const C = null; B.s();");
+        "var A$s = function() {}; class A {} class B extends A {} const C = null; A$s();");
 
-    testSame("class A { static s() {} } class B extends A {} B.s();");
+    test(
+        "class A { static s() {} } class B extends A {} B.s();",
+        "var A$s = function() {}; class A {} class B extends A {} A$s();");
 
-    // Currently we unsafely collapse A.s because we don't detect it is a class static method.
     test(
         "class A {}     A.s = function() {}; class B extends A {} B.s();",
-        "class A {} var A$s = function() {}; class B extends A {} B.s();");
+        "class A {} var A$s = function() {}; class B extends A {} A$s();");
   }
 
   @Test
@@ -1673,5 +1677,26 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
                 "ns.alias = Foo;",
                 "use(ns);",
                 "use(ns.alias.prop);")));
+  }
+
+  @Test
+  public void testClassStaticMemberAccessedWithSuper() {
+    test(
+        lines(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "class Baz extends Bar {",
+            "  static quadruple(n) {",
+            "    return 2 * super.double(n);",
+            " }",
+            "}"),
+        lines(
+            "var Bar$double = function(n) { return n * 2; }",
+            "class Bar {}",
+            "var Baz$quadruple = function(n) { return 2 * Bar$double(n); }",
+            "class Baz extends Bar {}"));
   }
 }
