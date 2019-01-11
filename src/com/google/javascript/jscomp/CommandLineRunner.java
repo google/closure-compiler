@@ -761,12 +761,6 @@ public class CommandLineRunner extends
     private CompilerOptions.Environment environment =
         CompilerOptions.Environment.BROWSER;
 
-
-    @Option(name = "--instrumentation_template",
-            hidden = true,
-            usage = "A file containing an instrumentation template.")
-    private String instrumentationFile = "";
-
     @Option(
       name = "--json_streams",
       hidden = true,
@@ -1752,7 +1746,6 @@ public class CommandLineRunner extends
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)
           .setHideWarningsFor(flags.hideWarningsFor)
           .setAngularPass(flags.angularPass)
-          .setInstrumentationTemplateFile(flags.instrumentationFile)
           .setJsonStreamMode(flags.jsonStreamMode)
           .setErrorFormat(flags.errorFormat);
     }
@@ -1918,30 +1911,6 @@ public class CommandLineRunner extends
     }
 
     options.setConformanceConfigs(loadConformanceConfigs(flags.conformanceConfigs));
-
-    if (!flags.instrumentationFile.isEmpty()) {
-      String instrumentationPb;
-      Instrumentation.Builder builder = Instrumentation.newBuilder();
-      try (BufferedReader br =
-          new BufferedReader(Files.newReader(new File(flags.instrumentationFile), UTF_8))) {
-        StringBuilder sb = new StringBuilder();
-        String line = br.readLine();
-
-        while (line != null) {
-          sb.append(line);
-          sb.append(System.lineSeparator());
-          line = br.readLine();
-        }
-        instrumentationPb = sb.toString();
-        TextFormat.merge(instrumentationPb, builder);
-
-        // Setting instrumentation template
-        options.instrumentationTemplate = builder.build();
-
-      } catch (IOException e) {
-        throw new RuntimeException("Error reading instrumentation template", e);
-      }
-    }
 
     options.setPrintSourceAfterEachPass(flags.printSourceAfterEachPass);
     options.setTracerMode(flags.tracerMode);

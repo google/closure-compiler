@@ -427,7 +427,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(processTweaks);
     }
 
-    if (options.instrumentationTemplate != null || options.recordFunctionInformation) {
+    if (options.recordFunctionInformation) {
       checks.add(computeFunctionNames);
     }
 
@@ -816,10 +816,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     // This pass works best after collapseVariableDeclarations.
     passes.add(denormalize);
-
-    if (options.instrumentationTemplate != null) {
-      passes.add(instrumentFunctions);
-    }
 
     if (options.variableRenaming != VariableRenamingPolicy.ALL) {
       // If we're leaving some (or all) variables with their old names,
@@ -3088,22 +3084,6 @@ public final class DefaultPassConfig extends PassConfig {
           return ES8_MODULES;
         }
       };
-
-  /** Adds instrumentations according to an instrumentation template. */
-  private final PassFactory instrumentFunctions =
-      new PassFactory("instrumentFunctions", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new InstrumentFunctions(
-          compiler, compiler.getFunctionNames(),
-          options.instrumentationTemplate, options.appNameStr);
-    }
-
-    @Override
-    protected FeatureSet featureSet() {
-      return ES5;
-    }
-  };
 
   private final PassFactory instrumentForCodeCoverage =
       new PassFactory("instrumentForCodeCoverage", true) {

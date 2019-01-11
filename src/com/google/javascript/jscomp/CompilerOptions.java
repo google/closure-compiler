@@ -829,18 +829,6 @@ public class CompilerOptions implements Serializable {
   /** Move top-level function declarations to the top */
   public boolean moveFunctionDeclarations;
 
-  /** Instrumentation template to use with #recordFunctionInformation */
-  public Instrumentation instrumentationTemplate;
-
-  String appNameStr;
-
-  /**
-   * App identifier string for use by the instrumentation template's
-   * app_name_setter. @see #instrumentationTemplate
-   */
-  public void setAppNameStr(String appNameStr) {
-    this.appNameStr = appNameStr;
-  }
 
   /** Record function information */
   public boolean recordFunctionInformation;
@@ -1171,8 +1159,6 @@ public class CompilerOptions implements Serializable {
   /** Instrument branch coverage data - valid only if instrumentForCoverage is True */
   public boolean instrumentBranchCoverage;
 
-  String instrumentationTemplateFile;
-
   private static final ImmutableList<ConformanceConfig> GLOBAL_CONFORMANCE_CONFIGS =
       ImmutableList.of(ResourceLoader.loadGlobalConformance(CompilerOptions.class));
 
@@ -1345,7 +1331,6 @@ public class CompilerOptions implements Serializable {
     tweakProcessing = TweakProcessing.OFF;
     tweakReplacements = new HashMap<>();
     moveFunctionDeclarations = false;
-    appNameStr = "";
     recordFunctionInformation = false;
     checksOnly = false;
     outputJs = OutputJs.NORMAL;
@@ -1362,10 +1347,8 @@ public class CompilerOptions implements Serializable {
     inputSourceMaps = ImmutableMap.of();
 
     // Instrumentation
-    instrumentationTemplate = null;  // instrument functions
     instrumentForCoverage = false;  // instrument lines
     instrumentBranchCoverage = false; // instrument branches
-    instrumentationTemplateFile = "";
 
     // Output
     preserveTypeAnnotations = false;
@@ -2551,14 +2534,6 @@ public class CompilerOptions implements Serializable {
     this.moveFunctionDeclarations = moveFunctionDeclarations;
   }
 
-  public void setInstrumentationTemplate(Instrumentation instrumentationTemplate) {
-    this.instrumentationTemplate = instrumentationTemplate;
-  }
-
-  public void setInstrumentationTemplateFile(String filename){
-    this.instrumentationTemplateFile = filename;
-  }
-
   public void setRecordFunctionInformation(boolean recordFunctionInformation) {
     this.recordFunctionInformation = recordFunctionInformation;
   }
@@ -2921,7 +2896,6 @@ public class CompilerOptions implements Serializable {
             .add("ambiguateProperties", ambiguateProperties)
             .add("angularPass", angularPass)
             .add("anonymousFunctionNaming", anonymousFunctionNaming)
-            .add("appNameStr", appNameStr)
             .add("assumeClosuresOnlyCaptureReferences", assumeClosuresOnlyCaptureReferences)
             .add("assumeStrictThis", assumeStrictThis())
             .add("browserResolverPrefixReplacements", browserResolverPrefixReplacements)
@@ -3001,8 +2975,6 @@ public class CompilerOptions implements Serializable {
             .add("inputPropertyMap", inputPropertyMap)
             .add("inputSourceMaps", inputSourceMaps)
             .add("inputVariableMap", inputVariableMap)
-            .add("instrumentationTemplateFile", instrumentationTemplateFile)
-            .add("instrumentationTemplate", instrumentationTemplate)
             .add("instrumentForCoverage", instrumentForCoverage)
             .add("instrumentForCoverageOnly", instrumentForCoverageOnly)
             .add("instrumentBranchCoverage", instrumentBranchCoverage)
