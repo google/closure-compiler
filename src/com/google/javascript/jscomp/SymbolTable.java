@@ -1146,21 +1146,6 @@ public final class SymbolTable {
     NodeTraversal.traverseRoots(compiler, collectSuper, externs, root);
   }
 
-  private boolean isSymbolGeneratedAndShouldNotBeIndexed(Symbol symbol) {
-    // Destructuring pass introduces new variables:
-    //
-    // let {a, b} = foo;
-    //
-    // is transpiled to
-    //
-    // let destructuring$var0 = foo;
-    // let a = destructuring$var0.a;
-    // let b = destructuring$var0.b;
-    //
-    // destructuring$var0 should not get into index as it's invisible to a user.
-    // TODO(b/77597706): remove this once destructuring transpilation is done after type checks.
-    return symbol.getName().contains(Es6RewriteDestructuring.DESTRUCTURING_TEMP_VAR);
-  }
   /*
    * Checks whether symbol is a quoted object literal key. In the following object:
    *
@@ -1243,9 +1228,7 @@ public final class SymbolTable {
     // Need to iterate over copy of values list because removeSymbol() will change the map
     // and we'll get ConcurrentModificationException
     for (Symbol symbol : ImmutableList.copyOf(symbols.values())) {
-      if (isSymbolGeneratedAndShouldNotBeIndexed(symbol)) {
-        removeSymbol(symbol);
-      } else if (symbol.getDeclaration() != null
+      if (symbol.getDeclaration() != null
           && symbol.getDeclaration().getNode().getBooleanProp(Node.MODULE_EXPORT)) {
 
         // Lazy initialize nodeToSymbol map as it's needed only when ES6 modules are used.
