@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERE
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
 import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION;
 import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_REQUIRE;
+import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.MULTIPLE_MODULES_IN_FILE;
@@ -500,7 +501,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   }
 
   @Test
-  public void testIllegalShortImportReferencedByLongName_extends() {
+  public void testIllegalShortImportReferencedByLongNameInJsDoc() {
     testError(
         lines(
             "goog.module('x.y.z');",
@@ -514,7 +515,25 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         lines(
             "goog.module('x.y.z');",
             "",
+            "var A = goog.requireType('foo.A');",
+            "",
+            "/** @constructor @implements {foo.A} */ function B() {}"),
+        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+
+    testError(
+        lines(
+            "goog.module('x.y.z');",
+            "",
             "var A = goog.require('foo.A');",
+            "",
+            "/** @type {foo.A} */ var a;"),
+        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+
+    testError(
+        lines(
+            "goog.module('x.y.z');",
+            "",
+            "var A = goog.requireType('foo.A');",
             "",
             "/** @type {foo.A} */ var a;"),
         JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
@@ -531,7 +550,23 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         lines(
             "goog.module('x.y.z');",
             "",
+            "var A = goog.requireType('foo.A');",
+            "",
+            "/** @type {A} */ var a;"));
+
+    testSame(
+        lines(
+            "goog.module('x.y.z');",
+            "",
             "var Foo = goog.require('Foo');",
+            "",
+            "/** @type {Foo} */ var a;"));
+
+    testSame(
+        lines(
+            "goog.module('x.y.z');",
+            "",
+            "var Foo = goog.requireType('Foo');",
             "",
             "/** @type {Foo} */ var a;"));
 
@@ -548,7 +583,25 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         lines(
             "goog.module('x.y.z');",
             "",
+            "var ns = goog.requireType('some.namespace');",
+            "",
+            "/** @type {some.namespace.Foo} */ var foo;"),
+        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+
+    testError(
+        lines(
+            "goog.module('x.y.z');",
+            "",
             "var ns = goog.require('some.namespace');",
+            "",
+            "/** @type {Array<some.namespace.Foo>} */ var foos;"),
+        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+
+    testError(
+        lines(
+            "goog.module('x.y.z');",
+            "",
+            "var ns = goog.requireType('some.namespace');",
             "",
             "/** @type {Array<some.namespace.Foo>} */ var foos;"),
         JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
@@ -576,7 +629,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   }
 
   @Test
-  public void testIllegalImportNoAlias() {
+  public void testIllegalRequireNoAlias() {
     testError(
         lines(
             "goog.module('x.y.z');",
@@ -585,6 +638,18 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "",
             "exports = function() { return foo.utils.doThing(''); };"),
         REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
+  }
+
+  @Test
+  public void testIllegalRequireTypeNoAlias() {
+    testError(
+        lines(
+            "goog.module('x.y.z');",
+            "",
+            "goog.requireType('foo');",
+            "",
+            "/** @type {foo.Foo} */ var foo;"),
+        JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
   }
 
   // TODO(johnlenz): Re-enable these tests (they are a bit tricky).

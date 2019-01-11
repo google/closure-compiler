@@ -222,6 +222,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
             && !currentModuleInfo.name.equals(extractFirstArgumentName(n))) {
           t.report(n, MULTIPLE_MODULES_IN_FILE);
         } else if (callee.matchesQualifiedName("goog.require")
+            || callee.matchesQualifiedName("goog.requireType")
             || callee.matchesQualifiedName("goog.forwardDeclare")) {
           checkRequireCall(t, n, parent);
         } else if (callee.matchesQualifiedName("goog.module.get") && t.inModuleHoistScope()) {
