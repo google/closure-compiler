@@ -447,7 +447,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.processCommonJSModules = config.processCommonJSModules;
     options.moduleRoots = config.moduleRoots;
     options.angularPass = config.angularPass;
-    options.instrumentationTemplateFile = config.instrumentationTemplateFile;
 
     if (!config.jsonWarningsFile.isEmpty()) {
       options.addReportGenerator(
@@ -2637,13 +2636,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     public CommandLineConfig setAngularPass(boolean angularPass) {
       this.angularPass = angularPass;
       return this;
-    }
-
-    private String instrumentationTemplateFile = "";
-
-    public CommandLineConfig setInstrumentationTemplateFile(String fileName) {
-        this.instrumentationTemplateFile = fileName;
-        return this;
     }
 
     private JsonStreamMode jsonStreamMode = JsonStreamMode.NONE;
