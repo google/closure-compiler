@@ -1926,6 +1926,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   void hoistExterns() {
     boolean staleInputs = false;
+    maybeDoThreadedParsing();
     // Iterate a copy because hoisting modifies what we're iterating over.
     for (CompilerInput input : ImmutableList.copyOf(moduleGraph.getAllInputs())) {
       if (hoistIfExtern(input)) {
@@ -1963,9 +1964,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   void hoistNoCompileFiles() {
     boolean staleInputs = false;
-    if (options.numParallelThreads > 1) {
-      new PrebuildAst(this, options.numParallelThreads).prebuild(moduleGraph.getAllInputs());
-    }
+    maybeDoThreadedParsing();
     // Iterate a copy because hoisting modifies what we're iterating over.
     for (CompilerInput input : ImmutableList.copyOf(moduleGraph.getAllInputs())) {
       Node n = input.getAstRoot(this);
@@ -1978,6 +1977,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     if (staleInputs) {
       repartitionInputs();
+    }
+  }
+
+  private void maybeDoThreadedParsing() {
+    if (options.numParallelThreads > 1) {
+      new PrebuildAst(this, options.numParallelThreads).prebuild(moduleGraph.getAllInputs());
     }
   }
 
