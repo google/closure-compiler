@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp.deps;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
@@ -69,8 +67,6 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
 
   @Override
   public ImmutableList<INPUT> getStrongDependenciesOf(List<INPUT> rootInputs, boolean sorted) {
-    checkArgument(userOrderedInputs.containsAll(rootInputs));
-
     Set<INPUT> includedInputs = new HashSet<>();
     Deque<INPUT> worklist = new ArrayDeque<>(rootInputs);
     while (!worklist.isEmpty()) {

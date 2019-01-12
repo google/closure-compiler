@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
@@ -87,15 +86,6 @@ public class Es6SortedDependenciesTest {
         ImmutableList.of(d),
         ImmutableList.of(d, c, b, a),
         ImmutableList.of(d));
-
-    try {
-      assertSortedDeps(
-          ImmutableList.<SimpleDependencyInfo>of(),
-          ImmutableList.of(a, b, c, d),
-          ImmutableList.of(e));
-      assertWithMessage("Expected an exception").fail();
-    } catch (IllegalArgumentException expected) {
-    }
   }
 
   @Test
