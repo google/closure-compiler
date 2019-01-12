@@ -27,7 +27,10 @@ function mathTest() {
   expect(2 < 0).to.be.false;
 }
 
-/** Another example */
+/**
+ * Another example
+ * @suppress {suspiciousCode} false || null
+ */
 function nullAndUndefinedTest() {
   expect(false || null).to.be.null;
   expect(someVar).to.be.undefined;
@@ -38,7 +41,10 @@ function okTest() {
   expect('a string').to.be.ok;
 }
 
-/** The .to.not.be variations. */
+/**
+ * The .to.not.be variations.
+ * @suppress {suspiciousCode} false || null
+ */
 function negativeTest() {
   expect(1 > 0).to.not.be.true;
   expect(2 < 0).to.not.be.false;

@@ -341,12 +341,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(polymerPass);
     }
 
-    if (options.checkSuspiciousCode
-        || options.enables(DiagnosticGroups.GLOBAL_THIS)
-        || options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT)) {
-      checks.add(suspiciousCode);
-    }
-
     if (options.closurePass && options.checkMissingGetCssNameLevel.isOn()) {
       checks.add(closureCheckGetCssName);
     }
@@ -385,6 +379,13 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
     addTypeCheckerPasses(checks, options);
+
+    // CheckSuspiciousCode requires type information, so must run after the type checker.
+    if (options.checkSuspiciousCode
+        || options.enables(DiagnosticGroups.GLOBAL_THIS)
+        || options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT)) {
+      checks.add(suspiciousCode);
+    }
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       checks.add(j2clSourceFileChecker);

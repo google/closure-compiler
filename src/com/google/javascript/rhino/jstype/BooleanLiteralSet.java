@@ -94,4 +94,14 @@ public enum BooleanLiteralSet {
   public static BooleanLiteralSet get(boolean literalValue) {
     return literalValue ? TRUE : FALSE;
   }
+
+  /** Converts to a TernaryValue. */
+  public TernaryValue toTernaryValue() {
+    if (this == TRUE) {
+      return TernaryValue.TRUE;
+    } else if (this == FALSE) {
+      return TernaryValue.FALSE;
+    }
+    return TernaryValue.UNKNOWN;
+  }
 }

@@ -20,6 +20,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
  * Checks for common errors, such as misplaced semicolons:
@@ -55,6 +57,11 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
           "JSC_SUSPICIOUS_INSTANCEOF_LEFT",
           "\"instanceof\" with left non-object operand is always false.");
 
+  static final DiagnosticType SUSPICIOUS_LEFT_OPERAND_OF_LOGICAL_OPERATOR =
+      DiagnosticType.warning(
+          "JSC_SUSPICIOUS_LEFT_OPERAND_OF_LOGICAL_OPERATOR",
+          "Left operand of {0} operator is always {1}.");
+
   static final DiagnosticType SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR =
       DiagnosticType.warning(
           "JSC_SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR",
@@ -67,6 +74,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     checkInvalidIn(t, n);
     checkNonObjectInstanceOf(t, n);
     checkNegatedLeftOperandOfInOperator(t, n);
+    checkLeftOperandOfLogicalOperator(t, n);
   }
 
   private void checkMissingSemicolon(NodeTraversal t, Node n) {
@@ -154,5 +162,116 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     if (n.isIn() && n.getFirstChild().isNot()) {
       t.report(n.getFirstChild(), SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR);
     }
+  }
+
+  /**
+   * Check for the LHS of a logical operator (&amp;&amp; and ||) being deterministically truthy or
+   * falsy, using both syntactic and type information. This is always suspicious (though for
+   * different reasons: "truthy and" means the LHS is always ignored and should be removed, "falsy
+   * and" means the RHS is dead code, and vice versa for "or". However, there are a number of
+   * legitimate use cases where we need to back off from using type information (see {@link
+   * #getBooleanValueWithTypes} for more details on these back offs).
+   */
+  private void checkLeftOperandOfLogicalOperator(NodeTraversal t, Node n) {
+    if (n.isOr() || n.isAnd()) {
+      String operator = n.isOr() ? "||" : "&&";
+      TernaryValue v = getBooleanValueWithTypes(n.getFirstChild());
+      if (v != TernaryValue.UNKNOWN) {
+        String result = v == TernaryValue.TRUE ? "truthy" : "falsy";
+        t.report(n, SUSPICIOUS_LEFT_OPERAND_OF_LOGICAL_OPERATOR, operator, result);
+      }
+    }
+  }
+
+  /**
+   * Returns the possible boolean values of a node. This is a combination of {@link
+   * NodeUtil#getBooleanValue} and {@link JSType#getPossibleToBooleanOutcomes}, with some additional
+   * backoff for situations that are known to be less accurate (to wit, qualified names and truthy
+   * return types, which return UNKNOWN even if the type information seems conclusive). Another
+   * difference from the NodeUtil and JSTyoe methods is that we include some specific optimization
+   * to avoid quadratic behavior of large nested logical operations.
+   *
+   * <p>The specifics of when this method returns UNKNOWN instead of TRUE or FALSE is as follows:
+   *
+   * <ul>
+   *   <li>We should not determine that a qualified name (expanded slightly to include computed
+   *       properties) is always truthy or always falsy. There are many cases where an extern
+   *       defines a name to be truthy, but it still makes sense to feature-test in the browser.
+   *   <li>We should not determine that a getelem or a function call is always truthy (though we
+   *       expand it to simply never complain about always-truthy based only on types) since the
+   *       standard externs lie about the return type of {@code Map.prototype.get} and array
+   *       accesses, which can both return undefined despite what the externs say.
+   * </ul>
+   *
+   * We do not back off from boolean literals (e.g. "{@code true &&}"), though they appear to be
+   * common in generated code. Instead, such code should suppress "suspiciousCode". We also do not
+   * back off from always-falsy function call results, since it provides a valuable check and lies
+   * in this direction are much less common.
+   */
+  private TernaryValue getBooleanValueWithTypes(Node n) {
+    switch (n.getToken()) {
+      case ASSIGN:
+      case COMMA:
+        return getBooleanValueWithTypes(n.getLastChild());
+      case NOT:
+        return getBooleanValueWithTypes(n.getLastChild()).not();
+      case AND:
+        // Assume the left-hand side is unknown. If it's not then we'll report it elsewhere. This
+        // prevents revisiting deeper nodes repeatedly, which would result in O(n^2) performance.
+        return TernaryValue.UNKNOWN.and(getBooleanValueWithTypes(n.getLastChild()));
+      case OR:
+        // Assume the left-hand side is unknown. If it's not then we'll report it elsewhere. This
+        // prevents revisiting deeper nodes repeatedly, which would result in O(n^2) performance.
+        return TernaryValue.UNKNOWN.or(getBooleanValueWithTypes(n.getLastChild()));
+      case HOOK:
+        {
+          TernaryValue trueValue = getBooleanValueWithTypes(n.getSecondChild());
+          TernaryValue falseValue = getBooleanValueWithTypes(n.getLastChild());
+          return trueValue.equals(falseValue) ? trueValue : TernaryValue.UNKNOWN;
+        }
+      case FUNCTION:
+      case CLASS:
+      case NEW:
+      case ARRAYLIT:
+      case OBJECTLIT:
+        return TernaryValue.TRUE;
+      case VOID:
+        return TernaryValue.FALSE;
+      case GETPROP:
+      case GETELEM:
+        // Assume that type information on getprops and getelems are likely to be wrong.  This
+        // prevents spurious warnings from not including undefined in getelem's return value,
+        // from existence checks of symbols the externs define as certainly true, or from default
+        // initialization of globals ({@code x.y = x.y || {}}).
+        return TernaryValue.UNKNOWN;
+      default:
+    }
+    // If we reach this point then all the composite structures that we can decompose have
+    // already been handled, leaving only qualified names and type-aware checks to handle below.
+    // Note that much of the switch above in fact duplicates the logic in getPureBooleanValue,
+    // though with some subtle differences.  Important differences include (1) avoiding recursion
+    // into the left-hand-side of nested logical operators, instead treating them as unknown since
+    // they would have already been reported elsewhere in the traversal had they been otherwise
+    // (this guarantees we visit each node once, rather than quadratically repeating work);
+    // (2) it allows side effects to still have a boolean value (this is more in line with
+    // NodeUtil#getBooleanValue); (3) it propagates our unique amalgam of syntax-based and
+    // type-based checks to work when more deeply nested (i.e. recursively).  These differences
+    // rely on assumptions that are very specific to this use case, so it does not make sense to
+    // upstream them.
+    TernaryValue pure = NodeUtil.getPureBooleanValue(n);
+    if (pure != TernaryValue.UNKNOWN || n.isName()) {
+      // If the truthiness is determinstic from the syntax then return that immediately.
+      // Alternatively, NAME nodes also get a pass since we don't trust the type information.
+      return pure;
+    }
+    JSType type = n.getJSType();
+    if (type != null) {
+      // Distrust types we think are always truthy, since sometimes the types lie, even for results
+      // of function calls (e.g. Map.prototype.get), so it's still important to check.  But
+      // always-falsy values are a little more obviously wrong and there should be no reason for
+      // those type annotations to be lies.  ANDing with UNKNOWN ensures we never return TRUE.
+      return TernaryValue.UNKNOWN.and(type.getPossibleToBooleanOutcomes().toTernaryValue());
+    }
+    return TernaryValue.UNKNOWN;
   }
 }
