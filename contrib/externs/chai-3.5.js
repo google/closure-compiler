@@ -92,14 +92,15 @@ chai.Assertion.prototype.a = function(type, opt_message) {};
  * @param {string} type
  * @param {string=} opt_message
  */
-chai.Assertion.prototype.an = function(type, opt_message) {}
+chai.Assertion.prototype.an = function(type, opt_message) {};
 
-                              /**
-                               * @param {*} value
-                               * @param {string=} opt_message
-                               */
-                              chai.Assertion.prototype.include = function(
-    value, opt_message) {};
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+chai.Assertion.prototype.include = function(value, opt_message) {};
+
+/** @type {!chai.Assertion} */ chai.Assertion.prototype.include.all;
 
 /**
  * @param {*} value
