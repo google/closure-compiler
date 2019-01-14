@@ -260,16 +260,31 @@ final class PolymerClassRewriter {
     // Also add reflection and sinks for computed properties and complex observers
     // and switch simple observers to direct function references.
     if (propertyRenamingEnabled && cls.descriptor != null) {
-      convertObserverStringsToReferences(cls);
-      List<Node> propertySinks = addComputedPropertiesReflectionCalls(cls);
-      propertySinks.addAll(addComplexObserverReflectionCalls(cls));
+      convertSimpleObserverStringsToReferences(cls);
+      List<Node> propertySinks = new ArrayList<>();
+      if (polymerExportPolicy != PolymerExportPolicy.EXPORT_ALL) {
+        propertySinks.addAll(addComputedPropertiesReflectionCalls(cls));
+        propertySinks.addAll(addComplexObserverReflectionCalls(cls));
+      }
+
       if (propertySinks.size() > 0) {
+        // Add property sinks so that the compiler does not remove these properties as dead code.
+        // The compiler recognizes a normally side-effect free property get statement as
+        // potentially having side effects (Such as element.offsetWidth). It will warn about
+        // the statement but automatically add a sink to ensure the statement is not removed.
+        // We'll use this behavior, but suppress the warning.
+        //
+        // /** @suppress {uselessCode} */
+        // (function() {
+        //    element.prototype.propname;
+        // })()
         Node sinkFunction = IR.function(IR.name(""), IR.paramList(), IR.block(propertySinks));
         JSDocInfoBuilder sinkFunctionDoc = new JSDocInfoBuilder(false);
         sinkFunctionDoc.recordSuppressions(ImmutableSet.of("uselessCode"));
         sinkFunction.setJSDocInfo(sinkFunctionDoc.build());
 
         sinkFunction = IR.call(sinkFunction);
+        // Mark the function as not having an explicit "this" set
         sinkFunction.putBooleanProp(Node.FREE_CALL, true);
 
         Node stmt = NodeUtil.getEnclosingStatement(clazz);
@@ -727,7 +742,7 @@ final class PolymerClassRewriter {
    * <p>From: <code>observer: '_observerName'</code> To: <code>
    * observer: ClassName.prototype._observerName</code>
    */
-  private void convertObserverStringsToReferences(final PolymerClassDefinition cls) {
+  private void convertSimpleObserverStringsToReferences(final PolymerClassDefinition cls) {
     for (MemberDefinition prop : cls.props) {
       if (prop.value.isObjectLit()) {
         Node observer = NodeUtil.getFirstPropMatchingKey(prop.value, "observer");
