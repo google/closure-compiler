@@ -852,10 +852,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Performs all the bookkeeping required at the end of a compilation.
    */
   private void performPostCompilationTasksInternal() {
-    if (options.recordFunctionInformation) {
-      recordFunctionInformation();
-    }
-
     if (options.devMode == DevMode.START_AND_END) {
       runValidityCheck();
     }
@@ -2413,16 +2409,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     pass.process(null, root);
   }
 
-  void recordFunctionInformation() {
-    logger.fine("Recording function information");
-    startPass("recordFunctionInformation");
-    RecordFunctionInformation recordFunctionInfoPass =
-        new RecordFunctionInformation(this, this.functionNames);
-    process(recordFunctionInfoPass);
-    functionInformationMap = recordFunctionInfoPass.getMap();
-    endPass("recordFunctionInformation");
-  }
-
   protected final RecentChange recentChange = new RecentChange();
   private final List<CodeChangeHandler> codeChangeHandlers = new ArrayList<>();
   private final Map<Class<?>, IndexProvider<?>> indexProvidersByType =
@@ -2930,9 +2916,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** The naming map for anonymous functions */
   private VariableMap anonymousFunctionNameMap = null;
 
-  /** Fully qualified function names and globally unique ids */
-  private FunctionNames functionNames = null;
-
   /** String replacement map */
   private VariableMap stringMap = null;
 
@@ -2966,11 +2949,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public void setFunctionNames(FunctionNames functionNames) {
-    this.functionNames = functionNames;
-  }
-
-  @Override
   public void setCssNames(Map<String, Integer> cssNames) {
     this.cssNames = cssNames;
   }
@@ -2992,11 +2970,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public void setAnonymousFunctionNameMap(VariableMap functionMap) {
     this.anonymousFunctionNameMap = functionMap;
-  }
-
-  @Override
-  public FunctionNames getFunctionNames() {
-    return functionNames;
   }
 
   VariableMap getStringMap() {
@@ -3463,7 +3436,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final VariableMap variableMap;
     private final VariableMap propertyMap;
     private final VariableMap anonymousFunctionaMap;
-    private final FunctionNames functionNames;
     private final VariableMap stringMap;
     private final String idGeneratorMap;
     private final IdGenerator crossModuleIdGenerator;
@@ -3498,7 +3470,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.variableMap = compiler.variableMap;
       this.propertyMap = compiler.propertyMap;
       this.anonymousFunctionaMap = compiler.anonymousFunctionNameMap;
-      this.functionNames = compiler.functionNames;
       this.stringMap = compiler.stringMap;
       this.idGeneratorMap = compiler.idGeneratorMap;
       this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
@@ -3598,7 +3569,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     anonymousFunctionNameMap = compilerState.anonymousFunctionaMap;
     idGeneratorMap = compilerState.idGeneratorMap;
     crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
-    functionNames = compilerState.functionNames;
     defaultDefineValues = checkNotNull(compilerState.defaultDefineValues);
     annotationMap = checkNotNull(compilerState.annotationMap);
     inputSourceMaps = compilerState.inputSourceMaps;

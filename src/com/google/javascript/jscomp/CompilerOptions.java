@@ -829,10 +829,6 @@ public class CompilerOptions implements Serializable {
   /** Move top-level function declarations to the top */
   public boolean moveFunctionDeclarations;
 
-
-  /** Record function information */
-  public boolean recordFunctionInformation;
-
   boolean checksOnly;
 
   /** What type of JS file should be output by this compilation */
@@ -1331,7 +1327,6 @@ public class CompilerOptions implements Serializable {
     tweakProcessing = TweakProcessing.OFF;
     tweakReplacements = new HashMap<>();
     moveFunctionDeclarations = false;
-    recordFunctionInformation = false;
     checksOnly = false;
     outputJs = OutputJs.NORMAL;
     generateExports = false;
@@ -2534,10 +2529,6 @@ public class CompilerOptions implements Serializable {
     this.moveFunctionDeclarations = moveFunctionDeclarations;
   }
 
-  public void setRecordFunctionInformation(boolean recordFunctionInformation) {
-    this.recordFunctionInformation = recordFunctionInformation;
-  }
-
   public void setCssRenamingMap(CssRenamingMap cssRenamingMap) {
     this.cssRenamingMap = cssRenamingMap;
   }
@@ -3023,7 +3014,6 @@ public class CompilerOptions implements Serializable {
             .add("propertyRenaming", propertyRenaming)
             .add("protectHiddenSideEffects", protectHiddenSideEffects)
             .add("quoteKeywordProperties", quoteKeywordProperties)
-            .add("recordFunctionInformation", recordFunctionInformation)
             .add("removeAbstractMethods", removeAbstractMethods)
             .add("removeClosureAsserts", removeClosureAsserts)
             .add("removeJ2clAsserts", removeJ2clAsserts)

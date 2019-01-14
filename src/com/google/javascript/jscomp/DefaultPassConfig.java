@@ -428,10 +428,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(processTweaks);
     }
 
-    if (options.recordFunctionInformation) {
-      checks.add(computeFunctionNames);
-    }
-
     if (options.checksOnly) {
       // Run process defines here so that warnings/errors from that pass are emitted as part of
       // checks.
@@ -2190,27 +2186,6 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         public FeatureSet featureSet() {
           return ES8_MODULES;
-        }
-      };
-
-  /** Computes the names of functions for later analysis. */
-  private final PassFactory computeFunctionNames =
-      new PassFactory("computeFunctionNames", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new CompilerPass() {
-            @Override
-            public void process(Node externs, Node root) {
-              CollectFunctionNames pass = new CollectFunctionNames(compiler);
-              pass.process(externs, root);
-              compiler.setFunctionNames(pass.getFunctionNames());
-            }
-          };
-        }
-
-        @Override
-        public FeatureSet featureSet() {
-          return ES2018;
         }
       };
 

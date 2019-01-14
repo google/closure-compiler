@@ -115,12 +115,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /** Sets the string replacement map */
   public abstract void setStringMap(VariableMap stringMap);
 
-  /** Sets the fully qualified function name and globally unique id mapping. */
-  public abstract void setFunctionNames(FunctionNames functionNames);
-
-  /** Gets the fully qualified function name and globally unique id mapping. */
-  public abstract FunctionNames getFunctionNames();
-
   /** Sets the css names found during compilation. */
   public abstract void setCssNames(Map<String, Integer> newCssNames);
 
