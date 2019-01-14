@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import javax.annotation.Nullable;
 
 /**
  * Models an assignment that defines a variable and the removal of it.
@@ -157,6 +158,31 @@ class DefinitionsRemover {
      */
     protected abstract void performRemove(AbstractCompiler compiler);
 
+    /**
+     * Extract a name from a node. In the case of GETPROP nodes, replace the namespace or object
+     * expression with "this" for simplicity and correctness at the expense of inefficiencies due to
+     * higher chances of name collisions.
+     *
+     * <p>TODO(user) revisit. it would be helpful to at least use fully qualified names in the case
+     * of namespaces. Might not matter as much if this pass runs after {@link CollapseProperties}.
+     */
+    @Nullable
+    public static String getSimplifiedName(Node node) {
+      if (node.isName()) {
+        String name = node.getString();
+        if (name != null && !name.isEmpty()) {
+          return name;
+        } else {
+          return null;
+        }
+      } else if (node.isGetProp()) {
+        return "this." + node.getLastChild().getString();
+      } else if (node.isMemberFunctionDef()) {
+        return "this." + node.getString();
+      }
+      return null;
+    }
+
     public String getSimplifiedName() {
       return simplifiedName;
     }
@@ -201,7 +227,7 @@ class DefinitionsRemover {
     private final Node lValue;
 
     IncompleteDefinition(Node lValue, boolean inExterns) {
-      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(lValue));
+      super(inExterns, Definition.getSimplifiedName(lValue));
       checkNotNull(lValue);
 
       Preconditions.checkArgument(
@@ -280,7 +306,7 @@ class DefinitionsRemover {
     protected final Node function;
 
     FunctionDefinition(Node node, boolean inExterns) {
-      this(node, inExterns, NameBasedDefinitionProvider.getSimplifiedName(node.getFirstChild()));
+      this(node, inExterns, Definition.getSimplifiedName(node.getFirstChild()));
     }
 
     FunctionDefinition(Node node, boolean inExterns, String name) {
@@ -344,7 +370,7 @@ class DefinitionsRemover {
     protected final Node memberFunctionDef;
 
     MemberFunctionDefinition(Node node, boolean inExterns) {
-      super(node.getFirstChild(), inExterns, NameBasedDefinitionProvider.getSimplifiedName(node));
+      super(node.getFirstChild(), inExterns, Definition.getSimplifiedName(node));
       checkState(node.isMemberFunctionDef(), node);
       memberFunctionDef = node;
     }
@@ -369,7 +395,7 @@ class DefinitionsRemover {
     protected final Node c;
 
     ClassDefinition(Node node, boolean inExterns) {
-      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(node.getFirstChild()));
+      super(inExterns, Definition.getSimplifiedName(node.getFirstChild()));
       Preconditions.checkArgument(node.isClass());
       c = node;
     }
@@ -426,7 +452,7 @@ class DefinitionsRemover {
     private final Node assignment;
 
     AssignmentDefinition(Node node, boolean inExterns) {
-      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(node.getFirstChild()));
+      super(inExterns, Definition.getSimplifiedName(node.getFirstChild()));
       checkArgument(node.isAssign());
       assignment = node;
     }
@@ -479,7 +505,7 @@ class DefinitionsRemover {
     private final Node value;
 
     ObjectLiteralPropertyDefinition(Node name, Node value, boolean isExtern) {
-      super(isExtern, NameBasedDefinitionProvider.getSimplifiedName(getLValue(name)));
+      super(isExtern, Definition.getSimplifiedName(getLValue(name)));
 
       this.name = name;
       this.value = value;
@@ -528,7 +554,7 @@ class DefinitionsRemover {
   static final class VarDefinition extends Definition {
     private final Node name;
     VarDefinition(Node node, boolean inExterns) {
-      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(node));
+      super(inExterns, Definition.getSimplifiedName(node));
       checkArgument(NodeUtil.isNameDeclaration(node.getParent()) && node.isName());
       Preconditions.checkArgument(inExterns || node.hasChildren(),
           "VAR Declaration of %s must be assigned a value.", node.getString());

@@ -56,7 +56,7 @@ public final class NameBasedDefinitionProviderTest {
 
   @Nullable
   private String getSimplifiedName(Node n) {
-    return NameBasedDefinitionProvider.getSimplifiedName(n);
+    return DefinitionsRemover.Definition.getSimplifiedName(n);
   }
 
   @Nullable

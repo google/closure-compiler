@@ -156,7 +156,7 @@ class PureFunctionIdentifier implements CompilerPass {
       Iterable<Node> expanded = unwrapCallableExpression(call.getFirstChild());
       if (expanded != null) {
         for (Node comp : expanded) {
-          String name = NameBasedDefinitionProvider.getSimplifiedName(comp);
+          String name = DefinitionsRemover.Definition.getSimplifiedName(comp);
           sb.append(name).append("|");
         }
       } else {
@@ -270,7 +270,7 @@ class PureFunctionIdentifier implements CompilerPass {
         continue;
       }
 
-      String name = NameBasedDefinitionProvider.getSimplifiedName(expression);
+      String name = DefinitionsRemover.Definition.getSimplifiedName(expression);
       FunctionInformation info = null;
       if (name != null) {
         info = functionInfoByName.get(name);
@@ -307,7 +307,7 @@ class PureFunctionIdentifier implements CompilerPass {
       if (definition.getLValue() != null) {
         Node getOrName = definition.getLValue();
         checkArgument(getOrName.isGetProp() || getOrName.isName(), getOrName);
-        String name = NameBasedDefinitionProvider.getSimplifiedName(getOrName);
+        String name = DefinitionsRemover.Definition.getSimplifiedName(getOrName);
         checkNotNull(name);
         if (isSupportedFunctionDefinition(definition.getRValue())) {
           addSupportedDefinition(site, name);

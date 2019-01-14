@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -36,10 +35,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 /**
  * Simple name-based definition gatherer.
@@ -89,20 +86,6 @@ public class NameBasedDefinitionProvider implements CompilerPass {
     dropUntypedExterns();
 
     NodeTraversal.traverse(compiler, source, new DefinitionGatheringCallback(false));
-  }
-
-  public void rebuildScopeRoots(List<Node> changedScopeRoots, List<Node> deletedScopeRoots) {
-    for (Node scopeRoot : Iterables.concat(deletedScopeRoots, changedScopeRoots)) {
-      for (DefinitionSite definitionSite : definitionSitesByScopeNode.removeAll(scopeRoot)) {
-        Definition definition = definitionSite.definition;
-        definitionNodes.remove(definitionSite.node);
-        definitionsByName.remove(definition.getSimplifiedName(), definition);
-        definitionSitesByDefinitionSiteNode.remove(definitionSite.node);
-      }
-    }
-
-    DefinitionGatheringCallback cb = new DefinitionGatheringCallback();
-    NodeTraversal.traverseScopeRoots(compiler, null, changedScopeRoots, cb, cb, false);
   }
 
   /** @return Whether the node has a JSDoc that actually declares something. */
@@ -177,7 +160,7 @@ public class NameBasedDefinitionProvider implements CompilerPass {
       }
     }
 
-    String name = getSimplifiedName(useSiteNode);
+    String name = DefinitionsRemover.Definition.getSimplifiedName(useSiteNode);
     if (name != null) {
       return definitionsByName.get(name);
     }
@@ -298,31 +281,6 @@ public class NameBasedDefinitionProvider implements CompilerPass {
   }
 
   /**
-   * Extract a name from a node. In the case of GETPROP nodes, replace the namespace or object
-   * expression with "this" for simplicity and correctness at the expense of inefficiencies due to
-   * higher chances of name collisions.
-   *
-   * <p>TODO(user) revisit. it would be helpful to at least use fully qualified names in the case of
-   * namespaces. Might not matter as much if this pass runs after {@link CollapseProperties}.
-   */
-  @Nullable
-  public static String getSimplifiedName(Node node) {
-    if (node.isName()) {
-      String name = node.getString();
-      if (name != null && !name.isEmpty()) {
-        return name;
-      } else {
-        return null;
-      }
-    } else if (node.isGetProp()) {
-      return "this." + node.getLastChild().getString();
-    } else if (node.isMemberFunctionDef()) {
-      return "this." + node.getString();
-    }
-    return null;
-  }
-
-  /**
    * Returns the collection of definition sites found during traversal.
    *
    * @return definition site collection.
@@ -330,11 +288,5 @@ public class NameBasedDefinitionProvider implements CompilerPass {
   public Collection<DefinitionSite> getDefinitionSites() {
     checkState(hasProcessBeenRun, "Hasn't been initialized with process() yet.");
     return definitionSitesByDefinitionSiteNode.values();
-  }
-
-  public DefinitionSite getDefinitionForFunction(Node function) {
-    checkState(hasProcessBeenRun, "Hasn't been initialized with process() yet.");
-    checkState(function.isFunction());
-    return definitionSitesByDefinitionSiteNode.get(NodeUtil.getNameNode(function));
   }
 }
