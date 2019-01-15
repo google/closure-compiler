@@ -750,8 +750,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         Node objLit, ObjectType objLitType,
         boolean declareOnOwner) {
       for (Node keyNode = objLit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
-        if (keyNode.isComputedProp()) {
-          // Don't try defining computed properties on an object.
+        if (keyNode.isComputedProp() || keyNode.isSpread()) {
+          // Don't try defining computed or spread properties on an object. Note that for spread
+          // type inference will try to determine the properties and types. We cannot do it here as
+          // we don't have all the type information of the spread object.
           continue;
         }
         Node value = keyNode.getFirstChild();

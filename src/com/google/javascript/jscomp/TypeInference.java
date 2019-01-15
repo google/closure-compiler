@@ -1333,26 +1333,52 @@ class TypeInference
       return scope;
     }
 
-    String qObjName = NodeUtil.getBestLValueName(
-        NodeUtil.getBestLValue(n));
-    for (Node name = n.getFirstChild(); name != null;
-         name = name.getNext()) {
-      if (name.isComputedProp()) {
+    String qObjName = NodeUtil.getBestLValueName(NodeUtil.getBestLValue(n));
+    for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+      if (key.isComputedProp()) {
         // Don't define computed properties as inferred properties on the object
         continue;
       }
-      String memberName = NodeUtil.getObjectLitKeyName(name);
+
+      if (key.isSpread()) {
+        Node name = key.getFirstChild();
+        JSType nameType = name.getJSType();
+
+        if (nameType == null) {
+          continue;
+        }
+
+        ObjectType spreadType = nameType.toMaybeObjectType();
+
+        while (spreadType != null) {
+          Set<String> spreadPropertyNames = spreadType.getOwnPropertyNames();
+          for (String propertyName : spreadPropertyNames) {
+            objectType.defineInferredProperty(
+                propertyName, spreadType.getPropertyType(propertyName), key);
+          }
+          if ((!spreadType.isConstructor()
+                  && !spreadType.isInterface()
+                  && !spreadType.isInstanceType())
+              || spreadType.getSuperClassConstructor() == null) {
+            break;
+          }
+          spreadType = spreadType.getSuperClassConstructor().getInstanceType();
+        }
+
+        continue;
+      }
+
+      String memberName = NodeUtil.getObjectLitKeyName(key);
       if (memberName != null) {
-        JSType rawValueType =  name.getFirstChild().getJSType();
-        JSType valueType =
-            TypeCheck.getObjectLitKeyTypeFromValueType(name, rawValueType);
+        JSType rawValueType = key.getFirstChild().getJSType();
+        JSType valueType = TypeCheck.getObjectLitKeyTypeFromValueType(key, rawValueType);
         if (valueType == null) {
           valueType = unknownType;
         }
-        objectType.defineInferredProperty(memberName, valueType, name);
+        objectType.defineInferredProperty(memberName, valueType, key);
 
         // Do normal flow inference if this is a direct property assignment.
-        if (qObjName != null && name.isStringKey()) {
+        if (qObjName != null && key.isStringKey()) {
           String qKeyName = qObjName + "." + memberName;
           TypedVar var = getDeclaredVar(scope, qKeyName);
           JSType oldType = var == null ? null : var.getType();
@@ -1362,7 +1388,7 @@ class TypeInference
 
           scope =
               scope.inferQualifiedSlot(
-                  name, qKeyName, oldType == null ? unknownType : oldType, valueType, false);
+                  key, qKeyName, oldType == null ? unknownType : oldType, valueType, false);
         }
       } else {
         n.setJSType(unknownType);

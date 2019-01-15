@@ -1006,6 +1006,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   private void checkSpread(NodeTraversal t, Node spreadNode) {
+    if (spreadNode.getParent().isObjectLit()) {
+      // Nothing to check for object spread, anything can be spread.
+      return;
+    }
+
     Node iterableNode = spreadNode.getOnlyChild();
     ensureTyped(iterableNode);
     JSType iterableType = getJSType(iterableNode);
@@ -1328,7 +1333,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * we change the schema of the object type it is referring to.
    *
    * @param t the traversal
-   * @param key the ASSIGN, STRING_KEY, MEMBER_FUNCTION_DEF, or COMPUTED_PROPERTY node
+   * @param key the ASSIGN, STRING_KEY, MEMBER_FUNCTION_DEF, SPREAD, or COMPUTED_PROPERTY node
    * @param owner the parent node, either OBJECTLIT or CLASS_MEMBERS
    * @param ownerType the instance type of the enclosing object/class
    */
@@ -1369,6 +1374,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // If you annotate a class with @dict, only the constructor can be a non-computed property.
         report(t, key, owner.isClass() ? ILLEGAL_CLASS_KEY : ILLEGAL_OBJLIT_KEY, "dict");
       }
+    }
+
+    if (key.isSpread()) {
+      // Rely on type inference to figure out what the key/types this adds to this object.
+      return;
     }
 
     // TODO(johnlenz): Validate get and set function declarations are valid

@@ -1368,6 +1368,147 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testObjectSpread() {
+    JSType recordType =
+        registry.createRecordType(
+            ImmutableMap.of(
+                "x", getNativeType(STRING_TYPE),
+                "y", getNativeType(NUMBER_TYPE)));
+    assuming("obj", recordType);
+
+    inFunction(
+        lines(
+            "let copy = {...obj}; ", // preserve newline
+            "X: copy.x;",
+            "Y: copy.y;"));
+    assertTypeOfExpression("X").toStringIsEqualTo("string");
+    assertTypeOfExpression("Y").toStringIsEqualTo("number");
+
+    assertScopeEnclosing("X")
+        .declares("copy")
+        .withTypeThat()
+        .toStringIsEqualTo("{x: string, y: number}");
+  }
+
+  @Test
+  public void testObjectSpreadWithAdditionalProperties() {
+    JSType recordType =
+        registry.createRecordType(
+            ImmutableMap.of(
+                "x", getNativeType(STRING_TYPE),
+                "y", getNativeType(NUMBER_TYPE)));
+    assuming("obj", recordType);
+    assuming("a", NUMBER_TYPE);
+    assuming("b", STRING_TYPE);
+
+    inFunction(
+        lines(
+            "let copy = {a, c: 0, ...obj, b}; ", // preserve newline
+            "A: copy.a",
+            "B: copy.b",
+            "C: copy.c",
+            "X: copy.x;",
+            "Y: copy.y;"));
+    assertTypeOfExpression("A").toStringIsEqualTo("number");
+    assertTypeOfExpression("B").toStringIsEqualTo("string");
+    assertTypeOfExpression("C").toStringIsEqualTo("number");
+    assertTypeOfExpression("X").toStringIsEqualTo("string");
+    assertTypeOfExpression("Y").toStringIsEqualTo("number");
+
+    assertScopeEnclosing("X")
+        .declares("copy")
+        .withTypeThat()
+        .toStringIsEqualTo(
+            lines(
+                "{",
+                "  a: number,",
+                "  b: string,",
+                "  c: number,",
+                "  x: string,",
+                "  y: number",
+                "}"));
+  }
+
+  @Test
+  public void testObjectSpreadMergeObjects() {
+    JSType recordType =
+        registry.createRecordType(
+            ImmutableMap.of(
+                "x", getNativeType(STRING_TYPE),
+                "y", getNativeType(NUMBER_TYPE)));
+    assuming("xy", recordType);
+    recordType =
+        registry.createRecordType(
+            ImmutableMap.of(
+                "a", getNativeType(NUMBER_TYPE),
+                "b", getNativeType(STRING_TYPE)));
+    assuming("ab", recordType);
+
+    inFunction(
+        lines(
+            "let copy = {...ab, c: 0, ...xy}; ", // preserve newline
+            "A: copy.a",
+            "B: copy.b",
+            "C: copy.c",
+            "X: copy.x;",
+            "Y: copy.y;"));
+    assertTypeOfExpression("A").toStringIsEqualTo("number");
+    assertTypeOfExpression("B").toStringIsEqualTo("string");
+    assertTypeOfExpression("C").toStringIsEqualTo("number");
+    assertTypeOfExpression("X").toStringIsEqualTo("string");
+    assertTypeOfExpression("Y").toStringIsEqualTo("number");
+
+    assertScopeEnclosing("X")
+        .declares("copy")
+        .withTypeThat()
+        .toStringIsEqualTo(
+            lines(
+                "{",
+                "  a: number,",
+                "  b: string,",
+                "  c: number,",
+                "  x: string,",
+                "  y: number",
+                "}"));
+  }
+
+  @Test
+  public void testObjectSpreadPrimitivesAddsNoProperties() {
+    assuming("num", NUMBER_TYPE);
+
+    inFunction(
+        lines(
+            "let obj = {...0, ...'str', ...[0], ...num, ...function() {}}; ", // preserve newline
+            "OBJ: obj"));
+
+    assertTypeOfExpression("OBJ").toStringIsEqualTo("{}");
+  }
+
+  @Test
+  public void testObjectSpreadUnknown() {
+    assuming("what", UNKNOWN_TYPE);
+
+    inFunction(
+        lines(
+            "let obj = {...what}; ", // preserve newline
+            "OBJ: obj"));
+
+    assertTypeOfExpression("OBJ").toStringIsEqualTo("{}");
+  }
+
+  @Test
+  public void testObjectSpreadUnknownExtraProperties() {
+    assuming("what", UNKNOWN_TYPE);
+
+    inFunction(
+        lines(
+            "let obj = {a: 0, ...{b: ''}, ...what}; ", // preserve newline
+            "OBJ: obj"));
+
+    assertTypeOfExpression("OBJ").toStringIsEqualTo("{a: number, b: string}");
+  }
+
+  @Test
   public void testCast1() {
     inFunction("var x = /** @type {Object} */ (this);");
     verify("x", createNullableType(OBJECT_TYPE));
