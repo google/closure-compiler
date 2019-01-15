@@ -1774,18 +1774,32 @@ class TypeInference
   private void maybeResolveTemplatedType(
       JSType paramType,
       JSType argType,
-      Map<TemplateType, JSType> resolvedTypes, Set<JSType> seenTypes) {
+      Map<TemplateType, JSType> resolvedTypes,
+      Set<JSType> seenTypes) {
     if (paramType.isTemplateType()) {
+      // Recursive base case.
       // example: @param {T}
-      resolvedTemplateType(
-          resolvedTypes, paramType.toMaybeTemplateType(), argType);
-    } else if (paramType.isUnionType()) {
+      resolvedTemplateType(resolvedTypes, paramType.toMaybeTemplateType(), argType);
+      return;
+    }
+
+    // Unpack unions.
+    if (paramType.isUnionType()) {
       // example: @param {Array.<T>|NodeList|Arguments|{length:number}}
       UnionType unionType = paramType.toMaybeUnionType();
-      for (JSType alernative : unionType.getAlternates()) {
-        maybeResolveTemplatedType(alernative, argType, resolvedTypes, seenTypes);
+      for (JSType alternate : unionType.getAlternates()) {
+        maybeResolveTemplatedType(alternate, argType, resolvedTypes, seenTypes);
       }
-    } else if (paramType.isFunctionType()) {
+      return;
+    } else if (argType.isUnionType()) {
+      UnionType unionType = argType.toMaybeUnionType();
+      for (JSType alternate : unionType.getAlternates()) {
+        maybeResolveTemplatedType(paramType, alternate, resolvedTypes, seenTypes);
+      }
+      return;
+    }
+
+    if (paramType.isFunctionType()) {
       FunctionType paramFunctionType = paramType.toMaybeFunctionType();
       FunctionType argFunctionType = argType
           .restrictByNotNullOrUndefined()

@@ -1607,16 +1607,143 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testTemplateForTypeTransformationTests() {
+  public void testFunctionTemplateType_literalParam() {
     inFunction(
-        "/**\n"
-        + " * @param {T} a\n"
-        + " * @return {R}\n"
-        + " * @template T, R\n"
-        + " */\n"
-        + "function f(a){}\n"
-        + "var result = f(10);");
-      verify("result", UNKNOWN_TYPE);
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {T} a",
+            " * @return {T}",
+            " */",
+            "function f(a){}",
+            "",
+            "var result = f(10);"));
+    verify("result", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testFunctionTemplateType_unionsPossibilities() {
+    inFunction(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {T} a",
+            " * @param {T} b",
+            " * @return {T}",
+            " */",
+            "function f(a, b){}",
+            "",
+            "var result = f(10, 'x');"));
+    verify("result", registry.createUnionType(NUMBER_TYPE, STRING_TYPE));
+  }
+
+  @Test
+  public void testFunctionTemplateType_willUseUnknown() {
+    inFunction(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {T} a",
+            " * @return {T}",
+            " */",
+            "function f(a){}",
+            "",
+            "var result = f(/** @type {?} */ ({}));"));
+    verify("result", UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void testFunctionTemplateType_willUseUnknown_butPrefersTighterTypes() {
+    inFunction(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {T} a",
+            " * @param {T} b",
+            " * @param {T} c",
+            " * @return {T}",
+            " */",
+            "function f(a, b, c){}",
+            "",
+            // Make sure `?` is dispreferred before *and* after a known type.
+            "var result = f('x', /** @type {?} */ ({}), 5);"));
+    verify("result", registry.createUnionType(NUMBER_TYPE, STRING_TYPE));
+  }
+
+  @Test
+  public void testFunctionTemplateType_recursesIntoFunctionParams() {
+    inFunction(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {function(T)} a",
+            " * @return {T}",
+            " */",
+            "function f(a){}",
+            "",
+            "var result = f(function(/** number */ a) { });"));
+    verify("result", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testFunctionTemplateType_recursesIntoFunctionParams_throughUnknown() {
+    inFunction(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {function(T)=} a",
+            " * @return {T}",
+            " */",
+            "function f(a){}",
+            "",
+            "var result = f(/** @type {?} */ ({}));"));
+    verify("result", UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void testFunctionTemplateType_unpacksUnions_fromParamType() {
+    inFunction(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {!Iterable<T>|number} a",
+            " * @return {T}",
+            " */",
+            "function f(a){}",
+            "",
+            "var result = f(/** @type {!Iterable<number>} */ ({}));"));
+    verify("result", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testFunctionTemplateType_unpacksUnions_fromArgType() {
+    inFunction(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {!Iterable<T>} a",
+            " * @return {T}",
+            " */",
+            "function f(a){}",
+            "",
+            // The arg type is illegal, but the inference should still work.
+            "var result = f(/** @type {!Iterable<number>|number} */ ({}));"));
+    verify("result", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testFunctionTemplateType_unpacksUnions_fromArgType_acrossSubtypes() {
+    inFunction(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {!Iterable<T>} a",
+            " * @return {T}",
+            " */",
+            "function f(a){}",
+            "",
+            "var result = f(/** @type {!Array<number>|!Generator<string>} */ ({}));"));
+    verify("result", registry.createUnionType(NUMBER_TYPE, STRING_TYPE));
   }
 
   @Test
