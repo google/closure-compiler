@@ -1270,7 +1270,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "const [{b}] = a;"));
 
     TypedVar b = checkNotNull(globalScope.getVar("b"));
-    assertType(b.getType()).isUnknown();
+    assertType(b.getType()).isString();
     assertThat(b.isTypeInferred()).isTrue(); // b is inferred but not treated as declared
   }
 

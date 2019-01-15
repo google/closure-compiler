@@ -388,11 +388,22 @@ public class JSTypeRegistry implements Serializable {
     NoResolvedType noResolvedType = new NoResolvedType(this);
     registerNativeType(JSTypeNative.NO_RESOLVED_TYPE, noResolvedType);
 
+    FunctionType iterableFunctionType = nativeInterface("Iterable", iterableTemplate);
+    registerNativeType(JSTypeNative.ITERABLE_FUNCTION_TYPE, iterableFunctionType);
+    ObjectType iterableType = iterableFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.ITERABLE_TYPE, iterableType);
+
+    FunctionType iteratorFunctionType = nativeInterface("Iterator", iteratorTemplate);
+    registerNativeType(JSTypeNative.ITERATOR_FUNCTION_TYPE, iteratorFunctionType);
+    ObjectType iteratorType = iteratorFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.ITERATOR_TYPE, iteratorType);
+
     // Array
     FunctionType arrayFunctionType =
         nativeConstructorBuilder("Array")
             .withParamsNode(createParametersWithVarArgs(allType))
             .withReturnsOwnInstanceType()
+            // TODO(nickreid): Could this be achieved by having `Array` implement `IObject`?
             .withTemplateTypeMap(
                 new TemplateTypeMap(
                     this,
@@ -400,6 +411,8 @@ public class JSTypeRegistry implements Serializable {
                     ImmutableList.<JSType>of(arrayElementTemplateKey)))
             .build();
     arrayFunctionType.getPrototype(); // Force initialization
+    arrayFunctionType.setImplementedInterfaces(
+        ImmutableList.of(createTemplatizedType(iterableType, arrayElementTemplateKey)));
     registerNativeType(JSTypeNative.ARRAY_FUNCTION_TYPE, arrayFunctionType);
 
     ObjectType arrayType = arrayFunctionType.getInstanceType();
@@ -413,21 +426,19 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(
         JSTypeNative.I_TEMPLATE_ARRAY_TYPE, iTemplateArrayFunctionType.getInstanceType());
 
-    FunctionType iterableFunctionType = nativeInterface("Iterable", iterableTemplate);
-    registerNativeType(JSTypeNative.ITERABLE_FUNCTION_TYPE, iterableFunctionType);
-    registerNativeType(JSTypeNative.ITERABLE_TYPE, iterableFunctionType.getInstanceType());
-
-    FunctionType iteratorFunctionType = nativeInterface("Iterator", iteratorTemplate);
-    registerNativeType(JSTypeNative.ITERATOR_FUNCTION_TYPE, iteratorFunctionType);
-    registerNativeType(JSTypeNative.ITERATOR_TYPE, iteratorFunctionType.getInstanceType());
-
     FunctionType generatorFunctionType = nativeInterface("Generator", generatorTemplate);
+    // TODO(nickreid): Model this using `IteratorIterable<T>` as in the externs.
+    generatorFunctionType.setExtendedInterfaces(
+        ImmutableList.of(
+            createTemplatizedType(iterableType, generatorTemplate),
+            createTemplatizedType(iteratorType, generatorTemplate)));
     registerNativeType(JSTypeNative.GENERATOR_FUNCTION_TYPE, generatorFunctionType);
     registerNativeType(JSTypeNative.GENERATOR_TYPE, generatorFunctionType.getInstanceType());
 
     FunctionType ithenableFunctionType = nativeInterface("IThenable", iThenableTemplateKey);
     registerNativeType(JSTypeNative.I_THENABLE_FUNCTION_TYPE, ithenableFunctionType);
-    registerNativeType(JSTypeNative.I_THENABLE_TYPE, ithenableFunctionType.getInstanceType());
+    ObjectType ithenableType = ithenableFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.I_THENABLE_TYPE, ithenableType);
 
     // Thenable is an @typedef
     JSType thenableType = createRecordType(ImmutableMap.of("then", unknownType));
@@ -446,8 +457,7 @@ public class JSTypeRegistry implements Serializable {
                 createOptionalParameters(
                     createUnionType(
                         promiseTemplateKey,
-                        createTemplatizedType(
-                            ithenableFunctionType.getInstanceType(), promiseTemplateKey),
+                        createTemplatizedType(ithenableType, promiseTemplateKey),
                         thenableType,
                         nullType))),
             /* parameterTypes= */ createFunctionType(
@@ -461,6 +471,8 @@ public class JSTypeRegistry implements Serializable {
             .withTemplateKeys(promiseTemplateKey)
             .withExtendedTemplate(iThenableTemplateKey, promiseTemplateKey)
             .build();
+    promiseFunctionType.setImplementedInterfaces(
+        ImmutableList.of(createTemplatizedType(ithenableType, promiseTemplateKey)));
 
     registerNativeType(JSTypeNative.PROMISE_FUNCTION_TYPE, promiseFunctionType);
     registerNativeType(JSTypeNative.PROMISE_TYPE, promiseFunctionType.getInstanceType());
