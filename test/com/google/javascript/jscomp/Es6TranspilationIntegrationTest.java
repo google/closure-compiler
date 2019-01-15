@@ -735,6 +735,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " * @extends{D} */",
             "var C = function(var_args) {};",
+            "$jscomp.inherits(C, D);",
             "C.prototype.g = function() {};"));
   }
 
@@ -759,6 +760,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " * @extends{D} */",
             "var C = function(var_args) {};",
+            "$jscomp.inherits(C, D);",
             "C.prototype.g = function() {};"));
   }
 

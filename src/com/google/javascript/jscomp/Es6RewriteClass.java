@@ -244,21 +244,21 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
                 new Node(Token.BANG, IR.string(superClassString)),
                 metadata.getSuperClassNameNode().getSourceFileName()));
       } else {
-        if (!classNode.isFromExterns()) {
-          compiler.ensureLibraryInjected("es6/util/inherits", false);
-          Node inheritsCall =
-              IR.exprResult(
-                      astFactory.createCall(
-                          astFactory.createQName(t.getScope(), "$jscomp.inherits"),
-                          metadata.getFullClassNameNode().cloneTree(),
-                          metadata.getSuperClassNameNode().cloneTree()))
-                  .useSourceInfoIfMissingFromForTree(metadata.getSuperClassNameNode());
-          enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
-        }
         newInfo.recordBaseType(
             new JSTypeExpression(
                 new Node(Token.BANG, IR.string(superClassString)),
                 metadata.getSuperClassNameNode().getSourceFileName()));
+      }
+      if (!classNode.isFromExterns()) {
+        compiler.ensureLibraryInjected("es6/util/inherits", false);
+        Node inheritsCall =
+            IR.exprResult(
+                    astFactory.createCall(
+                        astFactory.createQName(t.getScope(), "$jscomp.inherits"),
+                        metadata.getFullClassNameNode().cloneTree(),
+                        metadata.getSuperClassNameNode().cloneTree()))
+                .useSourceInfoIfMissingFromForTree(metadata.getSuperClassNameNode());
+        enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
       }
     }
 

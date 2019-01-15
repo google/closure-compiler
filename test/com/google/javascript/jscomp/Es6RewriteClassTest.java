@@ -824,7 +824,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   public void testExtendsInExterns() {
     // Don't inject $jscomp.inherits() or apply() for externs
     testExternChanges(
-        "class D {} class C extends D {}", "",
+        "class D {} class C extends D {}",
+        "",
         lines(
             "/** @constructor @struct */",
             "let D = function() {};",
@@ -1027,6 +1028,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " * @extends{D} */",
             "let C = function(var_args) {};",
+            "$jscomp.inherits(C,D);",
             "C.prototype.g = function() {};"));
   }
 
@@ -1051,6 +1053,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " * @extends{D} */",
             "let C = function(var_args) {};",
+            "$jscomp.inherits(C,D);",
             "C.prototype.g = function() {};"));
   }
 
@@ -1080,7 +1083,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     // Drop super() calls in externs.
     testExternChanges(
         lines(
-            "class D {}",
+            "class D {}", //
             "class C extends D {",
             "  constructor() {",
             "    super();",
