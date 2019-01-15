@@ -22,11 +22,15 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerInput;
 import com.google.javascript.jscomp.ErrorHandler;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathResolver;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -561,6 +565,27 @@ public final class ModuleLoaderTest {
     assertUri(
         "/p0/p1/p2/file.js",
         loader.resolve("fake.js").resolveJsModule("0/1/2/file.js"));
+  }
+
+  @Test
+  public void testBrowserWithPrefixReplacementInvalidPrefix() {
+    List<JSError> errors = new ArrayList<>();
+
+    ModuleLoader loader =
+        new ModuleLoader(
+            (CheckLevel level, JSError error) -> errors.add(error),
+            ImmutableList.of("."),
+            inputs("/path/to/file.js"),
+            new BrowserWithTransformedPrefixesModuleResolver.Factory(
+                ImmutableMap.of("prefix/", "/path/to/")));
+
+    assertUri("/path/to/file.js", loader.resolve("fake.js").resolveJsModule("prefix/file.js"));
+    assertThat(errors).isEmpty();
+
+    loader.resolve("fake.js").resolveJsModule("invalid/file.js");
+    assertThat(errors).hasSize(1);
+    assertThat(errors.get(0).getType())
+        .isSameAs(BrowserWithTransformedPrefixesModuleResolver.INVALID_AMBIGUOUS_PATH);
   }
 
   @Test

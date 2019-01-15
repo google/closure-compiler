@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import java.util.Comparator;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -38,18 +39,17 @@ import javax.annotation.Nullable;
  */
 public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver {
 
-  static final DiagnosticType TRANSFORMED_PATH_IS_AMBIGUOUS =
+  static final DiagnosticType INVALID_AMBIGUOUS_PATH =
       DiagnosticType.error(
-          "JSC_TRANSFORMED_PATH_IS_AMBIGUOUS",
-          "Replacing \"{0}\" with \"{1}\" in the import path \"{2}\" is an ambiguous address "
-              + "(\"{3}\").");
+          "JSC_INVALID_AMBIGUOUS_PATH",
+          "The path \"{0}\" is invalid. Expected any of the following prefixes for non-relative "
+              + "paths: {1}.");
 
   /** Factory for {@link BrowserWithTransformedPrefixesModuleResolver}. */
   public static final class Factory implements ModuleResolverFactory {
     private final ImmutableMap<String, String> prefixReplacements;
 
-    public Factory(
-        ImmutableMap<String, String> prefixReplacements) {
+    public Factory(ImmutableMap<String, String> prefixReplacements) {
       this.prefixReplacements = prefixReplacements;
     }
 
@@ -71,6 +71,7 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
   @AutoValue
   abstract static class PrefixReplacement {
     abstract String prefix();
+
     abstract String replacement();
 
     public static PrefixReplacement of(String prefix, String replacement) {
@@ -80,6 +81,7 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
   }
 
   private final ImmutableSet<PrefixReplacement> prefixReplacements;
+  private final String expectedPrefixes;
 
   public BrowserWithTransformedPrefixesModuleResolver(
       ImmutableSet<String> modulePaths,
@@ -89,9 +91,7 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
       ImmutableMap<String, String> prefixReplacements) {
     super(modulePaths, moduleRootPaths, errorHandler, pathEscaper);
     Set<PrefixReplacement> p =
-        prefixReplacements
-            .entrySet()
-            .stream()
+        prefixReplacements.entrySet().stream()
             .map(entry -> PrefixReplacement.of(entry.getKey(), entry.getValue()))
             .collect(
                 toImmutableSortedSet(
@@ -99,8 +99,13 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
                     // least specific.
                     Comparator.<PrefixReplacement>comparingInt(r -> r.prefix().length())
                         .reversed()
-                        .thenComparing(r -> r.prefix())));
+                        .thenComparing(PrefixReplacement::prefix)));
     this.prefixReplacements = ImmutableSet.copyOf(p);
+    this.expectedPrefixes =
+        this.prefixReplacements.stream()
+            .map(PrefixReplacement::prefix)
+            .sorted()
+            .collect(Collectors.joining(", "));
   }
 
   @Nullable
@@ -108,41 +113,32 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
   public String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
     String transformedAddress = moduleAddress;
+
+    boolean replaced = false;
+
     for (PrefixReplacement prefixReplacement : prefixReplacements) {
       if (moduleAddress.startsWith(prefixReplacement.prefix())) {
         transformedAddress =
             prefixReplacement.replacement()
                 + moduleAddress.substring(prefixReplacement.prefix().length());
-
-        if (ModuleLoader.isAmbiguousIdentifier(transformedAddress)) {
-          errorHandler.report(
-              CheckLevel.WARNING,
-              JSError.make(
-                  sourcename,
-                  lineno,
-                  colno,
-                  TRANSFORMED_PATH_IS_AMBIGUOUS,
-                  prefixReplacement.prefix(),
-                  prefixReplacement.replacement(),
-                  moduleAddress,
-                  transformedAddress));
-        }
+        replaced = true;
         break;
       }
     }
 
     // If ambiguous after the loop it was not transformed and the original moduleAddress is
-    // ambiguous.
-    if (ModuleLoader.isAmbiguousIdentifier(transformedAddress)) {
+    // ambiguous with an unrecognized prefix. Allow transformed paths to be ambiguous after
+    // transformation to maybe match how files are passed to the compiler.
+    if (!replaced && ModuleLoader.isAmbiguousIdentifier(transformedAddress)) {
       errorHandler.report(
           CheckLevel.WARNING,
           JSError.make(
               sourcename,
               lineno,
               colno,
-              ModuleLoader.INVALID_MODULE_PATH,
+              INVALID_AMBIGUOUS_PATH,
               transformedAddress,
-              ModuleLoader.ResolutionMode.BROWSER_WITH_TRANSFORMED_PREFIXES.toString()));
+              expectedPrefixes));
       return null;
     }
 
