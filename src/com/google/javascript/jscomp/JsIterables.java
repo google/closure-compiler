@@ -32,7 +32,8 @@ final class JsIterables {
   /**
    * Returns the given `Iterable`s element type.
    *
-   * <p>If the given type is not an `Iterator` or `Iterable`, returns the unknown type.
+   * <p>If the given type is not an `Iterator`, `Iterable`, `AsyncIterator`, or `AsyncIterable`,
+   * returns the unknown type.
    */
   static final JSType getElementType(JSType iterableOrIterator, JSTypeRegistry typeRegistry) {
     TemplateTypeMap templateTypeMap =
@@ -47,6 +48,12 @@ final class JsIterables {
     } else if (templateTypeMap.hasTemplateKey(typeRegistry.getIteratorTemplate())) {
       // `Iterator<SomeElementType>`
       return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorTemplate());
+    } else if (templateTypeMap.hasTemplateKey(typeRegistry.getAsyncIterableTemplate())) {
+      // `AsyncIterable<SomeElementType>` or `AsyncGenerator<SomeElementType>`
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getAsyncIterableTemplate());
+    } else if (templateTypeMap.hasTemplateKey(typeRegistry.getAsyncIteratorTemplate())) {
+      // `AsyncIterator<SomeElementType>`
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getAsyncIteratorTemplate());
     }
     return typeRegistry.getNativeType(UNKNOWN_TYPE);
   }

@@ -111,8 +111,17 @@ public class JSTypeRegistry implements Serializable {
   /** The template variable corresponding to the VALUE type in {@code Iterator<VALUE>} */
   private TemplateType iteratorTemplate;
 
+  /** The template variable corresponding to the VALUE type in {@code AsyncIterable<VALUE>} */
+  private TemplateType asyncIterableTemplate;
+
+  /** The template variable corresponding to the VALUE type in {@code AsyncIterator<VALUE>} */
+  private TemplateType asyncIteratorTemplate;
+
   /** The template variable corresponding to the VALUE type in {@code Generator<VALUE>} */
   private TemplateType generatorTemplate;
+
+  /** The template variable corresponding to the VALUE type in {@code AsyncGenerator<VALUE>} */
+  private TemplateType asyncGeneratorTemplate;
 
   /** The template variable corresponding to the VALUE type in {@code IThenable<VALUE>} */
   private TemplateType iThenableTemplateKey;
@@ -266,6 +275,16 @@ public class JSTypeRegistry implements Serializable {
     return checkNotNull(iteratorTemplate);
   }
 
+  /** Returns the template variable for the AsyncIterable interface. */
+  public TemplateType getAsyncIterableTemplate() {
+    return checkNotNull(asyncIterableTemplate);
+  }
+
+  /** Returns the template variable for the AsyncIterator interface. */
+  public TemplateType getAsyncIteratorTemplate() {
+    return checkNotNull(asyncIteratorTemplate);
+  }
+
   /** @return The template variable for the IThenable interface. */
   public TemplateType getIThenableTemplate() {
     return checkNotNull(iThenableTemplateKey);
@@ -332,8 +351,11 @@ public class JSTypeRegistry implements Serializable {
     // These should match the template type name in externs files.
     arrayElementTemplateKey = new TemplateType(this, "T");
     iteratorTemplate = new TemplateType(this, "VALUE");
+    asyncIteratorTemplate = new TemplateType(this, "VALUE");
     generatorTemplate = new TemplateType(this, "VALUE");
+    asyncGeneratorTemplate = new TemplateType(this, "VALUE");
     iterableTemplate = new TemplateType(this, "VALUE");
+    asyncIterableTemplate = new TemplateType(this, "VALUE");
     iThenableTemplateKey = new TemplateType(this, "TYPE");
     promiseTemplateKey = new TemplateType(this, "TYPE");
 
@@ -434,6 +456,24 @@ public class JSTypeRegistry implements Serializable {
             createTemplatizedType(iteratorType, generatorTemplate)));
     registerNativeType(JSTypeNative.GENERATOR_FUNCTION_TYPE, generatorFunctionType);
     registerNativeType(JSTypeNative.GENERATOR_TYPE, generatorFunctionType.getInstanceType());
+
+    FunctionType asyncIteratorFunctionType =
+        nativeInterface("AsyncIterator", asyncIteratorTemplate);
+    registerNativeType(JSTypeNative.ASYNC_ITERATOR_FUNCTION_TYPE, asyncIteratorFunctionType);
+    registerNativeType(
+        JSTypeNative.ASYNC_ITERATOR_TYPE, asyncIteratorFunctionType.getInstanceType());
+
+    FunctionType asyncIterableFunctionType =
+        nativeInterface("AsyncIterable", asyncIterableTemplate);
+    registerNativeType(JSTypeNative.ASYNC_ITERABLE_FUNCTION_TYPE, asyncIterableFunctionType);
+    registerNativeType(
+        JSTypeNative.ASYNC_ITERABLE_TYPE, asyncIterableFunctionType.getInstanceType());
+
+    FunctionType asyncGeneratorFunctionType =
+        nativeInterface("AsyncGenerator", asyncGeneratorTemplate);
+    registerNativeType(JSTypeNative.ASYNC_GENERATOR_FUNCTION_TYPE, asyncGeneratorFunctionType);
+    registerNativeType(
+        JSTypeNative.ASYNC_GENERATOR_TYPE, asyncGeneratorFunctionType.getInstanceType());
 
     FunctionType ithenableFunctionType = nativeInterface("IThenable", iThenableTemplateKey);
     registerNativeType(JSTypeNative.I_THENABLE_FUNCTION_TYPE, ithenableFunctionType);
@@ -680,6 +720,9 @@ public class JSTypeRegistry implements Serializable {
 
   private void initializeRegistry() {
     registerGlobalType(getNativeType(JSTypeNative.ARRAY_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERABLE_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERATOR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.ASYNC_GENERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ITERABLE_TYPE));

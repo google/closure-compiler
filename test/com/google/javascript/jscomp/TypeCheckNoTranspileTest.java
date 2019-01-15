@@ -5701,4 +5701,412 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             // TODO(sdh): this should not be nullable
             "required: (null|number)"));
   }
+
+  @Test
+  public void testAsyncGeneratorNoReturnOrYield() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<?>} */", //
+            "async function* asyncGen() {}"));
+  }
+
+  @Test
+  public void testAsyncGeneratorDeclaredReturnMustBeSupertypeOfAsyncGenerator() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncIterator<?>} */", //
+            "async function* asyncGen() {}"));
+
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncIterable<?>} */", //
+            "async function* asyncGen() {}"));
+
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncIteratorIterable<?>} */", //
+            "async function* asyncGen() {}"));
+
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!Object} */", //
+            "async function* asyncGen() {}"));
+
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {*} */", //
+            "async function* asyncGen() {}"));
+
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {?} */", //
+            "async function* asyncGen() {}"));
+
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {number} */", //
+            "async function* asyncGen() {}"),
+        lines(
+            "An async generator function must return a (supertype of) AsyncGenerator",
+            "found   : number",
+            "required: AsyncGenerator"));
+  }
+
+  @Test
+  public void testAsyncGeneratorWithYield() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */", //
+            "async function* asyncGen() { yield 0; }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorWithYieldStarOtherAsyncGenerator() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen0() { yield 0; }",
+            "",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen1() { yield* asyncGen0(); }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldStarNonIterable() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */", // s
+            "async function* asyncGen() { yield* 0; }"),
+        lines(
+            "Expression yield* expects an iterable or async iterable",
+            "found   : number",
+            "required: (AsyncIterator|Iterator)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldStarBoxableIterable() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().addString().build(),
+        lines(
+            "let /** string */ boxable;",
+            "/** @return {!AsyncGenerator<string>} */",
+            "async function* asyncGen() { yield* 'boxable'; }"));
+
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().addArray().build(),
+        lines(
+            "let /** !Array<number> */ boxable;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield* boxable; }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorWithYieldStarSyncGenerator() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!Generator<number>} */",
+            "function* gen() { yield 0; }",
+            "",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield* gen(); }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorWithYieldStarSyncAndAsyncGeneratorUnion() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !Generator<string>|!AsyncGenerator<number> */ gen;",
+            "",
+            "/** @return {!AsyncGenerator<string|number>} */",
+            "async function* asyncGen() { yield* gen; }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorWithYieldStarSyncAndAsyncGeneratorAndNonGeneratorUnion() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !Generator<string>|!AsyncGenerator<number>|number */ gen;",
+            "",
+            "/** @return {!AsyncGenerator<string|number>} */",
+            "async function* asyncGen() { yield* gen; }"),
+        lines(
+            "Expression yield* expects an iterable or async iterable",
+            "found   : (AsyncGenerator<number>|Generator<string>|number)",
+            "required: (AsyncIterator|Iterator)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorWithYieldStarSyncAndAsyncGeneratorUnionMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !Generator<string>|!AsyncGenerator<number> */ gen;",
+            "",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield* gen; }"),
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : (number|string)",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorWithMismatchReturn() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return 'str'; }"),
+        lines(
+            "inconsistent return type", //
+            "found   : string",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorWithMismatchYield() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield 'str'; }"),
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : string",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldAwaitNonThenable() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await 0; }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldAwaitNonThenableMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await 'str'; }"),
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : string",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldAwaitThenable() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !IThenable<number> */ thenable;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await thenable; }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldAwaitThenableMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !IThenable<string> */ thenable;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await thenable; }"),
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : string",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldAwaitPromise() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await Promise.resolve(0); }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldAwaitPromiseMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await Promise.resolve('str'); }"),
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : string",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldPromise() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield Promise.resolve(0); }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldPromiseMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield Promise.resolve('str'); }"),
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : Promise<string>",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldIThenable() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !IThenable<number> */ thenable;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield thenable; }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldThenableMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !IThenable<string> */ thenable;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield thenable; }"),
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : IThenable<string>",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldIThenableUnionNonIThenable() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** (!IThenable<number>|string) */ thenableOrString;",
+            "/** @return {!AsyncGenerator<number|string>} */",
+            "async function* asyncGen() { yield thenable; }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorYieldIThenableUnionNonIThenableMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** (!IThenable<number>|string) */ thenableOrString;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield thenableOrString; }"),
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : (IThenable<number>|string)",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorReturnNothing() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */", "async function* asyncGen() { return; }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorReturnSameType() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return 0; }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorReturnMismatchType() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return 'str'; }"),
+        lines(
+            "inconsistent return type",
+            "found   : string",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorReturnVoidPromise() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !Promise<void> */ voidPromise;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return voidPromise; }"),
+        lines(
+            "inconsistent return type",
+            "found   : Promise<undefined>",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorReturnUndefinedPromise() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !Promise<undefined> */ undefPromise;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return undefPromise; }"),
+        lines(
+            "inconsistent return type",
+            "found   : Promise<undefined>",
+            "required: (IThenable<number>|number)"));
+  }
+
+  @Test
+  public void testAsyncGeneratorReturnPromise() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !Promise<number> */ promise;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return promise; }"));
+  }
+
+  @Test
+  public void testAsyncGeneratorReturnPromiseMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !Promise<string> */ promise;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return promise; }"),
+        lines(
+            "inconsistent return type",
+            "found   : Promise<string>",
+            "required: (IThenable<number>|number)"));
+  }
 }

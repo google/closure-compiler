@@ -41,6 +41,9 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_GENERATOR_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_ITERABLE_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_ITERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -96,6 +99,27 @@ public class JSTypeRegistryTest {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     assertType(typeRegistry.getGlobalType("Generator"))
         .isStructurallyEqualTo(typeRegistry.getNativeType(GENERATOR_TYPE));
+  }
+
+  @Test
+  public void testGetBuiltInType_async_iterable() {
+    JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
+    assertType(typeRegistry.getGlobalType("AsyncIterable"))
+        .isStructurallyEqualTo(typeRegistry.getNativeType(ASYNC_ITERABLE_TYPE));
+  }
+
+  @Test
+  public void testGetBuiltInType_async_iterator() {
+    JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
+    assertType(typeRegistry.getGlobalType("AsyncIterator"))
+        .isStructurallyEqualTo(typeRegistry.getNativeType(ASYNC_ITERATOR_TYPE));
+  }
+
+  @Test
+  public void testGetBuiltInType_async_generator() {
+    JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
+    assertType(typeRegistry.getGlobalType("AsyncGenerator"))
+        .isStructurallyEqualTo(typeRegistry.getNativeType(ASYNC_GENERATOR_TYPE));
   }
 
   @Test

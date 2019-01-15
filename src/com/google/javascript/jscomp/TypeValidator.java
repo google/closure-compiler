@@ -21,6 +21,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_GENERATOR_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
@@ -57,6 +59,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import javax.annotation.Nullable;
@@ -77,6 +80,7 @@ class TypeValidator implements Serializable {
   private final JSType allBitwisableValueTypes;
   private final JSType nullOrUndefined;
   private final JSType promiseOfUnknownType;
+  private final JSType iterableOrAsyncIterable;
 
   // In TypeCheck, when we are analyzing a file with .java.js suffix, we set
   // this field to IGNORE_NULL_UNDEFINED
@@ -181,6 +185,10 @@ class TypeValidator implements Serializable {
         typeRegistry.createTemplatizedType(
             typeRegistry.getNativeObjectType(JSTypeNative.PROMISE_TYPE),
             typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+    this.iterableOrAsyncIterable =
+        typeRegistry.createUnionType(
+            typeRegistry.getNativeObjectType(JSTypeNative.ITERATOR_TYPE),
+            typeRegistry.getNativeObjectType(JSTypeNative.ASYNC_ITERATOR_TYPE));
   }
 
   /**
@@ -275,7 +283,6 @@ class TypeValidator implements Serializable {
       mismatch(t, n, msg, type, anyObjectType);
     }
   }
-
   /**
    * Expect the type to autobox to be an Iterable.
    *
@@ -303,10 +310,54 @@ class TypeValidator implements Serializable {
     return true;
   }
 
+  /**
+   * Expect the type to autobox to be an Iterable or AsyncIterable.
+   *
+   * @return The unwrapped variants of the iterable(s), or empty if not iterable.
+   */
+  Optional<JSType> expectAutoboxesToIterableOrAsyncIterable(
+      NodeTraversal t, Node n, JSType type, String msg) {
+    List<JSType> templatedTypes = new ArrayList<>();
+
+    // Note: we don't just use JSType.autobox() here because that removes null and undefined.
+    // We want to keep null and undefined around.
+    if (type.isUnionType()) {
+      for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
+        alt = alt.isBoxableScalar() ? alt.autoboxesTo() : alt;
+        boolean isIterable = alt.isSubtypeOf(getNativeType(ITERABLE_TYPE));
+        boolean isAsyncIterable = alt.isSubtypeOf(getNativeType(ASYNC_ITERABLE_TYPE));
+        if (!isIterable && !isAsyncIterable) {
+          mismatch(t, n, msg, type, iterableOrAsyncIterable);
+          return Optional.empty();
+        }
+        JSTypeNative iterableType = isAsyncIterable ? ASYNC_ITERABLE_TYPE : ITERABLE_TYPE;
+        templatedTypes.add(alt.getInstantiatedTypeArgument(getNativeType(iterableType)));
+      }
+    } else {
+      JSType autoboxedType = type.isBoxableScalar() ? type.autoboxesTo() : type;
+      boolean isIterable = autoboxedType.isSubtypeOf(getNativeType(ITERABLE_TYPE));
+      boolean isAsyncIterable = autoboxedType.isSubtypeOf(getNativeType(ASYNC_ITERABLE_TYPE));
+      if (!isIterable && !isAsyncIterable) {
+        mismatch(t, n, msg, type, iterableOrAsyncIterable);
+        return Optional.empty();
+      }
+      JSTypeNative iterableType = isAsyncIterable ? ASYNC_ITERABLE_TYPE : ITERABLE_TYPE;
+      templatedTypes.add(autoboxedType.getInstantiatedTypeArgument(getNativeType(iterableType)));
+    }
+    return Optional.of(typeRegistry.createUnionType(templatedTypes));
+  }
+
   /** Expect the type to be a Generator or supertype of Generator. */
   void expectGeneratorSupertype(NodeTraversal t, Node n, JSType type, String msg) {
     if (!getNativeType(GENERATOR_TYPE).isSubtypeOf(type)) {
       mismatch(t, n, msg, type, GENERATOR_TYPE);
+    }
+  }
+
+  /** Expect the type to be a AsyncGenerator or supertype of AsyncGenerator. */
+  void expectAsyncGeneratorSupertype(NodeTraversal t, Node n, JSType type, String msg) {
+    if (!getNativeType(ASYNC_GENERATOR_TYPE).isSubtypeOf(type)) {
+      mismatch(t, n, msg, type, ASYNC_GENERATOR_TYPE);
     }
   }
 

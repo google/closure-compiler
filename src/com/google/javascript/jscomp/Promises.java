@@ -102,6 +102,28 @@ final class Promises {
   }
 
   /**
+   * Wraps the given type in an IThenable.
+   *
+   * <p>If the given type is already IThenable it is first unwrapped. For example:
+   *
+   * <p>{@code number} becomes {@code IThenable<number>}
+   *
+   * <p>{@code IThenable<number>} becomes {@code IThenable<number>}
+   *
+   * <p>{@code Promise<number>} becomes {@code IThenable<number>}
+   *
+   * <p>{@code IThenable<number>|string} becomes {@code IThenable<number|string>}
+   *
+   * <p>{@code IThenable<number>|IThenable<string>} becomes {@code IThenable<number|string>}
+   */
+  static final JSType wrapInIThenable(JSTypeRegistry registry, JSType maybeThenable) {
+    // Unwrap for simplicity first in the event it is a thenable.
+    JSType unwrapped = getResolvedType(registry, maybeThenable);
+    return registry.createTemplatizedType(
+        registry.getNativeObjectType(JSTypeNative.I_THENABLE_TYPE), unwrapped);
+  }
+
+  /**
    * Synthesizes a type representing the legal types of a return expression within async code
    * (i.e.`Promise` callbacks, async functions) based on the expected return type of that code.
    *

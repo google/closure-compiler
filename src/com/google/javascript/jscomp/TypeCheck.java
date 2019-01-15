@@ -63,6 +63,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -2198,6 +2199,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       checkConstructor(t, n, functionType);
     } else if (functionType.isInterface()) {
       checkInterface(t, n, functionType);
+    } else if (n.isAsyncGeneratorFunction()) {
+      // An async generator function must return a AsyncGenerator or supertype of AsyncGenerator
+      JSType returnType = functionType.getReturnType();
+      validator.expectAsyncGeneratorSupertype(
+          t,
+          n,
+          returnType,
+          "An async generator function must return a (supertype of) AsyncGenerator");
     } else if (n.isGeneratorFunction()) {
       // A generator function must return a Generator or supertype of Generator
       JSType returnType = functionType.getReturnType();
@@ -2559,6 +2568,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // Unwrap the template variable from a generator function's declared return type.
         // e.g. if returnType is "Generator<string>", make it just "string".
         returnType = JsIterables.getElementType(returnType, typeRegistry);
+
+        if (enclosingFunction.isAsyncGeneratorFunction()) {
+          // Can return x|IThenable<x> in an AsyncGenerator<x>, no await needed. Note that we must
+          // first wrap the type in IThenable as createAsyncReturnableType will map a non-IThenable
+          // to `?`.
+          returnType =
+              Promises.createAsyncReturnableType(
+                  typeRegistry, Promises.wrapInIThenable(typeRegistry, returnType));
+        }
       } else if (enclosingFunction.isAsyncFunction()) {
         // e.g. `!Promise<string>` => `string|!IThenable<string>`
         // We transform the expected return type rather than the actual return type so that the
@@ -2599,6 +2617,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       FunctionType functionType = jsType.toMaybeFunctionType();
       JSType returnType = functionType.getReturnType();
       declaredYieldType = JsIterables.getElementType(returnType, typeRegistry);
+
+      if (t.getEnclosingFunction().isAsyncGeneratorFunction()) {
+        // Can yield x|IThenable<x> in an AsyncGenerator<x>, no await needed. Note that we must
+        // first wrap the type in IThenable as createAsyncReturnableType will map a non-IThenable to
+        // `?`.
+        declaredYieldType =
+            Promises.createAsyncReturnableType(
+                typeRegistry, Promises.wrapInIThenable(typeRegistry, declaredYieldType));
+      }
     }
 
     // fetching the yielded value's type
@@ -2612,13 +2639,24 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     if (n.isYieldAll()) {
-      if (!validator.expectAutoboxesToIterable(
-          t, n, actualYieldType, "Expression yield* expects an iterable")) {
-        // don't do any further typechecking of the yield* type.
-        return;
+      if (t.getEnclosingFunction().isAsyncGeneratorFunction()) {
+        Optional<JSType> maybeActualYieldType =
+            validator.expectAutoboxesToIterableOrAsyncIterable(
+                t, n, actualYieldType, "Expression yield* expects an iterable or async iterable");
+        if (!maybeActualYieldType.isPresent()) {
+          // don't do any further typechecking of the yield* type.
+          return;
+        }
+        actualYieldType = maybeActualYieldType.get();
+      } else {
+        if (!validator.expectAutoboxesToIterable(
+            t, n, actualYieldType, "Expression yield* expects an iterable")) {
+          // don't do any further typechecking of the yield* type.
+          return;
+        }
+        actualYieldType =
+            actualYieldType.autobox().getInstantiatedTypeArgument(getNativeType(ITERABLE_TYPE));
       }
-      actualYieldType =
-          actualYieldType.autobox().getInstantiatedTypeArgument(getNativeType(ITERABLE_TYPE));
     }
 
     // verifying

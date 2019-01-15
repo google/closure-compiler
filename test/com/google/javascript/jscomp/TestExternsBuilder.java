@@ -82,7 +82,20 @@ public class TestExternsBuilder {
           " * @template VALUE",
           " */",
           "function IteratorIterable() {}",
-          "");
+          "",
+          "/**",
+          " * @interface",
+          " * @extends {IteratorIterable<VALUE>}",
+          " * @template VALUE",
+          " */",
+          "function Generator() {}",
+          "/**",
+          " * @param {?=} opt_value",
+          " * @return {!IIterableResult<VALUE>}",
+          " * @override",
+          " */",
+          "Generator.prototype.next = function(opt_value) {};");
+
   private static final String STRING_EXTERNS =
       lines(
           "/**",
@@ -423,6 +436,61 @@ public class TestExternsBuilder {
           "Promise.prototype.finally = function(callback) {};",
           "");
 
+  private static final String ASYNC_ITERABLE_EXTERNS =
+      lines(
+          "/**",
+          " * @const {symbol}",
+          " */",
+          "Symbol.asyncIterator;",
+          "/**",
+          " * @interface",
+          " * @template VALUE",
+          " */",
+          "function AsyncIterator() {}",
+          "/**",
+          " * @param {?=} opt_value",
+          " * @return {!Promise<!IIterableResult<VALUE>>}",
+          " */",
+          "AsyncIterator.prototype.next;",
+          "/**",
+          " * @interface",
+          " * @template VALUE",
+          " */",
+          "function AsyncIterable() {}",
+          "/**",
+          " * @return {!AsyncIterator<VALUE>}",
+          " */",
+          "AsyncIterable.prototype[Symbol.asyncIterator] = function() {};",
+          "/**",
+          " * @interface",
+          " * @extends {AsyncIterator<VALUE>}",
+          " * @extends {AsyncIterable<VALUE>}",
+          " * @template VALUE",
+          " */",
+          "function AsyncIteratorIterable() {}",
+          "/**",
+          " * @interface",
+          " * @extends {AsyncIteratorIterable<VALUE>}",
+          " * @template VALUE",
+          " */",
+          "function AsyncGenerator() {}",
+          "/**",
+          " * @param {?=} opt_value",
+          " * @return {!Promise<!IIterableResult<VALUE>>}",
+          " * @override",
+          " */",
+          "AsyncGenerator.prototype.next = function(opt_value) {};",
+          "/**",
+          " * @param {VALUE} value",
+          " * @return {!Promise<!IIterableResult<VALUE>>}",
+          " */",
+          "AsyncGenerator.prototype.return = function(value) {};",
+          "/**",
+          " * @param {?} exception",
+          " * @return {!Promise<!IIterableResult<VALUE>>}",
+          " */",
+          "AsyncGenerator.prototype.throw = function(exception) {};");
+
   private boolean includeIterableExterns = false;
   private boolean includeStringExterns = false;
   private boolean includeFunctionExterns = false;
@@ -431,6 +499,7 @@ public class TestExternsBuilder {
   private boolean includeArgumentsExterns = false;
   private boolean includeConsoleExterns = false;
   private boolean includePromiseExterns = false;
+  private boolean includeAsyncIterableExterns = false;
   private final List<String> extraExterns = new ArrayList<>();
 
   public TestExternsBuilder addIterable() {
@@ -480,6 +549,13 @@ public class TestExternsBuilder {
     return this;
   }
 
+  public TestExternsBuilder addAsyncIterable() {
+    includeAsyncIterableExterns = true;
+    addIterable(); // IIterableResult + Symbol
+    addPromise(); // Promise
+    return this;
+  }
+
   public TestExternsBuilder addExtra(String... lines) {
     Collections.addAll(extraExterns, lines);
     return this;
@@ -510,6 +586,9 @@ public class TestExternsBuilder {
     }
     if (includePromiseExterns) {
       externSections.add(PROMISE_EXTERNS);
+    }
+    if (includeAsyncIterableExterns) {
+      externSections.add(ASYNC_ITERABLE_EXTERNS);
     }
     externSections.addAll(extraExterns);
     return LINE_JOINER.join(externSections);
