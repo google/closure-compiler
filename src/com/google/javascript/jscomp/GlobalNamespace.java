@@ -713,10 +713,16 @@ class GlobalNamespace
      */
     private boolean isTypeDeclaration(Node n) {
       Node valueNode = NodeUtil.getRValueOfLValue(n);
+      if (valueNode == null) {
+        return false;
+      } else if (valueNode.isClass()) {
+        // Always treat classes as having a declared type. (Transpiled classes are annotated
+        // @constructor)
+        return true;
+      }
       JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
       // Heed the annotations only if they're sensibly used.
       return info != null
-          && valueNode != null
           && ((info.isConstructor() && valueNode.isFunction())
               || (info.isInterface() && valueNode.isFunction())
               || (info.hasEnumParameterType() && valueNode.isObjectLit()));

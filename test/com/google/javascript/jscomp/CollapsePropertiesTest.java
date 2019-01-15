@@ -2441,17 +2441,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEs6StaticMemberOnEscapedClassIsCollapsed() {
-    // TODO(b/122549779): add unsafe property collapsing for ES6 class props
-    testSame("class Bar { static m() {} } use(Bar);");
+    test(
+        "class Bar { static m() {} } use(Bar);",
+        "var Bar$m = function() {}; class Bar {} use(Bar);");
   }
 
   @Test
   public void testClassStaticProperties() {
     test("class A {} A.foo = 'bar'; use(A.foo);", "class A {} var A$foo = 'bar'; use(A$foo);");
-  }
 
-  @Test
-  public void testUnsafeThisReferenceInEs6ClassMethod() {
+    // Collapsing A.foo is known to be unsafe.
     test(
         srcs("class A { static useFoo() { alert(this.foo); } } A.foo = 'bar'; A.useFoo();"),
         expected(

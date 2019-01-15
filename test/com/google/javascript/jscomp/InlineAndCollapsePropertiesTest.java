@@ -1353,13 +1353,21 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testClassStaticInheritance_cantDetermineSuperclass() {
-    // Here A.foo and B.foo are not collapsed because getSuperclass() creates an alias for them.
-    testSame(
+    // Here A.foo and B.foo are unsafely collapsed because getSuperclass() creates an alias for them
+    test(
         lines(
             "class A {}",
             "A.foo = 5;",
             "class B {}",
             "B.foo = 6;",
+            "function getSuperclass() { return 1 < 2 ? A : B; }",
+            "class C extends getSuperclass() {}",
+            "use(C.foo);"),
+        lines(
+            "class A {}",
+            "var A$foo = 5;",
+            "class B {}",
+            "var B$foo = 6;",
             "function getSuperclass() { return 1 < 2 ? A : B; }",
             "class C extends getSuperclass() {}",
             "use(C.foo);"));

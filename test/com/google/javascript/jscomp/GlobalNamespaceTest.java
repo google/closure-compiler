@@ -307,6 +307,45 @@ public final class GlobalNamespaceTest {
     assertThat(nsA.getAliasingGets()).isEqualTo(0);
   }
 
+  @Test
+  public void testCannotCollapseAliasedObjectLitProperty() {
+    GlobalNamespace namespace = parse("var foo = {prop: 0}; use(foo);");
+
+    Name fooProp = namespace.getSlot("foo.prop");
+
+    // We should not convert foo.prop -> foo$prop because use(foo) might read foo.prop
+    assertThat(fooProp.canCollapse()).isFalse();
+  }
+
+  @Test
+  public void testCanCollapseAliasedConstructorProperty() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "/** @constructor */",
+                "var Foo = function() {}",
+                "",
+                "Foo.prop = prop;",
+                "use(Foo);"));
+
+    Name fooProp = namespace.getSlot("Foo.prop");
+
+    // We should still convert Foo.prop -> Foo$prop, even though use(Foo) might read foo.prop,
+    // because Foo is a constructor
+    assertThat(fooProp.canCollapse()).isTrue();
+  }
+
+  @Test
+  public void testCanCollapseAliasedClassProperty() {
+    GlobalNamespace namespace = parse(lines("class Foo {} Foo.prop = prop; use(Foo);"));
+
+    Name fooProp = namespace.getSlot("Foo.prop");
+
+    // We should still convert Foo.prop -> Foo$prop, even though use(Foo) might read foo.prop,
+    // because Foo is a constructor
+    assertThat(fooProp.canCollapse()).isTrue();
+  }
+
   private GlobalNamespace parse(String js) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
