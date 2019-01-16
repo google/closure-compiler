@@ -36,12 +36,14 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_OBJECT_TYPE
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
@@ -50,12 +52,15 @@ import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticTypedRef;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.testing.TypeSubject;
@@ -237,6 +242,22 @@ public final class TypeInferenceTest {
     StaticTypedSlot var = returnScope.getSlot(name);
     assertWithMessage("The variable " + name + " is missing from the scope.").that(var).isNotNull();
     return var.getType();
+  }
+
+  /** Returns the NAME node {@code name} from the PARAM_LIST of the top level of type inference. */
+  private Node getParamNameNode(String name) {
+    StaticTypedScope staticScope = checkNotNull(returnScope.getDeclarationScope(), returnScope);
+    StaticTypedSlot slot = checkNotNull(staticScope.getSlot(name), staticScope);
+    StaticTypedRef declaration = checkNotNull(slot.getDeclaration(), slot);
+    Node node = checkNotNull(declaration.getNode(), declaration);
+
+    assertNode(node).hasType(Token.NAME);
+    Streams.stream(node.getAncestors())
+        .filter(Node::isParamList)
+        .findFirst()
+        .orElseThrow(AssertionError::new);
+
+    return node;
   }
 
   private void verify(String name, JSType type) {
@@ -1020,6 +1041,80 @@ public final class TypeInferenceTest {
             "var result = new F(x,y,z);"));
 
     assertThat(getType("result").toString()).isEqualTo("F<(number|string),boolean>");
+  }
+
+  @Test
+  public void testParamNodeType_simpleName() {
+    parseAndRunTypeInference("(/** @param {number} i */ function(i) {})");
+
+    assertNode(getParamNameNode("i")).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testParamNodeType_rest() {
+    parseAndRunTypeInference("(/** @param {...number} i */ function(...i) {})");
+
+    assertNode(getParamNameNode("i")).hasJSTypeThat().toStringIsEqualTo("Array<number>");
+  }
+
+  @Test
+  public void testParamNodeType_arrayDestructuring() {
+    parseAndRunTypeInference("(/** @param {!Iterable<number>} i */ function([i]) {})");
+
+    // TODO(nickreid): Also check the types of the other nodes in the PARAM_LIST tree.
+    assertNode(getParamNameNode("i")).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testParamNodeType_objectDestructuring() {
+    parseAndRunTypeInference("(/** @param {{a: number}} i */ function({a: i}) {})");
+
+    // TODO(nickreid): Also check the types of the other nodes in the PARAM_LIST tree.
+    assertNode(getParamNameNode("i")).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testParamNodeType_simpleName_withDefault() {
+    parseAndRunTypeInference("(/** @param {number=} i */ function(i = 9) {})");
+
+    // TODO(nickreid): Also check the types of the other nodes in the PARAM_LIST tree.
+    assertNode(getParamNameNode("i")).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testParamNodeType_arrayDestructuring_withDefault() {
+    parseAndRunTypeInference(
+        lines(
+            "(/** @param {!Iterable<number>=} unused */",
+            "function([i] = /** @type ({!Array<number>} */ ([])) {})"));
+
+    // TODO(nickreid): Also check the types of the other nodes in the PARAM_LIST tree.
+    // TODO(b/122904530): `i` should be `number`.
+    assertNode(getParamNameNode("i")).hasJSTypeThat().isUnknown();
+  }
+
+  @Test
+  public void testParamNodeType_objectDestructuring_withDefault() {
+    parseAndRunTypeInference("(/** @param {{a: number}=} i */ function({a: i} = {a: 9}) {})");
+
+    // TODO(nickreid): Also check the types of the other nodes in the PARAM_LIST tree.
+    assertNode(getParamNameNode("i")).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testParamNodeType_arrayDestructuring_withDefault_nestedInPattern() {
+    parseAndRunTypeInference("(/** @param {!Iterable<number>} i */ function([i = 9]) {})");
+
+    // TODO(nickreid): Also check the types of the other nodes in the PARAM_LIST tree.
+    assertNode(getParamNameNode("i")).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testParamNodeType_objectDestructuring_withDefault_nestedInPattern() {
+    parseAndRunTypeInference("(/** @param {{a: number}} i */ function({a: i = 9}) {})");
+
+    // TODO(nickreid): Also check the types of the other nodes in the PARAM_LIST tree.
+    assertNode(getParamNameNode("i")).hasJSTypeThat().isNumber();
   }
 
   @Test

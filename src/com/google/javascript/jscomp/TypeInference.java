@@ -166,7 +166,27 @@ class TypeInference
     // Always visit every AST parameter once, regardless of how many IIFE arguments or
     // FunctionType param nodes there are.
     for (Node astParameter : astParameters.children()) {
-      boolean isRest = false;
+      if (iifeArgumentNode != null && iifeArgumentNode.isSpread()) {
+        // block inference on all parameters that might possibly be set by a spread, e.g. `z` in
+        // (function f(x, y, z = 1))(...[1, 2], 'foo')
+        iifeArgumentNode = null;
+      }
+
+      // Running variable for the type of the param within the body of the function. We use the
+      // existing type on the param node as the default, and then transform it according to the
+      // declaration syntax.
+      JSType inferredType = getJSType(astParameter);
+
+      if (iifeArgumentNode != null) {
+        if (iifeArgumentNode.getJSType() != null) {
+          inferredType = iifeArgumentNode.getJSType();
+        }
+      } else if (parameterTypeNode != null) {
+        if (parameterTypeNode.getJSType() != null) {
+          inferredType = parameterTypeNode.getJSType();
+        }
+      }
+
       Node defaultValue = null;
       if (astParameter.isDefaultValue()) {
         defaultValue = astParameter.getSecondChild();
@@ -177,46 +197,27 @@ class TypeInference
         // e.g. `function f(p1, ...restParamName) {}`
         // set astParameter = restParamName
         astParameter = astParameter.getOnlyChild();
-        isRest = true;
-      }
-
-      if (iifeArgumentNode != null && iifeArgumentNode.isSpread()) {
-        // block inference on all parameters that might possibly be set by a spread, e.g. `z` in
-        // (function f(x, y, z = 1))(...[1, 2], 'foo')
-        iifeArgumentNode = null;
-      }
-      JSType inferredType = null;
-
-      if (iifeArgumentNode != null) {
-        inferredType = iifeArgumentNode.getJSType();
-      } else if (parameterTypeNode != null) {
-        inferredType = parameterTypeNode.getJSType();
-      }
-      if (inferredType != null) {
-        // update the actual type of the parameter node
-        astParameter.setJSType(inferredType);
+        // convert 'number' into 'Array<number>' for rest parameters
+        inferredType =
+            registry.createTemplatizedType(registry.getNativeObjectType(ARRAY_TYPE), inferredType);
       }
 
       if (defaultValue != null) {
         // The param could possibly be the default type, and `undefined` args won't propagate in.
         inferredType =
             registry.createUnionType(
-                getJSType(astParameter).restrictByNotUndefined(), getJSType(defaultValue));
+                inferredType.restrictByNotUndefined(), getJSType(defaultValue));
       }
 
       if (astParameter.isDestructuringPattern()) {
         // even if the inferredType is null, we still need to type all the nodes inside the
         // destructuring pattern. (e.g. in computed properties or default value expressions)
-        inferredType = inferredType != null ? inferredType : getJSType(astParameter);
-        astParameter.setJSType(inferredType);
         entryFlowScope = updateDestructuringParameter(astParameter, inferredType, entryFlowScope);
-      } else if (inferredType != null) {
+      } else {
         // for simple named parameters, we only need to update the scope/AST if we have a new
         // inferred type.
-        astParameter.setJSType(inferredType);
         entryFlowScope =
-            updateNamedParameter(
-                astParameter, isRest, defaultValue != null, inferredType, entryFlowScope);
+            updateNamedParameter(astParameter, defaultValue != null, inferredType, entryFlowScope);
       }
 
       parameterTypeNode = parameterTypeNode != null ? parameterTypeNode.getNext() : null;
@@ -226,6 +227,16 @@ class TypeInference
     return entryFlowScope;
   }
 
+  /**
+   * Sets the types of a un-named/destructuring function parameter to an inferred type.
+   *
+   * <p>This method is responsible for typing:
+   *
+   * <ul>
+   *   <li>The scope slot
+   *   <li>The pattern nodes
+   * </ul>
+   */
   @CheckReturnValue
   @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
   private FlowScope updateDestructuringParameter(
@@ -265,23 +276,26 @@ class TypeInference
     return entryFlowScope;
   }
 
+  /**
+   * Sets the types of a named/non-destructuring function parameter to an inferred type.
+   *
+   * <p>This method is responsible for typing:
+   *
+   * <ul>
+   *   <li>The scope slot
+   *   <li>The param node
+   * </ul>
+   */
   @CheckReturnValue
   @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
   private FlowScope updateNamedParameter(
-      Node paramName,
-      boolean isRest,
-      boolean hasDefaultValue,
-      JSType inferredType,
-      FlowScope entryFlowScope) {
+      Node paramName, boolean hasDefaultValue, JSType inferredType, FlowScope entryFlowScope) {
     TypedVar var = containerScope.getVar(paramName.getString());
     checkNotNull(var);
 
+    paramName.setJSType(inferredType);
+
     if (var.isTypeInferred()) {
-      if (isRest) {
-        // convert 'number' into 'Array<number>' for rest parameters
-        inferredType =
-            registry.createTemplatizedType(registry.getNativeObjectType(ARRAY_TYPE), inferredType);
-      }
       var.setType(inferredType);
     } else if (hasDefaultValue) {
       // If this is a declared type with a default value, update the LinkedFlowScope slots but not
