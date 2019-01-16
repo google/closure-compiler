@@ -33,6 +33,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPE_CHECK_
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
@@ -289,6 +290,11 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(checkVariableReferences);
+
+    if (options.closurePass) {
+      checks.add(checkClosureImports);
+      checks.add(rewriteClosureImports);
+    }
 
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       checks.add(rewriteGoogJsImports);
@@ -1081,6 +1087,12 @@ public final class DefaultPassConfig extends PassConfig {
         gatherModuleMetadataPass,
         closureCheckModule,
         "Need to gather module metadata before checking closure modules.");
+
+    assertPassOrder(
+        checks,
+        checkClosureImports,
+        rewriteClosureImports,
+        "Closure imports must be checked before they are rewritten.");
   }
 
   /**
@@ -1480,6 +1492,42 @@ public final class DefaultPassConfig extends PassConfig {
           maybeInitializeModuleRewriteState();
           return new ClosureRewriteModule(
               compiler, preprocessorSymbolTableFactory.getInstanceOrNull(), moduleRewriteState);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES_NEXT;
+        }
+      };
+
+  /** Checks goog.require, goog.forwardDeclare, goog.requireType, and goog.module.get calls */
+  private final HotSwapPassFactory checkClosureImports =
+      new HotSwapPassFactory("checkGoogRequires") {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          // TODO(johnplaisted): Expand the Set of modules to check.
+          return new CheckClosureImports(
+              compiler, compiler.getModuleMetadataMap(), ImmutableSet.of());
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES_NEXT;
+        }
+      };
+
+  /** Rewrites goog.require, goog.forwardDeclare, goog.requireType, and goog.module.get calls */
+  private final HotSwapPassFactory rewriteClosureImports =
+      new HotSwapPassFactory("rewriteClosureImports") {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          preprocessorSymbolTableFactory.maybeInitialize(compiler);
+          return new RewriteClosureImports(
+              compiler,
+              compiler.getModuleMetadataMap(),
+              preprocessorSymbolTableFactory.getInstanceOrNull(),
+              // TODO(johnplaisted): Expand the Set of modules to rewrite in.
+              ImmutableSet.of());
         }
 
         @Override
