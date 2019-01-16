@@ -628,16 +628,40 @@ RTCRtpSender.prototype.replaceTrack = function(track) {};
 
 
 /**
- * @return {!Object}
+ * @return {!RTCRtpSendParameters}
  */
 RTCRtpSender.prototype.getParameters = function() {};
 
 
 /**
- * @param {!Object} params
+ * @param {!RTCRtpSendParameters} params
  * @return {!Promise<undefined>}
  */
 RTCRtpSender.prototype.setParameters = function(params) {};
+
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpsendparameters
+ */
+function RTCRtpSendParameters() {}
+
+/**
+ * @type {string|undefined}
+ */
+RTCRtpSendParameters.prototype.transactionId;
+
+/**
+ * @type {!Array<!RTCRtpEncodingParameters>}
+ */
+RTCRtpSendParameters.prototype.encodings;
+
+/**
+ * Possible string values are "maintain-framerate", "maintain-resolution", and
+ * "balanced".
+ * @type {string|undefined}
+ */
+RTCRtpSendParameters.prototype.degradationPreference;
 
 
 /**
