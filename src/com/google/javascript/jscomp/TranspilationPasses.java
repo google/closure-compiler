@@ -83,7 +83,6 @@ public class TranspilationPasses {
 
     if (options.needsTranspilationFrom(ES2018)) {
       passes.add(rewriteAsyncIteration);
-      passes.add(rewriteObjectSpread);
     }
 
     if (options.needsTranspilationFrom(ES6) && doEs6ExternsCheck) {
@@ -102,6 +101,10 @@ public class TranspilationPasses {
   /** Adds transpilation passes that should run after all checks are done. */
   public static void addPostCheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
+    if (options.needsTranspilationFrom(ES2018)) {
+      passes.add(rewriteObjectSpread);
+    }
+
     if (options.needsTranspilationFrom(ES8)) {
       // Trailing commas in parameter lists are flagged as present by the parser,
       // but never actually represented in the AST.

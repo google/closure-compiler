@@ -74,9 +74,20 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPESCRIPT = ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
-  // OBJECT_PATTERN_REST is a 2018 feature, but its transpilation is done by the same pass that
-  // handles the destructuring transpilation done for ES6.
-  public static final FeatureSet TYPE_CHECK_SUPPORTED = ES8.with(Feature.OBJECT_PATTERN_REST);
+  public static final FeatureSet TYPE_CHECK_SUPPORTED =
+      // We are working to expand from ES8 to ES2018. We are currently missing:
+      // - ASYNC_GENERATORS
+      // - FOR_AWAIT_OF
+      // - REGEXP_FLAG_S
+      // - REGEXP_LOOKBEHIND
+      // - REGEXP_NAMED_GROUPS
+      // - REGEXP_UNICODE_PROPERTY_ESCAPE
+      ES8.with(
+          // OBJECT_PATTERN_REST is a 2018 feature, but its transpilation is done by the same pass
+          // that handles the destructuring transpilation done for ES6.
+          Feature.OBJECT_PATTERN_REST,
+          // rewriteObjectSpread is now after type checking.
+          Feature.OBJECT_LITERALS_WITH_SPREAD);
 
   private enum LangVersion {
     ES3,

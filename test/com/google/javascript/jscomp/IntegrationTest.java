@@ -6766,4 +6766,18 @@ public final class IntegrationTest extends IntegrationTestCase {
             "/** @type {(!RecordA<number>|!RecordA<boolean>)|!RecordB<string>} */",
             "Union.anything;"));
   }
+
+  @Test
+  public void testTypeCheckObjectSpread() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+
+    test(
+        options,
+        lines(
+            "let x = {a: 0, b: ''};", //
+            "let /** !{a: string, b: number} */ y = {...x};"),
+        TypeValidator.TYPE_MISMATCH_WARNING);
+  }
 }
