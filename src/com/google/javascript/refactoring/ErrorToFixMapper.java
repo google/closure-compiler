@@ -88,7 +88,7 @@ public final class ErrorToFixMapper {
         return getFixForMissingSemicolon(error, compiler);
       case "JSC_REQUIRES_NOT_SORTED":
         return getFixForUnsortedRequiresOrProvides(
-            error, compiler, "goog.require", "goog.forwardDeclare");
+            error, compiler, "goog.require", "goog.requireType", "goog.forwardDeclare");
       case "JSC_PROVIDES_NOT_SORTED":
         return getFixForUnsortedRequiresOrProvides(error, compiler, "goog.provide");
       case "JSC_DEBUGGER_STATEMENT_PRESENT":

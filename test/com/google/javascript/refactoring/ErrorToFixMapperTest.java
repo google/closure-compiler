@@ -371,7 +371,7 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
-  public void testRequiresSorted1() {
+  public void testRequiresSorted_standalone() {
     assertChanges(
         LINE_JOINER.join(
             "/**",
@@ -381,7 +381,8 @@ public class ErrorToFixMapperTest {
             "",
             "",
             "goog.require('b');",
-            "goog.require('a');",
+            "goog.requireType('a');",
+            "goog.requireType('d');",
             "goog.require('c');",
             "",
             "",
@@ -393,16 +394,17 @@ public class ErrorToFixMapperTest {
             " */",
             "",
             "",
-            "goog.require('a');",
+            "goog.requireType('a');",
             "goog.require('b');",
             "goog.require('c');",
+            "goog.requireType('d');",
             "",
             "",
             "alert(1);"));
   }
 
   @Test
-  public void testRequiresSorted2() {
+  public void testRequiresSorted_suppressExtra() {
     assertChanges(
         LINE_JOINER.join(
             "/**",
@@ -411,6 +413,8 @@ public class ErrorToFixMapperTest {
             " */",
             "goog.provide('x');",
             "",
+            "/** @suppress {extraRequire} */",
+            "goog.requireType('c');",
             "/** @suppress {extraRequire} */",
             "goog.require('b');",
             "goog.require('a');",
@@ -426,6 +430,8 @@ public class ErrorToFixMapperTest {
             "goog.require('a');",
             "/** @suppress {extraRequire} */",
             "goog.require('b');",
+            "/** @suppress {extraRequire} */",
+            "goog.requireType('c');",
             "",
             "alert(1);"));
   }
@@ -539,12 +545,12 @@ public class ErrorToFixMapperTest {
             "goog.module('m');",
             "",
             "const {fooBar} = goog.require('x');",
-            "const {foo, bar} = goog.require('y');"),
+            "const {foo, bar} = goog.requireType('y');"),
         LINE_JOINER.join(
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
-            "const {foo, bar} = goog.require('y');",
+            "const {foo, bar} = goog.requireType('y');",
             "const {fooBar} = goog.require('x');"));
   }
 
@@ -555,17 +561,17 @@ public class ErrorToFixMapperTest {
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
-            "const shorthand2 = goog.require('a');",
+            "const shorthand2 = goog.requireType('a');",
             "goog.require('standalone.two');",
-            "goog.require('standalone.one');",
+            "goog.requireType('standalone.one');",
             "const shorthand1 = goog.require('b');"),
         LINE_JOINER.join(
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
             "const shorthand1 = goog.require('b');",
-            "const shorthand2 = goog.require('a');",
-            "goog.require('standalone.one');",
+            "const shorthand2 = goog.requireType('a');",
+            "goog.requireType('standalone.one');",
             "goog.require('standalone.two');"));
   }
 
@@ -576,19 +582,21 @@ public class ErrorToFixMapperTest {
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
-            "const shorthand2 = goog.require('a');",
+            "const shorthand2 = goog.requireType('a');",
             "goog.require('standalone.two');",
-            "const {destructuring} = goog.require('c');",
-            "goog.require('standalone.one');",
+            "const {destructuring2} = goog.requireType('c');",
+            "const {destructuring1} = goog.require('d');",
+            "goog.requireType('standalone.one');",
             "const shorthand1 = goog.require('b');"),
         LINE_JOINER.join(
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
             "const shorthand1 = goog.require('b');",
-            "const shorthand2 = goog.require('a');",
-            "const {destructuring} = goog.require('c');",
-            "goog.require('standalone.one');",
+            "const shorthand2 = goog.requireType('a');",
+            "const {destructuring1} = goog.require('d');",
+            "const {destructuring2} = goog.requireType('c');",
+            "goog.requireType('standalone.one');",
             "goog.require('standalone.two');"));
   }
 
@@ -626,6 +634,7 @@ public class ErrorToFixMapperTest {
             "const bar = goog.require('bar');",
             "const {Bar} = bar;",
             "const util = goog.require('util');",
+            "const type = goog.requireType('type');",
             "const {doCoolThings} = util;",
             "",
             "doCoolThings(foo, Bar);"),
@@ -636,6 +645,7 @@ public class ErrorToFixMapperTest {
             "const foo = goog.require('foo');",
             "const {Bar} = bar;",
             "const util = goog.require('util');",
+            "const type = goog.requireType('type');",
             "const {doCoolThings} = util;",
             "",
             "doCoolThings(foo, Bar);"));
@@ -648,16 +658,20 @@ public class ErrorToFixMapperTest {
             "goog.module('m');",
             "",
             "const {veryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} = goog.require('other');",
+            "const {anotherVeryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} = goog.requireType('type');",
             "const shorter = goog.require('shorter');",
             "",
+            "/** @type {!anotherVeryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} */ var x;",
             "use(veryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace);",
             "use(shorter);"),
         LINE_JOINER.join(
             "goog.module('m');",
             "",
             "const shorter = goog.require('shorter');",
+            "const {anotherVeryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} = goog.requireType('type');",
             "const {veryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} = goog.require('other');",
             "",
+            "/** @type {!anotherVeryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} */ var x;",
             "use(veryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace);",
             "use(shorter);"));
   }
