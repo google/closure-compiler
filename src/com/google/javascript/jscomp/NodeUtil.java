@@ -2423,7 +2423,7 @@ public final class NodeUtil {
   }
 
   public static boolean isAnyFor(Node n) {
-    return n.isVanillaFor() || n.isForIn() || n.isForOf();
+    return n.isVanillaFor() || n.isForIn() || n.isForOf() || n.isForAwaitOf();
   }
 
   /**
