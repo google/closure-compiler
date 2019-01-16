@@ -93,10 +93,10 @@ testSuite({
 
   testCopyWithin_throwsIfNullish() {
     assertThrows(function() {
-      Array.prototype.copyWithin.call(null);
+      Array.prototype.copyWithin.call(null, 0, 0);
     });
     assertThrows(function() {
-      Array.prototype.copyWithin.call(undefined);
+      Array.prototype.copyWithin.call(undefined, 0, 0);
     });
   },
 
@@ -105,7 +105,7 @@ testSuite({
       length: 5
     };
 
-    Object.defineProperty(obj, 4, {
+    Object.defineProperty(obj, '4', {
       value: 'a',
       configurable: false,
       writable: true
