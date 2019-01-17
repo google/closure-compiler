@@ -154,19 +154,24 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
   }
 
   // TODO(tbreisacher): Update CodingConvention.extractClassNameIf{Require,Provide} to match this.
-  private String extractNamespace(Node call, String functionName) {
+  private String extractNamespace(Node call, String... primitiveNames) {
     Node callee = call.getFirstChild();
-    if (callee.isGetProp() && callee.matchesQualifiedName(functionName)) {
-      Node target = callee.getNext();
-      if (target != null && target.isString()) {
-        return target.getString();
+    if (!callee.isGetProp()) {
+      return null;
+    }
+    for (String primitiveName : primitiveNames) {
+      if (callee.matchesQualifiedName(primitiveName)) {
+        Node target = callee.getNext();
+        if (target != null && target.isString()) {
+          return target.getString();
+        }
       }
     }
     return null;
   }
 
   private String extractNamespaceIfRequire(Node call) {
-    return extractNamespace(call, "goog.require");
+    return extractNamespace(call, "goog.require", "goog.requireType");
   }
 
   private String extractNamespaceIfForwardDeclare(Node call) {
