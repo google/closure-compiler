@@ -942,10 +942,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case FOR_OF:
+      case FOR_AWAIT_OF:
         ensureTyped(n.getSecondChild());
-        JSType iterable = getJSType(n.getSecondChild());
-        validator.expectAutoboxesToIterable(
-            t, n.getSecondChild(), iterable, "Can only iterate over a (non-null) Iterable type");
         typeable = false;
         break;
 
@@ -991,7 +989,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // Visit the loop initializer of a for-of loop
     // We do this check here, instead of when visiting FOR_OF, in order to get the correct
     // TypedScope.
-    if (n.getParent().isForOf() && n.getParent().getFirstChild() == n) {
+    if ((n.getParent().isForOf() || n.getParent().isForAwaitOf())
+        && n.getParent().getFirstChild() == n) {
       checkForOfTypes(t, n.getParent());
     }
 
@@ -1747,18 +1746,43 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     return true;
   }
 
-  /** Visits the loop variable of a FOR_OF and verifies the type being assigned to it */
+  /**
+   * Visits the loop variable of a FOR_OF and FOR_AWAIT_OF and verifies the type being assigned to
+   * it.
+   */
   private void checkForOfTypes(NodeTraversal t, Node forOf) {
     Node lhs = forOf.getFirstChild();
     Node iterable = forOf.getSecondChild();
     JSType iterableType = getJSType(iterable);
-    // Convert primitives to their wrapper type and remove null/undefined
-    // If iterable is a union type, autoboxes each member of the union.
-    iterableType = iterableType.autobox();
-    JSType actualType =
-        iterableType
-            .getTemplateTypeMap()
-            .getResolvedTemplateType(typeRegistry.getIterableTemplate());
+    JSType actualType;
+
+    if (forOf.isForAwaitOf()) {
+      Optional<JSType> maybeType =
+          validator.expectAutoboxesToIterableOrAsyncIterable(
+              t,
+              iterable,
+              iterableType,
+              "Can only async iterate over a (non-null) Iterable or AsyncIterable type");
+
+      if (!maybeType.isPresent()) {
+        // Not iterable or async iterable, error reported by
+        // expectAutoboxesToIterableOrAsyncIterable.
+        return;
+      }
+
+      actualType = maybeType.get();
+    } else {
+      validator.expectAutoboxesToIterable(
+          t, iterable, iterableType, "Can only iterate over a (non-null) Iterable type");
+
+      actualType =
+          // Convert primitives to their wrapper type and remove null/undefined
+          // If iterable is a union type, autoboxes each member of the union.
+          iterableType
+              .autobox()
+              .getTemplateTypeMap()
+              .getResolvedTemplateType(typeRegistry.getIterableTemplate());
+    }
 
     if (NodeUtil.isNameDeclaration(lhs)) {
       // e.g. get "x" given the VAR in "for (var x of arr) {"

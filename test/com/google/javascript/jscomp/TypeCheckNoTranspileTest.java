@@ -6478,4 +6478,187 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "missing : []",
             "mismatch: [a,b]"));
   }
+
+  @Test
+  public void testForAwaitOfNonIterable() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "async function foo() {", //
+            "  for await (const n of 0) {",
+            "  }",
+            "}"),
+        lines(
+            "Can only async iterate over a (non-null) Iterable or AsyncIterable type",
+            "found   : number",
+            "required: (AsyncIterator|Iterator)"));
+  }
+
+  @Test
+  public void testForAwaitOfAsyncIterator() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !AsyncIterable<number> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testForAwaitOfNullableAsyncIterator() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** ?AsyncIterable<number> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}"),
+        lines(
+            "Can only async iterate over a (non-null) Iterable or AsyncIterable type",
+            "found   : (AsyncIterable<number>|null)",
+            "required: (AsyncIterator|Iterator)"));
+  }
+
+  @Test
+  public void testForAwaitOfAsyncIteratorMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().addString().build(),
+        lines(
+            "let /** !AsyncIterable<string> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}"),
+        lines(
+            "declared type of for-of loop variable does not match inferred type",
+            "found   : string",
+            "required: number"));
+  }
+
+  @Test
+  public void testForAwaitOfSynchronousIterable() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !Iterable<number> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testForAwaitOfSynchronousIterableMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().addString().build(),
+        lines(
+            "let /** !Iterable<string> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}"),
+        lines(
+            "declared type of for-of loop variable does not match inferred type",
+            "found   : string",
+            "required: number"));
+  }
+
+  @Test
+  public void testForAwaitOfBoxedSynchronousIterable() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().addString().build(),
+        lines(
+            "let /** string */ gen;",
+            "async function foo() {",
+            "  for await (const /** string */ n of gen) {",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testForAwaitOfBoxedSynchronousIterableMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().addString().build(),
+        lines(
+            "let /** string */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}"),
+        lines(
+            "declared type of for-of loop variable does not match inferred type",
+            "found   : string",
+            "required: number"));
+  }
+
+  @Test
+  public void testForAwaitOfAsyncAndSynchronousIterableUnion() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** !Iterable<number>|!AsyncIterable<string> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number|string */ n of gen) {",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testForAwaitOfAsyncAndSynchronousIterableUnionMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().addString().build(),
+        lines(
+            "let /** !Iterable<number>|!AsyncIterable<string> */ gen;",
+            "async function foo() {",
+            "  for await (const /** boolean */ n of gen) {",
+            "  }",
+            "}"),
+        lines(
+            "declared type of for-of loop variable does not match inferred type",
+            "found   : (number|string)",
+            "required: boolean"));
+  }
+
+  @Test
+  public void testForAwaitOfAsyncAndBoxIterableUnion() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().addString().build(),
+        lines(
+            "let /** !Iterable<number>|string */ gen;",
+            "async function foo() {",
+            "  for await (const /** number|string */ n of gen) {",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testForAwaitOfAsyncAndBoxIterableUnionMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().addString().build(),
+        lines(
+            "let /** !Iterable<number>|string */ gen;",
+            "async function foo() {",
+            "  for await (const /** boolean */ n of gen) {",
+            "  }",
+            "}"),
+        lines(
+            "declared type of for-of loop variable does not match inferred type",
+            "found   : (number|string)",
+            "required: boolean"));
+  }
+
+  @Test
+  public void testForAwaitOfUnknown() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "let /** ? */ gen;",
+            "async function foo() {",
+            "  for await (const /** null */ n of gen) {",
+            "  }",
+            "}"));
+  }
 }
