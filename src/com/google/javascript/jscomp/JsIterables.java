@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 
@@ -56,6 +57,16 @@ final class JsIterables {
       return templateTypeMap.getResolvedTemplateType(typeRegistry.getAsyncIteratorTemplate());
     }
     return typeRegistry.getNativeType(UNKNOWN_TYPE);
+  }
+
+  /**
+   * Returns an `Iterable` type templated on {@code elementType}.
+   *
+   * <p>Example: `number' => `Iterable<number>`.
+   */
+  static final JSType createIterableTypeOf(JSType elementType, JSTypeRegistry typeRegistry) {
+    return typeRegistry.createTemplatizedType(
+        typeRegistry.getNativeObjectType(JSTypeNative.ITERABLE_TYPE), elementType);
   }
 
   private JsIterables() {}

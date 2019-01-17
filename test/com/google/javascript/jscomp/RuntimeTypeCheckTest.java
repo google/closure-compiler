@@ -23,6 +23,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import javax.annotation.Nullable;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -49,13 +50,109 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   @Test
-  public void testValue() {
+  public void testParamFormat_simpleName() {
     testChecks(
         "/** @param {number} i */ function f(i) {}",
-        "/** @param {number} i */ function f(i) {"
-            + "  $jscomp.typecheck.checkType(i, "
-            + "      [$jscomp.typecheck.valueChecker('number')]);"
-            + "}");
+        lines(
+            "/** @param {number} i */ function f(i) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.valueChecker('number')]);",
+            "}"));
+  }
+
+  @Test
+  public void testParamFormat_rest() {
+    testChecks(
+        "/** @param {...number} i */ function f(...i) {}",
+        lines(
+            "/** @param {...number} i */ function f(...i) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.externClassChecker('Array')]);",
+            "}"));
+  }
+
+  @Test
+  public void testParamFormat_arrayDestructuring() {
+    testChecks(
+        "/** @param {!Iterable<number>} i */ function f([i]) {}",
+        lines(
+            "/** @param {!Iterable<number>} i */ function f([i]) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.valueChecker('number')]);",
+            "}"));
+  }
+
+  @Test
+  public void testParamFormat_objectDestructuring() {
+    testChecks(
+        "/** @param {{a: number}} i */ function f({a: i}) {}",
+        lines(
+            "/** @param {{a: number}} i */ function f({a: i}) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.valueChecker('number')]);",
+            "}"));
+  }
+
+  @Test
+  public void testParamFormat_simpleName_withDefault() {
+    testChecks(
+        "/** @param {number=} i */ function f(i = 9) {}",
+        lines(
+            "/** @param {number=} i */ function f(i = 9) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.valueChecker('number')]);",
+            "}"));
+  }
+
+  @Test
+  public void testParamFormat_arrayDestructuring_withDefault() {
+    testChecks(
+        lines(
+            "const /** !Iterable<number> */ itr = [];",
+            "",
+            "/** @param {!Iterable<number>=} unused */",
+            "function f([i] = itr) {}"),
+        lines(
+            "const /** !Iterable<number> */ itr = [];",
+            "",
+            "/** @param {!Iterable<number>=} unused */",
+            "function f([i] = itr) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.valueChecker('number')]);",
+            "}"));
+  }
+
+  @Test
+  public void testParamFormat_objectDestructuring_withDefault() {
+    testChecks(
+        "/** @param {{a: number}=} i */ function f({a: i} = {a: 9}) {}",
+        lines(
+            "/** @param {{a: number}=} i */ function f({a: i} = {a: 9}) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.valueChecker('number')]);",
+            "}"));
+  }
+
+  @Test
+  public void testParamFormat_arrayDestructuring_withDefault_nestedInPattern() {
+    testChecks(
+        "/** @param {!Iterable<number>} i */ function f([i = 9]) {}",
+        lines(
+            "/** @param {!Iterable<number>} i */ function f([i = 9]) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.valueChecker('number')]);",
+            "}"));
+  }
+
+  @Test
+  public void testParamFormat_objectDestructuring_withDefault_nestedInPattern() {
+    testChecks(
+        "/** @param {{a: number}} i */ function f({a: i = 9}) {}",
+        lines(
+            "/** @param {{a: number}} i */ function f({a: i = 9}) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.valueChecker('number')]);",
+            "}"));
   }
 
   @Test
@@ -135,13 +232,80 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   @Test
-  public void testReturn() {
+  public void testReturn_sync() {
     testChecks(
         "/** @return {string} */ function f() { return 'x'; }",
-        "/** @return {string} */ function f() {"
-            + "  return $jscomp.typecheck.checkType('x', "
-            + "      [$jscomp.typecheck.valueChecker('string')]);"
-            + "}");
+        lines(
+            "/** @return {string} */ function f() {",
+            "  return $jscomp.typecheck.checkType('x', [",
+            "      $jscomp.typecheck.valueChecker('string'),",
+            "  ]);",
+            "}"));
+  }
+
+  @Test
+  public void testReturn_async() {
+    testChecks(
+        "/** @return {!Promise<string>} */ async function f() { return 'x'; }",
+        lines(
+            "/** @return {!Promise<string>} */ async function f() {",
+            "  return $jscomp.typecheck.checkType('x', [",
+            "      $jscomp.typecheck.externClassChecker('IThenable'),",
+            "      $jscomp.typecheck.valueChecker('string'),",
+            "  ]);",
+            "}"));
+  }
+
+  @Test
+  public void testYield_sync() {
+    testChecks(
+        "/** @return {!Generator<string>} */ function* f() { yield 'x'; }",
+        lines(
+            "/** @return {!Generator<string>} */ function* f() {",
+            "  yield $jscomp.typecheck.checkType('x', [",
+            "      $jscomp.typecheck.valueChecker('string'),",
+            "  ]);",
+            "}"));
+  }
+
+  @Test
+  @Ignore // TODO(b/120277559): Enable when async generators are supported.
+  public void testYield_async() {
+    testChecks(
+        "/** @return {!AsyncGenerator<string>} */ async function* f() { yield 'x'; }",
+        lines(
+            "/** @return {!AsyncGenerator<string>} */ function* f() {",
+            "  yield $jscomp.typecheck.checkType('x', [",
+            "      $jscomp.typecheck.externClassChecker('IThenable'),",
+            "      $jscomp.typecheck.valueChecker('string'),",
+            "  ]);",
+            "}"));
+  }
+
+  @Test
+  public void testYieldAll_sync() {
+    testChecks(
+        "/** @return {!Generator<string>} */ function* f() { yield* ['x']; }",
+        lines(
+            "/** @return {!Generator<string>} */ function* f() {",
+            "  yield* $jscomp.typecheck.checkType(['x'], [",
+            "      $jscomp.typecheck.externClassChecker('Iterable'),",
+            "  ]);",
+            "}"));
+  }
+
+  @Test
+  @Ignore // TODO(b/120277559): Enable when async generators are supported.
+  public void testYieldAll_async() {
+    testChecks(
+        "/** @return {!AsyncGenerator<string>} */ async function* f() { yield* ['x']; }",
+        lines(
+            "/** @return {!AsyncGenerator<string>} */ async function* f() {",
+            "  yield* $jscomp.typecheck.checkType(['x'], [",
+            "      $jscomp.typecheck.externClassChecker('IThenable'),",
+            "      $jscomp.typecheck.externClassChecker('Iterable'),",
+            "  ]);",
+            "}"));
   }
 
   @Test
@@ -176,7 +340,6 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   @Test
   public void testNullableFunctionType() {
-    // TODO(b/120913284): Nullable function outer cast incorrectly prevents instrumentation.
     testChecks(
         lines(
             "/** @type {?function(number):number} */ (/** @param {number} x*/ function(x) {",
@@ -184,7 +347,8 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "})"),
         lines(
             "/** @type {?function(number):number} */ (/** @param {number} x */ function(x) {",
-            " return x;",
+            "  $jscomp.typecheck.checkType(x,[$jscomp.typecheck.valueChecker('number')]);",
+            "  return x;",
             "})"));
   }
 
@@ -211,7 +375,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   @Test
-  public void testQualifiedClass() {
+  public void testMarkers_onQualifiedClass_es5() {
     testChecks(
         lines(
             "var goog = {};",
@@ -232,72 +396,264 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInnerClasses() {
+  public void testMarkers_onQualifiedClass_es6() {
     testChecks(
-        "function f() { /** @constructor */ function inner() {} }"
-            + "function g() { /** @constructor */ function inner() {} }",
-        "function f() {"
-            + "  /** @constructor */ function inner() {}"
-            + "  inner.prototype['instance_of__inner'] = true;"
-            + "}"
-            + "function g() {"
-            + "  /** @constructor */ function inner$jscomp$1() {}"
-            + "  inner$jscomp$1.prototype['instance_of__inner$jscomp$1'] = true;"
-            + "}");
+        lines(
+            "var goog = {};",
+            "goog.Foo = class {};",
+            "",
+            "/** @param {!goog.Foo} x */ ",
+            "function f(x) {}"),
+        lines(
+            "var goog = {};",
+            "goog.Foo = class {",
+            "  ['instance_of__goog.Foo']() {}",
+            "};",
+            "",
+            "/** @param {!goog.Foo} x */ ",
+            "function f(x) {",
+            "  $jscomp.typecheck.checkType(x, ",
+            "    [$jscomp.typecheck.classChecker('goog.Foo')]);",
+            "}"));
   }
 
   @Test
-  public void testInterface() {
-    testChecks(
-        "/** @interface */ function I() {}" + "/** @param {!I} i */ function f(i) {}",
-        "/** @interface */ function I() {}"
-            + "/** @param {!I} i */ function f(i) {"
-            + "  $jscomp.typecheck.checkType(i, "
-            + "    [$jscomp.typecheck.interfaceChecker('I')])"
-            + "}");
-  }
-
-  @Test
-  public void testImplementedInterface() {
+  public void testMarkers_onScopedClass_byFunction_es5() {
     testChecks(
         lines(
-            "/** @interface */ function I() {}",
-            "/** @param {!I} i */ function f(i) {}",
-            "/** @constructor\n@implements {I} */ function C() {}"),
+            "function f() { /** @constructor */ function inner() {} }",
+            "function g() { /** @constructor */ function inner() {} }"),
         lines(
-            "/** @interface */ function I() {}",
-            "/** @param {!I} i */ function f(i) {",
-            "  $jscomp.typecheck.checkType(i, ",
-            "      [$jscomp.typecheck.interfaceChecker('I')])",
+            "function f() {",
+            "  /** @constructor */ function inner() {}",
+            "  inner.prototype['instance_of__inner'] = true;",
             "}",
-            "/** @constructor\n@implements {I} */ function C() {}",
+            "function g() {",
+            "  /** @constructor */ function inner$jscomp$1() {}",
+            "  inner$jscomp$1.prototype['instance_of__inner$jscomp$1'] = true;",
+            "}"));
+  }
+
+  @Test
+  public void testMarkers_onScopedClass_byFunction_es6() {
+    testChecks(
+        lines(
+            "function f() { class inner {} }", //
+            "function g() { class inner {} }"),
+        lines(
+            "function f() {",
+            "  class inner {",
+            "    ['instance_of__inner']() {}",
+            "  }",
+            "}",
+            "function g() {",
+            "  class inner$jscomp$1 {",
+            "    ['instance_of__inner$jscomp$1']() { }",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testMarkers_onScopedClass_byIife_es5() {
+    testChecks(
+        "(function() { /** @constructor */ function C() {} })()",
+        lines(
+            "(function() {",
+            "  /** @constructor */ function C() {}",
+            "  C.prototype['instance_of__C'] = true;",
+            "})()"));
+  }
+
+  @Test
+  public void testMarkers_onScopedClass_byIife_es6() {
+    testChecks(
+        "(function() { class C {} })()",
+        lines(
+            "(function() {", //
+            "  class C {",
+            "    ['instance_of__C']() {}",
+            "  }",
+            "})()"));
+  }
+
+  @Test
+  public void testMarkers_forImplementedInterface_es5() {
+    testChecks(
+        lines(
+            "/** @interface */ function I() {}",
+            "",
+            "/**",
+            " * @constructor",
+            " * @implements {I}",
+            " */",
+            "function C() {}"),
+        lines(
+            "/** @interface */ function I() {}",
+            "",
+            "/**",
+            " * @constructor",
+            " * @implements {I}",
+            " */",
+            "function C() {}",
             "C.prototype['instance_of__C'] = true;",
             "C.prototype['implements__I'] = true;"));
   }
 
   @Test
-  public void testExtendedInterface() {
+  public void testMarkers_forImplementedInterface_es6() {
+    testChecks(
+        lines(
+            "/** @interface */ class I {}", //
+            "",
+            "/** @implements {I} */ class C {}"),
+        lines(
+            "/** @interface */ class I {}",
+            "",
+            "/** @implements {I} */ class C {",
+            "  ['instance_of__C']() {}",
+            "  ['implements__I']() {}",
+            "}"));
+  }
+
+  @Test
+  public void testMarkers_forExtendedInterface_es5() {
     testChecks(
         lines(
             "/** @interface */ function I() {}",
-            "/** @interface\n@extends {I} */ function J() {}",
-            "/** @param {!I} i */function f(i) {}",
-            "/** @constructor\n@implements {J} */function C() {}"),
+            "",
+            "/**",
+            " * @interface",
+            " * @extends {I}",
+            " */",
+            "function J() {}",
+            "",
+            "/**",
+            " * @constructor",
+            " * @implements {J}",
+            " */",
+            "function C() {}"),
         lines(
             "/** @interface */ function I() {}",
-            "/** @interface\n@extends {I} */ function J() {}",
-            "/** @param {!I} i */ function f(i) {",
-            "  $jscomp.typecheck.checkType(i, ",
-            "      [$jscomp.typecheck.interfaceChecker('I')])",
-            "}",
-            "/** @constructor\n@implements {J} */ function C() {}",
+            "",
+            "/**",
+            " * @interface",
+            " * @extends {I}",
+            " */",
+            "function J() {}",
+            "",
+            "/**",
+            " * @constructor",
+            " * @implements {J}",
+            " */",
+            "function C() {}",
             "C.prototype['instance_of__C'] = true;",
             "C.prototype['implements__I'] = true;",
             "C.prototype['implements__J'] = true;"));
   }
 
   @Test
-  public void testImplementedInterfaceOrdering() {
+  public void testMarkers_forExtendedInterface_es6() {
+    testChecks(
+        lines(
+            "/** @interface */ class I {}",
+            "",
+            "/** @interface */ class J extends I {}",
+            "",
+            "/**",
+            " * @constructor",
+            " * @implements {J}",
+            " */",
+            "class C {}"),
+        lines(
+            "/** @interface */ class I {}",
+            "",
+            "/** @interface */ class J extends I {}",
+            "",
+            "/**",
+            " * @constructor",
+            " * @implements {J}",
+            " */",
+            "class C {",
+            "  ['instance_of__C']() {}",
+            "  ['implements__I']() {}",
+            "  ['implements__J']() {}",
+            "}"));
+  }
+
+  @Test
+  public void testMarkers_onClass_inCompositeExpression_es5() {
+    testChecks(
+        lines(
+            "/** @interface */ function I() {};", //
+            "",
+            // `new` is just an example. The important thing is that the class is declared in a
+            // larger expression.
+            "new (/**",
+            "      * @constructor",
+            "      * @implements {I}",
+            "      */",
+            "     function() {});"),
+        lines(
+            "/** @interface */ function I() {};", //
+            "",
+            // TODO(b/123018757): There should be markers added here somehow.
+            "new (/**",
+            "      * @constructor",
+            "      * @implements {I}",
+            "      */",
+            "     function() {});"));
+  }
+
+  @Test
+  public void testMarkers_onClass_inCompositeExpression_es6() {
+    testChecks(
+        lines(
+            "/** @interface */ class I {};", //
+            "",
+            // `new` is just an example; the important thing is that the class is declared in a
+            // larger expression.
+            "new (/** @implements {I} */ class {});"),
+        lines(
+            "/** @interface */ class I {};", //
+            "",
+            "new (/** @implements {I} */ class {",
+            "  ['implements__I']() {}",
+            "});"));
+  }
+
+  @Test
+  public void testMarkers_onClass_es6_withConstructor() {
+    testChecks(
+        lines(
+            "class C {",
+            // This node is also a FUNCTION with a ctor type, so we want to check that the markers
+            // aren't duplicated.
+            "  constructor() {",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "  }",
+            "",
+            "  ['instance_of__C']() { }",
+            "}"));
+  }
+
+  @Test
+  public void testInterface() {
+    testChecks(
+        lines("/** @interface */ function I() {}" + "/** @param {!I} i */ function f(i) {}"),
+        lines(
+            "/** @interface */ function I() {}",
+            "/** @param {!I} i */ function f(i) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "    [$jscomp.typecheck.interfaceChecker('I')])",
+            "}"));
+  }
+
+  @Test
+  public void testImplementedInterface_ordering() {
     testChecks(
         lines(
             "/** @interface */ function I() {}",
@@ -317,7 +673,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   @Test
-  public void testImplementedInterfaceOrderingGoogInherits() {
+  public void testImplementedInterface_ordering_googInherits() {
     testChecks(
         lines(
             "var goog = {};",
@@ -343,17 +699,6 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "C.prototype['instance_of__C'] = true;",
             "C.prototype['implements__I'] = true;",
             "C.prototype.f = function() {};"));
-  }
-
-  @Test
-  public void testInnerConstructor() {
-    testChecks(
-        "(function() { /** @constructor */ function C() {} })()",
-        lines(
-            "(function() {",
-            "  /** @constructor */ function C() {}",
-            "  C.prototype['instance_of__C'] = true;",
-            "})()"));
   }
 
   @Test
