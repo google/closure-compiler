@@ -48,12 +48,25 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   private static final SourceFile PROVIDES_SYMBOL_SRC =
       SourceFile.fromCode(PROVIDES_SYMBOL_PATH, "goog.provide('symbol');");
 
+  private static final String ES_MODULE_PATH = "es_module.js";
+
+  private static final SourceFile ES_MODULE_SRC =
+      SourceFile.fromCode(ES_MODULE_PATH, "goog.declareModuleId('es.module');\nexport {};");
+
   private static final String TEST_CODE_PATH = "testcode";
 
   private static final ModuleMetadata PROVIDES_SYMBOL_METADATA =
       ModuleMetadata.builder()
           .addGoogNamespace("symbol")
           .moduleType(ModuleType.GOOG_PROVIDE)
+          .usesClosure(true)
+          .isTestOnly(false)
+          .build();
+
+  private static final ModuleMetadata ES_MODULE_METADATA =
+      ModuleMetadata.builder()
+          .addGoogNamespace("es.module")
+          .moduleType(ModuleType.ES6_MODULE)
           .usesClosure(true)
           .isTestOnly(false)
           .build();
@@ -108,11 +121,19 @@ public class CheckClosureImportsTest extends CompilerTestCase {
             ImmutableMap.of(
                 PROVIDES_SYMBOL_PATH,
                 PROVIDES_SYMBOL_METADATA,
+                ES_MODULE_PATH,
+                ES_MODULE_METADATA,
                 TEST_CODE_PATH,
                 testMetadata,
                 "externs",
                 EXTERN_METADATA),
-            ImmutableMap.of("symbol", PROVIDES_SYMBOL_METADATA, "test", testMetadata)),
+            ImmutableMap.of(
+                "symbol",
+                PROVIDES_SYMBOL_METADATA,
+                "es.module",
+                ES_MODULE_METADATA,
+                "test",
+                testMetadata)),
         typesToRewriteIn);
   }
 
@@ -735,5 +756,19 @@ public class CheckClosureImportsTest extends CompilerTestCase {
                     "goog.module('test');", //
                     "const {Type} = goog.requireType('symbol');",
                     "/** !Type */ let x;"))));
+  }
+
+  @Test
+  public void googRequireBetweenEsModulesIsWarning() {
+    moduleType = ModuleType.ES6_MODULE;
+
+    test(
+        srcs(
+            ES_MODULE_SRC,
+            makeTestFile(
+                lines(
+                    "const {Type} = goog.require('es.module');", //
+                    "export {};"))),
+        warning(Es6RewriteModules.SHOULD_IMPORT_ES6_MODULE));
   }
 }

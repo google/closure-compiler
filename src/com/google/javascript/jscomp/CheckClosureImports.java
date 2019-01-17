@@ -430,6 +430,11 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         return;
       }
 
+      if (!call.hasTwoChildren() || !call.getSecondChild().isString()) {
+        t.report(call, INVALID_CLOSURE_IMPORT_CALL, importType.callName());
+        return;
+      }
+
       if (!isNonModule && NodeUtil.isNameDeclaration(parent.getParent())) {
         Node declaration = parent.getParent();
 
@@ -460,11 +465,6 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         }
       }
 
-      if (!call.hasTwoChildren() || !call.getSecondChild().isString()) {
-        t.report(call, INVALID_CLOSURE_IMPORT_CALL, importType.callName());
-        return;
-      }
-
       String namespace = call.getSecondChild().getString();
       ModuleMetadata requiredModule = moduleMetadataMap.getModulesByGoogNamespace().get(namespace);
 
@@ -477,6 +477,13 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         t.report(call, MISSING_MODULE_OR_PROVIDE, namespace);
       } else if (importType.mustBeOrdered() && !namespacesSeen.contains(namespace)) {
         t.report(call, LATE_PROVIDE_ERROR, namespace);
+      }
+
+      if (importType == ClosureImport.REQUIRE
+          && requiredModule != null
+          && currentModule.isEs6Module()
+          && requiredModule.isEs6Module()) {
+        t.report(call, Es6RewriteModules.SHOULD_IMPORT_ES6_MODULE);
       }
     }
   }

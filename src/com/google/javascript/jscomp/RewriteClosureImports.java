@@ -151,13 +151,31 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
       }
 
       if (n.getJSDocInfo() != null) {
-        rewriteJsdoc(n.getJSDocInfo(), currentModule);
+        rewriteJsdoc(t, n.getJSDocInfo(), currentModule);
       }
+    }
+
+    /**
+     * Gets some made-up metadata for the given Closure namespace.
+     *
+     * <p>This is used when the namespace is not part of the input so that this pass can be fault
+     * tolerant and still rewrite to something. Some tools don't care about rewriting correctly and
+     * just want the type information of this modules (e.g. clutz).
+     */
+    private ModuleMetadata getFallbackMetadataForNamespace(String namespace) {
+      // Assume a provide'd file to be consistent with goog.module rewriting.
+      ModuleMetadata.Builder builder =
+          ModuleMetadata.builder()
+              .moduleType(ModuleMetadataMap.ModuleType.GOOG_PROVIDE)
+              .usesClosure(true)
+              .isTestOnly(false);
+      builder.googNamespacesBuilder().add(namespace);
+      return builder.build();
     }
 
     private void rewriteImport(
         ModuleMetadata currentModule,
-        ModuleMetadata requiredModule,
+        @Nullable ModuleMetadata requiredModule,
         String requiredNamespace,
         Node callNode,
         Node parentNode) {
@@ -233,6 +251,9 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
       String requiredNamespace = callNode.getLastChild().getString();
       ModuleMetadata requiredModule =
           moduleMetadataMap.getModulesByGoogNamespace().get(requiredNamespace);
+      if (requiredModule == null) {
+        requiredModule = getFallbackMetadataForNamespace(requiredNamespace);
+      }
       rewriteImport(currentModule, requiredModule, requiredNamespace, callNode, parentNode);
     }
 
@@ -318,11 +339,46 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
         return;
       }
 
+      if (n.getParent().isExportSpec() && n.getParent().getFirstChild() == n) {
+        // We can't inline a name in an export spec. So split it out into its own export statement
+        // first. Note that it should always be okay to make this new export a const export, which
+        // differs from export specs, because we force the goog.require alias to be const.
+
+        // const a = goog.require('some.provide');
+        // let qux;
+        // export {qux, a as b};
+        // =======================================
+        // const a = goog.require('some.provide');
+        // let qux;
+        // export {qux};
+        // export const b = a;
+
+        // After this rewriting we can then replace the new RHS `a` with `some.provide`.
+        n = splitExportSpec(t, n, n.getParent());
+      }
+
       if (!newName.contains(".")) {
         safeSetString(n, newName);
       } else {
         n.replaceWith(NodeUtil.newQName(compiler, newName).srcrefTree(n));
       }
+    }
+
+    /**
+     * Splits the given name of an export spec into its own constant export statement.
+     *
+     * @return the right hand side of the new const node
+     */
+    private Node splitExportSpec(NodeTraversal t, Node nameNode, Node exportSpec) {
+      Node oldExport = exportSpec.getGrandparent(); // export spec -> specs -> export
+      Node newRHSNameNode = IR.name(nameNode.getString());
+      Node newExport =
+          IR.export(IR.constNode(IR.name(exportSpec.getSecondChild().getString()), newRHSNameNode))
+              .srcrefTree(exportSpec);
+      oldExport.getParent().addChildAfter(newExport, oldExport);
+      exportSpec.detach();
+      t.reportCodeChange();
+      return newRHSNameNode;
     }
 
     private void safeSetString(Node n, String newString) {
@@ -342,7 +398,7 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
       }
     }
 
-    private void rewriteJsdoc(JSDocInfo info, ModuleMetadata currentModule) {
+    private void rewriteJsdoc(NodeTraversal t, JSDocInfo info, ModuleMetadata currentModule) {
       if (typesToInline.isEmpty()) {
         return;
       }

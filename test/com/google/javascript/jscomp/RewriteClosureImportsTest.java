@@ -1397,4 +1397,118 @@ public class RewriteClosureImportsTest extends CompilerTestCase {
                     "export let /** !a */ n;",
                     "export let /** !a.b */ x;"))));
   }
+
+  @Test
+  public void googRequireInEsModuleReexported() {
+    test(
+        srcs(
+            PROVIDE,
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "const x = goog.require('some.provided.namespace');", //
+                    "let a, b, c;", //
+                    "export {a, b as d, x as y, c};",
+                    "use(x);"))),
+        expected(
+            PROVIDE,
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "let a, b, c;", //
+                    "export {a, b as d, c};",
+                    "export const y = some.provided.namespace;",
+                    "use(some.provided.namespace);"))));
+  }
+
+  // TODO(johnplaisted): These tests should pass. However, most of the logic in this class is copied
+  // from ClosureRewriteModules, which apparently also has this bug today. Fixing this would require
+  // reworking the pass to first scan for Closure imports, rewrite references to them, and then
+  // detach them. We could probably reuse the Import class / model in the modules package. But for
+  // now just acknowledge this broken.
+  // @Test
+  // public void correctAnnotationIsRenamed() {
+  //   test(
+  //       srcs(
+  //           PROVIDE,
+  //           SourceFile.fromCode(
+  //               "testcode",
+  //               lines(
+  //                   "const {Type} = goog.require('some.provided.namespace');",
+  //                   "export let /** !Type */ value;",
+  //                   "function foo() {",
+  //                   "  class Type {}",
+  //                   "  let /** !Type */ value;",
+  //                   "}"))),
+  //       expected(
+  //           PROVIDE,
+  //           SourceFile.fromCode(
+  //               "testcode",
+  //               lines(
+  //                   "export let /** !some.provided.namespace.Type */ value;",
+  //                   "function foo() {",
+  //                   "  class Type {}",
+  //                   "  let /** !Type */ value;",
+  //                   "}"))));
+  // }
+  //
+  // @Test
+  // public void testGoogRequireTypeCorrectAnnotationIsRenamed() {
+  //   test(
+  //       srcs(
+  //           PROVIDE,
+  //           SourceFile.fromCode(
+  //               "testcode",
+  //               lines(
+  //                   "const {Type} = goog.requireType('closure.provide');",
+  //                   "export let /** !Type */ value;",
+  //                   "function foo() {",
+  //                   "  class Type {}",
+  //                   "  let /** !Type */ value;",
+  //                   "}"))),
+  //       expected(
+  //           PROVIDE,
+  //           SourceFile.fromCode(
+  //               "testcode",
+  //               lines(
+  //                   "let /** !closure.provide.Type */ value$$module$testcode;",
+  //                   "function foo$$module$testcode() {",
+  //                   "  class Type {}",
+  //                   "  let /** !Type */ value;",
+  //                   "}",
+  //                   "/** @const */ var module$testcode={};",
+  //                   "/** @const */ module$testcode.value = value$$module$testcode;"))));
+  // }
+
+  @Test
+  public void assumeMissingRequireIsProvide() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "goog.module('foo');", //
+                    "const x = goog.require('does.not.exist');",
+                    "use(x);"))),
+        expected(
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "goog.module('foo');", //
+                    "use(does.not.exist);"))));
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "goog.module('foo');", //
+                    "const {X} = goog.require('does.not.exist');",
+                    "let /** !X */ x;"))),
+        expected(
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "goog.module('foo');", //
+                    "let /** !does.not.exist.X */ x;"))));
+  }
 }
