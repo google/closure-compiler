@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.HamtPMap;
@@ -176,7 +177,8 @@ public class JSTypeRegistry implements Serializable {
   private final transient Set<String> forwardDeclaredTypes;
 
   // A map of properties to the types on which those properties have been declared.
-  private final Map<String, UnionTypeBuilder> typesIndexedByProperty = new HashMap<>();
+  private transient Multimap<String, JSType> typesIndexedByProperty =
+      MultimapBuilder.hashKeys().linkedHashSetValues().build();
 
   private JSType sentinelObjectLiteral;
 
@@ -898,15 +900,16 @@ public class JSTypeRegistry implements Serializable {
    * show up in the type registry").
    */
   public void registerPropertyOnType(String propertyName, JSType type) {
-    UnionTypeBuilder typeSet =
-        typesIndexedByProperty.computeIfAbsent(
-            propertyName, k -> UnionTypeBuilder.createForPropertyChecking(this));
-
     if (isObjectLiteralThatCanBeSkipped(type)) {
       type = getSentinelObjectLiteral();
     }
 
-    typeSet.addAlternate(type);
+    if (type.isUnionType()) {
+      typesIndexedByProperty.putAll(propertyName, type.toMaybeUnionType().getAlternates());
+    } else {
+      typesIndexedByProperty.put(propertyName, type);
+    }
+
     addReferenceTypeIndexedByProperty(propertyName, type);
 
     // Clear cached values that depend on typesIndexedByProperty.
@@ -948,18 +951,24 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Gets the greatest subtype of the {@code type} that has a property
-   * {@code propertyName} defined on it.
+   * Gets the greatest subtype of the {@code type} that has a property {@code propertyName} defined
+   * on it.
+   *
+   * <p>NOTE: Building the returned union here is an n^2 operation of relatively expensive subtype
+   * checks: for common properties named such as those on some generated classes this can be
+   * extremely expensive (programs with thousands of protos isn't uncommon resulting in millions of
+   * subtype relationship checks for each common property name). Currently, this is only used by
+   * "disambiguate properties" and there is should be removed.
    */
-  public JSType getGreatestSubtypeWithProperty(
-      JSType type, String propertyName) {
+  public JSType getGreatestSubtypeWithProperty(JSType type, String propertyName) {
     JSType withProperty = greatestSubtypeByProperty.get(propertyName);
     if (withProperty != null) {
       return withProperty.getGreatestSubtype(type);
     }
-    UnionTypeBuilder typesWithProp = typesIndexedByProperty.get(propertyName);
-    if (typesWithProp != null) {
-      JSType built = typesWithProp.build();
+    if (typesIndexedByProperty.containsKey(propertyName)) {
+      Collection<JSType> typesWithProp = typesIndexedByProperty.get(propertyName);
+      JSType built =
+          UnionTypeBuilder.createForPropertyChecking(this).addAlternates(typesWithProp).build();
       greatestSubtypeByProperty.put(propertyName, built);
       return built.getGreatestSubtype(type);
     }
@@ -1007,9 +1016,8 @@ public class JSTypeRegistry implements Serializable {
       }
 
       if (typesIndexedByProperty.containsKey(propertyName)) {
-        for (JSType alt :
-                 typesIndexedByProperty.get(propertyName).getAlternates()) {
-          JSType greatestSubtype = alt.getGreatestSubtype(type);
+        for (JSType alternative : typesIndexedByProperty.get(propertyName)) {
+          JSType greatestSubtype = alternative.getGreatestSubtype(type);
           if (!greatestSubtype.isEmptyType()) {
             // We've found a type with this property. Now we just have to make
             // sure it's not a type used for internal bookkeeping.
@@ -2307,6 +2315,7 @@ public class JSTypeRegistry implements Serializable {
   public void saveContents(ObjectOutputStream out) throws IOException {
     out.writeObject(eachRefTypeIndexedByProperty);
     out.writeObject(interfaceToImplementors);
+    out.writeObject(typesIndexedByProperty);
   }
 
   /**
@@ -2320,6 +2329,7 @@ public class JSTypeRegistry implements Serializable {
   public void restoreContents(ObjectInputStream in) throws IOException, ClassNotFoundException {
     eachRefTypeIndexedByProperty = (Map<String, Map<String, ObjectType>>) in.readObject();
     interfaceToImplementors = (Multimap<String, FunctionType>) in.readObject();
+    typesIndexedByProperty = (Multimap<String, JSType>) in.readObject();
   }
 
   private FunctionBuilder nativeConstructorBuilder(String name) {

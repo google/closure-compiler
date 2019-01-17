@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -165,6 +166,13 @@ public final class UnionTypeBuilder implements Serializable {
     } else {
       return rightType.isSubtypeWithoutStructuralTyping(leftType);
     }
+  }
+
+  public UnionTypeBuilder addAlternates(Collection<JSType> c) {
+    for (JSType type : c) {
+      addAlternate(type);
+    }
+    return this;
   }
 
   /**
