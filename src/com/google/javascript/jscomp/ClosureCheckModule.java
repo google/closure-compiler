@@ -44,7 +44,10 @@ import javax.annotation.Nullable;
 public final class ClosureCheckModule extends AbstractModuleCallback
     implements HotSwapCompilerPass {
   static final DiagnosticType AT_EXPORT_IN_GOOG_MODULE =
-      DiagnosticType.error("JSC_AT_EXPORT_IN_GOOG_MODULE", "@export has no effect here");
+      DiagnosticType.error(
+          "JSC_AT_EXPORT_IN_GOOG_MODULE",
+          "@export has no effect on top-level names in a goog.module."
+              + " Consider using goog.exportSymbol instead.");
 
   static final DiagnosticType AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE =
       DiagnosticType.error(

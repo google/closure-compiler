@@ -312,6 +312,19 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "",
             "exports = ClassName;"),
         ClosureCheckModule.AT_EXPORT_IN_GOOG_MODULE);
+
+    // TODO(b/123020550): warn for this, as the actual name exported will be
+    //   module$contents$foo_example_ClassName.Builder
+    testSame(
+        lines(
+            "goog.module('foo.example.ClassName');",
+            "",
+            "class ClassName {}",
+            "",
+            "/** @export */",
+            "ClassName.Builder = function() {};",
+            "",
+            "exports = ClassName;"));
   }
 
   @Test
