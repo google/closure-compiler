@@ -2018,7 +2018,11 @@ public class JSDocInfo implements Serializable {
         ? ImmutableList.<Marker>of() : documentation.markers;
   }
 
-  /** Gets the template type name. */
+  /**
+   * Gets the @template type names.
+   *
+   * <p>Excludes @template types from TTL; get those with {@link #getTypeTransformations()}
+   */
   public ImmutableList<String> getTemplateTypeNames() {
     if (info == null || info.templateTypeNames == null) {
       return ImmutableList.of();

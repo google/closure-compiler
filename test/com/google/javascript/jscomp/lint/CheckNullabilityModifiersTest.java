@@ -130,6 +130,30 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTemplateDefinitionTypeWithTtl() {
+    checkNoWarning(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @param {U} y",
+            " * @template T",
+            " * @template U := T =:",
+            " */",
+            "function f(x, y) {}"));
+
+    checkNoWarning(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @param {U} y",
+            " * @template T",
+            // note that "Object" below is /not/ nullable
+            " * @template U := cond(isUnknown(T), \"Object\", T) =:",
+            " */",
+            "function f(x, y) {}"));
+  }
+
+  @Test
   public void testTemplateInstantiationType() {
     checkRedundantWarning("/** @type {!Array<!string>} */ var x;");
 
