@@ -123,14 +123,17 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
     private boolean ambiguous;
     private Node declaredModuleId;
     private Node declaresLegacyNamespace;
-    private final Node rootNode;
     final ModuleMetadata.Builder metadataBuilder;
     LinkedHashMultiset<String> googNamespaces = LinkedHashMultiset.create();
 
     ModuleMetadataBuilder(Node rootNode, @Nullable ModulePath path) {
-      this.metadataBuilder = ModuleMetadata.builder();
-      this.rootNode = rootNode;
-      metadataBuilder.path(path).moduleType(ModuleType.SCRIPT).usesClosure(false).isTestOnly(false);
+      this.metadataBuilder =
+          ModuleMetadata.builder()
+              .path(path)
+              .rootNode(rootNode)
+              .moduleType(ModuleType.SCRIPT)
+              .usesClosure(false)
+              .isTestOnly(false);
     }
 
     void moduleType(ModuleType type, NodeTraversal t, Node n) {

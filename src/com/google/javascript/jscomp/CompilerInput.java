@@ -549,7 +549,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     return ImmutableSet.<T>builder().addAll(first).addAll(second).build();
   }
 
-  ModulePath getPath() {
+  public ModulePath getPath() {
     if (modulePath == null) {
       ModuleLoader moduleLoader = compiler.getModuleLoader();
       this.modulePath = moduleLoader.resolve(getName());

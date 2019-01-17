@@ -35,14 +35,16 @@ import javax.annotation.Nullable;
 // TODO(johnplaisted): Add validation tests. Current ModulePath makes this difficult as it is non
 @AutoValue
 public abstract class Export {
-  // Prevent unwanted subclasses.
-  Export() {}
-
   /**
    * The {@link Export#localName()} of anonymous ES module default exports, e.g. {@code export
    * default 0}.
    */
   public static final String DEFAULT_EXPORT_NAME = "*default*";
+
+  static final String DEFAULT = "default";
+
+  // Prevent unwanted subclasses.
+  Export() {}
 
   @AutoValue.Builder
   abstract static class Builder {

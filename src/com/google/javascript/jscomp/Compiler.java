@@ -2986,8 +2986,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public Set<String> getExportedNames() {
     return exportedNames;
   }
+
   @Override
-  CompilerOptions getOptions() {
+  public CompilerOptions getOptions() {
     return options;
   }
 
@@ -3362,7 +3363,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  ModuleLoader getModuleLoader() {
+  public ModuleLoader getModuleLoader() {
     return moduleLoader;
   }
 

@@ -20,7 +20,9 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
+import com.google.javascript.rhino.Node;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -66,11 +68,18 @@ public final class ModuleMetadataMap {
    */
   private final ImmutableMap<String, ModuleMetadata> modulesByGoogNamespace;
 
+  private final ImmutableSet<ModuleMetadata> moduleMetadata;
+
   public ModuleMetadataMap(
       Map<String, ModuleMetadata> modulesByPath,
       Map<String, ModuleMetadata> modulesByGoogNamespace) {
     this.modulesByPath = ImmutableMap.copyOf(modulesByPath);
     this.modulesByGoogNamespace = ImmutableMap.copyOf(modulesByGoogNamespace);
+    this.moduleMetadata =
+        ImmutableSet.<ModuleMetadata>builder()
+            .addAll(modulesByPath.values())
+            .addAll(modulesByGoogNamespace.values())
+            .build();
   }
 
   /** Struct containing basic information about a module including its type and goog namespaces. */
@@ -105,6 +114,15 @@ public final class ModuleMetadataMap {
     public boolean isScript() {
       return moduleType() == ModuleType.SCRIPT;
     }
+
+    /**
+     * AST node that represents the root of this module.
+     *
+     * <p>May be null if this is a synthetic piece of metadata - e.g. in a test, or something used
+     * as a fallback.
+     */
+    @Nullable
+    public abstract Node rootNode();
 
     /**
      * Whether this file uses Closure Library at all. Note that a file could use Closure Library
@@ -188,6 +206,8 @@ public final class ModuleMetadataMap {
       public abstract ModuleType moduleType();
 
       public abstract Builder moduleType(ModuleType value);
+
+      public abstract Builder rootNode(@Nullable Node root);
     }
   }
 
@@ -211,5 +231,15 @@ public final class ModuleMetadataMap {
    */
   public ImmutableMap<String, ModuleMetadata> getModulesByGoogNamespace() {
     return modulesByGoogNamespace;
+  }
+
+  /**
+   * The set of all modules across both maps.
+   *
+   * <p>{@code goog.loadModule} calls have no associated path, and non-Closure modules have no
+   * namespaces.
+   */
+  public ImmutableSet<ModuleMetadata> getAllModuleMetadata() {
+    return moduleMetadata;
   }
 }
