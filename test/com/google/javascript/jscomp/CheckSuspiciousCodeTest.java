@@ -38,7 +38,7 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     enableParseTypeInfo();
   }
 
@@ -77,6 +77,10 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testSame("var y = [1, 2, 3]; for(x of y) console.log(x);");
     testWarning("var y = [1, 2, 3]; for(x of y); console.log(x);", e);
     testSame("var y = [1, 2, 3]; for(x of y){} console.log(x);");
+
+    testSame("async () => { var y = [1, 2, 3]; for await (x of y) console.log(x); }");
+    testWarning("async () => { var y = [1, 2, 3]; for await (x of y); console.log(x); }", e);
+    testSame("async () => { var y = [1, 2, 3]; for await (x of y){} console.log(x); }");
   }
 
   @Test
@@ -105,6 +109,19 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testSame("for (var x of NaN) console.log(x);");
     testSame("for (var x of Infinity) console.log(x);");
     testSame("for (var x of null) console.log(x);");
+  }
+
+  @Test
+  public void testForAwaitOf() {
+    testSame("async () => { var y = [1, 2, 3]; for await (var x of y) console.log(x); }");
+    testSame("async () => { var y = [1, 2, 3]; for await (var x of 'test') console.log(x); }");
+    testSame("async () => { for await (var x of 123) console.log(x); }");
+    testSame("async () => { for await (var x of false) console.log(x); }");
+    testSame("async () => { for await (var x of true) console.log(x); }");
+    testSame("async () => { for await (var x of undefined) console.log(x); }");
+    testSame("async () => { for await (var x of NaN) console.log(x); }");
+    testSame("async () => { for await (var x of Infinity) console.log(x); }");
+    testSame("async () => { for await (var x of null) console.log(x); }");
   }
 
   private void testReportNaN(String js) {

@@ -395,6 +395,7 @@ class RemoveUnusedCode implements CompilerPass {
 
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
         traverseEnhancedFor(n, scope);
         break;
 

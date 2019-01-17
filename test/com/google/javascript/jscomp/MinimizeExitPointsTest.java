@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +31,13 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
     super.setUp();
 
     disableScriptFeatureValidation();
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    return options;
   }
 
   @Override
@@ -264,6 +272,23 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
     fold("for(x of y){if(a()){b();}else{c();continue;}}",
         "for(x of y){if(a()){b();}else{c();}}");
 
+    fold(
+        "async () => { for await (x of y){if(x)continue; x=3; continue; }}",
+        "async () => { for await (x of y)if(x);else x=3 }");
+    foldSame("async () => { for await (x of y){a();continue;b()}}");
+    fold(
+        "async () => { for await (x of y){if(true){a();continue;}else;b();}}",
+        "async () => { for await (x of y){if(true)a();else b();}}");
+    fold(
+        "async () => { for await (x of y){if(false){a();continue;}else;b();continue;}}",
+        "async () => { for await (x of y){if(false){a();}else{b()}}}");
+    fold(
+        "async () => { for await (x of y){if(a()){b();continue;}else;c();}}",
+        "async () => { for await (x of y){if(a()){b();}else{c();}}}");
+    fold(
+        "async () => { for await (x of y){if(a()){b();}else{c();continue;}}}",
+        "async () => { for await (x of y){if(a()){b();}else{c();}}}");
+
     fold("for(x=0;x<y;x++){if(a()){b();continue;}else;}",
          "for(x=0;x<y;x++){if(a()){b();}else;}");
     fold("for(x=0;x<y;x++){if(a()){continue;}else{continue;} continue;}",
@@ -374,5 +399,6 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
     foldSame("function f() { do { if (true) {return;} let c = 3; } while (x); }");
     foldSame("function f() { for (;;) { if (true) { return; } let c = 3; } }");
     foldSame("function f(y) { for(x in []){ if(x) { return; } let c = 3; } }");
+    foldSame("async function f(y) { for await (x in []){ if(x) { return; } let c = 3; } }");
   }
 }

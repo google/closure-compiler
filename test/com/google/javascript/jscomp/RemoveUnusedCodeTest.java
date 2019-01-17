@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,6 +75,13 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     enableGatherExternProperties();
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    return options;
   }
 
   @Override
@@ -1655,6 +1663,39 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "for (var n of externVar) {", // x removed
             "  if (n) {};",
             "}"));
+  }
+
+  @Test
+  public void testForAwaitOf() {
+    testSame("async () => { let item; for await (item of externVar){} }");
+
+    testSame("async () => { for(var item of externVar){} }");
+
+    testSame("async () => { for(let item of externVar){} }");
+
+    testSame(
+        lines(
+            "async () => { ",
+            "  var x;",
+            "  for (var n of externVar) {",
+            "    if (x > n) {};", // keeps x alive
+            "  }",
+            "};"));
+
+    test(
+        lines(
+            "async () => { ",
+            "  var x;", // no references to this
+            "  for (var n of externVar) {",
+            "    if (n) {};",
+            "  }",
+            "};"),
+        lines(
+            "async () => { ",
+            "  for (var n of externVar) {", // x removed
+            "    if (n) {};",
+            "  }",
+            "};"));
   }
 
   @Test

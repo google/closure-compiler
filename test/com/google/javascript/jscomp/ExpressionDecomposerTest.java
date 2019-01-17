@@ -301,6 +301,14 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void testCannotExpose_forAwaitOf() {
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE,
+        "async function *f() { for await (let x of yield y) {} }",
+        "yield");
+  }
+
+  @Test
   public void testCanExposeExpression10() {
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE,
@@ -1258,7 +1266,7 @@ public final class ExpressionDecomposerTest {
   private Compiler getCompiler() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguage(LanguageMode.ECMASCRIPT_2018);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setAllowMethodCallDecomposing(allowMethodCallDecomposing);
     compiler.initOptions(options);

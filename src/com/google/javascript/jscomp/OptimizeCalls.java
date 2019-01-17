@@ -429,6 +429,7 @@ class OptimizeCalls implements CompilerPass {
     switch (parent.getToken()) {
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
         // inspecting the properties is allowed.
         return parent.getSecondChild() == n;
       case INSTANCEOF:

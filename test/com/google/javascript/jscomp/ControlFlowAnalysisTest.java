@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1493,6 +1495,72 @@ public final class ControlFlowAnalysisTest {
   }
 
   @Test
+  public void testForAwaitOfOrderBreakAndContinue() throws IOException {
+    assertNodeOrder(
+        createCfg(
+            lines(
+                "async function f() {",
+                "  outer: for await (let x of y) {",
+                "    inner: for await (let z of x) {",
+                "      if (z) break inner;",
+                "      else continue outer;",
+                "    }",
+                "  }",
+                "  return 0;",
+                "}")),
+        ImmutableList.of(
+            Token.SCRIPT,
+            Token.FUNCTION,
+            Token.BLOCK,
+            Token.NAME,
+            Token.FOR_AWAIT_OF,
+            Token.BLOCK,
+            Token.NAME,
+            Token.FOR_AWAIT_OF,
+            Token.BLOCK,
+            Token.IF,
+            Token.BLOCK,
+            Token.BREAK,
+            Token.BLOCK,
+            Token.CONTINUE,
+            Token.RETURN));
+  }
+
+  @Test
+  public void testForAwaitOfOrderBreakAndContinueAndYield() throws IOException {
+    assertNodeOrder(
+        createCfg(
+            lines(
+                "async function* f() {",
+                "  outer: for await (let x of y) {",
+                "    inner: for await (let z of x) {",
+                "      if (z > 0) break inner;",
+                "      else if (z < 0) continue outer;",
+                "      yield z;",
+                "    }",
+                "  }",
+                "}")),
+        ImmutableList.of(
+            Token.SCRIPT,
+            Token.FUNCTION,
+            Token.BLOCK,
+            Token.NAME,
+            Token.FOR_AWAIT_OF,
+            Token.BLOCK,
+            Token.NAME,
+            Token.FOR_AWAIT_OF,
+            Token.BLOCK,
+            Token.IF,
+            Token.BLOCK,
+            Token.BREAK,
+            Token.BLOCK,
+            Token.IF,
+            Token.BLOCK,
+            Token.CONTINUE,
+            Token.EXPR_RESULT));
+  }
+
+  @Test
   public void testBreakInFinally1() throws IOException {
     String src =
         "f = function() {\n" +
@@ -1630,13 +1698,11 @@ public final class ControlFlowAnalysisTest {
         .that(implicitReturn)
         .isNull();
 
-    assertWithMessage("Wrong number of CFG nodes")
-        .that(cfgNodes.size())
-        .isEqualTo(nodeTypes.size());
-    for (int i = 0; i < cfgNodes.size(); i++) {
-      Token expectedType = nodeTypes.get(i);
-      Token actualType = cfgNodes.get(i).getValue().getToken();
-      assertWithMessage("node type mismatch at " + i).that(actualType).isEqualTo(expectedType);
-    }
+    assertThat(
+            cfgNodes.stream()
+                .map(DiGraphNode::getValue)
+                .map(Node::getToken)
+                .collect(Collectors.toList()))
+        .isEqualTo(nodeTypes);
   }
 }

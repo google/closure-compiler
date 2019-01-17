@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +39,13 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    return options;
   }
 
   @Override
@@ -426,6 +434,16 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
          "function FUNC(param1, param2){" + expected + "}");
   }
 
+  private void inAsyncFunction(String src) {
+    inAsyncFunction(src, src);
+  }
+
+  private void inAsyncFunction(String src, String expected) {
+    test(
+        "async function FUNC(param1, param2){" + src + "}",
+        "async function FUNC(param1, param2){" + expected + "}");
+  }
+
   @Test
   public void testBug8730257() {
     inFunction(
@@ -706,6 +724,15 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
     inFunction("var x, y, z; x = {}; z = {}; for (y of x = z) {}",
         "var x, y, z;   ({}); z = {}; for (y of z)     {}");
+  }
+
+  @Test
+  public void testForAwaitOf() {
+    inAsyncFunction("var x = {}; for await (var y of x) { y() }");
+
+    inAsyncFunction(
+        "var x, y, z; x = {}; z = {}; for await (y of x = z) {}",
+        "var x, y, z;   ({}); z = {}; for await (y of z)     {}");
   }
 
   @Test

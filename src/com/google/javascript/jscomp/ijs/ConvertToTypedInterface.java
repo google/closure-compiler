@@ -207,6 +207,7 @@ public class ConvertToTypedInterface implements CompilerPass {
           NodeUtil.deleteNode(n.getSecondChild(), t.getCompiler());
           // fall-through
         case FOR_OF:
+        case FOR_AWAIT_OF:
         case FOR_IN:
           NodeUtil.deleteNode(n.getSecondChild(), t.getCompiler());
           Node initializer = n.removeFirstChild();
@@ -254,6 +255,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         case FOR:
         case FOR_IN:
         case FOR_OF:
+        case FOR_AWAIT_OF:
         case IF:
         case SWITCH:
           if (n.getParent() != null) {

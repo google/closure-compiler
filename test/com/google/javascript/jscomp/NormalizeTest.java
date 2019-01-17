@@ -44,7 +44,7 @@ public final class NormalizeTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
   }
 
   @Override
@@ -408,6 +408,40 @@ public final class NormalizeTest extends CompilerTestCase {
     test("for (var [a, b] of c) foo();", "var a; var b; for ([a, b] of c) foo();");
 
     test("for (var {a, b} of c) foo();", "var a; var b; for ({a: a, b: b} of c) foo();");
+  }
+
+  @Test
+  public void testForAwaitOf() {
+    // Verify nothing happens with simple for-await-of
+    testSame("async () => { for await (a of b) foo(); }");
+
+    // Verify vars are extracted from the FOR-AWAIT-OF node.
+    test(
+        "async () => { for await (var a of b) foo() }",
+        "async () => { var a; for await (a of b) foo() }");
+
+    // Verify vars are extracted from the FOR init before the label node.
+    test(
+        "async () => { a:for await (var a of b) foo() }",
+        "async () => { var a; a: for await (a of b) foo() }");
+    // Verify vars are extracted from the FOR init before the labels node.
+    test(
+        "async () => { a: b: for await (var a of b) foo() }",
+        "async () => { var a; a: b: for await (a of b) foo() }");
+
+    // Verify block are properly introduced for ifs.
+    test(
+        "async () => { if (x) for await (var a of b) foo() }",
+        "async () => { if (x) { var a; for await (a of b) foo() } }");
+
+    // Verify names in destructuring declarations are individually declared.
+    test(
+        "async () => { for await (var [a, b] of c) foo(); }",
+        "async () => { var a; var b; for await ([a, b] of c) foo(); }");
+
+    test(
+        "async () => { for await (var {a, b} of c) foo(); }",
+        "async () => { var a; var b; for await ({a: a, b: b} of c) foo(); }");
   }
 
   @Test

@@ -197,7 +197,21 @@ public final class LiveVariablesAnalysisTest {
   public void testForOfLoopsDestructuring() {
     assertLiveBeforeX("var key, value; X:for ([key, value] of arr) {value;} value;", "value");
     assertLiveBeforeX("let x = 3; X:for (var [y = x] of arr) { y; }", "x");
-    assertLiveBeforeX("for (let [key, value] in arr) { X: key; value; }", "key");
+    assertLiveBeforeX("for (let [key, value] of arr) { X: key; value; }", "key");
+  }
+
+  @Test
+  public void testForAwaitOfLoopsVar() {
+    assertLiveBeforeX("var a; for await (a of [1, 2, 3]) {X:{}}", "a");
+    assertLiveAfterX("for await (var a of [1, 2, 3]) {X:{}}", "a");
+    assertLiveBeforeX("var a,b; for await (var y of a = [0, 1, 2]) { X:a[y] }", "a");
+  }
+
+  @Test
+  public void testForAwaitOfLoopsDestructuring() {
+    assertLiveBeforeX("var key, value; X:for await ([key, value] of arr) {value;} value;", "value");
+    assertLiveBeforeX("let x = 3; X:for await (var [y = x] of arr) { y; }", "x");
+    assertLiveBeforeX("for await (let [key, value] of arr) { X: key; value; }", "key");
   }
 
   @Test
@@ -416,7 +430,11 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private void assertLiveBeforeX(String src, String var) {
-    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
+    assertLiveBeforeX(src, var, false);
+  }
+
+  private void assertLiveBeforeX(String src, String var, boolean async) {
+    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, async);
     assertWithMessage(src + " should contain a label 'X:'").that(state).isNotNull();
     assertWithMessage("Variable " + var + " should be live before X")
         .that(state.getIn().isLive(liveness.getVarIndex(var)))
@@ -424,7 +442,11 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private void assertLiveAfterX(String src, String var) {
-    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
+    assertLiveAfterX(src, var, false);
+  }
+
+  private void assertLiveAfterX(String src, String var, boolean async) {
+    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, async);
     assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
     assertWithMessage("Variable " + var + " should be live after X")
         .that(state.getOut().isLive(liveness.getVarIndex(var)))
@@ -432,7 +454,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private void assertNotLiveAfterX(String src, String var) {
-    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
+    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, false);
     assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
     assertWithMessage("Variable " + var + " should not be live after X")
         .that(state.getOut().isLive(liveness.getVarIndex(var)))
@@ -440,7 +462,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private void assertNotLiveBeforeX(String src, String var) {
-    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
+    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, false);
     assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
     assertWithMessage("Variable " + var + " should not be live before X")
         .that(state.getIn().isLive(liveness.getVarIndex(var)))
@@ -474,8 +496,9 @@ public final class LiveVariablesAnalysisTest {
         .isFalse();
   }
 
-  private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(String src) {
-    liveness = computeLiveness(src);
+  private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(
+      String src, boolean async) {
+    liveness = computeLiveness(src, async);
     return getFlowStateAtX(liveness.getCfg().getEntry().getValue(), liveness.getCfg());
   }
 
@@ -497,7 +520,7 @@ public final class LiveVariablesAnalysisTest {
 
   private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtDeclaration(
       String src, String name) {
-    liveness = computeLiveness(src);
+    liveness = computeLiveness(src, false);
     return getFlowStateAtDeclaration(
         liveness.getCfg().getEntry().getValue(), liveness.getCfg(), name);
   }
@@ -524,7 +547,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private static void assertEscaped(String src, String name) {
-    for (Var var : computeLiveness(src).getEscapedLocals()) {
+    for (Var var : computeLiveness(src, false).getEscapedLocals()) {
       if (var.name.equals(name)) {
         return;
       }
@@ -533,22 +556,23 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private static void assertNotEscaped(String src, String name) {
-    for (Var var : computeLiveness(src).getEscapedLocals()) {
+    for (Var var : computeLiveness(src, false).getEscapedLocals()) {
       assertThat(var.name).isNotEqualTo(name);
     }
   }
 
-  private static LiveVariablesAnalysis computeLiveness(String src) {
+  private static LiveVariablesAnalysis computeLiveness(String src, boolean async) {
     // Set up compiler
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguage(LanguageMode.ECMASCRIPT_2018);
     options.setCodingConvention(new GoogleCodingConvention());
     compiler.initOptions(options);
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
     // Set up test case
-    src = "function _FUNCTION(param1, param2 = 1, ...param3){" + src + "}";
+    src =
+        (async ? "async " : "") + "function _FUNCTION(param1, param2 = 1, ...param3){" + src + "}";
     Node n = compiler.parseTestCode(src).removeFirstChild();
     checkState(n.isFunction(), n);
     Node script = new Node(Token.SCRIPT, n);

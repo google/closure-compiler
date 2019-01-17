@@ -590,6 +590,7 @@ class Normalize implements CompilerPass {
         case FOR:
         case FOR_IN:
         case FOR_OF:
+        case FOR_AWAIT_OF:
         case WHILE:
         case DO:
           return;
@@ -627,6 +628,7 @@ class Normalize implements CompilerPass {
             break;
           case FOR_IN:
           case FOR_OF:
+          case FOR_AWAIT_OF:
             Node first = c.getFirstChild();
             if (first.isVar()) {
               Node lhs = first.getFirstChild();

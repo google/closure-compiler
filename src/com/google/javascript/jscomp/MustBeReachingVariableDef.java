@@ -259,6 +259,7 @@ final class MustBeReachingVariableDef extends
 
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
         // for(x in y) {...}
         Node lhs = n.getFirstChild();
         Node rhs = lhs.getNext();

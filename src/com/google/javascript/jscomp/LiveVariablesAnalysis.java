@@ -255,6 +255,7 @@ class LiveVariablesAnalysis
         return;
 
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case FOR_IN:
         {
           // for (x in y) {...}

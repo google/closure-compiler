@@ -272,6 +272,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
         case FOR:
         case FOR_IN:
         case FOR_OF:
+        case FOR_AWAIT_OF:
         case TRY:
         case WHILE:
         case WITH:

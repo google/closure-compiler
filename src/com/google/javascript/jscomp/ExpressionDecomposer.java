@@ -741,6 +741,7 @@ class ExpressionDecomposer {
           // fall through
         case FOR_IN:
         case FOR_OF:
+        case FOR_AWAIT_OF:
         case DO:
         case WHILE:
         case SCRIPT:

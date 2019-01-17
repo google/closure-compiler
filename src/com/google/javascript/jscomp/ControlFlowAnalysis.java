@@ -994,6 +994,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
       case FOR:
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case DO:
       case WHILE:
       case SWITCH:
