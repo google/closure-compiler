@@ -448,12 +448,12 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       // const this$ = this;
       newBody.addChildToBack(
           astFactory.createThisAliasDeclarationForFunction(ASYNC_THIS, functionContext.function));
-      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS);
     }
     if (functionContext.mustAddAsyncArgumentsVariable) {
       // const arguments$ = arguments;
       newBody.addChildToBack(astFactory.createArgumentsAliasDeclaration(ASYNC_ARGUMENTS));
-      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS);
     }
     for (SuperPropertyWrapperInfo superPropertyWrapperInfo :
         functionContext.superPropertyWrappers.asCollection()) {
@@ -469,7 +469,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       compiler.reportChangeToChangeScope(arrowFunction);
       // Record that we've added arrow functions and const declarations to this script,
       // so later transpilations of those features will run, if needed.
-      Node enclosingScript = t.getCurrentFile();
+      Node enclosingScript = t.getCurrentScript();
       NodeUtil.addFeatureToScript(enclosingScript, Feature.ARROW_FUNCTIONS);
       NodeUtil.addFeatureToScript(enclosingScript, Feature.CONST_DECLARATIONS);
     }
@@ -486,7 +486,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     Node generatorFunction =
         astFactory.createZeroArgGeneratorFunction("", originalBody, originalFunction.getJSType());
     compiler.reportChangeToChangeScope(generatorFunction);
-    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.GENERATORS);
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.GENERATORS);
 
     // return $jscomp.asyncExecutePromiseGeneratorFunction(function* () { ... });
     newBody.addChildToBack(

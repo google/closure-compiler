@@ -271,7 +271,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       Node ctorVar = IR.let(metadata.getClassNameNode().cloneNode(), constructor);
       ctorVar.useSourceInfoIfMissingFromForTree(classNode);
       parent.replaceChild(classNode, ctorVar);
-      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS);
     } else {
       parent.replaceChild(classNode, constructor);
     }

@@ -431,7 +431,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
         // overwritten but they also act like a const for temporal dead-zone purposes.
         Node var = IR.constNode(IR.name(name), export.removeFirstChild());
         parent.replaceChild(export, var.useSourceInfoIfMissingFromForTree(export));
-        NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
+        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS);
       }
 
       exportedNameToLocalQName.put("default", new LocalQName(name, export));

@@ -1325,7 +1325,13 @@ public class NodeTraversal {
     return nullToEmpty(name);
   }
 
-  public Node getCurrentFile() {
+  /**
+   * Returns the SCRIPT node enclosing the current scope, or `null` if unknown
+   *
+   * <p>e.g. returns null if {@link #traverseInnerNode(Node, Node, AbstractScope)} was used
+   */
+  @Nullable
+  Node getCurrentScript() {
     return curScript;
   }
 

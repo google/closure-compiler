@@ -94,7 +94,7 @@ public final class Es6RewriteBlockScopedFunctionDeclaration extends AbstractPost
     Node oldNameNode = n.getFirstChild();
     Node fnNameNode = oldNameNode.cloneNode();
     Node let = IR.declaration(fnNameNode, Token.LET).srcref(n);
-    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS);
 
     // Prepare the function.
     oldNameNode.setString("");

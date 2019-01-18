@@ -253,7 +253,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
         checkNotNull(ctx.function);
         checkState(ctx.function.isAsyncFunction());
         replaceForAwaitOf(ctx, n);
-        NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
+        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS);
         break;
 
         // Maintaining references to this/arguments/super
@@ -626,7 +626,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
               IR.paramList(),
               IR.getprop(superReference, IR.string(replacedMethodName)));
       compiler.reportChangeToChangeScope(arrowFunction);
-      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.ARROW_FUNCTIONS);
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.ARROW_FUNCTIONS);
       String superReplacementName = superPropGetterPrefix + replacedMethodName;
       prefixBlock.addChildToBack(IR.constNode(IR.name(superReplacementName), arrowFunction));
     }
@@ -642,7 +642,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
         || thisSuperArgsCtx.usedArguments
         || !thisSuperArgsCtx.usedSuperProperties.isEmpty()) {
       compiler.reportChangeToChangeScope(function);
-      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS);
     }
   }
 }

@@ -684,7 +684,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     Node rhs = assignment.getLastChild().detach();
     // let temp0 = rhs;
     Node newAssignment = IR.let(tempVarModel.cloneNode(), rhs);
-    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS);
     // [x, y] = temp0;
     Node replacementExpr =
         astFactory.createAssign(assignment.getFirstChild().detach(), tempVarModel.cloneNode());
@@ -699,7 +699,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
 
     // Create a call to the function, and replace the pattern with the call.
     Node call = astFactory.createCall(arrowFn);
-    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.ARROW_FUNCTIONS);
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.ARROW_FUNCTIONS);
     call.useSourceInfoIfMissingFromForTree(assignment);
     call.putBooleanProp(Node.FREE_CALL, true);
     assignment.getParent().replaceChild(assignment, call);
@@ -763,7 +763,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     catchBlock.addChildToFront(
         IR.declaration(
             pattern, astFactory.createName(tempVarName, pattern.getJSType()), Token.LET));
-    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS);
   }
 
   /** Helper for transpiling DEFAULT_VALUE trees. */

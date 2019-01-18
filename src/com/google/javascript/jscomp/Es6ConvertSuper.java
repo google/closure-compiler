@@ -100,8 +100,8 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
                     IR.superNode().setJSType(superClass.getJSType()),
                     IR.spread(astFactory.createArgumentsReference())));
         body.addChildToFront(exprResult);
-        NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.SUPER);
-        NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.SPREAD_EXPRESSIONS);
+        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.SUPER);
+        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.SPREAD_EXPRESSIONS);
       }
       Node constructor =
           astFactory.createFunction(
@@ -121,7 +121,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     memberDef.useSourceInfoIfMissingFromForTree(classNode);
     memberDef.makeNonIndexableRecursive();
     classMembers.addChildToFront(memberDef);
-    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.MEMBER_DECLARATIONS);
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.MEMBER_DECLARATIONS);
     // report newly created constructor
     compiler.reportChangeToChangeScope(memberDef.getOnlyChild());
     // report change to scope containing the class
