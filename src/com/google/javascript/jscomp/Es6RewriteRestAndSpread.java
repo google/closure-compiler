@@ -122,13 +122,13 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   private void visitRestParam(NodeTraversal t, Node restParam, Node paramList) {
     Node functionBody = paramList.getNext();
     int restIndex = paramList.getIndexOfChild(restParam);
-    String paramName = restParam.getFirstChild().getString();
+    Node nameNode = restParam.getOnlyChild();
+    String paramName = nameNode.getString();
 
-    // Swap a vararg param into the parameter list.
-    Node nameNode = IR.name(paramName);
+    // Swap the existing param into the list, moving requisite AST annotations.
     nameNode.setVarArgs(true);
     nameNode.setJSDocInfo(restParam.getJSDocInfo());
-    paramList.replaceChild(restParam, nameNode);
+    paramList.replaceChild(restParam, nameNode.detach());
 
     // Make sure rest parameters are typechecked.
     JSDocInfo inlineInfo = restParam.getJSDocInfo();
