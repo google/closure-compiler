@@ -39,7 +39,7 @@ public abstract class CodePrinterTestBase {
     preserveTypeAnnotations = false;
     trustedStrings = true;
     lastCompiler = null;
-    languageMode = LanguageMode.ECMASCRIPT5;
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
   }
 
   Node parse(String js) {

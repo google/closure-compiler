@@ -20,11 +20,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -55,10 +53,20 @@ class TypedCodeGenerator extends CodeGenerator {
 
   @Override
   protected void add(Node n, Context context) {
+    maybeAddTypeAnnotation(n);
+    super.add(n, context);
+  }
+
+  private void maybeAddTypeAnnotation(Node n) {
     Node parent = n.getParent();
-    if (parent != null && (parent.isBlock() || parent.isScript())) {
-      if (n.isFunction()) {
-        add(getFunctionAnnotation(n));
+    if (parent == null) {
+      // root node cannot have a type annotation.
+      return;
+    }
+    // Generate type annotations only for statements and class member functions.
+    if (parent.isBlock() || parent.isScript() || parent.isClassMembers()) {
+      if (n.isClass() || n.isFunction() || n.isMemberFunctionDef()) {
+        add(getTypeAnnotation(n));
       } else if (n.isExprResult()
           && n.getFirstChild().isAssign()) {
         Node assign = n.getFirstChild();
@@ -68,8 +76,7 @@ class TypedCodeGenerator extends CodeGenerator {
           Node rhs = assign.getLastChild();
           add(getTypeAnnotation(rhs));
         }
-      } else if (n.isVar()
-          && n.getFirstFirstChild() != null) {
+      } else if (NodeUtil.isNameDeclaration(n) && n.getFirstFirstChild() != null) {
         if (NodeUtil.isNamespaceDecl(n.getFirstChild())) {
           add(jsDocInfoPrinter.print(n.getJSDocInfo()));
         } else {
@@ -77,35 +84,44 @@ class TypedCodeGenerator extends CodeGenerator {
         }
       }
     }
-
-    super.add(n, context);
   }
 
   private String getTypeAnnotation(Node node) {
-    // Only add annotations for things with JSDoc, or function literals.
-    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(node);
-    if (jsdoc == null && !node.isFunction()) {
-      return "";
-    }
-
-    JSType type = node.getJSType();
-    if (type == null) {
-      return "";
-    } else if (type.isFunctionType()) {
+    if (node.isMemberFunctionDef()) {
+      // For a member function the type information is actually on the function it contains,
+      // so just generate the type annotation for that.
+      return getMemberFunctionAnnotation(node.getOnlyChild());
+    } else if (node.isClass()) {
+      return getClassAnnotation(node.getJSType());
+    } else if (node.isFunction()) {
       return getFunctionAnnotation(node);
-    } else if (type.isEnumType()) {
-      return "/** @enum {"
-          + type.toMaybeObjectType()
-              .getEnumeratedTypeOfEnumObject()
-              .toAnnotationString(Nullability.EXPLICIT)
-          + "} */\n";
-    } else if (!type.isUnknownType()
-        && !type.isEmptyType()
-        && !type.isVoidType()
-        && !type.isFunctionPrototypeType()) {
-      return "/** @type {" + node.getJSType().toAnnotationString(Nullability.EXPLICIT) + "} */\n";
     } else {
-      return "";
+      boolean nodeOriginallyHadJSDoc = NodeUtil.getBestJSDocInfo(node) != null;
+      if (!nodeOriginallyHadJSDoc) {
+        // For nodes that don't inherently define a type, ony generate JSDoc if they originally
+        // had some.
+        return "";
+      }
+
+      JSType type = node.getJSType();
+      if (type == null) {
+        return "";
+      } else if (type.isFunctionType()) {
+        return getFunctionAnnotation(node);
+      } else if (type.isEnumType()) {
+        return "/** @enum {"
+            + type.toMaybeObjectType()
+                .getEnumeratedTypeOfEnumObject()
+                .toAnnotationString(Nullability.EXPLICIT)
+            + "} */\n";
+      } else if (!type.isUnknownType()
+          && !type.isEmptyType()
+          && !type.isVoidType()
+          && !type.isFunctionPrototypeType()) {
+        return "/** @type {" + node.getJSType().toAnnotationString(Nullability.EXPLICIT) + "} */\n";
+      } else {
+        return "";
+      }
     }
   }
 
@@ -138,18 +154,7 @@ class TypedCodeGenerator extends CodeGenerator {
     }
 
     // Param types
-    int minArity = funType.getMinArity();
-    int maxArity = funType.getMaxArity();
-    List<JSType> formals = ImmutableList.copyOf(funType.getParameterTypes());
-    for (int i = 0; i < formals.size(); i++) {
-      sb.append(" * ");
-      appendAnnotation(sb, "param", getParameterJSDocType(formals, i, minArity, maxArity));
-      String parameterName = getParameterJSDocName(paramNode, i);
-      sb.append(" ").append(parameterName).append("\n");
-      if (paramNode != null) {
-        paramNode = paramNode.getNext();
-      }
-    }
+    appendFunctionParamAnnotations(sb, funType, paramNode);
 
     // Return type
     JSType retType = funType.getReturnType();
@@ -162,8 +167,13 @@ class TypedCodeGenerator extends CodeGenerator {
       sb.append("\n");
     }
 
+    // This function could be defining an ES5-style class or interface.
+    // If it isn't but still requires a type for `this`, then we need to explicitly add
+    // an annotation for that.
     if (funType.isConstructor()) {
-      appendConstructorAnnotations(sb, funType);
+      // This function is defining an ES5-style class, so include the class annotations here.
+      appendClassAnnotations(sb, funType);
+      sb.append(" * @constructor\n");
     } else if (funType.isInterface()) {
       appendInterfaceAnnotations(sb, funType);
     } else {
@@ -177,19 +187,116 @@ class TypedCodeGenerator extends CodeGenerator {
       }
     }
 
-    Collection<JSType> typeParams = funType.getTypeParameters();
-    if (!typeParams.isEmpty()) {
-      sb.append(" * @template ");
-      Joiner.on(",").appendTo(sb, Iterables.transform(typeParams, new Function<JSType, String>() {
-        @Override public String apply(JSType var) {
-          return formatTypeVar(var);
-        }
-      }));
-      sb.append("\n");
+    appendTemplateAnnotations(sb, funType.getTypeParameters());
+
+    sb.append(" */\n");
+    return sb.toString();
+  }
+
+  /** @param fnNode A function node child of a MEMBER_FUNCTION_DEF */
+  private String getMemberFunctionAnnotation(Node fnNode) {
+    checkState(fnNode.isFunction() && fnNode.getParent().isMemberFunctionDef(), fnNode);
+    JSType type = fnNode.getJSType();
+
+    if (type == null || type.isUnknownType()) {
+      return "";
+    }
+
+    FunctionType funType = type.toMaybeFunctionType();
+    StringBuilder sb = new StringBuilder("/**\n");
+
+    // We need to use the child nodes of the function as the nodes for the
+    // parameters of the function type do not have the real parameter names.
+    // FUNCTION
+    //   NAME
+    //   PARAM_LIST
+    //     NAME param1
+    //     NAME param2
+    Node paramNode = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
+
+    // Param types
+    appendFunctionParamAnnotations(sb, funType, paramNode);
+
+    boolean isClassConstructor = fnNode.getParent().getString().equals("constructor");
+
+    if (isClassConstructor) {
+      appendTemplateAnnotations(sb, funType.getConstructorOnlyTemplateParameters());
+      // no return type for the constructor
+    } else {
+      appendTemplateAnnotations(sb, funType.getTypeParameters());
+      // Return type
+      JSType retType = funType.getReturnType();
+      if (retType != null && !retType.isEmptyType()) {
+        // There is no annotation for the empty type.
+        sb.append(" * ");
+        appendAnnotation(sb, "return", retType.toAnnotationString(Nullability.EXPLICIT));
+        sb.append("\n");
+      }
     }
 
     sb.append(" */\n");
     return sb.toString();
+  }
+
+  /**
+   * Generates @param annotations.
+   *
+   * @param sb annotations will be appended here
+   * @param funType function type
+   * @param paramNode parameter names will be taken from here
+   */
+  private void appendFunctionParamAnnotations(
+      StringBuilder sb, FunctionType funType, Node paramNode) {
+    int minArity = funType.getMinArity();
+    int maxArity = funType.getMaxArity();
+    List<JSType> formals = ImmutableList.copyOf(funType.getParameterTypes());
+    for (int i = 0; i < formals.size(); i++) {
+      sb.append(" * ");
+      appendAnnotation(sb, "param", getParameterJSDocType(formals, i, minArity, maxArity));
+      String parameterName = getParameterJSDocName(paramNode, i);
+      sb.append(" ").append(parameterName).append("\n");
+      if (paramNode != null) {
+        paramNode = paramNode.getNext();
+      }
+    }
+  }
+
+  private String getClassAnnotation(JSType classType) {
+    checkState(classType.isFunctionType(), classType);
+
+    if (classType == null || classType.isUnknownType()) {
+      return "";
+    }
+
+    FunctionType funType = classType.toMaybeFunctionType();
+    StringBuilder sb = new StringBuilder();
+
+    if (funType.isInterface()) {
+      appendInterfaceAnnotations(sb, funType);
+    } else {
+      checkState(funType.isConstructor(), funType);
+      appendClassAnnotations(sb, funType);
+    }
+
+    appendTemplateAnnotations(sb, funType.getTypeParameters());
+
+    String jsdocContent = sb.toString();
+
+    // For simple class, it's possible we didn't end up generating any JSDoc at all.
+    if (jsdocContent.isEmpty()) {
+      return jsdocContent;
+    } else {
+      return "/**\n" + jsdocContent + " */\n";
+    }
+  }
+
+  private void appendTemplateAnnotations(
+      StringBuilder sb, Collection<? extends JSType> typeParams) {
+    if (!typeParams.isEmpty()) {
+      sb.append(" * @template ");
+      Joiner.on(",").appendTo(sb, Iterables.transform(typeParams, var -> formatTypeVar(var)));
+      sb.append("\n");
+    }
   }
 
   /**
@@ -234,7 +341,7 @@ class TypedCodeGenerator extends CodeGenerator {
 
   // TODO(dimvar): it's awkward that we print @constructor after the extends/implements;
   // we should print it first, like users write it. Same for @interface and @record.
-  private void appendConstructorAnnotations(StringBuilder sb, FunctionType funType) {
+  private void appendClassAnnotations(StringBuilder sb, FunctionType funType) {
     FunctionType superConstructor = funType.getInstanceType().getSuperClassConstructor();
     if (superConstructor != null) {
       ObjectType superInstance = superConstructor.getInstanceType();
@@ -254,7 +361,6 @@ class TypedCodeGenerator extends CodeGenerator {
       appendAnnotation(sb, "implements", interfaze);
       sb.append("\n");
     }
-    sb.append(" * @constructor\n");
   }
 
   private void appendInterfaceAnnotations(StringBuilder sb, FunctionType funType) {

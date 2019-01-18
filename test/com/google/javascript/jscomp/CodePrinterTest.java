@@ -359,7 +359,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintBlockScopedFunctions() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     // Safari 3 needs a "{" around a single function
     assertPrint("if (true) function foo(){return}",
         "if(true){function foo(){return}}");
@@ -368,7 +367,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintArrayPatternVar() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("var []=[]");
     assertPrintSame("var [a]=[1]");
     assertPrintSame("var [a,b]=[1,2]");
@@ -382,7 +380,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintArrayPatternLet() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("let []=[]");
     assertPrintSame("let [a]=[1]");
     assertPrintSame("let [a,b]=[1,2]");
@@ -396,7 +393,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintArrayPatternConst() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("const []=[]");
     assertPrintSame("const [a]=[1]");
     assertPrintSame("const [a,b]=[1,2]");
@@ -410,7 +406,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintArrayPatternAssign() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("[]=[]");
     assertPrintSame("[a]=[1]");
     assertPrintSame("[a,b]=[1,2]");
@@ -424,7 +419,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintArrayPatternWithInitializer() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("[x=1]=[]");
     assertPrintSame("[a,,c=2,,e]=[1,2,3,4,5]");
     assertPrintSame("[a=1,b=2,c=3]=foo()");
@@ -434,7 +428,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintNestedArrayPattern() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("var [a,[b,c],d]=[1,[2,3],4]");
     assertPrintSame("var [[[[a]]]]=[[[[1]]]]");
 
@@ -444,13 +437,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrettyPrintArrayPattern() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrettyPrint("let [a,b,c]=foo();", "let [a, b, c] = foo();\n");
   }
 
   @Test
   public void testPrintObjectPatternVar() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("var {a}=foo()");
     assertPrintSame("var {a,b}=foo()");
     assertPrintSame("var {a:a,b:b}=foo()");
@@ -458,7 +449,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintObjectPatternLet() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("let {a}=foo()");
     assertPrintSame("let {a,b}=foo()");
     assertPrintSame("let {a:a,b:b}=foo()");
@@ -466,7 +456,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintObjectPatternConst() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("const {a}=foo()");
     assertPrintSame("const {a,b}=foo()");
     assertPrintSame("const {a:a,b:b}=foo()");
@@ -474,7 +463,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintObjectPatternAssign() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("({a}=foo())");
     assertPrintSame("({a,b}=foo())");
     assertPrintSame("({a:a,b:b}=foo())");
@@ -482,14 +470,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintNestedObjectPattern() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("({a:{b,c}}=foo())");
     assertPrintSame("({a:{b:{c:{d}}}}=foo())");
   }
 
   @Test
   public void testPrintObjectPatternInitializer() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("({a=1}=foo())");
     assertPrintSame("({a:{b=2}}=foo())");
     assertPrintSame("({a:b=2}=foo())");
@@ -512,20 +498,17 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrettyPrintObjectPattern() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrettyPrint("const {a,b,c}=foo();", "const {a, b, c} = foo();\n");
   }
 
   @Test
   public void testPrintMixedDestructuring() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("({a:[b,c]}=foo())");
     assertPrintSame("[a,{b,c}]=foo()");
   }
 
   @Test
   public void testPrintDestructuringInParamList() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("function f([a]){}");
     assertPrintSame("function f([a,b]){}");
     assertPrintSame("function f([a,b]=c()){}");
@@ -539,15 +522,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrintDestructuringInRestParam() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("function f(...[a,b]){}");
     assertPrintSame("function f(...{length:num_params}){}");
   }
 
   @Test
   public void testDestructuringForInLoops() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     assertPrintSame("for({a}in b)c");
     assertPrintSame("for(var {a}in b)c");
     assertPrintSame("for(let {a}in b)c");
@@ -566,8 +546,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testDestructuringForOfLoops1() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     assertPrintSame("for({a}of b)c");
     assertPrintSame("for(var {a}of b)c");
     assertPrintSame("for(let {a}of b)c");
@@ -586,8 +564,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testDestructuringForOfLoops2() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     // The destructuring 'var' statement is a child of the for-of loop, but
     // not the first child.
     assertPrintSame("for(a of b)var {x}=y");
@@ -708,7 +684,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("for(a=c?0:(0 in d);;)foo()");
 
     // And inside an arrow function body
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrint(
         "var a={}; for(var i = () => (0 in a); i;) {}", "var a={};for(var i=()=>(0 in a);i;);");
     assertPrint(
@@ -717,8 +692,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testForOf() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     assertPrintSame("for(a of b)c");
     assertPrintSame("for(var a of b)c");
   }
@@ -726,8 +699,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   // In pretty-print mode, make sure there is a space before and after the 'of' in a for/of loop.
   @Test
   public void testForOfPretty() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     assertPrettyPrintSame("for ([x, y] of b) {\n  c;\n}\n");
     assertPrettyPrintSame("for (x of [[1, 2]]) {\n  c;\n}\n");
     assertPrettyPrintSame("for ([x, y] of [[1, 2]]) {\n  c;\n}\n");
@@ -753,8 +724,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testLetFor() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     assertPrintSame("for(let a=0;a<5;a++)b");
     assertPrintSame("for(let a in b)c");
     assertPrintSame("for(let a of b)c");
@@ -764,8 +733,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testConstFor() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     assertPrintSame("for(const a=5;b<a;b++)c");
     assertPrintSame("for(const a in b)c");
     assertPrintSame("for(const a of b)c");
@@ -1155,13 +1122,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrettyPrinter_arrow() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrettyPrint("(a)=>123;", "(a) => 123;\n");
   }
 
   @Test
   public void testPrettyPrinter_defaultValue() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrettyPrint("(a=1)=>123;", "(a = 1) => 123;\n");
     assertPrettyPrint("[a=(1,2)]=[];", "[a = (1, 2)] = [];\n");
   }
@@ -1184,8 +1149,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   // For https://github.com/google/closure-compiler/issues/782
   @Test
   public void testPrettyPrinter_spaceBeforeUnaryOperators() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     assertPrettyPrint("var f = function() { return !b; };",
         "var f = function() {\n" +
             "  return !b;\n" +
@@ -1215,9 +1178,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testPrettyPrinter_varLetConst() {
     assertPrettyPrint("var x=0;", "var x = 0;\n");
-
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     assertPrettyPrint("const x=0;", "const x = 0;\n");
     assertPrettyPrint("let x=0;", "let x = 0;\n");
   }
@@ -1434,22 +1394,19 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testTypeAnnotationClassImplements() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertTypeAnnotations(
         lines(
             "/** @interface */ class Foo {}", //
             "/** @implements {Foo} */ class Bar {}"),
         lines(
-            // TODO(b/111818228): Should print annotations
-            // "/**\n * @interface\n */",
+            "/**\n * @interface\n */",
             "class Foo {\n}",
-            // "/**\n * @implements {Foo}\n */",
+            "/**\n * @implements {Foo}\n */",
             "class Bar {\n}\n"));
   }
 
   @Test
   public void testTypeAnnotationClassMember() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertTypeAnnotations(
         lines(
             "class Foo {", //
@@ -1457,15 +1414,43 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "}"),
         lines(
             "class Foo {",
-            // TODO(b/111818228): Should print annotations
-            // "  /**\n * @param {string} arg\n * @return {number}\n */",
-            "  method(arg) {\n  }",
-            "}\n"));
+            "  /**",
+            "   * @param {string} arg",
+            "   * @return {number}",
+            "   */",
+            "  method(arg) {",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testTypeAnnotationClassConstructor() {
+    assertTypeAnnotations(
+        lines(
+            "/**",
+            " * @template T",
+            " */",
+            "class Foo {", //
+            "  /** @param {T} arg */",
+            "  constructor(arg) {}",
+            "}"),
+        lines(
+            "/**",
+            " * @template T",
+            " */",
+            "class Foo {",
+            "  /**",
+            "   * @param {T} arg",
+            "   */",
+            "  constructor(arg) {",
+            "  }",
+            "}",
+            ""));
   }
 
   @Test
   public void testRestParameter() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertTypeAnnotations(
         lines(
             "/** @param {...string} args */", //
@@ -1477,7 +1462,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testDefaultParameter() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertTypeAnnotations(
         lines(
             "/** @param {string=} msg */", //
@@ -1489,7 +1473,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testObjectDestructuringParameter() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertTypeAnnotations(
         lines(
             "/** @param {{a: number, b: number}} ignoredName */", //
@@ -1506,7 +1489,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testObjectDestructuringParameterWithDefault() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertTypeAnnotations(
         lines(
             "/** @param {{a: number, b: number}=} ignoredName */", //
@@ -1523,7 +1505,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testArrayDestructuringParameter() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertTypeAnnotations(
         lines(
             "/** @param {!Iterable<number>} ignoredName */", //
@@ -1540,7 +1521,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testArrayDestructuringParameterWithDefault() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertTypeAnnotations(
         lines(
             "/** @param {!Iterable<number>=} ignoredName */", //
@@ -1652,8 +1632,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testEnumAnnotation1() {
     assertTypeAnnotations(
-        "/** @enum {string} */ var Enum = {FOO: 'x', BAR: 'y'};",
-        "/** @enum {string} */\nvar Enum = {FOO:\"x\", BAR:\"y\"};\n");
+        "/** @enum {string} */ const Enum = {FOO: 'x', BAR: 'y'};",
+        "/** @enum {string} */\nconst Enum = {FOO:\"x\", BAR:\"y\"};\n");
   }
 
   @Test
@@ -2003,7 +1983,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testFunctionSafariCompatibility() {
     // Functions within IFs cause syntax errors on Safari.
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrint("function f(){if(e1){function goo(){return true}}else foo()}",
         "function f(){if(e1){function goo(){return true}}else foo()}");
 
@@ -2055,7 +2034,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     //   http://www.ecma-international.org/ecma-262/5.1/#sec-8.5
     assertPrint("9223372036854775808", "0x7fffffffffffffff");
     assertPrint("0x8000000000000000", "0x7fffffffffffffff");
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrint(
         "0b1000000000000000000000000000000000000000000000000000000000000000",
         "0x7fffffffffffffff");
@@ -2166,7 +2144,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testExtendedObjectLit() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("var a={b}");
     assertPrintSame("var a={b,c}");
     assertPrintSame("var a={b,c:d,e}");
@@ -2175,8 +2152,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testComputedProperties() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     assertPrintSame("var a={[b]:c}");
     assertPrintSame("var a={[b+3]:c}");
 
@@ -2191,8 +2166,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testComputedPropertiesClassMethods() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     assertPrintSame("class C{[m](){}}");
 
     assertPrintSame("class C{[\"foo\"+bar](){alert(1)}}");
@@ -2337,6 +2310,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testOctalInString() {
+    languageMode = LanguageMode.ECMASCRIPT5;
     assertPrint("var x ='\\0';", "var x=\"\\x00\"");
     assertPrint("var x ='\\07';", "var x=\"\\u0007\"");
 
@@ -2359,6 +2333,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testOctalInStringNoLeadingZero() {
+    languageMode = LanguageMode.ECMASCRIPT5;
     assertPrint("var x ='\\7';", "var x=\"\\u0007\"");
 
     // Octal 12 = Hex 0A = \n
@@ -2633,7 +2608,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testDefaultParameters() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("function f(a=0){}");
     assertPrintSame("function f(a,b=0){}");
     assertPrintSame("function f(a=(1,2),b){}");
@@ -2642,21 +2616,18 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testRestParameters() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("function f(...args){}");
     assertPrintSame("function f(first,...rest){}");
   }
 
   @Test
   public void testDefaultParametersWithRestParameters() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("function f(first=0,...args){}");
     assertPrintSame("function f(first,second=0,...rest){}");
   }
 
   @Test
   public void testSpreadExpression() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("f(...args)");
     assertPrintSame("f(...arrayOfArrays[0])");
     assertPrintSame("f(...[1,2,3])");
@@ -2664,7 +2635,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testClass() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("class C{}");
     assertPrintSame("(class C{})");
     assertPrintSame("class C extends D{}");
@@ -2675,7 +2645,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testClassComputedProperties() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
 
     assertPrintSame("class C{[x](){}}");
     assertPrintSame("class C{get [x](){}}");
@@ -2688,7 +2657,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testClassPretty() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrettyPrint(
         "class C{}",
         "class C {\n}\n");
@@ -2707,7 +2675,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testSuper() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("class C extends foo(){}");
     assertPrintSame("class C extends m.foo(){}");
     assertPrintSame("class C extends D{member(){super.foo()}}");
@@ -2715,14 +2682,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testNewTarget() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("function f(){new.target}");
     assertPrint("function f() {\nnew\n.\ntarget;\n}", "function f(){new.target}");
   }
 
   @Test
   public void testGeneratorYield() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("function*f(){yield 1}");
     assertPrintSame("function*f(){yield}");
     assertPrintSame("function*f(){yield 1?0:2}");
@@ -2735,7 +2700,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testGeneratorYieldPretty() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrettyPrint(
         "function *f() {yield 1}",
         LINE_JOINER.join(
@@ -2755,14 +2719,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testMemberGeneratorYield1() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("class C{*member(){(yield 1)+(yield 1)}}");
     assertPrintSame("var obj={*member(){(yield 1)+(yield 1)}}");
   }
 
   @Test
   public void testArrowFunction() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("()=>1");
     assertPrint("(()=>1)", "()=>1");
     assertPrintSame("()=>{}");
@@ -2843,8 +2805,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   /** Regression test for b/28633247 - necessary parens dropped around arrow functions. */
   @Test
   public void testParensAroundArrow() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     // Parens required for non-assignment binary operator
     assertPrintSame("x||((_)=>true)");
     // Parens required for unary operator
@@ -2873,7 +2833,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testParensAroundArrowReturnValue() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("()=>({})");
     assertPrintSame("()=>({a:1})");
     assertPrintSame("()=>({a:1,b:2})");
@@ -2903,7 +2862,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrettyArrowFunction() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrettyPrint("if (x) {var f = ()=>{alert(1); alert(2)}}",
         LINE_JOINER.join(
             "if (x) {",
@@ -2932,7 +2890,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testBlocksInCaseArePreserved() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     String js = LINE_JOINER.join(
         "switch(something) {",
         "  case 0:",
@@ -2955,7 +2912,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testBlocksArePreserved() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     String js = LINE_JOINER.join(
         "console.log(0);",
         "{",
@@ -2975,7 +2931,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testDeclarations() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("let x");
     assertPrintSame("let x,y");
     assertPrintSame("let x=1");
@@ -2997,7 +2952,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testImports() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("import x from\"foo\"");
     assertPrintSame("import\"foo\"");
     assertPrintSame("import x,{a as b}from\"foo\"");
@@ -3010,7 +2964,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testExports() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     // export declarations
     assertPrintSame("export var x=1");
     assertPrintSame("export var x;export var y");
@@ -3128,8 +3081,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // related to b/117613188
 
     // Given
-    languageMode = LanguageMode.ECMASCRIPT_2015;
-
     // Configure these so that the printer would otherwise attempt to reuse an existing newline.
     CompilerOptions codePrinterOptions = new CompilerOptions();
     codePrinterOptions.setPreferLineBreakAtEndOfFile(true); // Enable rearranging.
@@ -3223,20 +3174,17 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testEs6NewTargetBare() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame("class C{constructor(){new.target.prototype}}");
   }
 
   @Test
   public void testEs6NewTargetPrototype() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrintSame(
         "class C{constructor(){var callable=Object.setPrototypeOf(obj,new.target.prototype)}}");
   }
 
   @Test
   public void testEs6NewTargetConditional() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrint(
         LINE_JOINER.join(
             "function f() {",
