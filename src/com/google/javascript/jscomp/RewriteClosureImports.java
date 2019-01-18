@@ -19,8 +19,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_FORWARD_DECLARE;
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Table;
 import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
@@ -104,8 +106,14 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
     // However we don't do this for ES modules due to mutable exports.
     // Note that doing this for types also allows type references to non-imported non-legacy
     // goog.module files - which we really shouldn't have allowed, but people are now relying on it.
-    private final Map<String, String> variablesToInline = new HashMap<>();
-    private final Map<String, String> typesToInline = new HashMap<>();
+    //
+    // These tables are [old name, alias node, new name].
+    private final Table<String, Node, String> variablesToInline = HashBasedTable.create();
+    private final Table<String, Node, String> typesToInline = HashBasedTable.create();
+
+    // Map from Closure ID to global name for imports that have no alias.
+    private final Map<String, String> nonAliasedNamespaces = new HashMap<>();
+
     private final ModuleMetadataMap moduleMetadataMap;
 
     Rewriter(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
@@ -117,6 +125,7 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
     protected void exitModule(ModuleMetadata oldModule, Node moduleScopeRoot) {
       variablesToInline.clear();
       typesToInline.clear();
+      nonAliasedNamespaces.clear();
     }
 
     @Override
@@ -136,7 +145,7 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
         case CALL:
           if (n.getFirstChild().matchesQualifiedName(GOOG_REQUIRE)
               || n.getFirstChild().matchesQualifiedName(GOOG_REQUIRE_TYPE)) {
-            visitRequire(n, parent, currentModule);
+            visitRequire(t, n, parent, currentModule);
           } else if (n.getFirstChild().matchesQualifiedName(GOOG_FORWARD_DECLARE)) {
             visitForwardDeclare(t, n, parent, currentModule);
           } else if (n.getFirstChild().matchesQualifiedName(GOOG_MODULE_GET)) {
@@ -174,6 +183,7 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
     }
 
     private void rewriteImport(
+        NodeTraversal t,
         ModuleMetadata currentModule,
         @Nullable ModuleMetadata requiredModule,
         String requiredNamespace,
@@ -192,7 +202,7 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
           // Fully qualified module namespaces can be referenced in type annotations.
           // Legacy modules and provides don't need rewriting since their references will be the
           // same after rewriting.
-          typesToInline.put(requiredNamespace, globalName);
+          nonAliasedNamespaces.put(requiredNamespace, globalName);
         }
 
         statementNode.detach();
@@ -215,8 +225,14 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
         // Closure file stored in a var or const without destructuring. Inline the variable.
 
         // use(closure-global-name);
-        variablesToInline.put(parentNode.getString(), globalName);
-        typesToInline.put(parentNode.getString(), globalName);
+        String name = parentNode.getString();
+
+        // Get the variable from the scope. Scope creation is lazy, and we want to snapshot the
+        // scope BEFORE we detach any nodes.
+        Node fromScope = t.getScope().getVar(parentNode.getString()).getNameNode();
+        checkState(fromScope == parentNode);
+        variablesToInline.put(name, fromScope, globalName);
+        typesToInline.put(parentNode.getString(), parentNode, globalName);
         statementNode.detach();
 
         maybeAddAliasToSymbolTable(statementNode.getFirstChild(), currentModule);
@@ -235,8 +251,13 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
           Node aliasNode = importSpec.getFirstChild();
           String aliasName = aliasNode.getString();
           String fullName = globalName + "." + importedProperty;
-          variablesToInline.put(aliasName, fullName);
-          typesToInline.put(aliasName, fullName);
+
+          // Get the variable from the scope. Scope creation is lazy, and we want to snapshot the
+          // scope BEFORE we detach any nodes.
+          Node fromScope = t.getScope().getVar(aliasNode.getString()).getNameNode();
+          checkState(fromScope == aliasNode);
+          variablesToInline.put(aliasName, aliasNode, fullName);
+          typesToInline.put(aliasName, aliasNode, fullName);
 
           maybeAddAliasToSymbolTable(aliasNode, currentModule);
         }
@@ -247,14 +268,15 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
       compiler.reportChangeToChangeScope(changeScope);
     }
 
-    private void visitRequire(Node callNode, Node parentNode, ModuleMetadata currentModule) {
+    private void visitRequire(
+        NodeTraversal t, Node callNode, Node parentNode, ModuleMetadata currentModule) {
       String requiredNamespace = callNode.getLastChild().getString();
       ModuleMetadata requiredModule =
           moduleMetadataMap.getModulesByGoogNamespace().get(requiredNamespace);
       if (requiredModule == null) {
         requiredModule = getFallbackMetadataForNamespace(requiredNamespace);
       }
-      rewriteImport(currentModule, requiredModule, requiredNamespace, callNode, parentNode);
+      rewriteImport(t, currentModule, requiredModule, requiredNamespace, callNode, parentNode);
     }
 
     private void rewriteGoogModuleGet(
@@ -283,6 +305,12 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
       String requiredNamespace = callNode.getLastChild().getString();
       ModuleMetadata requiredModule =
           moduleMetadataMap.getModulesByGoogNamespace().get(requiredNamespace);
+      if (requiredModule == null) {
+        // Be fault tolerant. An error should've been reported in the checks.
+        compiler.reportChangeToChangeScope(NodeUtil.getEnclosingChangeScopeRoot(callNode));
+        NodeUtil.getEnclosingStatement(callNode).detach();
+        return;
+      }
       rewriteGoogModuleGet(requiredModule, requiredNamespace, t, callNode);
     }
 
@@ -318,7 +346,7 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
         parent.detach();
         t.reportCodeChange();
       } else {
-        rewriteImport(currentModule, requiredModule, requiredNamespace, n, parent);
+        rewriteImport(t, currentModule, requiredModule, requiredNamespace, n, parent);
       }
     }
 
@@ -329,11 +357,12 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
 
       Var var = t.getScope().getVar(n.getString());
 
-      if (var != null) {
+      // The scope hasn't updated, all aliases should be in scope still.
+      if (var == null) {
         return;
       }
 
-      String newName = variablesToInline.get(n.getString());
+      String newName = variablesToInline.get(n.getString(), var.getNameNode());
 
       if (newName == null) {
         return;
@@ -360,7 +389,11 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
       if (!newName.contains(".")) {
         safeSetString(n, newName);
       } else {
+        Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(n);
         n.replaceWith(NodeUtil.newQName(compiler, newName).srcrefTree(n));
+        if (changeScope != null) {
+          compiler.reportChangeToChangeScope(changeScope);
+        }
       }
     }
 
@@ -399,11 +432,11 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
     }
 
     private void rewriteJsdoc(NodeTraversal t, JSDocInfo info, ModuleMetadata currentModule) {
-      if (typesToInline.isEmpty()) {
+      if (typesToInline.isEmpty() && nonAliasedNamespaces.isEmpty()) {
         return;
       }
 
-      JsDocRefReplacer replacer = new JsDocRefReplacer(currentModule);
+      JsDocRefReplacer replacer = new JsDocRefReplacer(currentModule, t.getScope());
 
       for (Node typeNode : info.getTypeNodes()) {
         NodeUtil.visitPreOrder(typeNode, replacer);
@@ -412,9 +445,11 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
 
     private final class JsDocRefReplacer implements NodeUtil.Visitor {
       private final ModuleMetadata currentModule;
+      private final Scope scope;
 
-      JsDocRefReplacer(ModuleMetadata currentModule) {
+      JsDocRefReplacer(ModuleMetadata currentModule, Scope scope) {
         this.currentModule = currentModule;
+        this.scope = scope;
       }
 
       @Override
@@ -435,8 +470,24 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
           // "{Foo}" to
           // "{module$exports$bar$Foo}" or
           // "{bar.Foo}"
-          String aliasedNamespace = typesToInline.get(prefixTypeName);
-          if (aliasedNamespace != null) {
+          String globalName = null;
+
+          // First see if this is an aliased variable created by an import.
+          if (!prefixTypeName.contains(".")) {
+            Var var = scope.getVar(prefixTypeName);
+
+            if (var != null) {
+              globalName = typesToInline.get(prefixTypeName, var.getNameNode());
+            }
+          }
+
+          // If null it is not an aliased, local variable. See if there was a non-aliased import
+          // for this namespace.
+          if (globalName == null) {
+            globalName = nonAliasedNamespaces.get(prefixTypeName);
+          }
+
+          if (globalName != null) {
             if (preprocessorSymbolTable != null) {
               // Jsdoc type node is a single STRING node that spans the whole type. For example
               // STRING node "bar.Foo". When rewriting modules potentially replace only "module"
@@ -448,7 +499,7 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
               maybeAddAliasToSymbolTable(moduleOnlyNode, currentModule);
             }
 
-            safeSetString(typeRefNode, aliasedNamespace + suffix);
+            safeSetString(typeRefNode, globalName + suffix);
             return;
           }
 

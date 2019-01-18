@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.CheckClosureImports.NO_CLOSURE_IMPORT
 import static com.google.javascript.jscomp.CheckClosureImports.ONE_CLOSURE_IMPORT_PER_DECLARATION;
 import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
@@ -158,30 +159,22 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         error(error));
   }
 
-  /** A test common to goog.require, goog.module.get, goog.forwardDeclare, and goog.requireType. */
-  private void testCommonAndGetCase(String source) {
-    testCommonCase(source);
-    test(srcs(PROVIDES_SYMBOL_SRC, makeTestFile(source.replace("<import>", "goog.module.get"))));
-  }
-
-  /** A test common to goog.require, goog.module.get, goog.forwardDeclare, and goog.requireType. */
-  private void testCommonAndGetCase(String source, DiagnosticType error) {
-    testCommonCase(source, error);
-    test(
-        srcs(PROVIDES_SYMBOL_SRC, makeTestFile(source.replace("<import>", "goog.module.get"))),
-        error(error));
-  }
-
   @Test
   public void mustHaveOneStringLiteralArgument() {
     // The regex deps parser will report an error earlier, but it doesn't run if modules aren't
     // part of the input.
     languageMode = LanguageMode.ECMASCRIPT5_STRICT;
-    testCommonAndGetCase("<import>();", INVALID_CLOSURE_IMPORT_CALL);
-    testCommonAndGetCase("<import>(0);", INVALID_CLOSURE_IMPORT_CALL);
-    testCommonAndGetCase("<import>(e);", INVALID_CLOSURE_IMPORT_CALL);
-    testCommonAndGetCase("<import>('symbol');");
-    testCommonAndGetCase("<import>('symbol', 'extra');", INVALID_CLOSURE_IMPORT_CALL);
+    testCommonCase("<import>();", INVALID_CLOSURE_IMPORT_CALL);
+    testCommonCase("<import>(0);", INVALID_CLOSURE_IMPORT_CALL);
+    testCommonCase("<import>(e);", INVALID_CLOSURE_IMPORT_CALL);
+    testCommonCase("<import>('symbol');");
+    testCommonCase("<import>('symbol', 'extra');", INVALID_CLOSURE_IMPORT_CALL);
+
+    testError("function x() { goog.module.get(); }", INVALID_CLOSURE_IMPORT_CALL);
+    testError("function x() { goog.module.get(0); }", INVALID_CLOSURE_IMPORT_CALL);
+    testError("function x() { goog.module.get(e); }", INVALID_CLOSURE_IMPORT_CALL);
+    testSame("function x() { goog.module.get('symbol'); }");
+    testError("function x() { goog.module.get('symbol', 'extra'); }", INVALID_CLOSURE_IMPORT_CALL);
   }
 
   @Test
@@ -196,12 +189,13 @@ public class CheckClosureImportsTest extends CompilerTestCase {
 
   @Test
   public void referenceMissingSymbolIsError() {
-    testCommonAndGetCase("<import>('symbol');");
+    testCommonCase("<import>('symbol');");
+    testSame("() => goog.module.get('symbol');");
 
     // Not an error for goog.forwardDeclare in scripts.
     testError("goog.require('dne');", MISSING_MODULE_OR_PROVIDE);
     testError("goog.requireType('dne');", MISSING_MODULE_OR_PROVIDE);
-    testError("goog.module.get('dne');", MISSING_MODULE_OR_PROVIDE);
+    testError("() => goog.module.get('dne');", MISSING_MODULE_OR_PROVIDE);
   }
 
   @Test
@@ -539,6 +533,15 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   }
 
   @Test
+  public void moduleGetInGlobalScopeIsError() {
+    moduleType = ModuleType.SCRIPT;
+
+    test(
+        srcs(ES_MODULE_SRC, makeTestFile("goog.module.get('es.module');")),
+        error(INVALID_GET_CALL_SCOPE));
+  }
+
+  @Test
   public void moduleGetInFunctionScopeIsOk() {
     moduleType = ModuleType.GOOG_MODULE;
 
@@ -559,19 +562,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
                 lines(
                     "() => goog.module.get('symbol');", //
                     "export {};"))));
-  }
 
-  @Test
-  public void moduleGetInProvideScopeIsOk() {
-    moduleType = ModuleType.GOOG_PROVIDE;
+    moduleType = ModuleType.SCRIPT;
 
-    test(
-        srcs(
-            PROVIDES_SYMBOL_SRC,
-            makeTestFile(
-                lines(
-                    "goog.provide('test');", //
-                    "goog.module.get('symbol');"))));
+    test(srcs(PROVIDES_SYMBOL_SRC, makeTestFile("() => goog.module.get('symbol');")));
   }
 
   @Test

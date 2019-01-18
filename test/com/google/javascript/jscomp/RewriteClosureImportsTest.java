@@ -1511,4 +1511,70 @@ public class RewriteClosureImportsTest extends CompilerTestCase {
                     "goog.module('foo');", //
                     "let /** !does.not.exist.X */ x;"))));
   }
+
+  @Test
+  public void rewriteTypesAndReferencesInInnerScope() {
+    test(
+        srcs(
+            PROVIDE,
+            GOOG_MODULE,
+            ES_MODULE,
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "goog.module('p.C');", //
+                    "const A = goog.require('some.provided.namespace');",
+                    "const B = goog.require('some.module.namespace');",
+                    "const {C} = goog.require('some.es.id');",
+                    "function main() {",
+                    "  /** @type {A} */ const a = new A;",
+                    "  /** @type {B} */ const b = new B;",
+                    "  /** @type {C} */ const c = new C;",
+                    "}"))),
+        expected(
+            PROVIDE,
+            GOOG_MODULE,
+            ES_MODULE,
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "goog.module('p.C');", //
+                    "const {C} = module$esm;",
+                    "function main() {",
+                    "  /** @type {some.provided.namespace} */",
+                    "  const a = new some.provided.namespace;",
+                    "  /** @type {module$exports$some$module$namespace} */",
+                    "  const b = new module$exports$some$module$namespace;",
+                    "  /** @type {C} */ const c = new C;",
+                    "}"))));
+  }
+
+  @Test
+  public void rewriteIsScopeAware() {
+    test(
+        srcs(
+            PROVIDE,
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "goog.module('p.C');", //
+                    "const A = goog.require('some.provided.namespace');",
+                    "/** @type {A} */ const a = new A;",
+                    "function main() {",
+                    "  class A {}",
+                    "  /** @type {A} */ const a = new A;",
+                    "}"))),
+        expected(
+            PROVIDE,
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "goog.module('p.C');", //
+                    "/** @type {some.provided.namespace} */",
+                    "const a = new some.provided.namespace;",
+                    "function main() {",
+                    "  class A {}",
+                    "  /** @type {A} */ const a = new A;",
+                    "}"))));
+  }
 }

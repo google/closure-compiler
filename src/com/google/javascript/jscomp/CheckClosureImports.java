@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
@@ -31,6 +32,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
@@ -336,6 +338,14 @@ final class CheckClosureImports implements HotSwapCompilerPass {
     private void checkGoogModuleGet(NodeTraversal t, Node call, ModuleMetadata currentModule) {
       if (t.inModuleHoistScope()) {
         t.report(call, MODULE_USES_GOOG_MODULE_GET);
+        return;
+      }
+
+      if (!currentModule.isEs6Module()
+          && !currentModule.isGoogModule()
+          && t.inGlobalScope()
+          && compiler.getOptions().moduleResolutionMode != ResolutionMode.WEBPACK) {
+        t.report(call, INVALID_GET_CALL_SCOPE);
         return;
       }
 
