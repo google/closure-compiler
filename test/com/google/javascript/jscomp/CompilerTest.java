@@ -2003,6 +2003,42 @@ public final class CompilerTest {
   }
 
   @Test
+  public void testCodeReferenceToTypeImport() throws Exception {
+    List<SourceFile> externs =
+        ImmutableList.of(SourceFile.fromCode("extern.js", "/** @externs */ function alert(x) {}"));
+    List<SourceFile> sources =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "type.js",
+                lines(
+                    "goog.module('type');", //
+                    "",
+                    "exports.Type = class {}")),
+            SourceFile.fromCode(
+                "main.js",
+                lines(
+                    "goog.module('main');",
+                    "",
+                    "const {Type} = goog.requireType('type');",
+                    "",
+                    "alert(new Type());")));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setClosurePass(true);
+
+    Compiler compiler = new Compiler();
+
+    compiler.init(externs, sources, options);
+    compiler.parse();
+    compiler.check();
+
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(compiler.getErrors()).hasLength(1);
+    assertThat(compiler.getErrors()[0].getType())
+        .isEqualTo(CheckTypeImportCodeReferences.TYPE_IMPORT_CODE_REFERENCE);
+  }
+
+  @Test
   public void testWeakSources() throws Exception {
     List<SourceFile> sources =
         ImmutableList.of(

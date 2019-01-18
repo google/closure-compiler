@@ -63,11 +63,6 @@ final class CheckClosureImports implements HotSwapCompilerPass {
       }
 
       @Override
-      boolean typesOnly() {
-        return false;
-      }
-
-      @Override
       String callName() {
         return "goog.require";
       }
@@ -86,11 +81,6 @@ final class CheckClosureImports implements HotSwapCompilerPass {
 
       @Override
       boolean mustBeOrdered() {
-        return false;
-      }
-
-      @Override
-      boolean typesOnly() {
         return false;
       }
 
@@ -114,11 +104,6 @@ final class CheckClosureImports implements HotSwapCompilerPass {
       @Override
       boolean mustBeOrdered() {
         return false;
-      }
-
-      @Override
-      boolean typesOnly() {
-        return true;
       }
 
       @Override
@@ -152,9 +137,6 @@ final class CheckClosureImports implements HotSwapCompilerPass {
      * before the definition.
      */
     abstract boolean mustBeOrdered();
-
-    /** True if aliases can only appear in types. */
-    abstract boolean typesOnly();
 
     /** Human readable name of this call, used in error reporting. */
     abstract String callName();
@@ -191,11 +173,6 @@ final class CheckClosureImports implements HotSwapCompilerPass {
       DiagnosticType.error(
           "JSC_LHS_OF_CLOUSRE_IMPORT_MUST_BE_CONST_IN_ES_MODULE",
           "The left side of a {0} must use ''const'' (not ''let'' or ''var'') in an ES module.");
-
-  static final DiagnosticType INVALID_TYPE_IMPORT_CODE_REFERENCE =
-      DiagnosticType.error(
-          "JSC_INVALID_TYPE_IMPORT_CODE_REFERENCE",
-          "Can only reference aliases of {0} in type annotations.");
 
   private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), IR.string("require"));
   private static final Node GOOG_MODULE_GET =
@@ -328,10 +305,6 @@ final class CheckClosureImports implements HotSwapCompilerPass {
 
       if (kindOfCall == null) {
         return;
-      }
-
-      if (kindOfCall.typesOnly()) {
-        t.report(nameNode, INVALID_TYPE_IMPORT_CODE_REFERENCE, kindOfCall.callName());
       }
     }
 

@@ -566,6 +566,10 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup UNNECESSARY_ESCAPE =
       DiagnosticGroups.registerGroup("unnecessaryEscape", RhinoErrorReporter.UNNECESSARY_ESCAPE);
 
+  public static final DiagnosticGroup TYPE_IMPORT_CODE_REFERENCES =
+      DiagnosticGroups.registerGroup(
+          "typeImportCodeReferences", CheckTypeImportCodeReferences.TYPE_IMPORT_CODE_REFERENCE);
+
   // Warnings reported by the linter. If you enable these as errors in your build targets,
   // the JS Compiler team will break your build and not rollback.
   public static final DiagnosticGroup LINT_CHECKS =

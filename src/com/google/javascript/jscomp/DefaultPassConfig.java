@@ -273,6 +273,8 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertEs6TypedToEs6);
     }
 
+    checks.add(checkTypeImportCodeReferences);
+
     checks.add(gatherModuleMetadataPass);
 
     if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
@@ -1452,6 +1454,19 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           return ES_NEXT;
+        }
+      };
+
+  private final PassFactory checkTypeImportCodeReferences =
+      new PassFactory("checkTypeImportCodeReferences", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new CheckTypeImportCodeReferences(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest();
         }
       };
 

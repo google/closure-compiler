@@ -77,6 +77,7 @@ public final class Linter {
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.ERROR);
     options.setWarningLevel(DiagnosticGroups.USE_OF_GOOG_BASE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.MISPLACED_SUPPRESS, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.TYPE_IMPORT_CODE_REFERENCES, CheckLevel.ERROR);
     options.setSummaryDetailLevel(0);
     compiler.setPassConfig(new LintPassConfig(options));
     compiler.disableThreads();

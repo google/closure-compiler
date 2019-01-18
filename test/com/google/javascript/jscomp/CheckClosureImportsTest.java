@@ -686,59 +686,6 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   }
 
   @Test
-  public void googRequireTypeCodeReferenceAliasIsError() {
-    moduleType = ModuleType.GOOG_MODULE;
-
-    test(
-        srcs(
-            PROVIDES_SYMBOL_SRC,
-            makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const alias = goog.requireType('symbol');",
-                    "alias;"))),
-        error(CheckClosureImports.INVALID_TYPE_IMPORT_CODE_REFERENCE));
-
-    test(
-        srcs(
-            PROVIDES_SYMBOL_SRC,
-            makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const {alias} = goog.requireType('symbol');",
-                    "alias;"))),
-        error(CheckClosureImports.INVALID_TYPE_IMPORT_CODE_REFERENCE));
-
-    testSame(
-        srcs(
-            PROVIDES_SYMBOL_SRC,
-            makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const alias = goog.requireType('symbol');",
-                    "function baz(alias) { alias; }"))));
-
-    testSame(
-        srcs(
-            PROVIDES_SYMBOL_SRC,
-            makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const {alias} = goog.requireType('symbol');",
-                    "function baz(alias) { alias; }"))));
-
-    test(
-        srcs(
-            PROVIDES_SYMBOL_SRC,
-            makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const alias = goog.requireType('symbol');",
-                    "function baz() { alias; }"))),
-        error(CheckClosureImports.INVALID_TYPE_IMPORT_CODE_REFERENCE));
-  }
-
-  @Test
   public void googRequireTypeTypeReferenceAliasIsOk() {
     moduleType = ModuleType.GOOG_MODULE;
 
