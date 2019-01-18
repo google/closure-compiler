@@ -18,8 +18,8 @@ package com.google.javascript.jscomp.modules;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import javax.annotation.Nullable;
 
 /**

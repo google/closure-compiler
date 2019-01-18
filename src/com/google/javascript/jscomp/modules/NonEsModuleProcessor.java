@@ -17,13 +17,13 @@ package com.google.javascript.jscomp.modules;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.ExportTrace;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleProcessor;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleRequestResolver;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.ResolveExportResult;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.UnresolvedModule;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
 import java.util.Set;
 import javax.annotation.Nullable;

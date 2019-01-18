@@ -44,6 +44,8 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
 import com.google.javascript.jscomp.deps.NodeModuleResolver;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.deps.WebpackModuleResolver;
+import com.google.javascript.jscomp.modules.ModuleMap;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -3611,6 +3613,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public void setModuleMetadataMap(ModuleMetadataMap moduleMetadataMap) {
     this.moduleMetadataMap = moduleMetadataMap;
+  }
+
+  private ModuleMap moduleMap;
+
+  @Override
+  public ModuleMap getModuleMap() {
+    return moduleMap;
+  }
+
+  @Override
+  public void setModuleMap(ModuleMap moduleMap) {
+    this.moduleMap = moduleMap;
   }
 
   /**

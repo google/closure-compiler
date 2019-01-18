@@ -18,9 +18,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.modules.Binding;
 import com.google.javascript.jscomp.modules.Export;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import javax.annotation.Nullable;
 
 /** Centralized location for determining how to rename modules. */

@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.ModuleMetadataMap.ModuleType;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import java.io.IOException;
 import java.util.Arrays;
 import org.junit.Before;

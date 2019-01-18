@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.modules;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
@@ -168,7 +168,7 @@ public final class ModuleMetadataMap {
     /** Raw text of all ES6 import specifiers (includes "export from" as well). */
     public abstract ImmutableMultiset<String> es6ImportSpecifiers();
 
-    abstract ImmutableList<ModuleMetadata> nestedModules();
+    public abstract ImmutableList<ModuleMetadata> nestedModules();
 
     @Nullable
     public abstract ModulePath path();
@@ -184,12 +184,12 @@ public final class ModuleMetadataMap {
 
       public abstract ImmutableMultiset.Builder<String> googNamespacesBuilder();
 
-      Builder addGoogNamespace(String namespace) {
+      public Builder addGoogNamespace(String namespace) {
         googNamespacesBuilder().add(namespace);
         return this;
       }
 
-      abstract ImmutableMultiset.Builder<String> requiredGoogNamespacesBuilder();
+      public abstract ImmutableMultiset.Builder<String> requiredGoogNamespacesBuilder();
 
       public abstract ImmutableMultiset.Builder<String> requiredTypesBuilder();
 
@@ -214,8 +214,8 @@ public final class ModuleMetadataMap {
   /**
    * @return map from module path to module. These modules represent files and thus {@link
    *     ModuleMetadata#googNamespaces()} contains all Closure namespaces in the file. These are not
-   *     the same modules from {@link ModuleMetadataMap#getModulesByGoogNamespace()}. It is not
-   *     valid to call {@link ModuleRenaming#getGlobalName(ModuleMetadata, String)} on {@link
+   *     the same modules from ModuleMetadataMap#getModulesByGoogNamespace(). It is not valid to
+   *     call ModuleRenaming#getGlobalName(ModuleMetadata, String) on {@link
    *     ModuleType#GOOG_PROVIDE} modules from this map that have more than one Closure namespace as
    *     it is ambiguous.
    */
@@ -226,8 +226,8 @@ public final class ModuleMetadataMap {
   /**
    * @return map from Closure namespace to module. These modules represent the Closure namespace and
    *     thus {@link ModuleMetadata#googNamespaces()} will have size 1. As a result, it is valid to
-   *     call {@link ModuleRenaming#getGlobalName(ModuleMetadata, String)} on these modules. These
-   *     are not the same modules from {@link ModuleMetadataMap#getModulesByPath()}.
+   *     call ModuleRenaming#getGlobalName(ModuleMetadata, String) on these modules. These are not
+   *     the same modules from {@link ModuleMetadataMap#getModulesByPath()}.
    */
   public ImmutableMap<String, ModuleMetadata> getModulesByGoogNamespace() {
     return modulesByGoogNamespace;

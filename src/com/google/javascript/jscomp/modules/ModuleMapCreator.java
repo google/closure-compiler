@@ -22,12 +22,12 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.ModuleMetadataMap;
-import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,7 +36,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /** Creates a {@link ModuleMap}. */
-public class ModuleMapCreator {
+public class ModuleMapCreator implements CompilerPass {
   static final DiagnosticType MISSING_NAMESPACE_IMPORT =
       DiagnosticType.error(
           "JSC_MISSING_NAMESPACE_IMPORT", "Imported Closure namespace \"{0}\" never defined.");
@@ -310,7 +310,7 @@ public class ModuleMapCreator {
     unresolvedModulesByClosureNamespace = new HashMap<>();
   }
 
-  public ModuleMap create() {
+  private ModuleMap create() {
     ModuleRequestResolver requestResolver = new ModuleRequestResolver();
     Map<String, Module> resolvedModules = new HashMap<>();
     Map<String, Module> resolvedClosureModules = new HashMap<>();
@@ -358,5 +358,10 @@ public class ModuleMapCreator {
 
     return new ModuleMap(
         ImmutableMap.copyOf(resolvedModules), ImmutableMap.copyOf(resolvedClosureModules));
+  }
+
+  @Override
+  public void process(Node externs, Node root) {
+    compiler.setModuleMap(create());
   }
 }

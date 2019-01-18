@@ -23,6 +23,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.modules.ModuleMap;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
@@ -687,4 +689,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   public abstract ModuleMetadataMap getModuleMetadataMap();
 
   public abstract void setModuleMetadataMap(ModuleMetadataMap moduleMetadataMap);
+
+  public abstract ModuleMap getModuleMap();
+
+  public abstract void setModuleMap(ModuleMap moduleMap);
 }

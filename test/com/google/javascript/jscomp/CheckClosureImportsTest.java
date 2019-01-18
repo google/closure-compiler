@@ -33,8 +33,9 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIA
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
-import com.google.javascript.jscomp.ModuleMetadataMap.ModuleType;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
