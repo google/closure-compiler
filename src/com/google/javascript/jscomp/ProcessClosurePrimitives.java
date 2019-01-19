@@ -1627,6 +1627,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       if (offset != 0) {
         newNode.setSourceEncodedPositionForTree(
             sourceInfoNode.getSourcePosition() + offset);
+        // Given namespace "foo.bar.baz" we create node for "baz" here and need to calculate
+        // length of the last component which is "baz".
+        int lengthOfLastComponent = namespace.length() - (namespace.lastIndexOf(".") + 1);
+        newNode.setLengthForTree(lengthOfLastComponent);
       }
     }
 

@@ -1520,6 +1520,15 @@ public class Node implements Serializable {
     this.length = length;
   }
 
+  /** Useful to set length of a transpiled node tree to map back to the length of original node. */
+  public final void setLengthForTree(int length) {
+    this.length = length;
+
+    for (Node child = first; child != null; child = child.next) {
+      child.setLengthForTree(length);
+    }
+  }
+
   public final int getLineno() {
     return extractLineno(sourcePosition);
   }
