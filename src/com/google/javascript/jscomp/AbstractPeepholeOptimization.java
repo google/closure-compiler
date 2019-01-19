@@ -29,7 +29,8 @@ import com.google.javascript.rhino.Node;
  */
 abstract class AbstractPeepholeOptimization {
 
-  protected AbstractCompiler compiler;
+  /** Intentionally not exposed to subclasses */
+  private AbstractCompiler compiler;
 
   /**
    * Given a node to optimize and a traversal, optimize the node. Subclasses
@@ -81,51 +82,68 @@ abstract class AbstractPeepholeOptimization {
     this.compiler = compiler;
   }
 
-  /**
-   * @return Whether the node may create new mutable state, or change existing
-   * state.
-   */
-  boolean mayEffectMutableState(Node n) {
+  /** Returns whether the node may create new mutable state, or change existing state. */
+  protected boolean mayEffectMutableState(Node n) {
+    checkNotNull(compiler);
     return NodeUtil.mayEffectMutableState(n, compiler);
   }
 
-  /**
-   * @return Whether the node may have side effects when executed.
-   */
-  boolean mayHaveSideEffects(Node n) {
+  /** Returns whether the node may have side effects when executed. */
+  protected boolean mayHaveSideEffects(Node n) {
+    checkNotNull(compiler);
     return NodeUtil.mayHaveSideEffects(n, compiler);
   }
 
   /**
    * Returns true if the current node's type implies side effects.
    *
-   * This is a non-recursive version of the may have side effects
-   * check; used to check wherever the current node's type is one of
-   * the reason's why a subtree has side effects.
+   * <p>This is a non-recursive version of the may have side effects check; used to check wherever
+   * the current node's type is one of the reason's why a subtree has side effects.
    */
-  boolean nodeTypeMayHaveSideEffects(Node n) {
+  protected boolean nodeTypeMayHaveSideEffects(Node n) {
+    checkNotNull(compiler);
     return NodeUtil.nodeTypeMayHaveSideEffects(n, compiler);
   }
 
   /**
-   * @return Whether the output language is ECMAScript 5 or later.
-   *     Workarounds for quirks in browsers that do not support ES5 can be
-   *     ignored when this is true.
+   * Returns whether the output language is ECMAScript 5 or later. Workarounds for quirks in
+   * browsers that do not support ES5 can be ignored when this is true.
    */
-  boolean isEcmaScript5OrGreater() {
+  protected boolean isEcmaScript5OrGreater() {
     return compiler != null
         && compiler.getOptions().getOutputFeatureSet().contains(FeatureSet.ES5);
   }
 
-  /**
-   * @return the current coding convention.
-   */
-  CodingConvention getCodingConvention() {
+  /** Returns the current coding convention. */
+  protected CodingConvention getCodingConvention() {
     // Note: this assumes a thread safe coding convention object.
     return compiler.getCodingConvention();
   }
 
-  final boolean areDeclaredGlobalExternsOnWindow() {
-    return compiler != null && compiler.getOptions().declaredGlobalExternsOnWindow;
+  protected final boolean areDeclaredGlobalExternsOnWindow() {
+    checkNotNull(compiler);
+    return compiler.getOptions().declaredGlobalExternsOnWindow;
+  }
+
+  protected final void reportChangeToEnclosingScope(Node n) {
+    compiler.reportChangeToEnclosingScope(n);
+  }
+
+  /** Calls {@link NodeUtil#deleteNode(Node, AbstractCompiler)} */
+  protected final void deleteNode(Node property) {
+    checkNotNull(compiler);
+    NodeUtil.deleteNode(property, compiler);
+  }
+
+  /** Calls {@link NodeUtil#markFunctionsDeleted(Node, AbstractCompiler)} */
+  protected final void markFunctionsDeleted(Node function) {
+    checkNotNull(compiler);
+    NodeUtil.markFunctionsDeleted(function, compiler);
+  }
+
+  /** Calls {@link NodeUtil#markNewScopesChanged(Node, AbstractCompiler)} */
+  protected final void markNewScopesChanged(Node n) {
+    checkNotNull(compiler);
+    NodeUtil.markNewScopesChanged(n, compiler);
   }
 }

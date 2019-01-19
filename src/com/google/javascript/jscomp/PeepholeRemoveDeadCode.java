@@ -127,7 +127,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     String labelName = n.getFirstChild().getString();
     Node stmt = n.getLastChild();
     if (stmt.isEmpty() || (stmt.isBlock() && !stmt.hasChildren())) {
-      compiler.reportChangeToEnclosingScope(n);
+      reportChangeToEnclosingScope(n);
       n.detach();
       return null;
     }
@@ -137,7 +137,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       stmt = child;
     }
     if (stmt.isBreak() && stmt.getFirstChild().getString().equals(labelName)) {
-      compiler.reportChangeToEnclosingScope(n);
+      reportChangeToEnclosingScope(n);
       n.detach();
       return null;
     }
@@ -188,14 +188,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     if (!catchBlock.hasChildren() && (finallyBlock == null || !finallyBlock.hasChildren())) {
       n.removeChild(body);
       n.replaceWith(body);
-      compiler.reportChangeToEnclosingScope(body);
+      reportChangeToEnclosingScope(body);
       return body;
     }
 
     // Only leave FINALLYs if TRYs are empty
     if (!body.hasChildren()) {
       NodeUtil.redeclareVarsInsideBranch(catchBlock);
-      compiler.reportChangeToEnclosingScope(n);
+      reportChangeToEnclosingScope(n);
       if (finallyBlock != null) {
         n.removeChild(finallyBlock);
         n.replaceWith(finallyBlock);
@@ -222,14 +222,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         && left.getString().equals(right.getString())) {
       // Only names
       subtree.replaceWith(right.detach());
-      compiler.reportChangeToEnclosingScope(right);
+      reportChangeToEnclosingScope(right);
       return right;
     } else if (left.isDestructuringPattern() && !left.hasChildren()) {
       // `[] = <expr>` becomes `<expr>`
       // Note that this does potentially change behavior. If `<expr>` is not iterable and this
       // code originally threw, it will no longer throw.
       subtree.replaceWith(right.detach());
-      compiler.reportChangeToEnclosingScope(right);
+      reportChangeToEnclosingScope(right);
       return right;
     }
     return subtree;
@@ -249,7 +249,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         // `var [] = foo();` becomes `foo();`
         Node value = left.getSecondChild();
         subtree.replaceWith(IR.exprResult(value.detach()).srcref(value));
-        compiler.reportChangeToEnclosingScope(value);
+        reportChangeToEnclosingScope(value);
       }
     }
     return subtree;
@@ -385,7 +385,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       if (result == null) {
         if (removeUnused) {
           parent.removeChild(n);
-          NodeUtil.markFunctionsDeleted(n, compiler);
+          markFunctionsDeleted(n);
         } else {
           result = IR.empty().srcref(n);
           parent.replaceChild(n, result);
@@ -397,7 +397,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         }
         n.replaceWith(result);
       }
-      compiler.reportChangeToEnclosingScope(parent);
+      reportChangeToEnclosingScope(parent);
     }
 
     return result;
@@ -417,7 +417,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
   private void removeIfUnnamedBreak(Node maybeBreak) {
     if (maybeBreak != null && maybeBreak.isBreak() && !maybeBreak.hasChildren()) {
-      compiler.reportChangeToEnclosingScope(maybeBreak);
+      reportChangeToEnclosingScope(maybeBreak);
       maybeBreak.detach();
     }
   }
@@ -435,7 +435,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
           IR.exprResult(n.removeFirstChild()).srcref(n), switchBlock.getPrevious());
     }
     n.replaceWith(caseBlock.detach());
-    compiler.reportChangeToEnclosingScope(caseBlock);
+    reportChangeToEnclosingScope(caseBlock);
     return caseBlock;
   }
 
@@ -445,7 +445,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       Node condition = n.removeFirstChild();
       Node replacement = IR.exprResult(condition).srcref(n);
       n.replaceWith(replacement);
-      compiler.reportChangeToEnclosingScope(replacement);
+      reportChangeToEnclosingScope(replacement);
       return replacement;
     } else if (n.hasTwoChildren() && n.getLastChild().isDefaultCase()) {
       if (n.getFirstChild().isCall()) {
@@ -517,7 +517,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
               while (block.hasChildren()) {
                 matchingCaseBlock.addChildToBack(block.getFirstChild().detach());
               }
-              compiler.reportChangeToEnclosingScope(cur);
+              reportChangeToEnclosingScope(cur);
               cur.detach();
             }
             cur = next;
@@ -590,7 +590,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private void removeCase(Node switchNode, Node caseNode) {
     NodeUtil.redeclareVarsInsideBranch(caseNode);
     switchNode.removeChild(caseNode);
-    compiler.reportChangeToEnclosingScope(switchNode);
+    reportChangeToEnclosingScope(switchNode);
   }
 
   /**
@@ -676,7 +676,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       // Fold it!
       n.removeChild(right);
       parent.replaceChild(n, right);
-      compiler.reportChangeToEnclosingScope(parent);
+      reportChangeToEnclosingScope(parent);
       return right;
     }
     return n;
@@ -694,8 +694,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         //    include: EMPTY nodes, control structures without children
         //    (removing infinite loops), empty try blocks.  What else?
         n.removeChild(c);
-        compiler.reportChangeToEnclosingScope(n);
-        NodeUtil.markFunctionsDeleted(c, compiler);
+        reportChangeToEnclosingScope(n);
+        markFunctionsDeleted(c);
       } else {
         tryOptimizeConditionalAfterAssign(c);
       }
@@ -709,7 +709,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     // Try to remove the block.
     Node parent = n.getParent();
     if (NodeUtil.tryMergeBlock(n, false)) {
-      compiler.reportChangeToEnclosingScope(parent);
+      reportChangeToEnclosingScope(parent);
       return null;
     }
 
@@ -765,7 +765,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
           Node replacementConditionNode =
               NodeUtil.booleanNode(value.toBoolean(true));
           condition.replaceWith(replacementConditionNode);
-          compiler.reportChangeToEnclosingScope(replacementConditionNode);
+          reportChangeToEnclosingScope(replacementConditionNode);
         }
       }
     }
@@ -863,7 +863,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     // if (x) { .. } else { } --> if (x) { ... }
     if (elseBody != null && !mayHaveSideEffects(elseBody)) {
       n.removeChild(elseBody);
-      compiler.reportChangeToEnclosingScope(n);
+      reportChangeToEnclosingScope(n);
       elseBody = null;
     }
 
@@ -873,7 +873,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       n.replaceChild(thenBody, elseBody);
       Node notCond = new Node(Token.NOT);
       n.replaceChild(cond, notCond);
-      compiler.reportChangeToEnclosingScope(n);
+      reportChangeToEnclosingScope(n);
       notCond.addChildToFront(cond);
       cond = notCond;
       thenBody = cond.getNext();
@@ -887,12 +887,12 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         n.removeChild(cond);
         Node replacement = NodeUtil.newExpr(cond);
         parent.replaceChild(n, replacement);
-        compiler.reportChangeToEnclosingScope(parent);
+        reportChangeToEnclosingScope(parent);
         return replacement;
       } else {
         // x() has no side effects, the whole tree is useless now.
         NodeUtil.removeChild(parent, n);
-        compiler.reportChangeToEnclosingScope(parent);
+        reportChangeToEnclosingScope(parent);
         return null;
       }
     }
@@ -915,7 +915,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       n.replaceChild(cond, newCond);
       Node branchToKeep = newConditionValue ? thenBody : elseBody;
       branchToKeep.addChildToFront(IR.exprResult(cond).srcref(cond));
-      compiler.reportChangeToEnclosingScope(branchToKeep);
+      reportChangeToEnclosingScope(branchToKeep);
       cond = newCond;
     }
 
@@ -928,14 +928,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         Node thenStmt = n.getSecondChild();
         n.removeChild(thenStmt);
         parent.replaceChild(n, thenStmt);
-        compiler.reportChangeToEnclosingScope(thenStmt);
+        reportChangeToEnclosingScope(thenStmt);
         return thenStmt;
       } else {
         // Remove "if (false) { X }" completely.
         NodeUtil.redeclareVarsInsideBranch(n);
         NodeUtil.removeChild(parent, n);
-        compiler.reportChangeToEnclosingScope(parent);
-        NodeUtil.markFunctionsDeleted(n, compiler);
+        reportChangeToEnclosingScope(parent);
+        markFunctionsDeleted(n);
         return null;
       }
     } else {
@@ -948,8 +948,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       NodeUtil.redeclareVarsInsideBranch(branchToRemove);
       n.removeChild(branchToKeep);
       parent.replaceChild(n, branchToKeep);
-      compiler.reportChangeToEnclosingScope(branchToKeep);
-      NodeUtil.markFunctionsDeleted(n, compiler);
+      reportChangeToEnclosingScope(branchToKeep);
+      markFunctionsDeleted(n);
       return branchToKeep;
     }
   }
@@ -995,12 +995,12 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       replacement = IR.comma(cond, branchToKeep).srcref(n);
     } else {
       replacement = branchToKeep;
-      NodeUtil.markFunctionsDeleted(cond, compiler);
+      markFunctionsDeleted(cond);
     }
 
     parent.replaceChild(n, replacement);
-    compiler.reportChangeToEnclosingScope(replacement);
-    NodeUtil.markFunctionsDeleted(branchToRemove, compiler);
+    reportChangeToEnclosingScope(replacement);
+    markFunctionsDeleted(branchToRemove);
     return replacement;
   }
 
@@ -1014,7 +1014,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return n;
     }
     NodeUtil.redeclareVarsInsideBranch(n);
-    compiler.reportChangeToEnclosingScope(n.getParent());
+    reportChangeToEnclosingScope(n.getParent());
     NodeUtil.removeChild(n.getParent(), n);
 
     return null;
@@ -1062,7 +1062,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       }
       parent.replaceChild(n, statement);
     }
-    compiler.reportChangeToEnclosingScope(parent);
+    reportChangeToEnclosingScope(parent);
     return null;
   }
 
@@ -1090,7 +1090,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       Node condStatement = IR.exprResult(cond.detach()).srcref(cond);
       parent.addChildAfter(condStatement, block);
     }
-    compiler.reportChangeToEnclosingScope(parent);
+    reportChangeToEnclosingScope(parent);
 
     return block;
   }
@@ -1111,7 +1111,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
                      IR.empty().srcref(n),
                      body.detach());
       n.replaceWith(forNode);
-      compiler.reportChangeToEnclosingScope(forNode);
+      reportChangeToEnclosingScope(forNode);
       return forNode;
     }
     return n;
@@ -1139,7 +1139,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       if (isRemovableDestructuringTarget(key.getOnlyChild())) {
         // e.g. `const {f: {}} = obj;`
         key.detach();
-        compiler.reportChangeToEnclosingScope(pattern);
+        reportChangeToEnclosingScope(pattern);
       }
     }
     return pattern;
@@ -1154,7 +1154,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         Node prev = lastChild.getPrevious();
         pattern.removeChild(lastChild);
         lastChild = prev;
-        compiler.reportChangeToEnclosingScope(pattern);
+        reportChangeToEnclosingScope(pattern);
       } else {
         // don't remove any non-trailing empty nodes because that will change the ordering of the
         // other assignments
@@ -1176,7 +1176,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return false;
     }
     // only remove default values without side effects
-    return defaultValue == null || !NodeUtil.mayHaveSideEffects(defaultValue, compiler);
+    return defaultValue == null || !mayHaveSideEffects(defaultValue);
   }
 
   /**
@@ -1192,7 +1192,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    */
   private void tryFoldForCondition(Node forCondition) {
     if (NodeUtil.getPureBooleanValue(forCondition) == TernaryValue.TRUE) {
-      compiler.reportChangeToEnclosingScope(forCondition);
+      reportChangeToEnclosingScope(forCondition);
       forCondition.replaceWith(IR.empty());
     }
   }

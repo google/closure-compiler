@@ -108,7 +108,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
 
     // Just an 'exit'.
     if (matchingExitNode(n, exitType, labelName)) {
-      compiler.reportChangeToEnclosingScope(n);
+      reportChangeToEnclosingScope(n);
       NodeUtil.removeChild(n.getParent(), n);
       return;
     }
@@ -303,7 +303,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
 
       // Move all the if node's following siblings.
       moveAllFollowing(ifNode, ifNode.getParent(), newDestBlock);
-      compiler.reportChangeToEnclosingScope(ifNode);
+      reportChangeToEnclosingScope(ifNode);
     }
   }
 

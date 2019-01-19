@@ -155,7 +155,7 @@ class PeepholeSubstituteAlternateSyntax
         if (parentNode.isCall()) {
           parentNode.putBooleanProp(Node.FREE_CALL, true);
         }
-        compiler.reportChangeToEnclosingScope(parentNode);
+        reportChangeToEnclosingScope(parentNode);
         return newNameNode;
       }
     }
@@ -178,7 +178,7 @@ class PeepholeSubstituteAlternateSyntax
       Node newLhs = new Node(n.getToken(), first, second).useSourceInfoIfMissingFrom(n);
       Node newRoot = new Node(rhs.getToken(), newLhs, third).useSourceInfoIfMissingFrom(rhs);
       n.replaceWith(newRoot);
-      compiler.reportChangeToEnclosingScope(newRoot);
+      reportChangeToEnclosingScope(newRoot);
       return newRoot;
     } else if (NodeUtil.isCommutative(n.getToken()) && !NodeUtil.mayHaveSideEffects(n)) {
       // Transform a * (b / c) to b / c * a
@@ -193,7 +193,7 @@ class PeepholeSubstituteAlternateSyntax
         n.removeChild(rhs);
         lhs.replaceWith(rhs);
         n.addChildToBack(lhs);
-        compiler.reportChangeToEnclosingScope(n);
+        reportChangeToEnclosingScope(n);
         return n;
       }
     }
@@ -227,7 +227,7 @@ class PeepholeSubstituteAlternateSyntax
               replacement = IR.not(IR.not(value).srcref(n));
             }
             n.replaceWith(replacement);
-            compiler.reportChangeToEnclosingScope(replacement);
+            reportChangeToEnclosingScope(replacement);
           }
           break;
         }
@@ -244,7 +244,7 @@ class PeepholeSubstituteAlternateSyntax
           if (value != null && value.getNext() == null && NodeUtil.isImmutableValue(value)) {
             Node addition = IR.add(IR.string("").srcref(callTarget), value.detach());
             n.replaceWith(addition);
-            compiler.reportChangeToEnclosingScope(addition);
+            reportChangeToEnclosingScope(addition);
             return addition;
           }
           break;
@@ -278,15 +278,15 @@ class PeepholeSubstituteAlternateSyntax
         Node newCallTarget = IR.getprop(
             callTarget.cloneTree(),
             IR.string("call").srcref(callTarget));
-        NodeUtil.markNewScopesChanged(newCallTarget, compiler);
+        markNewScopesChanged(newCallTarget);
         n.replaceChild(callTarget, newCallTarget);
-        NodeUtil.markFunctionsDeleted(callTarget, compiler);
+        markFunctionsDeleted(callTarget);
         n.addChildAfter(bind.thisValue.cloneTree(), newCallTarget);
         n.putBooleanProp(Node.FREE_CALL, false);
       } else {
         n.putBooleanProp(Node.FREE_CALL, true);
       }
-      compiler.reportChangeToEnclosingScope(n);
+      reportChangeToEnclosingScope(n);
     }
     return n;
   }
@@ -320,7 +320,7 @@ class PeepholeSubstituteAlternateSyntax
       // This modifies outside the subtree, which is not
       // desirable in a peephole optimization.
       parent.getParent().addChildAfter(newStatement, parent);
-      compiler.reportChangeToEnclosingScope(parent);
+      reportChangeToEnclosingScope(parent);
       return left;
     } else {
       return n;
@@ -337,7 +337,7 @@ class PeepholeSubstituteAlternateSyntax
         && !NodeUtil.isLValue(n)) {
       Node replacement = NodeUtil.newUndefinedNode(n);
       n.replaceWith(replacement);
-      compiler.reportChangeToEnclosingScope(replacement);
+      reportChangeToEnclosingScope(replacement);
       return replacement;
     }
     return n;
@@ -357,14 +357,14 @@ class PeepholeSubstituteAlternateSyntax
           Node operand = result.getFirstChild();
           if (!mayHaveSideEffects(operand)) {
             n.removeFirstChild();
-            compiler.reportChangeToEnclosingScope(n);
+            reportChangeToEnclosingScope(n);
           }
           break;
         case NAME:
           String name = result.getString();
           if (name.equals("undefined")) {
             n.removeFirstChild();
-            compiler.reportChangeToEnclosingScope(n);
+            reportChangeToEnclosingScope(n);
           }
           break;
         default:
@@ -394,7 +394,7 @@ class PeepholeSubstituteAlternateSyntax
     if (canFoldStandardConstructors(n)) {
       n.setToken(Token.CALL);
       n.putBooleanProp(Node.FREE_CALL, true);
-      compiler.reportChangeToEnclosingScope(n);
+      reportChangeToEnclosingScope(n);
     }
 
     return n;
@@ -470,7 +470,7 @@ class PeepholeSubstituteAlternateSyntax
 
         if (newLiteralNode != null) {
           n.replaceWith(newLiteralNode);
-          compiler.reportChangeToEnclosingScope(newLiteralNode);
+          reportChangeToEnclosingScope(newLiteralNode);
           return newLiteralNode;
         }
       }
@@ -562,7 +562,7 @@ class PeepholeSubstituteAlternateSyntax
       }
 
       parent.replaceChild(n, regexLiteral);
-      compiler.reportChangeToEnclosingScope(parent);
+      reportChangeToEnclosingScope(parent);
       return regexLiteral;
     }
 
@@ -575,12 +575,12 @@ class PeepholeSubstituteAlternateSyntax
       if (right.getDouble() == 1) {
         Node newNode = IR.dec(n.removeFirstChild(), false);
         n.replaceWith(newNode);
-        compiler.reportChangeToEnclosingScope(newNode);
+        reportChangeToEnclosingScope(newNode);
         return newNode;
       } else if (right.getDouble() == -1) {
         Node newNode = IR.inc(n.removeFirstChild(), false);
         n.replaceWith(newNode);
-        compiler.reportChangeToEnclosingScope(newNode);
+        reportChangeToEnclosingScope(newNode);
         return newNode;
       }
     }
@@ -598,7 +598,7 @@ class PeepholeSubstituteAlternateSyntax
         case NE:
           Node number = IR.number(n.isTrue() ? 1 : 0);
           n.getParent().replaceChild(n, number);
-          compiler.reportChangeToEnclosingScope(number);
+          reportChangeToEnclosingScope(number);
           return number;
         default:
           break;
@@ -607,7 +607,7 @@ class PeepholeSubstituteAlternateSyntax
       Node not = IR.not(IR.number(n.isTrue() ? 0 : 1));
       not.useSourceInfoIfMissingFromForTree(n);
       n.replaceWith(not);
-      compiler.reportChangeToEnclosingScope(not);
+      reportChangeToEnclosingScope(not);
       return not;
     }
     return n;
@@ -658,7 +658,7 @@ class PeepholeSubstituteAlternateSyntax
           IR.string("" + delimiter));
       call.useSourceInfoIfMissingFromForTree(n);
       n.replaceWith(call);
-      compiler.reportChangeToEnclosingScope(call);
+      reportChangeToEnclosingScope(call);
       return call;
     }
     return n;
@@ -675,7 +675,7 @@ class PeepholeSubstituteAlternateSyntax
     }
     Node stringNode = IR.string(string).srcref(n);
     n.replaceWith(stringNode);
-    compiler.reportChangeToEnclosingScope(stringNode);
+    reportChangeToEnclosingScope(stringNode);
     return stringNode;
   }
 
