@@ -288,7 +288,8 @@ final class PolymerClassRewriter {
         sinkFunction.putBooleanProp(Node.FREE_CALL, true);
 
         Node stmt = NodeUtil.getEnclosingStatement(clazz);
-        stmt.getParent().addChildToBack(IR.exprResult(sinkFunction).useSourceInfoFromForTree(stmt));
+        stmt.getParent().addChildAfter(
+            IR.exprResult(sinkFunction).useSourceInfoFromForTree(stmt), stmt);
         compiler.reportChangeToChangeScope(sinkFunction.getFirstChild());
         compiler.reportChangeToEnclosingScope(stmt);
       }
