@@ -2113,6 +2113,8 @@ public class Node implements Serializable {
         return "this";
       case SUPER:
         return "super";
+      case IMPORT:
+        return "import";
       default:
         return null;
     }
@@ -2184,6 +2186,8 @@ public class Node implements Serializable {
       return "this";
     } else if (token == Token.SUPER) {
       return "super";
+    } else if (token == Token.IMPORT) {
+      return "import";
     } else {
       return null;
     }
@@ -2201,6 +2205,11 @@ public class Node implements Serializable {
       case THIS:
       case SUPER:
         return true;
+      case IMPORT:
+        if (this.getParent() != null && this.getParent().isCall()) {
+          return true;
+        }
+        return false;
       case GETPROP:
         return getFirstChild().isQualifiedName();
       default:
@@ -2232,6 +2241,8 @@ public class Node implements Serializable {
         return start == 0 && 4 == endIndex && qname.startsWith("this");
       case SUPER:
         return start == 0 && 5 == endIndex && qname.startsWith("super");
+      case IMPORT:
+        return start == 0 && 6 == endIndex && qname.startsWith("import");
       case GETPROP:
         String prop = getLastChild().getString();
         return start > 1

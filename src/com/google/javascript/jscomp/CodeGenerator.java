@@ -418,21 +418,23 @@ public class CodeGenerator {
       case IMPORT:
         add("import");
 
-        Node second = first.getNext();
-        if (!first.isEmpty()) {
-          add(first);
-          if (!second.isEmpty()) {
-            cc.listSeparator();
+        if (first != null) {
+          Node second = first.getNext();
+          if (!first.isEmpty()) {
+            add(first);
+            if (!second.isEmpty()) {
+              cc.listSeparator();
+            }
           }
+          if (!second.isEmpty()) {
+            add(second);
+          }
+          if (!first.isEmpty() || !second.isEmpty()) {
+            add("from");
+          }
+          add(last);
+          cc.endStatement();
         }
-        if (!second.isEmpty()) {
-          add(second);
-        }
-        if (!first.isEmpty() || !second.isEmpty()) {
-          add("from");
-        }
-        add(last);
-        cc.endStatement();
         break;
 
       case EXPORT_SPECS:

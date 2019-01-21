@@ -164,6 +164,9 @@ public final class FeatureSet implements Serializable {
     // https://github.com/tc39/proposal-regexp-unicode-property-escapes
     REGEXP_UNICODE_PROPERTY_ESCAPE("RegExp unicode property escape", LangVersion.ES2018),
 
+    // Stage 3 proposal likely to be part of ES2020
+    DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES_NEXT),
+
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
     AMBIENT_DECLARATION("ambient declaration", LangVersion.TYPESCRIPT),

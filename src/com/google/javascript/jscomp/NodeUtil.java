@@ -1697,6 +1697,7 @@ public final class NodeUtil {
       case TRUE:
       case TAGGED_TEMPLATELIT:
       case TEMPLATELIT:
+      case IMPORT:
         // Tokens from the type declaration AST
       case UNION_TYPE:
         return 17;

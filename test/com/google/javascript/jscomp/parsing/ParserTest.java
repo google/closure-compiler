@@ -4958,6 +4958,51 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "Semi-colon expected");
   }
 
+  @Test
+  public void testDynamicImport() {
+    List<String> dynamicImportUses =
+        ImmutableList.of(
+            "import('foo')",
+            "import('foo').then(function(a) { return a; })",
+            "var moduleNamespace = import('foo')",
+            "Promise.all([import('foo')]).then(function(a) { return a; })");
+    expectFeatures(Feature.DYNAMIC_IMPORT);
+
+    for (LanguageMode m : LanguageMode.values()) {
+      mode = m;
+      strictMode = (m == LanguageMode.ECMASCRIPT3) ? SLOPPY : STRICT;
+      if (m.featureSet.has(Feature.DYNAMIC_IMPORT)) {
+        for (String importUseSource : dynamicImportUses) {
+          parse(importUseSource);
+        }
+      } else {
+        for (String importUseSource : dynamicImportUses) {
+          parseWarning(
+              importUseSource,
+              requiresLanguageModeMessage(LanguageMode.ES_NEXT, Feature.DYNAMIC_IMPORT));
+        }
+      }
+    }
+  }
+
+  @Test
+  public void testAwaitDynamicImport() {
+    List<String> awaitDynamicImportUses =
+        ImmutableList.of(
+            "(async function() { return await import('foo'); })()",
+            "(async function() { await import('foo').then(function(a) { return a; }); })()",
+            "(async function() { var moduleNamespace = await import('foo'); })()",
+            lines(
+                "(async function() {",
+                "await Promise.all([import('foo')]).then(function(a) { return a; }); })()"));
+    expectFeatures(Feature.DYNAMIC_IMPORT, Feature.ASYNC_FUNCTIONS);
+    mode = LanguageMode.ES_NEXT;
+
+    for (String importUseSource : awaitDynamicImportUses) {
+      parse(importUseSource);
+    }
+  }
+
   private void assertNodeHasJSDocInfoWithJSType(Node node, JSType jsType) {
     JSDocInfo info = node.getJSDocInfo();
     assertWithMessage("Node has no JSDocInfo: %s", node).that(info).isNotNull();

@@ -69,6 +69,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ImportExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IndexSignatureTree;
 import com.google.javascript.jscomp.parsing.parser.trees.InterfaceDeclarationTree;
@@ -392,7 +393,7 @@ public class Parser {
 
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-imports
   private boolean peekImportDeclaration() {
-    return peek(TokenType.IMPORT);
+    return peek(TokenType.IMPORT) && !peek(1, TokenType.OPEN_PAREN);
   }
 
   private ParseTree parseImportDeclaration() {
@@ -2309,6 +2310,13 @@ public class Parser {
     return new ThisExpressionTree(getTreeLocation(start));
   }
 
+  private ImportExpressionTree parseImportExpression() {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.IMPORT);
+    recordFeatureUsed(Feature.DYNAMIC_IMPORT);
+    return new ImportExpressionTree(getTreeLocation(start));
+  }
+
   private IdentifierExpressionTree parseIdentifierExpression() {
     SourcePosition start = getTreeStartLocation();
     IdentifierToken identifier = eatId();
@@ -2898,6 +2906,8 @@ public class Parser {
       case VOID:
       case YIELD:
         return true;
+      case IMPORT:
+        return peekImportCall();
       default:
         return false;
     }
@@ -3475,13 +3485,23 @@ public class Parser {
     }
   }
 
+  private boolean peekImportCall() {
+    return peek(TokenType.IMPORT) && peek(1, TokenType.OPEN_PAREN);
+  }
+
   // 11.2 Left hand side expression
   //
   // Also inlines the call expression productions
   @SuppressWarnings("incomplete-switch")
   private ParseTree parseLeftHandSideExpression() {
     SourcePosition start = getTreeStartLocation();
-    ParseTree operand = parseNewExpression();
+    ParseTree operand;
+    if (peekImportCall()) {
+      // https://tc39.github.io/proposal-dynamic-import
+      operand = parseImportExpression();
+    } else {
+      operand = parseNewExpression();
+    }
 
     // this test is equivalent to is member expression
     if (!(operand instanceof NewExpressionTree)
