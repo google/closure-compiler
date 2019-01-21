@@ -23,9 +23,19 @@
  */
 
 /**
+ * @typedef {IArrayLike<string>}
+ */
+var URLSearchParamsTupleType;
+
+/**
+ * @typedef {IArrayLike<!URLSearchParamsTupleType>|Iterable<!URLSearchParamsTupleType>}
+ */
+var URLSearchParamsTupleSequenceType;
+
+/**
  * @constructor
  * @implements {Iterable<!Array<string>>}
- * @param {(string|!URLSearchParams|Object<*, *>)=} init
+ * @param {(string|!URLSearchParamsTupleSequenceType|!Object<string,string>)=} init
  */
 function URLSearchParams(init) {}
 
