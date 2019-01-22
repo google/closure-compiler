@@ -508,6 +508,62 @@ public final class JsFileParserTest {
   }
 
   @Test
+  public void testIncludeGoog1_quotes() {
+    String contents = "var x = \"/**\\\\n * @provideGoog\\\\n */\\\\n\";";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
+            .setProvides(ImmutableList.of())
+            .setGoogModule(false)
+            .build();
+    DependencyInfo result =
+        parser.setIncludeGoogBase(true).parseFile(SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  @Test
+  public void testIncludeGoog1_quotesSingleLine() {
+    String contents = "var x = \"/** @provideGoog */\";";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
+            .setProvides(ImmutableList.of())
+            .setGoogModule(false)
+            .build();
+    DependencyInfo result =
+        parser.setIncludeGoogBase(true).parseFile(SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  @Test
+  public void testIncludeGoog1_quotesBeforeComment() {
+    String contents = "var x = \"foo\"; /** @provideGoog */";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
+            .setProvides(ImmutableList.of("goog"))
+            .setGoogModule(false)
+            .build();
+    DependencyInfo result =
+        parser.setIncludeGoogBase(true).parseFile(SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  @Test
+  public void testIncludeGoog1_multipleQuotes() {
+    String contents = "var x = \"foo\"; var y = \"/** @provideGoog */\";";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
+            .setProvides()
+            .setGoogModule(false)
+            .build();
+    DependencyInfo result =
+        parser.setIncludeGoogBase(true).parseFile(SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  @Test
   public void testIncludeGoog2() {
     String contents = "goog.require('bar');";
 

@@ -151,6 +151,8 @@ public abstract class JsFileLineParser {
 
           if (!inMultilineComment) {
             while (true) {
+              // System.out.println("DYLAN doParse filePath: " + filePath);
+              // System.out.println("DYLAN isCommentQuoted line: " + line);
               int startOfLineComment = revisedLine.indexOf("//");
               int startOfMultilineComment = revisedLine.indexOf("/*");
               if (startOfLineComment != -1 &&
@@ -159,6 +161,13 @@ public abstract class JsFileLineParser {
                 revisedLine = revisedLine.substring(0, startOfLineComment);
                 break;
               } else if (startOfMultilineComment != -1) {
+                // If comment is in a string (single or double quoted), don't parse as a comment.
+                if (isCommentQuoted(revisedLine, startOfMultilineComment, '\'')) {
+                  break;
+                }
+                if (isCommentQuoted(revisedLine, startOfMultilineComment, '"')) {
+                  break;
+                }
                 int endOfMultilineComment = revisedLine.indexOf("*/", startOfMultilineComment + 2);
                 if (endOfMultilineComment == -1) {
                   revisedBlockCommentLine = revisedLine.substring(startOfMultilineComment);
@@ -210,6 +219,22 @@ public abstract class JsFileLineParser {
               PARSE_ERROR, "Error reading file: " + filePath));
       parseSucceeded = false;
     }
+  }
+
+  private boolean isCommentQuoted(String line, int startOfMultilineComment, char quoteChar) {
+    int startQuoteIndex = line.indexOf(quoteChar);
+    // Loop in case there are multiple strings between start of line and start of the comment.
+    while (startQuoteIndex != -1 && startQuoteIndex < startOfMultilineComment) {
+      int closingQuoteIndex = line.indexOf(quoteChar, startQuoteIndex + 1);
+      if (closingQuoteIndex == -1) {
+        return false;
+      }
+      if (closingQuoteIndex > startOfMultilineComment) {
+        return true;
+      }
+      startQuoteIndex = line.indexOf(quoteChar, closingQuoteIndex + 1);
+    }
+    return false;
   }
 
   /**
