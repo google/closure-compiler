@@ -622,7 +622,9 @@ RTCRtpSender.prototype.dtmf;
 RTCRtpSender.prototype.track;
 
 /**
- * @param {!MediaStreamTrack} track
+ * @param {?MediaStreamTrack} track
+ * @return {!Promise<void>}
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpsender
  */
 RTCRtpSender.prototype.replaceTrack = function(track) {};
 
