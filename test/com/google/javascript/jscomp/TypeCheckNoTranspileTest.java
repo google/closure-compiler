@@ -6111,6 +6111,39 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testAsyncGeneratorFunctionInferredToBeAsyncGenerator() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "async function* asyncGen() { return 0; }",
+            "let /** !AsyncGenerator<number> */ g = asyncGen();"));
+  }
+
+  @Test
+  public void testAsyncGeneratorFunctionInferredToBeAsyncGeneratorTemplateMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            // TODO - there is no inference on return type for any functions, so should be
+            // AsyncGenerator<?>
+            "async function* asyncGen() { return 0; }",
+            "let /** !AsyncGenerator<string> */ g = asyncGen();"));
+  }
+
+  @Test
+  public void testAsyncGeneratorFunctionInferredToBeAsyncGeneratorMismatch() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addAsyncIterable().build(),
+        lines(
+            "async function* asyncGen() { return 0; }", //
+            "let /** null */ g = asyncGen();"),
+        lines(
+            "initializing variable", //
+            "found   : AsyncGenerator<?>",
+            "required: null"));
+  }
+
+  @Test
   public void testObjectSpread() {
     testTypes(
         lines(

@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.jscomp.TypeCheck.BAD_IMPLEMENTED_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.PROMISE_TYPE;
@@ -830,7 +831,15 @@ final class FunctionTypeBuilder {
 
   /** Sets the returnType for this function using very basic type inference. */
   private void provideDefaultReturnType() {
-    if (contents.getSourceNode() != null && contents.getSourceNode().isGeneratorFunction()) {
+    if (contents.getSourceNode() != null && contents.getSourceNode().isAsyncGeneratorFunction()) {
+      // Set the return type of a generator function to:
+      //   @return {!AsyncGenerator<?>}
+      ObjectType generatorType = typeRegistry.getNativeObjectType(ASYNC_GENERATOR_TYPE);
+      returnType =
+          typeRegistry.createTemplatizedType(
+              generatorType, typeRegistry.getNativeType(UNKNOWN_TYPE));
+      return;
+    } else if (contents.getSourceNode() != null && contents.getSourceNode().isGeneratorFunction()) {
       // Set the return type of a generator function to:
       //   @return {!Generator<?>}
       ObjectType generatorType = typeRegistry.getNativeObjectType(GENERATOR_TYPE);
