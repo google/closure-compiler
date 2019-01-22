@@ -2297,7 +2297,7 @@ CaretPosition.prototype.offset;
 Element.prototype.getClientRects = function() {};
 
 /**
- * @return {!ClientRect}
+ * @return {!DOMRect}
  * @see http://www.w3.org/TR/cssom-view/#dom-element-getboundingclientrect
  */
 Element.prototype.getBoundingClientRect = function() {};
@@ -2411,7 +2411,7 @@ HTMLElement.prototype.offsetHeight;
 Range.prototype.getClientRects = function() {};
 
 /**
- * @return {!ClientRect}
+ * @return {!DOMRect}
  * @see http://www.w3.org/TR/cssom-view/#dom-range-getboundingclientrect
  */
 Range.prototype.getBoundingClientRect = function() {};
@@ -2490,7 +2490,7 @@ MouseEvent.prototype.offsetY;
 /**
  * @constructor
  * @see http://www.w3.org/TR/cssom-view/#the-clientrectlist-interface
- * @implements {IArrayLike<!ClientRect>}
+ * @implements {IArrayLike<!DOMRect>}
  */
 function ClientRectList() {}
 
@@ -2502,52 +2502,10 @@ ClientRectList.prototype.length;
 
 /**
  * @param {number} index
- * @return {ClientRect}
+ * @return {?DOMRect}
  * @see http://www.w3.org/TR/cssom-view/#dom-clientrectlist-item
  */
 ClientRectList.prototype.item = function(index) {};
-
-/**
- * @constructor
- * @see http://www.w3.org/TR/cssom-view/#the-clientrect-interface
- */
-function ClientRect() {}
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-top
- */
-ClientRect.prototype.top;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-right
- */
-ClientRect.prototype.right;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-bottom
- */
-ClientRect.prototype.bottom;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-left
- */
-ClientRect.prototype.left;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-width
- */
-ClientRect.prototype.width;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-height
- */
-ClientRect.prototype.height;
 
 /**
  * @constructor
