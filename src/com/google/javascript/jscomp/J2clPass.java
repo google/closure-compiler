@@ -130,24 +130,37 @@ public class J2clPass implements CompilerPass {
       public void visit(NodeTraversal t, Node n, Node parent) {
         // If we arrive here then we're already inside the desired script.
 
-        // Only look at named function declarations
-        if (!n.isAssign() || !n.getLastChild().isFunction()) {
-          return;
+        // Only look at named function declarations that are fully qualified.
+        final String qualifiedFnName;
+        final String fnName;
+        switch (n.getToken()) {
+          case ASSIGN:
+            // TODO(b/69730966): Delete this branch when ES5 syntax support is no longer needed.
+            if (!n.getLastChild().isFunction()) {
+              return;
+            }
+
+            Node qualifiedNameNode = n.getFirstChild();
+            if (!qualifiedNameNode.isGetProp() || !qualifiedNameNode.isQualifiedName()) {
+              return;
+            }
+
+            qualifiedFnName = qualifiedNameNode.getQualifiedName();
+            fnName = qualifiedNameNode.getLastChild().getString();
+            break;
+
+          case MEMBER_FUNCTION_DEF:
+            qualifiedFnName = NodeUtil.getBestLValueName(n);
+            fnName = n.getString();
+            break;
+
+          default:
+            return;
         }
 
-        // ... that are fully qualified
-        Node qualifiedNameNode = n.getFirstChild();
-        if (!qualifiedNameNode.isGetProp() || !qualifiedNameNode.isQualifiedName()) {
-          return;
-        }
-
-        Node fnNode = n.getLastChild();
-        String qualifiedFnName = qualifiedNameNode.getQualifiedName();
-        String fnName = qualifiedNameNode.getLastChild().getString();
         if (fnNamesToInline.contains(fnName)) {
-
           // Then store a reference to it.
-          fnsToInlineByQualifiedName.put(qualifiedFnName, fnNode);
+          fnsToInlineByQualifiedName.put(qualifiedFnName, n.getLastChild());
         }
       }
     }
