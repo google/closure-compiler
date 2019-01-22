@@ -3722,9 +3722,24 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return;
     }
     sourceMap.reset();
-    if (options.applyInputSourceMaps && options.sourceMapIncludeSourcesContent) {
-      for (SourceMapInput inputSourceMap : inputSourceMaps.values()) {
-        addSourceMapSourceFiles(inputSourceMap);
+    if (options.sourceMapIncludeSourcesContent) {
+      if (options.applyInputSourceMaps) {
+        // Add any input source map content files to the source map as potential sources
+        for (SourceMapInput inputSourceMap : inputSourceMaps.values()) {
+          addSourceMapSourceFiles(inputSourceMap);
+        }
+      }
+
+      // Add all the compilation sources to the source map as potential sources
+      Iterable<JSModule> allModules = getModules();
+      if (allModules != null) {
+        List<SourceFile> sourceFiles = new ArrayList<>();
+        for (JSModule module : allModules) {
+          for (CompilerInput input : module.getInputs()) {
+            sourceFiles.add(input.getSourceFile());
+          }
+        }
+        addFilesToSourceMap(sourceFiles);
       }
     }
   }
