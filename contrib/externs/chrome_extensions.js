@@ -5050,7 +5050,8 @@ chrome.permissions.onRemoved;
 
 
 /**
- *  @see https://developer.chrome.com/extensions/platformKeys
+ * @const
+ * @see https://developer.chrome.com/extensions/platformKeys
  */
 chrome.platformKeys = {};
 
@@ -5131,6 +5132,7 @@ chrome.platformKeys.verifyTLSServerCertificate = function(details, callback) {};
 
 
 /**
+ * @const
  * @see http://developer.chrome.com/dev/extensions/power.html
  */
 chrome.power = {};
@@ -6678,6 +6680,9 @@ chrome.system.display.clearTouchCalibration = function(id) {};
 chrome.system.display.onDisplayChanged;
 
 
+/**
+ * @const
+ */
 chrome.types = {};
 
 
