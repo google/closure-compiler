@@ -64,5 +64,57 @@ testSuite({
     arr = {length: 3, 1: 4, 3: 'unused'};
     assertEquals(arr, Array.prototype.copyWithin.call(noCheck(arr), 0, 1));
     assertObjectEquals({length: 3, 0: 4, 3: 'unused'}, arr);
+
+    arr = {length: 3, 1: 4, 3: 'unused'};
+    assertEquals(arr, Array.prototype.copyWithin.call(noCheck(arr), 1, 0));
+    assertObjectEquals({length: 3, 2: 4, 3: 'unused'}, arr);
+  },
+
+  testCopyWithin_coercingArgs() {
+    assertObjectEquals([1, 2, 3, 3], [0, 1, 2, 3].copyWithin(NaN, 1));
+    assertObjectEquals([1, 2, 3, 3], [0, 1, 2, 3].copyWithin(0.5, 1));
+    assertObjectEquals([0, 0, 1, 2], [0, 1, 2, 3].copyWithin(1.5, 0));
+
+    assertObjectEquals([0, 0, 1, 2], [0, 1, 2, 3].copyWithin(1, NaN));
+    assertObjectEquals([0, 0, 1, 2], [0, 1, 2, 3].copyWithin(1, 0.5));
+    assertObjectEquals([1, 2, 3, 3], [0, 1, 2, 3].copyWithin(0, 1.5));
+
+    assertObjectEquals([0, 1, 2, 3], [0, 1, 2, 3].copyWithin(1, 0, NaN));
+    assertObjectEquals([0, 0, 2, 3], [0, 1, 2, 3].copyWithin(1, 0, 1.5));
+    assertObjectEquals([0, 0, 1, 3], [0, 1, 2, 3].copyWithin(1, 0, -2.5));
+    assertObjectEquals([0, 0, 1, 2], [0, 1, 2, 3].copyWithin(1, 0, undefined));
+  },
+
+  testCopyWithin_negativeArgs() {
+    assertObjectEquals([1, 2, 3, 1, 2], [1, 2, 3, 4, 5].copyWithin(-2, 0));
+    assertObjectEquals([1, 3, 4, 5, 5], [1, 2, 3, 4, 5].copyWithin(1, -3));
+    assertObjectEquals([1, 3, 4, 4, 5], [1, 2, 3, 4, 5].copyWithin(1, 2, -1));
+  },
+
+  testCopyWithin_throwsIfNullish() {
+    // TODO(tjgq): requires strict mode, lost in transpilation (b/24413211)
+    // assertThrows(function() {
+    //   Array.prototype.copyWithin.call(null, 0, 0);
+    // });
+    // assertThrows(function() {
+    //   Array.prototype.copyWithin.call(undefined, 0, 0);
+    // });
+  },
+
+  testCopyWithin_throwIfFailToDeleteProperty() {
+    var obj = {
+      length: 5
+    };
+
+    Object.defineProperty(obj, '4', {
+      value: 'a',
+      configurable: false,
+      writable: true
+    });
+
+    // TODO(tjgq): requires strict mode, lost in transpilation (b/24413211)
+    // assertThrows(function() {
+    //   Array.prototype.copyWithin.call(noCheck(obj), 4, 0);
+    // });
   },
 });
