@@ -1300,6 +1300,12 @@ md.$panel.MdPanelAnimation.prototype.openFrom = function(openFrom) {};
 md.$panel.MdPanelAnimation.prototype.closeTo = function(closeTo) {};
 
 /**
+ * @param {number|{open: number, close: number}} duration
+ * @returns {!md.$panel.MdPanelAnimation}
+ */
+md.$panel.MdPanelAnimation.prototype.duration = function(duration) {};
+
+/**
  * @param {string|{open: string, close: string}} cssClass
  * @return {!md.$panel.MdPanelAnimation}
  */
