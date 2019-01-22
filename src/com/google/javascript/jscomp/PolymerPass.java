@@ -97,8 +97,8 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
 
     globalNames = new GlobalNamespace(compiler, externs, root);
 
-    // TODO(b/111701088): Use externsAndJsRoot instead of root to get proper typechecking in js_lib
-    hotSwapScript(root, null);
+    Node externsAndJsRoot = root.getParent();
+    hotSwapScript(externsAndJsRoot, null);
   }
 
   @Override
