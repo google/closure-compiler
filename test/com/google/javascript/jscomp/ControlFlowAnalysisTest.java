@@ -266,12 +266,32 @@ public final class ControlFlowAnalysisTest {
   }
 
   @Test
-  public void testSimpleStatements() throws IOException {
+  public void testSimpleStatementsInScript() {
     String src = "var a; a = a; a = a";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertDownEdge(cfg, Token.SCRIPT, Token.VAR, Branch.UNCOND);
     assertCrossEdge(cfg, Token.VAR, Token.EXPR_RESULT, Branch.UNCOND);
     assertCrossEdge(cfg, Token.EXPR_RESULT, Token.EXPR_RESULT, Branch.UNCOND);
+  }
+
+  @Test
+  public void testSimpleStatementsInGoogModule() {
+    String src = "goog.module('myMod'); var a; a = a; a = a";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertDownEdge(cfg, Token.SCRIPT, Token.MODULE_BODY, Branch.UNCOND);
+    // the EXPR_RESULT is the goog.module(...) call
+    assertDownEdge(cfg, Token.MODULE_BODY, Token.EXPR_RESULT, Branch.UNCOND);
+    assertCrossEdge(cfg, Token.EXPR_RESULT, Token.VAR, Branch.UNCOND); // goog.module() -> var a;
+  }
+
+  @Test
+  public void testSimpleStatementsInEsModule() {
+    String src = "var a; a = a; export default a;";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertDownEdge(cfg, Token.SCRIPT, Token.MODULE_BODY, Branch.UNCOND);
+    assertDownEdge(cfg, Token.MODULE_BODY, Token.VAR, Branch.UNCOND);
+    assertCrossEdge(cfg, Token.VAR, Token.EXPR_RESULT, Branch.UNCOND);
+    assertCrossEdge(cfg, Token.EXPR_RESULT, Token.EXPORT, Branch.UNCOND);
   }
 
   // Test a simple IF control flow.
