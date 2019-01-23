@@ -47,7 +47,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.Property;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -55,6 +54,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -339,7 +339,7 @@ public final class ConformanceRules {
       return false;
     }
 
-    protected static boolean isKnown(Node n) {
+    protected boolean isKnown(Node n) {
       return !isUnknown(n)
           && !isBottom(n)
           && !isTypeVariable(n); // TODO(johnlenz): Remove this restriction
@@ -350,22 +350,27 @@ public final class ConformanceRules {
       return type.isEquivalentTo(nativeObjectType);
     }
 
-    protected static boolean isTop(Node n) {
+    protected boolean isTop(Node n) {
       JSType type = n.getJSType();
       return type != null && type.isAllType();
     }
 
-    protected static boolean isUnknown(Node n) {
+    protected boolean isUnknown(Node n) {
       JSType type = n.getJSType();
       return (type == null || type.isUnknownType());
     }
 
-    protected static boolean isTypeVariable(Node n) {
+    protected boolean isSomeUnknownType(Node n) {
+      JSType type = n.getJSType();
+      return (type == null || type.isUnknownType());
+    }
+
+    protected boolean isTypeVariable(Node n) {
       JSType type = n.getJSType().restrictByNotNullOrUndefined();
       return type.isTypeVariable();
     }
 
-    private static boolean isBottom(Node n) {
+    private boolean isBottom(Node n) {
       JSType type = n.getJSType().restrictByNotNullOrUndefined();
       return type.isEmptyType();
     }
@@ -1041,7 +1046,8 @@ public final class ConformanceRules {
         if (rhsType != null && targetType != null) {
           JSType targetNotNullType = null;
           for (Restriction r : restrictions) {
-            if (n.getLastChild().getString() == r.property) { // Both strings are interned.
+            if (Objects.equals(
+                n.getLastChild().getString(), r.property)) { // Both strings are interned.
               if (!rhsType.isSubtypeOf(r.restrictedType)) {
                 if (ConformanceUtil.isLooseType(targetType)) {
                   if (reportLooseTypeViolations) {
@@ -1384,21 +1390,14 @@ public final class ConformanceRules {
           && isUnknown(n)
           && !isTypeVariable(n)
           && isUsed(n) // skip most assignments, etc
-          && !isTypeImmediatelyTightened(n)
-          && !isExplicitlyUnknown(n)) {
+          && !isTypeImmediatelyTightened(n)) {
         return ConformanceResult.VIOLATION;
       }
       return ConformanceResult.CONFORMANCE;
     }
 
-    private static boolean isKnownThis(Node n) {
+    private boolean isKnownThis(Node n) {
       return n.isThis() && !isUnknown(n);
-    }
-
-    private static boolean isExplicitlyUnknown(Node n) {
-      ObjectType owner = ObjectType.cast(n.getFirstChild().getJSType());
-      Property prop = owner.getSlot(n.getLastChild().getString());
-      return prop != null && !prop.isTypeInferred();
     }
   }
 
@@ -1420,7 +1419,7 @@ public final class ConformanceRules {
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       if (n.isGetProp()
-          && isUnknown(n)
+          && isSomeUnknownType(n)
           && isUsed(n) // skip most assignments, etc
           && !isTypeImmediatelyTightened(n)
           && isCheckablePropertySource(n.getFirstChild()) // not a cascading unknown
