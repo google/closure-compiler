@@ -100,7 +100,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     // This optimization is valid only within a function so we are going to
     // skip over the initial entry to the global scope.
     Node function = traversal.getScopeRoot();
-    if (!function.isFunction()) {
+    if (!function.isFunction() || function.isArrowFunction()) {
       return;
     }
 
@@ -304,61 +304,39 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    */
   private boolean changeBody(int numNamedParameter, String[] argNames, Node parametersList) {
     boolean changed = false;
-    boolean nextArguments = true;
 
-    while (nextArguments) {
+    for (Node ref : currentArgumentsAccess) {
+      Node index = ref.getNext();
+      Node grandParent = ref.getGrandparent();
+      Node parent = ref.getParent();
 
-      nextArguments = false;
-
-      for (Node ref : currentArgumentsAccess) {
-        if (NodeUtil.getEnclosingFunction(ref).isArrowFunction()) {
-          nextArguments = true;
-        }
-
-        Node index = ref.getNext();
-        Node grandParent = ref.getGrandparent();
-        Node parent = ref.getParent();
-
-        // Skip if it is unknown.
-        if (!index.isNumber()) {
-          continue;
-        }
-        int value = (int) index.getDouble();
-
-        // Unnamed parameter.
-        if (value >= numNamedParameter) {
-          grandParent.replaceChild(parent, IR.name(argNames[value - numNamedParameter]));
-          compiler.reportChangeToEnclosingScope(grandParent);
-        } else {
-
-          // Here, for no apparent reason, the user is accessing a named parameter
-          // with arguments[idx]. We can replace it with the actual name for them.
-          Node name = parametersList.getFirstChild();
-
-          // This is a linear search for the actual name from the signature.
-          // It is not necessary to make this fast because chances are the user
-          // will not deliberately write code like this.
-          for (int i = 0; i < value; i++) {
-            name = parametersList.getChildAtIndex(value);
-          }
-          grandParent.replaceChild(parent, IR.name(name.getString()));
-          compiler.reportChangeToEnclosingScope(grandParent);
-        }
-        changed = true;
+      // Skip if it is unknown.
+      if (!index.isNumber()) {
+        continue;
       }
+      int value = (int) index.getDouble();
 
-      if (nextArguments) {
-        // After the attempt to replace the arguments. The currentArgumentsAccess
-        // is stale and as we exit the Scope, no longer holds all the access to the
-        // current scope anymore. We'll pop the access list from the outer scope
-        // and set it as currentArgumentsAccess if the outer scope is not the global
-        // scope.
-        if (!argumentsAccessStack.isEmpty()) {
-          currentArgumentsAccess = argumentsAccessStack.pop();
-        } else {
-          currentArgumentsAccess = null;
+      // Unnamed parameter.
+      if (value >= numNamedParameter) {
+        Node newName = IR.name(argNames[value - numNamedParameter]);
+        grandParent.replaceChild(parent, newName);
+        compiler.reportChangeToEnclosingScope(newName);
+      } else {
+        // Here, for no apparent reason, the user is accessing a named parameter
+        // with arguments[idx]. We can replace it with the actual name for them.
+        Node name = parametersList.getFirstChild();
+
+        // This is a linear search for the actual name from the signature.
+        // It is not necessary to make this fast because chances are the user
+        // will not deliberately write code like this.
+        for (int i = 0; i < value; i++) {
+          name = parametersList.getChildAtIndex(value);
         }
+        Node newName = IR.name(name.getString());
+        grandParent.replaceChild(parent, newName);
+        compiler.reportChangeToEnclosingScope(newName);
       }
+      changed = true;
     }
 
     return changed;

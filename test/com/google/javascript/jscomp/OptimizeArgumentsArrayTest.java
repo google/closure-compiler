@@ -224,6 +224,39 @@ public final class OptimizeArgumentsArrayTest extends CompilerTestCase {
   }
 
   @Test
+  public void testArrowFunctionInInnerFunctionUsingArguments() {
+    // See https://github.com/google/closure-compiler/issues/3195
+    test(
+        lines(
+            "function f() {",
+            "  function g() {",
+            "    arguments[0].map((v) => v.error);",
+            "  };",
+            "}"),
+        lines(
+            "function f() {", //
+            "  function g(p0) {",
+            "    p0.map((v) => v.error);",
+            "  };",
+            "}"));
+  }
+
+  @Test
+  public void testArgumentsReferenceInFunctionAndArrow() {
+    test(
+        lines(
+            "function f() {", //
+            "  arguments[0];",
+            "  return () => arguments[0];",
+            "}"),
+        lines(
+            "function f(p0) {", //
+            "  p0;",
+            "  return () => p0;",
+            "}"));
+  }
+
+  @Test
   public void testArrowFunctionDeclaration() {
 
     test(
