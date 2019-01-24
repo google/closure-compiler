@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -132,9 +133,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
     // Attempt to replace the argument access and if the AST has been change,
     // report back to the compiler.
-    if (tryReplaceArguments(traversal.getScope())) {
-      traversal.reportCodeChange();
-    }
+    tryReplaceArguments(traversal.getScope());
 
     // After the attempt to replace the arguments. The currentArgumentsAccess
     // is stale and as we exit the Scope, no longer holds all the access to the
@@ -177,22 +176,17 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
   }
 
   /**
-   * Tries to optimize all the arguments array access in this scope by assigning
-   * a name to each element.
+   * Tries to optimize all the arguments array access in this scope by assigning a name to each
+   * element.
    *
    * @param scope scope of the function
-   * @return true if any modification has been done to the AST
    */
-  private boolean tryReplaceArguments(Scope scope) {
-    Node parametersList = scope.getRootNode().getSecondChild();
-    checkState(parametersList.isParamList());
-
-    // Keep track of rather this function modified the AST and needs to be
-    // reported back to the compiler later.
-
+  private void tryReplaceArguments(Scope scope) {
     // Number of parameter that can be accessed without using the arguments
     // array.
+    Node parametersList = NodeUtil.getFunctionParameters(scope.getRootNode());
     int numParameters = parametersList.getChildCount();
+    checkState(parametersList.isParamList(), parametersList);
 
     // We want to guess what the highest index that has been access from the
     // arguments array. We will guess that it does not use anything index higher
@@ -200,7 +194,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     int highestIndex = numParameters - 1;
     highestIndex = getHighestIndex(highestIndex);
     if (highestIndex < 0) {
-      return false;
+      return;
     }
 
     // Number of extra arguments we need.
@@ -209,17 +203,9 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     // function(a,b,c,d) { d }.
     int numExtraArgs = highestIndex - numParameters + 1;
 
-    // Temporary holds the new names as string for quick access later.
-    String[] argNames = new String[numExtraArgs];
-
-    boolean changed = false;
-    boolean changedSignature = changeMethodSignature(numExtraArgs, parametersList, argNames);
-    boolean changedBody = changeBody(numParameters, argNames, parametersList);
-    changed = changedSignature;
-    if (changedBody) {
-      changed = changedBody;
-    }
-    return changed;
+    ImmutableList<String> extraArgNames = getNewNames(numExtraArgs);
+    changeMethodSignature(extraArgNames, parametersList);
+    changeBody(numParameters, extraArgNames, parametersList);
   }
 
   /**
@@ -278,33 +264,26 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
   }
 
   /**
-   * Insert the formal parameter to the method's signature. Example: function() -->
-   * function(r0, r1, r2)
+   * Inserts new formal parameters into the method's signature based on the given list of names.
    *
-   * @param numExtraArgs num extra method parameters needed to replace all the arguments[i]
+   * <p>Example: function() --> function(r0, r1, r2)
+   *
+   * @param extraArgNames names for all new formal parameters
    * @param parametersList node representing the function signature
-   * @param argNames holds the replacement names in a String array
    */
-  private boolean changeMethodSignature(int numExtraArgs, Node parametersList, String[] argNames) {
-
-    boolean changed = false;
-
-    for (int i = 0; i < numExtraArgs; i++) {
-      String name = getNewName();
-      argNames[i] = name;
-      parametersList.addChildToBack(
-          IR.name(name).useSourceInfoIfMissingFrom(parametersList));
-      changed = true;
+  private void changeMethodSignature(ImmutableList<String> extraArgNames, Node parametersList) {
+    if (extraArgNames.isEmpty()) {
+      return;
     }
-    return changed;
+    for (String name : extraArgNames) {
+      parametersList.addChildToBack(IR.name(name).useSourceInfoIfMissingFrom(parametersList));
+    }
+    compiler.reportChangeToEnclosingScope(parametersList);
   }
 
-  /**
-   * Performs the replacement of arguments[x] -> a if x is known.
-   */
-  private boolean changeBody(int numNamedParameter, String[] argNames, Node parametersList) {
-    boolean changed = false;
-
+  /** Performs the replacement of arguments[x] -> a if x is known. */
+  private void changeBody(
+      int numNamedParameter, ImmutableList<String> argNames, Node parametersList) {
     for (Node ref : currentArgumentsAccess) {
       Node index = ref.getNext();
       Node grandParent = ref.getGrandparent();
@@ -318,34 +297,26 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
       // Unnamed parameter.
       if (value >= numNamedParameter) {
-        Node newName = IR.name(argNames[value - numNamedParameter]);
+        Node newName = IR.name(argNames.get(value - numNamedParameter));
         grandParent.replaceChild(parent, newName);
         compiler.reportChangeToEnclosingScope(newName);
       } else {
         // Here, for no apparent reason, the user is accessing a named parameter
         // with arguments[idx]. We can replace it with the actual name for them.
-        Node name = parametersList.getFirstChild();
-
-        // This is a linear search for the actual name from the signature.
-        // It is not necessary to make this fast because chances are the user
-        // will not deliberately write code like this.
-        for (int i = 0; i < value; i++) {
-          name = parametersList.getChildAtIndex(value);
-        }
+        Node name = parametersList.getChildAtIndex(value);
         Node newName = IR.name(name.getString());
         grandParent.replaceChild(parent, newName);
         compiler.reportChangeToEnclosingScope(newName);
       }
-      changed = true;
     }
-
-    return changed;
   }
 
-  /**
-   * Generate a unique name for the next parameter.
-   */
-  private String getNewName() {
-    return paramPrefix + uniqueId++;
+  /** Generates {@code count} unique names (for synthesized parameters). */
+  private ImmutableList<String> getNewNames(int count) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    for (; count > 0; count--) {
+      builder.add(paramPrefix + uniqueId++);
+    }
+    return builder.build();
   }
 }
