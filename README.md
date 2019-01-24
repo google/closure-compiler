@@ -498,3 +498,36 @@ without make's wrinkles and with the full portability of pure java code.</td>
     <td>Substantial changes to make them compatible with NpmCommandLineRunner.</td>
   </tr>
 </table>
+
+
+<table>
+  <tr>
+    <td>Code Path</td>
+    <td><code>contrib/externs/nodejs</code></td>
+  </tr>
+
+  <tr>
+    <td>URL</td>
+    <td>https://www.github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node/v8</td>
+  </tr>
+
+  <tr>
+    <td>Version</td>
+    <td>(best guess) 27e260259ec83211b0cc59043988f124e9a42b20</td>
+  </tr>
+
+  <tr>
+    <td>License</td>
+    <td>MIT</td>
+  </tr>
+
+  <tr>
+    <td>Description</td>
+    <td>Type contracts for NodeJS APIs</td>
+  </tr>
+
+  <tr>
+    <td>Local Modifications</td>
+    <td>externs.js file is generated from index.ts using https://github.com/angular/tsickle</td>
+  </tr>
+</table>
