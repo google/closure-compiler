@@ -1235,8 +1235,8 @@ Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
 /**
  * @param {function(*):VALUE} onRejected
- * @return {!Promise<TYPE|VALUE>} A Promise of the original type or a possibly a
- *     different type depending on whether the parent promise was rejected.
+ * @return {!Promise<TYPE|RESULT>} A Promise of the original type or a possibly
+ *     a different type depending on whether the parent promise was rejected.
  *
  * @template VALUE
  *
