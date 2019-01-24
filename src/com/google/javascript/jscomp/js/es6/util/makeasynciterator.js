@@ -18,6 +18,7 @@
  * @fileoverview Polyfill for for-of loops.
  */
 'require es6/symbol';
+'require es6/util/makeiterator';
 
 /**
  * Creates an iterator for the given iterable.
