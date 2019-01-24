@@ -678,7 +678,7 @@ function RTCRtpContributingSource() {}
 RTCRtpContributingSource.prototype.source;
 
 /**
- * @type {?Date}
+ * @type {?Date|number}
  */
 RTCRtpContributingSource.prototype.timestamp;
 
@@ -804,7 +804,7 @@ RTCRtpTransceiver.prototype.mid;
 RTCRtpTransceiver.prototype.stopped;
 
 /**
- * @const {!RTCRtpTransceiverDirection}
+ * @type {!RTCRtpTransceiverDirection}
  */
 RTCRtpTransceiver.prototype.direction;
 
@@ -1638,12 +1638,71 @@ RTCPeerConnectionIceEvent.prototype.candidate;
 // modern browsers, breaking compatibility with older versions as they become
 // obsolete.
 /**
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcstats
+ * @interface
+ */
+function RTCStats() {}
+
+/**
+ * @type {?Date|number}
+ * @const
+ */
+RTCStats.prototype.timestamp;
+
+/**
+ * https://www.w3.org/TR/webrtc-stats/#rtcstatstype-str*
+ * @type {string}
+ * @const
+ */
+RTCStats.prototype.type;
+
+/**
+ * @type {string}
+ * @const
+ */
+RTCStats.prototype.id;
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcrtpstreamstats
+ * @interface
+ * @extends {RTCStats}
+ */
+function RTCStreamStats() {}
+
+/** @const {number} */
+RTCStreamStats.prototype.ssrc;
+
+/** @const {string} */
+RTCStreamStats.prototype.kind;
+
+/** @const {string} */
+RTCStreamStats.prototype.transportId;
+
+/** @const {string} */
+RTCStreamStats.prototype.codecId;
+
+/** @const {number} */
+RTCStreamStats.prototype.firCount;
+
+/** @const {number} */
+RTCStreamStats.prototype.pliCount;
+
+/** @const {number} */
+RTCStreamStats.prototype.nackCount;
+
+/** @const {number} */
+RTCStreamStats.prototype.sliCount;
+
+/** @const {number} */
+RTCStreamStats.prototype.qpSum;
+
+/**
  * @interface
  */
 function RTCStatsReport() {}
 
 /**
- * @type {Date}
+ * @type {?Date|number}
  * @const
  */
 RTCStatsReport.prototype.timestamp;
@@ -1690,7 +1749,7 @@ RTCStatsReport.prototype.id;
 // Mozilla.
 // See https://www.w3.org/TR/webrtc/#rtcstatsreport-object for definition.
 /**
- * @param {function(this:SCOPE, Object, string, MAP)} callback
+ * @param {function(this:SCOPE, !RTCStats, string, MAP)} callback
  * @param {SCOPE=} opt_thisObj The value of "this" inside callback function.
  * @this {MAP}
  * @template MAP,SCOPE
@@ -1700,7 +1759,7 @@ RTCStatsReport.prototype.forEach = function(callback, opt_thisObj) {};
 
 /**
  * @param {string} key
- * @return {Object}
+ * @return {!RTCStats}
  * @readonly
  */
 RTCStatsReport.prototype.get = function(key) {};
@@ -1893,14 +1952,15 @@ function RTCDataChannelInitInterface_() {}
 RTCDataChannelInitInterface_.prototype.reliable;
 
 /**
- * @typedef {Object}
- * @property {boolean=} [ordered=true]
- * @property {number=} maxPacketLifeTime
- * @property {number=} maxRetransmits
- * @property {string=} [protocol=""]
- * @property {boolean=} [negotiated=false]
- * @property {number=} id
- * @property {string=} [priority='low']
+ * @typedef {{
+ *   ordered: (boolean|undefined),
+ *   maxPacketLifeTime: (number|undefined),
+ *   maxRetransmits: (number|undefined),
+ *   protocol: (string|undefined),
+ *   negotiated: (boolean|undefined),
+ *   id: (number|undefined),
+ *   priority: (string|undefined),
+ * }}
  * see https://www.w3.org/TR/webrtc/#dom-rtcdatachannelinit for documentation
  * Type inconsistencies due to Closure limitations:
  * maxPacketLifeTime should be UnsignedShort
