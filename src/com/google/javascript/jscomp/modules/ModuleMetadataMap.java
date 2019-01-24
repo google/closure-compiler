@@ -177,6 +177,19 @@ public final class ModuleMetadataMap {
       return new AutoValue_ModuleMetadataMap_ModuleMetadata.Builder();
     }
 
+    // Use reference equality to prevent bad HashSet<ModuleMetadata> performance on GWT.
+    // GatherModuleMetadata is guaranteed to create exactly one ModuleMetadata instance for each
+    // input module.
+    @Override
+    public final boolean equals(Object other) {
+      return super.equals(other);
+    }
+
+    @Override
+    public final int hashCode() {
+      return super.hashCode();
+    }
+
     /** Builder for {@link ModuleMetadata}. */
     @AutoValue.Builder
     public abstract static class Builder {
