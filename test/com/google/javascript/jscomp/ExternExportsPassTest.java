@@ -757,6 +757,37 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   }
 
   @Test
+  public void exportEs5ClassHeirarchy() {
+    compileAndCheck(
+        lines(
+            "/** @constructor */", //
+            "function SuperClass() {}",
+            "goog.exportSymbol('Foo', SuperClass);",
+            "",
+            "/**",
+            " * @constructor",
+            " * @extends {SuperClass}",
+            " */",
+            "function SubClass() {}",
+            "goog.exportSymbol('Bar', SubClass);",
+            ""),
+        lines(
+            "/**",
+            // TODO(b/123352214): SuperClass should be called Foo in exported @extends annotation
+            " * @extends {SuperClass}",
+            " * @constructor",
+            " */",
+            "var Bar = function() {",
+            "};",
+            "/**",
+            " * @constructor",
+            " */",
+            "var Foo = function() {",
+            "};",
+            ""));
+  }
+
+  @Test
   public void testExportLocalPropertyInConstructor() {
     compileAndCheck(
         "/** @constructor */function F() { /** @export */ this.x = 5;} goog.exportSymbol('F', F);",
