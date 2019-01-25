@@ -23,19 +23,22 @@
  */
 
 /**
- * @typedef {IArrayLike<string>}
+ * @typedef {Iterable<string>}
  */
 var URLSearchParamsTupleType;
 
 /**
- * @typedef {IArrayLike<!URLSearchParamsTupleType>|Iterable<!URLSearchParamsTupleType>}
- */
-var URLSearchParamsTupleSequenceType;
-
-/**
+ * @see https://url.spec.whatwg.org/#interface-urlsearchparams
  * @constructor
  * @implements {Iterable<!Array<string>>}
- * @param {(string|!URLSearchParamsTupleSequenceType|!Object<string,string>)=} init
+ * @param {(string|!Iterable<!URLSearchParamsTupleType>|!Object<string,string>)=} init
+ * when |init| is a string, it is basically parsed as a query string (a=b&b=c).
+ * when |init| is an iterable of iterables of string ([["a", "b"], ["b", "c"]]),
+ *  it must contain pairs of strings,
+ *  where the first item in the pair will be interpreted as a key
+ *  and the second as a value.
+ * when |init| is an object, keys and values will be interpreted as such
+ *  ({a: "b", b: "c"}).
  */
 function URLSearchParams(init) {}
 
