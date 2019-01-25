@@ -51,6 +51,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DefaultClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DefaultParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DoWhileStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.DynamicImportTree;
 import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.EnumDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
@@ -69,7 +70,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ImportExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IndexSignatureTree;
 import com.google.javascript.jscomp.parsing.parser.trees.InterfaceDeclarationTree;
@@ -2269,6 +2269,8 @@ public class Parser {
       return parseSuperExpression();
     case THIS:
       return parseThisExpression();
+    case IMPORT:
+      return parseDynamicImportExpression();
     case IDENTIFIER:
     case TYPE:
     case DECLARE:
@@ -2310,11 +2312,15 @@ public class Parser {
     return new ThisExpressionTree(getTreeLocation(start));
   }
 
-  private ImportExpressionTree parseImportExpression() {
+  // https://tc39.github.io/proposal-dynamic-import
+  private DynamicImportTree parseDynamicImportExpression() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.IMPORT);
+    eat(TokenType.OPEN_PAREN);
+    ParseTree argument = parseAssignmentExpression();
+    eat(TokenType.CLOSE_PAREN);
     recordFeatureUsed(Feature.DYNAMIC_IMPORT);
-    return new ImportExpressionTree(getTreeLocation(start));
+    return new DynamicImportTree(getTreeLocation(start), argument);
   }
 
   private IdentifierExpressionTree parseIdentifierExpression() {
@@ -3495,13 +3501,7 @@ public class Parser {
   @SuppressWarnings("incomplete-switch")
   private ParseTree parseLeftHandSideExpression() {
     SourcePosition start = getTreeStartLocation();
-    ParseTree operand;
-    if (peekImportCall()) {
-      // https://tc39.github.io/proposal-dynamic-import
-      operand = parseImportExpression();
-    } else {
-      operand = parseNewExpression();
-    }
+    ParseTree operand = parseNewExpression();
 
     // this test is equivalent to is member expression
     if (!(operand instanceof NewExpressionTree)

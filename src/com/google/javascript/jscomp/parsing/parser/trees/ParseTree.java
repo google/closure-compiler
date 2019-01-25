@@ -100,7 +100,7 @@ public class ParseTree {
   public IfStatementTree asIfStatement() { return (IfStatementTree) this; }
   public ImportDeclarationTree asImportDeclaration() { return (ImportDeclarationTree) this; }
   public ImportSpecifierTree asImportSpecifier() { return (ImportSpecifierTree) this; }
-  public ImportExpressionTree asImportExpression() { return (ImportExpressionTree) this; }
+  public DynamicImportTree asDynamicImportExpression() { return (DynamicImportTree) this; }
   public LabelledStatementTree asLabelledStatement() { return (LabelledStatementTree) this; }
   public LiteralExpressionTree asLiteralExpression() { return (LiteralExpressionTree) this; }
   public MemberExpressionTree asMemberExpression() { return (MemberExpressionTree) this; }

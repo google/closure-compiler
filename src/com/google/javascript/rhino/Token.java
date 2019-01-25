@@ -179,6 +179,7 @@ public enum Token {
     EXPORT_SPECS,
     EXPORT_SPEC,
     MODULE_BODY,
+    DYNAMIC_IMPORT,
 
     REST, // "..." in formal parameters, or an array pattern.
     SPREAD, // "..." in a call expression, or an array literal.

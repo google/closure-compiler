@@ -418,23 +418,21 @@ public class CodeGenerator {
       case IMPORT:
         add("import");
 
-        if (first != null) {
-          Node second = first.getNext();
-          if (!first.isEmpty()) {
-            add(first);
-            if (!second.isEmpty()) {
-              cc.listSeparator();
-            }
-          }
+        Node second = first.getNext();
+        if (!first.isEmpty()) {
+          add(first);
           if (!second.isEmpty()) {
-            add(second);
+            cc.listSeparator();
           }
-          if (!first.isEmpty() || !second.isEmpty()) {
-            add("from");
-          }
-          add(last);
-          cc.endStatement();
         }
+        if (!second.isEmpty()) {
+          add(second);
+        }
+        if (!first.isEmpty() || !second.isEmpty()) {
+          add("from");
+        }
+        add(last);
+        cc.endStatement();
         break;
 
       case EXPORT_SPECS:
@@ -463,6 +461,12 @@ public class CodeGenerator {
         add("*");
         add("as");
         add(n.getString());
+        break;
+
+      case DYNAMIC_IMPORT:
+        add("import(");
+        addExpr(first, NodeUtil.precedence(type), context);
+        add(")");
         break;
 
         // CLASS -> NAME,EXPR|EMPTY,BLOCK

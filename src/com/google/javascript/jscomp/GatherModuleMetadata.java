@@ -210,7 +210,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
     private void visitImportOrExport(NodeTraversal t, Node importOrExport) {
       checkNotNull(currentModule);
       currentModule.moduleType(ModuleType.ES6_MODULE, t, importOrExport);
-      if ((importOrExport.isImport() && !importOrExport.getParent().isCall())
+      if (importOrExport.isImport()
           // export from
           || (importOrExport.hasTwoChildren() && importOrExport.getLastChild().isString())) {
         currentModule

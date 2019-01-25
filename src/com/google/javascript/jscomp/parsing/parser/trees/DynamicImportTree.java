@@ -18,8 +18,11 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-public class ImportExpressionTree extends ParseTree {
-  public ImportExpressionTree(SourceRange location) {
-    super(ParseTreeType.IMPORT_EXPRESSION, location);
+public class DynamicImportTree extends ParseTree {
+  public final ParseTree argument;
+
+  public DynamicImportTree(SourceRange location, ParseTree argument) {
+    super(ParseTreeType.DYNAMIC_IMPORT_EXPRESSION, location);
+    this.argument = argument;
   }
 }
