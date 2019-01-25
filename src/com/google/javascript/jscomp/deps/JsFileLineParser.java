@@ -151,8 +151,6 @@ public abstract class JsFileLineParser {
 
           if (!inMultilineComment) {
             while (true) {
-              // System.out.println("DYLAN doParse filePath: " + filePath);
-              // System.out.println("DYLAN isCommentQuoted line: " + line);
               int startOfLineComment = revisedLine.indexOf("//");
               int startOfMultilineComment = revisedLine.indexOf("/*");
               if (startOfLineComment != -1 &&
@@ -228,6 +226,14 @@ public abstract class JsFileLineParser {
       int closingQuoteIndex = line.indexOf(quoteChar, startQuoteIndex + 1);
       if (closingQuoteIndex == -1) {
         return false;
+      }
+      ;
+      // Skip escaped quotes
+      while (line.charAt(closingQuoteIndex - 1) == '\\') {
+        closingQuoteIndex = line.indexOf(quoteChar, closingQuoteIndex + 1);
+        if (closingQuoteIndex == -1) {
+          return false;
+        }
       }
       if (closingQuoteIndex > startOfMultilineComment) {
         return true;
