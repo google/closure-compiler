@@ -20,9 +20,12 @@ import static com.google.javascript.jscomp.CollapseProperties.NAMESPACE_REDEFINE
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_WARNING;
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_THIS;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +47,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
       + "var arguments";
 
   private PropertyCollapseLevel propertyCollapseLevel = PropertyCollapseLevel.ALL;
+
+  private boolean enableDependencyManagement = false;
+  private List<ModuleIdentifier> entryPoints = null;
 
   public CollapsePropertiesTest() {
     super(EXTERNS);
@@ -73,6 +79,17 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     enableProcessCommonJsModules();
     enableTranspile();
     propertyCollapseLevel = PropertyCollapseLevel.MODULE_EXPORT;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+
+    if (this.enableDependencyManagement && this.entryPoints != null) {
+      options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(this.entryPoints));
+    }
+
+    return options;
   }
 
   @Test
@@ -2931,6 +2948,43 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     expected.add(
         SourceFile.fromCode(
             "entry.js", "var mod = module$mod1$default; alert(module$mod1$default.bar);"));
+
+    test(inputs, expected);
+  }
+
+  @Test
+  public void testModuleDynamicImportCommonJs() {
+    this.setupModuleExportsOnly();
+    this.setWebpackModulesById(
+        ImmutableMap.of(
+            "1", "mod1.js",
+            "2", "entry.js"));
+    this.setModuleResolutionMode(ResolutionMode.WEBPACK);
+    this.enableDependencyManagement = true;
+    this.entryPoints = new ArrayList<>();
+    this.entryPoints.add(ModuleIdentifier.forFile("entry.js"));
+
+    ArrayList<SourceFile> inputs = new ArrayList<>();
+    inputs.add(SourceFile.fromCode("mod1.js", "module.exports = 123;"));
+    inputs.add(
+        SourceFile.fromCode(
+            "entry.js",
+            lines(
+                "__webpack_require__.e(1).then(",
+                "    function() { return __webpack_require__(1);})")));
+
+    ArrayList<SourceFile> expected = new ArrayList<>();
+    expected.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            "/** @const */ var module$mod1={}; /** @const */ module$mod1.default = 123;"));
+    expected.add(
+        SourceFile.fromCode(
+            "entry.js",
+            lines(
+                "/** @const */ var module$entry={};",
+                "__webpack_require__.e(1).then(",
+                "    function() { return module$mod1.default;})")));
 
     test(inputs, expected);
   }
