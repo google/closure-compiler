@@ -15,6 +15,8 @@
  */
 
 'require util/polyfill';
+'require util/tointeger';
+'require util/tolength';
 
 $jscomp.polyfill('Array.prototype.fill', function(orig) {
   if (orig) return orig;
@@ -31,14 +33,19 @@ $jscomp.polyfill('Array.prototype.fill', function(orig) {
    * @suppress {reportUnknownTypes, strictPrimitiveOperators}
    */
   var polyfill = function(value, opt_start, opt_end) {
-    var length = this.length || 0;
-    if (opt_start < 0) {
-      opt_start = Math.max(0, length + /** @type {number} */ (opt_start));
+    'use strict';
+    var length = $jscomp.toLength(this.length);
+    var start = $jscomp.toInteger(opt_start);
+    if (start < 0) {
+      start = Math.max(0, length + start);
     }
-    if (opt_end == null || opt_end > length) opt_end = length;
-    opt_end = Number(opt_end);
-    if (opt_end < 0) opt_end = Math.max(0, length + opt_end);
-    for (var i = Number(opt_start || 0); i < opt_end; i++) {
+    var end = opt_end === undefined ? length : $jscomp.toInteger(opt_end);
+    if (end < 0) {
+      end = Math.max(0, length + end);
+    } else if (end > length) {
+      end = length;
+    }
+    for (var i = start; i < end; i++) {
       this[i] = value;
     }
     return this;

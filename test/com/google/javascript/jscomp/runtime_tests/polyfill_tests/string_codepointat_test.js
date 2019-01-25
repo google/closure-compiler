@@ -76,6 +76,7 @@ testSuite({
     assertUndefined('abc'.codePointAt(Infinity));
     assertUndefined('abc'.codePointAt(-Infinity));
     assertUndefined('abc'.codePointAt(-1));
+    assertUndefined('abc'.codePointAt(Math.power(2, 32)));
 
     assertEquals(0x31, String.prototype.codePointAt.call(noCheck(14), 0));
     assertEquals(

@@ -15,11 +15,9 @@
  */
 
 'require util/polyfill';
+'require util/tointeger';
 
 $jscomp.polyfill('Array.prototype.copyWithin', function(orig) {
-  // requires strict mode to throw for invalid `this` or params
-  'use strict';
-
   if (orig) return orig;
 
   /**
@@ -33,10 +31,12 @@ $jscomp.polyfill('Array.prototype.copyWithin', function(orig) {
    * @template VALUE
    */
   var polyfill = function(target, start, opt_end) {
+    // TODO(tjgq): requires strict mode, lost in transpilation (b/24413211)
+    'use strict';
     var len = this.length;
-    target = toInteger(target);
-    start = toInteger(start);
-    var end = opt_end === undefined ? len : toInteger(opt_end);
+    target = $jscomp.toInteger(target);
+    start = $jscomp.toInteger(start);
+    var end = opt_end === undefined ? len : $jscomp.toInteger(opt_end);
     var to = target < 0 ? Math.max(len + target, 0) : Math.min(target, len);
     var from = start < 0 ? Math.max(len + start, 0) : Math.min(start, len);
     var final = end < 0 ? Math.max(len + end, 0) : Math.min(end, len);
@@ -62,18 +62,6 @@ $jscomp.polyfill('Array.prototype.copyWithin', function(orig) {
     }
     return this;
   };
-
-  /**
-   * @param {number} arg
-   * @return {number}
-   */
-  function toInteger(arg) {
-    var n = Number(arg);
-    if (n === Infinity || n === -Infinity) {
-      return n;
-    }
-    return n | 0;
-  }
 
   return polyfill;
 }, 'es6', 'es3');

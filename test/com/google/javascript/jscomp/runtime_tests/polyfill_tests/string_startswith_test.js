@@ -66,6 +66,8 @@ testSuite({
     assertTrue('xyz'.startsWith('x', -5));
     assertFalse('xyz'.startsWith('x', noCheck('1')));
     assertTrue('xyz'.startsWith('y', noCheck('1')));
+    assertFalse('xyz'.startsWith('x', Infinity));
+    assertFalse('xyz'.startsWith('x', 2147483648)); // 2**31
 
     assertTrue('12345'.startsWith(noCheck(23), 1));
     assertTrue('12345'.startsWith(noCheck(345), 2));

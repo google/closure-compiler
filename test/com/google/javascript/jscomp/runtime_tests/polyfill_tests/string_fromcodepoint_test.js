@@ -58,6 +58,7 @@ testSuite({
     assertFails(RangeError, () => String.fromCodePoint(noCheck({})));
     assertFails(RangeError, () => String.fromCodePoint(NaN));
     assertFails(RangeError, () => String.fromCodePoint(noCheck(/./)));
+    assertFails(RangeError, () => String.fromCodePoint(noCheck(undefined)));
     assertFails(
         Error,
         () => String.fromCodePoint(noCheck({valueOf() { throw Error(); }})));

@@ -16,6 +16,7 @@
 
 'require util/checkstringargs';
 'require util/polyfill';
+'require util/tointeger';
 
 $jscomp.polyfill('String.prototype.startsWith', function(orig) {
   if (orig) return orig;
@@ -38,7 +39,7 @@ $jscomp.polyfill('String.prototype.startsWith', function(orig) {
     var searchLen = searchString.length;
     var i = Math.max(
         0,
-        Math.min(/** @type {number} */ (opt_position) | 0, string.length));
+        Math.min($jscomp.toInteger(opt_position), string.length));
     var j = 0;
     while (j < searchLen && i < strLen) {
       if (string[i++] != searchString[j++]) return false;

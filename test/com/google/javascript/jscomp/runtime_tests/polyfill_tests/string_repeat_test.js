@@ -30,6 +30,7 @@ testSuite({
     assertEquals('abababab', 'ab'.repeat(4));
     assertEquals('', ''.repeat(5));
     assertEquals('', 'ab'.repeat(0));
+    assertEquals('', 'ab'.repeat(NaN));
 
     assertEquals('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'a'.repeat(37));
     assertEquals('\u10D8\u10D8\u10D8', '\u10D8'.repeat(3));

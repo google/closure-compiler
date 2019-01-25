@@ -16,6 +16,7 @@
 
 'require util/checkstringargs';
 'require util/polyfill';
+'require util/tointeger';
 
 $jscomp.polyfill('String.prototype.repeat', function(orig) {
   if (orig) return orig;
@@ -32,10 +33,10 @@ $jscomp.polyfill('String.prototype.repeat', function(orig) {
   var polyfill = function(copies) {
     'use strict';
     var string = $jscomp.checkStringArgs(this, null, 'repeat');
+    copies = $jscomp.toInteger(copies);
     if (copies < 0 || copies > 0x4FFFFFFF) { // impose a 1GB limit
       throw new RangeError('Invalid count value');
     }
-    copies = copies | 0; // cast to a signed integer.
     var result = '';
     while (copies) {
       if (copies & 1) result += string;

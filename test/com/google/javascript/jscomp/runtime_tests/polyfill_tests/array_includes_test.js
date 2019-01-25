@@ -50,6 +50,13 @@ testSuite({
     assertFalse(arr.includes(0, -3));
     assertTrue(arr.includes(0, -4));
     assertTrue(arr.includes(0, -5));
+    assertTrue(arr.includes(1, true));
+    var obj1 = {
+      valueOf: function() {
+        return 1;
+      }
+    };
+    assertTrue(arr.includes(1, obj1));
 
     // null and undefined
     // Make sure the compiler knows both null and undefined are allowed
@@ -77,5 +84,29 @@ testSuite({
     assertTrue(Array.prototype.includes.call(arr, 6));
     assertFalse(Array.prototype.includes.call(arr, 5, 1));
     assertFalse(Array.prototype.includes.call(arr, 7));
+
+    // length
+    arr = {length: 0.1, 0: 5, 1: 6};
+    assertFalse(Array.prototype.includes.call(obj, 5));
+
+    // length boundary
+    var fromIndex = 9007199254740990; // 2 ** 53 - 2
+    arr = {
+      9007199254740990: 5,
+      9007199254740991: 6
+    };
+    arr.length = 9007199254740991;
+    assertTrue(Array.prototype.includes.call(arr, 5, fromIndex));
+    assertFalse(Array.prototype.includes.call(arr, 6, fromIndex));
+
+    arr.length = 9007199254740992;
+    assertTrue(Array.prototype.includes.call(arr, 5, fromIndex));
+    assertFalse(Array.prototype.includes.call(arr, 6, fromIndex));
+
+    // nullish this
+    // TODO(tjgq): requires strict mode, lost in transpilation (b/24413211)
+    // assertThrows(function() {
+    //   Array.prototype.includes.call(null);
+    // });
   },
 });

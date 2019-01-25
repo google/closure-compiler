@@ -16,6 +16,8 @@
 
 'require es6/object/is';
 'require util/polyfill';
+'require util/tointeger';
+'require util/tolength';
 
 $jscomp.polyfill('Array.prototype.includes', function(orig) {
   if (orig) return orig;
@@ -33,12 +35,16 @@ $jscomp.polyfill('Array.prototype.includes', function(orig) {
    * @suppress {reportUnknownTypes}
    */
   var includes = function(searchElement, opt_fromIndex) {
+    'use strict';
     var array = this;
     if (array instanceof String) {
       array = /** @type {!IArrayLike} */ (String(array));
     }
-    var len = array.length;
-    var i = opt_fromIndex || 0;
+    var len = $jscomp.toLength(array.length);
+    if (len === 0) {
+      return false;
+    }
+    var i = $jscomp.toInteger(opt_fromIndex);
     if (i < 0) {
       i = Math.max(i + len, 0);
     }

@@ -16,6 +16,7 @@
 
 'require util/checkstringargs';
 'require util/polyfill';
+'require util/tointeger';
 
 $jscomp.polyfill('String.prototype.endsWith', function(orig) {
   if (orig) return orig;
@@ -34,8 +35,8 @@ $jscomp.polyfill('String.prototype.endsWith', function(orig) {
     'use strict';
     var string = $jscomp.checkStringArgs(this, searchString, 'endsWith');
     searchString = searchString + '';
-    if (opt_position === void 0) opt_position = string.length;
-    var i = Math.max(0, Math.min(opt_position | 0, string.length));
+    var end = opt_position === void 0 ? string.length : $jscomp.toInteger(opt_position);
+    var i = Math.max(0, Math.min(end, string.length));
     var j = searchString.length;
     while (j > 0 && i > 0) {
       if (string[--i] != searchString[--j]) return false;

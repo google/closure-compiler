@@ -42,6 +42,9 @@ testSuite({
     assertTrue('abc'.endsWith('', 1));
     assertTrue('abc'.endsWith('', 2));
     assertTrue('abc'.endsWith('', 3));
+
+    assertTrue('abc'.endsWith('c', Infinity));
+    assertTrue('abc'.endsWith('c', 2147483648)); // 2**31
   },
 
 

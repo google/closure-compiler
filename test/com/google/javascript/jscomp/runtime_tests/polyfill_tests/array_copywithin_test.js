@@ -91,6 +91,19 @@ testSuite({
     assertObjectEquals([1, 3, 4, 4, 5], [1, 2, 3, 4, 5].copyWithin(1, 2, -1));
   },
 
+  testCopyWithin_infinity() {
+    assertObjectEquals([1, 2, 3, 4, 5], [1, 2, 3, 4, 5].copyWithin(Infinity, 1));
+    assertObjectEquals([1, 2, 3, 4, 5], [1, 2, 3, 4, 5].copyWithin(1, Infinity));
+    assertObjectEquals([2, 3, 4, 5, 5], [1, 2, 3, 4, 5].copyWithin(0, 1, Infinity));
+  },
+
+  testCopyWithin_over32bit() {
+    var n = 2147483648; // 2**31
+    assertObjectEquals([1, 2, 3, 4, 5], [1, 2, 3, 4, 5].copyWithin(n, 1));
+    assertObjectEquals([1, 2, 3, 4, 5], [1, 2, 3, 4, 5].copyWithin(1, n));
+    assertObjectEquals([2, 3, 4, 5, 5], [1, 2, 3, 4, 5].copyWithin(0, 1, n));
+  },
+
   testCopyWithin_throwsIfNullish() {
     // TODO(tjgq): requires strict mode, lost in transpilation (b/24413211)
     // assertThrows(function() {

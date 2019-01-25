@@ -60,6 +60,12 @@ testSuite({
     assertObjectEquals([1, 2, 3], fill([1, 2, 3], 9, NaN, NaN));
     assertObjectEquals([1, 2, 3], fill([1, 2, 3], 9, 1, NaN));
     assertObjectEquals([9, 2, 3], fill([1, 2, 3], 9, NaN, 1));
+
+    assertObjectEquals([1, 1], fill([0, 0], 1, null));
+    assertObjectEquals([0, 0], fill([0, 0], 1, 0, null));
+
+    assertObjectEquals([0, 1], fill([0, 0], 1, 1.1));
+    assertObjectEquals([1, 0], fill([0, 0], 1, 0, 1.1));
   },
 
   testFill_arrayLike() {
@@ -69,6 +75,12 @@ testSuite({
 
     assertEquals(arr, Array.prototype.fill.call(arr, 'z', undefined, 2));
     assertObjectEquals({0: 'z', 1: 'z', 2: 'y', 3: 'safe', length: 3}, arr);
+  },
+
+  testFill_arrayLikeCoerced() {
+    const arr = {length: 1.5, 0: 0, 1: 0};
+    assertEquals(arr, Array.prototype.fill.call(arr, 'y'));
+    assertObjectEquals({0: 'y', 1: 0, length: 1.5}, arr);
   },
 
   testFill_notArrayLike() {

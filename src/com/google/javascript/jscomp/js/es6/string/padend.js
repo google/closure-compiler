@@ -15,8 +15,9 @@
  */
 
 'require util/checkstringargs';
-'require util/stringpadding';
 'require util/polyfill';
+'require util/stringpadding';
+'require util/tolength';
 
 $jscomp.polyfill('String.prototype.padEnd', function(orig) {
   if (orig) return orig;
@@ -32,8 +33,9 @@ $jscomp.polyfill('String.prototype.padEnd', function(orig) {
    * @return {string}
    */
   var padEnd = function(targetLength, opt_padString) {
-    var string = $jscomp.checkStringArgs(this, null, 'padStart');
-    var padLength = targetLength - string.length;
+    'use strict';
+    var string = $jscomp.checkStringArgs(this, null, 'padEnd');
+    var padLength = $jscomp.toLength(targetLength) - string.length;
     return string + $jscomp.stringPadding(opt_padString, padLength);
   };
 

@@ -16,6 +16,7 @@
 
 'require util/checkstringargs';
 'require util/polyfill';
+'require util/tointeger';
 
 $jscomp.polyfill('String.prototype.codePointAt', function(orig) {
   if (orig) return orig;
@@ -34,13 +35,10 @@ $jscomp.polyfill('String.prototype.codePointAt', function(orig) {
     'use strict';
     var string = $jscomp.checkStringArgs(this, null, 'codePointAt');
     var size = string.length;
-    // Make 'position' a number (non-number coerced to NaN and then or to zero).
-    position = Number(position) || 0;
+    position = $jscomp.toInteger(position);
     if (!(position >= 0 && position < size)) {
       return void 0;
     }
-    // Truncate 'position' to an integer.
-    position = position | 0;
     var first = string.charCodeAt(position);
     if (first < 0xD800 || first > 0xDBFF || position + 1 === size) {
       return first;
