@@ -3949,12 +3949,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  _computePets() {}",
             "  _computeName(user, thingToDo) {}",
             "}",
-            "(/** @suppress {uselessCode} */ function() {",
-            "  XElement.prototype._computePets;",
-            "  XElement.prototype._computeName;",
-            "  XElement.prototype.user_;",
-            "  XElement.prototype.thingToDo;",
-            "})();",
             "/** @type {!User} @private */",
             "XElement.prototype.user_;",
             "/** @type {!Array} */",
@@ -3962,7 +3956,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @type {string} */",
             "XElement.prototype.name;",
             "/** @type {!Function} */",
-            "XElement.prototype.thingToDo;"));
+            "XElement.prototype.thingToDo;",
+            "(/** @suppress {uselessCode} */ function() {",
+            "  XElement.prototype._computePets;",
+            "  XElement.prototype._computeName;",
+            "  XElement.prototype.user_;",
+            "  XElement.prototype.thingToDo;",
+            "})();"));
   }
 
   @Test
@@ -4023,11 +4023,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  _computePets() {}",
             "  _computeName(user, thingToDo) {}",
             "}",
-            "(/** @suppress {uselessCode} */ function() {",
-            "  XElement.prototype._computeName;",
-            "  XElement.prototype.user_;",
-            "  XElement.prototype.user_;",
-            "})();",
             "/** @type {!User} @private */",
             "XElement.prototype.user_;",
             "/** @type {!Array} */",
@@ -4035,7 +4030,12 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @type {string} */",
             "XElement.prototype.name;",
             "/** @type {!Function} */",
-            "XElement.prototype.thingToDo;"));
+            "XElement.prototype.thingToDo;",
+            "(/** @suppress {uselessCode} */ function() {",
+            "  XElement.prototype._computeName;",
+            "  XElement.prototype.user_;",
+            "  XElement.prototype.user_;",
+            "})();"));
   }
 
   @Test
@@ -4164,13 +4164,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  _userChanged(user_) {}",
             "  _userOrThingToDoChanged(user, thingToDo) {}",
             "}",
-            "(/** @suppress {uselessCode} */ function() {",
-            "  XElement.prototype._userChanged;",
-            "  XElement.prototype.user_;",
-            "  XElement.prototype._userOrThingToDoChanged;",
-            "  XElement.prototype.user_;",
-            "  XElement.prototype.thingToDo;",
-            "})();",
             "/** @type {!User} @private */",
             "XElement.prototype.user_;",
             "/** @type {!Array} */",
@@ -4178,7 +4171,14 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @type {string} */",
             "XElement.prototype.name;",
             "/** @type {!Function} */",
-            "XElement.prototype.thingToDo;"));
+            "XElement.prototype.thingToDo;",
+            "(/** @suppress {uselessCode} */ function() {",
+            "  XElement.prototype._userChanged;",
+            "  XElement.prototype.user_;",
+            "  XElement.prototype._userOrThingToDoChanged;",
+            "  XElement.prototype.user_;",
+            "  XElement.prototype.thingToDo;",
+            "})();"));
   }
 
   @Override

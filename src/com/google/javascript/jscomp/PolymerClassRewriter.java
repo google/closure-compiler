@@ -233,11 +233,14 @@ final class PolymerClassRewriter {
       jsDocInfoNode.setJSDocInfo(classInfo.build());
     }
 
+    Node insertAfterReference = NodeUtil.getEnclosingStatement(clazz);
     if (block.hasChildren()) {
       removePropertyDocs(cls.descriptor, cls.defType);
-      Node stmt = NodeUtil.getEnclosingStatement(clazz);
-      stmt.getParent().addChildrenAfter(block.removeChildren(), stmt);
-      compiler.reportChangeToEnclosingScope(stmt);
+      Node newInsertAfterReference = block.getLastChild();
+      insertAfterReference.getParent()
+          .addChildrenAfter(block.removeChildren(), insertAfterReference);
+      compiler.reportChangeToEnclosingScope(insertAfterReference);
+      insertAfterReference = newInsertAfterReference;
     }
 
     addReturnTypeIfMissing(cls, "is", new JSTypeExpression(IR.string("string"), VIRTUAL_FILE));
@@ -287,11 +290,11 @@ final class PolymerClassRewriter {
         // Mark the function as not having an explicit "this" set
         sinkFunction.putBooleanProp(Node.FREE_CALL, true);
 
-        Node stmt = NodeUtil.getEnclosingStatement(clazz);
-        stmt.getParent().addChildAfter(
-            IR.exprResult(sinkFunction).useSourceInfoFromForTree(stmt), stmt);
+        insertAfterReference.getParent().addChildAfter(
+            IR.exprResult(sinkFunction)
+                .useSourceInfoIfMissingFromForTree(clazz), insertAfterReference);
         compiler.reportChangeToChangeScope(sinkFunction.getFirstChild());
-        compiler.reportChangeToEnclosingScope(stmt);
+        compiler.reportChangeToEnclosingScope(insertAfterReference);
       }
 
       addPropertiesConfigObjectReflection(cls, cls.descriptor);
@@ -845,7 +848,8 @@ final class PolymerClassRewriter {
     // Add reflect and property sinks for the method name which will be a property on the class
     String methodName = methodSignatureString.substring(0, openParenIndex).trim();
     propertySinkStatements.add(
-        IR.exprResult(IR.getprop(className.cloneTree(), "prototype", methodName)));
+        IR.exprResult(IR.getprop(className.cloneTree(), "prototype", methodName))
+            .useSourceInfoFromForTree(methodSignature));
 
     Node reflectedMethodName =
         IR.call(
@@ -856,7 +860,6 @@ final class PolymerClassRewriter {
     Node reflectedSignature = reflectedMethodName;
 
     // Process any parameters in the method call
-    Node reflectedParams = null;
     String nextParamDelimeter = "(";
     if (openParenIndex < methodSignatureString.length() - 2) {
       String methodParamsString =
