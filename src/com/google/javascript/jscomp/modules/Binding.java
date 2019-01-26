@@ -78,7 +78,10 @@ public abstract class Binding {
    * <p>This is generally a NAME node inside an import or export statement that represents where the
    * name was bound. However as {@code export * from} has no NAME nodes the source node in that
    * instance should be the entire export node.
+   *
+   * <p>Null for missing ES modules and non-ES modules as they are currently not scanned.
    */
+  @Nullable
   public abstract Node sourceNode();
 
   /**

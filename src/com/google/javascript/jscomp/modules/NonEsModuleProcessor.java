@@ -62,7 +62,7 @@ final class NonEsModuleProcessor implements ModuleProcessor {
         Set<ExportTrace> resolveSet,
         Set<UnresolvedModule> exportStarSet) {
       String namespace = null;
-      if (GoogEsImports.isGoogImportSpecifier(moduleSpecifier)) {
+      if (moduleSpecifier != null && GoogEsImports.isGoogImportSpecifier(moduleSpecifier)) {
         namespace = GoogEsImports.getClosureIdFromGoogImportSpecifier(moduleSpecifier);
       }
       return ResolveExportResult.of(

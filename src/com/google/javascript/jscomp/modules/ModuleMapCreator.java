@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -28,6 +29,7 @@ import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -232,6 +234,77 @@ public class ModuleMapCreator implements CompilerPass {
   final class ModuleRequestResolver {
     private ModuleRequestResolver() {}
 
+    private UnresolvedModule getFallbackForMissingNonClosureModule(ModuleLoader.ModulePath path) {
+      ModuleMetadata metadata =
+          ModuleMetadata.builder()
+              .rootNode(null)
+              .path(path)
+              .moduleType(ModuleType.ES6_MODULE)
+              .isTestOnly(false)
+              .usesClosure(false)
+              .build();
+
+      return new UnresolvedModule() {
+        @Override
+        Module resolve(@Nullable String moduleSpecifier) {
+          return Module.builder()
+              .boundNames(ImmutableMap.of())
+              .namespace(ImmutableMap.of())
+              .localNameToLocalExport(ImmutableMap.of())
+              .path(path)
+              .metadata(metadata)
+              .build();
+        }
+
+        @Override
+        boolean isEsModule() {
+          return true;
+        }
+
+        @Override
+        ImmutableSet<String> getExportedNames() {
+          return ImmutableSet.of();
+        }
+
+        @Override
+        protected ImmutableSet<String> getExportedNames(Set<UnresolvedModule> visited) {
+          return ImmutableSet.of();
+        }
+
+        @Override
+        ResolveExportResult resolveExport(
+            @Nullable String moduleSpecifier,
+            String exportName,
+            Set<ExportTrace> resolveSet,
+            Set<UnresolvedModule> exportStarSet) {
+          return ResolveExportResult.of(
+              Binding.from(
+                  Export.builder()
+                      .localName(exportName)
+                      .moduleMetadata(metadata)
+                      .modulePath(path)
+                      .closureNamespace(null)
+                      .build(),
+                  /* sourceNode= */ null));
+        }
+      };
+    }
+
+    private UnresolvedModule getFallbackForMissingClosureModule(String namespace) {
+      return nonEsModuleProcessor.process(
+          this,
+          ModuleMetadata.builder()
+              .addGoogNamespace(namespace)
+              .isTestOnly(false)
+              .moduleType(ModuleType.GOOG_PROVIDE)
+              .path(null)
+              .rootNode(null)
+              .usesClosure(true)
+              .build(),
+          /* path= */ null,
+          /* script= */ null);
+    }
+
     @Nullable
     UnresolvedModule resolve(Import i) {
       return resolve(i.moduleRequest(), i.modulePath(), i.importNode());
@@ -250,6 +323,8 @@ public class ModuleMapCreator implements CompilerPass {
         UnresolvedModule module = unresolvedModulesByClosureNamespace.get(namespace);
         if (module == null) {
           compiler.report(JSError.make(forLineInfo, MISSING_NAMESPACE_IMPORT, namespace));
+          module = getFallbackForMissingClosureModule(namespace);
+          unresolvedModulesByClosureNamespace.put(namespace, module);
         }
         return module;
       }
@@ -262,7 +337,13 @@ public class ModuleMapCreator implements CompilerPass {
               forLineInfo.getCharno());
 
       if (requestedPath == null) {
-        return null;
+        requestedPath = modulePath.resolveModuleAsPath(moduleRequest);
+
+        if (!unresolvedModules.containsKey(requestedPath.toModuleName())) {
+          UnresolvedModule module = getFallbackForMissingNonClosureModule(requestedPath);
+          unresolvedModules.put(requestedPath.toModuleName(), module);
+          return module;
+        }
       }
 
       return unresolvedModules.get(requestedPath.toModuleName());
@@ -340,18 +421,38 @@ public class ModuleMapCreator implements CompilerPass {
       }
     }
 
-    for (Map.Entry<String, UnresolvedModule> e : unresolvedModules.entrySet()) {
-      Module resolved = e.getValue().resolve();
-      resolvedModules.put(e.getKey(), resolved);
+    // We need to resolve in a loop as any missing reference will add a fake to the
+    // unresolvedModules map (see getFallback* methods above). This would cause a concurrent
+    // modification exception if we just iterated over unresolvedModules. So the first loop through
+    // should resolve any "known" modules, and the second any "unrecognized" modules.
+    do {
+      Set<String> toResolve =
+          Sets.difference(unresolvedModules.keySet(), resolvedModules.keySet()).immutableCopy();
 
-      for (String namespace : resolved.metadata().googNamespaces()) {
-        resolvedClosureModules.put(namespace, resolved);
+      for (String key : toResolve) {
+        Module resolved = unresolvedModules.get(key).resolve();
+        resolvedModules.put(key, resolved);
+
+        for (String namespace : resolved.metadata().googNamespaces()) {
+          resolvedClosureModules.put(namespace, resolved);
+        }
       }
-    }
 
-    for (Map.Entry<String, UnresolvedModule> e : unresolvedModulesByClosureNamespace.entrySet()) {
-      resolvedClosureModules.put(e.getKey(), e.getValue().resolve());
-    }
+    } while (!resolvedModules.keySet().containsAll(unresolvedModules.keySet()));
+
+    do {
+      Set<String> toResolve =
+          Sets.difference(
+                  unresolvedModulesByClosureNamespace.keySet(), resolvedClosureModules.keySet())
+              .immutableCopy();
+
+      for (String namespace : toResolve) {
+        resolvedClosureModules.put(
+            namespace, unresolvedModulesByClosureNamespace.get(namespace).resolve());
+      }
+    } while (!resolvedClosureModules
+        .keySet()
+        .containsAll(unresolvedModulesByClosureNamespace.keySet()));
 
     unresolvedModules.clear();
     unresolvedModulesByClosureNamespace.clear();
