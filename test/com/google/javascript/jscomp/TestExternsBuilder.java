@@ -203,7 +203,19 @@ public class TestExternsBuilder {
           " * @return {!Object}",
           " */",
           "Object.setPrototypeOf = function(obj, proto) {};",
-          "");
+          "/**",
+          " * @param {!Object} obj",
+          " * @return {Object}",
+          " * @nosideeffects",
+          " */",
+          "Object.getPrototypeOf = function(obj) {};",
+          "",
+          "/**",
+          " * @param {!Object} target",
+          " * @param {...(Object|null|undefined)} var_args",
+          " * @return {!Object}",
+          " */",
+          "Object.assign = function(target, var_args) {};");
   private static final String ARRAY_EXTERNS =
       lines(
           "/**",
