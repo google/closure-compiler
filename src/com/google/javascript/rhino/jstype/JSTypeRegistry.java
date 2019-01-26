@@ -112,6 +112,9 @@ public class JSTypeRegistry implements Serializable {
   /** The template variable corresponding to the VALUE type in {@code Iterator<VALUE>} */
   private TemplateType iteratorTemplate;
 
+  /** The template variable corresponding to the VALUE type in {@code IIterableResult<VALUE>} */
+  private TemplateType iiterableResultTemplate;
+
   /** The template variable corresponding to the VALUE type in {@code AsyncIterable<VALUE>} */
   private TemplateType asyncIterableTemplate;
 
@@ -353,6 +356,7 @@ public class JSTypeRegistry implements Serializable {
     // These should match the template type name in externs files.
     arrayElementTemplateKey = new TemplateType(this, "T");
     iteratorTemplate = new TemplateType(this, "VALUE");
+    iiterableResultTemplate = new TemplateType(this, "VALUE");
     asyncIteratorTemplate = new TemplateType(this, "VALUE");
     generatorTemplate = new TemplateType(this, "VALUE");
     asyncGeneratorTemplate = new TemplateType(this, "VALUE");
@@ -421,6 +425,12 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(JSTypeNative.ITERATOR_FUNCTION_TYPE, iteratorFunctionType);
     ObjectType iteratorType = iteratorFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.ITERATOR_TYPE, iteratorType);
+
+    FunctionType iiterableResultFunctionType =
+        nativeInterface("IIterableResult", iiterableResultTemplate);
+    registerNativeType(JSTypeNative.I_ITERABLE_RESULT_FUNCTION_TYPE, iiterableResultFunctionType);
+    ObjectType iiterableResultType = iiterableResultFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.I_ITERABLE_RESULT_TYPE, iiterableResultType);
 
     // Array
     FunctionType arrayFunctionType =
@@ -732,6 +742,7 @@ public class JSTypeRegistry implements Serializable {
     registerGlobalType(getNativeType(JSTypeNative.GENERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.DATE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.I_OBJECT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.I_ITERABLE_RESULT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.I_TEMPLATE_ARRAY_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.I_THENABLE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.NULL_TYPE));
