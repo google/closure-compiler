@@ -1408,23 +1408,93 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCustomBanUnknownThisProp1() {
+  public void testBanUnknownDirectThisPropsReferences_implicitUnknownOnEs5Constructor_warn() {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
     testWarning(
-        "/** @constructor */ function f() {}; f.prototype.prop;"
-            + "f.prototype.method = function() { alert(this.prop); }",
+        lines(
+            "/** @constructor */",
+            "function f() {}",
+            "f.prototype.prop;",
+            "f.prototype.method = function() { alert(this.prop); };"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
   }
 
   @Test
-  public void testCustomBanUnknownThisProp2() {
+  public void testBanUnknownDirectThisPropsReferences_explicitUnknownOnEs5Constructor_ok() {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
     testNoWarning(
-        "/** @constructor */ function f() {}; f.prototype.prop;"
-            + "f.prototype.method = function() { this.prop = foo; };");
+        lines(
+            "/** @constructor */",
+            "function f() {};",
+            "/** @type {?} */",
+            "f.prototype.prop;",
+            "f.prototype.method = function() { alert(this.prop); }"));
+  }
+
+  @Test
+  public void testBanUnknownDirectThisPropsReferences_implicitUnknownOnEs6Class_warn() {
+    configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
+
+    testWarning(
+        lines(
+            "class F {",
+            "  constructor() {",
+            "    this.prop;",
+            "  }",
+            "  method() {",
+            "    alert(this.prop);",
+            "  }",
+            "}"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message");
+  }
+
+  @Test
+  public void testBanUnknownDirectThisPropsReferences_explicitUnknownOnEs6Class_ok() {
+    configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
+
+    testNoWarning(
+        lines(
+            "class F {",
+            "  constructor() {",
+            "    /** @type {?} */",
+            "    this.prop;",
+            "  }",
+            "  method() {",
+            "    alert(this.prop);",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testBanUnknownDirectThisPropsReferences_inferredNotUnknown_ok() {
+    configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
+
+    testNoWarning(
+        lines(
+            "class F {",
+            "  constructor() {",
+            "    this.prop = 42;",
+            "  }",
+            "  method() {",
+            "    alert(this.prop);",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testBanUnknownDirectThisPropsReferences_implicitUnknownAssignedButNotUsed_ok() {
+    configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
+
+    testNoWarning(
+        lines(
+            "/** @constructor */",
+            "function f() {}",
+            "f.prototype.prop;",
+            "f.prototype.method = function() { this.prop = foo; };"));
   }
 
   @Test
