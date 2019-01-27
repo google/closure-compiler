@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
-import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.Es6ToEs3Util.cannotConvertYet;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -115,7 +115,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         }
         break;
       case NEW_TARGET:
-        cannotConvertYet(n, "new.target");
+        cannotConvertYet(compiler, n, "new.target");
         break;
       default:
         break;
@@ -434,7 +434,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
    */
   private void visitNonMethodMember(Node member, ClassDeclarationMetadata metadata) {
     if (member.isComputedProp() && member.isStaticMember()) {
-      cannotConvertYet(member, "Static computed property");
+      cannotConvertYet(compiler, member, "Static computed property");
       return;
     }
     if (member.isComputedProp() && !member.getFirstChild().isQualifiedName()) {
@@ -591,15 +591,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
   private void cannotConvert(Node n, String message) {
     compiler.report(JSError.make(n, CANNOT_CONVERT, message));
-  }
-
-  /**
-   * Warns the user that the given ES6 feature cannot be converted to ES3
-   * because the transpilation is not yet implemented. A call to this method
-   * is essentially a "TODO(tbreisacher): Implement {@code feature}" comment.
-   */
-  private void cannotConvertYet(Node n, String feature) {
-    compiler.report(JSError.make(n, CANNOT_CONVERT_YET, feature));
   }
 
   private Node createPropertyDescriptor() {
