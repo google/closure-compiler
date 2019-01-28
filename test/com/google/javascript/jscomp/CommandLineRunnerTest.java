@@ -2460,6 +2460,45 @@ public final class CommandLineRunnerTest {
     testSame("alert('hello world')");
   }
 
+  @Test
+  public void testOutputSourceMapContainsSourcesContent() {
+    String inputString =
+        "[{\"src\": \"\", \"path\": \"base.js\"},"
+            + "{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
+    args.add("--json_streams=BOTH");
+    args.add("--chunk=m1:1");
+    args.add("--chunk=m2:1:m1");
+    args.add("--source_map_include_content");
+
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            args.toArray(new String[] {}),
+            new ByteArrayInputStream(inputString.getBytes(UTF_8)),
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+
+    lastCompiler = runner.getCompiler();
+    try {
+      runner.doRun();
+    } catch (IOException e) {
+      e.printStackTrace();
+      assertWithMessage("Unexpected exception " + e).fail();
+    }
+    String output = new String(outReader.toByteArray(), UTF_8);
+    assertThat(output)
+        .isEqualTo(
+            "[{\"src\":\"\\n\",\"path\":\"./m1.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
+                + "\\n\\\"file\\\":\\\"./m1.js\\\",\\n\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\";\\\""
+                + ",\\n\\\"sources\\\":[],\\n\\\"names\\\":[]\\n}\\n\"},{\"src\":\"alert(\\\"foo\\\");"
+                + "\\n\",\"path\":\"./m2.js\",\"source_map\":\"{\\n\\\"version\\\":3,\\n\\\"file\\\":"
+                + "\\\"./m2.js\\\",\\n\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;"
+                + "\\\",\\n\\\"sources\\\":[\\\"foo.js\\\"],\\n\\\"sourcesContent\\\":[\\\""
+                + "alert('foo');\\\"],\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"},"
+                + "{\"src\":\"\\n\",\"path\":\"./$weak$.js\",\"source_map\":\"{\\n\\\"version\\\":3,\\n"
+                + "\\\"file\\\":\\\"./$weak$.js\\\",\\n\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\";"
+                + "\\\",\\n\\\"sources\\\":[],\\n\\\"names\\\":[]\\n}\\n\"}]");
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {

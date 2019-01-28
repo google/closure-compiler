@@ -1467,7 +1467,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         String moduleFilename = getModuleOutputFileName(m);
         try (Writer writer = fileNameToLegacyOutputWriter(moduleFilename)) {
           if (options.sourceMapOutputPath != null) {
-            compiler.getSourceMap().reset();
+            compiler.resetAndIntitializeSourceMap();
           }
           writeModuleOutput(writer, m);
           if (options.sourceMapOutputPath != null) {
@@ -1491,7 +1491,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   /** Given an output module, convert it to a JSONFileSpec with associated sourcemap */
   @GwtIncompatible("Unnecessary")
   private JsonFileSpec createJsonFileFromModule(JSModule module) throws IOException {
-    compiler.getSourceMap().reset();
+    compiler.resetAndIntitializeSourceMap();
 
     StringBuilder output = new StringBuilder();
     writeModuleOutput(output, module);
