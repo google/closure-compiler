@@ -186,12 +186,12 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    process(scriptRoot);
+    process(scriptRoot, /* hotSwap= */ true);
   }
 
   @Override
   public void process(Node externs, Node root) {
-    process(root);
+    process(root, /* hotSwap= */ false);
   }
 
   /**
@@ -199,10 +199,14 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
    *
    * @param root Root of AST to rewrite
    */
-  private void process(Node root) {
+  private void process(Node root, boolean hotSwap) {
     checkState(contextStack.isEmpty());
     contextStack.push(LexicalContext.newGlobalContext());
-    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
+    if (hotSwap) {
+      TranspilationPasses.hotSwapTranspile(compiler, root, transpiledFeatures, this);
+    } else {
+      TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
+    }
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
     checkState(contextStack.element().function == null);
     contextStack.remove();
