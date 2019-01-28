@@ -116,22 +116,55 @@ final class AstFactory {
    * Returns a new BLOCK node.
    *
    * <p>Blocks have no type information, so this is functionally the same as calling {@code
-   * IR.block()}. It exists so that a pass can be consistent about always using {@code AstFactory}
-   * to create new nodes.
+   * IR.block(statements)}. It exists so that a pass can be consistent about always using {@code
+   * AstFactory} to create new nodes.
    */
-  Node createBlock() {
-    return IR.block();
+  Node createBlock(Node... statements) {
+    return IR.block(statements);
   }
 
   /**
-   * Returns a new BLOCK node.
+   * Returns a new IF node.
    *
    * <p>Blocks have no type information, so this is functionally the same as calling {@code
-   * IR.block(statement)}. It exists so that a pass can be consistent about always using {@code
+   * IR.ifNode(cond, then)}. It exists so that a pass can be consistent about always using {@code
    * AstFactory} to create new nodes.
    */
-  Node createBlock(Node statement) {
-    return IR.block(statement);
+  Node createIf(Node cond, Node then) {
+    return IR.ifNode(cond, then);
+  }
+
+  /**
+   * Returns a new IF node.
+   *
+   * <p>Blocks have no type information, so this is functionally the same as calling {@code
+   * IR.ifNode(cond, then, elseNode)}. It exists so that a pass can be consistent about always using
+   * {@code AstFactory} to create new nodes.
+   */
+  Node createIf(Node cond, Node then, Node elseNode) {
+    return IR.ifNode(cond, then, elseNode);
+  }
+
+  /**
+   * Returns a new FOR node.
+   *
+   * <p>Blocks have no type information, so this is functionally the same as calling {@code
+   * IR.forNode(init, cond, incr, body)}. It exists so that a pass can be consistent about always
+   * using {@code AstFactory} to create new nodes.
+   */
+  Node createFor(Node init, Node cond, Node incr, Node body) {
+    return IR.forNode(init, cond, incr, body);
+  }
+
+  /**
+   * Returns a new BREAK node.
+   *
+   * <p>Breaks have no type information, so this is functionally the same as calling {@code
+   * IR.breakNode()}. It exists so that a pass can be consistent about always using {@code
+   * AstFactory} to create new nodes.
+   */
+  Node createBreak() {
+    return IR.breakNode();
   }
 
   /**
@@ -153,6 +186,20 @@ final class AstFactory {
    */
   Node createYield(JSType jsType, Node value) {
     Node result = IR.yield(value);
+    if (isAddingTypes()) {
+      result.setJSType(checkNotNull(jsType));
+    }
+    return result;
+  }
+
+  /**
+   * Returns a new {@code await} expression.
+   *
+   * @param jsType Type we expect to get back after the await
+   * @param value value to await
+   */
+  Node createAwait(JSType jsType, Node value) {
+    Node result = IR.await(value);
     if (isAddingTypes()) {
       result.setJSType(checkNotNull(jsType));
     }
@@ -199,6 +246,14 @@ final class AstFactory {
     return result;
   }
 
+  Node createSuper(JSType superType) {
+    Node result = IR.superNode();
+    if (isAddingTypes()) {
+      result.setJSType(checkNotNull(superType));
+    }
+    return result;
+  }
+
   /** Creates a THIS node with the correct type for the given function node. */
   Node createThisForFunction(Node functionNode) {
     final Node result = IR.thisNode();
@@ -208,11 +263,30 @@ final class AstFactory {
     return result;
   }
 
+  /** Creates a SUPER node with the correct type for the given function node. */
+  Node createSuperForFunction(Node functionNode) {
+    final Node result = IR.superNode();
+    if (isAddingTypes()) {
+      result.setJSType(getTypeOfSuperForFunctionNode(functionNode));
+    }
+    return result;
+  }
+
   @Nullable
   private JSType getTypeOfThisForFunctionNode(Node functionNode) {
     if (isAddingTypes()) {
       FunctionType functionType = getFunctionType(functionNode);
       return checkNotNull(functionType.getTypeOfThis(), functionType);
+    } else {
+      return null; // not adding type information
+    }
+  }
+
+  @Nullable
+  private JSType getTypeOfSuperForFunctionNode(Node functionNode) {
+    if (isAddingTypes()) {
+      ObjectType thisType = getTypeOfThisForFunctionNode(functionNode).assertObjectType();
+      return checkNotNull(thisType.getSuperClassConstructor().getInstanceType(), thisType);
     } else {
       return null; // not adding type information
     }
@@ -490,13 +564,33 @@ final class AstFactory {
     return result;
   }
 
+  Node createNewNode(Node target, Node... args) {
+    Node result = IR.newNode(target, args);
+    if (isAddingTypes()) {
+      JSType instanceType = target.getJSType();
+      if (instanceType.isFunctionType()) {
+        instanceType = instanceType.toMaybeFunctionType().getInstanceType();
+      } else {
+        instanceType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      }
+      result.setJSType(instanceType);
+    }
+    return result;
+  }
+
   Node createObjectGetPrototypeOfCall(Node argObjectNode) {
     Node objectName = createName("Object", JSTypeNative.OBJECT_FUNCTION_TYPE);
     Node objectGetPrototypeOf = createGetProp(objectName, "getPrototypeOf");
-    Node result = NodeUtil.newCallNode(objectGetPrototypeOf, argObjectNode);
+    Node result = createCall(objectGetPrototypeOf, argObjectNode);
     if (isAddingTypes()) {
       ObjectType typeOfArgObject = argObjectNode.getJSTypeRequired().assertObjectType();
-      result.setJSType(getPrototypeObjectType(typeOfArgObject));
+      JSType returnedType = getPrototypeObjectType(typeOfArgObject);
+      result.setJSType(returnedType);
+
+      // Return type of the function needs to match that of the entire expression. getPrototypeOf
+      // normally returns !Object.
+      objectGetPrototypeOf.setJSType(
+          registry.createFunctionType(returnedType, getNativeType(JSTypeNative.OBJECT_TYPE)));
     }
     return result;
   }
@@ -556,6 +650,18 @@ final class AstFactory {
   /** Creates an empty function `function() {}` */
   Node createEmptyFunction(JSType type) {
     Node result = NodeUtil.emptyFunction();
+    if (isAddingTypes()) {
+      checkNotNull(type);
+      checkArgument(type.isFunctionType(), type);
+      result.setJSType(checkNotNull(type));
+    }
+    return result;
+  }
+
+  /** Creates an empty function `function*() {}` */
+  Node createEmptyGeneratorFunction(JSType type) {
+    Node result = NodeUtil.emptyFunction();
+    result.setIsGeneratorFunction(true);
     if (isAddingTypes()) {
       checkNotNull(type);
       checkArgument(type.isFunctionType(), type);
@@ -706,6 +812,114 @@ final class AstFactory {
       makeIteratorName.setJSType(makeIteratorType.visit(replacer));
     }
     return createCall(makeIteratorName, iterator);
+  }
+
+  /**
+   * Given an iterable like {@code rhs} in
+   *
+   * <pre>{@code
+   * for await (lhs of rhs) { block(); }
+   * }</pre>
+   *
+   * <p>returns a call node for the {@code rhs} wrapped in a {@code $jscomp.makeAsyncIterator} call.
+   *
+   * <pre>{@code
+   * $jscomp.makeAsyncIterator(rhs)
+   * }</pre>
+   */
+  Node createJSCompMakeAsyncIteratorCall(Node iterable, Scope scope) {
+    Node makeIteratorAsyncName = createQName(scope, "$jscomp.makeAsyncIterator");
+    // Since createCall (currently) doesn't handle templated functions, fill in the template types
+    // of makeIteratorName manually.
+    if (isAddingTypes() && !makeIteratorAsyncName.getJSType().isUnknownType()) {
+      // if makeIteratorName has the unknown type, we must have not injected the required runtime
+      // libraries - hopefully because this is in a test using NonInjectingCompiler.
+
+      // e.g get `number` from `AsyncIterable<number>`
+      JSType asyncIterableType =
+          JsIterables.maybeBoxIterableOrAsyncIterable(iterable.getJSType(), registry)
+              .orElse(unknownType);
+      JSType makeAsyncIteratorType = makeIteratorAsyncName.getJSType();
+      // e.g. replace
+      //   function(AsyncIterable<T>): AsyncIterator<T>
+      // with
+      //   function(AsyncIterable<number>): AsyncIterator<number>
+      TemplateTypeMap typeMap =
+          registry.createTemplateTypeMap(
+              makeAsyncIteratorType.getTemplateTypeMap().getTemplateKeys(),
+              ImmutableList.of(asyncIterableType));
+      TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
+      makeIteratorAsyncName.setJSType(makeAsyncIteratorType.visit(replacer));
+    }
+    return createCall(makeIteratorAsyncName, iterable);
+  }
+
+  private JSType replaceTemplate(JSType templatedType, JSType... templateTypes) {
+    TemplateTypeMap typeMap =
+        registry.createTemplateTypeMap(
+            templatedType.getTemplateTypeMap().getTemplateKeys(),
+            ImmutableList.copyOf(templateTypes));
+    TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
+    return templatedType.visit(replacer);
+  }
+
+  /**
+   * Creates a reference to $jscomp.AsyncGeneratorWrapper with the template filled in to match the
+   * original function.
+   *
+   * @param originalFunctionType the type of the async generator function that needs transpilation
+   */
+  Node createAsyncGeneratorWrapperReference(JSType originalFunctionType, Scope scope) {
+    Node ctor = createQName(scope, "$jscomp.AsyncGeneratorWrapper");
+
+    if (isAddingTypes() && !ctor.getJSType().isUnknownType()) {
+      // if ctor has the unknown type, we must have not injected the required runtime
+      // libraries - hopefully because this is in a test using NonInjectingCompiler.
+
+      // e.g get `number` from `AsyncIterable<number>`
+      JSType yieldedType =
+          originalFunctionType
+              .toMaybeFunctionType()
+              .getReturnType()
+              .getInstantiatedTypeArgument(getNativeType(JSTypeNative.ASYNC_ITERABLE_TYPE));
+
+      // e.g. replace
+      //  AsyncGeneratorWrapper<T>
+      // with
+      //  AsyncGeneratorWrapper<number>
+      ctor.setJSType(replaceTemplate(ctor.getJSType(), yieldedType));
+    }
+
+    return ctor;
+  }
+
+  /**
+   * Creates an empty generator function with the correct return type to be an argument to
+   * $jscomp.AsyncGeneratorWrapper.
+   *
+   * @param asyncGeneratorWrapperType the specific type of the $jscomp.AsyncGeneratorWrapper with
+   *     its template filled in. Should be the type on the node returned from
+   *     createAsyncGeneratorWrapperReference.
+   */
+  Node createEmptyAsyncGeneratorWrapperArgument(JSType asyncGeneratorWrapperType) {
+    JSType generatorType = null;
+
+    if (isAddingTypes()) {
+      if (asyncGeneratorWrapperType.isUnknownType()) {
+        // Not injecting libraries?
+        generatorType =
+            registry.createFunctionType(
+                replaceTemplate(getNativeType(JSTypeNative.GENERATOR_TYPE), unknownType));
+      } else {
+        // Generator<$jscomp.AsyncGeneratorWrapper$ActionRecord<number>>
+        JSType innerFunctionReturnType =
+            Iterables.getOnlyElement(
+                asyncGeneratorWrapperType.toMaybeFunctionType().getParameterTypes());
+        generatorType = registry.createFunctionType(innerFunctionReturnType);
+      }
+    }
+
+    return createEmptyGeneratorFunction(generatorType);
   }
 
   Node createJscompAsyncExecutePromiseGeneratorFunctionCall(Scope scope, Node generatorFunction) {
