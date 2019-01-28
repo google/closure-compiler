@@ -197,8 +197,12 @@ public class J2clPass implements CompilerPass {
         }
 
         // Otherwise inline the call.
+        // Note: This pass has to run before normalization, so we must use the unsafeInline method.
+        // It is safe because these are strictly controlled trivial bootstrap methods that are
+        // written with inlining in mind (e.g. doesn't read/write local/global variables).
+        // TODO(goktug): Add a check that will ensure safety of this.
         Node inlinedCall =
-            injector.inline(
+            injector.unsafeInline(
                 new Reference(n, t.getScope(), t.getModule(), inliningMode), fnName, fnImpl);
         t.getCompiler().reportChangeToEnclosingScope(inlinedCall);
       }
