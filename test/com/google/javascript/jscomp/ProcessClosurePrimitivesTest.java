@@ -1064,19 +1064,6 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInvalidDefine() {
-    testError(
-        "goog.provide('a.b'); var x = x || goog.define('goog.DEBUG', true);",
-        CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR);
-    testError(
-        "goog.provide('a.b'); x = goog.define('goog.DEBUG', true);",
-        CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR);
-    testError(
-        "goog.provide('a.b'); function f() { goog.define('goog.DEBUG', true); }",
-        INVALID_CLOSURE_CALL_SCOPE_ERROR);
-  }
-
-  @Test
   public void testInvalidAddDependency() {
     testError(
         "goog.provide('a.b'); var x = x || goog.addDependency('a.b', ['foo'], ['bar']);",
@@ -1578,6 +1565,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     String jsdoc = "/** @define {number} */\n";
     test(jsdoc + "goog.define('name', 1);", jsdoc + "var name = 1");
     test(jsdoc + "goog.define('ns.name', 1);", jsdoc + "ns.name = 1");
+    test(jsdoc + "const x = goog.define('ns.name', 1);", jsdoc + "const x = 1");
   }
 
   @Test
@@ -1605,6 +1593,16 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     testErrorExterns(jsdoc + "goog.define(5);", INVALID_ARGUMENT_ERROR);
 
     testErrorExterns("/** @define {!number} */ goog.define('name');");
+  }
+
+  @Test
+  public void testInvalidDefine() {
+    testError(
+        "goog.provide('a.b'); var x = x || goog.define('goog.DEBUG', true);",
+        INVALID_CLOSURE_CALL_SCOPE_ERROR);
+    testError(
+        "goog.provide('a.b'); function f() { goog.define('goog.DEBUG', true); }",
+        INVALID_CLOSURE_CALL_SCOPE_ERROR);
   }
 
   private void testErrorExterns(String externs) {

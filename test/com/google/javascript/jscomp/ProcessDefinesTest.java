@@ -38,14 +38,14 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   private final Map<String, Node> overrides = new HashMap<>();
   private GlobalNamespace namespace;
-  private boolean doReplacements;
+  private boolean checksOnly;
 
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
     overrides.clear();
-    doReplacements = true;
+    checksOnly = false;
 
     // ProcessDefines emits warnings if the user tries to re-define a constant,
     // but the constant is not defined anywhere in the binary.
@@ -94,13 +94,13 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   @Test
   public void testChecksOnlyProducesErrors() {
-    doReplacements = false;
+    checksOnly = true;
     testError("/** @define {Object} */ var DEF = {}", ProcessDefines.INVALID_DEFINE_TYPE_ERROR);
   }
 
   @Test
   public void testChecksOnlyProducesUnknownDefineWarning() {
-    doReplacements = false;
+    checksOnly = true;
     overrides.put("a.B", new Node(Token.TRUE));
     test("var a = {};", "var a = {};", warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
   }
@@ -419,6 +419,21 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogDefine_notOverridden() {
+    test(
+        "/** @define {boolean} */ const B = goog.define('a.B', false);",
+        "/** @define {boolean} */ const B = false;");
+  }
+
+  @Test
+  public void testGoogDefine_overridden() {
+    overrides.put("a.B", new Node(Token.TRUE));
+    test(
+        "/** @define {boolean} */ const B = goog.define('a.B', false);",
+        "/** @define {boolean} */ const B = true;");
+  }
+
+  @Test
   public void testOverrideAfterAlias() {
     testError("var x; /** @define {boolean} */var DEF=true; x=DEF; DEF=false;",
         ProcessDefines.DEFINE_NOT_ASSIGNABLE_ERROR);
@@ -448,7 +463,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   @Test
   public void testConstProducesUnknownDefineWarning() {
-    doReplacements = false;
+    checksOnly = true;
     overrides.put("a.B", new Node(Token.TRUE));
     test("const a = {};", "const a = {};", warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
   }
@@ -479,9 +494,13 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node js) {
+      new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, true).process(externs, js);
       namespace = new GlobalNamespace(compiler, externs, js);
-      new ProcessDefines(compiler, overrides, doReplacements)
-          .injectNamespace(namespace)
+      new ProcessDefines.Builder(compiler)
+          .putReplacements(overrides)
+          .checksOnly(checksOnly)
+          .injectNamespace(() -> namespace)
+          .build()
           .process(externs, js);
     }
   }

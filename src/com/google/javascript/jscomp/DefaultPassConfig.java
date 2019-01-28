@@ -32,7 +32,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPE_CHECK_
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
@@ -2158,18 +2157,13 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("processDefines", true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
-          return new CompilerPass() {
-            @Override
-            public void process(Node externs, Node jsRoot) {
-              HashMap<String, Node> replacements = new HashMap<>();
-              replacements.putAll(compiler.getDefaultDefineValues());
-              replacements.putAll(getAdditionalReplacements(options));
-              replacements.putAll(options.getDefineReplacements());
-              new ProcessDefines(compiler, ImmutableMap.copyOf(replacements), !options.checksOnly)
-                  .injectNamespace(namespaceForChecks)
-                  .process(externs, jsRoot);
-            }
-          };
+          return new ProcessDefines.Builder(compiler)
+              .putReplacements(compiler.getDefaultDefineValues())
+              .putReplacements(getAdditionalReplacements(options))
+              .putReplacements(options.getDefineReplacements())
+              .checksOnly(options.checksOnly)
+              .injectNamespace(() -> namespaceForChecks)
+              .build();
         }
 
         @Override

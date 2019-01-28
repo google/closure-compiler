@@ -201,6 +201,8 @@ public class Node implements Serializable {
     // Record the type associated with a @typedef to enable looking up typedef in the AST possible
     // without saving the type scope.
     TYPEDEF_TYPE,
+    // Original name of a goog.define call.
+    DEFINE_NAME,
   }
 
   // TODO(sdh): Get rid of these by using accessor methods instead.
@@ -2826,6 +2828,16 @@ public class Node implements Serializable {
   /** Returns true if this is or ever was a CLASS node (i.e. even after transpilation). */
   public final boolean isEs6Class() {
     return isClass() || getBooleanProp(Prop.IS_ES6_CLASS);
+  }
+
+  /** Returns any goog.define'd name corresponding to this NAME or GETPROP node. */
+  public final String getDefineName() {
+    return (String) getProp(Prop.DEFINE_NAME);
+  }
+
+  /** Sets the goog.define name for a NAME or GETPROP node. */
+  public final void setDefineName(String name) {
+    putProp(Prop.DEFINE_NAME, name);
   }
 
   // There are four values of interest:

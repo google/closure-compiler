@@ -272,16 +272,32 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
    */
   private void replaceGoogDefines(Node n) {
     Node parent = n.getParent();
-    checkState(parent.isExprResult());
     String name = n.getSecondChild().getString();
     JSDocInfo jsdoc = n.getJSDocInfo();
     Node value =
         n.isFromExterns() ? getAnyValueOfType(jsdoc).srcref(n) : n.getChildAtIndex(2).detach();
 
-    Node replacement = NodeUtil.newQNameDeclaration(compiler, name, value, jsdoc);
-    replacement.useSourceInfoIfMissingFromForTree(parent);
-    parent.replaceWith(replacement);
-    compiler.reportChangeToEnclosingScope(replacement);
+    switch (parent.getToken()) {
+      case EXPR_RESULT:
+        Node replacement = NodeUtil.newQNameDeclaration(compiler, name, value, jsdoc);
+        replacement.useSourceInfoIfMissingFromForTree(parent);
+        parent.replaceWith(replacement);
+        compiler.reportChangeToEnclosingScope(replacement);
+        break;
+      case NAME:
+        parent.setDefineName(name);
+        n.replaceWith(value);
+        compiler.reportChangeToEnclosingScope(parent);
+        break;
+      case ASSIGN:
+        checkState(n == parent.getLastChild());
+        parent.getFirstChild().setDefineName(name);
+        n.replaceWith(value);
+        compiler.reportChangeToEnclosingScope(parent);
+        break;
+      default:
+        throw new IllegalStateException("goog.define outside of EXPR_RESULT, NAME, or ASSIGN");
+    }
   }
 
   @Override
@@ -308,9 +324,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
                 processBaseClassCall(t, n);
                 break;
               case "define":
-                if (validateUnaliasablePrimitiveCall(t, n, methodName)) {
-                  processDefineCall(t, n, parent);
-                }
+                processDefineCall(t, n, parent);
                 break;
               case "require":
               case "requireType":
@@ -448,7 +462,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     if (!t.inGlobalHoistScope()) {
       compiler.report(t.makeError(n, INVALID_CLOSURE_CALL_SCOPE_ERROR));
       return false;
-    } else if (!n.getParent().isExprResult()) {
+    } else if (!n.getParent().isExprResult() && !"goog.define".equals(methodName)) {
       // If the call is in the global hoist scope, but the result is used
       compiler.report(t.makeError(n, invalidAliasingError, GOOG + "." + methodName));
       return false;
@@ -1142,15 +1156,30 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /**
-   * Verifies that a provide method call has exactly one argument,
-   * and that it's a string literal and that the contents of the string are
-   * valid JS tokens. Reports a compile error if it doesn't.
+   * Verifies that a goog.define method call has exactly two arguments, with the first a string
+   * literal whose contents is a valid JS qualified name. Reports a compile error if it doesn't.
    *
    * @return Whether the argument checked out okay
    */
-  private boolean verifyDefine(NodeTraversal t,
-      Node expr,
-      Node methodName, Node args) {
+  private boolean verifyDefine(NodeTraversal t, Node parent, Node methodName, Node args) {
+    // Calls to goog.define must be in the global hoist scope.  This is copied from
+    // validate(Un)aliasablePrimitiveCall.
+    // TODO(sdh): loosen this restriction if the results are assigned?
+    if (!compiler.getOptions().shouldPreserveGoogModule() && !t.inGlobalHoistScope()) {
+      compiler.report(t.makeError(methodName.getParent(), INVALID_CLOSURE_CALL_SCOPE_ERROR));
+      return false;
+    }
+
+    // It is an error for goog.define to show up anywhere except on its own or immediately after =.
+    if (parent.isAssign() && parent.getParent().isExprResult()) {
+      parent = parent.getParent();
+    }
+    if (parent.isName() && NodeUtil.isNameDeclaration(parent.getParent())) {
+      parent = parent.getGrandparent();
+    } else if (!parent.isExprResult()) {
+      compiler.report(t.makeError(methodName.getParent(), INVALID_CLOSURE_CALL_SCOPE_ERROR));
+      return false;
+    }
 
     // Verify first arg
     Node arg = args;
@@ -1172,9 +1201,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       return false;
     }
 
-    JSDocInfo info = expr.getFirstChild().getJSDocInfo();
+    JSDocInfo info = parent.getFirstChild().getJSDocInfo();
     if (info == null || !info.isDefine()) {
-      compiler.report(t.makeError(expr, MISSING_DEFINE_ANNOTATION));
+      compiler.report(t.makeError(parent, MISSING_DEFINE_ANNOTATION));
       return false;
     }
     return true;

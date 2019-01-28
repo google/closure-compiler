@@ -19,6 +19,8 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
@@ -34,9 +36,11 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -61,9 +65,8 @@ class ProcessDefines implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final Map<String, Node> dominantReplacements;
-  private final boolean doReplacements;
-
-  private GlobalNamespace namespace = null;
+  private final boolean checksOnly;
+  private final Supplier<GlobalNamespace> namespaceSupplier;
 
   // Warnings
   static final DiagnosticType UNKNOWN_DEFINE_WARNING = DiagnosticType.warning(
@@ -94,30 +97,48 @@ class ProcessDefines implements CompilerPass {
   private static final MessageFormat REASON_DEFINE_NOT_ASSIGNABLE =
       new MessageFormat("line {0} of {1}");
 
-  /**
-   * Create a pass that overrides define constants.
-   *
-   * TODO(nicksantos): Write a builder to help JSCompiler induce
-   *    {@code replacements} from command-line flags
-   *
-   * @param replacements A hash table of names of defines to their replacements.
-   *   All replacements <b>must</b> be literals.
-   */
-  ProcessDefines(
-      AbstractCompiler compiler, Map<String, Node> replacements, boolean doReplacements) {
-    this.compiler = compiler;
-    this.dominantReplacements = replacements;
-    this.doReplacements = doReplacements;
+  /** Create a pass that overrides define constants. */
+  private ProcessDefines(Builder builder) {
+    this.compiler = builder.compiler;
+    this.dominantReplacements = ImmutableMap.copyOf(builder.replacements);
+    this.checksOnly = builder.checksOnly;
+    this.namespaceSupplier = builder.namespaceSupplier;
   }
 
-  /**
-   * Injects a pre-computed global namespace, so that the same namespace
-   * can be re-used for multiple check passes. Returns {@code this} for
-   * easy chaining.
-   */
-  ProcessDefines injectNamespace(GlobalNamespace namespace) {
-    this.namespace = namespace;
-    return this;
+  /** Builder for ProcessDefines. */
+  static class Builder {
+    private final AbstractCompiler compiler;
+    private final Map<String, Node> replacements = new LinkedHashMap<>();
+    private boolean checksOnly;
+    private Supplier<GlobalNamespace> namespaceSupplier;
+
+    Builder(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    Builder putReplacements(Map<String, Node> replacements) {
+      this.replacements.putAll(replacements);
+      return this;
+    }
+
+    Builder checksOnly(boolean checksOnly) {
+      this.checksOnly = checksOnly;
+      return this;
+    }
+
+    /**
+     * Injects a pre-computed global namespace, so that the same namespace can be re-used for
+     * multiple check passes. Accepts a supplier because the namespace may not exist at
+     * pass-creation time.
+     */
+    Builder injectNamespace(Supplier<GlobalNamespace> namespaceSupplier) {
+      this.namespaceSupplier = namespaceSupplier;
+      return this;
+    }
+
+    ProcessDefines build() {
+      return new ProcessDefines(this);
+    }
   }
 
   @Override
@@ -126,7 +147,7 @@ class ProcessDefines implements CompilerPass {
   }
 
   private void overrideDefines(Map<String, DefineInfo> allDefines) {
-    if (doReplacements) {
+    if (!checksOnly) {
       for (Map.Entry<String, DefineInfo> def : allDefines.entrySet()) {
         String defineName = def.getKey();
         DefineInfo info = def.getValue();
@@ -173,14 +194,23 @@ class ProcessDefines implements CompilerPass {
   }
 
   /**
-   * Finds all defines, and creates a {@link DefineInfo} data structure for
-   * each one.
+   * Finds all defines, and creates a {@link DefineInfo} data structure for each one.
+   *
    * @return A map of {@link DefineInfo} structures, keyed by name.
    */
   Map<String, DefineInfo> collectDefines(Node externs, Node root) {
+    GlobalNamespace namespace = null;
+    if (namespaceSupplier != null) {
+      namespace = namespaceSupplier.get();
+    }
     if (namespace == null) {
       namespace = new GlobalNamespace(compiler, externs, root);
     }
+
+    // namespace =
+    //     namespaceSupplier != nul
+    //         ? namespaceSupplier.get()
+    //         : new GlobalNamespace(compiler, externs, root);
 
     // Find all the global names with a @define annotation
     List<Name> allDefines = new ArrayList<>();
@@ -218,18 +248,14 @@ class ProcessDefines implements CompilerPass {
       }
     }
 
-    CollectDefines pass = new CollectDefines(compiler, allDefines);
+    CollectDefines pass = new CollectDefines(allDefines);
     NodeTraversal.traverseRoots(compiler, pass, externs, root);
     return pass.getAllDefines();
   }
 
-  /**
-   * Finds all assignments to @defines, and figures out the last value of
-   * the @define.
-   */
-  private static final class CollectDefines implements Callback {
+  /** Finds all assignments to @defines, and figures out the last value of the @define. */
+  private final class CollectDefines implements Callback {
 
-    private final AbstractCompiler compiler;
     private final Map<String, DefineInfo> assignableDefines;
     private final Map<String, DefineInfo> allDefines;
     private final Map<Node, RefInfo> allRefInfo;
@@ -243,8 +269,7 @@ class ProcessDefines implements CompilerPass {
     // a define is allowed. Otherwise, it's not allowed.
     private final Deque<Integer> assignAllowed;
 
-    CollectDefines(AbstractCompiler compiler, List<Name> listOfDefines) {
-      this.compiler = compiler;
+    CollectDefines(List<Name> listOfDefines) {
       this.allDefines = new HashMap<>();
 
       assignableDefines = new HashMap<>();
@@ -298,7 +323,12 @@ class ProcessDefines implements CompilerPass {
       if (refInfo != null) {
         Ref ref = refInfo.ref;
         Name name = refInfo.name;
-        String fullName = name.getFullName();
+        // If the (qualified) name node had a DEFINE_NAME prop added to it (i.e. by the closure
+        // pass) then use that name instead of the name assigned in the AST.  This happens any time
+        // the result of goog.define is assigned to something (i.e. all the time, once it stops
+        // exporting the global variable).  This allows goog.define to have more flexibility than
+        // simple @define.
+        String fullName = MoreObjects.firstNonNull(ref.node.getDefineName(), name.getFullName());
         switch (ref.type) {
           case SET_FROM_GLOBAL:
           case SET_FROM_LOCAL:
@@ -454,45 +484,40 @@ class ProcessDefines implements CompilerPass {
 
       return false;
     }
+  }
 
-    /**
-     * Gets the parent node of the value for any assignment to a Name.
-     * For example, in the assignment
-     * {@code var x = 3;}
-     * the parent would be the NAME node.
-     */
-    private static Node getValueParent(Ref ref) {
-      // there are two types of declarations: VARs, ASSIGNs, and CONSTs
-      return ref.node.getParent() != null
-              && (ref.node.getParent().isVar() || ref.node.getParent().isConst())
-          ? ref.node
-          : ref.node.getParent();
-    }
+  /**
+   * Gets the parent node of the value for any assignment to a Name. For example, in the assignment
+   * {@code var x = 3;} the parent would be the NAME node.
+   */
+  private static Node getValueParent(Ref ref) {
+    // there are two types of declarations: VARs, ASSIGNs, and CONSTs
+    return ref.node.getParent() != null
+            && (ref.node.getParent().isVar() || ref.node.getParent().isConst())
+        ? ref.node
+        : ref.node.getParent();
+  }
 
-    /**
-     * Records the fact that because of the current node in the node traversal,
-     * the define can't ever be assigned again.
-     *
-     * @param info Represents the define variable.
-     * @param t The current traversal.
-     */
-    private static void setDefineInfoNotAssignable(DefineInfo info, NodeTraversal t) {
-      info.setNotAssignable(format(REASON_DEFINE_NOT_ASSIGNABLE,
-                                t.getLineNumber(), t.getSourceName()));
-    }
+  /**
+   * Records the fact that because of the current node in the node traversal, the define can't ever
+   * be assigned again.
+   *
+   * @param info Represents the define variable.
+   * @param t The current traversal.
+   */
+  private static void setDefineInfoNotAssignable(DefineInfo info, NodeTraversal t) {
+    info.setNotAssignable(
+        format(REASON_DEFINE_NOT_ASSIGNABLE, t.getLineNumber(), t.getSourceName()));
+  }
 
-    /**
-     * A simple data structure for associating a Ref with the name
-     * that it references.
-     */
-    private static class RefInfo {
-      final Ref ref;
-      final Name name;
+  /** A simple data structure for associating a Ref with the name that it references. */
+  private static class RefInfo {
+    final Ref ref;
+    final Name name;
 
-      RefInfo(Ref ref, Name name) {
-        this.ref = ref;
-        this.name = name;
-      }
+    RefInfo(Ref ref, Name name) {
+      this.ref = ref;
+      this.name = name;
     }
   }
 
