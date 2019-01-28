@@ -373,6 +373,12 @@ assert.isNotFalse = function(value, opt_message) {};
  * @param {*} value
  * @param {string=} opt_message
  */
+assert.isNaN = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
 assert.isUndefined = function(value, opt_message) {};
 
 /**
