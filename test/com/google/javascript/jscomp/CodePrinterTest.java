@@ -3047,14 +3047,30 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
-  public void testMultiLineTemplateLiteral_preservesInteralNewlines() {
+  public void testMultiLineTemplateLiteral_preservesInteralNewAndBlankLines() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame(
         lines(
-            "var y=`hello", //
+            "var y=`hello", // Line break (0 blank lines).
             "world",
+            "", // Single blank line.
             "foo",
+            "", // Multiple blank lines.
+            "",
+            "",
             "bar`"));
+
+    assertPrettyPrintSame(
+        lines(
+            "var y = `hello", // Line break (0 blank lines).
+            "world",
+            "", // Single blank line.
+            "foo",
+            "", // Multiple blank lines.
+            "",
+            "",
+            "bar`;",
+            ""));
   }
 
   @Test

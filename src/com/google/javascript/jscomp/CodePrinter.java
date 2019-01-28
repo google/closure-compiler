@@ -359,11 +359,13 @@ public final class CodePrinter {
      */
     @Override
     void startNewLine() {
-      if (lineLength > 0) {
-        code.append('\n');
-        lineIndex++;
-        lineLength = 0;
+      if (lineLength <= 0 && !this.isInTemplateLiteral()) {
+        return;
       }
+
+      code.append('\n');
+      lineIndex++;
+      lineLength = 0;
     }
 
     @Override
@@ -588,7 +590,7 @@ public final class CodePrinter {
      */
     @Override
     void startNewLine() {
-      if (lineLength <= 0) {
+      if (lineLength <= 0 && !this.isInTemplateLiteral()) {
         return;
       }
 
