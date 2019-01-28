@@ -844,32 +844,7 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
-  public void testBothFormsOfRequire1() {
-    assertChanges(
-        LINE_JOINER.join(
-            "goog.module('example');",
-            "",
-            "const SoyRenderer = goog.require('foo.bar.SoyRenderer');",
-            "goog.require('foo.bar.SoyRenderer');",
-            "",
-            "function setUp() {",
-            "  const soyService = new foo.bar.SoyRenderer();",
-            "}",
-            ""),
-        LINE_JOINER.join(
-            "goog.module('example');",
-            "",
-            "const SoyRenderer = goog.require('foo.bar.SoyRenderer');",
-            "function setUp() {",
-            "  const soyService = new SoyRenderer();",
-            "}",
-            ""));
-  }
-
-  @Test
-  public void testBothFormsOfRequire2() {
-    // After this change, a second run will remove the duplicate require.
-    // See testBothFormsOfRequire1
+  public void testBothFormsOfRequire() {
     assertChanges(
         LINE_JOINER.join(
             "goog.module('example');",
@@ -1645,109 +1620,6 @@ public class ErrorToFixMapperTest {
             "",
             "alert(goog.string.parseInt('7'));",
             "alert(goog.dom.createElement('div'));"));
-  }
-
-  @Test
-  public void testDuplicateRequire() {
-    assertChanges(
-        LINE_JOINER.join(
-            "goog.require('goog.string');",
-            "goog.require('goog.string');",
-            "",
-            "alert(goog.string.parseInt('7'));"),
-        LINE_JOINER.join(
-            "goog.require('goog.string');",
-            "",
-            "alert(goog.string.parseInt('7'));"));
-  }
-
-  @Test
-  public void testDuplicateRequire_shorthand() {
-    // We could provide a fix here, eliminating the later require. But then we'd need to switch
-    // str to googString in the last line. Probably not worth it.
-    assertNoChanges(
-        LINE_JOINER.join(
-            "const googString = goog.require('goog.string');",
-            "const str = goog.require('goog.string');",
-            "",
-            "alert(googString.parseInt('7'));",
-            "alert(str.parseInt('8'));"));
-  }
-
-  @Test
-  public void testDuplicateRequire_destructuring1() {
-    assertChanges(
-        LINE_JOINER.join(
-            "const {bar} = goog.require('goog.string');",
-            "const {foo} = goog.require('goog.string');",
-            "",
-            "alert(bar('7'));",
-            "alert(foo('8'));"),
-        LINE_JOINER.join(
-            "const {bar, foo} = goog.require('goog.string');",
-            "",
-            "",
-            "alert(bar('7'));",
-            "alert(foo('8'));"));
-  }
-
-  @Test
-  public void testDuplicateRequire_destructuring2() {
-    assertChanges(
-        LINE_JOINER.join(
-            "const {bar} = goog.require('goog.string');",
-            "const {foo:x, qux:y} = goog.require('goog.string');",
-            "",
-            "alert(bar('7'));",
-            "alert(x(y));"),
-        LINE_JOINER.join(
-            "const {bar, foo:x, qux:y} = goog.require('goog.string');",
-            "",
-            "",
-            "alert(bar('7'));",
-            "alert(x(y));"));
-  }
-
-  @Test
-  public void testDuplicateRequire_destructuring3() {
-    assertChanges(
-        LINE_JOINER.join(
-            "const {bar} = goog.require('goog.util');",
-            "goog.require('goog.util');",
-            "",
-            "alert(bar('7'));"),
-        LINE_JOINER.join("const {bar} = goog.require('goog.util');", "alert(bar('7'));"));
-  }
-
-  // In this case, only the standalone require gets removed. Then a second run would merge
-  // the two remaining ones.
-  @Test
-  public void testDuplicateRequire_destructuring4() {
-    assertChanges(
-        LINE_JOINER.join(
-            "const {bar} = goog.require('goog.util');",
-            "const {foo} = goog.require('goog.util');",
-            "goog.require('goog.util');",
-            "",
-            "alert(bar('7'));",
-            "alert(foo('8'));"),
-        LINE_JOINER.join(
-            "const {bar} = goog.require('goog.util');",
-            "const {foo} = goog.require('goog.util');",
-            "alert(bar('7'));",
-            "alert(foo('8'));"));
-  }
-
-  @Test
-  public void testDuplicateRequire_destructuring5() {
-    // TODO(b/74166725): Here, we could remove the second require and add "const {bar} = util;".
-    assertNoChanges(
-        LINE_JOINER.join(
-            "const util = goog.require('goog.util');",
-            "const {bar} = goog.require('goog.util');",
-            "",
-            "alert(bar('7'));",
-            "alert(util.foo('8'));"));
   }
 
   private void assertChanges(String originalCode, String expectedCode) {

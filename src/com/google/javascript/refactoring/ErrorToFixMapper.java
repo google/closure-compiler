@@ -36,7 +36,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
 /**
  * Maps a {@code JSError} to a list of {@code SuggestedFix}es, if possible.
@@ -51,8 +50,6 @@ public final class ErrorToFixMapper {
       Pattern.compile("Variable referenced before declaration: (.*)");
   private static final Pattern MISSING_REQUIRE =
       Pattern.compile("missing require: '([^']+)'");
-  private static final Pattern DUPLICATE_REQUIRE =
-      Pattern.compile("'([^']+)' required more than once\\.");
   private static final Pattern FULLY_QUALIFIED_NAME =
       Pattern.compile("Reference to fully qualified import name '([^']+)'.*");
   private static final Pattern USE_SHORT_NAME =
@@ -104,8 +101,6 @@ public final class ErrorToFixMapper {
       case "JSC_MISSING_REQUIRE_WARNING":
       case "JSC_MISSING_REQUIRE_STRICT_WARNING":
         return getFixForMissingRequire(error, compiler);
-      case "JSC_DUPLICATE_REQUIRE":
-        return getFixForDuplicateRequire(error, compiler);
       case "JSC_EXTRA_REQUIRE_WARNING":
         return getFixForExtraRequire(error, compiler);
       case "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME":
@@ -338,39 +333,6 @@ public final class ErrorToFixMapper {
       }
     }
     return fix.build();
-  }
-
-  @Nullable
-  private static SuggestedFix getFixForDuplicateRequire(JSError error, AbstractCompiler compiler) {
-    Matcher regexMatcher = DUPLICATE_REQUIRE.matcher(error.description);
-    checkState(
-        regexMatcher.matches(), "Unexpected error description: %s", error.description);
-    String namespace = regexMatcher.group(1);
-    NodeMetadata metadata = new NodeMetadata(compiler);
-    Match match = new Match(error.node, metadata);
-    if (error.node.isExprResult()) {
-      return new SuggestedFix.Builder()
-          .attachMatchedNodeInfo(error.node, compiler)
-          .removeGoogRequire(match, namespace)
-          .build();
-    } else {
-      checkState(NodeUtil.isNameDeclaration(error.node), error.node);
-      if (error.node.getFirstChild().isName()) {
-        return null;
-      }
-
-      checkState(error.node.getFirstChild().isDestructuringLhs(), error.node);
-
-      SuggestedFix fix =
-          new SuggestedFix.Builder()
-              .attachMatchedNodeInfo(error.node, compiler)
-              .mergeGoogRequire(error.node, match.getMetadata(), namespace, compiler)
-              .build();
-      if (!fix.isNoOp()) {
-        return fix;
-      }
-      return null;
-    }
   }
 
   private static SuggestedFix getFixForExtraRequire(JSError error, AbstractCompiler compiler) {

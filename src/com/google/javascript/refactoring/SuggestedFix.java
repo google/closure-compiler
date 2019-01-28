@@ -812,35 +812,6 @@ public final class SuggestedFix {
     }
 
     /**
-     * Merge names from the lhs of |requireToMergeFrom|, which must be a destructuring require, if
-     * there is another destructuring require that its lhs can be merged into. If not, then no
-     * change is applied.
-     */
-    Builder mergeGoogRequire(
-        Node requireToMergeFrom, NodeMetadata m, String namespace, AbstractCompiler compiler) {
-      checkArgument(requireToMergeFrom.getFirstChild().isDestructuringLhs(), requireToMergeFrom);
-      checkArgument(requireToMergeFrom.getFirstFirstChild().isObjectPattern(), requireToMergeFrom);
-
-      Node googRequireNode = findGoogRequireNode(requireToMergeFrom, m, namespace);
-      if (googRequireNode == null) {
-        return this;
-      }
-      if (googRequireNode.isExprResult()) {
-        return this;
-      }
-      if (googRequireNode.getFirstChild().isDestructuringLhs()) {
-        Node objectPattern = googRequireNode.getFirstFirstChild();
-        Node newObjectPattern = objectPattern.cloneTree();
-        for (Node name : requireToMergeFrom.getFirstFirstChild().children()) {
-          newObjectPattern.addChildToBack(name.cloneTree());
-        }
-        this.replace(objectPattern, newObjectPattern, compiler);
-        this.deleteWithoutRemovingWhitespace(requireToMergeFrom);
-      }
-      return this;
-    }
-
-    /**
      * Removes a goog.require for the given namespace to the file if it
      * already exists.
      */
