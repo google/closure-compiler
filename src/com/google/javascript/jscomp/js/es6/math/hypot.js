@@ -24,34 +24,32 @@ $jscomp.polyfill('Math.hypot', function(orig) {
    *
    * <p>Polyfills the static function Math.hypot().
    *
-   * @param {number} x Any number, or value that can be coerced to a number.
-   * @param {number} y Any number, or value that can be coerced to a number.
-   * @param {...*} var_args More numbers.
+   * @param {...number} var_args Any number, or value that can be coerced to a
+   *     number.
    * @return {number} The square root of the sum of the squares.
    */
-  var polyfill = function(x, y, var_args) {
-    // Make the type checker happy.
-    x = Number(x);
-    y = Number(y);
-    var i, z, sum;
+  var polyfill = function(var_args) {
+    if (arguments.length < 2) {
+      return arguments.length ? Math.abs(arguments[0]) : 0;
+    }
+
+    var i, z, sum, max;
     // Note: we need to normalize the numbers in case of over/underflow.
-    var max = Math.max(Math.abs(x), Math.abs(y));
-    for (i = 2; i < arguments.length; i++) {
+    for (max = 0, i = 0; i < arguments.length; i++) {
       max = Math.max(max, Math.abs(arguments[i]));
     }
+    // TODO(sdh): Document where these constants come from.
     if (max > 1e100 || max < 1e-100) {
       if (!max) return max; // Handle 0 and NaN before trying to divide.
-      x = x / max;
-      y = y / max;
-      sum = x * x + y * y;
-      for (i = 2; i < arguments.length; i++) {
+      sum = 0;
+      for (i = 0; i < arguments.length; i++) {
         z = Number(arguments[i]) / max;
         sum += z * z;
       }
       return Math.sqrt(sum) * max;
     } else {
-      sum = x * x + y * y;
-      for (i = 2; i < arguments.length; i++) {
+      sum = 0;
+      for (i = 0; i < arguments.length; i++) {
         z = Number(arguments[i]);
         sum += z * z;
       }
