@@ -289,6 +289,18 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
     return stage;
   }
 
+  private static final String FILL_FILE_SUFFIX = "$fillFile";
+
+  /** Empty modules get an empty "fill" file, so that we can move code into an empty module. */
+  static String createFillFileName(String moduleName) {
+    return moduleName + FILL_FILE_SUFFIX;
+  }
+
+  /** Returns whether a file name was created by {@link createFillFileName}. */
+  public static boolean isFillFileName(String fileName) {
+    return fileName.endsWith(FILL_FILE_SUFFIX);
+  }
+
   /**
    * Generates unique ids.
    */

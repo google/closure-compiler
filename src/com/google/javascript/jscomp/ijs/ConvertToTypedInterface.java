@@ -116,6 +116,10 @@ public class ConvertToTypedInterface implements CompilerPass {
 
   private void processFile(Node scriptNode) {
     checkArgument(scriptNode.isScript());
+    if (AbstractCompiler.isFillFileName(scriptNode.getSourceFileName())) {
+      scriptNode.detach();
+      return;
+    }
     FileInfo currentFile = new FileInfo();
     NodeTraversal.traverse(compiler, scriptNode, new RemoveNonDeclarations());
     NodeTraversal.traverse(compiler, scriptNode, new PropagateConstJsdoc(currentFile));
