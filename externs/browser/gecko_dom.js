@@ -550,14 +550,14 @@ Document.prototype.queryCommandValue;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.write
- * @param {string} text
+ * @param {!TrustedHTML|string} text
  * @return {undefined}
  */
 Document.prototype.write = function(text) {};
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.writeln
- * @param {string} text
+ * @param {!TrustedHTML|string} text
  * @return {undefined}
  */
 Document.prototype.writeln = function(text) {};
@@ -577,7 +577,7 @@ Document.prototype.getBoxObjectFor = function(element) {};
 // http://lxr.mozilla.org/mozilla1.8/source/dom/public/idl/range/nsIDOMNSRange.idl
 
 /**
- * @param {string} tag
+ * @param {!TrustedHTML|string} tag
  * @return {DocumentFragment}
  */
 Range.prototype.createContextualFragment;

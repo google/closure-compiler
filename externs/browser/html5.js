@@ -1272,14 +1272,14 @@ Window.prototype.applicationCache;
 
 /**
  * @see https://developer.mozilla.org/En/DOM/Worker/Functions_available_to_workers
- * @param {...string} var_args
+ * @param {...!TrustedScriptURL|string} var_args
  * @return {undefined}
  */
 Window.prototype.importScripts = function(var_args) {};
 
 /**
  * @see https://developer.mozilla.org/En/DOM/Worker/Functions_available_to_workers
- * @param {...string} var_args
+ * @param {...!TrustedScriptURL|string} var_args
  * @return {undefined}
  */
 function importScripts(var_args) {}
@@ -1727,6 +1727,7 @@ HTMLAreaElement.prototype.ping;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/html-markup/iframe.html#iframe.attrs.srcdoc
  */
 HTMLIFrameElement.prototype.srcdoc;
@@ -1843,7 +1844,7 @@ HTMLMediaElement.HAVE_ENOUGH_DATA;  // = 4
 /** @type {MediaError} */
 HTMLMediaElement.prototype.error;
 
-/** @type {string} */
+/** @type {string} @implicitCast */
 HTMLMediaElement.prototype.src;
 
 /** @type {string} */
@@ -3458,6 +3459,7 @@ HTMLButtonElement.prototype.setCustomValidity = function(message) {};
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/html5/forms.html#attr-fs-formaction
  */
 HTMLButtonElement.prototype.formAction;
@@ -3488,6 +3490,7 @@ HTMLInputElement.prototype.formNoValidate;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/html5/forms.html#attr-fs-formaction
  */
 HTMLInputElement.prototype.formAction;
@@ -3639,6 +3642,7 @@ HTMLEmbedElement.prototype.height;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/html5/the-embed-element.html#dom-embed-src
  */
 HTMLEmbedElement.prototype.src;
@@ -4013,6 +4017,7 @@ ShadowRoot.prototype.olderShadowRoot;
 
 /**
  * @type {string}
+ * @implicitCast
  */
 ShadowRoot.prototype.innerHTML;
 
@@ -4134,7 +4139,7 @@ HTMLSourceElement.prototype.media;
 /** @type {string} */
 HTMLSourceElement.prototype.sizes;
 
-/** @type {string} */
+/** @type {string} @implicitCast */
 HTMLSourceElement.prototype.src;
 
 /** @type {string} */
@@ -4528,7 +4533,7 @@ function HTMLTrackElement() {}
 HTMLTrackElement.prototype.kind;
 
 
-/** @type {string} */
+/** @type {string} @implicitCast */
 HTMLTrackElement.prototype.src;
 
 

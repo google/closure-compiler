@@ -179,7 +179,7 @@ Node.prototype.document;
  * Inserts the given HTML text into the element at the location.
  * @param {string} sWhere Where to insert the HTML text, one of 'beforeBegin',
  *     'afterBegin', 'beforeEnd', 'afterEnd'.
- * @param {string} sText HTML text to insert.
+ * @param {!TrustedHTML|string} sText HTML text to insert.
  * @see http://msdn.microsoft.com/en-us/library/ms536452(VS.85).aspx
  * @return {undefined}
  */
@@ -1123,6 +1123,7 @@ Element.prototype.onselectstart;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://msdn.microsoft.com/en-us/library/aa752326(VS.85).aspx
  */
 Element.prototype.outerHTML;
@@ -1260,6 +1261,7 @@ Location.prototype.hostname;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms533867(VS.85).aspx
+ * @implicitCast
  * @type {string}
  */
 Location.prototype.href;
@@ -1296,7 +1298,7 @@ Location.prototype.search;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536342(VS.85).aspx
- * @param {string} url
+ * @param {!TrustedURL|string} url
  * @return {undefined}
  */
 Location.prototype.assign = function(url) {};
@@ -1310,7 +1312,7 @@ Location.prototype.assign = function(url) {};
 Location.prototype.reload = function(opt_forceReload) {};
 
 /**
- * @param {string} url
+ * @param {!TrustedURL|string} url
  * @see http://msdn.microsoft.com/en-us/library/ms536712(VS.85).aspx
  * @return {undefined}
  */

@@ -66,7 +66,7 @@ function DOMParser() {}
  *  var parser = new DOMParser();
  *  var doc = parser.parseFromString(aStr, "text/xml");
  *
- * @param {string} src The UTF16 string to be parsed.
+ * @param {!TrustedHTML|string} src The UTF16 string to be parsed.
  * @param {string} type The content type of the string.
  * @return {Document}
  */
