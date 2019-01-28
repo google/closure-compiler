@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_GENERATOR_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
@@ -40,6 +39,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Joiner;
+import com.google.javascript.jscomp.JsIterables.MaybeBoxedIterableOrAsyncIterable;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -317,34 +317,16 @@ class TypeValidator implements Serializable {
    */
   Optional<JSType> expectAutoboxesToIterableOrAsyncIterable(
       NodeTraversal t, Node n, JSType type, String msg) {
-    List<JSType> templatedTypes = new ArrayList<>();
+    MaybeBoxedIterableOrAsyncIterable maybeBoxed =
+        JsIterables.maybeBoxIterableOrAsyncIterable(type, typeRegistry);
 
-    // Note: we don't just use JSType.autobox() here because that removes null and undefined.
-    // We want to keep null and undefined around.
-    if (type.isUnionType()) {
-      for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
-        alt = alt.isBoxableScalar() ? alt.autoboxesTo() : alt;
-        boolean isIterable = alt.isSubtypeOf(getNativeType(ITERABLE_TYPE));
-        boolean isAsyncIterable = alt.isSubtypeOf(getNativeType(ASYNC_ITERABLE_TYPE));
-        if (!isIterable && !isAsyncIterable) {
-          mismatch(t, n, msg, type, iterableOrAsyncIterable);
-          return Optional.empty();
-        }
-        JSTypeNative iterableType = isAsyncIterable ? ASYNC_ITERABLE_TYPE : ITERABLE_TYPE;
-        templatedTypes.add(alt.getInstantiatedTypeArgument(getNativeType(iterableType)));
-      }
-    } else {
-      JSType autoboxedType = type.isBoxableScalar() ? type.autoboxesTo() : type;
-      boolean isIterable = autoboxedType.isSubtypeOf(getNativeType(ITERABLE_TYPE));
-      boolean isAsyncIterable = autoboxedType.isSubtypeOf(getNativeType(ASYNC_ITERABLE_TYPE));
-      if (!isIterable && !isAsyncIterable) {
-        mismatch(t, n, msg, type, iterableOrAsyncIterable);
-        return Optional.empty();
-      }
-      JSTypeNative iterableType = isAsyncIterable ? ASYNC_ITERABLE_TYPE : ITERABLE_TYPE;
-      templatedTypes.add(autoboxedType.getInstantiatedTypeArgument(getNativeType(iterableType)));
+    if (maybeBoxed.isMatch()) {
+      return Optional.of(maybeBoxed.getTemplatedType());
     }
-    return Optional.of(typeRegistry.createUnionType(templatedTypes));
+
+    mismatch(t, n, msg, type, iterableOrAsyncIterable);
+
+    return Optional.empty();
   }
 
   /** Expect the type to be a Generator or supertype of Generator. */
