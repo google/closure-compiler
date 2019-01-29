@@ -231,6 +231,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
     private boolean isNewControlBranch(Node n) {
       return n != null
           && (NodeUtil.isControlStructure(n)
+              || n.isDefaultValue()
               || n.isHook()
               || n.isAnd()
               || n.isOr()
