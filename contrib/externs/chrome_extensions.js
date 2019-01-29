@@ -10518,6 +10518,16 @@ chrome.bluetoothPrivate.TransportType = {
 
 
 /**
+ * Connects to the given device. This will only throw an error if the device
+ * address is invalid or the device is already connected. Otherwise this will
+ * succeed and invoke |callback| with ConnectResultType.
+ * @param {string} deviceAddress
+ * @param {function(!chrome.bluetoothPrivate.ConnectResultType):void=} callback
+ */
+chrome.bluetoothPrivate.connect = function(deviceAddress, callback) {};
+
+
+/**
  * @const
  * @see http://goo.gl/XmVdHm
  */
