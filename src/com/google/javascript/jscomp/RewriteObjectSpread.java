@@ -16,15 +16,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
-import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
 
 /**
  * Converts object spread to valid ES2017 code.
@@ -41,11 +36,11 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwa
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.OBJECT_LITERALS_WITH_SPREAD);
 
-  private final boolean addTypes;
+  private final AstFactory astFactory;
 
   public RewriteObjectSpread(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.addTypes = compiler.hasTypeCheckingRun();
+    this.astFactory = compiler.createAstFactory();
   }
 
   @Override
@@ -70,17 +65,17 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwa
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case OBJECTLIT:
-        visitObject(n);
+        visitObject(t, n);
         break;
       default:
         break;
     }
   }
 
-  private void visitObject(Node obj) {
+  private void visitObject(NodeTraversal t, Node obj) {
     for (Node child : obj.children()) {
       if (child.isSpread()) {
-        visitObjectWithSpread(obj);
+        visitObjectWithSpread(t, obj);
         return;
       }
     }
@@ -91,18 +86,14 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwa
    *
    * Object.assign({}, {first:b, c}, spread, {d:e, last});
    */
-  private void visitObjectWithSpread(Node obj) {
+  private void visitObjectWithSpread(NodeTraversal t, Node obj) {
     checkArgument(obj.isObjectLit());
-
-    JSType simpleObjectType =
-        createType(addTypes, compiler.getTypeRegistry(), JSTypeNative.EMPTY_OBJECT_LITERAL_TYPE);
-
-    JSType resultType = simpleObjectType;
-    Node result = withType(IR.call(NodeUtil.newQName(compiler, "Object.assign")), resultType);
 
     // Add an empty target object literal so changes made by Object.assign will not affect any other
     // variables.
-    result.addChildToBack(withType(IR.objectlit(), simpleObjectType));
+    Node result =
+        astFactory.createObjectDotAssignCall(
+            t.getScope(), obj.getJSType(), astFactory.createEmptyObjectLit());
 
     // An indicator whether the current last thing in the param list is an object literal to which
     // properties may be added.  Initialized to null since nothing should be added to the empty
@@ -120,7 +111,7 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwa
       } else {
         if (trailingObjectLiteral == null) {
           // Add a new object to which properties may be added.
-          trailingObjectLiteral = withType(IR.objectlit(), simpleObjectType);
+          trailingObjectLiteral = astFactory.createEmptyObjectLit();
           result.addChildToBack(trailingObjectLiteral);
         }
         // Add the property to the object literal.

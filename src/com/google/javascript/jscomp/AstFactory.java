@@ -564,6 +564,31 @@ final class AstFactory {
     return result;
   }
 
+  /**
+   * Creates a call to Object.assign that returns the specified type.
+   *
+   * <p>Object.assign returns !Object in the externs, which can lose type information if the actual
+   * type is known.
+   */
+  Node createObjectDotAssignCall(Scope scope, JSType returnType, Node... args) {
+    Node objAssign = createQName(scope, "Object.assign");
+    Node result = createCall(objAssign, args);
+
+    if (isAddingTypes()) {
+      // Make a unique function type that returns the exact type we've inferred it to be.
+      // Object.assign in the externs just returns !Object, which loses type information.
+      JSType objAssignType =
+          registry.createFunctionTypeWithVarArgs(
+              returnType,
+              registry.getNativeType(JSTypeNative.OBJECT_TYPE),
+              registry.createUnionType(JSTypeNative.OBJECT_TYPE, JSTypeNative.NULL_TYPE));
+      objAssign.setJSType(objAssignType);
+      result.setJSType(returnType);
+    }
+
+    return result;
+  }
+
   Node createNewNode(Node target, Node... args) {
     Node result = IR.newNode(target, args);
     if (isAddingTypes()) {
