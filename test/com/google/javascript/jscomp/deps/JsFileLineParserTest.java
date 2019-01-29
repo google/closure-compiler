@@ -159,7 +159,7 @@ public final class JsFileLineParserTest {
     }
 
     @Override
-    boolean parseBlockCommentLine(String line) {
+    boolean parseJsDocCommentLine(String line) {
       comments.append(line);
       return true;
     }

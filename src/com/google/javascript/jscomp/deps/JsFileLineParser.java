@@ -130,21 +130,27 @@ public abstract class JsFileLineParser {
     String line = null;
     lineNum = 0;
     boolean inMultilineComment = false;
+    boolean inJsDocComment = false;
 
     try {
       while (null != (line = lineBuffer.readLine())) {
         ++lineNum;
         try {
           String revisedLine = line;
-          String revisedBlockCommentLine = "";
+          String revisedJsDocCommentLine = "";
           if (inMultilineComment) {
             int endOfComment = revisedLine.indexOf("*/");
             if (endOfComment != -1) {
-              revisedBlockCommentLine = revisedLine.substring(0, endOfComment + 2);
+              if (inJsDocComment) {
+                revisedJsDocCommentLine = revisedLine.substring(0, endOfComment + 2);
+                inJsDocComment = false;
+              }
               revisedLine = revisedLine.substring(endOfComment + 2);
               inMultilineComment = false;
             } else {
-              revisedBlockCommentLine = line;
+              if (inJsDocComment) {
+                revisedJsDocCommentLine = line;
+              }
               revisedLine = "";
             }
           }
@@ -166,17 +172,25 @@ public abstract class JsFileLineParser {
                 if (isCommentQuoted(revisedLine, startOfMultilineComment, '"')) {
                   break;
                 }
+                if (startOfMultilineComment == revisedLine.indexOf("/**")) {
+                  inJsDocComment = true;
+                }
                 int endOfMultilineComment = revisedLine.indexOf("*/", startOfMultilineComment + 2);
                 if (endOfMultilineComment == -1) {
-                  revisedBlockCommentLine = revisedLine.substring(startOfMultilineComment);
+                  if (inJsDocComment) {
+                    revisedJsDocCommentLine = revisedLine.substring(startOfMultilineComment);
+                  }
                   revisedLine = revisedLine.substring(0, startOfMultilineComment);
                   inMultilineComment = true;
                   break;
                 } else {
-                  if (!parseBlockCommentLine(
-                          revisedLine.substring(startOfMultilineComment, endOfMultilineComment + 2))
-                      && shortcutMode) {
-                    break;
+                  if (inJsDocComment) {
+                    String jsDocComment =
+                        revisedLine.substring(startOfMultilineComment, endOfMultilineComment + 2);
+                    if (!parseJsDocCommentLine(jsDocComment) && shortcutMode) {
+                      break;
+                    }
+                    inJsDocComment = false;
                   }
                   revisedLine =
                       revisedLine.substring(0, startOfMultilineComment) +
@@ -188,8 +202,8 @@ public abstract class JsFileLineParser {
             }
           }
 
-          if (!revisedBlockCommentLine.isEmpty()) {
-            if (!parseBlockCommentLine(revisedBlockCommentLine) && shortcutMode) {
+          if (!revisedJsDocCommentLine.isEmpty()) {
+            if (!parseJsDocCommentLine(revisedJsDocCommentLine) && shortcutMode) {
               break;
             }
           }
@@ -252,7 +266,13 @@ public abstract class JsFileLineParser {
    */
   abstract boolean parseLine(String line) throws ParseException;
 
-  boolean parseBlockCommentLine(String line) {
+  /**
+   * Called for each JSDoc line of the file being parsed.
+   *
+   * @param line The JSDoc comment line to parse.
+   * @return true to keep going, false otherwise.
+   */
+  boolean parseJsDocCommentLine(String line) {
     return true;
   }
 

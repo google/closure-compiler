@@ -190,6 +190,16 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     return getDependencyInfo().getProvides();
   }
 
+  @Override
+  public boolean getHasExternsAnnotation() {
+    return getDependencyInfo().getHasExternsAnnotation();
+  }
+
+  @Override
+  public boolean getHasNoCompileAnnotation() {
+    return getDependencyInfo().getHasNoCompileAnnotation();
+  }
+
   /**
    * Gets a list of types provided, but does not attempt to
    * regenerate the dependency information. Typically this occurs
@@ -271,6 +281,8 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
               .setRequires(concat(dependencyInfo.getRequires(), extraRequires))
               .setTypeRequires(dependencyInfo.getTypeRequires())
               .setLoadFlags(dependencyInfo.getLoadFlags())
+              .setHasExternsAnnotation(dependencyInfo.getHasExternsAnnotation())
+              .setHasNoCompileAnnotation(dependencyInfo.getHasNoCompileAnnotation())
               .build();
       extraRequires.clear();
       extraProvides.clear();

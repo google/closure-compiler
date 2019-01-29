@@ -97,6 +97,16 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
   }
 
   @Override
+  public boolean getHasExternsAnnotation() {
+    return false;
+  }
+
+  @Override
+  public boolean getHasNoCompileAnnotation() {
+    return false;
+  }
+
+  @Override
   public ImmutableList<Require> getRequires() {
     ImmutableList.Builder<Require> builder = ImmutableList.builder();
     for (JSModule m : deps) {

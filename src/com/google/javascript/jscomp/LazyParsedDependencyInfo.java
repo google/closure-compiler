@@ -91,4 +91,14 @@ public class LazyParsedDependencyInfo extends DependencyInfo.Base {
   public ImmutableList<String> getProvides() {
     return delegate.getProvides();
   }
+
+  @Override
+  public boolean getHasExternsAnnotation() {
+    return delegate.getHasExternsAnnotation();
+  }
+
+  @Override
+  public boolean getHasNoCompileAnnotation() {
+    return delegate.getHasNoCompileAnnotation();
+  }
 }

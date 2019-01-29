@@ -145,6 +145,12 @@ public interface DependencyInfo extends Serializable {
   /** Whether the symbol is provided by a module */
   boolean isModule();
 
+  /** Whether the file '@externs' annotation. */
+  boolean getHasExternsAnnotation();
+
+  /** Whether the file has the '@nocompile' annotation. */
+  boolean getHasNoCompileAnnotation();
+
   /**
    * Abstract base implementation that defines derived accessors such
    * as {@link #isModule}.

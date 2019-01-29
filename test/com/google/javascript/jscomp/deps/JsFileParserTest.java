@@ -612,6 +612,89 @@ public final class JsFileParserTest {
   }
 
   @Test
+  public void testExternsAnnotation_basic_multiline() {
+    String contents = "/**\n" + " * @externs\n" + " */\n";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH).setHasExternsAnnotation(true).build();
+    DependencyInfo result =
+        parser.setIncludeGoogBase(true).parseFile(SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  @Test
+  public void testExternsAnnotation_basic_oneLine() {
+    String contents = "/** @externs */\n";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH).setHasExternsAnnotation(true).build();
+    DependencyInfo result =
+        parser.setIncludeGoogBase(true).parseFile(SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  @Test
+  public void testExternsAnnotation_blockComment() {
+    String contents = "/* @externs */\n";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH).setHasExternsAnnotation(false).build();
+    DependencyInfo result =
+        parser.setIncludeGoogBase(true).parseFile(SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  @Test
+  public void testExternsAnnotation_blockComment_multiline() {
+    String contents = "/*\n @externs */\n";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH).setHasExternsAnnotation(false).build();
+    DependencyInfo result =
+        parser.setIncludeGoogBase(true).parseFile(SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  @Test
+  public void testNoCompileAnnotation_basic_multiline() {
+    String contents = "/**\n" + " * @nocompile\n" + " */\n";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
+            .setHasNoCompileAnnotation(true)
+            .build();
+    DependencyInfo result =
+        parser.setIncludeGoogBase(true).parseFile(SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  @Test
+  public void testNoCompileAnnotation_basic_oneLine() {
+    String contents = "/** @nocompile */\n";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
+            .setHasNoCompileAnnotation(true)
+            .build();
+    DependencyInfo result =
+        parser.setIncludeGoogBase(true).parseFile(SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  @Test
+  public void testNoCompileAnnotation_blockComment() {
+    String contents = "/* @nocompile */\n";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
+            .setHasNoCompileAnnotation(false)
+            .build();
+    DependencyInfo result =
+        parser.setIncludeGoogBase(true).parseFile(SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  @Test
   public void testParseProvidesAndWrappedGoogModule() {
     String contents =
         ""

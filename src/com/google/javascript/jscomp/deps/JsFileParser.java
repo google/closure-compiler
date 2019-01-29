@@ -90,6 +90,12 @@ public final class JsFileParser extends JsFileLineParser {
   /** Line in comment indicating that the file is Closure's base.js. */
   private static final String PROVIDES_GOOG_COMMENT = "@provideGoog";
 
+  /** Line in comment indicating that the file is an extern. */
+  private static final String EXTERNS_COMMENT = "@externs";
+
+  /** Line in comment indicating that the file should not be touched by JSCompiler. */
+  private static final String NOCOMPILE_COMMENT = "@nocompile";
+
   /** The start of a bundled goog.module, i.e. one that is wrapped in a goog.loadModule call */
   private static final String BUNDLED_GOOG_MODULE_START = "goog.loadModule(function(";
 
@@ -104,6 +110,8 @@ public final class JsFileParser extends JsFileLineParser {
   private List<Require> requires;
   private List<String> typeRequires;
   private boolean fileHasProvidesOrRequires;
+  private boolean hasExternsAnnotation;
+  private boolean hasNoCompileAnnotation;
   private ModuleLoader loader = ModuleLoader.EMPTY;
   private ModuleLoader.ModulePath file;
 
@@ -211,6 +219,8 @@ public final class JsFileParser extends JsFileLineParser {
             .setRequires(requires)
             .setTypeRequires(typeRequires)
             .setLoadFlags(loadFlags)
+            .setHasExternsAnnotation(hasExternsAnnotation)
+            .setHasNoCompileAnnotation(hasNoCompileAnnotation)
             .build();
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("DepInfo: " + dependencyInfo);
@@ -245,9 +255,19 @@ public final class JsFileParser extends JsFileLineParser {
   }
 
   @Override
-  protected boolean parseBlockCommentLine(String line) {
+  protected boolean parseJsDocCommentLine(String line) {
+    // Since these checks are all mutually exclusive, bail out after we see the first one.
+    // @providesGoog should only ever be in one file (namely base.js),
+    // and @nocompile means the file is thrown out entirely,
+    // so it should never exist with @externs.
     if (includeGoogBase && line.contains(PROVIDES_GOOG_COMMENT)) {
       provides.add("goog");
+      return false;
+    } else if (line.contains(EXTERNS_COMMENT)) {
+      hasExternsAnnotation = true;
+      return false;
+    } else if (line.contains(NOCOMPILE_COMMENT)) {
+      hasNoCompileAnnotation = true;
       return false;
     }
     return true;
