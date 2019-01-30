@@ -3957,12 +3957,10 @@ public class PolymerPassTest extends CompilerTestCase {
             "XElement.prototype.name;",
             "/** @type {!Function} */",
             "XElement.prototype.thingToDo;",
-            "(/** @suppress {uselessCode} */ function() {",
-            "  XElement.prototype._computePets;",
-            "  XElement.prototype._computeName;",
-            "  XElement.prototype.user_;",
-            "  XElement.prototype.thingToDo;",
-            "})();"));
+            "JSCOMPILER_PRESERVE(XElement.prototype._computePets);",
+            "JSCOMPILER_PRESERVE(XElement.prototype._computeName);",
+            "JSCOMPILER_PRESERVE(XElement.prototype.user_);",
+            "JSCOMPILER_PRESERVE(XElement.prototype.thingToDo);"));
   }
 
   @Test
@@ -4031,11 +4029,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "XElement.prototype.name;",
             "/** @type {!Function} */",
             "XElement.prototype.thingToDo;",
-            "(/** @suppress {uselessCode} */ function() {",
-            "  XElement.prototype._computeName;",
-            "  XElement.prototype.user_;",
-            "  XElement.prototype.user_;",
-            "})();"));
+            "JSCOMPILER_PRESERVE(XElement.prototype._computeName);",
+            "JSCOMPILER_PRESERVE(XElement.prototype.user_);",
+            "JSCOMPILER_PRESERVE(XElement.prototype.user_);"));
   }
 
   @Test
@@ -4172,13 +4168,11 @@ public class PolymerPassTest extends CompilerTestCase {
             "XElement.prototype.name;",
             "/** @type {!Function} */",
             "XElement.prototype.thingToDo;",
-            "(/** @suppress {uselessCode} */ function() {",
-            "  XElement.prototype._userChanged;",
-            "  XElement.prototype.user_;",
-            "  XElement.prototype._userOrThingToDoChanged;",
-            "  XElement.prototype.user_;",
-            "  XElement.prototype.thingToDo;",
-            "})();"));
+            "JSCOMPILER_PRESERVE(XElement.prototype._userChanged);",
+            "JSCOMPILER_PRESERVE(XElement.prototype.user_);",
+            "JSCOMPILER_PRESERVE(XElement.prototype._userOrThingToDoChanged);",
+            "JSCOMPILER_PRESERVE(XElement.prototype.user_);",
+            "JSCOMPILER_PRESERVE(XElement.prototype.thingToDo);"));
   }
 
   @Override

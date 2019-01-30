@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -194,7 +193,7 @@ final class PolymerClassRewriter {
    *     call.
    */
   void rewritePolymerClassDeclaration(
-      Node clazz, final PolymerClassDefinition cls, boolean isInGlobalScope) {
+      Node clazz, NodeTraversal traversal, final PolymerClassDefinition cls) {
 
     if (cls.descriptor != null) {
       addTypesToFunctions(cls.descriptor, cls.target.getQualifiedName(), cls.defType);
@@ -271,29 +270,20 @@ final class PolymerClassRewriter {
       }
 
       if (propertySinks.size() > 0) {
-        // Add property sinks so that the compiler does not remove these properties as dead code.
-        // The compiler recognizes a normally side-effect free property get statement as
-        // potentially having side effects (Such as element.offsetWidth). It will warn about
-        // the statement but automatically add a sink to ensure the statement is not removed.
-        // We'll use this behavior, but suppress the warning.
-        //
-        // /** @suppress {uselessCode} */
-        // (function() {
-        //    element.prototype.propname;
-        // })()
-        Node sinkFunction = IR.function(IR.name(""), IR.paramList(), IR.block(propertySinks));
-        JSDocInfoBuilder sinkFunctionDoc = new JSDocInfoBuilder(false);
-        sinkFunctionDoc.recordSuppressions(ImmutableSet.of("uselessCode"));
-        sinkFunction.setJSDocInfo(sinkFunctionDoc.build());
+        if (traversal.getScope().getVar(CheckSideEffects.PROTECTOR_FN) == null) {
+          CheckSideEffects.addExtern(compiler);
+        }
 
-        sinkFunction = IR.call(sinkFunction);
-        // Mark the function as not having an explicit "this" set
-        sinkFunction.putBooleanProp(Node.FREE_CALL, true);
+        for (Node propertyRef : propertySinks) {
+          Node name = IR.name(CheckSideEffects.PROTECTOR_FN).srcref(propertyRef);
+          name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+          Node protectorCall = IR.call(name, propertyRef).srcref(propertyRef);
+          protectorCall.putBooleanProp(Node.FREE_CALL, true);
+          protectorCall = IR.exprResult(protectorCall).useSourceInfoFrom(propertyRef);
+          insertAfterReference.getParent().addChildAfter(protectorCall, insertAfterReference);
+          insertAfterReference = protectorCall;
+        }
 
-        insertAfterReference.getParent().addChildAfter(
-            IR.exprResult(sinkFunction)
-                .useSourceInfoIfMissingFromForTree(clazz), insertAfterReference);
-        compiler.reportChangeToChangeScope(sinkFunction.getFirstChild());
         compiler.reportChangeToEnclosingScope(insertAfterReference);
       }
 
@@ -848,7 +838,7 @@ final class PolymerClassRewriter {
     // Add reflect and property sinks for the method name which will be a property on the class
     String methodName = methodSignatureString.substring(0, openParenIndex).trim();
     propertySinkStatements.add(
-        IR.exprResult(IR.getprop(className.cloneTree(), "prototype", methodName))
+        IR.getprop(className.cloneTree(), "prototype", methodName)
             .useSourceInfoFromForTree(methodSignature));
 
     Node reflectedMethodName =
@@ -902,11 +892,9 @@ final class PolymerClassRewriter {
                 // The root of the parameter will be a property reference on the class
                 // Create both a property sink and a reflection call
                 propertySinkStatements.add(
-                    IR.exprResult(
-                        IR.getprop(
-                            className.cloneTree(),
-                            IR.string("prototype"),
-                            IR.string(paramParts[i]))));
+                    IR.getprop(
+                            className.cloneTree(), IR.string("prototype"), IR.string(paramParts[i]))
+                        .useSourceInfoFromForTree(methodSignature));
               }
               Node reflectedParamPart =
                   IR.call(

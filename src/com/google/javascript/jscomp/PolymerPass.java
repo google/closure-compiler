@@ -164,7 +164,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
               polymerVersion,
               polymerExportPolicy,
               this.propertyRenamingEnabled);
-      rewriter.rewritePolymerClassDeclaration(node, def, traversal.inGlobalScope());
+      rewriter.rewritePolymerClassDeclaration(node, traversal, def);
     }
   }
 
