@@ -576,10 +576,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Fill any empty modules with a place holder file. It makes any cross module motion easier. */
-  private static void fillEmptyModules(Iterable<JSModule> modules) {
+  private void fillEmptyModules(Iterable<JSModule> modules) {
     for (JSModule module : modules) {
       if (!module.getName().equals(JSModule.WEAK_MODULE_NAME) && module.getInputs().isEmpty()) {
-        module.add(SourceFile.fromCode(createFillFileName(module.getName()), ""));
+        CompilerInput input =
+            new CompilerInput(SourceFile.fromCode(createFillFileName(module.getName()), ""));
+        input.setCompiler(this);
+        module.add(input);
       }
     }
   }
