@@ -576,7 +576,7 @@ AudioBufferSourceNode.prototype.loopStart;
 /** @type {number} */
 AudioBufferSourceNode.prototype.loopEnd;
 
-/** @type {?function(!Event)} */
+/** @type {?function(!Event): void} */
 AudioBufferSourceNode.prototype.onended;
 
 /** @type {!AudioParam} */
