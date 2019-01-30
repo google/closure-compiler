@@ -38,6 +38,13 @@ function Symbol(opt_description) {}
 
 
 /**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/description
+ */
+Symbol.prototype.description;
+
+
+/**
  * @param {string} sym
  * @return {symbol|undefined}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/for
