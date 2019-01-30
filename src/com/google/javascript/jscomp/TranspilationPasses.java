@@ -81,10 +81,6 @@ public class TranspilationPasses {
         markUntranspilableFeaturesAsRemoved(
             options.getLanguageIn().toFeatureSet(), options.getOutputFeatureSet()));
 
-    if (options.needsTranspilationFrom(ES2018)) {
-      passes.add(rewriteAsyncIteration);
-    }
-
     if (options.needsTranspilationFrom(ES6) && doEs6ExternsCheck) {
       passes.add(es6ExternsCheck);
     }
@@ -102,6 +98,7 @@ public class TranspilationPasses {
   public static void addPostCheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
     if (options.needsTranspilationFrom(ES2018)) {
+      passes.add(rewriteAsyncIteration);
       passes.add(rewriteObjectSpread);
     }
 

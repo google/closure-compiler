@@ -76,8 +76,6 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPE_CHECK_SUPPORTED =
       // We are working to expand from ES8 to ES2018. We are currently missing:
-      // - ASYNC_GENERATORS
-      // - FOR_AWAIT_OF
       // - REGEXP_FLAG_S
       // - REGEXP_LOOKBEHIND
       // - REGEXP_NAMED_GROUPS
@@ -87,7 +85,10 @@ public final class FeatureSet implements Serializable {
           // that handles the destructuring transpilation done for ES6.
           Feature.OBJECT_PATTERN_REST,
           // rewriteObjectSpread is now after type checking.
-          Feature.OBJECT_LITERALS_WITH_SPREAD);
+          Feature.OBJECT_LITERALS_WITH_SPREAD,
+          // rewriteAsyncIteration handles both async generators and for-await-of.
+          Feature.ASYNC_GENERATORS,
+          Feature.FOR_AWAIT_OF);
 
   private enum LangVersion {
     ES3,
