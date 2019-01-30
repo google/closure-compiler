@@ -1590,8 +1590,7 @@ public abstract class CompilerTestCase {
 
         if (computeSideEffects && i == 0) {
           recentChange.reset();
-          PureFunctionIdentifier.Driver mark =
-              new PureFunctionIdentifier.Driver(compiler, null);
+          PureFunctionIdentifier.Driver mark = new PureFunctionIdentifier.Driver(compiler);
           mark.process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }

@@ -19,16 +19,13 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
-import com.google.common.io.Files;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.CodingConvention.Cache;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
@@ -43,8 +40,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -134,42 +129,6 @@ class PureFunctionIdentifier implements CompilerPass {
     propagateSideEffects();
 
     markPureFunctionCalls();
-  }
-
-  /**
-   * Compute debug report that includes:
-   *
-   * <ul>
-   *   <li>List of all pure functions.
-   *   <li>Reasons we think the remaining functions have side effects.
-   * </ul>
-   */
-  @VisibleForTesting
-  String getDebugReport() {
-    checkNotNull(externs);
-    checkNotNull(root);
-
-    StringBuilder sb = new StringBuilder();
-
-    for (Node call : allFunctionCalls) {
-      sb.append("  ");
-      Iterable<Node> expanded = unwrapCallableExpression(call.getFirstChild());
-      if (expanded != null) {
-        for (Node comp : expanded) {
-          String name = DefinitionsRemover.Definition.getSimplifiedName(comp);
-          sb.append(name).append("|");
-        }
-      } else {
-        sb.append("<cant expand>");
-      }
-
-      sb.append(" ")
-          .append(new Node.SideEffectFlags(call.getSideEffectFlags()))
-          .append(" from: ")
-          .append(call.getSourceFileName())
-          .append("\n");
-    }
-    return sb.toString();
   }
 
   /**
@@ -1021,11 +980,9 @@ class PureFunctionIdentifier implements CompilerPass {
    */
   static class Driver implements CompilerPass {
     private final AbstractCompiler compiler;
-    private final String reportPath;
 
-    Driver(AbstractCompiler compiler, String reportPath) {
+    Driver(AbstractCompiler compiler) {
       this.compiler = compiler;
-      this.reportPath = reportPath;
     }
 
     @Override
@@ -1036,15 +993,6 @@ class PureFunctionIdentifier implements CompilerPass {
       PureFunctionIdentifier pureFunctionIdentifier =
           new PureFunctionIdentifier(compiler, defFinder);
       pureFunctionIdentifier.process(externs, root);
-
-      if (reportPath != null) {
-        try {
-          Files.asCharSink(new File(reportPath), UTF_8)
-              .write(pureFunctionIdentifier.getDebugReport());
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      }
     }
   }
 }

@@ -232,9 +232,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
           new PureFunctionIdentifier(compiler, defFinder);
       pureFunctionIdentifier.process(externs, root);
 
-      // Ensure that debug report computation doesn't crash.
-      pureFunctionIdentifier.getDebugReport();
-
       NodeTraversal.traverse(compiler, externs, this);
       NodeTraversal.traverse(compiler, root, this);
     }

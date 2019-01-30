@@ -2478,23 +2478,19 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  /**
-   * Look for function calls that are pure, and annotate them
-   * that way.
-   */
+  /** Look for function calls that are pure, and annotate them that way. */
   private final PassFactory markPureFunctions =
       new PassFactory("markPureFunctions", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new PureFunctionIdentifier.Driver(
-          compiler, options.debugFunctionSideEffectsPath);
-    }
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new PureFunctionIdentifier.Driver(compiler);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
 
   /** Look for function calls that have no side effects, and annotate them that way. */
   private final PassFactory markNoSideEffectCalls =

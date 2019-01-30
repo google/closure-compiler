@@ -655,11 +655,6 @@ public class CompilerOptions implements Serializable {
   public boolean computeFunctionSideEffects;
 
   /**
-   * Where to save debug report for compute function side effects.
-   */
-  String debugFunctionSideEffectsPath;
-
-  /**
    * Rename private properties to disambiguate between unrelated fields based on
    * the coding convention.
    */
@@ -1354,7 +1349,6 @@ public class CompilerOptions implements Serializable {
     tracer = TracerMode.OFF;
     colorizeErrorOutput = false;
     errorFormat = ErrorFormat.SINGLELINE;
-    debugFunctionSideEffectsPath = null;
     externExports = false;
 
     // Debugging
@@ -2370,10 +2364,6 @@ public class CompilerOptions implements Serializable {
     this.computeFunctionSideEffects = computeFunctionSideEffects;
   }
 
-  public void setDebugFunctionSideEffectsPath(String debugFunctionSideEffectsPath) {
-    this.debugFunctionSideEffectsPath = debugFunctionSideEffectsPath;
-  }
-
   /**
    * @return Whether disambiguate private properties is enabled.
    */
@@ -2921,7 +2911,6 @@ public class CompilerOptions implements Serializable {
             .add("customPasses", customPasses)
             .add("dartPass", dartPass)
             .add("deadAssignmentElimination", deadAssignmentElimination)
-            .add("debugFunctionSideEffectsPath", debugFunctionSideEffectsPath)
             .add("declaredGlobalExternsOnWindow", declaredGlobalExternsOnWindow)
             .add("defineReplacements", getDefineReplacements())
             .add("dependencyOptions", getDependencyOptions())
