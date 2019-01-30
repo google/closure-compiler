@@ -3598,6 +3598,9 @@ HTMLTextAreaElement.prototype.autofocus;
 HTMLTextAreaElement.prototype.labels;
 
 /** @type {string} */
+HTMLTextAreaElement.prototype.placeholder;
+
+/** @type {string} */
 HTMLTextAreaElement.prototype.validationMessage;
 
 /**
