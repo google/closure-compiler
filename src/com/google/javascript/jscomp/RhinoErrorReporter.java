@@ -93,6 +93,9 @@ class RhinoErrorReporter {
   static final DiagnosticType LANGUAGE_FEATURE =
       DiagnosticType.error("JSC_LANGUAGE_FEATURE", "{0}.");
 
+  static final DiagnosticType UNSUPPORTED_LANGUAGE_FEATURE =
+      DiagnosticType.error("JSC_UNSUPPORTED_LANGUAGE_FEATURE", "{0}.");
+
   static final DiagnosticType ES6_TYPED =
       DiagnosticType.error(
           "JSC_ES6_TYPED",
@@ -128,28 +131,23 @@ class RhinoErrorReporter {
 
             // Duplicate parameter
             .put(replacePlaceHolders("Duplicate parameter name \"{0}\""), DUPLICATE_PARAM)
-
             .put(Pattern.compile("Unnecessary escape:.*"), UNNECESSARY_ESCAPE)
-
             .put(Pattern.compile("^invalid param name.*"), INVALID_PARAM)
 
             // Unknown @annotations.
             .put(
                 replacePlaceHolders(SimpleErrorReporter.getMessage0("msg.bad.jsdoc.tag")),
                 BAD_JSDOC_ANNOTATION)
-
             .put(
                 Pattern.compile(
                     "^Keywords and reserved words are not allowed as unquoted property.*"),
                 INVALID_ES3_PROP_NAME)
-
             .put(Pattern.compile("^Too many template parameters"), TOO_MANY_TEMPLATE_PARAMS)
 
             // Type annotation warnings.
             .put(
                 Pattern.compile(".*Type annotations should have curly braces.*"),
                 JSDOC_MISSING_BRACES_WARNING)
-
             .put(Pattern.compile("Missing type declaration\\."), JSDOC_MISSING_TYPE_WARNING)
 
             // Unresolved types that aren't forward declared.
@@ -163,17 +161,16 @@ class RhinoErrorReporter {
 
             // Old-style octal literals
             .put(Pattern.compile("^Octal .*literal.*"), INVALID_OCTAL_LITERAL)
-
             .put(Pattern.compile("^String continuations.*"), STRING_CONTINUATION)
-
             .put(
                 Pattern.compile("^This language feature is only supported for .*"),
                 LANGUAGE_FEATURE)
-
+            .put(
+                Pattern.compile(
+                    "^This language feature is not currently supported by the compiler: .*"),
+                UNSUPPORTED_LANGUAGE_FEATURE)
             .put(Pattern.compile("^type syntax is only supported in ES6 typed mode.*"), ES6_TYPED)
-
             .put(Pattern.compile("^Can only have JSDoc or inline type.*"), MISPLACED_TYPE_SYNTAX)
-
             .build();
   }
 

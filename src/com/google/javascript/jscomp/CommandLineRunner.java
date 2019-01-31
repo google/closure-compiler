@@ -1774,6 +1774,10 @@ public class CommandLineRunner extends
     if (!flags.languageIn.isEmpty()) {
       CompilerOptions.LanguageMode languageMode =
           CompilerOptions.LanguageMode.fromString(flags.languageIn);
+      if (languageMode == LanguageMode.UNSUPPORTED) {
+        throw new FlagUsageException(
+            "Cannot specify the unsupported set of features for language_in.");
+      }
       if (languageMode != null) {
         options.setLanguageIn(languageMode);
       } else {
@@ -1786,6 +1790,10 @@ public class CommandLineRunner extends
     } else {
       CompilerOptions.LanguageMode languageMode =
           CompilerOptions.LanguageMode.fromString(flags.languageOut);
+      if (languageMode == LanguageMode.UNSUPPORTED) {
+        throw new FlagUsageException(
+            "Cannot specify the unsupported set of features for language_out.");
+      }
       if (languageMode != null) {
         options.setLanguageOut(languageMode);
       } else {

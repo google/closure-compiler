@@ -2499,6 +2499,12 @@ public final class CommandLineRunnerTest {
                 + "\\\",\\n\\\"sources\\\":[],\\n\\\"names\\\":[]\\n}\\n\"}]");
   }
 
+  @Test
+  public void testOptionalCatchIsUnsupported() {
+    args.add("--language_in=ES_NEXT");
+    test("try { x(); } catch {}", RhinoErrorReporter.UNSUPPORTED_LANGUAGE_FEATURE);
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {

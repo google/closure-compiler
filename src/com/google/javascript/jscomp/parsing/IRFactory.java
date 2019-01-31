@@ -813,10 +813,16 @@ class IRFactory {
   }
 
   String languageFeatureWarningMessage(Feature feature) {
-    return "This language feature is only supported for "
-              + LanguageMode.minimumRequiredFor(feature)
-              + " mode or better: "
-              + feature;
+    LanguageMode forFeature = LanguageMode.minimumRequiredFor(feature);
+
+    if (forFeature == LanguageMode.UNSUPPORTED) {
+      return "This language feature is not currently supported by the compiler: " + feature;
+    } else {
+      return "This language feature is only supported for "
+          + LanguageMode.minimumRequiredFor(feature)
+          + " mode or better: "
+          + feature;
+    }
   }
 
   void maybeWarnForFeature(ParseTree node, Feature feature) {
@@ -2099,6 +2105,10 @@ class IRFactory {
     }
 
     Node processCatchClause(CatchTree clauseNode) {
+      if (clauseNode.exception.type == ParseTreeType.EMPTY_STATEMENT) {
+        maybeWarnForFeature(clauseNode, Feature.OPTIONAL_CATCH_BINDING);
+      }
+
       return newNode(Token.CATCH,
           transform(clauseNode.exception),
           transformBlock(clauseNode.catchBody));

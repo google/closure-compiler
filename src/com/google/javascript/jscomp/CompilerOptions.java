@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
@@ -1854,6 +1855,7 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguage(LanguageMode language) {
     checkState(language != LanguageMode.NO_TRANSPILE);
+    checkState(language != LanguageMode.UNSUPPORTED);
     this.setLanguageIn(language);
     this.setLanguageOut(language);
   }
@@ -1864,7 +1866,19 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguageIn(LanguageMode languageIn) {
     checkState(languageIn != LanguageMode.NO_TRANSPILE);
+    checkState(languageIn != LanguageMode.UNSUPPORTED);
     this.languageIn = languageIn == LanguageMode.STABLE ? LanguageMode.STABLE_IN : languageIn;
+  }
+
+  /**
+   * Sets the ECMAScript version to the unsupported features that can be parsed but are not
+   * understood by the rest of the compiler.
+   *
+   * <p>Should not be used outside tests!
+   */
+  @VisibleForTesting()
+  public void setLanguageInToUnsupported() {
+    this.languageIn = LanguageMode.UNSUPPORTED;
   }
 
   public LanguageMode getLanguageIn() {
@@ -1880,6 +1894,7 @@ public class CompilerOptions implements Serializable {
    * #setOutputFeatureSet.
    */
   public void setLanguageOut(LanguageMode languageOut) {
+    checkState(languageOut != LanguageMode.UNSUPPORTED);
     if (languageOut == LanguageMode.NO_TRANSPILE) {
       languageOutIsDefaultStrict = Optional.absent();
       outputFeatureSet = Optional.absent();
@@ -3112,10 +3127,14 @@ public class CompilerOptions implements Serializable {
     /** Use stable features. */
     STABLE,
 
+    /** For languageOut only. The same language mode as the input. */
+    NO_TRANSPILE,
+
     /**
-     * For languageOut only. The same language mode as the input.
+     * For testing only. Features that can be parsed but cannot be understood by the rest of the
+     * compiler yet.
      */
-    NO_TRANSPILE;
+    UNSUPPORTED;
 
     public static final LanguageMode STABLE_IN = ECMASCRIPT_2017;
     public static final LanguageMode STABLE_OUT = ECMASCRIPT5;
@@ -3168,6 +3187,8 @@ public class CompilerOptions implements Serializable {
         case ECMASCRIPT_NEXT:
         case NO_TRANSPILE:
           return FeatureSet.ES_NEXT;
+        case UNSUPPORTED:
+          return FeatureSet.ES_UNSUPPORTED;
         case ECMASCRIPT6_TYPED:
           return FeatureSet.TYPESCRIPT;
         case STABLE:

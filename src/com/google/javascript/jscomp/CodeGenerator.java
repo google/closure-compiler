@@ -184,9 +184,14 @@ public class CodeGenerator {
         cc.maybeInsertSpace();
         add("catch");
         cc.maybeInsertSpace();
-        add("(");
-        add(first);
-        add(")");
+
+        if (!first.isEmpty()) {
+          // optional catch binding
+          add("(");
+          add(first);
+          add(")");
+        }
+
         add(last);
         break;
 

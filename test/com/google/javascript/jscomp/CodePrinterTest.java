@@ -39,6 +39,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   @Test
+  public void testOptionalCatchBlock() {
+    useUnsupportedFeatures = true;
+    assertPrintSame("try{}catch{}");
+    assertPrintSame("try{}catch{}finally{}");
+  }
+
+  @Test
   public void testExponentiationOperator() {
     languageMode = LanguageMode.ECMASCRIPT_2016;
     assertPrintSame("x**y");

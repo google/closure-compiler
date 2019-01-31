@@ -30,6 +30,7 @@ public abstract class CodePrinterTestBase {
   protected boolean allowWarnings = false;
   protected boolean trustedStrings = true;
   protected boolean preserveTypeAnnotations = false;
+  protected boolean useUnsupportedFeatures = false;
   protected LanguageMode languageMode = LanguageMode.ECMASCRIPT5;
   protected Compiler lastCompiler = null;
 
@@ -39,6 +40,7 @@ public abstract class CodePrinterTestBase {
     preserveTypeAnnotations = false;
     trustedStrings = true;
     lastCompiler = null;
+    useUnsupportedFeatures = false;
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
   }
 
@@ -52,8 +54,11 @@ public abstract class CodePrinterTestBase {
     CompilerOptions options = new CompilerOptions();
     options.setTrustedStrings(trustedStrings);
     options.preserveTypeAnnotations = preserveTypeAnnotations;
-    // Allow getters and setters.
-    options.setLanguageIn(languageMode);
+    if (useUnsupportedFeatures) {
+      options.setLanguageInToUnsupported();
+    } else {
+      options.setLanguageIn(languageMode);
+    }
 
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("externs", CompilerTestCase.MINIMAL_EXTERNS)),

@@ -95,6 +95,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testOptionalCatchBinding() {
+    mode = LanguageMode.UNSUPPORTED;
+
+    expectFeatures(Feature.OPTIONAL_CATCH_BINDING);
+
+    parse("try {} catch {}");
+    parse("try {} catch {} finally {}");
+  }
+
+  @Test
   public void testExponentOperator() {
     mode = LanguageMode.ECMASCRIPT7;
     strictMode = STRICT;

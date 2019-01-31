@@ -177,6 +177,9 @@ public final class ParserRunner {
       case ES_NEXT:
         parserConfigLanguageMode = Mode.ES_NEXT;
         break;
+      case UNSUPPORTED:
+        parserConfigLanguageMode = Mode.UNSUPPORTED;
+        break;
     }
     return new com.google.javascript.jscomp.parsing.parser.Parser.Config(
         checkNotNull(parserConfigLanguageMode), isStrictMode);

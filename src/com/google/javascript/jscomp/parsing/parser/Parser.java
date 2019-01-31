@@ -227,6 +227,7 @@ public class Parser {
       ES6_OR_ES7,
       ES8_OR_GREATER,
       ES_NEXT,
+      UNSUPPORTED,
       TYPESCRIPT,
     }
 
@@ -248,7 +249,7 @@ public class Parser {
     public Config(Mode mode, boolean isStrictMode) {
       parseTypeSyntax = mode == Mode.TYPESCRIPT;
       atLeast6 = !(mode == Mode.ES3 || mode == Mode.ES5);
-      atLeast8 = mode == Mode.ES8_OR_GREATER || mode == Mode.ES_NEXT;
+      atLeast8 = mode == Mode.ES8_OR_GREATER || mode == Mode.ES_NEXT || mode == Mode.UNSUPPORTED;
       this.isStrictMode = isStrictMode;
 
       // Generally, we allow everything that is valid in any mode
@@ -2230,14 +2231,21 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     CatchTree catchBlock;
     eat(TokenType.CATCH);
-    eat(TokenType.OPEN_PAREN);
-    ParseTree exception;
-    if (peekPatternStart()) {
-      exception = parsePattern(PatternKind.INITIALIZER);
+
+    ParseTree exception = new EmptyStatementTree(getTreeLocation(getTreeStartLocation()));
+
+    if (peekToken().type == TokenType.OPEN_PAREN) {
+      eat(TokenType.OPEN_PAREN);
+      if (peekPatternStart()) {
+        exception = parsePattern(PatternKind.INITIALIZER);
+      } else {
+        exception = parseIdentifierExpression();
+      }
+      eat(TokenType.CLOSE_PAREN);
     } else {
-      exception = parseIdentifierExpression();
+      recordFeatureUsed(Feature.OPTIONAL_CATCH_BINDING);
     }
-    eat(TokenType.CLOSE_PAREN);
+
     BlockTree catchBody = parseBlock();
     catchBlock = new CatchTree(getTreeLocation(start), exception, catchBody);
     return catchBlock;
