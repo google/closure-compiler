@@ -50,6 +50,7 @@ final class PolymerClassRewriter {
   @VisibleForTesting static final String POLYMER_ELEMENT_PROP_CONFIG = "PolymerElementProperties";
 
   private final Node polymerElementExterns;
+  boolean propertySinkExternInjected = false;
 
   PolymerClassRewriter(
       AbstractCompiler compiler,
@@ -270,8 +271,10 @@ final class PolymerClassRewriter {
       }
 
       if (propertySinks.size() > 0) {
-        if (traversal.getScope().getVar(CheckSideEffects.PROTECTOR_FN) == null) {
+        if (!propertySinkExternInjected
+            && traversal.getScope().getVar(CheckSideEffects.PROTECTOR_FN) == null) {
           CheckSideEffects.addExtern(compiler);
+          propertySinkExternInjected = true;
         }
 
         for (Node propertyRef : propertySinks) {

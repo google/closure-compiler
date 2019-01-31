@@ -59,6 +59,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   private ImmutableList<Node> polymerElementProps;
   private GlobalNamespace globalNames;
   private boolean warnedPolymer1ExternsMissing = false;
+  private boolean propertySinkExternInjected = false;
 
   PolymerPass(
       AbstractCompiler compiler,
@@ -164,7 +165,9 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
               polymerVersion,
               polymerExportPolicy,
               this.propertyRenamingEnabled);
+      rewriter.propertySinkExternInjected = propertySinkExternInjected;
       rewriter.rewritePolymerClassDeclaration(node, traversal, def);
+      propertySinkExternInjected = rewriter.propertySinkExternInjected;
     }
   }
 
