@@ -18,11 +18,11 @@ package com.google.javascript.jscomp.modules;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimaps;
+import com.google.common.collect.ListMultimap;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.Es6ToEs3Util;
@@ -136,7 +136,7 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
    */
   private static final class FindMutableExports extends AbstractPostOrderCallback {
     final List<Export> exports;
-    final ImmutableListMultimap<String, Export> exportsByLocalName;
+    final ListMultimap<String, Export> exportsByLocalName;
 
     FindMutableExports(List<Export> exports) {
       // There may be multiple exports with the same local name because you can export a local
@@ -145,7 +145,10 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
       // let x;
       // export {x as y, x as z};
       this.exports = exports;
-      exportsByLocalName = Multimaps.index(exports, Export::localName);
+      exportsByLocalName = ArrayListMultimap.create();
+      for (Export e : exports) {
+        exportsByLocalName.put(e.localName(), e);
+      }
     }
 
     @Override
@@ -159,7 +162,7 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
         return;
       }
 
-      ImmutableList<Export> exports = exportsByLocalName.get(n.getString());
+      List<Export> exports = exportsByLocalName.get(n.getString());
       if (exports.isEmpty()) {
         return;
       }
@@ -172,9 +175,12 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
         return;
       }
 
-      for (Export e : exports) {
+      for (Export e : new ArrayList<>(exports)) {
         int i = this.exports.indexOf(e);
-        this.exports.set(i, e.mutatedCopy());
+        Export mutated = e.mutatedCopy();
+        this.exports.set(i, mutated);
+        exportsByLocalName.remove(e.localName(), e);
+        exportsByLocalName.put(e.localName(), mutated);
       }
     }
   }
