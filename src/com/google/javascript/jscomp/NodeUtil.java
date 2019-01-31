@@ -5697,10 +5697,21 @@ public final class NodeUtil {
   }
 
   private static boolean isEs6Constructor(Node fnNode) {
-    return fnNode.isFunction()
-        && fnNode.getGrandparent() != null
-        && fnNode.getGrandparent().isClassMembers()
-        && fnNode.getParent().matchesQualifiedName("constructor");
+    if (!fnNode.isFunction()) {
+      return false;
+    }
+    Node memberFunctionDef = fnNode.getParent();
+    if (memberFunctionDef == null || !memberFunctionDef.isMemberFunctionDef()) {
+      return false; // not a member function
+    }
+    if (memberFunctionDef.isStaticMember()) {
+      return false; // it is possible to have a static method named "constructor"
+    }
+    Node classMembers = memberFunctionDef.getParent();
+    if (classMembers == null || !classMembers.isClassMembers()) {
+      return false; // method definition in an object literal
+    }
+    return memberFunctionDef.matchesQualifiedName("constructor");
   }
 
   static boolean isGetterOrSetter(Node propNode) {

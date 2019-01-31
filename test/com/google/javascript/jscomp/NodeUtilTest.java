@@ -3582,6 +3582,11 @@ public final class NodeUtilTest {
                 getFunctionNode("var x = {}; /** @constructor */ x.Foo = function() {}")))
         .isTrue();
     assertThat(NodeUtil.isConstructor(getFunctionNode("class Foo { constructor() {} }"))).isTrue();
+    assertThat(NodeUtil.isConstructor(getFunctionNode("class Foo { static constructor() {} }")))
+        .isFalse();
+    assertThat(NodeUtil.isConstructor(getFunctionNode("class Foo { get constructor() {} }")))
+        .isFalse();
+    assertThat(NodeUtil.isConstructor(getFunctionNode("let Foo = { constructor() {} }"))).isFalse();
 
     assertThat(NodeUtil.isConstructor(getFunctionNode("function Foo() {}"))).isFalse();
     assertThat(NodeUtil.isConstructor(getFunctionNode("var Foo = function() {}"))).isFalse();
