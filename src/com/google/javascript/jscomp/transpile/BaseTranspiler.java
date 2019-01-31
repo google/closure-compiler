@@ -190,6 +190,10 @@ public final class BaseTranspiler implements Transpiler {
       options.setModuleResolutionMode(moduleResolution);
       options.setModuleRoots(moduleRoots);
       options.setBrowserResolverPrefixReplacements(prefixReplacements);
+
+      // Transpiler often used in isolation, so references to other files will never exist.
+      options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
+
       // Don't escape module paths when bundling in the event paths are URLs.
       options.setPathEscaper(PathEscaper.CANONICALIZE_ONLY);
 
