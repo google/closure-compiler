@@ -1636,8 +1636,14 @@ class TypeInference
   }
 
   /**
-   * For functions with function parameters, type inference will set the type of a function literal
-   * argument from the function parameter type.
+   * Performs a limited back-inference on function arguments based on the expected parameter types.
+   *
+   * <p>Currently this only does back-inference in two cases: it infers the type of function literal
+   * arguments and adds inferred properties to inferred object-typed arguments.
+   *
+   * <p>For example: if someone calls `Promise<string>.prototype.then` with `(result) => ...` then
+   * we infer that the type of the arrow function is `function(string): ?`, and inside the arrow
+   * function body we know that `result` is a string.
    */
   private void updateTypeOfArguments(Node n, FunctionType fnType) {
     checkState(NodeUtil.isInvocation(n), n);
@@ -1690,16 +1696,23 @@ class TypeInference
           && iArgumentType.isFunctionType()) {
         FunctionType argFnType = iArgumentType.toMaybeFunctionType();
         JSDocInfo argJsdoc = iArgument.getJSDocInfo();
-        boolean declared = argJsdoc != null && argJsdoc.containsDeclaration();
+        // Treat the parameter & return types of the function as 'declared' if the function has
+        // JSDoc with type annotations, or a parameter has inline JSDoc.
+        // Note that this does not distinguish between cases where all parameters have JSDoc vs
+        // only one parameter has JSDoc.
+        boolean declared =
+            (argJsdoc != null && argJsdoc.containsDeclaration())
+                || NodeUtil.functionHasInlineJsdocs(iArgument);
         iArgument.setJSType(matchFunction(restrictedParameter, argFnType, declared));
       }
     }
   }
 
   /**
-   * Take the current function type, and try to match the expected function
-   * type. This is a form of backwards-inference, like record-type constraint
-   * matching.
+   * Take the current function type, and try to match the expected function type. This is a form of
+   * backwards-inference, like record-type constraint matching.
+   *
+   * @param declared Whether the given function type is user-provided as opposed to inferred
    */
   private FunctionType matchFunction(
       FunctionType expectedType, FunctionType currentType, boolean declared) {

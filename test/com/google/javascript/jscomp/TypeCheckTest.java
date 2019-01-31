@@ -7715,13 +7715,50 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testInferredParam9() {
-    // TODO(b/77731069) This should warn "parameter 1 of f does not match formal parameter"
+  public void testFunctionLiteralParamWithInlineJSDocNotInferred() {
+    testTypes(
+        lines(
+            "/** @param {function(string)} x */",
+            "function f(x) {}",
+            "f(function(/** number */ x) {});"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : function(number): undefined",
+            "required: function(string): ?"));
+  }
+
+  @Test
+  public void testFunctionLiteralParamWithInlineJSDocNotInferredWithTwoParams() {
+    testTypes(
+        lines(
+            "/** @param {function(string, number)} x */",
+            "function f(x) {}",
+            "f((/** string */ str, num) => {",
+            // TODO(b/123583824): this should be a type mismatch warning.
+            //    found   : number
+            //    expected: string
+            //  but the JSDoc on `str` blocks inference of `num`.
+            "  const /** string */ newStr = num;",
+            "});"));
+  }
+
+  @Test
+  public void testJSDocOnNoParensArrowFnParameterIsIgnored() {
+    // This case is to document a potential bit of confusion: what happens when writing
+    // inline-like JSDoc on a 'naked' arrow function parameter (no parentheses)
+    // The actual behavior is that the JSDoc does nothing: this is equivalent to writing
+    //   /** number */ function(x) { ...
     testTypes(
         lines(
             "/** @param {function(string)} callback */",
             "function foo(callback) {}",
-            "foo(function(/** number */ x) {});"));
+            // The `/** number */` JSDoc is attached to the entire arrow  function, not the
+            // parameter `x`
+            "foo(/** number */ x =>  { var /** number */ y = x; });"),
+        lines(
+            "initializing variable",
+            "found   : string", // type of "x" is inferred to be string
+            "required: number"));
   }
 
   @Test
