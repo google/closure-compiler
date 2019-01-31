@@ -72,6 +72,13 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   }
 
   @Override
+  public CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
+    return options;
+  }
+
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
@@ -1037,7 +1044,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     testSame("export class C {};");
     testSame("class Bar {} export {Bar}");
 
-    testSame("import { square, diag } from 'lib';");
-    testSame("import * as lib from 'lib';");
+    testSame("import { square, diag } from '/lib';");
+    testSame("import * as lib from '/lib';");
   }
 }

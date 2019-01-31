@@ -42,6 +42,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     return super.getOptions(options);
   }
 
@@ -111,9 +112,9 @@ public final class ExtraRequireTest extends CompilerTestCase {
   public void testNoWarning_esImport_objlitShorthand() {
     testSame(
         lines(
-            "import 'example.module';", //
+            "import '/example.module';", //
             "",
-            "import X from 'example.X';",
+            "import X from '/example.X';",
             "alert({X});"));
   }
 
@@ -175,51 +176,41 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   @Test
   public void testPassModule() {
-    testSame(
-        lines(
-            "import {Foo} from 'bar';",
-            "new Foo();"));
+    testSame(lines("import {Foo} from '/bar';", "new Foo();"));
+
+    testSame(lines("import Bar from '/bar';", "new Bar();"));
+
+    testSame(lines("import {CoolFeature as Foo} from '/bar';", "new Foo();"));
 
     testSame(
         lines(
-            "import Bar from 'bar';",
-            "new Bar();"));
-
-    testSame(
-        lines(
-            "import {CoolFeature as Foo} from 'bar';",
-            "new Foo();"));
-
-    testSame(
-        lines(
-            "import Bar, {CoolFeature as Foo, OtherThing as Baz} from 'bar';",
+            "import Bar, {CoolFeature as Foo, OtherThing as Baz} from '/bar';",
             "new Foo(); new Bar(); new Baz();"));
   }
 
   @Test
   public void testFailModule() {
+    testError("import {Foo} from '/bar';", EXTRA_REQUIRE_WARNING);
+
+    testError("import {Foo as Foo} from '/bar';", EXTRA_REQUIRE_WARNING);
+
+    testError("import {Foo as Bar} from '/bar';", EXTRA_REQUIRE_WARNING);
+
     testError(
-        "import {Foo} from 'bar';",
+        lines("import {Foo} from '/bar';", "goog.require('example.ExtraRequire');", "new Foo;"),
         EXTRA_REQUIRE_WARNING);
 
     testError(
-        "import {Foo as Foo} from 'bar';",
+        lines("import {Foo} from '/bar';", "goog.require('example.ExtraRequire');", "new Foo;"),
         EXTRA_REQUIRE_WARNING);
 
     testError(
-        "import {Foo as Bar} from 'bar';",
+        lines("import {Foo} from '/bar';", "goog.require('example.ExtraRequire');", "new Foo;"),
         EXTRA_REQUIRE_WARNING);
 
     testError(
         lines(
-            "import {Foo} from 'bar';",
-            "goog.require('example.ExtraRequire');",
-            "new Foo;"),
-            EXTRA_REQUIRE_WARNING);
-
-    testError(
-        lines(
-            "import {Foo} from 'bar';", //
+            "import {Foo} from '/bar';", //
             "goog.requireType('example.ExtraRequire');",
             "new Foo;"),
         EXTRA_REQUIRE_WARNING);
@@ -497,20 +488,9 @@ public final class ExtraRequireTest extends CompilerTestCase {
   public void testES6ModuleWithDestructuringRequire() {
     testError(
         lines(
-            "import 'example';",
+            "import '/example';",
             "",
-            "import {assert, fail} from 'goog.asserts';",
-            "",
-            "export default function() {",
-            "  assert(true);",
-            "};"),
-        EXTRA_REQUIRE_WARNING);
-
-    testError(
-        lines(
-            "import 'example';",
-            "",
-            "import {assert as assert, fail as fail} from 'goog.asserts';",
+            "import {assert, fail} from '/goog.asserts';",
             "",
             "export default function() {",
             "  assert(true);",
@@ -519,9 +499,20 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
     testError(
         lines(
-            "import 'example';",
+            "import '/example';",
             "",
-            "import {assert as a, fail as f} from 'goog.asserts';",
+            "import {assert as assert, fail as fail} from '/goog.asserts';",
+            "",
+            "export default function() {",
+            "  assert(true);",
+            "};"),
+        EXTRA_REQUIRE_WARNING);
+
+    testError(
+        lines(
+            "import '/example';",
+            "",
+            "import {assert as a, fail as f} from '/goog.asserts';",
             "",
             "export default function() {",
             "  a(true);",

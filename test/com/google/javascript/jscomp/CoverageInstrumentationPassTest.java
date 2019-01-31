@@ -31,6 +31,7 @@ public final class CoverageInstrumentationPassTest {
     options.setInstrumentForCoverageOnly(coverageOnly);
     options.setLanguageIn(inMode);
     options.setLanguageOut(outMode);
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     return options;
   }
 

@@ -49,6 +49,7 @@ public final class MissingRequireTest extends CompilerTestCase {
 
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.WARNING);
     return super.getOptions(options);
   }
@@ -248,7 +249,7 @@ public final class MissingRequireTest extends CompilerTestCase {
   public void testWarnES6Module_noRewriting() {
     testMissingRequireStrict(
         lines(
-            "import 'example';",
+            "import '/example';",
             "",
             "/**",
             " * @param {Array<string>} ids",
@@ -382,9 +383,9 @@ public final class MissingRequireTest extends CompilerTestCase {
   public void testPassES6Module_noRewriting() {
     testSame(
         lines(
-            "import 'example';",
+            "import '/example';",
             "",
-            "import dom from 'goog.dom';",
+            "import dom from '/goog.dom';",
             "",
             "/**",
             " * @param {Array<string>} ids",
@@ -1306,10 +1307,7 @@ public final class MissingRequireTest extends CompilerTestCase {
 
   @Test
   public void testPassModule() {
-    testSame(
-        lines(
-            "import {Foo} from 'bar';",
-            "new Foo();"));
+    testSame(lines("import {Foo} from '/bar';", "new Foo();"));
   }
 
   // Check to make sure that we still get warnings when processing a non-module after processing
@@ -1318,7 +1316,7 @@ public final class MissingRequireTest extends CompilerTestCase {
   public void testFailAfterModule() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
 
-    String module = "import {Foo} from 'bar';";
+    String module = "import {Foo} from '/bar';";
     String script = "var x = new example.X()";
     String[] js = new String[] {module, script};
     String warning = "missing require: 'example.X'";

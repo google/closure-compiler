@@ -73,6 +73,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     options.setPreserveClosurePrimitives(this.preserveClosurePrimitives);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     return options;
   }
 
@@ -2655,6 +2656,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   @Test
   public void testEs6Module() {
     testSame("export var x;");
-    testSame("import {x} from 'y';");
+    testSame("import {x} from '/y';");
   }
 }

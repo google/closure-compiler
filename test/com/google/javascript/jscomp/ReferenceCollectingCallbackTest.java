@@ -67,6 +67,13 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         scopeCreator);
   }
 
+  @Override
+  public CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
+    return options;
+  }
+
   private void testBehavior(String js, Behavior behavior) {
     this.behavior = behavior;
     testSame(js);
@@ -93,7 +100,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   public void testImport1() {
     es6ScopeCreator = true;
     testBehavior(
-        "import x from 'm';",
+        "import x from '/m';",
         (NodeTraversal t, ReferenceMap rm) -> {
           if (t.getScope().isModuleScope()) {
             ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
@@ -109,7 +116,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   public void testImport2() {
     es6ScopeCreator = true;
     testBehavior(
-        "import {x} from 'm';",
+        "import {x} from '/m';",
         (NodeTraversal t, ReferenceMap rm) -> {
           if (t.getScope().isModuleScope()) {
             ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
@@ -125,7 +132,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   public void testImport2_alternate() {
     es6ScopeCreator = true;
     testBehavior(
-        "import {x as x} from 'm';",
+        "import {x as x} from '/m';",
         (NodeTraversal t, ReferenceMap rm) -> {
           if (t.getScope().isModuleScope()) {
             ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
@@ -141,7 +148,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   public void testImport3() {
     es6ScopeCreator = true;
     testBehavior(
-        "import {y as x} from 'm';",
+        "import {y as x} from '/m';",
         (NodeTraversal t, ReferenceMap rm) -> {
           if (t.getScope().isModuleScope()) {
             assertThat(t.getScope().getVar("y")).isNull();
@@ -158,7 +165,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   public void testImport4() {
     es6ScopeCreator = true;
     testBehavior(
-        "import * as x from 'm';",
+        "import * as x from '/m';",
         (NodeTraversal t, ReferenceMap rm) -> {
           if (t.getScope().isModuleScope()) {
             Var var = t.getScope().getVar("x");

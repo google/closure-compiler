@@ -16,10 +16,13 @@
 
 package com.google.javascript.jscomp.ijs;
 
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +42,13 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new ConvertToTypedInterface(compiler);
+  }
+
+  @Override
+  public CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
+    return options;
   }
 
   @Override
@@ -724,22 +734,22 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   public void testEs6Modules() {
     testSame("export default class {}");
 
-    testSame("import Foo from 'foo';");
+    testSame("import Foo from '/foo';");
 
     testSame("export class Foo {}");
 
-    testSame("import {Foo} from 'foo';");
+    testSame("import {Foo} from '/foo';");
 
     testSame(
         lines(
-            "import {Baz} from 'baz';",
+            "import {Baz} from '/baz';",
             "",
             "export /** @constructor */ function Foo() {}",
             "/** @type {!Baz} */ Foo.prototype.baz"));
 
     testSame(
         lines(
-            "import {Bar, Baz} from 'a/b/c';",
+            "import {Bar, Baz} from '/a/b/c';",
             "",
             "class Foo extends Bar {",
             "  /** @return {!Baz} */ getBaz() {}",

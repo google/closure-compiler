@@ -20,11 +20,13 @@ import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.P
 import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED;
 import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED;
 
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,6 +58,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
     options.setPreserveTypeAnnotations(true);
     options.setPreferSingleQuotes(true);
     options.setEmitUseStrict(false);
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     return options;
   }
 
@@ -484,10 +487,10 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   public void testES6Modules() {
     testNoWarning(
         lines(
-            "import foo from 'bar';",
-            "import bar from 'foo';",
-            "import * as a from 'b';",
-            "import {a, b} from 'c';",
-            "import 'foobar';"));
+            "import foo from '/bar';",
+            "import bar from '/foo';",
+            "import * as a from '/b';",
+            "import {a, b} from '/c';",
+            "import '/foobar';"));
   }
 }

@@ -61,6 +61,13 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   }
 
   @Override
+  public CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
+    return options;
+  }
+
+  @Override
   protected int getNumRepetitions() {
     // The normalize pass is only run once.
     return 1;

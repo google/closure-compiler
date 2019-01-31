@@ -63,6 +63,7 @@ public final class VarCheckTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_DEP_CHECK,
         strictModuleDepErrorLevel);
     if (externValidationErrorLevel != null) {

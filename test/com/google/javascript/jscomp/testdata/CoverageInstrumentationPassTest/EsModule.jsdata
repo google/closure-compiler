@@ -1,4 +1,4 @@
-import * as foo from 'bar';
+import * as foo from '/bar';
 
 export function qux() {
   console.log('baz');

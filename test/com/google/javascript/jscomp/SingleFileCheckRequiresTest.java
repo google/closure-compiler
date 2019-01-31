@@ -38,6 +38,7 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
   protected CompilerOptions getOptions(CompilerOptions options) {
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     return super.getOptions(options);
   }
 
@@ -141,7 +142,7 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
 
   @Test
   public void testExtraImport() {
-    testError("import z from 'x.y';", EXTRA_REQUIRE_WARNING);
+    testError("import z from '/x.y';", EXTRA_REQUIRE_WARNING);
   }
 
   @Test
@@ -151,7 +152,7 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
 
   @Test
   public void testUnqualifiedImportUsedInJSDoc() {
-    testSame("import { Something } from 'somewhere'; /** @type {Something} */ var x;");
+    testSame("import { Something } from '/somewhere'; /** @type {Something} */ var x;");
   }
 
   @Test
@@ -161,7 +162,7 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToSingleNameWithImport() {
-    testSame("import 'Foo'; new Foo();");
+    testSame("import '/Foo'; new Foo();");
   }
 
   @Test
