@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.regex.RegExpTree.LookbehindAssertion;
 import com.google.javascript.jscomp.regex.RegExpTree.NamedCaptureGroup;
 import com.google.javascript.jscomp.regex.RegExpTree.UnicodePropertyEscape;
 import com.google.javascript.rhino.Node;
-import java.util.EnumSet;
 import java.util.function.Predicate;
 
 /**
@@ -42,8 +41,9 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
   static final DiagnosticType UNTRANSPILABLE_FEATURE_PRESENT =
       DiagnosticType.error(
           "JSC_UNTRANSPILABLE",
-          "Cannot convert {0} feature \"{1}\" to targeted output language. "
-              + "Either remove feature \"{1}\" or raise output level to {0}.");
+          // TODO(b/123768968) suggest users raise their language level once we support language
+          // output higher than ES5.
+          "Cannot convert {0} feature \"{1}\" to targeted output language.");
 
   private static final FeatureSet UNTRANSPILABLE_2018_FEATURES =
       FeatureSet.BARE_MINIMUM.with(
@@ -55,9 +55,18 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
   private static final FeatureSet ALL_UNTRANSPILABLE_FEATURES =
       FeatureSet.BARE_MINIMUM.union(UNTRANSPILABLE_2018_FEATURES);
 
-  private static final FeatureSet ALL_TRANSPILABLE_FEATURES =
-      FeatureSet.BARE_MINIMUM.with(
-          EnumSet.complementOf(EnumSet.copyOf(ALL_UNTRANSPILABLE_FEATURES.getFeatures())));
+  private static final FeatureSet ALL_TRANSPILABLE_FEATURES;
+
+  static {
+    // Work around EnumSet.complementOf not being supported in j2cl.
+    FeatureSet allTranspilableFeatures = FeatureSet.BARE_MINIMUM;
+    for (Feature feature : Feature.values()) {
+      if (!ALL_UNTRANSPILABLE_FEATURES.contains(feature)) {
+        allTranspilableFeatures = allTranspilableFeatures.with(feature);
+      }
+    }
+    ALL_TRANSPILABLE_FEATURES = allTranspilableFeatures;
+  }
 
   private final AbstractCompiler compiler;
   private final FeatureSet untranspilableFeaturesToRemove;

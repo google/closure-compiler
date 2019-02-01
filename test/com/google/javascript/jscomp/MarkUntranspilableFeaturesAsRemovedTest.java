@@ -76,16 +76,12 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
         "const a = /asdf/s;",
         UNTRANSPILABLE_FEATURE_PRESENT,
         "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp flag 's'\" to targeted output language. "
-            + "Either remove feature \"RegExp flag 's'\" "
-            + "or raise output level to ECMASCRIPT_2018.");
+            + "\"RegExp flag 's'\" to targeted output language.");
     testError(
         "const a = /asdf/gs;",
         UNTRANSPILABLE_FEATURE_PRESENT,
         "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp flag 's'\" to targeted output language. "
-            + "Either remove feature \"RegExp flag 's'\" "
-            + "or raise output level to ECMASCRIPT_2018.");
+            + "\"RegExp flag 's'\" to targeted output language.");
   }
 
   @Test
@@ -108,16 +104,12 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
         "const a = /(?<=asdf)/;",
         UNTRANSPILABLE_FEATURE_PRESENT,
         "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp Lookbehind\" to targeted output language. "
-            + "Either remove feature \"RegExp Lookbehind\" or "
-            + "raise output level to ECMASCRIPT_2018.");
+            + "\"RegExp Lookbehind\" to targeted output language.");
     testError(
         "const a = /(?<!asdf)/;",
         UNTRANSPILABLE_FEATURE_PRESENT,
         "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp Lookbehind\" to targeted output language. "
-            + "Either remove feature \"RegExp Lookbehind\" or "
-            + "raise output level to ECMASCRIPT_2018.");
+            + "\"RegExp Lookbehind\" to targeted output language.");
   }
 
   @Test
@@ -137,16 +129,12 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
         "const a = /\\p{Script=Greek}/u;",
         UNTRANSPILABLE_FEATURE_PRESENT,
         "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp unicode property escape\" to targeted "
-            + "output language. Either remove feature \"RegExp unicode property escape\" or raise "
-            + "output level to ECMASCRIPT_2018.");
+            + "\"RegExp unicode property escape\" to targeted output language.");
     testError(
         "const a = /\\P{Script=Greek}/u;",
         UNTRANSPILABLE_FEATURE_PRESENT,
         "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp unicode property escape\" to targeted "
-            + "output language. Either remove feature \"RegExp unicode property escape\" or raise "
-            + "output level to ECMASCRIPT_2018.");
+            + "\"RegExp unicode property escape\" to targeted output language.");
   }
 
   @Test
@@ -169,16 +157,12 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
         "const a = /(?<name>)/;",
         UNTRANSPILABLE_FEATURE_PRESENT,
         "Cannot convert ECMASCRIPT_2018 feature \"RegExp named groups\" "
-            + "to targeted output language. "
-            + "Either remove feature \"RegExp named groups\" "
-            + "or raise output level to ECMASCRIPT_2018.");
+            + "to targeted output language.");
     testError(
         "const a = /(?<$var>).*/u;",
         UNTRANSPILABLE_FEATURE_PRESENT,
         "Cannot convert ECMASCRIPT_2018 feature \"RegExp named groups\" "
-            + "to targeted output language. "
-            + "Either remove feature \"RegExp named groups\" "
-            + "or raise output level to ECMASCRIPT_2018.");
+            + "to targeted output language.");
     // test valid regex with '<' or '>' that is not named capture group
     testSame("const a = /(<name>)/;");
     testSame("const a = /(>.>)/u;");
@@ -196,9 +180,7 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
         "const a = /^(?<half>.*).\\k<half>$/u;",
         UNTRANSPILABLE_FEATURE_PRESENT,
         "Cannot convert ECMASCRIPT_2018 feature \"RegExp named groups\" "
-            + "to targeted output language. "
-            + "Either remove feature \"RegExp named groups\" "
-            + "or raise output level to ECMASCRIPT_2018.");
+            + "to targeted output language.");
 
     // test that in named groups backreferencing, the backslash is not removed
     testSame("const a = /.\\k<half>$/u;");

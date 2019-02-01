@@ -164,7 +164,16 @@ public class DiagnosticGroups {
           + "uselessCode, "
           + "useOfGoogBase, "
           + "underscore, "
+          + "untranspilableFeatures,"
           + "visibility";
+
+  // TODO(b/123768968) remove this diagnostic group, do not allow this suppression. Instead the only
+  // work around should be to raise the output language to a high enough level. We need to suppress
+  // right now because we don't have any language output level higher than ES5.
+  public static final DiagnosticGroup UNSTRANSPILABLE_FEATURES =
+      DiagnosticGroups.registerGroup(
+          "untranspilableFeatures",
+          MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT);
 
   public static final DiagnosticGroup MODULE_LOAD =
       DiagnosticGroups.registerGroup("moduleLoad",
