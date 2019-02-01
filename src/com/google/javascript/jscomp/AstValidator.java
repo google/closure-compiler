@@ -1337,10 +1337,19 @@ public final class AstValidator implements CompilerPass {
       validateName(caught);
     } else if (caught.isArrayPattern()) {
       validateArrayPattern(Token.CATCH, caught);
-    } else {
+    } else if (caught.isObjectPattern()) {
       validateObjectPattern(Token.CATCH, caught);
+    } else if (caught.isEmpty()) {
+      validateNoCatchBinding(caught);
+    } else {
+      violation("Unexpected catch binding: " + caught, n);
     }
     validateBlock(n.getLastChild());
+  }
+
+  private void validateNoCatchBinding(Node n) {
+    validateFeature(Feature.OPTIONAL_CATCH_BINDING, n);
+    validateChildCount(n);
   }
 
   private void validateSwitch(Node n) {
