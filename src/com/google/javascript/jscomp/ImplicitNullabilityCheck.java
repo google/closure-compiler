@@ -95,6 +95,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
                   case QMARK:
                   case THIS: // The names inside function(this:Foo) and
                   case NEW: // function(new:Bar) are already non-null.
+                  case TYPEOF: // Names after 'typeof' don't have nullability.
                     return;
                   case PIPE:
                     { // Inside a union

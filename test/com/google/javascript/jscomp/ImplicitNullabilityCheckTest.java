@@ -122,6 +122,11 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTypeofDoesntWarn() {
+    noWarning("/** @type {typeof Object} */ var x;");
+  }
+
+  @Test
   public void testUserDefinedClass() {
     warnImplicitlyNullable(lines(
         "/** @constructor */",
