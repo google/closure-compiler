@@ -905,6 +905,7 @@ public class Parser {
         // { 'str'() {} }
         // { 123() {} }
         // Treat these as if they were computed properties.
+        // TODO(b/123769080): Stop making this assumption!
         name = null;
         nameExpr = parseLiteralExpression();
       }

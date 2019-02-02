@@ -4131,6 +4131,66 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testClass_constructorMember_legalModifiers() {
+    mode = LanguageMode.ECMASCRIPT_2018;
+    final String errorMsg = "Class constructor may not be getter, setter, async, or generator.";
+
+    // The expected default case.
+    parse("class A { constructor() { } }");
+
+    // Modifiers are legal on a static "constructor" member.
+    parse("class A { static constructor() { } }");
+    parse("class A { static get constructor() { } }");
+    parse("class A { static set constructor(x) { } }");
+    parse("class A { static async constructor() { } }");
+    parse("class A { static *constructor() { } }");
+
+    // Modifiers are illegal on an instance "constructor" member.
+    parseError("class A { get constructor() { } }", errorMsg);
+    parseError("class A { set constructor(x) { } }", errorMsg);
+    parseError("class A { async constructor() { } }", errorMsg);
+    parseError("class A { *constructor() { } }", errorMsg);
+
+    // Modifiers are also illegal on a constructor declared using a string literal.
+    // TODO(b/123769080): These should be parse errors, but this case can't be detected currently.
+    parse("class A { 'constructor'() { } }");
+    parse("class A { get 'constructor'() { } }");
+    parse("class A { set 'constructor'(x) { } }");
+    parse("class A { async 'constructor'() { } }");
+    parse("class A { *'constructor'() { } }");
+
+    // Modifiers are legal on computed properties that happen to be named "constructor".
+    parse("class A { ['constructor']() { } }");
+    parse("class A { get ['constructor']() { } }");
+    parse("class A { set ['constructor'](x) { } }");
+    parse("class A { async ['constructor']() { } }");
+    parse("class A { *['constructor']() { } }");
+  }
+
+  @Test
+  public void testClass_constructorMember_atMostOne() {
+    mode = LanguageMode.ECMASCRIPT6;
+    final String errorMsg = "Class may have only one constructor.";
+
+    // The expected default cases.
+    parse("class A { }");
+    parse("class A { constructor() { } }");
+
+    // Not more than one.
+    parseError("class A { constructor() { } constructor() { } }", errorMsg);
+    parseError(
+        "class A { constructor() { } constructor() { } constructor() { } }", errorMsg, errorMsg);
+    // TODO(b/123769080): These should be parse errors, but this case can't be detected currently.
+    parse("class A { constructor() { } 'constructor'() { } }");
+
+    // Computed properties can't be the class constructor.
+    parse("class A { constructor() { } ['constructor']() { } }");
+
+    // Statics can't be the class constructor.
+    parse("class A { constructor() { } static constructor() { } }");
+  }
+
+  @Test
   public void testSuper1() {
     expectFeatures(Feature.SUPER);
     mode = LanguageMode.ECMASCRIPT6;

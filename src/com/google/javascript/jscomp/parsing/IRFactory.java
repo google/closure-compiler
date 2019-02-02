@@ -2323,17 +2323,41 @@ class IRFactory {
 
       Node body = newNode(Token.CLASS_MEMBERS);
       setSourceInfo(body, tree);
+
+      boolean hasConstructor = false;
       for (ParseTree child : tree.elements) {
-        if (child.type == ParseTreeType.MEMBER_VARIABLE
-            || child.type == ParseTreeType.COMPUTED_PROPERTY_MEMBER_VARIABLE) {
-          maybeWarnTypeSyntax(child, Feature.MEMBER_VARIABLE_IN_CLASS);
+        switch (child.type) {
+          case MEMBER_VARIABLE:
+          case COMPUTED_PROPERTY_MEMBER_VARIABLE:
+            maybeWarnTypeSyntax(child, Feature.MEMBER_VARIABLE_IN_CLASS);
+            break;
+          default:
+            break;
         }
-        if (child.type == ParseTreeType.COMPUTED_PROPERTY_GETTER
-            || child.type == ParseTreeType.COMPUTED_PROPERTY_SETTER
-            || child.type == ParseTreeType.GET_ACCESSOR
-            || child.type == ParseTreeType.SET_ACCESSOR) {
-          features = features.with(Feature.CLASS_GETTER_SETTER);
+
+        switch (child.type) {
+          case COMPUTED_PROPERTY_GETTER:
+          case COMPUTED_PROPERTY_SETTER:
+          case GET_ACCESSOR:
+          case SET_ACCESSOR:
+            features = features.with(Feature.CLASS_GETTER_SETTER);
+            break;
+          default:
+            break;
         }
+
+        boolean childIsCtor = validateClassConstructorMember(child); // Has side-effects.
+        if (childIsCtor) {
+          if (hasConstructor) {
+            errorReporter.error(
+                "Class may have only one constructor.", //
+                sourceName,
+                lineno(child),
+                charno(child));
+          }
+          hasConstructor = true;
+        }
+
         body.addChildToBack(transform(child));
       }
 
@@ -2343,6 +2367,63 @@ class IRFactory {
         classNode.putProp(Node.IMPLEMENTS, interfaces);
       }
       return classNode;
+    }
+
+    /** Returns {@code true} iff this member is a legal class constructor. */
+    private boolean validateClassConstructorMember(ParseTree member) {
+      final com.google.javascript.jscomp.parsing.parser.Token memberName;
+      final boolean isStatic;
+      final boolean hasIllegalModifier;
+      switch (member.type) {
+        case GET_ACCESSOR:
+          GetAccessorTree getter = member.asGetAccessor();
+          memberName = getter.propertyName;
+          isStatic = getter.isStatic;
+          hasIllegalModifier = true;
+          break;
+
+        case SET_ACCESSOR:
+          SetAccessorTree setter = member.asSetAccessor();
+          memberName = setter.propertyName;
+          isStatic = setter.isStatic;
+          hasIllegalModifier = true;
+          break;
+
+        case FUNCTION_DECLARATION:
+          FunctionDeclarationTree method = member.asFunctionDeclaration();
+          memberName = method.name;
+          isStatic = method.isStatic;
+          hasIllegalModifier = method.isGenerator || method.isAsync;
+          break;
+
+        default:
+          // Computed properties aren't an issue here because they aren't used as the class
+          // constructor, regardless of their name.
+          return false;
+      }
+
+      if (isStatic) {
+        // Statics are fine because they're never the class constructor.
+        return false;
+      }
+
+      if (!memberName.type.equals(TokenType.IDENTIFIER)
+          || !memberName.asIdentifier().value.equals("constructor")) {
+        // There's only a potential issue if the member is named "constructor".
+        // TODO(b/123769080): Also check for quoted string literals with the value "constructor".
+        return false;
+      }
+
+      if (hasIllegalModifier) {
+        errorReporter.error(
+            "Class constructor may not be getter, setter, async, or generator.",
+            sourceName,
+            lineno(member),
+            charno(member));
+        return false;
+      }
+
+      return true;
     }
 
     Node processInterfaceDeclaration(InterfaceDeclarationTree tree) {
