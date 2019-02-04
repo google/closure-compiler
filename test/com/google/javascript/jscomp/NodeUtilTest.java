@@ -3595,6 +3595,22 @@ public final class NodeUtilTest {
   }
 
   @Test
+  public void testGetEs6ClassConstructorMemberFunctionDef() {
+    // distinguish between static and non-static method named "constructor"
+    Node constructorMemberFunctionDef =
+        NodeUtil.getEs6ClassConstructorMemberFunctionDef(
+            getClassNode("class Foo { method() {} constructor() {} static constructor() {} };"));
+    assertNode(constructorMemberFunctionDef).isMemberFunctionDef("constructor");
+    assertThat(constructorMemberFunctionDef.isStaticMember()).isFalse();
+
+    // static method named "constructor" will not be returned as the constructor
+    constructorMemberFunctionDef =
+        NodeUtil.getEs6ClassConstructorMemberFunctionDef(
+            getClassNode("class Foo { method() {} static constructor() {} }"));
+    assertThat(constructorMemberFunctionDef).isNull();
+  }
+
+  @Test
   public void testIsGetterOrSetter() {
     Node fnNode = getFunctionNode("Object.defineProperty(this, 'bar', {get: function() {}});");
     assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();

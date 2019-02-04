@@ -547,6 +547,21 @@ public final class NodeUtil {
     return n.getLastChild();
   }
 
+  @Nullable
+  public static Node getEs6ClassConstructorMemberFunctionDef(Node classNode) {
+    checkArgument(classNode.isClass(), classNode);
+    Node classMembers = checkNotNull(classNode.getLastChild(), classNode);
+    for (Node memberFunctionDef = classMembers.getFirstChild();
+        memberFunctionDef != null;
+        memberFunctionDef = memberFunctionDef.getNext()) {
+      if (isEs6ConstructorMemberFunctionDef(memberFunctionDef)) {
+        return memberFunctionDef;
+      }
+    }
+
+    return null;
+  }
+
   /**
    * Returns true if this is an immutable value.
    */
@@ -5696,22 +5711,21 @@ public final class NodeUtil {
         || isEs6Constructor(fnNode);
   }
 
-  private static boolean isEs6Constructor(Node fnNode) {
+  private static boolean isEs6ConstructorMemberFunctionDef(Node memberFunctionDef) {
+    if (!memberFunctionDef.isMemberFunctionDef()) {
+      return false; // not a member function at all
+    }
+    return memberFunctionDef.getParent().isClassMembers() // is in a class
+        && !memberFunctionDef.isStaticMember() // constructors aren't static
+        && memberFunctionDef.matchesQualifiedName("constructor");
+  }
+
+  static boolean isEs6Constructor(Node fnNode) {
     if (!fnNode.isFunction()) {
       return false;
     }
     Node memberFunctionDef = fnNode.getParent();
-    if (memberFunctionDef == null || !memberFunctionDef.isMemberFunctionDef()) {
-      return false; // not a member function
-    }
-    if (memberFunctionDef.isStaticMember()) {
-      return false; // it is possible to have a static method named "constructor"
-    }
-    Node classMembers = memberFunctionDef.getParent();
-    if (classMembers == null || !classMembers.isClassMembers()) {
-      return false; // method definition in an object literal
-    }
-    return memberFunctionDef.matchesQualifiedName("constructor");
+    return memberFunctionDef != null && isEs6ConstructorMemberFunctionDef(memberFunctionDef);
   }
 
   static boolean isGetterOrSetter(Node propNode) {

@@ -503,6 +503,20 @@ public class TestExternsBuilder {
           " */",
           "AsyncGenerator.prototype.throw = function(exception) {};");
 
+  // Test cases that perform transpilation of ES6 classes but use a non-injecting compiler need
+  // these definitions.
+  private static final String ES6_CLASS_TRANSPILATION_EXTERNS =
+      lines(
+          "var $jscomp = {};",
+          "",
+          "/**",
+          " * @param {?} subClass",
+          " * @param {?} superClass",
+          " * @return {?} newClass",
+          " */",
+          "$jscomp.inherits = function(subClass, superClass) {};",
+          "");
+
   private boolean includeIterableExterns = false;
   private boolean includeStringExterns = false;
   private boolean includeFunctionExterns = false;
@@ -512,6 +526,7 @@ public class TestExternsBuilder {
   private boolean includeConsoleExterns = false;
   private boolean includePromiseExterns = false;
   private boolean includeAsyncIterableExterns = false;
+  private boolean includeEs6ClassTranspilationExterns = false;
   private final List<String> extraExterns = new ArrayList<>();
 
   public TestExternsBuilder addIterable() {
@@ -568,6 +583,19 @@ public class TestExternsBuilder {
     return this;
   }
 
+  /**
+   * Externs needed for successful transpilation of ES6 classes without injecting the runtime code.
+   *
+   * <p>ES6 class transpilation depends on some runtime code that we often don't want to actually
+   * generate in test cases, so we use a non-injecting compiler and include these externs
+   * definitions to keep the type checker happy.
+   */
+  public TestExternsBuilder addEs6ClassTranspilationExterns() {
+    includeEs6ClassTranspilationExterns = true;
+    addFunction(); // need definition of Function.prototype.apply
+    return this;
+  }
+
   public TestExternsBuilder addExtra(String... lines) {
     Collections.addAll(extraExterns, lines);
     return this;
@@ -601,6 +629,9 @@ public class TestExternsBuilder {
     }
     if (includeAsyncIterableExterns) {
       externSections.add(ASYNC_ITERABLE_EXTERNS);
+    }
+    if (includeEs6ClassTranspilationExterns) {
+      externSections.add(ES6_CLASS_TRANSPILATION_EXTERNS);
     }
     externSections.addAll(extraExterns);
     return LINE_JOINER.join(externSections);
