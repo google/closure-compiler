@@ -56,6 +56,9 @@ final class CheckSideEffects extends AbstractPostOrderCallback
 
   private final boolean protectSideEffectFreeCode;
 
+  /** Whether the synthetic extern for JSCOMPILER_PRESERVE has been injected */
+  private boolean preserveFunctionInjected = false;
+
   CheckSideEffects(AbstractCompiler compiler, boolean report,
       boolean protectSideEffectFreeCode) {
     this.compiler = compiler;
@@ -170,7 +173,9 @@ final class CheckSideEffects extends AbstractPostOrderCallback
    */
   private void protectSideEffects() {
     if (!problemNodes.isEmpty()) {
-      addExtern();
+      if (!preserveFunctionInjected) {
+        addExtern(compiler);
+      }
       for (Node n : problemNodes) {
         Node name = IR.name(PROTECTOR_FN).srcref(n);
         name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
@@ -183,7 +188,8 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     }
   }
 
-  private void addExtern() {
+  /** Injects JSCOMPILER_PRESEVE into the synthetic externs */
+  static void addExtern(AbstractCompiler compiler) {
     Node name = IR.name(PROTECTOR_FN);
     name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     Node var = IR.var(name);
@@ -244,6 +250,10 @@ final class CheckSideEffects extends AbstractPostOrderCallback
           String name = NodeUtil.getName(n);
           noSideEffectExterns.add(name);
         }
+      }
+
+      if (n.isName() && PROTECTOR_FN.equals(n.getString())) {
+        preserveFunctionInjected = true;
       }
     }
   }

@@ -15,10 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
@@ -49,6 +51,7 @@ final class PolymerClassRewriter {
   @VisibleForTesting static final String POLYMER_ELEMENT_PROP_CONFIG = "PolymerElementProperties";
 
   private final Node polymerElementExterns;
+  boolean propertySinkExternInjected = false;
 
   PolymerClassRewriter(
       AbstractCompiler compiler,
@@ -178,7 +181,7 @@ final class PolymerClassRewriter {
     if (polymerVersion > 1 && propertyRenamingEnabled && cls.descriptor != null) {
       Node props = NodeUtil.getFirstPropMatchingKey(cls.descriptor, "properties");
       if (props != null && props.isObjectLit()) {
-        addObjectReflectionCall(cls, props);
+        addPropertiesConfigObjectReflection(cls, props);
       }
     }
   }
@@ -192,7 +195,7 @@ final class PolymerClassRewriter {
    *     call.
    */
   void rewritePolymerClassDeclaration(
-      Node clazz, final PolymerClassDefinition cls, boolean isInGlobalScope) {
+      Node clazz, NodeTraversal traversal, final PolymerClassDefinition cls) {
 
     if (cls.descriptor != null) {
       addTypesToFunctions(cls.descriptor, cls.target.getQualifiedName(), cls.defType);
@@ -231,11 +234,15 @@ final class PolymerClassRewriter {
       jsDocInfoNode.setJSDocInfo(classInfo.build());
     }
 
+    Node insertAfterReference = NodeUtil.getEnclosingStatement(clazz);
     if (block.hasChildren()) {
       removePropertyDocs(cls.descriptor, cls.defType);
-      Node stmt = NodeUtil.getEnclosingStatement(clazz);
-      stmt.getParent().addChildrenAfter(block.removeChildren(), stmt);
-      compiler.reportChangeToEnclosingScope(stmt);
+      Node newInsertAfterReference = block.getLastChild();
+      insertAfterReference
+          .getParent()
+          .addChildrenAfter(block.removeChildren(), insertAfterReference);
+      compiler.reportChangeToEnclosingScope(insertAfterReference);
+      insertAfterReference = newInsertAfterReference;
     }
 
     addReturnTypeIfMissing(cls, "is", new JSTypeExpression(IR.string("string"), VIRTUAL_FILE));
@@ -254,8 +261,38 @@ final class PolymerClassRewriter {
     // If property renaming is enabled, wrap the properties object literal
     // in a reflection call so that the properties are renamed consistently
     // with the class members.
+    //
+    // Also add reflection and sinks for computed properties and complex observers
+    // and switch simple observers to direct function references.
     if (propertyRenamingEnabled && cls.descriptor != null) {
-      addObjectReflectionCall(cls, cls.descriptor);
+      convertSimpleObserverStringsToReferences(cls);
+      List<Node> propertySinks = new ArrayList<>();
+      if (polymerExportPolicy != PolymerExportPolicy.EXPORT_ALL) {
+        propertySinks.addAll(addComputedPropertiesReflectionCalls(cls));
+        propertySinks.addAll(addComplexObserverReflectionCalls(cls));
+      }
+
+      if (propertySinks.size() > 0) {
+        if (!propertySinkExternInjected
+            && traversal.getScope().getVar(CheckSideEffects.PROTECTOR_FN) == null) {
+          CheckSideEffects.addExtern(compiler);
+          propertySinkExternInjected = true;
+        }
+
+        for (Node propertyRef : propertySinks) {
+          Node name = IR.name(CheckSideEffects.PROTECTOR_FN).srcref(propertyRef);
+          name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+          Node protectorCall = IR.call(name, propertyRef).srcref(propertyRef);
+          protectorCall.putBooleanProp(Node.FREE_CALL, true);
+          protectorCall = IR.exprResult(protectorCall).useSourceInfoFrom(propertyRef);
+          insertAfterReference.getParent().addChildAfter(protectorCall, insertAfterReference);
+          insertAfterReference = protectorCall;
+        }
+
+        compiler.reportChangeToEnclosingScope(insertAfterReference);
+      }
+
+      addPropertiesConfigObjectReflection(cls, cls.descriptor);
     }
   }
 
@@ -275,7 +312,8 @@ final class PolymerClassRewriter {
   }
 
   /** Wrap the properties config object in an objectReflect call */
-  private void addObjectReflectionCall(PolymerClassDefinition cls, Node propertiesLiteral) {
+  private void addPropertiesConfigObjectReflection(
+      PolymerClassDefinition cls, Node propertiesLiteral) {
     checkNotNull(propertiesLiteral);
     checkState(propertiesLiteral.isObjectLit());
 
@@ -695,5 +733,259 @@ final class PolymerClassRewriter {
     Node assign =
         IR.assign(var.getFirstChild().cloneNode(), var.getFirstChild().removeFirstChild());
     return IR.exprResult(assign).useSourceInfoIfMissingFromForTree(var);
+  }
+
+  /**
+   * Converts property observer strings to direct function references.
+   *
+   * <p>From: <code>observer: '_observerName'</code> To: <code>
+   * observer: ClassName.prototype._observerName</code>
+   */
+  private void convertSimpleObserverStringsToReferences(final PolymerClassDefinition cls) {
+    for (MemberDefinition prop : cls.props) {
+      if (prop.value.isObjectLit()) {
+        Node observer = NodeUtil.getFirstPropMatchingKey(prop.value, "observer");
+        if (observer != null && observer.isString()) {
+          Node observerDirectReference =
+              IR.getprop(cls.target.cloneTree(), "prototype", observer.getString())
+                  .useSourceInfoFrom(observer);
+
+          observer.replaceWith(observerDirectReference);
+          compiler.reportChangeToEnclosingScope(observerDirectReference);
+        }
+      }
+    }
+  }
+
+  /**
+   * For any property in the Polymer property configuration object with a `computed` key, parse the
+   * method call and path arguments and replace them with property reflection calls.
+   *
+   * <p>Returns a list of property sink statements to guard against dead code elimination since the
+   * compiler may not see these methods as being used.
+   */
+  private List<Node> addComputedPropertiesReflectionCalls(final PolymerClassDefinition cls) {
+    List<Node> propertySinkStatements = new ArrayList<>();
+    for (MemberDefinition prop : cls.props) {
+      if (prop.value.isObjectLit()) {
+        Node computed = NodeUtil.getFirstPropMatchingKey(prop.value, "computed");
+        if (computed != null && computed.isString()) {
+          propertySinkStatements.addAll(
+              replaceMethodStringWithReflectedCalls(cls.target, computed));
+        }
+      }
+    }
+    return propertySinkStatements;
+  }
+
+  /**
+   * For any strings returned in the array from the Polymer static observers property, parse the
+   * method call and path arguments and replace them with property reflection calls.
+   *
+   * <p>Returns a list of property sink statements to guard against dead code elimination since the
+   * compiler may not see these methods as being used.
+   */
+  private List<Node> addComplexObserverReflectionCalls(final PolymerClassDefinition cls) {
+    List<Node> propertySinkStatements = new ArrayList<>();
+    Node classMembers = NodeUtil.getClassMembers(cls.definition);
+    Node getter = NodeUtil.getFirstGetterMatchingKey(classMembers, "observers");
+    if (getter != null) {
+      Node complexObservers = null;
+      for (Node child : NodeUtil.getFunctionBody(getter.getFirstChild()).children()) {
+        if (child.isReturn()) {
+          if (child.hasChildren() && child.getFirstChild().isArrayLit()) {
+            complexObservers = child.getFirstChild();
+            break;
+          }
+        }
+      }
+      if (complexObservers != null) {
+        for (Node complexObserver : complexObservers.children()) {
+          if (complexObserver.isString()) {
+            propertySinkStatements.addAll(
+                replaceMethodStringWithReflectedCalls(cls.target, complexObserver));
+          }
+        }
+      }
+    }
+    return propertySinkStatements;
+  }
+
+  /**
+   * Given a Polymer method call string such as: <code>"methodName(path.item, other.property.path)"
+   * </code> parses the string into a method name and arguments and builds up a new string of
+   * property reflection calls so that the properties can be renamed consistently.
+   *
+   * <p>Returns a list of property sink statements to guard against dead code elimination.
+   */
+  private List<Node> replaceMethodStringWithReflectedCalls(Node className, Node methodSignature) {
+    checkArgument(methodSignature.isString());
+    List<Node> propertySinkStatements = new ArrayList<>();
+    String methodSignatureString = methodSignature.getString().trim();
+    int openParenIndex = methodSignatureString.indexOf('(');
+    if (methodSignatureString.charAt(methodSignatureString.length() - 1) != ')'
+        || openParenIndex < 1) {
+      compiler.report(JSError.make(methodSignature, PolymerPassErrors.POLYMER_UNPARSABLE_STRING));
+      return propertySinkStatements;
+    }
+
+    // Reflect property calls require an instance of a type. Since we don't have one,
+    // just cast an object literal to be that type. While not generally safe, it is
+    // safe for property reflection.
+    JSDocInfoBuilder classTypeDoc = new JSDocInfoBuilder(false);
+    JSTypeExpression classType =
+        new JSTypeExpression(
+            new Node(Token.BANG, IR.string(className.getQualifiedName())),
+            className.getSourceFileName());
+    classTypeDoc.recordType(classType);
+    Node classTypeExpression = IR.cast(IR.objectlit(), classTypeDoc.build());
+
+    // Add reflect and property sinks for the method name which will be a property on the class
+    String methodName = methodSignatureString.substring(0, openParenIndex).trim();
+    propertySinkStatements.add(
+        IR.getprop(className.cloneTree(), "prototype", methodName)
+            .useSourceInfoFromForTree(methodSignature));
+
+    Node reflectedMethodName =
+        IR.call(
+            IR.getprop(IR.name("$jscomp"), IR.string("reflectProperty")),
+            IR.string(methodName),
+            classTypeExpression.cloneTree());
+
+    Node reflectedSignature = reflectedMethodName;
+
+    // Process any parameters in the method call
+    String nextParamDelimeter = "(";
+    if (openParenIndex < methodSignatureString.length() - 2) {
+      String methodParamsString =
+          methodSignatureString
+              .substring(openParenIndex + 1, methodSignatureString.length() - 1)
+              .trim();
+
+      List<String> methodParams = parseMethodParams(methodParamsString, methodSignature);
+
+      // Add property reflection for each parameter
+      for (String methodParam : methodParams) {
+        Node reflectedTypeReference = classTypeExpression;
+        if (methodParam.length() == 0) {
+          continue;
+        }
+
+        if (isParamLiteral(methodParam)) {
+          Node term = IR.string(methodParam);
+
+          reflectedSignature =
+              IR.add(IR.add(reflectedSignature, IR.string(nextParamDelimeter)), term);
+        } else {
+          // Arguments in conmplex observer or computed property strings are property paths.
+          // We need to rename each path segment.
+          List<String> paramParts = Splitter.on('.').splitToList(methodParam);
+          String nextPropertyTermDelimiter = nextParamDelimeter;
+          for (int i = 0; i < paramParts.size(); i++) {
+            // Polymer property paths have two special terms recognized when they are the last
+            // path reference:
+            //   - * - any sub-property change
+            //   - splices - Adds or removes of array items
+            // These terms are not renamable and are left as is
+            if (i > 0
+                && i == paramParts.size() - 1
+                && (paramParts.get(i).equals("*") || paramParts.get(i).equals("splices"))) {
+              reflectedSignature =
+                  IR.add(
+                      reflectedSignature, IR.string(nextPropertyTermDelimiter + paramParts.get(i)));
+            } else {
+              if (i == 0) {
+                // The root of the parameter will be a property reference on the class
+                // Create both a property sink and a reflection call
+                propertySinkStatements.add(
+                    IR.getprop(
+                            className.cloneTree(),
+                            IR.string("prototype"),
+                            IR.string(paramParts.get(i)))
+                        .useSourceInfoFromForTree(methodSignature));
+              }
+              Node reflectedParamPart =
+                  IR.call(
+                      IR.getprop(IR.name("$jscomp"), IR.string("reflectProperty")),
+                      IR.string(paramParts.get(i)),
+                      reflectedTypeReference.cloneTree());
+              reflectedSignature =
+                  IR.add(
+                      IR.add(reflectedSignature, IR.string(nextPropertyTermDelimiter)),
+                      reflectedParamPart);
+
+              reflectedTypeReference =
+                  IR.getprop(reflectedTypeReference.cloneTree(), paramParts.get(i));
+            }
+            nextPropertyTermDelimiter = ".";
+          }
+        }
+        nextParamDelimeter = ",";
+      }
+
+      if (methodParams.size() == 0) {
+        reflectedSignature = IR.add(reflectedSignature, IR.string("()"));
+      } else {
+        reflectedSignature = IR.add(reflectedSignature, IR.string(")"));
+      }
+    } else {
+      reflectedSignature = IR.add(reflectedSignature, IR.string("()"));
+    }
+
+    methodSignature.replaceWith(reflectedSignature.useSourceInfoFromForTree(methodSignature));
+    compiler.reportChangeToEnclosingScope(reflectedSignature);
+    return propertySinkStatements;
+  }
+
+  /**
+   * Parses the parameters string from a complex observer or computed property into distinct
+   * parameters. Since a parameter can be a quoted string literal, we can't just split on commas.
+   */
+  private List<String> parseMethodParams(String methodParameters, Node methodSignature) {
+    List<String> parsedParameters = new ArrayList<>();
+
+    char nextDelimeter = ',';
+    String currentTerm = "";
+    for (int i = 0; i < methodParameters.length(); i++) {
+      if (methodParameters.charAt(i) == nextDelimeter) {
+        if (nextDelimeter == ',') {
+          parsedParameters.add(currentTerm.trim());
+          currentTerm = "";
+        } else {
+          currentTerm += nextDelimeter;
+          nextDelimeter = ',';
+        }
+      } else {
+        currentTerm += methodParameters.charAt(i);
+        if (methodParameters.charAt(i) == '"' || methodParameters.charAt(i) == '\'') {
+          nextDelimeter = methodParameters.charAt(i);
+        }
+      }
+    }
+    if (nextDelimeter != ',') {
+      compiler.report(JSError.make(methodSignature, PolymerPassErrors.POLYMER_UNPARSABLE_STRING));
+      return parsedParameters;
+    }
+    if (currentTerm.length() > 0) {
+      parsedParameters.add(currentTerm.trim());
+    }
+    return parsedParameters;
+  }
+
+  /** Determine if the method parameter a quoted string or numeric literal recognized by Polymer. */
+  private static boolean isParamLiteral(String param) {
+    try {
+      Double.parseDouble(param);
+      return true;
+    } catch (NumberFormatException e) {
+      // Check to see if the parameter is a literal - either a quoted string or
+      // numeric literal
+      if (param.length() > 1
+          && (param.charAt(0) == '"' || param.charAt(0) == '\'')
+          && param.charAt(0) == param.charAt(param.length() - 1)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

@@ -33,3 +33,19 @@
 $jscomp.reflectObject = function(type, object) {
   return object;
 };
+
+/**
+ * Definition for object property reflection.
+ *
+ * Internal compiler version of closure library goog.reflect.objectProperty.
+ *
+ * Use this if you have a string that needs renamed as if it were an unquoted
+ * property of a class.
+ *
+ * @param {string} propName
+ * @param {?Object} type class, interface, or record
+ * @return {string}
+ */
+$jscomp.reflectProperty = function(propName, type) {
+  return propName;
+};
