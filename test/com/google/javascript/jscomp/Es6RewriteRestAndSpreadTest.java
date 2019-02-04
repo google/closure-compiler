@@ -193,7 +193,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
             lines(
                 "/**",
                 " * @constructor",
-                " * @struct",
+                // Skipping @struct here to allow for string access.
                 " */",
                 "function TestClass() { }",
                 "",
@@ -202,11 +202,16 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
                 "",
                 "/** @return {!TestClass} */",
                 "function testClassFactory() { }")),
-        srcs(lines("var obj = new TestClass();", "obj.testMethod(...arr);")),
+        srcs(
+            lines(
+                "var obj = new TestClass();",
+                "obj.testMethod(...arr);",
+                "obj['testMethod'](...arr);")),
         expected(
             lines(
                 "var obj = new TestClass();",
-                "obj.testMethod.apply(obj, $jscomp.arrayFromIterable(arr));")));
+                "obj.testMethod.apply(obj, $jscomp.arrayFromIterable(arr));",
+                "obj[\"testMethod\"].apply(obj, $jscomp.arrayFromIterable(arr));")));
     assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
   }
 

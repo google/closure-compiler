@@ -411,10 +411,14 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       callToApply =
           IR.call(getpropInferringJSType(callee, "apply"), freshVar.cloneTree(), joinedGroups);
     } else {
-      // foo.method(...[a, b, c]) -> foo.method.apply(foo, [a, b, c]
+      // foo.method(...[a, b, c]) -> foo.method.apply(foo, [a, b, c])
+      // foo['method'](...[a, b, c]) -> foo['method'].apply(foo, [a, b, c])
       // or
       // foo(...[a, b, c]) -> foo.apply(null, [a, b, c])
-      Node context = callee.isGetProp() ? callee.getFirstChild().cloneTree() : nullWithJSType();
+      Node context =
+          (callee.isGetProp() || callee.isGetElem())
+              ? callee.getFirstChild().cloneTree()
+              : nullWithJSType();
       callToApply = IR.call(getpropInferringJSType(callee, "apply"), context, joinedGroups);
     }
 
