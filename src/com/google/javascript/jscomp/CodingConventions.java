@@ -532,7 +532,7 @@ public final class CodingConventions {
 
     @Override
     public boolean isPropertyRenameFunction(String name) {
-      return NodeUtil.JSC_PROPERTY_NAME_FN.equals(name);
+      return NodeUtil.JSC_PROPERTY_NAME_FN.equals(name) || "$jscomp.reflectProperty".equals(name);
     }
 
     @Override
