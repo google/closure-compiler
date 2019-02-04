@@ -16,224 +16,31 @@
 
 package com.google.javascript.jscomp.modules;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler;
-import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
 /** Creates a {@link ModuleMap}. */
-public class ModuleMapCreator implements CompilerPass {
+public class ModuleMapCreator implements HotSwapCompilerPass {
   static final DiagnosticType MISSING_NAMESPACE_IMPORT =
       DiagnosticType.error(
           "JSC_MISSING_NAMESPACE_IMPORT", "Imported Closure namespace \"{0}\" never defined.");
 
-  /**
-   * The result of resolving an export, which can be a valid binding, ambiguous, not found, or an
-   * error.
-   */
-  static final class ResolveExportResult {
-    private enum State {
-      RESOLVED,
-      AMBIGUOUS,
-      NOT_FOUND,
-      ERROR,
-    }
-
-    @Nullable private final Binding binding;
-    private final State state;
-
-    private ResolveExportResult(@Nullable Binding binding, State state) {
-      this.binding = binding;
-      this.state = state;
-    }
-
-    /** Creates a new result that has the given node for the source of the binding. */
-    ResolveExportResult withSource(Node sourceNode) {
-      checkNotNull(sourceNode);
-
-      if (binding == null) {
-        return this;
-      }
-
-      return new ResolveExportResult(binding.withSource(sourceNode), state);
-    }
-
-    /** True if there was an error resolving the export, false otherwise. */
-    boolean hadError() {
-      return state == State.ERROR;
-    }
-
-    /** True if the export is ambiguous, false otherwise. */
-    boolean isAmbiguous() {
-      return state == State.AMBIGUOUS;
-    }
-
-    /** True if the export was successfully resolved, false otherwise. */
-    boolean resolved() {
-      return state == State.RESOLVED;
-    }
-
-    /**
-     * True if the export key exists on the given module, even if it is ambiguous or had an error.
-     */
-    public boolean found() {
-      return state != State.NOT_FOUND;
-    }
-
-    @Nullable
-    public Binding getBinding() {
-      return binding;
-    }
-
-    /**
-     * The result of resolving the export was ambiguous.
-     *
-     * <p>This happens when there are multiple {@code export * from} statements that end up causing
-     * the same key to be re-exported.
-     *
-     * <p>When resolving an import or transitive export, if the result is ambiguous, an error should
-     * be reported at the import / transitive export site, an then {@link #ERROR} returned so that
-     * more ambiguous errors are not reported.
-     */
-    static final ResolveExportResult AMBIGUOUS = new ResolveExportResult(null, State.AMBIGUOUS);
-
-    /**
-     * The export was not found because the module never exported the key.
-     *
-     * <p>When resolving an import or transitive export, if the result is not found, an error should
-     * be reported at the import / transitive export site, an then {@link #ERROR} returned so that
-     * more ambiguous errors are not reported.
-     */
-    static final ResolveExportResult NOT_FOUND = new ResolveExportResult(null, State.NOT_FOUND);
-
-    /**
-     * There was an error resolving the export.
-     *
-     * <p>This can mean that:
-     *
-     * <ol>
-     *   <li>When resolving a transitive export, the transitive export was not found.
-     *   <li>When resolving a transitive export, the transitive export was ambiguous.
-     *   <li>There was a cycle resolving an export.
-     *   <li>The requested module does not exist.
-     * </ol>
-     *
-     * <p>When resolving an import or transitive export, if the result is {@code ERROR}, then
-     * resolving should also return {@code ERROR}. No error needs to be reported, this is an
-     * indication that something has already been reported.
-     */
-    static final ResolveExportResult ERROR = new ResolveExportResult(null, State.ERROR);
-
-    static ResolveExportResult of(Binding binding) {
-      checkNotNull(binding);
-      return new ResolveExportResult(binding, State.RESOLVED);
-    }
-  }
-
-  /**
-   * A module which has had some of its imports and exports statements scanned but has yet to
-   * resolve anything transitively.
-   */
-  abstract static class UnresolvedModule {
-    final Module resolve() {
-      return resolve(/* moduleSpecifier= */ null);
-    }
-
-    /**
-     * Resolves all imports and exports and returns a resolved module.
-     *
-     * @param moduleSpecifier the module specifier that was used to import this module, if resolving
-     *     an import
-     */
-    abstract Module resolve(@Nullable String moduleSpecifier);
-
-    abstract boolean isEsModule();
-
-    /**
-     * Returns all names in this module's namespace. Names are sorted per Java's string ordering,
-     * which should be the same as JavaScript's Array.protype.sort, which is how the spec says these
-     * keys should be ordered in the module object.
-     */
-    abstract ImmutableSet<String> getExportedNames();
-
-    /**
-     * Returns all names in this module's namespace. Names are sorted per Java's string ordering,
-     * which should be the same as JavaScript's Array.prototype.sort, which is how the spec says
-     * these keys should be ordered in the module object.
-     *
-     * @param visited set used to detect {@code export *} cycles.
-     */
-    protected abstract ImmutableSet<String> getExportedNames(Set<UnresolvedModule> visited);
-
-    /**
-     * @param exportName name of the export to resolve
-     * @return the result of resolving the export, which can be one of several states:
-     *     <ul>
-     *       <li>The resolved export with the binding, if found.
-     *       <li>A result indicating that the export is ambiguous.
-     *       <li>A result indicating that the module has no such export.
-     *       <li>A result indicating that there was some other error resolving, like a cycle, or a
-     *           module transitively returned that there was no such export.
-     *     </ul>
-     */
-    ResolveExportResult resolveExport(String exportName) {
-      return resolveExport(
-          /* moduleSpecifier= */ null, exportName, new HashSet<>(), new HashSet<>());
-    }
-
-    /**
-     * @param moduleSpecifier the specifier used to reference this module, if this trace is from an
-     *     import
-     * @param exportName name of the export to resolve
-     * @param resolveSet set used to detect invalid cycles. It is invalid to reach the same exact
-     *     export (same module with the same export name) in a given cycle.
-     * @param exportStarSet set used for cycle checking with {@code export *} statements
-     * @return the result of resolving the export, which can be one of several states:
-     *     <ul>
-     *       <li>The resolved export with the binding, if found.
-     *       <li>A result indicating that the export is ambiguous.
-     *       <li>A result indicating that the module has no such export.
-     *       <li>A result indicating that there was some other error resolving, like a cycle, or a
-     *           module transitively returned that there was no such export.
-     *     </ul>
-     */
-    abstract ResolveExportResult resolveExport(
-        @Nullable String moduleSpecifier,
-        String exportName,
-        Set<ExportTrace> resolveSet,
-        Set<UnresolvedModule> exportStarSet);
-
-    // Reference equality is expected in ExportTrace. Prevent subclasses from changing this.
-    @Override
-    public final boolean equals(Object other) {
-      return super.equals(other);
-    }
-
-    @Override
-    public final int hashCode() {
-      return super.hashCode();
-    }
-  }
-
-  final class ModuleRequestResolver {
-    private ModuleRequestResolver() {}
-
+  private final class ModuleRequestResolverImpl implements ModuleRequestResolver {
     private UnresolvedModule getFallbackForMissingNonClosureModule(ModuleLoader.ModulePath path) {
       ModuleMetadata metadata =
           ModuleMetadata.builder()
@@ -246,13 +53,18 @@ public class ModuleMapCreator implements CompilerPass {
 
       return new UnresolvedModule() {
         @Override
-        Module resolve(@Nullable String moduleSpecifier) {
+        void reset() {}
+
+        @Override
+        Module resolve(
+            ModuleRequestResolver moduleRequestResolver, @Nullable String moduleSpecifier) {
           return Module.builder()
               .boundNames(ImmutableMap.of())
               .namespace(ImmutableMap.of())
               .localNameToLocalExport(ImmutableMap.of())
               .path(path)
               .metadata(metadata)
+              .unresolvedModule(this)
               .build();
         }
 
@@ -262,17 +74,19 @@ public class ModuleMapCreator implements CompilerPass {
         }
 
         @Override
-        ImmutableSet<String> getExportedNames() {
+        ImmutableSet<String> getExportedNames(ModuleRequestResolver moduleRequestResolver) {
           return ImmutableSet.of();
         }
 
         @Override
-        protected ImmutableSet<String> getExportedNames(Set<UnresolvedModule> visited) {
+        protected ImmutableSet<String> getExportedNames(
+            ModuleRequestResolver moduleRequestResolver, Set<UnresolvedModule> visited) {
           return ImmutableSet.of();
         }
 
         @Override
         ResolveExportResult resolveExport(
+            ModuleRequestResolver moduleRequestResolver,
             @Nullable String moduleSpecifier,
             String exportName,
             Set<ExportTrace> resolveSet,
@@ -292,7 +106,6 @@ public class ModuleMapCreator implements CompilerPass {
 
     private UnresolvedModule getFallbackForMissingClosureModule(String namespace) {
       return nonEsModuleProcessor.process(
-          this,
           ModuleMetadata.builder()
               .addGoogNamespace(namespace)
               .isTestOnly(false)
@@ -305,13 +118,15 @@ public class ModuleMapCreator implements CompilerPass {
           /* script= */ null);
     }
 
+    @Override
     @Nullable
-    UnresolvedModule resolve(Import i) {
+    public UnresolvedModule resolve(Import i) {
       return resolve(i.moduleRequest(), i.modulePath(), i.importNode());
     }
 
+    @Override
     @Nullable
-    UnresolvedModule resolve(Export e) {
+    public UnresolvedModule resolve(Export e) {
       return resolve(e.moduleRequest(), e.modulePath(), e.exportNode());
     }
 
@@ -352,27 +167,7 @@ public class ModuleMapCreator implements CompilerPass {
 
   /** A basic interface that can scan and return information about a module. */
   interface ModuleProcessor {
-    UnresolvedModule process(
-        ModuleRequestResolver resolver, ModuleMetadata metadata, ModulePath path, Node script);
-  }
-
-  /**
-   * Simple class to keep track of which modules and exports have been visited when resolving
-   * exports. It is invalid to visit the same (module, name) pair more than once when resolving an
-   * export (invalid cycle).
-   *
-   * <p>This is an AutoValue used for its hashCode / equals implementation and used in a Set for
-   * equality checks. So fields may appear to be "unused".
-   */
-  @AutoValue
-  abstract static class ExportTrace {
-    static ExportTrace create(UnresolvedModule module, String exportName) {
-      return new AutoValue_ModuleMapCreator_ExportTrace(module, exportName);
-    }
-
-    abstract UnresolvedModule module();
-
-    abstract String exportName();
+    UnresolvedModule process(ModuleMetadata metadata, ModulePath path, Node script);
   }
 
   private final AbstractCompiler compiler;
@@ -392,34 +187,22 @@ public class ModuleMapCreator implements CompilerPass {
   }
 
   private ModuleMap create() {
-    ModuleRequestResolver requestResolver = new ModuleRequestResolver();
-    Map<String, Module> resolvedModules = new HashMap<>();
-    Map<String, Module> resolvedClosureModules = new HashMap<>();
-
     unresolvedModules.clear();
     unresolvedModulesByClosureNamespace.clear();
 
     // There are modules that aren't associated with scripts - nested goog.modules in
     // goog.loadModule calls.
     for (ModuleMetadata moduleMetadata : moduleMetadataMap.getAllModuleMetadata()) {
-
-      ModuleProcessor processor =
-          moduleMetadata.isEs6Module() ? esModuleProcessor : nonEsModuleProcessor;
-      UnresolvedModule module =
-          processor.process(
-              requestResolver, moduleMetadata, moduleMetadata.path(), moduleMetadata.rootNode());
-
-      // Have to use module names as keys because path "resolution" (ModuleLoader) "respects"
-      // leading slashes. Meaning that if you look up "file.js" and "/file.js" you'll get
-      // different paths back. But they'll have the same module name.
-      if (moduleMetadata.path() != null) {
-        unresolvedModules.put(moduleMetadata.path().toModuleName(), module);
-      }
-
-      for (String namespace : moduleMetadata.googNamespaces()) {
-        unresolvedModulesByClosureNamespace.put(namespace, module);
-      }
+      process(moduleMetadata);
     }
+
+    return resolve();
+  }
+
+  private ModuleMap resolve() {
+    ModuleRequestResolver requestResolver = new ModuleRequestResolverImpl();
+    Map<String, Module> resolvedModules = new HashMap<>();
+    Map<String, Module> resolvedClosureModules = new HashMap<>();
 
     // We need to resolve in a loop as any missing reference will add a fake to the
     // unresolvedModules map (see getFallback* methods above). This would cause a concurrent
@@ -430,7 +213,7 @@ public class ModuleMapCreator implements CompilerPass {
           Sets.difference(unresolvedModules.keySet(), resolvedModules.keySet()).immutableCopy();
 
       for (String key : toResolve) {
-        Module resolved = unresolvedModules.get(key).resolve();
+        Module resolved = unresolvedModules.get(key).resolve(requestResolver);
         resolvedModules.put(key, resolved);
 
         for (String namespace : resolved.metadata().googNamespaces()) {
@@ -448,7 +231,7 @@ public class ModuleMapCreator implements CompilerPass {
 
       for (String namespace : toResolve) {
         resolvedClosureModules.put(
-            namespace, unresolvedModulesByClosureNamespace.get(namespace).resolve());
+            namespace, unresolvedModulesByClosureNamespace.get(namespace).resolve(requestResolver));
       }
     } while (!resolvedClosureModules
         .keySet()
@@ -461,8 +244,54 @@ public class ModuleMapCreator implements CompilerPass {
         ImmutableMap.copyOf(resolvedModules), ImmutableMap.copyOf(resolvedClosureModules));
   }
 
+  private void process(ModuleMetadata moduleMetadata) {
+    ModuleProcessor processor =
+        moduleMetadata.isEs6Module() ? esModuleProcessor : nonEsModuleProcessor;
+    UnresolvedModule module =
+        processor.process(moduleMetadata, moduleMetadata.path(), moduleMetadata.rootNode());
+
+    // Have to use module names as keys because path "resolution" (ModuleLoader) "respects"
+    // leading slashes. Meaning that if you look up "file.js" and "/file.js" you'll get
+    // different paths back. But they'll have the same module name.
+    if (moduleMetadata.path() != null) {
+      unresolvedModules.put(moduleMetadata.path().toModuleName(), module);
+    }
+
+    for (String namespace : moduleMetadata.googNamespaces()) {
+      unresolvedModulesByClosureNamespace.put(namespace, module);
+    }
+  }
+
   @Override
   public void process(Node externs, Node root) {
     compiler.setModuleMap(create());
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    for (ModuleMetadata metadata : compiler.getModuleMetadataMap().getAllModuleMetadata()) {
+      // Call NodeUtil.getInputId on the metadata's root node as it could be a block of a nested
+      // goog.module, which won't have an input ID on the node itself.
+      if (originalRoot.getInputId().equals(NodeUtil.getInputId(metadata.rootNode()))) {
+        // We're hotswapping this module, rescan it.
+        process(metadata);
+      } else {
+        // Existing module we aren't hot swapping. We need to pull off the previously created
+        // UnresolvedModule - we can't scan this again since the module is probably transpiled now.
+        if (metadata.path() != null) {
+          Module module = compiler.getModuleMap().getModule(metadata.path());
+          unresolvedModules.put(metadata.path().toModuleName(), module.unresolvedModule());
+          module.unresolvedModule().reset();
+        }
+
+        for (String namespace : metadata.googNamespaces()) {
+          Module module = compiler.getModuleMap().getClosureModule(namespace);
+          unresolvedModulesByClosureNamespace.put(namespace, module.unresolvedModule());
+          module.unresolvedModule().reset();
+        }
+      }
+    }
+
+    compiler.setModuleMap(resolve());
   }
 }

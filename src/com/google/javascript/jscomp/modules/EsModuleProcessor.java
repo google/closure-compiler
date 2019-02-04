@@ -35,11 +35,7 @@ import com.google.javascript.jscomp.Scope;
 import com.google.javascript.jscomp.Var;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
-import com.google.javascript.jscomp.modules.ModuleMapCreator.ExportTrace;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleProcessor;
-import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleRequestResolver;
-import com.google.javascript.jscomp.modules.ModuleMapCreator.ResolveExportResult;
-import com.google.javascript.jscomp.modules.ModuleMapCreator.UnresolvedModule;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -309,10 +305,20 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
     }
 
     @Override
-    public Module resolve(@Nullable String moduleSpecifier) {
+    void reset() {
+      resolved = null;
+      exportedNames = null;
+      resolvedImports.clear();
+      resolvedExports.clear();
+    }
+
+    @Override
+    public Module resolve(
+        ModuleRequestResolver moduleRequestResolver, @Nullable String moduleSpecifier) {
       if (resolved == null) {
         // Every import creates a locally bound name.
-        Map<String, Binding> boundNames = new LinkedHashMap<>(getAllResolvedImports());
+        Map<String, Binding> boundNames =
+            new LinkedHashMap<>(getAllResolvedImports(moduleRequestResolver));
 
         Map<String, Export> localNameToLocalExport = new HashMap<>();
 
@@ -321,7 +327,7 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
           localNameToLocalExport.put(e.localName(), e);
 
           if (!Export.DEFAULT_EXPORT_NAME.equals(e.localName())) {
-            ResolveExportResult b = resolveExport(e.exportName());
+            ResolveExportResult b = resolveExport(moduleRequestResolver, e.exportName());
             checkState(b.resolved(), "Cannot have invalid missing own export!");
             if (!b.isAmbiguous()) {
               boundNames.put(e.localName(), b.getBinding());
@@ -333,10 +339,11 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
         resolved =
             Module.builder()
                 .boundNames(ImmutableMap.copyOf(boundNames))
-                .namespace(ImmutableMap.copyOf(getAllResolvedExports()))
+                .namespace(ImmutableMap.copyOf(getAllResolvedExports(moduleRequestResolver)))
                 .metadata(metadata)
                 .path(path)
                 .localNameToLocalExport(ImmutableMap.copyOf(localNameToLocalExport))
+                .unresolvedModule(this)
                 .build();
       }
 
@@ -349,11 +356,11 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
     }
 
     /** A map from import bound name to binding. */
-    Map<String, Binding> getAllResolvedImports() {
+    Map<String, Binding> getAllResolvedImports(ModuleRequestResolver moduleRequestResolver) {
       Map<String, Binding> imports = new HashMap<>();
 
       for (String name : importsByLocalName.keySet()) {
-        ResolveExportResult b = resolveImport(name);
+        ResolveExportResult b = resolveImport(moduleRequestResolver, name);
         if (b.resolved()) {
           imports.put(name, b.getBinding());
         }
@@ -363,21 +370,29 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
     }
 
     public ResolveExportResult resolveImport(
-        String name, Set<ExportTrace> resolveSet, Set<UnresolvedModule> exportStarSet) {
+        ModuleRequestResolver moduleRequestResolver,
+        String name,
+        Set<ExportTrace> resolveSet,
+        Set<UnresolvedModule> exportStarSet) {
       if (resolvedImports.containsKey(name)) {
         return resolvedImports.get(name);
       }
-      ResolveExportResult b = resolveImportImpl(name, resolveSet, exportStarSet);
+      ResolveExportResult b =
+          resolveImportImpl(moduleRequestResolver, name, resolveSet, exportStarSet);
       resolvedImports.put(name, b);
       return b;
     }
 
-    public ResolveExportResult resolveImport(String name) {
-      return resolveImport(name, new HashSet<>(), new HashSet<>());
+    public ResolveExportResult resolveImport(
+        ModuleRequestResolver moduleRequestResolver, String name) {
+      return resolveImport(moduleRequestResolver, name, new HashSet<>(), new HashSet<>());
     }
 
     private ResolveExportResult resolveImportImpl(
-        String name, Set<ExportTrace> resolveSet, Set<UnresolvedModule> exportStarSet) {
+        ModuleRequestResolver moduleRequestResolver,
+        String name,
+        Set<ExportTrace> resolveSet,
+        Set<UnresolvedModule> exportStarSet) {
       Import i = importsByLocalName.get(name);
 
       UnresolvedModule requested = moduleRequestResolver.resolve(i);
@@ -398,10 +413,16 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
             return ResolveExportResult.ERROR;
           }
           return ResolveExportResult.of(
-              Binding.from(requested.resolve(i.moduleRequest()), i.nameNode()));
+              Binding.from(
+                  requested.resolve(moduleRequestResolver, i.moduleRequest()), i.nameNode()));
         } else {
           ResolveExportResult result =
-              requested.resolveExport(i.moduleRequest(), i.importName(), resolveSet, exportStarSet);
+              requested.resolveExport(
+                  moduleRequestResolver,
+                  i.moduleRequest(),
+                  i.importName(),
+                  resolveSet,
+                  exportStarSet);
           if (!result.found() && !result.hadError()) {
             compiler.report(
                 JSError.make(
@@ -428,15 +449,16 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
     }
 
     @Override
-    public ImmutableSet<String> getExportedNames() {
+    public ImmutableSet<String> getExportedNames(ModuleRequestResolver moduleRequestResolver) {
       if (exportedNames == null) {
-        exportedNames = getExportedNames(new HashSet<>());
+        exportedNames = getExportedNames(moduleRequestResolver, new HashSet<>());
       }
       return exportedNames;
     }
 
     @Override
-    public ImmutableSet<String> getExportedNames(Set<UnresolvedModule> visited) {
+    public ImmutableSet<String> getExportedNames(
+        ModuleRequestResolver moduleRequestResolver, Set<UnresolvedModule> visited) {
       if (visited.contains(this)) {
         // import * cycle
         return ImmutableSet.of();
@@ -459,7 +481,7 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
 
         if (requested != null) {
           if (requested.isEsModule()) {
-            for (String n : requested.getExportedNames(visited)) {
+            for (String n : requested.getExportedNames(moduleRequestResolver, visited)) {
               // Default exports are not exported with export *.
               if (!Export.DEFAULT.equals(n) && !exportedNames.contains(n)) {
                 exportedNames.add(n);
@@ -479,11 +501,11 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
     }
 
     /** Map of exported name to binding. */
-    Map<String, Binding> getAllResolvedExports() {
+    Map<String, Binding> getAllResolvedExports(ModuleRequestResolver moduleRequestResolver) {
       Map<String, Binding> exports = new LinkedHashMap<>();
 
-      for (String name : getExportedNames()) {
-        ResolveExportResult b = resolveExport(name);
+      for (String name : getExportedNames(moduleRequestResolver)) {
+        ResolveExportResult b = resolveExport(moduleRequestResolver, name);
         checkState(b.found(), "Cannot have invalid own export.");
         if (b.resolved()) {
           exports.put(name, b.getBinding());
@@ -496,8 +518,11 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
     }
 
     private ResolveExportResult resolveExport(
-        String exportName, Set<ExportTrace> resolveSet, Set<UnresolvedModule> exportStarSet) {
-      if (!getExportedNames().contains(exportName)) {
+        ModuleRequestResolver moduleRequestResolver,
+        String exportName,
+        Set<ExportTrace> resolveSet,
+        Set<UnresolvedModule> exportStarSet) {
+      if (!getExportedNames(moduleRequestResolver).contains(exportName)) {
         return ResolveExportResult.NOT_FOUND;
       }
 
@@ -519,7 +544,8 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
           if (importsByLocalName.containsKey(e.localName())) {
             // import whatever from 'mod';
             // export { whatever };
-            return resolveImport(e.localName(), resolveSet, exportStarSet).withSource(e.nameNode());
+            return resolveImport(moduleRequestResolver, e.localName(), resolveSet, exportStarSet)
+                .withSource(e.nameNode());
           } else {
             UnresolvedModule requested = moduleRequestResolver.resolve(e);
 
@@ -529,7 +555,11 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
               // export { whatever } from 'mod';
               ResolveExportResult result =
                   requested.resolveExport(
-                      e.moduleRequest(), e.importName(), resolveSet, exportStarSet);
+                      moduleRequestResolver,
+                      e.moduleRequest(),
+                      e.importName(),
+                      resolveSet,
+                      exportStarSet);
               if (!result.found() && !result.hadError()) {
                 compiler.report(
                     JSError.make(
@@ -572,9 +602,10 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
 
         if (requested == null) {
           return ResolveExportResult.ERROR;
-        } else if (requested.getExportedNames().contains(exportName)) {
+        } else if (requested.getExportedNames(moduleRequestResolver).contains(exportName)) {
           ResolveExportResult resolution =
-              requested.resolveExport(e.moduleRequest(), exportName, resolveSet, exportStarSet);
+              requested.resolveExport(
+                  moduleRequestResolver, e.moduleRequest(), exportName, resolveSet, exportStarSet);
 
           if (resolution.hadError()) {
             // Recursive case; error was reported on base case.
@@ -605,6 +636,7 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
 
     @Override
     public ResolveExportResult resolveExport(
+        ModuleRequestResolver moduleRequestResolver,
         @Nullable String moduleSpecifier,
         String exportName,
         Set<ExportTrace> resolveSet,
@@ -614,7 +646,8 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
         return resolvedExports.get(exportName);
       }
 
-      ResolveExportResult b = resolveExport(exportName, resolveSet, exportStarSet);
+      ResolveExportResult b =
+          resolveExport(moduleRequestResolver, exportName, resolveSet, exportStarSet);
       resolvedExports.put(exportName, b);
       return b;
     }
@@ -627,15 +660,12 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
   private final AbstractCompiler compiler;
   private UnresolvedModuleBuilder currentModuleBuilder;
   private ModuleMetadata metadata;
-  private ModuleRequestResolver moduleRequestResolver;
 
   @Override
   public UnresolvedModule process(
-      ModuleRequestResolver moduleRequestResolver,
       ModuleMetadata metadata,
       ModulePath path,
       Node script) {
-    this.moduleRequestResolver = moduleRequestResolver;
     this.metadata = metadata;
     currentModuleBuilder = new UnresolvedModuleBuilder(path, script);
 

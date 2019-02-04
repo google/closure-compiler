@@ -18,11 +18,7 @@ package com.google.javascript.jscomp.modules;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
-import com.google.javascript.jscomp.modules.ModuleMapCreator.ExportTrace;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleProcessor;
-import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleRequestResolver;
-import com.google.javascript.jscomp.modules.ModuleMapCreator.ResolveExportResult;
-import com.google.javascript.jscomp.modules.ModuleMapCreator.UnresolvedModule;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
 import java.util.Set;
@@ -50,13 +46,15 @@ final class NonEsModuleProcessor implements ModuleProcessor {
 
     @Nullable
     @Override
-    public ResolveExportResult resolveExport(String exportName) {
+    public ResolveExportResult resolveExport(
+        ModuleRequestResolver moduleRequestResolver, String exportName) {
       throw new UnsupportedOperationException();
     }
 
     @Nullable
     @Override
     public ResolveExportResult resolveExport(
+        ModuleRequestResolver moduleRequestResolver,
         @Nullable String moduleSpecifier,
         String exportName,
         Set<ExportTrace> resolveSet,
@@ -77,7 +75,11 @@ final class NonEsModuleProcessor implements ModuleProcessor {
     }
 
     @Override
-    public Module resolve(@Nullable String moduleSpecifier) {
+    void reset() {}
+
+    @Override
+    public Module resolve(
+        ModuleRequestResolver moduleRequestResolver, @Nullable String moduleSpecifier) {
       String namespace = null;
       if (moduleSpecifier != null && GoogEsImports.isGoogImportSpecifier(moduleSpecifier)) {
         namespace = GoogEsImports.getClosureIdFromGoogImportSpecifier(moduleSpecifier);
@@ -89,6 +91,7 @@ final class NonEsModuleProcessor implements ModuleProcessor {
           .boundNames(ImmutableMap.of())
           .localNameToLocalExport(ImmutableMap.of())
           .closureNamespace(namespace)
+          .unresolvedModule(this)
           .build();
     }
 
@@ -98,22 +101,19 @@ final class NonEsModuleProcessor implements ModuleProcessor {
     }
 
     @Override
-    public ImmutableSet<String> getExportedNames() {
+    public ImmutableSet<String> getExportedNames(ModuleRequestResolver moduleRequestResolver) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public ImmutableSet<String> getExportedNames(Set<UnresolvedModule> visited) {
+    public ImmutableSet<String> getExportedNames(
+        ModuleRequestResolver moduleRequestResolver, Set<UnresolvedModule> visited) {
       throw new UnsupportedOperationException();
     }
   }
 
   @Override
-  public UnresolvedModule process(
-      ModuleRequestResolver requestResolver,
-      ModuleMetadata metadata,
-      ModulePath path,
-      Node script) {
+  public UnresolvedModule process(ModuleMetadata metadata, ModulePath path, Node script) {
     return new NonEsModule(metadata, path, script);
   }
 }
