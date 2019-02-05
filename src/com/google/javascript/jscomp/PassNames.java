@@ -42,6 +42,7 @@ public final class PassNames {
   public static final String COLLAPSE_PROPERTIES = "collapseProperties";
   public static final String COLLAPSE_VARIABLE_DECLARATIONS = "collapseVariableDeclarations";
   public static final String CONVERT_TO_DOTTED_PROPERTIES = "convertToDottedProperties";
+  public static final String CREATE_MODULE_MAP = "createModuleMap";
   public static final String CROSS_CHUNK_CODE_MOTION = "crossChunkCodeMotion";
   public static final String CROSS_CHUNK_METHOD_MOTION = "crossChunkMethodMotion";
   public static final String DEAD_ASSIGNMENT_ELIMINATION = "deadAssignmentsElimination";
