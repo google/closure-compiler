@@ -19,6 +19,8 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -27,7 +29,10 @@ import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Name.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,6 +86,66 @@ public final class GlobalNamespaceTest {
 
     assertThat(n.getDeclaration()).isNull();
     assertThat(n.getGlobalSets()).isEqualTo(0);
+  }
+
+  @Test
+  public void firstDeclarationJSDocAlwaysWins() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "const X = {};", //
+                "/** @type {symbol} */", // later assignment should win
+                "X.number;",
+                "/** @type {number} */", // this is the JSDoc we should use
+                "X.number = 3;",
+                "/** @type {string} */",
+                "X.number = 'hi';",
+                "/** @type {Object} */",
+                "X.number;",
+                ""));
+    Name nameX = namespace.getOwnSlot("X.number");
+    Ref declarationRef = nameX.getDeclaration();
+    assertThat(declarationRef).isNotNull();
+
+    // make sure first assignment is considered to be the declaration
+    Node declarationNode = declarationRef.getNode();
+    assertNode(declarationNode).matchesQualifiedName("X.number");
+    Node assignNode = declarationNode.getParent();
+    assertNode(assignNode).isAssign();
+    Node valueNode = declarationNode.getNext();
+    assertNode(valueNode).isNumber(3);
+
+    // Make sure JSDoc on the first assignment is the JSDoc for the name
+    JSDocInfo jsDocInfo = nameX.getJSDocInfo();
+    assertThat(jsDocInfo).isNotNull();
+    JSTypeExpression jsTypeExpression = jsDocInfo.getType();
+    assertThat(jsTypeExpression).isNotNull();
+    JSType jsType = jsTypeExpression.evaluate(/* scope= */ null, lastCompiler.getTypeRegistry());
+    assertType(jsType).isNumber();
+  }
+
+  @Test
+  public void withoutAssignmentFirstQnameDeclarationStatementJSDocWins() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "const X = {};", //
+                "/** @type {string} */",
+                "X.number;",
+                "/** @type {Object} */",
+                "X.number;",
+                ""));
+    Name nameX = namespace.getOwnSlot("X.number");
+    Ref declarationRef = nameX.getDeclaration();
+    assertThat(declarationRef).isNull();
+
+    // Make sure JSDoc on the first assignment is the JSDoc for the name
+    JSDocInfo jsDocInfo = nameX.getJSDocInfo();
+    assertThat(jsDocInfo).isNotNull();
+    JSTypeExpression jsTypeExpression = jsDocInfo.getType();
+    assertThat(jsTypeExpression).isNotNull();
+    JSType jsType = jsTypeExpression.evaluate(/* scope= */ null, lastCompiler.getTypeRegistry());
+    assertType(jsType).isString();
   }
 
   @Test

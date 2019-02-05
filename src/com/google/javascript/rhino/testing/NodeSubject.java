@@ -109,6 +109,21 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
     return this;
   }
 
+  public NodeSubject isNumber(int value) {
+    return isNumber((double) value);
+  }
+
+  public NodeSubject isNumber(double value) {
+    check("isNumber()").that(actual().isNumber()).isTrue();
+    check("getNumber()").that(actual().getDouble()).isEqualTo(value);
+    return this;
+  }
+
+  public NodeSubject isAssign() {
+    check("isAssign()").that(actual().isAssign()).isTrue();
+    return this;
+  }
+
   public NodeSubject isThis() {
     check("isThis()").that(actual().isThis()).isTrue();
     return this;

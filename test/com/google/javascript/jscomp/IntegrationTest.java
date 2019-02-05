@@ -2875,11 +2875,18 @@ public final class IntegrationTest extends IntegrationTestCase {
             "};",
             "C.exportedName = 0;"),
         EMPTY_JOINER.join(
-            // TODO(tbreisacher): Find out why C is removed despite the @export annotation.
-            "('undefined'!=typeof window&&window===this?",
-            "this:'undefined'!=typeof global&&null!=global?global:this)",
-            ".Object.defineProperties(function(){},",
-            "{exportedName:{configurable:!0,enumerable:!0,set:function(){}}})"));
+            "function a(){}", // class C
+            "(",
+            "'undefined'!=typeof window&&window===this?",
+            "this:'undefined'!=typeof global&&null!=global?global:this",
+            ")", // inlined $jscomp.global
+            ".Object.defineProperties(",
+            "a,",
+            "{",
+            "exportedName:{configurable:!0,enumerable:!0,set:function(){}}",
+            "}",
+            ");",
+            "a.exportedName=0"));
   }
 
   @Test

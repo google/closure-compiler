@@ -473,7 +473,7 @@ class CollapseProperties implements CompilerPass {
     Node grandparent = parent.getParent();
 
     if (rvalue != null && rvalue.isFunction()) {
-      checkForHosedThisReferences(rvalue, refName.docInfo, refName);
+      checkForHosedThisReferences(rvalue, refName.getJSDocInfo(), refName);
     }
 
     // Create the new alias node.
@@ -593,7 +593,7 @@ class CollapseProperties implements CompilerPass {
     } else if (!n.isSimpleName()) {
       // Create a VAR node to declare the name.
       if (rvalue.isFunction()) {
-        checkForHosedThisReferences(rvalue, n.docInfo, n);
+        checkForHosedThisReferences(rvalue, n.getJSDocInfo(), n);
       }
 
       compiler.reportChangeToEnclosingScope(rvalue);

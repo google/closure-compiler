@@ -216,10 +216,10 @@ class ProcessDefines implements CompilerPass {
     List<Name> allDefines = new ArrayList<>();
     for (Name name : namespace.getNameIndex().values()) {
       Ref decl = name.getDeclaration();
-      if (name.docInfo != null && name.docInfo.isDefine()) {
+      if (name.getJSDocInfo() != null && name.getJSDocInfo().isDefine()) {
         // Process defines should not depend on check types being enabled,
         // so we look for the JSDoc instead of the inferred type.
-        if (isValidDefineType(name.docInfo.getType())) {
+        if (isValidDefineType(name.getJSDocInfo().getType())) {
           allDefines.add(name);
         } else {
           JSError error = JSError.make(decl.getNode(), INVALID_DEFINE_TYPE_ERROR);

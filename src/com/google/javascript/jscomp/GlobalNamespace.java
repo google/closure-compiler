@@ -1060,16 +1060,14 @@ class GlobalNamespace
       FUNCTION, // function f() {}
       SUBCLASSING_GET, // class C extends SuperClass {
       GET_SET, // a getter, setter, or both; e.g. `obj.b` in `const obj = {set b(x) {}};`
-      OTHER, // anything else, including `var x = 1;`, var x = new Something();`, etc.
+      OTHER; // anything else, including `var x = 1;`, var x = new Something();`, etc.
     }
 
     private final String baseName;
     private final Name parent;
 
     // The children of this name. Must be null if there are no children.
-    @Nullable
-    List<Name> props;
-
+    @Nullable List<Name> props;
     /** The first global assignment to a name. */
     private Ref declaration;
 
@@ -1094,7 +1092,19 @@ class GlobalNamespace
     int subclassingGets = 0;
     private final SourceKind sourceKind;
 
-    JSDocInfo docInfo = null;
+    // Will be set to the JSDocInfo associated with the first SET_FROM_GLOBAL reference added
+    // that has JSDocInfo.
+    // e.g.
+    // /** @type {number} */
+    // X.numberProp = 3;
+    @Nullable private JSDocInfo firstDeclarationJSDocInfo = null;
+
+    // Will be set to the JSDocInfo associated with the first get reference that is a statement
+    // by itself.
+    // e.g.
+    // /** @type {number} */
+    // X.numberProp;
+    @Nullable private JSDocInfo firstQnameDeclarationWithoutAssignmentJsDocInfo = null;
 
     static Name createForTesting(String name) {
       return new Name(name, null, SourceKind.CODE);
@@ -1137,6 +1147,7 @@ class GlobalNamespace
       return parent == null ? baseName : parent.getFullName() + '.' + baseName;
     }
 
+    @Nullable
     @Override
     public Ref getDeclaration() {
       return declaration;
@@ -1207,7 +1218,12 @@ class GlobalNamespace
         case SET_FROM_GLOBAL:
           if (declaration == null) {
             declaration = ref;
-            docInfo = getDocInfoForDeclaration(ref);
+          }
+          if (firstDeclarationJSDocInfo == null) {
+            // JSDocInfo from the first SET_FROM_GLOBAL will be assumed to be canonical
+            // Note that this will not change if the first declaration is later removed
+            // by optimizations.
+            firstDeclarationJSDocInfo = getDocInfoForDeclaration(ref);
           }
           globalSets++;
           break;
@@ -1221,8 +1237,11 @@ class GlobalNamespace
         case PROTOTYPE_GET:
         case DIRECT_GET:
           Node node = ref.getNode();
-          if (node != null && node.isGetProp() && node.getParent().isExprResult()) {
-            docInfo = node.getJSDocInfo();
+          if (firstQnameDeclarationWithoutAssignmentJsDocInfo == null
+              && isQnameDeclarationWithoutAssignment(node)) {
+            // /** @type {sometype} */
+            // some.qname.ref;
+            firstQnameDeclarationWithoutAssignmentJsDocInfo = node.getJSDocInfo();
           }
           totalGets++;
           break;
@@ -1344,13 +1363,7 @@ class GlobalNamespace
     }
 
     boolean isCollapsingExplicitlyDenied() {
-      if (docInfo == null) {
-        Ref ref = getDeclaration();
-        if (ref != null) {
-          docInfo = getDocInfoForDeclaration(ref);
-        }
-      }
-
+      JSDocInfo docInfo = getJSDocInfo();
       return docInfo != null && docInfo.isNoCollapse();
     }
 
@@ -1723,9 +1736,15 @@ class GlobalNamespace
                   "subclassingGets=" + subclassingGets);
     }
 
+    @Nullable
     @Override
     public JSDocInfo getJSDocInfo() {
-      return docInfo;
+      // e.g.
+      // /** @type {string} */ X.numProp;     // could be a declaration, but...
+      // /** @type {number} */ X.numProp = 3; // assignment wins
+      return firstDeclarationJSDocInfo != null
+          ? firstDeclarationJSDocInfo
+          : firstQnameDeclarationWithoutAssignmentJsDocInfo;
     }
 
     /**
@@ -1763,6 +1782,18 @@ class GlobalNamespace
     boolean isModuleExport() {
       return isModuleProp;
     }
+  }
+
+  /**
+   * True if the given Node is the GETPROP in a statement like `some.q.name;`
+   *
+   * <p>Such do-nothing statements often have JSDoc on them and are intended to declare the
+   * qualified name.
+   *
+   * @param node any Node, or even null
+   */
+  private static boolean isQnameDeclarationWithoutAssignment(@Nullable Node node) {
+    return node != null && node.isGetProp() && node.getParent().isExprResult();
   }
 
   // -------------------------------------------------------------------------
