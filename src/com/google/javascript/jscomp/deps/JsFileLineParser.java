@@ -243,7 +243,7 @@ public abstract class JsFileLineParser {
       }
       ;
       // Skip escaped quotes
-      while (line.charAt(closingQuoteIndex - 1) == '\\') {
+      while (isEscaped(line, closingQuoteIndex)) {
         closingQuoteIndex = line.indexOf(quoteChar, closingQuoteIndex + 1);
         if (closingQuoteIndex == -1) {
           return false;
@@ -255,6 +255,18 @@ public abstract class JsFileLineParser {
       startQuoteIndex = line.indexOf(quoteChar, closingQuoteIndex + 1);
     }
     return false;
+  }
+
+  private boolean isEscaped(String line, int closingQuoteIndex) {
+    int escapeCharCount = 0;
+    int index = closingQuoteIndex - 1;
+    while (line.charAt(index) == '\\') {
+      index--;
+      escapeCharCount++;
+    }
+    // Odd number of backslashes means one is actually escaping the quote. Otherwise they are
+    // literal backslashes which are being escaped by another backslash.
+    return escapeCharCount % 2 == 1;
   }
 
   /**

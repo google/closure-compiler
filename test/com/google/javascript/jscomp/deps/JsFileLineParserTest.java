@@ -104,6 +104,11 @@ public final class JsFileLineParserTest {
   }
 
   @Test
+  public void testBlockComment_singleQuotes_escapedSlash() {
+    assertBlocks("", "var x = '\\'/** one line */\\\\';");
+  }
+
+  @Test
   public void testBlockComment_doubleQuotes() {
     assertBlocks("", "var x = \"/** one line */\";");
   }
@@ -116,6 +121,11 @@ public final class JsFileLineParserTest {
   @Test
   public void testBlockComment_doubleQuotes_escaped() {
     assertBlocks("", "var x = \"\\\"/** one line */\";");
+  }
+
+  @Test
+  public void testBlockComment_doubleQuotes_escapedSlash() {
+    assertBlocks("", "var x = \"\\\"/** one line */\\\\\";");
   }
 
   @Test
