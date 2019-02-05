@@ -11644,6 +11644,34 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testCastToNameRequiringPropertyResolution() {
+    // regression test for correctly typing properties off of types in CASTs.
+    // The type JSDoc in a cast is currently evaluated during TypeInference. In the past any
+    // 'unresolved' types in cast JSDoc were not resolved until after type inference completed. This
+    // caused type inference to infer properties off of those unresolved types as unknown.
+    testTypesWithExterns(
+        "var unknownVar;",
+        lines(
+            "const foo = {bar: {}};",
+            "const bar = foo.bar;",
+            "bar.Class = class {",
+            "  /** @return {number} */",
+            "  id() { return 0; }",
+            "};",
+            // Because `foo.bar.Class = ...` was never directly assigned, the type 'foo.bar.Class'
+            // is not in the JSTypeRegistry. It's resolved through NamedType#resolveViaProperty.
+            // The same thing would have occurred if we assigned 'foo.bar.Class = ...' then
+            // referred to '!bar.Class' in the JSDoc.
+            // Verify that type inference correctly infers the id property's type.
+
+            "const /** null */ n = /** @type {!foo.bar.Class} */ (unknownVar).id;"),
+        lines(
+            "initializing variable", //
+            "found   : function(this:bar.Class): number",
+            "required: null"));
+  }
+
+  @Test
   public void testNestedCasts() {
     testTypes("/** @constructor */var T = function() {};\n" +
         "/** @constructor */var V = function() {};\n" +
