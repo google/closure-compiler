@@ -222,8 +222,7 @@ class ProcessDefines implements CompilerPass {
         if (isValidDefineType(name.docInfo.getType())) {
           allDefines.add(name);
         } else {
-          JSError error = JSError.make(
-              decl.node, INVALID_DEFINE_TYPE_ERROR);
+          JSError error = JSError.make(decl.getNode(), INVALID_DEFINE_TYPE_ERROR);
           compiler.report(error);
         }
       } else {
@@ -233,8 +232,8 @@ class ProcessDefines implements CompilerPass {
             continue;
           }
 
-          Node n = ref.node;
-          Node parent = ref.node.getParent();
+          Node n = ref.getNode();
+          Node parent = ref.getNode().getParent();
           JSDocInfo info = n.getJSDocInfo();
           if (info == null && parent.isVar() && parent.hasOneChild()) {
             info = parent.getJSDocInfo();
@@ -281,8 +280,7 @@ class ProcessDefines implements CompilerPass {
       for (Name name : listOfDefines) {
         Ref decl = name.getDeclaration();
         if (decl != null) {
-          allRefInfo.put(decl.node,
-                         new RefInfo(decl, name));
+          allRefInfo.put(decl.getNode(), new RefInfo(decl, name));
         }
         for (Ref ref : name.getRefs()) {
           if (ref == decl) {
@@ -292,7 +290,7 @@ class ProcessDefines implements CompilerPass {
 
           // If there's a TWIN def, only put one of the twins in.
           if (ref.getTwin() == null || !ref.getTwin().isSet()) {
-            allRefInfo.put(ref.node, new RefInfo(ref, name));
+            allRefInfo.put(ref.getNode(), new RefInfo(ref, name));
           }
         }
       }
@@ -328,7 +326,8 @@ class ProcessDefines implements CompilerPass {
         // the result of goog.define is assigned to something (i.e. all the time, once it stops
         // exporting the global variable).  This allows goog.define to have more flexibility than
         // simple @define.
-        String fullName = MoreObjects.firstNonNull(ref.node.getDefineName(), name.getFullName());
+        String fullName =
+            MoreObjects.firstNonNull(ref.getNode().getDefineName(), name.getFullName());
         switch (ref.type) {
           case SET_FROM_GLOBAL:
           case SET_FROM_LOCAL:
@@ -492,10 +491,10 @@ class ProcessDefines implements CompilerPass {
    */
   private static Node getValueParent(Ref ref) {
     // there are two types of declarations: VARs, ASSIGNs, and CONSTs
-    return ref.node.getParent() != null
-            && (ref.node.getParent().isVar() || ref.node.getParent().isConst())
-        ? ref.node
-        : ref.node.getParent();
+    return ref.getNode().getParent() != null
+            && (ref.getNode().getParent().isVar() || ref.getNode().getParent().isConst())
+        ? ref.getNode()
+        : ref.getNode().getParent();
   }
 
   /**

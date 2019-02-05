@@ -1246,6 +1246,16 @@ class GlobalNamespace
       }
     }
 
+    /**
+     * This is the only safe way to update the Node belonging to a Ref once it is added to a Name.
+     */
+    void updateRefNode(Ref ref, @Nullable Node node) {
+      // TODO(bradfordcsmith): Add this checkState when it can be done more efficiently than
+      //     searching through all of the refs.
+      // checkState(refs != null && refs.contains(ref), "unknown ref: %s", ref);
+      ref.node = node;
+    }
+
     void removeRef(Ref ref) {
       if (refs != null && refs.remove(ref)) {
         if (ref == declaration) {
@@ -1809,7 +1819,8 @@ class GlobalNamespace
       SUBCLASSING_GET,
     }
 
-    Node node; // Not final because CollapseProperties needs to update the namespace in-place.
+    // Not final because CollapseProperties needs to update the namespace in-place.
+    private Node node;
     final JSModule module;
     final Name name;
     final Type type;
@@ -1841,8 +1852,8 @@ class GlobalNamespace
       this.preOrderIndex = index;
     }
 
-    private Ref(Ref original, Type type, int index) {
-      this.node = original.node;
+    private Ref(Ref original, Type type, int index, Node refNode) {
+      this.node = refNode;
       this.name = original.name;
       this.module = original.module;
       this.type = type;
@@ -1898,11 +1909,12 @@ class GlobalNamespace
     }
 
     /**
-     * Create a new ref that is the same as this one, but of
-     * a different class.
+     * Create a new ref that is the same as this one, but of a different class and for a different
+     * AST node.
      */
-    Ref cloneAndReclassify(Type type) {
-      return new Ref(this, type, this.preOrderIndex);
+    Ref cloneAndReclassify(Type type, Node refNode) {
+      Ref clone = new Ref(this, type, this.preOrderIndex, refNode);
+      return clone;
     }
 
     static Ref createRefForTesting(Type type) {

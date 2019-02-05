@@ -248,7 +248,7 @@ class AggressiveInlineAliases implements CompilerPass {
       Set<AstChange> newNodes = new LinkedHashSet<>();
 
       // Use this node as a template for rewriteAliasProp.
-      Node superclassNameNode = superclassNameObj.getDeclaration().node;
+      Node superclassNameNode = superclassNameObj.getDeclaration().getNode();
       if (superclassNameNode.isName()) {
         superclassNameNode = superclassNameNode.cloneNode();
       } else if (superclassNameNode.isGetProp()) {
@@ -277,7 +277,7 @@ class AggressiveInlineAliases implements CompilerPass {
       return true;
     }
     // If the scope in which the alias is assigned is not global, look up the LHS of the assignment.
-    Node aliasParent = alias.node.getParent();
+    Node aliasParent = alias.getNode().getParent();
     if (!aliasParent.isAssign() && !aliasParent.isName()) {
       // Only handle variable assignments and initializing declarations.
       return true;
@@ -314,7 +314,7 @@ class AggressiveInlineAliases implements CompilerPass {
     // then the NAME must be the child of a VAR, LET, or CONST node, and we must
     // be in a VAR, LET, or CONST assignment.
     // Otherwise if the parent is an assign, we are in a "a = alias" case.
-    Node aliasParent = alias.node.getParent();
+    Node aliasParent = alias.getNode().getParent();
     if (aliasParent.isName() || aliasParent.isAssign()) {
       Node aliasLhsNode = aliasParent.isName() ? aliasParent : aliasParent.getFirstChild();
       String aliasVarName = aliasLhsNode.getString();
@@ -453,8 +453,8 @@ class AggressiveInlineAliases implements CompilerPass {
       // TODO(lharker): instead replace the entire assignment with the RHS - "alias = x" becomes "x"
       return false;
     }
-    Node aliasParent = alias.node.getParent();
-    aliasParent.replaceChild(alias.node, IR.nullNode());
+    Node aliasParent = alias.getNode().getParent();
+    aliasParent.replaceChild(alias.getNode(), IR.nullNode());
     alias.name.removeRef(alias);
     codeChanged = true;
     compiler.reportChangeToEnclosingScope(aliasParent);
@@ -496,7 +496,7 @@ class AggressiveInlineAliases implements CompilerPass {
    * @return an AstChange representing the new node(s) added to the AST *
    */
   private AstChange replaceAliasReference(Ref alias, Reference aliasRef) {
-    Node newNode = alias.node.cloneTree();
+    Node newNode = alias.getNode().cloneTree();
     aliasRef.getParent().replaceChild(aliasRef.getNode(), newNode);
     compiler.reportChangeToEnclosingScope(newNode);
     return new AstChange(getRefModule(aliasRef), aliasRef.getScope(), newNode);
@@ -515,7 +515,7 @@ class AggressiveInlineAliases implements CompilerPass {
   private void inlineGlobalAliasIfPossible(Name name, Ref alias, GlobalNamespace namespace) {
     // Ensure that the alias is assigned to global name at that the
     // declaration.
-    Node aliasParent = alias.node.getParent();
+    Node aliasParent = alias.getNode().getParent();
     if (((aliasParent.isAssign() || aliasParent.isName())
             && NodeUtil.isExecutedExactlyOnce(aliasParent))
         // We special-case for constructors here, to inline constructor aliases
@@ -552,7 +552,7 @@ class AggressiveInlineAliases implements CompilerPass {
 
       // Rewrite all references to the aliasing name, except for the initialization
       rewriteAliasReferences(aliasingName, alias, newNodes);
-      rewriteAliasProps(aliasingName, alias.node, 0, newNodes);
+      rewriteAliasProps(aliasingName, alias.getNode(), 0, newNodes);
 
       if (aliasInlinability.shouldRemoveDeclaration()) {
         // Rewrite the initialization of the alias, unless this is an unsafe alias inline
@@ -566,14 +566,14 @@ class AggressiveInlineAliases implements CompilerPass {
           //   a.b = aliased.name
           checkState(aliasParent.isAssign(), aliasParent);
           Node aliasGrandparent = aliasParent.getParent();
-          aliasParent.replaceWith(alias.node.detach());
+          aliasParent.replaceWith(alias.getNode().detach());
           aliasingName.removeRef(aliasDeclaration);
           aliasingName.removeRef(aliasDeclaration.getTwin());
-          newNodes.add(new AstChange(alias.module, alias.scope, alias.node));
+          newNodes.add(new AstChange(alias.module, alias.scope, alias.getNode()));
           compiler.reportChangeToEnclosingScope(aliasGrandparent);
         } else {
           // just set the original alias to null.
-          aliasParent.replaceChild(alias.node, IR.nullNode());
+          aliasParent.replaceChild(alias.getNode(), IR.nullNode());
           compiler.reportChangeToEnclosingScope(aliasParent);
         }
         codeChanged = true;
@@ -608,15 +608,15 @@ class AggressiveInlineAliases implements CompilerPass {
             checkState(ref.type == Type.ALIASING_GET, ref);
             break;
           }
-          if (ref.node.isStringKey()) {
+          if (ref.getNode().isStringKey()) {
             // e.g. `y` in `const {y} = x;`
             DestructuringGlobalNameExtractor.reassignDestructringLvalue(
-                ref.node, aliasingRef.node.cloneTree(), newNodes, ref, compiler);
+                ref.getNode(), aliasingRef.getNode().cloneTree(), newNodes, ref, compiler);
           } else {
             // e.g. `x.y`
-            checkState(ref.node.isGetProp() || ref.node.isName());
-            Node newNode = aliasingRef.node.cloneTree();
-            Node node = ref.node;
+            checkState(ref.getNode().isGetProp() || ref.getNode().isName());
+            Node newNode = aliasingRef.getNode().cloneTree();
+            Node node = ref.getNode();
             node.replaceWith(newNode);
             compiler.reportChangeToEnclosingScope(newNode);
             newNodes.add(new AstChange(ref.module, ref.scope, newNode));
@@ -678,7 +678,7 @@ class AggressiveInlineAliases implements CompilerPass {
     rewriteAliasProps(prop, value, depth + 1, newNodes);
     List<Ref> refs = new ArrayList<>(prop.getRefs());
     for (Ref ref : refs) {
-      Node target = ref.node;
+      Node target = ref.getNode();
       for (int i = 0; i <= depth; i++) {
         if (target.isGetProp()) {
           target = target.getFirstChild();
@@ -714,7 +714,7 @@ class AggressiveInlineAliases implements CompilerPass {
       compiler.reportChangeToEnclosingScope(newValue);
       prop.removeRef(ref);
       // Rescan the expression root.
-      newNodes.add(new AstChange(ref.module, ref.scope, ref.node));
+      newNodes.add(new AstChange(ref.module, ref.scope, ref.getNode()));
       codeChanged = true;
     }
   }

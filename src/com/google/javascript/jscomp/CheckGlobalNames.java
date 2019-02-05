@@ -185,12 +185,13 @@ class CheckGlobalNames implements CompilerPass {
                 ? name.getFullName() + ".prototype"
                 : name.getFullName();
             compiler.report(
-                JSError.make(ref.node,
+                JSError.make(
+                    ref.getNode(),
                     NAME_DEFINED_LATE_WARNING,
                     refName,
                     owner.getFullName(),
                     owner.getDeclaration().getSourceFile().getName(),
-                    String.valueOf(owner.getDeclaration().node.getLineno())));
+                    String.valueOf(owner.getDeclaration().getNode().getLineno())));
           }
         }
       }
@@ -204,9 +205,9 @@ class CheckGlobalNames implements CompilerPass {
     }
     for (Ref ref : name.getRefs()) {
       // If this is an annotated EXPR-GET, don't do anything.
-      Node parent = ref.node.getParent();
+      Node parent = ref.getNode().getParent();
       if (parent.isExprResult()) {
-        JSDocInfo info = ref.node.getJSDocInfo();
+        JSDocInfo info = ref.getNode().getJSDocInfo();
         if (info != null && info.hasTypedefType()) {
           return true;
         }
@@ -217,10 +218,12 @@ class CheckGlobalNames implements CompilerPass {
 
   private void reportBadModuleReference(Name name, Ref ref) {
     compiler.report(
-        JSError.make(ref.node, STRICT_MODULE_DEP_QNAME,
-                     ref.getModule().getName(),
-                     name.getDeclaration().getModule().getName(),
-                     name.getFullName()));
+        JSError.make(
+            ref.getNode(),
+            STRICT_MODULE_DEP_QNAME,
+            ref.getModule().getName(),
+            name.getDeclaration().getModule().getName(),
+            name.getFullName()));
   }
 
   private void reportRefToUndefinedName(Name name, Ref ref) {
@@ -230,9 +233,7 @@ class CheckGlobalNames implements CompilerPass {
       name = name.getParent();
     }
 
-    compiler.report(
-        JSError.make(ref.node, level,
-            UNDEFINED_NAME_WARNING, name.getFullName()));
+    compiler.report(JSError.make(ref.getNode(), level, UNDEFINED_NAME_WARNING, name.getFullName()));
   }
 
   /**
