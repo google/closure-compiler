@@ -24,7 +24,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharStreams;
-import com.google.common.io.Resources;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.File;
@@ -36,8 +35,6 @@ import java.io.Serializable;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -356,7 +353,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
   }
 
   private static final String BANG_SLASH = "!/";
-  private static final String JAR_URL_PREFIX = "jar:file:";
 
   private static boolean isZipEntry(String path) {
     return path.contains(".zip!" + File.separator)
@@ -376,18 +372,16 @@ public class SourceFile implements StaticSourceFile, Serializable {
     }
   }
 
-  @GwtIncompatible("java.net.URL")
+  @GwtIncompatible("java.io.File")
   public static SourceFile fromZipEntry(
       String originalZipPath, String absoluteZipPath, String entryPath, Charset inputCharset)
       throws MalformedURLException {
-    String zipEntryPath =
-        JAR_URL_PREFIX + absoluteZipPath + BANG_SLASH + entryPath.replace(File.separator, "/");
-    URL zipEntryUrl = new URL(zipEntryPath);
-
+    // No longer throws MalformedURLException but we are keeping it for backward compatbility.
     return builder()
         .withCharset(inputCharset)
         .withOriginalPath(originalZipPath + BANG_SLASH + entryPath)
-        .buildFromUrl(zipEntryUrl);
+        .buildFromZipEntry(
+            new ZipEntryReader(absoluteZipPath, entryPath.replace(File.separator, "/")));
   }
 
   @GwtIncompatible("java.io.File")
@@ -500,11 +494,11 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return new OnDisk(path, originalPath, charset, kind);
     }
 
-    @GwtIncompatible("java.net.URL")
-    public SourceFile buildFromUrl(URL url) {
-      checkNotNull(url);
+    @GwtIncompatible("java.io.File")
+    public SourceFile buildFromZipEntry(ZipEntryReader zipEntryReader) {
+      checkNotNull(zipEntryReader);
       checkNotNull(charset);
-      return new AtUrl(url, originalPath, charset, kind);
+      return new SourceFile.AtZip(zipEntryReader, originalPath, charset, kind);
     }
 
     public SourceFile buildFromCode(String fileName, String code) {
@@ -654,21 +648,19 @@ public class SourceFile implements StaticSourceFile, Serializable {
   }
 
   /**
-   * A source file at a URL where the code is only read into memory if absolutely necessary. We will
+   * A source file at a zip where the code is only read into memory if absolutely necessary. We will
    * try to delay loading the code into memory as long as possible.
-   *
-   * <p>In practice this is used to load code in entries inside of zip files.
    */
-  @GwtIncompatible("java.net.URL")
-  private static class AtUrl extends SourceFile {
+  @GwtIncompatible("java.io.File")
+  private static class AtZip extends SourceFile {
     private static final long serialVersionUID = 1L;
-    private final URL url;
+    private final ZipEntryReader zipEntryReader;
     private transient Charset inputCharset;
 
-    AtUrl(URL url, String originalPath, Charset c, SourceKind kind) {
+    AtZip(ZipEntryReader zipEntryReader, String originalPath, Charset c, SourceKind kind) {
       super(originalPath, SourceKind.STRONG);
       this.inputCharset = c;
-      this.url = url;
+      this.zipEntryReader = zipEntryReader;
       setOriginalPath(originalPath);
     }
 
@@ -677,15 +669,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
       String cachedCode = super.getCode();
 
       if (cachedCode == null) {
-        URLConnection urlConnection = url.openConnection();
-        // Perform the read through the URL connection while making sure that it does not internally
-        // cache, because its default internal caching would defeat our own cache management.
-        urlConnection.setUseCaches(false);
-        InputStream inputStream = urlConnection.getInputStream();
-        cachedCode = CharStreams.toString(new InputStreamReader(inputStream, inputCharset));
-        // Must close the stream or else the cache won't be cleared.
-        inputStream.close();
-
+        cachedCode = zipEntryReader.read(inputCharset);
         super.setCode(cachedCode);
         // Byte Order Mark can be removed by setCode
         cachedCode = super.getCode();
@@ -702,7 +686,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
         return super.getCodeReader();
       } else {
         // If we haven't pulled the code into memory yet, don't.
-        return Resources.asCharSource(url, inputCharset).openStream();
+        return zipEntryReader.getReader(inputCharset);
       }
     }
 
