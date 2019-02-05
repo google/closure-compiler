@@ -3031,6 +3031,40 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstructorAliasWithPrototypeMethodHasCorrectThisType() {
+    testSame(
+        lines(
+            "class Foo {}", //
+            "const FooAlias = Foo;",
+            "FooAlias.prototype.fn = function() {};"));
+
+    Node fnAliasNameNode =
+        findQualifiedNameNode("FooAlias.prototype.fn", globalScope.getRootNode());
+
+    JSType fooCtorType = findNameType("Foo", globalScope);
+    JSType fooType = fooCtorType.toMaybeFunctionType().getInstanceType();
+
+    assertType(fnAliasNameNode.getJSType())
+        .isFunctionTypeThat()
+        .hasTypeOfThisThat()
+        .isEqualTo(fooType);
+  }
+
+  @Test
+  public void testConstructorAliasPrototypePropIsInScope() {
+    testSame(
+        lines(
+            "class Foo {}", //
+            "const FooAlias = Foo;",
+            "FooAlias.prototype.fn = function() {};"));
+
+    TypedVar fooAliasPrototype = globalScope.getSlot("FooAlias.prototype");
+    assertThat(fooAliasPrototype).isNotNull();
+    assertType(fooAliasPrototype.getType())
+        .isEqualTo(globalScope.getSlot("Foo.prototype").getType());
+  }
+
+  @Test
   public void testTemplateType1() {
     testSame(
         "/**\n" +

@@ -1676,8 +1676,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // This doesn't apply to structural constructors (like
           // function(new:Array). Checking the constructed type against
           // the variable name is a sufficient check for this.
-          if ((fnType.isConstructor() || fnType.isInterface())
-              && variableName.equals(fnType.getReferenceName())) {
+          if (fnType.isConstructor() || fnType.isInterface()) {
             finishConstructorDefinition(
                 declarationNode, variableName, fnType, scopeToDeclareIn, input, newVar);
           }
@@ -1758,16 +1757,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       FunctionType superClassCtor = fnType.getSuperClassConstructor();
       Property prototypeSlot = fnType.getSlot("prototype");
 
-      // When we declare the function prototype implicitly, we
-      // want to make sure that the function and its prototype
-      // are declared at the same node. We also want to make sure
-      // that the if a symbol has both a TypedVar and a JSType, they have
-      // the same node.
-      //
-      // This consistency is helpful to users of SymbolTable,
-      // because everything gets declared at the same place.
-      prototypeSlot.setNode(n);
-
       String prototypeName = variableName + ".prototype";
 
       // There are some rare cases where the prototype will already
@@ -1787,11 +1776,27 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           superClassCtor == null
               || superClassCtor.getInstanceType().isEquivalentTo(getNativeType(OBJECT_TYPE)));
 
-      // Make sure the variable is initialized to something if it constructs itself.
-      if (newVar.getInitialValue() == null && !n.isFromExterns()) {
-        report(
-            JSError.make(
-                n, fnType.isConstructor() ? CTOR_INITIALIZER : IFACE_INITIALIZER, variableName));
+      // Only do the following at the initial initialization of the constructor, not on an
+      // alias.
+      if (variableName.equals(fnType.getReferenceName())) {
+        // Make sure the variable is initialized to something if it constructs itself.
+        if (newVar.getInitialValue() == null && !n.isFromExterns()) {
+          report(
+              JSError.make(
+                  n, fnType.isConstructor() ? CTOR_INITIALIZER : IFACE_INITIALIZER, variableName));
+        }
+
+        // When we declare the function prototype implicitly, we
+        // want to make sure that the function and its prototype
+        // are declared at the same node. We also want to make sure
+        // that the if a symbol has both a TypedVar and a JSType, they have
+        // the same node.
+        //
+        // This consistency is helpful to users of SymbolTable,
+        // because everything gets declared at the same place.
+        // This is skipped for aliases of constructors; the .prototype property should point to the
+        // original definition.
+        prototypeSlot.setNode(n);
       }
     }
 
