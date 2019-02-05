@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_TYPE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_MODULE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_NAMESPACE;
@@ -28,8 +26,6 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_DESTRUCT
 import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_SHADOWS_VAR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
-import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_MODULE_NAMESPACE;
-import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_PROVIDE_CALL;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LATE_PROVIDE_ERROR;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -1031,28 +1027,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         lines(
             "/** @const */ var module$exports$a = {};",
             "this;"));
-  }
-
-  @Test
-  public void testInvalidModule() {
-    testError("goog.module(a);", INVALID_MODULE_NAMESPACE);
-  }
-
-  @Test
-  public void testInvalidRequire() {
-    testError("goog.module('ns.a');" + "goog.require(a);", INVALID_REQUIRE_NAMESPACE);
-  }
-
-  @Test
-  public void testInvalidRequireType() {
-    testError("goog.module('ns.a');" + "goog.requireType(a);", INVALID_REQUIRE_TYPE_NAMESPACE);
-  }
-
-  @Test
-  public void testInvalidProvide() {
-    // The ES6 path turns on DependencyOptions.needsManagement() which leads to JsFileLineParser
-    // execution that throws a different exception on some invalid goog.provide()s.
-    testError("goog.module('a'); goog.provide('b');", INVALID_PROVIDE_CALL);
   }
 
   @Test

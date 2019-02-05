@@ -201,14 +201,6 @@ public final class ExtraRequireTest extends CompilerTestCase {
         EXTRA_REQUIRE_WARNING);
 
     testError(
-        lines("import {Foo} from '/bar';", "goog.require('example.ExtraRequire');", "new Foo;"),
-        EXTRA_REQUIRE_WARNING);
-
-    testError(
-        lines("import {Foo} from '/bar';", "goog.require('example.ExtraRequire');", "new Foo;"),
-        EXTRA_REQUIRE_WARNING);
-
-    testError(
         lines(
             "import {Foo} from '/bar';", //
             "goog.requireType('example.ExtraRequire');",

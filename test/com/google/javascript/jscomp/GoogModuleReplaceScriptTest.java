@@ -146,22 +146,4 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
             "var a = new Bar();");
     runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
   }
-
-  @Test
-  public void testGoogModuleDependsOnGoogProvideError() {
-    String source0 = "goog.provide('ns.Bar'); /** @constructor */ ns.Bar = function() {};";
-    String source1 =
-        LINE_JOINER.join(
-            "goog.loadModule(function(exports) { 'use strict';",
-            "  goog.module('ns.Baz');",
-            "  var Bar = goog.require('ns.Bar');",
-            "  var a = new Bar();",
-            "  return exports;",
-            "});");
-    runReplaceScriptWithError(
-        ImmutableList.of(source0 + source1),
-        source1,
-        0,
-        ProcessClosurePrimitives.MISSING_PROVIDE_ERROR);
-  }
 }

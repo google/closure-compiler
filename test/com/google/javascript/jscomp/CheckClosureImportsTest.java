@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CheckClosureImports.INVALID_CLOSURE_IMPORT_CALL;
 import static com.google.javascript.jscomp.CheckClosureImports.INVALID_CLOSURE_IMPORT_DESTRUCTURING;
 import static com.google.javascript.jscomp.CheckClosureImports.LATE_PROVIDE_ERROR;
 import static com.google.javascript.jscomp.CheckClosureImports.LET_CLOSURE_IMPORT;
@@ -158,24 +157,6 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     test(
         srcs(PROVIDES_SYMBOL_SRC, makeTestFile(source.replace("<import>", "goog.requireType"))),
         error(error));
-  }
-
-  @Test
-  public void mustHaveOneStringLiteralArgument() {
-    // The regex deps parser will report an error earlier, but it doesn't run if modules aren't
-    // part of the input.
-    languageMode = LanguageMode.ECMASCRIPT5_STRICT;
-    testCommonCase("<import>();", INVALID_CLOSURE_IMPORT_CALL);
-    testCommonCase("<import>(0);", INVALID_CLOSURE_IMPORT_CALL);
-    testCommonCase("<import>(e);", INVALID_CLOSURE_IMPORT_CALL);
-    testCommonCase("<import>('symbol');");
-    testCommonCase("<import>('symbol', 'extra');", INVALID_CLOSURE_IMPORT_CALL);
-
-    testError("function x() { goog.module.get(); }", INVALID_CLOSURE_IMPORT_CALL);
-    testError("function x() { goog.module.get(0); }", INVALID_CLOSURE_IMPORT_CALL);
-    testError("function x() { goog.module.get(e); }", INVALID_CLOSURE_IMPORT_CALL);
-    testSame("function x() { goog.module.get('symbol'); }");
-    testError("function x() { goog.module.get('symbol', 'extra'); }", INVALID_CLOSURE_IMPORT_CALL);
   }
 
   @Test

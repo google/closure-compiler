@@ -474,13 +474,6 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
         DUPLICATE_REQUIRE);
   }
 
-  // Just make sure we don't crash.
-  @Test
-  public void testEmptyRequire() {
-    testNoWarning("goog.require();");
-    testNoWarning("goog.requireType();");
-  }
-
   // Compiler doesn't sort ES6 modules yet, because semantics not yet finalized.
   // Simple test to make sure compiler does not crash.
   @Test

@@ -37,7 +37,6 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.MISSING_DEFI
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.MISSING_PROVIDE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NULL_ARGUMENT_ERROR;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.TOO_MANY_ARGUMENTS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.WEAK_NAMESPACE_TYPE;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.XMODULE_REQUIRE_ERROR;
 
@@ -77,6 +76,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
 
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     if (banGoogBase) {
       options.setWarningLevel(
           DiagnosticGroups.USE_OF_GOOG_BASE, CheckLevel.ERROR);
@@ -431,18 +431,9 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   @Test
   public void testProvideErrorCases() {
-    testError("goog.provide();", NULL_ARGUMENT_ERROR);
-    testError("goog.provide(5);", INVALID_ARGUMENT_ERROR);
-    testError("goog.provide([]);", INVALID_ARGUMENT_ERROR);
-    testError("goog.provide({});", INVALID_ARGUMENT_ERROR);
-    testError("goog.provide('foo', 'bar');", TOO_MANY_ARGUMENTS_ERROR);
     testError("goog.provide('foo'); goog.provide('foo');", DUPLICATE_NAMESPACE_ERROR);
     testError("goog.provide('foo.bar'); goog.provide('foo'); goog.provide('foo');",
         DUPLICATE_NAMESPACE_ERROR);
-
-    testError("goog.provide(`template`);", INVALID_ARGUMENT_ERROR);
-    testError("goog.provide(tagged`template`);", INVALID_ARGUMENT_ERROR);
-    testError("goog.provide(`${template}Sub`);", INVALID_ARGUMENT_ERROR);
   }
 
   @Test
@@ -466,11 +457,6 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
     test("goog.provide('foo'); /** @type {Object<string>} */ var foo = {};",
         "/** @type {Object<string>} */ var foo={};");
-  }
-
-  @Test
-  public void testProvideInESModule() {
-    testError("import {x} from 'y'; goog.provide('z');", INVALID_CLOSURE_CALL_SCOPE_ERROR);
   }
 
   @Test
@@ -529,28 +515,6 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test(
         "goog.provide('foo'); goog.requireType('foo'); var a = {};",
         "/** @const */ var foo = {}; goog.provide('foo'); goog.requireType('foo'); var a = {};");
-  }
-
-  @Test
-  public void testRequireBadArguments() {
-    testError("goog.require();", NULL_ARGUMENT_ERROR);
-    testError("goog.require(5);", INVALID_ARGUMENT_ERROR);
-    testError("goog.require([]);", INVALID_ARGUMENT_ERROR);
-    testError("goog.require({});", INVALID_ARGUMENT_ERROR);
-    testError("goog.require(`template`);", INVALID_ARGUMENT_ERROR);
-    testError("goog.require(tagged`template`);", INVALID_ARGUMENT_ERROR);
-    testError("goog.require(`${template}Sub`);", INVALID_ARGUMENT_ERROR);
-  }
-
-  @Test
-  public void testRequireTypeBadArguments() {
-    testError("goog.requireType();", NULL_ARGUMENT_ERROR);
-    testError("goog.requireType(5);", INVALID_ARGUMENT_ERROR);
-    testError("goog.requireType([]);", INVALID_ARGUMENT_ERROR);
-    testError("goog.requireType({});", INVALID_ARGUMENT_ERROR);
-    testError("goog.requireType(`template`);", INVALID_ARGUMENT_ERROR);
-    testError("goog.requireType(tagged`template`);", INVALID_ARGUMENT_ERROR);
-    testError("goog.requireType(`${template}Sub`);", INVALID_ARGUMENT_ERROR);
   }
 
   @Test
