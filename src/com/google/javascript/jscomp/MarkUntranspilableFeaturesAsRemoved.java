@@ -52,8 +52,18 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
           Feature.REGEXP_NAMED_GROUPS,
           Feature.REGEXP_UNICODE_PROPERTY_ESCAPE);
 
+  private static final FeatureSet UNTRANSPILABLE_2019_FEATURES =
+      FeatureSet.BARE_MINIMUM.with(
+          // We could transpile this, but there's no point. We always escape these in the output,
+          // no need to have a separate pass to escape them. So we'll piggy back off this pass to
+          // mark it as transpiled. Note that we never complain that this feature won't be
+          // transpiled below.
+          Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
+
   private static final FeatureSet ALL_UNTRANSPILABLE_FEATURES =
-      FeatureSet.BARE_MINIMUM.union(UNTRANSPILABLE_2018_FEATURES);
+      FeatureSet.BARE_MINIMUM
+          .union(UNTRANSPILABLE_2018_FEATURES)
+          .union(UNTRANSPILABLE_2019_FEATURES);
 
   private static final FeatureSet ALL_TRANSPILABLE_FEATURES;
 

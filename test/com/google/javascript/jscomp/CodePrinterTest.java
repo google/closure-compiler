@@ -39,6 +39,26 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   @Test
+  public void testUnescapedUnicodeLineSeparator() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrintSame("`\u2028`");
+
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertPrint("'\u2028'", "\"\\u2028\"");
+    assertPrint("\"\u2028\"", "\"\\u2028\"");
+  }
+
+  @Test
+  public void testUnescapedUnicodeParagraphSeparator() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrintSame("`\u2029`");
+
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertPrint("'\u2029'", "\"\\u2029\"");
+    assertPrint("\"\u2029\"", "\"\\u2029\"");
+  }
+
+  @Test
   public void testOptionalCatchBlock() {
     useUnsupportedFeatures = true;
     assertPrintSame("try{}catch{}");

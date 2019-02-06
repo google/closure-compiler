@@ -2327,6 +2327,12 @@ public class Parser {
   private LiteralExpressionTree parseLiteralExpression() {
     SourcePosition start = getTreeStartLocation();
     Token literal = nextLiteralToken();
+
+    if (literal.type == TokenType.STRING
+        && ((StringLiteralToken) literal).hasUnescapedUnicodeLineOrParagraphSeparator()) {
+      recordFeatureUsed(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
+    }
+
     return new LiteralExpressionTree(getTreeLocation(start), literal);
   }
 

@@ -166,6 +166,10 @@ public final class FeatureSet implements Serializable {
     // https://github.com/tc39/proposal-regexp-unicode-property-escapes
     REGEXP_UNICODE_PROPERTY_ESCAPE("RegExp unicode property escape", LangVersion.ES2018),
 
+    // ES 2019 adds https://github.com/tc39/proposal-json-superset
+    UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP(
+        "Unescaped unicode line or paragraph separator", LangVersion.ES_NEXT),
+
     // ES 2019 adds optional catch bindings:
     // https://github.com/tc39/proposal-optional-catch-binding
     OPTIONAL_CATCH_BINDING("Optional catch binding", LangVersion.ES_UNSUPPORTED),

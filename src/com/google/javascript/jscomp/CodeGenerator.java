@@ -1806,10 +1806,6 @@ public class CodeGenerator {
         case '$': sb.append(dollarEscape); break;
         case '`': sb.append(backtickEscape); break;
 
-        // From LineTerminators (ES5 Section 7.3, Table 3)
-        case '\u2028': sb.append("\\u2028"); break;
-        case '\u2029': sb.append("\\u2029"); break;
-
         case '=':
           // '=' is a syntactically significant regexp character.
           if (trustedStrings || isRegexp) {
@@ -1868,7 +1864,22 @@ public class CodeGenerator {
             sb.append(c);
           }
           break;
+
         default:
+          if (isRegexp) {
+            // In 2019 these characters (line and paragraph separators) are valid in strings but
+            // not regular expressions.
+            // https://github.com/tc39/proposal-json-superset
+            if (c == '\u2028') {
+              sb.append("\\u2028");
+              break;
+            }
+            if (c == '\u2029') {
+              sb.append("\\u2029");
+              break;
+            }
+          }
+
           if ((outputCharsetEncoder != null && outputCharsetEncoder.canEncode(c))
               || (c > 0x1f && c < 0x7f)) {
             // If we're given an outputCharsetEncoder, then check if the character can be

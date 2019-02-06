@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
@@ -310,6 +311,18 @@ public class Scanner {
         return true;
       default:
         return false;
+    }
+  }
+
+  // Allow line separator and paragraph separator in string literals.
+  // https://github.com/tc39/proposal-json-superset
+  private static boolean isStringLineTerminator(char ch) {
+    switch (ch) {
+      case '\u2028': // Line Separator
+      case '\u2029': // Paragraph Separator
+        return false;
+      default:
+        return isLineTerminator(ch);
     }
   }
 
@@ -827,10 +840,16 @@ public class Scanner {
   }
 
   private Token scanStringLiteral(int beginIndex, char terminator) {
+    boolean hasUnescapedUnicodeLineOrParagraphSeparator = false;
     while (peekStringLiteralChar(terminator)) {
+      char c = peekChar();
+      hasUnescapedUnicodeLineOrParagraphSeparator =
+          hasUnescapedUnicodeLineOrParagraphSeparator || c == '\u2028' || c == '\u2029';
       if (!skipStringLiteralChar()) {
-        return new LiteralToken(
-            TokenType.STRING, getTokenString(beginIndex), getTokenRange(beginIndex));
+        return new StringLiteralToken(
+            getTokenString(beginIndex),
+            getTokenRange(beginIndex),
+            hasUnescapedUnicodeLineOrParagraphSeparator);
       }
     }
     if (peekChar() != terminator) {
@@ -838,8 +857,10 @@ public class Scanner {
     } else {
       nextChar();
     }
-    return new LiteralToken(
-        TokenType.STRING, getTokenString(beginIndex), getTokenRange(beginIndex));
+    return new StringLiteralToken(
+        getTokenString(beginIndex),
+        getTokenRange(beginIndex),
+        hasUnescapedUnicodeLineOrParagraphSeparator);
   }
 
   private Token scanTemplateLiteral(int beginIndex) {
@@ -893,7 +914,7 @@ public class Scanner {
   }
 
   private boolean peekStringLiteralChar(char terminator) {
-    return !isAtEnd() && peekChar() != terminator && !isLineTerminator(peekChar());
+    return !isAtEnd() && peekChar() != terminator && !isStringLineTerminator(peekChar());
   }
 
   private boolean skipStringLiteralChar() {
@@ -996,7 +1017,7 @@ public class Scanner {
       reportError("Unterminated string literal escape sequence");
       return false;
     }
-    if (isLineTerminator(peekChar())) {
+    if (isStringLineTerminator(peekChar())) {
       skipLineTerminator();
       return true;
     }

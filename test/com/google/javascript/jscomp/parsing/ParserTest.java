@@ -95,6 +95,24 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseUnescapedLineSep() {
+    parse("`\u2028`;");
+
+    expectFeatures(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
+    parse("\"\u2028\";");
+    parse("'\u2028';");
+  }
+
+  @Test
+  public void testParseUnescapedParagraphSep() {
+    parse("`\u2029`;");
+
+    expectFeatures(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
+    parse("\"\u2029\";");
+    parse("'\u2029';");
+  }
+
+  @Test
   public void testOptionalCatchBinding() {
     mode = LanguageMode.UNSUPPORTED;
 
