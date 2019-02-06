@@ -157,8 +157,10 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         visitEnum(t, n, parent);
         break;
       case NAME:
-      case REST:
         maybeVisitColonType(t, n, n);
+        break;
+      case REST:
+        maybeVisitColonType(t, n, n.getOnlyChild());
         break;
       case FUNCTION:
         visitFunction(t, n, parent);

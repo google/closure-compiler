@@ -241,6 +241,10 @@ public final class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = new ArrayList<>();
 
+    if (options.needsTranspilationFrom(TYPESCRIPT)) {
+      checks.add(convertEs6TypedToEs6);
+    }
+
     checks.add(gatherGettersAndSetters);
 
     if (options.shouldGenerateTypedExterns()) {
@@ -267,10 +271,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Verify JsDoc annotations and check ES6 modules
     checks.add(checkJsDocAndEs6Modules);
-
-    if (options.needsTranspilationFrom(TYPESCRIPT)) {
-      checks.add(convertEs6TypedToEs6);
-    }
 
     checks.add(checkTypeImportCodeReferences);
 
