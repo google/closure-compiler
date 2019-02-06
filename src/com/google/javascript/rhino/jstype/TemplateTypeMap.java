@@ -229,7 +229,7 @@ public class TemplateTypeMap implements Serializable {
       boolean result =
           checkEquivalenceHelper(eqMethod, this, that, eqCache, subtypingMode)
               && checkEquivalenceHelper(eqMethod, that, this, eqCache, subtypingMode);
-      eqCache.updateCache(this, that, result ? MatchStatus.MATCH : MatchStatus.NOT_MATCH);
+      eqCache.updateCache(this, that, MatchStatus.valueOf(result));
       return result;
     } else {
       return status.subtypeValue();

@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.rhino.jstype.ObjectType.PropertyOptionality.ALL_PROPS_ARE_REQUIRED;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
@@ -429,23 +430,21 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   /** Determines if typeA is a subtype of typeB */
-  private static boolean isSubtype(ObjectType typeA, RecordType typeB,
-      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    // typeA is a subtype of record type typeB iff:
-    // 1) typeA has all the properties declared in typeB.
-    // 2) And for each property of typeB, its type must be
-    //    a super type of the corresponding property of typeA.
-    for (String property : typeB.getOwnPropertyNames()) {
-      if (!typeA.hasProperty(property)) {
-        return false;
-      }
-      JSType propA = typeA.getPropertyType(property);
-      JSType propB = typeB.getPropertyType(property);
-      if (!propA.isSubtype(propB, implicitImplCache, subtypingMode)) {
-        return false;
-      }
+  private static boolean isSubtype(
+      ObjectType typeA,
+      RecordType typeB,
+      ImplCache implicitImplCache,
+      SubtypingMode subtypingMode) {
+
+    MatchStatus cached = implicitImplCache.checkCache(typeA, typeB);
+    if (cached != null) {
+      return cached.subtypeValue();
     }
-    return true;
+
+    boolean result =
+        isStructuralSubtypeHelper(
+            typeA, typeB, implicitImplCache, subtypingMode, ALL_PROPS_ARE_REQUIRED);
+    return implicitImplCache.updateCache(typeA, typeB, MatchStatus.valueOf(result));
   }
 
   /** Whether this is a built-in object. */

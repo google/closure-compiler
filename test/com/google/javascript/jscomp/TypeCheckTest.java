@@ -20088,8 +20088,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "Rec.prototype.p;",
             "",
             "/**",
-            " * @constructor @implements {Rec<T>}",
-            " * @template T",
+            " * @constructor @implements {Rec<U>}",
+            " * @template U",
             " */",
             "var Foo = function() {};",
             "/** @override */",
@@ -20746,7 +20746,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testCovarianceForRecordType21() {
-    testTypesWithExtraExterns(
+    testTypesWithExterns(
         "",
         lines(
             "/** @constructor */",
@@ -20763,7 +20763,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testCovarianceForRecordType23() {
-    testTypesWithExtraExterns(
+    testTypesWithExterns(
         lines(
             "/** @constructor */",
             "function A() {}",
@@ -22833,6 +22833,122 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @const {!Component} */",
             "var OtherComponent = {foo: 2};"),
         STRICT_INEXISTENT_PROPERTY);
+  }
+
+  @Test
+  public void testCheckRecursiveTypedefSubclassOfNominalClass() {
+    testTypes(
+        lines(
+            "/** @typedef {{self: !Bar}} */",
+            "var Foo;",
+            "/** @typedef {!Foo} */",
+            "var Bar;",
+            "",
+            "/** @type {!Foo} */",
+            "var foo;",
+            "",
+            "class Baz {",
+            "  constructor() {",
+            "    /** @type {!Baz} */ this.self = this;",
+            "  }",
+            "}",
+            "",
+            "const /** !Baz */ x = foo;"),
+        lines(
+            "initializing variable", //
+            "found   : {self: {...}}",
+            "required: Baz"));
+  }
+
+  @Test
+  public void testCheckNominalClassSubclassOfRecursiveTypedef() {
+    testTypes(
+        lines(
+            "/** @typedef {{self: !Bar}} */",
+            "var Foo;",
+            "/** @typedef {!Foo} */",
+            "var Bar;",
+            "",
+            "class Baz {",
+            "  constructor() {",
+            "    /** @type {!Baz} */ this.self = this;",
+            "  }",
+            "}",
+            "",
+            "const /** !Foo */ x = new Baz();"));
+  }
+
+  @Test
+  public void testNullableToStringSubclassOfRecordLiteral() {
+    // Note: this is an interesting case because inline record literal types are implicit subtypes
+    // of Object, and thus inherit Object's prototype methods (toString and valueOf).  But once
+    // the warning is suppressed in the class definition, classes that break these methods'
+    // contracts should still be usable.
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().addObject().build(),
+        lines(
+            "/** @struct @constructor */",
+            "function MyClass() {}",
+            "",
+            "/**",
+            " * @override",
+            " * @return {?string}",
+            " * @suppress {checkTypes}", // J2CL allows this, so we need to test it.
+            " */",
+            "MyClass.prototype.toString = function() {};",
+            "",
+            // To do a strucutural match, this type needs at least one additional property.
+            // There is no empty `{}` type.
+            "/** @return {number} */",
+            "MyClass.prototype.x = function() {};",
+            "",
+            "var /** {x: !Function} */ instance = new MyClass();"));
+  }
+
+  @Test
+  public void testForwardReferencedRecordTypeUnionedWithConcreteType() {
+    // These types should be disjoint and both should be preserved both before and after type
+    // resolution.  This is not particularly special, but it covers a previously-uncovered case.
+    testTypes(
+        lines(
+            "class Concrete {}",
+            "",
+            "/**",
+            " * @param {!ForwardReferenced|!Concrete} arg",
+            " */",
+            "var bar = (arg) => {};",
+            "",
+            "/**",
+            " * @typedef {{baz}}",
+            " */",
+            "var ForwardReferenced;",
+            "",
+            "/**",
+            " * @param {!Concrete} arg",
+            " */",
+            "var foo = (arg) => bar(arg);",
+            ""));
+  }
+
+  @Test
+  public void testUnionCollapse_recordWithOnlyOptionalPropertiesDoesNotSupercedeArrayOrFunction() {
+    // Ensure the full union type is preserved
+    testTypes(
+        lines(
+            "/** @typedef {{x: (string|undefined)}} */",
+            "var Options;",
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @typedef {function(new: Foo)|!Array<function(new: Foo)>} */",
+            "var FooCtor;",
+            "/** @type {FooCtor|Options} */",
+            "var x;",
+            "/** @type {null} */",
+            "var y = x;"),
+        lines(
+            "initializing variable",
+            "found   : (Array<function(new:Foo): ?>|function(new:Foo): ?|{x: (string|undefined)})",
+            "required: null"));
   }
 
   private void testClosureTypes(String js, String description) {

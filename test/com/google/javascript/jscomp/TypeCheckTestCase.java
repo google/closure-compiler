@@ -197,6 +197,10 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     testTypesWithExterns(externs, js, description, false);
   }
 
+  protected void testTypesWithExterns(String externs, String js, DiagnosticType diagnosticType) {
+    testTypesWithExterns(externs, js, diagnosticType, false);
+  }
+
   protected void testTypesWithExterns(String externs, String js) {
     testTypesWithExterns(externs, js, (String) null, false);
   }
