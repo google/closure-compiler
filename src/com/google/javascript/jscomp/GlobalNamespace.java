@@ -1327,7 +1327,7 @@ class GlobalNamespace
     }
 
     List<Ref> getRefs() {
-      return refs == null ? ImmutableList.of() : refs;
+      return refs == null ? ImmutableList.of() : Collections.unmodifiableList(refs);
     }
 
     private void addRefInternal(Ref ref) {
