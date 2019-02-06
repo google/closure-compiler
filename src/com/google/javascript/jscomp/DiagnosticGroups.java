@@ -704,6 +704,9 @@ public class DiagnosticGroups {
   // For internal use only, so there are no constants for these groups.
   static {
     DiagnosticGroups.registerGroup(
+        "polymerBehavior", PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR);
+
+    DiagnosticGroups.registerGroup(
         "invalidProvide", ProcessClosurePrimitives.INVALID_PROVIDE_ERROR);
 
     DiagnosticGroups.registerGroup("es6Typed", RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);
