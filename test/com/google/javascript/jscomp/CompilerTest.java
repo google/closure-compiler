@@ -1174,10 +1174,11 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
 
-    assertThat(compiler.externsRoot.getChildCount()).isEqualTo(3);
-    assertExternIndex(compiler, 0, "hops");
-    assertExternIndex(compiler, 1, "beer");
-    assertExternIndex(compiler, 2, "leaf");
+    assertThat(compiler.externsRoot.getChildCount()).isEqualTo(4);
+    assertExternIndex(compiler, 0, "{SyntheticVarsDeclar}"); // added by VarCheck
+    assertExternIndex(compiler, 1, "hops");
+    assertExternIndex(compiler, 2, "beer");
+    assertExternIndex(compiler, 3, "leaf");
   }
 
   @Test
@@ -1366,9 +1367,10 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
 
-    assertThat(compiler.externsRoot.getChildCount()).isEqualTo(2);
-    assertExternIndex(compiler, 0, "something");
-    assertExternIndex(compiler, 1, "moocher");
+    assertThat(compiler.externsRoot.getChildCount()).isEqualTo(3);
+    assertExternIndex(compiler, 0, "{SyntheticVarsDeclar}"); // added by VarCheck
+    assertExternIndex(compiler, 1, "something");
+    assertExternIndex(compiler, 2, "moocher");
   }
 
   private void assertExternIndex(Compiler compiler, int index, String name) {

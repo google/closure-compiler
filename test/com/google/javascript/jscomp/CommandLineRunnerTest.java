@@ -756,9 +756,13 @@ public final class CommandLineRunnerTest {
     test(new String[] {code},
          new String[] {});
 
-    assertThat(lastCompiler.getExternsForTesting()).hasSize(2);
+    // NOTE: externs are [{SyntheticVarsDeclar}, externs, input0].
+    //  - The first is added by VarCheck
+    //  - The second is the default externs
+    //  - The third is the source input that we're ensuring is lifted into externs
+    assertThat(lastCompiler.getExternsForTesting()).hasSize(3);
 
-    CompilerInput extern = lastCompiler.getExternsForTesting().get(1);
+    CompilerInput extern = lastCompiler.getExternsForTesting().get(2);
     assertThat(extern.getModule()).isNull();
     assertThat(extern.isExtern()).isTrue();
     assertThat(extern.getCode()).isEqualTo(code);

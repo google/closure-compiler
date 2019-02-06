@@ -18,8 +18,6 @@
  * @fileoverview Runtime code to store the global object.
  */
 'require base';
-'declare global';
-'declare window';
 
 
 /**

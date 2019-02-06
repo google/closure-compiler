@@ -213,6 +213,12 @@ public abstract class CompilerTestCase {
   /** Whether {@link #setUp} has run. */
   private boolean setUpRan = false;
 
+  // NOTE: These externs are inserted by VarCheck and should not be input as externs for tests.
+  // It is provided here for tests that assert on output externs in cases where pulling in the
+  // extra externs is unavoidable.
+  protected static final String VAR_CHECK_EXTERNS =
+      Joiner.on("").join(Iterables.transform(VarCheck.REQUIRED_SYMBOLS, s -> "var " + s + ";\n"));
+
   protected static final String ACTIVE_X_OBJECT_DEF =
       lines(
           "/**",

@@ -367,10 +367,12 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testDuplicateNamespaceInExterns() {
+    // Compare as tree does not allow multiple externs, but VarCheck forcibly inserts them.
+    disableCompareAsTree();
     testExternChanges(
         "/** @const */ var ns = {}; /** @const */ var ns = {};",
         "",
-        "/** @const */ var ns = {};");
+        VAR_CHECK_EXTERNS + "/** @const */ var ns = {};");
   }
 
   @Test
@@ -645,8 +647,8 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testSimple() {
-    checkSynthesizedExtern("x", "var x;");
-    checkSynthesizedExtern("var x", "");
+    checkSynthesizedExtern("x", "var x;" + VAR_CHECK_EXTERNS);
+    checkSynthesizedExtern("var x", VAR_CHECK_EXTERNS);
   }
 
   @Test
@@ -662,51 +664,47 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testParameter() {
-    checkSynthesizedExtern("function f(x){}", "");
+    checkSynthesizedExtern("function f(x){}", VAR_CHECK_EXTERNS);
   }
 
   @Test
   public void testLocalVar() {
-    checkSynthesizedExtern("function f(){x}", "var x");
+    checkSynthesizedExtern("function f(){x}", "var x;" + VAR_CHECK_EXTERNS);
   }
 
   @Test
   public void testTwoLocalVars() {
-    checkSynthesizedExtern("function f(){x}function g() {x}", "var x");
+    checkSynthesizedExtern("function f(){x}function g() {x}", "var x;" + VAR_CHECK_EXTERNS);
   }
 
   @Test
   public void testInnerFunctionLocalVar() {
-    checkSynthesizedExtern("function f(){function g() {x}}", "var x");
+    checkSynthesizedExtern("function f(){function g() {x}}", "var x;" + VAR_CHECK_EXTERNS);
   }
 
   @Test
   public void testNoCreateVarsForLabels() {
-    checkSynthesizedExtern("x:var y", "");
+    checkSynthesizedExtern("x:var y", VAR_CHECK_EXTERNS);
   }
 
   @Test
   public void testVariableInNormalCodeUsedInExterns1() {
-    checkSynthesizedExtern(
-        "x.foo;", "var x;", "var x; x.foo;");
+    checkSynthesizedExtern("x.foo;", "var x;", "var x; " + VAR_CHECK_EXTERNS + " x.foo;");
   }
 
   @Test
   public void testVariableInNormalCodeUsedInExterns2() {
-    checkSynthesizedExtern(
-        "x;", "var x;", "var x; x;");
+    checkSynthesizedExtern("x;", "var x;", "var x; " + VAR_CHECK_EXTERNS + " x;");
   }
 
   @Test
   public void testVariableInNormalCodeUsedInExterns3() {
-    checkSynthesizedExtern(
-        "x.foo;", "function x() {}", "var x; x.foo; ");
+    checkSynthesizedExtern("x.foo;", "function x() {}", "var x; " + VAR_CHECK_EXTERNS + " x.foo;");
   }
 
   @Test
   public void testVariableInNormalCodeUsedInExterns4() {
-    checkSynthesizedExtern(
-        "x;", "function x() {}", "var x; x; ");
+    checkSynthesizedExtern("x;", "function x() {}", "var x; " + VAR_CHECK_EXTERNS + " x;");
   }
 
   @Test

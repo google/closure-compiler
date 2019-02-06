@@ -59,7 +59,6 @@ import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -3247,20 +3246,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         case "require":
           // 'require lib'; pulls in the named library before this one.
           ensureLibraryInjected(words.get(1), force);
-          break;
-        case "declare":
-          // 'declare name'; adds the name to the externs (with no type information).
-          // Note that we could simply add the entire externs library, but that leads to
-          // potentially-surprising behavior when the externs that are present depend on
-          // whether or not a polyfill is used.
-          Node var = IR.var(IR.name(words.get(1)));
-          JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);
-          // Suppress duplicate-var warning in case this name is already defined in the externs.
-          jsdoc.addSuppression("duplicate");
-          var.setJSDocInfo(jsdoc.build());
-          getSynthesizedExternsInputAtEnd()
-              .getAstRoot(this)
-              .addChildToBack(var);
           break;
         default:
           throw new RuntimeException("Bad directive: " + directive);

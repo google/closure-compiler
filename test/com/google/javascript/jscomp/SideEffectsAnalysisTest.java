@@ -37,7 +37,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class SideEffectsAnalysisTest extends CompilerTestCase {
 
-  private static final String SHARED_EXTERNS = "var arguments = [];";
+  private static final String SHARED_EXTERNS = VAR_CHECK_EXTERNS + "var arguments = [];";
 
   LocationAbstractionMode currentLocationAbstractionIdentifier;
 
