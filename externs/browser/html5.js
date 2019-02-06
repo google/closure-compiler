@@ -2982,7 +2982,7 @@ WebSocket.prototype.onopen;
 /**
  * An event handler called on message event.
  * TODO(blickly): Change this to MessageEvent<*> and add casts as needed
- * @type {?function(!MessageEvent<?>)}
+ * @type {?function(!MessageEvent<?>): void}
  */
 WebSocket.prototype.onmessage;
 
