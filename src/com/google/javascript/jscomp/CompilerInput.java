@@ -267,10 +267,8 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     extraRequires.add(require);
   }
 
-  /**
-   * Returns the DependencyInfo object, generating it lazily if necessary.
-   */
-  private DependencyInfo getDependencyInfo() {
+  /** Returns the DependencyInfo object, generating it lazily if necessary. */
+  DependencyInfo getDependencyInfo() {
     if (dependencyInfo == null) {
       dependencyInfo = generateDependencyInfo();
     }
