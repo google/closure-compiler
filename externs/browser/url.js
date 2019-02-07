@@ -23,7 +23,7 @@
  */
 
 /**
- * @typedef {Iterable<string>}
+ * @typedef {Array<string>}
  */
 var URLSearchParamsTupleType;
 
@@ -31,12 +31,14 @@ var URLSearchParamsTupleType;
  * @see https://url.spec.whatwg.org/#interface-urlsearchparams
  * @constructor
  * @implements {Iterable<!Array<string>>}
- * @param {(string|!Iterable<!URLSearchParamsTupleType>|!Object<string,string>)=} init
+ * @param {(string|!Array<!URLSearchParamsTupleType>|!Object<string,string>)=} init
  * when |init| is a string, it is basically parsed as a query string (a=b&b=c).
- * when |init| is an iterable of iterables of string ([["a", "b"], ["b", "c"]]),
+ * when |init| is an array of arrays of string ([["a", "b"], ["b", "c"]]),
  *  it must contain pairs of strings,
  *  where the first item in the pair will be interpreted as a key
  *  and the second as a value.
+ *  Note - the specification uses Iterable rather than Array,
+ *  but this is not supported in Edge 17 - 18.
  * when |init| is an object, keys and values will be interpreted as such
  *  ({a: "b", b: "c"}).
  */
