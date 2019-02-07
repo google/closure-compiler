@@ -217,9 +217,7 @@ class TypedCodeGenerator extends CodeGenerator {
     // Param types
     appendFunctionParamAnnotations(sb, funType, paramNode);
 
-    boolean isClassConstructor = fnNode.getParent().getString().equals("constructor");
-
-    if (isClassConstructor) {
+    if (NodeUtil.isEs6Constructor(fnNode)) {
       appendTemplateAnnotations(sb, funType.getConstructorOnlyTemplateParameters());
       // no return type for the constructor
     } else {

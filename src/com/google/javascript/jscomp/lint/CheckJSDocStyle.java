@@ -166,7 +166,11 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
     checkForAtSignCodePresence(t, n, jsDoc);
 
-    String name;
+    if (NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
+      return;
+    }
+
+    final String name;
     if (n.isMemberFunctionDef() || n.isGetterDef() || n.isSetterDef()) {
       name = n.getString();
     } else {
@@ -176,9 +180,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         return;
       }
       name = lhs.getLastChild().getString();
-    }
-    if (name.equals("constructor")) {
-      return;
     }
 
     if (jsDoc != null && name != null) {
@@ -272,7 +273,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   }
 
   private boolean isConstructorWithoutParameters(Node function) {
-    return function.getParent().matchesQualifiedName("constructor")
+    return NodeUtil.isEs6Constructor(function)
         && !NodeUtil.getFunctionParameters(function).hasChildren();
   }
 
@@ -395,8 +396,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       return;
     }
 
-    Node parent = function.getParent();
-    if (parent.isMemberFunctionDef() && parent.getString().equals("constructor")) {
+    if (NodeUtil.isEs6Constructor(function)) {
       // ES6 class constructors should never have "@return".
       return;
     }

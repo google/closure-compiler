@@ -183,7 +183,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
                   || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)))
           || (member.isGetterDef() || member.isSetterDef())) {
         visitNonMethodMember(member, metadata);
-      } else if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
+      } else if (NodeUtil.isEs6ConstructorMemberFunctionDef(member)) {
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detach().setJSType(classNode.getJSType());
         constructor.setJSTypeBeforeCast(classNode.getJSTypeBeforeCast());

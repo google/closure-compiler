@@ -594,7 +594,7 @@ class AmbiguateProperties implements CompilerPass {
             quotedNames.add(member.getFirstChild().getString());
           }
           continue;
-        } else if ("constructor".equals(member.getString())) {
+        } else if (NodeUtil.isEs6ConstructorMemberFunctionDef(member)) {
           // don't rename `class C { constructor() {} }` !
           // This only applies for ES6 classes, not generic properties called 'constructor', which
           // is why it's handled in this method specifically.

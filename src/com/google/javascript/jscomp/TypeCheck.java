@@ -1367,8 +1367,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     } else {
       // we have either a non-quoted string or a member function def
       // Neither is allowed for an @dict type except for "constructor" as a special case.
-      if (ownerType.isDict()
-          && !(key.isMemberFunctionDef() && "constructor".equals(key.getString()))) {
+      if (ownerType.isDict() && !NodeUtil.isEs6ConstructorMemberFunctionDef(key)) {
         // Object literals annotated as @dict may only have
         // If you annotate a class with @dict, only the constructor can be a non-computed property.
         report(t, key, owner.isClass() ? ILLEGAL_CLASS_KEY : ILLEGAL_OBJLIT_KEY, "dict");

@@ -118,8 +118,7 @@ class RuntimeTypeCheck implements CompilerPass {
 
       switch (node.getToken()) {
         case FUNCTION:
-          Node parent = node.getParent();
-          if (parent.isMemberFunctionDef() && parent.getString().equals("constructor")) {
+          if (NodeUtil.isEs6Constructor(node)) {
             break; // "constructor" members are not constructors.
           }
 

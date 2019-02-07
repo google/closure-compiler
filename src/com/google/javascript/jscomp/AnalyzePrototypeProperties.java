@@ -520,7 +520,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       String name = n.getString();
       // Don't want to add a declaration for constructors and static members
       // so they aren't removed
-      if (name.equals("constructor") || n.isStaticMember()) {
+      if (NodeUtil.isEs6ConstructorMemberFunctionDef(n) || n.isStaticMember()) {
         return;
       }
 

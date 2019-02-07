@@ -1069,26 +1069,22 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Creates a new class type from the given class literal.
-     * This function does not need to worry about stubs and aliases because
-     * they are handled by createFunctionTypeFromNodes instead.
+     * Creates a new class type from the given class literal. This function does not need to worry
+     * about stubs and aliases because they are handled by createFunctionTypeFromNodes instead.
      */
     private FunctionType createClassTypeFromNodes(
-        Node n,
-        @Nullable String name,
-        @Nullable JSDocInfo info,
-        @Nullable Node lvalueNode) {
+        Node clazz, @Nullable String name, @Nullable JSDocInfo info, @Nullable Node lvalueNode) {
+      checkArgument(clazz.isClass(), clazz);
 
       FunctionTypeBuilder builder =
-          new FunctionTypeBuilder(name, compiler, n, currentScope)
+          new FunctionTypeBuilder(name, compiler, clazz, currentScope)
               .usingClassSyntax()
-              .setContents(new AstFunctionContents(n))
+              .setContents(new AstFunctionContents(clazz))
               .setDeclarationScope(lvalueNode != null ? getLValueRootScope(lvalueNode) : null)
               .inferKind(info)
               .inferTemplateTypeName(info, null);
 
-      Node extendsClause = n.getSecondChild();
-      Node classMembers = n.getLastChild();
+      Node extendsClause = clazz.getSecondChild();
 
       // Look at the extends clause and/or JSDoc info to find a super class.  Use generics from the
       // JSDoc to supplement the extends type when available.
@@ -1096,7 +1092,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       builder.inferInheritance(info, baseType);
 
       // Look for an explicit constructor.
-      Node constructor = NodeUtil.getFirstPropMatchingKey(classMembers, "constructor");
+      Node constructor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(clazz);
+      if (constructor != null) {
+        constructor = constructor.getOnlyChild(); // We want the FUNCTION, not the member.
+      }
+
       if (constructor != null) {
         // Note: constructor should have the following structure:
         //   MEMBER_FUNCTION_DEF [jsdoc_info]
@@ -2876,13 +2876,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     @Override
     void visitPreorder(NodeTraversal t, Node n, Node parent) {
       // These are not descended into, so must be done preorder
-      if (n.isFunction()) {
-        if (parent.isMemberFunctionDef() && parent.getString().equals("constructor")) {
-          // Constructor has already been analyzed, so pull that here.
-          setDeferredType(n, currentScope.getRootNode().getJSType());
-        } else {
-          defineFunctionLiteral(n);
-        }
+      if (!n.isFunction()) {
+        return;
+      }
+
+      if (NodeUtil.isEs6Constructor(n)) {
+        // Constructor has already been analyzed, so pull that here.
+        setDeferredType(n, currentScope.getRootNode().getJSType());
+      } else {
+        defineFunctionLiteral(n);
       }
     }
 
@@ -2900,8 +2902,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             .withType(parent.getJSType())
             .allowLaterTypeInference(false)
             .defineSlot();
-      } else if (n.isMemberFunctionDef() && !"constructor".equals(n.getString())) {
+      } else if (NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
         // Ignore "constructor" since it has special handling in `createClassTypeFromNodes()`.
+      } else if (n.isMemberFunctionDef()) {
         defineMemberFunction(n);
       } else if (n.isGetterDef() || n.isSetterDef()) {
         defineGetterSetter(n);

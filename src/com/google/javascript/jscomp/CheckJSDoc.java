@@ -335,7 +335,12 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       return;
     }
 
-    if ((n.isMemberFunctionDef() || n.isStringKey()) && "constructor".equals(n.getString())) {
+    // TODO(b/124020008): Delete this case when `goog.defineClass` is dropped.
+    boolean isGoogDefineClassConstructor =
+        n.getParent().isObjectLit()
+            && (n.isMemberFunctionDef() || n.isStringKey())
+            && "constructor".equals(n.getString());
+    if (NodeUtil.isEs6ConstructorMemberFunctionDef(n) || isGoogDefineClassConstructor) {
       // @abstract annotation on an ES6 or goog.defineClass constructor
       report(n, MISPLACED_ANNOTATION, "@abstract", "constructors cannot be abstract");
       return;

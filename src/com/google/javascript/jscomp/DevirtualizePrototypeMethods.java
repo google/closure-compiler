@@ -142,7 +142,7 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
 
     switch (node.getToken()) {
       case MEMBER_FUNCTION_DEF:
-        if (node.getString().equals("constructor")) {
+        if (NodeUtil.isEs6ConstructorMemberFunctionDef(node)) {
           return false; // Constructors aren't methods.
         }
 

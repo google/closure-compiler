@@ -414,7 +414,7 @@ class RenameProperties implements CompilerPass {
                   Node fnName = member.getFirstChild();
                   if (compiler.getCodingConvention().blockRenamingForProperty(memberDefName)) {
                     externedNames.add(fnName.getString());
-                  } else if (memberDefName.equals("constructor")
+                  } else if (NodeUtil.isEs6ConstructorMemberFunctionDef(key)
                       || memberDefName.equals("superClass_")) {
                     // TODO (simarora) is there a better way to identify these externs?
                     externedNames.add(fnName.getString());

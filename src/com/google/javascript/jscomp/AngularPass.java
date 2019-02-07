@@ -273,7 +273,7 @@ class AngularPass extends AbstractPostOrderCallback
           Node classNode = parent.getParent();
           String midPart = n.isStaticMember() ? "." : ".prototype.";
           name = NodeUtil.getName(classNode) + midPart + n.getString();
-          if (n.getString().equals("constructor")) {
+          if (NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
             name = NodeUtil.getName(classNode);
           }
           fn = n.getFirstChild();

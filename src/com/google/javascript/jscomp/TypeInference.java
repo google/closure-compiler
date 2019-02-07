@@ -807,11 +807,13 @@ class TypeInference
     }
     Node root = scope.getRootNode();
     Node parent = root.getParent();
-    if (parent.isMemberFunctionDef() && parent.getGrandparent().isClass()) {
+    if (parent.getGrandparent().isClass()) {
       // In an ES6 constuctor, new.target may not be undefined.  In any other method, it must be
       // undefined, since methods are not constructable.
       JSTypeNative type =
-          "constructor".equals(parent.getString()) ? JSTypeNative.U2U_CONSTRUCTOR_TYPE : VOID_TYPE;
+          NodeUtil.isEs6ConstructorMemberFunctionDef(parent)
+              ? JSTypeNative.U2U_CONSTRUCTOR_TYPE
+              : VOID_TYPE;
       newTargetNode.setJSType(registry.getNativeType(type));
     } else {
       // Other functions also include undefined, in case they are not called with 'new'.

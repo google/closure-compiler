@@ -52,16 +52,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isClass()) {
-      boolean hasConstructor = false;
-      for (Node member = n.getLastChild().getFirstChild();
-          member != null;
-          member = member.getNext()) {
-        if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
-          hasConstructor = true;
-          break;
-        }
-      }
-      if (!hasConstructor) {
+      if (NodeUtil.getEs6ClassConstructorMemberFunctionDef(n) == null) {
         addSyntheticConstructor(t, n);
       }
     } else if (n.isSuper()) {
@@ -209,8 +200,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       return;
     }
 
-    if (enclosingMemberDef.isMemberFunctionDef()
-        && enclosingMemberDef.getString().equals("constructor")) {
+    if (NodeUtil.isEs6ConstructorMemberFunctionDef(enclosingMemberDef)) {
       // Calls to super() constructors will be transpiled by Es6ConvertSuperConstructorCalls later.
       if (node.isFromExterns() || isInterface(clazz)) {
         // If a class is defined in an externs file or as an interface, it's only a stub, not an

@@ -5711,16 +5711,16 @@ public final class NodeUtil {
         || isEs6Constructor(fnNode);
   }
 
-  private static boolean isEs6ConstructorMemberFunctionDef(Node memberFunctionDef) {
+  public static boolean isEs6ConstructorMemberFunctionDef(Node memberFunctionDef) {
     if (!memberFunctionDef.isMemberFunctionDef()) {
       return false; // not a member function at all
     }
     return memberFunctionDef.getParent().isClassMembers() // is in a class
         && !memberFunctionDef.isStaticMember() // constructors aren't static
-        && memberFunctionDef.matchesQualifiedName("constructor");
+        && memberFunctionDef.getString().equals("constructor");
   }
 
-  static boolean isEs6Constructor(Node fnNode) {
+  public static boolean isEs6Constructor(Node fnNode) {
     if (!fnNode.isFunction()) {
       return false;
     }

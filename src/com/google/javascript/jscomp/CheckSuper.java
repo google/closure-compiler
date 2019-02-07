@@ -84,14 +84,13 @@ final class CheckSuper implements HotSwapCompilerPass, Callback {
       return true;
     }
 
-    Node constructor =
-        NodeUtil.getFirstPropMatchingKey(NodeUtil.getClassMembers(n), "constructor");
+    Node constructor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(n);
     if (constructor == null) {
       return true;
     }
 
     FindSuperOrReturn finder = new FindSuperOrReturn();
-    NodeTraversal.traverse(compiler, NodeUtil.getFunctionBody(constructor), finder);
+    NodeTraversal.traverse(compiler, NodeUtil.getFunctionBody(constructor.getOnlyChild()), finder);
 
     if (!finder.found) {
       t.report(constructor, MISSING_CALL_TO_SUPER);
@@ -125,7 +124,7 @@ final class CheckSuper implements HotSwapCompilerPass, Callback {
 
     Node memberDef = fn.getParent();
     if (memberDef.isMemberFunctionDef()) {
-      if (memberDef.matchesQualifiedName("constructor")) {
+      if (NodeUtil.isEs6ConstructorMemberFunctionDef(memberDef)) {
         // No error.
       } else {
         t.report(n, INVALID_SUPER_CALL_WITH_SUGGESTION, memberDef.getString());

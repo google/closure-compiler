@@ -252,8 +252,7 @@ final class PolymerClassDefinition {
     JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(classNode);
 
     JSDocInfo ctorInfo = null;
-    Node constructor =
-        NodeUtil.getFirstPropMatchingKey(NodeUtil.getClassMembers(classNode), "constructor");
+    Node constructor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(classNode);
     if (constructor != null) {
       ctorInfo = NodeUtil.getBestJSDocInfo(constructor);
     }

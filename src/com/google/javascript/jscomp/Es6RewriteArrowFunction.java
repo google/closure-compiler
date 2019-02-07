@@ -68,7 +68,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
         break;
       case FUNCTION:
         if (!n.isArrowFunction()) {
-          contextStack.push(contextForFunction(n, parent));
+          contextStack.push(contextForFunction(n));
         }
         break;
       case SUPER:
@@ -223,11 +223,9 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
     }
   }
 
-  private ThisAndArgumentsContext contextForFunction(Node functionNode, Node functionParent) {
+  private ThisAndArgumentsContext contextForFunction(Node functionNode) {
     Node scopeBody = functionNode.getLastChild();
-    boolean isConstructor =
-        functionParent.isMemberFunctionDef() && functionParent.getString().equals("constructor");
-    return new ThisAndArgumentsContext(scopeBody, isConstructor);
+    return new ThisAndArgumentsContext(scopeBody, NodeUtil.isEs6Constructor(functionNode));
   }
 
   private ThisAndArgumentsContext contextForScript(Node scriptNode) {
