@@ -21,10 +21,10 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.NominalTypeBuilderOti;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -254,8 +254,8 @@ public final class ClosureCodingConventionTest {
         registry.createConstructorType("B", nodeB, new Node(Token.PARAM_LIST), null, null, false);
 
     conv.applySubclassRelationship(
-        new NominalTypeBuilderOti(ctorA, ctorA.getInstanceType()),
-        new NominalTypeBuilderOti(ctorB, ctorB.getInstanceType()),
+        new NominalTypeBuilder(ctorA, ctorA.getInstanceType()),
+        new NominalTypeBuilder(ctorB, ctorB.getInstanceType()),
         SubclassType.INHERITS);
 
     assertThat(ctorB.getPrototype().hasOwnProperty("constructor")).isTrue();

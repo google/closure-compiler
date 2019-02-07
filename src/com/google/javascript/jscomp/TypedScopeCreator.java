@@ -76,7 +76,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.NominalTypeBuilderOti;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
@@ -356,7 +355,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       List<NominalTypeBuilder> delegateProxies = new ArrayList<>();
       for (FunctionType delegateProxyCtor : delegateProxyCtors) {
         delegateProxies.add(
-            new NominalTypeBuilderOti(delegateProxyCtor, delegateProxyCtor.getInstanceType()));
+            new NominalTypeBuilder(delegateProxyCtor, delegateProxyCtor.getInstanceType()));
       }
       codingConvention.defineDelegateProxyPrototypeProperties(
           typeRegistry, delegateProxies, delegateCallingConventions);
@@ -2074,8 +2073,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           FunctionType subCtor = subClass.getConstructor();
           if (superCtor != null && subCtor != null) {
             codingConvention.applySubclassRelationship(
-                new NominalTypeBuilderOti(superCtor, superClass),
-                new NominalTypeBuilderOti(subCtor, subClass),
+                new NominalTypeBuilder(superCtor, superClass),
+                new NominalTypeBuilder(subCtor, subClass),
                 relationship.type);
           }
         }
@@ -2091,7 +2090,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           if (functionType != null) {
             FunctionType getterType = typeRegistry.createFunctionType(objectType);
             codingConvention.applySingletonGetter(
-                new NominalTypeBuilderOti(functionType, objectType), getterType);
+                new NominalTypeBuilder(functionType, objectType), getterType);
           }
         }
       }
@@ -2155,9 +2154,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           delegateProxy.setPrototypeBasedOn(delegateBaseObject);
 
           codingConvention.applyDelegateRelationship(
-              new NominalTypeBuilderOti(delegateSuperCtor, delegateSuperObject),
-              new NominalTypeBuilderOti(delegateBaseCtor, delegateBaseObject),
-              new NominalTypeBuilderOti(delegatorCtor, delegatorObject),
+              new NominalTypeBuilder(delegateSuperCtor, delegateSuperObject),
+              new NominalTypeBuilder(delegateBaseCtor, delegateBaseObject),
+              new NominalTypeBuilder(delegatorCtor, delegatorObject),
               (ObjectType) delegateProxy.getTypeOfThis(),
               findDelegate);
           delegateProxyCtors.add(delegateProxy);
