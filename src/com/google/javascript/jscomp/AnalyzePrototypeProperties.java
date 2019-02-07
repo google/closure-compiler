@@ -502,7 +502,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
                 String name = key.getString();
                 PrototypeProperty prop =
                     new LiteralPrototypeProperty(
-                        key, key.getFirstChild(), n, maybeGetVar(t, root), t.getModule());
+                        key.getFirstChild(), n, maybeGetVar(t, root), t.getModule());
                 getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
               }
             }
@@ -728,14 +728,12 @@ class AnalyzePrototypeProperties implements CompilerPass {
    * Foo.prototype = {bar: function() { ... };</pre>
    */
   static class LiteralPrototypeProperty implements PrototypeProperty {
-    private final Node key;
     private final Node value;
     private final Node assign;
     private final Var rootVar;
     private final JSModule module;
 
-    LiteralPrototypeProperty(Node key, Node value, Node assign, Var rootVar, JSModule module) {
-      this.key = key;
+    LiteralPrototypeProperty(Node value, Node assign, Var rootVar, JSModule module) {
       this.value = value;
       this.assign = assign;
       this.rootVar = rootVar;
