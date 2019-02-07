@@ -181,32 +181,32 @@ function prompt(message, opt_value) {}
 
 /**
  * @param {function()} callback
- * @param {...?} var_args
+ * @param {...?} callbackParams
  * @return {number}
  * @see https://developer.mozilla.org/en-US/docs/DOM/window.setImmediate
  * @see http://msdn.microsoft.com/en-us/library/ie/hh773176(v=vs.85).aspx
  */
-function setImmediate(callback, var_args) {}
+function setImmediate(callback, callbackParams) {}
 
 /**
  * @param {Function|!TrustedScript|string} callback
  * @param {number=} opt_delay
- * @param {...?} var_args
+ * @param {...?} callbackParams
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setInterval
  * @see https://html.spec.whatwg.org/multipage/webappapis.html#timers
  */
-function setInterval(callback, opt_delay, var_args) {}
+function setInterval(callback, opt_delay, callbackParams) {}
 
 /**
  * @param {Function|!TrustedScript|string} callback
  * @param {number=} opt_delay
- * @param {...*} var_args
+ * @param {...*} callbackParams
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setTimeout
  * @see https://html.spec.whatwg.org/multipage/webappapis.html#timers
  */
-function setTimeout(callback, opt_delay, var_args) {}
+function setTimeout(callback, opt_delay, callbackParams) {}
 
 /**
  * Returns whether the object has a property with the specified name.
