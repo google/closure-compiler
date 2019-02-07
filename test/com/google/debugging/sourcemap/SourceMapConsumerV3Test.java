@@ -18,6 +18,9 @@ package com.google.debugging.sourcemap;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import java.util.Map;
@@ -32,19 +35,22 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class SourceMapConsumerV3Test {
 
+  private static final Gson GSON = new Gson();
+
   @Test
   public void testSources() throws Exception {
-    String sourceMap =  "{\n" +
-                        "\"version\":3,\n" +
-                        "\"file\":\"testcode\",\n" +
-                        "\"lineCount\":1,\n" +
-                        "\"mappings\":\"AAAAA,QAASA,UAAS,EAAG;\",\n" +
-                        "\"sources\":[\"testcode\"],\n" +
-                        "\"names\":[\"__BASIC__\"]\n" +
-                        "}\n";
 
     SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
-    consumer.parse(sourceMap);
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                .setFile("testcode")
+                .setLineCount(1)
+                .setMappings("AAAAA,QAASA,UAAS,EAAG;")
+                .setSources("testcode")
+                .setNames("__BASIC__")
+                .build()));
 
     assertThat(consumer.getOriginalSources()).containsExactly("testcode");
     assertThat(consumer.getSourceRoot()).isNull();
@@ -52,45 +58,43 @@ public final class SourceMapConsumerV3Test {
 
   @Test
   public void testMap() throws Exception {
-    String sourceMap = ""
-        + "{"
-        + "  \"version\": 3,"
-        + "  \"file\": \"testcode.js\","
-        + "  \"sections\": ["
-        + "    {"
-        + "      \"map\": {"
-        + "         \"version\": 3,"
-        + "         \"mappings\": \"AAAAA,QAASA,UAAS,EAAG;\","
-        + "         \"sources\": [\"testcode.js\"],"
-        + "         \"names\": [\"foo\"]"
-        + "      },"
-        + "      \"offset\": {"
-        + "        \"line\": 1,"
-        + "        \"column\": 1"
-        + "      }"
-        + "    }"
-        + "  ]"
-        + "}";
-
     SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
-    consumer.parse(sourceMap);
-
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                .setFile("testcode")
+                .setCustomProperty(
+                    "sections",
+                    ImmutableList.of(
+                        ImmutableMap.builder()
+                            .put(
+                                "map",
+                                TestJsonBuilder.create()
+                                    .setVersion(3)
+                                    .setMappings("AAAAA,QAASA,UAAS,EAAG;")
+                                    .setSources("testcode.js")
+                                    .setNames("foo")
+                                    .build())
+                            .put("offset", ImmutableMap.of("line", 1, "column", 2))
+                            .build()))
+                .build()));
   }
 
   @Test
   public void testSourcesWithRoot() throws Exception {
-    String sourceMap =  "{\n" +
-                        "\"version\":3,\n" +
-                        "\"file\":\"testcode\",\n" +
-                        "\"lineCount\":1,\n" +
-                        "\"sourceRoot\":\"http://server/path/\",\n" +
-                        "\"mappings\":\"AAAAA,QAASA,UAAS,EAAG;\",\n" +
-                        "\"sources\":[\"testcode\"],\n" +
-                        "\"names\":[\"__BASIC__\"]\n" +
-                        "}\n";
-
     SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
-    consumer.parse(sourceMap);
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                .setFile("testcode")
+                .setLineCount(1)
+                .setMappings("AAAAA,QAASA,UAAS,EAAG;")
+                .setSourceRoot("http://server/path/")
+                .setSources("testcode")
+                .setNames("__BASIC__")
+                .build()));
 
     //By default sourceRoot is not prepended
     assertThat(consumer.getOriginalSources()).containsExactly("testcode");
@@ -99,25 +103,25 @@ public final class SourceMapConsumerV3Test {
 
   @Test
   public void testExtensions() throws Exception {
-    String sourceMap =  "{\n" +
-                        "\"version\":3,\n" +
-                        "\"file\":\"testcode\",\n" +
-                        "\"lineCount\":1,\n" +
-                        "\"mappings\":\"AAAAA,QAASA,UAAS,EAAG;\",\n" +
-                        "\"sources\":[\"testcode\"],\n" +
-                        "\"names\":[\"__BASIC__\"],\n" +
-                        "\"x_org_int\":2,\n" +
-                        "\"x_org_array\":[]\n" +
-                        "}\n";
-
     SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
-    consumer.parse(sourceMap);
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                .setFile("testcode")
+                .setLineCount(1)
+                .setMappings("AAAAA,QAASA,UAAS,EAAG;")
+                .setSources("testcode")
+                .setNames("__BASIC__")
+                .setCustomProperty("x_org_int", 2)
+                .setCustomProperty("x_org_array", ImmutableList.of())
+                .build()));
 
     Map<String, Object> exts = consumer.getExtensions();
 
     assertThat(exts).hasSize(2);
     assertThat(exts).doesNotContainKey("org_int");
     assertThat(((JsonElement) exts.get("x_org_int")).getAsInt()).isEqualTo(2);
-    assertThat(((JsonArray) exts.get("x_org_array")).size()).isEqualTo(0);
+    assertThat((JsonArray) exts.get("x_org_array")).isEmpty();
   }
 }

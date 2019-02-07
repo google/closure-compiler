@@ -55,7 +55,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     if (File.separatorChar == '\\') {
       return "c:/myfile.js";
     } else {
-      return "c:\\\\myfile.js";
+      return "c:\\myfile.js";
     }
   }
 
@@ -69,14 +69,14 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     // Empty source map test
     checkSourceMap(
         "function __BASIC__() { }",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"A,aAAAA,QAASA,UAAS,EAAG;\",\n"
-            + "\"sources\":[\"testcode\"],\n"
-            + "\"names\":[\"__BASIC__\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(1)
+            .setMappings("A,aAAAA,QAASA,UAAS,EAAG;")
+            .setSources("testcode")
+            .setNames("__BASIC__")
+            .build());
   }
 
   @Test
@@ -95,16 +95,14 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     // Empty source map test
     checkSourceMap(
         "function __BASIC__(__PARAM1__, __PARAM2__) { " + "var __VAR__ = '__STR__'; }",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"A,aAAAA,QAASA,UAAS,CAACC,UAAD,CAAaC,UAAb,"
-            + "CAAyB,CAAE,IAAIC,QAAU,SAAhB;\",\n"
-            + "\"sources\":[\"testcode\"],\n"
-            + "\"names\":[\"__BASIC__\",\"__PARAM1__\",\"__PARAM2__\","
-            + "\"__VAR__\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(1)
+            .setMappings("A,aAAAA,QAASA,UAAS,CAACC,UAAD,CAAaC,UAAb,CAAyB,CAAE,IAAIC,QAAU,SAAhB;")
+            .setSources("testcode")
+            .setNames("__BASIC__", "__PARAM1__", "__PARAM2__", "__VAR__")
+            .build());
   }
 
   @Test
@@ -141,42 +139,42 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     // Empty source map test
     checkSourceMap(
         "",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"A;\",\n"
-            + "\"sources\":[],\n"
-            + "\"names\":[]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(1)
+            .setMappings("A;")
+            .setSources()
+            .setNames()
+            .build());
   }
 
   @Test
   public void testGoldenOutput0a() throws Exception {
     checkSourceMap(
         "a;",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"A,aAAAA;\",\n"
-            + "\"sources\":[\"testcode\"],\n"
-            + "\"names\":[\"a\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(1)
+            .setMappings("A,aAAAA;")
+            .setSources("testcode")
+            .setNames("a")
+            .build());
 
     sourceMapIncludeSourcesContent = true;
 
     checkSourceMap(
         "a;",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"A,aAAAA;\",\n"
-            + "\"sources\":[\"testcode\"],\n"
-            + "\"sourcesContent\":[\"a;\"],\n"
-            + "\"names\":[\"a\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(1)
+            .setMappings("A,aAAAA;")
+            .setSources("testcode")
+            .setSourcesContent("a;")
+            .setNames("a")
+            .build());
   }
 
   @Test
@@ -185,64 +183,67 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
 
     checkSourceMap(
         "function f(foo, bar) { foo = foo + bar + 2; return foo; }",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"A,aAAAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN,"
-            + "CAAW,CAAED,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkB,CAAG,"
-            + "OAAOD,IAA9B;\",\n"
-            + "\"sources\":[\"testcode\"],\n"
-            + "\"names\":[\"f\",\"foo\",\"bar\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(1)
+            .setMappings(
+                "A,aAAAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN,"
+                    + "CAAW,CAAED,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkB,CAAG,"
+                    + "OAAOD,IAA9B;")
+            .setSources("testcode")
+            .setNames("f", "foo", "bar")
+            .build());
 
     detailLevel = SourceMap.DetailLevel.SYMBOLS;
 
     checkSourceMap(
         "function f(foo, bar) { foo = foo + bar + 2; return foo; }",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"A,aAAAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE,"
-            + "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF,"
-            + "SAAmDC,IAAnDD;\",\n"
-            + "\"sources\":[\"testcode\"],\n"
-            + "\"names\":[\"f\",\"foo\",\"bar\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(1)
+            .setMappings(
+                "A,aAAAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE,"
+                    + "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF,"
+                    + "SAAmDC,IAAnDD;")
+            .setSources("testcode")
+            .setNames("f", "foo", "bar")
+            .build());
 
     sourceMapIncludeSourcesContent = true;
 
     checkSourceMap(
         "function f(foo, bar) { foo = foo + bar + 2; return foo; }",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"A,aAAAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE,"
-            + "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF,"
-            + "SAAmDC,IAAnDD;\",\n"
-            + "\"sources\":[\"testcode\"],\n"
-            + "\"sourcesContent\":"
-            + "[\"function f(foo, bar) { foo = foo + bar + 2; return foo; }\"],\n"
-            + "\"names\":[\"f\",\"foo\",\"bar\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(1)
+            .setMappings(
+                "A,aAAAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE,"
+                    + "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF,"
+                    + "SAAmDC,IAAnDD;")
+            .setSources("testcode")
+            .setSourcesContent("function f(foo, bar) { foo = foo + bar + 2; return foo; }")
+            .setNames("f", "foo", "bar")
+            .build());
   }
 
   @Test
   public void testGoldenOutput2() throws Exception {
     checkSourceMap(
         "function f(foo, bar) {\r\n\n\n\nfoo = foo + bar + foo;" + "\nreturn foo;\n}",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"A,aAAAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN,"
-            + "CAAW,CAIrBD,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkBD,"
-            + "GAClB,OAAOA,IALc;\",\n"
-            + "\"sources\":[\"testcode\"],\n"
-            + "\"names\":[\"f\",\"foo\",\"bar\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(1)
+            .setMappings(
+                "A,aAAAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN,"
+                    + "CAAW,CAIrBD,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkBD,"
+                    + "GAClB,OAAOA,IALc;")
+            .setSources("testcode")
+            .setNames("f", "foo", "bar")
+            .build());
   }
 
   @Test
@@ -250,16 +251,14 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     checkSourceMap(
         "c:\\myfile.js",
         "foo;",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"A,aAAAA;\",\n"
-            + "\"sources\":[\""
-            + getEncodedFileName()
-            + "\"],\n"
-            + "\"names\":[\"foo\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(1)
+            .setMappings("A,aAAAA;")
+            .setSources(getEncodedFileName())
+            .setNames("foo")
+            .build());
   }
 
   @Test
@@ -267,16 +266,14 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     checkSourceMap(
         "c:\\myfile.js",
         "foo;   boo;   goo;",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"A,aAAAA,GAAOC,IAAOC;\",\n"
-            + "\"sources\":[\""
-            + getEncodedFileName()
-            + "\"],\n"
-            + "\"names\":[\"foo\",\"boo\",\"goo\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(1)
+            .setMappings("A,aAAAA,GAAOC,IAAOC;")
+            .setSources(getEncodedFileName())
+            .setNames("foo", "boo", "goo")
+            .build());
   }
 
   @Test
@@ -315,17 +312,16 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
             + " 123456789 123456789 123456789 123456789 123456789"
             + " 123456789 123456789 123456789 123456789 123456789"
             + "' + c + d + e;",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":6,\n"
-            + "\"mappings\":\"A;;;;aAGA,IAAIA,IAAIC,CAAJD,CAAQ,mxCAARA;AAA8xCE,"
-            + "CAA9xCF,CAAkyCG,CAAlyCH,CAAsyCI;\",\n"
-            + "\"sources\":[\""
-            + getEncodedFileName()
-            + "\"],\n"
-            + "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(6)
+            .setMappings(
+                "A;;;;aAGA,IAAIA,IAAIC,CAAJD,CAAQ,mxCAARA;AAA8xCE,"
+                    + "CAA9xCF,CAAkyCG,CAAlyCH,CAAsyCI;")
+            .setSources(getEncodedFileName())
+            .setNames("foo", "a", "c", "d", "e")
+            .build());
 
     detailLevel = SourceMap.DetailLevel.SYMBOLS;
 
@@ -361,17 +357,14 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
             + " 123456789 123456789 123456789 123456789 123456789"
             + " 123456789 123456789 123456789 123456789 123456789"
             + "' + c + d + e;",
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"testcode\",\n"
-            + "\"lineCount\":6,\n"
-            + "\"mappings\":\"A;;;;iBAGIA,IAAIC,CAAJD;AAA8xCE,CAA9xCF,CAAkyCG,"
-            + "CAAlyCH,CAAsyCI;\",\n"
-            + "\"sources\":[\""
-            + getEncodedFileName()
-            + "\"],\n"
-            + "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n"
-            + "}\n");
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(6)
+            .setMappings("A;;;;iBAGIA,IAAIC,CAAJD;AAA8xCE,CAA9xCF,CAAkyCG,CAAlyCH,CAAsyCI;")
+            .setSources(getEncodedFileName())
+            .setNames("foo", "a", "c", "d", "e")
+            .build());
   }
 
   @Test
@@ -385,16 +378,14 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
             "var myMultilineTemplate = `Item ${a}", //
             "Item ${b}",
             "Item ${c}`;"),
-        lines(
-            "{",
-            "\"version\":3,",
-            "\"file\":\"testcode\",",
-            "\"lineCount\":3,",
-            "\"mappings\":\"A,aAAA,IAAIA,oBAAsB,QAAQC,CAAR;OACnBC,CADmB;OAEnBC,CAFmB;\",",
-            "\"sources\":[\"" + getEncodedFileName() + "\"],",
-            "\"names\":[\"myMultilineTemplate\",\"a\",\"b\",\"c\"]",
-            "}",
-            ""));
+        TestJsonBuilder.create()
+            .setVersion(3)
+            .setFile("testcode")
+            .setLineCount(3)
+            .setMappings("A,aAAA,IAAIA,oBAAsB,QAAQC,CAAR;OACnBC,CADmB;OAEnBC,CAFmB;")
+            .setSources(getEncodedFileName())
+            .setNames("myMultilineTemplate", "a", "b", "c")
+            .build());
   }
 
   @Test
