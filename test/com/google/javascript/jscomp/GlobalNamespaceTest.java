@@ -33,6 +33,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,41 +50,41 @@ public final class GlobalNamespaceTest {
   @Nullable private Compiler lastCompiler = null;
 
   @Test
-  public void testRemoveDeclaration1() {
+  public void firstGlobalAssignmentIsConsideredDeclaration() {
     Name n = Name.createForTesting("a");
-    Ref set1 = createNodelessRef(Ref.Type.SET_FROM_GLOBAL);
-    Ref set2 = createNodelessRef(Ref.Type.SET_FROM_GLOBAL);
+    Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 0);
+    Ref set2 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 1);
 
-    n.addRef(set1);
-    n.addRef(set2);
+    List<Ref> refs = n.getRefs();
+    assertThat(refs).containsExactly(set1, set2);
 
     assertThat(n.getDeclaration()).isEqualTo(set1);
     assertThat(n.getGlobalSets()).isEqualTo(2);
-    assertThat(n.getRefs()).hasSize(2);
 
     n.removeRef(set1);
 
+    // declaration moves to next global assignment when first is removed
     assertThat(n.getDeclaration()).isEqualTo(set2);
     assertThat(n.getGlobalSets()).isEqualTo(1);
-    assertThat(n.getRefs()).hasSize(1);
+    assertThat(n.getRefs()).containsExactly(set2);
   }
 
   @Test
-  public void testRemoveDeclaration2() {
+  public void localAssignmentWillNotBeConsideredADeclaration() {
     Name n = Name.createForTesting("a");
-    Ref set1 = createNodelessRef(Ref.Type.SET_FROM_GLOBAL);
-    Ref set2 = createNodelessRef(Ref.Type.SET_FROM_LOCAL);
+    Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 0);
+    Ref localSet = n.addSingleRefForTesting(Ref.Type.SET_FROM_LOCAL, 1);
 
-    n.addRef(set1);
-    n.addRef(set2);
+    List<Ref> refs = n.getRefs();
+    assertThat(refs).containsExactly(set1, localSet);
 
     assertThat(n.getDeclaration()).isEqualTo(set1);
     assertThat(n.getGlobalSets()).isEqualTo(1);
     assertThat(n.getLocalSets()).isEqualTo(1);
-    assertThat(n.getRefs()).hasSize(2);
 
     n.removeRef(set1);
 
+    // local set will not be used as the declaration
     assertThat(n.getDeclaration()).isNull();
     assertThat(n.getGlobalSets()).isEqualTo(0);
   }
@@ -420,9 +421,5 @@ public final class GlobalNamespaceTest {
     this.lastCompiler = compiler;
 
     return new GlobalNamespace(compiler, compiler.getRoot());
-  }
-
-  private Ref createNodelessRef(Ref.Type type) {
-    return Ref.createRefForTesting(type);
   }
 }

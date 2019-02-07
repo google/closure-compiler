@@ -687,19 +687,16 @@ class GlobalNamespace
         nameObj.isModuleProp = true;
       }
 
-      Ref set = new Ref(module, scope, n, nameObj, Ref.Type.SET_FROM_GLOBAL,
-          currentPreOrderIndex++);
-      nameObj.addRef(set);
-
       if (isNestedAssign(parent)) {
         // This assignment is both a set and a get that creates an alias.
-        Ref get = new Ref(module, scope, n, nameObj, Ref.Type.ALIASING_GET,
-            currentPreOrderIndex++);
-        nameObj.addRef(get);
-        Ref.markTwins(set, get);
-      } else if (isTypeDeclaration(n)) {
-        // Names with a @constructor or @enum annotation are always collapsed
-        nameObj.setDeclaredType();
+        nameObj.addTwinRefs(module, scope, n, Ref.Type.SET_FROM_GLOBAL, currentPreOrderIndex);
+        currentPreOrderIndex += 2; // addTwinRefs uses 2 index values
+      } else {
+        nameObj.addSingleRef(module, scope, n, Ref.Type.SET_FROM_GLOBAL, currentPreOrderIndex++);
+        if (isTypeDeclaration(n)) {
+          // Names with a @constructor or @enum annotation are always collapsed
+          nameObj.setDeclaredType();
+        }
       }
     }
 
@@ -744,19 +741,16 @@ class GlobalNamespace
       }
 
       Name nameObj = getOrCreateName(name);
-      Ref set = new Ref(module, scope, n, nameObj,
-          Ref.Type.SET_FROM_LOCAL, currentPreOrderIndex++);
-      nameObj.addRef(set);
       if (n.getBooleanProp(Node.MODULE_EXPORT)) {
         nameObj.isModuleProp = true;
       }
 
       if (isNestedAssign(parent)) {
         // This assignment is both a set and a get that creates an alias.
-        Ref get = new Ref(module, scope, n, nameObj,
-            Ref.Type.ALIASING_GET, currentPreOrderIndex++);
-        nameObj.addRef(get);
-        Ref.markTwins(set, get);
+        nameObj.addTwinRefs(module, scope, n, Ref.Type.SET_FROM_LOCAL, currentPreOrderIndex);
+        currentPreOrderIndex += 2; // addTwinRefs uses 2 index values
+      } else {
+        nameObj.addSingleRef(module, scope, n, Ref.Type.SET_FROM_LOCAL, currentPreOrderIndex++);
       }
     }
 
@@ -859,7 +853,7 @@ class GlobalNamespace
       Name nameObj = getOrCreateName(name);
 
       // No need to look up additional ancestors, since they won't be used.
-      nameObj.addRef(new Ref(module, scope, n, nameObj, type, currentPreOrderIndex++));
+      nameObj.addSingleRef(module, scope, n, type, currentPreOrderIndex++);
     }
 
     private boolean isClassDefiningCall(Node callNode) {
@@ -1212,7 +1206,72 @@ class GlobalNamespace
       throw new UnsupportedOperationException();
     }
 
-    void addRef(Ref ref) {
+    /**
+     * Add a pair of Refs for the same Node.
+     *
+     * <p>This covers cases like `var a = b = 0`. The 'b' node needs a ALIASING_GET reference and a
+     * SET_FROM_GLOBAL or SET_FROM_LOCAL reference.
+     *
+     * @param module
+     * @param scope
+     * @param node
+     * @param setType either SET_FROM_LOCAL or SET_FROM_GLOBAL
+     * @param setRefPreOrderIndex used for setter Ref, getter ref will be this value + 1
+     */
+    private void addTwinRefs(
+        JSModule module, Scope scope, Node node, Ref.Type setType, int setRefPreOrderIndex) {
+      checkArgument(
+          setType == Ref.Type.SET_FROM_GLOBAL || setType == Ref.Type.SET_FROM_LOCAL, setType);
+      Ref setRef = createNewRef(module, scope, node, setType, setRefPreOrderIndex);
+      Ref getRef =
+          createNewRef(module, scope, node, Ref.Type.ALIASING_GET, setRefPreOrderIndex + 1);
+      setRef.twin = getRef;
+      getRef.twin = setRef;
+      addRef(setRef);
+      addRef(getRef);
+    }
+
+    private void addSingleRef(
+        JSModule module, Scope scope, Node node, Ref.Type type, int preOrderIndex) {
+      addRef(createNewRef(module, scope, node, type, preOrderIndex));
+    }
+
+    private Ref createNewRef(
+        JSModule module, Scope scope, Node node, Ref.Type type, int preOrderIndex) {
+      return new Ref(
+          module, // null if the compilation isn't using JSModules
+          checkNotNull(scope),
+          checkNotNull(node), // may be null later, but not on creation
+          this,
+          type,
+          preOrderIndex);
+    }
+
+    Ref addSingleRefForTesting(Ref.Type type, int preOrderIndex) {
+      Ref ref =
+          new Ref(
+              /* module= */ null, /* scope= */ null, /* node = */ null, this, type, preOrderIndex);
+      addRef(ref);
+      return ref;
+    }
+
+    /**
+     * Add an ALIASING_GET Ref for the given Node using the same Ref properties as the declaration
+     * Ref, which must exist.
+     *
+     * <p>Only for use by CollapseProperties.
+     *
+     * @param newRefNode newly added AST node that refers to this Name and appears in the same
+     *     module and scope as the Ref that declares this Name
+     */
+    void addAliasingGetClonedFromDeclaration(Node newRefNode) {
+      // TODO(bradfordcsmith): It would be good to add checks that the scope and module are correct.
+      Ref declRef = checkNotNull(declaration);
+      addSingleRef(
+          declRef.module, declRef.scope, newRefNode, Ref.Type.ALIASING_GET, declRef.preOrderIndex);
+    }
+
+    private void addRef(Ref ref) {
       addRefInternal(ref);
       switch (ref.type) {
         case SET_FROM_GLOBAL:
@@ -1872,31 +1931,18 @@ class GlobalNamespace
     private Ref twin = null;
 
     /**
-     * Creates a reference at the current node.
+     * Creates a Ref
+     *
+     * <p>No parameter checking is done here, because we allow nulls for several fields in Refs
+     * created just for testing. However, all Refs for real use must be created by methods on the
+     * Name class, which does do argument checking.
      */
-    Ref(JSModule module, Scope scope, Node node, Name name, Type type, int index) {
+    private Ref(JSModule module, Scope scope, Node node, Name name, Type type, int index) {
       this.node = node;
       this.name = name;
       this.module = module;
       this.type = type;
       this.scope = scope;
-      this.preOrderIndex = index;
-    }
-
-    private Ref(Ref original, Type type, int index, Node refNode) {
-      this.node = refNode;
-      this.name = original.name;
-      this.module = original.module;
-      this.type = type;
-      this.scope = original.scope;
-      this.preOrderIndex = index;
-    }
-
-    private Ref(Type type, int index) {
-      this.type = type;
-      this.module = null;
-      this.scope = null;
-      this.name = null;
       this.preOrderIndex = index;
     }
 
@@ -1926,30 +1972,6 @@ class GlobalNamespace
 
     boolean isSet() {
       return type == Type.SET_FROM_GLOBAL || type == Type.SET_FROM_LOCAL;
-    }
-
-    static void markTwins(Ref a, Ref b) {
-      checkArgument(
-          (a.type == Type.ALIASING_GET || b.type == Type.ALIASING_GET)
-              && (a.type == Type.SET_FROM_GLOBAL
-                  || a.type == Type.SET_FROM_LOCAL
-                  || b.type == Type.SET_FROM_GLOBAL
-                  || b.type == Type.SET_FROM_LOCAL));
-      a.twin = b;
-      b.twin = a;
-    }
-
-    /**
-     * Create a new ref that is the same as this one, but of a different class and for a different
-     * AST node.
-     */
-    Ref cloneAndReclassify(Type type, Node refNode) {
-      Ref clone = new Ref(this, type, this.preOrderIndex, refNode);
-      return clone;
-    }
-
-    static Ref createRefForTesting(Type type) {
-      return new Ref(type, -1);
     }
 
     @Override

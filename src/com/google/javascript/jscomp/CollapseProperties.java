@@ -856,8 +856,7 @@ class CollapseProperties implements CompilerPass {
       // for the same global name.)
       if (isJsIdentifier && p != null) {
         if (!discardKeys) {
-          Ref newAlias = p.getDeclaration().cloneAndReclassify(Ref.Type.ALIASING_GET, refNode);
-          p.addRef(newAlias);
+          p.addAliasingGetClonedFromDeclaration(refNode);
         }
 
         p.updateRefNode(p.getDeclaration(), nameNode);
