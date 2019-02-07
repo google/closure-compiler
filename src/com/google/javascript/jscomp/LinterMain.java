@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,11 @@ public final class LinterMain {
   @Option(name = "--fix", usage = "Fix lint warnings automatically")
   private boolean fix = false;
 
+  @Option(
+      name = "--resolution_mode",
+      usage = "Expected path resolution mode for resolving module specifiers.")
+  private ResolutionMode resolutionMode = ResolutionMode.BROWSER;
+
   @Argument private List<String> files = new ArrayList<>();
 
   public static void main(String[] args) throws IOException, CmdLineException {
@@ -44,11 +50,13 @@ public final class LinterMain {
     CmdLineParser parser = new CmdLineParser(this);
     parser.parseArgument(args);
 
+    Linter linter = Linter.builder().withModuleResolutionMode(resolutionMode).build();
+
     for (String filename : files) {
       if (fix) {
-        Linter.fixRepeatedly(filename);
+        linter.fixRepeatedly(filename);
       } else {
-        Linter.lint(filename);
+        linter.lint(filename);
       }
     }
   }
