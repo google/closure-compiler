@@ -976,6 +976,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * placeholder where the code should be inserted.
    */
   @GwtIncompatible("Unnecessary")
+  @VisibleForTesting
   void writeOutput(
       Appendable out,
       Compiler compiler,
