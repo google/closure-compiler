@@ -68,6 +68,11 @@ URLSearchParams.prototype.has = function(name) {};
 URLSearchParams.prototype.set = function(name, value) {};
 
 /**
+ * @return {undefined}
+ */
+URLSearchParams.prototype.sort = function() {};
+
+/**
  * @see https://url.spec.whatwg.org
  * @constructor
  * @param {string} url
