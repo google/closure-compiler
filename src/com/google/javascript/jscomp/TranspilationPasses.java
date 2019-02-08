@@ -76,10 +76,6 @@ public class TranspilationPasses {
     // Inject runtime libraries needed for the transpilation we will have to do.
     passes.add(es6InjectRuntimeLibraries);
 
-    passes.add(
-        markUntranspilableFeaturesAsRemoved(
-            options.getLanguageIn().toFeatureSet(), options.getOutputFeatureSet()));
-
     if (options.needsTranspilationFrom(ES6) && doEs6ExternsCheck) {
       passes.add(es6ExternsCheck);
     }
@@ -164,19 +160,6 @@ public class TranspilationPasses {
     passes.add(rewritePolyfills);
   }
 
-  private static PassFactory markUntranspilableFeaturesAsRemoved(FeatureSet from, FeatureSet to) {
-    return new PassFactory("markUntranspilableFeaturesAsRemoved", true) {
-      @Override
-      protected CompilerPass create(AbstractCompiler compiler) {
-        return new MarkUntranspilableFeaturesAsRemoved(compiler, from, to);
-      }
-
-      @Override
-      protected FeatureSet featureSet() {
-        return ES_NEXT;
-      }
-    };
-  }
 
   /** Rewrites ES6 modules */
   private static final PassFactory es6RewriteModuleToCjs =

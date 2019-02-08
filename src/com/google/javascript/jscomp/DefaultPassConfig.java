@@ -151,6 +151,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.needsTranspilationFrom(TYPESCRIPT)) {
       passes.add(convertEs6TypedToEs6);
     }
+    passes.add(markUntranspilableFeaturesAsRemoved);
 
     passes.add(checkVariableReferencesForTranspileOnly);
     passes.add(gatherModuleMetadataPass);
@@ -242,6 +243,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.needsTranspilationFrom(TYPESCRIPT)) {
       checks.add(convertEs6TypedToEs6);
     }
+    checks.add(markUntranspilableFeaturesAsRemoved);
 
     checks.add(gatherGettersAndSetters);
 
@@ -1392,6 +1394,22 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           return TYPESCRIPT;
+        }
+      };
+
+  private static final PassFactory markUntranspilableFeaturesAsRemoved =
+      new PassFactory("markUntranspilableFeaturesAsRemoved", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          CompilerOptions options = compiler.getOptions();
+
+          return new MarkUntranspilableFeaturesAsRemoved(
+              compiler, options.getLanguageIn().toFeatureSet(), options.getOutputFeatureSet());
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES_NEXT;
         }
       };
 
