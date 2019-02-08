@@ -616,11 +616,6 @@ public class CompilerOptions implements Serializable {
     renamePrefixNamespaceAssumeCrossChunkNames = assume;
   }
 
-  @Deprecated
-  void setRenamePrefixNamespaceAssumeCrossModuleNames(boolean assume) {
-    setRenamePrefixNamespaceAssumeCrossChunkNames(assume);
-  }
-
   private PropertyCollapseLevel collapsePropertiesLevel;
 
   /** Flattens multi-level property names (e.g. a$b = x) */
@@ -1809,14 +1804,6 @@ public class CompilerOptions implements Serializable {
     this.summaryDetailLevel = summaryDetailLevel;
   }
 
-  /**
-   * @deprecated replaced by {@link #setExternExports}
-   */
-  @Deprecated
-  public void enableExternExports(boolean enabled) {
-    this.externExports = enabled;
-  }
-
   public void setExtraAnnotationNames(Iterable<String> extraAnnotationNames) {
     this.extraAnnotationNames = ImmutableSet.copyOf(extraAnnotationNames);
   }
@@ -2199,12 +2186,6 @@ public class CompilerOptions implements Serializable {
         parentChunkCanSeeSymbolsDeclaredInChildren;
   }
 
-  @Deprecated
-  public void setParentModuleCanSeeSymbolsDeclaredInChildren(
-      boolean parentChunkCanSeeSymbolsDeclaredInChildren) {
-    setParentChunkCanSeeSymbolsDeclaredInChildren(parentChunkCanSeeSymbolsDeclaredInChildren);
-  }
-
   public void setCrossChunkMethodMotion(boolean crossChunkMethodMotion) {
     this.crossChunkMethodMotion = crossChunkMethodMotion;
   }
@@ -2465,13 +2446,6 @@ public class CompilerOptions implements Serializable {
    */
   public void setPreserveClosurePrimitives(boolean preserveClosurePrimitives) {
     this.preserveClosurePrimitives = preserveClosurePrimitives;
-  }
-
-  // TODO(bangert): Delete this alias once it has been deprecated for 3 months.
-  /** Preserve goog.provide(), goog.require() and goog.module() calls. */
-  @Deprecated
-  public void setPreserveGoogProvidesAndRequires(boolean preserveGoogProvidesAndRequires) {
-     setPreserveClosurePrimitives(preserveGoogProvidesAndRequires);
   }
 
   public boolean shouldPreservesGoogProvidesAndRequires() {

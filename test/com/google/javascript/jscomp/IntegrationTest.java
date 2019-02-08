@@ -4960,7 +4960,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         options);
     options.setRenamePrefixNamespace("a");
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
-    options.setRenamePrefixNamespaceAssumeCrossModuleNames(false);
+    options.setRenamePrefixNamespaceAssumeCrossChunkNames(false);
     WarningLevel.DEFAULT.setOptionsForWarningLevel(options);
 
     test(options, code, "var b = {}; try { (0,use)(b.FOO); } catch (c) {}");
@@ -6523,7 +6523,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
-    options.setRenamePrefixNamespaceAssumeCrossModuleNames(true);
+    options.setRenamePrefixNamespaceAssumeCrossChunkNames(true);
     return options;
   }
 
