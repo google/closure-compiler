@@ -353,6 +353,33 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGlobalNameSetTwiceInSiblingModulesAllowed() {
+    testSame(
+        createModuleStar(
+            // root module
+            "class C {};",
+            // leaf 1
+            "C.m = 1; alert(C.m);",
+            // leaf 2
+            "C.m = 1; alert(C.m);"));
+  }
+
+  @Test
+  public void testGlobalNameSetOnlyInOtherSiblingModuleNotAllowed() {
+    testSame(
+        createModuleStar(
+            // root module
+            "class C {};",
+            // leaf 1 sets than uses C.m
+            "C.m = 1; alert(C.m);",
+            // leaf 2 also sets then uses C.m
+            "C.m = 1; alert(C.m);",
+            // leaf 3 uses C.m without it having been set
+            "alert(C.m);"),
+        STRICT_MODULE_DEP_QNAME);
+  }
+
+  @Test
   public void testSelfModuleDep() {
     testSame(createModuleChain(
         NAMES + "var c = a.b;"

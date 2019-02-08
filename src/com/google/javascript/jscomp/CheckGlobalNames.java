@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.GlobalNamespace.Name;
@@ -151,10 +152,8 @@ class CheckGlobalNames implements CompilerPass {
   private void validateName(Name name, boolean isDefined) {
     // If the name is not defined, emit warnings for each reference. While
     // we're looking through each reference, check all the module dependencies.
-    Ref declaration = name.getDeclaration();
     Name parent = name.getParent();
 
-    JSModuleGraph moduleGraph = compiler.getModuleGraph();
     boolean isTypedef = isTypedef(name);
     for (Ref ref : name.getRefs()) {
       // Don't worry about global exprs.
@@ -164,10 +163,7 @@ class CheckGlobalNames implements CompilerPass {
         if (!isGlobalExpr) {
           reportRefToUndefinedName(name, ref);
         }
-      } else if (declaration != null &&
-          ref.getModule() != declaration.getModule() &&
-          !moduleGraph.dependsOn(
-              ref.getModule(), declaration.getModule())) {
+      } else if (checkForBadModuleReference(name, ref)) {
         reportBadModuleReference(name, ref);
       } else {
         // Check for late references.
@@ -214,6 +210,50 @@ class CheckGlobalNames implements CompilerPass {
       }
     }
     return false;
+  }
+
+  /**
+   * Returns true if this name is potentially referenced before being defined in a different module
+   *
+   * <p>For example:
+   *
+   * <ul>
+   *   <li>Module B depends on Module A. name is set in Module A and referenced in Module B. this is
+   *       fine, and this method returns false.
+   *   <li>Module A and Module B are unrelated. name is set in Module A and referenced in Module B.
+   *       this is an error, and this method returns true.
+   *   <li>name is referenced in Module A, and never set globally. This warning is not specific to
+   *       modules, so is emitted elsewhere.
+   * </ul>
+   */
+  private boolean checkForBadModuleReference(Name name, Ref ref) {
+    JSModuleGraph moduleGraph = compiler.getModuleGraph();
+    if (name.getGlobalSets() == 0 || ref.type == Ref.Type.SET_FROM_GLOBAL) {
+      // Back off if either 1) this name was never set, or 2) this reference /is/ a set.
+      return false;
+    }
+    if (name.getGlobalSets() == 1) {
+      // there is only one global set - it should be set as name.declaration
+      // just look at that declaration instead of iterating through every single reference.
+      Ref declaration = checkNotNull(name.getDeclaration());
+      return !isSetFromPrecedingModule(ref, declaration, moduleGraph);
+    }
+    // there are multiple sets, so check if any of them happens in this module or a module earlier
+    // in the dependency chain.
+    for (Ref set : name.getRefs()) {
+      if (isSetFromPrecedingModule(ref, set, moduleGraph)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /** Whether the set is in the global scope and occurs in a module the original ref depends on */
+  private static boolean isSetFromPrecedingModule(
+      Ref originalRef, Ref set, JSModuleGraph moduleGraph) {
+    return set.type == Ref.Type.SET_FROM_GLOBAL
+        && (originalRef.getModule() == set.getModule()
+            || moduleGraph.dependsOn(originalRef.getModule(), set.getModule()));
   }
 
   private void reportBadModuleReference(Name name, Ref ref) {
