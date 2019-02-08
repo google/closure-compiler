@@ -21,7 +21,9 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -33,8 +35,10 @@ import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -146,7 +150,7 @@ class GlobalNamespace
   @Override
   public Iterable<Ref> getReferences(Name slot) {
     ensureGenerated();
-    return Collections.unmodifiableList(slot.getRefs());
+    return Collections.unmodifiableCollection(slot.getRefs());
   }
 
   @Override
@@ -1066,7 +1070,7 @@ class GlobalNamespace
     private Ref declaration;
 
     /** All references to a name. This must contain {@code declaration}. */
-    private List<Ref> refs;
+    private LinkedHashSet<Ref> refs;
 
     /** All Es6 subclasses of a name that is an Es6 class. Must be null if not an ES6 class. */
     @Nullable List<Name> subclasses;
@@ -1335,63 +1339,67 @@ class GlobalNamespace
     }
 
     void removeRef(Ref ref) {
-      if (refs != null && refs.remove(ref)) {
-        if (ref == declaration) {
-          declaration = null;
-          if (refs != null) {
-            for (Ref maybeNewDecl : refs) {
-              if (maybeNewDecl.type == Ref.Type.SET_FROM_GLOBAL) {
-                declaration = maybeNewDecl;
-                break;
-              }
-            }
+      checkState(
+          ref.name == this, "removeRef(%s): node does not belong to this name: %s", ref, this);
+      checkState(refs != null && refs.contains(ref), "removeRef(%s): unknown ref", ref);
+      refs.remove(ref);
+      if (ref == declaration) {
+        declaration = null;
+        for (Ref maybeNewDecl : refs) {
+          if (maybeNewDecl.type == Ref.Type.SET_FROM_GLOBAL) {
+            declaration = maybeNewDecl;
+            break;
           }
         }
+      }
 
-        JSDocInfo info;
-        switch (ref.type) {
-          case SET_FROM_GLOBAL:
-            globalSets--;
-            break;
-          case SET_FROM_LOCAL:
-            localSets--;
-            info = ref.getNode() == null ? null : NodeUtil.getBestJSDocInfo(ref.getNode());
-            if (info != null && info.isNoCollapse()) {
-              localSetsWithNoCollapse--;
-            }
-            break;
-          case PROTOTYPE_GET:
-          case DIRECT_GET:
-            totalGets--;
-            break;
-          case ALIASING_GET:
-            aliasingGets--;
-            totalGets--;
-            break;
-          case CALL_GET:
-            callGets--;
-            totalGets--;
-            break;
-          case DELETE_PROP:
-            deleteProps--;
-            break;
-          case SUBCLASSING_GET:
-            subclassingGets--;
-            totalGets--;
-            break;
-          default:
-            throw new IllegalStateException();
-        }
+      JSDocInfo info;
+      switch (ref.type) {
+        case SET_FROM_GLOBAL:
+          globalSets--;
+          break;
+        case SET_FROM_LOCAL:
+          localSets--;
+          info = ref.getNode() == null ? null : NodeUtil.getBestJSDocInfo(ref.getNode());
+          if (info != null && info.isNoCollapse()) {
+            localSetsWithNoCollapse--;
+          }
+          break;
+        case PROTOTYPE_GET:
+        case DIRECT_GET:
+          totalGets--;
+          break;
+        case ALIASING_GET:
+          aliasingGets--;
+          totalGets--;
+          break;
+        case CALL_GET:
+          callGets--;
+          totalGets--;
+          break;
+        case DELETE_PROP:
+          deleteProps--;
+          break;
+        case SUBCLASSING_GET:
+          subclassingGets--;
+          totalGets--;
+          break;
+          // Leaving off default: allows compile-time enforcement that all values are covered
       }
     }
 
-    List<Ref> getRefs() {
-      return refs == null ? ImmutableList.of() : Collections.unmodifiableList(refs);
+    Collection<Ref> getRefs() {
+      return refs == null ? ImmutableList.of() : Collections.unmodifiableCollection(refs);
+    }
+
+    Ref getFirstRef() {
+      checkState(!refs.isEmpty(), "no first Ref to get");
+      return Iterables.get(refs, 0);
     }
 
     private void addRefInternal(Ref ref) {
       if (refs == null) {
-        refs = new ArrayList<>();
+        refs = new LinkedHashSet<>();
       }
       refs.add(ref);
     }
@@ -1413,7 +1421,7 @@ class GlobalNamespace
 
     boolean isSimpleStubDeclaration() {
       if (getRefs().size() == 1) {
-        Ref ref = refs.get(0);
+        Ref ref = Iterables.get(refs, 0);
         if (ref.node.getParent().isExprResult()) {
           return true;
         }
@@ -1976,7 +1984,16 @@ class GlobalNamespace
 
     @Override
     public String toString() {
-      return node.toString();
+      return MoreObjects.toStringHelper(this)
+          .omitNullValues()
+          .add("name", name)
+          .add("type", type)
+          .add("node", node)
+          .add("preOrderIndex", preOrderIndex)
+          .add("isTwin", twin != null)
+          .add("module", module)
+          .add("scope", scope)
+          .toString();
     }
   }
 }

@@ -33,7 +33,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
-import java.util.List;
 import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,8 +54,7 @@ public final class GlobalNamespaceTest {
     Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 0);
     Ref set2 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 1);
 
-    List<Ref> refs = n.getRefs();
-    assertThat(refs).containsExactly(set1, set2);
+    assertThat(n.getRefs()).containsExactly(set1, set2).inOrder();
 
     assertThat(n.getDeclaration()).isEqualTo(set1);
     assertThat(n.getGlobalSets()).isEqualTo(2);
@@ -75,8 +73,7 @@ public final class GlobalNamespaceTest {
     Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 0);
     Ref localSet = n.addSingleRefForTesting(Ref.Type.SET_FROM_LOCAL, 1);
 
-    List<Ref> refs = n.getRefs();
-    assertThat(refs).containsExactly(set1, localSet);
+    assertThat(n.getRefs()).containsExactly(set1, localSet).inOrder();
 
     assertThat(n.getDeclaration()).isEqualTo(set1);
     assertThat(n.getGlobalSets()).isEqualTo(1);

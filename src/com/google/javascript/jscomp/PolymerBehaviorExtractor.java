@@ -156,8 +156,7 @@ final class PolymerBehaviorExtractor {
     // Use any set as a backup declaration, even if it's local.
     Ref declarationRef = globalName.getDeclaration();
     if (declarationRef == null) {
-      List<Ref> behaviorRefs = globalName.getRefs();
-      for (Ref ref : behaviorRefs) {
+      for (Ref ref : globalName.getRefs()) {
         if (ref.isSet()) {
           isGlobalDeclaration = false;
           declarationRef = ref;

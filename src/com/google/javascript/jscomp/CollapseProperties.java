@@ -895,7 +895,7 @@ class CollapseProperties implements CompilerPass {
         compiler.reportChangeToEnclosingScope(newVar);
         // Determine if this is a constant var by checking the first
         // reference to it. Don't check the declaration, as it might be null.
-        if (p.getRefs().get(0).getNode().getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)) {
+        if (p.getFirstRef().getNode().getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)) {
           nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
           compiler.reportChangeToEnclosingScope(nameNode);
         }

@@ -344,9 +344,7 @@ class AggressiveInlineAliases implements CompilerPass {
         }
 
         // just set the original alias to null.
-        if (tryReplacingAliasingAssignment(alias, aliasLhsNode)) {
-          name.removeRef(alias);
-        }
+        tryReplacingAliasingAssignment(alias, aliasLhsNode);
 
         // Inlining the variable may have introduced new references
         // to descendants of {@code name}. So those need to be collected now.
