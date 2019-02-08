@@ -2504,9 +2504,9 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testOptionalCatchIsUnsupported() {
+  public void testOptionalCatch() {
     args.add("--language_in=ES_NEXT");
-    test("try { x(); } catch {}", RhinoErrorReporter.UNSUPPORTED_LANGUAGE_FEATURE);
+    test("try { x(); } catch {}", "try{x()}catch(a){}");
   }
 
   /* Helper functions */

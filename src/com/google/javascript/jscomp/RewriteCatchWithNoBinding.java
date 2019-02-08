@@ -71,10 +71,12 @@ final class RewriteCatchWithNoBinding implements HotSwapCompilerPass {
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     TranspilationPasses.hotSwapTranspile(
         compiler, scriptRoot, TRANSPILED_FEATURES, new AddBindings());
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
   }
 
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, TRANSPILED_FEATURES, new AddBindings());
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
   }
 }

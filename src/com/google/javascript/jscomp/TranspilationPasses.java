@@ -17,12 +17,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_UNSUPPORTED;
 
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -98,9 +96,7 @@ public class TranspilationPasses {
   /** Adds transpilation passes that should run after all checks are done. */
   public static void addPostCheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
-    if (options.needsTranspilationFrom(FeatureSet.ES_UNSUPPORTED)) {
-      // TODO(b/123603829) Should move to ES_NEXT, then ES2019 when all checks understand this
-      // feature.
+    if (options.needsTranspilationFrom(FeatureSet.ES_NEXT)) {
       passes.add(rewriteCatchWithNoBinding);
     }
 
@@ -270,9 +266,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          // TODO(b/123603829) Should move to ES_NEXT, then ES2019 when all checks understand this
-          // feature.
-          return ES_UNSUPPORTED;
+          return ES_NEXT;
         }
       };
 
@@ -312,7 +306,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 

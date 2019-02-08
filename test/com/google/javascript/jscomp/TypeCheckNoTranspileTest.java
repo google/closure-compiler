@@ -6694,4 +6694,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  }",
             "}"));
   }
+
+  @Test
+  public void testNoCatchBinding() {
+    testTypes("try {} catch {}");
+    testTypes("try {} catch {} finally {}");
+  }
 }

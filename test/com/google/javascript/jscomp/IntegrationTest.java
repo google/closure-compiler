@@ -6787,4 +6787,66 @@ public final class IntegrationTest extends IntegrationTestCase {
             "let /** !{a: string, b: number} */ y = {...x};"),
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
+
+  @Test
+  public void testOptionalCatchBinding_toEs5() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "function foo() {}",
+              "function reportError() {}",
+              "try {",
+              " foo();",
+              "} catch {",
+              "  reportError();",
+              "}")
+        },
+        new String[] {
+          lines(
+              "function foo() {}",
+              "function reportError() {}",
+              "try {",
+              " foo();",
+              "} catch ($jscomp$unused$catch) {",
+              "  reportError();",
+              "}")
+        });
+  }
+
+  @Test
+  public void testOptionalCatchBinding_noTranspile() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "function foo() {}",
+              "function reportError() {}",
+              "try {",
+              " foo();",
+              "} catch {",
+              "  reportError();",
+              "}")
+        },
+        new String[] {
+          lines(
+              "function foo() {}",
+              "function reportError() {}",
+              "try {",
+              " foo();",
+              "} catch {",
+              "  reportError();",
+              "}")
+        });
+  }
 }

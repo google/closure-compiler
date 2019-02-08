@@ -77,7 +77,7 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPESCRIPT = ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
-  public static final FeatureSet TYPE_CHECK_SUPPORTED = ES2018;
+  public static final FeatureSet TYPE_CHECK_SUPPORTED = ES2018.with(Feature.OPTIONAL_CATCH_BINDING);
 
   private enum LangVersion {
     ES3,
@@ -172,7 +172,7 @@ public final class FeatureSet implements Serializable {
 
     // ES 2019 adds optional catch bindings:
     // https://github.com/tc39/proposal-optional-catch-binding
-    OPTIONAL_CATCH_BINDING("Optional catch binding", LangVersion.ES_UNSUPPORTED),
+    OPTIONAL_CATCH_BINDING("Optional catch binding", LangVersion.ES_NEXT),
 
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),

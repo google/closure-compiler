@@ -15,8 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +44,7 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
     super.getOptions(options);
-    options.setLanguageInToUnsupported();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     return options;
   }
 
@@ -60,6 +63,8 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
             "} catch ($jscomp$unused$catch) {",
             "  onError();",
             "}"));
+    assertThat(getLastCompiler().getFeatureSet().contains(Feature.OPTIONAL_CATCH_BINDING))
+        .isFalse();
   }
 
   @Test
