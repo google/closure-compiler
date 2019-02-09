@@ -2465,7 +2465,7 @@ MessagePort.prototype.close = function() {};
 
 /**
  * TODO(blickly): Change this to MessageEvent<*> and add casts as needed
- * @type {?function(!MessageEvent<?>)}
+ * @type {?function(!MessageEvent<?>): void}
  */
 MessagePort.prototype.onmessage;
 
