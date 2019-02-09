@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
-
 import java.io.Serializable;
 import javax.annotation.Nullable;
 
@@ -68,6 +67,17 @@ public final class JSError implements Serializable {
    */
   public static JSError make(DiagnosticType type, String... arguments) {
     return new JSError(null, null, -1, -1, type, null, arguments);
+  }
+
+  /**
+   * Creates a JSError with no source information and a non-default level.
+   *
+   * @param level
+   * @param type The DiagnosticType
+   * @param arguments Arguments to be incorporated into the message
+   */
+  public static JSError make(CheckLevel level, DiagnosticType type, String... arguments) {
+    return new JSError(null, null, -1, -1, type, level, arguments);
   }
 
   /**

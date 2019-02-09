@@ -130,6 +130,7 @@ public class DiagnosticGroups {
           + "es3, "
           + "es5Strict, "
           + "externsValidation, "
+          // + "featuresNotSupportedByPass, " Don't show this to users
           + "fileoverviewTags, "
           + "functionParams, "
           + "globalThis, "
@@ -174,6 +175,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "untranspilableFeatures",
           MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT);
+
+  public static final DiagnosticGroup FEATURES_NOT_SUPPORTED_BY_PASS =
+      DiagnosticGroups.registerGroup(
+          "featuresNotSupportedByPass", PhaseOptimizer.FEATURES_NOT_SUPPORTED_BY_PASS);
 
   public static final DiagnosticGroup MODULE_LOAD =
       DiagnosticGroups.registerGroup("moduleLoad",

@@ -39,6 +39,12 @@ import java.util.logging.Logger;
  */
 class PhaseOptimizer implements CompilerPass {
 
+  static final DiagnosticType FEATURES_NOT_SUPPORTED_BY_PASS =
+      DiagnosticType.error(
+          "JSC_FEATURES_NOT_SUPPORTED_BY_PASS",
+          "Attempted to run pass \"{0}\" on input with features it does not support. {1}\n"
+              + "Unsupported features: {2}");
+
   private static final Logger logger = Logger.getLogger(PhaseOptimizer.class.getName());
   private final AbstractCompiler compiler;
   private final PerformanceTracker tracker;
@@ -279,16 +285,28 @@ class PhaseOptimizer implements CompilerPass {
     public void process(Node externs, Node root) {
       FeatureSet featuresInAst = compiler.getFeatureSet();
       FeatureSet featuresSupportedByPass = factory.featureSet();
-      if (compiler.getOptions().shouldSkipUnsupportedPasses()
-          && !featuresSupportedByPass.contains(featuresInAst)) {
-        // NOTE: this warning ONLY appears in code using the Google-internal runner.
-        // Both CommandLineRunner.java and gwt/client/GwtRunner.java explicitly set the logging
-        // level to Level.OFF to avoid seeing this warning.
-        // See https://github.com/google/closure-compiler/pull/2998 for why.
-        logger.warning("Skipping pass " + name);
+
+      if (!featuresSupportedByPass.contains(featuresInAst)) {
         FeatureSet unsupportedFeatures = featuresInAst.without(featuresSupportedByPass);
-        logger.warning("AST contains unsupported features: " + unsupportedFeatures);
-        return;
+
+        if (compiler.getOptions().shouldSkipUnsupportedPasses()) {
+          compiler.report(
+              JSError.make(
+                  CheckLevel.WARNING,
+                  FEATURES_NOT_SUPPORTED_BY_PASS,
+                  name,
+                  "Skipping pass.",
+                  unsupportedFeatures.toString()));
+          return;
+        } else {
+          compiler.report(
+              JSError.make(
+                  CheckLevel.ERROR,
+                  FEATURES_NOT_SUPPORTED_BY_PASS,
+                  name,
+                  "Running pass anyway.",
+                  unsupportedFeatures.toString()));
+        }
       }
 
       logger.fine("Running pass " + name);

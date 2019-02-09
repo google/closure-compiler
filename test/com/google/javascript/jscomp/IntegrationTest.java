@@ -114,17 +114,21 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testForOfDoesNotFoolSideEffectDetection() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+
     // we don't want to see injected library code in the output
     useNoninjectingCompiler = true;
-    testSame(
+    test(
         options,
         lines(
             "class C {",
             "  constructor(elements) {",
             "    this.elements = elements;",
-            "    this.m1();", // this call should not be removed, because it has side effects
+            // This call will be preserved, but inlined, because it has side effects.
+            "    this.m1();",
             "  }",
             // m1() must be considered to have side effects because it taints a non-local object
             // through basically this.elements[i].sompProp.
@@ -134,8 +138,17 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    }",
             "  }",
             "}",
-            "new C([]);",
-            ""));
+            "new C([]);"),
+        lines(
+            "class C {",
+            "  constructor(elements) {",
+            "    this.elements = elements;",
+            "    for (const element of this.elements) {",
+            "      element.someProp = 1;",
+            "    }",
+            "  }",
+            "}",
+            "new C([]);"));
   }
 
   @Test
@@ -6414,6 +6427,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     useNoninjectingCompiler = true;
+
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
     externsList.add(
@@ -6524,6 +6538,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossChunkNames(true);
+    options.setWarningLevel(DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS, CheckLevel.OFF);
     return options;
   }
 

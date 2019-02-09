@@ -102,6 +102,7 @@ public final class Es6TypedIntegrationTest extends IntegrationTestCase {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setWarningLevel(DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS, CheckLevel.OFF);
     options.preserveTypeAnnotations = true;
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     return options;
