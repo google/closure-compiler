@@ -142,7 +142,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     FunctionType classCConstructorType = classCInstanceType.getConstructor();
 
     // `C` from `let C = function() {};`
-    Node cName = getNodeMatchingQName(getLastCompiler().getJsRoot(), "C");
+    Node cName = getNodeWithName(getLastCompiler().getJsRoot(), "C");
     assertNode(cName).hasToken(Token.NAME);
     assertType(cName.getJSType()).isEqualTo(classCConstructorType);
 
@@ -164,7 +164,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     FunctionType classCConstructorType = classCInstanceType.getConstructor();
 
     // `C` from `let C = function() {};`
-    Node cName = getNodeMatchingQName(getLastCompiler().getJsRoot(), "C");
+    Node cName = getNodeWithName(getLastCompiler().getJsRoot(), "C");
     assertNode(cName).hasToken(Token.NAME);
     assertType(cName.getJSType()).isEqualTo(classCConstructorType);
 
@@ -191,8 +191,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     JSType methodType = classCPrototypeType.getPropertyType("method");
 
     // `C.prototype.method`
-    Node cPrototypeMethod =
-        getNodeMatchingQName(getLastCompiler().getJsRoot(), "C.prototype.method");
+    Node cPrototypeMethod = getNodeWithName(getLastCompiler().getJsRoot(), "method").getParent();
     assertNode(cPrototypeMethod).matchesQualifiedName("C.prototype.method");
     assertType(cPrototypeMethod.getJSType()).isEqualTo(methodType);
 
@@ -2633,11 +2632,11 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
 
     // Get nodes from the original, pre-transpiled AST
     // `C` from `class C { }`
-    Node sourceCName = getNodeMatchingQName(sourceRoot, "C");
+    Node sourceCName = getNodeWithName(sourceRoot, "C");
     Node sourceClass = sourceCName.getParent();
 
     // `C` from `let C = function() {};` matches `C` from `class C { }`
-    Node expectedCName = getNodeMatchingQName(expectedRoot, "C");
+    Node expectedCName = getNodeWithName(expectedRoot, "C");
     assertNode(expectedCName).matchesQualifiedName("C").hasEqualSourceInfoTo(sourceCName);
 
     // function() {}
@@ -2656,13 +2655,13 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
 
     // Get nodes from the original, pre-transpiled AST
     // `C` from `class C {`
-    Node sourceCName = getNodeMatchingQName(sourceRoot, "C");
+    Node sourceCName = getNodeWithName(sourceRoot, "C");
     // `constructor() {}`
-    Node sourceConstructorFunction = getNodeMatchingQName(sourceRoot, "constructor").getOnlyChild();
+    Node sourceConstructorFunction = getNodeWithName(sourceRoot, "constructor").getOnlyChild();
     assertNode(sourceConstructorFunction).hasToken(Token.FUNCTION);
 
     // `C` from `let C = function() {};` matches `C` from `class C {`
-    Node expectedCName = getNodeMatchingQName(expectedRoot, "C");
+    Node expectedCName = getNodeWithName(expectedRoot, "C");
     assertNode(expectedCName).matchesQualifiedName("C").hasEqualSourceInfoTo(sourceCName);
 
     // `function() {}` matches `constructor() {}`
@@ -2687,12 +2686,12 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
 
     // Get nodes from the original, pre-transpiled AST
     // The MEMBER_FUNCTION_DEF for `method`
-    Node sourceMethodMemberDef = getNodeMatchingQName(sourceRoot, "method");
+    Node sourceMethodMemberDef = getNodeWithName(sourceRoot, "method");
     // The FUNCTION node for `method() {}`
     Node sourceMethodFunction = sourceMethodMemberDef.getOnlyChild();
 
     // `C.prototype.method` has source info matching `method`
-    Node cPrototypeMethod = getNodeMatchingQName(expectedRoot, "C.prototype.method");
+    Node cPrototypeMethod = getNodeWithName(expectedRoot, "method").getParent();
     assertNode(cPrototypeMethod).hasEqualSourceInfoTo(sourceMethodMemberDef);
 
     // `C.prototype` has source info matching `method`
@@ -2925,12 +2924,23 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   /** Returns the first node (preorder) in the given AST that matches the given qualified name */
-  private Node getNodeMatchingQName(Node root, String qname) {
-    if (root.matchesQualifiedName(qname)) {
-      return root;
+  private Node getNodeWithName(Node root, String name) {
+    switch (root.getToken()) {
+      case NAME:
+      case STRING:
+      case MEMBER_FUNCTION_DEF:
+      case STRING_KEY:
+        if (root.getString().equals(name)) {
+          return root;
+        }
+        break;
+
+      default:
+        break;
     }
+
     for (Node child : root.children()) {
-      Node result = getNodeMatchingQName(child, qname);
+      Node result = getNodeWithName(child, name);
       if (result != null) {
         return result;
       }

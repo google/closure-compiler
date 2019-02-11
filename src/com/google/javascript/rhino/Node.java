@@ -2214,6 +2214,9 @@ public class Node implements Serializable {
         return true;
       case GETPROP:
         return getFirstChild().isQualifiedName();
+
+      case MEMBER_FUNCTION_DEF:
+        // These are explicitly *not* qualified name components.
       default:
         return false;
     }
@@ -2236,7 +2239,6 @@ public class Node implements Serializable {
 
     switch (this.getToken()) {
       case NAME:
-      case MEMBER_FUNCTION_DEF:
         String name = getString();
         return start == 0 && !name.isEmpty() && name.length() == endIndex && qname.startsWith(name);
       case THIS:
@@ -2249,6 +2251,9 @@ public class Node implements Serializable {
             && prop.length() == endIndex - start
             && prop.regionMatches(0, qname, start, endIndex - start)
             && getFirstChild().matchesQualifiedName(qname, start - 1);
+
+      case MEMBER_FUNCTION_DEF:
+        // These are explicitly *not* qualified name components.
       default:
         return false;
     }
@@ -2274,6 +2279,9 @@ public class Node implements Serializable {
         // ==, rather than equal as it is intern'd in setString
         return getLastChild().getString() == n.getLastChild().getString()
             && getFirstChild().matchesQualifiedName(n.getFirstChild());
+
+      case MEMBER_FUNCTION_DEF:
+        // These are explicitly *not* qualified name components.
       default:
         return false;
     }
