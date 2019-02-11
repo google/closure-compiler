@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -67,20 +68,19 @@ class GlobalNamespace
     CODE;
 
     static SourceKind fromScriptNode(Node n) {
-       if (!n.isFromExterns()) {
-         return CODE;
-       } else if (NodeUtil.isFromTypeSummary(n)) {
-         return TYPE_SUMMARY;
-       } else {
-         return EXTERN;
-       }
+      if (!n.isFromExterns()) {
+        return CODE;
+      } else if (NodeUtil.isFromTypeSummary(n)) {
+        return TYPE_SUMMARY;
+      } else {
+        return EXTERN;
+      }
     }
   }
 
   /**
-   * Each reference has an index in post-order.
-   * Notice that some nodes are represented by 2 Ref objects, so
-   * this index is not necessarily unique.
+   * Each reference has an index in post-order. Notice that some nodes are represented by 2 Ref
+   * objects, so this index is not necessarily unique.
    */
   private int currentPreOrderIndex = 0;
 
@@ -104,11 +104,10 @@ class GlobalNamespace
    * Creates an instance that may emit warnings when building the namespace.
    *
    * @param compiler The AbstractCompiler, for reporting code changes
-   * @param externsRoot The root of the externs to build a namespace for. If
-   *     this is null, externs and properties defined on extern types will not
-   *     be included in the global namespace.  If non-null, it allows
-   *     user-defined function on extern types to be included in the global
-   *     namespace.  E.g. String.foo.
+   * @param externsRoot The root of the externs to build a namespace for. If this is null, externs
+   *     and properties defined on extern types will not be included in the global namespace. If
+   *     non-null, it allows user-defined function on extern types to be included in the global
+   *     namespace. E.g. String.foo.
    * @param root The root of the rest of the code to build a namespace for.
    */
   GlobalNamespace(AbstractCompiler compiler, Node externsRoot, Node root) {
@@ -171,8 +170,8 @@ class GlobalNamespace
   }
 
   /**
-   * Gets a list of the roots of the forest of the global names, where the
-   * roots are the top-level names.
+   * Gets a list of the roots of the forest of the global names, where the roots are the top-level
+   * names.
    */
   List<Name> getNameForest() {
     ensureGenerated();
@@ -180,8 +179,8 @@ class GlobalNamespace
   }
 
   /**
-   * Gets an index of all the global names, indexed by full qualified name
-   * (as in "a", "a.b.c", etc.).
+   * Gets an index of all the global names, indexed by full qualified name (as in "a", "a.b.c",
+   * etc.).
    */
   Map<String, Name> getNameIndex() {
     ensureGenerated();
@@ -189,8 +188,8 @@ class GlobalNamespace
   }
 
   /**
-   * A simple data class that contains the information necessary to inspect
-   * a node for changes to the global namespace.
+   * A simple data class that contains the information necessary to inspect a node for changes to
+   * the global namespace.
    */
   static class AstChange {
     final JSModule module;
@@ -221,8 +220,9 @@ class GlobalNamespace
   }
 
   /**
-   * If the client adds new nodes to the AST, scan these new nodes
-   * to see if they've added any references to the global namespace.
+   * If the client adds new nodes to the AST, scan these new nodes to see if they've added any
+   * references to the global namespace.
+   *
    * @param newNodes New nodes to check.
    */
   void scanNewNodes(Set<AstChange> newNodes) {
@@ -257,9 +257,7 @@ class GlobalNamespace
     builder.collect(module, scope, n);
   }
 
-  /**
-   * Builds the namespace lazily.
-   */
+  /** Builds the namespace lazily. */
   private void process() {
     if (hasExternsRoot()) {
       sourceKind = SourceKind.EXTERN;
@@ -273,8 +271,7 @@ class GlobalNamespace
   }
 
   /**
-   * Determines whether a name reference in a particular scope is a global name
-   * reference.
+   * Determines whether a name reference in a particular scope is a global name reference.
    *
    * @param name A variable or property name (e.g. "a" or "a.b.c.d")
    * @param s The scope in which the name is referenced
@@ -297,8 +294,8 @@ class GlobalNamespace
   }
 
   /**
-   * Determines whether a variable name reference in a particular scope is a
-   * global variable reference.
+   * Determines whether a variable name reference in a particular scope is a global variable
+   * reference.
    *
    * @param name A variable name (e.g. "a")
    * @param s The scope in which the name is referenced
@@ -485,7 +482,6 @@ class GlobalNamespace
         return;
       }
 
-
       if (isSet) {
         // Use the closest hoist scope to select handleSetFromGlobal or handleSetFromLocal
         // because they use the term 'global' in an ES5, pre-block-scoping sense.
@@ -501,20 +497,17 @@ class GlobalNamespace
     }
 
     /**
-     * Gets the fully qualified name corresponding to an object literal key,
-     * as long as it and its prefix property names are valid JavaScript
-     * identifiers. The object literal may be nested inside of other object
-     * literals.
+     * Gets the fully qualified name corresponding to an object literal key, as long as it and its
+     * prefix property names are valid JavaScript identifiers. The object literal may be nested
+     * inside of other object literals.
      *
-     * For example, if called with node {@code n} representing "z" in any of
-     * the following expressions, the result would be "w.x.y.z":
-     * <code> var w = {x: {y: {z: 0}}}; </code>
-     * <code> w.x = {y: {z: 0}}; </code>
-     * <code> w.x.y = {'a': 0, 'z': 0}; </code>
+     * <p>For example, if called with node {@code n} representing "z" in any of the following
+     * expressions, the result would be "w.x.y.z": <code> var w = {x: {y: {z: 0}}}; </code> <code>
+     *  w.x = {y: {z: 0}}; </code> <code> w.x.y = {'a': 0, 'z': 0}; </code>
      *
      * @param n A child of an OBJLIT node
-     * @return The global name, or null if {@code n} doesn't correspond to the
-     *   key of an object literal that can be named
+     * @return The global name, or null if {@code n} doesn't correspond to the key of an object
+     *     literal that can be named
      */
     String getNameForObjLitKey(Node n) {
       Node parent = n.getParent();
@@ -570,19 +563,16 @@ class GlobalNamespace
     }
 
     /**
-     * Gets the fully qualified name corresponding to an class member function,
-     * as long as it and its prefix property names are valid JavaScript
-     * identifiers.
+     * Gets the fully qualified name corresponding to an class member function, as long as it and
+     * its prefix property names are valid JavaScript identifiers.
      *
-     * For example, if called with node {@code n} representing "y" in any of
-     * the following expressions, the result would be "x.y":
-     * <code> class x{y(){}}; </code>
-     * <code> var x = class{y(){}}; </code>
-     * <code> var x; x = class{y(){}}; </code>
+     * <p>For example, if called with node {@code n} representing "y" in any of the following
+     * expressions, the result would be "x.y": <code> class x{y(){}}; </code> <code>
+     *  var x = class{y(){}}; </code> <code> var x; x = class{y(){}}; </code>
      *
      * @param n A child of an CLASS_MEMBERS node
-     * @return The global name, or null if {@code n} doesn't correspond to
-     *   a class member function that can be named
+     * @return The global name, or null if {@code n} doesn't correspond to a class member function
+     *     that can be named
      */
     String getNameForClassMembers(Node n) {
       Node parent = n.getParent();
@@ -693,14 +683,39 @@ class GlobalNamespace
 
       if (isNestedAssign(parent)) {
         // This assignment is both a set and a get that creates an alias.
-        nameObj.addTwinRefs(module, scope, n, Ref.Type.SET_FROM_GLOBAL, currentPreOrderIndex);
-        currentPreOrderIndex += 2; // addTwinRefs uses 2 index values
+        Ref.Type refType = Ref.Type.SET_FROM_GLOBAL;
+        addOrConfirmTwinRefs(nameObj, n, refType, module, scope);
       } else {
-        nameObj.addSingleRef(module, scope, n, Ref.Type.SET_FROM_GLOBAL, currentPreOrderIndex++);
+        addOrConfirmRef(nameObj, n, Ref.Type.SET_FROM_GLOBAL, module, scope);
         if (isTypeDeclaration(n)) {
           // Names with a @constructor or @enum annotation are always collapsed
           nameObj.setDeclaredType();
         }
+      }
+    }
+
+    /**
+     * If Refs already exist for the given Node confirm they match what we would create. Otherwise,
+     * create them.
+     *
+     * @param nameObj
+     * @param node
+     * @param setRefType
+     * @param module
+     * @param scope
+     */
+    private void addOrConfirmTwinRefs(
+        Name nameObj, Node node, Ref.Type setRefType, JSModule module, Scope scope) {
+      ImmutableList<Ref> existingRefs = nameObj.getRefsForNode(node);
+      if (existingRefs.isEmpty()) {
+        nameObj.addTwinRefs(module, scope, node, setRefType, currentPreOrderIndex);
+        currentPreOrderIndex += 2; // addTwinRefs uses 2 index values
+      } else {
+        checkState(existingRefs.size() == 2, "unexpected existing refs: %s", existingRefs);
+        Ref setRef = existingRefs.get(0);
+        // module and scope are dependent on Node, so not much point in checking them
+        // the type of the getRef is set within the Name class, so no need to check that either.
+        checkState(setRef.type == setRefType, "unexpected existing set Ref type: %s", setRef.type);
       }
     }
 
@@ -751,10 +766,9 @@ class GlobalNamespace
 
       if (isNestedAssign(parent)) {
         // This assignment is both a set and a get that creates an alias.
-        nameObj.addTwinRefs(module, scope, n, Ref.Type.SET_FROM_LOCAL, currentPreOrderIndex);
-        currentPreOrderIndex += 2; // addTwinRefs uses 2 index values
+        addOrConfirmTwinRefs(nameObj, n, Ref.Type.SET_FROM_LOCAL, module, scope);
       } else {
-        nameObj.addSingleRef(module, scope, n, Ref.Type.SET_FROM_LOCAL, currentPreOrderIndex++);
+        addOrConfirmRef(nameObj, n, Ref.Type.SET_FROM_LOCAL, module, scope);
       }
     }
 
@@ -857,14 +871,34 @@ class GlobalNamespace
       Name nameObj = getOrCreateName(name);
 
       // No need to look up additional ancestors, since they won't be used.
-      nameObj.addSingleRef(module, scope, n, type, currentPreOrderIndex++);
+      addOrConfirmRef(nameObj, n, type, module, scope);
+    }
+
+    /**
+     * If there is already a Ref for the given name & node, confirm it matches what we would create.
+     * Otherwise add a new one.
+     */
+    private void addOrConfirmRef(
+        Name nameObj, Node node, Ref.Type refType, JSModule module, Scope scope) {
+      ImmutableList<Ref> existingRefs = nameObj.getRefsForNode(node);
+      if (existingRefs.isEmpty()) {
+        nameObj.addSingleRef(module, scope, node, refType, currentPreOrderIndex++);
+      } else {
+        checkState(existingRefs.size() == 1, "unexpected twin refs: %s", existingRefs);
+        // module and scope are dependent on Node, so not much point in checking them
+        Ref.Type existingRefType = existingRefs.get(0).type;
+        checkState(
+            existingRefType == refType,
+            "existing ref type: %s expected: %s",
+            existingRefType,
+            refType);
+      }
     }
 
     private boolean isClassDefiningCall(Node callNode) {
       CodingConvention convention = compiler.getCodingConvention();
       // Look for goog.inherits, goog.mixin
-      SubclassRelationship classes =
-          convention.getClassesDefinedByCall(callNode);
+      SubclassRelationship classes = convention.getClassesDefinedByCall(callNode);
       if (classes != null) {
         return true;
       }
@@ -892,17 +926,17 @@ class GlobalNamespace
     }
 
     /**
-     * Determines whether the result of a hook (x?y:z) or boolean expression
-     * (x||y) or (x&&y) is assigned to a specific global name.
+     * Determines whether the result of a hook (x?y:z) or boolean expression (x||y) or (x&&y) is
+     * assigned to a specific global name.
      *
      * @param module The current module
      * @param scope The current scope
-     * @param parent The parent of the current node in the traversal. This node
-     *     should already be known to be a HOOK, AND, or OR node.
-     * @param name A name that is already known to be global in the current
-     *     scope (e.g. "a" or "a.b.c.d")
-     * @return The expression's get type, either {@link Ref.Type#DIRECT_GET} or
-     *     {@link Ref.Type#ALIASING_GET}
+     * @param parent The parent of the current node in the traversal. This node should already be
+     *     known to be a HOOK, AND, or OR node.
+     * @param name A name that is already known to be global in the current scope (e.g. "a" or
+     *     "a.b.c.d")
+     * @return The expression's get type, either {@link Ref.Type#DIRECT_GET} or {@link
+     *     Ref.Type#ALIASING_GET}
      */
     Ref.Type determineGetTypeForHookOrBooleanExpr(
         JSModule module, Scope scope, Node parent, String name) {
@@ -935,7 +969,7 @@ class GlobalNamespace
               return Ref.Type.ALIASING_GET;
             }
             break;
-          case NAME:  // a variable declaration
+          case NAME: // a variable declaration
             if (!name.equals(anc.getString())) {
               return Ref.Type.ALIASING_GET;
             }
@@ -956,9 +990,9 @@ class GlobalNamespace
     }
 
     /**
-     * Updates our representation of the global namespace to reflect a read
-     * of a global name's longest prefix before the "prototype" property if the
-     * name includes the "prototype" property. Does nothing otherwise.
+     * Updates our representation of the global namespace to reflect a read of a global name's
+     * longest prefix before the "prototype" property if the name includes the "prototype" property.
+     * Does nothing otherwise.
      *
      * @param module The current module
      * @param scope The current scope
@@ -967,8 +1001,8 @@ class GlobalNamespace
      * @param name The global name (e.g. "a" or "a.b.c.d")
      * @return Whether the name was handled
      */
-    boolean maybeHandlePrototypePrefix(JSModule module, Scope scope,
-        Node n, Node parent, String name) {
+    boolean maybeHandlePrototypePrefix(
+        JSModule module, Scope scope, Node n, Node parent, String name) {
       // We use a string-based approach instead of inspecting the parse tree
       // to avoid complexities with object literals, possibly nested, beneath
       // assignments.
@@ -1008,12 +1042,10 @@ class GlobalNamespace
     }
 
     /**
-     * Determines whether an assignment is nested (i.e. whether its return
-     * value is used).
+     * Determines whether an assignment is nested (i.e. whether its return value is used).
      *
      * @param parent The parent of the current traversal node (not null)
-     * @return Whether it appears that the return value of the assignment is
-     *     used
+     * @return Whether it appears that the return value of the assignment is used
      */
     boolean isNestedAssign(Node parent) {
       return parent.isAssign() && !parent.getParent().isExprResult();
@@ -1070,7 +1102,10 @@ class GlobalNamespace
     private Ref declaration;
 
     /** All references to a name. This must contain {@code declaration}. */
-    private LinkedHashSet<Ref> refs;
+    private final LinkedHashSet<Ref> refs = new LinkedHashSet<>();
+
+    /** Keep track of which Nodes are Refs for this Name */
+    private final Map<Node, ImmutableList<Ref>> refsForNodeMap = new HashMap<>();
 
     /** All Es6 subclasses of a name that is an Es6 class. Must be null if not an ES6 class. */
     @Nullable List<Name> subclasses;
@@ -1231,13 +1266,25 @@ class GlobalNamespace
           createNewRef(module, scope, node, Ref.Type.ALIASING_GET, setRefPreOrderIndex + 1);
       setRef.twin = getRef;
       getRef.twin = setRef;
-      addRef(setRef);
-      addRef(getRef);
+      refsForNodeMap.put(node, ImmutableList.of(setRef, getRef));
+      refs.add(setRef);
+      updateStateForAddedRef(setRef);
+      refs.add(getRef);
+      updateStateForAddedRef(getRef);
     }
 
     private void addSingleRef(
         JSModule module, Scope scope, Node node, Ref.Type type, int preOrderIndex) {
-      addRef(createNewRef(module, scope, node, type, preOrderIndex));
+      checkNoExistingRefsForNode(node);
+      Ref ref = createNewRef(module, scope, node, type, preOrderIndex);
+      refs.add(ref);
+      refsForNodeMap.put(node, ImmutableList.of(ref));
+      updateStateForAddedRef(ref);
+    }
+
+    private void checkNoExistingRefsForNode(Node node) {
+      ImmutableList<Ref> refsForNode = refsForNodeMap.get(node);
+      checkState(refsForNode == null, "Refs already exist for node: %s", refsForNode);
     }
 
     private Ref createNewRef(
@@ -1255,7 +1302,9 @@ class GlobalNamespace
       Ref ref =
           new Ref(
               /* module= */ null, /* scope= */ null, /* node = */ null, this, type, preOrderIndex);
-      addRef(ref);
+      refs.add(ref);
+      // node is Null for testing in this case, so nothing to add to refsForNodeMap
+      updateStateForAddedRef(ref);
       return ref;
     }
 
@@ -1275,8 +1324,14 @@ class GlobalNamespace
           declRef.module, declRef.scope, newRefNode, Ref.Type.ALIASING_GET, declRef.preOrderIndex);
     }
 
-    private void addRef(Ref ref) {
-      addRefInternal(ref);
+    /**
+     * Updates counters and JSDocInfo recorded for the name to include a newly added Ref.
+     *
+     * <p>Must be called exactly once when a new Ref is added.
+     *
+     * @param ref a Ref that has just been added for this Name
+     */
+    private void updateStateForAddedRef(Ref ref) {
       switch (ref.type) {
         case SET_FROM_GLOBAL:
           if (declaration == null) {
@@ -1330,18 +1385,87 @@ class GlobalNamespace
 
     /**
      * This is the only safe way to update the Node belonging to a Ref once it is added to a Name.
+     *
+     * <p>This is a specialized method that exists only for use by CollapseProperties.
+     *
+     * @param ref reference to update - it must belong to this name
+     * @param newNode new value for the ref's node
      */
-    void updateRefNode(Ref ref, @Nullable Node node) {
-      // TODO(bradfordcsmith): Add this checkState when it can be done more efficiently than
-      //     searching through all of the refs.
-      // checkState(refs != null && refs.contains(ref), "unknown ref: %s", ref);
-      ref.node = node;
+    void updateRefNode(Ref ref, @Nullable Node newNode) {
+      checkArgument(ref.node != newNode, "redundant update to Ref node: %s", ref);
+
+      // Once a Ref's node is set to null, it shouldn't ever be set to anything else.
+      // TODO(bradfordcsmith): Document here what it means when we set the node to null.
+      //     Seems to be a way to keep name.getDeclaration() returning the original declaration
+      //     Ref even though its node is no longer in the AST.
+      Node oldNode = ref.getNode();
+      checkState(oldNode != null, "Ref's node is already null: %s", ref);
+      ref.node = newNode;
+
+      // If this ref was a twin, it isn't anymore, and its previous twin is now the only ref to the
+      // original node.
+      Ref twinRef = ref.getTwin();
+      if (twinRef != null) {
+        ref.twin = null;
+        twinRef.twin = null;
+        refsForNodeMap.put(oldNode, ImmutableList.of(twinRef));
+      } else {
+        refsForNodeMap.remove(oldNode); // this ref was the only reference on the node
+      }
+
+      if (newNode != null) {
+        ImmutableList<Ref> existingRefsForNewNode = refsForNodeMap.get(newNode);
+        checkArgument(
+            existingRefsForNewNode == null, "refs already exist: %s", existingRefsForNewNode);
+        refsForNodeMap.put(newNode, ImmutableList.of(ref));
+      }
     }
 
+    /**
+     * Remove a Ref and its twin at the same time.
+     *
+     * <p>If you intend to remove both, it is more efficient and less error prone to use this method
+     * instead of removing them one at a time.
+     *
+     * @param ref A Ref that has a twin.
+     */
+    void removeTwinRefs(Ref ref) {
+      checkArgument(
+          ref.name == this, "removeTwinRefs(%s): node does not belong to this name: %s", ref, this);
+      checkState(refs.contains(ref), "removeRef(%s): unknown ref", ref);
+      Ref twinRef = ref.getTwin();
+      checkArgument(twinRef != null, ref);
+
+      removeTwinRefsFromNodeMap(ref);
+      removeRefAndUpdateState(ref);
+      removeRefAndUpdateState(twinRef);
+    }
+
+    /**
+     * Removes the given Ref, which must belong to this Name.
+     *
+     * <p>NOTE: if ref has a twin, they will no longer be twins after this method finishes. Use
+     * removeTwinRefs() to remove a pair of twins at the same time.
+     *
+     * @param ref
+     */
     void removeRef(Ref ref) {
       checkState(
           ref.name == this, "removeRef(%s): node does not belong to this name: %s", ref, this);
-      checkState(refs != null && refs.contains(ref), "removeRef(%s): unknown ref", ref);
+      checkState(refs.contains(ref), "removeRef(%s): unknown ref", ref);
+      Node refNode = ref.getNode();
+      if (refNode != null) {
+        removeSingleRefFromNodeMap(ref);
+      }
+      removeRefAndUpdateState(ref);
+    }
+
+    /**
+     * Update counts, declaration, and JSDoc to reflect removal of the given Ref.
+     *
+     * @param ref
+     */
+    private void removeRefAndUpdateState(Ref ref) {
       refs.remove(ref);
       if (ref == declaration) {
         declaration = null;
@@ -1388,20 +1512,69 @@ class GlobalNamespace
       }
     }
 
+    private void removeSingleRefFromNodeMap(Ref ref) {
+      Node refNode = checkNotNull(ref.getNode(), ref);
+      if (ref.getTwin() != null) {
+        removeTwinRefsFromNodeMap(ref);
+        Ref twinRef = ref.getTwin();
+        // break the twin relationship
+        ref.twin = null;
+        twinRef.twin = null;
+        // put twin back alone, since we're not really removing it
+        refsForNodeMap.put(refNode, ImmutableList.of(twinRef));
+      } else {
+        ImmutableList<Ref> refsForNode = refsForNodeMap.get(refNode);
+        checkState(
+            refsForNode.size() == 1 && refsForNode.get(0) == ref,
+            "Unexpected Refs for Node: %s: when removing Ref: %s",
+            refsForNode,
+            ref);
+        refsForNodeMap.remove(refNode);
+      }
+    }
+
+    private void removeTwinRefsFromNodeMap(Ref ref) {
+      Ref twinRef = checkNotNull(ref.getTwin(), ref);
+      Node refNode = checkNotNull(ref.getNode(), ref);
+      ImmutableList<Ref> refsForNode = refsForNodeMap.get(refNode);
+
+      checkState(
+          refsForNode.size() == 2,
+          "unexpected Refs for Node: %s, when removing: %s",
+          refsForNode,
+          ref);
+      checkState(
+          refsForNode.contains(ref),
+          "Refs for Node: %s does not contain Ref to remove: %s",
+          refsForNode,
+          ref);
+      checkState(
+          refsForNode.contains(twinRef),
+          "Refs for Node: %s does not contain expected twin: %s",
+          refsForNode,
+          twinRef);
+      refsForNodeMap.remove(refNode);
+    }
+
     Collection<Ref> getRefs() {
       return refs == null ? ImmutableList.of() : Collections.unmodifiableCollection(refs);
+    }
+
+    /**
+     * Get the Refs for this name that belong to the given node.
+     *
+     * <p>Returns an empty list if there are no Refs, or a list with only one Ref, or a list with
+     * exactly 2 refs that are twins of each other.
+     */
+    @VisibleForTesting
+    ImmutableList<Ref> getRefsForNode(Node node) {
+      ImmutableList<Ref> refsForNode = refsForNodeMap.get(checkNotNull(node));
+      return (refsForNode == null) ? ImmutableList.of() : refsForNode;
     }
 
     Ref getFirstRef() {
       checkState(!refs.isEmpty(), "no first Ref to get");
       return Iterables.get(refs, 0);
-    }
-
-    private void addRefInternal(Ref ref) {
-      if (refs == null) {
-        refs = new LinkedHashSet<>();
-      }
-      refs.add(ref);
     }
 
     boolean canEliminate() {
@@ -1674,8 +1847,11 @@ class GlobalNamespace
      * goog.provide namespace chains.
      */
     private Inlinability canCollapseOrInlineChildNames() {
-      if (type == Type.OTHER || isGetOrSetDefinition()
-          || globalSets != 1 || localSets != 0 || deleteProps != 0) {
+      if (type == Type.OTHER
+          || isGetOrSetDefinition()
+          || globalSets != 1
+          || localSets != 0
+          || deleteProps != 0) {
         // condition (a) and (b)
         return Inlinability.DO_NOT_INLINE;
       }
@@ -1750,8 +1926,7 @@ class GlobalNamespace
 
     void setDeclaredType() {
       declaredType = true;
-      for (Name ancestor = parent; ancestor != null;
-           ancestor = ancestor.parent) {
+      for (Name ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
         ancestor.isDeclared = true;
       }
     }
@@ -1764,31 +1939,31 @@ class GlobalNamespace
       Node declNode = declaration.node;
       Node rvalueNode = NodeUtil.getRValueOfLValue(declNode);
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
-      return rvalueNode != null && rvalueNode.isFunction()
-          && jsdoc != null && jsdoc.isConstructor();
+      return rvalueNode != null
+          && rvalueNode.isFunction()
+          && jsdoc != null
+          && jsdoc.isConstructor();
     }
 
     /**
-     * Determines whether this name is a prefix of at least one class or enum
-     * name. Because classes and enums are always collapsed, the namespace will
-     * have different properties in compiled code than in uncompiled code.
+     * Determines whether this name is a prefix of at least one class or enum name. Because classes
+     * and enums are always collapsed, the namespace will have different properties in compiled code
+     * than in uncompiled code.
      *
-     * For example, if foo.bar.DomHelper is a class, then foo and foo.bar are
-     * considered namespaces.
+     * <p>For example, if foo.bar.DomHelper is a class, then foo and foo.bar are considered
+     * namespaces.
      */
     boolean isNamespaceObjectLit() {
       return isDeclared && type == Type.OBJECTLIT;
     }
 
-    /**
-     * Determines whether this is a simple name (as opposed to a qualified
-     * name).
-     */
+    /** Determines whether this is a simple name (as opposed to a qualified name). */
     boolean isSimpleName() {
       return parent == null;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       return getFullName()
           + " ("
           + type
@@ -1814,9 +1989,7 @@ class GlobalNamespace
           : firstQnameDeclarationWithoutAssignmentJsDocInfo;
     }
 
-    /**
-     * Tries to get the doc info for a given declaration ref.
-     */
+    /** Tries to get the doc info for a given declaration ref. */
     private static JSDocInfo getDocInfoForDeclaration(Ref ref) {
       if (ref.node != null) {
         Node refParent = ref.node.getParent();
@@ -1884,33 +2057,21 @@ class GlobalNamespace
       PROTOTYPE_GET,
 
       /**
-       * Includes all uses that prevent a name's properties from being collapsed:
-       *   var x = a.b.c
-       *   f(a.b.c)
-       *   new Foo(a.b.c)
+       * Includes all uses that prevent a name's properties from being collapsed: var x = a.b.c
+       * f(a.b.c) new Foo(a.b.c)
        */
       ALIASING_GET,
 
       /**
        * Includes all uses that prevent a name from being completely eliminated:
-       *   goog.inherits(anotherName, a.b.c)
-       *   new a.b.c()
-       *   x instanceof a.b.c
-       *   void a.b.c
-       *   if (a.b.c) {}
+       * goog.inherits(anotherName, a.b.c) new a.b.c() x instanceof a.b.c void a.b.c if (a.b.c) {}
        */
       DIRECT_GET,
 
-      /**
-       * Calling a name: a.b.c();
-       * Prevents a name from being collapsed if never set.
-       */
+      /** Calling a name: a.b.c(); Prevents a name from being collapsed if never set. */
       CALL_GET,
 
-      /**
-       * Deletion of a property: delete a.b.c;
-       * Prevents a name from being collapsed at all.
-       */
+      /** Deletion of a property: delete a.b.c; Prevents a name from being collapsed at all. */
       DELETE_PROP,
 
       /** ES6 subclassing ref: class extends A {} */
@@ -1927,14 +2088,14 @@ class GlobalNamespace
      * this scope may not be the correct hoist scope of the aliasing VAR.
      */
     final Scope scope;
+
     final int preOrderIndex;
 
     /**
-     * Certain types of references are actually double-refs. For example,
-     * var a = b = 0;
-     * counts as both a "set" of b and an "alias" of b.
+     * Certain types of references are actually double-refs. For example, var a = b = 0; counts as
+     * both a "set" of b and an "alias" of b.
      *
-     * We create two Refs for this node, and mark them as twins of each other.
+     * <p>We create two Refs for this node, and mark them as twins of each other.
      */
     private Ref twin = null;
 

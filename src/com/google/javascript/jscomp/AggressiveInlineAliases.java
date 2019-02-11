@@ -565,8 +565,8 @@ class AggressiveInlineAliases implements CompilerPass {
           checkState(aliasParent.isAssign(), aliasParent);
           Node aliasGrandparent = aliasParent.getParent();
           aliasParent.replaceWith(alias.getNode().detach());
-          aliasingName.removeRef(aliasDeclaration);
-          aliasingName.removeRef(aliasDeclaration.getTwin());
+          // remove both of the refs
+          aliasingName.removeTwinRefs(aliasDeclaration);
           newNodes.add(new AstChange(alias.module, alias.scope, alias.getNode()));
           compiler.reportChangeToEnclosingScope(aliasGrandparent);
         } else {

@@ -18,10 +18,12 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
@@ -33,6 +35,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
+import java.util.Collection;
 import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,6 +50,16 @@ import org.junit.runners.JUnit4;
 public final class GlobalNamespaceTest {
 
   @Nullable private Compiler lastCompiler = null;
+
+  // TODO(b/124228379): We should be using assertThrows from JUnit4.
+  private static void assertThrows(Object exceptionClass, Runnable runnable) {
+    try {
+      runnable.run();
+      assertWithMessage("Did not get expected exception: %s", exceptionClass).fail();
+    } catch (Exception expectedException) {
+      // expected
+    }
+  }
 
   @Test
   public void firstGlobalAssignmentIsConsideredDeclaration() {
@@ -177,6 +190,236 @@ public final class GlobalNamespaceTest {
     Name subclassStaticMethod = namespace.getOwnSlot("Subclass.staticMethod");
     assertThat(subclassStaticMethod.getRefs()).hasSize(1);
     assertThat(subclassStaticMethod.getDeclaration()).isNull();
+  }
+
+  @Test
+  public void updateRefNodeRejectsRedundantUpdate() {
+    GlobalNamespace namespace = parse("const A = 3;");
+
+    Name nameA = namespace.getOwnSlot("A");
+    Ref refA = nameA.getFirstRef();
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          nameA.updateRefNode(refA, refA.getNode());
+        });
+  }
+
+  @Test
+  public void updateRefNodeMovesRefFromOldNodeToNewNode() {
+    GlobalNamespace namespace = parse("const A = 3;");
+
+    Name nameA = namespace.getOwnSlot("A");
+    Ref refA = nameA.getFirstRef();
+
+    Node oldNode = refA.getNode();
+    Node newNode = IR.name("A");
+
+    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(refA);
+
+    nameA.updateRefNode(refA, newNode);
+
+    assertThat(refA.getNode()).isEqualTo(newNode);
+    assertThat(nameA.getRefsForNode(oldNode)).isEmpty();
+    assertThat(nameA.getRefsForNode(newNode)).containsExactly(refA);
+  }
+
+  @Test
+  public void updateRefNodeCanSetNodeToNullButPreventsFurtherUpdates() {
+    GlobalNamespace namespace = parse("const A = 3;");
+
+    Name nameA = namespace.getOwnSlot("A");
+    Ref refA = nameA.getFirstRef();
+
+    Node oldNode = refA.getNode();
+
+    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(refA);
+
+    nameA.updateRefNode(refA, null);
+
+    assertThat(refA.getNode()).isNull();
+    assertThat(nameA.getRefsForNode(oldNode)).isEmpty();
+    // cannot get refs for null
+    assertThrows(
+        NullPointerException.class,
+        () -> {
+          nameA.getRefsForNode(null);
+        });
+    // cannot update the node again once it's been set to null
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          nameA.updateRefNode(refA, null);
+        });
+    assertThrows(
+        IllegalStateException.class,
+        () -> {
+          nameA.updateRefNode(refA, oldNode);
+        });
+  }
+
+  @Test
+  public void updateRefNodeRejectsNodeWithExistingRefs() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "const A = 3;", // declaration ref
+                "A;")); // use ref
+
+    Name nameA = namespace.getOwnSlot("A");
+    Ref declarationRef = nameA.getDeclaration();
+    Ref useRef = Iterables.get(nameA.getRefs(), 1); // use ref is 2nd
+
+    Node useNode = useRef.getNode();
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          nameA.updateRefNode(declarationRef, useNode);
+        });
+  }
+
+  @Test
+  public void confirmTwinsAreCreated() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "let A;", //
+                "const B = A = 3;")); // A will have twin refs here
+
+    Name nameA = namespace.getOwnSlot("A");
+    // first ref is declaration of A
+    Ref setTwinRef = Iterables.get(nameA.getRefs(), 1); // second is the SET twin
+    Ref getTwinRef = Iterables.get(nameA.getRefs(), 2); // third is the GET twin
+
+    // confirm that they start as twins
+    assertThat(setTwinRef.getTwin()).isEqualTo(getTwinRef);
+    assertThat(getTwinRef.getTwin()).isEqualTo(setTwinRef);
+
+    Node oldNode = getTwinRef.getNode();
+    assertThat(setTwinRef.getNode()).isEqualTo(oldNode);
+
+    // confirm that they are both associated with oldNode
+    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(setTwinRef, getTwinRef);
+  }
+
+  @Test
+  public void updateRefNodeRemovesTwinRelationship() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "let A;", //
+                "const B = A = 3;")); // A will have twin refs here
+
+    Name nameA = namespace.getOwnSlot("A");
+    // first ref is declaration of A
+    Ref setTwinRef = Iterables.get(nameA.getRefs(), 1); // second is the SET twin
+    Ref getTwinRef = Iterables.get(nameA.getRefs(), 2); // third is the GET twin
+
+    Node oldNode = getTwinRef.getNode();
+
+    // move the getTwinRef
+    Node newNode = IR.name("A");
+    nameA.updateRefNode(getTwinRef, newNode);
+
+    // see confirmTwinsAreCreated() for verification of the original twin relationship
+
+    // confirm that getTwinRef has been updated
+    assertThat(getTwinRef.getNode()).isEqualTo(newNode);
+    assertThat(nameA.getRefsForNode(newNode)).containsExactly(getTwinRef);
+
+    // confirm that the getTwinRef and setTwinRef are no longer twins
+    assertThat(getTwinRef.getTwin()).isNull();
+    assertThat(setTwinRef.getTwin()).isNull();
+
+    // confirm that setTwinRef remains otherwise unchanged
+    assertThat(setTwinRef.getNode()).isEqualTo(oldNode);
+    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(setTwinRef);
+  }
+
+  @Test
+  public void removeTwinRefsTogether() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "let A;", //
+                "const B = A = 3;")); // A will have twin refs here
+
+    Name nameA = namespace.getOwnSlot("A");
+    // first ref is declaration of A
+    Ref setTwinRef = Iterables.get(nameA.getRefs(), 1); // second is the SET twin
+    Ref getTwinRef = Iterables.get(nameA.getRefs(), 2); // third is the GET twin
+
+    // see confirmTwinsAreCreated() for verification of the original twin relationship
+
+    Node oldNode = getTwinRef.getNode();
+
+    nameA.removeRef(setTwinRef);
+
+    assertThat(nameA.getRefs()).doesNotContain(setTwinRef);
+    assertThat(nameA.getRefs()).contains(getTwinRef); // twin is still there
+    assertThat(getTwinRef.getTwin()).isNull(); // and not a twin anymore
+    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(getTwinRef);
+  }
+
+  @Test
+  public void removeOneRefOfAPairOfTwins() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "let A;", //
+                "const B = A = 3;")); // A will have twin refs here
+
+    Name nameA = namespace.getOwnSlot("A");
+    // first ref is declaration of A
+    Ref setTwinRef = Iterables.get(nameA.getRefs(), 1); // second is the SET twin
+    Ref getTwinRef = Iterables.get(nameA.getRefs(), 2); // third is the GET twin
+
+    // see confirmTwinsAreCreated() for verification of the original twin relationship
+
+    Node oldNode = getTwinRef.getNode();
+
+    // confirm that they are both associated with oldNode
+    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(setTwinRef, getTwinRef);
+
+    nameA.removeTwinRefs(setTwinRef);
+
+    assertThat(nameA.getRefs()).doesNotContain(setTwinRef);
+    assertThat(nameA.getRefs()).doesNotContain(getTwinRef);
+    assertThat(nameA.getRefsForNode(oldNode)).isEmpty();
+  }
+
+  @Test
+  public void rescanningExistingNodesDoesNotCreateDuplicateRefs() {
+    GlobalNamespace namespace = parse("class Foo {} const Bar = Foo; const Baz = Bar;");
+
+    Name foo = namespace.getOwnSlot("Foo");
+    Name bar = namespace.getOwnSlot("Bar");
+    Name baz = namespace.getOwnSlot("Baz");
+    Collection<Ref> originalFooRefs = ImmutableList.copyOf(foo.getRefs());
+    Collection<Ref> originalBarRefs = ImmutableList.copyOf(bar.getRefs());
+    Collection<Ref> originalBazRefs = ImmutableList.copyOf(baz.getRefs());
+
+    // Rescan all of the nodes for which we got refs as if they were newly added
+    Node root = lastCompiler.getJsRoot();
+    ImmutableSet.Builder<AstChange> astChangeSetBuilder = ImmutableSet.builder();
+    for (Name name : ImmutableList.of(foo, bar, baz)) {
+      for (Ref ref : name.getRefs()) {
+        astChangeSetBuilder.add(createGlobalAstChangeForNode(root, ref.getNode()));
+      }
+    }
+    namespace.scanNewNodes(astChangeSetBuilder.build());
+
+    // We should get the same Name objects
+    assertThat(namespace.getOwnSlot("Foo")).isEqualTo(foo);
+    assertThat(namespace.getOwnSlot("Bar")).isEqualTo(bar);
+    assertThat(namespace.getOwnSlot("Baz")).isEqualTo(baz);
+
+    // ...and they should contain the same refs with no duplicates added
+    assertThat(foo.getRefs()).containsExactlyElementsIn(originalFooRefs).inOrder();
+    assertThat(bar.getRefs()).containsExactlyElementsIn(originalBarRefs).inOrder();
+    assertThat(baz.getRefs()).containsExactlyElementsIn(originalBazRefs).inOrder();
   }
 
   @Test
