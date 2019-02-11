@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 
 /**
  * A callback that calls the abstract method on every "inferrable const". This is a constant
@@ -58,19 +59,23 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
         switch (expr.getToken()) {
           case CALL:
             Node callee = expr.getFirstChild();
-            if (callee.matchesQualifiedName("goog.provide")) {
+            if (GOOG_PROVIDE.matches(callee)) {
               currentFile.markProvided(expr.getLastChild().getString());
-            } else if (callee.matchesQualifiedName("goog.require")
-                || callee.matchesQualifiedName("require")) {
+            } else if (GOOG_REQUIRE.matches(callee) || CJS_REQUIRE.matches(callee)) {
               currentFile.recordImport(expr.getLastChild().getString());
-            } else if (callee.matchesQualifiedName("goog.define")) {
+            } else if (GOOG_DEFINE.matches(callee)) {
               currentFile.recordDefine(expr);
             }
             break;
           case ASSIGN:
             Node lhs = expr.getFirstChild();
-            currentFile.recordNameDeclaration(lhs);
-            processDeclarationWithRhs(t, lhs);
+            Node rhs = expr.getLastChild();
+            if (rhs.isCall() && GOOG_DEFINE.matches(rhs.getFirstChild()) && lhs.isQualifiedName()) {
+              currentFile.recordDefine(rhs);
+            } else {
+              currentFile.recordNameDeclaration(lhs);
+              processDeclarationWithRhs(t, lhs, expr.getLastChild());
+            }
             break;
           case GETPROP:
             currentFile.recordNameDeclaration(expr);
@@ -83,14 +88,20 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
       case CONST:
       case LET:
         checkState(n.hasOneChild(), n);
-        recordNameDeclaration(n);
-        if (n.getFirstChild().isName() && n.getFirstChild().hasChildren()) {
-          processDeclarationWithRhs(t, n.getFirstChild());
+        Node name = n.getFirstChild();
+        Node rhs = name.getFirstChild();
+        if (rhs != null && rhs.isCall() && GOOG_DEFINE.matches(name.getFirstFirstChild())) {
+          currentFile.recordDefine(rhs);
+        } else {
+          recordNameDeclaration(n);
+          if (name.isName() && name.hasChildren()) {
+            processDeclarationWithRhs(t, name, rhs);
+          }
         }
         break;
       case STRING_KEY:
         if (parent.isObjectLit() && n.hasOneChild()) {
-          processDeclarationWithRhs(t, n);
+          processDeclarationWithRhs(t, n, n.getFirstChild());
           currentFile.recordStringKeyDeclaration(n);
         }
         break;
@@ -98,6 +109,11 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
         break;
     }
   }
+
+  private static final QualifiedName GOOG_DEFINE = QualifiedName.of("goog.define");
+  private static final QualifiedName GOOG_PROVIDE = QualifiedName.of("goog.provide");
+  private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
+  private static final QualifiedName CJS_REQUIRE = QualifiedName.of("require");
 
   private void recordNameDeclaration(Node decl) {
     checkArgument(NodeUtil.isNameDeclaration(decl));
@@ -112,15 +128,14 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
     }
   }
 
-  private void processDeclarationWithRhs(NodeTraversal t, Node lhs) {
+  private void processDeclarationWithRhs(NodeTraversal t, Node lhs, Node rhs) {
     checkArgument(
         lhs.isQualifiedName() || lhs.isStringKey() || lhs.isDestructuringLhs(),
         lhs);
     checkState(NodeUtil.getRValueOfLValue(lhs) != null, lhs);
-    if (!PotentialDeclaration.isConstToBeInferred(lhs)) {
-      return;
+    if (PotentialDeclaration.isConstToBeInferred(lhs)) {
+      processConstWithRhs(t, lhs);
     }
-    processConstWithRhs(t, lhs);
   }
 
   protected abstract void processConstWithRhs(NodeTraversal t, Node lhs);

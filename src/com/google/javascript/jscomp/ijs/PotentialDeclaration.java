@@ -22,7 +22,9 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import javax.annotation.Nullable;
 
 /**
@@ -75,7 +77,7 @@ abstract class PotentialDeclaration {
 
   static PotentialDeclaration fromDefine(Node callNode) {
     checkArgument(NodeUtil.isCallTo(callNode, "goog.define"));
-    return new DefineDeclaration(callNode);
+    return DefineDeclaration.from(callNode);
   }
 
   String getFullyQualifiedName() {
@@ -261,19 +263,65 @@ abstract class PotentialDeclaration {
     }
   }
 
-
   /**
    * A declaration declared by a call to `goog.define`. Note that a let, const, or var declaration
-   * annotated with @define in its JSDoc would be a NameDeclaration instead.
+   * annotated with @define in its JSDoc and no 'goog.define' would be a NameDeclaration instead.
    */
   private static class DefineDeclaration extends PotentialDeclaration {
-    DefineDeclaration(Node callNode) {
-      super(callNode.getSecondChild().getString(), callNode, callNode.getLastChild());
+    DefineDeclaration(String qualifiedName, Node lhs, Node rhs) {
+      super(qualifiedName, lhs, rhs);
     }
 
     @Override
     void simplify(AbstractCompiler compiler) {
-      NodeUtil.deleteNode(getLhs().getLastChild(), compiler);
+      JSDocInfo info = getJsDoc();
+      if (info != null && info.getType() != null) {
+        Node newRhs = makeEmptyValueNode(info.getType());
+        if (newRhs != null) {
+          getRhs().replaceWith(newRhs);
+          compiler.reportChangeToEnclosingScope(newRhs);
+          return;
+        }
+      }
+      NodeUtil.deleteNode(getRemovableNode(), compiler);
+    }
+
+    static DefineDeclaration from(Node callNode) {
+      // Match a few different forms, depending on the call node's parent:
+      //   1. EXPR_RESULT: goog.define('foo', 1);
+      //   2. ASSIGN: a.b = goog.define('c', 2);
+      //   3. NAME: var x = goog.define('d', 3);
+      switch (callNode.getParent().getToken()) {
+        case EXPR_RESULT:
+          return new DefineDeclaration(
+              callNode.getSecondChild().getString(), callNode, callNode.getLastChild());
+        case ASSIGN:
+          Node previous = callNode.getPrevious();
+          return new DefineDeclaration(
+              previous.getQualifiedName(), previous, callNode.getLastChild());
+        case NAME:
+          Node parent = callNode.getParent();
+          return new DefineDeclaration(parent.getString(), parent, callNode.getLastChild());
+        default:
+          throw new IllegalStateException("Unexpected parent: " + callNode.getParent().getToken());
+      }
+    }
+
+    static Node makeEmptyValueNode(JSTypeExpression type) {
+      Node n = type.getRoot();
+      while (n != null && n.getToken() != Token.STRING && n.getToken() != Token.NAME) {
+        n = n.getFirstChild();
+      }
+      switch (n != null ? n.getString() : "") {
+        case "boolean":
+          return new Node(Token.FALSE);
+        case "number":
+          return Node.newNumber(0);
+        case "string":
+          return Node.newString("");
+        default:
+          return null;
+      }
     }
   }
 

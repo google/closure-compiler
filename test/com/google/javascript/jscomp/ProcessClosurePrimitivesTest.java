@@ -1546,20 +1546,6 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDefineInExterns() {
-    String jsdoc = "/** @define {number} */\n";
-    allowExternsChanges();
-    testErrorExterns(jsdoc + "goog.define('value');");
-
-    testErrorExterns("goog.define('name');", MISSING_DEFINE_ANNOTATION);
-    testErrorExterns(jsdoc + "goog.define('name.2');", INVALID_DEFINE_NAME_ERROR);
-    testErrorExterns(jsdoc + "goog.define();", NULL_ARGUMENT_ERROR);
-    testErrorExterns(jsdoc + "goog.define(5);", INVALID_ARGUMENT_ERROR);
-
-    testErrorExterns("/** @define {!number} */ goog.define('name');");
-  }
-
-  @Test
   public void testInvalidDefine() {
     testError(
         "goog.provide('a.b'); var x = x || goog.define('goog.DEBUG', true);",

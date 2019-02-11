@@ -1171,10 +1171,25 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testDefines() {
     // NOTE: This is another pattern that is only allowed in externs.
-    test("/** @define {number} */ var x = 5;", "/** @define {number} */ var x;");
+    test(
+        "/** @define {number} */ var x = 5;", //
+        "/** @define {number} */ var x;");
 
-    test("/** @define {number} */ goog.define('goog.BLAH', 5);",
-         "/** @define {number} */ goog.define('goog.BLAH');");
+    test(
+        "/** @define {number} */ goog.define('goog.BLAH', 5);",
+        "/** @define {number} */ goog.define('goog.BLAH', 0);");
+
+    test(
+        "/** @define {string} */ const BLAH = goog.define('goog.BLAH', 'blah');",
+        "/** @define {string} */ const BLAH = goog.define('goog.BLAH', '');");
+
+    test(
+        "/** @define {boolean} */ goog.BLECH = goog.define('goog.BLAH', true);",
+        "/** @define {boolean} */ goog.BLECH = goog.define('goog.BLAH', false);");
+
+    test(
+        "/** @define {number|boolean} */ const X = goog.define('goog.XYZ', true);",
+        "/** @define {number|boolean} */ const X = goog.define('goog.XYZ', 0);");
   }
 
   @Test

@@ -248,25 +248,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     compiler.report(JSError.make(r.requireNode, requiresLevel, error, r.namespace));
   }
 
-  private Node getAnyValueOfType(JSDocInfo jsdoc) {
-    checkArgument(jsdoc.hasType());
-    Node typeAst = jsdoc.getType().getRoot();
-    if (typeAst.getToken() == Token.BANG) {
-      typeAst = typeAst.getLastChild();
-    }
-    checkState(typeAst.isString(), typeAst);
-    switch (typeAst.getString()) {
-      case "boolean":
-        return IR.falseNode();
-      case "string":
-        return IR.string("");
-      case "number":
-        return IR.number(0);
-      default:
-        throw new RuntimeException(typeAst.getString());
-    }
-  }
-
   /**
    * @param n
    */
@@ -274,8 +255,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     Node parent = n.getParent();
     String name = n.getSecondChild().getString();
     JSDocInfo jsdoc = n.getJSDocInfo();
-    Node value =
-        n.isFromExterns() ? getAnyValueOfType(jsdoc).srcref(n) : n.getChildAtIndex(2).detach();
+    Node value = n.getChildAtIndex(2).detach();
 
     switch (parent.getToken()) {
       case EXPR_RESULT:
@@ -1173,9 +1153,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     // It is an error for goog.define to show up anywhere except on its own or immediately after =.
     if (parent.isAssign() && parent.getParent().isExprResult()) {
       parent = parent.getParent();
-    }
-    if (parent.isName() && NodeUtil.isNameDeclaration(parent.getParent())) {
-      parent = parent.getGrandparent();
+    } else if (parent.isName() && NodeUtil.isNameDeclaration(parent.getParent())) {
+      parent = parent.getParent();
     } else if (!parent.isExprResult()) {
       compiler.report(t.makeError(methodName.getParent(), INVALID_CLOSURE_CALL_SCOPE_ERROR));
       return false;
@@ -1201,7 +1180,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       return false;
     }
 
-    JSDocInfo info = parent.getFirstChild().getJSDocInfo();
+    JSDocInfo info = (parent.isExprResult() ? parent.getFirstChild() : parent).getJSDocInfo();
     if (info == null || !info.isDefine()) {
       compiler.report(t.makeError(parent, MISSING_DEFINE_ANNOTATION));
       return false;
