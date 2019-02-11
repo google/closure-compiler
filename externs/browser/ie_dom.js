@@ -1025,7 +1025,7 @@ Element.prototype.componentFromPoint = function(iCoordX, iCoordY) {};
 
 
 /**
- * @type {string}
+ * @type {string|boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms533690(VS.85).aspx
  */
 Element.prototype.contentEditable;
