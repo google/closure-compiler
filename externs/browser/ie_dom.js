@@ -1025,7 +1025,7 @@ Element.prototype.componentFromPoint = function(iCoordX, iCoordY) {};
 
 
 /**
- * @type {boolean}
+ * @type {string}
  * @see http://msdn.microsoft.com/en-us/library/ms533690(VS.85).aspx
  */
 Element.prototype.contentEditable;
@@ -1073,6 +1073,7 @@ Element.prototype.hideFocus;
 Element.prototype.innerText;
 
 /**
+ * @type {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms537838(VS.85).aspx
  */
 Element.prototype.isContentEditable;
