@@ -23,9 +23,32 @@
  */
 
 /**
+ * @typedef {Array<string>}
+ */
+var URLSearchParamsTupleType;
+
+/**
+ * Represents the query string of a URL.
+ *
+ * * When `init` is a string, it is basically parsed as a query string
+ *   `'name1=value1&name2=value2'`.
+ *
+ * * When `init` is an array of arrays of string
+ *   `([['name1', 'value1'], ['name2', 'value2']])`,
+ *   it must contain pairs of strings, where the first item in the pair will be
+ *   interpreted as a key and the second as a value.
+ *
+ *   NOTE: The specification uses Iterable rather than Array, but this is not
+ *   supported in Edge 17 - 18.
+ *
+ * * When `init` is an object, keys and values will be interpreted as such
+ *   `({name1: 'value1', name2: 'value2'}).
+ *
+ * @see https://url.spec.whatwg.org/#interface-urlsearchparams
  * @constructor
  * @implements {Iterable<!Array<string>>}
- * @param {(string|!URLSearchParams)=} init
+ * @param {(string|!Array<!URLSearchParamsTupleType>|!Object<string,string>)=}
+ *     init
  */
 function URLSearchParams(init) {}
 
