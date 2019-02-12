@@ -404,14 +404,14 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (inGoogScopeBody()) {
         Scope hoistedScope = t.getClosestHoistScope().untyped();
         if (isGoogScopeFunctionBody(hoistedScope.getRootNode())) {
-          findAliases(t, hoistedScope);
+          findAliases(hoistedScope);
         }
       }
       Node scopeMethodCall = findScopeMethodCall(t.getScopeRoot());
       if (scopeMethodCall != null) {
         transformation = transformationHandler.logAliasTransformation(
             scopeMethodCall.getSourceFileName(), getSourceRegion(scopeMethodCall));
-        findAliases(t, t.getScope());
+        findAliases(t.getScope());
         scopeFunctionBody = scopeMethodCall.getLastChild().getLastChild();
       }
     }
@@ -444,7 +444,7 @@ class ScopedAliases implements HotSwapCompilerPass {
             // Disallow block-scoped function declarations that leak into the goog.scope
             // function body. Technically they shouldn't leak in ES6 but the browsers don't agree
             // on that yet.
-            report(t, v.getNode(), GOOG_SCOPE_INVALID_VARIABLE, v.getName());
+            report(v.getNode(), GOOG_SCOPE_INVALID_VARIABLE, v.getName());
           }
         }
       }
@@ -467,13 +467,12 @@ class ScopedAliases implements HotSwapCompilerPass {
       return pos;
     }
 
-    private void report(NodeTraversal t, Node n, DiagnosticType error,
-        String... arguments) {
-      compiler.report(t.makeError(n, error, arguments));
+    private void report(Node n, DiagnosticType error, String... arguments) {
+      compiler.report(JSError.make(n, error, arguments));
       hasErrors = true;
     }
 
-    private void findAliases(NodeTraversal t, Scope scope) {
+    private void findAliases(Scope scope) {
       for (Var v : scope.getVarIterable()) {
         Node n = v.getNode();
         Node parent = n.getParent();
@@ -582,7 +581,7 @@ class ScopedAliases implements HotSwapCompilerPass {
           recordAlias(v);
         } else {
           // Do not other kinds of local symbols, like catch params.
-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+          report(n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
         }
       }
     }
@@ -664,21 +663,21 @@ class ScopedAliases implements HotSwapCompilerPass {
         preprocessorSymbolTable.addReference(n.getFirstChild());
       }
       if (!parent.isExprResult()) {
-        report(t, n, GOOG_SCOPE_MUST_BE_ALONE);
+        report(n, GOOG_SCOPE_MUST_BE_ALONE);
       }
       if (t.getEnclosingFunction() != null) {
-        report(t, n, GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE);
+        report(n, GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE);
       }
       if (!n.hasTwoChildren()) {
         // The goog.scope call should have exactly 1 parameter.  The first
         // child is the "goog.scope" and the second should be the parameter.
-        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+        report(n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
       } else {
         Node anonymousFnNode = n.getSecondChild();
         if (!anonymousFnNode.isFunction()
             || NodeUtil.getName(anonymousFnNode) != null
             || NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
-          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+          report(anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
         } else {
           scopeCalls.add(n);
         }
@@ -719,16 +718,16 @@ class ScopedAliases implements HotSwapCompilerPass {
             // twice.
             return;
           } else {
-            report(t, n, GOOG_SCOPE_ALIAS_REDEFINED, n.getString());
+            report(n, GOOG_SCOPE_ALIAS_REDEFINED, n.getString());
           }
         }
 
         if (type == Token.RETURN) {
-          report(t, n, GOOG_SCOPE_USES_RETURN);
+          report(n, GOOG_SCOPE_USES_RETURN);
         } else if (type == Token.THIS) {
-          report(t, n, GOOG_SCOPE_REFERENCES_THIS);
+          report(n, GOOG_SCOPE_REFERENCES_THIS);
         } else if (type == Token.THROW) {
-          report(t, n, GOOG_SCOPE_USES_THROW);
+          report(n, GOOG_SCOPE_USES_THROW);
         }
       }
 

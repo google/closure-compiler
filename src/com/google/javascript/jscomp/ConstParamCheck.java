@@ -94,7 +94,7 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
       if (name.matchesQualifiedName(CONST_FUNCTION_NAME)
           || name.matchesQualifiedName(CONST_FUNCTION_NAME_COLLAPSED)) {
         if (!isSafeValue(traversal.getScope(), argument)) {
-          compiler.report(traversal.makeError(argument, CONST_NOT_STRING_LITERAL_ERROR));
+          compiler.report(JSError.make(argument, CONST_NOT_STRING_LITERAL_ERROR));
         }
       }
     }

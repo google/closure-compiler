@@ -140,7 +140,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
   }
 
   @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
+  public void visit(NodeTraversal unused, Node n, Node parent) {
     if (!n.isCall() || !n.getFirstChild().isName()) {
       return;
     }
@@ -150,7 +150,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
 
     if (startMarkerName.equals(callName)) {
       if (!parent.isExprResult()) {
-        compiler.report(t.makeError(n, INVALID_MARKER_USAGE, startMarkerName));
+        compiler.report(JSError.make(n, INVALID_MARKER_USAGE, startMarkerName));
         return;
       }
       markerStack.push(parent);
@@ -163,19 +163,19 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
 
     Node endMarkerNode = parent;
     if (!endMarkerNode.isExprResult()) {
-      compiler.report(t.makeError(n, INVALID_MARKER_USAGE, endMarkerName));
+      compiler.report(JSError.make(n, INVALID_MARKER_USAGE, endMarkerName));
       return;
     }
 
     if (markerStack.isEmpty()) {
-      compiler.report(t.makeError(n, UNMATCHED_END_MARKER, startMarkerName, endMarkerName));
+      compiler.report(JSError.make(n, UNMATCHED_END_MARKER, startMarkerName, endMarkerName));
       return;
     }
 
     Node startMarkerNode = markerStack.pop();
     if (endMarkerNode.getParent() != startMarkerNode.getParent()) {
       // The end marker isn't in the same block as the start marker.
-      compiler.report(t.makeError(n, UNMATCHED_END_MARKER, startMarkerName, endMarkerName));
+      compiler.report(JSError.make(n, UNMATCHED_END_MARKER, startMarkerName, endMarkerName));
       return;
     }
 

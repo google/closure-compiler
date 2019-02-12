@@ -70,7 +70,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
     switch (n.getToken()) {
       case SCRIPT:
         if (!n.hasOneChild()) {
-          compiler.report(t.makeError(n, JSON_UNEXPECTED_TOKEN));
+          compiler.report(JSError.make(n, JSON_UNEXPECTED_TOKEN));
         } else {
           visitScript(t, n);
         }
@@ -87,18 +87,18 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
 
       case STRING_KEY:
         if (!n.isQuotedString() || !n.hasOneChild()) {
-          compiler.report(t.makeError(n, JSON_UNEXPECTED_TOKEN));
+          compiler.report(JSError.make(n, JSON_UNEXPECTED_TOKEN));
         }
         break;
 
       case EXPR_RESULT:
         if (!parent.isScript()) {
-          compiler.report(t.makeError(n, JSON_UNEXPECTED_TOKEN));
+          compiler.report(JSError.make(n, JSON_UNEXPECTED_TOKEN));
         }
         break;
 
       default:
-        compiler.report(t.makeError(n, JSON_UNEXPECTED_TOKEN));
+        compiler.report(JSError.make(n, JSON_UNEXPECTED_TOKEN));
         break;
     }
 
@@ -119,7 +119,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
    */
   private void visitScript(NodeTraversal t, Node n) {
     if (!n.hasOneChild() || !n.getFirstChild().isExprResult()) {
-      compiler.report(t.makeError(n, JSON_UNEXPECTED_TOKEN));
+      compiler.report(JSError.make(n, JSON_UNEXPECTED_TOKEN));
       return;
     }
 

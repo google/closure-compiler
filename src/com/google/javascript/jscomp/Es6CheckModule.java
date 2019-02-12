@@ -66,7 +66,7 @@ public final class Es6CheckModule extends AbstractPostOrderCallback implements H
             if (nameNode != null && nameNode.isImportStar()) {
               // import * as M from '';
               // M.x = 2;
-              compiler.report(t.makeError(n, IMPORT_CANNOT_BE_REASSIGNED, nameNode.getString()));
+              compiler.report(JSError.make(n, IMPORT_CANNOT_BE_REASSIGNED, nameNode.getString()));
             }
           }
         }
@@ -80,7 +80,7 @@ public final class Es6CheckModule extends AbstractPostOrderCallback implements H
               if (NodeUtil.isImportedName(nameNode)) {
                 // import { x } from '';
                 // x = 2;
-                compiler.report(t.makeError(n, IMPORT_CANNOT_BE_REASSIGNED, nameNode.getString()));
+                compiler.report(JSError.make(n, IMPORT_CANNOT_BE_REASSIGNED, nameNode.getString()));
               }
             }
           }

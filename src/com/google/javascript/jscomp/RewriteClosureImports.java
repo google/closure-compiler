@@ -325,7 +325,7 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
         typeDeclaration = Iterables.getOnlyElement(convention.identifyTypeDeclarationCall(n));
       } catch (NullPointerException | NoSuchElementException | IllegalArgumentException e) {
         compiler.report(
-            t.makeError(
+            JSError.make(
                 n,
                 INVALID_FORWARD_DECLARE,
                 "A single type could not identified for the goog.forwardDeclare statement"));

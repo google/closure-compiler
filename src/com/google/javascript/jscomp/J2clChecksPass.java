@@ -46,17 +46,14 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
   }
 
   @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
+  public void visit(NodeTraversal unused, Node n, Node parent) {
     for (String typeName : REFERENCE_EQUALITY_TYPE_PATTERNS.keySet()) {
-      checkReferenceEquality(t, n, typeName, REFERENCE_EQUALITY_TYPE_PATTERNS.get(typeName));
+      checkReferenceEquality(n, typeName, REFERENCE_EQUALITY_TYPE_PATTERNS.get(typeName));
     }
   }
 
-  /**
-   * Reports an error if the node is a reference equality check of the specified type.
-   */
-  private void checkReferenceEquality(
-      NodeTraversal t, Node n, String typeName, String fileName) {
+  /** Reports an error if the node is a reference equality check of the specified type. */
+  private void checkReferenceEquality(Node n, String typeName, String fileName) {
     if (n.getToken() == Token.SHEQ
         || n.getToken() == Token.EQ
         || n.getToken() == Token.SHNE
@@ -66,7 +63,7 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
       boolean hasType = isType(firstJsType, fileName) || isType(lastJsType, fileName);
       boolean hasNullType = isNullType(firstJsType) || isNullType(lastJsType);
       if (hasType && !hasNullType) {
-        compiler.report(t.makeError(n, J2CL_REFERENCE_EQUALITY, typeName));
+        compiler.report(JSError.make(n, J2CL_REFERENCE_EQUALITY, typeName));
       }
     }
   }
