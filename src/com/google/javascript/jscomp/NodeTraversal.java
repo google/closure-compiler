@@ -1410,8 +1410,8 @@ public class NodeTraversal {
    * @param type The DiagnosticType
    * @param arguments Arguments to be incorporated into the message
    */
-  public JSError makeError(Node n, CheckLevel level, DiagnosticType type,
-      String... arguments) {
+  @Deprecated
+  public JSError makeError(Node n, CheckLevel level, DiagnosticType type, String... arguments) {
     return JSError.make(n, level, type, arguments);
   }
 
@@ -1422,6 +1422,7 @@ public class NodeTraversal {
    * @param type The DiagnosticType
    * @param arguments Arguments to be incorporated into the message
    */
+  @Deprecated
   public JSError makeError(Node n, DiagnosticType type, String... arguments) {
     return JSError.make(n, type, arguments);
   }

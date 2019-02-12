@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.lint;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
@@ -61,7 +62,7 @@ public final class CheckPrototypeProperties implements HotSwapCompilerPass, Node
   }
 
   @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
+  public void visit(NodeTraversal unused, Node n, Node parent) {
     if (NodeUtil.isPrototypePropertyDeclaration(n)) {
       Node assign = n.getFirstChild();
       Node rhs = assign.getLastChild();
@@ -73,7 +74,7 @@ public final class CheckPrototypeProperties implements HotSwapCompilerPass, Node
           return;
         }
         String propName = assign.getFirstChild().getLastChild().getString();
-        compiler.report(t.makeError(assign, ILLEGAL_PROTOTYPE_MEMBER, propName));
+        compiler.report(JSError.make(assign, ILLEGAL_PROTOTYPE_MEMBER, propName));
       }
     }
   }

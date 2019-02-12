@@ -121,18 +121,11 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
               }
               JSType type = registry.createTypeFromCommentNode(node);
               if (type.isNullable()) {
-                reportWarning(t, node, typeName);
+                compiler.report(JSError.make(node, IMPLICITLY_NULLABLE_JSDOC, typeName));
               }
             }
           },
           Predicates.alwaysTrue());
     }
-  }
-
-  /**
-   * Reports an implicitly nullable name in JSDoc warning.
-   */
-  void reportWarning(NodeTraversal t, Node n, String name) {
-    compiler.report(t.makeError(n, IMPLICITLY_NULLABLE_JSDOC, name));
   }
 }

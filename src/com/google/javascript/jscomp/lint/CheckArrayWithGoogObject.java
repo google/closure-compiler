@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -110,10 +111,10 @@ public final class CheckArrayWithGoogObject extends NodeTraversal.AbstractPostOr
   }
 
   @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
+  public void visit(NodeTraversal unused, Node n, Node parent) {
     if (isGoogObjectIterationOverArray(n)) {
       compiler.report(
-          t.makeError(n, ARRAY_PASSED_TO_GOOG_OBJECT, n.getFirstChild().getQualifiedName()));
+          JSError.make(n, ARRAY_PASSED_TO_GOOG_OBJECT, n.getFirstChild().getQualifiedName()));
     }
   }
 

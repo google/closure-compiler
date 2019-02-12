@@ -481,7 +481,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         // Namespace imports cannot be imported "as *".
         if (isNamespaceImport) {
           compiler.report(
-              t.makeError(
+              JSError.make(
                   importDecl, NAMESPACE_IMPORT_CANNOT_USE_STAR, child.getString(), moduleName));
         }
         maybeAddAliasToSymbolTable(child, t.getSourceName());

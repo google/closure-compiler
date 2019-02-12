@@ -259,7 +259,7 @@ class ReplaceIdGenerators implements CompilerPass {
   private class GatherGenerators extends AbstractPostOrderCallback {
 
     @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
+    public void visit(NodeTraversal unused, Node n, Node parent) {
       JSDocInfo doc = n.getJSDocInfo();
       if (doc == null) {
         return;
@@ -275,7 +275,7 @@ class ReplaceIdGenerators implements CompilerPass {
       if (numGeneratorAnnotations == 0) {
         return;
       } else if (numGeneratorAnnotations > 1) {
-        compiler.report(t.makeError(n, CONFLICTING_GENERATOR_TYPE));
+        compiler.report(JSError.make(n, CONFLICTING_GENERATOR_TYPE));
       }
 
       String name = null;
@@ -311,7 +311,7 @@ class ReplaceIdGenerators implements CompilerPass {
         NameSupplier supplier = nameGenerators.get(name);
         if (supplier == null
             || supplier.getRenameStrategy() != RenameStrategy.MAPPED) {
-          compiler.report(t.makeError(n, MISSING_NAME_MAP_FOR_GENERATOR));
+          compiler.report(JSError.make(n, MISSING_NAME_MAP_FOR_GENERATOR));
           // skip registering the name in the list of Generators if there no
           // mapping.
           return;
@@ -347,7 +347,7 @@ class ReplaceIdGenerators implements CompilerPass {
       if (!t.inGlobalHoistScope()
           && nameGenerator.getRenameStrategy() == RenameStrategy.INCONSISTENT) {
         // Warn about calls not in the global scope.
-        compiler.report(t.makeError(n, NON_GLOBAL_ID_GENERATOR_CALL));
+        compiler.report(JSError.make(n, NON_GLOBAL_ID_GENERATOR_CALL));
         return;
       }
 
@@ -355,7 +355,7 @@ class ReplaceIdGenerators implements CompilerPass {
         for (Node ancestor : n.getAncestors()) {
           if (NodeUtil.isControlStructure(ancestor)) {
             // Warn about conditional calls.
-            compiler.report(t.makeError(n, CONDITIONAL_ID_GENERATOR_CALL));
+            compiler.report(JSError.make(n, CONDITIONAL_ID_GENERATOR_CALL));
             return;
           }
         }
@@ -363,7 +363,7 @@ class ReplaceIdGenerators implements CompilerPass {
 
       Node arg = n.getSecondChild();
       if (arg == null) {
-        compiler.report(t.makeError(n, INVALID_GENERATOR_PARAMETER));
+        compiler.report(JSError.make(n, INVALID_GENERATOR_PARAMETER));
       } else if (arg.isString()) {
         String rename = getObfuscatedName(
             arg, callName, nameGenerator, arg.getString());
@@ -372,11 +372,11 @@ class ReplaceIdGenerators implements CompilerPass {
       } else if (arg.isObjectLit()) {
         for (Node key : arg.children()) {
           if (key.isMemberFunctionDef()) {
-            compiler.report(t.makeError(n, SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN));
+            compiler.report(JSError.make(n, SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN));
             return;
           }
           if (key.isComputedProp()) {
-            compiler.report(t.makeError(n, COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN));
+            compiler.report(JSError.make(n, COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN));
             return;
           }
 
@@ -390,7 +390,7 @@ class ReplaceIdGenerators implements CompilerPass {
         parent.replaceChild(n, arg);
         t.reportCodeChange();
       } else {
-        compiler.report(t.makeError(n, INVALID_GENERATOR_PARAMETER));
+        compiler.report(JSError.make(n, INVALID_GENERATOR_PARAMETER));
       }
     }
 

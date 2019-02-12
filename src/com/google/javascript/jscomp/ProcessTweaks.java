@@ -358,7 +358,7 @@ class ProcessTweaks implements CompilerPass {
       // Ensure the first parameter (the tweak ID) is a string literal.
       Node tweakIdNode = n.getSecondChild();
       if (!tweakIdNode.isString()) {
-        compiler.report(t.makeError(tweakIdNode, NON_LITERAL_TWEAK_ID_ERROR));
+        compiler.report(JSError.make(tweakIdNode, NON_LITERAL_TWEAK_ID_ERROR));
         return;
       }
       String tweakId = tweakIdNode.getString();
@@ -376,20 +376,18 @@ class ProcessTweaks implements CompilerPass {
         case REGISTER_STRING:
           // Ensure the ID contains only valid characters.
           if (!ID_MATCHER.matchesAllOf(tweakId)) {
-            compiler.report(t.makeError(tweakIdNode, INVALID_TWEAK_ID_ERROR));
+            compiler.report(JSError.make(tweakIdNode, INVALID_TWEAK_ID_ERROR));
           }
 
           // Ensure tweaks are registered in the global scope.
           if (!t.inGlobalHoistScope()) {
-            compiler.report(
-                t.makeError(n, NON_GLOBAL_TWEAK_INIT_ERROR, tweakId));
+            compiler.report(JSError.make(n, NON_GLOBAL_TWEAK_INIT_ERROR, tweakId));
             break;
           }
 
           // Ensure tweaks are registered only once.
           if (tweakInfo.isRegistered()) {
-            compiler.report(
-                t.makeError(n, TWEAK_MULTIPLY_REGISTERED_ERROR, tweakId));
+            compiler.report(JSError.make(n, TWEAK_MULTIPLY_REGISTERED_ERROR, tweakId));
             break;
           }
 
@@ -400,14 +398,12 @@ class ProcessTweaks implements CompilerPass {
         case OVERRIDE_DEFAULT_VALUE:
           // Ensure tweaks overrides occur in the global scope.
           if (!t.inGlobalScope()) {
-            compiler.report(
-                t.makeError(n, NON_GLOBAL_TWEAK_INIT_ERROR, tweakId));
+            compiler.report(JSError.make(n, NON_GLOBAL_TWEAK_INIT_ERROR, tweakId));
             break;
           }
           // Ensure tweak overrides occur before the tweak is registered.
           if (tweakInfo.isRegistered()) {
-            compiler.report(
-                t.makeError(n, TWEAK_OVERRIDE_AFTER_REGISTERED_ERROR, tweakId));
+            compiler.report(JSError.make(n, TWEAK_OVERRIDE_AFTER_REGISTERED_ERROR, tweakId));
             break;
           }
 

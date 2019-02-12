@@ -159,9 +159,9 @@ final class CheckGlobalThis implements Callback {
   }
 
   @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
+  public void visit(NodeTraversal unused, Node n, Node parent) {
     if (n.isThis() && shouldReportThis(n)) {
-      compiler.report(t.makeError(n, GLOBAL_THIS));
+      compiler.report(JSError.make(n, GLOBAL_THIS));
     }
     if (n == assignLhsChild) {
       assignLhsChild = null;

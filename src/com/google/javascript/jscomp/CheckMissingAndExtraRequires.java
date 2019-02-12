@@ -228,7 +228,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
         visitCallNode(t, n, parent);
         break;
       case SCRIPT:
-        visitScriptNode(t);
+        visitScriptNode();
         reset();
         break;
       case NEW:
@@ -255,7 +255,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
     this.googScopeBlock = null;
   }
 
-  private void visitScriptNode(NodeTraversal t) {
+  private void visitScriptNode() {
     if (mode == Mode.SINGLE_FILE && requires.isEmpty() && closurizedNamespaces.isEmpty()) {
       // Likely a file that isn't using Closure at all.
       return;
@@ -288,15 +288,15 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
                     ? namespace.substring(0, namespace.lastIndexOf('.'))
                     : namespace;
             String nameToReport = Iterables.getFirst(getClassNames(namespace), defaultName);
-            compiler.report(t.makeError(node, MISSING_REQUIRE_STRICT_WARNING, nameToReport));
+            compiler.report(JSError.make(node, MISSING_REQUIRE_STRICT_WARNING, nameToReport));
           } else if (node.getParent().isName()
               && node.getParent().getGrandparent() == googScopeBlock) {
-            compiler.report(t.makeError(node, MISSING_REQUIRE_FOR_GOOG_SCOPE, namespace));
+            compiler.report(JSError.make(node, MISSING_REQUIRE_FOR_GOOG_SCOPE, namespace));
           } else {
             if (node.isGetProp() && !node.getParent().isClass()) {
-              compiler.report(t.makeError(node, MISSING_REQUIRE_STRICT_WARNING, namespace));
+              compiler.report(JSError.make(node, MISSING_REQUIRE_STRICT_WARNING, namespace));
             } else {
-              compiler.report(t.makeError(node, MISSING_REQUIRE_WARNING, namespace));
+              compiler.report(JSError.make(node, MISSING_REQUIRE_WARNING, namespace));
             }
           }
           namespaces.add(namespace);
