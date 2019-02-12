@@ -27,6 +27,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.Test;
@@ -160,16 +162,20 @@ public final class SourceFileTest {
   }
 
   private static void createZipWithContent(Path zipFile, String content) throws IOException {
-    ZipOutputStream zos;
+    Instant lastModified = Instant.now();
     if (zipFile.toFile().exists()) {
+      // Ensure that file modified date is updated, otherwise could cause flakiness (b/123962282).
+      lastModified = Files.getLastModifiedTime(zipFile).toInstant().plusSeconds(1);
       zipFile.toFile().delete();
     }
+
     zipFile.toFile().createNewFile();
-    zos = new ZipOutputStream(new FileOutputStream(zipFile.toFile()));
-    zos.putNextEntry(new ZipEntry("foo.js"));
-    zos.write(content.getBytes(StandardCharsets.UTF_8));
-    zos.closeEntry();
-    zos.close();
+    try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile.toFile()))) {
+      zos.putNextEntry(new ZipEntry("foo.js"));
+      zos.write(content.getBytes(StandardCharsets.UTF_8));
+      zos.closeEntry();
+    }
+    Files.setLastModifiedTime(zipFile, FileTime.from(lastModified));
   }
 
   @Test
