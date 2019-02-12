@@ -953,7 +953,7 @@ public class CompilerOptions implements Serializable {
     trustedStrings = yes;
   }
 
-  private boolean allowMethodCallDecomposing;
+  private boolean allowMethodCallDecomposing = true;
 
   /**
    * See

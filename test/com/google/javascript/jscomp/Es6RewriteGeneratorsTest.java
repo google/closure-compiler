@@ -29,7 +29,6 @@ import org.junit.runners.JUnit4;
 /** Unit tests for {@link Es6RewriteGenerators}. */
 @RunWith(JUnit4.class)
 public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
-  private boolean allowMethodCallDecomposing;
 
   public Es6RewriteGeneratorsTest() {
     super(DEFAULT_EXTERNS);
@@ -39,7 +38,6 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    allowMethodCallDecomposing = false;
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableTypeCheck();
     enableTypeInfoValidation();
@@ -54,7 +52,6 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
-    options.setAllowMethodCallDecomposing(allowMethodCallDecomposing);
     return options;
   }
 
@@ -455,9 +452,42 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testUndecomposableExpression() {
-    testError("function *f() { obj.bar(yield 5); }", Es6ToEs3Util.CANNOT_CONVERT);
-    //testError("function *f() { (yield 5) && obj.bar(yield 5); }", Es6ToEs3Util.CANNOT_CONVERT);
+  public void testDecomposeComplexYieldExpression() {
+    test(
+        lines(
+            "/* @return {?} */ function *f() {",
+            "  var obj = {bar: function(x) {}};",
+            "  (yield 5) && obj.bar(yield 5);",
+            "}"),
+        lines(
+            "function f(){",
+            "var obj;",
+            "var JSCompiler_temp$jscomp$0;",
+            "var JSCompiler_temp_const$jscomp$2;",
+            "var JSCompiler_temp_const$jscomp$1;",
+            "return $jscomp.generator.createGenerator(f,function($jscomp$generator$context) {",
+            "  switch($jscomp$generator$context.nextAddress) {",
+            "    case 1:",
+            "      obj = {bar:function(x){}};",
+            "      return $jscomp$generator$context.yield(5,2);",
+            "    case 2:",
+            "      if (!(JSCompiler_temp$jscomp$0 = $jscomp$generator$context.yieldResult)) {",
+            "        $jscomp$generator$context.jumpTo(3);",
+            "        break;",
+            "      }",
+            "      JSCompiler_temp_const$jscomp$2 = obj;",
+            "      JSCompiler_temp_const$jscomp$1 = JSCompiler_temp_const$jscomp$2.bar;",
+            "      return $jscomp$generator$context.yield(5,4);",
+            "    case 4:",
+            "      JSCompiler_temp$jscomp$0 = JSCompiler_temp_const$jscomp$1.call(",
+            "          JSCompiler_temp_const$jscomp$2,",
+            "          $jscomp$generator$context.yieldResult);",
+            "    case 3:",
+            "      JSCompiler_temp$jscomp$0;",
+            "      $jscomp$generator$context.jumpToEnd();",
+            "   }",
+            " })",
+            "}"));
   }
 
   @Test
@@ -487,7 +517,6 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "case 2:",
             "  return $jscomp$generator$context.return($jscomp$generator$context.yieldResult);"));
 
-    allowMethodCallDecomposing = true;
     rewriteGeneratorBodyWithVars(
         "var obj = {bar: function(x) {}}; obj.bar(yield 5);",
         lines(

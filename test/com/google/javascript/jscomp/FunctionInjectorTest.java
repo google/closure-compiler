@@ -1787,6 +1787,7 @@ public final class FunctionInjectorTest {
       final String fnName,
       final InliningMode mode) {
     final Compiler compiler = new Compiler();
+    compiler.initOptions(new CompilerOptions());
     final FunctionInjector injector = new FunctionInjector(
         compiler, compiler.getUniqueNameIdSupplier(), allowDecomposition,
         assumeStrictThis,
@@ -1836,11 +1837,6 @@ public final class FunctionInjectorTest {
       String code, final String expectedResult,
       final String fnName, final InliningMode mode) {
     final Compiler compiler = new Compiler();
-    final FunctionInjector injector = new FunctionInjector(
-        compiler, compiler.getUniqueNameIdSupplier(), allowDecomposition,
-        assumeStrictThis,
-        assumeMinimumCapture);
-
     List<SourceFile> externsInputs = ImmutableList.of(
         SourceFile.fromCode("externs", ""));
 
@@ -1848,6 +1844,15 @@ public final class FunctionInjectorTest {
     options.setCodingConvention(new GoogleCodingConvention());
     compiler.init(externsInputs, ImmutableList.of(
         SourceFile.fromCode("code", code)), options);
+
+    final FunctionInjector injector =
+        new FunctionInjector(
+            compiler,
+            compiler.getUniqueNameIdSupplier(),
+            allowDecomposition,
+            assumeStrictThis,
+            assumeMinimumCapture);
+
     Node parseRoot = compiler.parseInputs();
     Node externsRoot = parseRoot.getFirstChild();
     final Node tree = parseRoot.getLastChild();
@@ -1933,6 +1938,7 @@ public final class FunctionInjectorTest {
    */
   public boolean doesFunctionMeetMinimumRequirements(final String code, final String fnName) {
     final Compiler compiler = new Compiler();
+    compiler.initOptions(new CompilerOptions());
     final FunctionInjector injector =
         new FunctionInjector(
             compiler,

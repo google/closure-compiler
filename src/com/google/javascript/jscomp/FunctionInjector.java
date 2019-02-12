@@ -47,6 +47,7 @@ class FunctionInjector {
   private Set<String> knownConstants = new HashSet<>();
   private final boolean assumeStrictThis;
   private final boolean assumeMinimumCapture;
+  private final boolean allowMethodCallDecomposing;
   private final Supplier<String> safeNameIdSupplier;
   private final Supplier<String> throwawayNameSupplier =
       new Supplier<String>() {
@@ -57,10 +58,48 @@ class FunctionInjector {
     }
   };
 
+  public enum Decomposition {
+    DISABLED,
+    ENABLED,
+    // TODD(b/124253050): consider removing this option.
+    ENABLED_WITHOUT_METHOD_CALL_DECOMPOSING;
+
+    public static Decomposition from(
+        boolean allowDecomposition, boolean allowMethodCallDecomposing) {
+      if (!allowDecomposition) {
+        return Decomposition.DISABLED;
+      } else if (allowMethodCallDecomposing) {
+        return Decomposition.ENABLED;
+      } else {
+        return Decomposition.ENABLED_WITHOUT_METHOD_CALL_DECOMPOSING;
+      }
+    }
+  }
+
   /**
-   * @param allowDecomposition Whether an effort should be made to break down
-   * expressions into simpler expressions to allow functions to be injected
-   * where they would otherwise be disallowed.
+   * @param decomposition Whether an effort should be made to break down expressions into simpler
+   *     expressions to allow functions to be injected where they would otherwise be disallowed.
+   */
+  public FunctionInjector(
+      AbstractCompiler compiler,
+      Supplier<String> safeNameIdSupplier,
+      Decomposition decomposition,
+      boolean assumeStrictThis,
+      boolean assumeMinimumCapture) {
+    checkNotNull(compiler);
+    checkNotNull(safeNameIdSupplier);
+    this.compiler = compiler;
+    this.safeNameIdSupplier = safeNameIdSupplier;
+    this.assumeStrictThis = assumeStrictThis;
+    this.assumeMinimumCapture = assumeMinimumCapture;
+    this.allowDecomposition = !decomposition.equals(Decomposition.DISABLED);
+    this.allowMethodCallDecomposing = decomposition.equals(Decomposition.ENABLED);
+  }
+
+  /**
+   * @param allowDecomposition Whether an effort should be made to break down expressions into
+   *     simpler expressions to allow functions to be injected where they would otherwise be
+   *     disallowed.
    */
   public FunctionInjector(
       AbstractCompiler compiler,
@@ -68,13 +107,12 @@ class FunctionInjector {
       boolean allowDecomposition,
       boolean assumeStrictThis,
       boolean assumeMinimumCapture) {
-    checkNotNull(compiler);
-    checkNotNull(safeNameIdSupplier);
-    this.compiler = compiler;
-    this.safeNameIdSupplier = safeNameIdSupplier;
-    this.allowDecomposition = allowDecomposition;
-    this.assumeStrictThis = assumeStrictThis;
-    this.assumeMinimumCapture = assumeMinimumCapture;
+    this(
+        compiler,
+        safeNameIdSupplier,
+        Decomposition.from(allowDecomposition, compiler.getOptions().allowMethodCallDecomposing()),
+        assumeStrictThis,
+        assumeMinimumCapture);
   }
 
   /** The type of inlining to perform. */
@@ -381,6 +419,7 @@ class FunctionInjector {
         // Nothing to do.
       }
     },
+
     /**
      * An var declaration and initialization, where the result of the call is
      * assigned to the declared name
@@ -396,6 +435,7 @@ class FunctionInjector {
         // Nothing to do.
       }
     },
+
     /**
      * An arbitrary expression, the root of which is a EXPR_RESULT, IF,
      * RETURN, SWITCH or VAR.  The call must be the first side-effect in
@@ -495,11 +535,7 @@ class FunctionInjector {
 
   private ExpressionDecomposer getDecomposer(Scope scope) {
     return new ExpressionDecomposer(
-        compiler,
-        safeNameIdSupplier,
-        knownConstants,
-        scope,
-        compiler.getOptions().allowMethodCallDecomposing());
+        compiler, safeNameIdSupplier, knownConstants, scope, allowMethodCallDecomposing);
   }
 
   /**
