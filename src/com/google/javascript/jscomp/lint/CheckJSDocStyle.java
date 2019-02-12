@@ -240,7 +240,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
    * in the global scope, or a method on a class which is declared in the global scope.
    */
   private boolean isFunctionThatShouldHaveJsDoc(NodeTraversal t, Node function) {
-    if (!(t.inGlobalHoistScope() || t.inModuleScope())) {
+    if (!(t.inGlobalHoistScope() || t.inModuleHoistScope())) {
       return false;
     }
     if (NodeUtil.isFunctionDeclaration(function)) {
