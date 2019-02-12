@@ -73,6 +73,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DefaultClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DefaultParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DoWhileStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.DynamicImportTree;
 import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.EnumDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
@@ -2571,6 +2572,12 @@ class IRFactory {
       return importSpec;
     }
 
+    Node processDynamicImport(DynamicImportTree dynamicImportNode) {
+      maybeWarnForFeature(dynamicImportNode, Feature.DYNAMIC_IMPORT);
+      Node argument = transform(dynamicImportNode.argument);
+      return newNode(Token.DYNAMIC_IMPORT, argument);
+    }
+
     Node processTypeName(TypeNameTree tree) {
       Node typeNode;
       if (tree.segments.size() == 1) {
@@ -3080,6 +3087,8 @@ class IRFactory {
           return processImportDecl(node.asImportDeclaration());
         case IMPORT_SPECIFIER:
           return processImportSpec(node.asImportSpecifier());
+        case DYNAMIC_IMPORT_EXPRESSION:
+          return processDynamicImport(node.asDynamicImportExpression());
 
         case ARRAY_PATTERN:
           return processArrayPattern(node.asArrayPattern());

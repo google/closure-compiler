@@ -174,6 +174,9 @@ public final class FeatureSet implements Serializable {
     // https://github.com/tc39/proposal-optional-catch-binding
     OPTIONAL_CATCH_BINDING("Optional catch binding", LangVersion.ES_NEXT),
 
+    // Stage 3 proposal likely to be part of ES2020
+    DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES_UNSUPPORTED),
+
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
     AMBIENT_DECLARATION("ambient declaration", LangVersion.TYPESCRIPT),

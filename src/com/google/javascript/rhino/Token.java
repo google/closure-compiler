@@ -49,200 +49,201 @@ package com.google.javascript.rhino;
  *
  */
 public enum Token {
-    RETURN,
-    BITOR,
-    BITXOR,
-    BITAND,
-    EQ,
-    NE,
-    LT,
-    LE,
-    GT,
-    GE,
-    LSH,
-    RSH,
-    URSH,
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    MOD,
-    EXPONENT,
-    NOT,
-    BITNOT,
-    POS,
-    NEG,
-    NEW,
-    DELPROP,
-    TYPEOF,
-    GETPROP,
-    GETELEM,
-    CALL,
-    NAME,
-    NUMBER,
-    STRING,
-    NULL,
-    THIS,
-    FALSE,
-    TRUE,
-    SHEQ, // shallow equality (===)
-    SHNE, // shallow inequality (!==)
-    REGEXP,
-    THROW,
-    IN,
-    INSTANCEOF,
-    ARRAYLIT, // array literal
-    OBJECTLIT, // object literal
+  RETURN,
+  BITOR,
+  BITXOR,
+  BITAND,
+  EQ,
+  NE,
+  LT,
+  LE,
+  GT,
+  GE,
+  LSH,
+  RSH,
+  URSH,
+  ADD,
+  SUB,
+  MUL,
+  DIV,
+  MOD,
+  EXPONENT,
+  NOT,
+  BITNOT,
+  POS,
+  NEG,
+  NEW,
+  DELPROP,
+  TYPEOF,
+  GETPROP,
+  GETELEM,
+  CALL,
+  NAME,
+  NUMBER,
+  STRING,
+  NULL,
+  THIS,
+  FALSE,
+  TRUE,
+  SHEQ, // shallow equality (===)
+  SHNE, // shallow inequality (!==)
+  REGEXP,
+  THROW,
+  IN,
+  INSTANCEOF,
+  ARRAYLIT, // array literal
+  OBJECTLIT, // object literal
 
-    TRY,
-    PARAM_LIST,
-    COMMA, // comma operator
+  TRY,
+  PARAM_LIST,
+  COMMA, // comma operator
 
-    ASSIGN, // simple assignment  (=)
-    ASSIGN_BITOR, // |=
-    ASSIGN_BITXOR, // ^=
-    ASSIGN_BITAND, // &=
-    ASSIGN_LSH, // <<=
-    ASSIGN_RSH, // >>=
-    ASSIGN_URSH, // >>>=
-    ASSIGN_ADD, // +=
-    ASSIGN_SUB, // -=
-    ASSIGN_MUL, // *=
-    ASSIGN_DIV, // /=
-    ASSIGN_MOD, // %=
-    ASSIGN_EXPONENT, // **=
+  ASSIGN, // simple assignment  (=)
+  ASSIGN_BITOR, // |=
+  ASSIGN_BITXOR, // ^=
+  ASSIGN_BITAND, // &=
+  ASSIGN_LSH, // <<=
+  ASSIGN_RSH, // >>=
+  ASSIGN_URSH, // >>>=
+  ASSIGN_ADD, // +=
+  ASSIGN_SUB, // -=
+  ASSIGN_MUL, // *=
+  ASSIGN_DIV, // /=
+  ASSIGN_MOD, // %=
+  ASSIGN_EXPONENT, // **=
 
-    HOOK, // conditional (?:)
-    OR, // logical or (||)
-    AND, // logical and (&&)
-    INC, // increment (++)
-    DEC, // decrement (--)
-    FUNCTION, // function keyword
-    IF, // if keyword
-    SWITCH, // switch keyword
-    CASE, // case keyword
-    DEFAULT_CASE, // default keyword
-    WHILE, // while keyword
-    DO, // do keyword
-    FOR, // for(;;) statement
-    FOR_IN, // for-in
-    BREAK, // break keyword
-    CONTINUE, // continue keyword
-    VAR, // var keyword
-    WITH, // with keyword
-    CATCH, // catch keyword
-    VOID, // void keyword
+  HOOK, // conditional (?:)
+  OR, // logical or (||)
+  AND, // logical and (&&)
+  INC, // increment (++)
+  DEC, // decrement (--)
+  FUNCTION, // function keyword
+  IF, // if keyword
+  SWITCH, // switch keyword
+  CASE, // case keyword
+  DEFAULT_CASE, // default keyword
+  WHILE, // while keyword
+  DO, // do keyword
+  FOR, // for(;;) statement
+  FOR_IN, // for-in
+  BREAK, // break keyword
+  CONTINUE, // continue keyword
+  VAR, // var keyword
+  WITH, // with keyword
+  CATCH, // catch keyword
+  VOID, // void keyword
 
-    EMPTY,
+  EMPTY,
 
-    ROOT, // Used only for the 3 root nodes of the AST: externsRoot, jsRoot, and externsAndJsRoot
-    BLOCK, // statement block
-    LABEL, // label
-    EXPR_RESULT, // expression statement in scripts
-    SCRIPT, // top-level node for entire script
+  ROOT, // Used only for the 3 root nodes of the AST: externsRoot, jsRoot, and externsAndJsRoot
+  BLOCK, // statement block
+  LABEL, // label
+  EXPR_RESULT, // expression statement in scripts
+  SCRIPT, // top-level node for entire script
 
-    GETTER_DEF,
-    SETTER_DEF,
+  GETTER_DEF,
+  SETTER_DEF,
 
-    CONST, // JS 1.5 const keyword
-    DEBUGGER,
+  CONST, // JS 1.5 const keyword
+  DEBUGGER,
 
-    // JSCompiler introduced tokens
-    LABEL_NAME,
-    STRING_KEY, // object literal key
-    CAST,
+  // JSCompiler introduced tokens
+  LABEL_NAME,
+  STRING_KEY, // object literal key
+  CAST,
 
-    // ES6
-    ARRAY_PATTERN, // destructuring patterns
-    OBJECT_PATTERN,
-    DESTRUCTURING_LHS, // The node inside a var/let/const with a destructuring LHS
+  // ES6
+  ARRAY_PATTERN, // destructuring patterns
+  OBJECT_PATTERN,
+  DESTRUCTURING_LHS, // The node inside a var/let/const with a destructuring LHS
 
-    CLASS, // classes
-    CLASS_MEMBERS, // class member container
-    MEMBER_FUNCTION_DEF,
-    SUPER,
+  CLASS, // classes
+  CLASS_MEMBERS, // class member container
+  MEMBER_FUNCTION_DEF,
+  SUPER,
 
-    LET, // block scoped vars
+  LET, // block scoped vars
 
-    FOR_OF, // for-of
-    FOR_AWAIT_OF, // for-await-of
+  FOR_OF, // for-of
+  FOR_AWAIT_OF, // for-await-of
 
-    YIELD, // generators
+  YIELD, // generators
 
-    AWAIT, // async functions
+  AWAIT, // async functions
 
-    IMPORT, // modules
-    IMPORT_SPECS,
-    IMPORT_SPEC,
-    IMPORT_STAR, // "* as name", called NameSpaceImport in the spec.
-    EXPORT,
-    EXPORT_SPECS,
-    EXPORT_SPEC,
-    MODULE_BODY,
+  IMPORT, // modules
+  IMPORT_SPECS,
+  IMPORT_SPEC,
+  IMPORT_STAR, // "* as name", called NameSpaceImport in the spec.
+  EXPORT,
+  EXPORT_SPECS,
+  EXPORT_SPEC,
+  MODULE_BODY,
+  DYNAMIC_IMPORT,
 
-    REST, // "..." in formal parameters, or an array pattern.
-    SPREAD, // "..." in a call expression, or an array literal.
+  REST, // "..." in formal parameters, or an array pattern.
+  SPREAD, // "..." in a call expression, or an array literal.
 
-    COMPUTED_PROP,
+  COMPUTED_PROP,
 
-    TAGGED_TEMPLATELIT, // tagged template literal, e.g. foo`bar`
-    TEMPLATELIT, // template literal
-    TEMPLATELIT_SUB, // template literal substitution
-    TEMPLATELIT_STRING, // template literal string
+  TAGGED_TEMPLATELIT, // tagged template literal, e.g. foo`bar`
+  TEMPLATELIT, // template literal
+  TEMPLATELIT_SUB, // template literal substitution
+  TEMPLATELIT_STRING, // template literal string
 
-    DEFAULT_VALUE, // Formal parameter or destructuring element with a default value
-    NEW_TARGET, // new.target
+  DEFAULT_VALUE, // Formal parameter or destructuring element with a default value
+  NEW_TARGET, // new.target
 
-    // Used by type declaration ASTs
-    STRING_TYPE,
-    BOOLEAN_TYPE,
-    NUMBER_TYPE,
-    FUNCTION_TYPE,
-    PARAMETERIZED_TYPE,
-    UNION_TYPE,
-    ANY_TYPE,
-    NULLABLE_TYPE,
-    VOID_TYPE,
-    REST_PARAMETER_TYPE,
-    NAMED_TYPE,
-    OPTIONAL_PARAMETER,
-    RECORD_TYPE,
-    UNDEFINED_TYPE,
-    ARRAY_TYPE,
-    GENERIC_TYPE,
-    GENERIC_TYPE_LIST,
+  // Used by type declaration ASTs
+  STRING_TYPE,
+  BOOLEAN_TYPE,
+  NUMBER_TYPE,
+  FUNCTION_TYPE,
+  PARAMETERIZED_TYPE,
+  UNION_TYPE,
+  ANY_TYPE,
+  NULLABLE_TYPE,
+  VOID_TYPE,
+  REST_PARAMETER_TYPE,
+  NAMED_TYPE,
+  OPTIONAL_PARAMETER,
+  RECORD_TYPE,
+  UNDEFINED_TYPE,
+  ARRAY_TYPE,
+  GENERIC_TYPE,
+  GENERIC_TYPE_LIST,
 
-    // JSDoc-only tokens
-    ANNOTATION,
-    PIPE,
-    STAR,
-    EOC,
-    QMARK, // type is nullable or unknown
-    ELLIPSIS,
-    BANG,
-    EQUALS,
-    LB, // left brackets
-    LC, // left curly braces
-    COLON,
+  // JSDoc-only tokens
+  ANNOTATION,
+  PIPE,
+  STAR,
+  EOC,
+  QMARK, // type is nullable or unknown
+  ELLIPSIS,
+  BANG,
+  EQUALS,
+  LB, // left brackets
+  LC, // left curly braces
+  COLON,
 
-    // TypeScript
-    INTERFACE,
-    INTERFACE_EXTENDS,
-    INTERFACE_MEMBERS,
-    ENUM,
-    ENUM_MEMBERS,
-    IMPLEMENTS,
-    TYPE_ALIAS,
-    DECLARE,
-    MEMBER_VARIABLE_DEF,
-    INDEX_SIGNATURE,
-    CALL_SIGNATURE,
-    NAMESPACE,
-    NAMESPACE_ELEMENTS,
+  // TypeScript
+  INTERFACE,
+  INTERFACE_EXTENDS,
+  INTERFACE_MEMBERS,
+  ENUM,
+  ENUM_MEMBERS,
+  IMPLEMENTS,
+  TYPE_ALIAS,
+  DECLARE,
+  MEMBER_VARIABLE_DEF,
+  INDEX_SIGNATURE,
+  CALL_SIGNATURE,
+  NAMESPACE,
+  NAMESPACE_ELEMENTS,
 
-    // Tokens to use for internal bookkeeping,
-    // an AST is invalid while these are present.
-    PLACEHOLDER1,
+  // Tokens to use for internal bookkeeping,
+  // an AST is invalid while these are present.
+  PLACEHOLDER1,
   PLACEHOLDER2,
   PLACEHOLDER3;
 

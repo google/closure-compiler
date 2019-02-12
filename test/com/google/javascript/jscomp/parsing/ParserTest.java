@@ -5046,6 +5046,49 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "Semi-colon expected");
   }
 
+  @Test
+  public void testDynamicImport() {
+    List<String> dynamicImportUses =
+        ImmutableList.of(
+            "import('foo')",
+            "import('foo').then(function(a) { return a; })",
+            "var moduleNamespace = import('foo')",
+            "Promise.all([import('foo')]).then(function(a) { return a; })");
+    expectFeatures(Feature.DYNAMIC_IMPORT);
+
+    for (LanguageMode m : LanguageMode.values()) {
+      mode = m;
+      strictMode = (m == LanguageMode.ECMASCRIPT3) ? SLOPPY : STRICT;
+      if (m.featureSet.has(Feature.DYNAMIC_IMPORT)) {
+        for (String importUseSource : dynamicImportUses) {
+          parse(importUseSource);
+        }
+      } else {
+        for (String importUseSource : dynamicImportUses) {
+          parseWarning(importUseSource, unsupportedFeatureMessage(Feature.DYNAMIC_IMPORT));
+        }
+      }
+    }
+  }
+
+  @Test
+  public void testAwaitDynamicImport() {
+    List<String> awaitDynamicImportUses =
+        ImmutableList.of(
+            "(async function() { return await import('foo'); })()",
+            "(async function() { await import('foo').then(function(a) { return a; }); })()",
+            "(async function() { var moduleNamespace = await import('foo'); })()",
+            lines(
+                "(async function() {",
+                "await Promise.all([import('foo')]).then(function(a) { return a; }); })()"));
+    expectFeatures(Feature.DYNAMIC_IMPORT, Feature.ASYNC_FUNCTIONS);
+    mode = LanguageMode.UNSUPPORTED;
+
+    for (String importUseSource : awaitDynamicImportUses) {
+      parse(importUseSource);
+    }
+  }
+
   private void assertNodeHasJSDocInfoWithJSType(Node node, JSType jsType) {
     JSDocInfo info = node.getJSDocInfo();
     assertWithMessage("Node has no JSDocInfo: %s", node).that(info).isNotNull();
@@ -5077,6 +5120,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "This language feature is only supported for %s mode or better: %s",
         languageMode,
         feature);
+  }
+
+  private static String unsupportedFeatureMessage(Feature feature) {
+    return String.format(
+        "This language feature is not currently supported by the compiler: %s", feature);
   }
 
   private static Node script(Node stmt) {

@@ -51,6 +51,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DefaultClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DefaultParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DoWhileStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.DynamicImportTree;
 import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.EnumDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
@@ -393,7 +394,7 @@ public class Parser {
 
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-imports
   private boolean peekImportDeclaration() {
-    return peek(TokenType.IMPORT);
+    return peek(TokenType.IMPORT) && !peek(1, TokenType.OPEN_PAREN);
   }
 
   private ParseTree parseImportDeclaration() {
@@ -2271,38 +2272,40 @@ public class Parser {
   // 11.1 Primary Expressions
   private ParseTree parsePrimaryExpression() {
     switch (peekType()) {
-    case CLASS:
-      return parseClassExpression();
-    case SUPER:
-      return parseSuperExpression();
-    case THIS:
-      return parseThisExpression();
-    case IDENTIFIER:
-    case TYPE:
-    case DECLARE:
-    case MODULE:
-    case NAMESPACE:
-      return parseIdentifierExpression();
-    case NUMBER:
-    case STRING:
-    case TRUE:
-    case FALSE:
-    case NULL:
-      return parseLiteralExpression();
-    case NO_SUBSTITUTION_TEMPLATE:
-    case TEMPLATE_HEAD:
-      return parseTemplateLiteral(null);
-    case OPEN_SQUARE:
-      return parseArrayInitializer();
-    case OPEN_CURLY:
-      return parseObjectLiteral();
-    case OPEN_PAREN:
-      return parseCoverParenthesizedExpressionAndArrowParameterList();
-    case SLASH:
-    case SLASH_EQUAL:
-      return parseRegularExpressionLiteral();
-    default:
-      return parseMissingPrimaryExpression();
+      case CLASS:
+        return parseClassExpression();
+      case SUPER:
+        return parseSuperExpression();
+      case THIS:
+        return parseThisExpression();
+      case IMPORT:
+        return parseDynamicImportExpression();
+      case IDENTIFIER:
+      case TYPE:
+      case DECLARE:
+      case MODULE:
+      case NAMESPACE:
+        return parseIdentifierExpression();
+      case NUMBER:
+      case STRING:
+      case TRUE:
+      case FALSE:
+      case NULL:
+        return parseLiteralExpression();
+      case NO_SUBSTITUTION_TEMPLATE:
+      case TEMPLATE_HEAD:
+        return parseTemplateLiteral(null);
+      case OPEN_SQUARE:
+        return parseArrayInitializer();
+      case OPEN_CURLY:
+        return parseObjectLiteral();
+      case OPEN_PAREN:
+        return parseCoverParenthesizedExpressionAndArrowParameterList();
+      case SLASH:
+      case SLASH_EQUAL:
+        return parseRegularExpressionLiteral();
+      default:
+        return parseMissingPrimaryExpression();
     }
   }
 
@@ -2316,6 +2319,17 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.THIS);
     return new ThisExpressionTree(getTreeLocation(start));
+  }
+
+  // https://tc39.github.io/proposal-dynamic-import
+  private DynamicImportTree parseDynamicImportExpression() {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.IMPORT);
+    eat(TokenType.OPEN_PAREN);
+    ParseTree argument = parseAssignmentExpression();
+    eat(TokenType.CLOSE_PAREN);
+    recordFeatureUsed(Feature.DYNAMIC_IMPORT);
+    return new DynamicImportTree(getTreeLocation(start), argument);
   }
 
   private IdentifierExpressionTree parseIdentifierExpression() {
@@ -2913,6 +2927,8 @@ public class Parser {
       case VOID:
       case YIELD:
         return true;
+      case IMPORT:
+        return peekImportCall();
       default:
         return false;
     }
@@ -3488,6 +3504,10 @@ public class Parser {
       default:
         return false;
     }
+  }
+
+  private boolean peekImportCall() {
+    return peek(TokenType.IMPORT) && peek(1, TokenType.OPEN_PAREN);
   }
 
   // 11.2 Left hand side expression

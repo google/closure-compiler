@@ -468,6 +468,12 @@ public class CodeGenerator {
         add(n.getString());
         break;
 
+      case DYNAMIC_IMPORT:
+        add("import(");
+        addExpr(first, NodeUtil.precedence(type), context);
+        add(")");
+        break;
+
         // CLASS -> NAME,EXPR|EMPTY,BLOCK
       case CLASS:
         {
