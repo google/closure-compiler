@@ -671,7 +671,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             } else if (!this.hasGoogProvideOrModule
                 && (v == null
                     || (v.getNameNode() == null && v.getNameNode().getFirstChild() != n))) {
-              errors.add(JSError.make(qNameRoot, SUSPICIOUS_EXPORTS_ASSIGNMENT));
+              errors.add(t.makeError(qNameRoot, SUSPICIOUS_EXPORTS_ASSIGNMENT));
             }
           } else {
             exports.add(new ExportInfo(n, t.getScope()));
@@ -731,7 +731,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     private void visitRequireEnsureCall(NodeTraversal t, Node call) {
       if (call.getChildCount() != 3) {
         compiler.report(
-            JSError.make(
+            t.makeError(
                 call,
                 UNKNOWN_REQUIRE_ENSURE,
                 "Expected the function to have 2 arguments but instead found {0}",
@@ -742,7 +742,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       Node dependencies = call.getSecondChild();
       if (!dependencies.isArrayLit()) {
         compiler.report(
-            JSError.make(
+            t.makeError(
                 dependencies,
                 UNKNOWN_REQUIRE_ENSURE,
                 "The first argument must be an array literal of string literals."));
@@ -752,7 +752,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       for (Node dep : dependencies.children()) {
         if (!dep.isString()) {
           compiler.report(
-              JSError.make(
+              t.makeError(
                   dep,
                   UNKNOWN_REQUIRE_ENSURE,
                   "The first argument must be an array literal of string literals."));
@@ -765,7 +765,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           && callback.getSecondChild().getFirstChild().isName()
           && "require".equals(callback.getSecondChild().getFirstChild().getString()))) {
         compiler.report(
-            JSError.make(
+            t.makeError(
                 callback,
                 UNKNOWN_REQUIRE_ENSURE,
                 "The second argument must be a function"

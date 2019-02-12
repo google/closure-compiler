@@ -200,19 +200,19 @@ class AngularPass extends AbstractPostOrderCallback
   }
 
   @Override
-  public void visit(NodeTraversal unused, Node n, Node parent) {
+  public void visit(NodeTraversal t, Node n, Node parent) {
     JSDocInfo docInfo = n.getJSDocInfo();
     if (docInfo != null && docInfo.isNgInject()) {
-      addNode(n);
+      addNode(n, t);
     }
   }
 
   /**
    * Add node to the list of injectables.
-   *
    * @param n node to add.
+   * @param t node traversal instance.
    */
-  private void addNode(Node n) {
+  private void addNode(Node n, NodeTraversal t) {
     Node target = null;
     Node fn = null;
     String name = null;
@@ -223,7 +223,7 @@ class AngularPass extends AbstractPostOrderCallback
       // a = b = c = function() {}
       case ASSIGN:
         if (!n.getFirstChild().isQualifiedName()) {
-          compiler.report(JSError.make(n, INJECTED_FUNCTION_ON_NON_QNAME));
+          compiler.report(t.makeError(n, INJECTED_FUNCTION_ON_NON_QNAME));
           return;
         }
         name = n.getFirstChild().getQualifiedName();
@@ -289,14 +289,14 @@ class AngularPass extends AbstractPostOrderCallback
     }
 
     if (fn == null || !fn.isFunction()) {
-      compiler.report(JSError.make(n, INJECT_NON_FUNCTION_ERROR));
+      compiler.report(t.makeError(n, INJECT_NON_FUNCTION_ERROR));
       return;
     }
     // report an error if the function declaration did not take place in a block or global scope
     if (!target.getParent().isScript()
         && !target.getParent().isBlock()
         && !target.getParent().isModuleBody()) {
-      compiler.report(JSError.make(n, INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR));
+      compiler.report(t.makeError(n, INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR));
       return;
     }
     // checks that name is present, which must always be the case unless the

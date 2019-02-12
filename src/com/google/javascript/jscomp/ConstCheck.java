@@ -70,7 +70,7 @@ class ConstCheck extends AbstractPostOrderCallback
               initializedConstants.add(var);
             } else if (n.hasChildren()) {
               if (!initializedConstants.add(var)) {
-                reportError(n, var, name);
+                reportError(t, n, var, name);
               }
             }
           }
@@ -96,7 +96,7 @@ class ConstCheck extends AbstractPostOrderCallback
             String name = lhs.getString();
             Var var = t.getScope().getVar(name);
             if (var.isConst() || (isConstant(var) && !initializedConstants.add(var))) {
-              reportError(n, var, name);
+              reportError(t, n, var, name);
             }
           }
           break;
@@ -110,7 +110,7 @@ class ConstCheck extends AbstractPostOrderCallback
             String name = lhs.getString();
             Var var = t.getScope().getVar(name);
             if (var.isConst() || isConstant(var)) {
-              reportError(n, var, name);
+              reportError(t, n, var, name);
             }
           }
           break;
@@ -128,13 +128,15 @@ class ConstCheck extends AbstractPostOrderCallback
     return var != null && var.isInferredConst();
   }
 
-  /** Reports a reassigned constant error. */
-  void reportError(Node n, Var var, String name) {
+  /**
+   * Reports a reassigned constant error.
+   */
+  void reportError(NodeTraversal t, Node n, Var var, String name) {
     JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
     if (info == null || !info.getSuppressions().contains("const")) {
       Node declNode = var.getNode();
       String declaredPosition = declNode.getSourceFileName() + ":" + declNode.getLineno();
-      compiler.report(JSError.make(n, CONST_REASSIGNED_VALUE_ERROR, name, declaredPosition));
+      compiler.report(t.makeError(n, CONST_REASSIGNED_VALUE_ERROR, name, declaredPosition));
     }
   }
 }

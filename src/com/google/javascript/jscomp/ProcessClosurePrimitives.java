@@ -336,7 +336,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
                 break;
               case "forwardDeclare":
                 if (validateAliasiablePrimitiveCall(t, n, methodName)) {
-                  processForwardDeclare(n, parent);
+                  processForwardDeclare(t, n, parent);
                 }
                 break;
               case "addDependency":
@@ -345,13 +345,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
                 }
                 break;
               case "setCssNameMapping":
-                processSetCssNameMapping(n, parent);
+                processSetCssNameMapping(t, n, parent);
                 break;
               default: // fall out
             }
           } else if (left.getLastChild().getString().equals("base")) {
             // maybe an "base" setup by goog.inherits
-            maybeProcessClassBaseCall(n);
+            maybeProcessClassBaseCall(t, n);
           }
         }
         break;
@@ -359,7 +359,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       case ASSIGN:
       case NAME:
         if (n.isName() && n.getString().equals("CLOSURE_DEFINES")) {
-          handleClosureDefinesValues(n);
+          handleClosureDefinesValues(t, n);
         } else {
           // If this is an assignment to a provided name, remove the provided
           // object.
@@ -376,7 +376,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
           String name = n.getFirstChild().getString();
           ProvidedName pn = providedNames.get(name);
           if (pn != null) {
-            compiler.report(JSError.make(n, CLASS_NAMESPACE_ERROR, name));
+            compiler.report(t.makeError(n, CLASS_NAMESPACE_ERROR, name));
           }
         }
         break;
@@ -388,7 +388,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
           String name = n.getFirstChild().getString();
           ProvidedName pn = providedNames.get(name);
           if (pn != null) {
-            compiler.report(JSError.make(n, FUNCTION_NAMESPACE_ERROR, name));
+            compiler.report(t.makeError(n, FUNCTION_NAMESPACE_ERROR, name));
           }
         }
         break;
@@ -399,7 +399,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
             && !parent.isAssign()
             && n.matchesQualifiedName("goog.base")
             && !n.getSourceFileName().endsWith("goog.js")) {
-          reportBadGoogBaseUse(n, "May only be called directly.");
+          reportBadGoogBaseUse(t, n, "May only be called directly.");
         }
         break;
       default:
@@ -440,17 +440,17 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     }
 
     if (!t.inGlobalHoistScope()) {
-      compiler.report(JSError.make(n, INVALID_CLOSURE_CALL_SCOPE_ERROR));
+      compiler.report(t.makeError(n, INVALID_CLOSURE_CALL_SCOPE_ERROR));
       return false;
     } else if (!n.getParent().isExprResult() && !"goog.define".equals(methodName)) {
       // If the call is in the global hoist scope, but the result is used
-      compiler.report(JSError.make(n, invalidAliasingError, GOOG + "." + methodName));
+      compiler.report(t.makeError(n, invalidAliasingError, GOOG + "." + methodName));
       return false;
     }
     return true;
   }
 
-  private void handleClosureDefinesValues(Node n) {
+  private void handleClosureDefinesValues(NodeTraversal t, Node n) {
     // var CLOSURE_DEFINES = {};
     if (NodeUtil.isNameDeclaration(n.getParent())
         && n.hasOneChild()
@@ -463,7 +463,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
             && isValidDefineValue(c.getFirstChild())) {
           builder.put(c.getString(), c.getFirstChild().cloneTree());
         } else {
-          reportBadClosureCommonDefinesDefinition(c);
+          reportBadClosureCommonDefinesDefinition(t, c);
         }
       }
       compiler.setDefaultDefineValues(ImmutableMap.copyOf(builder));
@@ -489,7 +489,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     Node left = n.getFirstChild();
     Node arg = left.getNext();
     String method = left.getFirstChild().getNext().getString();
-    if (verifyLastArgumentIsString(left, arg)) {
+    if (verifyLastArgumentIsString(t, left, arg)) {
       String ns = arg.getString();
       ProvidedName provided = providedNames.get(ns);
       if (provided == null || !provided.isExplicitlyProvided()) {
@@ -508,8 +508,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
               && !moduleGraph.dependsOn(module, providedModule)
               && !method.equals("requireType")) {
             compiler.report(
-                JSError.make(
-                    n, XMODULE_REQUIRE_ERROR, ns, providedModule.getName(), module.getName()));
+                t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
+                    providedModule.getName(),
+                    module.getName()));
           }
         }
       }
@@ -535,7 +536,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     checkState(n.isCall());
     Node left = n.getFirstChild();
     Node arg = left.getNext();
-    if (verifyProvide(left, arg)) {
+    if (verifyProvide(t, left, arg)) {
       String ns = arg.getString();
 
       maybeAddToSymbolTable(left);
@@ -547,7 +548,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
           previouslyProvided.addProvide(parent, t.getModule(), true);
         } else {
           String explicitSourceName = previouslyProvided.explicitNode.getSourceFileName();
-          compiler.report(JSError.make(n, DUPLICATE_NAMESPACE_ERROR, ns, explicitSourceName));
+          compiler.report(t.makeError(n, DUPLICATE_NAMESPACE_ERROR, ns, explicitSourceName));
         }
       } else {
         registerAnyProvidedPrefixes(ns, parent, t.getModule());
@@ -663,20 +664,20 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     t.report(n, USE_OF_GOOG_BASE);
 
     if (baseUsedInClass(n)){
-      reportBadGoogBaseUse(n, "goog.base in ES6 class is not allowed. Use super instead.");
+      reportBadGoogBaseUse(t, n, "goog.base in ES6 class is not allowed. Use super instead.");
       return;
     }
 
     Node callee = n.getFirstChild();
     Node thisArg = callee.getNext();
     if (thisArg == null || !thisArg.isThis()) {
-      reportBadGoogBaseUse(n, "First argument must be 'this'.");
+      reportBadGoogBaseUse(t, n, "First argument must be 'this'.");
       return;
     }
 
     Node enclosingFnNameNode = getEnclosingDeclNameNode(n);
     if (enclosingFnNameNode == null) {
-      reportBadGoogBaseUse(n, "Could not find enclosing method.");
+      reportBadGoogBaseUse(t, n, "Could not find enclosing method.");
       return;
     }
 
@@ -698,7 +699,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       }
 
       if (baseClassNode == null) {
-        reportBadGoogBaseUse(n, "Could not find goog.inherits for base class");
+        reportBadGoogBaseUse(
+            t, n, "Could not find goog.inherits for base class");
         return;
       }
 
@@ -712,14 +714,15 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       // Handle methods.
       Node methodNameNode = thisArg.getNext();
       if (methodNameNode == null || !methodNameNode.isString()) {
-        reportBadGoogBaseUse(n, "Second argument must name a method.");
+        reportBadGoogBaseUse(t, n, "Second argument must name a method.");
         return;
       }
 
       String methodName = methodNameNode.getString();
       String ending = ".prototype." + methodName;
       if (enclosingQname == null || !enclosingQname.endsWith(ending)) {
-        reportBadGoogBaseUse(n, "Enclosing method does not match " + methodName);
+        reportBadGoogBaseUse(
+            t, n, "Enclosing method does not match " + methodName);
         return;
       }
 
@@ -737,7 +740,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     }
   }
 
-  private void maybeProcessClassBaseCall(Node n) {
+  private void maybeProcessClassBaseCall(NodeTraversal t, Node n) {
     // Two things must hold for every base call:
     // 1) We must be calling it on "this".
     // 2) We must be calling it on a prototype method of the same name as
@@ -777,16 +780,14 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     if (enclosingFnNameNode == null || !enclosingFnNameNode.isUnscopedQualifiedName()) {
       // some unknown container method.
       if (knownClosureSubclasses.contains(baseContainer)) {
-        reportBadBaseMethodUse(n, baseContainer, "Could not find enclosing method.");
+        reportBadBaseMethodUse(t, n, baseContainer, "Could not find enclosing method.");
       } else if (baseUsedInClass(n)) {
         Node clazz = NodeUtil.getEnclosingClass(n);
         if ((clazz.getFirstChild().isName()
                 && clazz.getFirstChild().getString().equals(baseContainer))
             || (clazz.getSecondChild().isName()
                 && clazz.getSecondChild().getString().equals(baseContainer))) {
-          reportBadBaseMethodUse(
-              n,
-              clazz.getFirstChild().getString(),
+          reportBadBaseMethodUse(t, n, clazz.getFirstChild().getString(),
               "base method is not allowed in ES6 class. Use super instead.");
         }
       }
@@ -794,7 +795,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     }
 
     if (baseUsedInClass(n)) {
-      reportBadGoogBaseUse(n, "goog.base in ES6 class is not allowed. Use super instead.");
+      reportBadGoogBaseUse(t, n, "goog.base in ES6 class is not allowed. Use super instead.");
       return;
     }
 
@@ -806,8 +807,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       if (!enclosingQname.equals(baseContainer)) {
         // Report misuse of "base" methods from other known classes.
         if (knownClosureSubclasses.contains(baseContainer)) {
-          reportBadBaseMethodUse(
-              n, baseContainer, "Must be used within " + baseContainer + " methods");
+          reportBadBaseMethodUse(t, n, baseContainer, "Must be used within "
+              + baseContainer + " methods");
         }
         return;
       }
@@ -841,7 +842,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       Node callee = n.getFirstChild();
       Node thisArg = callee.getNext();
       if (thisArg == null || !thisArg.isThis()) {
-        reportBadBaseMethodUse(n, baseContainer, "First argument must be 'this'.");
+        reportBadBaseMethodUse(t, n, baseContainer,
+            "First argument must be 'this'.");
         return;
       }
 
@@ -850,7 +852,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       if (methodNameNode == null
           || !methodNameNode.isString()
           || !methodNameNode.getString().equals("constructor")) {
-        reportBadBaseMethodUse(n, baseContainer, "Second argument must be 'constructor'.");
+        reportBadBaseMethodUse(t, n, baseContainer,
+            "Second argument must be 'constructor'.");
         return;
       }
 
@@ -874,8 +877,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
           getFirstFirstChild().matchesQualifiedName(baseContainer);
       if (misuseOfBase) {
         // Report misuse of "base" methods from other known classes.
-        reportBadBaseMethodUse(
-            n, baseContainer, "Must be used within " + baseContainer + " methods");
+        reportBadBaseMethodUse(t, n, baseContainer, "Must be used within "
+            + baseContainer + " methods");
         return;
       }
 
@@ -883,21 +886,24 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       Node callee = n.getFirstChild();
       Node thisArg = callee.getNext();
       if (thisArg == null || !thisArg.isThis()) {
-        reportBadBaseMethodUse(n, baseContainer, "First argument must be 'this'.");
+        reportBadBaseMethodUse(t, n, baseContainer,
+            "First argument must be 'this'.");
         return;
       }
 
       // Handle methods.
       Node methodNameNode = thisArg.getNext();
       if (methodNameNode == null || !methodNameNode.isString()) {
-        reportBadBaseMethodUse(n, baseContainer, "Second argument must name a method.");
+        reportBadBaseMethodUse(t, n, baseContainer,
+            "Second argument must name a method.");
         return;
       }
 
       String methodName = methodNameNode.getString();
       String ending = ".prototype." + methodName;
       if (enclosingQname == null || !enclosingQname.endsWith(ending)) {
-        reportBadBaseMethodUse(n, baseContainer, "Enclosing method does not match " + methodName);
+        reportBadBaseMethodUse(t, n, baseContainer,
+            "Enclosing method does not match " + methodName);
         return;
       }
 
@@ -948,18 +954,21 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /** Reports an incorrect use of super-method calling. */
-  private void reportBadGoogBaseUse(Node n, String extraMessage) {
-    compiler.report(JSError.make(n, GOOG_BASE_CLASS_ERROR, extraMessage));
+  private void reportBadGoogBaseUse(
+      NodeTraversal t, Node n, String extraMessage) {
+    compiler.report(t.makeError(n, GOOG_BASE_CLASS_ERROR, extraMessage));
   }
 
   /** Reports an incorrect use of super-method calling. */
-  private void reportBadBaseMethodUse(Node n, String className, String extraMessage) {
-    compiler.report(JSError.make(n, BASE_CLASS_ERROR, className, extraMessage));
+  private void reportBadBaseMethodUse(
+      NodeTraversal t, Node n, String className, String extraMessage) {
+    compiler.report(t.makeError(n, BASE_CLASS_ERROR, className, extraMessage));
   }
 
   /** Reports an incorrect CLOSURE_DEFINES definition. */
-  private void reportBadClosureCommonDefinesDefinition(Node n) {
-    compiler.report(JSError.make(n, CLOSURE_DEFINES_ERROR));
+  private void reportBadClosureCommonDefinesDefinition(
+      NodeTraversal t, Node n) {
+    compiler.report(t.makeError(n, CLOSURE_DEFINES_ERROR));
   }
 
   /**
@@ -1005,16 +1014,16 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /**
-   * Processes a call to goog.setCssNameMapping(). Either the argument to goog.setCssNameMapping()
-   * is valid, in which case it will be used to create a CssRenamingMap for the compiler of this
-   * CompilerPass, or it is invalid and a JSCompiler error will be reported.
-   *
+   * Processes a call to goog.setCssNameMapping(). Either the argument to
+   * goog.setCssNameMapping() is valid, in which case it will be used to create
+   * a CssRenamingMap for the compiler of this CompilerPass, or it is invalid
+   * and a JSCompiler error will be reported.
    * @see #visit(NodeTraversal, Node, Node)
    */
-  private void processSetCssNameMapping(Node n, Node parent) {
+  private void processSetCssNameMapping(NodeTraversal t, Node n, Node parent) {
     Node left = n.getFirstChild();
     Node arg = left.getNext();
-    if (verifySetCssNameMapping(left, arg)) {
+    if (verifySetCssNameMapping(t, left, arg)) {
       // Translate OBJECTLIT into SubstitutionMap. All keys and
       // values must be strings, or an error will be thrown.
       final Map<String, String> cssNames = new HashMap<>();
@@ -1025,7 +1034,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
         if (!key.isStringKey()
             || value == null
             || !value.isString()) {
-          compiler.report(JSError.make(n, NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR));
+          compiler.report(
+              t.makeError(n,
+                  NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR));
           return;
         }
         cssNames.put(key.getString(), value.getString());
@@ -1040,7 +1051,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       try {
         style = CssRenamingMap.Style.valueOf(styleStr);
       } catch (IllegalArgumentException e) {
-        compiler.report(JSError.make(n, INVALID_STYLE_ERROR, styleStr));
+        compiler.report(
+            t.makeError(n, INVALID_STYLE_ERROR, styleStr));
         return;
       }
 
@@ -1053,7 +1065,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
           }
         }
         if (!errors.isEmpty()) {
-          compiler.report(JSError.make(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
+          compiler.report(
+            t.makeError(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
         }
       } else if (style == CssRenamingMap.Style.BY_WHOLE) {
         // Verifying things is a lot trickier here. We just do a quick
@@ -1074,7 +1087,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
           }
         }
         if (!errors.isEmpty()) {
-          compiler.report(JSError.make(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
+          compiler.report(
+            t.makeError(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
         }
       }
 
@@ -1100,24 +1114,21 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /**
-   * Verifies that a provide method call has exactly one argument, and that it's a string literal
-   * and that the contents of the string are valid JS tokens. Reports a compile error if it doesn't.
+   * Verifies that a provide method call has exactly one argument,
+   * and that it's a string literal and that the contents of the string are
+   * valid JS tokens. Reports a compile error if it doesn't.
    *
    * @return Whether the argument checked out okay
    */
-  private boolean verifyProvide(Node methodName, Node arg) {
-    if (!verifyLastArgumentIsString(methodName, arg)) {
+  private boolean verifyProvide(NodeTraversal t, Node methodName, Node arg) {
+    if (!verifyLastArgumentIsString(t, methodName, arg)) {
       return false;
     }
 
     if (!NodeUtil.isValidQualifiedName(
         compiler.getOptions().getLanguageIn().toFeatureSet(), arg.getString())) {
-      compiler.report(
-          JSError.make(
-              arg,
-              INVALID_PROVIDE_ERROR,
-              arg.getString(),
-              compiler.getOptions().getLanguageIn().toString()));
+      compiler.report(t.makeError(arg, INVALID_PROVIDE_ERROR,
+          arg.getString(), compiler.getOptions().getLanguageIn().toString()));
       return false;
     }
 
@@ -1135,7 +1146,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     // validate(Un)aliasablePrimitiveCall.
     // TODO(sdh): loosen this restriction if the results are assigned?
     if (!compiler.getOptions().shouldPreserveGoogModule() && !t.inGlobalHoistScope()) {
-      compiler.report(JSError.make(methodName.getParent(), INVALID_CLOSURE_CALL_SCOPE_ERROR));
+      compiler.report(t.makeError(methodName.getParent(), INVALID_CLOSURE_CALL_SCOPE_ERROR));
       return false;
     }
 
@@ -1145,33 +1156,33 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     } else if (parent.isName() && NodeUtil.isNameDeclaration(parent.getParent())) {
       parent = parent.getParent();
     } else if (!parent.isExprResult()) {
-      compiler.report(JSError.make(methodName.getParent(), INVALID_CLOSURE_CALL_SCOPE_ERROR));
+      compiler.report(t.makeError(methodName.getParent(), INVALID_CLOSURE_CALL_SCOPE_ERROR));
       return false;
     }
 
     // Verify first arg
     Node arg = args;
-    if (!verifyNotNull(methodName, arg) || !verifyOfType(methodName, arg, Token.STRING)) {
+    if (!verifyNotNull(t, methodName, arg) || !verifyOfType(t, methodName, arg, Token.STRING)) {
       return false;
     }
 
     // Verify second arg
     arg = arg.getNext();
     if (!args.isFromExterns()
-        && (!verifyNotNull(methodName, arg) || !verifyIsLast(methodName, arg))) {
+        && (!verifyNotNull(t, methodName, arg) || !verifyIsLast(t, methodName, arg))) {
       return false;
     }
 
     String name = args.getString();
     if (!NodeUtil.isValidQualifiedName(
         compiler.getOptions().getLanguageIn().toFeatureSet(), name)) {
-      compiler.report(JSError.make(args, INVALID_DEFINE_NAME_ERROR, name));
+      compiler.report(t.makeError(args, INVALID_DEFINE_NAME_ERROR, name));
       return false;
     }
 
     JSDocInfo info = (parent.isExprResult() ? parent.getFirstChild() : parent).getJSDocInfo();
     if (info == null || !info.isDefine()) {
-      compiler.report(JSError.make(parent, MISSING_DEFINE_ANNOTATION));
+      compiler.report(t.makeError(parent, MISSING_DEFINE_ANNOTATION));
       return false;
     }
     return true;
@@ -1200,8 +1211,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     compiler.reportChangeToEnclosingScope(emptyNode);
   }
 
-  /** Process a goog.forwardDeclare() call and record the specified forward declaration. */
-  private void processForwardDeclare(Node n, Node parent) {
+  /**
+   * Process a goog.forwardDeclare() call and record the specified forward
+   * declaration.
+   */
+  private void processForwardDeclare(NodeTraversal t, Node n, Node parent) {
     CodingConvention convention = compiler.getCodingConvention();
 
     String typeDeclaration = null;
@@ -1210,7 +1224,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
           convention.identifyTypeDeclarationCall(n));
     } catch (NullPointerException | NoSuchElementException | IllegalArgumentException e) {
       compiler.report(
-          JSError.make(
+          t.makeError(
               n,
               INVALID_FORWARD_DECLARE,
               "A single type could not identified for the goog.forwardDeclare statement"));
@@ -1225,41 +1239,53 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /**
-   * Verifies that a method call has exactly one argument, and that it's a string literal. Reports a
-   * compile error if it doesn't.
+   * Verifies that a method call has exactly one argument, and that it's a
+   * string literal. Reports a compile error if it doesn't.
    *
    * @return Whether the argument checked out okay
    */
-  private boolean verifyLastArgumentIsString(Node methodName, Node arg) {
-    return verifyNotNull(methodName, arg)
-        && verifyOfType(methodName, arg, Token.STRING)
-        && verifyIsLast(methodName, arg);
+  private boolean verifyLastArgumentIsString(
+      NodeTraversal t, Node methodName, Node arg) {
+    return verifyNotNull(t, methodName, arg)
+        && verifyOfType(t, methodName, arg, Token.STRING)
+        && verifyIsLast(t, methodName, arg);
   }
 
-  /** @return Whether the argument checked out okay */
-  private boolean verifyNotNull(Node methodName, Node arg) {
+  /**
+   * @return Whether the argument checked out okay
+   */
+  private boolean verifyNotNull(NodeTraversal t, Node methodName, Node arg) {
     if (arg == null) {
-      compiler.report(JSError.make(methodName, NULL_ARGUMENT_ERROR, methodName.getQualifiedName()));
+      compiler.report(
+          t.makeError(methodName,
+              NULL_ARGUMENT_ERROR, methodName.getQualifiedName()));
       return false;
     }
     return true;
   }
 
-  /** @return Whether the argument checked out okay */
-  private boolean verifyOfType(Node methodName, Node arg, Token desiredType) {
+  /**
+   * @return Whether the argument checked out okay
+   */
+  private boolean verifyOfType(NodeTraversal t, Node methodName,
+      Node arg, Token desiredType) {
     if (arg.getToken() != desiredType) {
       compiler.report(
-          JSError.make(methodName, INVALID_ARGUMENT_ERROR, methodName.getQualifiedName()));
+          t.makeError(methodName,
+              INVALID_ARGUMENT_ERROR, methodName.getQualifiedName()));
       return false;
     }
     return true;
   }
 
-  /** @return Whether the argument checked out okay */
-  private boolean verifyIsLast(Node methodName, Node arg) {
+  /**
+   * @return Whether the argument checked out okay
+   */
+  private boolean verifyIsLast(NodeTraversal t, Node methodName, Node arg) {
     if (arg.getNext() != null) {
       compiler.report(
-          JSError.make(methodName, TOO_MANY_ARGUMENTS_ERROR, methodName.getQualifiedName()));
+          t.makeError(methodName,
+              TOO_MANY_ARGUMENTS_ERROR, methodName.getQualifiedName()));
       return false;
     }
     return true;
@@ -1270,7 +1296,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
    *
    * @return Whether the arguments checked out okay
    */
-  private boolean verifySetCssNameMapping(Node methodName, Node firstArg) {
+  private boolean verifySetCssNameMapping(NodeTraversal t, Node methodName,
+      Node firstArg) {
     DiagnosticType diagnostic = null;
     if (firstArg == null) {
       diagnostic = NULL_ARGUMENT_ERROR;
@@ -1285,7 +1312,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       }
     }
     if (diagnostic != null) {
-      compiler.report(JSError.make(methodName, diagnostic, methodName.getQualifiedName()));
+      compiler.report(
+          t.makeError(methodName,
+              diagnostic, methodName.getQualifiedName()));
       return false;
     }
     return true;

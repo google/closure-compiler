@@ -344,10 +344,10 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     @Nullable PropertyReference propRef = createPropertyReference(node);
 
     checkDeprecation(node, propRef, identifierBehaviour, traversal);
-    checkVisibility(node, propRef, identifierBehaviour, traversal.getScope());
-    checkConstantProperty(propRef, identifierBehaviour);
+    checkVisibility(node, propRef, identifierBehaviour, traversal);
+    checkConstantProperty(propRef, identifierBehaviour, traversal);
 
-    checkFinalClassOverrides(node);
+    checkFinalClassOverrides(node, traversal);
 
     @Nullable Node accessControlRoot = primaryAccessControlScopeRootFor(node);
     if (accessControlRoot != null) {
@@ -389,13 +389,13 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       Node node,
       @Nullable PropertyReference propRef,
       IdentifierBehaviour identifierBehaviour,
-      Scope scope) {
+      NodeTraversal traversal) {
     if (identifierBehaviour.equals(IdentifierBehaviour.ES6_CLASS_INVOCATION)) {
-      checkEs6ConstructorInvocationVisibility(node);
+      checkEs6ConstructorInvocationVisibility(node, traversal);
     }
 
     if (!identifierBehaviour.equals(IdentifierBehaviour.ES5_CLASS_NAMESPACE)) {
-      checkNameVisibility(scope, node);
+      checkNameVisibility(traversal, node);
     }
 
     if (node.getParent().isObjectLit()) {
@@ -408,7 +408,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
         case GETTER_DEF:
         case SETTER_DEF:
         case MEMBER_FUNCTION_DEF:
-          checkKeyVisibilityConvention(node, node.getParent());
+          checkKeyVisibilityConvention(traversal, node, node.getParent());
           break;
 
         default:
@@ -417,7 +417,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     }
 
     if (propRef != null && !identifierBehaviour.equals(IdentifierBehaviour.ES5_CLASS_NAMESPACE)) {
-      checkPropertyVisibility(propRef);
+      checkPropertyVisibility(traversal, propRef);
     }
   }
 
@@ -439,7 +439,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     }
 
     DiagnosticType message = deprecationInfo.isEmpty() ? DEPRECATED_CLASS : DEPRECATED_CLASS_REASON;
-    compiler.report(JSError.make(n, message, instanceType.toString(), deprecationInfo));
+    compiler.report(t.makeError(n, message, instanceType.toString(), deprecationInfo));
   }
 
   /** Checks the given NAME node to ensure that access restrictions are obeyed. */
@@ -458,9 +458,11 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     if (docInfo != null && docInfo.isDeprecated()) {
       if (docInfo.getDeprecationReason() != null) {
         compiler.report(
-            JSError.make(n, DEPRECATED_NAME_REASON, n.getString(), docInfo.getDeprecationReason()));
+            t.makeError(n, DEPRECATED_NAME_REASON, n.getString(),
+                docInfo.getDeprecationReason()));
       } else {
-        compiler.report(JSError.make(n, DEPRECATED_NAME, n.getString()));
+        compiler.report(
+            t.makeError(n, DEPRECATED_NAME, n.getString()));
       }
     }
   }
@@ -487,7 +489,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
 
         if (!deprecationInfo.isEmpty()) {
           compiler.report(
-              JSError.make(
+              t.makeError(
                   propRef.getSourceNode(),
                   DEPRECATED_PROP_REASON,
                   propertyName,
@@ -495,7 +497,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
                   deprecationInfo));
         } else {
           compiler.report(
-              JSError.make(
+              t.makeError(
                   propRef.getSourceNode(),
                   DEPRECATED_PROP,
                   propertyName,
@@ -513,9 +515,10 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   /**
    * Determines whether the given OBJECTLIT property visibility violates the coding convention.
    *
+   * @param t The current traversal.
    * @param key The objectlit key node (STRING_KEY, GETTER_DEF, SETTER_DEF, MEMBER_FUNCTION_DEF).
    */
-  private void checkKeyVisibilityConvention(Node key, Node parent) {
+  private void checkKeyVisibilityConvention(NodeTraversal t, Node key, Node parent) {
     JSDocInfo info = key.getJSDocInfo();
     if (info == null) {
       return;
@@ -536,22 +539,22 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     // Visibility is declared to be something other than private.
     if (declaredVisibility != Visibility.INHERITED
         && declaredVisibility != Visibility.PRIVATE) {
-      compiler.report(JSError.make(key, CONVENTION_MISMATCH));
+      compiler.report(t.makeError(key, CONVENTION_MISMATCH));
     }
   }
 
   /**
    * Reports an error if the given name is not visible in the current context.
    *
-   * @param scope The current scope.
+   * @param t The current traversal.
    * @param name The name node.
    */
-  private void checkNameVisibility(Scope scope, Node name) {
+  private void checkNameVisibility(NodeTraversal t, Node name) {
     if (!name.isName()) {
       return;
     }
 
-    Var var = scope.getVar(name.getString());
+    Var var = t.getScope().getVar(name.getString());
     if (var == null) {
       return;
     }
@@ -564,21 +567,15 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       case PACKAGE:
         if (!isPackageAccessAllowed(var, name)) {
           compiler.report(
-              JSError.make(
-                  name,
-                  BAD_PACKAGE_PROPERTY_ACCESS,
-                  name.getString(),
-                  var.getSourceFile().getName()));
+              t.makeError(name, BAD_PACKAGE_PROPERTY_ACCESS,
+                  name.getString(), var.getSourceFile().getName()));
         }
         break;
       case PRIVATE:
         if (!isPrivateAccessAllowed(var, name)) {
           compiler.report(
-              JSError.make(
-                  name,
-                  BAD_PRIVATE_GLOBAL_ACCESS,
-                  name.getString(),
-                  var.getSourceFile().getName()));
+              t.makeError(name, BAD_PRIVATE_GLOBAL_ACCESS,
+                  name.getString(), var.getSourceFile().getName()));
         }
         break;
       default:
@@ -633,13 +630,14 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       Visibility overriding,
       Visibility overridden,
       @Nullable Visibility fileOverview,
+      NodeTraversal t,
       PropertyReference propRef) {
     if (overriding == Visibility.INHERITED
         && overriding != overridden
         && fileOverview != null
         && fileOverview != Visibility.INHERITED) {
       compiler.report(
-          JSError.make(
+          t.makeError(
               propRef.getSourceNode(),
               BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY,
               propRef.getName(),
@@ -656,7 +654,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   }
 
   /** Checks if a constructor is trying to override a final class. */
-  private void checkFinalClassOverrides(Node ctor) {
+  private void checkFinalClassOverrides(Node ctor, NodeTraversal t) {
     if (!isFunctionOrClass(ctor)) {
       return;
     }
@@ -666,7 +664,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       JSType finalParentClass = getSuperClassInstanceIfFinal(bestInstanceTypeForMethodOrCtor(ctor));
       if (finalParentClass != null) {
         compiler.report(
-            JSError.make(
+            t.makeError(
                 ctor,
                 EXTEND_FINAL_CLASS,
                 type.getDisplayName(),
@@ -677,7 +675,9 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
 
   /** Determines whether the given constant property got reassigned */
   private void checkConstantProperty(
-      @Nullable PropertyReference propRef, IdentifierBehaviour identifierBehaviour) {
+      @Nullable PropertyReference propRef,
+      IdentifierBehaviour identifierBehaviour,
+      NodeTraversal t) {
     if (propRef == null || identifierBehaviour.equals(IdentifierBehaviour.ES5_CLASS_NAMESPACE)) {
       return;
     }
@@ -695,8 +695,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     // Check whether constant properties are reassigned
     if (isConstant) {
       if (propRef.isDeletion()) {
-        compiler.report(
-            JSError.make(propRef.getSourceNode(), CONST_PROPERTY_DELETED, propertyName));
+        compiler.report(t.makeError(propRef.getSourceNode(), CONST_PROPERTY_DELETED, propertyName));
         return;
       }
 
@@ -715,7 +714,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
             || initializedConstantProperties.containsEntry(
                 getCanonicalInstance(oType), propertyName)) {
           compiler.report(
-              JSError.make(propRef.getSourceNode(), CONST_PROPERTY_REASSIGNED_VALUE, propertyName));
+              t.makeError(propRef.getSourceNode(), CONST_PROPERTY_REASSIGNED_VALUE, propertyName));
           break;
         }
         oType = oType.getImplicitPrototype();
@@ -761,7 +760,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   }
 
   /** Reports an error if the given property is not visible in the current context. */
-  private void checkPropertyVisibility(PropertyReference propRef) {
+  private void checkPropertyVisibility(NodeTraversal t, PropertyReference propRef) {
     JSType rawReferenceType = typeOrUnknown(propRef.getReceiverType()).autobox();
     ObjectType referenceType = castToObject(rawReferenceType);
 
@@ -769,7 +768,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     boolean isPrivateByConvention = isPrivateByConvention(propertyName);
 
     if (isPrivateByConvention && propertyIsDeclaredButNotPrivate(propRef)) {
-      compiler.report(JSError.make(propRef.getSourceNode(), CONVENTION_MISMATCH));
+      compiler.report(t.makeError(propRef.getSourceNode(), CONVENTION_MISMATCH));
       return;
     }
 
@@ -797,7 +796,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       Visibility overriding = getOverridingPropertyVisibility(propRef);
       if (overriding != null) {
         checkOverriddenPropertyVisibilityMismatch(
-            overriding, visibility, fileOverviewVisibility, propRef);
+            overriding, visibility, fileOverviewVisibility, t, propRef);
       }
     }
 
@@ -823,10 +822,10 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       boolean sameInput = referenceSource != null
           && referenceSource.getName().equals(definingSource.getName());
       checkOverriddenPropertyVisibility(
-          propRef, visibility, fileOverviewVisibility, reportType, sameInput);
+          t, propRef, visibility, fileOverviewVisibility, reportType, sameInput);
     } else {
       checkNonOverriddenPropertyVisibility(
-          propRef, visibility, reportType, referenceSource, definingSource);
+          t, propRef, visibility, reportType, referenceSource, definingSource);
     }
   }
 
@@ -835,7 +834,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
    *
    * <p>Precondition: {@code target} has an ES6 class {@link JSType}.
    */
-  private void checkEs6ConstructorInvocationVisibility(Node target) {
+  private void checkEs6ConstructorInvocationVisibility(Node target, NodeTraversal traversal) {
     FunctionType ctorType = target.getJSType().toMaybeFunctionType();
     ObjectType prototypeType = ctorType.getPrototype();
 
@@ -877,6 +876,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
             : annotatedCtorVisibility;
 
     checkNonOverriddenPropertyVisibility(
+        traversal,
         fauxCtorRef,
         effectiveCtorVisibility,
         ctorType,
@@ -898,6 +898,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   }
 
   private void checkOverriddenPropertyVisibility(
+      NodeTraversal t,
       PropertyReference propRef,
       Visibility visibility,
       Visibility fileOverviewVisibility,
@@ -914,12 +915,12 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     //     a file with default visibility in the @fileoverview block.
     if (visibility == Visibility.PRIVATE && !sameInput) {
       compiler.report(
-          JSError.make(propRef.getSourceNode(), PRIVATE_OVERRIDE, objectType.toString()));
+          t.makeError(propRef.getSourceNode(), PRIVATE_OVERRIDE, objectType.toString()));
     } else if (overridingVisibility != Visibility.INHERITED
         && overridingVisibility != visibility
         && fileOverviewVisibility == null) {
       compiler.report(
-          JSError.make(
+          t.makeError(
               propRef.getSourceNode(),
               VISIBILITY_MISMATCH,
               visibility.name(),
@@ -929,6 +930,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   }
 
   private void checkNonOverriddenPropertyVisibility(
+      NodeTraversal t,
       PropertyReference propRef,
       Visibility visibility,
       JSType objectType,
@@ -945,13 +947,13 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
 
     switch (visibility) {
       case PACKAGE:
-        checkPackagePropertyVisibility(propRef, referenceSource, definingSource);
+        checkPackagePropertyVisibility(t, propRef, referenceSource, definingSource);
         break;
       case PRIVATE:
-        checkPrivatePropertyVisibility(propRef, ownerType);
+        checkPrivatePropertyVisibility(t, propRef, ownerType);
         break;
       case PROTECTED:
-        checkProtectedPropertyVisibility(propRef, ownerType);
+        checkProtectedPropertyVisibility(t, propRef, ownerType);
         break;
       default:
         break;
@@ -959,6 +961,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   }
 
   private void checkPackagePropertyVisibility(
+      NodeTraversal t,
       PropertyReference propRef,
       StaticSourceFile referenceSource,
       StaticSourceFile definingSource) {
@@ -969,7 +972,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
         || defPackage == null
         || !refPackage.equals(defPackage)) {
       compiler.report(
-          JSError.make(
+          t.makeError(
               propRef.getSourceNode(),
               BAD_PACKAGE_PROPERTY_ACCESS,
               propRef.getName(),
@@ -978,6 +981,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   }
 
   private void checkPrivatePropertyVisibility(
+      NodeTraversal t,
       PropertyReference propRef,
       @Nullable ObjectType ownerType) {
 
@@ -989,7 +993,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
             ? propRef.getReadableTypeNameOrDefault()
             : ownerType.toString();
     compiler.report(
-        JSError.make(
+        t.makeError(
             propRef.getSourceNode(),
             BAD_PRIVATE_PROPERTY_ACCESS,
             propRef.getName(),
@@ -997,7 +1001,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   }
 
   private void checkProtectedPropertyVisibility(
-      PropertyReference propRef, @Nullable ObjectType ownerType) {
+      NodeTraversal t, PropertyReference propRef, @Nullable ObjectType ownerType) {
     // There are 3 types of legal accesses of a protected property:
     // 1) Accesses in the same file
     // 2) Overriding the property in a subclass
@@ -1014,7 +1018,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     }
 
     compiler.report(
-        JSError.make(
+        t.makeError(
             propRef.getSourceNode(),
             BAD_PROTECTED_PROPERTY_ACCESS,
             propRef.getName(),

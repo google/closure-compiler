@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.CheckPathsBetweenNodes;
 import com.google.javascript.jscomp.ControlFlowGraph;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
-import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
@@ -82,9 +81,9 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
         && !canReturnNull(t.getControlFlowGraph())) {
       String fnName = NodeUtil.getNearestFunctionName(parent);
       if (fnName != null && !fnName.isEmpty()) {
-        compiler.report(JSError.make(parent, NULLABLE_RETURN_WITH_NAME, fnName));
+        compiler.report(t.makeError(parent, NULLABLE_RETURN_WITH_NAME, fnName));
       } else {
-        compiler.report(JSError.make(parent, NULLABLE_RETURN));
+        compiler.report(t.makeError(parent, NULLABLE_RETURN));
       }
     }
   }

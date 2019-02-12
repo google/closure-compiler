@@ -252,7 +252,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     }
 
     if (msgNode == null) {
-      compiler.report(JSError.make(node, MESSAGE_HAS_NO_VALUE, messageKey));
+      compiler.report(
+          traversal.makeError(node, MESSAGE_HAS_NO_VALUE, messageKey));
       return;
     }
 
@@ -272,7 +273,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     } else if (style != JsMessage.Style.LEGACY) {
       // TODO(johnlenz): promote this to an error once existing conflicts have been
       // cleaned up.
-      compiler.report(JSError.make(node, MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX));
+      compiler.report(traversal.makeError(node,
+          MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX));
       if (style == JsMessage.Style.CLOSURE) {
         // Don't extract the message if we aren't accepting LEGACY messages
         return;
@@ -299,7 +301,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         extractMessageFrom(builder, msgNode, node);
       }
     } catch (MalformedException ex) {
-      compiler.report(JSError.make(ex.getNode(), MESSAGE_TREE_MALFORMED, ex.getMessage()));
+      compiler.report(traversal.makeError(ex.getNode(),
+          MESSAGE_TREE_MALFORMED, ex.getMessage()));
       return;
     }
 
@@ -316,7 +319,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
     if (extractedMessage.isEmpty()) {
       // value of the message is an empty string. Translators do not like it.
-      compiler.report(JSError.make(node, MESSAGE_HAS_NO_TEXT, messageKey));
+      compiler.report(traversal.makeError(node, MESSAGE_HAS_NO_TEXT,
+          messageKey));
     }
 
     // New-style messages must have descriptions. We don't emit a warning
@@ -327,7 +331,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     if (isNewStyleMessage
         && (desc == null || desc.trim().isEmpty())
         && !extractedMessage.isExternal()) {
-      compiler.report(JSError.make(node, MESSAGE_HAS_NO_DESCRIPTION, messageKey));
+      compiler.report(traversal.makeError(node, MESSAGE_HAS_NO_DESCRIPTION,
+          messageKey));
     }
 
     JsMessageDefinition msgDefinition = new JsMessageDefinition(msgNode);
@@ -823,7 +828,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     if (call.getChildCount() != 3
         || !call.getSecondChild().isName()
         || !call.getLastChild().isName()) {
-      compiler.report(JSError.make(call, BAD_FALLBACK_SYNTAX));
+      compiler.report(t.makeError(call, BAD_FALLBACK_SYNTAX));
       return;
     }
 
@@ -834,7 +839,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     }
     JsMessage firstMessage = getTrackedMessage(t, name);
     if (firstMessage == null) {
-      compiler.report(JSError.make(firstArg, FALLBACK_ARG_ERROR, name));
+      compiler.report(t.makeError(firstArg, FALLBACK_ARG_ERROR, name));
       return;
     }
 
@@ -845,7 +850,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     }
     JsMessage secondMessage = getTrackedMessage(t, name);
     if (secondMessage == null) {
-      compiler.report(JSError.make(secondArg, FALLBACK_ARG_ERROR, name));
+      compiler.report(t.makeError(secondArg, FALLBACK_ARG_ERROR, name));
       return;
     }
 

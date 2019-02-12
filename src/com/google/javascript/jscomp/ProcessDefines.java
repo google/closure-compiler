@@ -337,8 +337,8 @@ class ProcessDefines implements CompilerPass {
               // For defines, it's an error if a simple name is assigned
               // before it's declared
               Node errNode = val == null ? valParent : val;
-              compiler.report(JSError.make(errNode, INVALID_DEFINE_INIT_ERROR, fullName));
-            } else if (processDefineAssignment(fullName, val, valParent)) {
+              compiler.report(t.makeError(errNode, INVALID_DEFINE_INIT_ERROR, fullName));
+            } else if (processDefineAssignment(t, fullName, val, valParent)) {
               // remove the assignment so that the variable is still declared,
               // but no longer assigned to a value, e.g.,
               // DEF_FOO = 5; // becomes "5;"
@@ -366,7 +366,8 @@ class ProcessDefines implements CompilerPass {
 
       if (!t.inGlobalScope() && n.getJSDocInfo() != null && n.getJSDocInfo().isDefine()) {
         // warn about @define annotations in local scopes
-        compiler.report(JSError.make(n, NON_GLOBAL_DEFINE_INIT_ERROR, ""));
+        compiler.report(
+            t.makeError(n, NON_GLOBAL_DEFINE_INIT_ERROR, ""));
       }
 
       if (lvalueToRemoveLater == n) {
@@ -444,19 +445,22 @@ class ProcessDefines implements CompilerPass {
     /**
      * Tracks the given define.
      *
+     * @param t The current traversal, for context.
      * @param name The full name for this define.
      * @param value The value assigned to the define.
      * @param valueParent The parent node of value.
      * @return Whether we should remove this assignment from the parse tree.
      */
-    private boolean processDefineAssignment(String name, Node value, Node valueParent) {
+    private boolean processDefineAssignment(NodeTraversal t,
+        String name, Node value, Node valueParent) {
       boolean fromExterns = valueParent.isFromExterns();
       if (!fromExterns
           && (value == null || !NodeUtil.isValidDefineValue(value, allDefines.keySet()))) {
         Node errNode = value == null ? valueParent : value;
-        compiler.report(JSError.make(errNode, INVALID_DEFINE_INIT_ERROR, name));
+        compiler.report(t.makeError(errNode, INVALID_DEFINE_INIT_ERROR, name));
       } else if (!isAssignAllowed()) {
-        compiler.report(JSError.make(valueParent, NON_GLOBAL_DEFINE_INIT_ERROR, name));
+        compiler.report(
+            t.makeError(valueParent, NON_GLOBAL_DEFINE_INIT_ERROR, name));
       } else {
         DefineInfo info = allDefines.get(name);
         if (info == null) {
@@ -472,11 +476,8 @@ class ProcessDefines implements CompilerPass {
           // The define was already initialized, and this is an unsafe
           // re-assignment.
           compiler.report(
-              JSError.make(
-                  valueParent,
-                  DEFINE_NOT_ASSIGNABLE_ERROR,
-                  name,
-                  info.getReasonWhyNotAssignable()));
+              t.makeError(valueParent, DEFINE_NOT_ASSIGNABLE_ERROR,
+                  name, info.getReasonWhyNotAssignable()));
         }
       }
 

@@ -56,7 +56,7 @@ class CheckMissingGetCssName
   }
 
   @Override
-  public void visit(NodeTraversal unused, Node n, Node parent) {
+  public void visit(NodeTraversal t, Node n, Node parent) {
     if ((n.isString() || n.isTemplateLitString()) && !parent.isGetProp() && !parent.isRegExp()) {
       String s = n.isString() ? n.getString() : n.getCookedString();
 
@@ -78,7 +78,8 @@ class CheckMissingGetCssName
         if (insideAssignmentToIdConstant(n)) {
           continue;
         }
-        compiler.report(JSError.make(n, level, MISSING_GETCSSNAME, blacklist.group()));
+        compiler.report(t.makeError(n, level, MISSING_GETCSSNAME,
+                blacklist.group()));
       }
     }
   }

@@ -55,7 +55,7 @@ class LineNumberCheck implements Callback, CompilerPass {
   }
 
   @Override
-  public boolean shouldTraverse(NodeTraversal unused, Node n, Node parent) {
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     // Each JavaScript file is rooted in a script node, so we'll only
     // have line number information inside the script node.
     if (n.isScript()) {
@@ -65,14 +65,16 @@ class LineNumberCheck implements Callback, CompilerPass {
   }
 
   @Override
-  public void visit(NodeTraversal unused, Node n, Node parent) {
+  public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isScript()) {
       requiresLineNumbers = false;
     } else if (requiresLineNumbers) {
       if (n.getLineno() == -1) {
         // The tree version of the node is really the best diagnostic
         // info we have to offer here.
-        compiler.report(JSError.make(n, MISSING_LINE_INFO, n.toStringTree()));
+        compiler.report(
+            t.makeError(n, MISSING_LINE_INFO,
+                n.toStringTree()));
       }
     }
   }

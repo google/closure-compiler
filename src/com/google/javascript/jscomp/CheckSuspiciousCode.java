@@ -107,7 +107,8 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     // annotating it with EMPTY_BLOCK.  Blocks without children are
     // usually intentional, especially with loops.
     if (!block.hasChildren() && block.isAddedBlock()) {
-      t.getCompiler().report(JSError.make(block, SUSPICIOUS_SEMICOLON));
+        t.getCompiler().report(
+            t.makeError(block, SUSPICIOUS_SEMICOLON));
     }
   }
 
@@ -131,7 +132,8 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
   private static void reportIfNaN(NodeTraversal t, Node n) {
     if (NodeUtil.isNaN(n)) {
-      t.getCompiler().report(JSError.make(n.getParent(), SUSPICIOUS_COMPARISON_WITH_NAN));
+      t.getCompiler().report(
+          t.makeError(n.getParent(), SUSPICIOUS_COMPARISON_WITH_NAN));
     }
   }
 
