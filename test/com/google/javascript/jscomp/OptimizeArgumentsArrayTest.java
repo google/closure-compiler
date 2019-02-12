@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -305,27 +304,42 @@ public final class OptimizeArgumentsArrayTest extends CompilerTestCase {
   }
 
   @Test
-  @Ignore
-  public void testUseArgumentsToAccessParamWithDefault() {
-    // TODO(b/123256727): fix this case. right now the pass crashes
-    test("function f(x = 0) { arguments[0]; }", "function f(x = 0) { x; }");
+  public void testUseArguments_withDefaultValue() {
+    // `arguments` doesn't consider default values. It holds exaclty the provided args.
+    testSame("function f(x = 0) { arguments[0]; }");
+
+    test(
+        "function f(x = 0) { arguments[1]; }", //
+        "function f(x = 0, p0) { p0; }");
   }
 
   @Test
-  @Ignore
-  public void testUseArgumentsWithRestParam() {
-    // TODO(b/123256727): fix this case. right now the pass crashes
-    test("function f(x, ...rest) { arguments[1]; }", "function f(...rest) { rest[0]; }");
+  public void testUseArguments_withRestParam() {
+    test(
+        "function f(x, ...rest) { arguments[0]; }", //
+        "function f(x, ...rest) { x; }");
 
-    test("function f(x, ...rest) { arguments[2]; }", "function f(...rest) { rest[1]; }");
+    // We could possibly do better here by referencing through `rest` instead, but the additional
+    // complexity of tracking and validating the rest parameter isn't worth it.
+    testSame("function f(x, ...rest) { arguments[1]; }");
+    testSame("function f(x, ...rest) { arguments[2]; }"); // Don't synthesize params after a rest.
   }
 
   @Test
-  @Ignore
-  public void testUseArgumentsWithDestructuringParam() {
-    // TODO(b/123256727): fix this case. right now the pass crashes
-    test("function f([x, y]) { arguments[1]; }", "function f([x, y], p0) { p0; }");
-
+  public void testUseArguments_withArrayDestructuringParam() {
     testSame("function f([x, y]) { arguments[0]; }");
+
+    test(
+        "function f([x, y]) { arguments[1]; }", //
+        "function f([x, y], p0) { p0; }");
+  }
+
+  @Test
+  public void testUseArguments_withObjectDestructuringParam() {
+    test(
+        "function f({x: y}) { arguments[1]; }", //
+        "function f({x: y}, p0) { p0; }");
+
+    testSame("function f({x: y}) { arguments[0]; }");
   }
 }

@@ -16,10 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -27,6 +29,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Optimization for functions that have {@code var_args} or access the
@@ -182,30 +185,22 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    * @param scope scope of the function
    */
   private void tryReplaceArguments(Scope scope) {
-    // Number of parameter that can be accessed without using the arguments
-    // array.
+    // Find the number of parameters that can be accessed without using `arguments`.
     Node parametersList = NodeUtil.getFunctionParameters(scope.getRootNode());
-    int numParameters = parametersList.getChildCount();
     checkState(parametersList.isParamList(), parametersList);
+    int numParameters = parametersList.getChildCount();
 
-    // We want to guess what the highest index that has been access from the
-    // arguments array. We will guess that it does not use anything index higher
-    // than the named parameter list first until we see other wise.
-    int highestIndex = numParameters - 1;
-    highestIndex = getHighestIndex(highestIndex);
+    // Determine the highest index that is used to make an access on `arguments`. By default, assume
+    // that the value is the number of parameters to the function.
+    int highestIndex = getHighestIndex(numParameters - 1);
     if (highestIndex < 0) {
       return;
     }
 
-    // Number of extra arguments we need.
-    // For example: function() { arguments[3] } access index 3 so
-    // it will need 4 extra named arguments to changed into:
-    // function(a,b,c,d) { d }.
-    int numExtraArgs = highestIndex - numParameters + 1;
-
-    ImmutableList<String> extraArgNames = getNewNames(numExtraArgs);
-    changeMethodSignature(extraArgNames, parametersList);
-    changeBody(numParameters, extraArgNames, parametersList);
+    ImmutableSortedMap<Integer, String> argNames =
+        assembleParamNames(parametersList, highestIndex + 1);
+    changeMethodSignature(argNames, parametersList);
+    changeBody(argNames);
   }
 
   /**
@@ -264,59 +259,89 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
   }
 
   /**
-   * Inserts new formal parameters into the method's signature based on the given list of names.
+   * Inserts new formal parameters into the method's signature based on the given set of names.
    *
    * <p>Example: function() --> function(r0, r1, r2)
    *
-   * @param extraArgNames names for all new formal parameters
-   * @param parametersList node representing the function signature
+   * @param argNames maps param index to param name, if the param with that index has a name.
+   * @param paramList node representing the function signature
    */
-  private void changeMethodSignature(ImmutableList<String> extraArgNames, Node parametersList) {
-    if (extraArgNames.isEmpty()) {
-      return;
+  private void changeMethodSignature(ImmutableSortedMap<Integer, String> argNames, Node paramList) {
+    ImmutableSortedMap<Integer, String> newParams = argNames.tailMap(paramList.getChildCount());
+    for (String name : newParams.values()) {
+      paramList.addChildToBack(IR.name(name).useSourceInfoIfMissingFrom(paramList));
     }
-    for (String name : extraArgNames) {
-      parametersList.addChildToBack(IR.name(name).useSourceInfoIfMissingFrom(parametersList));
+    if (!newParams.isEmpty()) {
+      compiler.reportChangeToEnclosingScope(paramList);
     }
-    compiler.reportChangeToEnclosingScope(parametersList);
   }
 
-  /** Performs the replacement of arguments[x] -> a if x is known. */
-  private void changeBody(
-      int numNamedParameter, ImmutableList<String> argNames, Node parametersList) {
+  /**
+   * Performs the replacement of arguments[x] -> a if x is known.
+   *
+   * @param argNames maps param index to param name, if the param with that index has a name.
+   */
+  private void changeBody(ImmutableMap<Integer, String> argNames) {
     for (Node ref : currentArgumentsAccess) {
       Node index = ref.getNext();
-      Node grandParent = ref.getGrandparent();
       Node parent = ref.getParent();
+      int value = (int) index.getDouble(); // This was validated earlier.
 
-      // Skip if it is unknown.
-      if (!index.isNumber()) {
+      @Nullable String name = argNames.get(value);
+      if (name == null) {
         continue;
       }
-      int value = (int) index.getDouble();
 
-      // Unnamed parameter.
-      if (value >= numNamedParameter) {
-        Node newName = IR.name(argNames.get(value - numNamedParameter));
-        grandParent.replaceChild(parent, newName);
-        compiler.reportChangeToEnclosingScope(newName);
-      } else {
-        // Here, for no apparent reason, the user is accessing a named parameter
-        // with arguments[idx]. We can replace it with the actual name for them.
-        Node name = parametersList.getChildAtIndex(value);
-        Node newName = IR.name(name.getString());
-        grandParent.replaceChild(parent, newName);
-        compiler.reportChangeToEnclosingScope(newName);
-      }
+      Node newName = IR.name(name).useSourceInfoIfMissingFrom(parent);
+      parent.replaceWith(newName);
+      // TODO(nickreid): See if we can do this fewer times. The accesses may be in different scopes.
+      compiler.reportChangeToEnclosingScope(newName);
     }
   }
 
-  /** Generates {@code count} unique names (for synthesized parameters). */
-  private ImmutableList<String> getNewNames(int count) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-    for (; count > 0; count--) {
-      builder.add(paramPrefix + uniqueId++);
+  /**
+   * Generates a {@link Map} from argument indices to parameter names.
+   *
+   * <p>A {@link Map} is used because the sequence may be sparse in the case that there is an
+   * anonymous param, such as a destructuring param. There may also be fewer returned names than
+   * {@code maxCount} if there is a rest param, since no additional params may be synthesized.
+   *
+   * @param maxCount The maximum number of argument names in the returned map.
+   */
+  private ImmutableSortedMap<Integer, String> assembleParamNames(Node paramList, int maxCount) {
+    checkArgument(paramList.isParamList(), paramList);
+
+    ImmutableSortedMap.Builder<Integer, String> builder = ImmutableSortedMap.naturalOrder();
+    int index = 0;
+
+    // Collect all existing param names first...
+    for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
+      switch (param.getToken()) {
+        case NAME:
+          builder.put(index, param.getString());
+          break;
+
+        case REST:
+          return builder.build();
+
+        case DEFAULT_VALUE:
+          // `arguments` doesn't consider default values. It holds exactly the provided args.
+        case OBJECT_PATTERN:
+        case ARRAY_PATTERN:
+          // Patterns have no names to substitute into the body.
+          break;
+
+        default:
+          throw new IllegalArgumentException(param.toString());
+      }
+
+      index++;
     }
+    // ... then synthesize any additional param names.
+    for (; index < maxCount; index++) {
+      builder.put(index, paramPrefix + uniqueId++);
+    }
+
     return builder.build();
   }
 }
