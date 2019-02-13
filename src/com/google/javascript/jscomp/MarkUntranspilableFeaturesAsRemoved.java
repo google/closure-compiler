@@ -65,31 +65,15 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
           .union(UNTRANSPILABLE_2018_FEATURES)
           .union(UNTRANSPILABLE_2019_FEATURES);
 
-  private static final FeatureSet ALL_TRANSPILABLE_FEATURES;
-
-  static {
-    // Work around EnumSet.complementOf not being supported in j2cl.
-    FeatureSet allTranspilableFeatures = FeatureSet.BARE_MINIMUM;
-    for (Feature feature : Feature.values()) {
-      if (!ALL_UNTRANSPILABLE_FEATURES.contains(feature)) {
-        allTranspilableFeatures = allTranspilableFeatures.with(feature);
-      }
-    }
-    ALL_TRANSPILABLE_FEATURES = allTranspilableFeatures;
-  }
-
   private final AbstractCompiler compiler;
   private final FeatureSet untranspilableFeaturesToRemove;
 
-  MarkUntranspilableFeaturesAsRemoved(
-      AbstractCompiler compiler, FeatureSet inputFeatures, FeatureSet outputFeatures) {
+  MarkUntranspilableFeaturesAsRemoved(AbstractCompiler compiler, FeatureSet outputFeatures) {
     checkNotNull(compiler);
-    checkNotNull(inputFeatures);
     checkNotNull(outputFeatures);
     this.compiler = compiler;
     this.untranspilableFeaturesToRemove =
-        inputFeatures // All features in the input language features...
-            .without(ALL_TRANSPILABLE_FEATURES) // that we can't transpile...
+        ALL_UNTRANSPILABLE_FEATURES // Features that we can't transpile...
             .without(outputFeatures); // and do not exist in the output language features
   }
 
