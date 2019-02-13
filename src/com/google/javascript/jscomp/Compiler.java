@@ -59,6 +59,7 @@ import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -1924,10 +1925,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Return whether or not the given input was hoisted.
    */
   private boolean hoistIfExtern(CompilerInput input) {
-    if (input.getHasExternsAnnotation()) {
+    Node n = input.getAstRoot(this);
+    JSDocInfo info = n.getJSDocInfo();
+    if (info != null && info.isExterns()) {
       // If the input file is explicitly marked as an externs file, then move it out of the main
       // JS root and put it with the other externs.
-      externsRoot.addChildToBack(input.getAstRoot(this));
+      externsRoot.addChildToBack(n);
       input.setIsExtern();
 
       input.getModule().remove(input);
@@ -1946,7 +1949,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     maybeDoThreadedParsing();
     // Iterate a copy because hoisting modifies what we're iterating over.
     for (CompilerInput input : ImmutableList.copyOf(moduleGraph.getAllInputs())) {
-      if (input.getHasNoCompileAnnotation()) {
+      Node n = input.getAstRoot(this);
+      JSDocInfo info = n.getJSDocInfo();
+      if (info != null && info.isNoCompile()) {
         input.getModule().remove(input);
         staleInputs = true;
       }
@@ -1959,7 +1964,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private void maybeDoThreadedParsing() {
     if (options.numParallelThreads > 1) {
-      new PrebuildDependencyInfo(options.numParallelThreads).prebuild(moduleGraph.getAllInputs());
+      new PrebuildAst(this, options.numParallelThreads).prebuild(moduleGraph.getAllInputs());
     }
   }
 
