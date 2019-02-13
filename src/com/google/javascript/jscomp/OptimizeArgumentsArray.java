@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -50,20 +51,17 @@ import javax.annotation.Nullable;
  */
 class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
-  // The arguments object as described by ECMAScript version 3
-  // section 10.1.8
+  // The arguments object as described by ECMAScript version 3 section 10.1.8
   private static final String ARGUMENTS = "arguments";
 
   // To ensure that the newly introduced parameter names are unique. We will
-  // use this string as prefix unless the caller specify a different prefix.
-  private static final String PARAMETER_PREFIX =
-      "JSCompiler_OptimizeArgumentsArray_p";
+  // use this string as prefix unless the caller specifies a different prefix.
+  private static final String PARAMETER_PREFIX = "JSCompiler_OptimizeArgumentsArray_p";
 
   // The prefix for the newly introduced parameter name.
   private final String paramPrefix;
 
-  // To make each parameter name unique in the function. We append an
-  // unique integer at the end.
+  // To make each parameter name unique in the function we append a unique integer.
   private int uniqueId = 0;
 
   // Reference to the compiler object to notify any changes to source code AST.
@@ -72,8 +70,11 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
   // A stack of arguments access list to the corresponding outer functions.
   private final Deque<List<Node>> argumentsAccessStack = new ArrayDeque<>();
 
-  // This stores a list of argument access in the current scope.
-  private List<Node> currentArgumentsAccess = null;
+  // The `arguments` access in the current scope.
+  //
+  // The elements are NAME nodes. This initial value is a error-detecting sentinel for the global
+  // scope, which is used because since `ArrayDeque` is null-hostile.
+  private List<Node> currentArgumentsAccesses = ImmutableList.of();
 
   /**
    * Construct this pass and use {@link #PARAMETER_PREFIX} as the prefix for
@@ -99,38 +100,18 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
   @Override
   public void enterScope(NodeTraversal traversal) {
-    checkNotNull(traversal);
-
-    // This optimization is valid only within a function so we are going to
-    // skip over the initial entry to the global scope.
-    Node function = traversal.getScopeRoot();
-    if (!function.isFunction() || function.isArrowFunction()) {
+    if (!definesArgumentsVar(traversal.getScopeRoot())) {
       return;
     }
 
-    // Introduces a new access list and stores the access list of the outer
-    // scope in the stack if necessary.
-    if (currentArgumentsAccess != null) {
-      argumentsAccessStack.push(currentArgumentsAccess);
-    }
-    currentArgumentsAccess = new ArrayList<>();
+    // Introduces a new access list and stores the access list of the outer scope.
+    argumentsAccessStack.push(currentArgumentsAccesses);
+    currentArgumentsAccesses = new ArrayList<>();
   }
 
   @Override
   public void exitScope(NodeTraversal traversal) {
-    checkNotNull(traversal);
-
-    // This is the case when we are exiting the global scope where we had never
-    // collected argument access list. Since we do not perform this optimization
-    // for the global scope, we will skip this exit point.
-    if (currentArgumentsAccess == null) {
-      return;
-    }
-
-    Node function = traversal.getScopeRoot();
-    if (!function.isFunction()) {
-      return;
-    } else if (function.isArrowFunction()) {
+    if (!definesArgumentsVar(traversal.getScopeRoot())) {
       return;
     }
 
@@ -138,43 +119,26 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     // report back to the compiler.
     tryReplaceArguments(traversal.getScope());
 
-    // After the attempt to replace the arguments. The currentArgumentsAccess
-    // is stale and as we exit the Scope, no longer holds all the access to the
-    // current scope anymore. We'll pop the access list from the outer scope
-    // and set it as currentArgumentsAccess if the outer scope is not the global
-    // scope.
-    if (!argumentsAccessStack.isEmpty()) {
-      currentArgumentsAccess = argumentsAccessStack.pop();
-    } else {
-      currentArgumentsAccess = null;
-    }
+    currentArgumentsAccesses = argumentsAccessStack.pop();
+  }
+
+  private static boolean definesArgumentsVar(Node root) {
+    return root.isFunction() && !root.isArrowFunction();
   }
 
   @Override
-  public boolean shouldTraverse(
-      NodeTraversal nodeTraversal, Node node, Node parent) {
-    // We will continuously recurse down the AST regardless of the node types.
+  public boolean shouldTraverse(NodeTraversal unused0, Node unused1, Node unused2) {
     return true;
   }
 
   @Override
   public void visit(NodeTraversal traversal, Node node, Node parent) {
-    checkNotNull(traversal);
-    checkNotNull(node);
-
-    // Searches for all the references to the arguments array.
-
-    // We don't have an arguments list set up for this scope. This implies we
-    // are currently in the global scope so we will not record any arguments
-    // array access.
-    if (currentArgumentsAccess == null) {
-      return;
+    if (traversal.inGlobalScope()) {
+      return; // Do no rewriting in the global scope.
     }
 
-    // Otherwise, we are in a function scope and we should record if the current
-    // name is referring to the implicit arguments array.
     if (node.isName() && ARGUMENTS.equals(node.getString())) {
-      currentArgumentsAccess.add(node);
+      currentArgumentsAccesses.add(node); // Record all potential references to the arguments array.
     }
   }
 
@@ -211,7 +175,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    * @param highestIndex highest index that has been accessed from the arguments array
    */
   private int getHighestIndex(int highestIndex) {
-    for (Node ref : currentArgumentsAccess) {
+    for (Node ref : currentArgumentsAccesses) {
 
       Node getElem = ref.getParent();
 
@@ -282,7 +246,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    * @param argNames maps param index to param name, if the param with that index has a name.
    */
   private void changeBody(ImmutableMap<Integer, String> argNames) {
-    for (Node ref : currentArgumentsAccess) {
+    for (Node ref : currentArgumentsAccesses) {
       Node index = ref.getNext();
       Node parent = ref.getParent();
       int value = (int) index.getDouble(); // This was validated earlier.
