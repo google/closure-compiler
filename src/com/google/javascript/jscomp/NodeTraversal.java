@@ -1403,30 +1403,6 @@ public class NodeTraversal {
     return inputId;
   }
 
-  /**
-   * Creates a JSError during NodeTraversal.
-   *
-   * @param n Determines the line and char position within the source file name
-   * @param type The DiagnosticType
-   * @param arguments Arguments to be incorporated into the message
-   */
-  @Deprecated
-  public JSError makeError(Node n, CheckLevel level, DiagnosticType type, String... arguments) {
-    return JSError.make(n, level, type, arguments);
-  }
-
-  /**
-   * Creates a JSError during NodeTraversal.
-   *
-   * @param n Determines the line and char position within the source file name
-   * @param type The DiagnosticType
-   * @param arguments Arguments to be incorporated into the message
-   */
-  @Deprecated
-  public JSError makeError(Node n, DiagnosticType type, String... arguments) {
-    return JSError.make(n, type, arguments);
-  }
-
   private String getBestSourceFileName(Node n) {
     return n == null ? sourceName : n.getSourceFileName();
   }
