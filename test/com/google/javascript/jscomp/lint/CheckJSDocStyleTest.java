@@ -351,7 +351,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   public void testMissingJsDoc_googModule() {
     testWarning("goog.module('a.b.c'); function f() {}", MISSING_JSDOC);
     testWarning("goog.module('a.b.c'); var f = function() {};", MISSING_JSDOC);
-    testWarning("goog.module('a.b.c'); class Foo { constructor(x) {} }", MISSING_JSDOC);
   }
 
   @Test
@@ -383,8 +382,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   public void testMissingJsDoc_googModule_noWarning() {
     testSame("goog.module('a.b.c'); /** @type {function()} */ function f() {}");
     testSame("goog.module('a.b.c'); /** @type {function()} */ var f = function() {};");
-    // No JSDoc is required for a constructor with no parameters.
-    testSame("goog.module('a.b.c'); class Foo { constructor() {} }");
   }
 
   @Test
