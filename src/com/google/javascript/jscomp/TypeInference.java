@@ -668,8 +668,20 @@ class TypeInference
       case CAST:
         scope = traverseChildren(n, scope);
         JSDocInfo info = n.getJSDocInfo();
-        if (info != null && info.hasType()) {
-          n.setJSType(info.getType().evaluate(scope.getDeclarationScope(), registry));
+        // TODO(b/123955687): also check that info.hasType() is true
+        checkNotNull(info, "CAST node should always have JSDocInfo");
+        if (info.hasType()) {
+          // NOTE(lharker) - I tried moving CAST type evaluation into the typed scope creation
+          // phase.
+          // Since it caused a few new, seemingly spurious, 'Bad type annotation' and
+          // 'unknown property type' warnings, and having it in TypeInference seems to work, we just
+          // do the lookup + resolution here.
+          n.setJSType(
+              info.getType()
+                  .evaluate(scope.getDeclarationScope(), registry)
+                  .resolve(registry.getErrorReporter()));
+        } else {
+          n.setJSType(unknownType);
         }
         break;
 

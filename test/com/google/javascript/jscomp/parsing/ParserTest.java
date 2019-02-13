@@ -967,7 +967,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testJSDocAttachment17() {
+  public void testJSDocAttachmentForCastFnCall() {
     Node fn =
         parse(
             "function f() { " +
@@ -979,7 +979,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testJSDocAttachment18() {
+  public void testJSDocAttachmentForCastName() {
     Node fn =
         parse(
             "function f() { " +
@@ -988,6 +988,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(fn).hasType(Token.FUNCTION);
     Node cast = fn.getLastChild().getFirstFirstChild().getFirstChild();
     assertNode(cast).hasType(Token.CAST);
+  }
+
+  @Test
+  public void testJSDocAttachmentForCastLhs() {
+    Node expr = parse("/** some jsdoc */ (/** @type {?} */ (a)).b = 0;").getOnlyChild();
+    Node lhs = expr.getFirstFirstChild(); // child is ASSIGN, grandchild is the GETPROP
+    Node cast = lhs.getFirstChild();
+    assertNode(cast).hasToken(Token.CAST);
+    assertThat(cast.getJSDocInfo()).isNotNull();
+    // TODO(b/123955687): this should be true
+    assertThat(cast.getJSDocInfo().hasType()).isFalse();
   }
 
   @Test

@@ -331,13 +331,15 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testConstructorCycle() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
-    test(
+    testNoWarnings(
         options,
-        "/** @return {function()} */ var AsyncTestCase = function() {};\n"
-        + "/**\n"
-        + " * @constructor\n"
-        + " */ Foo = /** @type {function(new:Foo)} */ (AyncTestCase());",
-        RhinoErrorReporter.PARSE_ERROR);
+        lines(
+            "/** @return {function()} */",
+            "var AsyncTestCase = function() {};",
+            "/**",
+            " * @constructor",
+            " */",
+            "const Foo = /** @type {function(new:Foo)} */ (AsyncTestCase());"));
   }
 
   // b/27531865
