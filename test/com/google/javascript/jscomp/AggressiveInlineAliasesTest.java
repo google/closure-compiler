@@ -876,6 +876,25 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGlobalAliasWithPropertiesAsNestedObjectLits() {
+    test(
+        lines(
+            "var ns = {};"
+                + "ns.Foo = function() {};"
+                + "ns.Bar = ns.Foo;"
+                + "/** @enum { number } */ ns.Bar.Other = { X: {Y: 1}};"
+                + "var x = function() { use(ns.Bar.Other.X.Y) };"
+                + "use(x)"),
+        lines(
+            "var ns = {};"
+                + "ns.Foo = function() {};"
+                + "ns.Bar = null;"
+                + "/** @enum { number } */ ns.Foo.Other = { X: {Y: 1}};"
+                + "var x = function() { use(ns.Foo.Other.X.Y) };"
+                + "use(x)"));
+  }
+
+  @Test
   public void testGlobalWriteToNonAncestor() {
     test(
         "var a = { b: 3 };" + "function f() { var x = a;" + "f(a.b);" + "} a.b = 5;",
@@ -2052,6 +2071,27 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "var {} = b;",
             "var y = void 0 === a.x ? 0 : a.x;",
             "use(y);"));
+  }
+
+  @Test
+  public void testDestructuringPropertyOnAliasedNamespace() {
+    // We can inline a part of a getprop chain on the rhs of a destructuring pattern:
+    //   replace 'alias -> a.b' in 'const {A} = alias.Enum;'
+    test(
+        lines(
+            "const a = {};",
+            "/** @const */ a.b = {};",
+            "/** @enum {string} */ a.b.Enum = {A: 'a'};",
+            "",
+            "const alias = a.b;",
+            "function f() { const {A} = alias.Enum; }"),
+        lines(
+            "const a = {}; ",
+            "/** @const */ a.b = {};",
+            "/** @enum {string} */ a.b.Enum = {A: 'a'};",
+            "",
+            "const alias = null;",
+            "function f() { const {A} = a.b.Enum; }"));
   }
 
   @Test

@@ -247,7 +247,7 @@ class AggressiveInlineAliases implements CompilerPass {
     if (subclassPropNameObj != null) {
       Set<AstChange> newNodes = new LinkedHashSet<>();
 
-      // Use this node as a template for rewriteAliasProp.
+      // Use this node as a template for rewriteNestedAliasReference.
       Node superclassNameNode = superclassNameObj.getDeclaration().getNode();
       if (superclassNameNode.isName()) {
         superclassNameNode = superclassNameNode.cloneNode();
@@ -257,7 +257,7 @@ class AggressiveInlineAliases implements CompilerPass {
         return false;
       }
 
-      rewriteAliasProp(superclassNameNode, 0, newNodes, subclassPropNameObj);
+      rewriteNestedAliasReference(superclassNameNode, 0, newNodes, subclassPropNameObj);
       namespace.scanNewNodes(newNodes);
     }
     return true;
@@ -662,21 +662,63 @@ class AggressiveInlineAliases implements CompilerPass {
         value,
         name.getFullName());
     for (Name prop : name.props) {
-      rewriteAliasProp(value, depth, newNodes, prop);
+      rewriteNestedAliasReference(value, depth, newNodes, prop);
     }
   }
 
   /**
+   * Replaces references to an alias that are nested inside a longer getprop chain or an object
+   * literal
+   *
+   * <p>For example: if we have an inlined alias 'const A = B;', and reference a property 'A.x',
+   * then this method is responsible for replacing 'A.x' with 'B.x'.
+   *
+   * <p>This is necessary because in the above example, given 'A.x', there is only one {@link Ref}
+   * that points to the whole name 'A.x', not a direct {@link Ref} to 'A'. So the only way to
+   * replace 'A.x' with 'B.x' is by looking at the property 'x' reference.
+   *
    * @param value The value to use when rewriting.
-   * @param depth The chain depth.
+   * @param depth The property chain depth.
    * @param newNodes Expression nodes that have been updated.
    * @param prop The property to rewrite with value.
    */
-  private void rewriteAliasProp(Node value, int depth, Set<AstChange> newNodes, Name prop) {
+  private void rewriteNestedAliasReference(
+      Node value, int depth, Set<AstChange> newNodes, Name prop) {
     rewriteAliasProps(prop, value, depth + 1, newNodes);
     List<Ref> refs = new ArrayList<>(prop.getRefs());
     for (Ref ref : refs) {
       Node target = ref.getNode();
+      if (target.isStringKey() && target.getParent().isDestructuringPattern()) {
+        // Do nothing for alias properties accessed through object destructuring. This would be
+        // redundant. This method is intended for names nested inside getprop chains, because
+        // GlobalNamespace only creates a single Ref for the outermost getprop. However, for
+        // destructuring property accesses, GlobalNamespace creates multiple Refs, one for the
+        // destructured object, and one for each string key in the pattern.
+        //
+        // For example, consider:
+        //   const originalObj = {key: 0};
+        //   const rhs = originalObj;
+        //   const {key: lhs} = rhs;
+        //   const otherLhs = rhs.key;
+        // AggressiveInlineAliases is inlining rhs -> originalObj.
+        //
+        // GlobalNamespace creates two Refs for the name 'rhs': one for its declaration,
+        // and one for 'const {key: lhs} = rhs;'. There is no Ref pointing directly to the 'rhs'
+        // in 'const otherLhs = rhs.key', though.
+        // There are also two Refs to the name 'rhs.key': one for the destructuring access and one
+        // for the getprop access. This loop will visit both Refs.
+        // This method is responsible for inlining "const otherLhs = originalObj.key" but not
+        // "const {key: lhs} = originalObj;". We bail out at the Ref in the latter case.
+        checkState(
+            target.getGrandparent().isAssign() || target.getGrandparent().isDestructuringLhs(),
+            // Currently GlobalNamespace doesn't create Refs for 'b' in const {a: {b}} = obj;
+            // If it does start creating those Refs, we may have to update this method to handle
+            // them explicitly.
+            "Did not expect GlobalNamespace to create Ref for key in nested object pattern %s",
+            target);
+        continue;
+      }
+
       for (int i = 0; i <= depth; i++) {
         if (target.isGetProp()) {
           target = target.getFirstChild();
@@ -690,21 +732,9 @@ class AggressiveInlineAliases implements CompilerPass {
             checkState(NodeUtil.isObjectLitKey(gparent));
             target = gparent;
           }
-        } else if (target.getParent().isObjectPattern()) {
-          // The rhs of the pattern has its own 'Ref' and will already have been rewritten.
-          Node grandparent = target.getGrandparent();
-          // Right now GlobalNamespace only handles object patterns in assignments or declarations,
-          // not nested object patterns, so expect the grandparent to be an assign/decl.
-          checkState(grandparent.isAssign() || grandparent.isDestructuringLhs());
-          target = null;
-
         } else {
-          throw new IllegalStateException("unexpected: " + target);
+          throw new IllegalStateException("unexpected node: " + target);
         }
-      }
-      if (target == null) {
-        // Ignore the rhs of destructuring patterns
-        continue;
       }
       checkState(target.isGetProp() || target.isName());
       Node newValue = value.cloneTree();

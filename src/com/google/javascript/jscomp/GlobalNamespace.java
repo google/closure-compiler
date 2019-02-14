@@ -396,6 +396,8 @@ class GlobalNamespace
               }
               break;
             case GETPROP:
+              // This name is nested in a getprop. Return and only create a Ref for the outermost
+              // getprop in the chain.
               return;
             case FUNCTION:
               Node grandparent = parent.getParent();
@@ -453,6 +455,8 @@ class GlobalNamespace
                 type = Name.Type.OTHER;
                 break;
               case GETPROP:
+                // This is nested in another getprop. Return and only create a Ref for the outermost
+                // getprop in the chain.
                 return;
               default:
                 if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
