@@ -248,6 +248,23 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
+  public void testJsMessageAlias_fromObjectDestrucuturing_longhand() {
+    extractMessagesSafely("({MSG_MENU_MARK_AS_UNREAD: MSG_MENU_MARK_AS_UNREAD} = x);");
+  }
+
+  @Test
+  public void testJsMessageAlias_fromObjectDestrucuturing_longhand_invalid() {
+    extractMessages("({MSG_NOT_FOO: MSG_FOO} = x);");
+
+    assertThat(compiler.getErrors()).hasLength(1);
+  }
+
+  @Test
+  public void testJsMessageAlias_fromObjectDestrucuturing_shorthand() {
+    extractMessagesSafely("({MSG_MENU_MARK_AS_UNREAD} = x);");
+  }
+
+  @Test
   public void testJsMessageOnRHSOfVar() {
     extractMessagesSafely("var MSG_MENU_MARK_AS_UNREAD = a.name.space.MSG_MENU_MARK_AS_UNREAD;");
     assertThat(messages).isEmpty();
