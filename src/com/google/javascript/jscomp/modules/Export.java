@@ -56,7 +56,7 @@ public abstract class Export {
 
     abstract Builder localName(@Nullable String value);
 
-    abstract Builder modulePath(ModulePath value);
+    abstract Builder modulePath(@Nullable ModulePath value);
 
     abstract Builder exportNode(@Nullable Node value);
 
@@ -151,6 +151,7 @@ public abstract class Export {
   public abstract String localName();
 
   /** Returns the path of the containing module */
+  @Nullable
   public abstract ModuleLoader.ModulePath modulePath();
 
   /**

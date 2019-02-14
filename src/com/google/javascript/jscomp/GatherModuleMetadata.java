@@ -122,6 +122,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
 
   private class ModuleMetadataBuilder {
     private boolean ambiguous;
+    private boolean hasModuleBody;
     private Node declaredModuleId;
     private Node declaresLegacyNamespace;
     final ModuleMetadata.Builder metadataBuilder;
@@ -168,6 +169,11 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
     ModuleMetadata build() {
       metadataBuilder.googNamespacesBuilder().addAll(googNamespaces);
       if (!ambiguous) {
+        if (hasModuleBody && metadataBuilder.moduleType() == ModuleType.SCRIPT) {
+          // A script with no imports or exports, but has a module body, must be an ES module.
+          metadataBuilder.moduleType(ModuleType.ES6_MODULE);
+        }
+
         if (declaredModuleId != null && metadataBuilder.moduleType() != ModuleType.ES6_MODULE) {
           compiler.report(JSError.make(declaredModuleId, DECLARE_MODULE_ID_OUTSIDE_ES6_MODULE));
         }
@@ -203,6 +209,9 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
             loadModuleCall = n;
             enterModule(n, null);
           }
+          break;
+        case MODULE_BODY:
+          currentModule.hasModuleBody = true;
           break;
         default:
           break;

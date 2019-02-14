@@ -43,6 +43,7 @@ import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
+import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -183,6 +184,7 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup MODULE_LOAD =
       DiagnosticGroups.registerGroup("moduleLoad",
           ModuleLoader.LOAD_WARNING,
+          ModuleMapCreator.MISSING_NAMESPACE_IMPORT,
           ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
           ProcessCommonJSModules.UNKNOWN_REQUIRE_ENSURE);
 

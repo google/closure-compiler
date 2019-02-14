@@ -45,6 +45,7 @@ public final class Es6RewriteScriptsToModules extends AbstractPreOrderCallback
     Node moduleNode = new Node(Token.MODULE_BODY).srcref(root);
     moduleNode.addChildrenToBack(root.removeChildren());
     root.addChildToBack(moduleNode);
+    compiler.reportChangeToChangeScope(root);
   }
 
   @Override
@@ -67,7 +68,6 @@ public final class Es6RewriteScriptsToModules extends AbstractPreOrderCallback
 
       if (moduleType == CompilerInput.ModuleType.IMPORTED_SCRIPT) {
         forceToEs6Module(n);
-        compiler.reportChangeToChangeScope(n);
       }
     }
 

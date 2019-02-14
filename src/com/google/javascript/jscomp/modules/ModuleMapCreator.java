@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
 
 /** Creates a {@link ModuleMap}. */
 public class ModuleMapCreator implements HotSwapCompilerPass {
-  static final DiagnosticType MISSING_NAMESPACE_IMPORT =
+  public static final DiagnosticType MISSING_NAMESPACE_IMPORT =
       DiagnosticType.error(
           "JSC_MISSING_NAMESPACE_IMPORT", "Imported Closure namespace \"{0}\" never defined.");
 

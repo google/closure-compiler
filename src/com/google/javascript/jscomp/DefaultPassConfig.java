@@ -57,6 +57,7 @@ import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
+import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
@@ -155,6 +156,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(checkVariableReferencesForTranspileOnly);
     passes.add(gatherModuleMetadataPass);
+    passes.add(createModuleMapPass);
 
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       passes.add(rewriteGoogJsImports);
@@ -275,6 +277,7 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(checkTypeImportCodeReferences);
 
     checks.add(gatherModuleMetadataPass);
+    checks.add(createModuleMapPass);
 
     if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
       checks.add(lintChecks);
@@ -1089,6 +1092,12 @@ public final class DefaultPassConfig extends PassConfig {
         gatherModuleMetadataPass,
         closureCheckModule,
         "Need to gather module metadata before checking closure modules.");
+
+    assertPassOrder(
+        checks,
+        gatherModuleMetadataPass,
+        createModuleMapPass,
+        "Need to gather module metadata before scanning modules.");
 
     assertPassOrder(
         checks,
@@ -3443,6 +3452,19 @@ public final class DefaultPassConfig extends PassConfig {
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new GatherModuleMetadata(
               compiler, options.processCommonJSModules, options.moduleResolutionMode);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES_NEXT;
+        }
+      };
+
+  private final HotSwapPassFactory createModuleMapPass =
+      new HotSwapPassFactory(PassNames.CREATE_MODULE_MAP) {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          return new ModuleMapCreator(compiler, compiler.getModuleMetadataMap());
         }
 
         @Override

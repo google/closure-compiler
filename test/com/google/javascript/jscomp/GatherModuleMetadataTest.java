@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -30,10 +31,35 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class GatherModuleMetadataTest extends CompilerTestCase {
 
+  private boolean rewriteScriptsToModules;
+  private ImmutableList<ModuleIdentifier> entryPoints;
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    entryPoints = ImmutableList.of();
+    rewriteScriptsToModules = false;
+  }
+
+  @Override
+  protected CompilerOptions getOptions(CompilerOptions options) {
+    options = super.getOptions(options);
+    if (!entryPoints.isEmpty()) {
+      options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
+    }
+    return options;
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new GatherModuleMetadata(
-        compiler, /* processCommonJsModules= */ true, ResolutionMode.BROWSER);
+    return (externs, root) -> {
+      if (rewriteScriptsToModules) {
+        new Es6RewriteScriptsToModules(compiler).process(externs, root);
+      }
+      new GatherModuleMetadata(
+              compiler, /* processCommonJsModules= */ true, ResolutionMode.BROWSER)
+          .process(externs, root);
+    };
   }
 
   private ModuleMetadataMap metadataMap() {
@@ -576,5 +602,53 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     assertThat(m.googNamespaces()).containsExactly("my.module");
     assertThat(m.isEs6Module()).isTrue();
     assertThat(m.isGoogModule()).isFalse();
+  }
+
+  @Test
+  public void testImportedScript() {
+    test(
+        srcs(
+            SourceFile.fromCode("imported.js", "console.log('lol');"),
+            SourceFile.fromCode("notimported.js", "console.log('lol');"),
+            SourceFile.fromCode("module.js", "import './imported.js';")));
+
+    assertThat(metadataMap().getModulesByPath().get("imported.js").moduleType())
+        .isEqualTo(ModuleType.SCRIPT);
+    assertThat(metadataMap().getModulesByPath().get("notimported.js").moduleType())
+        .isEqualTo(ModuleType.SCRIPT);
+  }
+
+  @Test
+  public void testImportedScriptWithScriptsToModules() {
+    // Default dependency options should still mark imported files as ES modules.
+    rewriteScriptsToModules = true;
+
+    test(
+        srcs(
+            SourceFile.fromCode("imported.js", "console.log('lol');"),
+            SourceFile.fromCode("notimported.js", "console.log('lol');"),
+            SourceFile.fromCode("module.js", "import './imported.js';")));
+
+    assertThat(metadataMap().getModulesByPath().get("imported.js").moduleType())
+        .isEqualTo(ModuleType.ES6_MODULE);
+    assertThat(metadataMap().getModulesByPath().get("notimported.js").moduleType())
+        .isEqualTo(ModuleType.SCRIPT);
+  }
+
+  @Test
+  public void testImportedScriptWithEntryPoint() {
+    rewriteScriptsToModules = true;
+    entryPoints = ImmutableList.of(ModuleIdentifier.forFile("module.js"));
+
+    test(
+        srcs(
+            SourceFile.fromCode("imported.js", "console.log('lol');"),
+            SourceFile.fromCode("notimported.js", "console.log('lol');"),
+            SourceFile.fromCode("module.js", "import './imported.js';")));
+
+    assertThat(metadataMap().getModulesByPath().get("imported.js").moduleType())
+        .isEqualTo(ModuleType.ES6_MODULE);
+    // Pruned
+    assertThat(metadataMap().getModulesByPath().keySet()).doesNotContain("notimported.js");
   }
 }
