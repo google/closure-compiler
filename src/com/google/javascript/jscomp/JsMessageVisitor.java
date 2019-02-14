@@ -182,60 +182,58 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
   }
 
   @Override
-  public void visit(NodeTraversal traversal, Node node, Node parent) {
+  public void visit(NodeTraversal traversal, Node node, Node unused) {
+    collectGetMsgCall(traversal, node);
+    checkMessageInitialization(traversal, node);
+  }
+
+  private void checkMessageInitialization(NodeTraversal traversal, Node node) {
+    final Node parent = node.getParent();
+
     String messageKey;
-    String originalMessageKey;
-    boolean isVar;
-    Node msgNode;
+    final String originalMessageKey;
+    final Node msgNode;
+    final boolean isVar;
 
     switch (node.getToken()) {
       case NAME:
-        // var MSG_HELLO = 'Message'
-        if ((parent != null) && (NodeUtil.isNameDeclaration(parent))) {
-          messageKey = node.getString();
-          originalMessageKey = node.getOriginalName();
-          isVar = true;
-        } else {
+        // Case: `var MSG_HELLO = 'Message';`
+        if (parent == null || !NodeUtil.isNameDeclaration(parent)) {
           return;
         }
 
+        messageKey = node.getString();
+        originalMessageKey = node.getOriginalName();
         msgNode = node.getFirstChild();
+        isVar = true;
         break;
-      case ASSIGN:
-        // somenamespace.someclass.MSG_HELLO = 'Message'
-        isVar = false;
 
+      case ASSIGN:
+        // Case: `somenamespace.someclass.MSG_HELLO = 'Message';`
         Node getProp = node.getFirstChild();
         if (!getProp.isGetProp()) {
           return;
         }
 
-        Node propNode = getProp.getLastChild();
-
-        messageKey = propNode.getString();
+        messageKey = getProp.getLastChild().getString();
         originalMessageKey = getProp.getOriginalName();
         msgNode = node.getLastChild();
+        isVar = false;
         break;
 
       case STRING_KEY:
+        // Case: `var t = {MSG_HELLO: 'Message'}`;
+        // Case: `var {MSG_HELLO} = x;
         if (node.isQuotedString() || !node.hasChildren()) {
           return;
         }
-        isVar = false;
+
         messageKey = node.getString();
         originalMessageKey = node.getOriginalName();
         msgNode = node.getFirstChild();
+        isVar = false;
         break;
 
-      case CALL:
-        // goog.getMsg()
-        if (node.getFirstChild().matchesQualifiedName(MSG_FUNCTION_NAME)) {
-          googMsgNodes.add(node);
-        } else if (node.getFirstChild().matchesQualifiedName(
-            MSG_FALLBACK_FUNCTION_NAME)) {
-          visitFallbackFunctionCall(traversal, node);
-        }
-        return;
       default:
         return;
     }
@@ -245,8 +243,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     }
 
     // Is this a message name?
-    boolean isNewStyleMessage =
-        msgNode != null && msgNode.isCall();
+    boolean isNewStyleMessage = msgNode != null && msgNode.isCall();
     if (!isMessageName(messageKey, isNewStyleMessage)) {
       return;
     }
@@ -265,8 +262,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
       return;
     }
 
-    // Report a warning if a qualified messageKey that looks like a message
-    // (e.g. "a.b.MSG_X") doesn't use goog.getMsg().
+    // Report a warning if a qualified messageKey that looks like a message (e.g. "a.b.MSG_X")
+    // doesn't use goog.getMsg().
     if (isNewStyleMessage) {
       googMsgNodes.remove(msgNode);
     } else if (style != JsMessage.Style.LEGACY) {
@@ -281,11 +278,10 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
     boolean isUnnamedMsg = isUnnamedMessageName(messageKey);
 
-    Builder builder = new Builder(
-        isUnnamedMsg ? null : messageKey);
-    OriginalMapping mapping = compiler.getSourceMapping(
-        traversal.getSourceName(), traversal.getLineNumber(),
-        traversal.getCharno());
+    JsMessage.Builder builder = new JsMessage.Builder(isUnnamedMsg ? null : messageKey);
+    OriginalMapping mapping =
+        compiler.getSourceMapping(
+            traversal.getSourceName(), traversal.getLineNumber(), traversal.getCharno());
     if (mapping != null) {
       builder.setSourceName(mapping.getOriginalFile());
     } else {
@@ -306,13 +302,10 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     JsMessage extractedMessage = builder.build(idGenerator);
 
     // If asked to check named internal messages.
-    if (needToCheckDuplications
-        && !isUnnamedMsg
-        && !extractedMessage.isExternal()) {
+    if (needToCheckDuplications && !isUnnamedMsg && !extractedMessage.isExternal()) {
       checkIfMessageDuplicated(messageKey, msgNode);
     }
-    trackMessage(traversal, extractedMessage,
-        messageKey, msgNode, isUnnamedMsg);
+    trackMessage(traversal, extractedMessage, messageKey, msgNode, isUnnamedMsg);
 
     if (extractedMessage.isEmpty()) {
       // value of the message is an empty string. Translators do not like it.
@@ -332,6 +325,19 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
     JsMessageDefinition msgDefinition = new JsMessageDefinition(msgNode);
     processJsMessage(extractedMessage, msgDefinition);
+  }
+
+  private void collectGetMsgCall(NodeTraversal traversal, Node call) {
+    if (!call.isCall()) {
+      return;
+    }
+
+    // goog.getMsg()
+    if (call.getFirstChild().matchesQualifiedName(MSG_FUNCTION_NAME)) {
+      googMsgNodes.add(call);
+    } else if (call.getFirstChild().matchesQualifiedName(MSG_FALLBACK_FUNCTION_NAME)) {
+      visitFallbackFunctionCall(traversal, call);
+    }
   }
 
   /**
