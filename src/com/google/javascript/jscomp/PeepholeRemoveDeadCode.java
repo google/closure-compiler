@@ -605,8 +605,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     // A case isn't useless if a previous case falls through to it unless it happens to be the last
     // case in the switch.
     Node switchNode = caseNode.getParent();
-    if (switchNode.getLastChild() != caseNode
-        && previousCase != null) {
+    if (switchNode.getLastChild() != caseNode && previousCase != null) {
       Node previousBlock = previousCase.getLastChild();
       if (!previousBlock.hasChildren()
           || !isExit(previousBlock.getLastChild())) {
@@ -621,6 +620,11 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       // DEFAULT case.  Otherwise, we assume the DEFAULT case has already
       // been removed.
       checkState(caseNode == executingCase || !executingCase.isDefaultCase());
+      if (!executingCase.isDefaultCase() && mayHaveSideEffects(executingCase.getFirstChild())) {
+        // The case falls thru to a case whose condition has a potential side-effect,
+        // removing the candidate case would skip that side-effect, so don't.
+        return false;
+      }
       Node block = executingCase.getLastChild();
       checkState(block.isBlock());
       if (block.hasChildren()) {

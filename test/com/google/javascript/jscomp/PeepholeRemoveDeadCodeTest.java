@@ -768,6 +768,19 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "function f() { while (true) { continue; } }");
   }
 
+  @Test
+  public void testOptimizeSwitchWithDefaultCaseWithFallthru() {
+    testSame(
+        lines(
+            "function f() {",
+            "  switch(a) {",
+            "    case 'x':",
+            "    case foo():",
+            "    default: return 3",
+            "  }",
+            "}"));
+  }
+
   // GitHub issue #1722: https://github.com/google/closure-compiler/issues/1722
   @Test
   public void testOptimizeSwitchWithDefaultCase() {
