@@ -159,14 +159,17 @@ WebAssembly.Table.prototype.grow = function(delta) {};
  */
 WebAssembly.Table.prototype.length;
 
+/** @typedef {function(...)} */
+var TableFunction;
+
 /**
  * @param {number} index
- * @return {function(...)}
+ * @return {TableFunction}
  */
 WebAssembly.Table.prototype.get = function(index) {};
 
 /**
  * @param {number} index
- * @param {?function(...)} value
+ * @param {?TableFunction} value
  */
 WebAssembly.Table.prototype.set = function(index, value) {};
