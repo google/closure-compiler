@@ -5355,7 +5355,7 @@ public final class NodeUtil {
   }
 
   /** Get the name of the given l-value node. */
-  static String getBestLValueName(@Nullable Node lValue) {
+  public static String getBestLValueName(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {
       return null;
     }

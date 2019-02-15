@@ -319,6 +319,21 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMissingJsDoc_noWarning_wizConstructorAndDeps() {
+    // Exempt Wiz controller constructor and deps() method because Wiz automatically adds JSDoc
+    // NOTE(lharker@): right now this does not warn because of b/124061048: the behavior is correct
+    // but for the wrong reason.
+    testSame(
+        lines(
+            "goog.module('a.b.MyController');",
+            "class MyController extends SomeParentController {",
+            "  static deps() { return {model: 0}; }",
+            "  constructor({model}) {}",
+            "}",
+            "registerController(MY_CONTROLLER, MyController);"));
+  }
+
+  @Test
   public void testMissingJsDoc_noWarningOnTestFunctions() {
     testSame("function testSomeFunctionality() {}");
     testSame("var testSomeFunctionality = function() {};");
@@ -330,6 +345,15 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("function tearDown() {}");
     testSame("var setUp = function() {};");
     testSame("var tearDown = function() {};");
+  }
+
+  @Test
+  public void testMissingJsDoc_noWarningOnTestMethods() {
+    testSame("class MyClass { testSomeFunctionality() {} }");
+    testSame("goog.module('mod'); class MyClass { testSomeFunctionality() {} }");
+    testSame("a.b.c = class { testSomeFunctionality() {} }");
+    testSame("class MyClass { setUp() {} }");
+    testSame("class MyClass { tearDown() {} }");
   }
 
   @Test
@@ -351,6 +375,9 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   public void testMissingJsDoc_googModule() {
     testWarning("goog.module('a.b.c'); function f() {}", MISSING_JSDOC);
     testWarning("goog.module('a.b.c'); var f = function() {};", MISSING_JSDOC);
+    // TODO(b/124061048): these should also warn for missing JSDoc
+    testSame("goog.module('a.b.c'); class Foo { constructor(x) {} }");
+    testSame("goog.module('a.b.c'); class Foo { someMethod() {} }");
   }
 
   @Test
@@ -382,6 +409,8 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   public void testMissingJsDoc_googModule_noWarning() {
     testSame("goog.module('a.b.c'); /** @type {function()} */ function f() {}");
     testSame("goog.module('a.b.c'); /** @type {function()} */ var f = function() {};");
+    // No param constructors do not require JSDoc
+    testSame("goog.module('a.b.c'); class Foo { constructor() {} }");
   }
 
   @Test
