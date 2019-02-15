@@ -2301,6 +2301,40 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testI18nMessageValidation_throughModuleExport() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.module('a.b')", //
+              "",
+              "exports = {",
+              "  MSG_HELLO: goog.getMsg('Hello!'),",
+              "}"),
+          lines(
+              "goog.module('a.c')", //
+              "",
+              "const b = goog.require('a.b');",
+              "",
+              "const {MSG_HELLO} = b;")
+        },
+        new String[] {
+          lines(
+              "var module$exports$a$b = {", //
+              "  MSG_HELLO: goog.getMsg('Hello!'),",
+              "}"),
+          lines(
+              "var module$exports$a$c = {};", //
+              "",
+              "const {MSG_HELLO: module$contents$a$c_MSG_HELLO} = module$exports$a$b;")
+        });
+  }
+
+  @Test
   public void testDisambiguateProperties() {
     String code =
         "/** @constructor */ function Foo(){} Foo.prototype.bar = 3;" +

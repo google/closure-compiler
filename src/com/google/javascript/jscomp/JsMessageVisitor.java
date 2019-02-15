@@ -253,20 +253,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
       return;
     }
 
-    if (msgNode.isGetProp()
-        && msgNode.isQualifiedName()
-        && msgNode.getLastChild().getString().equals(messageKey)) {
-      // Case: `foo.Thing.MSG_EXAMPLE = bar.OtherThing.MSG_EXAMPLE;`
-      //
-      // This kind of construct is created by Es6ToEs3ClassSideInheritance. Just ignore it; the
-      // message will have already been extracted from the base class.
-      return;
-    } else if (msgNode.getGrandparent().isObjectPattern()
-        && msgNode.isName()
-        && msgNode.getParent().getString().equals(msgNode.getString())) {
-      // Case: `var {MSG_HELLO} = x;
-      //
-      // It's a destructuring alias. Ignore it.
+    if (isLegalMessageVarAlias(msgNode, messageKey)) {
       return;
     }
 
@@ -368,6 +355,42 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         unnamedMessages.put(var, message);
       }
     }
+  }
+
+  /**
+   * Defines any special cases that are exceptions to what would otherwise be illegal message
+   * assignments.
+   *
+   * <p>These exceptions are generally due to the pass being designed before new syntax was
+   * introduced.
+   */
+  private static boolean isLegalMessageVarAlias(Node msgNode, String msgKey) {
+    if (msgNode.isGetProp()
+        && msgNode.isQualifiedName()
+        && msgNode.getLastChild().getString().equals(msgKey)) {
+      // Case: `foo.Thing.MSG_EXAMPLE = bar.OtherThing.MSG_EXAMPLE;`
+      //
+      // This kind of construct is created by Es6ToEs3ClassSideInheritance. Just ignore it; the
+      // message will have already been extracted from the base class.
+      return true;
+    }
+
+    if (msgNode.getGrandparent().isObjectPattern() && msgNode.isName()) {
+      // Case: `var {MSG_HELLO} = x;
+      //
+      // It's a destructuring import. Ignore it if the name is the same. We compare against the
+      // original name if possible because in modules, the NAME node will be rewritten with a
+      // module-qualified name (e.g. `var {MSG_HELLO: goog$module$my$module_MSG_HELLO} = x;`).
+      String aliasName =
+          (msgNode.getOriginalName() != null) ? msgNode.getOriginalName() : msgNode.getString();
+      if (aliasName.equals(msgKey)) {
+        return true;
+      }
+    }
+
+    // TODO(nickreid): Should `var MSG_HELLO = x.MSG_HELLO;` also be allowed?
+
+    return false;
   }
 
   /** Get a previously tracked message. */
