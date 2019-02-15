@@ -40,6 +40,7 @@ package com.google.javascript.rhino;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.JSDocInfo.Visibility.INHERITED;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.PACKAGE;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.PRIVATE;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.PROTECTED;
@@ -622,6 +623,26 @@ public class JSDocInfoTest {
 
     Collection<Node> nodes = info.getTypeNodes();
     assertThat(nodes).isEmpty();
+  }
+
+  @Test
+  public void testContainsDeclaration_implements() {
+    JSDocInfo info = new JSDocInfo();
+    info.setVisibility(INHERITED);
+    info.addImplementedInterface(fromString("MyInterface"));
+
+    assertThat(info.getImplementedInterfaceCount()).isEqualTo(1);
+    assertThat(info.containsDeclaration()).isTrue();
+  }
+
+  @Test
+  public void testContainsDeclaration_extends() {
+    JSDocInfo info = new JSDocInfo();
+    info.setVisibility(INHERITED);
+    info.setBaseType(fromString("MyBaseClass"));
+
+    assertThat(info.hasBaseType()).isTrue();
+    assertThat(info.containsDeclaration()).isTrue();
   }
 
   /** Gets the type expression for a simple type name. */

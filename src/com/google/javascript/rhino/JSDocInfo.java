@@ -975,18 +975,20 @@ public class JSDocInfo implements Serializable {
         || hasTypedefType()
         || hasThisType()
         || getParameterCount() > 0
+        || getImplementedInterfaceCount() > 0
+        || hasBaseType()
         || visibility != Visibility.INHERITED
         || getFlag(MASK_CONSTANT
-            | MASK_CONSTRUCTOR
-            | MASK_DEFINE
-            | MASK_OVERRIDE
-            | MASK_EXPORT
-            | MASK_EXPOSE
-            | MASK_DEPRECATED
-            | MASK_INTERFACE
-            | MASK_IMPLICITCAST
-            | MASK_NOSIDEEFFECTS
-            | MASK_RECORD));
+                | MASK_CONSTRUCTOR
+                | MASK_DEFINE
+                | MASK_OVERRIDE
+                | MASK_EXPORT
+                | MASK_EXPOSE
+                | MASK_DEPRECATED
+                | MASK_INTERFACE
+                | MASK_IMPLICITCAST
+                | MASK_NOSIDEEFFECTS
+                | MASK_RECORD));
   }
 
   /**
