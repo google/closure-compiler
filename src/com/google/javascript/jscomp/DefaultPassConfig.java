@@ -1412,7 +1412,8 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           CompilerOptions options = compiler.getOptions();
 
-          return new MarkUntranspilableFeaturesAsRemoved(compiler, options.getOutputFeatureSet());
+          return new MarkUntranspilableFeaturesAsRemoved(
+              compiler, options.getLanguageIn().toFeatureSet(), options.getOutputFeatureSet());
         }
 
         @Override
