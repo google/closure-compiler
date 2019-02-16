@@ -42,6 +42,7 @@ import com.google.javascript.jscomp.CompilerOptions.OutputJs;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
+import com.google.javascript.jscomp.ijs.IjsErrors;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.TokenStream;
@@ -676,6 +677,65 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
+   * Removes input --ijs files whose basename matches an input --js or --weakdep file.
+   *
+   * @throws FlagUsageException If there are both input --ijs files and module specs.
+   */
+  @GwtIncompatible("Unnecessary")
+  private ImmutableList<JSError> deduplicateIjsFiles(
+      List<FlagEntry<JsSourceType>> files, List<String> moduleRoots, boolean hasModuleSpecs) {
+    ImmutableList.Builder<JSError> errors = ImmutableList.builder();
+
+    // First pass: collect basenames of --js and --weakdep files.
+    Map<String, String> basenameToFile = new HashMap<>();
+    for (FlagEntry<JsSourceType> file : files) {
+      // TODO(tjgq): Handle zip files.
+      if (file.flag == JsSourceType.JS || file.flag == JsSourceType.WEAKDEP) {
+        String basename = getBasename(file.value, moduleRoots);
+        basenameToFile.put(basename, file.value);
+      }
+    }
+
+    // Second pass: drop --ijs files whose basename matches --js or --weakdep files.
+    Iterator<FlagEntry<JsSourceType>> iterator = files.iterator();
+    while (iterator.hasNext()) {
+      FlagEntry<JsSourceType> file = iterator.next();
+      if (file.flag == JsSourceType.IJS) {
+        if (hasModuleSpecs) {
+          throw new FlagUsageException("--ijs is incompatible with --chunk or --module.");
+        }
+        if (!file.value.endsWith(".i.js")) {
+          errors.add(JSError.make(IjsErrors.BAD_IJS_FILE_NAME, file.value));
+        }
+        String basename = getBasename(file.value, moduleRoots);
+        if (basenameToFile.containsKey(basename)) {
+          errors.add(
+              JSError.make(
+                  IjsErrors.CONFLICTING_IJS_FILE, basenameToFile.get(basename), file.value));
+          iterator.remove();
+        }
+      }
+    }
+
+    return errors.build();
+  }
+
+  private String getBasename(String filename, List<String> moduleRoots) {
+    for (String moduleRoot : moduleRoots) {
+      if (filename.startsWith(moduleRoot + "/")) {
+        filename = filename.substring(moduleRoot.length() + 1);
+        break;
+      }
+    }
+    for (String suffix : new String[] {".i.js", ".js"}) {
+      if (filename.endsWith(suffix)) {
+        return filename.substring(0, filename.length() - suffix.length());
+      }
+    }
+    return filename;
+  }
+
+  /**
    * Check that relative paths inside zip files are unique, since multiple files with the same path
    * inside different zips are considered duplicate inputs. Parameter {@code sourceFiles} may be
    * modified if duplicates are removed.
@@ -731,7 +791,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   private List<SourceFile> createSourceInputs(
       List<JsModuleSpec> jsModuleSpecs,
       List<FlagEntry<JsSourceType>> files,
-      List<JsonFileSpec> jsonFiles)
+      List<JsonFileSpec> jsonFiles,
+      List<String> moduleRoots)
       throws IOException {
     if (isInTestMode()) {
       return inputsSupplierForTesting != null ? inputsSupplierForTesting.get()
@@ -741,6 +802,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       // Request to read from stdin.
       files = ImmutableList.of(new FlagEntry<JsSourceType>(JsSourceType.JS, "-"));
     }
+
+    for (JSError error : deduplicateIjsFiles(files, moduleRoots, !jsModuleSpecs.isEmpty())) {
+      compiler.report(error);
+    }
+
     try {
       if (jsonFiles != null) {
         return createInputs(files, jsonFiles, jsModuleSpecs);
@@ -1122,8 +1188,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     compiler.initWarningsGuard(options.getWarningsGuard());
+
     List<SourceFile> inputs =
-        createSourceInputs(jsModuleSpecs, config.mixedJsSources, jsonFiles);
+        createSourceInputs(jsModuleSpecs, config.mixedJsSources, jsonFiles, config.moduleRoots);
     if (!jsModuleSpecs.isEmpty()) {
       if (isInTestMode()) {
         modules = modulesSupplierForTesting.get();
@@ -2718,13 +2785,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
   }
 
-  /** Flag types for js source files. */
+  /** Flag types for JavaScript source files. */
   @GwtIncompatible("Unnecessary")
   protected enum JsSourceType {
     EXTERN("extern"),
     JS("js"),
     JS_ZIP("jszip"),
-    WEAKDEP("weakdep");
+    WEAKDEP("weakdep"),
+    IJS("ijs");
 
     @VisibleForTesting
     final String flagName;
