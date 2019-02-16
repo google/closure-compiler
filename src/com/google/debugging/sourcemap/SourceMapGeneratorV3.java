@@ -508,7 +508,8 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
       if (i != 0) {
         out.append(",");
       }
-      out.append(escapeString(contents.get(i)));
+      String sourceContent = contents.get(i);
+      out.append(escapeString(sourceContent == null ? "" : sourceContent));
     }
     out.append("]");
     appendFieldEnd(out);
