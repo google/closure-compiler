@@ -746,13 +746,18 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "(condition ? obj1 : obj2).prop = testcode$classdecl$var0;"));
   }
 
-  /**
-   * We don't bother transpiling this case because the transpiled code will be very difficult to
-   * typecheck.
-   */
   @Test
   public void testClassExpression_cannotConvert() {
-    testError("var C = new (foo || (foo = class { }))();", CANNOT_CONVERT);
+    test(
+        "var C = new (foo || (foo = class { }))();",
+        lines(
+            "var JSCompiler_temp$jscomp$0;",
+            "if (JSCompiler_temp$jscomp$0 = foo) {",
+            "} else {",
+            "  /** @struct @constructor */ const testcode$classdecl$var0 = function(){};",
+            "  JSCompiler_temp$jscomp$0 = foo = testcode$classdecl$var0;",
+            "}",
+            "var C = new JSCompiler_temp$jscomp$0;"));
   }
 
   @Test
