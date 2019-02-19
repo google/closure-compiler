@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.SourceFile.Generator;
@@ -36,8 +35,6 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public class RecoverableJsAstTest {
-  private static final Joiner LINE_JOINER = Joiner.on('\n');
-
   private String srcCode = "";
 
   @Test
