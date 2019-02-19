@@ -2017,22 +2017,48 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "",
         "function f(/** Bar */ i) { return i.x; }");
 
-    String output = lines(
-        "/** @record */",
-        "function I(){}",
-        "/** @type {number} */",
-        "I.prototype.Foo_prototype$x;",
-        "/** @constructor @implements {I} */",
-        "function Foo(){}",
-        "/** @type {number} */",
-        "Foo.prototype.Foo_prototype$x;",
-        "/** @constructor */",
-        "function Bar(){}",
-        "/** @type {number} */",
-        "Bar.prototype.Bar_prototype$x;",
-        "function f(/** Bar */ i){return i.Bar_prototype$x}");
+    String output =
+        lines(
+            "/** @record */",
+            "function I(){}",
+            "/** @type {number} */",
+            "I.prototype.Foo_prototype$x;",
+            "/** @constructor @implements {I} */",
+            "function Foo(){}",
+            "/** @type {number} */",
+            "Foo.prototype.Foo_prototype$x;",
+            "/** @constructor */",
+            "function Bar(){}",
+            "/** @type {number} */",
+            "Bar.prototype.Bar_prototype$x;",
+            "function f(/** Bar */ i){return i.Bar_prototype$x}");
 
     testSets(js, output, "{x=[[Bar.prototype], [Foo.prototype, I.prototype]]}");
+  }
+
+  @Test
+  public void testStructuralTyping_typeConflationIsRecordedThroughTemplateTypes() {
+    testSets(
+        lines(
+            "/** @record */",
+            "class Record {",
+            "  /** @return {string} */",
+            "  bar() {}",
+            "}",
+            "",
+            "class Concrete {",
+            "  /** @return {string} */",
+            "  bar() { return ''; }",
+            "}",
+            "",
+            "/**",
+            " * @param {!Array<!Concrete>} concretes",
+            " * @return {!Array<!Record>}",
+            " */",
+            "function conflate(concretes) { return concretes; }"),
+        // TODO(b/124766232): The correct disambiguation sets would be:
+        // "{bar=[[Concrete.prototype, Record.prototype]]}"
+        "{bar=[[Concrete.prototype], [Record.prototype]]}");
   }
 
   /**
