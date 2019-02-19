@@ -2119,6 +2119,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   @VisibleForTesting
   @GwtIncompatible("Unnecessary")
   void printBundleTo(Iterable<CompilerInput> inputs, Appendable out) throws IOException {
+    // Prebuild ASTs before they're needed in getLoadFlags, for performance and because
+    // StackOverflowErrors can be hit if not prebuilt.
+    if (compiler.getOptions().numParallelThreads > 1) {
+      new PrebuildAst(compiler, compiler.getOptions().numParallelThreads).prebuild(inputs);
+    }
     if (!compiler.getOptions().preventLibraryInjection) {
       // ES6 modules will need a runtime in a bundle. Skip appending this runtime if there are no
       // ES6 modules to cut down on size.
