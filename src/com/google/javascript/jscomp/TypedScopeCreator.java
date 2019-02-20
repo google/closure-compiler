@@ -1977,7 +1977,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         TypedVar var = currentScope.getVar(qname.getComponent());
         return var != null ? var.getNameNode() : null;
       }
-      ObjectType parent = ObjectType.cast(lookupQualifiedName(qname.getOwner()));
+      ObjectType parent = ObjectType.cast(currentScope.lookupQualifiedName(qname.getOwner()));
       return parent != null ? parent.getPropertyDefSite(qname.getComponent()) : null;
     }
 
@@ -2007,7 +2007,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       // If rValue is a name, try looking it up in the current scope.
       if (rValue.isQualifiedName()) {
-        return lookupQualifiedName(rValue.getQualifiedNameObject());
+        return currentScope.lookupQualifiedName(rValue.getQualifiedNameObject());
       }
 
       // Check for simple invariant operations, such as "!x" or "+x" or "''+x"
@@ -2024,11 +2024,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       if (rValue.isNew() && rValue.getFirstChild().isQualifiedName()) {
-        JSType targetType = lookupQualifiedName(rValue.getFirstChild().getQualifiedNameObject());
+        JSType targetType =
+            currentScope.lookupQualifiedName(rValue.getFirstChild().getQualifiedNameObject());
         if (targetType != null) {
-          FunctionType fnType = targetType
-              .restrictByNotNullOrUndefined()
-              .toMaybeFunctionType();
+          FunctionType fnType = targetType.restrictByNotNullOrUndefined().toMaybeFunctionType();
           if (fnType != null && fnType.hasInstanceType()) {
             return fnType.getInstanceType();
           }
@@ -2058,25 +2057,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       return null;
     }
 
-    private JSType lookupQualifiedName(QualifiedName qname) {
-      TypedVar slot = currentScope.getVar(qname.join());
-      if (slot != null && !slot.isTypeInferred()) {
-        JSType type = slot.getType();
-        if (type != null && !type.isUnknownType()) {
-          return type;
-        }
-      } else if (!qname.isSimple()) {
-        JSType type = lookupQualifiedName(qname.getOwner());
-        // NOTE: The scope only contains declared types at this
-        // point so any property we find is a value type
-        // to look up properties on.
-        if (type != null) {
-          return type.findPropertyType(qname.getComponent());
-        }
-      }
-      return null;
-    }
-
     /**
      * Look for class-defining calls.
      * Because JS has no 'native' syntax for defining classes,
@@ -2087,9 +2067,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           codingConvention.getClassesDefinedByCall(n);
       if (relationship != null) {
         ObjectType superClass =
-            TypeValidator.getInstanceOfCtor(currentScope.getVar(relationship.superclassName));
+            TypeValidator.getInstanceOfCtor(
+                currentScope.lookupQualifiedName(QualifiedName.of(relationship.superclassName)));
         ObjectType subClass =
-            TypeValidator.getInstanceOfCtor(currentScope.getVar(relationship.subclassName));
+            TypeValidator.getInstanceOfCtor(
+                currentScope.lookupQualifiedName(QualifiedName.of(relationship.subclassName)));
         if (superClass != null && subClass != null) {
           // superCtor and subCtor might be structural constructors
           // (like {function(new:Object)}) so we need to resolve them back

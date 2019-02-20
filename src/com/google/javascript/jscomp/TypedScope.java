@@ -21,10 +21,12 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
+import javax.annotation.Nullable;
 
 /**
  * TypedScope contains information about variables and their types. Scopes can be nested, a scope
@@ -187,5 +189,29 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
   public JSDocInfo getJsdocOfTypeDeclaration(String typeName) {
     StaticTypedSlot slot = getSlot(typeName);
     return slot == null ? null : slot.getJSDocInfo();
+  }
+
+  /**
+   * Looks up a given qualified name in the scope. if that fails, looks up the component properties
+   * off of any owner types that are in scope.
+   *
+   * <p>This is always more or equally expensive as calling getVar(String name), so should only be
+   * used when necessary.
+   */
+  @Nullable
+  public JSType lookupQualifiedName(QualifiedName qname) {
+    TypedVar slot = getVar(qname.join());
+    if (slot != null && !slot.isTypeInferred()) {
+      JSType type = slot.getType();
+      if (type != null && !type.isUnknownType()) {
+        return type;
+      }
+    } else if (!qname.isSimple()) {
+      JSType type = lookupQualifiedName(qname.getOwner());
+      if (type != null) {
+        return type.findPropertyType(qname.getComponent());
+      }
+    }
+    return null;
   }
 }

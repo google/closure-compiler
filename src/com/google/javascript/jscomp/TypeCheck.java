@@ -41,6 +41,7 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -2362,10 +2363,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         compiler.getCodingConvention().getClassesDefinedByCall(n);
     TypedScope scope = t.getTypedScope();
     if (relationship != null) {
-      ObjectType superClass = TypeValidator.getInstanceOfCtor(
-          scope.getVar(relationship.superclassName));
-      ObjectType subClass = TypeValidator.getInstanceOfCtor(
-          scope.getVar(relationship.subclassName));
+      ObjectType superClass =
+          TypeValidator.getInstanceOfCtor(
+              scope.lookupQualifiedName(QualifiedName.of(relationship.superclassName)));
+      ObjectType subClass =
+          TypeValidator.getInstanceOfCtor(
+              scope.lookupQualifiedName(QualifiedName.of(relationship.subclassName)));
       if (relationship.type == SubclassType.INHERITS
           && superClass != null
           && !superClass.isEmptyType()

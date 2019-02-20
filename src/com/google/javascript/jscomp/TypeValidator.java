@@ -191,21 +191,12 @@ class TypeValidator implements Serializable {
             typeRegistry.getNativeObjectType(JSTypeNative.ASYNC_ITERATOR_TYPE));
   }
 
-  /**
-   * Utility function for getting a function type from a var.
-   */
-  static FunctionType getFunctionType(@Nullable TypedVar v) {
-    JSType t = v == null ? null : v.getType();
-    ObjectType o = t == null ? null : t.dereference();
-    return JSType.toMaybeFunctionType(o);
-  }
-
-  /**
-   * Utility function for getting an instance type from a var pointing
-   * to the constructor.
-   */
-  static ObjectType getInstanceOfCtor(@Nullable TypedVar v) {
-    FunctionType ctor = getFunctionType(v);
+  /** Utility function that attempts to get an instance type from a potential constructor type */
+  static ObjectType getInstanceOfCtor(@Nullable JSType t) {
+    if (t == null) {
+      return null;
+    }
+    FunctionType ctor = JSType.toMaybeFunctionType(t.dereference());
     if (ctor != null && ctor.isConstructor()) {
       return ctor.getInstanceType();
     }

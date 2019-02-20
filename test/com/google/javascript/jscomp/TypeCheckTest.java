@@ -5060,6 +5060,91 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testGoodExtends_withAliasOfSuperclass() {
+    testTypesWithCommonExterns(
+        CLOSURE_DEFS
+            + lines(
+                "/** @constructor */ const OldType = function () {};",
+                "const OldTypeAlias = OldType;",
+                "",
+                "/**",
+                "  * @constructor",
+                "  * @extends {OldTypeAlias}",
+                "  */",
+                "function NewType() {};",
+                // Verify that we recognize the inheritance even when goog.inherits references
+                // OldTypeAlias, not OldType.
+                "goog.inherits(NewType, OldTypeAlias);",
+                "NewType.prototype.method = function() {",
+                "  NewType.superClass_.foo.call(this);",
+                "};"),
+        "Property foo never defined on OldType.prototype");
+  }
+
+  @Test
+  public void testBadExtends_withAliasOfSuperclass() {
+    testTypesWithCommonExterns(
+        CLOSURE_DEFS
+            + lines(
+                "const ns = {};",
+                "/** @constructor */ ns.OldType = function () {};",
+                "const nsAlias = ns;",
+                "",
+                "/**",
+                "  * @constructor",
+                "  * // no @extends here, NewType should not have a goog.inherits",
+                "  */",
+                "function NewType() {};",
+                // Verify that we recognize the inheritance even when goog.inherits references
+                // nsAlias.OldType, not ns.OldType.
+                "goog.inherits(NewType, ns.OldType);"),
+        "Missing @extends tag on type NewType");
+  }
+
+  @Test
+  public void testBadExtends_withNamespacedAliasOfSuperclass() {
+    testTypesWithCommonExterns(
+        CLOSURE_DEFS
+            + lines(
+                "const ns = {};",
+                "/** @constructor */ ns.OldType = function () {};",
+                "const nsAlias = ns;",
+                "",
+                "/**",
+                "  * @constructor",
+                "  * // no @extends here, NewType should not have a goog.inhertis",
+                "  */",
+                "function NewType() {};",
+                // Verify that we recognize the inheritance even when goog.inherits references
+                // nsAlias.OldType, not ns.OldType.
+                "goog.inherits(NewType, nsAlias.OldType);"),
+        "Missing @extends tag on type NewType");
+  }
+
+  @Test
+  public void testGoodExtends_withNamespacedAliasOfSuperclass() {
+    testTypesWithCommonExterns(
+        CLOSURE_DEFS
+            + lines(
+                "const ns = {};",
+                "/** @constructor */ ns.OldType = function () {};",
+                "const nsAlias = ns;",
+                "",
+                "/**",
+                "  * @constructor",
+                "  * @extends {nsAlias.OldType}",
+                "  */",
+                "function NewType() {};",
+                // Verify that we recognize the inheritance even when goog.inherits references
+                // nsAlias.OldType, not ns.OldType.
+                "goog.inherits(NewType, nsAlias.OldType);",
+                "NewType.prototype.method = function() {",
+                "  NewType.superClass_.foo.call(this);",
+                "};"),
+        "Property foo never defined on ns.OldType.prototype");
+  }
+
+  @Test
   public void testGoodExtends15() {
     testTypes(
         CLOSURE_DEFS +
