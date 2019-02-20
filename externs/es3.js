@@ -31,14 +31,15 @@
 
 
 /**
- * @param {string=} opt_description
+ * @constructor
+ * @param {*=} opt_description
  * @return {symbol}
  */
 function Symbol(opt_description) {}
 
 
 /**
- * @type {string}
+ * @const {string|undefined}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/description
  */
 Symbol.prototype.description;

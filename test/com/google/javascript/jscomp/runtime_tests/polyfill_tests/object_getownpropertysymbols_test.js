@@ -23,7 +23,7 @@ const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 const assertPropertyListEquals = testing.assertPropertyListEquals;
 const objectCreate = testing.objectCreate;
 
-const SYMBOL_IS_POLYFILLED = typeof Symbol('') === 'string';
+const SYMBOL_IS_POLYFILLED = typeof Symbol() !== 'symbol';
 
 testSuite({
   testGetOwnPropertySymbols_symbols() {
