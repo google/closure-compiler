@@ -21,7 +21,7 @@
   <packaging>jar</packaging>
 
   <name>Closure Compiler Linter</name>
-  <version>v20190215</version>
+  <version>1.0-SNAPSHOT</version>
 
   <url>https://developers.google.com/closure/compiler/</url>
   <description>
@@ -41,7 +41,7 @@
   <parent>
     <groupId>com.google.javascript</groupId>
     <artifactId>closure-compiler-main</artifactId>
-    <version>v20190215</version>
+    <version>1.0-SNAPSHOT</version>
     <relativePath>pom-main.xml</relativePath>
   </parent>
 
