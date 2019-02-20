@@ -1360,6 +1360,27 @@ Array.prototype.copyWithin = function(target, start, opt_end) {};
  */
 Array.prototype.includes = function(searchElement, opt_fromIndex) {};
 
+/**
+ * NOTE: this is a stage 3 proposal extern.
+ * @param {function(this: THIS, T, number, !IArrayLike<T>): S|!Array<S>}
+ *     callback
+ * @param {THIS=} thisArg
+ * @return {!Array<S>}
+ * @this {!IArrayLike<T>}
+ * @template T, THIS, S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap
+ */
+Array.prototype.flatMap = function(callback, thisArg) {};
+
+/**
+ * NOTE: this is a stage 3 proposal extern.
+ * @param {*=} depth
+ * @return {!Array<S>}
+ * @this {!IArrayLike<T>}
+ * @template T, S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
+ */
+Array.prototype.flat = function(depth) {};
 
 /**
  * @param {!Object} obj

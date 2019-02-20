@@ -5,6 +5,8 @@ Array.prototype.entries es6 es3 es6/array/entries
 Array.prototype.fill es6 es3 es6/array/fill
 Array.prototype.find es6 es3 es6/array/find
 Array.prototype.findIndex es6 es3 es6/array/findindex
+Array.prototype.flat es9 es5 es6/array/flat
+Array.prototype.flatMap es9 es5 es6/array/flatmap
 Array.prototype.includes es7 es3 es6/array/includes
 Array.prototype.keys es6 es3 es6/array/keys
 Array.prototype.values es8 es3 es6/array/values
