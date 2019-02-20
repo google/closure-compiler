@@ -283,16 +283,10 @@ public class NodeTest {
   }
 
   @Test
-  public void testMatchesQualifiedNameX() {
-    assertThat(qname("this.b").matchesQualifiedName("this.b")).isTrue();
-  }
-
-  @Test
   public void testMatchesQualifiedName1() {
     assertThat(IR.name("a").matchesQualifiedName("a")).isTrue();
     assertThat(IR.name("a").matchesQualifiedName("ab")).isFalse();
     assertThat(IR.name("a").matchesQualifiedName("a.b")).isFalse();
-    assertThat(IR.name("a").matchesQualifiedName((String) null)).isFalse();
     assertThat(IR.name("a").matchesQualifiedName(".b")).isFalse();
     assertThat(IR.name("a").matchesQualifiedName("a.")).isFalse();
 
@@ -343,7 +337,6 @@ public class NodeTest {
   public void testMatchesQualifiedName2() {
     assertThat(IR.name("a").matchesQualifiedName(qname("a"))).isTrue();
     assertThat(IR.name("a").matchesQualifiedName(qname("a.b"))).isFalse();
-    assertThat(IR.name("a").matchesQualifiedName((Node) null)).isFalse();
 
     assertThat(qname("a.b").matchesQualifiedName(qname("a"))).isFalse();
     assertThat(qname("a.b").matchesQualifiedName(qname("a.b"))).isTrue();

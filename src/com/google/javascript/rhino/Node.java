@@ -2227,7 +2227,7 @@ public class Node implements Serializable {
    * <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
    */
   public final boolean matchesQualifiedName(String name) {
-    return name != null && matchesQualifiedName(name, name.length());
+    return matchesQualifiedName(name, name.length());
   }
 
   /**
@@ -2265,7 +2265,7 @@ public class Node implements Serializable {
    */
   @SuppressWarnings("ReferenceEquality")
   public final boolean matchesQualifiedName(Node n) {
-    if (n == null || n.token != token) {
+    if (n.token != token) {
       return false;
     }
     switch (token) {
