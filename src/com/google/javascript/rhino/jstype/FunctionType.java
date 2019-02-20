@@ -49,6 +49,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -157,6 +158,34 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    */
   private boolean wasAddedToExtendedConstructorSubtypes = false;
 
+  /** The primitive id associated with this FunctionType, or null if none. */
+  private final ClosurePrimitive closurePrimitive;
+
+  // TODO(lharker): we should really clean these constructors up to take a FunctionBuilder
+  /** Creates an instance for a function that might be a constructor that is not a primitive. */
+  FunctionType(
+      JSTypeRegistry registry,
+      String name,
+      Node source,
+      ArrowType arrowType,
+      JSType typeOfThis,
+      TemplateTypeMap templateTypeMap,
+      Kind kind,
+      boolean nativeType,
+      boolean isAbstract) {
+    this(
+        registry,
+        name,
+        source,
+        arrowType,
+        typeOfThis,
+        templateTypeMap,
+        kind,
+        /* closurePrimitive= */ null,
+        nativeType,
+        isAbstract);
+  }
+
   /** Creates an instance for a function that might be a constructor. */
   FunctionType(
       JSTypeRegistry registry,
@@ -166,6 +195,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       JSType typeOfThis,
       TemplateTypeMap templateTypeMap,
       Kind kind,
+      ClosurePrimitive closurePrimitive,
       boolean nativeType,
       boolean isAbstract) {
     super(
@@ -198,6 +228,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         break;
     }
     this.call = arrowType;
+    this.closurePrimitive = closurePrimitive;
     this.isStructuralInterface = false;
     this.isAbstract = isAbstract;
   }
@@ -1531,5 +1562,10 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   private boolean isDelegateProxy() {
     // TODO(bradfordcsmith): There should be a better way to determine that we have a proxy type.
     return hasReferenceName() && getReferenceName().endsWith(DELEGATE_SUFFIX);
+  }
+
+  /** Returns the {@code @closurePrimitive} identifier associated with this function */
+  public final ClosurePrimitive getClosurePrimitive() {
+    return this.closurePrimitive;
   }
 }

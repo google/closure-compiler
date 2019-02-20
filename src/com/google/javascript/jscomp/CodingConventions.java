@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.Immutable;
+import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.StaticSourceFile;
@@ -358,6 +359,10 @@ public final class CodingConventions {
 
     @Override
     public boolean isFunctionCallThatAlwaysThrows(Node n) {
+      if (NodeUtil.isExprCall(n)) {
+        FunctionType fnType = FunctionType.toMaybeFunctionType(n.getFirstFirstChild().getJSType());
+        return fnType != null && ClosurePrimitive.ASSERTS_FAIL == fnType.getClosurePrimitive();
+      }
       return false;
     }
 

@@ -63,6 +63,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   private Set<String> extraAnnotations;
   private Set<String> extraSuppressions;
+  private Set<String> extraPrimitives;
   private JSDocInfoBuilder fileLevelJsDocBuilder = null;
 
   private static final String MISSING_TYPE_DECL_WARNING_TEXT =
@@ -86,6 +87,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     extraSuppressions.add("x");
     extraSuppressions.add("y");
     extraSuppressions.add("z");
+
+    extraPrimitives = new HashSet<>();
+    extraPrimitives.add("id");
+    extraPrimitives.add("idA");
+    extraPrimitives.add("idB");
   }
 
   @Test
@@ -1644,6 +1650,63 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseMeaning4() {
     parse("@meaning  tigers\n * @meaning and lions  */",
         "extra @meaning tag");
+  }
+
+  @Test
+  public void testParseClosurePrimitive() {
+    JSDocInfo info = parse("@closurePrimitive {id} */");
+    assertThat(info.getClosurePrimitiveId()).isEqualTo("id");
+  }
+
+  @Test
+  public void testParseClosurePrimitiveOnNewLine() {
+    JSDocInfo info = parse("@closurePrimitive    \n\n {id} */");
+    assertThat(info.getClosurePrimitiveId()).isEqualTo("id");
+  }
+
+  @Test
+  public void testParseClosurePrimitiveWithAnnotationAfterId() {
+    JSDocInfo info = parse("@closurePrimitive {id} @const */");
+    assertThat(info.getClosurePrimitiveId()).isEqualTo("id");
+    assertThat(info.isConstant()).isTrue();
+  }
+
+  @Test
+  public void testParseClosurePrimitiveWithStringAfterId() {
+    JSDocInfo info = parse("@closurePrimitive {id} some comment\n@const */");
+    assertThat(info.getClosurePrimitiveId()).isEqualTo("id");
+    assertThat(info.isConstant()).isTrue();
+  }
+
+  @Test
+  public void testParseClosurePrimitiveIdMissingIdentifier() {
+    parse("@closurePrimitive */", "missing opening {");
+  }
+
+  @Test
+  public void testParseClosurePrimitiveIdInvalidId() {
+    parse("@closurePrimitive {unrecognizedId } */", "invalid id in @closurePrimitive tag.");
+  }
+
+  @Test
+  public void testParseClosurePrimitiveIdMissingLeftCurly() {
+    parse("@closurePrimitive id} */", "missing opening {");
+  }
+
+  @Test
+  public void testParseClosurePrimitiveIdMissingRightCurly() {
+    parse("@closurePrimitive {id */", "expected closing }");
+  }
+
+  @Test
+  public void testParseClosurePrimitiveIdMissingStringInCurly() {
+    parse("@closurePrimitive {} */", "missing id in @closurePrimitive tag.");
+  }
+
+  @Test
+  public void testParseClosurePrimitiveDuplicateTags() {
+    parse(
+        "@closurePrimitive {idA}\n@closurePrimitive {idB} */", "conflicting @closurePrimitive tag");
   }
 
   @Test
@@ -5601,6 +5664,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             .setExtraAnnotationNames(extraAnnotations)
             .setJsDocParsingMode(parseDocumentation)
             .setSuppressionNames(extraSuppressions)
+            .setClosurePrimitiveNames(extraPrimitives)
             .setLanguageMode(LanguageMode.ECMASCRIPT3)
             .setParseInlineSourceMaps(true)
             .setStrictMode(Config.StrictMode.SLOPPY)

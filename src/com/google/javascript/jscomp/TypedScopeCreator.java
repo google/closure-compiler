@@ -1360,6 +1360,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               .setDeclarationScope(lvalueNode != null ? getLValueRootScope(lvalueNode) : null)
               .inferFromOverriddenFunction(overriddenType, parametersNode)
               .inferKind(info)
+              .inferClosurePrimitive(info)
               .inferTemplateTypeName(info, prototypeOwner)
               .inferInheritance(info, null);
 

@@ -35,6 +35,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -4317,6 +4318,15 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     JSType aNameType = findNameType("a", globalScope);
     assertType(aNameType).isString();
+  }
+
+  @Test
+  public void testCustomClosurePrimitiveOnFunctionDeclaration() {
+    testSame("/** @closurePrimitive {asserts.fail} */ function fail() {}");
+
+    JSType failType = findNameType("fail", globalScope);
+
+    assertType(failType).isFunctionTypeThat().hasPrimitiveId(ClosurePrimitive.ASSERTS_FAIL);
   }
 
   @Test

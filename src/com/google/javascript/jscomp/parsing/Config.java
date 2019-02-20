@@ -135,6 +135,9 @@ public abstract class Config {
   /** Set of recognized names in a {@code @suppress} tag. */
   abstract ImmutableSet<String> suppressionNames();
 
+  /** Set of recognized names in a {@code @closurePrimitive} tag. */
+  abstract ImmutableSet<String> closurePrimitiveNames();
+
   /** Whether to parse inline source maps (//# sourceMappingURL=data:...). */
   abstract boolean parseInlineSourceMaps();
 
@@ -150,6 +153,7 @@ public abstract class Config {
         .setRunMode(RunMode.STOP_AFTER_ERROR)
         .setExtraAnnotationNames(ImmutableSet.<String>of())
         .setSuppressionNames(ImmutableSet.<String>of())
+        .setClosurePrimitiveNames(ImmutableSet.of())
         .setParseInlineSourceMaps(false);
   }
 
@@ -166,6 +170,8 @@ public abstract class Config {
     abstract Builder setParseInlineSourceMaps(boolean parseInlineSourceMaps);
 
     abstract Builder setSuppressionNames(Iterable<String> names);
+
+    abstract Builder setClosurePrimitiveNames(Iterable<String> names);
 
     final Builder setExtraAnnotationNames(Iterable<String> names) {
       return setAnnotations(buildAnnotations(names));

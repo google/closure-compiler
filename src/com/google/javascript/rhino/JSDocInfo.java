@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * JSDoc information describing JavaScript code. JSDoc is represented as a unified object with
@@ -126,6 +127,7 @@ public class JSDocInfo implements Serializable {
     private ImmutableSet<String> suppressions;
     private ImmutableSet<String> modifies;
     private JSTypeExpression lendsName;
+    @Nullable private String closurePrimitiveId;
 
     // Bit flags for properties.
     private int propertyBitField;
@@ -149,6 +151,7 @@ public class JSDocInfo implements Serializable {
           .add("suppressions", suppressions)
           .add("modifies", modifies)
           .add("lendsName", lendsName)
+          .add("closurePrimitiveId", closurePrimitiveId)
           .omitNullValues()
           .toString();
     }
@@ -179,6 +182,7 @@ public class JSDocInfo implements Serializable {
       other.suppressions = suppressions == null ? null : ImmutableSet.copyOf(suppressions);
       other.modifies = modifies == null ? null :  ImmutableSet.copyOf(modifies);
       other.lendsName = cloneType(lendsName, cloneTypeNodes);
+      other.closurePrimitiveId = closurePrimitiveId;
 
       other.propertyBitField = propertyBitField;
       return other;
@@ -1680,6 +1684,21 @@ public class JSDocInfo implements Serializable {
 
   public boolean hasLendsName() {
     return getLendsName() != null;
+  }
+
+  void setClosurePrimitiveId(String closurePrimitiveId) {
+    lazyInitInfo();
+    info.closurePrimitiveId = closurePrimitiveId;
+  }
+
+  /** Returns the {@code @closurePrimitive {id}} identifier */
+  public String getClosurePrimitiveId() {
+    return (info == null) ? null : info.closurePrimitiveId;
+  }
+
+  /** Whether this JSDoc is annotated with {@code @closurePrimitive} */
+  public boolean hasClosurePrimitiveId() {
+    return getClosurePrimitiveId() != null;
   }
 
   /**

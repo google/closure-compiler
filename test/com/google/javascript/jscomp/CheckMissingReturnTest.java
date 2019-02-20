@@ -384,4 +384,20 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
         "/** @return {!Promise<string>} */ async function foo() { alert(1); }",
         CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
+
+  @Test
+  public void testClosureAssertsFailPreventsWarning() {
+    String input =
+        lines(
+            "/** @return {string} */",
+            "function foo(param) {",
+            "  if (param) {",
+            "    return 'success';",
+            "  }",
+            "  fail();",
+            "}");
+    testWarning("function fail() {}" + input, CheckMissingReturn.MISSING_RETURN_STATEMENT);
+
+    testNoWarning("/** @closurePrimitive {asserts.fail} */ function fail() {}" + input);
+  }
 }

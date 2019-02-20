@@ -27,10 +27,11 @@ enum Annotation {
   NG_INJECT,
   ABSTRACT,
   AUTHOR,
-  CUSTOM_ELEMENT,
+  CLOSURE_PRIMITIVE,
   CONSISTENTIDGENERATOR,
   CONSTANT,
   CONSTRUCTOR,
+  CUSTOM_ELEMENT,
   RECORD,
   DEFINE,
   DEPRECATED,
@@ -91,6 +92,7 @@ enum Annotation {
           .put("abstract", Annotation.ABSTRACT)
           .put("argument", Annotation.PARAM)
           .put("author", Annotation.AUTHOR)
+          .put("closurePrimitive", Annotation.CLOSURE_PRIMITIVE)
           .put("consistentIdGenerator", Annotation.CONSISTENTIDGENERATOR)
           .put("const", Annotation.CONSTANT)
           .put("constant", Annotation.CONSTANT)

@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType.Kind;
 import java.util.Set;
@@ -72,6 +73,7 @@ public final class FunctionBuilder {
   private Set<TemplateType> constructorOnlyKeys = ImmutableSet.of();
   private Kind kind = Kind.ORDINARY;
   private int properties = 0;
+  private ClosurePrimitive primitiveId = null;
 
   public FunctionBuilder(JSTypeRegistry registry) {
     this.registry = registry;
@@ -81,6 +83,10 @@ public final class FunctionBuilder {
   public FunctionBuilder withName(String name) {
     this.name = name;
     return this;
+  }
+
+  String getName() {
+    return this.name;
   }
 
   /** Set the source node of the function type. */
@@ -208,6 +214,11 @@ public final class FunctionBuilder {
     return this;
   }
 
+  public FunctionBuilder withClosurePrimitiveId(ClosurePrimitive id) {
+    this.primitiveId = id;
+    return this;
+  }
+
   /** Copies all the information from another function type. */
   public FunctionBuilder copyFromOtherFunction(FunctionType otherType) {
     int isNative = otherType.isNativeObjectType() ? IS_NATIVE : 0;
@@ -221,6 +232,7 @@ public final class FunctionBuilder {
     this.templateTypeMap = otherType.getTemplateTypeMap();
     this.kind = otherType.getKind();
     this.properties = isNative | isAbstract | inferredReturnType;
+    this.primitiveId = otherType.getClosurePrimitive();
     return this;
   }
 
@@ -237,16 +249,18 @@ public final class FunctionBuilder {
       // Instead, just pass in unknown so that it doesn't try to instantiate a new instance type.
       typeOfThis = registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
     }
-    FunctionType ft = new FunctionType(
-        registry,
-        name,
-        sourceNode,
-        new ArrowType(registry, parametersNode, returnType, inferredReturnType),
-        typeOfThis,
-        templateTypeMap,
-        kind,
-        isNative,
-        isAbstract);
+    FunctionType ft =
+        new FunctionType(
+            registry,
+            name,
+            sourceNode,
+            new ArrowType(registry, parametersNode, returnType, inferredReturnType),
+            typeOfThis,
+            templateTypeMap,
+            kind,
+            primitiveId,
+            isNative,
+            isAbstract);
     if (setPrototypeBasedOn != null) {
       ft.setPrototypeBasedOn(setPrototypeBasedOn);
     }

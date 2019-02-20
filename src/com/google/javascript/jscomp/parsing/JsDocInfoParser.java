@@ -119,6 +119,7 @@ public final class JsDocInfoParser {
 
   private final Map<String, Annotation> annotations;
   private final Set<String> suppressionNames;
+  private final Set<String> closurePrimitiveNames;
   private final boolean preserveWhitespace;
   private static final Set<String> modifiesAnnotationKeywords =
       ImmutableSet.of("this", "arguments");
@@ -176,6 +177,7 @@ public final class JsDocInfoParser {
     }
     this.annotations = config.annotations();
     this.suppressionNames = config.suppressionNames();
+    this.closurePrimitiveNames = config.closurePrimitiveNames();
     this.preserveWhitespace = config.jsDocParsingMode().shouldPreserveWhitespace();
 
     this.errorReporter = errorReporter;
@@ -675,6 +677,10 @@ public final class JsDocInfoParser {
             addParserWarning("msg.jsdoc.meaning.extra");
           }
           return token;
+
+        case CLOSURE_PRIMITIVE:
+          skipEOLs();
+          return parseClosurePrimitiveTag(next());
 
         case NO_COMPILE:
           if (!jsdocBuilder.recordNoCompile()) {
@@ -1344,6 +1350,36 @@ public final class JsDocInfoParser {
       }
       return eatUntilEOLIfNotAnnotation();
     }
+  }
+
+  /**
+   * Parse a {@code @closurePrimitive} tag
+   *
+   * @param token The current token.
+   */
+  private JsDocToken parseClosurePrimitiveTag(JsDocToken token) {
+    if (token != JsDocToken.LEFT_CURLY) {
+      addParserWarning("msg.jsdoc.missing.lc");
+      return token;
+    } else if (match(JsDocToken.STRING)) {
+      String name = stream.getString();
+      if (!closurePrimitiveNames.contains(name)) {
+        addParserWarning("msg.jsdoc.closurePrimitive.invalid", name);
+      } else if (!jsdocBuilder.recordClosurePrimitiveId(name)) {
+        addParserWarning("msg.jsdoc.closurePrimitive.extra");
+      }
+      token = next();
+    } else {
+      addParserWarning("msg.jsdoc.closurePrimitive.missing");
+      return token;
+    }
+
+    if (!match(JsDocToken.RIGHT_CURLY)) {
+      addParserWarning("msg.jsdoc.missing.rc");
+    } else {
+      token = next();
+    }
+    return eatUntilEOLIfNotAnnotation();
   }
 
   /**

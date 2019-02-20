@@ -48,6 +48,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.errorprone.annotations.ForOverride;
+import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import javax.annotation.CheckReturnValue;
@@ -312,6 +313,12 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
 
     public TypeSubject hasReturnTypeThat() {
       return assertType(actualFunctionType().getReturnType());
+    }
+
+    public void hasPrimitiveId(ClosurePrimitive id) {
+      check("getClosurePrimitive()")
+          .that(actualNonNull().toMaybeFunctionType().getClosurePrimitive())
+          .isEqualTo(id);
     }
   }
 }

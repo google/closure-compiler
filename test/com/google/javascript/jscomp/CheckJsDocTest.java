@@ -477,6 +477,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFunctionJSDocOnStubDeclarations() {
+    testSame("/** @return {string} */ ns.my.abstract.ctor.method;");
+    // should this only be allowed on well-known Symbols ?
+    testSame("/** @return {string} */ ns.my.abstract.ctor['method'];");
+  }
+
+  @Test
   public void testFunctionJSDocOnMethods() {
     testSame("class Foo { /** @return {?} */ bar() {} }");
     testSame("class Foo { /** @return {?} */ static bar() {} }");
@@ -999,5 +1006,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("/* @cc_on */ var x = 3;");
     // a jsdoc tag can't be immediately followed by a paren
     testSame("/* @TODO(username) */ var x = 3;");
+  }
+
+  @Test
+  public void testClosurePrimitive() {
+    testSame("/** @closurePrimitive {asserts.fail} */ function fail() {}");
+    testSame("/** @closurePrimitive {asserts.fail} */ goog.asserts.fail = function() {};");
+    testSame("/** @closurePrimitive {asserts.fail} */ let fail = function() {}");
+    testWarning("/** @fileoverview @closurePrimitive {asserts.fail} */", MISPLACED_ANNOTATION);
   }
 }

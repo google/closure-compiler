@@ -32,6 +32,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -92,6 +93,7 @@ final class FunctionTypeBuilder {
   private boolean isRecord = false;
   private boolean isAbstract = false;
   private Node parametersNode = null;
+  private ClosurePrimitive closurePrimitiveId = null;
   private ImmutableList<TemplateType> templateTypeNames = ImmutableList.of();
   private ImmutableList<TemplateType> constructorTemplateTypeNames = ImmutableList.of();
   private TypedScope declarationScope = null;
@@ -702,6 +704,13 @@ final class FunctionTypeBuilder {
     return this;
   }
 
+  FunctionTypeBuilder inferClosurePrimitive(@Nullable JSDocInfo info) {
+    if (info != null && info.hasClosurePrimitiveId()) {
+      this.closurePrimitiveId = ClosurePrimitive.fromStringId(info.getClosurePrimitiveId());
+    }
+    return this;
+  }
+
   private void setConstructorTemplateTypeNames(List<TemplateType> templates, @Nullable Node ctor) {
     if (!templates.isEmpty()) {
       this.constructorTemplateTypeNames = ImmutableList.copyOf(templates);
@@ -906,6 +915,7 @@ final class FunctionTypeBuilder {
               .withTypeOfThis(thisType)
               .withTemplateKeys(templateTypeNames)
               .withIsAbstract(isAbstract)
+              .withClosurePrimitiveId(closurePrimitiveId)
               .build();
       maybeSetBaseType(fnType);
     }

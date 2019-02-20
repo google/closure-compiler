@@ -155,6 +155,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     validateDefinesDeclaration(n, info);
     validateSuppress(n, info);
     validateImplicitCast(n, info);
+    validateClosurePrimitive(n, info);
   }
 
   private void validateSuppress(Node n, JSDocInfo info) {
@@ -415,44 +416,57 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       return;
     }
 
-    if (info.containsFunctionDeclaration() && !info.hasType()) {
+    if (info.containsFunctionDeclaration() && !info.hasType() && !isJSDocOnFunctionNode(n, info)) {
       // This JSDoc should be attached to a FUNCTION node, or an assignment
       // with a function as the RHS, etc.
-      switch (n.getToken()) {
-        case FUNCTION:
-        case GETTER_DEF:
-        case SETTER_DEF:
-        case MEMBER_FUNCTION_DEF:
-        case STRING_KEY:
-        case COMPUTED_PROP:
-        case EXPORT:
-          return;
-        case GETELEM:
-        case GETPROP:
-          if (n.getFirstChild().isQualifiedName()) {
-            return;
-          }
-          break;
-        case VAR:
-        case LET:
-        case CONST:
-        case ASSIGN: {
+
+      reportMisplaced(
+          n,
+          "function",
+          "This JSDoc is not attached to a function node. " + "Are you missing parentheses?");
+    }
+  }
+
+  /**
+   * Whether this node's JSDoc may apply to a function
+   *
+   * <p>This has some false positive cases, to allow for patterns like goog.abstractMethod.
+   */
+  private boolean isJSDocOnFunctionNode(Node n, JSDocInfo info) {
+    switch (n.getToken()) {
+      case FUNCTION:
+      case GETTER_DEF:
+      case SETTER_DEF:
+      case MEMBER_FUNCTION_DEF:
+      case STRING_KEY:
+      case COMPUTED_PROP:
+      case EXPORT:
+        return true;
+      case GETELEM:
+      case GETPROP:
+        if (n.getFirstChild().isQualifiedName()) {
+          // assume qualified names may be function declarations
+          return true;
+        }
+        return false;
+      case VAR:
+      case LET:
+      case CONST:
+      case ASSIGN:
+        {
           Node lhs = n.getFirstChild();
           Node rhs = NodeUtil.getRValueOfLValue(lhs);
           if (rhs != null && isClass(rhs) && !info.isConstructor()) {
-            break;
+            return false;
           }
-          // TODO(tbreisacher): Check that the RHS of the assignment is a
+
+          // TODO(b/124081098): Check that the RHS of the assignment is a
           // function. Note that it can be a FUNCTION node, but it can also be
           // a call to goog.abstractMethod, goog.functions.constant, etc.
-          return;
+          return true;
         }
-        default:
-          break;
-      }
-      reportMisplaced(n,
-          "function", "This JSDoc is not attached to a function node. "
-              + "Are you missing parentheses?");
+      default:
+        return false;
     }
   }
 
@@ -666,6 +680,17 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   private void validateImplicitCast(Node n, JSDocInfo info) {
     if (!inExterns && info != null && info.isImplicitCast()) {
       report(n, TypeCheck.ILLEGAL_IMPLICIT_CAST);
+    }
+  }
+
+  /** Checks that a @closurePrimitive {id} is on a function */
+  private void validateClosurePrimitive(Node n, JSDocInfo info) {
+    if (info == null || !info.hasClosurePrimitiveId()) {
+      return;
+    }
+
+    if (!isJSDocOnFunctionNode(n, info)) {
+      report(n, MISPLACED_ANNOTATION, "closurePrimitive", "must be on a function node");
     }
   }
 }

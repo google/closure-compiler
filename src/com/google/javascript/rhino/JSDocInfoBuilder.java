@@ -795,6 +795,21 @@ public final class JSDocInfoBuilder {
   }
 
   /**
+   * Records an identifier for a Closure Primitive. function.
+   *
+   * @return {@code true} If the id was successfully updated.
+   */
+  public boolean recordClosurePrimitiveId(String closurePrimitiveId) {
+    if (closurePrimitiveId != null && currentInfo.getClosurePrimitiveId() == null) {
+      currentInfo.setClosurePrimitiveId(closurePrimitiveId);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Records a fileoverview description.
    *
    * @return {@code true} if the description was recorded and {@code false}

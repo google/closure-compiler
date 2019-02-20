@@ -345,8 +345,8 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
 
   @Override
   public boolean isFunctionCallThatAlwaysThrows(Node n) {
-    return CodingConventions.defaultIsFunctionCallThatAlwaysThrows(
-        n, "goog.asserts.fail");
+    return super.isFunctionCallThatAlwaysThrows(n)
+        || CodingConventions.defaultIsFunctionCallThatAlwaysThrows(n, "goog.asserts.fail");
   }
 
   @Override
