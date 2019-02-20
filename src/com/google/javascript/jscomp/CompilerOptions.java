@@ -3110,7 +3110,7 @@ public class CompilerOptions implements Serializable {
      */
     UNSUPPORTED;
 
-    public static final LanguageMode STABLE_IN = ECMASCRIPT_2017;
+    public static final LanguageMode STABLE_IN = ECMASCRIPT_2018;
     public static final LanguageMode STABLE_OUT = ECMASCRIPT5;
 
     /** Whether this language mode defaults to strict mode */
