@@ -30,7 +30,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -319,38 +318,6 @@ public class NodeTraversal {
         Node n,
         @Nullable ModuleMetadata currentModule,
         @Nullable Node moduleScopeRoot) {}
-  }
-
-  /**
-   * Abstract callback to visit a pruned set of nodes.
-   */
-  public abstract static class AbstractNodeTypePruningCallback
-        implements Callback {
-    private final Set<Token> nodeTypes;
-    private final boolean include;
-
-    /**
-     * Creates an abstract pruned callback.
-     * @param nodeTypes the nodes to include in the traversal
-     */
-    public AbstractNodeTypePruningCallback(Set<Token> nodeTypes) {
-      this(nodeTypes, true);
-    }
-
-    /**
-     * Creates an abstract pruned callback.
-     * @param nodeTypes the nodes to include/exclude in the traversal
-     * @param include whether to include or exclude the nodes in the traversal
-     */
-    public AbstractNodeTypePruningCallback(Set<Token> nodeTypes, boolean include) {
-      this.nodeTypes = nodeTypes;
-      this.include = include;
-    }
-
-    @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      return include == nodeTypes.contains(n.getToken());
-    }
   }
 
   /**

@@ -22,9 +22,7 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallbackInterface;
 import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
@@ -43,45 +41,6 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link NodeTraversal}. */
 @RunWith(JUnit4.class)
 public final class NodeTraversalTest {
-  @Test
-  public void testPruningCallbackShouldTraverse1() {
-    PruningCallback include =
-      new PruningCallback(ImmutableSet.of(Token.SCRIPT, Token.VAR), true);
-
-    Node script = new Node(Token.SCRIPT);
-    assertThat(include.shouldTraverse(null, script, null)).isTrue();
-    assertThat(include.shouldTraverse(null, new Node(Token.VAR), null)).isTrue();
-    assertThat(include.shouldTraverse(null, new Node(Token.NAME), null)).isFalse();
-    assertThat(include.shouldTraverse(null, new Node(Token.ADD), null)).isFalse();
-  }
-
-  @Test
-  public void testPruningCallbackShouldTraverse2() {
-    PruningCallback include =
-      new PruningCallback(ImmutableSet.of(Token.SCRIPT, Token.VAR), false);
-
-    Node script = new Node(Token.SCRIPT);
-    assertThat(include.shouldTraverse(null, script, null)).isFalse();
-    assertThat(include.shouldTraverse(null, new Node(Token.VAR), null)).isFalse();
-    assertThat(include.shouldTraverse(null, new Node(Token.NAME), null)).isTrue();
-    assertThat(include.shouldTraverse(null, new Node(Token.ADD), null)).isTrue();
-  }
-
-  /**
-   * Concrete implementation of AbstractPrunedCallback to test the
-   * AbstractNodeTypePruningCallback shouldTraverse method.
-   */
-  static class PruningCallback extends AbstractNodeTypePruningCallback {
-    public PruningCallback(Set<Token> nodeTypes, boolean include) {
-      super(nodeTypes, include);
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      throw new UnsupportedOperationException();
-    }
-  }
-
   @Test
   public void testReport() {
     final List<JSError> errors = new ArrayList<>();
