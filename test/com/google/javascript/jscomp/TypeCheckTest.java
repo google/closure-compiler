@@ -22495,8 +22495,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "initializing variable", //
             "found   : undefined",
-            // TODO(johnlenz): this should not be nullable
-            "required: (Foo.E<number>|null)"));
+            "required: Foo.E<number>"));
   }
 
   @Test

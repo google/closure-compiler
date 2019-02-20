@@ -4269,6 +4269,22 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAliasTypedefOntoNamespace() {
+    testSame(
+        lines(
+            "/** @typedef {number} */ let Foo;", //
+            "const E = {};",
+            "/** @const */",
+            "E.F = Foo;",
+            "/** @type {E.F} */ let x;"));
+    assertType(findNameType("x", globalScope)).isNumber();
+    ObjectType eType = findNameType("E", globalScope).toMaybeObjectType();
+    assertThat(eType).isNotNull();
+    // TODO(b/124121835): fix this assertion - 'E.F' should be considered declared.
+    assertThat(eType.isPropertyTypeDeclared("F")).isFalse();
+  }
+
+  @Test
   public void testAliasTypedefFromNamespace() {
     testSame(
         lines(

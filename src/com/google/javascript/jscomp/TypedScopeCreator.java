@@ -1906,6 +1906,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     /**
      * For a const alias, like `const alias = other.name`, this may declare `alias` as a type name,
      * depending on what other.name is defined to be.
+     *
+     * <p>This method recognizes three kinds of type aliases: @typedefs, @constructor/@interface
+     * types, and @enums.
+     *
+     * <p>Given any of those three types, this method redeclares the aliasing name in the
+     * typeRegistry. For @typedefs and global @enums, this method also marks the qualified name
+     * referring to the type as non-nullable by default.
      */
     private void maybeDeclareAliasType(
         Node lValue, @Nullable QualifiedName rValue, @Nullable JSType rValueType) {
@@ -1916,33 +1923,51 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (!lValue.isQualifiedName() || (rValue == null)) {
         return;
       }
+      String lValueName = lValue.getQualifiedName();
 
+      // Look for a @typedef annotation on the definition node
       Node definitionNode = getDefinitionNode(rValue);
       if (definitionNode != null) {
         JSType typedefType = definitionNode.getTypedefTypeProp();
         if (typedefType != null) {
           // Propagate typedef type to typedef aliases.
           lValue.setTypedefTypeProp(typedefType);
-          String qName = lValue.getQualifiedName();
-          typeRegistry.identifyNonNullableName(qName);
-          typeRegistry.declareType(currentScope, qName, typedefType);
+          typeRegistry.identifyNonNullableName(lValueName);
+          typeRegistry.declareType(currentScope, lValueName, typedefType);
           return;
         }
       }
 
-      // Treat @const-annotated aliases like @constructor/@interface if RHS has instance type
+      // Check if the provided rValueType indicates that we should declare this type
+      // Note that we only look for enums and constructors/interfaces here: this step cannot work
+      // for @typedefs. The 'type' of the TypedVar representing a @typedef'd name is the None type,
+      // not the @typedef'd type.
       if (rValueType != null
           && rValueType.isFunctionType()
           && rValueType.toMaybeFunctionType().hasInstanceType()) {
+        // Look for @constructor/@interface by checking if the RHS has an instance type
         FunctionType functionType = rValueType.toMaybeFunctionType();
         typeRegistry.declareType(
             currentScope, lValue.getQualifiedName(), functionType.getInstanceType());
-      } else if (rValue != null) {
-        // Also infer a type name for aliased @typedef
-        JSType rhsNamedType = typeRegistry.getType(currentScope, rValue.join());
-        if (rhsNamedType != null) {
-          typeRegistry.declareType(currentScope, lValue.getQualifiedName(), rhsNamedType);
+        return;
+      }
+
+      if (rValueType != null && rValueType.isEnumType()) {
+        // Look for cases where the rValue is an Enum namespace
+        typeRegistry.declareType(
+            currentScope, lValueName, rValueType.toMaybeEnumType().getElementsType());
+        if (isLValueRootedInGlobalScope(lValue)) {
+          // TODO(b/123710194): Also make local aliases non-nullable
+          typeRegistry.identifyNonNullableName(lValueName);
         }
+      }
+
+      // TODO(b/124121835): remove this case. Currently it's only necessary for a few places where
+      // we alias typedefs, but cannot find the 'definition node' for the typedef.
+      // It also leads to strange behavior like "const f = undefined;" making `f` a type.
+      JSType rhsNamedType = typeRegistry.getType(currentScope, rValue.join());
+      if (rhsNamedType != null) {
+        typeRegistry.declareType(currentScope, lValueName, rhsNamedType);
       }
     }
 

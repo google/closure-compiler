@@ -5242,6 +5242,32 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testTypedefAliasedThroughDestructuringFromLegacyNamespacePassesTypechecking() {
+    testTypes(
+        lines(
+            "/** @typedef {number} */",
+            "let TypeOriginal;",
+            "class clientOpClass {}",
+            "",
+            "const clientOp = clientOpClass;",
+            "/** @const */",
+            "clientOp.Type = TypeOriginal;",
+            // The above pattern mimics some goog.module.declareLegacyNamespace() code
+            "",
+            "const {Type} = clientOp;",
+            "class C {",
+            "  /** @param {!Type} type */",
+            "  m(type) {",
+            "    type = 'cause a type error';",
+            "  }",
+            "}"),
+        lines(
+            "assignment", //
+            "found   : string",
+            "required: number"));
+  }
+
+  @Test
   public void testEnumAliasedThroughDestructuringPassesTypechecking() {
     testTypes(
         lines(
@@ -5621,6 +5647,21 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testGlobalAliasOfEnumIsNonNullable() {
+    testTypes(
+        lines(
+            "class Foo {}",
+            "/** @enum {number} */",
+            "Foo.E = {A: 1};",
+            "const E = Foo.E;",
+            "/** @type {E} */ let e = undefined;"),
+        lines(
+            "initializing variable", //
+            "found   : undefined",
+            "required: Foo.E<number>"));
+  }
+
+  @Test
   public void testTypeNameAliasOnAliasedNamespace() {
     testTypes(
         lines(
@@ -5633,7 +5674,22 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "initializing variable", //
             "found   : undefined",
-            // TODO(johnlenz): this should not be nullable
+            "required: Foo.E<number>"));
+  }
+
+  @Test
+  public void testTypeNamePropertyOnAliasedNamespace() {
+    testTypes(
+        lines(
+            "class Foo {}",
+            "/** @enum {number} */",
+            "Foo.E = {A: 1};",
+            "const F = Foo;",
+            "/** @type {F.E} */ let e = undefined;"),
+        lines(
+            "initializing variable", //
+            "found   : undefined",
+            // TODO(b/116853368): this should be non-null
             "required: (Foo.E<number>|null)"));
   }
 
@@ -5666,8 +5722,45 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "initializing variable", //
             "found   : undefined",
-            // TODO(johnlenz): this should not be nullable
-            "required: (Foo.E<number>|null)"));
+            "required: Foo.E<number>"));
+  }
+
+  @Test
+  public void testForwardDeclaredGlobalAliasOfEnumIsNonNullable() {
+    // TODO(b/116853368): this should be non-nullable and warn
+    testTypes(
+        lines(
+            "/** @enum {string} */",
+            "const Colors = {RED: 'red', YELLOW: 'yellow'};",
+            "const /** ColorsAlias */ c = null",
+            "const ColorsAlias = Colors;"));
+  }
+
+  @Test
+  public void testLocalEnumDoesNotInfluenceGlobalDefaultNullablity() {
+    testTypes(
+        lines(
+            "class Foo {};",
+            "function f() {",
+            "  /** @enum {number} */ const Foo = {A: 1};",
+            "}",
+            "/** @type {Foo} */ let x = null;"));
+  }
+
+  @Test
+  public void testGlobalEnumDoesNotInfluenceLocalDefaultNullablity() {
+    // TODO(b/123710194): the local Foo should be nullable and this should not warn
+    testTypes(
+        lines(
+            "/** @enum {number} */ const Foo = {A: 1};",
+            "function f() {",
+            "  class Foo {};",
+            "  /** @type {Foo} */ let x = null;",
+            "}"),
+        lines(
+            "initializing variable", //
+            "found   : null",
+            "required: Foo"));
   }
 
   @Test
