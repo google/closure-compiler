@@ -335,9 +335,10 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   }
 
   /**
-   * Writes out the source map in the following format (line numbers are for
-   * reference only and are not part of the format):
+   * Writes out the source map in the following format (line numbers are for reference only and are
+   * not part of the format):
    *
+   * <pre>
    * 1.  {
    * 2.    version: 3,
    * 3.    file: "out.js",
@@ -349,29 +350,32 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
    * 9.    mappings: "a;;abcde,abcd,a;"
    * 10.   x_org_extension: value
    * 11. }
+   * </pre>
    *
-   * Line 1: The entire file is a single JSON object
-   * Line 2: File revision (always the first entry in the object)
-   * Line 3: The name of the file that this source map is associated with.
-   * Line 4: The number of lines represented in the source map.
-   * Line 5: An optional source root, useful for relocating source files on a
-   *     server or removing repeated prefix values in the "sources" entry.
-   * Line 6: A list of sources used by the "mappings" entry relative to the
-   *     sourceRoot.
-   * Line 7: An optional list of the full content of the source files.
-   * Line 8: A list of symbol names used by the "mapping" entry.  This list
-   *     may be incomplete.
-   * Line 9: The mappings field.
-   * Line 10: Any custom field (extension).
+   * <ol>
+   *   <li>Line 1 : The entire file is a single JSON object
+   *   <li>Line 2 : File version (always the first entry in the object)
+   *   <li>Line 3 : [Optional] The name of the file that this source map is associated with.
+   *   <li>Line 4 : [Optional] The number of lines represented in the source map.
+   *   <li>Line 5 : [Optional] An optional source root, useful for relocating source files on a
+   *       server or removing repeated prefix values in the "sources" entry.
+   *   <li>Line 6 : A list of sources used by the "mappings" entry relative to the sourceRoot.
+   *   <li>Line 7 : An optional list of the full content of the source files.
+   *   <li>Line 8 : A list of symbol names used by the "mapping" entry. This list may be incomplete.
+   *       Line 9 : The mappings field.
+   *   <li>Line 10: Any custom field (extension).
+   * </ol>
    */
   @Override
-  public void appendTo(Appendable out, String name) throws IOException {
+  public void appendTo(Appendable out, @Nullable String name) throws IOException {
     int maxLine = prepMappings() + 1;
 
     // Add the header fields.
     out.append("{\n");
     appendFirstField(out, "version", "3");
-    appendField(out, "file", escapeString(name));
+    if (name != null) {
+      appendField(out, "file", escapeString(name));
+    }
     appendField(out, "lineCount", String.valueOf(maxLine));
 
     //optional source root

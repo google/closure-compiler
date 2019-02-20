@@ -15,6 +15,7 @@
  */
 package com.google.debugging.sourcemap;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -26,6 +27,9 @@ import com.google.common.collect.ImmutableMap;
 final class TestJsonBuilder {
 
   private final ImmutableMap.Builder<String, Object> internal = ImmutableMap.builder();
+
+  private final ImmutableList.Builder<ImmutableMap<String, Object>> sections =
+      ImmutableList.builder();
 
   static TestJsonBuilder create() {
     return new TestJsonBuilder();
@@ -68,6 +72,16 @@ final class TestJsonBuilder {
 
   TestJsonBuilder setNames(String... names) {
     internal.put("names", names);
+    return this;
+  }
+
+  TestJsonBuilder addSection(int line, int column, TestJsonBuilder map) {
+    sections.add(
+        ImmutableMap.<String, Object>builder()
+            .put("offset", ImmutableMap.of("line", 1, "column", 2))
+            .put("map", map.build())
+            .build());
+    internal.put("sections", sections.build());
     return this;
   }
 

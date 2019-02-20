@@ -19,7 +19,6 @@ package com.google.debugging.sourcemap;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -37,10 +36,10 @@ public final class SourceMapConsumerV3Test {
 
   private static final Gson GSON = new Gson();
 
+  private final SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
+
   @Test
   public void testSources() throws Exception {
-
-    SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
     consumer.parse(
         GSON.toJson(
             TestJsonBuilder.create()
@@ -57,33 +56,45 @@ public final class SourceMapConsumerV3Test {
   }
 
   @Test
-  public void testMap() throws Exception {
-    SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
+  public void testSectionsFormat_parsesSuccessfully() throws Exception {
     consumer.parse(
         GSON.toJson(
             TestJsonBuilder.create()
                 .setVersion(3)
                 .setFile("testcode")
-                .setCustomProperty(
-                    "sections",
-                    ImmutableList.of(
-                        ImmutableMap.builder()
-                            .put(
-                                "map",
-                                TestJsonBuilder.create()
-                                    .setVersion(3)
-                                    .setMappings("AAAAA,QAASA,UAAS,EAAG;")
-                                    .setSources("testcode.js")
-                                    .setNames("foo")
-                                    .build())
-                            .put("offset", ImmutableMap.of("line", 1, "column", 2))
-                            .build()))
+                .addSection(
+                    1,
+                    2,
+                    TestJsonBuilder.create()
+                        .setVersion(3)
+                        .setFile("part_a")
+                        .setMappings("AAAAA,QAASA,UAAS,EAAG;")
+                        .setSources("testcode.js")
+                        .setNames("foo"))
+                .build()));
+  }
+
+  @Test
+  public void testSectionsFormat_fileNameIsOptional_inSectionAndTopLevel() throws Exception {
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                // .setFile("testcode")
+                .addSection(
+                    1,
+                    2,
+                    TestJsonBuilder.create()
+                        .setVersion(3)
+                        // .setFile("part_a")
+                        .setMappings("AAAAA,QAASA,UAAS,EAAG;")
+                        .setSources("testcode.js")
+                        .setNames("foo"))
                 .build()));
   }
 
   @Test
   public void testSourcesWithRoot() throws Exception {
-    SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
     consumer.parse(
         GSON.toJson(
             TestJsonBuilder.create()
@@ -103,7 +114,6 @@ public final class SourceMapConsumerV3Test {
 
   @Test
   public void testExtensions() throws Exception {
-    SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
     consumer.parse(
         GSON.toJson(
             TestJsonBuilder.create()
