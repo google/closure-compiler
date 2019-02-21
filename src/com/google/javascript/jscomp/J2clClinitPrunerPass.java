@@ -406,7 +406,12 @@ public class J2clClinitPrunerPass implements CompilerPass {
       }
 
       Node lhs = node.getFirstFirstChild();
+      if (lhs.isGetElem()) {
+        // This can happen if code has been inserted, for example for instrumentation.
+        return false;
+      }
       checkState(lhs.isName() || lhs.isGetProp(), lhs);
+
       Node rhs = node.getFirstChild().getLastChild();
       return NodeUtil.isEmptyFunctionExpression(rhs)
           && Objects.equals(NodeUtil.getBestLValueName(lhs), enclosingFnName);
