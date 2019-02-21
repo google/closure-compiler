@@ -24,7 +24,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
@@ -426,16 +425,18 @@ public class SuggestedFixTest {
 
   @Test
   public void testRemoveCast_complexStatement() {
-    String input = ""
-        + "var x = /** @type {string} */ (function() {\n"
-        + "  // Inline comment that should be preserved.\n"
-        + "  var blah = bleh;\n"
-        + "});";
-    String expectedCode = ""
-        + "var x = function() {\n"
-        + "  // Inline comment that should be preserved.\n"
-        + "  var blah = bleh;\n"
-        + "};";
+    String input =
+        lines(
+            "var x = /** @type {string} */ (function() {",
+            "  // Inline comment that should be preserved.",
+            "  var blah = bleh;",
+            "});");
+    String expectedCode =
+        lines(
+            "var x = function() {",
+            "  // Inline comment that should be preserved.",
+            "  var blah = bleh;",
+            "};");
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Node castNode = root.getFirstFirstChild().getFirstChild();
@@ -449,15 +450,17 @@ public class SuggestedFixTest {
 
   @Test
   public void testRemoveCast_return() {
-    String input = Joiner.on('\n').join(
-        "function f() {",
-        "  return /** @type {string} */ (",
-        "      'I am obviously a string. Why are you casting me?');",
-        "}");
-    String expectedCode = Joiner.on('\n').join(
-        "function f() {",
-        "  return 'I am obviously a string. Why are you casting me?';",
-        "}");
+    String input =
+        lines(
+            "function f() {",
+            "  return /** @type {string} */ (",
+            "      'I am obviously a string. Why are you casting me?');",
+            "}");
+    String expectedCode =
+        lines(
+            "function f() {", //
+            "  return 'I am obviously a string. Why are you casting me?';",
+            "}");
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Node castNode = root.getFirstChild().getLastChild().getFirstChild().getLastChild();
@@ -776,12 +779,12 @@ public class SuggestedFixTest {
   @Test
   public void testAddGoogRequire_var() {
     String before = "goog.provide('js.Foo');\n";
-    String after = Joiner.on('\n').join(
-        "goog.require('js.Bar');",
-        "",
-        "var x;",
-        "/** @private */",
-        "function foo_() {};");
+    String after =
+        "goog.require('js.Bar');\n"
+            + "\n"
+            + "var x;\n"
+            + "/** @private */\n"
+            + "function foo_() {};\n";
     assertAddGoogRequire(before, after, "abc.def");
   }
 
@@ -829,11 +832,12 @@ public class SuggestedFixTest {
   @Test
   public void testAddGoogRequire_alreadyExists() {
     String input =
-        "goog.provide('js.Foo');\n"
-        + "goog.require('abc.def');\n"
-        + "\n"
-        + "/** @private */\n"
-        + "function foo_() {};\n";
+        lines(
+            "goog.provide('js.Foo');",
+            "goog.require('abc.def');",
+            "",
+            "/** @private */",
+            "function foo_() {};");
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -847,14 +851,14 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireModule() {
     String input =
-        Joiner.on('\n').join(
-            "goog.module('js.Foo');",
+        lines(
+            "goog.module('js.Foo');", //
             "",
             "/** @private */",
             "function foo_() {",
             "}");
     String expected =
-        Joiner.on('\n').join(
+        lines(
             "goog.module('js.Foo');",
             "const safe = goog.require('goog.safe');",
             "",
@@ -871,13 +875,13 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireConst() {
     String input =
-        Joiner.on('\n').join(
-            "const bar = goog.require('goog.bar');",
+        lines(
+            "const bar = goog.require('goog.bar');", //
             "",
             "/** @private */",
             "function foo_() {};");
     String expected =
-        Joiner.on('\n').join(
+        lines(
             "const bar = goog.require('goog.bar');",
             "const safe = goog.require('goog.safe');",
             "",
@@ -893,13 +897,13 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireVar() {
     String input =
-        Joiner.on('\n').join(
-            "var bar = goog.require('goog.bar');",
+        lines(
+            "var bar = goog.require('goog.bar');", //
             "",
             "/** @private */",
             "function foo_() {};");
     String expected =
-        Joiner.on('\n').join(
+        lines(
             "var bar = goog.require('goog.bar');",
             // We add new imports as const per the Google Style Guide;
             // TODO(bangert): we could add complexity to add new imports as var if we want to.
@@ -917,7 +921,7 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireModuleUnchanged() {
     String input =
-        Joiner.on('\n').join(
+        lines(
             "goog.module('js.Foo');",
             "const safe = goog.require('goog.safe');",
             "",
@@ -933,7 +937,7 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireModuleDifferentNameUnchanged() {
     String input =
-        Joiner.on('\n').join(
+        lines(
             "goog.module('js.Foo');",
             "const googSafe = goog.require('goog.safe');",
             "",
@@ -1103,4 +1107,7 @@ public class SuggestedFixTest {
     assertThat(getShortNameForRequire("Array")).isEqualTo("Array");
   }
 
+  private String lines(String... lines) {
+    return String.join("\n", lines);
+  }
 }

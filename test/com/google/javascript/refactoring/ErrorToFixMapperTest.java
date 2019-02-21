@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.CheckLevel.ERROR;
 import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.Compiler;
@@ -41,8 +40,6 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class ErrorToFixMapperTest {
-  private static final Joiner LINE_JOINER = Joiner.on('\n');
-
   private FixingErrorManager errorManager;
   private CompilerOptions options;
   private Compiler compiler;
@@ -65,14 +62,16 @@ public class ErrorToFixMapperTest {
 
   @Test
   public void testDebugger() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  debugger;",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  ",
-        "}");
+    String code =
+        lines(
+            "function f() {", //
+            "  debugger;",
+            "}");
+    String expectedCode =
+        lines(
+            "function f() {", //
+            "  ",
+            "}");
     assertChanges(code, expectedCode);
   }
 
@@ -112,21 +111,22 @@ public class ErrorToFixMapperTest {
   @Test
   public void testImplicitNullability3() {
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, OFF);
-    String originalCode = LINE_JOINER.join(
-        "/**",
-        " * Some non-ASCII characters: αβγδε",
-        " * @param {Object} o",
-        " */",
-        "function f(o) {}");
+    String originalCode =
+        lines(
+            "/**",
+            " * Some non-ASCII characters: αβγδε",
+            " * @param {Object} o",
+            " */",
+            "function f(o) {}");
     String expected1 =
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * Some non-ASCII characters: αβγδε",
             " * @param {?Object} o",
             " */",
             "function f(o) {}");
     String expected2 =
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * Some non-ASCII characters: αβγδε",
             " * @param {!Object} o",
@@ -157,21 +157,21 @@ public class ErrorToFixMapperTest {
   public void testMissingNullabilityModifier3() {
     options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, OFF);
     String originalCode =
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * Some non-ASCII characters: αβγδε",
             " * @param {Object} o",
             " */",
             "function f(o) {}");
     String expected1 =
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * Some non-ASCII characters: αβγδε",
             " * @param {!Object} o",
             " */",
             "function f(o) {}");
     String expected2 =
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * Some non-ASCII characters: αβγδε",
             " * @param {?Object} o",
@@ -236,48 +236,37 @@ public class ErrorToFixMapperTest {
 
   @Test
   public void testRedeclaration_withValue() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  var x = 0;",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  x = 0;",
-        "}");
+    String code =
+        lines(
+            "function f() {", //
+            "  var x;",
+            "  var x = 0;",
+            "}");
+    String expectedCode = lines("function f() {", "  var x;", "  x = 0;", "}");
     assertChanges(code, expectedCode);
   }
 
   @Test
   public void testRedeclaration_multipleVars_withValue1() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  var x = 0, y;",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  x = 0;",
-        "var y;",
-        "}");
+    String code =
+        lines(
+            "function f() {", //
+            "  var x;",
+            "  var x = 0, y;",
+            "}");
+    String expectedCode = lines("function f() {", "  var x;", "  x = 0;", "var y;", "}");
     assertChanges(code, expectedCode);
   }
 
   @Test
   public void testRedeclaration_multipleVars_withValue2() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  var y, x = 0;",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  var y;",
-        "x = 0;",
-        "}");
+    String code =
+        lines(
+            "function f() {", //
+            "  var x;",
+            "  var y, x = 0;",
+            "}");
+    String expectedCode = lines("function f() {", "  var x;", "  var y;", "x = 0;", "}");
     assertChanges(code, expectedCode);
   }
 
@@ -285,50 +274,56 @@ public class ErrorToFixMapperTest {
   // functions have side effects, we don't change the order they're called in.
   @Test
   public void testRedeclaration_multipleVars_withValue3() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var y;",
-        "  var x = getX(), y = getY(), z = getZ();",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var y;",
-        "  var x = getX();",
-        "y = getY();",
-        "var z = getZ();",
-        "}");
+    String code =
+        lines(
+            "function f() {", //
+            "  var y;",
+            "  var x = getX(), y = getY(), z = getZ();",
+            "}");
+    String expectedCode =
+        lines(
+            "function f() {",
+            "  var y;",
+            "  var x = getX();",
+            "y = getY();",
+            "var z = getZ();",
+            "}");
     assertChanges(code, expectedCode);
   }
 
   @Test
   public void testRedeclaration_multipleVars_withValue4() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  var x = getX(), y = getY(), z = getZ();",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  x = getX();",
-        "var y = getY(), z = getZ();",
-        "}");
+    String code =
+        lines(
+            "function f() {", //
+            "  var x;",
+            "  var x = getX(), y = getY(), z = getZ();",
+            "}");
+    String expectedCode =
+        lines(
+            "function f() {", //
+            "  var x;",
+            "  x = getX();",
+            "var y = getY(), z = getZ();",
+            "}");
     assertChanges(code, expectedCode);
   }
 
   @Test
   public void testRedeclaration_multipleVars_withValue5() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var z;",
-        "  var x = getX(), y = getY(), z = getZ();",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var z;",
-        "  var x = getX(), y = getY();",
-        "z = getZ();",
-        "}");
+    String code =
+        lines(
+            "function f() {", //
+            "  var z;",
+            "  var x = getX(), y = getY(), z = getZ();",
+            "}");
+    String expectedCode =
+        lines(
+            "function f() {", //
+            "  var z;",
+            "  var x = getX(), y = getY();",
+            "z = getZ();",
+            "}");
     assertChanges(code, expectedCode);
   }
 
@@ -373,7 +368,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testRequiresSorted_standalone() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @fileoverview",
             " * @suppress {extraRequire}",
@@ -387,7 +382,7 @@ public class ErrorToFixMapperTest {
             "",
             "",
             "alert(1);"),
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @fileoverview",
             " * @suppress {extraRequire}",
@@ -406,7 +401,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testRequiresSorted_suppressExtra() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @fileoverview",
             " * @suppress {extraRequire}",
@@ -420,7 +415,7 @@ public class ErrorToFixMapperTest {
             "goog.require('a');",
             "",
             "alert(1);"),
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @fileoverview",
             " * @suppress {extraRequire}",
@@ -439,7 +434,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSortRequiresInGoogModule_let() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "/** @suppress {extraRequire} */",
@@ -448,7 +443,7 @@ public class ErrorToFixMapperTest {
             "goog.require('a.b');",
             "",
             "let localVar;"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "/** @suppress {extraRequire} */",
@@ -462,7 +457,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSortRequiresInGoogModule_const() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "/** @suppress {extraRequire} */",
@@ -471,7 +466,7 @@ public class ErrorToFixMapperTest {
             "goog.require('a.b');",
             "",
             "const FOO = 0;"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "/** @suppress {extraRequire} */",
@@ -488,7 +483,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSortRequiresInGoogModule_standalone() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {strictModuleChecks} */",
             "goog.module('m');",
             "",
@@ -499,7 +494,7 @@ public class ErrorToFixMapperTest {
             "alert(a.c());",
             "alert(a.b.d());",
             "alert(a.b.c());"),
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {strictModuleChecks} */",
             "goog.module('m');",
             "",
@@ -515,7 +510,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSortRequiresInGoogModule_shorthand() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var c2 = goog.require('a.c');",
@@ -525,7 +520,7 @@ public class ErrorToFixMapperTest {
             "alert(c1());",
             "alert(d());",
             "alert(c2());"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var c1 = goog.require('a.b.c');",
@@ -540,13 +535,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSortRequiresInGoogModule_destructuring() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
             "const {fooBar} = goog.require('x');",
             "const {foo, bar} = goog.requireType('y');"),
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
@@ -557,7 +552,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSortRequiresInGoogModule_shorthandAndStandalone() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
@@ -565,7 +560,7 @@ public class ErrorToFixMapperTest {
             "goog.require('standalone.two');",
             "goog.requireType('standalone.one');",
             "const shorthand1 = goog.require('b');"),
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
@@ -578,7 +573,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSortRequiresInGoogModule_allThreeStyles() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
@@ -588,7 +583,7 @@ public class ErrorToFixMapperTest {
             "const {destructuring1} = goog.require('d');",
             "goog.requireType('standalone.one');",
             "const shorthand1 = goog.require('b');"),
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
@@ -603,7 +598,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSortRequiresInGoogModule_withFwdDeclare() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const s = goog.require('s');",
@@ -612,7 +607,7 @@ public class ErrorToFixMapperTest {
             "const r = goog.require('r');",
             "",
             "alert(r, s);"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const r = goog.require('r');",
@@ -627,7 +622,7 @@ public class ErrorToFixMapperTest {
   public void testSortRequiresInGoogModule_withOtherStatements() {
     // The requires after "const {Bar} = bar;" are not sorted.
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const foo = goog.require('foo');",
@@ -639,7 +634,7 @@ public class ErrorToFixMapperTest {
             "",
             "/** @type {!type} */ let x;",
             "doCoolThings(foo, Bar);"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const bar = goog.require('bar');",
@@ -656,7 +651,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSortRequiresInGoogModule_veryLongRequire() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "const {veryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} = goog.require('other');",
@@ -666,7 +661,7 @@ public class ErrorToFixMapperTest {
             "/** @type {!anotherVeryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} */ var x;",
             "use(veryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace);",
             "use(shorter);"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "const shorter = goog.require('shorter');",
@@ -681,7 +676,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSortRequiresAndForwardDeclares() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('x');",
             "",
             "goog.require('s');",
@@ -690,7 +685,7 @@ public class ErrorToFixMapperTest {
             "goog.require('r');",
             "",
             "alert(r, s);"),
-        LINE_JOINER.join(
+        lines(
             "goog.provide('x');",
             "",
             "goog.require('r');",
@@ -704,12 +699,12 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequireInGoogProvideFile() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.provide('p');",
+        lines(
+            "goog.provide('p');", //
             "",
             "alert(new a.b.C());"),
-        LINE_JOINER.join(
-            "goog.provide('p');",
+        lines(
+            "goog.provide('p');", //
             "goog.require('a.b.C');",
             "",
             "alert(new a.b.C());"));
@@ -720,7 +715,7 @@ public class ErrorToFixMapperTest {
     // Both the fix for requires being unsorted, and the fix for the missing require, are applied.
     // However, the end result is still out of order.
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('module');",
             "",
             "const Xray = goog.require('goog.Xray');",
@@ -729,7 +724,7 @@ public class ErrorToFixMapperTest {
             "alert(new Anteater());",
             "alert(new Xray());",
             "alert(new goog.dom.DomHelper());"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('module');",
             "",
             "const DomHelper = goog.require('goog.dom.DomHelper');",
@@ -746,7 +741,7 @@ public class ErrorToFixMapperTest {
     // Both the fix for requires being unsorted, and the fix for the missing require, are applied.
     // The end result is ordered.
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('module');",
             "",
             "const DomHelper = goog.require('goog.dom.DomHelper');",
@@ -755,7 +750,7 @@ public class ErrorToFixMapperTest {
             "alert(new Anteater());",
             "alert(new goog.rays.Xray());",
             "alert(new DomHelper());"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('module');",
             "",
             "const Anteater = goog.require('goog.Anteater');",
@@ -770,12 +765,12 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequireInGoogModule() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('m');",
+        lines(
+            "goog.module('m');", //
             "",
             "alert(new a.b.C());"),
-        LINE_JOINER.join(
-            "goog.module('m');",
+        lines(
+            "goog.module('m');", //
             "const C = goog.require('a.b.C');",
             "",
             "alert(new C());"));
@@ -784,12 +779,12 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequireInGoogModuleTwice() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('m');",
+        lines(
+            "goog.module('m');", //
             "",
             "alert(new a.b.C());",
             "alert(new a.b.C());"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "const C = goog.require('a.b.C');",
             "",
@@ -801,12 +796,12 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequireInGoogModule_call() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('m');",
+        lines(
+            "goog.module('m');", //
             "",
             "alert(a.b.c());"),
-        LINE_JOINER.join(
-            "goog.module('m');",
+        lines(
+            "goog.module('m');", //
             "const b = goog.require('a.b');",
             "",
             "alert(b.c());"));
@@ -815,11 +810,11 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequireInGoogModule_extends() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('m');",
+        lines(
+            "goog.module('m');", //
             "",
             "class Cat extends world.util.Animal {}"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "const Animal = goog.require('world.util.Animal');",
             "",
@@ -829,12 +824,12 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequireInGoogModule_atExtends() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "/** @constructor @extends {world.util.Animal} */",
             "function Cat() {}"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "const Animal = goog.require('world.util.Animal');",
             "",
@@ -846,7 +841,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testBothFormsOfRequire() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "goog.require('foo.bar.SoyRenderer');",
@@ -856,7 +851,7 @@ public class ErrorToFixMapperTest {
             "  const soyService = new foo.bar.SoyRenderer();",
             "}",
             ""),
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "const SoyRenderer = goog.require('foo.bar.SoyRenderer');",
@@ -871,13 +866,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testStandaloneVarDoesntCrashMissingRequire() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('m');",
+        lines(
+            "goog.module('m');", //
             "",
             "var x;",
             "",
             "class Cat extends goog.Animal {}"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "const Animal = goog.require('goog.Animal');",
             "",
@@ -889,13 +884,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testAddLhsToGoogRequire() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "goog.require('world.util.Animal');",
             "",
             "class Cat extends world.util.Animal {}"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "const Animal = goog.require('world.util.Animal');",
@@ -906,13 +901,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testAddLhsToGoogRequire_new() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "goog.require('world.util.Animal');",
             "",
             "let cat = new world.util.Animal();"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "const Animal = goog.require('world.util.Animal');",
@@ -923,14 +918,14 @@ public class ErrorToFixMapperTest {
   @Test
   public void testAddLhsToGoogRequire_getprop() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "goog.require('magical.factories');",
             "goog.require('world.util.AnimalType');",
             "",
             "let cat = magical.factories.createAnimal(world.util.AnimalType.CAT);"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "const factories = goog.require('magical.factories');",
@@ -944,7 +939,7 @@ public class ErrorToFixMapperTest {
     // TODO(tbreisacher): Add "const Animal = " before the goog.require and change
     // world.util.Animal to Animal
     assertNoChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "goog.require('world.util.Animal');",
@@ -956,13 +951,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSwitchToShorthand_JSDoc1() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
             "/** @constructor @implements {world.util.Animal} */",
             "function Cat() {}"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
@@ -973,13 +968,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSwitchToShorthand_JSDoc2() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
             "/** @constructor @extends {world.util.Animal} */",
             "function Cat() {}"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
@@ -990,13 +985,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSwitchToShorthand_JSDoc3() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
             "/** @type {!world.util.Animal} */",
             "var animal;"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
@@ -1007,13 +1002,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSwitchToShorthand_JSDoc4() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
             "/** @type {?world.util.Animal} */",
             "var animal;"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
@@ -1024,13 +1019,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSwitchToShorthand_JSDoc5() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
             "/** @type {?Array<!world.util.Animal>} */",
             "var animals;"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
@@ -1041,13 +1036,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSwitchToShorthand_JSDoc6() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
             "/** @type {?Array<!world.util.Animal.Turtle>} */",
             "var turtles;"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var Animal = goog.require('world.util.Animal');",
             "",
@@ -1058,13 +1053,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSwitchToShorthand_JSDoc7() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var AnimalAltName = goog.require('world.util.Animal');",
             "",
             "/** @type {?Array<!world.util.Animal.Turtle>} */",
             "var turtles;"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "var AnimalAltName = goog.require('world.util.Animal');",
             "",
@@ -1075,12 +1070,12 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequireInGoogModule_atExtends_qname() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "/** @constructor @extends {world.util.Animal} */",
             "world.util.Cat = function() {};"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "const Animal = goog.require('world.util.Animal');",
             "",
@@ -1092,11 +1087,11 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequireInGoogModule_googString() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('m');",
+        lines(
+            "goog.module('m');", //
             "",
             "alert(goog.string.trim('   str    '));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "const googString = goog.require('goog.string');",
             "",
@@ -1106,11 +1101,11 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequireInGoogModule_googStructsMap() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('m');",
+        lines(
+            "goog.module('m');", //
             "",
             "alert(new goog.structs.Map());"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "const StructsMap = goog.require('goog.structs.Map');",
             "",
@@ -1120,14 +1115,14 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequireInGoogModule_insertedInCorrectOrder() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "const A = goog.require('a.A');",
             "const C = goog.require('c.C');",
             "",
             "alert(new A(new x.B(new C())));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             // Requires are sorted by the short name, not the full namespace.
@@ -1141,14 +1136,14 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequireInGoogModule_alwaysInsertsConst() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var A = goog.require('a.A');",
             "var C = goog.require('c.C');",
             "",
             "alert(new A(new x.B(new C())));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var A = goog.require('a.A');",
@@ -1161,7 +1156,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testSortShorthandRequiresInGoogModule() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var B = goog.require('x.B');",
@@ -1169,7 +1164,7 @@ public class ErrorToFixMapperTest {
             "var C = goog.require('c.C');",
             "",
             "alert(new A(new B(new C())));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             // Requires are sorted by the short name, not the full namespace.
@@ -1183,7 +1178,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testUnsortedAndMissingLhs() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('foo');",
             "",
             "goog.require('example.controller');",
@@ -1191,7 +1186,7 @@ public class ErrorToFixMapperTest {
             "",
             "alert(example.controller.SOME_CONSTANT);",
             "alert(Bar.doThings);"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('foo');",
             "",
             "const Bar = goog.require('example.Bar');",
@@ -1204,14 +1199,14 @@ public class ErrorToFixMapperTest {
   @Test
   public void testShortRequireInGoogModule1() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('m');",
+        lines(
+            "goog.module('m');", //
             "",
             "var c = goog.require('a.b.c');",
             "",
             "alert(a.b.c);"),
-        LINE_JOINER.join(
-            "goog.module('m');",
+        lines(
+            "goog.module('m');", //
             "",
             "var c = goog.require('a.b.c');",
             "",
@@ -1221,13 +1216,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testShortRequireInGoogModule2() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var Classname = goog.require('a.b.Classname');",
             "",
             "alert(a.b.Classname.instance_.foo());"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var Classname = goog.require('a.b.Classname');",
@@ -1238,13 +1233,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testShortRequireInGoogModule3() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var Classname = goog.require('a.b.Classname');",
             "",
             "alert(a.b.Classname.INSTANCE_.foo());"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var Classname = goog.require('a.b.Classname');",
@@ -1255,13 +1250,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testShortRequireInGoogModule4() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var object = goog.require('goog.object');",
             "",
             "alert(goog.object.values({x:1}));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var object = goog.require('goog.object');",
@@ -1272,13 +1267,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testShortRequireInGoogModule5() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var Widget = goog.require('goog.Widget');",
             "",
             "alert(new goog.Widget());"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var Widget = goog.require('goog.Widget');",
@@ -1289,13 +1284,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testShortRequireInGoogModule6() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var GoogWidget = goog.require('goog.Widget');",
             "",
             "alert(new goog.Widget());"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var GoogWidget = goog.require('goog.Widget');",
@@ -1310,14 +1305,14 @@ public class ErrorToFixMapperTest {
   @Test
   public void testShortRequireInGoogModule7() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var CoffeeTable = goog.require('coffee.Table');",
             "var KitchenTable = goog.require('kitchen.Table');",
             "",
             "alert(new coffee.Table(), new kitchen.Table());"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var CoffeeTable = goog.require('coffee.Table');",
@@ -1329,14 +1324,14 @@ public class ErrorToFixMapperTest {
   @Test
   public void testBug65602711a() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {X} = goog.require('ns.abc.xyz');",
             "",
             "use(ns.abc.xyz.X);"),
-        LINE_JOINER.join(
-            "goog.module('x');",
+        lines(
+            "goog.module('x');", //
             "",
             "const {X} = goog.require('ns.abc.xyz');",
             "",
@@ -1346,13 +1341,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testBug65602711b() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {X: X2} = goog.require('ns.abc.xyz');",
             "",
             "use(ns.abc.xyz.X);"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {X: X2} = goog.require('ns.abc.xyz');",
@@ -1363,7 +1358,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testProvidesSorted1() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview foo */",
             "",
             "",
@@ -1373,7 +1368,7 @@ public class ErrorToFixMapperTest {
             "",
             "",
             "alert(1);"),
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview foo */",
             "",
             "",
@@ -1388,26 +1383,23 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequire() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.require('goog.object');",
             "goog.require('goog.string');",
             "",
             "alert(goog.string.parseInt('7'));"),
-        LINE_JOINER.join(
-            "goog.require('goog.string');",
-            "",
-            "alert(goog.string.parseInt('7'));"));
+        lines("goog.require('goog.string');", "", "alert(goog.string.parseInt('7'));"));
   }
 
   @Test
   public void testExtraRequireType() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.requireType('goog.events.Listenable');",
             "goog.require('goog.string');",
             "",
             "alert(goog.string.parseInt('7'));"),
-        LINE_JOINER.join(
+        lines(
             "goog.require('goog.string');", //
             "",
             "alert(goog.string.parseInt('7'));"));
@@ -1416,13 +1408,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequire_module() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const googString = goog.require('goog.string');",
             "const object = goog.require('goog.object');",
             "alert(googString.parseInt('7'));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const googString = goog.require('goog.string');",
@@ -1432,13 +1424,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequireType_module() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const googString = goog.require('goog.string');",
             "const Listenable = goog.requireType('goog.events.Listenable');",
             "alert(googString.parseInt('7'));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const googString = goog.require('goog.string');",
@@ -1448,13 +1440,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequire_destructuring_unusedInitialMember() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {foo, bar} = goog.require('goog.util');",
             "",
             "alert(bar(7));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {bar} = goog.require('goog.util');",
@@ -1465,13 +1457,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequire_destructuring_unusedFinalMember() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {foo, bar} = goog.require('goog.util');",
             "",
             "alert(foo(7));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {foo} = goog.require('goog.util');",
@@ -1482,13 +1474,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequire_destructuring_unusedMiddleMember() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {foo, bar, qux} = goog.require('goog.util');",
             "",
             "alert(foo(qux(7)));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {foo, qux} = goog.require('goog.util');",
@@ -1500,12 +1492,12 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequire_destructuring_multipleUnusedMembers() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('x');",
+        lines(
+            "goog.module('x');", //
             "",
             "const {foo, bar, qux} = goog.require('goog.util');"),
-        LINE_JOINER.join(
-            "goog.module('x');",
+        lines(
+            "goog.module('x');", //
             "",
             "const {qux} = goog.require('goog.util');"));
   }
@@ -1513,12 +1505,12 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequire_destructuring_allUnusedMembers() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('x');",
+        lines(
+            "goog.module('x');", //
             "",
             "const {qux} = goog.require('goog.util');"),
-        LINE_JOINER.join(
-            "goog.module('x');",
+        lines(
+            "goog.module('x');", //
             "",
             "const {} = goog.require('goog.util');"));
   }
@@ -1526,13 +1518,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequire_destructuring_unusedShortnameMember() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {foo: googUtilFoo, bar} = goog.require('goog.util');",
             "",
             "alert(bar(7));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {bar} = goog.require('goog.util');",
@@ -1543,13 +1535,13 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequire_destructuring_keepShortnameMember() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {foo: googUtilFoo, bar} = goog.require('goog.util');",
             "",
             "alert(googUtilFoo(7));"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {foo: googUtilFoo} = goog.require('goog.util');",
@@ -1560,12 +1552,12 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequire_destructuring_onlyUnusedShortnameMember() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('x');",
+        lines(
+            "goog.module('x');", //
             "",
             "const {foo: googUtilFoo} = goog.require('goog.util');"),
-        LINE_JOINER.join(
-            "goog.module('x');",
+        lines(
+            "goog.module('x');", //
             "",
             "const {} = goog.require('goog.util');"));
   }
@@ -1573,12 +1565,12 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequire_destructuring_noMembers() {
     assertChanges(
-        LINE_JOINER.join(
-            "goog.module('x');",
+        lines(
+            "goog.module('x');", //
             "",
             "const {} = goog.require('goog.util');"),
-        LINE_JOINER.join(
-            "goog.module('x');",
+        lines(
+            "goog.module('x');", //
             "",
             ""));
   }
@@ -1586,14 +1578,14 @@ public class ErrorToFixMapperTest {
   @Test
   public void testExtraRequireType_destructuring() {
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {foo: googUtilFoo, bar, baz: googUtilBaz, qux} = goog.requireType('goog.util');",
             "",
             "/** @type {!googUtilFoo} */ let x;",
             "/** @type {!qux} */ let x;"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const {foo: googUtilFoo, qux} = goog.requireType('goog.util');",
@@ -1607,14 +1599,14 @@ public class ErrorToFixMapperTest {
     // There is also a warning because requires are not sorted. That one is not fixed because
     // the fix would conflict with the extra-require fix.
     assertChanges(
-        LINE_JOINER.join(
+        lines(
             "goog.require('goog.string');",
             "goog.require('goog.object');",
             "goog.require('goog.dom');",
             "",
             "alert(goog.string.parseInt('7'));",
             "alert(goog.dom.createElement('div'));"),
-        LINE_JOINER.join(
+        lines(
             "goog.require('goog.string');",
             "goog.require('goog.dom');",
             "",
@@ -1664,5 +1656,9 @@ public class ErrorToFixMapperTest {
         options);
     Collection<SuggestedFix> fixes = errorManager.getAllFixes();
     assertThat(fixes).isEmpty();
+  }
+
+  private String lines(String... lines) {
+    return String.join("\n", lines);
   }
 }

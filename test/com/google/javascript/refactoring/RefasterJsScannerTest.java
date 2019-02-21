@@ -157,15 +157,16 @@ public class RefasterJsScannerTest {
     String originalCode = "f(1 || 2) && f(3) && f(4) == 5 && 6 == f(7) && 8 + f(9);";
     String expectedCode =
         "(1 || 2) == 0 && 3 == 0 && (4 == 0) == 5 && 6 == (7 == 0) && 8 + (9 == 0);";
-    String template = Joiner.on("\n").join(
-        "/** @param {?} x */",
-        "function before_foo(x) {",
-        "  f(x);",
-        "};",
-        "/** @param {?} x */",
-        "function after_foo(x) {",
-        "  x == 0;",
-        "}");
+    String template =
+        lines(
+            "/** @param {?} x */",
+            "function before_foo(x) {",
+            "  f(x);",
+            "};",
+            "/** @param {?} x */",
+            "function after_foo(x) {",
+            "  x == 0;",
+            "}");
     assertChanges("", originalCode, template, expectedCode);
   }
 
@@ -985,5 +986,9 @@ public class RefasterJsScannerTest {
     for (int i = 0; i < outputChoices.size(); i++) {
       assertEquals("Choice " + i, expectedChoices[i], outputChoices.get(i).get("input"));
     }
+  }
+
+  private String lines(String... lines) {
+    return String.join("\n", lines);
   }
 }
