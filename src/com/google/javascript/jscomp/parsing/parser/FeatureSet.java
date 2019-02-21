@@ -70,14 +70,19 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES2018 = ES2018_MODULES.without(Feature.MODULES);
 
-  public static final FeatureSet ES_NEXT = ES2018_MODULES.with(LangVersion.ES_NEXT.features());
+  public static final FeatureSet ES2019_MODULES =
+      ES2018_MODULES.with(LangVersion.ES2019.features());
+
+  public static final FeatureSet ES2019 = ES2019_MODULES.without(Feature.MODULES);
+
+  public static final FeatureSet ES_NEXT = ES2019_MODULES.with(LangVersion.ES_NEXT.features());
 
   public static final FeatureSet ES_UNSUPPORTED =
       ES_NEXT.with(LangVersion.ES_UNSUPPORTED.features());
 
   public static final FeatureSet TYPESCRIPT = ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
-  public static final FeatureSet TYPE_CHECK_SUPPORTED = ES2018.with(Feature.OPTIONAL_CATCH_BINDING);
+  public static final FeatureSet TYPE_CHECK_SUPPORTED = ES2019;
 
   private enum LangVersion {
     ES3,
@@ -86,6 +91,7 @@ public final class FeatureSet implements Serializable {
     ES7,
     ES8,
     ES2018,
+    ES2019,
     ES_NEXT,
     ES_UNSUPPORTED,
     TYPESCRIPT;
@@ -168,11 +174,11 @@ public final class FeatureSet implements Serializable {
 
     // ES 2019 adds https://github.com/tc39/proposal-json-superset
     UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP(
-        "Unescaped unicode line or paragraph separator", LangVersion.ES_NEXT),
+        "Unescaped unicode line or paragraph separator", LangVersion.ES2019),
 
     // ES 2019 adds optional catch bindings:
     // https://github.com/tc39/proposal-optional-catch-binding
-    OPTIONAL_CATCH_BINDING("Optional catch binding", LangVersion.ES_NEXT),
+    OPTIONAL_CATCH_BINDING("Optional catch binding", LangVersion.ES2019),
 
     // Stage 3 proposal likely to be part of ES2020
     DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES_UNSUPPORTED),
@@ -232,6 +238,9 @@ public final class FeatureSet implements Serializable {
     if (ES2018_MODULES.contains(this)) {
       return "es9";
     }
+    if (ES2019_MODULES.contains(this)) {
+      return "es_2019";
+    }
     if (ES_NEXT.contains(this)) {
       return "es_next";
     }
@@ -271,6 +280,9 @@ public final class FeatureSet implements Serializable {
     }
     if (ES2018_MODULES.contains(this)) {
       return "es9";
+    }
+    if (ES2019_MODULES.contains(this)) {
+      return "es_2019";
     }
     if (ES_NEXT.contains(this)) {
       return "es_next";
@@ -414,6 +426,8 @@ public final class FeatureSet implements Serializable {
       case "es2018":
       case "es9":
         return ES2018;
+      case "es_2019":
+        return ES2019;
       case "es_next":
         return ES_NEXT;
       case "ts":

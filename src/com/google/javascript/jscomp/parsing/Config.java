@@ -53,6 +53,7 @@ public abstract class Config {
     ECMASCRIPT7(FeatureSet.ES7_MODULES),
     ECMASCRIPT8(FeatureSet.ES8_MODULES),
     ECMASCRIPT_2018(FeatureSet.ES2018_MODULES),
+    ECMASCRIPT_2019(FeatureSet.ES2019_MODULES),
     ES_NEXT(FeatureSet.ES_NEXT),
     UNSUPPORTED(FeatureSet.ES_UNSUPPORTED),
     TYPESCRIPT(FeatureSet.TYPESCRIPT),

@@ -3095,6 +3095,9 @@ public class CompilerOptions implements Serializable {
     /** ECMAScript standard approved in 2018. Adds "..." in object literals/patterns. */
     ECMASCRIPT_2018,
 
+    /** ECMAScript standard approved in 2019. Adds catch blocks with no error binding. */
+    ECMASCRIPT_2019,
+
     /** ECMAScript latest draft standard. */
     ECMASCRIPT_NEXT,
 
@@ -3158,6 +3161,8 @@ public class CompilerOptions implements Serializable {
           return FeatureSet.ES8_MODULES;
         case ECMASCRIPT_2018:
           return FeatureSet.ES2018_MODULES;
+        case ECMASCRIPT_2019:
+          return FeatureSet.ES2019_MODULES;
         case ECMASCRIPT_NEXT:
         case NO_TRANSPILE:
           return FeatureSet.ES_NEXT;

@@ -6842,7 +6842,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testOptionalCatchBinding_toEs5() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     test(
@@ -6873,8 +6873,8 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testOptionalCatchBinding_noTranspile() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
 
     test(
         options,

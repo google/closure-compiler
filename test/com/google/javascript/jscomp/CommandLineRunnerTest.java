@@ -2505,7 +2505,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testOptionalCatch() {
-    args.add("--language_in=ES_NEXT");
+    args.add("--language_in=ECMASCRIPT_2019");
     test("try { x(); } catch {}", "try{x()}catch(a){}");
   }
 
