@@ -21,6 +21,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.debugging.sourcemap.Util;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -49,6 +51,7 @@ public class CodeGenerator {
   private final boolean trustedStrings;
   private final boolean quoteKeywordProperties;
   private final boolean useOriginalName;
+  private final FeatureSet outputFeatureSet;
   private final JSDocInfoPrinter jsDocInfoPrinter;
 
   private CodeGenerator(CodeConsumer consumer) {
@@ -59,6 +62,7 @@ public class CodeGenerator {
     preserveTypeAnnotations = false;
     quoteKeywordProperties = false;
     useOriginalName = false;
+    this.outputFeatureSet = FeatureSet.BARE_MINIMUM;
     this.jsDocInfoPrinter = new JSDocInfoPrinter(false);
   }
 
@@ -71,6 +75,7 @@ public class CodeGenerator {
     this.preserveTypeAnnotations = options.preserveTypeAnnotations;
     this.quoteKeywordProperties = options.shouldQuoteKeywordProperties();
     this.useOriginalName = options.getUseOriginalNamesInOutput();
+    this.outputFeatureSet = options.getOutputFeatureSet();
     this.jsDocInfoPrinter = new JSDocInfoPrinter(useOriginalName);
   }
 
@@ -297,9 +302,17 @@ public class CodeGenerator {
         break;
 
       case PARAM_LIST:
-        add("(");
-        addList(first);
-        add(")");
+        // If this is the list for a non-TypeScript arrow function with one simple name param.
+        if (n.getParent().isArrowFunction()
+            && n.hasOneChild()
+            && first.isName()
+            && !outputFeatureSet.has(Feature.TYPE_ANNOTATION)) {
+          add(first);
+        } else {
+          add("(");
+          addList(first);
+          add(")");
+        }
         break;
 
       case DEFAULT_VALUE:

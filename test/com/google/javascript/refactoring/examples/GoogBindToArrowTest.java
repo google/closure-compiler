@@ -16,11 +16,9 @@
 package com.google.javascript.refactoring.examples;
 
 import com.google.javascript.refactoring.Scanner;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
 
 /**
  * Test case for {@link GoogBindToArrow}.
@@ -128,10 +126,10 @@ public class GoogBindToArrowTest extends RefactoringTest {
 
     assertChanges(
         LINE_JOINER.join(
-            "[1,2,3].forEach(goog.bind(function(x) {",
+            "[1,2,3].forEach(goog.bind(function(x) {", //
             "  return y;",
             "}, this));"),
-        "[1,2,3].forEach((x) => y);");
+        "[1,2,3].forEach(x => y);");
   }
 
   /**

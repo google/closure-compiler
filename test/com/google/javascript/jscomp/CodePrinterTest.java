@@ -1149,7 +1149,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrettyPrinter_arrow() {
-    assertPrettyPrint("(a)=>123;", "(a) => 123;\n");
+    assertPrettyPrint("(a)=>123;", "a => 123;\n");
   }
 
   @Test
@@ -2751,18 +2751,33 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
-  public void testArrowFunction() {
+  public void testArrowFunction_zeroParams() {
     assertPrintSame("()=>1");
     assertPrint("(()=>1)", "()=>1");
     assertPrintSame("()=>{}");
-    assertPrint("a=>b", "(a)=>b");
-    assertPrint("(a=>b)(1)", "((a)=>b)(1)");
-    assertPrintSame("var z={x:(a)=>1}");
-    assertPrint("(a,b)=>b", "(a,b)=>b");
-    assertPrintSame("()=>(a,b)");
     assertPrint("(()=>a),b", "()=>a,b");
     assertPrint("()=>(a=b)", "()=>a=b");
-    assertPrintSame("[1,2].forEach((x)=>y)");
+  }
+
+  @Test
+  public void testArrowFunction_oneParam() {
+    assertPrintSame("a=>b");
+    assertPrintSame("([a])=>b");
+    assertPrintSame("(...a)=>b");
+    assertPrintSame("(a=0)=>b");
+    assertPrintSame("(a=>b)(1)");
+    assertPrintSame("var z={x:a=>1}");
+    assertPrintSame("[1,2].forEach(x=>y)");
+  }
+
+  @Test
+  public void testArrowFunction_manyParams() {
+    assertPrintSame("(a,b)=>b");
+  }
+
+  @Test
+  public void testArrowFunction_bodyEdgeCases() {
+    assertPrintSame("()=>(a,b)");
     assertPrintSame("()=>({a:1})");
     assertPrintSame("()=>{return 1}");
   }
@@ -2793,6 +2808,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testAsyncArrowFunction() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("async()=>1");
+    assertPrint("async (a) => 1", "async a=>1");
+
     // implicit semicolon prevents async being treated as a keyword
     assertPrint("f=async\n()=>1", "f=async;()=>1");
   }
@@ -2826,36 +2843,41 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("pwait=async function(promise){return await promise}");
     assertPrintSame("class C{async pwait(promise){await promise}}");
     assertPrintSame("o={async pwait(promise){await promise}}");
-    assertPrintSame("pwait=async(promise)=>await promise");
+    assertPrintSame("pwait=async promise=>await promise");
   }
 
-  /** Regression test for b/28633247 - necessary parens dropped around arrow functions. */
+  /**
+   * Regression test for b/28633247 - necessary parens dropped around arrow functions.
+   *
+   * <p>Many of these cases use single param arrows because their PARAM_LIST parens should also be
+   * dropped, which can make this harder to parse for humans.
+   */
   @Test
   public void testParensAroundArrow() {
     // Parens required for non-assignment binary operator
-    assertPrintSame("x||((_)=>true)");
+    assertPrint("x||((_)=>true)", "x||(_=>true)");
     // Parens required for unary operator
-    assertPrintSame("void((e)=>e*5)");
+    assertPrint("void((e)=>e*5)", "void(e=>e*5)");
     // Parens not required for comma operator
-    assertPrint("((_) => true), ((_) => false)", "(_)=>true,(_)=>false");
+    assertPrint("((_) => true), ((_) => false)", "_=>true,_=>false");
     // Parens not required for right side of assignment operator
     // NOTE: An arrow function on the left side would be a parse error.
-    assertPrint("x = ((_) => _ + 1)", "x=(_)=>_+1");
+    assertPrint("x = ((_) => _ + 1)", "x=_=>_+1");
     // Parens required for template tag
-    assertPrintSame("((_)=>\"\")`template`");
+    assertPrint("((_)=>\"\")`template`", "(_=>\"\")`template`");
     // Parens required to reference a property
     assertPrintSame("((a,b,c)=>a+b+c).length");
     assertPrintSame("((a,b,c)=>a+b+c)[\"length\"]");
     // Parens not required when evaluating property name.
     // (It doesn't make much sense to do it, though.)
-    assertPrint("x[((_)=>0)]", "x[(_)=>0]");
+    assertPrint("x[((_)=>0)]", "x[_=>0]");
     // Parens required to call the arrow function immediately
-    assertPrintSame("((x)=>x*5)(10)");
+    assertPrint("((x)=>x*5)(10)", "(x=>x*5)(10)");
     // Parens not required for function call arguments
-    assertPrint("x(((_) => true), ((_) => false))", "x((_)=>true,(_)=>false)");
+    assertPrint("x(((_) => true), ((_) => false))", "x(_=>true,_=>false)");
     // Parens required for first operand to a conditional, but not the rest.
-    assertPrintSame("((x)=>1)?a:b");
-    assertPrint("x?((x)=>0):((x)=>1)", "x?(x)=>0:(x)=>1");
+    assertPrint("((x)=>1)?a:b", "(x=>1)?a:b");
+    assertPrint("x?((x)=>0):((x)=>1)", "x?x=>0:x=>1");
   }
 
   @Test
