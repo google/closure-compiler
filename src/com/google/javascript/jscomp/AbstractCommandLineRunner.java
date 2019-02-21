@@ -551,8 +551,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Creates inputs from a list of files.
    *
-   * <p>Can be overridden by subclasses who want to pull files from different places.
-   *
    * @param files A list of flag entries indicates js and zip file names.
    * @param allowStdIn Whether '-' is allowed appear as a filename to represent stdin. If true, '-'
    *     is only allowed to appear once.
@@ -560,16 +558,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @return An array of inputs
    */
   @GwtIncompatible("Unnecessary")
-  protected List<SourceFile> createInputs(
+  private List<SourceFile> createInputs(
       List<FlagEntry<JsSourceType>> files, boolean allowStdIn, List<JsModuleSpec> jsModuleSpecs)
       throws IOException {
-    return createInputs(files, null /* jsonFiles */, allowStdIn, jsModuleSpecs);
+    return createInputs(files, /* jsonFiles= */ null, allowStdIn, jsModuleSpecs);
   }
 
   /**
    * Creates inputs from a list of source files and json files.
-   *
-   * <p>Can be overridden by subclasses who want to pull files from different places.
    *
    * @param files A list of flag entries indicates js and zip file names.
    * @param jsonFiles A list of json encoded files.
@@ -577,12 +573,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @return An array of inputs
    */
   @GwtIncompatible("Unnecessary")
-  protected List<SourceFile> createInputs(
+  private List<SourceFile> createInputs(
       List<FlagEntry<JsSourceType>> files,
       List<JsonFileSpec> jsonFiles,
       List<JsModuleSpec> jsModuleSpecs)
       throws IOException {
-    return createInputs(files, jsonFiles, false, jsModuleSpecs);
+    return createInputs(files, jsonFiles, /* allowStdIn= */ false, jsModuleSpecs);
   }
 
   /**
