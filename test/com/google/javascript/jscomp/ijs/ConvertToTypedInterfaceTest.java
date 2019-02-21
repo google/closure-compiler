@@ -1767,4 +1767,36 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   public void testEmptyFile() {
     test(new String[] {"const x = 42;", ""}, new String[] {"/** @const {number} */ var x;", ""});
   }
+
+  @Test
+  public void testPropertyAssignment() {
+    // Test for b/123413988 which used to crash the ijs generator
+    // These tests also exposes a bug tracked in b/124946590
+    // TODO(b/124946590): Modify these tests when fixing the bug.
+    test(
+        lines(
+            "goog.module('fooo');",
+            "var Foo;",
+            "Foo = class {",
+            "    constructor() {",
+            "        this.boundOnMouseMove = null;",
+            "    }",
+            "};"),
+        lines("goog.module('fooo');", "/** @const @type {UnusableType} */ var Foo;"));
+
+    test(
+        lines(
+            "goog.module('fooo');",
+            "var Foo;",
+            "let Bar = Foo = class {",
+            "    constructor() {",
+            "        /** @type {null} */",
+            "        this.boundOnMouseMove = null;",
+            "    }",
+            "};"),
+        lines(
+            "goog.module('fooo');",
+            "/** @const @type {UnusableType} */ var Foo;",
+            "/** @const @type {UnusableType} */ var Bar"));
+  }
 }

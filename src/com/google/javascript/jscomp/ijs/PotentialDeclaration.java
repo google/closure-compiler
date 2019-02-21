@@ -258,8 +258,10 @@ abstract class PotentialDeclaration {
           NodeUtil.newQNameDeclaration(compiler, getFullyQualifiedName(), null, getJsDoc());
       newStatement.useSourceInfoIfMissingFromForTree(getLhs());
       NodeUtil.deleteNode(getRemovableNode(), compiler);
-      insertionPoint.getParent().addChildAfter(newStatement, insertionPoint);
-      compiler.reportChangeToEnclosingScope(newStatement);
+      if (insertionPoint.getParent() != null) {
+        insertionPoint.getParent().addChildAfter(newStatement, insertionPoint);
+        compiler.reportChangeToEnclosingScope(newStatement);
+      }
     }
   }
 
