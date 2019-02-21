@@ -6340,7 +6340,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setOptimizeCalls(false);
-    options.setAllowMethodCallDecomposing(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
 

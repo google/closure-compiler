@@ -63,12 +63,13 @@ public final class Es6ExtractClasses
   Es6ExtractClasses(AbstractCompiler compiler) {
     this.compiler = compiler;
     Set<String> consts = new HashSet<>();
-    this.expressionDecomposer = new ExpressionDecomposer(
-        compiler,
-        compiler.getUniqueNameIdSupplier(),
-        consts,
-        Scope.createGlobalScope(new Node(Token.SCRIPT)),
-        compiler.getOptions().allowMethodCallDecomposing());
+    this.expressionDecomposer =
+        new ExpressionDecomposer(
+            compiler,
+            compiler.getUniqueNameIdSupplier(),
+            consts,
+            Scope.createGlobalScope(new Node(Token.SCRIPT)),
+            /* allowMethodCallDecomposing = */ true);
   }
 
   @Override

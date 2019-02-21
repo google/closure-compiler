@@ -15,8 +15,7 @@
  */
 
 /**
- * @fileoverview Tests for ES6 generators, which require the
- * --allow_method_call_decomposing flag.
+ * @fileoverview Tests for ES6 generators.
  */
 goog.require('goog.testing.jsunit');
 

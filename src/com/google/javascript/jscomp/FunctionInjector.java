@@ -63,17 +63,6 @@ class FunctionInjector {
     ENABLED,
     // TODD(b/124253050): consider removing this option.
     ENABLED_WITHOUT_METHOD_CALL_DECOMPOSING;
-
-    public static Decomposition from(
-        boolean allowDecomposition, boolean allowMethodCallDecomposing) {
-      if (!allowDecomposition) {
-        return Decomposition.DISABLED;
-      } else if (allowMethodCallDecomposing) {
-        return Decomposition.ENABLED;
-      } else {
-        return Decomposition.ENABLED_WITHOUT_METHOD_CALL_DECOMPOSING;
-      }
-    }
   }
 
   /**
@@ -110,7 +99,7 @@ class FunctionInjector {
     this(
         compiler,
         safeNameIdSupplier,
-        Decomposition.from(allowDecomposition, compiler.getOptions().allowMethodCallDecomposing()),
+        allowDecomposition ? Decomposition.ENABLED : Decomposition.DISABLED,
         assumeStrictThis,
         assumeMinimumCapture);
   }

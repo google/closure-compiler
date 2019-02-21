@@ -1268,7 +1268,6 @@ public final class ExpressionDecomposerTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguage(LanguageMode.ECMASCRIPT_2018);
     options.setCodingConvention(new GoogleCodingConvention());
-    options.setAllowMethodCallDecomposing(allowMethodCallDecomposing);
     compiler.initOptions(options);
     return compiler;
   }

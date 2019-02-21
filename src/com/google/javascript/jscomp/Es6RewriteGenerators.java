@@ -167,7 +167,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
               compiler.getUniqueNameIdSupplier(),
               new HashSet<>(),
               Scope.createGlobalScope(new Node(Token.SCRIPT)),
-              compiler.getOptions().allowMethodCallDecomposing());
+              /* allowMethodCallDecomposing = */ true);
     }
 
     @Override
