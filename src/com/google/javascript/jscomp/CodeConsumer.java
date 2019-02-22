@@ -249,8 +249,8 @@ public abstract class CodeConsumer {
   final void beginTemplateLit() {
     checkState(templateLitDepth == templateLitSubDepth);
 
-    templateLitDepth++;
     append("`");
+    templateLitDepth++;
   }
 
   final void beginTemplateLitSub() {
@@ -258,8 +258,8 @@ public abstract class CodeConsumer {
     // append it without sanitizing in the generic way {@link #add()} would.
     checkState(isInTemplateLiteral());
 
-    templateLitSubDepth++;
     append("${");
+    templateLitSubDepth++;
   }
 
   final void endTemplateLitSub() {
@@ -268,16 +268,16 @@ public abstract class CodeConsumer {
     checkState(templateLitSubDepth > 0);
     checkState(templateLitDepth == templateLitSubDepth);
 
-    templateLitSubDepth--;
     append("}");
+    templateLitSubDepth--;
   }
 
   final void endTemplateLit() {
     checkState(templateLitDepth > 0);
     checkState(isInTemplateLiteral());
 
-    templateLitDepth--;
     append("`");
+    templateLitDepth--;
   }
 
   final boolean isInTemplateLiteral() {

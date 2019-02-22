@@ -3123,20 +3123,54 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
-  public void testMultiLineTemplateLiteral_notIndented_byPrettyPrint() {
+  public void testMultiLineTemplateLiteral_doesNotPreserveNewLines_inSubstituions() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertPrint(
+        lines(
+            "var y=`Hello ${x", //
+            "+",
+            "z", //
+            "}`"),
+        lines("var y=`Hello ${x+z}`"));
+
     assertPrettyPrint(
         lines(
-            "function indentScope(){var y = `hello", //
-            "world",
-            "foo",
-            "bar`;}"),
+            "var y=`Hello ${x", //
+            "+",
+            "z", //
+            "}`"),
         lines(
-            "function indentScope() {",
-            "  var y = `hello", //
+            "var y = `Hello ${x + z}`;", //
+            ""));
+  }
+
+  @Test
+  public void testMultiLineTemplateLiteral_notIndented_byPrettyPrint() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+
+    // We intentionally put all the delimiter characters on the start of their own line to check
+    // their indentation.
+    assertPrettyPrint(
+        lines(
+            "function indentScope() {", //
+            "  var y =",
+            "`hello", // Open backtick.
             "world",
             "foo",
-            "bar`;",
+            "${", // Open substituion.
+            "bing",
+            "}", // Close substitution.
+            "bar",
+            "`;", // Close backtick.
+            "}"),
+        lines(
+            "function indentScope() {", //
+            "  var y = `hello",
+            "world",
+            "foo",
+            "${bing}",
+            "bar",
+            "`;",
             "}",
             ""));
   }
