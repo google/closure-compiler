@@ -122,10 +122,8 @@ public class CompilerOptions implements Serializable {
   /**
    * Skips passes (logging a warning) whose PassFactory feature set doesn't include some features
    * currently in the AST.
-   *
-   * <p>At the moment, this should only ever be set to false for testing.
    */
-  private boolean skipUnsupportedPasses = true;
+  private boolean skipUnsupportedPasses = false;
 
   /**
    * The builtin set of externs to be used
