@@ -951,26 +951,6 @@ public class CompilerOptions implements Serializable {
     trustedStrings = yes;
   }
 
-  private boolean allowMethodCallDecomposing = true;
-
-  /**
-   * See
-   * https://github.com/google/closure-compiler/wiki/FAQ#i-get-an-undecomposable-expression-error-for-my-yield-or-await-expression-what-do-i-do
-   */
-  public boolean allowMethodCallDecomposing() {
-    return allowMethodCallDecomposing;
-  }
-
-  /**
-   * Setting this to true indicates that it's safe to rewrite x.y() as: fn = x.y; fn.call(x);
-   * This should be false if supporting IE 8 or IE 9 is necessary.
-   *
-   * See https://github.com/google/closure-compiler/wiki/FAQ#i-get-an-undecomposable-expression-error-for-my-yield-or-await-expression-what-do-i-do
-   */
-  public void setAllowMethodCallDecomposing(boolean value) {
-    this.allowMethodCallDecomposing = value;
-  }
-
   // Should only be used when debugging compiler bugs.
   boolean printSourceAfterEachPass;
 

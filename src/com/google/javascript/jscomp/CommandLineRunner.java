@@ -823,7 +823,7 @@ public class CommandLineRunner extends
     @Option(
         name = "--allow_method_call_decomposing",
         handler = BooleanOptionHandler.class,
-        usage = "Allow decomposing x.y(); to: var tmp = x.y; tmp.call(x); Unsafe on IE 8 and 9")
+        usage = "This flag is a no-op.")
     private boolean allowMethodCallDecomposing = true;
 
     @Option(
@@ -1895,8 +1895,6 @@ public class CommandLineRunner extends
 
     options.rewritePolyfills =
         flags.rewritePolyfills && options.getLanguageIn().toFeatureSet().contains(FeatureSet.ES6);
-
-    options.setAllowMethodCallDecomposing(flags.allowMethodCallDecomposing);
 
     if (!flags.translationsFile.isEmpty()) {
       try {
