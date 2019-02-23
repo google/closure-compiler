@@ -134,13 +134,13 @@ public final class JsMessageExtractor {
 
     ExtractMessagesVisitor extractCompilerPass =
         new ExtractMessagesVisitor(compiler);
-    if (compiler.getErrors().length == 0) {
+    if (compiler.getErrors().isEmpty()) {
       extractCompilerPass.process(null, compiler.getRoot());
     }
 
-    JSError[] errors = compiler.getErrors();
+    ImmutableList<JSError> errors = compiler.getErrors();
     // Check for errors.
-    if (errors.length > 0) {
+    if (!errors.isEmpty()) {
       StringBuilder msg = new StringBuilder("JSCompiler errors\n");
       MessageFormatter formatter = new LightweightMessageFormatter(compiler);
       for (JSError e : errors) {

@@ -153,7 +153,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     Result result = this.runReplaceScript(options, ImmutableList.of(
         firstSource, secondSource), 1, 0, modifiedSource, 1, true).getResult();
     assertThat(result.success).isFalse();
-    assertThat(result.errors).hasLength(2);
+    assertThat(result.errors).hasSize(2);
     int i = 2;
     for (JSError e : result.errors) {
       assertErrorType(e, VarCheck.UNDEFINED_VAR_ERROR, i++);
@@ -214,8 +214,8 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     flushResults(compiler);
     doReplaceScript(compiler, src2, 2);
     Result result = compiler.getResult();
-    assertThat(result.errors).hasLength(3);
-    assertErrorType(result.errors[1], VarCheck.VAR_MULTIPLY_DECLARED_ERROR, 1);
+    assertThat(result.errors).hasSize(3);
+    assertErrorType(result.errors.get(1), VarCheck.VAR_MULTIPLY_DECLARED_ERROR, 1);
   }
 
   /**
@@ -237,8 +237,8 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     flushResults(compiler);
     doReplaceScript(compiler, src2, 2);
     Result result = compiler.getResult();
-    assertThat(result.errors).hasLength(2);
-    assertErrorType(result.errors[0], VarCheck.VAR_MULTIPLY_DECLARED_ERROR, 1);
+    assertThat(result.errors).hasSize(2);
+    assertErrorType(result.errors.get(0), VarCheck.VAR_MULTIPLY_DECLARED_ERROR, 1);
   }
 
   /**
@@ -351,8 +351,8 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         ImmutableList.of(source0), 1, 0, source0, 0, true).getResult();
     assertThat(result.success).isFalse();
 
-    assertThat(result.errors).hasLength(1);
-    assertErrorType(result.errors[0], CheckProvides.MISSING_PROVIDE_WARNING, 1);
+    assertThat(result.errors).hasSize(1);
+    assertErrorType(result.errors.get(0), CheckProvides.MISSING_PROVIDE_WARNING, 1);
   }
 
   /** Test related to DefaultPassConfig.inferTypes */
@@ -369,8 +369,8 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         ImmutableList.of(src), 0, 0, modifiedSrc, 0, false).getResult();
     assertThat(result.success).isFalse();
 
-    assertThat(result.errors).hasLength(1);
-    assertErrorType(result.errors[0], TypeValidator.TYPE_MISMATCH_WARNING, 4);
+    assertThat(result.errors).hasSize(1);
+    assertErrorType(result.errors.get(0), TypeValidator.TYPE_MISMATCH_WARNING, 4);
 
     assertThat(result.warnings).isEmpty();
   }
@@ -827,12 +827,9 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     Result result = this.runReplaceScript(options,
         ImmutableList.of(src0, src1), 3, 0, src1, 1, true).getResult();
     assertNumWarningsAndErrors(result, 3, 0);
-    assertErrorType(result.errors[0],
-        CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS, 2);
-    assertErrorType(result.errors[1],
-        CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS, 3);
-    assertErrorType(result.errors[2],
-        CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS, 4);
+    assertErrorType(result.errors.get(0), CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS, 2);
+    assertErrorType(result.errors.get(1), CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS, 3);
+    assertErrorType(result.errors.get(2), CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS, 4);
   }
 
   @Test
@@ -843,7 +840,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     Result result = runReplaceScript(options,
         ImmutableList.of(src), 1, 0, src, 0, true).getResult();
     assertNumWarningsAndErrors(result, 1, 0);
-    assertErrorType(result.errors[0], CheckGlobalThis.GLOBAL_THIS, 2);
+    assertErrorType(result.errors.get(0), CheckGlobalThis.GLOBAL_THIS, 2);
   }
 
   @Test
@@ -856,7 +853,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     Result result = runReplaceScript(options,
         ImmutableList.of(src), 0, 1, src, 0, true).getResult();
     assertNumWarningsAndErrors(result, 0, 1);
-    assertErrorType(result.warnings[0], CheckSideEffects.USELESS_CODE_ERROR, 2);
+    assertErrorType(result.warnings.get(0), CheckSideEffects.USELESS_CODE_ERROR, 2);
   }
 
   @Test
@@ -867,8 +864,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     Result result = runReplaceScript(options,
         ImmutableList.of(src), 0, 1, src, 0, true).getResult();
     assertNumWarningsAndErrors(result, 0, 1);
-    assertErrorType(result.warnings[0],
-        CheckSuspiciousCode.SUSPICIOUS_SEMICOLON, 1);
+    assertErrorType(result.warnings.get(0), CheckSuspiciousCode.SUSPICIOUS_SEMICOLON, 1);
   }
 
   @Test
@@ -879,7 +875,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     Result result = runReplaceScript(options,
         ImmutableList.of(src), 1, 0, src, 0, true).getResult();
     assertNumWarningsAndErrors(result, 1, 0);
-    assertErrorType(result.errors[0], CheckUnreachableCode.UNREACHABLE_CODE, 1);
+    assertErrorType(result.errors.get(0), CheckUnreachableCode.UNREACHABLE_CODE, 1);
   }
 
   @Test
@@ -893,8 +889,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     Result result = runReplaceScript(options,
         ImmutableList.of(src), 1, 0, src, 0, true).getResult();
     assertNumWarningsAndErrors(result, 1, 0);
-    assertErrorType(result.errors[0],
-        CheckMissingReturn.MISSING_RETURN_STATEMENT, 2);
+    assertErrorType(result.errors.get(0), CheckMissingReturn.MISSING_RETURN_STATEMENT, 2);
   }
 
   /** Test related to DefaultPassConfig.closureGoogScopeAliases */
@@ -922,9 +917,8 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         src1), 0, 0, modifiedSrc1, 1, true).getResult();
     // ImmutableList.of(src0, modifiedSrc1), 1, 0, modifiedSrc1, 1, true);
     assertThat(result.success).isFalse();
-    assertThat(result.errors).hasLength(1);
-    assertErrorType(result.errors[0],
-        CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS, 5);
+    assertThat(result.errors).hasSize(1);
+    assertErrorType(result.errors.get(0), CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS, 5);
   }
 
   /**

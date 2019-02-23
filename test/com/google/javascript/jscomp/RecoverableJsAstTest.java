@@ -165,7 +165,6 @@ public class RecoverableJsAstTest {
     }
 
     assertThat(compiler.getResult().errors)
-        .asList()
         .comparingElementsUsing(DESCRIPTION_EQUALITY)
         .containsExactlyElementsIn(expectedErrors)
         .inOrder();

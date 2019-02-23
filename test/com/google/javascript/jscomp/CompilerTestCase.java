@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
@@ -1477,7 +1478,6 @@ public abstract class CompilerTestCase {
       // Might be an expected parse error.
       assertThat(compiler.getErrors())
           .named("parse errors")
-          .asList()
           .comparingElementsUsing(new DiagnosticCorrespondence())
           .containsExactlyElementsIn(expectedErrors);
       for (Postcondition postcondition : postconditions) {
@@ -1684,7 +1684,7 @@ public abstract class CompilerTestCase {
 
         hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         aggregateWarningCount += errorManagers[i].getWarningCount();
-        Collections.addAll(aggregateWarnings, compiler.getWarnings());
+        aggregateWarnings.addAll(compiler.getWarnings());
 
         if (normalizeEnabled) {
           boolean verifyDeclaredConstants = true;
@@ -1706,10 +1706,9 @@ public abstract class CompilerTestCase {
         expectedRoot.detach();
       }
 
-      JSError[] stErrors = symbolTableErrorManager.getErrors();
+      ImmutableList<JSError> stErrors = symbolTableErrorManager.getErrors();
       if (expectedSymbolTableError != null) {
-        assertWithMessage("There should be one error.").that(stErrors.length).isEqualTo(1);
-        assertError(stErrors[0]).hasType(expectedSymbolTableError);
+        assertError(getOnlyElement(stErrors)).hasType(expectedSymbolTableError);
       } else {
         assertThat(stErrors).named("symbol table errors").isEmpty();
       }
@@ -1728,7 +1727,6 @@ public abstract class CompilerTestCase {
         for (int i = 0; i < numRepetitions; i++) {
           assertThat(errorManagers[i].getWarnings())
               .named("compile warnings from repetition " + (i + 1))
-              .asList()
               .comparingElementsUsing(new DiagnosticCorrespondence())
               .containsExactlyElementsIn(expectedWarnings);
           for (JSError warning : errorManagers[i].getWarnings()) {
@@ -1865,7 +1863,6 @@ public abstract class CompilerTestCase {
     } else {
       assertThat(compiler.getErrors())
           .named("compile errors")
-          .asList()
           .comparingElementsUsing(new DiagnosticCorrespondence())
           .containsExactlyElementsIn(expectedErrors);
       for (JSError error : compiler.getErrors()) {
@@ -2051,7 +2048,7 @@ public abstract class CompilerTestCase {
       for (int i = 0; i < warnings.length; i++) {
         DiagnosticType warning = warnings[i];
         assertWithMessage(warningMessage)
-            .that(compiler.getWarnings()[i].getType())
+            .that(compiler.getWarnings().get(i).getType())
             .isEqualTo(warning);
       }
     }

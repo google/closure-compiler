@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
-import java.util.Arrays;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -148,9 +147,9 @@ public final class LazyParsedDependencyInfoTest {
             .build();
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
-    assertThat(Arrays.asList(compiler.getErrorManager().getWarnings())).isEmpty();
+    assertThat(compiler.getErrorManager().getWarnings()).isEmpty();
     assertThat(info.getLoadFlags()).containsExactly("module", "es6", "lang", "es6");
-    assertThat(Arrays.asList(compiler.getErrorManager().getWarnings()))
+    assertThat(compiler.getErrorManager().getWarnings())
         .containsExactly(JSError.make(ModuleLoader.MODULE_CONFLICT, "my/js.js"));
   }
 }

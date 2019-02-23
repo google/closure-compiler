@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.Requirement.WhitelistEntry;
 
 /**
@@ -51,15 +52,11 @@ public interface ErrorManager extends ErrorHandler {
    */
   int getWarningCount();
 
-  /**
-   * Gets all the errors.
-   */
-  JSError[] getErrors();
+  /** Gets all the errors. */
+  ImmutableList<JSError> getErrors();
 
-  /**
-   * Gets all the warnings.
-   */
-  JSError[] getWarnings();
+  /** Gets all the warnings. */
+  ImmutableList<JSError> getWarnings();
 
   /**
    * Sets the percentage of typed expressions.

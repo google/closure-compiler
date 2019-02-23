@@ -2027,7 +2027,7 @@ public final class FunctionInjectorTest {
   private static Node parseExpected(Compiler compiler, String js) {
     Node n = compiler.parseTestCode(js);
     String message = "Unexpected errors: ";
-    JSError[] errs = compiler.getErrors();
+    ImmutableList<JSError> errs = compiler.getErrors();
     for (JSError element : errs) {
       message += "\n" + element;
     }

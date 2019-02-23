@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.JSError;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,7 +47,7 @@ public final class CoverageInstrumenterTest {
 
   private static final Path FOO_JS = Paths.get("foo.js");
   private static final Path SOURCE_JS = Paths.get("source.js");
-  private static final JSError[] NO_ERRORS = new JSError[] {};
+  private static final ImmutableList<JSError> NO_ERRORS = ImmutableList.of();
 
   @Before
   public void setUp() {

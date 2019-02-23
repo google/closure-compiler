@@ -666,14 +666,14 @@ public final class DepsGeneratorTest {
   private void assertWarnings(String... messages) {
     assertErrorWarningCount(0, messages.length);
     for (int i = 0; i < messages.length; i++) {
-      assertThat(errorManager.getWarnings()[i].description).isEqualTo(messages[i]);
+      assertThat(errorManager.getWarnings().get(i).description).isEqualTo(messages[i]);
     }
   }
 
   private void assertErrors(String... messages) {
     assertErrorWarningCount(messages.length, 0);
     for (int i = 0; i < messages.length; i++) {
-      assertThat(errorManager.getErrors()[i].description).isEqualTo(messages[i]);
+      assertThat(errorManager.getErrors().get(i).description).isEqualTo(messages[i]);
     }
   }
 

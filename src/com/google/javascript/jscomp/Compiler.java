@@ -32,6 +32,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.javascript.jscomp.AbstractCompiler.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
@@ -1209,24 +1210,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         this.sourceMap, this.externExports, this.cssNames, this.idGeneratorMap, transpiledFiles);
   }
 
-  /**
-   * Returns the array of errors (never null).
-   */
-  public JSError[] getErrors() {
-    if (errorManager == null) {
-      return new JSError[] {};
-    }
-    return errorManager.getErrors();
+  /** Returns the list of errors (never null). */
+  public ImmutableList<JSError> getErrors() {
+    return (errorManager == null) ? ImmutableList.of() : errorManager.getErrors();
   }
 
-  /**
-   * Returns the array of warnings (never null).
-   */
-  public JSError[] getWarnings() {
-    if (errorManager == null) {
-      return new JSError[] {};
-    }
-    return errorManager.getWarnings();
+  /** Returns the list of warnings (never null). */
+  public ImmutableList<JSError> getWarnings() {
+    return (errorManager == null) ? ImmutableList.of() : errorManager.getWarnings();
   }
 
   @Override
@@ -3399,8 +3390,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
     private final Set<String> externProperties;
-    private final JSError[] errors;
-    private final JSError[] warnings;
+    private final ImmutableList<JSError> errors;
+    private final ImmutableList<JSError> warnings;
     private final JSModuleGraph moduleGraph;
     private final int uniqueNameId;
     private final Set<String> exportedNames;

@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -76,13 +76,13 @@ public class SortingErrorManager implements ErrorManager {
   }
 
   @Override
-  public JSError[] getErrors() {
-    return toArray(CheckLevel.ERROR);
+  public ImmutableList<JSError> getErrors() {
+    return filterToListOf(CheckLevel.ERROR);
   }
 
   @Override
-  public JSError[] getWarnings() {
-    return toArray(CheckLevel.WARNING);
+  public ImmutableList<JSError> getWarnings() {
+    return filterToListOf(CheckLevel.WARNING);
   }
 
   Iterable<ErrorWithLevel> getSortedDiagnostics() {
@@ -101,14 +101,11 @@ public class SortingErrorManager implements ErrorManager {
     return typedPercent;
   }
 
-  private JSError[] toArray(CheckLevel level) {
-    List<JSError> errors = new ArrayList<>(messages.size());
-    for (ErrorWithLevel p : messages) {
-      if (p.level == level) {
-        errors.add(p.error);
-      }
-    }
-    return errors.toArray(new JSError[0]);
+  private ImmutableList<JSError> filterToListOf(CheckLevel level) {
+    return messages.stream()
+        .filter((e) -> e.level == level)
+        .map((e) -> e.error)
+        .collect(toImmutableList());
   }
 
   // TODO(b/114762232): It should be invalid to report errors during the execution of this method;

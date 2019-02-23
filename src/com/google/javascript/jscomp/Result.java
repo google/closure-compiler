@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,8 +26,8 @@ import java.util.Set;
  */
 public class Result {
   public final boolean success;
-  public final JSError[] errors;
-  public final JSError[] warnings;
+  public final ImmutableList<JSError> errors;
+  public final ImmutableList<JSError> warnings;
 
   public final VariableMap variableMap;
   public final VariableMap propertyMap;
@@ -39,15 +40,20 @@ public class Result {
   public final String idGeneratorMap;
   public final Set<SourceFile> transpiledFiles;
 
-  Result(JSError[] errors, JSError[] warnings,
-         VariableMap variableMap, VariableMap propertyMap,
-         VariableMap namedAnonFunctionMap,
-         VariableMap stringMap,
-         FunctionInformationMap functionInformationMap,
-         SourceMap sourceMap, String externExport,
-         Map<String, Integer> cssNames, String idGeneratorMap,
-         Set<SourceFile> transpiledFiles) {
-    this.success = errors.length == 0;
+  Result(
+      ImmutableList<JSError> errors,
+      ImmutableList<JSError> warnings,
+      VariableMap variableMap,
+      VariableMap propertyMap,
+      VariableMap namedAnonFunctionMap,
+      VariableMap stringMap,
+      FunctionInformationMap functionInformationMap,
+      SourceMap sourceMap,
+      String externExport,
+      Map<String, Integer> cssNames,
+      String idGeneratorMap,
+      Set<SourceFile> transpiledFiles) {
+    this.success = errors.isEmpty();
     this.errors  = errors;
     this.warnings = warnings;
     this.variableMap = variableMap;
@@ -63,11 +69,15 @@ public class Result {
   }
 
   @VisibleForTesting
-  public Result(JSError[] errors, JSError[] warnings,
-                VariableMap variableMap, VariableMap propertyMap,
-                VariableMap namedAnonFunctionMap,
-                FunctionInformationMap functionInformationMap,
-                SourceMap sourceMap, String externExport) {
+  public Result(
+      ImmutableList<JSError> errors,
+      ImmutableList<JSError> warnings,
+      VariableMap variableMap,
+      VariableMap propertyMap,
+      VariableMap namedAnonFunctionMap,
+      FunctionInformationMap functionInformationMap,
+      SourceMap sourceMap,
+      String externExport) {
     this(errors, warnings, variableMap, propertyMap,
          namedAnonFunctionMap, null, functionInformationMap, sourceMap,
          externExport, null, null, null);

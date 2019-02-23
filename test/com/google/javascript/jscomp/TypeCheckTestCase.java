@@ -171,7 +171,6 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     (isError
             ? assertWithMessage("Regarding errors:").that(compiler.getErrors())
             : assertWithMessage("Regarding warnings:").that(compiler.getWarnings()))
-        .asList()
         .comparingElementsUsing(DESCRIPTION_EQUALITY)
         .containsExactlyElementsIn(descriptions)
         .inOrder();
@@ -187,7 +186,6 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     (isError
             ? assertWithMessage("Regarding errors:").that(compiler.getErrors())
             : assertWithMessage("Regarding warnings:").that(compiler.getWarnings()))
-        .asList()
         .comparingElementsUsing(DIAGNOSTIC_TYPE_EQUALITY)
         .containsExactlyElementsIn(expectedTypes)
         .inOrder();

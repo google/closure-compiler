@@ -1426,7 +1426,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     // return 0 if no errors, the error count otherwise
-    return Math.min(result.errors.length, 0x7f);
+    return Math.min(result.errors.size(), 0x7f);
   }
 
   @GwtIncompatible("Unnecessary")

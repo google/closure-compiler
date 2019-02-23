@@ -1676,7 +1676,7 @@ public final class CommandLineRunnerTest {
       "var a b;",
       "var b c;"
     });
-    assertThat(compiler.getErrors()).hasLength(2);
+    assertThat(compiler.getErrors()).hasSize(2);
   }
 
   @Test
@@ -2554,11 +2554,11 @@ public final class CommandLineRunnerTest {
                   + Joiner.on("\n").join(compiler.getErrors())
                   + "\nWarnings: \n"
                   + Joiner.on("\n").join(compiler.getWarnings()))
-          .that(compiler.getErrors().length + compiler.getWarnings().length)
+          .that(compiler.getErrors().size() + compiler.getWarnings().size())
           .isEqualTo(0);
     } else {
-      assertThat(compiler.getWarnings()).hasLength(1);
-      assertThat(compiler.getWarnings()[0].getType()).isEqualTo(warning);
+      assertThat(compiler.getWarnings()).hasSize(1);
+      assertThat(compiler.getWarnings().get(0).getType()).isEqualTo(warning);
     }
 
     Node root = compiler.getRoot().getLastChild();
@@ -2601,19 +2601,19 @@ public final class CommandLineRunnerTest {
                 + Joiner.on("\n").join(compiler.getErrors())
                 + "\nWarnings: \n"
                 + Joiner.on("\n").join(compiler.getWarnings()))
-        .that(compiler.getErrors().length + compiler.getWarnings().length)
+        .that(compiler.getErrors().size() + compiler.getWarnings().size())
         .isEqualTo(1);
 
     assertThat(exitCodes).isNotEmpty();
     int lastExitCode = Iterables.getLast(exitCodes);
 
-    if (compiler.getErrors().length > 0) {
-      assertThat(compiler.getErrors()).hasLength(1);
-      assertThat(compiler.getErrors()[0].getType()).isEqualTo(warning);
+    if (!compiler.getErrors().isEmpty()) {
+      assertThat(compiler.getErrors()).hasSize(1);
+      assertThat(compiler.getErrors().get(0).getType()).isEqualTo(warning);
       assertThat(lastExitCode).isEqualTo(1);
     } else {
-      assertThat(compiler.getWarnings()).hasLength(1);
-      assertThat(compiler.getWarnings()[0].getType()).isEqualTo(warning);
+      assertThat(compiler.getWarnings()).hasSize(1);
+      assertThat(compiler.getWarnings().get(0).getType()).isEqualTo(warning);
       assertThat(lastExitCode).isEqualTo(0);
     }
   }
@@ -2727,8 +2727,8 @@ public final class CommandLineRunnerTest {
       assertThat(compiler.getWarnings()).isEmpty();
       assertThat(output).isEqualTo(expectedOutput);
     } else {
-      assertThat(compiler.getErrors()).hasLength(1);
-      assertError(compiler.getErrors()[0]).hasType(expectedError);
+      assertThat(compiler.getErrors()).hasSize(1);
+      assertError(compiler.getErrors().get(0)).hasType(expectedError);
     }
   }
 

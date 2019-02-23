@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * A simple delegating {@link ErrorManager} that provides a thread-safe wrapper
@@ -55,12 +56,12 @@ public class ThreadSafeDelegatingErrorManager implements ErrorManager {
   }
 
   @Override
-  public synchronized JSError[] getErrors() {
+  public synchronized ImmutableList<JSError> getErrors() {
     return delegated.getErrors();
   }
 
   @Override
-  public synchronized JSError[] getWarnings() {
+  public synchronized ImmutableList<JSError> getWarnings() {
     return delegated.getWarnings();
   }
 

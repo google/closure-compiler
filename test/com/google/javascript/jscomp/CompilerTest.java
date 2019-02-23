@@ -963,8 +963,8 @@ public final class CompilerTest {
       String outputSource = compiler.toSource();
       assertThat(outputSource).isEqualTo(expected);
     } else {
-      assertThat(result.errors).hasLength(1);
-      assertThat(result.errors[0].getType()).isEqualTo(error);
+      assertThat(result.errors).hasSize(1);
+      assertThat(result.errors.get(0).getType()).isEqualTo(error);
     }
     return result;
   }
@@ -1066,13 +1066,13 @@ public final class CompilerTest {
     }
 
     @Override
-    public JSError[] getErrors() {
-      return null;
+    public ImmutableList<JSError> getErrors() {
+      return ImmutableList.of();
     }
 
     @Override
-    public JSError[] getWarnings() {
-      return null;
+    public ImmutableList<JSError> getWarnings() {
+      return ImmutableList.of();
     }
 
     @Override public void setTypedPercent(double typedPercent) {}
@@ -2035,8 +2035,8 @@ public final class CompilerTest {
     compiler.check();
 
     assertThat(compiler.getWarnings()).isEmpty();
-    assertThat(compiler.getErrors()).hasLength(1);
-    assertThat(compiler.getErrors()[0].getType())
+    assertThat(compiler.getErrors()).hasSize(1);
+    assertThat(compiler.getErrors().get(0).getType())
         .isEqualTo(CheckTypeImportCodeReferences.TYPE_IMPORT_CODE_REFERENCE);
   }
 

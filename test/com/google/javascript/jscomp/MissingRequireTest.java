@@ -914,7 +914,7 @@ public final class MissingRequireTest extends CompilerTestCase {
     opts.setClosurePass(true);
 
     Result result = compiler.compile(ImmutableList.<SourceFile>of(), ImmutableList.of(input), opts);
-    JSError[] warnings = result.warnings;
+    ImmutableList<JSError> warnings = result.warnings;
     assertThat(warnings).isNotNull();
     assertThat(warnings).isNotEmpty();
 

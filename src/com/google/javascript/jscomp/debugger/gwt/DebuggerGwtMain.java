@@ -34,12 +34,9 @@ import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.debugger.common.CompilationParam;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * A GWT-based version of the Closure Compiler debugger
@@ -71,9 +68,8 @@ public class DebuggerGwtMain implements EntryPoint {
     String outputCode = compiler.toSource();
     rightPane.add(new Label(outputCode));
     rightPane.add(new HTML("<h4>Warnings</h4>"));
-    List<JSError> errors = Arrays.asList(result.errors);
-    List<JSError> warnings = Arrays.asList(result.warnings);
-    rightPane.add(new Label(Joiner.on("\n\n").join(Iterables.concat(errors, warnings))));
+    rightPane.add(
+        new Label(Joiner.on("\n\n").join(Iterables.concat(result.errors, result.warnings))));
     rightPane.add(new HTML("<h4>AST</h4>"));
     String outputAst = compiler.getRoot().toStringTree();
     rightPane.add(new Label(outputAst));

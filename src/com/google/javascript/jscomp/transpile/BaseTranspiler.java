@@ -147,7 +147,7 @@ public final class BaseTranspiler implements Transpiler {
         }
       }
       boolean transpiled = !result.transpiledFiles.isEmpty();
-      if (result.errors.length > 0) {
+      if (!result.errors.isEmpty()) {
         throw new TranspilationException(compiler, result.errors, result.warnings);
       }
       return new CompileResult(

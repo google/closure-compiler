@@ -15,7 +15,6 @@
  */
 package com.google.javascript.refactoring;
 
-import static com.google.common.collect.ObjectArrays.concat;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
 import static com.google.javascript.jscomp.CheckLevel.OFF;
@@ -1619,8 +1618,11 @@ public class ErrorToFixMapperTest {
         ImmutableList.<SourceFile>of(), // Externs
         ImmutableList.of(SourceFile.fromCode("test", originalCode)),
         options);
-    JSError[] warningsAndErrors =
-        concat(compiler.getWarnings(), compiler.getErrors(), JSError.class);
+    ImmutableList<JSError> warningsAndErrors =
+        ImmutableList.<JSError>builder()
+            .addAll(compiler.getWarnings())
+            .addAll(compiler.getErrors())
+            .build();
     assertThat(warningsAndErrors).named("warnings/errors").isNotEmpty();
     Collection<SuggestedFix> fixes = errorManager.getAllFixes();
     assertThat(fixes).named("fixes").isNotEmpty();
@@ -1635,8 +1637,11 @@ public class ErrorToFixMapperTest {
         ImmutableList.<SourceFile>of(), // Externs
         ImmutableList.of(SourceFile.fromCode("test", originalCode)),
         options);
-    JSError[] warningsAndErrors =
-        concat(compiler.getWarnings(), compiler.getErrors(), JSError.class);
+    ImmutableList<JSError> warningsAndErrors =
+        ImmutableList.<JSError>builder()
+            .addAll(compiler.getWarnings())
+            .addAll(compiler.getErrors())
+            .build();
     assertThat(warningsAndErrors).named("warnings/errors").isNotEmpty();
     SuggestedFix[] fixes = errorManager.getAllFixes().toArray(new SuggestedFix[0]);
     assertThat(fixes).named("fixes").hasLength(expectedFixes.length);

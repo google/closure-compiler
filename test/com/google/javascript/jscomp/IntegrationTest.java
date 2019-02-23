@@ -1183,9 +1183,9 @@ public final class IntegrationTest extends IntegrationTestCase {
     // We should have one warning: that property p1 shouldn't have any JSDoc inside the properties
     // configuration, because when a property is also declared in the constructor, the constructor
     // JSDoc will take precedence.
-    JSError[] warnings = compiler.getWarnings();
-    assertThat(warnings).hasLength(1);
-    JSError warning = warnings[0];
+    ImmutableList<JSError> warnings = compiler.getWarnings();
+    assertThat(warnings).hasSize(1);
+    JSError warning = warnings.get(0);
     assertThat(warning.getType()).isEqualTo(POLYMER_MISPLACED_PROPERTY_JSDOC);
     assertThat(warning.node.getString()).isEqualTo("p1");
   }
@@ -2005,7 +2005,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLegacyCodeCompile(true);
     Compiler compiler = compile(options, "123();");
     assertThat(compiler.getErrors()).isEmpty();
-    assertThat(compiler.getWarnings()).hasLength(1);
+    assertThat(compiler.getWarnings()).hasSize(1);
   }
 
   @Test
@@ -2018,7 +2018,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLegacyCodeCompile(true);
     Compiler compiler = compile(options, "123();");
     assertThat(compiler.getErrors()).isEmpty();
-    assertThat(compiler.getWarnings()).hasLength(1);
+    assertThat(compiler.getWarnings()).hasSize(1);
   }
 
   @Test
@@ -4225,7 +4225,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     Compiler compiler = compile(options, code);
     checkUnexpectedErrorsOrWarnings(compiler, 1);
-    assertThat(compiler.getErrors()[0].toString())
+    assertThat(compiler.getErrors().get(0).toString())
         .isEqualTo(
             "JSC_PARSE_ERROR. Parse error."
                 + " getters are not supported in older versions of JavaScript."
@@ -5317,7 +5317,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compile(options,
         "/** @return {number} */ function f() { return true; }");
-    assertThat(compiler.getErrors()).hasLength(1);
+    assertThat(compiler.getErrors()).hasSize(1);
     assertThat(compiler.getWarnings()).isEmpty();
   }
 
@@ -5331,7 +5331,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     Compiler compiler = compile(options,
         "/** @return {number} */ function f() { return true; }");
     assertThat(compiler.getErrors()).isEmpty();
-    assertThat(compiler.getWarnings()).hasLength(1);
+    assertThat(compiler.getWarnings()).hasSize(1);
   }
 
   @Test
@@ -6134,7 +6134,7 @@ public final class IntegrationTest extends IntegrationTestCase {
                 + "\n"
                 + "Warnings: \n"
                 + Joiner.on("\n").join(compiler.getWarnings()))
-        .that(compiler.getErrors().length + compiler.getWarnings().length)
+        .that(compiler.getErrors().size() + compiler.getWarnings().size())
         .isEqualTo(0);
 
     Node root = compiler.getRoot().getLastChild();

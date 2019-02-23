@@ -361,7 +361,7 @@ abstract class IntegrationTestCase {
                 + "\n"
                 + "Warnings: \n"
                 + Joiner.on("\n").join(compiler.getWarnings()))
-        .that(compiler.getErrors().length + compiler.getWarnings().length)
+        .that(compiler.getErrors().size() + compiler.getWarnings().size())
         .isEqualTo(0);
 
     Node root = compiler.getJsRoot();
@@ -411,12 +411,12 @@ abstract class IntegrationTestCase {
     Compiler compiler = compile(options, original);
     checkUnexpectedErrorsOrWarnings(compiler, 1);
     assertWithMessage("Expected exactly one warning or error")
-        .that(compiler.getErrors().length + compiler.getWarnings().length)
+        .that(compiler.getErrors().size() + compiler.getWarnings().size())
         .isEqualTo(1);
-    if (compiler.getErrors().length > 0) {
-      assertError(compiler.getErrors()[0]).hasType(warning);
+    if (!compiler.getErrors().isEmpty()) {
+      assertError(compiler.getErrors().get(0)).hasType(warning);
     } else {
-      assertError(compiler.getWarnings()[0]).hasType(warning);
+      assertError(compiler.getWarnings().get(0)).hasType(warning);
     }
 
     if (compiled != null) {
@@ -476,7 +476,7 @@ abstract class IntegrationTestCase {
       }
     }
     assertWithMessage("Unexpected warnings: " + Joiner.on("\n").join(compiler.getWarnings()))
-        .that(compiler.getWarnings().length)
+        .that(compiler.getWarnings().size())
         .isEqualTo(0);
 
     if (compiled != null) {
@@ -498,7 +498,7 @@ abstract class IntegrationTestCase {
 
   protected void checkUnexpectedErrorsOrWarnings(
       Compiler compiler, int expected) {
-    int actual = compiler.getErrors().length + compiler.getWarnings().length;
+    int actual = compiler.getErrors().size() + compiler.getWarnings().size();
     if (actual != expected) {
       String msg = "";
       for (JSError err : compiler.getErrors()) {

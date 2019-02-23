@@ -15,8 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Predicates.not;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -28,7 +29,6 @@ import com.google.javascript.rhino.jstype.NoType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -81,12 +81,12 @@ public class PartialCompilationTest {
         options);
     compiler.parse();
     compiler.check();
-    List<JSError> errors = Arrays.asList(compiler.getErrors());
-    for (JSError error : errors) {
-      if (!DiagnosticGroups.MISSING_SOURCES_WARNINGS.matches(error)) {
-        assertWithMessage("Unexpected error " + error).fail();
-      }
-    }
+
+    ImmutableList<JSError> sourcesErrors =
+        compiler.getErrors().stream()
+            .filter(not(DiagnosticGroups.MISSING_SOURCES_WARNINGS::matches))
+            .collect(toImmutableList());
+    assertThat(sourcesErrors).isEmpty();
   }
 
   @Test

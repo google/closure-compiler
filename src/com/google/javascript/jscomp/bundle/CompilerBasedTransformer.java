@@ -58,7 +58,7 @@ public abstract class CompilerBasedTransformer implements Source.Transformer {
   @Override
   public Source transform(Source input) {
     CompileResult result = compilerSupplier.compile(input.path(), input.code());
-    if (result.errors.length > 0) {
+    if (!result.errors.isEmpty()) {
       // TODO(sdh): how to handle this?  Currently we throw an ISE with the message,
       // but this may not be the most appropriate option.  It might make sense to
       // add console.log() statements to any JS that comes out, particularly for
@@ -166,11 +166,12 @@ public abstract class CompilerBasedTransformer implements Source.Transformer {
   /** The source together with the additional compilation results. */
   public static class CompileResult {
     public final String source;
-    public final JSError[] errors;
+    public final ImmutableList<JSError> errors;
     public final boolean transformed;
     public final String sourceMap;
 
-    public CompileResult(String source, JSError[] errors, boolean transformed, String sourceMap) {
+    public CompileResult(
+        String source, ImmutableList<JSError> errors, boolean transformed, String sourceMap) {
       this.source = checkNotNull(source);
       this.errors = checkNotNull(errors);
       this.transformed = transformed;

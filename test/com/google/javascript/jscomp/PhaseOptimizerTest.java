@@ -227,7 +227,6 @@ public final class PhaseOptimizerTest {
     assertPasses();
 
     assertThat(compiler.getWarnings())
-        .asList()
         .comparingElementsUsing(new DiagnosticCorrespondence())
         .containsExactly(FEATURES_NOT_SUPPORTED_BY_PASS);
   }
@@ -240,7 +239,6 @@ public final class PhaseOptimizerTest {
     assertPasses("testPassFactory");
 
     assertThat(compiler.getErrors())
-        .asList()
         .comparingElementsUsing(new DiagnosticCorrespondence())
         .containsExactly(FEATURES_NOT_SUPPORTED_BY_PASS);
   }

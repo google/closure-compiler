@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -139,8 +138,7 @@ public final class RhinoErrorReporterTest {
     Compiler compiler = parseCode(code);
     assertWithMessage("Expected error").that(compiler.getErrorCount()).isEqualTo(1);
 
-    JSError error =
-        Iterables.getOnlyElement(Arrays.asList(compiler.getErrors()));
+    JSError error = Iterables.getOnlyElement(compiler.getErrors());
     assertThat(error.getType()).isEqualTo(type);
     assertThat(error.description).isEqualTo(description);
     return error;
@@ -154,8 +152,7 @@ public final class RhinoErrorReporterTest {
     Compiler compiler = parseCode(code);
     assertWithMessage("Expected warning").that(compiler.getWarningCount()).isEqualTo(1);
 
-    JSError error =
-        Iterables.getOnlyElement(Arrays.asList(compiler.getWarnings()));
+    JSError error = Iterables.getOnlyElement(compiler.getWarnings());
     assertThat(error.getType()).isEqualTo(type);
     assertThat(error.description).isEqualTo(description);
     return error;

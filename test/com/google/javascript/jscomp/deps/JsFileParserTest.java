@@ -336,7 +336,7 @@ public final class JsFileParserTest {
     assertThat(result).isEqualTo(expected);
     assertThat(errorManager.getErrorCount()).isEqualTo(0);
     assertThat(errorManager.getWarningCount()).isEqualTo(1);
-    assertThat(errorManager.getWarnings()[0].getType()).isEqualTo(ModuleLoader.MODULE_CONFLICT);
+    assertThat(errorManager.getWarnings().get(0).getType()).isEqualTo(ModuleLoader.MODULE_CONFLICT);
   }
 
   @Test
@@ -729,7 +729,7 @@ public final class JsFileParserTest {
 
     assertThat(errorManager.getErrorCount()).isEqualTo(0);
     assertThat(errorManager.getWarningCount()).isEqualTo(1);
-    assertThat(errorManager.getWarnings()[0].getType()).isEqualTo(ModuleLoader.MODULE_CONFLICT);
+    assertThat(errorManager.getWarnings().get(0).getType()).isEqualTo(ModuleLoader.MODULE_CONFLICT);
   }
 
   /** Asserts the deps match without errors */

@@ -112,7 +112,6 @@ abstract class CompilerTypeTestCase {
 
     assertWithMessage("Regarding warnings:")
         .that(compiler.getWarnings())
-        .asList()
         .comparingElementsUsing(DESCRIPTION_EQUALITY)
         .containsExactlyElementsIn(expected)
         .inOrder();

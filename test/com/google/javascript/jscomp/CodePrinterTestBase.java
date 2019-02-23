@@ -83,9 +83,9 @@ public abstract class CodePrinterTestBase {
 
   private void checkUnexpectedErrorsOrWarnings(
       Compiler compiler, int expected) {
-    int actual = compiler.getErrors().length;
+    int actual = compiler.getErrors().size();
     if (!allowWarnings) {
-      actual += compiler.getWarnings().length;
+      actual += compiler.getWarnings().size();
     }
 
     if (actual != expected) {

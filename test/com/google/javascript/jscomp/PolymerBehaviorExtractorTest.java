@@ -139,8 +139,8 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
             "});"));
     extractor.extractBehaviors(behaviorArray);
 
-    assertThat(compiler.getErrors()).hasLength(1);
-    assertError(compiler.getErrors()[0]).hasType(POLYMER_INVALID_BEHAVIOR);
+    assertThat(compiler.getErrors()).hasSize(1);
+    assertError(compiler.getErrors().get(0)).hasType(POLYMER_INVALID_BEHAVIOR);
   }
 
   // TODO(jlklein): Test more use cases: names to avoid copying, global vs. non-global, etc.
