@@ -458,6 +458,21 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   abstract CompilerOptions getOptions();
 
+  /**
+   * The set of features defined by the input language mode that have not (yet) been transpiled
+   * away.
+   *
+   * <p>This is **not** the exact set of all features currently in the AST, but rather an improper
+   * super set. This set starts out as the set of features from the language input mode specified by
+   * the options, which is verified to be a super set of what appears in the input code (if the
+   * input code contains a feature outside the language input mode it is an error). As the compiler
+   * transpiles code any features that are transpiled away from the AST are removed from this set.
+   *
+   * <p>The feature set is computed this way, rather than using the detected features in the AST, so
+   * that the set of passes that run is determined purely by input flags. Otherwise, introducing a
+   * previously unused feature in any of the transitive deps of compilation target could effect the
+   * build behaviour.
+   */
   abstract FeatureSet getFeatureSet();
 
   abstract void setFeatureSet(FeatureSet fs);
