@@ -384,14 +384,14 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   public ImmutableCollection<AssertionFunctionSpec> getAssertionFunctions() {
     return ImmutableList.of(
         AssertionFunctionSpec.makeTruthyAssertion("goog.asserts.assert"),
-        // TODO(b/125939011): goog.asserts.assertBoolean should also be here...
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertNumber"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertString"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertObject"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertFunction"),
         AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertArray"),
+        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertBoolean"),
         AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertElement"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertInstanceof"));
+        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertFunction"),
+        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertInstanceof"),
+        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertNumber"),
+        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertObject"),
+        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertString"));
   }
 
   @Override

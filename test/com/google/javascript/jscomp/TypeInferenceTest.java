@@ -573,6 +573,18 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testAssertBoolean_narrowsAllTypeToBoolean() {
+    JSType startType = createNullableType(ALL_TYPE);
+    includeAssertionFunction("assertBoolean", getNativeType(BOOLEAN_TYPE));
+    assuming("x", startType);
+
+    inFunction("out1 = x; goog.asserts.assertBoolean(x); out2 = x;");
+
+    verify("out1", startType);
+    verify("out2", BOOLEAN_TYPE);
+  }
+
+  @Test
   public void testAssertString_narrowsAllTypeToString() {
     JSType startType = createNullableType(ALL_TYPE);
     includeAssertionFunction("assertString", getNativeType(STRING_TYPE));
