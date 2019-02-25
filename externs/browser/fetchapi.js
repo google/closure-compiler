@@ -103,7 +103,8 @@ Headers.prototype[Symbol.iterator] = function() {};
 
 
 /**
- * @typedef {!Blob|!BufferSource|!FormData|string}
+ * @typedef {
+ *     !Blob|!BufferSource|!FormData|!URLSearchParams|!ReadableStream|string}
  * @see https://fetch.spec.whatwg.org/#bodyinit
  */
 var BodyInit;
