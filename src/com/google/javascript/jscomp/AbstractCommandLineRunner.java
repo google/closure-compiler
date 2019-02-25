@@ -682,17 +682,19 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       List<FlagEntry<JsSourceType>> files, List<String> moduleRoots, boolean hasModuleSpecs) {
     ImmutableList.Builder<JSError> errors = ImmutableList.builder();
 
-    // First pass: collect basenames of --js and --weakdep files.
-    Map<String, String> basenameToFile = new HashMap<>();
+    // First pass: collect the (module root relative) names of --js and --weakdep files.
+    Map<String, String> relativeToAbsoluteName = new HashMap<>();
     for (FlagEntry<JsSourceType> file : files) {
       // TODO(tjgq): Handle zip files.
       if (file.flag == JsSourceType.JS || file.flag == JsSourceType.WEAKDEP) {
-        String basename = getBasename(file.value, moduleRoots);
-        basenameToFile.put(basename, file.value);
+        String absoluteName = file.value;
+        String relativeName = getModuleRootRelativeName(absoluteName, moduleRoots);
+        relativeToAbsoluteName.put(relativeName, absoluteName);
       }
     }
 
-    // Second pass: drop --ijs files whose basename matches --js or --weakdep files.
+    // Second pass: drop --ijs files whose (module root relative) name matches a --js or --weakdep
+    // file.
     Iterator<FlagEntry<JsSourceType>> iterator = files.iterator();
     while (iterator.hasNext()) {
       FlagEntry<JsSourceType> file = iterator.next();
@@ -700,14 +702,20 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         if (hasModuleSpecs) {
           throw new FlagUsageException("--ijs is incompatible with --chunk or --module.");
         }
-        if (!file.value.endsWith(".i.js")) {
-          errors.add(JSError.make(IjsErrors.BAD_IJS_FILE_NAME, file.value));
+        String absoluteName = file.value;
+        if (!absoluteName.endsWith(".i.js")) {
+          errors.add(JSError.make(IjsErrors.BAD_IJS_FILE_NAME, absoluteName));
+          continue;
         }
-        String basename = getBasename(file.value, moduleRoots);
-        if (basenameToFile.containsKey(basename)) {
+        String relativeName = getModuleRootRelativeName(absoluteName, moduleRoots);
+        String relativeNonIjsName =
+            relativeName.substring(0, relativeName.length() - ".i.js".length());
+        if (relativeToAbsoluteName.containsKey(relativeNonIjsName)) {
           errors.add(
               JSError.make(
-                  IjsErrors.CONFLICTING_IJS_FILE, basenameToFile.get(basename), file.value));
+                  IjsErrors.CONFLICTING_IJS_FILE,
+                  relativeToAbsoluteName.get(relativeNonIjsName),
+                  absoluteName));
           iterator.remove();
         }
       }
@@ -716,16 +724,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     return errors.build();
   }
 
-  private String getBasename(String filename, List<String> moduleRoots) {
+  private String getModuleRootRelativeName(String filename, List<String> moduleRoots) {
     for (String moduleRoot : moduleRoots) {
       if (filename.startsWith(moduleRoot + "/")) {
-        filename = filename.substring(moduleRoot.length() + 1);
-        break;
-      }
-    }
-    for (String suffix : new String[] {".i.js", ".js"}) {
-      if (filename.endsWith(suffix)) {
-        return filename.substring(0, filename.length() - suffix.length());
+        return filename.substring(moduleRoot.length() + 1);
       }
     }
     return filename;
