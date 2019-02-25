@@ -1533,36 +1533,43 @@ class TypeInference
     if (assertionFunctionSpec == null || firstParam == null) {
       return scope;
     }
-    Node assertedNode = assertionFunctionSpec.getAssertedParam(firstParam);
+    Node assertedNode = assertionFunctionSpec.getAssertedArg(firstParam);
     if (assertedNode == null) {
       return scope;
     }
-    JSType assertedType = assertionFunctionSpec.getAssertedOldType(
-        callNode, registry);
     String assertedNodeName = assertedNode.getQualifiedName();
 
-    JSType narrowed;
     // Handle assertions that enforce expressions evaluate to true.
-    if (assertedType == null) {
-      // Handle arbitrary expressions within the assert.
-      scope = reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
-          assertedNode, scope, true);
-      // Build the result of the assertExpression
-      narrowed = getJSType(assertedNode).restrictByNotNullOrUndefined();
-    } else {
-      // Handle assertions that enforce expressions are of a certain type.
-      JSType type = getJSType(assertedNode);
-      if (assertedType.isUnknownType() || type.isUnknownType()) {
-        narrowed = assertedType;
-      } else {
-        narrowed = type.getGreatestSubtype(assertedType);
-      }
-      if (assertedNodeName != null && type.differsFrom(narrowed)) {
-        scope = narrowScope(scope, assertedNode, narrowed);
-      }
+    switch (assertionFunctionSpec.getAssertionKind()) {
+      case TRUTHY:
+        // Handle arbitrary expressions within the assert.
+        // e.g. given `assert(typeof x === 'string')`, the resulting scope will infer x to be a
+        // string.
+        scope =
+            reverseInterpreter.getPreciserScopeKnowingConditionOutcome(assertedNode, scope, true);
+        // Build the result of the assertExpression
+        JSType truthyType = getJSType(assertedNode).restrictByNotNullOrUndefined();
+        callNode.setJSType(truthyType);
+        break;
+
+      case MATCHES_RETURN_TYPE:
+        // Handle assertions that enforce expressions match the return type of the function
+        FunctionType callType = JSType.toMaybeFunctionType(left.getJSType());
+        JSType assertedType = callType != null ? callType.getReturnType() : unknownType;
+        JSType type = getJSType(assertedNode);
+        JSType narrowed;
+        if (assertedType.isUnknownType() || type.isUnknownType()) {
+          narrowed = assertedType;
+        } else {
+          narrowed = type.getGreatestSubtype(assertedType);
+        }
+        callNode.setJSType(narrowed);
+        if (assertedNodeName != null && type.differsFrom(narrowed)) {
+          scope = narrowScope(scope, assertedNode, narrowed);
+        }
+        break;
     }
 
-    callNode.setJSType(narrowed);
     return scope;
   }
 

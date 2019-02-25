@@ -15,20 +15,20 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * CodingConvention defines a set of hooks to customize the behavior of the
@@ -426,9 +426,9 @@ public interface CodingConvention extends Serializable {
 
     public SubclassRelationship(
         SubclassType type, Node subclassNode, Node superclassNode) {
-      Preconditions.checkArgument(
+      checkArgument(
           subclassNode.isQualifiedName(), "Expected qualified name, found: %s", subclassNode);
-      Preconditions.checkArgument(
+      checkArgument(
           superclassNode.isQualifiedName(), "Expected qualified name, found: %s", superclassNode);
       this.type = type;
       this.subclassName = subclassNode.getQualifiedName();
@@ -478,22 +478,43 @@ public interface CodingConvention extends Serializable {
   }
 
   /**
-   * A function that will throw an exception when either:
-   *   -One or more of its parameters evaluate to false.
-   *   -One or more of its parameters are not of a certain type.
+   * A description of a JavaScript function that will throw an exception when either:
+   *
+   * <ul>
+   *   <li>One of its parameters does not match the return type of the function
+   *   <li>One of its parameters is falsy. This has some special handling for expressions that the
+   *       match-return-type handling does not have.
+   * </ul>
    */
-  public class AssertionFunctionSpec {
-    protected final String functionName;
-    protected final JSTypeNative assertedType;
+  final class AssertionFunctionSpec {
+    private final String functionName;
+    private final AssertionKind kind;
+    private final int paramIndex; // the index of the formal parameter that is actually asserted
 
-    @Deprecated
-    public AssertionFunctionSpec(String functionName) {
-      this(functionName, null);
+    public enum AssertionKind {
+      TRUTHY, // an assertion that the parameter is 'truthy'
+      MATCHES_RETURN_TYPE // an assertion that the parameter matches the inferred return kind
     }
 
-    public AssertionFunctionSpec(String functionName, JSTypeNative assertedType) {
+    private AssertionFunctionSpec(String functionName, AssertionKind kind, int paramIndex) {
       this.functionName = functionName;
-      this.assertedType = assertedType;
+      this.kind = kind;
+      this.paramIndex = paramIndex;
+    }
+
+    /** Returns a truthy assertion function on the first param */
+    public static AssertionFunctionSpec makeTruthyAssertion(String functionName) {
+      return new AssertionFunctionSpec(functionName, AssertionKind.TRUTHY, /* paramIndex= */ 0);
+    }
+
+    /** Returns an assertion function asserting the first param matches the return type */
+    public static AssertionFunctionSpec makeReturnTypeAssertion(String functionName) {
+      return new AssertionFunctionSpec(functionName, AssertionKind.MATCHES_RETURN_TYPE, 0);
+    }
+
+    /** Returns an assertion function asserting the nth arg is truthy (0-indexed) */
+    public static AssertionFunctionSpec makeTruthyAssertion(String functionName, int paramIndex) {
+      return new AssertionFunctionSpec(functionName, AssertionKind.TRUTHY, paramIndex);
     }
 
     /** Returns the name of the function. */
@@ -501,21 +522,22 @@ public interface CodingConvention extends Serializable {
       return functionName;
     }
 
-    /**
-     * Returns the parameter of the assertion function that is being checked.
-     * @param firstParam The first parameter of the function call.
-     */
-    public Node getAssertedParam(Node firstParam) {
-      return firstParam;
+    AssertionKind getAssertionKind() {
+      return this.kind;
     }
 
-    /**
-     * Returns the old type system type for a type assertion, or null if
-     * the function asserts that the node must not be null or undefined.
-     * @param call The asserting call
-     */
-    public JSType getAssertedOldType(Node call, JSTypeRegistry registry) {
-      return assertedType != null ? registry.getNativeType(assertedType) : null;
+    /** Returns which argument is actually being asserted, or null if fewer args than expected */
+    @Nullable
+    public Node getAssertedArg(Node firstArg) {
+      for (int i = 0; i < paramIndex; i++) {
+        if (firstArg == null) {
+          // If there are fewer arguments than expected, return null instead of crashing in this
+          // function.
+          return null;
+        }
+        firstArg = firstArg.getNext();
+      }
+      return firstArg;
     }
   }
 }

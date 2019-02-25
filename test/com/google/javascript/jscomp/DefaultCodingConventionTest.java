@@ -16,8 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -194,6 +197,42 @@ public final class DefaultCodingConventionTest {
     assertPackageName("foo/bar/baz/quux.js", "foo/bar/baz");
     assertPackageName("foo/test/bar.js", "foo/test");
     assertPackageName("foo/testxyz/bar.js", "foo/testxyz");
+  }
+
+  @Test
+  public void makeReturnTypeAssertion_assertsOnFirstArg() {
+    AssertionFunctionSpec spec = AssertionFunctionSpec.makeReturnTypeAssertion("assertNumber");
+    Node callNode = parseTestCode("assertNumber(0, 1, 2, 3);").getFirstChild();
+    checkState(callNode.isCall(), callNode);
+    Node firstArg = NodeUtil.getArgumentForCallOrNew(callNode, /* index= */ 0);
+
+    Node assertedArg = spec.getAssertedArg(firstArg);
+    assertNode(assertedArg).isNumber(0);
+  }
+
+  @Test
+  public void makeTruthyAssertion_assertsOnFirstArg() {
+    AssertionFunctionSpec spec = AssertionFunctionSpec.makeTruthyAssertion("assertTruthy");
+    Node callNode = parseTestCode("assertTruthy(0, 1, 2, 3);").getFirstChild();
+    checkState(callNode.isCall(), callNode);
+    Node firstArg = NodeUtil.getArgumentForCallOrNew(callNode, /* index= */ 0);
+
+    Node assertedArg = spec.getAssertedArg(firstArg);
+
+    assertNode(assertedArg).isNumber(0);
+  }
+
+  @Test
+  public void makeTruthyAssertion_withParamIndexOfTwo_assertsOnThirdArg() {
+    AssertionFunctionSpec spec =
+        AssertionFunctionSpec.makeTruthyAssertion("assertTruthy", /* paramIndex= */ 2);
+    Node callNode = parseTestCode("assertTruthy(0, 1, 2, 3);").getFirstChild();
+    checkState(callNode.isCall(), callNode);
+    Node firstArg = NodeUtil.getArgumentForCallOrNew(callNode, /* index= */ 0);
+
+    Node assertedArg = spec.getAssertedArg(firstArg);
+
+    assertNode(assertedArg).isNumber(2);
   }
 
   private void assertPackageName(String filename, String expectedPackageName) {

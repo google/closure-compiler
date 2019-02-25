@@ -221,7 +221,4 @@ public enum JSTypeNative {
    * (number,string,symbol)
    */
   NUMBER_STRING_SYMBOL,
-
-  /** Only used in the new type inference */
-  TRUTHY,
 }
