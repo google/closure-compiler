@@ -794,6 +794,9 @@ CanvasRenderingContext2D.prototype.shadowOffsetX;
 /** @type {number} */
 CanvasRenderingContext2D.prototype.shadowOffsetY;
 
+/** @type {boolean} */
+CanvasRenderingContext2D.prototype.imageSmoothingEnabled;
+
 /**
  * @type {string|!CanvasGradient|!CanvasPattern}
  * @see https://html.spec.whatwg.org/multipage/scripting.html#fill-and-stroke-styles:dom-context-2d-strokestyle
