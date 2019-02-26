@@ -375,12 +375,14 @@ final class FunctionTypeBuilder {
   /** Infer whether the function is a normal function, a constructor, or an interface. */
   FunctionTypeBuilder inferKind(@Nullable JSDocInfo info) {
     if (info != null) {
-      isConstructor = info.isConstructor();
-      isInterface = info.isInterface();
-      isRecord = info.usesImplicitMatch();
+      if (!NodeUtil.isMethodDeclaration(errorRoot)) {
+        isConstructor = info.isConstructor();
+        isInterface = info.isInterface();
+        isRecord = info.usesImplicitMatch();
+        makesStructs = info.makesStructs();
+        makesDicts = info.makesDicts();
+      }
       isAbstract = info.isAbstract();
-      makesStructs = info.makesStructs();
-      makesDicts = info.makesDicts();
     }
     if (isClass) {
       // If a CLASS literal has not been explicitly declared an interface, it's a constructor.

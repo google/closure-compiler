@@ -6793,4 +6793,60 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     testTypes("try {} catch {}");
     testTypes("try {} catch {} finally {}");
   }
+
+  @Test
+  public void testMethodWithAtConstructorDoesNotDeclareType_staticClassMethod() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @constructor */",
+            "  static Bar() { }",
+            "}",
+            "",
+            "var /** !Foo.Bar */ x;",
+            ""),
+        "Bad type annotation. Unknown type Foo.Bar");
+  }
+
+  @Test
+  public void testMethodWithAtConstructorDoesNotDeclareType_namespaceMemberMethod() {
+    testTypes(
+        lines(
+            "const ns = {",
+            "  /** @constructor */",
+            "  Bar() { }",
+            "};",
+            "",
+            "var /** !ns.Bar */ x;",
+            ""),
+        "Bad type annotation. Unknown type ns.Bar");
+  }
+
+  @Test
+  public void testMethodWithAtInterfaceDoesNotDeclareType() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @interface */",
+            "  static Bar() { }",
+            "}",
+            "",
+            "var /** !Foo.Bar */ x;",
+            ""),
+        "Bad type annotation. Unknown type Foo.Bar");
+  }
+
+  @Test
+  public void testMethodWithAtRecordDoesNotDeclareType() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @record */",
+            "  static Bar() { }",
+            "}",
+            "",
+            "var /** !Foo.Bar */ x;",
+            ""),
+        "Bad type annotation. Unknown type Foo.Bar");
+  }
 }
