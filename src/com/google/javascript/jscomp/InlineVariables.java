@@ -53,18 +53,23 @@ class InlineVariables implements CompilerPass {
 
   enum Mode {
     // Only inline things explicitly marked as constant.
-    CONSTANTS_ONLY,
+    CONSTANTS_ONLY(Var::isInferredConst),
     // Locals only
-    LOCALS_ONLY,
-    ALL
+    LOCALS_ONLY(Var::isLocal),
+    ALL(Predicates.alwaysTrue());
+
+    @SuppressWarnings("ImmutableEnumChecker")
+    private final Predicate<Var> varPredicate;
+
+    private Mode(Predicate<Var> varPredicate) {
+      this.varPredicate = varPredicate;
+    }
   }
 
   private final Mode mode;
 
   // Inlines all strings, even if they increase the size of the gzipped binary.
   private final boolean inlineAllStrings;
-
-  private final IdentifyConstants identifyConstants = new IdentifyConstants();
 
   InlineVariables(
       AbstractCompiler compiler,
@@ -82,46 +87,8 @@ class InlineVariables implements CompilerPass {
             compiler,
             new InliningBehavior(),
             new Es6SyntacticScopeCreator(compiler),
-            getFilterForMode());
+            mode.varPredicate);
     callback.process(externs, root);
-  }
-
-  private Predicate<Var> getFilterForMode() {
-    switch (mode) {
-      case ALL:
-        return Predicates.alwaysTrue();
-      case LOCALS_ONLY:
-        return new IdentifyLocals();
-      case CONSTANTS_ONLY:
-        return new IdentifyConstants();
-      default:
-        throw new IllegalStateException();
-    }
-  }
-
-  /**
-   * Filters variables declared as "constant", and declares them in the outer
-   * declaredConstants map.
-   *
-   * In Google coding conventions, this means anything declared with @const
-   * or named in all caps, and initialized to an immutable value.
-   * CheckConsts has already verified that these are truly constants.
-   */
-  private static class IdentifyConstants implements Predicate<Var> {
-    @Override
-    public boolean apply(Var var) {
-      return var.isInferredConst();
-    }
-  }
-
-  /**
-   * Filters non-global variables.
-   */
-  private static class IdentifyLocals implements Predicate<Var> {
-    @Override
-    public boolean apply(Var var) {
-      return var.isLocal();
-    }
   }
 
   private static class AliasCandidate {
@@ -230,21 +197,13 @@ class InlineVariables implements CompilerPass {
             // consider a escape of the arguments object.
             if (!(NodeUtil.isGet(refParent)
                 && refNode == ref.getParent().getFirstChild()
-                && !isLValue(refParent))) {
+                && !NodeUtil.isLValue(refParent))) {
               return true;
             }
           }
         }
       }
       return false;
-    }
-
-    private boolean isLValue(Node n) {
-      Node parent = n.getParent();
-      return (parent.isInc()
-          || parent.isDec()
-          || (NodeUtil.isAssignmentOp(parent)
-          && parent.getFirstChild() == n));
     }
 
     private void inlineNonConstants(
@@ -456,13 +415,9 @@ class InlineVariables implements CompilerPass {
       NodeUtil.markFunctionsDeleted(child, compiler);
     }
 
-    /**
-     * Determines whether the given variable is declared as a constant
-     * and may be inlined.
-     */
-    private boolean isInlineableDeclaredConstant(Var var,
-        ReferenceCollection refInfo) {
-      if (!identifyConstants.apply(var)) {
+    /** Determines whether the given variable is declared as a constant and may be inlined. */
+    private boolean isInlineableDeclaredConstant(Var var, ReferenceCollection refInfo) {
+      if (!Mode.CONSTANTS_ONLY.varPredicate.apply(var)) {
         return false;
       }
 
