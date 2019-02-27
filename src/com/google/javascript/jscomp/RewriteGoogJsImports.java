@@ -15,16 +15,23 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
+import com.google.javascript.jscomp.modules.Binding;
+import com.google.javascript.jscomp.modules.Module;
+import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -91,61 +98,34 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
   private static final String EXPECTED_BASE_PROVIDE = "goog";
 
   private final Mode mode;
+  private final ModuleMap moduleMap;
   private final AbstractCompiler compiler;
-  private FindExports exportsFinder;
+  private Module googModule;
+  private final Map<Module, Module> moduleReplacements = new HashMap<>();
 
-  public RewriteGoogJsImports(AbstractCompiler compiler, Mode mode) {
+  public RewriteGoogJsImports(AbstractCompiler compiler, Mode mode, ModuleMap moduleMap) {
+    checkNotNull(moduleMap);
     this.compiler = compiler;
     this.mode = mode;
+    this.moduleMap = moduleMap;
   }
 
-  /** Finds all exports in the goog.js file. */
-  private class FindExports extends AbstractPreOrderCallback {
-    final Set<String> exportedNames;
+  private void changeModules() {
+    ImmutableMap.Builder<String, Module> resolvedModules = ImmutableMap.builder();
+    ImmutableMap.Builder<String, Module> closureModules = ImmutableMap.builder();
 
-    public FindExports(Node googRoot) {
-      checkState(Es6RewriteModules.isEs6ModuleRoot(googRoot));
-      exportedNames = new HashSet<>();
-      NodeTraversal.traverse(compiler, googRoot, this);
+    for (Map.Entry<String, Module> m : moduleMap.getModulesByPath().entrySet()) {
+      Module newModule = moduleReplacements.getOrDefault(m.getValue(), m.getValue());
+      resolvedModules.put(m.getKey(), newModule);
     }
 
-    private void visitExport(Node export) {
-      if (export.getBooleanProp(Node.EXPORT_DEFAULT)) {
-        throw new IllegalStateException("goog.js should never have a default export.");
-      } else if (export.hasTwoChildren()) {
-        throw new IllegalStateException("goog.js should never export from anything.");
-      } else if (export.getFirstChild().isExportSpecs()) {
-        Node spec = export.getFirstFirstChild();
-        while (spec != null) {
-          exportedNames.add(spec.getSecondChild().getString());
-          spec = spec.getNext();
-        }
-      } else {
-        Node maybeName = export.getFirstFirstChild();
-        while (maybeName != null) {
-          if (maybeName.isName()) {
-            exportedNames.add(maybeName.getString());
-          }
-          maybeName = maybeName.getNext();
-        }
-      }
+    for (Map.Entry<String, Module> m : moduleMap.getModulesByClosureNamespace().entrySet()) {
+      Module newModule = moduleReplacements.getOrDefault(m.getValue(), m.getValue());
+      closureModules.put(m.getKey(), newModule);
     }
 
-    @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      switch (n.getToken()) {
-        case EXPORT:
-          visitExport(n);
-          return false;
-        case IMPORT:
-          throw new IllegalStateException("goog.js should never import anything.");
-        case SCRIPT:
-        case MODULE_BODY:
-          return true;
-        default:
-          return false;
-      }
-    }
+    compiler.setModuleMap(new ModuleMap(resolvedModules.build(), closureModules.build()));
+    moduleReplacements.clear();
   }
 
   /**
@@ -157,18 +137,28 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
     private final Node googImportNode;
     private final boolean globalizeAllReferences;
 
-    public ReferenceReplacer(Node script, Node googImportNode, boolean globalizeAllReferences) {
+    ReferenceReplacer(
+        Node script, Node googImportNode, Module module, boolean globalizeAllReferences) {
       this.googImportNode = googImportNode;
       this.globalizeAllReferences = globalizeAllReferences;
       NodeTraversal.traverse(compiler, script, this);
 
       if (googImportNode.getSecondChild().isImportStar()) {
+        Map<String, Binding> newBindings = new LinkedHashMap<>(module.boundNames());
+        newBindings.remove("goog");
         if (hasBadExport) {
+          // We might be able to get rid of this case now. Originally this was to cause a type error
+          // later in compilation. But now the ModuleMapCreator should log an error for the bad
+          // export. However if we're still running we might be in some tool that expects us to be
+          // fault tolerant and still rewrite modules. So assume this is needed in those tools.
           googImportNode.getSecondChild().setOriginalName("goog");
           googImportNode.getSecondChild().setString("$goog");
+          newBindings.put("$goog", module.boundNames().get("goog"));
         } else {
           googImportNode.getSecondChild().replaceWith(IR.empty());
         }
+        Module newModule = module.toBuilder().boundNames(ImmutableMap.copyOf(newBindings)).build();
+        moduleReplacements.put(module, newModule);
         compiler.reportChangeToEnclosingScope(googImportNode);
       }
     }
@@ -187,7 +177,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
       }
 
       if (globalizeAllReferences
-          || exportsFinder.exportedNames.contains(parent.getSecondChild().getString())) {
+          || googModule.namespace().containsKey(parent.getSecondChild().getString())) {
         return;
       }
 
@@ -264,6 +254,8 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
 
   @Nullable
   private Node findGoogImportNode(Node scriptRoot) {
+    // Cannot use the module map here - information is lost about the imports. The "bound names"
+    // could be from transitive imports, but we lose the original import.
     boolean valid = true;
     Node googImportNode = null;
 
@@ -308,19 +300,26 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
     return null;
   }
 
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+  private void rewriteImports(Node scriptRoot) {
     if (Es6RewriteModules.isEs6ModuleRoot(scriptRoot)) {
       Node googImportNode = findGoogImportNode(scriptRoot);
       NodeTraversal.traverse(compiler, scriptRoot, new FindReexports(googImportNode != null));
+      Module module = moduleMap.getModule(compiler.getInput(scriptRoot.getInputId()).getPath());
+      checkNotNull(module);
 
       if (googImportNode != null && mode == Mode.LINT_AND_REWRITE) {
-        // If exportsFinder is null then goog.js was not part of the input. Try to be fault tolerant
+        // If googModule is null then goog.js was not part of the input. Try to be fault tolerant
         // and just assume that everything exported is on the global goog.
         new ReferenceReplacer(
-            scriptRoot, googImportNode, /* globalizeAllReferences= */ exportsFinder == null);
+            scriptRoot, googImportNode, module, /* globalizeAllReferences= */ googModule == null);
       }
     }
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    rewriteImports(scriptRoot);
+    changeModules();
   }
 
   @Nullable
@@ -365,7 +364,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    exportsFinder = null;
+    googModule = null;
 
     Node googJsScriptNode = findGoogJsScriptNode(root);
 
@@ -376,14 +375,29 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
 
     if (mode == Mode.LINT_AND_REWRITE) {
       if (googJsScriptNode != null) {
-        exportsFinder = new FindExports(googJsScriptNode);
+        ModulePath googJsPath = compiler.getInput(googJsScriptNode.getInputId()).getPath();
+        googModule = moduleMap.getModule(googJsPath);
+        checkNotNull(googModule);
+        Predicate<Binding> isFromGoog =
+            (Binding b) -> b.originatingExport().modulePath() == googJsPath;
+        checkState(
+            googModule.boundNames().values().stream().allMatch(isFromGoog),
+            "goog.js should never import anything");
+        checkState(
+            !googModule.namespace().containsKey("default"),
+            "goog.js should never have a default export.");
+        checkState(
+            googModule.namespace().values().stream().allMatch(isFromGoog),
+            "goog.js should never export from anything.");
       }
     } else {
       checkState(mode == Mode.LINT_ONLY);
     }
 
     for (Node script : root.children()) {
-      hotSwapScript(script, null);
+      rewriteImports(script);
     }
+
+    changeModules();
   }
 }

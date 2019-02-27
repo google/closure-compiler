@@ -18,8 +18,12 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.RewriteGoogJsImports.CANNOT_HAVE_MODULE_VAR_NAMED_GOOG;
 import static com.google.javascript.jscomp.RewriteGoogJsImports.GOOG_JS_IMPORT_MUST_BE_GOOG_STAR;
 import static com.google.javascript.jscomp.RewriteGoogJsImports.GOOG_JS_REEXPORTED;
+import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
 import com.google.javascript.jscomp.RewriteGoogJsImports.Mode;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.modules.ModuleMapCreator;
+import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,11 +37,21 @@ public final class CheckGoogJsImportTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    ignoreWarnings(LOAD_WARNING);
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteGoogJsImports(compiler, Mode.LINT_ONLY);
+    return (Node externs, Node root) -> {
+      GatherModuleMetadata gmm =
+          new GatherModuleMetadata(
+              compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER);
+      gmm.process(externs, root);
+      ModuleMapCreator mmc = new ModuleMapCreator(compiler, compiler.getModuleMetadataMap());
+      mmc.process(externs, root);
+      new RewriteGoogJsImports(compiler, Mode.LINT_ONLY, compiler.getModuleMap())
+          .process(externs, root);
+    };
   }
 
   @Override

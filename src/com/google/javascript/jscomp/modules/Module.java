@@ -98,26 +98,31 @@ public abstract class Module {
    */
   abstract UnresolvedModule unresolvedModule();
 
-  static Builder builder() {
+  /** Creates a new builder. */
+  public static Builder builder() {
     return new AutoValue_Module.Builder();
   }
 
+  /** Returns this module in builder form. */
+  public abstract Builder toBuilder();
+
+  /** Builder for {@link Module}. */
   @AutoValue.Builder
-  abstract static class Builder {
-    abstract Builder metadata(ModuleMetadata value);
+  public abstract static class Builder {
+    public abstract Builder metadata(ModuleMetadata value);
 
-    abstract Builder path(@Nullable ModuleLoader.ModulePath value);
+    public abstract Builder path(@Nullable ModuleLoader.ModulePath value);
 
-    abstract Builder namespace(ImmutableMap<String, Binding> value);
+    public abstract Builder namespace(ImmutableMap<String, Binding> value);
 
-    abstract Builder boundNames(ImmutableMap<String, Binding> value);
+    public abstract Builder boundNames(ImmutableMap<String, Binding> value);
 
-    abstract Builder localNameToLocalExport(ImmutableMap<String, Export> value);
+    public abstract Builder localNameToLocalExport(ImmutableMap<String, Export> value);
 
-    abstract Builder closureNamespace(@Nullable String value);
+    public abstract Builder closureNamespace(@Nullable String value);
 
-    abstract Builder unresolvedModule(UnresolvedModule value);
+    public abstract Builder unresolvedModule(UnresolvedModule value);
 
-    abstract Module build();
+    public abstract Module build();
   }
 }

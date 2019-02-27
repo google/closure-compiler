@@ -1586,7 +1586,8 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("rewriteGoogJsImports") {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new RewriteGoogJsImports(compiler, RewriteGoogJsImports.Mode.LINT_AND_REWRITE);
+          return new RewriteGoogJsImports(
+              compiler, RewriteGoogJsImports.Mode.LINT_AND_REWRITE, compiler.getModuleMap());
         }
 
         @Override
