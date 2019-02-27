@@ -60,6 +60,13 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
   }
 
   @Test
+  public void testArray_nonConsecutiveAssignments() {
+    test(
+        "var a = []; a[2] = 1; a[0] = 2; a[1] = 3;", //
+        "var a = [2, 3, 1];");
+  }
+
+  @Test
   public void testArrayOptimization2() {
     test("var a; a = []; a[0] = 1; a[1] = 2; a[2] = 3;",
          "var a; a = [1, 2, 3];");
@@ -221,6 +228,22 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
   }
 
   @Test
+  public void testArray_usingSpread_diablesOptimization_leadingSpread() {
+    // TODO(nickreid): A future improvement could generate `var a = [3, ...b, 2];`
+    testSame("var a = [1, ...b, 2]; a[0] = 3;");
+  }
+
+  @Test
+  public void testArray_usingSpread_diablesOptimization_withinSpread() {
+    testSame("var a = [1, ...b, 2]; a[1] = 3;");
+  }
+
+  @Test
+  public void testArray_usingSpread_diablesOptimization_followingSpread() {
+    testSame("var a = [1, ...b, 2]; a[2] = 3;");
+  }
+
+  @Test
   public void testObjectOptimization1() {
     test("var o = {}; o.x = 0; o['y'] = 1; o[2] = 2;",
          "var o = { x: 0, \"y\": 1, \"2\": 2 };");
@@ -323,6 +346,23 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
         "var a = {b:10};" +
         "var x = 1;" +
         "a.b = x+10;");
+  }
+
+  @Test
+  public void testObject_usingSpread_diablesOptimization_leadingSpread() {
+    test(
+        "var a = {a: 1, ...b, c: 2}; a.a = 3;", //
+        "var a = {...b, c: 2, a: 3};");
+  }
+
+  @Test
+  public void testObject_usingSpread_diablesOptimization_withinSpread() {
+    testSame("var a = {a: 1, ...b, c: 2, b: 3};");
+  }
+
+  @Test
+  public void testObject_usingSpread_diablesOptimization_followingSpread() {
+    testSame("var a = {a: 1, ...b, c: 3};");
   }
 
   @Test
