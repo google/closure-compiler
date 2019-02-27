@@ -29,13 +29,16 @@ import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.Collection;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link ErrorToFixMapper}.
- */
+// TODO(tjgq): Re-enable the disabled tests once CheckRequiresAndProvidesSorted is updated to use
+// RequiresFixer. Currently, CheckRequiresAndProvidesSorted and ErrorToFixMapper sometimes disagree
+// on whether a fix is required, which causes no fix to be suggested when it should.
+
+/** Test case for {@link ErrorToFixMapper}. */
 
 @RunWith(JUnit4.class)
 public class ErrorToFixMapperTest {
@@ -365,334 +368,364 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
-  public void testRequiresSorted_standalone() {
+  public void testFixRequires_sortStandaloneOnly() {
     assertChanges(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @suppress {extraRequire}",
-            " */",
-            "",
-            "",
+        fileWithImports(
+            "goog.require('b');",
+            "goog.requireType('d');",
+            "goog.requireType('c');",
+            "goog.forwardDeclare('f');",
+            "goog.require('a');",
+            "goog.forwardDeclare('e');",
+            useInCode("a", "b"),
+            useInType("c", "d")),
+        fileWithImports(
+            "goog.forwardDeclare('e');",
+            "goog.forwardDeclare('f');",
+            "goog.require('a');",
+            "goog.require('b');",
+            "goog.requireType('c');",
+            "goog.requireType('d');",
+            useInCode("a", "b"),
+            useInType("c", "d")));
+  }
+
+  @Test
+  public void testFixRequires_sortAllTypes() {
+    assertChanges(
+        fileWithImports(
+            "goog.requireType('a');",
+            "goog.require('b');",
+            "const f = goog.require('f');",
+            "const {d} = goog.require('d');",
+            "const e = goog.requireType('e');",
+            "const {c} = goog.requireType('c');",
+            "goog.forwardDeclare('g');",
+            useInCode("a", "d", "f"),
+            useInType("b", "c", "e")),
+        fileWithImports(
+            "const e = goog.requireType('e');",
+            "const f = goog.require('f');",
+            "const {c} = goog.requireType('c');",
+            "const {d} = goog.require('d');",
+            "goog.forwardDeclare('g');",
             "goog.require('b');",
             "goog.requireType('a');",
-            "goog.requireType('d');",
-            "goog.require('c');",
+            useInCode("a", "d", "f"),
+            useInType("b", "c", "e")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_deduplicate_standalone() {
+    assertChanges(
+        fileWithImports(
+            "goog.require('a');",
+            "goog.require('a');",
+            "goog.require('b');",
+            "goog.requireType('b');",
+            "goog.requireType('c');",
+            "goog.requireType('c');",
+            "goog.forwardDeclare('b');",
+            "goog.forwardDeclare('c');",
+            "goog.forwardDeclare('d');",
+            useInCode("a", "b"),
+            useInType("c")),
+        fileWithImports(
+            "goog.forwardDeclare('d');",
+            "goog.require('a');",
+            "goog.require('b');",
+            "goog.requireType('c');",
+            useInCode("a", "b"),
+            useInType("c")));
+  }
+
+  @Test
+  public void testFixRequires_preserveMultipleAliases() {
+    // a3 changes from goog.requireType to goog.require because we enforce all imports for the same
+    // namespace to have the same strength when rewriting.
+    assertChanges(
+        fileWithImports(
+            "const a3 = goog.requireType('a');",
+            "const a2 = goog.require('a');",
+            "const a1 = goog.require('a');",
+            useInCode("a1", "a2"),
+            useInType("a3")),
+        fileWithImports(
+            "const a1 = goog.require('a');",
+            "const a2 = goog.require('a');",
+            "const a3 = goog.require('a');",
+            useInCode("a1", "a2"),
+            useInType("a3")));
+  }
+
+  @Test
+  public void testFixRequires_mergeDestructuring() {
+    assertChanges(
+        fileWithImports(
+            "const {c, a: a2} = goog.require('a');",
+            "const {b, a: a1} = goog.require('a');",
+            "const {a} = goog.require('a');",
+            "const {} = goog.require('a');",
+            useInCode("a", "a1", "a2", "b", "c")),
+        fileWithImports(
+            "const {a, a: a1, a: a2, b, c} = goog.require('a');",
+            useInCode("a", "a1", "a2", "b", "c")));
+  }
+
+  @Test
+  public void testFixRequires_mergeDestructuring_multiplePrimitives() {
+    assertChanges(
+        fileWithImports(
+            "const {c, a} = goog.require('a');",
+            "const {b, a} = goog.requireType('a');",
+            useInCode("a", "c"),
+            useInType("a", "b")),
+        fileWithImports(
+            "const {a, b, c} = goog.require('a');", useInCode("a", "c"), useInType("a", "b")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_emptyDestructuring_alone() {
+    assertChanges(
+        fileWithImports("const {} = goog.require('a');", useInCode("a")),
+        fileWithImports("goog.require('a');", useInCode("a")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_emptyDestructuringStandaloneBySamePrimitive() {
+    assertChanges(
+        fileWithImports("const {} = goog.require('a');", "goog.require('a');", useInCode("a")),
+        fileWithImports("goog.require('a');", useInCode("a")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_emptyDestructuringStandaloneByStrongerPrimitive() {
+    assertChanges(
+        fileWithImports("const {} = goog.requireType('a');", "goog.require('a');", useInCode("a")),
+        fileWithImports("goog.require('a');", useInCode("a")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_emptyDestructuringStandaloneByWeakerPrimitive() {
+    assertChanges(
+        fileWithImports("const {} = goog.require('a');", "goog.requireType('a');", useInCode("a")),
+        fileWithImports("goog.require('a');", useInCode("a")));
+  }
+
+  @Test
+  public void testFixRequires_emptyDestructuringAliasedBySamePrimitive() {
+    assertChanges(
+        fileWithImports(
+            "const {} = goog.require('a');", "const a = goog.require('a');", useInCode("a")),
+        fileWithImports("const a = goog.require('a');", useInCode("a")));
+  }
+
+  @Test
+  public void testFixRequires_emptyDestructuringAliasedByStrongerPrimitive() {
+    assertChanges(
+        fileWithImports(
+            "const {} = goog.requireType('a');", "const a = goog.require('a');", useInCode("a")),
+        fileWithImports("const a = goog.require('a');", useInCode("a")));
+  }
+
+  @Test
+  public void testFixRequires_emptyDestructuringAliasedByWeakerPrimitive() {
+    assertChanges(
+        fileWithImports(
+            "const {} = goog.require('a');", "const a = goog.requireType('a');", useInCode("a")),
+        fileWithImports("const a = goog.require('a');", useInCode("a")));
+  }
+
+  @Test
+  public void testFixRequires_aliasPreservedWhenDestructuring() {
+    assertNoChanges(
+        fileWithImports(
+            "const a = goog.require('a');",
+            "const b = goog.require('b');",
+            "const {a1, a2} = goog.require('a');",
+            "const {b1, b2} = goog.require('b');",
             "",
-            "",
-            "alert(1);"),
-        lines(
+            useInCode("a1", "a2", "b", "b1", "b2"),
+            useInType("a")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_standaloneAliasedBySamePrimitive() {
+    assertChanges(
+        fileWithImports("const a = goog.require('a');", "goog.require('a');", useInCode("a")),
+        fileWithImports("const a = goog.require('a');", useInCode("a")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_standaloneAliasedByStrongerPrimitive() {
+    assertChanges(
+        fileWithImports("const a = goog.require('a');", "goog.requireType('a');", useInCode("a")),
+        fileWithImports("const a = goog.require('a');", useInCode("a")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_standaloneAliasedByWeakerPrimitive() {
+    assertChanges(
+        fileWithImports("const a = goog.requireType('a');", "goog.require('a');", useInCode("a")),
+        fileWithImports("const a = goog.require('a');", useInCode("a")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_standaloneDestructuredBySamePrimitive() {
+    assertChanges(
+        fileWithImports("const {a} = goog.require('a');", "goog.require('a');", useInCode("a")),
+        fileWithImports("const {a} = goog.require('a');", useInCode("a")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_standaloneDestructuredByStrongerPrimitive() {
+    assertChanges(
+        fileWithImports("const {a} = goog.require('a');", "goog.requireType('a');", useInCode("a")),
+        fileWithImports("const {a} = goog.require('a');", useInCode("a")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_standaloneDestructuredByWeakerPrimitive() {
+    assertChanges(
+        fileWithImports("const {a} = goog.requireType('a');", "goog.require('a');", useInCode("a")),
+        fileWithImports("const {a} = goog.require('a');", useInCode("a")));
+  }
+
+  @Test
+  public void testFixRequires_varAndLetBecomeConstIfUnsorted() {
+    assertChanges(
+        fileWithImports(
+            "var b = goog.require('b');", "let a = goog.require('a');", useInCode("a", "b")),
+        fileWithImports(
+            "const a = goog.require('a');", "const b = goog.require('b');", useInCode("a", "b")));
+  }
+
+  @Test
+  public void testFixRequires_varAndLetDoNotBecomeConstIfAlreadySorted() {
+    // TODO(tjgq): Consider rewriting to const even when already sorted.
+    assertNoChanges(
+        fileWithImports(
+            "let a = goog.require('a');", "var b = goog.require('b');", useInCode("a", "b")));
+  }
+
+  @Test
+  public void testFixRequires_preserveJsDoc_whenSorting() {
+    assertChanges(
+        fileWithImports(
+            "const c = goog.require('c');",
             "/**",
-            " * @fileoverview",
-            " * @suppress {extraRequire}",
+            " * @suppress {extraRequire} Because I said so.",
             " */",
-            "",
-            "",
+            "const b = goog.require('b');",
+            "const a = goog.require('a');",
+            useInCode("a", "b", "c")),
+        fileWithImports(
+            "const a = goog.require('a');",
+            "/**",
+            " * @suppress {extraRequire} Because I said so.",
+            " */",
+            "const b = goog.require('b');",
+            "const c = goog.require('c');",
+            useInCode("a", "b", "c")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_preserveJsDoc_whenMergingStandalone() {
+    assertChanges(
+        fileWithImports(
+            "/**",
+            " * @suppress {extraRequire} Because I said so.",
+            " */",
+            "goog.require('a');",
             "goog.requireType('a');",
-            "goog.require('b');",
-            "goog.require('c');",
-            "goog.requireType('d');",
-            "",
-            "",
-            "alert(1);"));
-  }
-
-  @Test
-  public void testRequiresSorted_suppressExtra() {
-    assertChanges(
-        lines(
+            useInCode("a")),
+        fileWithImports(
             "/**",
-            " * @fileoverview",
-            " * @suppress {extraRequire}",
+            " * @suppress {extraRequire} Because I said so.",
             " */",
-            "goog.provide('x');",
-            "",
-            "/** @suppress {extraRequire} */",
-            "goog.requireType('c');",
-            "/** @suppress {extraRequire} */",
-            "goog.require('b');",
             "goog.require('a');",
-            "",
-            "alert(1);"),
-        lines(
+            useInCode("a")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_preserveJsDoc_whenMergingDestructures_single() {
+    assertChanges(
+        fileWithImports(
             "/**",
-            " * @fileoverview",
-            " * @suppress {extraRequire}",
+            " * @suppress {extraRequire} Because I said so.",
             " */",
-            "goog.provide('x');",
-            "",
-            "goog.require('a');",
-            "/** @suppress {extraRequire} */",
-            "goog.require('b');",
-            "/** @suppress {extraRequire} */",
-            "goog.requireType('c');",
-            "",
-            "alert(1);"));
+            "const {b} = goog.require('a');",
+            "const {c} = goog.require('a');",
+            useInCode("b", "c")),
+        fileWithImports(
+            "/**",
+            " * @suppress {extraRequire} Because I said so.",
+            " */",
+            "const {b, c} = goog.require('a');",
+            useInCode("b", "c")));
+  }
+
+  @Ignore
+  @Test
+  public void testFixRequires_preserveJsDoc_whenMergingDestructures_multiple() {
+    // TODO(tjgq): Consider merging multiple @suppress annotations into a single comment.
+    assertChanges(
+        fileWithImports(
+            "/**",
+            " * @suppress {extraRequire} Because I said so.",
+            " */",
+            "const {b} = goog.require('a');",
+            "/**",
+            " * @suppress {extraRequire} Because I rule.",
+            " */",
+            "const {c} = goog.require('a');",
+            useInCode("b", "c")),
+        fileWithImports(
+            "/**",
+            " * @suppress {extraRequire} Because I said so.",
+            " */",
+            "/**",
+            " * @suppress {extraRequire} Because I rule.",
+            " */",
+            "const {b, c} = goog.require('a');",
+            useInCode("b", "c")));
   }
 
   @Test
-  public void testSortRequiresInGoogModule_let() {
-    assertChanges(
-        lines(
-            "goog.module('m');",
+  public void testFixRequires_veryLongNames() {
+    assertNoChanges(
+        fileWithImports(
+            "const veryLongIdentifierSoLongThatItGoesPastThe80CharactersLimitAndYetWeShouldNotLineBreak = goog.require('b');",
+            "const {anotherVeryLongIdentifierSoLongThatItGoesPastThe80CharactersLimitAndYetWeShouldNotLineBreak} = goog.require('a');",
             "",
-            "/** @suppress {extraRequire} */",
-            "goog.require('a.c');",
-            "/** @suppress {extraRequire} */",
-            "goog.require('a.b');",
-            "",
-            "let localVar;"),
-        lines(
-            "goog.module('m');",
-            "",
-            "/** @suppress {extraRequire} */",
-            "goog.require('a.b');",
-            "/** @suppress {extraRequire} */",
-            "goog.require('a.c');",
-            "",
-            "let localVar;"));
+            useInCode(
+                "veryLongIdentifierSoLongThatItGoesPastThe80CharactersLimitAndYetWeShouldNotLineBreak",
+                "anotherVeryLongIdentifierSoLongThatItGoesPastThe80CharactersLimitAndYetWeShouldNotLineBreak")));
   }
 
   @Test
-  public void testSortRequiresInGoogModule_const() {
+  public void testFixRequires_veryLongNames_whenMergingDestructures() {
     assertChanges(
-        lines(
-            "goog.module('m');",
-            "",
-            "/** @suppress {extraRequire} */",
-            "goog.require('a.c');",
-            "/** @suppress {extraRequire} */",
-            "goog.require('a.b');",
-            "",
-            "const FOO = 0;"),
-        lines(
-            "goog.module('m');",
-            "",
-            "/** @suppress {extraRequire} */",
-            "goog.require('a.b');",
-            "/** @suppress {extraRequire} */",
-            "goog.require('a.c');",
-            "",
-            "const FOO = 0;"));
-  }
-
-  /**
-   * Using this form in a goog.module is a violation of the style guide, but still fairly common.
-   */
-  @Test
-  public void testSortRequiresInGoogModule_standalone() {
-    assertChanges(
-        lines(
-            "/** @fileoverview @suppress {strictModuleChecks} */",
-            "goog.module('m');",
-            "",
-            "goog.require('a.c');",
-            "goog.require('a.b.d');",
-            "goog.require('a.b.c');",
-            "",
-            "alert(a.c());",
-            "alert(a.b.d());",
-            "alert(a.b.c());"),
-        lines(
-            "/** @fileoverview @suppress {strictModuleChecks} */",
-            "goog.module('m');",
-            "",
-            "goog.require('a.b.c');",
-            "goog.require('a.b.d');",
-            "goog.require('a.c');",
-            "",
-            "alert(a.c());",
-            "alert(a.b.d());",
-            "alert(a.b.c());"));
-  }
-
-  @Test
-  public void testSortRequiresInGoogModule_shorthand() {
-    assertChanges(
-        lines(
-            "goog.module('m');",
-            "",
-            "var c2 = goog.require('a.c');",
-            "var d = goog.require('a.b.d');",
-            "var c1 = goog.require('a.b.c');",
-            "",
-            "alert(c1());",
-            "alert(d());",
-            "alert(c2());"),
-        lines(
-            "goog.module('m');",
-            "",
-            "var c1 = goog.require('a.b.c');",
-            "var c2 = goog.require('a.c');",
-            "var d = goog.require('a.b.d');",
-            "",
-            "alert(c1());",
-            "alert(d());",
-            "alert(c2());"));
-  }
-
-  @Test
-  public void testSortRequiresInGoogModule_destructuring() {
-    assertChanges(
-        lines(
-            "/** @fileoverview @suppress {extraRequire} */",
-            "goog.module('m');",
-            "",
-            "const {fooBar} = goog.require('x');",
-            "const {foo, bar} = goog.requireType('y');"),
-        lines(
-            "/** @fileoverview @suppress {extraRequire} */",
-            "goog.module('m');",
-            "",
-            "const {foo, bar} = goog.requireType('y');",
-            "const {fooBar} = goog.require('x');"));
-  }
-
-  @Test
-  public void testSortRequiresInGoogModule_shorthandAndStandalone() {
-    assertChanges(
-        lines(
-            "/** @fileoverview @suppress {extraRequire} */",
-            "goog.module('m');",
-            "",
-            "const shorthand2 = goog.requireType('a');",
-            "goog.require('standalone.two');",
-            "goog.requireType('standalone.one');",
-            "const shorthand1 = goog.require('b');"),
-        lines(
-            "/** @fileoverview @suppress {extraRequire} */",
-            "goog.module('m');",
-            "",
-            "const shorthand1 = goog.require('b');",
-            "const shorthand2 = goog.requireType('a');",
-            "goog.requireType('standalone.one');",
-            "goog.require('standalone.two');"));
-  }
-
-  @Test
-  public void testSortRequiresInGoogModule_allThreeStyles() {
-    assertChanges(
-        lines(
-            "/** @fileoverview @suppress {extraRequire} */",
-            "goog.module('m');",
-            "",
-            "const shorthand2 = goog.requireType('a');",
-            "goog.require('standalone.two');",
-            "const {destructuring2} = goog.requireType('c');",
-            "const {destructuring1} = goog.require('d');",
-            "goog.requireType('standalone.one');",
-            "const shorthand1 = goog.require('b');"),
-        lines(
-            "/** @fileoverview @suppress {extraRequire} */",
-            "goog.module('m');",
-            "",
-            "const shorthand1 = goog.require('b');",
-            "const shorthand2 = goog.requireType('a');",
-            "const {destructuring1} = goog.require('d');",
-            "const {destructuring2} = goog.requireType('c');",
-            "goog.requireType('standalone.one');",
-            "goog.require('standalone.two');"));
-  }
-
-  @Test
-  public void testSortRequiresInGoogModule_withFwdDeclare() {
-    assertChanges(
-        lines(
-            "goog.module('x');",
-            "",
-            "const s = goog.require('s');",
-            "const g = goog.forwardDeclare('g');",
-            "const f = goog.forwardDeclare('f');",
-            "const r = goog.require('r');",
-            "",
-            "alert(r, s);"),
-        lines(
-            "goog.module('x');",
-            "",
-            "const r = goog.require('r');",
-            "const s = goog.require('s');",
-            "const f = goog.forwardDeclare('f');",
-            "const g = goog.forwardDeclare('g');",
-            "",
-            "alert(r, s);"));
-  }
-
-  @Test
-  public void testSortRequiresInGoogModule_withOtherStatements() {
-    // The requires after "const {Bar} = bar;" are not sorted.
-    assertChanges(
-        lines(
-            "goog.module('x');",
-            "",
-            "const foo = goog.require('foo');",
-            "const bar = goog.require('bar');",
-            "const {Bar} = bar;",
-            "const util = goog.require('util');",
-            "const type = goog.requireType('type');",
-            "const {doCoolThings} = util;",
-            "",
-            "/** @type {!type} */ let x;",
-            "doCoolThings(foo, Bar);"),
-        lines(
-            "goog.module('x');",
-            "",
-            "const bar = goog.require('bar');",
-            "const foo = goog.require('foo');",
-            "const {Bar} = bar;",
-            "const util = goog.require('util');",
-            "const type = goog.requireType('type');",
-            "const {doCoolThings} = util;",
-            "",
-            "/** @type {!type} */ let x;",
-            "doCoolThings(foo, Bar);"));
-  }
-
-  @Test
-  public void testSortRequiresInGoogModule_veryLongRequire() {
-    assertChanges(
-        lines(
-            "goog.module('m');",
-            "",
-            "const {veryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} = goog.require('other');",
-            "const {anotherVeryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} = goog.requireType('type');",
-            "const shorter = goog.require('shorter');",
-            "",
-            "/** @type {!anotherVeryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} */ var x;",
-            "use(veryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace);",
-            "use(shorter);"),
-        lines(
-            "goog.module('m');",
-            "",
-            "const shorter = goog.require('shorter');",
-            "const {anotherVeryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} = goog.requireType('type');",
-            "const {veryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} = goog.require('other');",
-            "",
-            "/** @type {!anotherVeryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace} */ var x;",
-            "use(veryLongDestructuringStatementSoLongThatWeGoPast80CharactersBeforeGettingToTheClosingCurlyBrace);",
-            "use(shorter);"));
-  }
-
-  @Test
-  public void testSortRequiresAndForwardDeclares() {
-    assertChanges(
-        lines(
-            "goog.provide('x');",
-            "",
-            "goog.require('s');",
-            "goog.forwardDeclare('g');",
-            "goog.forwardDeclare('f');",
-            "goog.require('r');",
-            "",
-            "alert(r, s);"),
-        lines(
-            "goog.provide('x');",
-            "",
-            "goog.require('r');",
-            "goog.require('s');",
-            "goog.forwardDeclare('f');",
-            "goog.forwardDeclare('g');",
-            "",
-            "alert(r, s);"));
+        fileWithImports(
+            "const {veryLongSymbolThatMapsTo: veryLongLocalNameForIt} = goog.require('a');",
+            "const {anotherVeryLongSymbolThatMapsTo: veryLongLocalNameForItAlso} = goog.require('a');",
+            useInCode("veryLongLocalNameForIt", "veryLongLocalNameForItAlso")),
+        fileWithImports(
+            "const {anotherVeryLongSymbolThatMapsTo: veryLongLocalNameForItAlso, veryLongSymbolThatMapsTo: veryLongLocalNameForIt} = goog.require('a');",
+            useInCode("veryLongLocalNameForIt", "veryLongLocalNameForItAlso")));
   }
 
   @Test
@@ -835,31 +868,6 @@ public class ErrorToFixMapperTest {
             // TODO(tbreisacher): Change this to "@extends {Animal}"
             "/** @constructor @extends {world.util.Animal} */",
             "function Cat() {}"));
-  }
-
-  @Test
-  public void testBothFormsOfRequire() {
-    assertChanges(
-        lines(
-            "goog.module('example');",
-            "",
-            "goog.require('foo.bar.SoyRenderer');",
-            "const SoyRenderer = goog.require('foo.bar.SoyRenderer');",
-            "",
-            "function setUp() {",
-            "  const soyService = new foo.bar.SoyRenderer();",
-            "}",
-            ""),
-        lines(
-            "goog.module('example');",
-            "",
-            "const SoyRenderer = goog.require('foo.bar.SoyRenderer');",
-            "goog.require('foo.bar.SoyRenderer');",
-            "",
-            "function setUp() {",
-            "  const soyService = new SoyRenderer();",
-            "}",
-            ""));
   }
 
   @Test
@@ -1150,49 +1158,6 @@ public class ErrorToFixMapperTest {
             "var C = goog.require('c.C');",
             "",
             "alert(new A(new B(new C())));"));
-  }
-
-  @Test
-  public void testSortShorthandRequiresInGoogModule() {
-    assertChanges(
-        lines(
-            "goog.module('m');",
-            "",
-            "var B = goog.require('x.B');",
-            "var A = goog.require('a.A');",
-            "var C = goog.require('c.C');",
-            "",
-            "alert(new A(new B(new C())));"),
-        lines(
-            "goog.module('m');",
-            "",
-            // Requires are sorted by the short name, not the full namespace.
-            "var A = goog.require('a.A');",
-            "var B = goog.require('x.B');",
-            "var C = goog.require('c.C');",
-            "",
-            "alert(new A(new B(new C())));"));
-  }
-
-  @Test
-  public void testUnsortedAndMissingLhs() {
-    assertChanges(
-        lines(
-            "goog.module('foo');",
-            "",
-            "goog.require('example.controller');",
-            "const Bar = goog.require('example.Bar');",
-            "",
-            "alert(example.controller.SOME_CONSTANT);",
-            "alert(Bar.doThings);"),
-        lines(
-            "goog.module('foo');",
-            "",
-            "const Bar = goog.require('example.Bar');",
-            "goog.require('example.controller');",
-            "",
-            "alert(example.controller.SOME_CONSTANT);",
-            "alert(Bar.doThings);"));
   }
 
   @Test
@@ -1611,6 +1576,40 @@ public class ErrorToFixMapperTest {
             "",
             "alert(goog.string.parseInt('7'));",
             "alert(goog.dom.createElement('div'));"));
+  }
+
+  // TODO(tjgq): Make this not crash on ClosureRewriteModule#updateGoogRequire.
+  @Ignore
+  @Test
+  public void testNoCrashOnInvalidMultiRequireStatement() {
+    assertNoChanges(
+        fileWithImports(
+            "const a = goog.require('a'), b = goog.require('b');", useInCode("a", "b")));
+  }
+
+  private String fileWithImports(String... imports) {
+    return lines(
+        lines("/*", " * @fileoverview", " */", "goog.module('x');", ""),
+        lines(imports),
+        lines("", "module.exports = function() {};"));
+  }
+
+  private String useInCode(String... names) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("\n");
+    for (String name : names) {
+      sb.append("use(").append(name).append(");\n");
+    }
+    return sb.toString();
+  }
+
+  private String useInType(String... names) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("\n");
+    for (String name : names) {
+      sb.append("/** @type {!").append(name).append("} */ var _").append(name).append(";\n");
+    }
+    return sb.toString();
   }
 
   private void assertChanges(String originalCode, String expectedCode) {

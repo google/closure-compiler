@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
+import com.google.javascript.jscomp.lint.RequiresFixer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -84,10 +85,9 @@ public final class ErrorToFixMapper {
       case "JSC_MISSING_SEMICOLON":
         return getFixForMissingSemicolon(error, compiler);
       case "JSC_REQUIRES_NOT_SORTED":
-        return getFixForUnsortedRequiresOrProvides(
-            error, compiler, "goog.require", "goog.requireType", "goog.forwardDeclare");
+        return getFixForUnsortedRequires(error, compiler);
       case "JSC_PROVIDES_NOT_SORTED":
-        return getFixForUnsortedRequiresOrProvides(error, compiler, "goog.provide");
+        return getFixForUnsortedProvides(error, compiler);
       case "JSC_DEBUGGER_STATEMENT_PRESENT":
         return removeNode(error, compiler);
       case "JSC_USELESS_EMPTY_STATEMENT":
@@ -352,12 +352,26 @@ public final class ErrorToFixMapper {
     return fix.build();
   }
 
-  private static SuggestedFix getFixForUnsortedRequiresOrProvides(
-      JSError error, AbstractCompiler compiler, String... closureFunctions) {
+  private static SuggestedFix getFixForUnsortedRequires(JSError error, AbstractCompiler compiler) {
+    Node script = NodeUtil.getEnclosingScript(error.node);
+
+    RequiresFixer fixer = new RequiresFixer(compiler, script);
+
+    if (!fixer.needsFix()) {
+      return null;
+    }
+
+    return new SuggestedFix.Builder()
+        .attachMatchedNodeInfo(fixer.getFirstNode(), compiler)
+        .replaceRange(fixer.getFirstNode(), fixer.getLastNode(), fixer.getReplacement())
+        .build();
+  }
+
+  private static SuggestedFix getFixForUnsortedProvides(JSError error, AbstractCompiler compiler) {
     SuggestedFix.Builder fix = new SuggestedFix.Builder();
     fix.attachMatchedNodeInfo(error.node, compiler);
     Node script = NodeUtil.getEnclosingScript(error.node);
-    RequireProvideSorter cb = new RequireProvideSorter(closureFunctions);
+    RequireProvideSorter cb = new RequireProvideSorter("goog.provide");
     NodeTraversal.traverse(compiler, script, cb);
     Node first = cb.calls.get(0);
     Node last = Iterables.getLast(cb.calls);
@@ -385,6 +399,7 @@ public final class ErrorToFixMapper {
         .build();
   }
 
+  // TODO(tjgq): Rewrite this into a simpler ProvideFixer now that RequireFixer has been split off.
   private static class RequireProvideSorter implements NodeTraversal.Callback, Comparator<Node> {
     private final ImmutableSet<String> closureFunctions;
     private final List<Node> calls = new ArrayList<>();
