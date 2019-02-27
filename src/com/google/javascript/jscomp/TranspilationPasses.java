@@ -59,26 +59,11 @@ public class TranspilationPasses {
 
   public static void addPreTypecheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
-    addPreTypecheckTranspilationPasses(
-        passes,
-        options,
-        // This condition works most of the time, but has edge cases that fail in tests.
-        !options.skipNonTranspilationPasses);
-  }
-
-  // Tests extending CompilerTestCase and TypeCheckTestCase fail if the es6ExternsCheck pass is
-  // run. Ideally a condition based on the CompilerOptions should be used so that the boolean
-  // parameter can be removed.
-  static void addPreTypecheckTranspilationPasses(
-      List<PassFactory> passes, CompilerOptions options, boolean doEs6ExternsCheck) {
 
     // TODO(bradfordcsmith): Rename this since it isn't just libraries for ES6 features anymore.
     // Inject runtime libraries needed for the transpilation we will have to do.
     passes.add(es6InjectRuntimeLibraries);
 
-    if (options.needsTranspilationFrom(ES6) && doEs6ExternsCheck) {
-      passes.add(es6ExternsCheck);
-    }
   }
 
   public static void addEs6ModuleToCjsPass(List<PassFactory> passes) {
@@ -276,20 +261,6 @@ public class TranspilationPasses {
         @Override
         protected FeatureSet featureSet() {
           return ES2018;
-        }
-      };
-
-  static final PassFactory es6ExternsCheck =
-      new PassFactory("es6ExternsCheck", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          // TODO(johnlenz): Investigate if this can be removed
-          return new Es6ExternsCheck(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES_NEXT;
         }
       };
 

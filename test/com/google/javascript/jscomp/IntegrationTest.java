@@ -4306,7 +4306,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.WARNING);
 
     externs = ImmutableList.of(
@@ -4314,12 +4313,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String code = "function *gen() { arguments.callee; }";
 
-    DiagnosticType[] expectedErrors = new DiagnosticType[] {
-      StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN,
-      Es6ExternsCheck.MISSING_ES6_EXTERNS,
-    };
-
-    test(options, new String[] { code }, null, expectedErrors);
+    test(options, new String[] {code}, null, StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
   }
 
   // http://blickly.github.io/closure-compiler-issues/#701
