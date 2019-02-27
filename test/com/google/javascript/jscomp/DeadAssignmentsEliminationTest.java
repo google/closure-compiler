@@ -900,6 +900,97 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSpread_consideredRead() {
+    inFunction(
+        lines(
+            "var a;", //
+            "a = [];", //
+            "[...a];"));
+
+    inFunction(
+        lines(
+            "var a;", //
+            "a = {};", //
+            "({...a});"));
+  }
+
+  @Test
+  public void testRest_notConsideredWrite() {
+    // TODO(b/126441776): The initial writes are dead. The pass should rewrite to the commented
+    // code.
+
+    inFunction(
+        lines(
+            "var a = 9;", //
+            "[...a] = itr;",
+            "return a;")
+        /** , lines( "var a;", // "[...a] = itr;", "return a;") */
+        );
+
+    inFunction(
+        lines(
+            "var a = 9;", //
+            "({...a} = obj);",
+            "return a;")
+        /** , lines( "var a;", // "({...a} = obj);", "return a;") */
+        );
+  }
+
+  @Test
+  public void testDestructuring_notConsideredWrite() {
+    // TODO(b/126441776): The initial writes are dead. The pass should rewrite to the commented
+    // code.
+
+    inFunction(
+        lines(
+            "var a = 9;", //
+            "[a] = itr;",
+            "return a;")
+        /** , lines( "var a;", // "[a] = itr;", "return a;") */
+        );
+
+    inFunction(
+        lines(
+            "var a = 9;", //
+            "({a} = obj);",
+            "return a;")
+        /** , lines( "var a;", // "({a} = obj);", "return a;") */
+        );
+  }
+
+  @Test
+  public void testRest_isNotRemovable() {
+    // TODO(b/126441776): Elimination is possible here under getter/setter assumptions. Determine if
+    // this is the correct behaviour.
+
+    inFunction(
+        lines(
+            "var a;", //
+            "[...a] = itr;"));
+
+    inFunction(
+        lines(
+            "var a;", //
+            "({...a} = obj);"));
+  }
+
+  @Test
+  public void testDestructuring_isNotRemovable() {
+    // TODO(b/126441776): Elimination is possible here under getter/setter assumptions. Determine if
+    // this is the correct behaviour.
+
+    inFunction(
+        lines(
+            "var a;", //
+            "[a] = itr;"));
+
+    inFunction(
+        lines(
+            "var a;", //
+            "({a} = obj);"));
+  }
+
+  @Test
   public void testLet() {
     inFunction("let a; a = 2;",
         "let a; 2;");
