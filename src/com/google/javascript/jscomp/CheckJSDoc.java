@@ -87,6 +87,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
           "JSC_JSDOC_IN_BLOCK_COMMENT",
           "Non-JSDoc comment has annotations. Did you mean to start it with '/**'?");
 
+  public static final DiagnosticType JSDOC_ON_RETURN =
+      DiagnosticType.warning(
+          "JSC_JSDOC_ON_RETURN", "JSDoc annotations are not supported on return.");
+
   private static final Pattern COMMENT_PATTERN =
       Pattern.compile("(/|(\n[ \t]*))\\*[ \t]*@[a-zA-Z]+[ \t\n{]");
 
@@ -156,6 +160,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     validateSuppress(n, info);
     validateImplicitCast(n, info);
     validateClosurePrimitive(n, info);
+    validateReturnJsDoc(n, info);
   }
 
   private void validateSuppress(Node n, JSDocInfo info) {
@@ -691,6 +696,17 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
 
     if (!isJSDocOnFunctionNode(n, info)) {
       report(n, MISPLACED_ANNOTATION, "closurePrimitive", "must be on a function node");
+    }
+  }
+
+  /** Checks that there are no annotations on return. */
+  private void validateReturnJsDoc(Node n, JSDocInfo info) {
+    if (!n.isReturn() || info == null) {
+      return;
+    }
+    // @type is handled in validateTypeAnnotations method.
+    if (info.containsDeclaration() && !info.hasType()) {
+      report(n, JSDOC_ON_RETURN);
     }
   }
 }
