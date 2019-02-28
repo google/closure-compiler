@@ -69,7 +69,6 @@ import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionType.Kind;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -685,15 +684,13 @@ public class JSTypeRegistry implements Serializable {
         // in addition, overrides getInstanceType() to return the NoObject type
         // instead of a new anonymous object.
         new FunctionType(
-            this,
-            "Function",
-            /* source= */ null,
-            createArrowType(createParametersWithVarArgs(unknownType), unknownType),
-            /* typeOfThis= */ unknownType,
-            /* templateTypeMap= */ null,
-            Kind.CONSTRUCTOR,
-            /* nativeType= */ true,
-            /* isAbstract= */ false) {
+            FunctionType.builder(this)
+                .withName("Function")
+                .withParamsNode(createParametersWithVarArgs(unknownType))
+                .withReturnType(unknownType)
+                .withTypeOfThis(unknownType)
+                .forConstructor()
+                .forNativeType()) {
           private static final long serialVersionUID = 1L;
 
           @Override
@@ -1599,7 +1596,7 @@ public class JSTypeRegistry implements Serializable {
    *     is unknown.
    */
   public FunctionType createFunctionType(JSType returnType, Node parameters) {
-    return new FunctionBuilder(this).withParamsNode(parameters).withReturnType(returnType).build();
+    return FunctionType.builder(this).withParamsNode(parameters).withReturnType(returnType).build();
   }
 
   /**
@@ -1638,7 +1635,7 @@ public class JSTypeRegistry implements Serializable {
   public JSType createFunctionTypeWithInstanceType(ObjectType instanceType,
       JSType returnType, List<JSType> parameterTypes) {
     Node paramsNode = createParameters(parameterTypes.toArray(new JSType[parameterTypes.size()]));
-    return new FunctionBuilder(this)
+    return FunctionType.builder(this)
         .withParamsNode(paramsNode)
         .withReturnType(returnType)
         .withTypeOfThis(instanceType)
@@ -1706,7 +1703,7 @@ public class JSTypeRegistry implements Serializable {
    */
   public FunctionType createFunctionTypeWithNewReturnType(
       FunctionType existingFunctionType, JSType returnType) {
-    return new FunctionBuilder(this)
+    return FunctionType.builder(this)
         .copyFromOtherFunction(existingFunctionType)
         .withReturnType(returnType)
         .build();
@@ -1714,7 +1711,7 @@ public class JSTypeRegistry implements Serializable {
 
   private FunctionType createNativeFunctionType(
       JSType returnType, Node parameters) {
-    return new FunctionBuilder(this)
+    return FunctionType.builder(this)
         .withParamsNode(parameters)
         .withReturnType(returnType)
         .forNativeType()
@@ -1805,7 +1802,7 @@ public class JSTypeRegistry implements Serializable {
       ImmutableList<TemplateType> templateKeys,
       boolean isAbstract) {
     checkArgument(source == null || source.isFunction() || source.isClass());
-    return new FunctionBuilder(this)
+    return FunctionType.builder(this)
         .forConstructor()
         .withName(name)
         .withSourceNode(source)
@@ -1826,13 +1823,14 @@ public class JSTypeRegistry implements Serializable {
    */
   public FunctionType createInterfaceType(
       String name, Node source, ImmutableList<TemplateType> templateKeys, boolean struct) {
-    FunctionType fn = new FunctionBuilder(this)
-        .forInterface()
-        .withName(name)
-        .withSourceNode(source)
-        .withEmptyParams()
-        .withTemplateKeys(templateKeys)
-        .build();
+    FunctionType fn =
+        FunctionType.builder(this)
+            .forInterface()
+            .withName(name)
+            .withSourceNode(source)
+            .withEmptyParams()
+            .withTemplateKeys(templateKeys)
+            .build();
     if (struct) {
       fn.setStruct();
     }
@@ -2176,7 +2174,7 @@ public class JSTypeRegistry implements Serializable {
         JSType returnType =
             createFromTypeNodesInternal(current, sourceName, scope, recordUnresolvedTypes);
 
-        return new FunctionBuilder(this)
+        return FunctionType.builder(this)
             .withParamsNode(paramBuilder.build())
             .withReturnType(returnType)
             .withTypeOfThis(thisType)
@@ -2343,18 +2341,13 @@ public class JSTypeRegistry implements Serializable {
     typesIndexedByProperty = (Multimap<String, JSType>) in.readObject();
   }
 
-  private FunctionBuilder nativeConstructorBuilder(String name) {
-    return new FunctionBuilder(this)
-        .forNativeType()
-        .forConstructor()
-        .withName(name);
+  private FunctionType.Builder nativeConstructorBuilder(String name) {
+    return FunctionType.builder(this).forNativeType().forConstructor().withName(name);
   }
 
   private FunctionType nativeInterface(String name, TemplateType... templateKeys) {
-    FunctionBuilder builder = new FunctionBuilder(this)
-        .forNativeType()
-        .forInterface()
-        .withName(name);
+    FunctionType.Builder builder =
+        FunctionType.builder(this).forNativeType().forInterface().withName(name);
     if (templateKeys.length > 0) {
       builder.withTemplateKeys(templateKeys);
     }

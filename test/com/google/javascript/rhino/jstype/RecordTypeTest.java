@@ -149,40 +149,32 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testSubtypeWithUnknowns2() {
-    JSType recordA = new RecordTypeBuilder(registry)
-        .addProperty("a",
-            new FunctionBuilder(registry)
-            .withReturnType(NUMBER_TYPE)
-            .build(),
-            null)
-        .build();
-    JSType recordB = new RecordTypeBuilder(registry)
-        .addProperty("a",
-            new FunctionBuilder(registry)
-            .withReturnType(UNKNOWN_TYPE)
-            .build(),
-            null)
-        .build();
+    JSType recordA =
+        new RecordTypeBuilder(registry)
+            .addProperty(
+                "a", FunctionType.builder(registry).withReturnType(NUMBER_TYPE).build(), null)
+            .build();
+    JSType recordB =
+        new RecordTypeBuilder(registry)
+            .addProperty(
+                "a", FunctionType.builder(registry).withReturnType(UNKNOWN_TYPE).build(), null)
+            .build();
     assertThat(recordA.isSubtypeOf(recordB)).isTrue();
     assertThat(recordB.isSubtypeOf(recordA)).isTrue();
   }
 
   @Test
   public void testSubtypeWithFunctionProps() {
-    JSType recordA = new RecordTypeBuilder(registry)
-        .addProperty("a",
-            new FunctionBuilder(registry)
-            .withReturnType(NUMBER_TYPE)
-            .build(),
-            null)
-        .build();
-    JSType recordB = new RecordTypeBuilder(registry)
-        .addProperty("a",
-            new FunctionBuilder(registry)
-            .withReturnType(STRING_TYPE)
-            .build(),
-            null)
-        .build();
+    JSType recordA =
+        new RecordTypeBuilder(registry)
+            .addProperty(
+                "a", FunctionType.builder(registry).withReturnType(NUMBER_TYPE).build(), null)
+            .build();
+    JSType recordB =
+        new RecordTypeBuilder(registry)
+            .addProperty(
+                "a", FunctionType.builder(registry).withReturnType(STRING_TYPE).build(), null)
+            .build();
     assertThat(recordA.isSubtypeOf(recordB)).isFalse();
     assertThat(recordB.isSubtypeOf(recordA)).isFalse();
   }

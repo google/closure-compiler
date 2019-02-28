@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionBuilder;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.ArrayDeque;
@@ -148,7 +148,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
         // type checking hasn't run, so we don't need type information.
         wrapperFunctionType = null;
       } else {
-        wrapperFunctionType = new FunctionBuilder(registry).withReturnType(propertyType).build();
+        wrapperFunctionType = FunctionType.builder(registry).withReturnType(propertyType).build();
       }
       return new SuperPropertyWrapperInfo(
           firstSuperDotPropertyNode, wrapperFunctionName, wrapperFunctionType);

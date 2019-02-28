@@ -54,7 +54,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
-import com.google.javascript.rhino.jstype.FunctionBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -2767,7 +2766,7 @@ public final class TypeInferenceTest {
   private void includeAssertionFunction(String fnName, JSType returnType) {
     String fullName = "goog.asserts." + fnName;
     FunctionType fnType =
-        new FunctionBuilder(registry)
+        FunctionType.builder(registry)
             .withReturnType(returnType)
             .withParamsNode(IR.paramList(IR.name("p")))
             .withName(fullName)
@@ -2781,7 +2780,7 @@ public final class TypeInferenceTest {
     TemplateType templateType = registry.createTemplateType("T");
     // Create the function type `function(new:T)`
     FunctionType templateTypeCtor =
-        new FunctionBuilder(registry).forConstructor().withTypeOfThis(templateType).build();
+        FunctionType.builder(registry).forConstructor().withTypeOfThis(templateType).build();
     // Create the function type `function(?, function(new:T)): T`
     // This matches the JSDoc for goog.asserts.assertInstanceof:
     //   /**
@@ -2791,7 +2790,7 @@ public final class TypeInferenceTest {
     //    * @template T
     //    */
     FunctionType fnType =
-        new FunctionBuilder(registry)
+        FunctionType.builder(registry)
             .withParamsNode(
                 IR.paramList(
                     IR.name("value").setJSType(getNativeType(UNKNOWN_TYPE)),

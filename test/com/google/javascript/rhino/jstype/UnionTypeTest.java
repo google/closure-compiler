@@ -67,23 +67,23 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
         new NamedType(EMPTY_SCOPE, registry, "not.resolved.named.type", null, -1, -1);
 
     this.base =
-        new FunctionBuilder(registry).forConstructor().withName("Base").build().getInstanceType();
+        FunctionType.builder(registry).forConstructor().withName("Base").build().getInstanceType();
     this.sub1 =
-        new FunctionBuilder(registry)
+        FunctionType.builder(registry)
             .forConstructor()
             .withName("Sub1")
             .withPrototypeBasedOn(base)
             .build()
             .getInstanceType();
     this.sub2 =
-        new FunctionBuilder(registry)
+        FunctionType.builder(registry)
             .forConstructor()
             .withName("Sub2")
             .withPrototypeBasedOn(base)
             .build()
             .getInstanceType();
     this.sub3 =
-        new FunctionBuilder(registry)
+        FunctionType.builder(registry)
             .forConstructor()
             .withName("Sub3")
             .withPrototypeBasedOn(base)

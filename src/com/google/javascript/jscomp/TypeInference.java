@@ -45,7 +45,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.BooleanLiteralSet;
-import com.google.javascript.rhino.jstype.FunctionBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -1642,10 +1641,11 @@ class TypeInference
       JSType thisType = getJSType(bind.thisValue);
       if (thisType.toObjectType() != null && !thisType.isUnknownType()
           && callTargetFn.getTypeOfThis().isUnknownType()) {
-        callTargetFn = new FunctionBuilder(registry)
-            .copyFromOtherFunction(callTargetFn)
-            .withTypeOfThis(thisType.toObjectType())
-            .build();
+        callTargetFn =
+            FunctionType.builder(registry)
+                .copyFromOtherFunction(callTargetFn)
+                .withTypeOfThis(thisType.toObjectType())
+                .build();
         target.setJSType(callTargetFn);
       }
     }
@@ -1742,10 +1742,11 @@ class TypeInference
       // but the expected type does, back fill it.
       if (currentType.getTypeOfThis().isUnknownType()
           && !expectedType.getTypeOfThis().isUnknownType()) {
-        FunctionType replacement = new FunctionBuilder(registry)
-            .copyFromOtherFunction(currentType)
-            .withTypeOfThis(expectedType.getTypeOfThis())
-            .build();
+        FunctionType replacement =
+            FunctionType.builder(registry)
+                .copyFromOtherFunction(currentType)
+                .withTypeOfThis(expectedType.getTypeOfThis())
+                .build();
          return replacement;
       }
     } else {

@@ -46,17 +46,15 @@ import com.google.javascript.rhino.Node;
 /**
  * The bottom Object type, representing the subclass of all objects.
  *
- * Although JavaScript programmers can't explicitly denote the bottom
- * Object type, it comes up in static analysis. For example, if we have:
- * <code>
+ * <p>Although JavaScript programmers can't explicitly denote the bottom Object type, it comes up in
+ * static analysis. For example, if we have: <code>
  * var x = function() {};
  * if (x instanceof Array) {
  *   f(x);
  * }
- * </code>
- * We need to be able to assign {@code x} a type within the {@code f(x)}
- * call. It has no possible type, but {@code x} would not be legal if f
- * expected a string. So we assign it the {@code NoObjectType}.
+ * </code> We need to be able to assign {@code x} a type within the {@code f(x)} call. It has no
+ * possible type, but {@code x} would not be legal if f expected a string. So we assign it the
+ * {@code NoObjectType}.
  *
  * @see <a href="http://en.wikipedia.org/wiki/Bottom_type">Bottom types</a>
  */
@@ -64,16 +62,7 @@ public class NoObjectType extends FunctionType {
   private static final long serialVersionUID = 1L;
 
   NoObjectType(JSTypeRegistry registry) {
-    super(
-        registry,
-        /* name= */ null,
-        /* source= */ null,
-        registry.createArrowType(null, null),
-        /* typeOfThis= */ null,
-        /* templateTypeMap= */ null,
-        FunctionType.Kind.CONSTRUCTOR,
-        /* nativeType= */ true,
-        /* isAbstract= */ false);
+    super(FunctionType.builder(registry).forConstructor().forNativeType());
     getInternalArrowType().returnType = this;
     this.setInstanceType(this);
   }

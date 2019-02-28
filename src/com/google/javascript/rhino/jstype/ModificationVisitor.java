@@ -129,13 +129,14 @@ public class ModificationVisitor implements Visitor<JSType> {
     }
 
     if (changed) {
-      FunctionType ft = new FunctionBuilder(registry)
-          .withKind(type.getKind())
-          .withParamsNode(paramBuilder.build())
-          .withReturnType(afterReturn)
-          .withTypeOfThis(afterThis)
-          .withTemplateKeys(type.getTemplateTypeMap().getUnfilledTemplateKeys())
-          .build();
+      FunctionType ft =
+          FunctionType.builder(registry)
+              .withKind(type.getKind())
+              .withParamsNode(paramBuilder.build())
+              .withReturnType(afterReturn)
+              .withTypeOfThis(afterThis)
+              .withTemplateKeys(type.getTemplateTypeMap().getUnfilledTemplateKeys())
+              .build();
       return ft;
     }
 

@@ -38,7 +38,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionBuilder;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.Collection;
@@ -540,18 +540,16 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
           i++;
         }
 
-        Node iife = IR.function(
-            IR.name(""),
-            IR.paramList(objectNames),
-            IR.block(returnNode));
+        Node iife = IR.function(IR.name(""), IR.paramList(objectNames), IR.block(returnNode));
         if (shouldAddTypesOnNewAstNodes) {
-          FunctionBuilder functionBuilder = new FunctionBuilder(compiler.getTypeRegistry());
-          functionBuilder
-              .withName("")
-              .withSourceNode(iife)
-              .withParamsNode(compiler.getTypeRegistry().createParameters(objectTypes))
-              .withReturnType(function.getJSType());
-          iife.setJSType(functionBuilder.build());
+          FunctionType iifeType =
+              FunctionType.builder(compiler.getTypeRegistry())
+                  .withName("")
+                  .withSourceNode(iife)
+                  .withParamsNode(compiler.getTypeRegistry().createParameters(objectTypes))
+                  .withReturnType(function.getJSType())
+                  .build();
+          iife.setJSType(iifeType);
         }
         compiler.reportChangeToChangeScope(iife);
         Node call = IR.call(iife, objectNamesForCall);

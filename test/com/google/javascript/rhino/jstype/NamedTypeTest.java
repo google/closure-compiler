@@ -66,7 +66,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     super.setUp();
 
     fooCtorType =
-        forceResolutionOf(new FunctionBuilder(registry).forConstructor().withName("Foo").build());
+        forceResolutionOf(FunctionType.builder(registry).forConstructor().withName("Foo").build());
     fooType = forceResolutionOf(fooCtorType.getInstanceType());
   }
 
@@ -131,7 +131,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
   public void testEquality() {
     // Given
     ObjectType barType = createNominalType("Bar");
-    FunctionType anonType = forceResolutionOf(new FunctionBuilder(registry).build());
+    FunctionType anonType = forceResolutionOf(FunctionType.builder(registry).build());
 
     NamedTypeBuilder namedFooBuilder = new NamedTypeBuilder().setName("Foo");
     NamedType namedFooUnresolved = namedFooBuilder.build();
@@ -197,7 +197,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
 
   private ObjectType createNominalType(String name) {
     FunctionType ctorType =
-        forceResolutionOf(new FunctionBuilder(registry).forConstructor().withName(name).build());
+        forceResolutionOf(FunctionType.builder(registry).forConstructor().withName(name).build());
     return forceResolutionOf(ctorType.getInstanceType());
   }
 

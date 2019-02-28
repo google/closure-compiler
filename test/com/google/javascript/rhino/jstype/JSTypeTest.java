@@ -116,18 +116,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     enumType = new EnumType(registry, "Enum", null, NUMBER_TYPE);
     elementsType = enumType.getElementsType();
-    functionType = new FunctionBuilder(registry)
-        .withReturnType(NUMBER_TYPE)
-        .build();
-    dateMethod = new FunctionBuilder(registry)
-        .withParamsNode(new Node(Token.PARAM_LIST))
-        .withReturnType(NUMBER_TYPE)
-        .withTypeOfThis(DATE_TYPE)
-        .build();
+    functionType = FunctionType.builder(registry).withReturnType(NUMBER_TYPE).build();
+    dateMethod =
+        FunctionType.builder(registry)
+            .withParamsNode(new Node(Token.PARAM_LIST))
+            .withReturnType(NUMBER_TYPE)
+            .withTypeOfThis(DATE_TYPE)
+            .build();
     unresolvedNamedType = new NamedType(scope, registry, "not.resolved.named.type", null, -1, -1);
     namedGoogBar = new NamedType(scope, registry, "goog.Bar", null, -1, -1);
 
-    subclassCtor = new FunctionBuilder(registry).forConstructor().build();
+    subclassCtor = FunctionType.builder(registry).forConstructor().build();
     subclassCtor.setPrototypeBasedOn(unresolvedNamedType);
     subclassOfUnresolvedNamedType = subclassCtor.getInstanceType();
 
@@ -2734,7 +2733,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     Asserts.assertResolvesToSame(functionType);
 
-    assertThat(new FunctionBuilder(registry).withName("aFunctionName").build().getDisplayName())
+    assertThat(FunctionType.builder(registry).withName("aFunctionName").build().getDisplayName())
         .isEqualTo("aFunctionName");
   }
 
@@ -3162,7 +3161,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         .isEqualTo("function(number, ...string): boolean");
 
     assertThat(
-            new FunctionBuilder(registry)
+            FunctionType.builder(registry)
                 .withParamsNode(registry.createParameters(NUMBER_TYPE))
                 .withReturnType(NUMBER_STRING_BOOLEAN)
                 .withTypeOfThis(DATE_TYPE)
@@ -3174,24 +3173,36 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   /** Tests relationships between structural function types. */
   @Test
   public void testFunctionTypeRelationships() {
-    FunctionType dateMethodEmpty = new FunctionBuilder(registry)
-        .withParamsNode(registry.createParameters())
-        .withTypeOfThis(DATE_TYPE).build();
-    FunctionType dateMethodWithParam = new FunctionBuilder(registry)
-        .withParamsNode(registry.createOptionalParameters(NUMBER_TYPE))
-        .withTypeOfThis(DATE_TYPE).build();
-    FunctionType dateMethodWithReturn = new FunctionBuilder(registry)
-        .withReturnType(NUMBER_TYPE)
-        .withTypeOfThis(DATE_TYPE).build();
-    FunctionType stringMethodEmpty = new FunctionBuilder(registry)
-        .withParamsNode(registry.createParameters())
-        .withTypeOfThis(STRING_OBJECT_TYPE).build();
-    FunctionType stringMethodWithParam = new FunctionBuilder(registry)
-        .withParamsNode(registry.createOptionalParameters(NUMBER_TYPE))
-        .withTypeOfThis(STRING_OBJECT_TYPE).build();
-    FunctionType stringMethodWithReturn = new FunctionBuilder(registry)
-        .withReturnType(NUMBER_TYPE)
-        .withTypeOfThis(STRING_OBJECT_TYPE).build();
+    FunctionType dateMethodEmpty =
+        FunctionType.builder(registry)
+            .withParamsNode(registry.createParameters())
+            .withTypeOfThis(DATE_TYPE)
+            .build();
+    FunctionType dateMethodWithParam =
+        FunctionType.builder(registry)
+            .withParamsNode(registry.createOptionalParameters(NUMBER_TYPE))
+            .withTypeOfThis(DATE_TYPE)
+            .build();
+    FunctionType dateMethodWithReturn =
+        FunctionType.builder(registry)
+            .withReturnType(NUMBER_TYPE)
+            .withTypeOfThis(DATE_TYPE)
+            .build();
+    FunctionType stringMethodEmpty =
+        FunctionType.builder(registry)
+            .withParamsNode(registry.createParameters())
+            .withTypeOfThis(STRING_OBJECT_TYPE)
+            .build();
+    FunctionType stringMethodWithParam =
+        FunctionType.builder(registry)
+            .withParamsNode(registry.createOptionalParameters(NUMBER_TYPE))
+            .withTypeOfThis(STRING_OBJECT_TYPE)
+            .build();
+    FunctionType stringMethodWithReturn =
+        FunctionType.builder(registry)
+            .withReturnType(NUMBER_TYPE)
+            .withTypeOfThis(STRING_OBJECT_TYPE)
+            .build();
 
     // One-off tests.
     assertThat(stringMethodEmpty.isSubtype(dateMethodEmpty)).isFalse();
@@ -3229,12 +3240,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testProxiedFunctionTypeRelationships() {
-    FunctionType dateMethodEmpty = new FunctionBuilder(registry)
-      .withParamsNode(registry.createParameters())
-      .withTypeOfThis(DATE_TYPE).build().toMaybeFunctionType();
-    FunctionType dateMethodWithParam = new FunctionBuilder(registry)
-      .withParamsNode(registry.createParameters(NUMBER_TYPE))
-      .withTypeOfThis(DATE_TYPE).build().toMaybeFunctionType();
+    FunctionType dateMethodEmpty =
+        FunctionType.builder(registry)
+            .withParamsNode(registry.createParameters())
+            .withTypeOfThis(DATE_TYPE)
+            .build()
+            .toMaybeFunctionType();
+    FunctionType dateMethodWithParam =
+        FunctionType.builder(registry)
+            .withParamsNode(registry.createParameters(NUMBER_TYPE))
+            .withTypeOfThis(DATE_TYPE)
+            .build()
+            .toMaybeFunctionType();
     ProxyObjectType proxyDateMethodEmpty =
         new ProxyObjectType(registry, dateMethodEmpty);
     ProxyObjectType proxyDateMethodWithParam =
@@ -3249,19 +3266,22 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   /** Tests relationships between structural function types. */
   @Test
   public void testFunctionSubTypeRelationships() {
-    FunctionType googBarMethod = new FunctionBuilder(registry)
-        .withTypeOfThis(googBar).build();
-    FunctionType googBarParamFn = new FunctionBuilder(registry)
-        .withParamsNode(registry.createParameters(googBar)).build();
-    FunctionType googBarReturnFn = new FunctionBuilder(registry)
-        .withParamsNode(registry.createParameters())
-        .withReturnType(googBar).build();
-    FunctionType googSubBarMethod = new FunctionBuilder(registry)
-        .withTypeOfThis(googSubBar).build();
-    FunctionType googSubBarParamFn = new FunctionBuilder(registry)
-        .withParamsNode(registry.createParameters(googSubBar)).build();
-    FunctionType googSubBarReturnFn = new FunctionBuilder(registry)
-        .withReturnType(googSubBar).build();
+    FunctionType googBarMethod = FunctionType.builder(registry).withTypeOfThis(googBar).build();
+    FunctionType googBarParamFn =
+        FunctionType.builder(registry).withParamsNode(registry.createParameters(googBar)).build();
+    FunctionType googBarReturnFn =
+        FunctionType.builder(registry)
+            .withParamsNode(registry.createParameters())
+            .withReturnType(googBar)
+            .build();
+    FunctionType googSubBarMethod =
+        FunctionType.builder(registry).withTypeOfThis(googSubBar).build();
+    FunctionType googSubBarParamFn =
+        FunctionType.builder(registry)
+            .withParamsNode(registry.createParameters(googSubBar))
+            .build();
+    FunctionType googSubBarReturnFn =
+        FunctionType.builder(registry).withReturnType(googSubBar).build();
 
     assertThat(googBarMethod.isSubtype(googSubBarMethod)).isTrue();
     assertThat(googBarReturnFn.isSubtype(googSubBarReturnFn)).isTrue();
@@ -4641,22 +4661,22 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testSupertypeOfProxiedFunctionTypes() {
     ObjectType fn1 =
-        new FunctionBuilder(registry)
-        .withParamsNode(new Node(Token.PARAM_LIST))
-        .withReturnType(NUMBER_TYPE)
-        .build();
+        FunctionType.builder(registry)
+            .withParamsNode(new Node(Token.PARAM_LIST))
+            .withReturnType(NUMBER_TYPE)
+            .build();
     ObjectType fn2 =
-        new FunctionBuilder(registry)
-        .withParamsNode(new Node(Token.PARAM_LIST))
-        .withReturnType(STRING_TYPE)
-        .build();
+        FunctionType.builder(registry)
+            .withParamsNode(new Node(Token.PARAM_LIST))
+            .withReturnType(STRING_TYPE)
+            .build();
     ObjectType p1 = new ProxyObjectType(registry, fn1);
     ObjectType p2 = new ProxyObjectType(registry, fn2);
     ObjectType supremum =
-        new FunctionBuilder(registry)
-        .withParamsNode(new Node(Token.PARAM_LIST))
-        .withReturnType(registry.createUnionType(STRING_TYPE, NUMBER_TYPE))
-        .build();
+        FunctionType.builder(registry)
+            .withParamsNode(new Node(Token.PARAM_LIST))
+            .withReturnType(registry.createUnionType(STRING_TYPE, NUMBER_TYPE))
+            .build();
 
     assertTypeEquals(fn1.getLeastSupertype(fn2), p1.getLeastSupertype(p2));
     assertTypeEquals(supremum, fn1.getLeastSupertype(fn2));
@@ -4667,8 +4687,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testTypeOfThisIsProxied() {
-    ObjectType fnType = new FunctionBuilder(registry)
-        .withReturnType(NUMBER_TYPE).withTypeOfThis(OBJECT_TYPE).build();
+    ObjectType fnType =
+        FunctionType.builder(registry)
+            .withReturnType(NUMBER_TYPE)
+            .withTypeOfThis(OBJECT_TYPE)
+            .build();
     ObjectType proxyType = new ProxyObjectType(registry, fnType);
     assertTypeEquals(fnType.getTypeOfThis(), proxyType.getTypeOfThis());
   }
@@ -6030,19 +6053,22 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(createTemplatizedType(ARRAY_TYPE, STRING_TYPE).hasAnyTemplateTypes()).isFalse();
 
     assertThat(
-            new FunctionBuilder(registry)
+            FunctionType.builder(registry)
                 .withReturnType(new TemplateType(registry, "T"))
                 .build()
                 .hasAnyTemplateTypes())
         .isTrue();
     assertThat(
-            new FunctionBuilder(registry)
+            FunctionType.builder(registry)
                 .withTypeOfThis(new TemplateType(registry, "T"))
                 .build()
                 .hasAnyTemplateTypes())
         .isTrue();
     assertThat(
-            new FunctionBuilder(registry).withReturnType(STRING_TYPE).build().hasAnyTemplateTypes())
+            FunctionType.builder(registry)
+                .withReturnType(STRING_TYPE)
+                .build()
+                .hasAnyTemplateTypes())
         .isFalse();
 
     assertThat(

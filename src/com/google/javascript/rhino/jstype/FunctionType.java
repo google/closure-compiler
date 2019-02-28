@@ -161,76 +161,49 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   /** The primitive id associated with this FunctionType, or null if none. */
   private final ClosurePrimitive closurePrimitive;
 
-  // TODO(lharker): we should really clean these constructors up to take a FunctionBuilder
-  /** Creates an instance for a function that might be a constructor that is not a primitive. */
-  FunctionType(
-      JSTypeRegistry registry,
-      String name,
-      Node source,
-      ArrowType arrowType,
-      JSType typeOfThis,
-      TemplateTypeMap templateTypeMap,
-      Kind kind,
-      boolean nativeType,
-      boolean isAbstract) {
-    this(
-        registry,
-        name,
-        source,
-        arrowType,
-        typeOfThis,
-        templateTypeMap,
-        kind,
-        /* closurePrimitive= */ null,
-        nativeType,
-        isAbstract);
-  }
-
-  /** Creates an instance for a function that might be a constructor. */
-  FunctionType(
-      JSTypeRegistry registry,
-      String name,
-      Node source,
-      ArrowType arrowType,
-      JSType typeOfThis,
-      TemplateTypeMap templateTypeMap,
-      Kind kind,
-      ClosurePrimitive closurePrimitive,
-      boolean nativeType,
-      boolean isAbstract) {
+  /**
+   * Creates an instance for a function that might be a constructor.
+   *
+   * <p>Non-subclasses must go through {@link Builder} to create a new FunctionType.
+   */
+  FunctionType(Builder builder) {
     super(
-        registry,
-        name,
-        registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
-        nativeType,
-        templateTypeMap);
+        builder.registry,
+        builder.name,
+        builder.registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
+        builder.isNativeType(),
+        builder.templateTypeMap);
     setPrettyPrint(true);
 
+    Node source = builder.sourceNode;
     checkArgument(source == null || source.isFunction() || source.isClass());
-    checkNotNull(arrowType);
     this.source = source;
-    this.kind = kind;
+    this.kind = builder.kind;
     switch (kind) {
       case CONSTRUCTOR:
         this.propAccess = PropAccess.ANY;
         this.typeOfThis =
-            typeOfThis != null ? typeOfThis : new InstanceObjectType(registry, this, nativeType);
+            builder.typeOfThis != null
+                ? builder.typeOfThis
+                : new InstanceObjectType(registry, this, builder.isNativeType());
         break;
       case ORDINARY:
         this.typeOfThis =
-            typeOfThis != null
-                ? typeOfThis
+            builder.typeOfThis != null
+                ? builder.typeOfThis
                 : registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
         break;
       case INTERFACE:
         this.typeOfThis =
-            typeOfThis != null ? typeOfThis : new InstanceObjectType(registry, this, nativeType);
+            builder.typeOfThis != null
+                ? builder.typeOfThis
+                : new InstanceObjectType(registry, this, builder.isNativeType());
         break;
     }
-    this.call = arrowType;
-    this.closurePrimitive = closurePrimitive;
+    this.call = builder.buildArrowType();
+    this.closurePrimitive = builder.primitiveId;
     this.isStructuralInterface = false;
-    this.isAbstract = isAbstract;
+    this.isAbstract = builder.isAbstract();
   }
 
   @Override
@@ -677,7 +650,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
         defineDeclaredProperty(
             name,
-            new FunctionBuilder(registry)
+            builder(registry)
                 .withParamsNode(builder.build())
                 .withReturnType(getReturnType())
                 .withTemplateKeys(getTemplateTypeMap().getTemplateKeys())
@@ -695,8 +668,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    * <p>If -1 is passed, then we will return a result that accepts any parameters.
    */
   public final FunctionType getBindReturnType(int argsToBind) {
-    FunctionBuilder builder =
-        new FunctionBuilder(registry)
+    Builder builder =
+        builder(registry)
             .withReturnType(getReturnType())
             .withTemplateKeys(getTemplateTypeMap().getTemplateKeys());
     if (argsToBind >= 0) {
@@ -721,8 +694,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    */
   private FunctionType getCallOrBindSignature(boolean isCall) {
     boolean isBind = !isCall;
-    FunctionBuilder builder =
-        new FunctionBuilder(registry)
+    Builder builder =
+        builder(registry)
             .withReturnType(isCall ? getReturnType() : getBindReturnType(-1))
             .withTemplateKeys(getTemplateTypeMap().getTemplateKeys());
 
@@ -879,7 +852,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     boolean newReturnTypeInferred = call.returnTypeInferred || other.call.returnTypeInferred;
 
-    return new FunctionBuilder(registry)
+    return builder(registry)
         .withParamsNode(newParamsNode)
         .withReturnType(newReturnType, newReturnTypeInferred)
         .withTypeOfThis(newTypeOfThis)
@@ -1479,7 +1452,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   /** Create a new constructor with the parameters and return type stripped. */
   public final FunctionType forgetParameterAndReturnTypes() {
     FunctionType result =
-        new FunctionBuilder(registry)
+        builder(registry)
             .withName(getReferenceName())
             .withSourceNode(source)
             .withTypeOfThis(getInstanceType())
@@ -1567,5 +1540,238 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   /** Returns the {@code @closurePrimitive} identifier associated with this function */
   public final ClosurePrimitive getClosurePrimitive() {
     return this.closurePrimitive;
+  }
+
+  public static Builder builder(JSTypeRegistry registry) {
+    return new Builder(registry);
+  }
+
+  /**
+   * A builder class for function and arrow types.
+   *
+   * <p>If you need to build an interface constructor, use {@link
+   * JSTypeRegistry#createInterfaceType}.
+   *
+   * @author nicksantos@google.com (Nick Santos)
+   */
+  public static final class Builder {
+
+    // Bit masks for various boolean properties
+    private static final int IS_ABSTRACT = 0x1;
+    private static final int IS_NATIVE = 0x2;
+    private static final int INFERRED_RETURN_TYPE = 0x4;
+    private static final int RETURNS_OWN_INSTANCE_TYPE = 0x8;
+
+    private final JSTypeRegistry registry;
+    private String name = null;
+    private Node sourceNode = null;
+    private Node parametersNode = null;
+    private JSType returnType = null;
+    private JSType typeOfThis = null;
+    private ObjectType setPrototypeBasedOn = null;
+    private TemplateTypeMap templateTypeMap = null;
+    private Set<TemplateType> constructorOnlyKeys = ImmutableSet.of();
+    private Kind kind = Kind.ORDINARY;
+    private int properties = 0;
+    private ClosurePrimitive primitiveId = null;
+
+    private Builder(JSTypeRegistry registry) {
+      this.registry = registry;
+    }
+
+    /** Set the name of the function type. */
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    /** Set the source node of the function type. */
+    public Builder withSourceNode(Node sourceNode) {
+      this.sourceNode = sourceNode;
+      return this;
+    }
+
+    /** Set the parameters of the function type with a specially-formatted node. */
+    public Builder withParamsNode(Node parametersNode) {
+      this.parametersNode = parametersNode;
+      return this;
+    }
+
+    /** Set the parameters of the function type with a specially-formatted node. */
+    Builder withEmptyParams() {
+      this.parametersNode = registry.createEmptyParams();
+      return this;
+    }
+
+    /** Set the return type. */
+    public Builder withReturnType(JSType returnType) {
+      this.returnType = returnType;
+      return this;
+    }
+
+    /** Set the return type and whether it's inferred. */
+    public Builder withReturnType(JSType returnType, boolean inferred) {
+      this.returnType = returnType;
+      this.properties =
+          inferred
+              ? this.properties | INFERRED_RETURN_TYPE
+              : this.properties & ~INFERRED_RETURN_TYPE;
+      return this;
+    }
+
+    /** Set the return type to be a constructor's own instance type. */
+    Builder withReturnsOwnInstanceType() {
+      this.properties = this.properties | RETURNS_OWN_INSTANCE_TYPE;
+      return this;
+    }
+
+    /** Sets an inferred return type. */
+    public Builder withInferredReturnType(JSType returnType) {
+      this.returnType = returnType;
+      this.properties = this.properties | INFERRED_RETURN_TYPE;
+      return this;
+    }
+
+    /** Set the "this" type. */
+    public Builder withTypeOfThis(JSType typeOfThis) {
+      this.typeOfThis = typeOfThis;
+      return this;
+    }
+
+    /** Set the template name. */
+    public Builder withTemplateKeys(ImmutableList<TemplateType> templateKeys) {
+      this.templateTypeMap = registry.createTemplateTypeMap(templateKeys, null);
+      return this;
+    }
+
+    /** Set the template name. */
+    public Builder withTemplateKeys(TemplateType... templateKeys) {
+      this.templateTypeMap =
+          registry.createTemplateTypeMap(ImmutableList.copyOf(templateKeys), null);
+      return this;
+    }
+
+    Builder withExtendedTemplate(TemplateType key, JSType value) {
+      this.templateTypeMap =
+          templateTypeMap.extend(
+              registry.createTemplateTypeMap(ImmutableList.of(key), ImmutableList.of(value)));
+      return this;
+    }
+
+    Builder withTemplateTypeMap(TemplateTypeMap templateTypeMap) {
+      this.templateTypeMap = templateTypeMap;
+      return this;
+    }
+
+    /**
+     * Specifies a subset of the template keys that only apply to the constructor, and should be
+     * removed from the instance type. These keys must still be passed to {@link #withTemplateKeys}.
+     */
+    public Builder withConstructorTemplateKeys(Iterable<TemplateType> constructorOnlyKeys) {
+      this.constructorOnlyKeys = ImmutableSet.copyOf(constructorOnlyKeys);
+      return this;
+    }
+
+    /** Set the function kind. */
+    Builder withKind(Kind kind) {
+      this.kind = kind;
+      return this;
+    }
+    /** Make this a constructor. */
+    public Builder forConstructor() {
+      this.kind = Kind.CONSTRUCTOR;
+      return this;
+    }
+
+    /** Make this an interface. */
+    public Builder forInterface() {
+      this.kind = Kind.INTERFACE;
+      this.parametersNode = registry.createEmptyParams();
+      return this;
+    }
+
+    /** Make this a native type. */
+    Builder forNativeType() {
+      this.properties = this.properties | IS_NATIVE;
+      return this;
+    }
+
+    private boolean isNativeType() {
+      return (this.properties & IS_NATIVE) != 0;
+    }
+
+    /** Mark abstract method. */
+    public Builder withIsAbstract(boolean isAbstract) {
+      this.properties = isAbstract ? this.properties | IS_ABSTRACT : this.properties & ~IS_ABSTRACT;
+      return this;
+    }
+
+    private boolean isAbstract() {
+      return (this.properties & IS_ABSTRACT) != 0;
+    }
+
+    /** Set the prototype property of a constructor. */
+    public Builder withPrototypeBasedOn(ObjectType setPrototypeBasedOn) {
+      this.setPrototypeBasedOn = setPrototypeBasedOn;
+      return this;
+    }
+
+    /** Sets the {@link ClosurePrimitive} corresponding to this function */
+    public Builder withClosurePrimitiveId(ClosurePrimitive id) {
+      this.primitiveId = id;
+      return this;
+    }
+
+    /** Returns a new {@link ArrowType} instance each time with the given param/return types */
+    private ArrowType buildArrowType() {
+      boolean inferredReturnType = (properties & INFERRED_RETURN_TYPE) != 0;
+      return new ArrowType(registry, parametersNode, returnType, inferredReturnType);
+    }
+
+    /** Copies all the information from another function type. */
+    public Builder copyFromOtherFunction(FunctionType otherType) {
+      int isNative = otherType.isNativeObjectType() ? IS_NATIVE : 0;
+      int isAbstract = otherType.isAbstract() ? IS_ABSTRACT : 0;
+      int inferredReturnType = otherType.isReturnTypeInferred() ? INFERRED_RETURN_TYPE : 0;
+      this.name = otherType.getReferenceName();
+      this.sourceNode = otherType.getSource();
+      this.parametersNode = otherType.getParametersNode();
+      this.returnType = otherType.getReturnType();
+      this.typeOfThis = otherType.getTypeOfThis();
+      this.templateTypeMap = otherType.getTemplateTypeMap();
+      this.kind = otherType.getKind();
+      this.properties = isNative | isAbstract | inferredReturnType;
+      this.primitiveId = otherType.getClosurePrimitive();
+      return this;
+    }
+
+    /** Constructs a new function type. */
+    public FunctionType build() {
+      boolean isNative = (properties & IS_NATIVE) != 0;
+      boolean returnsOwnInstanceType = (properties & RETURNS_OWN_INSTANCE_TYPE) != 0;
+      boolean hasConstructorOnlyKeys = !constructorOnlyKeys.isEmpty();
+
+      if (hasConstructorOnlyKeys) {
+        // We can't pass in the correct this type yet because it depends on the finished
+        // constructor.
+        // Instead, just pass in unknown so that it doesn't try to instantiate a new instance type.
+        this.typeOfThis = registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+      }
+
+      FunctionType ft = new FunctionType(this);
+
+      if (setPrototypeBasedOn != null) {
+        ft.setPrototypeBasedOn(setPrototypeBasedOn);
+      }
+      if (returnsOwnInstanceType) {
+        ft.getInternalArrowType().returnType = ft.getInstanceType();
+      }
+      if (hasConstructorOnlyKeys) {
+        ft.setInstanceType(
+            new InstanceObjectType(
+                registry, ft, isNative, templateTypeMap.remove(constructorOnlyKeys)));
+      }
+      return ft;
+    }
   }
 }

@@ -65,10 +65,11 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    FunctionType baseCtor = new FunctionBuilder(registry).forConstructor().withName("Base").build();
+    FunctionType baseCtor =
+        FunctionType.builder(registry).forConstructor().withName("Base").build();
     this.base = baseCtor.getInstanceType();
     FunctionType subCtor =
-        new FunctionBuilder(registry)
+        FunctionType.builder(registry)
             .forConstructor()
             .withName("Sub")
             .withPrototypeBasedOn(base)
@@ -211,7 +212,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
   }
 
   public FunctionType createFunctionWithReturn(JSType type) {
-    return new FunctionBuilder(registry)
+    return FunctionType.builder(registry)
         .withParamsNode(registry.createParameters())
         .withReturnType(type)
         .build();

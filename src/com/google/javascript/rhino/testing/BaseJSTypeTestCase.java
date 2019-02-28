@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -326,9 +325,8 @@ public abstract class BaseJSTypeTestCase {
   private static void addMethod(
       JSTypeRegistry registry, ObjectType receivingType, String methodName,
       JSType returnType) {
-    receivingType.defineDeclaredProperty(methodName,
-        new FunctionBuilder(registry).withReturnType(returnType).build(),
-        null);
+    receivingType.defineDeclaredProperty(
+        methodName, FunctionType.builder(registry).withReturnType(returnType).build(), null);
   }
 
   protected JSType createUnionType(JSType... variants) {

@@ -27,7 +27,6 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.BooleanLiteralSet;
-import com.google.javascript.rhino.jstype.FunctionBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -732,7 +731,7 @@ final class AstFactory {
       // function. It will just be ignored in favor of the `this` in the scope where the
       // arrow was defined.
       FunctionType functionType =
-          new FunctionBuilder(registry)
+          FunctionType.builder(registry)
               .withReturnType(expression.getJSTypeRequired())
               .withParamsNode(IR.paramList())
               .build();
