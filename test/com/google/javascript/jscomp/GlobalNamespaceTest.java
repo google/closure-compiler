@@ -18,8 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
@@ -50,16 +50,6 @@ import org.junit.runners.JUnit4;
 public final class GlobalNamespaceTest {
 
   @Nullable private Compiler lastCompiler = null;
-
-  // TODO(b/124228379): We should be using assertThrows from JUnit4.
-  private static void assertThrows(Object exceptionClass, Runnable runnable) {
-    try {
-      runnable.run();
-      assertWithMessage("Did not get expected exception: %s", exceptionClass).fail();
-    } catch (Exception expectedException) {
-      // expected
-    }
-  }
 
   @Test
   public void firstGlobalAssignmentIsConsideredDeclaration() {

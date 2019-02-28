@@ -112,4 +112,25 @@ public class Asserts {
     Assert.assertTrue(b.canCastTo(b));
     Assert.assertTrue(b.canCastTo(a));
   }
+
+  /**
+   * Assert that the given function throws a particular throwable. This method is inspired by a
+   * similar API in JUnit 4.13, but the compiler is currently pinned on 4.12, which doesn't include
+   * it.
+   */
+  public static void assertThrows(
+      Class<? extends Throwable> exceptionClass, ThrowingRunnable runnable) {
+    try {
+      runnable.run();
+      assertWithMessage("Did not get expected exception: %s", exceptionClass).fail();
+    } catch (Throwable expectedException) {
+      assertThat(expectedException).isInstanceOf(exceptionClass);
+    }
+  }
+
+  /** Functional interface for use with {@link #assertThrows}. */
+  @FunctionalInterface
+  public static interface ThrowingRunnable {
+    void run() throws Throwable;
+  }
 }
