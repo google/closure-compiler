@@ -33,7 +33,6 @@ public class Result {
   public final VariableMap propertyMap;
   public final VariableMap namedAnonFunctionMap;
   public final VariableMap stringMap;
-  public final FunctionInformationMap functionInformationMap;
   public final SourceMap sourceMap;
   public final Map<String, Integer> cssNames;
   public final String externExport;
@@ -47,7 +46,6 @@ public class Result {
       VariableMap propertyMap,
       VariableMap namedAnonFunctionMap,
       VariableMap stringMap,
-      FunctionInformationMap functionInformationMap,
       SourceMap sourceMap,
       String externExport,
       Map<String, Integer> cssNames,
@@ -60,7 +58,6 @@ public class Result {
     this.propertyMap = propertyMap;
     this.namedAnonFunctionMap = namedAnonFunctionMap;
     this.stringMap = stringMap;
-    this.functionInformationMap = functionInformationMap;
     this.sourceMap = sourceMap;
     this.externExport = externExport;
     this.cssNames = cssNames;
@@ -75,11 +72,19 @@ public class Result {
       VariableMap variableMap,
       VariableMap propertyMap,
       VariableMap namedAnonFunctionMap,
-      FunctionInformationMap functionInformationMap,
       SourceMap sourceMap,
       String externExport) {
-    this(errors, warnings, variableMap, propertyMap,
-         namedAnonFunctionMap, null, functionInformationMap, sourceMap,
-         externExport, null, null, null);
+    this(
+        errors,
+        warnings,
+        variableMap,
+        propertyMap,
+        namedAnonFunctionMap,
+        null,
+        sourceMap,
+        externExport,
+        null,
+        null,
+        null);
   }
 }

@@ -215,9 +215,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   private boolean hasRegExpGlobalReferences = true;
 
-  /** The function information map */
-  private FunctionInformationMap functionInformationMap;
-
   /** Detects Google-specific coding conventions. */
   CodingConvention defaultCodingConvention = new ClosureCodingConvention();
 
@@ -1204,10 +1201,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
       }
     }
-    return new Result(getErrors(), getWarnings(),
-        this.variableMap, this.propertyMap,
-        this.anonymousFunctionNameMap, this.stringMap, this.functionInformationMap,
-        this.sourceMap, this.externExports, this.cssNames, this.idGeneratorMap, transpiledFiles);
+    return new Result(
+        getErrors(),
+        getWarnings(),
+        this.variableMap,
+        this.propertyMap,
+        this.anonymousFunctionNameMap,
+        this.stringMap,
+        this.sourceMap,
+        this.externExports,
+        this.cssNames,
+        this.idGeneratorMap,
+        transpiledFiles);
   }
 
   /** Returns the list of errors (never null). */
@@ -2966,10 +2971,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public CompilerOptions getOptions() {
     return options;
-  }
-
-  FunctionInformationMap getFunctionalInformationMap() {
-    return functionInformationMap;
   }
 
   /**

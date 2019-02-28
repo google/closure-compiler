@@ -46,7 +46,6 @@ import com.google.javascript.jscomp.ijs.IjsErrors;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.TokenStream;
-import com.google.protobuf.CodedOutputStream;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -1838,7 +1837,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     String propertyMapOutputPath = null;
     String variableMapOutputPath = null;
-    String functionInformationMapOutputPath = null;
 
     // Check the create_name_map_files FLAG.
     if (config.createNameMapFiles) {
@@ -1846,7 +1844,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
       propertyMapOutputPath = basePath + "_props_map.out";
       variableMapOutputPath = basePath + "_vars_map.out";
-      functionInformationMapOutputPath = basePath + "_functions_map.out";
     }
 
     // Check the individual FLAGS.
@@ -1875,15 +1872,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     if (propertyMapOutputPath != null && compiler.getPropertyMap() != null) {
       compiler.getPropertyMap().save(propertyMapOutputPath);
-    }
-
-    if (functionInformationMapOutputPath != null
-        && compiler.getFunctionalInformationMap() != null) {
-      try (final OutputStream file = filenameToOutputStream(functionInformationMapOutputPath)) {
-        CodedOutputStream outputStream = CodedOutputStream.newInstance(file);
-        compiler.getFunctionalInformationMap().writeTo(outputStream);
-        outputStream.flush();
-      }
     }
   }
 
