@@ -558,6 +558,130 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSpread_ofArray_consideredRead() {
+    testSame(
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  var b = 6;",
+            "",
+            "  ([...a]);", // Read `a`.
+            "  return b;",
+            "}"));
+
+    test(
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  read(a);",
+            "",
+            "  var b = 6;",
+            "  ([...b]);", // Read `b`.
+            "}"),
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  read(a);",
+            "",
+            "  a = 6;",
+            "  ([...a]);",
+            "}"));
+  }
+
+  @Test
+  public void testSpread_ofObject_consideredRead() {
+    testSame(
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  var b = 6;",
+            "",
+            "  ({...a});", // Read `a`.
+            "  return b;",
+            "}"));
+
+    test(
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  read(a);",
+            "",
+            "  var b = 6;",
+            "  ({...b});", // Read `b`.
+            "}"),
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  read(a);",
+            "",
+            "  a = 6;",
+            "  ({...a});",
+            "}"));
+  }
+
+  @Test
+  public void testRest_fromArray_consideredWrite() {
+    testSame(
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  var b = 6;",
+            "",
+            "  ([...a] = itr);", // Write `a`.
+            "  return b;",
+            "}"));
+
+    test(
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  read(a);",
+            "",
+            "  var b = 6;",
+            "  ([...b] = itr);", // Write `b`.
+            "}"),
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  read(a);",
+            "",
+            "  a = 6;",
+            "  ([...a] = itr);",
+            "}"));
+  }
+
+  @Test
+  public void testRest_fromObject_consideredWrite() {
+    testSame(
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  var b = 6;",
+            "",
+            "  ({...a} = obj);", // Write `a`.
+            "  return b;",
+            "}"));
+
+    test(
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  read(a);",
+            "",
+            "  var b = 6;",
+            "  ({...b} = itr);", // Write `b`.
+            "}"),
+        lines(
+            "function f() {", //
+            "  var a = 9;",
+            "  read(a);",
+            "",
+            "  a = 6;",
+            "  ({...a} = itr);",
+            "}"));
+  }
+
+  @Test
   public void testDestructuringEvaluationOrder() {
     // Since the "a = 5" assignment is evaluated before "a = param" (which is
     // conditionally evaluated), we must not coalesce param and a.
