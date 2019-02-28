@@ -581,6 +581,23 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
     testSameLocal("var obj = {}; obj['a'] = 3; use(obj['a']);");
   }
 
+  @Test
+  public void testObjectSpread_readingFromSpreadAssignment() {
+    testSameLocal(
+        lines(
+            "var obj = {...foo};", //
+            "use(obj.bar);"));
+  }
+
+  @Test
+  public void testObjectSpread_readingFromOverwrittenProp() {
+    testSameLocal(
+        lines(
+            "var foo = {prop: 7};",
+            "var obj = {prop: 6, ...foo};", //
+            "use(obj.prop);"));
+  }
+
   private static final String LOCAL_PREFIX = "function local(){";
   private static final String LOCAL_POSTFIX = "}";
 

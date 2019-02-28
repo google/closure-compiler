@@ -228,14 +228,24 @@ class InlineObjectLiterals implements CompilerPass {
         // Also, ES5 getters/setters aren't handled by this pass.
         for (Node child = val.getFirstChild(); child != null;
              child = child.getNext()) {
-          if (child.isGetterDef() || child.isSetterDef()) {
-            // ES5 get/set not supported.
-            return false;
-          }
+          switch (child.getToken()) {
+              // ES5 get/set not supported.
+            case GETTER_DEF:
+            case SETTER_DEF:
+              // Don't inline computed property names
+            case COMPUTED_PROP:
+              // Spread can overwrite any preceding prop if there are matching keys.
+              // TODO(b/126567617): Allow inlining props declared after the SPREAD.
+            case SPREAD:
+              return false;
 
-          // Don't inline computed property names
-          if (child.isComputedProp()) {
-            return false;
+            case MEMBER_FUNCTION_DEF:
+            case STRING_KEY:
+              break;
+
+            default:
+              throw new IllegalStateException(
+                  "Unexpected child of OBJECTLIT: " + child.toStringTree());
           }
 
           validProperties.add(child.getString());
