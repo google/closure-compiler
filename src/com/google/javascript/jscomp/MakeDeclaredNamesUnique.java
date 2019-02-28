@@ -26,7 +26,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import java.util.ArrayDeque;
@@ -111,16 +110,6 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       case IMPORT_STAR:
         visitName(t, n, parent);
         break;
-
-      case STRING_KEY: {
-        String newName = getReplacementName(n.getString());
-        if (newName != null && !n.hasChildren()) {
-          Node name = IR.name(n.getString()).useSourceInfoFrom(n);
-          n.addChildToBack(name);
-          visitName(t, name, n);
-        }
-        break;
-      }
 
       default:
         break;
