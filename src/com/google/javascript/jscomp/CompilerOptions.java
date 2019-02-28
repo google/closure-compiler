@@ -616,7 +616,11 @@ public class CompilerOptions implements Serializable {
 
   private PropertyCollapseLevel collapsePropertiesLevel;
 
-  /** Flattens multi-level property names (e.g. a$b = x) */
+  /**
+   * Flattens multi-level property names (e.g. a$b = x)
+   *
+   * @deprecated use getPropertyCollapseLevel
+   */
   public boolean shouldCollapseProperties() {
     return collapsePropertiesLevel != PropertyCollapseLevel.NONE;
   }
