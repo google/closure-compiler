@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.InputId;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.IOException;
@@ -329,6 +330,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
       }
 
       finder.visitTree(root);
+      JSDocInfo info = root.getJSDocInfo();
 
       // TODO(nicksantos|user): This caching behavior is a bit
       // odd, and only works if you assume the exact call flow that
@@ -345,6 +347,8 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
           .setRequires(finder.requires)
           .setTypeRequires(finder.typeRequires)
           .setLoadFlags(finder.loadFlags)
+          .setHasExternsAnnotation(info != null && info.isExterns())
+          .setHasNoCompileAnnotation(info != null && info.isNoCompile())
           .build();
     }
   }
