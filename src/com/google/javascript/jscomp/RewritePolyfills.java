@@ -299,6 +299,8 @@ public class RewritePolyfills implements HotSwapCompilerPass {
     switch (features.version()) {
       case "ts":
         return languageOutIsAtLeast(LanguageMode.ECMASCRIPT6_TYPED);
+      case "es_2019":
+        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2019);
       case "es9":
         return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2018);
       case "es8":
