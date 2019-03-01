@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
-import com.google.javascript.jscomp.lint.RequiresFixer;
+import com.google.javascript.jscomp.lint.CheckRequiresSorted;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -353,17 +353,19 @@ public final class ErrorToFixMapper {
   }
 
   private static SuggestedFix getFixForUnsortedRequires(JSError error, AbstractCompiler compiler) {
+    // TODO(tjgq): Encode enough information in the error to avoid the need to run a traversal in
+    // order to produce the fix.
     Node script = NodeUtil.getEnclosingScript(error.node);
+    CheckRequiresSorted callback = new CheckRequiresSorted(CheckRequiresSorted.Mode.COLLECT_ONLY);
+    NodeTraversal.traverse(compiler, script, callback);
 
-    RequiresFixer fixer = new RequiresFixer(compiler, script);
-
-    if (!fixer.needsFix()) {
+    if (!callback.needsFix()) {
       return null;
     }
 
     return new SuggestedFix.Builder()
-        .attachMatchedNodeInfo(fixer.getFirstNode(), compiler)
-        .replaceRange(fixer.getFirstNode(), fixer.getLastNode(), fixer.getReplacement())
+        .attachMatchedNodeInfo(callback.getFirstNode(), compiler)
+        .replaceRange(callback.getFirstNode(), callback.getLastNode(), callback.getReplacement())
         .build();
   }
 

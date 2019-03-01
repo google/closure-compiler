@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.lint;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -26,7 +27,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.errorprone.annotations.Immutable;
-import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
@@ -38,10 +38,18 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Canonicalizes Closure import statements (goog.require, goog.requireType, and goog.forwardDeclare)
- * by merging and deduplicating them.
+ * Checks that Closure import statements (goog.require, goog.requireType, and goog.forwardDeclare)
+ * are sorted and deduplicated, exposing the necessary information to produce a suggested fix.
  */
-public final class RequiresFixer {
+public final class CheckRequiresSorted implements NodeTraversal.Callback {
+
+  /** Operation modes. */
+  public enum Mode {
+    /** Collect information to determine whether a fix is required, but do not report a warning. */
+    COLLECT_ONLY,
+    /** Additionally report a warning. */
+    COLLECT_AND_REPORT
+  };
 
   /** Primitives that may be called in an import statement. */
   enum ImportPrimitive {
@@ -98,7 +106,7 @@ public final class RequiresFixer {
     abstract String localName();
 
     static DestructuringBinding of(String exportedName, String localName) {
-      return new AutoValue_RequiresFixer_DestructuringBinding(exportedName, localName);
+      return new AutoValue_CheckRequiresSorted_DestructuringBinding(exportedName, localName);
     }
 
     /** Compares two bindings according to the style guide sort order. */
@@ -156,7 +164,7 @@ public final class RequiresFixer {
       Preconditions.checkArgument(
           alias == null || destructures == null,
           "Import statement cannot be simultaneously aliasing and destructuring");
-      return new AutoValue_RequiresFixer_ImportStatement(
+      return new AutoValue_CheckRequiresSorted_ImportStatement(
           nodes, primitive, namespace, alias, destructures);
     }
 
@@ -181,7 +189,7 @@ public final class RequiresFixer {
      */
     ImportStatement upgrade(ImportPrimitive otherPrimitive) {
       if (ImportPrimitive.stronger(primitive(), otherPrimitive) != primitive()) {
-        return new AutoValue_RequiresFixer_ImportStatement(
+        return new AutoValue_CheckRequiresSorted_ImportStatement(
             nodes(), otherPrimitive, namespace(), alias(), destructures());
       }
       return this;
@@ -251,113 +259,27 @@ public final class RequiresFixer {
     }
   }
 
-  /** A traversal collecting existing import statements. */
-  private static class ImportsCallback implements NodeTraversal.Callback {
-    // The import statements in the order they appear.
-    private final List<ImportStatement> originalImports = new ArrayList<>();
+  private final Mode mode;
 
-    // Maps each namespace into the existing import statements for that namespace.
-    // Use an ArrayListMultimap so that values for a key are iterated in a deterministic order.
-    private final Multimap<String, ImportStatement> importsByNamespace = ArrayListMultimap.create();
+  // Maps each namespace into the existing import statements for that namespace.
+  // Use an ArrayListMultimap so that values for a key are iterated in a deterministic order.
+  private final Multimap<String, ImportStatement> importsByNamespace = ArrayListMultimap.create();
 
-    private Node firstNode = null;
-    private Node lastNode = null;
-    private boolean finished = false;
+  // The import statements in the order they appear.
+  private final List<ImportStatement> originalImports = new ArrayList<>();
 
-    @Override
-    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      // Traverse top-level statements until a block of contiguous requires is found.
-      return !finished
-          && (parent == null || parent.isRoot() || parent.isScript() || parent.isModuleBody());
-    }
+  // The import statements in canonical order.
+  @Nullable private List<ImportStatement> canonicalImports = null;
 
-    @Override
-    public final void visit(NodeTraversal nodeTraversal, Node n, Node parent) {
-      Node callNode = null;
-      if (n.isExprResult()) {
-        callNode = n.getFirstChild();
-      } else if (NodeUtil.isNameDeclaration(n)) {
-        callNode = n.getFirstChild().getLastChild();
-      }
-      if (callNode != null && isValidImportCall(callNode)) {
-        ImportStatement stmt = parseImport(callNode);
-        originalImports.add(stmt);
-        importsByNamespace.put(stmt.namespace(), stmt);
-        if (firstNode == null) {
-          firstNode = lastNode = n;
-        } else {
-          lastNode = n;
-        }
-      } else if (!importsByNamespace.isEmpty()) {
-        finished = true;
-      }
-    }
+  @Nullable private Node firstNode = null;
+  @Nullable private Node lastNode = null;
+  private boolean finished = false;
 
-    private static boolean isValidImportCall(Node n) {
-      return n.isCall()
-          && n.hasTwoChildren()
-          && (n.getFirstChild().matchesQualifiedName("goog.require")
-              || n.getFirstChild().matchesQualifiedName("goog.requireType")
-              || n.getFirstChild().matchesQualifiedName("goog.forwardDeclare"))
-          && n.getSecondChild().isString();
-    }
+  private boolean needsFix = false;
+  @Nullable private String replacement = null;
 
-    private static ImportStatement parseImport(Node callNode) {
-      ImportPrimitive primitive =
-          ImportPrimitive.fromName(callNode.getFirstChild().getQualifiedName());
-      String namespace = callNode.getSecondChild().getString();
-
-      Node parent = callNode.getParent();
-      if (parent.isExprResult()) {
-        // goog.require('a');
-        return ImportStatement.of(
-            ImmutableList.of(parent),
-            primitive,
-            namespace,
-            /* alias= */ null,
-            /* destructures= */ null);
-      }
-
-      Node grandparent = parent.getParent();
-      if (parent.isName()) {
-        // const a = goog.require('a');
-        String alias = parent.getString();
-        return ImportStatement.of(
-            ImmutableList.of(grandparent), primitive, namespace, alias, /* destructures= */ null);
-      }
-      // const {a: b, c} = goog.require('a');
-      ImmutableList.Builder<DestructuringBinding> destructures = ImmutableList.builder();
-      for (Node name : parent.getFirstChild().children()) {
-        String exportedName = name.getString();
-        String localName = name.getFirstChild().getString();
-        destructures.add(DestructuringBinding.of(exportedName, localName));
-      }
-      return ImportStatement.of(
-          ImmutableList.of(grandparent),
-          primitive,
-          namespace,
-          /* alias= */ null,
-          destructures.build());
-    }
-  }
-
-  private final Node firstNode;
-  private final Node lastNode;
-  private final String replacement;
-  private final boolean needsFix;
-
-  public RequiresFixer(AbstractCompiler compiler, Node scriptRoot) {
-    ImportsCallback callback = new ImportsCallback();
-    NodeTraversal.traverse(compiler, scriptRoot, callback);
-
-    firstNode = callback.firstNode;
-    lastNode = callback.lastNode;
-
-    List<ImportStatement> originalImports = callback.originalImports;
-    List<ImportStatement> canonicalImports = canonicalizeImports(callback.importsByNamespace);
-
-    needsFix = !originalImports.equals(canonicalImports);
-    replacement = String.join("\n", Iterables.transform(canonicalImports, ImportStatement::format));
+  public CheckRequiresSorted(Mode mode) {
+    this.mode = mode;
   }
 
   /** Returns the node for the first recognized import statement. */
@@ -380,6 +302,99 @@ public final class RequiresFixer {
    */
   public boolean needsFix() {
     return needsFix;
+  }
+
+  @Override
+  public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    // Traverse top-level statements until a block of contiguous requires is found.
+    return !finished
+        && (parent == null || parent.isRoot() || parent.isScript() || parent.isModuleBody());
+  }
+
+  @Override
+  public final void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.isScript()) {
+      checkCanonical(t);
+      return;
+    }
+
+    Node callNode = null;
+    if (n.isExprResult()) {
+      callNode = n.getFirstChild();
+    } else if (NodeUtil.isNameDeclaration(n)) {
+      callNode = n.getFirstChild().getLastChild();
+    }
+    if (callNode != null && isValidImportCall(callNode)) {
+      ImportStatement stmt = parseImport(callNode);
+      originalImports.add(stmt);
+      importsByNamespace.put(stmt.namespace(), stmt);
+      if (firstNode == null) {
+        firstNode = lastNode = n;
+      } else {
+        lastNode = n;
+      }
+    } else if (!importsByNamespace.isEmpty()) {
+      finished = true;
+    }
+  }
+
+  private static boolean isValidImportCall(Node n) {
+    return n.isCall()
+        && n.hasTwoChildren()
+        && (n.getFirstChild().matchesQualifiedName("goog.require")
+            || n.getFirstChild().matchesQualifiedName("goog.requireType")
+            || n.getFirstChild().matchesQualifiedName("goog.forwardDeclare"))
+        && n.getSecondChild().isString();
+  }
+
+  private static ImportStatement parseImport(Node callNode) {
+    ImportPrimitive primitive =
+        ImportPrimitive.fromName(callNode.getFirstChild().getQualifiedName());
+    String namespace = callNode.getSecondChild().getString();
+
+    Node parent = callNode.getParent();
+    if (parent.isExprResult()) {
+      // goog.require('a');
+      return ImportStatement.of(
+          ImmutableList.of(parent),
+          primitive,
+          namespace,
+          /* alias= */ null,
+          /* destructures= */ null);
+    }
+
+    Node grandparent = parent.getParent();
+    if (parent.isName()) {
+      // const a = goog.require('a');
+      String alias = parent.getString();
+      return ImportStatement.of(
+          ImmutableList.of(grandparent), primitive, namespace, alias, /* destructures= */ null);
+    }
+    // const {a: b, c} = goog.require('a');
+    ImmutableList.Builder<DestructuringBinding> destructures = ImmutableList.builder();
+    for (Node name : parent.getFirstChild().children()) {
+      String exportedName = name.getString();
+      String localName = name.getFirstChild().getString();
+      destructures.add(DestructuringBinding.of(exportedName, localName));
+    }
+    return ImportStatement.of(
+        ImmutableList.of(grandparent),
+        primitive,
+        namespace,
+        /* alias= */ null,
+        destructures.build());
+  }
+
+  private void checkCanonical(NodeTraversal t) {
+    canonicalImports = canonicalizeImports(importsByNamespace);
+    if (!originalImports.equals(canonicalImports)) {
+      needsFix = true;
+      replacement =
+          String.join("\n", Iterables.transform(canonicalImports, ImportStatement::format));
+      if (mode == Mode.COLLECT_AND_REPORT) {
+        t.report(firstNode, REQUIRES_NOT_SORTED, replacement);
+      }
+    }
   }
 
   /**
