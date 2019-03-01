@@ -1103,6 +1103,42 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldObjectLitSpreadGetProp() {
+    numRepetitions = 1;
+    fold("x = {...{a}}.a", "x = a;");
+    fold("x = {a, b, ...{c, d, e}}.d", "x = d;");
+    fold("x = {...{a, b}, c, ...{d, e}}.d", "x = d;");
+    fold("x = {...{...{a, b}, c, d}, e}.a", "x = a");
+    fold("x = {...{...{a, b}, c, d}, e}.d", "x = d");
+  }
+
+  @Test
+  public void testDontFoldNonLiteralObjectSpreadGetProp() {
+    foldSame("x = {...obj}.a;");
+    foldSame("x = {a, ...obj, c}.a;");
+    fold("x = {a, ...obj, c}.c;", "x = c;"); // We assume object spread has no side-effects.
+  }
+
+  @Test
+  public void testFoldObjectSpread() {
+    numRepetitions = 1;
+    fold("x = {...{}}", "x = {}");
+    fold("x = {a, ...{}, b}", "x = {a, b}");
+    fold("x = {...{a, b}, c, ...{d, e}}", "x = {a, b, c, d, e}");
+    fold("x = {...{...{a}, b}, c}", "x = {a, b, c}");
+    foldSame("({...{x}} = obj)");
+  }
+
+  @Test
+  public void testDontFoldMixedObjectAndArraySpread() {
+    numRepetitions = 1;
+    foldSame("x = [...{}]");
+    foldSame("x = {...[]}");
+    fold("x = [a, ...[...{}]]", "x = [a, ...{}]");
+    fold("x = {a, ...{...[]}}", "x = {a, ...[]}");
+  }
+
+  @Test
   public void testFoldComplex() {
     fold("x = (3 / 1.0) + (1 * 2)", "x = 5");
     fold("x = (1 == 1.0) && foo() && true", "x = foo()&&true");

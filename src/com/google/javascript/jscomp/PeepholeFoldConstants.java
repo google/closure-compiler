@@ -82,7 +82,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return tryFoldTypeof(subtree);
 
       case ARRAYLIT:
-        return tryFlattenArray(subtree);
+      case OBJECTLIT:
+        return tryFlattenArrayOrObjectLit(subtree);
 
       case NOT:
       case POS:
@@ -1415,40 +1416,33 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Flattens array literals that contain spreads of other array literals.
+   * Flattens array- or object-literals that contain spreads of other literals.
    *
-   * <p>Does not recurse into nested spreads,because this method is already called as part of a
-   * postorder traversal and nested spreads will already have been flattened
+   * <p>Does not recurse into nested spreads because this method is already called as part of a
+   * postorder traversal and nested spreads will already have been flattened.
    *
    * <p>Example: `[0, ...[1, 2, 3], 4, ...[5]]` => `[0, 1, 2, 3, 4, 5]`
    */
-  private Node tryFlattenArray(Node arrayLit) {
-    for (Node child = arrayLit.getFirstChild(); child != null; ) {
+  private Node tryFlattenArrayOrObjectLit(Node parentLit) {
+    for (Node child = parentLit.getFirstChild(); child != null; ) {
+      // We have to store the next element here because nodes may be inserted below.
       Node spread = child;
-      // we have to put child.getNext() here because spread nodes are detached below
       child = child.getNext();
-      if (spread.isSpread() && spread.getOnlyChild().isArrayLit()) {
-        inlineSpreadInArrayLit(spread);
+
+      if (!spread.isSpread()) {
+        continue;
       }
+
+      Node innerLit = spread.getOnlyChild();
+      if (!parentLit.getToken().equals(innerLit.getToken())) {
+        continue; // We only want to inline arrays into arrays and objects into objects.
+      }
+
+      parentLit.addChildrenAfter(innerLit.removeChildren(), spread);
+      spread.detach();
+      reportChangeToEnclosingScope(parentLit);
     }
-    return arrayLit;
-  }
-
-  /** Replaces `...[1, 2, 3]` with `1, 2, 3` in an array literal. */
-  private void inlineSpreadInArrayLit(Node spread) {
-    Node parentArray = spread.getParent();
-    checkArgument(parentArray.isArrayLit(), "This isn't supported for object spread");
-
-    Node childArray = spread.getOnlyChild();
-    // We can't use `child.getNext()` because the child is being moved.
-    for (Node element = childArray.getFirstChild();
-        element != null;
-        element = childArray.getFirstChild()) {
-      parentArray.addChildBefore(element.detach(), spread);
-    }
-
-    spread.detach();
-    reportChangeToEnclosingScope(parentArray);
+    return parentLit;
   }
 
   private Node tryFoldStringArrayAccess(Node n, Node left, Node right) {
@@ -1521,6 +1515,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node value = null;
     for (Node c = left.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
+        case SPREAD:
+          // Reset the search because spread could overwrite any previous result.
+          key = null;
+          value = null;
+          break;
         case SETTER_DEF:
           continue;
         case COMPUTED_PROP:
