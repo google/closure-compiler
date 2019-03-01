@@ -531,26 +531,49 @@ class DisambiguateProperties implements CompilerPass {
         return;
       }
 
-      for (Node child = n.getFirstChild();
-          child != null;
-          child = child.getNext()) {
-        if (child.isQuotedString() || child.isComputedProp()) {
-          // Ignore properties that the compiler does not rename
-          //   var obj = {'quoted': 0, ['computed']: 1};
-          continue;
-        }
+      for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+        switch (child.getToken()) {
+          case COMPUTED_PROP:
+            // These won't be renamed due to our assumptions. Ignore them.
+          case SPREAD:
+            // Ignore properties added via spread. All properties accessed from object literals are
+            // invalidated regardless, so we don't have to explicitly do that here. Additionally,
+            // even if we invalidated all the properties known to be on the spread type, there may
+            // be others we're unaware of, so it would be insufficient.
+            continue;
 
-        // We should never see a mix of numbers and strings.
-        String name = child.getString();
-        JSType objlitType = getType(n);
-        Property prop = getProperty(name);
-        if (!prop.scheduleRenaming(child, objlitType)) {
-          // TODO(user): It doesn't look like the user can do much in this
-          // case right now.
-          if (propertiesToErrorFor.containsKey(name)) {
-            compiler.report(JSError.make(child, propertiesToErrorFor.get(name),
-                Warnings.INVALIDATION, name, String.valueOf(objlitType), n.toString(), ""));
-          }
+          case STRING_KEY:
+          case MEMBER_FUNCTION_DEF:
+          case GETTER_DEF:
+          case SETTER_DEF:
+            if (child.isQuotedString()) {
+              continue; // These won't be renamed due to our assumptions. Ignore them.
+            }
+
+            // We should never see a mix of numbers and strings.
+            String name = child.getString();
+            JSType objlitType = getType(n);
+            Property prop = getProperty(name);
+            if (!prop.scheduleRenaming(child, objlitType)) {
+              // TODO(user): It doesn't look like the user can do much in this
+              // case right now.
+              if (propertiesToErrorFor.containsKey(name)) {
+                compiler.report(
+                    JSError.make(
+                        child,
+                        propertiesToErrorFor.get(name),
+                        Warnings.INVALIDATION,
+                        name,
+                        String.valueOf(objlitType),
+                        n.toString(),
+                        ""));
+              }
+            }
+            break;
+
+          default:
+            throw new IllegalStateException(
+                "Unexpected child of OBJECTLIT: " + child.toStringTree());
         }
       }
     }

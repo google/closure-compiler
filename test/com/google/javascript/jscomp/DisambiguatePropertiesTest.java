@@ -3370,7 +3370,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPropertyReference_leftFromObjectPatternRest_blocksDisambiguation() {
+  public void testObjectRest_blocksDisambiguation_ofRestedType() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     testSets(
         lines(
@@ -3384,6 +3384,56 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "Foo.prop = 'static property!';",
             "const {...rest} = (new Foo());",
             "alert(rest.prop);"),
+        "{}");
+  }
+
+  @Test
+  public void testObjectSpread_blocksDisambiguation_ofPropertiesAccessedFromResultType() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    testSets(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "",
+            "  /** @return {number} */",
+            "  method() { return 0; }",
+            "}",
+            "",
+            "const spread = {...new Foo()};",
+            "alert(spread.prop);"),
+        // `method` can be disambiguated, because we know it is never accessed via `spread.method`.
+        // This is not true for `prop`.
+        "{method=[[Foo.prototype]]}");
+  }
+
+  @Test
+  public void testObjectSpread_blocksDisambiguation_whenResultIsUsedAsIntermediaryType() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    testSets(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "",
+            "/** @record */",
+            "class Bar {", //
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "",
+            "const spread = {...new Foo()};",
+            "const /** !Bar */ bar = spread;",
+            "alert(bar.prop);"),
+        // Both Bar and Foo types are conflated with an anonymous object type created via spread,
+        // so none of their properties can be disambiguated.
         "{}");
   }
 
