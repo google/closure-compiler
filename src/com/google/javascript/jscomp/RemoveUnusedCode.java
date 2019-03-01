@@ -1062,10 +1062,18 @@ class RemoveUnusedCode implements CompilerPass {
     for (Node propertyNode = objectPattern.getFirstChild();
         propertyNode != null;
         propertyNode = propertyNode.getNext()) {
-      if (propertyNode.isComputedProp()) {
-        traverseObjectPatternComputedProperty(propertyNode, scope);
-      } else {
-        traverseObjectPatternStringKey(propertyNode, scope);
+      switch (propertyNode.getToken()) {
+        case COMPUTED_PROP:
+          traverseObjectPatternComputedProperty(propertyNode, scope);
+          break;
+        case STRING_KEY:
+          traverseObjectPatternStringKey(propertyNode, scope);
+          break;
+        case REST:
+          break;
+        default:
+          throw new IllegalStateException(
+              "Unexpected child of OBJECT_PATTERN: " + propertyNode.toStringTree());
       }
     }
   }

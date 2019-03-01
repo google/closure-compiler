@@ -346,35 +346,34 @@ class RenameProperties implements CompilerPass {
           }
           break;
         case OBJECTLIT:
-          for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-            if (key.isComputedProp()) {
-              // We don't want to rename computed properties
-              continue;
-            } else if (key.isQuotedString()) {
-              // Ensure that we never rename some other property in a way
-              // that could conflict with this quoted key.
-              quotedNames.add(key.getString());
-            } else if (compiler.getCodingConvention().blockRenamingForProperty(key.getString())) {
-              externedNames.add(key.getString());
-            } else {
-              maybeMarkCandidate(key);
-            }
-          }
-          break;
         case OBJECT_PATTERN:
-          // Iterate through all the nodes in the object pattern
+          // Iterate through all the properties.
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-            if (key.isComputedProp()) {
-              // We don't want to rename computed properties
-              continue;
-            } else if (key.isQuotedString()) {
-              // Ensure that we never rename some other property in a way
-              // that could conflict with this quoted key.
-              quotedNames.add(key.getString());
-            } else if (compiler.getCodingConvention().blockRenamingForProperty(key.getString())) {
-              externedNames.add(key.getString());
-            } else {
-              maybeMarkCandidate(key);
+            switch (key.getToken()) {
+              case COMPUTED_PROP: // We don't want to rename computed properties
+              case REST:
+              case SPREAD:
+                break;
+
+              case GETTER_DEF:
+              case MEMBER_FUNCTION_DEF:
+              case SETTER_DEF:
+              case STRING_KEY:
+                String propName = key.getString();
+                if (key.isQuotedString()) {
+                  // Ensure that we never rename some other property in a way
+                  // that could conflict with this quoted key.
+                  quotedNames.add(propName);
+                } else if (compiler.getCodingConvention().blockRenamingForProperty(propName)) {
+                  externedNames.add(propName);
+                } else {
+                  maybeMarkCandidate(key);
+                }
+                break;
+
+              default:
+                throw new IllegalStateException(
+                    "Unexpected child of " + n.getToken() + ": " + key.toStringTree());
             }
           }
           break;

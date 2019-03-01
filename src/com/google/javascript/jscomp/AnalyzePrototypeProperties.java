@@ -285,15 +285,29 @@ class AnalyzePrototypeProperties implements CompilerPass {
             return;
           }
 
-          // var x = {a: 1, b: 2}
+          // Fall through.
+        case OBJECT_PATTERN:
+          // `var x = {a: 1, b: 2}` and `var {a: x, b: y} = obj;`
           // should count as a use of property a and b.
-          for (Node propNameNode = n.getFirstChild();
-              propNameNode != null;
-              propNameNode = propNameNode.getNext()) {
-            // May be STRING, GET, or SET, but NUMBER isn't interesting.
-            // Also ignore computed properties
-            if (!propNameNode.isQuotedString() && !propNameNode.isComputedProp()) {
-              addSymbolUse(propNameNode.getString(), t.getModule(), PROPERTY);
+          for (Node propNode = n.getFirstChild(); propNode != null; propNode = propNode.getNext()) {
+            switch (propNode.getToken()) {
+              case COMPUTED_PROP:
+              case SPREAD:
+                break;
+
+              case STRING_KEY:
+              case GETTER_DEF:
+              case SETTER_DEF:
+              case MEMBER_FUNCTION_DEF:
+                if (!propNode.isQuotedString()) {
+                  // May be STRING, GET, or SET, but NUMBER isn't interesting.
+                  addSymbolUse(propNode.getString(), t.getModule(), PROPERTY);
+                }
+                break;
+
+              default:
+                throw new IllegalStateException(
+                    "Unexpected child of " + n.getToken() + ": " + propNode.toStringTree());
             }
           }
           break;
@@ -303,17 +317,6 @@ class AnalyzePrototypeProperties implements CompilerPass {
           for (Node child = classMembers.getFirstChild(); child != null; child = child.getNext()) {
             if (child.isMemberFunctionDef() || child.isSetterDef() || child.isGetterDef()) {
               processMemberDef(t, child);
-            }
-          }
-          break;
-
-        case OBJECT_PATTERN:
-          for (Node stringKeyNode = n.getFirstChild();
-              stringKeyNode != null;
-              stringKeyNode = stringKeyNode.getNext()) {
-            if (!stringKeyNode.isComputedProp() && !stringKeyNode.isQuotedString()) {
-              // skip over const {['foobar']: foo} = ...; and const {'foobar': foo} = ...;
-              addSymbolUse(stringKeyNode.getString(), t.getModule(), PROPERTY);
             }
           }
           break;

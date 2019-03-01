@@ -212,9 +212,10 @@ abstract class MethodCompilerPass implements CompilerPass {
                 nonMethodProperties.add(key.getString());
                 break;
               case COMPUTED_PROP: // complicated
+              case SPREAD:
                 break;
               default:
-                throw new IllegalStateException("unexpected OBJECTLIT key: " + key);
+                throw new IllegalStateException("Unexpected OBJECTLIT key: " + key);
             }
           }
           break;
