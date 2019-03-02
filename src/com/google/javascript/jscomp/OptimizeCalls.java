@@ -331,15 +331,10 @@ class OptimizeCalls implements CompilerPass {
           maybeAddNameReference(n);
           break;
 
-        case COMPUTED_PROP:
-          // TODO(johnlenz): support symbols.
-          break;
-        case GETELEM:
-          // ignore quoted keys.
-          break;
         case GETPROP:
           maybeAddPropReference(n.getLastChild().getString(), n);
           break;
+
         case STRING_KEY:
         case GETTER_DEF:
         case SETTER_DEF:
@@ -350,6 +345,14 @@ class OptimizeCalls implements CompilerPass {
           }
           break;
 
+        case COMPUTED_PROP:
+        case GETELEM:
+          // Ignore quoted keys.
+          // TODO(johnlenz): support symbols.
+        case REST:
+        case SPREAD:
+          // Don't worry about invisible accesses using these. To be invoked there would need to be
+          // downstream references that use the actual name. We'd see those.
         default:
           break;
       }
