@@ -1381,6 +1381,19 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjectRest_restingFromANamespace_isNotInlinable() {
+    // TODO(nickreid): These might actually be inlinable.
+    testSame("var a = {x: 5, y: 6}; var {...b} = a; use(b.y);");
+    testSame("var a = {x: 5, y: 6}; var {x, ...b} = a; use(b.y);");
+  }
+
+  @Test
+  public void testObjectSpread_spreadingInNamespaceDef_preventsInliningItsProps() {
+    testSame("var a = {x: 5, y: 6}; var b = {...a}; use(b.z);");
+    testSame("var a = {x: 5, y: 6, z: 7}; var b = {z: -7, ...a}; use(b.z);");
+  }
+
+  @Test
   public void testDefaultParamAlias() {
     test(
         "var a = {b: 5}; var b = a; function f(x=b) { alert(x.b); }",
