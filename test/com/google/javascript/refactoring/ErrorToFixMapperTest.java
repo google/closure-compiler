@@ -368,6 +368,72 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testFixProvides_sort() {
+    assertChanges(
+        lines(
+            "/** @fileoverview foo */",
+            "",
+            "goog.provide('b');",
+            "goog.provide('a');",
+            "goog.provide('c');",
+            "",
+            "alert(1);"),
+        lines(
+            "/** @fileoverview foo */",
+            "",
+            "goog.provide('a');",
+            "goog.provide('b');",
+            "goog.provide('c');",
+            "",
+            "alert(1);"));
+  }
+
+  @Test
+  public void testFixProvides_deduplicate() {
+    assertChanges(
+        lines(
+            "/** @fileoverview foo */",
+            "",
+            "goog.provide('a');",
+            "goog.provide('b');",
+            "goog.provide('a');",
+            "",
+            "alert(1);"),
+        lines(
+            "/** @fileoverview foo */",
+            "",
+            "goog.provide('a');",
+            "goog.provide('b');",
+            "",
+            "alert(1);"));
+  }
+
+  @Test
+  public void testFixProvides_alreadySorted() {
+    assertNoChanges(
+        lines(
+            "/** @fileoverview foo */",
+            "",
+            "goog.provide('a');",
+            "goog.provide('b');",
+            "goog.provide('c');",
+            "",
+            "alert(1);"));
+  }
+
+  @Test
+  public void testFixProvides_noProvides() {
+    assertNoChanges(
+        lines(
+            "/** @fileoverview foo */",
+            "",
+            "goog.module('m');",
+            "",
+            "goog.require('x');",
+            useInCode("x")));
+  }
+
+  @Test
   public void testFixRequires_sortStandaloneOnly() {
     assertChanges(
         fileWithImports(
@@ -726,6 +792,11 @@ public class ErrorToFixMapperTest {
         fileWithImports(
             "const {anotherVeryLongSymbolThatMapsTo: veryLongLocalNameForItAlso, veryLongSymbolThatMapsTo: veryLongLocalNameForIt} = goog.require('a');",
             useInCode("veryLongLocalNameForIt", "veryLongLocalNameForItAlso")));
+  }
+
+  @Test
+  public void testFixRequires_noRequires() {
+    assertNoChanges(fileWithImports());
   }
 
   @Test
@@ -1317,31 +1388,6 @@ public class ErrorToFixMapperTest {
             "const {X: X2} = goog.require('ns.abc.xyz');",
             "",
             "use(X2);"));
-  }
-
-  @Test
-  public void testProvidesSorted1() {
-    assertChanges(
-        lines(
-            "/** @fileoverview foo */",
-            "",
-            "",
-            "goog.provide('b');",
-            "goog.provide('a');",
-            "goog.provide('c');",
-            "",
-            "",
-            "alert(1);"),
-        lines(
-            "/** @fileoverview foo */",
-            "",
-            "",
-            "goog.provide('a');",
-            "goog.provide('b');",
-            "goog.provide('c');",
-            "",
-            "",
-            "alert(1);"));
   }
 
   @Test
