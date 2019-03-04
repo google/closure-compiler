@@ -3563,15 +3563,15 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if the node is a lhs value of a destructuring assignment For example, x in {@code
-   * var [x] = [1];}, {@code var [...x] = [1];}, and {@code var {a: x} = {a: 1}} or a.b in {@code
-   * ([a.b] = [1]);} or {@code ({key: a.b} = {key: 1});}
+   * Returns true if the node is a lhs value of a destructuring assignment.
+   *
+   * <p>For example, x in {@code var [x] = [1];}, {@code var [...x] = [1];}, and {@code var {a: x} =
+   * {a: 1}} or a.b in {@code ([a.b] = [1]);} or {@code ({key: a.b} = {key: 1});}
    */
   public static boolean isLhsByDestructuring(Node n) {
     switch (n.getToken()) {
       case NAME:
       case GETPROP:
-      case STRING_KEY:
       case GETELEM:
         return isLhsByDestructuringHelper(n);
       default:
@@ -3589,32 +3589,20 @@ public final class NodeUtil {
     Node grandparent = n.getGrandparent();
 
     switch (parent.getToken()) {
-      case ARRAY_PATTERN:
-        return true; // "b" in var [b] = ...
+      case ARRAY_PATTERN: // `b` in `var [b] = ...`
+      case REST: // `b` in `var [...b] = ...`
+        return true;
 
+      case COMPUTED_PROP:
+        if (n.isFirstChildOf(parent)) {
+          return false;
+        }
+        // Fall through.
       case STRING_KEY:
         return grandparent.isObjectPattern(); // the "b" in "var {a: b} = ..."
 
-      case OBJECT_PATTERN:
-        // STRING_KEY children of object patterns are not LHS nodes, since shorthand (e.g.
-        // "var {a} = ...") is normalized at parse-time. If n is not a STRING_KEY, it is
-        // an OBJECT_PATTERN or a COMPUTED_PROP and contains a LHS node.
-        return !n.isStringKey();
-
-      case COMPUTED_PROP:
-        if (n == parent.getSecondChild()) {
-          // The first child of a COMPUTED_PROP is the property expression, not a LHS.
-          // The second is the value, which in an object pattern will contain the LHS.
-          return isLhsByDestructuringHelper(parent);
-        }
-        return false;
-
-      case REST:
-        // The only child of a REST node is the LHS.
-        return isLhsByDestructuringHelper(parent);
-
       case DEFAULT_VALUE:
-        if (n == parent.getFirstChild()) {
+        if (n.isFirstChildOf(parent)) {
           // The first child of a DEFAULT_VALUE is a NAME node and a potential LHS.
           // The second child is the value, so never a LHS node.
           return isLhsByDestructuringHelper(parent);
