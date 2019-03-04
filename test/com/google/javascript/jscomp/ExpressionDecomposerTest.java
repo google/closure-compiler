@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -1007,6 +1008,7 @@ public final class ExpressionDecomposerTest {
         "foo",
         "var result$jscomp$0=foo();var x = {set a(p) {}, b: result$jscomp$0};");
   }
+
   @Test
   public void testMoveSpread_siblingOfCall_outOfArrayLiteral_usesTempArray() {
     shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
@@ -1152,16 +1154,7 @@ public final class ExpressionDecomposerTest {
       decomposer.exposeExpression(expr);
     }
     validateSourceInfo(compiler, tree);
-    String explanation = expectedRoot.checkTreeEquals(tree);
-    assertWithMessage(
-            "\nExpected: "
-                + compiler.toSource(expectedRoot)
-                + "\nResult:   "
-                + compiler.toSource(tree)
-                + "\n"
-                + explanation)
-        .that(explanation)
-        .isNull();
+    assertNode(tree).isEqualTo(expectedRoot);
 
     if (shouldTestTypes) {
       Node trueExpr = nodeFinder.apply(originalTree);
@@ -1211,16 +1204,7 @@ public final class ExpressionDecomposerTest {
       decomposer.moveExpression(expr);
     }
     validateSourceInfo(compiler, tree);
-    String explanation = expectedRoot.checkTreeEquals(tree);
-    assertWithMessage(
-            "\nExpected: "
-                + compiler.toSource(expectedRoot)
-                + "\nResult:   "
-                + compiler.toSource(tree)
-                + "\n"
-                + explanation)
-        .that(explanation)
-        .isNull();
+    assertNode(tree).isEqualTo(expectedRoot);
 
     if (shouldTestTypes) {
       // find a basis for comparison:
@@ -1331,19 +1315,13 @@ public final class ExpressionDecomposerTest {
       }
     }
 
-    return (new Find()).find(root);
+    return new Find().find(root);
   }
 
   private void validateSourceInfo(Compiler compiler, Node subtree) {
-    (new LineNumberCheck(compiler)).setCheckSubTree(subtree);
+    new LineNumberCheck(compiler).setCheckSubTree(subtree);
     // Source information problems are reported as compiler errors.
-    if (compiler.getErrorCount() != 0) {
-      String msg = "Error encountered: ";
-      for (JSError err : compiler.getErrors()) {
-        msg += err + "\n";
-      }
-      assertWithMessage(msg).that(compiler.getErrorCount()).isEqualTo(0);
-    }
+    assertThat(compiler.getErrors()).isEmpty();
   }
 
   private static Node parse(Compiler compiler, String js) {
