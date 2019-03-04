@@ -30,7 +30,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
-import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
@@ -333,7 +332,7 @@ class GlobalNamespace
       return true;
     }
 
-    public void collect(JSModule module, Scope scope, Node n) {
+    private void collect(JSModule module, Scope scope, Node n) {
       Node parent = n.getParent();
 
       String name;
@@ -343,41 +342,24 @@ class GlobalNamespace
       switch (n.getToken()) {
         case GETTER_DEF:
         case SETTER_DEF:
-        case STRING_KEY:
         case MEMBER_FUNCTION_DEF:
-          // This may be a key in an object literal declaration.
+          if (parent.isClassMembers() && !n.isStaticMember()) {
+            return; // Within a class, only static members define global names.
+          }
+          name = NodeUtil.getBestLValueName(n);
+          isSet = true;
+          type = n.isMemberFunctionDef() ? Name.Type.FUNCTION : Name.Type.GET_SET;
+          break;
+        case STRING_KEY:
           name = null;
           if (parent.isObjectLit()) {
-            name = getNameForObjLitKey(n);
-            isSet = true;
-          } else if (parent.isClassMembers()) {
-            name = getNameForClassMembers(n);
+            name = NodeUtil.getBestLValueName(n);
             isSet = true;
           } else if (parent.isObjectPattern()) {
             name = getNameForObjectPatternKey(n);
             // not a set
           }
-          if (name == null) {
-            return;
-          }
-          switch (n.getToken()) {
-            case MEMBER_FUNCTION_DEF:
-              type = getValueType(n.getFirstChild());
-              if (n.getParent().isClassMembers() && !n.isStaticMember()) {
-                // `class C { x() {} }` does /not/ create a global qualified name C.x, so return.
-                return;
-              }
-              break;
-            case STRING_KEY:
-              type = getValueType(n.getFirstChild());
-              break;
-            case GETTER_DEF:
-            case SETTER_DEF:
-              type = Name.Type.GET_SET;
-              break;
-            default:
-              throw new IllegalStateException("unexpected:" + n);
-          }
+          type = getValueType(n.getFirstChild());
           break;
         case NAME:
           // This may be a variable get or set.
@@ -440,6 +422,8 @@ class GlobalNamespace
           name = n.getString();
           break;
         case GETPROP:
+          // TODO(b/117673791): Merge this case with NAME case to fix.
+          // TODO(b/120303257): Merging this case with the NAME case makes this a breaking bug.
           // This may be a namespaced name get or set.
           if (parent != null) {
             switch (parent.getToken()) {
@@ -481,6 +465,10 @@ class GlobalNamespace
           return;
       }
 
+      if (name == null) {
+        return;
+      }
+
       // We are only interested in global names.
       if (!isGlobalNameReference(name, scope)) {
         return;
@@ -498,91 +486,6 @@ class GlobalNamespace
       } else {
         handleGet(module, scope, n, parent, name);
       }
-    }
-
-    /**
-     * Gets the fully qualified name corresponding to an object literal key, as long as it and its
-     * prefix property names are valid JavaScript identifiers. The object literal may be nested
-     * inside of other object literals.
-     *
-     * <p>For example, if called with node {@code n} representing "z" in any of the following
-     * expressions, the result would be "w.x.y.z": <code> var w = {x: {y: {z: 0}}}; </code> <code>
-     *  w.x = {y: {z: 0}}; </code> <code> w.x.y = {'a': 0, 'z': 0}; </code>
-     *
-     * @param n A child of an OBJLIT node
-     * @return The global name, or null if {@code n} doesn't correspond to the key of an object
-     *     literal that can be named
-     */
-    String getNameForObjLitKey(Node n) {
-      Node parent = n.getParent();
-      checkState(parent.isObjectLit());
-
-      Node grandparent = parent.getParent();
-      if (grandparent == null) {
-        return null;
-      }
-
-      Node greatGrandparent = grandparent.getParent();
-      String name;
-      switch (grandparent.getToken()) {
-        case NAME:
-          // VAR
-          //   NAME (grandparent)
-          //     OBJLIT (parent)
-          //       STRING (n)
-          if (greatGrandparent == null || !NodeUtil.isNameDeclaration(greatGrandparent)) {
-            return null;
-          }
-          name = grandparent.getString();
-          break;
-        case ASSIGN:
-          // ASSIGN (grandparent)
-          //   NAME|GETPROP
-          //   OBJLIT (parent)
-          //     STRING (n)
-          Node lvalue = grandparent.getFirstChild();
-          name = lvalue.getQualifiedName();
-          break;
-        case STRING_KEY:
-          // OBJLIT
-          //   STRING (grandparent)
-          //     OBJLIT (parent)
-          //       STRING (n)
-          if (greatGrandparent != null && greatGrandparent.isObjectLit()) {
-            name = getNameForObjLitKey(grandparent);
-          } else {
-            return null;
-          }
-          break;
-        default:
-          return null;
-      }
-      if (name != null) {
-        String key = n.getString();
-        if (TokenStream.isJSIdentifier(key)) {
-          return name + '.' + key;
-        }
-      }
-      return null;
-    }
-
-    /**
-     * Gets the fully qualified name corresponding to an class member function, as long as it and
-     * its prefix property names are valid JavaScript identifiers.
-     *
-     * <p>For example, if called with node {@code n} representing "y" in any of the following
-     * expressions, the result would be "x.y": <code> class x{y(){}}; </code> <code>
-     *  var x = class{y(){}}; </code> <code> var x; x = class{y(){}}; </code>
-     *
-     * @param n A child of an CLASS_MEMBERS node
-     * @return The global name, or null if {@code n} doesn't correspond to a class member function
-     *     that can be named
-     */
-    String getNameForClassMembers(Node n) {
-      Node parent = n.getParent();
-      checkState(parent.isClassMembers());
-      String className = NodeUtil.getName(parent.getParent());
-      return className == null ? null : className + '.' + n.getString();
     }
 
     /**
