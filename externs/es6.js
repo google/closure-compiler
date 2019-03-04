@@ -318,6 +318,23 @@ String.prototype.endsWith = function(searchString, opt_position) {};
  */
 String.prototype.includes = function(searchString, opt_position) {};
 
+/**
+ * @this {String|string}
+ * @return {string}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/trimStart
+ */
+String.prototype.trimStart = function() {};
+
+
+/**
+ * @this {String|string}
+ * @return {string}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/trimEnd
+ */
+String.prototype.trimEnd = function() {};
+
 
 /**
  * @see http://dev.w3.org/html5/postmsg/

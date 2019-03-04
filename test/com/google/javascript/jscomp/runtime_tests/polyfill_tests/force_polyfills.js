@@ -77,6 +77,8 @@ delete String.prototype.padEnd;
 delete String.prototype.padStart;
 delete String.prototype.repeat;
 delete String.prototype.startsWith;
+delete String.prototype.trimStart;
+delete String.prototype.trimEnd;
 
 delete Symbol;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 The Closure Compiler Authors.
+ * Copyright 2019 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,11 @@
  */
 
 /**
- * @fileoverview Brings in all ES6 String polyfills.
+ * @fileoverview
  * @suppress {uselessCode}
  */
-'require es6/string/codepointat';
-'require es6/string/endswith';
-'require es6/string/fromcodepoint';
-'require es6/string/includes';
-'require es6/string/padend';
-'require es6/string/padstart';
-'require es6/string/repeat';
-'require es6/string/startswith';
-'require es6/string/trimend';
-'require es6/string/trimstart';
+'require util/polyfill';
+
+$jscomp.polyfill('String.prototype.trimEnd', function(orig) {
+  return orig || String.prototype.trimRight;
+}, 'es_2019', 'es3');
