@@ -341,8 +341,11 @@ public final class ExpressionDecomposerTest {
     helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "new D(y(), ...x);", "y");
 
     helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "[...x, y()];", "y");
-    // Array literals cannot be side-effected.
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "({...x, z: y()});", "y");
+
+    // Array- and object-literal instantiations cannot be side-effected.
     helperCanExposeExpression(DecompositionType.MOVABLE, "[y(), ...x];", "y");
+    helperCanExposeExpression(DecompositionType.MOVABLE, "({z: y(), ...x});", "y");
 
     helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(...y());", "y");
     helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(...y(), x);", "y");
@@ -357,8 +360,11 @@ public final class ExpressionDecomposerTest {
     // TODO(b/121004488): There are potential decompositions that weren't implemented.
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "f(function() { [...x]; }, y());", "y");
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, "f(function() { ({...x}); }, y());", "y");
 
     helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(y(), () => [...x]);", "y");
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "f(y(), () => ({...x}));", "y");
 
     helperCanExposeExpression(DecompositionType.MOVABLE, "[() => f(...x), y()];", "y");
 
@@ -1021,6 +1027,17 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void testMoveSpread_siblingOfCall_outOfObjectLiteral_usesNoTempObject() {
+    shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
+    helperExposeExpression(
+        "({...x, y: foo()});",
+        "foo",
+        lines(
+            "var temp_const$jscomp$1 = x;", // This is a temp var, not a temp *object*.
+            "({...temp_const$jscomp$1, y: foo()});"));
+  }
+
+  @Test
   public void testMoveSpread_siblingOfCall_outOfFunctionCall_usesTempArray() {
     shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
     helperExposeExpression(
@@ -1050,6 +1067,20 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void testMoveSpreadParent_siblingOfCall_outOfFunctionCall_usesNoTempObject() {
+    helperExposeExpression(
+        lines(
+            "function f() { }", //
+            "f({...x}, foo());"),
+        "foo",
+        lines(
+            "function f() { }", //
+            "var temp_const$jscomp$1 = f;",
+            "var temp_const$jscomp$0 = {...x};",
+            "temp_const$jscomp$1(temp_const$jscomp$0, foo());"));
+  }
+
+  @Test
   public void testExposeExpressionInTemplateLibSub() {
     helperExposeExpression(
         "` ${ foo() }  ${ goo() } `;",
@@ -1071,6 +1102,65 @@ public final class ExpressionDecomposerTest {
         "` ${ foo() }  ${ goo() } `;",
         "foo",
         "var result$jscomp$0 = foo(); ` ${ result$jscomp$0 }  ${ goo() } `;");
+  }
+
+  @Test
+  public void testExposeExpression_computedProp_withPureKey() {
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE,
+        lines(
+            "({", //
+            "  ['a' + 'b']: foo(),",
+            "});"),
+        "foo");
+  }
+
+  @Test
+  public void testExposeObjectLitValue_computedProp_withImpureKey() {
+    helperExposeExpression(
+        lines(
+            "({", //
+            "  [goo()]: foo(),",
+            "});"),
+        "foo",
+        lines(
+            "var temp_const$jscomp$0 = goo();", //
+            "({",
+            "  [temp_const$jscomp$0]: foo(),",
+            "});"));
+  }
+
+  @Test
+  public void testExposeObjectLitValue_computedProp_asEarlierSibling_withImpureKeyAndValue() {
+    helperExposeExpression(
+        lines(
+            "({", //
+            "  [goo()]: qux(),",
+            "  bar: foo(),",
+            "});"),
+        "foo",
+        lines(
+            "var temp_const$jscomp$1 = goo();", //
+            "var temp_const$jscomp$0 = qux();",
+            "({",
+            "  [temp_const$jscomp$1]: temp_const$jscomp$0,",
+            "  bar: foo(),",
+            "});"));
+  }
+
+  @Test
+  public void testExposeObjectLitValue_memberFunctions_asEarlierSiblings_arePure() {
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE,
+        lines(
+            "({", //
+            "  a() { },",
+            "  get b() { },",
+            "  set b(v) { },",
+            "",
+            "  bar: foo(),",
+            "});"),
+        "foo");
   }
 
   /** Test case helpers. */

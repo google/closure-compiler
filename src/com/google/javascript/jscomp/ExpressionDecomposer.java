@@ -223,8 +223,6 @@ class ExpressionDecomposer {
           // Rewrite the call so "this" is preserved and continue walking up from there.
           expressionParent = rewriteCallExpression(expressionParent, state);
         }
-      } else if (expressionParent.isObjectLit()) {
-        decomposeObjectLiteralKeys(expressionParent.getFirstChild(), expressionToExpose, state);
       } else {
         decomposeSubExpressions(expressionParent.getFirstChild(), expressionToExpose, state);
       }
@@ -320,20 +318,6 @@ class ExpressionDecomposer {
   }
 
   /**
-   * Decompose an object literal.
-   *
-   * @param key The object literal key.
-   * @param stopNode A node after which to stop iterating.
-   */
-  private void decomposeObjectLiteralKeys(Node key, Node stopNode, DecompositionState state) {
-    if (key == null || key == stopNode) {
-      return;
-    }
-    decomposeObjectLiteralKeys(key.getNext(), stopNode, state);
-    decomposeSubExpressions(key.getFirstChild(), stopNode, state);
-  }
-
-  /**
    * @param n The node with which to start iterating.
    * @param stopNode A node after which to stop iterating.
    */
@@ -342,18 +326,31 @@ class ExpressionDecomposer {
       return;
     }
 
-    // Never try to decompose an object literal key.
-    checkState(!NodeUtil.mayBeObjectLitKey(n), n);
-
-    // Decompose the children in reverse evaluation order.  This simplifies
-    // determining if the any of the children following have side-effects.
-    // If they do we need to be more aggressive about removing values
-    // from the expression.
+    // Decompose the children in reverse evaluation order. This simplifies determining if any of
+    // the children following have side-effects. If they do we need to be more aggressive about
+    // removing values from the expression. Reverse order also maintains evaluation order as each
+    // extracted statemented is inserted on top of the others.
     decomposeSubExpressions(n.getNext(), stopNode, state);
 
     // Now this node.
 
-    if (n.isTemplateLitSub()) {
+    if (NodeUtil.mayBeObjectLitKey(n)
+        // TODO(b/111621528): Delete when fixed.
+        || n.isComputedProp()) {
+      if (n.isComputedProp()) {
+        // If the prop is computed we have to fork the decomposition between the key and value. This
+        // is because we can't move the property assignment itself; COMPUTED_PROP must remain a
+        // child of OBJECTLIT for example.
+        //
+        // We decompose the value of the prop first because decomposition is in reverse order of
+        // evaluation.
+        decomposeSubExpressions(n.getSecondChild(), stopNode, state);
+      }
+
+      // Decompose the children of the prop rather than the prop itself. In the computed case this
+      // will be the key, otherwise it will be the value.
+      n = n.getFirstChild();
+    } else if (n.isTemplateLitSub()) {
       // A template literal substitution expression like ${f()} is represented in the AST as
       //   TEMPLATELIT_SUB
       //     CALL
@@ -539,18 +536,28 @@ class ExpressionDecomposer {
       tempNameValue = expr.cloneTree();
     } else if (expr.isSpread()) {
       // We need to treat spreads differently because unlike other expressions, they can't be
-      // directly assigned to new variables. Instead we wrap them in an array literal.
+      // directly assigned to new variables. Instead we wrap them in an array-literal.
       //
       // We make sure to do `var tmp = [...fn()];` rather than `var tmp = fn()` because the
       // execution of a spread on an arbitrary iterable can both have side-effects and be
       // side-effected. However, once done we are then sure that spreading `tmp` is isolated.
-
-      // Replace the expression with the spread for the temporary name.
-      parent.replaceChild(
-          expr,
-          IR.spread(replacementValueNode).useSourceInfoFrom(expr).setJSType(expr.getJSType()));
-      // Move the original node into an array-literal so that it's in a legal context.
-      tempNameValue = astFactory.createArraylit(expr).useSourceInfoFrom(expr.getOnlyChild());
+      switch (parent.getToken()) {
+        case ARRAYLIT:
+        case CALL:
+        case NEW:
+          // Replace the expression with the spread for the temporary name.
+          Node spreadCopy = expr.cloneNode();
+          spreadCopy.addChildToBack(replacementValueNode);
+          expr.replaceWith(spreadCopy);
+          // Move the original node into an array-literal so that it's in a legal context.
+          tempNameValue = astFactory.createArraylit(expr).useSourceInfoFrom(expr.getOnlyChild());
+          break;
+        case OBJECTLIT:
+          // Object spread is assumed pure, so delgate to extracting the expression *being* spread.
+          return extractExpression(expr.getOnlyChild(), injectionPoint);
+        default:
+          throw new IllegalStateException("Unexpected parent of SPREAD:" + parent.toStringTree());
+      }
     } else {
       // Replace the expression with the temporary name.
       parent.replaceChild(expr, replacementValueNode);
@@ -1033,13 +1040,25 @@ class ExpressionDecomposer {
   private boolean isExpressionTreeUnsafe(Node tree, boolean followingSideEffectsExist) {
     if (tree.isSpread()) {
       // Spread expressions would cause recursive rewriting if not special cased here.
-      //
-      // When extracted, they can't be assigned to a single variable and instead are put into an
-      // array literal. However, that array literal must be spread again at the original site. This
-      // check is what prevents the original spread from triggering recursion.
-      Node toSpread = tree.getOnlyChild();
-      if (isTempConstantValueName(toSpread)) {
-        return false;
+      switch (tree.getParent().getToken()) {
+        case OBJECTLIT:
+          // Spreading an object, rather than an iterable, is assumed to be pure. That assesment is
+          // based on the compiler assumption that getters are pure. This check say nothing of the
+          // expression being spread.
+          break;
+        case ARRAYLIT:
+        case CALL:
+        case NEW:
+          // When extracted, spreads can't be assigned to a single variable and instead are put into
+          // an array-literal. However, that literal must be spread again at the original site. This
+          // check is what prevents the original spread from triggering recursion.
+          if (isTempConstantValueName(tree.getOnlyChild())) {
+            return false;
+          }
+          break;
+        default:
+          throw new IllegalStateException(
+              "Unexpected parent of SPREAD: " + tree.getParent().toStringTree());
       }
     }
 

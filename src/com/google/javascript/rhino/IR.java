@@ -541,14 +541,18 @@ public class IR {
   public static Node objectlit(Node ... propdefs) {
     Node objectlit = new Node(Token.OBJECTLIT);
     for (Node propdef : propdefs) {
-      checkState(
-          propdef.isStringKey()
-              || propdef.isMemberFunctionDef()
-              || propdef.isGetterDef()
-              || propdef.isSetterDef());
-      if (!propdef.isStringKey()) {
-        checkState(propdef.hasOneChild());
+      switch (propdef.getToken()) {
+        case STRING_KEY:
+        case MEMBER_FUNCTION_DEF:
+        case GETTER_DEF:
+        case SETTER_DEF:
+        case SPREAD:
+        case COMPUTED_PROP:
+          break;
+        default:
+          throw new IllegalStateException("Unexpected OBJECTLIT child: " + propdef);
       }
+
       objectlit.addChildToBack(propdef);
     }
     return objectlit;

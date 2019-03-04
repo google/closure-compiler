@@ -662,7 +662,14 @@ final class AstFactory {
     return result;
   }
 
-  /** Creates an empty object literal, `{}`. */
+  /**
+   * Creates an empty object literal, `{}`.
+   *
+   * <p>TODO(nickreid): Consider a single method {@code createObjectLit}, which accepts varargs.
+   * When this method was created it seemed valuable to explicitly distinguish these cases, which is
+   * why this method cannot be called with args. However, that differentiation might be frustrating
+   * to callers.
+   */
   Node createEmptyObjectLit() {
     Node result = IR.objectlit();
     if (isAddingTypes()) {
