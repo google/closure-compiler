@@ -241,7 +241,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
       for (Node node : nodes()) {
         JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(node);
         if (jsDoc != null) {
-          sb.append(jsDoc.getOriginalCommentString() + "\n");
+          sb.append(jsDoc.getOriginalCommentString()).append("\n");
         }
       }
 
@@ -253,9 +253,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
     /** Compares two import statements according to the style guide sort order. */
     @Override
     public int compareTo(ImportStatement other) {
-      return ComparisonChain.start()
-          .compare(this.formatWithoutDoc(), other.formatWithoutDoc())
-          .result();
+      return this.formatWithoutDoc().compareTo(other.formatWithoutDoc());
     }
   }
 
