@@ -1885,7 +1885,8 @@ public class CodeGenerator {
           break;
 
         default:
-          if (isRegexp) {
+          if (isRegexp
+              || !outputFeatureSet.contains(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP)) {
             // In 2019 these characters (line and paragraph separators) are valid in strings but
             // not regular expressions.
             // https://github.com/tc39/proposal-json-superset

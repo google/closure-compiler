@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.SourceMap.Format;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
@@ -39,23 +40,56 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   @Test
-  public void testUnescapedUnicodeLineSeparator() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
+  public void testUnescapedUnicodeLineSeparator_2018() {
+    languageMode = LanguageMode.ECMASCRIPT_2018;
     assertPrintSame("`\u2028`");
 
-    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertPrint("'\u2028'", "\"\\u2028\"");
+    assertPrint("\"\u2028\"", "\"\\u2028\"");
+
+    outputCharset = StandardCharsets.UTF_8;
+    // printed as a unicode escape for ES_2018 output
     assertPrint("'\u2028'", "\"\\u2028\"");
     assertPrint("\"\u2028\"", "\"\\u2028\"");
   }
 
   @Test
-  public void testUnescapedUnicodeParagraphSeparator() {
-    languageMode = LanguageMode.ECMASCRIPT_2015;
+  public void testUnescapedUnicodeLineSeparator_2019() {
+    languageMode = LanguageMode.ECMASCRIPT_2019;
+    assertPrint("'\u2028'", "\"\\u2028\"");
+    assertPrint("\"\u2028\"", "\"\\u2028\"");
+
+    outputCharset = StandardCharsets.UTF_8;
+    // left unescaped for ES_2019 out
+    assertPrint("'\u2028'", "\"\u2028\"");
+    assertPrint("\"\u2028\"", "\"\u2028\"");
+  }
+
+  @Test
+  public void testUnescapedUnicodeParagraphSeparator_2018() {
+    languageMode = LanguageMode.ECMASCRIPT_2018;
     assertPrintSame("`\u2029`");
 
-    languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrint("'\u2029'", "\"\\u2029\"");
     assertPrint("\"\u2029\"", "\"\\u2029\"");
+
+    outputCharset = StandardCharsets.UTF_8;
+    // printed as a unicode escape for ES_2018 output
+    assertPrint("'\u2029'", "\"\\u2029\"");
+    assertPrint("\"\u2029\"", "\"\\u2029\"");
+  }
+
+  @Test
+  public void testUnescapedUnicodeParagraphSeparator_2019() {
+    languageMode = LanguageMode.ECMASCRIPT_2019;
+
+    assertPrint("'\u2029'", "\"\\u2029\"");
+    assertPrint("\"\u2029\"", "\"\\u2029\"");
+
+    outputCharset = StandardCharsets.UTF_8;
+    // left unescaped for ES_2019 out
+    assertPrint("'\u2029'", "\"\u2029\"");
+    assertPrint("\"\u2029\"", "\"\u2029\"");
   }
 
   @Test
