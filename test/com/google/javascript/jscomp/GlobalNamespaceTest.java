@@ -26,6 +26,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Name.Inlinability;
@@ -590,6 +591,58 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
+  public void testObjectPatternRestInDeclaration() {
+    GlobalNamespace namespace = parse("const ns = {a: 3}; const {a, ...b} = ns;");
+
+    Name ns = namespace.getSlot("ns");
+    assertThat(ns.getGlobalSets()).isEqualTo(1);
+    assertThat(ns.getTotalGets()).isEqualTo(1);
+    assertThat(ns.getAliasingGets()).isEqualTo(1);
+
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(1);
+    assertThat(nsA.getTotalGets()).isEqualTo(1);
+    assertThat(nsA.getAliasingGets()).isEqualTo(1);
+
+    Name b = namespace.getSlot("b");
+    assertThat(b.getGlobalSets()).isEqualTo(1);
+    assertThat(b.getTotalGets()).isEqualTo(0);
+  }
+
+  @Test
+  public void testObjectPatternRestNestedInDeclaration() {
+    GlobalNamespace namespace = parse("const ns = {a: 3, b: {}}; const {a, b: {...c}} = ns;");
+
+    Name ns = namespace.getSlot("ns");
+    assertThat(ns.getGlobalSets()).isEqualTo(1);
+    assertThat(ns.getTotalGets()).isEqualTo(1);
+    // Nested patterns don't alias the top-level rhs.
+    assertThat(ns.getAliasingGets()).isEqualTo(0);
+
+    Name nsB = namespace.getSlot("ns.b");
+    assertThat(nsB.getGlobalSets()).isEqualTo(1);
+    assertThat(nsB.getTotalGets()).isEqualTo(1);
+    assertThat(nsB.getAliasingGets()).isEqualTo(1);
+  }
+
+  @Test
+  public void testObjectPatternRestAliasInAssign() {
+    GlobalNamespace namespace = parse("const ns = {a: 3}; const x = {}; ({a, ...x.y} = ns);");
+
+    Name ns = namespace.getSlot("ns");
+    assertThat(ns.getGlobalSets()).isEqualTo(1);
+    assertThat(ns.getAliasingGets()).isEqualTo(1);
+
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(1);
+    assertThat(nsA.getAliasingGets()).isEqualTo(1);
+
+    Name xY = namespace.getSlot("x.y");
+    // TODO(b/117673791): this should be 1
+    assertThat(xY.getGlobalSets()).isEqualTo(0);
+  }
+
+  @Test
   public void testObjectPatternAliasInForOf() {
     GlobalNamespace namespace = parse("const ns = {a: 3}; for (const {a: b} of [ns]) {}");
 
@@ -601,6 +654,58 @@ public final class GlobalNamespaceTest {
     Name nsA = namespace.getSlot("ns.a");
     assertThat(nsA.getGlobalSets()).isEqualTo(1);
     assertThat(nsA.getAliasingGets()).isEqualTo(0);
+  }
+
+  @Test
+  public void testObjectLitSpreadAliasInDeclaration() {
+    GlobalNamespace namespace = parse("const ns = {a: 3}; const {a} = {...ns};");
+
+    Name ns = namespace.getSlot("ns");
+    assertThat(ns.getGlobalSets()).isEqualTo(1);
+    assertThat(ns.getAliasingGets()).isEqualTo(1);
+
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(1);
+    assertThat(nsA.getAliasingGets()).isEqualTo(0);
+
+    Name a = namespace.getSlot("a");
+    assertThat(a.getGlobalSets()).isEqualTo(1);
+  }
+
+  @Test
+  public void testObjectLitSpreadAliasInAssign() {
+    GlobalNamespace namespace = parse("const ns = {a: 3}; const x = {}; ({a: x.y} = {...ns});");
+
+    Name ns = namespace.getSlot("ns");
+    assertThat(ns.getGlobalSets()).isEqualTo(1);
+    assertThat(ns.getAliasingGets()).isEqualTo(1);
+
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(1);
+    assertThat(nsA.getAliasingGets()).isEqualTo(0);
+
+    Name xY = namespace.getSlot("x.y");
+    // TODO(b/117673791): this should be 1
+    assertThat(xY.getGlobalSets()).isEqualTo(0);
+  }
+
+  @Test
+  public void testLhsCastInAssignment() {
+    // The type of the cast doesn't matter.
+    // Casting is only legal JS syntax in simple assignments, not with destructuring or declaration.
+    GlobalNamespace namespace = parse("const ns = {}; const b = 5; /** @type {*} */ (ns.a) = b;");
+
+    Name ns = namespace.getSlot("ns");
+    assertThat(ns.getGlobalSets()).isEqualTo(1);
+    assertThat(ns.getTotalGets()).isEqualTo(0);
+
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(0); // TODO(b/127505242): Should be 1.
+    assertThat(nsA.getTotalGets()).isEqualTo(1); // TODO(b/127505242): Should be 0.
+
+    Name b = namespace.getSlot("b");
+    assertThat(b.getGlobalSets()).isEqualTo(1);
+    assertThat(b.getAliasingGets()).isEqualTo(1);
   }
 
   @Test
@@ -642,10 +747,20 @@ public final class GlobalNamespaceTest {
     assertThat(fooProp.canCollapse()).isTrue();
   }
 
+  @Test
+  public void testCanCollapse_objectLitProperty_declaredBeforeASpread() {
+    GlobalNamespace namespace = parse("var foo = {prop: 0, ...bar}; use(foo.prop);");
+
+    Name fooProp = namespace.getSlot("foo.prop");
+    assertThat(fooProp.canCollapse()).isFalse();
+  }
+
   private GlobalNamespace parse(String js) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.setSkipNonTranspilationPasses(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     compiler.compile(SourceFile.fromCode("ex.js", ""), SourceFile.fromCode("test.js", js), options);
     assertThat(compiler.getErrors()).isEmpty();
     this.lastCompiler = compiler;
