@@ -1154,6 +1154,18 @@ public final class NodeUtil {
         return true;
 
       case OBJECTLIT:
+        if (checkForNewObjects) {
+          return true;
+        }
+        for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+          for (Node c = key.getFirstChild(); c != null; c = c.getNext()) {
+            if (checkForStateChangeHelper(c, checkForNewObjects, compiler)) {
+              return true;
+            }
+          }
+        }
+        return false;
+
       case ARRAYLIT:
       case REGEXP:
         if (checkForNewObjects) {
@@ -1162,18 +1174,11 @@ public final class NodeUtil {
         break;
 
       case SPREAD:
-        Node parent = n.getParent();
-        if (parent.isObjectLit()) {
-          break; // Object spread is assumed side-effect free despite getters.
-        } else if (parent.isArrayLit() || parent.isCall()) {
-          if (!n.getOnlyChild().isArrayLit()) {
-            // If spreading anything other than an array-lit, in the absence of any other
-            // information, we have to assume is going to invoke invoke a stateful generator or the
-            // like.
-            return true;
-          }
-        } else {
-          throw new IllegalStateException("Unexpected parent of SPREAD: " + parent.toStringTree());
+        Node expr = n.getOnlyChild();
+        if (!expr.isArrayLit()) {
+          // Anything other than an array, in the absense of any other information,
+          // we have to assume is going to invoke invoke a stateful generator or the like.
+          return true;
         }
         break;
 
