@@ -87,20 +87,24 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           "JSC_PREFER_BACKTICKS_TO_AT_SIGN_CODE",
           "Use `some_code` instead of '{'@code some_code'}'.");
 
-  public static final DiagnosticGroup ALL_DIAGNOSTICS =
+  public static final DiagnosticGroup LINT_DIAGNOSTICS =
       new DiagnosticGroup(
           CLASS_DISALLOWED_JSDOC,
           MISSING_JSDOC,
           MISSING_PARAMETER_JSDOC,
           MIXED_PARAM_JSDOC_STYLES,
           MISSING_RETURN_JSDOC,
-          MUST_BE_PRIVATE,
-          MUST_HAVE_TRAILING_UNDERSCORE,
           OPTIONAL_PARAM_NOT_MARKED_OPTIONAL,
           WRONG_NUMBER_OF_PARAMS,
           INCORRECT_PARAM_NAME,
           EXTERNS_FILES_SHOULD_BE_ANNOTATED,
           PREFER_BACKTICKS_TO_AT_SIGN_CODE);
+
+  public static final DiagnosticGroup UNDERSCORE_DIAGNOSTICS =
+      new DiagnosticGroup(MUST_BE_PRIVATE, MUST_HAVE_TRAILING_UNDERSCORE);
+
+  public static final DiagnosticGroup ALL_DIAGNOSTICS =
+      new DiagnosticGroup(LINT_DIAGNOSTICS, UNDERSCORE_DIAGNOSTICS);
 
   private final AbstractCompiler compiler;
 

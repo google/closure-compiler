@@ -67,6 +67,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_CHECKS, CheckLevel.ERROR);
     return options;
   }
 

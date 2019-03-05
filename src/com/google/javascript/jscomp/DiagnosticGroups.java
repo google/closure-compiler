@@ -74,8 +74,7 @@ public class DiagnosticGroups {
 
   public DiagnosticGroups() {}
 
-  private static final Map<String, DiagnosticGroup> groupsByName =
-       new HashMap<>();
+  private static final Map<String, DiagnosticGroup> groupsByName = new HashMap<>();
 
   static DiagnosticGroup registerDeprecatedGroup(String name) {
     return registerGroup(name, new DiagnosticGroup(name, UNUSED));
@@ -102,7 +101,7 @@ public class DiagnosticGroups {
   }
 
   /** Get the registered diagnostic groups, indexed by name. */
-  public Map<String, DiagnosticGroup> getRegisteredGroups() {
+  public static Map<String, DiagnosticGroup> getRegisteredGroups() {
     return ImmutableMap.copyOf(groupsByName);
   }
 
@@ -203,9 +202,9 @@ public class DiagnosticGroups {
           CheckAccessControls.DEPRECATED_CLASS_REASON);
 
   public static final DiagnosticGroup UNDERSCORE =
-      DiagnosticGroups.registerGroup("underscore",  // undocumented
-          CheckJSDocStyle.MUST_BE_PRIVATE,
-          CheckJSDocStyle.MUST_HAVE_TRAILING_UNDERSCORE);
+      DiagnosticGroups.registerGroup(
+          "underscore", // undocumented
+          CheckJSDocStyle.UNDERSCORE_DIAGNOSTICS);
 
   public static final DiagnosticGroup VISIBILITY =
       DiagnosticGroups.registerGroup("visibility",
@@ -591,7 +590,7 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup LINT_CHECKS =
       DiagnosticGroups.registerGroup(
           "lintChecks", // undocumented
-          CheckJSDocStyle.ALL_DIAGNOSTICS,
+          CheckJSDocStyle.LINT_DIAGNOSTICS,
           new DiagnosticGroup(
               CheckClosureImports.LET_CLOSURE_IMPORT,
               CheckEmptyStatements.USELESS_EMPTY_STATEMENT,
@@ -623,15 +622,10 @@ public class DiagnosticGroups {
               ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE,
               ClosureCheckModule.GOOG_MODULE_IN_NON_MODULE,
               ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION,
-              ClosureCheckModule.LET_GOOG_REQUIRE,
-              ClosureCheckModule.JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME,
-              ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
-              ClosureCheckModule.REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME,
-              ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
               ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE,
               RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING));
 
-  static final DiagnosticGroup STRICT_MODULE_CHECKS =
+  public static final DiagnosticGroup STRICT_MODULE_CHECKS =
       DiagnosticGroups.registerGroup(
           "strictModuleChecks",
           ClosureCheckModule.AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE,

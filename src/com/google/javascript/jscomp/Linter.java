@@ -81,6 +81,8 @@ public final class Linter {
       options.setWarningLevel(DiagnosticGroups.MISPLACED_SUPPRESS, CheckLevel.WARNING);
       options.setWarningLevel(DiagnosticGroups.TYPE_IMPORT_CODE_REFERENCES, CheckLevel.ERROR);
       options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
+      options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_CHECKS, CheckLevel.WARNING);
+      options.setWarningLevel(DiagnosticGroups.UNDERSCORE, CheckLevel.WARNING);
       options.setSummaryDetailLevel(0);
     }
 

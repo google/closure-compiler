@@ -60,6 +60,7 @@ public class ErrorToFixMapperTest {
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, WARNING);
     options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, ERROR);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, ERROR);
+    options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_CHECKS, WARNING);
   }
 
   @Test
