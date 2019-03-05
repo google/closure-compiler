@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
@@ -576,20 +577,21 @@ public final class DefaultPassConfig extends PassConfig {
     assertAllOneTimePasses(passes);
 
     // Inline aliases so that following optimizations don't have to understand alias chains.
-    if (options.shouldCollapseProperties()) {
+    if (options.getPropertyCollapseLevel() == PropertyCollapseLevel.ALL) {
       passes.add(aggressiveInlineAliases);
     }
 
     // Inline getters/setters in J2CL classes so that Object.defineProperties() calls (resulting
     // from desugaring) don't block class stripping.
-    if (options.j2clPassMode.shouldAddJ2clPasses() && options.shouldCollapseProperties()) {
+    if (options.j2clPassMode.shouldAddJ2clPasses()
+        && options.getPropertyCollapseLevel() == PropertyCollapseLevel.ALL) {
       // Relies on collapseProperties-triggered aggressive alias inlining.
       passes.add(j2clPropertyInlinerPass);
     }
 
     // Collapsing properties can undo constant inlining, so we do this before
     // the main optimization loop.
-    if (options.shouldCollapseProperties()) {
+    if (options.getPropertyCollapseLevel() != PropertyCollapseLevel.NONE) {
       passes.add(collapseProperties);
     }
 
