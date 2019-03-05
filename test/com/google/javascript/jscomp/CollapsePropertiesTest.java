@@ -2118,38 +2118,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDontCollapsePropertiesOfSpreadNamespace() {
-    // Notice we can still collapse the parent namespace, `a`.
-    test(
-        "var a = {b: {c: 0}}; var d = {...a.b}; use(a.b.c);", //
-        "var a$b = {c: 0}; use(a$b.c);");
-  }
-
-  @Test
-  public void testDontCollapsePropertiesOfRestedNamespace() {
-    test(
-        "var a = {b: {c: 0}}; var {...d} = a.b; use(a.b.c);", //
-        // `d` is a dead name that will be eliminated by other optimzation.
-        "var a$b = {c: 0}; var {...d} = a$b; use(a$b.c);");
-
-    // "a.b.c" is not aliased by the REST in this case.
-    test(
-        "var a = {b: {c: 0}}; var {d: {...d}} = a.b; use(a.b.c);", //
-        "var a$b$c = 0; var a$b = {}; var {d: {...d}} = a$b; use(a$b$c);");
-  }
-
-  @Test
-  public void testCollapsePropertiesWhenDeclaredInObjectLitWithSpread() {
-    testSame("var a = {b: 0, ...c}; use(a.b);");
-
-    testSame("var a = {...c}; use(a.b);");
-
-    test(
-        "var a = {...c, b: 0}; use(a.b);", //
-        "var a$b = 0; use(a$b);");
-  }
-
-  @Test
   public void testComputedPropertyNames() {
     // Computed property in object literal. This following test code is bad style - it does not
     // follow the assumptions of the pass and thus produces the following output.

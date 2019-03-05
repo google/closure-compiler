@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Streams.stream;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -414,8 +413,6 @@ class GlobalNamespace
                 type = Name.Type.OTHER;
               }
               break;
-            case SPREAD:
-              break; // isSet = false, type = OTHER.
             default:
               if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
                 isSet = true;
@@ -438,13 +435,13 @@ class GlobalNamespace
                 break;
               case INC:
               case DEC:
+                isSet = true;
+                type = Name.Type.OTHER;
                 break;
               case GETPROP:
                 // This is nested in another getprop. Return and only create a Ref for the outermost
                 // getprop in the chain.
                 return;
-              case SPREAD:
-                break; // isSet = false, type = OTHER.
               default:
                 if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
                   isSet = true;
@@ -747,39 +744,17 @@ class GlobalNamespace
           // This node is the superclass in an extends clause.
           type = Ref.Type.SUBCLASSING_GET;
           break;
-        case OBJECT_PATTERN: // Handle STRING_KEYS in object patterns.
-        case SPREAD:
+        case OBJECT_PATTERN:
+          // handle STRING_KEYS in object patterns
           type = Ref.Type.ALIASING_GET;
           break;
         case DESTRUCTURING_LHS:
         case ASSIGN:
+          // The rhs of an assign or a name declaration is escaped if it's assigned to a name
+          // directly; it's a 'direct get' if it's actually destructured, since we know what
+          // properties are accessed
           Node lhs = n.getPrevious();
-          switch (lhs.getToken()) {
-            case NAME:
-            case GETPROP:
-            case GETELEM:
-              // The rhs of an assign or a name declaration is escaped if it's assigned to a name
-              // directly ...
-            case ARRAY_PATTERN:
-              // ... or referenced through numeric keys.
-              type = Ref.Type.ALIASING_GET;
-              break;
-            case OBJECT_PATTERN:
-              type =
-                  // Nested patterns don't affect the type of the top-level reference. REST is
-                  // always the last child of a pattern.
-                  lhs.hasChildren() && lhs.getLastChild().isRest()
-                      // ... or through a rest.
-                      ? Ref.Type.ALIASING_GET
-                      // It's a 'direct get' if it's actually destructured, since we know what
-                      // properties are accessed.
-                      : Ref.Type.DIRECT_GET;
-              break;
-            default:
-              throw new IllegalStateException(
-                  "Unexpected previous sibling of " + n.getToken() + ": " + lhs.toStringTree());
-          }
-
+          type = lhs.isObjectPattern() ? Ref.Type.DIRECT_GET : Ref.Type.ALIASING_GET;
           break;
         default:
           type = Ref.Type.ALIASING_GET;
@@ -1662,16 +1637,6 @@ class GlobalNamespace
       if (referencesSuperOrInnerClassName()) {
         // condition (f)
         return Inlinability.DO_NOT_INLINE;
-      }
-
-      if (getDeclaration() != null) {
-        Node declaration = getDeclaration().getNode();
-        if (declaration.getParent().isObjectLit()
-            && stream(declaration.siblings()).anyMatch(Node::isSpread)) {
-          // Case: `var x = {a: 0, ...b, c: 2}` where declaration is `a` but not `c`.
-          // Following spreads may overwrite the declaration.
-          return Inlinability.DO_NOT_INLINE;
-        }
       }
 
       // condition (a)
