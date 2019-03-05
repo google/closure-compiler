@@ -16,9 +16,11 @@
 
 /**
  * @fileoverview Brings in all ES6 Object polyfills.
+ * @suppress {uselessCode}
  */
 'require es6/object/assign';
 'require es6/object/entries';
+'require es6/object/fromentries';
 'require es6/object/getownpropertydescriptors';
 'require es6/object/getownpropertysymbols';
 'require es6/object/is';

@@ -1521,6 +1521,13 @@ Object.values = function(obj) {};
 Object.entries = function(obj) {};
 
 /**
+ * @param {!Iterable<*>} iter
+ * @return {!Object}
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries
+ */
+Object.fromEntries = function(iter) {};
+
+/**
  * NOTE: this is an ES2017 (ES8) extern.
  * @param {!Object} obj
  * @return {!Object<!ObjectPropertyDescriptor>} descriptors

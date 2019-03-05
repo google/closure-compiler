@@ -61,6 +61,7 @@ delete Object.assign;
 delete Object.entries;
 delete Object.getOwnPropertyDescriptors;
 delete Object.getOwnPropertySymbols;
+delete Object.fromEntries;
 delete Object.is;
 delete Object.setPrototypeOf;
 delete Object.values;
