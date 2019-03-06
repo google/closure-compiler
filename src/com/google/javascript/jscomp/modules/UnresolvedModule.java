@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp.modules;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -43,19 +44,20 @@ abstract class UnresolvedModule {
   abstract Module resolve(
       ModuleRequestResolver moduleRequestResolver, @Nullable String moduleSpecifier);
 
-  abstract boolean isEsModule();
+  /** Returns the metadata corresponding to this module */
+  abstract ModuleMetadata metadata();
 
   /**
    * Returns all names in this module's namespace. Names are sorted per Java's string ordering,
    * which should be the same as JavaScript's Array.protype.sort, which is how the spec says these
-   * keys should be ordered in the module object.
+   * keys should be ordered in the ES module object.
    */
   abstract ImmutableSet<String> getExportedNames(ModuleRequestResolver moduleRequestResolver);
 
   /**
    * Returns all names in this module's namespace. Names are sorted per Java's string ordering,
    * which should be the same as JavaScript's Array.prototype.sort, which is how the spec says these
-   * keys should be ordered in the module object.
+   * keys should be ordered in the ES module object.
    *
    * @param visited set used to detect {@code export *} cycles.
    */

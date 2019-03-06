@@ -40,15 +40,18 @@ final class ResolveExportResult {
     this.state = state;
   }
 
-  /** Creates a new result that has the given node for the source of the binding. */
-  ResolveExportResult withSource(Node sourceNode) {
+  /**
+   * Creates a new result that has the given node for the source of the binding and given type of
+   * binding.
+   */
+  ResolveExportResult copy(Node sourceNode, Binding.CreatedBy createdBy) {
     checkNotNull(sourceNode);
 
     if (binding == null) {
       return this;
     }
 
-    return new ResolveExportResult(binding.withSource(sourceNode), state);
+    return new ResolveExportResult(binding.copy(sourceNode, createdBy), state);
   }
 
   /** True if there was an error resolving the export, false otherwise. */

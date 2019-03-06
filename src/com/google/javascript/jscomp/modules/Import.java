@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.modules;
 import com.google.auto.value.AutoValue;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
+import javax.annotation.Nullable;
 
 /**
  * An <code>import</code>ed name in a module.
@@ -65,7 +66,8 @@ public abstract class Import {
   /** Returns the local name the imported value is bound to. */
   public abstract String localName();
 
-  /** Returns the path of the containing module. */
+  /** Returns the path of the containing module, if from an ES module. */
+  @Nullable
   public abstract ModuleLoader.ModulePath modulePath();
 
   /** Returns the import node for source information. */

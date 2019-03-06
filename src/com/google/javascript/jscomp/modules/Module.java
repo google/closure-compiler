@@ -57,6 +57,8 @@ public abstract class Module {
    *   <li><code>import</code> statements make no entries on their own. If imported values are
    *       exported with <code> export {};</code> then an entry is created like <code>export {} from
    *       </code>.
+   *   <li><code>exports.foo = bar;</code> creates an entry with the name "foo" for the expression
+   *       on the right-hand side. This is not bound to a local name.
    * </ul>
    */
   public abstract ImmutableMap<String, Binding> namespace();
@@ -66,6 +68,9 @@ public abstract class Module {
    *
    * <p>This includes all names bound by import and exported names which originate in this module.
    * Used for rewriting in later stages of the compiler.
+   *
+   * <p>ES modules may have names bound by both imports and exports. Closure modules only have names
+   * bound by imports, as it is impossible to create a new local identifier in an export.
    *
    * <p>Examples:
    *
@@ -77,6 +82,8 @@ public abstract class Module {
    *   <li><code>export default function foo() {}</code> creates an entry with the name "foo" for
    *       the local module's export definition.
    *   <li><code>export {x as v} from 'mod';</code> does not create any entry in this module.
+   *   <li><code>const C = goog.require('mod.C')</code> creates an entry with the name "C" for the
+   *       binding containing the default export of 'mod.C'
    * </ul>
    */
   public abstract ImmutableMap<String, Binding> boundNames();

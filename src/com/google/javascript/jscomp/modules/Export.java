@@ -41,7 +41,17 @@ public abstract class Export {
    */
   public static final String DEFAULT_EXPORT_NAME = "*default*";
 
+  /**
+   * The {@link Export#exportName()} of anonymous ES module default exports, e.g. {@code export
+   * default 0}.
+   */
   static final String DEFAULT = "default";
+
+  /**
+   * The {@link Export#exportName()} of goog.module default exports, e.g. {@code exports = class
+   * {};}
+   */
+  static final String NAMESPACE = "*exports*";
 
   // Prevent unwanted subclasses.
   Export() {}
@@ -74,8 +84,10 @@ public abstract class Export {
       Export e = autoBuild();
       if (e.moduleMetadata().isEs6Module()) {
         validateEsModule(e);
+      } else if (e.moduleMetadata().isGoogModule()) {
+        validateGoogModule(e);
       } else {
-        validateNonEsModule(e);
+        validateOtherModule(e);
       }
       return e;
     }
@@ -104,8 +116,17 @@ public abstract class Export {
           "Exports with an import name should be a reexport.");
     }
 
+    /** Some export from a goog module. */
+    private static void validateGoogModule(Export e) {
+      checkState(e.closureNamespace() != null, "Exports should be associated with a namespace");
+      checkState(e.exportName() != null, "Exports should be named");
+      checkState(e.exportNode() != null, "Exports should have a node");
+      checkState(e.localName() == null, "goog.module Exports don't set a localName");
+      checkState(e.moduleRequest() == null, "goog modules cannot export from other modules");
+    }
+
     /** Some faux export from a non-ES module. */
-    private static void validateNonEsModule(Export e) {
+    private static void validateOtherModule(Export e) {
       checkNotNull(e.localName());
 
       // Fields ignored for these fake exports. Should not set these.

@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp.modules;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
@@ -109,10 +110,6 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
   // other binding, including other imports) and so we check that in VariableReferenceCheck.
   static final DiagnosticType DUPLICATE_EXPORT =
       DiagnosticType.error("JSC_DUPLICATE_EXPORT", "Duplicate export of \"{0}\".");
-
-  static final DiagnosticType DOES_NOT_HAVE_EXPORT =
-      DiagnosticType.error(
-          "JSC_DOES_NOT_HAVE_EXPORT", "Requested module does not have an export \"{0}\".");
 
   static final DiagnosticType IMPORTED_AMBIGUOUS_EXPORT =
       DiagnosticType.error(
@@ -351,8 +348,8 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
     }
 
     @Override
-    public boolean isEsModule() {
-      return true;
+    ModuleMetadata metadata() {
+      return metadata;
     }
 
     /** A map from import bound name to binding. */
@@ -400,7 +397,8 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
         return ResolveExportResult.ERROR;
       } else {
         boolean importStar = i.importName().equals("*");
-        if (importStar || (i.importName().equals(Export.DEFAULT) && !requested.isEsModule())) {
+        if (importStar
+            || (i.importName().equals(Export.DEFAULT) && !requested.metadata().isEs6Module())) {
           if (importStar && GoogEsImports.isGoogImportSpecifier(i.moduleRequest())) {
             compiler.report(
                 JSError.make(
@@ -443,7 +441,7 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
             return ResolveExportResult.ERROR;
           }
           Node forSourceInfo = i.nameNode() == null ? i.importNode() : i.nameNode();
-          return result.withSource(forSourceInfo);
+          return result.copy(forSourceInfo, Binding.CreatedBy.IMPORT);
         }
       }
     }
@@ -480,7 +478,7 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
         UnresolvedModule requested = moduleRequestResolver.resolve(e);
 
         if (requested != null) {
-          if (requested.isEsModule()) {
+          if (requested.metadata().isEs6Module()) {
             for (String n : requested.getExportedNames(moduleRequestResolver, visited)) {
               // Default exports are not exported with export *.
               if (!Export.DEFAULT.equals(n) && !exportedNames.contains(n)) {
@@ -545,7 +543,7 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
             // import whatever from 'mod';
             // export { whatever };
             return resolveImport(moduleRequestResolver, e.localName(), resolveSet, exportStarSet)
-                .withSource(e.nameNode());
+                .copy(e.nameNode(), Binding.CreatedBy.EXPORT);
           } else {
             UnresolvedModule requested = moduleRequestResolver.resolve(e);
 
@@ -578,7 +576,7 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
                         IMPORTED_AMBIGUOUS_EXPORT,
                         e.importName()));
               }
-              return result.withSource(e.nameNode());
+              return result.copy(e.nameNode(), Binding.CreatedBy.EXPORT);
             }
           }
         }
@@ -615,7 +613,7 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
           } else {
             if (starResolution == null) {
               // First time finding something, not ambiguous.
-              starResolution = resolution.withSource(e.exportNode());
+              starResolution = resolution.copy(e.exportNode(), Binding.CreatedBy.EXPORT);
             } else {
               // Second time finding something, might be ambiguous!
               // Not ambiguous if it is the same export (same module and export name).

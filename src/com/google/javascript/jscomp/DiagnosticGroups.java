@@ -443,7 +443,10 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup MISSING_PROVIDE =
       DiagnosticGroups.registerGroup(
-          "missingProvide", CheckProvides.MISSING_PROVIDE_WARNING, MISSING_MODULE_OR_PROVIDE);
+          "missingProvide",
+          CheckProvides.MISSING_PROVIDE_WARNING,
+          MISSING_MODULE_OR_PROVIDE,
+          ModuleMapCreator.MISSING_NAMESPACE_IMPORT);
 
   public static final DiagnosticGroup UNRECOGNIZED_TYPE_ERROR =
       DiagnosticGroups.registerGroup("unrecognizedTypeError", // undocumented

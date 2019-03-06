@@ -454,6 +454,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (options.skipNonTranspilationPasses && !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
       options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
     }
+
+    // If we're in transpile-only mode, we don't need to check for missing requires unless the user
+    // explicitly enables missing-provide checks.
+    if (options.skipNonTranspilationPasses && !options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
+      options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.OFF);
+    }
+
+    if (options.brokenClosureRequiresLevel == CheckLevel.OFF) {
+      options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.OFF);
+    }
   }
 
   /** Initializes the instance state needed for a compile job. */

@@ -25,8 +25,10 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Catch all module processor for non-ES modules that doesn't do any scanning of exports but instead
- * will always treat every name as `munged.name`.
+ * Catch all module processor for non-ES and non-goog modules that doesn't do any scanning of
+ * exports but instead will always treat every name as `munged.name`.
+ *
+ * <p>This includes goog.provide'd names and CommonJS modules.
  */
 // TODO(johnplaisted): It may not be too hard to actually scan these modules and figure out their
 // exported keys. At least, assuming we're rigid with what we allow (no dynamic exports).
@@ -96,8 +98,8 @@ final class NonEsModuleProcessor implements ModuleProcessor {
     }
 
     @Override
-    public boolean isEsModule() {
-      return false;
+    ModuleMetadata metadata() {
+      return metadata;
     }
 
     @Override

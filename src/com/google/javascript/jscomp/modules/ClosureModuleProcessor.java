@@ -1,0 +1,482 @@
+/*
+ * Copyright 2019 The Closure Compiler Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.google.javascript.jscomp.modules;
+
+import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
+import com.google.javascript.jscomp.modules.Binding.CreatedBy;
+import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleProcessor;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
+import com.google.javascript.rhino.Node;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.Nullable;
+
+/**
+ * Processor for goog.module
+ *
+ * <p>The namespace of a goog.module contains all named exports, e.g. {@code exports.x = 0}, and any
+ * 'default export's that assign directly to the `exports` object, e.g. {@code exports = class {}}).
+ *
+ * <p>The bound names include any names imported through a goog.require(Type)/forwardDeclare.
+ */
+final class ClosureModuleProcessor implements ModuleProcessor {
+
+  private static class Require {
+    private final Import i;
+    private final Binding.CreatedBy createdBy;
+
+    private Require(Import i, Binding.CreatedBy createdBy) {
+      this.i = i;
+      this.createdBy = createdBy;
+    }
+  }
+
+  private static class UnresolvedGoogModule extends UnresolvedModule {
+
+    private final ModuleMetadata metadata;
+    private final String srcFileName;
+    @Nullable private final ModulePath path;
+    private final ImmutableMap<String, Binding> namespace;
+    private final ImmutableMap<String, Require> requiresByLocalName;
+    private final AbstractCompiler compiler;
+    private Module resolved = null;
+
+    UnresolvedGoogModule(
+        ModuleMetadata metadata,
+        String srcFileName,
+        ModulePath path,
+        ImmutableMap<String, Binding> namespace,
+        ImmutableMap<String, Require> requires,
+        AbstractCompiler compiler) {
+      this.metadata = metadata;
+      this.srcFileName = srcFileName;
+      this.path = path;
+      this.namespace = namespace;
+      this.requiresByLocalName = requires;
+      this.compiler = compiler;
+    }
+
+    @Nullable
+    @Override
+    public ResolveExportResult resolveExport(
+        ModuleRequestResolver moduleRequestResolver, String exportName) {
+      if (namespace.containsKey(exportName)) {
+        return ResolveExportResult.of(namespace.get(exportName));
+      }
+      return ResolveExportResult.NOT_FOUND;
+    }
+
+    @Nullable
+    @Override
+    public ResolveExportResult resolveExport(
+        ModuleRequestResolver moduleRequestResolver,
+        @Nullable String moduleSpecifier,
+        String exportName,
+        Set<ExportTrace> resolveSet,
+        Set<UnresolvedModule> exportStarSet) {
+      return resolveExport(moduleRequestResolver, exportName);
+    }
+
+    @Override
+    public Module resolve(
+        ModuleRequestResolver moduleRequestResolver, @Nullable String moduleSpecifier) {
+      if (resolved == null) {
+
+        // Every import creates a locally bound name.
+        Map<String, Binding> boundNames =
+            new LinkedHashMap<>(getAllResolvedImports(moduleRequestResolver));
+
+        resolved =
+            Module.builder()
+                .path(path)
+                .metadata(metadata)
+                .namespace(namespace)
+                .boundNames(ImmutableMap.copyOf(boundNames))
+                .localNameToLocalExport(ImmutableMap.of())
+                .closureNamespace(moduleSpecifier)
+                .unresolvedModule(this)
+                .build();
+      }
+      return resolved;
+    }
+
+    /** A map from import bound name to binding. */
+    Map<String, Binding> getAllResolvedImports(ModuleRequestResolver moduleRequestResolver) {
+      Map<String, Binding> imports = new HashMap<>();
+
+      for (String name : requiresByLocalName.keySet()) {
+        ResolveExportResult b = resolveImport(moduleRequestResolver, name);
+        if (b.resolved()) {
+          imports.put(name, b.getBinding());
+        }
+      }
+
+      return imports;
+    }
+
+    ResolveExportResult resolveImport(ModuleRequestResolver moduleRequestResolver, String name) {
+      Require require = requiresByLocalName.get(name);
+      Import i = require.i;
+
+      UnresolvedModule requested = moduleRequestResolver.resolve(i);
+
+      if (requested == null) {
+        return ResolveExportResult.ERROR;
+      } else if (i.importName().equals(Export.NAMESPACE)) {
+        // Return a binding based on the other module's metadata.
+        return ResolveExportResult.of(
+            Binding.from(
+                requested.metadata(),
+                requested.metadata().rootNode(),
+                i.moduleRequest(),
+                require.createdBy));
+
+      } else {
+        ResolveExportResult result =
+            requested.resolveExport(
+                moduleRequestResolver,
+                i.moduleRequest(),
+                i.importName(),
+                new HashSet<>(),
+                new HashSet<>());
+        if (!result.found() && !result.hadError()) {
+          compiler.report(
+              JSError.make(
+                  srcFileName,
+                  i.importNode().getLineno(),
+                  i.importNode().getCharno(),
+                  DOES_NOT_HAVE_EXPORT,
+                  i.importName()));
+          return ResolveExportResult.ERROR;
+        }
+        Node forSourceInfo = i.nameNode() == null ? i.importNode() : i.nameNode();
+        return result.copy(forSourceInfo, require.createdBy);
+      }
+    }
+
+    @Override
+    ModuleMetadata metadata() {
+      return metadata;
+    }
+
+    @Override
+    public ImmutableSet<String> getExportedNames(ModuleRequestResolver moduleRequestResolver) {
+      // Unsupported until such time as it becomes useful
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ImmutableSet<String> getExportedNames(
+        ModuleRequestResolver moduleRequestResolver, Set<UnresolvedModule> visited) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    void reset() {
+      resolved = null;
+    }
+  }
+
+  private final AbstractCompiler compiler;
+
+  public ClosureModuleProcessor(AbstractCompiler compiler) {
+    this.compiler = compiler;
+  }
+
+  @Override
+  public UnresolvedModule process(ModuleMetadata metadata, ModulePath path, Node script) {
+    Preconditions.checkArgument(
+        script.isScript() || script.isCall(), "Unexpected module root %s", script);
+    Preconditions.checkArgument(
+        script.isCall() || path != null, "Non goog.loadModules must have a path");
+
+    ModuleProcessingCallback moduleProcessingCallback = new ModuleProcessingCallback(metadata);
+    NodeTraversal.traverse(compiler, script, moduleProcessingCallback);
+    return new UnresolvedGoogModule(
+        metadata,
+        script.getSourceFileName(),
+        path,
+        ImmutableMap.copyOf(moduleProcessingCallback.namespace),
+        ImmutableMap.copyOf(moduleProcessingCallback.requiresByLocalName),
+        compiler);
+  }
+
+  /** Traverses a subtree rooted at a module, gathering all exports and requires */
+  private static class ModuleProcessingCallback extends AbstractPreOrderCallback {
+    private final ModuleMetadata metadata;
+    /** The Closure namespace 'a.b.c' from the `goog.module('a.b.c');` statement */
+    private final String closureNamespace;
+    // Note: the following two maps are mutable because in some cases, we need to check if a key has
+    // already been added before trying to add a second.
+
+    /** All named exports and explicit assignments of the `exports` object */
+    private final Map<String, Binding> namespace;
+    /** All required/forwardDeclared local names */
+    private final Map<String, Require> requiresByLocalName;
+    /** Whether we've come across an "exports = ..." assignment */
+    private boolean seenExportsAssignment;
+
+    ModuleProcessingCallback(ModuleMetadata metadata) {
+      this.metadata = metadata;
+      this.namespace = new LinkedHashMap<>();
+      this.requiresByLocalName = new LinkedHashMap<>();
+      this.closureNamespace = Iterables.getOnlyElement(metadata.googNamespaces());
+      this.seenExportsAssignment = false;
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      switch (n.getToken()) {
+        case MODULE_BODY:
+        case SCRIPT:
+        case CALL: // Traverse into goog.loadModule calls.
+        case BLOCK:
+          return true;
+        case FUNCTION:
+          // Only traverse into functions that are the argument of a goog.loadModule call, which is
+          // the module root. Avoid traversing function declarations like:
+          //     goog.module('a.b'); function (exports) { exports.x = 0; }
+          return parent.isCall() && parent == metadata.rootNode();
+        case EXPR_RESULT:
+          Node expr = n.getFirstChild();
+          if (expr.isAssign()) {
+            maybeInitializeExports(expr);
+          } else if (expr.isGetProp()) {
+            maybeInitializeExportsStub(expr);
+          }
+          return false;
+        case CONST:
+        case VAR:
+        case LET:
+          // Note that `let` is valid only for `goog.forwardDeclare`.
+          maybeInitializeRequire(n);
+          return false;
+        default:
+          return false;
+      }
+    }
+
+    /** If an assignment is to 'exports', adds it to the list of Exports */
+    private void maybeInitializeExports(Node assignment) {
+      Node lhs = assignment.getFirstChild();
+      Node rhs = assignment.getSecondChild();
+      if (lhs.isName() && lhs.getString().equals("exports")) {
+        // This may be a 'named exports' or may be a default export.
+        // It is a 'named export' if and only if it is assigned an object literal w/ string keys,
+        // whose values are all names.
+        if (isNamedExportsLiteral(rhs)) {
+          initializeNamedExportsLiteral(rhs);
+        } else {
+          markExportsAssignmentInNamespace(lhs);
+        }
+      } else if (lhs.isGetProp()
+          && lhs.getFirstChild().isName()
+          && lhs.getFirstChild().getString().equals("exports")) {
+        String exportedId = lhs.getSecondChild().getString();
+        addPropertyExport(exportedId, lhs);
+      }
+    }
+
+    /** Adds stub export declarations `exports.Foo;` to the list of Exports */
+    private void maybeInitializeExportsStub(Node qname) {
+      Node owner = qname.getFirstChild();
+      if (owner.isName() && owner.getString().equals("exports")) {
+        Node prop = qname.getSecondChild();
+        String exportedId = prop.getString();
+        addPropertyExport(exportedId, qname);
+      }
+    }
+
+    /**
+     * Adds an explicit namespace export.
+     *
+     * <p>Note that all goog.modules create an 'exports' object, but this object is only added to
+     * the Module namespace if there is an explicit' exports = ...' assignment
+     */
+    private void markExportsAssignmentInNamespace(Node exportsNode) {
+      seenExportsAssignment = true;
+
+      namespace.put(
+          Export.NAMESPACE,
+          Binding.from(
+              Export.builder()
+                  .exportName(Export.NAMESPACE)
+                  .exportNode(exportsNode)
+                  .moduleMetadata(metadata)
+                  .closureNamespace(closureNamespace)
+                  .modulePath(metadata.path())
+                  .build(),
+              exportsNode));
+    }
+
+    private void initializeNamedExportsLiteral(Node objectLit) {
+      for (Node key : objectLit.children()) {
+        addPropertyExport(key.getString(), key);
+      }
+    }
+
+    /** Adds a named export to the list of Exports */
+    private void addPropertyExport(String exportedId, Node propNode) {
+      if (seenExportsAssignment) {
+        // We've seen an assignment "exports = ...", so this is not a named export.
+        return;
+      } else if (namespace.containsKey(exportedId)) {
+        // Ignore duplicate exports - this is an error but checked elsewhere.
+        return;
+      }
+
+      namespace.put(
+          exportedId,
+          Binding.from(
+              Export.builder()
+                  .exportName(exportedId)
+                  .exportNode(propNode)
+                  .moduleMetadata(metadata)
+                  .closureNamespace(closureNamespace)
+                  .modulePath(metadata.path())
+                  .build(),
+              propNode));
+    }
+
+    /**
+     * Adds a goog.require to the list of imports
+     *
+     * @param nameDeclaration a VAR, LET, or CONST
+     */
+    private void maybeInitializeRequire(Node nameDeclaration) {
+      // TODO(b/123598058): These requires can also be in ES modules. Move this code to a common
+      // location.
+      Node rhs =
+          nameDeclaration.getFirstChild().isDestructuringLhs()
+              ? nameDeclaration.getFirstChild().getSecondChild()
+              : nameDeclaration.getFirstFirstChild();
+      // this may be a require, requireType, or forwardDeclare
+      Binding.CreatedBy requireKind = getModuleDependencyType(rhs);
+      if (requireKind == null) {
+        return;
+      }
+      String namespace = rhs.getSecondChild().getString();
+      if (nameDeclaration.getFirstChild().isName()) {
+        // const modA = goog.require('modA');
+        Node lhs = nameDeclaration.getFirstChild();
+        requiresByLocalName.putIfAbsent(
+            lhs.getString(),
+            new Require(
+                Import.builder()
+                    .moduleRequest(namespace)
+                    .localName(lhs.getString())
+                    .importName(Export.NAMESPACE)
+                    .importNode(nameDeclaration)
+                    .nameNode(lhs)
+                    .build(),
+                requireKind));
+      } else {
+        // const {x, y} = goog.require('modA');
+        Node objectPattern = nameDeclaration.getFirstFirstChild();
+        if (!objectPattern.isObjectPattern()) {
+          // bad JS, ignore
+          return;
+        }
+        for (Node key : objectPattern.children()) {
+          if (!key.isStringKey()) {
+            // Bad code, just ignore. We warn elsewhere.
+            continue;
+          }
+          Node lhs = key.getOnlyChild();
+          if (!lhs.isName()) {
+            // Bad code ( e.g. `const {a = 0} = goog.require(...)`). We warn elsewhere.
+            continue;
+          }
+
+          requiresByLocalName.putIfAbsent(
+              lhs.getString(),
+              new Require(
+                  Import.builder()
+                      .moduleRequest(namespace)
+                      .localName(lhs.getString())
+                      .importName(key.getString())
+                      .importNode(nameDeclaration)
+                      .nameNode(lhs)
+                      .build(),
+                  requireKind));
+        }
+      }
+    }
+  }
+
+  /**
+   * Whether this is an assignment to 'exports' that creates named exports.
+   *
+   * <ul>
+   *   <li>exports = {a, b}; // named exports
+   *   <li>exports = 0; // namespace export
+   *   <li>exports = {a: 0, b}; // namespace export
+   * </ul>
+   */
+  private static boolean isNamedExportsLiteral(Node objLit) {
+    if (!objLit.isObjectLit() || !objLit.hasChildren()) {
+      return false;
+    }
+    for (Node key : objLit.children()) {
+      if (!key.isStringKey() || key.isQuotedString()) {
+        return false;
+      }
+      if (key.hasChildren() && !key.getFirstChild().isName()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // TODO(b/123598058):  move this code to a common location.
+  private static final ImmutableMap<String, Binding.CreatedBy> GOOG_DEPENDENCY_CALLS =
+      ImmutableMap.of(
+          "require",
+          CreatedBy.GOOG_REQUIRE,
+          "requireType",
+          CreatedBy.GOOG_REQUIRE_TYPE,
+          "forwardDeclare",
+          CreatedBy.GOOG_FORWARD_DECLARE);
+
+  @Nullable
+  private static CreatedBy getModuleDependencyType(Node value) {
+    if (value == null || !value.isCall()) {
+      return null;
+    }
+    Node callee = value.getFirstChild();
+    if (!callee.isGetProp()) {
+      return null;
+    }
+    Node owner = callee.getFirstChild();
+    if (!owner.isName() || !owner.getString().equals("goog")) {
+      return null;
+    }
+    return GOOG_DEPENDENCY_CALLS.get(callee.getSecondChild().getString());
+  }
+}
