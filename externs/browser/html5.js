@@ -2978,7 +2978,7 @@ WebSocket.prototype.bufferedAmount;
 
 /**
  * An event handler called on open event.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 WebSocket.prototype.onopen;
 
@@ -2991,7 +2991,7 @@ WebSocket.prototype.onmessage;
 
 /**
  * An event handler called on close event.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 WebSocket.prototype.onclose;
 
