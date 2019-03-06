@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -427,28 +428,28 @@ public final class DepsGeneratorTest {
   @Test
   public void testMergeStrategyAlways() throws Exception {
     String result = testMergeStrategyHelper(DepsGenerator.InclusionStrategy.ALWAYS);
-    assertContains("['a']", result);
-    assertContains("['b']", result);
-    assertContains("['c']", result);
-    assertContains("d.js", result);
+    assertThat(result).contains("['a']");
+    assertThat(result).contains("['b']");
+    assertThat(result).contains("['c']");
+    assertThat(result).contains("d.js");
   }
 
   @Test
   public void testMergeStrategyWhenInSrcs() throws Exception {
     String result = testMergeStrategyHelper(DepsGenerator.InclusionStrategy.WHEN_IN_SRCS);
-    assertNotContains("['a']", result);
-    assertContains("['b']", result);
-    assertContains("['c']", result);
-    assertNotContains("d.js", result);
+    assertThat(result).doesNotContain("['a']");
+    assertThat(result).contains("['b']");
+    assertThat(result).contains("['c']");
+    assertThat(result).doesNotContain("d.js");
   }
 
   @Test
   public void testMergeStrategyDoNotDuplicate() throws Exception {
     String result = testMergeStrategyHelper(DepsGenerator.InclusionStrategy.DO_NOT_DUPLICATE);
-    assertNotContains("['a']", result);
-    assertNotContains("['b']", result);
-    assertContains("['c']", result);
-    assertNotContains("d.js", result);
+    assertThat(result).doesNotContain("['a']");
+    assertThat(result).doesNotContain("['b']");
+    assertThat(result).contains("['c']");
+    assertThat(result).doesNotContain("d.js");
   }
 
   private String testMergeStrategyHelper(DepsGenerator.InclusionStrategy mergeStrategy)
@@ -644,46 +645,24 @@ public final class DepsGeneratorTest {
         "Could not find file \"./missing.js\".");
   }
 
-  private void assertErrorWarningCount(int errorCount, int warningCount) {
-    if (errorManager.getErrorCount() != errorCount) {
-      assertWithMessage(
-              "Expected %d errors but got\n%s",
-              errorCount, Joiner.on("\n").join(errorManager.getErrors()))
-          .fail();
-    }
-    if (errorManager.getWarningCount() != warningCount) {
-      assertWithMessage(
-              "Expected %d warnings but got\n%s",
-              warningCount, Joiner.on("\n").join(errorManager.getWarnings()))
-          .fail();
-    }
-  }
-
   private void assertNoWarnings() {
-    assertErrorWarningCount(0, 0);
+    assertThat(errorManager.getWarnings()).isEmpty();
+    assertThat(errorManager.getErrors()).isEmpty();
   }
 
   private void assertWarnings(String... messages) {
-    assertErrorWarningCount(0, messages.length);
-    for (int i = 0; i < messages.length; i++) {
-      assertThat(errorManager.getWarnings().get(i).description).isEqualTo(messages[i]);
-    }
+    assertThat(errorManager.getWarnings())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly(messages)
+        .inOrder();
+    assertThat(errorManager.getErrors()).isEmpty();
   }
 
   private void assertErrors(String... messages) {
-    assertErrorWarningCount(messages.length, 0);
-    for (int i = 0; i < messages.length; i++) {
-      assertThat(errorManager.getErrors().get(i).description).isEqualTo(messages[i]);
-    }
-  }
-
-  private static void assertContains(String part, String whole) {
-    assertWithMessage("Expected string to contain: " + part).that(whole.contains(part)).isTrue();
-  }
-
-  private static void assertNotContains(String part, String whole) {
-    assertWithMessage("Expected string not to contain: " + part)
-        .that(whole.contains(part))
-        .isFalse();
+    assertThat(errorManager.getWarnings()).isEmpty();
+    assertThat(errorManager.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly(messages)
+        .inOrder();
   }
 }

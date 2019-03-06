@@ -18,12 +18,12 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -36,7 +36,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.testing.TestErrorReporter;
-import java.util.Objects;
 import org.junit.Before;
 
 /**
@@ -314,17 +313,4 @@ abstract class CompilerTypeTestCase {
   JSType getNativeType(JSTypeNative jsTypeNative) {
     return registry.getNativeType(jsTypeNative);
   }
-
-  static final Correspondence<JSError, String> DESCRIPTION_EQUALITY =
-      new Correspondence<JSError, String>() {
-        @Override
-        public boolean compare(JSError error, String description) {
-          return Objects.equals(error.description, description);
-        }
-
-        @Override
-        public String toString() {
-          return "has description equal to";
-        }
-      };
 }

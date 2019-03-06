@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
+import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.fail;
 
@@ -453,8 +454,8 @@ public final class CompilerTest {
     // Default is warning.
     compiler.compile(SourceFile.fromCode("extern.js", ""),
         SourceFile.fromCode("test.js", badJsDoc), options);
-    assertThat(compiler.getWarningCount()).isEqualTo(1);
-    assertThat(compiler.getErrorCount()).isEqualTo(0);
+    assertThat(compiler.getWarnings()).hasSize(1);
+    assertThat(compiler.getErrors()).isEmpty();
   }
 
   /**
@@ -471,8 +472,8 @@ public final class CompilerTest {
         DiagnosticGroups.NON_STANDARD_JSDOC, CheckLevel.OFF);
     compiler.compile(SourceFile.fromCode("extern.js", ""),
         SourceFile.fromCode("test.js", badJsDoc), options);
-    assertThat(compiler.getWarningCount()).isEqualTo(0);
-    assertThat(compiler.getErrorCount()).isEqualTo(0);
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(compiler.getErrors()).isEmpty();
   }
 
   /**
@@ -490,8 +491,8 @@ public final class CompilerTest {
         DiagnosticGroups.NON_STANDARD_JSDOC, CheckLevel.ERROR);
     compiler.compile(SourceFile.fromCode("extern.js", ""),
         SourceFile.fromCode("test.js", badJsDoc), options);
-    assertThat(compiler.getWarningCount()).isEqualTo(0);
-    assertThat(compiler.getErrorCount()).isEqualTo(1);
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(compiler.getErrors()).hasSize(1);
   }
 
   @Test
@@ -2035,9 +2036,9 @@ public final class CompilerTest {
     compiler.check();
 
     assertThat(compiler.getWarnings()).isEmpty();
-    assertThat(compiler.getErrors()).hasSize(1);
-    assertThat(compiler.getErrors().get(0).getType())
-        .isEqualTo(CheckTypeImportCodeReferences.TYPE_IMPORT_CODE_REFERENCE);
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(CheckTypeImportCodeReferences.TYPE_IMPORT_CODE_REFERENCE);
   }
 
   @Test

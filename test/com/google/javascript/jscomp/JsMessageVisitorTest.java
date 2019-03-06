@@ -23,6 +23,8 @@ import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 import static com.google.javascript.jscomp.JsMessageVisitor.isLowerCamelCaseWithNumericSuffixes;
 import static com.google.javascript.jscomp.JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes;
+import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
+import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
 import com.google.common.base.Joiner;
@@ -274,23 +276,24 @@ public final class JsMessageVisitorTest {
   @Test
   public void testOrphanedJsMessage() {
     extractMessagesSafely("goog.getMsg('a')");
-    assertThat(compiler.getWarnings()).hasSize(1);
     assertThat(messages).isEmpty();
 
-    JSError warn = compiler.getWarnings().get(0);
-    assertError(warn).hasType(JsMessageVisitor.MESSAGE_NODE_IS_ORPHANED);
+    assertThat(compiler.getWarnings())
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(JsMessageVisitor.MESSAGE_NODE_IS_ORPHANED);
   }
 
   @Test
   public void testMessageWithoutDescription() {
     extractMessagesSafely("var MSG_HELLO = goog.getMsg('a')");
-    assertThat(compiler.getWarnings()).hasSize(1);
-    assertThat(messages).hasSize(1);
 
+    assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
 
-    assertError(compiler.getWarnings().get(0)).hasType(JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION);
+    assertThat(compiler.getWarnings())
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION);
   }
 
   @Test
@@ -505,10 +508,10 @@ public final class JsMessageVisitorTest {
     extractMessagesSafely("/** @desc text */ var MSG_FOO = goog.getMsg('');");
 
     assertThat(messages).hasSize(1);
-    assertThat(compiler.getWarnings()).hasSize(1);
-    assertThat(compiler.getWarnings().get(0).description)
-        .isEqualTo(
-            "Message value of MSG_FOO is just an empty string. " + "Empty messages are forbidden.");
+    assertThat(compiler.getWarnings())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly(
+            "Message value of MSG_FOO is just an empty string. Empty messages are forbidden.");
   }
 
   @Test
@@ -517,9 +520,9 @@ public final class JsMessageVisitorTest {
         + "'' + '' + ''     + ''\n+'');");
 
     assertThat(messages).hasSize(1);
-    assertThat(compiler.getWarnings()).hasSize(1);
-    assertThat(compiler.getWarnings().get(0).description)
-        .isEqualTo(
+    assertThat(compiler.getWarnings())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly(
             "Message value of MSG_BAR is just an empty string. " + "Empty messages are forbidden.");
   }
 
@@ -527,9 +530,9 @@ public final class JsMessageVisitorTest {
   public void testMsgVarWithoutAssignment() {
     extractMessages("var MSG_SILLY;");
 
-    assertThat(compiler.getErrors()).hasSize(1);
-    JSError error = compiler.getErrors().get(0);
-    assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_HAS_NO_VALUE);
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(JsMessageVisitor.MESSAGE_HAS_NO_VALUE);
   }
 
   @Test
@@ -544,19 +547,19 @@ public final class JsMessageVisitorTest {
   public void testMsgPropertyWithoutAssignment() {
     extractMessages("goog.message.MSG_SILLY_PROP;");
 
-    assertThat(compiler.getErrors()).hasSize(1);
-    JSError error = compiler.getErrors().get(0);
-    assertThat(error.description).isEqualTo("Message MSG_SILLY_PROP has no value");
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message MSG_SILLY_PROP has no value");
   }
 
   @Test
   public void testMsgVarWithIncorrectRightSide() {
     extractMessages("var MSG_SILLY = 0;");
 
-    assertThat(compiler.getErrors()).hasSize(1);
-    JSError error = compiler.getErrors().get(0);
-    assertThat(error.description)
-        .isEqualTo("Message parse tree malformed. Cannot parse value of " + "message MSG_SILLY");
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly(
+            "Message parse tree malformed. Cannot parse value of " + "message MSG_SILLY");
   }
 
   @Test
@@ -564,10 +567,9 @@ public final class JsMessageVisitorTest {
     extractMessages("DP_DatePicker.MSG_DATE_SELECTION = {};");
 
     assertThat(messages).isEmpty();
-    assertThat(compiler.getErrors()).hasSize(1);
-    JSError error = compiler.getErrors().get(0);
-    assertThat(error.description)
-        .isEqualTo(
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly(
             "Message parse tree malformed."
                 + " Message must be initialized using goog.getMsg function.");
   }
@@ -578,10 +580,9 @@ public final class JsMessageVisitorTest {
     extractMessages("DP_DatePicker.MSG_DATE_SELECTION = somefunc('a')");
 
     assertThat(messages).isEmpty();
-    assertThat(compiler.getErrors()).hasSize(1);
-    JSError error = compiler.getErrors().get(0);
-    assertThat(error.description)
-        .isEqualTo(
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly(
             "Message parse tree malformed. Message initialized using unrecognized function. "
                 + "Please use goog.getMsg() instead.");
   }
@@ -890,8 +891,9 @@ public final class JsMessageVisitorTest {
   }
 
   private void assertOneError(DiagnosticType type) {
-    assertThat(compiler.getErrors()).hasSize(1);
-    assertError(compiler.getErrors().get(0)).hasType(type);
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(type);
   }
 
   private void extractMessagesSafely(String input) {

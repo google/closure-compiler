@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.deps;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.deps.DependencyInfo.Require.es6Import;
 import static com.google.javascript.jscomp.deps.DependencyInfo.Require.googRequireSymbol;
+import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -727,15 +728,16 @@ public final class JsFileParserTest {
 
     parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
 
-    assertThat(errorManager.getErrorCount()).isEqualTo(0);
-    assertThat(errorManager.getWarningCount()).isEqualTo(1);
-    assertThat(errorManager.getWarnings().get(0).getType()).isEqualTo(ModuleLoader.MODULE_CONFLICT);
+    assertThat(errorManager.getErrors()).isEmpty();
+    assertThat(errorManager.getWarnings())
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(ModuleLoader.MODULE_CONFLICT);
   }
 
   /** Asserts the deps match without errors */
   private void assertDeps(DependencyInfo expected, DependencyInfo actual) {
     assertThat(actual).isEqualTo(expected);
-    assertThat(errorManager.getErrorCount()).isEqualTo(0);
-    assertThat(errorManager.getWarningCount()).isEqualTo(0);
+    assertThat(errorManager.getErrors()).isEmpty();
+    assertThat(errorManager.getWarnings()).isEmpty();
   }
 }
