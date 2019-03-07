@@ -17,11 +17,16 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
+import static com.google.javascript.rhino.Token.AWAIT;
+import static com.google.javascript.rhino.Token.CALL;
+import static com.google.javascript.rhino.Token.CLASS;
+import static com.google.javascript.rhino.Token.DESTRUCTURING_LHS;
+import static com.google.javascript.rhino.Token.FUNCTION;
+import static com.google.javascript.rhino.Token.YIELD;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -71,6 +76,19 @@ public final class NodeUtilTest {
     return n;
   }
 
+  /** Parses {@code js} into an AST and then returns {@link #getNode}{@code(token, root)}. */
+  // TODO(nickreid): Consider an overload that takes a `Predicate` rather than a `Token`.
+  private static Node parseFirst(Token token, String js) {
+    // It's fine that we don't inspect the top node because it's always a SCRIPT.
+    return getNode(parse(js), token);
+  }
+
+  /** Returns the parsed expression (e.g. returns a NAME given 'a') */
+  private Node parseExpr(String js) {
+    Node root = parse(js);
+    return root.getFirstFirstChild();
+  }
+
   private static Node getNode(String js) {
     Node root = parse("var a=(" + js + ");");
     Node expr = root.getFirstChild();
@@ -78,33 +96,43 @@ public final class NodeUtilTest {
     return var.getFirstChild();
   }
 
+  /**
+   * Performs a DFS over {@code root} searching for a descendant matching {@code token}.
+   *
+   * <p>The search doesn't include {@code root}.
+   *
+   * @return the first matching node
+   * @throws AssertionError if no matching node was found.
+   */
+  // TODO(nickreid): Consider an overload that takes a `Predicate` rather than a `Token`.
   private static Node getNode(Node root, Token token) {
+    @Nullable Node result = getNodeOrNull(root, token);
+    if (result == null) {
+      throw new AssertionError("No " + token + " node found in:\n " + root.toStringTree());
+    }
+    return result;
+  }
+
+  /**
+   * Performs a DFS below {@code root} searching for a descendant matching {@code token}.
+   *
+   * <p>The search doesn't include {@code root}.
+   *
+   * @return the first matching node, or {@code null} if none match.
+   */
+  // TODO(nickreid): Consider an overload that takes a `Predicate` rather than a `Token`.
+  @Nullable
+  private static Node getNodeOrNull(Node root, Token token) {
     for (Node n : root.children()) {
       if (n.getToken() == token) {
         return n;
       }
-      Node potentialMatch = getNode(n, token);
+      Node potentialMatch = getNodeOrNull(n, token);
       if (potentialMatch != null) {
         return potentialMatch;
       }
     }
     return null;
-  }
-
-  private static Node getYieldNode(String js) {
-    return checkNotNull(getYieldNode(parse(js)));
-  }
-
-  private static Node getYieldNode(Node root) {
-    return getNode(root, Token.YIELD);
-  }
-
-  private static Node getAwaitNode(String js) {
-    return checkNotNull(getAwaitNode(parse(js)));
-  }
-
-  private static Node getAwaitNode(Node root) {
-    return getNode(root, Token.AWAIT);
   }
 
   @Test
@@ -462,12 +490,6 @@ public final class NodeUtilTest {
     assertIsObjectLitKey(parseExpr("(class { a() {} })").getLastChild().getFirstChild(), false);
   }
 
-  /** Returns the parsed expression (e.g. returns a NAME given 'a') */
-  private Node parseExpr(String js) {
-    Node root = parse(js);
-    return root.getFirstFirstChild();
-  }
-
   private void assertMayBeObjectLitKey(Node node, boolean expected) {
     assertThat(NodeUtil.mayBeObjectLitKey(node)).isEqualTo(expected);
   }
@@ -556,41 +578,47 @@ public final class NodeUtilTest {
 
   @Test
   public void testIsFunctionDeclaration() {
-    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("function foo(){}"))).isTrue();
-    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("class C { constructor() {} }")))
+    assertThat(NodeUtil.isFunctionDeclaration(parseFirst(FUNCTION, "function foo(){}"))).isTrue();
+    assertThat(NodeUtil.isFunctionDeclaration(parseFirst(FUNCTION, "class C { constructor() {} }")))
         .isFalse();
-    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("({ foo() {} })"))).isFalse();
-    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("var x = function(){}"))).isFalse();
-    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("export function f() {}"))).isTrue();
-    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("export default function() {}")))
+    assertThat(NodeUtil.isFunctionDeclaration(parseFirst(FUNCTION, "({ foo() {} })"))).isFalse();
+    assertThat(NodeUtil.isFunctionDeclaration(parseFirst(FUNCTION, "var x = function(){}")))
         .isFalse();
-    assertThat(NodeUtil.isFunctionDeclaration(getFunctionNode("export default function foo() {}")))
+    assertThat(NodeUtil.isFunctionDeclaration(parseFirst(FUNCTION, "export function f() {}")))
+        .isTrue();
+    assertThat(NodeUtil.isFunctionDeclaration(parseFirst(FUNCTION, "export default function() {}")))
+        .isFalse();
+    assertThat(
+            NodeUtil.isFunctionDeclaration(
+                parseFirst(FUNCTION, "export default function foo() {}")))
         .isTrue();
     assertThat(
             NodeUtil.isFunctionDeclaration(
-                getFunctionNode("export default (foo) => { alert(foo); }")))
+                parseFirst(FUNCTION, "export default (foo) => { alert(foo); }")))
         .isFalse();
   }
 
   @Test
   public void testIsMethodDeclaration() {
-    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("class C { constructor() {} }")))
+    assertThat(NodeUtil.isMethodDeclaration(parseFirst(FUNCTION, "class C { constructor() {} }")))
         .isTrue();
-    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("class C { a() {} }"))).isTrue();
-    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("class C { static a() {} }"))).isTrue();
-    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("({ set foo(v) {} })"))).isTrue();
-    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("({ get foo() {} })"))).isTrue();
-    assertThat(NodeUtil.isMethodDeclaration(getFunctionNode("({ [foo]() {} })"))).isTrue();
+    assertThat(NodeUtil.isMethodDeclaration(parseFirst(FUNCTION, "class C { a() {} }"))).isTrue();
+    assertThat(NodeUtil.isMethodDeclaration(parseFirst(FUNCTION, "class C { static a() {} }")))
+        .isTrue();
+    assertThat(NodeUtil.isMethodDeclaration(parseFirst(FUNCTION, "({ set foo(v) {} })"))).isTrue();
+    assertThat(NodeUtil.isMethodDeclaration(parseFirst(FUNCTION, "({ get foo() {} })"))).isTrue();
+    assertThat(NodeUtil.isMethodDeclaration(parseFirst(FUNCTION, "({ [foo]() {} })"))).isTrue();
   }
 
   @Test
   public void testIsClassDeclaration() {
-    assertThat(NodeUtil.isClassDeclaration(getClassNode("class Foo {}"))).isTrue();
-    assertThat(NodeUtil.isClassDeclaration(getClassNode("var Foo = class {}"))).isFalse();
-    assertThat(NodeUtil.isClassDeclaration(getClassNode("var Foo = class Foo{}"))).isFalse();
-    assertThat(NodeUtil.isClassDeclaration(getClassNode("export default class Foo {}"))).isTrue();
-    assertThat(NodeUtil.isClassDeclaration(getClassNode("export class Foo {}"))).isTrue();
-    assertThat(NodeUtil.isClassDeclaration(getClassNode("export default class {}"))).isFalse();
+    assertThat(NodeUtil.isClassDeclaration(parseFirst(CLASS, "class Foo {}"))).isTrue();
+    assertThat(NodeUtil.isClassDeclaration(parseFirst(CLASS, "var Foo = class {}"))).isFalse();
+    assertThat(NodeUtil.isClassDeclaration(parseFirst(CLASS, "var Foo = class Foo{}"))).isFalse();
+    assertThat(NodeUtil.isClassDeclaration(parseFirst(CLASS, "export default class Foo {}")))
+        .isTrue();
+    assertThat(NodeUtil.isClassDeclaration(parseFirst(CLASS, "export class Foo {}"))).isTrue();
+    assertThat(NodeUtil.isClassDeclaration(parseFirst(CLASS, "export default class {}"))).isFalse();
   }
 
   private void assertSideEffect(boolean se, String js) {
@@ -1794,24 +1822,24 @@ public final class NodeUtilTest {
   @Test
   public void testLocalValueAwait() {
     Node expr;
-    expr = getAwaitNode("async function f() { await someAsyncAction(); }");
+    expr = parseFirst(AWAIT, "async function f() { await someAsyncAction(); }");
     assertThat(NodeUtil.evaluatesToLocalValue(expr)).isFalse();
 
-    expr = getAwaitNode("async function f() { await {then:function() { return p }}; }");
+    expr = parseFirst(AWAIT, "async function f() { await {then:function() { return p }}; }");
     assertThat(NodeUtil.evaluatesToLocalValue(expr)).isFalse();
 
     // it isn't clear why someone would want to wait on a non-thenable value...
-    expr = getAwaitNode("async function f() { await 5; }");
+    expr = parseFirst(AWAIT, "async function f() { await 5; }");
     assertThat(NodeUtil.evaluatesToLocalValue(expr)).isFalse();
   }
 
   @Test
   public void testLocalValueYield() {
     Node expr;
-    expr = getYieldNode("function *f() { yield; }");
+    expr = parseFirst(YIELD, "function *f() { yield; }");
     assertThat(NodeUtil.evaluatesToLocalValue(expr)).isFalse();
 
-    expr = getYieldNode("function *f() { yield 'something'; }");
+    expr = parseFirst(YIELD, "function *f() { yield 'something'; }");
     assertThat(NodeUtil.evaluatesToLocalValue(expr)).isFalse();
   }
 
@@ -2371,7 +2399,7 @@ public final class NodeUtilTest {
   @Test
   public void testGetBestLValueName() {
     Function<String, String> getBestName =
-        (js) -> NodeUtil.getBestLValueName(NodeUtil.getBestLValue(getFunctionNode(js)));
+        (js) -> NodeUtil.getBestLValueName(NodeUtil.getBestLValue(parseFirst(FUNCTION, js)));
     assertThat(getBestName.apply("var x = function() {};")).isEqualTo("x");
     assertThat(getBestName.apply("x = function() {};")).isEqualTo("x");
     assertThat(getBestName.apply("function x() {};")).isEqualTo("x");
@@ -2439,17 +2467,17 @@ public final class NodeUtilTest {
 
   @Test
   public void testGetRValueOfLValueDestructuringLhs() {
-    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var [x] = 'rhs';"))))
+    assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var [x] = 'rhs';")))
         .hasType(Token.STRING);
-    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var [x, y] = 'rhs';"))))
+    assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var [x, y] = 'rhs';")))
         .hasType(Token.STRING);
-    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var [y, x] = 'rhs';"))))
+    assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var [y, x] = 'rhs';")))
         .hasType(Token.STRING);
-    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var {x: x} = 'rhs';"))))
+    assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var {x: x} = 'rhs';")))
         .hasType(Token.STRING);
-    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var {y: x} = 'rhs';"))))
+    assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var {y: x} = 'rhs';")))
         .hasType(Token.STRING);
-    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var {x} = 'rhs';"))))
+    assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var {x} = 'rhs';")))
         .hasType(Token.STRING);
   }
 
@@ -3416,37 +3444,37 @@ public final class NodeUtilTest {
 
   @Test
   public void testGetBestJsDocInfoForClasses() {
-    Node classNode = getClassNode("/** @export */ class Foo {}");
+    Node classNode = parseFirst(CLASS, "/** @export */ class Foo {}");
     assertThat(NodeUtil.getBestJSDocInfo(classNode).isExport()).isTrue();
 
-    classNode = getClassNode("/** @export */ var Foo = class {}");
+    classNode = parseFirst(CLASS, "/** @export */ var Foo = class {}");
     assertThat(NodeUtil.getBestJSDocInfo(classNode).isExport()).isTrue();
 
-    classNode = getClassNode("/** @export */ var Foo = class Bar {}");
+    classNode = parseFirst(CLASS, "/** @export */ var Foo = class Bar {}");
     assertThat(NodeUtil.getBestJSDocInfo(classNode).isExport()).isTrue();
   }
 
   @Test
   public void testGetBestJsDocInfoForMethods() {
-    Node function = getFunctionNode("class C { /** @export */ foo() {} }");
+    Node function = parseFirst(FUNCTION, "class C { /** @export */ foo() {} }");
     assertThat(NodeUtil.getBestJSDocInfo(function).isExport()).isTrue();
 
-    function = getFunctionNode("class C { /** @export */ [computedMethod]() {} }");
+    function = parseFirst(FUNCTION, "class C { /** @export */ [computedMethod]() {} }");
     assertThat(NodeUtil.getBestJSDocInfo(function).isExport()).isTrue();
   }
 
   @Test
   public void testGetBestJsDocInfoExport() {
-    Node classNode = getClassNode("/** @constructor */ export class Foo {}");
+    Node classNode = parseFirst(CLASS, "/** @constructor */ export class Foo {}");
     assertThat(NodeUtil.getBestJSDocInfo(classNode).isConstructor()).isTrue();
 
-    Node function = getFunctionNode("/** @constructor */ export function Foo() {}");
+    Node function = parseFirst(FUNCTION, "/** @constructor */ export function Foo() {}");
     assertThat(NodeUtil.getBestJSDocInfo(function).isConstructor()).isTrue();
 
-    function = getFunctionNode("/** @constructor */ export var Foo = function() {}");
+    function = parseFirst(FUNCTION, "/** @constructor */ export var Foo = function() {}");
     assertThat(NodeUtil.getBestJSDocInfo(function).isConstructor()).isTrue();
 
-    function = getFunctionNode("/** @constructor */ export let Foo = function() {}");
+    function = parseFirst(FUNCTION, "/** @constructor */ export let Foo = function() {}");
     assertThat(NodeUtil.getBestJSDocInfo(function).isConstructor()).isTrue();
   }
 
@@ -3572,26 +3600,31 @@ public final class NodeUtilTest {
 
   @Test
   public void testIsConstructor() {
-    assertThat(NodeUtil.isConstructor(getFunctionNode("/** @constructor */ function Foo() {}")))
-        .isTrue();
     assertThat(
-            NodeUtil.isConstructor(getFunctionNode("/** @constructor */ var Foo = function() {}")))
+            NodeUtil.isConstructor(parseFirst(FUNCTION, "/** @constructor */ function Foo() {}")))
         .isTrue();
     assertThat(
             NodeUtil.isConstructor(
-                getFunctionNode("var x = {}; /** @constructor */ x.Foo = function() {}")))
+                parseFirst(FUNCTION, "/** @constructor */ var Foo = function() {}")))
         .isTrue();
-    assertThat(NodeUtil.isConstructor(getFunctionNode("class Foo { constructor() {} }"))).isTrue();
-    assertThat(NodeUtil.isConstructor(getFunctionNode("class Foo { static constructor() {} }")))
+    assertThat(
+            NodeUtil.isConstructor(
+                parseFirst(FUNCTION, "var x = {}; /** @constructor */ x.Foo = function() {}")))
+        .isTrue();
+    assertThat(NodeUtil.isConstructor(parseFirst(FUNCTION, "class Foo { constructor() {} }")))
+        .isTrue();
+    assertThat(
+            NodeUtil.isConstructor(parseFirst(FUNCTION, "class Foo { static constructor() {} }")))
         .isFalse();
-    assertThat(NodeUtil.isConstructor(getFunctionNode("let Foo = { constructor() {} }"))).isFalse();
+    assertThat(NodeUtil.isConstructor(parseFirst(FUNCTION, "let Foo = { constructor() {} }")))
+        .isFalse();
 
-    assertThat(NodeUtil.isConstructor(getFunctionNode("function Foo() {}"))).isFalse();
-    assertThat(NodeUtil.isConstructor(getFunctionNode("var Foo = function() {}"))).isFalse();
-    assertThat(NodeUtil.isConstructor(getFunctionNode("var x = {}; x.Foo = function() {};")))
+    assertThat(NodeUtil.isConstructor(parseFirst(FUNCTION, "function Foo() {}"))).isFalse();
+    assertThat(NodeUtil.isConstructor(parseFirst(FUNCTION, "var Foo = function() {}"))).isFalse();
+    assertThat(NodeUtil.isConstructor(parseFirst(FUNCTION, "var x = {}; x.Foo = function() {};")))
         .isFalse();
-    assertThat(NodeUtil.isConstructor(getFunctionNode("function constructor() {}"))).isFalse();
-    assertThat(NodeUtil.isConstructor(getFunctionNode("class Foo { bar() {} }"))).isFalse();
+    assertThat(NodeUtil.isConstructor(parseFirst(FUNCTION, "function constructor() {}"))).isFalse();
+    assertThat(NodeUtil.isConstructor(parseFirst(FUNCTION, "class Foo { bar() {} }"))).isFalse();
   }
 
   @Test
@@ -3599,35 +3632,36 @@ public final class NodeUtilTest {
     // distinguish between static and non-static method named "constructor"
     Node constructorMemberFunctionDef =
         NodeUtil.getEs6ClassConstructorMemberFunctionDef(
-            getClassNode("class Foo { method() {} constructor() {} static constructor() {} };"));
+            parseFirst(
+                CLASS, "class Foo { method() {} constructor() {} static constructor() {} };"));
     assertNode(constructorMemberFunctionDef).isMemberFunctionDef("constructor");
     assertThat(constructorMemberFunctionDef.isStaticMember()).isFalse();
 
     // static method named "constructor" will not be returned as the constructor
     constructorMemberFunctionDef =
         NodeUtil.getEs6ClassConstructorMemberFunctionDef(
-            getClassNode("class Foo { method() {} static constructor() {} }"));
+            parseFirst(CLASS, "class Foo { method() {} static constructor() {} }"));
     assertThat(constructorMemberFunctionDef).isNull();
   }
 
   @Test
   public void testIsGetterOrSetter() {
-    Node fnNode = getFunctionNode("Object.defineProperty(this, 'bar', {get: function() {}});");
+    Node fnNode = parseFirst(FUNCTION, "Object.defineProperty(this, 'bar', {get: function() {}});");
     assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
 
-    fnNode = getFunctionNode("Object.defineProperty(this, 'bar', {set: function() {}});");
+    fnNode = parseFirst(FUNCTION, "Object.defineProperty(this, 'bar', {set: function() {}});");
     assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
 
-    fnNode = getFunctionNode("Object.defineProperties(this, {bar: {get: function() {}}});");
+    fnNode = parseFirst(FUNCTION, "Object.defineProperties(this, {bar: {get: function() {}}});");
     assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
 
-    fnNode = getFunctionNode("Object.defineProperties(this, {bar: {set: function() {}}});");
+    fnNode = parseFirst(FUNCTION, "Object.defineProperties(this, {bar: {set: function() {}}});");
     assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
 
-    fnNode = getFunctionNode("var x = {get bar() {}};");
+    fnNode = parseFirst(FUNCTION, "var x = {get bar() {}};");
     assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
 
-    fnNode = getFunctionNode("var x = {set bar(z) {}};");
+    fnNode = parseFirst(FUNCTION, "var x = {set bar(z) {}};");
     assertThat(NodeUtil.isGetterOrSetter(fnNode.getParent())).isTrue();
   }
 
@@ -3635,31 +3669,32 @@ public final class NodeUtilTest {
   public void testIsObjectDefinePropertiesDefinition() {
     assertThat(
             NodeUtil.isObjectDefinePropertiesDefinition(
-                getCallNode("Object.defineProperties(this, {});")))
+                parseFirst(CALL, "Object.defineProperties(this, {});")))
         .isTrue();
     assertThat(
             NodeUtil.isObjectDefinePropertiesDefinition(
-                getCallNode("Object.defineProperties(this, foo);")))
+                parseFirst(CALL, "Object.defineProperties(this, foo);")))
         .isTrue();
     assertThat(
             NodeUtil.isObjectDefinePropertiesDefinition(
-                getCallNode("$jscomp.global.Object.defineProperties(this, foo);")))
+                parseFirst(CALL, "$jscomp.global.Object.defineProperties(this, foo);")))
         .isTrue();
     assertThat(
             NodeUtil.isObjectDefinePropertiesDefinition(
-                getCallNode("$jscomp$global.Object.defineProperties(this, foo);")))
+                parseFirst(CALL, "$jscomp$global.Object.defineProperties(this, foo);")))
         .isTrue();
 
     assertThat(
             NodeUtil.isObjectDefinePropertiesDefinition(
-                getCallNode("Object.defineProperties(this, {}, foo);")))
+                parseFirst(CALL, "Object.defineProperties(this, {}, foo);")))
         .isFalse();
     assertThat(
             NodeUtil.isObjectDefinePropertiesDefinition(
-                getCallNode("Object.defineProperties(this);")))
+                parseFirst(CALL, "Object.defineProperties(this);")))
         .isFalse();
     assertThat(
-            NodeUtil.isObjectDefinePropertiesDefinition(getCallNode("Object.defineProperties();")))
+            NodeUtil.isObjectDefinePropertiesDefinition(
+                parseFirst(CALL, "Object.defineProperties();")))
         .isFalse();
   }
 
@@ -3667,29 +3702,31 @@ public final class NodeUtilTest {
   public void testIsObjectDefinePropertyDefinition() {
     assertThat(
             NodeUtil.isObjectDefinePropertyDefinition(
-                getCallNode("Object.defineProperty(this, 'foo', {});")))
+                parseFirst(CALL, "Object.defineProperty(this, 'foo', {});")))
         .isTrue();
     assertThat(
             NodeUtil.isObjectDefinePropertyDefinition(
-                getCallNode("Object.defineProperty(this, 'foo', foo);")))
+                parseFirst(CALL, "Object.defineProperty(this, 'foo', foo);")))
         .isTrue();
     assertThat(
             NodeUtil.isObjectDefinePropertyDefinition(
-                getCallNode("$jscomp.global.Object.defineProperty(this, 'foo', foo);")))
+                parseFirst(CALL, "$jscomp.global.Object.defineProperty(this, 'foo', foo);")))
         .isTrue();
     assertThat(
             NodeUtil.isObjectDefinePropertyDefinition(
-                getCallNode("$jscomp$global.Object.defineProperty(this, 'foo', foo);")))
+                parseFirst(CALL, "$jscomp$global.Object.defineProperty(this, 'foo', foo);")))
         .isTrue();
 
     assertThat(
             NodeUtil.isObjectDefinePropertyDefinition(
-                getCallNode("Object.defineProperty(this, {});")))
+                parseFirst(CALL, "Object.defineProperty(this, {});")))
         .isFalse();
     assertThat(
-            NodeUtil.isObjectDefinePropertyDefinition(getCallNode("Object.defineProperty(this);")))
+            NodeUtil.isObjectDefinePropertyDefinition(
+                parseFirst(CALL, "Object.defineProperty(this);")))
         .isFalse();
-    assertThat(NodeUtil.isObjectDefinePropertyDefinition(getCallNode("Object.defineProperty();")))
+    assertThat(
+            NodeUtil.isObjectDefinePropertyDefinition(parseFirst(CALL, "Object.defineProperty();")))
         .isFalse();
   }
 
@@ -3701,7 +3738,7 @@ public final class NodeUtilTest {
     Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
 
     Node ast = parse(fnString);
-    Node functionNode = getFunctionNode(fnString);
+    Node functionNode = parseFirst(FUNCTION, fnString);
 
     Scope globalScope = Scope.createGlobalScope(ast);
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
@@ -3729,7 +3766,7 @@ public final class NodeUtilTest {
     Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
 
     Node ast = parse(fnString);
-    Node functionNode = getFunctionNode(fnString);
+    Node functionNode = parseFirst(FUNCTION, fnString);
 
     Scope globalScope = Scope.createGlobalScope(ast);
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
@@ -3810,22 +3847,22 @@ public final class NodeUtilTest {
 
   @Test
   public void testIsCallToString() {
-    assertThat(NodeUtil.isCallTo(getCallNode("foo()"), "foo")).isTrue();
-    assertThat(NodeUtil.isCallTo(getCallNode("foo.bar()"), "foo.bar")).isTrue();
+    assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo()"), "foo")).isTrue();
+    assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo.bar()"), "foo.bar")).isTrue();
 
     assertThat(NodeUtil.isCallTo(IR.name("foo"), "foo")).isFalse();
     assertThat(NodeUtil.isCallTo(IR.getprop(IR.name("foo"), IR.string("bar")), "foo.bar"))
         .isFalse();
-    assertThat(NodeUtil.isCallTo(getCallNode("foo.bar()"), "foo")).isFalse();
-    assertThat(NodeUtil.isCallTo(getCallNode("foo[0]()"), "foo")).isFalse();
+    assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo.bar()"), "foo")).isFalse();
+    assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo[0]()"), "foo")).isFalse();
   }
 
   @Test
   public void testIsCallToNode() {
-    assertThat(NodeUtil.isCallTo(getCallNode("foo()"), IR.name("foo"))).isTrue();
+    assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo()"), IR.name("foo"))).isTrue();
     assertThat(
             NodeUtil.isCallTo(
-                getCallNode("foo.bar()"), IR.getprop(IR.name("foo"), IR.string("bar"))))
+                parseFirst(CALL, "foo.bar()"), IR.getprop(IR.name("foo"), IR.string("bar"))))
         .isTrue();
 
     assertThat(NodeUtil.isCallTo(IR.name("foo"), IR.name("foo"))).isFalse();
@@ -3834,8 +3871,8 @@ public final class NodeUtilTest {
                 IR.getprop(IR.name("foo"), IR.string("bar")),
                 IR.getprop(IR.name("foo"), IR.string("bar"))))
         .isFalse();
-    assertThat(NodeUtil.isCallTo(getCallNode("foo.bar()"), IR.name("foo"))).isFalse();
-    assertThat(NodeUtil.isCallTo(getCallNode("foo[0]()"), IR.name("foo"))).isFalse();
+    assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo.bar()"), IR.name("foo"))).isFalse();
+    assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo[0]()"), IR.name("foo"))).isFalse();
   }
 
   private Node getNameNodeFrom(String code, String name) {
@@ -3850,14 +3887,14 @@ public final class NodeUtilTest {
   }
 
   private String getFunctionLValue(String js) {
-    Node lVal = NodeUtil.getBestLValue(getFunctionNode(js));
+    Node lVal = NodeUtil.getBestLValue(parseFirst(FUNCTION, js));
     return lVal == null ? null : lVal.getString();
   }
 
   private boolean functionIsRValueOfAssign(String js) {
     Node ast = parse(js);
     Node nameNode = getNameNode(ast, "x");
-    Node funcNode = getFunctionNode(ast);
+    Node funcNode = getNode(ast, FUNCTION);
     assertWithMessage("No function node to test").that(funcNode).isNotNull();
     return funcNode == NodeUtil.getRValueOfLValue(nameNode);
   }
@@ -3869,25 +3906,7 @@ public final class NodeUtilTest {
   }
 
   private static void testFunctionName(String js, String expected) {
-    assertThat(NodeUtil.getNearestFunctionName(getFunctionNode(js))).isEqualTo(expected);
-  }
-
-  private static Node getClassNode(String js) {
-    Node root = parse(js);
-    return getClassNode(root);
-  }
-
-  private static Node getClassNode(Node n) {
-    if (n.isClass()) {
-      return n;
-    }
-    for (Node c : n.children()) {
-      Node result = getClassNode(c);
-      if (result != null) {
-        return result;
-      }
-    }
-    return null;
+    assertThat(NodeUtil.getNearestFunctionName(parseFirst(FUNCTION, js))).isEqualTo(expected);
   }
 
   /**
@@ -3906,42 +3925,6 @@ public final class NodeUtilTest {
       checkState(NodeUtil.isAssignmentOp(root), root);
     }
     return NodeUtil.findLhsNodesInNode(root);
-  }
-
-  private static Node getCallNode(String js) {
-    Node root = parse(js);
-    return getCallNode(root);
-  }
-
-  private static Node getCallNode(Node n) {
-    if (n.isCall()) {
-      return n;
-    }
-    for (Node c : n.children()) {
-      Node result = getCallNode(c);
-      if (result != null) {
-        return result;
-      }
-    }
-    return null;
-  }
-
-  private static Node getFunctionNode(String js) {
-    Node root = parse(js);
-    return getFunctionNode(root);
-  }
-
-  private static Node getFunctionNode(Node n) {
-    if (n.isFunction()) {
-      return n;
-    }
-    for (Node c : n.children()) {
-      Node result = getFunctionNode(c);
-      if (result != null) {
-        return result;
-      }
-    }
-    return null;
   }
 
   private static Node getNameNode(Node n, String name) {
@@ -3965,21 +3948,6 @@ public final class NodeUtilTest {
     }
     for (Node c : tree.children()) {
       Node result = getPattern(c);
-      if (result != null) {
-        return result;
-      }
-    }
-    return null;
-  }
-
-  /** @return The first node in {@code tree} that is a DESTRUCTURING_LHS. */
-  @Nullable
-  private static Node getDestructuringLhs(Node tree) {
-    if (tree.isDestructuringLhs()) {
-      return tree;
-    }
-    for (Node c : tree.children()) {
-      Node result = getDestructuringLhs(c);
       if (result != null) {
         return result;
       }
