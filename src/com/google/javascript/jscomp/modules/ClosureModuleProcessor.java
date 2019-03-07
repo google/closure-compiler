@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
-import com.google.javascript.jscomp.modules.Binding.CreatedBy;
+import com.google.javascript.jscomp.modules.ClosureRequireProcessor.Require;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleProcessor;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
@@ -46,16 +46,6 @@ import javax.annotation.Nullable;
  * <p>The bound names include any names imported through a goog.require(Type)/forwardDeclare.
  */
 final class ClosureModuleProcessor implements ModuleProcessor {
-
-  private static class Require {
-    private final Import i;
-    private final Binding.CreatedBy createdBy;
-
-    private Require(Import i, Binding.CreatedBy createdBy) {
-      this.i = i;
-      this.createdBy = createdBy;
-    }
-  }
 
   private static class UnresolvedGoogModule extends UnresolvedModule {
 
@@ -142,41 +132,42 @@ final class ClosureModuleProcessor implements ModuleProcessor {
 
     ResolveExportResult resolveImport(ModuleRequestResolver moduleRequestResolver, String name) {
       Require require = requiresByLocalName.get(name);
-      Import i = require.i;
+      Import importRecord = require.importRecord();
 
-      UnresolvedModule requested = moduleRequestResolver.resolve(i);
+      UnresolvedModule requested = moduleRequestResolver.resolve(importRecord);
 
       if (requested == null) {
         return ResolveExportResult.ERROR;
-      } else if (i.importName().equals(Export.NAMESPACE)) {
+      } else if (importRecord.importName().equals(Export.NAMESPACE)) {
         // Return a binding based on the other module's metadata.
         return ResolveExportResult.of(
             Binding.from(
                 requested.metadata(),
                 requested.metadata().rootNode(),
-                i.moduleRequest(),
-                require.createdBy));
+                importRecord.moduleRequest(),
+                require.createdBy()));
 
       } else {
         ResolveExportResult result =
             requested.resolveExport(
                 moduleRequestResolver,
-                i.moduleRequest(),
-                i.importName(),
+                importRecord.moduleRequest(),
+                importRecord.importName(),
                 new HashSet<>(),
                 new HashSet<>());
         if (!result.found() && !result.hadError()) {
           compiler.report(
               JSError.make(
                   srcFileName,
-                  i.importNode().getLineno(),
-                  i.importNode().getCharno(),
+                  importRecord.importNode().getLineno(),
+                  importRecord.importNode().getCharno(),
                   DOES_NOT_HAVE_EXPORT,
-                  i.importName()));
+                  importRecord.importName()));
           return ResolveExportResult.ERROR;
         }
-        Node forSourceInfo = i.nameNode() == null ? i.importNode() : i.nameNode();
-        return result.copy(forSourceInfo, require.createdBy);
+        Node forSourceInfo =
+            importRecord.nameNode() == null ? importRecord.importNode() : importRecord.nameNode();
+        return result.copy(forSourceInfo, require.createdBy());
       }
     }
 
@@ -364,68 +355,10 @@ final class ClosureModuleProcessor implements ModuleProcessor {
               propNode));
     }
 
-    /**
-     * Adds a goog.require to the list of imports
-     *
-     * @param nameDeclaration a VAR, LET, or CONST
-     */
+    /** Adds a goog.require(Type) or forwardDeclare to the list of {@code requiresByLocalName} */
     private void maybeInitializeRequire(Node nameDeclaration) {
-      // TODO(b/123598058): These requires can also be in ES modules. Move this code to a common
-      // location.
-      Node rhs =
-          nameDeclaration.getFirstChild().isDestructuringLhs()
-              ? nameDeclaration.getFirstChild().getSecondChild()
-              : nameDeclaration.getFirstFirstChild();
-      // this may be a require, requireType, or forwardDeclare
-      Binding.CreatedBy requireKind = getModuleDependencyType(rhs);
-      if (requireKind == null) {
-        return;
-      }
-      String namespace = rhs.getSecondChild().getString();
-      if (nameDeclaration.getFirstChild().isName()) {
-        // const modA = goog.require('modA');
-        Node lhs = nameDeclaration.getFirstChild();
-        requiresByLocalName.putIfAbsent(
-            lhs.getString(),
-            new Require(
-                Import.builder()
-                    .moduleRequest(namespace)
-                    .localName(lhs.getString())
-                    .importName(Export.NAMESPACE)
-                    .importNode(nameDeclaration)
-                    .nameNode(lhs)
-                    .build(),
-                requireKind));
-      } else {
-        // const {x, y} = goog.require('modA');
-        Node objectPattern = nameDeclaration.getFirstFirstChild();
-        if (!objectPattern.isObjectPattern()) {
-          // bad JS, ignore
-          return;
-        }
-        for (Node key : objectPattern.children()) {
-          if (!key.isStringKey()) {
-            // Bad code, just ignore. We warn elsewhere.
-            continue;
-          }
-          Node lhs = key.getOnlyChild();
-          if (!lhs.isName()) {
-            // Bad code ( e.g. `const {a = 0} = goog.require(...)`). We warn elsewhere.
-            continue;
-          }
-
-          requiresByLocalName.putIfAbsent(
-              lhs.getString(),
-              new Require(
-                  Import.builder()
-                      .moduleRequest(namespace)
-                      .localName(lhs.getString())
-                      .importName(key.getString())
-                      .importNode(nameDeclaration)
-                      .nameNode(lhs)
-                      .build(),
-                  requireKind));
-        }
+      for (Require require : ClosureRequireProcessor.getAllRequires(nameDeclaration)) {
+        requiresByLocalName.putIfAbsent(require.localName(), require);
       }
     }
   }
@@ -452,31 +385,5 @@ final class ClosureModuleProcessor implements ModuleProcessor {
       }
     }
     return true;
-  }
-
-  // TODO(b/123598058):  move this code to a common location.
-  private static final ImmutableMap<String, Binding.CreatedBy> GOOG_DEPENDENCY_CALLS =
-      ImmutableMap.of(
-          "require",
-          CreatedBy.GOOG_REQUIRE,
-          "requireType",
-          CreatedBy.GOOG_REQUIRE_TYPE,
-          "forwardDeclare",
-          CreatedBy.GOOG_FORWARD_DECLARE);
-
-  @Nullable
-  private static CreatedBy getModuleDependencyType(Node value) {
-    if (value == null || !value.isCall()) {
-      return null;
-    }
-    Node callee = value.getFirstChild();
-    if (!callee.isGetProp()) {
-      return null;
-    }
-    Node owner = callee.getFirstChild();
-    if (!owner.isName() || !owner.getString().equals("goog")) {
-      return null;
-    }
-    return GOOG_DEPENDENCY_CALLS.get(callee.getSecondChild().getString());
   }
 }

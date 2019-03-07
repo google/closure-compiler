@@ -79,7 +79,14 @@ public abstract class Binding {
      *   const x = goog.forwardDeclare();
      *   const {x} = goog.forwardDeclare();
      */
-    GOOG_FORWARD_DECLARE,
+    GOOG_FORWARD_DECLARE;
+
+    /** Whether this is some goog.* dependency import */
+    boolean isClosureImport() {
+      return this.equals(GOOG_REQUIRE)
+          || this.equals(GOOG_REQUIRE_TYPE)
+          || this.equals(GOOG_FORWARD_DECLARE);
+    }
   }
 
   /** Binding for an exported value that is not a module namespace object. */
@@ -97,9 +104,7 @@ public abstract class Binding {
   static Binding from(
       ModuleMetadata metadata, Node sourceNode, String closureNamespace, CreatedBy createdBy) {
     Preconditions.checkArgument(
-        createdBy == CreatedBy.GOOG_REQUIRE
-            || createdBy == CreatedBy.GOOG_FORWARD_DECLARE
-            || createdBy == CreatedBy.GOOG_REQUIRE_TYPE,
+        createdBy.isClosureImport(),
         "Expected goog.require(Type) or goog.forwardDeclare, got %s",
         createdBy);
     return new AutoValue_Binding(
