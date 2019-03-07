@@ -464,93 +464,113 @@ class PureFunctionIdentifier implements CompilerPass {
         NodeTraversal traversal,
         Node node,
         Node enclosingFunction) {
-      if (node.isAssign()) {
-        // e.g.
-        // lhs = rhs;
-        // ({x, y} = object);
-        visitLhsNodes(
-            sideEffectInfo,
-            traversal.getScope(),
-            enclosingFunction,
-            NodeUtil.findLhsNodesInNode(node),
-            FIND_RHS_AND_CHECK_FOR_LOCAL_VALUE);
-      } else if (NodeUtil.isCompoundAssignmentOp(node)) {
-        // e.g.
-        // x += 3;
-        visitLhsNodes(
-            sideEffectInfo,
-            traversal.getScope(),
-            enclosingFunction,
-            ImmutableList.of(node.getFirstChild()),
-            // The update assignments (e.g. `+=) always assign primitive, and therefore local,
-            // values.
-            RHS_IS_ALWAYS_LOCAL);
-      } else if (node.isInc() || node.isDelProp() || node.isDec()) {
-        // e.g.
-        // x++;
-        visitLhsNodes(
-            sideEffectInfo,
-            traversal.getScope(),
-            enclosingFunction,
-            ImmutableList.of(node.getOnlyChild()),
-            // The value assigned by a unary op is always local.
-            RHS_IS_ALWAYS_LOCAL);
-      } else if (node.isForOf()) {
-        // e.g.
-        // for (const {prop1, prop2} of iterable) {...}
-        // for ({prop1: x.p1, prop2: x.p2} of iterable) {...}
-        //
-        // TODO(bradfordcsmith): Possibly we should try to determine whether the iteration itself
-        //     could have side effects.
-        visitLhsNodes(
-            sideEffectInfo,
-            traversal.getScope(),
-            enclosingFunction,
-            NodeUtil.findLhsNodesInNode(node),
-            // The RHS of a for-of must always be an iterable, making it a container, so we can't
-            // consider its contents to be local
-            RHS_IS_NEVER_LOCAL);
-      } else if (node.isForIn()) {
-        // e.g.
-        // for (prop in obj) {...}
-        // Also this, though not very useful or readable.
-        // for ([char1, char2, ...x.rest] in obj) {...}
-        visitLhsNodes(
-            sideEffectInfo,
-            traversal.getScope(),
-            enclosingFunction,
-            NodeUtil.findLhsNodesInNode(node),
-            // A for-in always assigns a string, which is a local value by definition.
-            RHS_IS_ALWAYS_LOCAL);
-      } else if (NodeUtil.isCallOrNew(node)) {
-        visitCall(sideEffectInfo, node);
-      } else if (node.isName()) {
-        // Variable definition are not side effects. Check that the name appears in the context of a
-        // variable declaration.
-        checkArgument(NodeUtil.isNameDeclaration(node.getParent()), node.getParent());
-        Node value = node.getFirstChild();
-        // Assignment to local, if the value isn't a safe local value,
-        // new object creation or literal or known primitive result
-        // value, add it to the local blacklist.
-        if (value != null && !NodeUtil.evaluatesToLocalValue(value)) {
-          Scope scope = traversal.getScope();
-          Var var = scope.getVar(node.getString());
-          blacklistedVarsByFunction.put(enclosingFunction, var);
-        }
-      } else if (node.isThrow()) {
-        sideEffectInfo.setFunctionThrows();
-      } else if (node.isReturn()) {
-        if (node.hasChildren() && !NodeUtil.evaluatesToLocalValue(node.getFirstChild())) {
-          sideEffectInfo.setTaintsReturn();
-        }
-      } else if (node.isYield()) {
-        // 'yield' throws if the caller calls `.throw` on the generator object.
-        sideEffectInfo.setFunctionThrows();
-      } else if (node.isAwait()) {
-        // 'await' throws if the promise it's waiting on is rejected.
-        sideEffectInfo.setFunctionThrows();
-      } else {
-        throw new IllegalArgumentException("Unhandled side effect node type " + node);
+      switch (node.getToken()) {
+        case ASSIGN:
+          // e.g.
+          // lhs = rhs;
+          // ({x, y} = object);
+          visitLhsNodes(
+              sideEffectInfo,
+              traversal.getScope(),
+              enclosingFunction,
+              NodeUtil.findLhsNodesInNode(node),
+              FIND_RHS_AND_CHECK_FOR_LOCAL_VALUE);
+          break;
+
+        case INC: // e.g. x++;
+        case DEC:
+        case DELPROP:
+          visitLhsNodes(
+              sideEffectInfo,
+              traversal.getScope(),
+              enclosingFunction,
+              ImmutableList.of(node.getOnlyChild()),
+              // The value assigned by a unary op is always local.
+              RHS_IS_ALWAYS_LOCAL);
+          break;
+
+        case FOR_OF:
+          // e.g.
+          // for (const {prop1, prop2} of iterable) {...}
+          // for ({prop1: x.p1, prop2: x.p2} of iterable) {...}
+          //
+          // TODO(bradfordcsmith): Possibly we should try to determine whether the iteration itself
+          //     could have side effects.
+          visitLhsNodes(
+              sideEffectInfo,
+              traversal.getScope(),
+              enclosingFunction,
+              NodeUtil.findLhsNodesInNode(node),
+              // The RHS of a for-of must always be an iterable, making it a container, so we can't
+              // consider its contents to be local
+              RHS_IS_NEVER_LOCAL);
+          break;
+
+        case FOR_IN:
+          // e.g.
+          // for (prop in obj) {...}
+          // Also this, though not very useful or readable.
+          // for ([char1, char2, ...x.rest] in obj) {...}
+          visitLhsNodes(
+              sideEffectInfo,
+              traversal.getScope(),
+              enclosingFunction,
+              NodeUtil.findLhsNodesInNode(node),
+              // A for-in always assigns a string, which is a local value by definition.
+              RHS_IS_ALWAYS_LOCAL);
+          break;
+
+        case CALL:
+        case NEW:
+          visitCall(sideEffectInfo, node);
+          break;
+
+        case NAME:
+          // Variable definition are not side effects. Check that the name appears in the context of
+          // a variable declaration.
+          checkArgument(NodeUtil.isNameDeclaration(node.getParent()), node.getParent());
+          Node value = node.getFirstChild();
+          // Assignment to local, if the value isn't a safe local value,
+          // new object creation or literal or known primitive result
+          // value, add it to the local blacklist.
+          if (value != null && !NodeUtil.evaluatesToLocalValue(value)) {
+            Scope scope = traversal.getScope();
+            Var var = scope.getVar(node.getString());
+            blacklistedVarsByFunction.put(enclosingFunction, var);
+          }
+          break;
+
+        case THROW:
+          sideEffectInfo.setFunctionThrows();
+          break;
+
+        case RETURN:
+          if (node.hasChildren() && !NodeUtil.evaluatesToLocalValue(node.getFirstChild())) {
+            sideEffectInfo.setTaintsReturn();
+          }
+          break;
+
+        case YIELD: // 'yield' throws if the caller calls `.throw` on the generator object.
+        case AWAIT: // 'await' throws if the promise it's waiting on is rejected.
+          sideEffectInfo.setFunctionThrows();
+          break;
+
+        default:
+          if (NodeUtil.isCompoundAssignmentOp(node)) {
+            // e.g.
+            // x += 3;
+            visitLhsNodes(
+                sideEffectInfo,
+                traversal.getScope(),
+                enclosingFunction,
+                ImmutableList.of(node.getFirstChild()),
+                // The update assignments (e.g. `+=) always assign primitive, and therefore local,
+                // values.
+                RHS_IS_ALWAYS_LOCAL);
+            break;
+          }
+
+          throw new IllegalArgumentException("Unhandled side effect node type " + node);
       }
     }
 
