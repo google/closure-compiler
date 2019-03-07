@@ -84,6 +84,7 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
     return actual().hasSlot(name) ? checkNotNull(actual().getVar(name)) : null;
   }
 
+  /** A subject for an {@link AbstractVar} declared by this particular scope. */
   public final class DeclarationSubject {
     private final AbstractVar<?, ?> var;
 
