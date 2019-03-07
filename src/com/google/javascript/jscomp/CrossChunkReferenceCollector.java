@@ -113,7 +113,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
       if (n.equals(topLevelStatementDraft.statementNode)) {
         topLevelStatements.add(new TopLevelStatement(topLevelStatementDraft));
         topLevelStatementDraft = null;
-      } else if (n.isName() || (n.isStringKey() && !n.hasChildren())) {
+      } else if (n.isName()) {
         String varName = n.getString();
         Var v = t.getScope().getVar(varName);
 
