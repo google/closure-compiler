@@ -85,9 +85,11 @@ public class DepsGenerator {
       "DEPS_SAME_FILE",
       "Namespace \"{0}\" is both required and provided in the same file.");
 
-  static final DiagnosticType NEVER_PROVIDED_ERROR = DiagnosticType.error(
-      "DEPS_NEVER_PROVIDED",
-      "Namespace \"{0}\" is required but never provided.");
+  static final DiagnosticType NEVER_PROVIDED_ERROR =
+      DiagnosticType.error(
+          "DEPS_NEVER_PROVIDED",
+          "Namespace \"{0}\" is required but never provided.\nYou "
+              + "need to pass a library that has it in srcs or exports to your target''s deps.");
 
   static final DiagnosticType DUPE_PROVIDES_WARNING = DiagnosticType.warning(
       "DEPS_DUPE_PROVIDES",

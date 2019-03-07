@@ -622,8 +622,12 @@ public final class DepsGeneratorTest {
     SourceFile src1 = SourceFile.fromCode("src1.js",
         "goog.require('b');\n");
 
-    doErrorMessagesRun(ImmutableList.of(dep1), ImmutableList.of(src1), true /* fatal */,
-        "Namespace \"b\" is required but never provided.");
+    doErrorMessagesRun(
+        ImmutableList.of(dep1),
+        ImmutableList.of(src1),
+        true /* fatal */,
+        "Namespace \"b\" is required but never provided.\n"
+            + "You need to pass a library that has it in srcs or exports to your target's deps.");
   }
 
   @Test
