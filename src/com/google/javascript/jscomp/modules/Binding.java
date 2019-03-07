@@ -100,7 +100,8 @@ public abstract class Binding {
         createdBy == CreatedBy.GOOG_REQUIRE
             || createdBy == CreatedBy.GOOG_FORWARD_DECLARE
             || createdBy == CreatedBy.GOOG_REQUIRE_TYPE,
-        "Expected goog.require(Type) or goog.forwardDeclare, got " + createdBy);
+        "Expected goog.require(Type) or goog.forwardDeclare, got %s",
+        createdBy);
     return new AutoValue_Binding(
         metadata,
         sourceNode,
