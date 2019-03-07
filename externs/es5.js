@@ -212,10 +212,20 @@ Object.isFrozen = function(obj) {};
 
 
 /**
+ * We acknowledge that this function does not exist on the `Object.prototype`
+ * and is declared in this file for other reasons.
+ *
+ * When `toJSON` is defined as a property on an object it can be used in
+ * conjunction with the JSON.stringify() function.
+ *
+ * It is defined here to:
+ * (1) Prevent the compiler from renaming the property on internal classes.
+ * (2) Enforce that the signature is correct for users defining it.
+ *
  * @param {string=} opt_key The JSON key for this object.
  * @return {*} The serializable representation of this object. Note that this
  *     need not be a string. See http://goo.gl/PEUvs.
- * @see https://es5.github.io/#x15.12.3
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#toJSON()_behavior
  */
 Object.prototype.toJSON = function(opt_key) {};
 
