@@ -482,7 +482,6 @@ public class ErrorToFixMapperTest {
             useInType("b", "c", "e")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_deduplicate_standalone() {
     assertChanges(
@@ -552,7 +551,6 @@ public class ErrorToFixMapperTest {
             "const {a, b, c} = goog.require('a');", useInCode("a", "c"), useInType("a", "b")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_emptyDestructuring_alone() {
     assertChanges(
@@ -560,7 +558,6 @@ public class ErrorToFixMapperTest {
         fileWithImports("goog.require('a');", useInCode("a")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_emptyDestructuringStandaloneBySamePrimitive() {
     assertChanges(
@@ -568,7 +565,6 @@ public class ErrorToFixMapperTest {
         fileWithImports("goog.require('a');", useInCode("a")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_emptyDestructuringStandaloneByStrongerPrimitive() {
     assertChanges(
@@ -576,7 +572,6 @@ public class ErrorToFixMapperTest {
         fileWithImports("goog.require('a');", useInCode("a")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_emptyDestructuringStandaloneByWeakerPrimitive() {
     assertChanges(
@@ -621,7 +616,6 @@ public class ErrorToFixMapperTest {
             useInType("a")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_standaloneAliasedBySamePrimitive() {
     assertChanges(
@@ -629,7 +623,6 @@ public class ErrorToFixMapperTest {
         fileWithImports("const a = goog.require('a');", useInCode("a")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_standaloneAliasedByStrongerPrimitive() {
     assertChanges(
@@ -637,7 +630,6 @@ public class ErrorToFixMapperTest {
         fileWithImports("const a = goog.require('a');", useInCode("a")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_standaloneAliasedByWeakerPrimitive() {
     assertChanges(
@@ -645,7 +637,6 @@ public class ErrorToFixMapperTest {
         fileWithImports("const a = goog.require('a');", useInCode("a")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_standaloneDestructuredBySamePrimitive() {
     assertChanges(
@@ -653,7 +644,6 @@ public class ErrorToFixMapperTest {
         fileWithImports("const {a} = goog.require('a');", useInCode("a")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_standaloneDestructuredByStrongerPrimitive() {
     assertChanges(
@@ -661,7 +651,6 @@ public class ErrorToFixMapperTest {
         fileWithImports("const {a} = goog.require('a');", useInCode("a")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_standaloneDestructuredByWeakerPrimitive() {
     assertChanges(
@@ -707,7 +696,6 @@ public class ErrorToFixMapperTest {
             useInCode("a", "b", "c")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_preserveJsDoc_whenMergingStandalone() {
     assertChanges(
@@ -726,7 +714,6 @@ public class ErrorToFixMapperTest {
             useInCode("a")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_preserveJsDoc_whenMergingDestructures_single() {
     assertChanges(
@@ -745,7 +732,6 @@ public class ErrorToFixMapperTest {
             useInCode("b", "c")));
   }
 
-  @Ignore
   @Test
   public void testFixRequires_preserveJsDoc_whenMergingDestructures_multiple() {
     // TODO(tjgq): Consider merging multiple @suppress annotations into a single comment.

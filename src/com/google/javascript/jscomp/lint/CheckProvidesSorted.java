@@ -17,9 +17,9 @@
 package com.google.javascript.jscomp.lint;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED;
 
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -31,6 +31,11 @@ import javax.annotation.Nullable;
  * information to produce a suggested fix.
  */
 public final class CheckProvidesSorted implements NodeTraversal.Callback {
+  public static final DiagnosticType PROVIDES_NOT_SORTED =
+      DiagnosticType.warning(
+          "JSC_PROVIDES_NOT_SORTED",
+          "goog.provide() statements are not sorted."
+              + " The correct order is:\n\n{0}\n");
 
   /** Operation modes. */
   public enum Mode {

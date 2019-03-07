@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp.lint;
 
-import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED;
+import static com.google.javascript.jscomp.lint.CheckProvidesSorted.PROVIDES_NOT_SORTED;
 
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;

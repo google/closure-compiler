@@ -41,7 +41,8 @@ import com.google.javascript.jscomp.lint.CheckNullabilityModifiers;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
-import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckRequiresSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
@@ -616,10 +617,8 @@ public class DiagnosticGroups {
               CheckPrimitiveAsObject.NEW_PRIMITIVE_OBJECT,
               CheckPrimitiveAsObject.PRIMITIVE_OBJECT_DECLARATION,
               CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER,
-              CheckRequiresAndProvidesSorted.DUPLICATE_REQUIRE,
-              CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED,
-              CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED,
-              CheckRequiresAndProvidesSorted.PROVIDES_AFTER_REQUIRES,
+              CheckProvidesSorted.PROVIDES_NOT_SORTED,
+              CheckRequiresSorted.REQUIRES_NOT_SORTED,
               CheckUnusedLabels.UNUSED_LABEL,
               CheckUselessBlocks.USELESS_BLOCK,
               ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE,

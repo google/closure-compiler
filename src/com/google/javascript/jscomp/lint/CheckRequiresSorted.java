@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.lint;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -27,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.errorprone.annotations.Immutable;
+import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
@@ -42,6 +42,11 @@ import javax.annotation.Nullable;
  * are sorted and deduplicated, exposing the necessary information to produce a suggested fix.
  */
 public final class CheckRequiresSorted implements NodeTraversal.Callback {
+  public static final DiagnosticType REQUIRES_NOT_SORTED =
+      DiagnosticType.warning(
+          "JSC_REQUIRES_NOT_SORTED",
+          "goog.require() and goog.requireType() statements are not sorted."
+              + " The correct order is:\n\n{0}\n");
 
   /** Operation modes. */
   public enum Mode {

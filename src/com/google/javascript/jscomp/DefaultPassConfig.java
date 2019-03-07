@@ -55,7 +55,8 @@ import com.google.javascript.jscomp.lint.CheckNullabilityModifiers;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
-import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckRequiresSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
@@ -2074,7 +2075,11 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("checkRequiresAndProvidesSorted") {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new CheckRequiresAndProvidesSorted(compiler);
+          return combineChecks(
+              compiler,
+              ImmutableList.of(
+                  new CheckProvidesSorted(CheckProvidesSorted.Mode.COLLECT_AND_REPORT),
+                  new CheckRequiresSorted(CheckRequiresSorted.Mode.COLLECT_AND_REPORT)));
         }
 
         @Override

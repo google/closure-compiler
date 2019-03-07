@@ -26,7 +26,8 @@ import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckNullabilityModifiers;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
-import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckRequiresSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -92,7 +93,8 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckPrimitiveAsObject(compiler),
                   new ClosureCheckModule(compiler, compiler.getModuleMetadataMap()),
                   new CheckNullabilityModifiers(compiler),
-                  new CheckRequiresAndProvidesSorted(compiler),
+                  new CheckProvidesSorted(CheckProvidesSorted.Mode.COLLECT_AND_REPORT),
+                  new CheckRequiresSorted(CheckRequiresSorted.Mode.COLLECT_AND_REPORT),
                   new CheckSideEffects(
                       compiler, /* report */ true, /* protectSideEffectFreeCode */ false),
                   new CheckTypeImportCodeReferences(compiler),
