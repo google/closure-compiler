@@ -697,27 +697,47 @@ public abstract class ObjectType extends JSType implements Serializable {
   }
 
   /**
-   * Checks that the prototype is an implicit prototype of this object. Since
-   * each object has an implicit prototype, an implicit prototype's
-   * implicit prototype is also this implicit prototype's.
+   * Checks that the prototype is an implicit prototype of this object. Since each object has an
+   * implicit prototype, an implicit prototype's implicit prototype is also this implicit
+   * prototype's.
    *
    * @param prototype any prototype based object
-   *
-   * @return {@code true} if {@code prototype} is {@code equal} to any
-   *         object in this object's implicit prototype chain.
+   * @return {@code true} if {@code prototype} is {@code equal} to any object in this object's
+   *     implicit prototype chain.
    */
+  @SuppressWarnings("ReferenceEquality")
   final boolean isImplicitPrototype(ObjectType prototype) {
-    for (ObjectType current = this;
-         current != null;
-         current = current.getImplicitPrototype()) {
+    for (ObjectType current = this; current != null; current = current.getImplicitPrototype()) {
       if (current.isTemplatizedType()) {
         current = current.toMaybeTemplatizedType().getReferencedType();
       }
-      if (current.isEquivalentTo(prototype)) {
+
+      current = deeplyUnwrap(current);
+
+      // The prototype should match exactly.
+      // NOTE: the use of "==" here rather than isEquivalentTo is deliberate.  This method
+      // is very hot in the type checker and relying on identity improves performance of both
+      // type checking/type inferrence and property disambiguation.
+      if (current != null && current == prototype) {
         return true;
       }
     }
     return false;
+  }
+
+  private static ObjectType deeplyUnwrap(ObjectType current) {
+    while (current instanceof ProxyObjectType) {
+      if (current.isTemplatizedType()) {
+        current = current.toMaybeTemplatizedType().getReferencedType();
+      }
+      if (current.isNamedType()) {
+        if (!current.isSuccessfullyResolved()) {
+          break;
+        }
+        current = current.toMaybeNamedType().getReferencedObjTypeInternal();
+      }
+    }
+    return current;
   }
 
   @Override
