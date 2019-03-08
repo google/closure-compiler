@@ -389,6 +389,18 @@ assert.isDefined = function(value, opt_message) {};
 
 /**
  * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.isFunction = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.isNotFunction = function(value, opt_message) {};
+
+/**
+ * @param {*} value
  * @param {string=} message
  */
 assert.isNotNull = function(value, message) {}
@@ -468,6 +480,14 @@ assert.propertyVal = function(object, property, value, opt_message) {};
  * @param {string=} opt_message
  */
 assert.throws = function(fn, constructor, opt_regexp, opt_message) {};
+
+/**
+ * @param {function()} fn
+ * @param {function(new: Object)|string|!RegExp} constructor
+ * @param {string|!RegExp=} opt_regexp
+ * @param {string=} opt_message
+ */
+assert.doesNotThrow = function(fn, constructor, opt_regexp, opt_message) {};
 
 /**
  * @param {!Array<*>} set1
