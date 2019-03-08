@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -66,6 +67,7 @@ public class Result {
   }
 
   @VisibleForTesting
+  @Deprecated
   public Result(
       ImmutableList<JSError> errors,
       ImmutableList<JSError> warnings,
@@ -83,6 +85,28 @@ public class Result {
         null,
         sourceMap,
         externExport,
+        null,
+        null,
+        null);
+  }
+
+  /**
+   * Returns an almost empty result that is used for multistage compilation.
+   *
+   * <p>For multistage compilations, Result for stage1 only cares about errors and warnings. It is
+   * unnecessary to write all of other results in the disk.
+   */
+  public static Result createResultForStage1(Result result) {
+    VariableMap emptyVariableMap = new VariableMap(ImmutableMap.of());
+    return new Result(
+        result.errors,
+        result.warnings,
+        emptyVariableMap,
+        emptyVariableMap,
+        emptyVariableMap,
+        null,
+        null,
+        "",
         null,
         null,
         null);
