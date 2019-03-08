@@ -156,4 +156,39 @@ final class PreprocessorSymbolTable
       return instance;
     }
   }
+
+  /**
+   * Adds a synthetic reference for a 'string' node representing a reference name.
+   *
+   * <p>This does some work to set the source info for the reference as well.
+   */
+  void addStringNode(Node n, AbstractCompiler compiler) {
+    String name = n.getString();
+    Node syntheticRef =
+        NodeUtil.newQName(
+            compiler, name, n /* real source offsets will be filled in below */, name);
+
+    // Offsets to add to source. Named for documentation purposes.
+    final int forQuote = 1;
+    final int forDot = 1;
+
+    Node current = null;
+    for (current = syntheticRef; current.isGetProp(); current = current.getFirstChild()) {
+      int fullLen = current.getQualifiedName().length();
+      int namespaceLen = current.getFirstChild().getQualifiedName().length();
+
+      current.setSourceEncodedPosition(n.getSourcePosition() + forQuote);
+      current.setLength(fullLen);
+
+      current
+          .getLastChild()
+          .setSourceEncodedPosition(n.getSourcePosition() + namespaceLen + forQuote + forDot);
+      current.getLastChild().setLength(current.getLastChild().getString().length());
+    }
+
+    current.setSourceEncodedPosition(n.getSourcePosition() + forQuote);
+    current.setLength(current.getString().length());
+
+    addReference(syntheticRef);
+  }
 }
