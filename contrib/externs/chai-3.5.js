@@ -514,3 +514,13 @@ chai.Assertion.prototype.assert = function(
 
 /** @const */
 chai.assert = assert;
+
+/** @const */
+chai.util = {};
+
+/**
+ * @param {!chai.Assertion} obj
+ * @param {string} key
+ * @param {*=} value
+ */
+chai.util.flag = function(obj, key, value) {};
