@@ -350,6 +350,7 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
     assertThat(statements.get(3).isMovableDeclaration()).isFalse();
   }
 
+
   @Test
   public void testUnknownNameValueIsImmovable() {
     assertStatementIsImmovable("var a = unknownName;");
@@ -398,44 +399,48 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
 
   @Test
   public void testObjectLiteralOfMovablesIsMovable() {
-    testSame(lines(
-        "var wellDefinedName = 1;",
-        "var o = {",
-        "  f: function(){},",
-        "  one: 1,",
-        "  n: wellDefinedName,",
-        "  o: {},",
-        "  'quoted': 1,",
-        "  123: 2,",
-        // computed
-        "  ['computed string']: 1,",
-        "  [234]: 1,",
-        // method shorthand
-        "  method() {},",
-        "  'quoted method'() {},",
-        "  ['computed method']() {},",
-        "  [345]() {},",
-        // variable shorthand
-        "  wellDefinedName,",
-        // getters
-        "  get x() {},",
-        "  get 'a'() {},",
-        "  get ['a']() {},",
-        "  get 456() {},",
-        "  get [567]() {},",
-        // setters
-        "  set x(x) {},",
-        "  set 'a'(v) {},",
-        "  set ['a'](v) {},",
-        "  set 678(v) {},",
-        "  set [678](v) {},",
-        "};"));
+    testSame(
+        lines(
+            "var wellDefinedName = 1;",
+            "var o = {",
+            "  f: function(){},",
+            "  one: 1,",
+            "  n: wellDefinedName,",
+            "  o: {},",
+            "  'quoted': 1,",
+            "  123: 2,",
+            // computed
+            "  ['computed string']: 1,",
+            "  [234]: 1,",
+            // method shorthand
+            "  method() {},",
+            "  'quoted method'() {},",
+            "  ['computed method']() {},",
+            "  [345]() {},",
+            // variable shorthand
+            "  wellDefinedName,",
+            // getters
+            "  get x() {},",
+            "  get 'a'() {},",
+            "  get ['a']() {},",
+            "  get 456() {},",
+            "  get [567]() {},",
+            // setters
+            "  set x(x) {},",
+            "  set 'a'(v) {},",
+            "  set ['a'](v) {},",
+            "  set 678(v) {},",
+            "  set [678](v) {},",
+            // spread
+            "  ...wellDefinedName,",
+            "};"));
     assertThat(testedCollector.getTopLevelStatements().get(1).isMovableDeclaration()).isTrue();
   }
 
   @Test
   public void testObjectLiteralWithImmovableIsImmovable() {
     assertStatementIsImmovable("var o = { v: unknownValue };");
+    assertStatementIsImmovable("var o = { ...unknownValue };");
     assertStatementIsImmovable("var o = { [unknownValue]: 1 };");
     assertStatementIsImmovable("var o = { [unknownValue]() {} };");
     assertStatementIsImmovable("var o = { get [unknownValue]() {} };");
