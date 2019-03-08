@@ -2919,7 +2919,7 @@ TimeRanges.prototype.end = function(index) { return 0; };
  * @see http://dev.w3.org/html5/websockets/
  * @constructor
  * @param {string} url
- * @param {string=} opt_protocol
+ * @param {(string|!Array<string>)=} opt_protocol
  * @implements {EventTarget}
  */
 function WebSocket(url, opt_protocol) {}
