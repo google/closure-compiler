@@ -2320,6 +2320,32 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDefaultValueInitializers_areConsidered_whenAnalyzingFunctions() {
+    assertNoPureCalls(
+        lines(
+            "function impure() { throw 'something'; }", //
+            "",
+            "function foo(a = impure()) { }",
+            "foo();"));
+
+    assertPureCallsMarked(
+        lines(
+            "function pure() { }", //
+            "",
+            "function foo(a = pure()) { }",
+            "foo();"),
+        ImmutableList.of(
+            // TODO(b/128035138): Should be ["pure", "foo"]. "pure" is being polluted.
+            ));
+
+    assertPureCallsMarked(
+        lines(
+            "function foo(a = 0) { }", //
+            "foo();"),
+        ImmutableList.of("foo"));
+  }
+
+  @Test
   public void testFunctionProperties1() {
     String source = lines(
         "/** @constructor */",
