@@ -62,8 +62,6 @@ import javax.annotation.Nullable;
  *
  * @author johnlenz@google.com (John Lenz)
  * @author tdeegan@google.com (Thomas Deegan)
- *     <p>We will prevail, in peace and freedom from fear, and in true health, through the purity
- *     and essence of our natural... fluids. - General Turgidson
  */
 class PureFunctionIdentifier implements CompilerPass {
   private final AbstractCompiler compiler;
