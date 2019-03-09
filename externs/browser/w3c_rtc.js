@@ -1256,6 +1256,21 @@ MediaRecorder.prototype.requestData = function() {};
 MediaRecorder.isTypeSupported = function(type) {};
 
 /**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {{data: !Blob, timecode: (number|undefined)}} eventInitDict
+ * @see https://www.w3.org/TR/mediastream-recording/#blobevent-section
+ */
+function BlobEvent(type, eventInitDict) {}
+
+/** @type {!Blob} */
+BlobEvent.prototype.data;
+
+/** @type {number} */
+BlobEvent.prototype.timecode;
+
+/**
  * @interface
  * @see https://w3c.github.io/mediacapture-image/##photosettings-section
  */
