@@ -48,6 +48,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Objects;
+import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
@@ -2848,42 +2849,23 @@ public class Node implements Serializable {
     putProp(Prop.DEFINE_NAME, name);
   }
 
-  // There are four values of interest:
-  //   global state changes
-  //   this state changes
-  //   arguments state changes
-  //   whether the call throws an exception
-  //   locality of the result
-  // We want a value of 0 to mean "global state changes and
-  // unknown locality of result".
-
-  public static final int FLAG_GLOBAL_STATE_UNMODIFIED = 1;
-  public static final int FLAG_THIS_UNMODIFIED = 2;
-  public static final int FLAG_ARGUMENTS_UNMODIFIED = 4;
-  public static final int FLAG_NO_THROWS = 8;
-  public static final int FLAG_LOCAL_RESULTS = 16;
-
-  public static final int SIDE_EFFECTS_FLAGS_MASK = 31;
-
-  public static final int SIDE_EFFECTS_ALL = 0;
-  public static final int NO_SIDE_EFFECTS =
-    FLAG_GLOBAL_STATE_UNMODIFIED
-    | FLAG_THIS_UNMODIFIED
-    | FLAG_ARGUMENTS_UNMODIFIED
-    | FLAG_NO_THROWS;
-
   /**
    * Marks this function or constructor call's side effect flags.
    * This property is only meaningful for {@link Token#CALL} and
    * {@link Token#NEW} nodes.
    */
   public final void setSideEffectFlags(int flags) {
-    checkArgument(
+    checkState(
         this.isCall() || this.isNew() || this.isTaggedTemplateLit(),
-        "setIsNoSideEffectsCall only supports call-like nodes, got %s",
+        "Side-effect flags can only be set on invocation nodes; got %s",
         this);
 
-    putIntProp(Prop.SIDE_EFFECT_FLAGS, flags);
+    // We invert the flags before setting because we also invert the them when getting; they go
+    // full circle.
+    //
+    // We apply the mask after inversion so that if all flags are being set (all 1s), it's
+    // equivalent to storing a 0, the default value of an int-prop, which has no memory cost.
+    putIntProp(Prop.SIDE_EFFECT_FLAGS, ~flags & SideEffectFlags.USED_BITS_MASK);
   }
 
   public final void setSideEffectFlags(SideEffectFlags flags) {
@@ -2894,15 +2876,45 @@ public class Node implements Serializable {
    * Returns the side effects flags for this node.
    */
   public final int getSideEffectFlags() {
-    return getIntProp(Prop.SIDE_EFFECT_FLAGS);
+    // Int props default to 0, but we want the default for side-effect flags to be all 1s.
+    // Therefore, we invert the value returned here. This is correct for non-defaults because we
+    // also invert when setting the flags.
+    return ~getIntProp(Prop.SIDE_EFFECT_FLAGS) & SideEffectFlags.USED_BITS_MASK;
   }
 
   /**
-   * A helper class for getting and setting the side-effect flags.
+   * A helper class for getting and setting invocation side-effect flags.
+   *
+   * <p>The following values are of interest:
+   *
+   * <ol>
+   *   <li>Is global state mutated? ({@code MUTATES_GLOBAL_STATE})
+   *   <li>Is the receiver (`this`) mutated? ({@code MUTATES_THIS})
+   *   <li>Are any arguments mutated? ({@code MUTATES_ARGUMENTS})
+   *   <li>Does the call throw an error? ({@code THROWS})
+   *   <li>Is the return an escaped (mutable by other code) value? ({@code ESCAPED_RETURN})
+   * </ol>
+   *
    * @author johnlenz@google.com (John Lenz)
    */
   public static final class SideEffectFlags {
-    private int value = Node.SIDE_EFFECTS_ALL;
+    public static final int MUTATES_GLOBAL_STATE = 1;
+    public static final int MUTATES_THIS = 2;
+    public static final int MUTATES_ARGUMENTS = 4;
+    public static final int THROWS = 8;
+    public static final int ESCAPED_RETURN = 16;
+
+    private static final int USED_BITS_MASK = (1 << 5) - 1;
+
+    // TODO(nickreid): Delete one of these values. They should be symmetric with respect to
+    // inversion. We need better noenclature to describe ESCAPED_RETURN.
+    public static final int NO_SIDE_EFFECTS = ESCAPED_RETURN;
+    public static final int ALL_SIDE_EFFECTS =
+        MUTATES_GLOBAL_STATE | MUTATES_THIS | MUTATES_ARGUMENTS | THROWS | ESCAPED_RETURN;
+
+    // A bitfield indicating the flag statuses. All bits set to 1 means "global state changes and
+    // unknown locality of result".
+    private int value = ALL_SIDE_EFFECTS;
 
     public SideEffectFlags() {
     }
@@ -2917,13 +2929,13 @@ public class Node implements Serializable {
 
     /** All side-effect occur and the returned results are non-local. */
     public SideEffectFlags setAllFlags() {
-      value = Node.SIDE_EFFECTS_ALL;
+      value = ALL_SIDE_EFFECTS;
       return this;
     }
 
     /** No side-effects occur and the returned results are local. */
     public SideEffectFlags clearAllFlags() {
-      value = Node.NO_SIDE_EFFECTS | Node.FLAG_LOCAL_RESULTS;
+      value = NO_SIDE_EFFECTS & ~ESCAPED_RETURN;
       return this;
     }
 
@@ -2932,63 +2944,56 @@ public class Node implements Serializable {
      *   no global state change, no throws, no this change, no arguments change
      */
     public void clearSideEffectFlags() {
-      value |= Node.NO_SIDE_EFFECTS;
+      value &= ESCAPED_RETURN;
     }
 
     public SideEffectFlags setMutatesGlobalState() {
       // Modify global means everything must be assumed to be modified.
-      removeFlag(Node.FLAG_GLOBAL_STATE_UNMODIFIED);
-      removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
-      removeFlag(Node.FLAG_THIS_UNMODIFIED);
+      value |= MUTATES_GLOBAL_STATE | MUTATES_ARGUMENTS | MUTATES_THIS;
       return this;
     }
 
     public SideEffectFlags setThrows() {
-      removeFlag(Node.FLAG_NO_THROWS);
+      value |= THROWS;
       return this;
     }
 
     public SideEffectFlags setMutatesThis() {
-      removeFlag(Node.FLAG_THIS_UNMODIFIED);
+      value |= MUTATES_THIS;
       return this;
     }
 
     public SideEffectFlags setMutatesArguments() {
-      removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
+      value |= MUTATES_ARGUMENTS;
       return this;
     }
 
     public SideEffectFlags setReturnsTainted() {
-      removeFlag(Node.FLAG_LOCAL_RESULTS);
+      value |= ESCAPED_RETURN;
       return this;
     }
 
-    private void removeFlag(int flag) {
-      value &= ~flag;
-    }
-
     @Override
+    @DoNotCall // For debugging only.
     public String toString() {
       StringBuilder builder = new StringBuilder("Side effects: ");
-      if ((value & Node.FLAG_THIS_UNMODIFIED) == 0) {
+
+      if ((value & MUTATES_THIS) != 0) {
         builder.append("this ");
       }
-
-      if ((value & Node.FLAG_GLOBAL_STATE_UNMODIFIED) == 0) {
+      if ((value & MUTATES_GLOBAL_STATE) != 0) {
         builder.append("global ");
       }
-
-      if ((value & Node.FLAG_NO_THROWS) == 0) {
+      if ((value & THROWS) != 0) {
         builder.append("throw ");
       }
-
-      if ((value & Node.FLAG_ARGUMENTS_UNMODIFIED) == 0) {
+      if ((value & MUTATES_ARGUMENTS) != 0) {
         builder.append("args ");
       }
-
-      if ((value & Node.FLAG_LOCAL_RESULTS) == 0) {
+      if ((value & ESCAPED_RETURN) != 0) {
         builder.append("return ");
       }
+
       return builder.toString();
     }
   }
@@ -2997,22 +3002,28 @@ public class Node implements Serializable {
    * @return Whether the only side-effect is "modifies this"
    */
   public final boolean isOnlyModifiesThisCall() {
-    return areBitFlagsSet(
-        getSideEffectFlags() & Node.NO_SIDE_EFFECTS,
-        Node.FLAG_GLOBAL_STATE_UNMODIFIED
-            | Node.FLAG_ARGUMENTS_UNMODIFIED
-            | Node.FLAG_NO_THROWS);
+    int consideredFlags = getSideEffectFlags();
+    consideredFlags |= SideEffectFlags.NO_SIDE_EFFECTS; // Set non-side-effect bits to 1.
+
+    // TODO(nickreid): Delete this; check if MUTATES_THIS is actually set. This was left in to
+    // maintain existing behaviour but it makes the name of this method misleading.
+    consideredFlags &= ~SideEffectFlags.MUTATES_THIS;
+
+    return consideredFlags == SideEffectFlags.NO_SIDE_EFFECTS;
   }
 
   /**
    * @return Whether the only side-effect is "modifies arguments"
    */
   public final boolean isOnlyModifiesArgumentsCall() {
-    return areBitFlagsSet(
-        getSideEffectFlags() & Node.NO_SIDE_EFFECTS,
-        Node.FLAG_GLOBAL_STATE_UNMODIFIED
-            | Node.FLAG_THIS_UNMODIFIED
-            | Node.FLAG_NO_THROWS);
+    int consideredFlags = getSideEffectFlags();
+    consideredFlags |= SideEffectFlags.NO_SIDE_EFFECTS; // Set non-side-effect bits to 1.
+
+    // TODO(nickreid): Delete this; check if MUTATES_ARGUMENTS is actually set. This was left in to
+    // maintain existing behaviour but it makes the name of this method misleading.
+    consideredFlags &= ~SideEffectFlags.MUTATES_ARGUMENTS;
+
+    return consideredFlags == SideEffectFlags.NO_SIDE_EFFECTS;
   }
 
   /**
@@ -3020,7 +3031,10 @@ public class Node implements Serializable {
    * has no side effects.
    */
   public final boolean isNoSideEffectsCall() {
-    return areBitFlagsSet(getSideEffectFlags(), NO_SIDE_EFFECTS);
+    int consideredFlags = getSideEffectFlags();
+    consideredFlags |= SideEffectFlags.NO_SIDE_EFFECTS; // Set non-side-effect bits to 1.
+
+    return consideredFlags == SideEffectFlags.NO_SIDE_EFFECTS;
   }
 
   /**
@@ -3029,25 +3043,28 @@ public class Node implements Serializable {
    * references).
    */
   public final boolean isLocalResultCall() {
-    return areBitFlagsSet(getSideEffectFlags(), FLAG_LOCAL_RESULTS);
+    return !allBitsSet(getSideEffectFlags(), SideEffectFlags.ESCAPED_RETURN);
   }
 
   /** Returns true if this is a new/call that may mutate its arguments. */
   public final boolean mayMutateArguments() {
-    return !areBitFlagsSet(getSideEffectFlags(), FLAG_ARGUMENTS_UNMODIFIED);
+    return allBitsSet(getSideEffectFlags(), SideEffectFlags.MUTATES_ARGUMENTS);
   }
 
   /** Returns true if this is a new/call that may mutate global state or throw. */
   public final boolean mayMutateGlobalStateOrThrow() {
-    return !areBitFlagsSet(getSideEffectFlags(),
-        FLAG_GLOBAL_STATE_UNMODIFIED | FLAG_NO_THROWS);
+    return anyBitSet(
+        getSideEffectFlags(), SideEffectFlags.MUTATES_GLOBAL_STATE | SideEffectFlags.THROWS);
   }
 
-  /**
-   * returns true if all the flags are set in value.
-   */
-  private static boolean areBitFlagsSet(int value, int flags) {
-    return (value & flags) == flags;
+  /** Returns true iff all the set bits in {@code mask} are also set in {@code value}. */
+  private static boolean allBitsSet(int value, int mask) {
+    return (value & mask) == mask;
+  }
+
+  /** Returns true iff any the bit set in {@code mask} is also set in {@code value}. */
+  private static boolean anyBitSet(int value, int mask) {
+    return (value & mask) != 0;
   }
 
   /**

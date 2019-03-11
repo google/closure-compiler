@@ -1500,7 +1500,7 @@ public final class NodeUtil {
    */
   static boolean callHasLocalResult(Node n) {
     checkState(n.isCall() || n.isTaggedTemplateLit(), n);
-    return (n.getSideEffectFlags() & Node.FLAG_LOCAL_RESULTS) > 0;
+    return n.isLocalResultCall();
   }
 
   /**

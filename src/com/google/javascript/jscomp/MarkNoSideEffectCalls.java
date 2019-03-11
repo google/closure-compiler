@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Node.SideEffectFlags;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -182,8 +183,8 @@ class MarkNoSideEffectCalls implements CompilerPass {
       }
 
       if (maybeFunction) {
-        if (node.getSideEffectFlags() != Node.NO_SIDE_EFFECTS) {
-          node.setSideEffectFlags(Node.NO_SIDE_EFFECTS);
+        if (node.getSideEffectFlags() != SideEffectFlags.NO_SIDE_EFFECTS) {
+          node.setSideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS);
           compiler.reportChangeToEnclosingScope(node);
         }
       }
