@@ -2977,6 +2977,12 @@ WebSocket.prototype.readyState;
 WebSocket.prototype.bufferedAmount;
 
 /**
+ * An event handler called on error event.
+ * @type {?function(!Event): void}
+ */
+WebSocket.prototype.onerror;
+
+/**
  * An event handler called on open event.
  * @type {?function(!Event): void}
  */
