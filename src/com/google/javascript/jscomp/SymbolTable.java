@@ -420,13 +420,16 @@ public final class SymbolTable {
 
     int refCount = 0;
     for (Reference ref : getReferences(symbol)) {
+      Node node = ref.getNode();
       builder.append(
           SimpleFormat.format(
-              "  Ref %d: %s:%d %s\n",
+              "  Ref %d: %s line: %d col: %d len: %d %s\n",
               refCount,
-              ref.getNode().getSourceFileName(),
-              ref.getNode().getLineno(),
-              ref.getNode().isIndexable() ? "" : "non indexable"));
+              node.getSourceFileName(),
+              node.getLineno(),
+              node.getCharno(),
+              node.getLength(),
+              node.isIndexable() ? "" : "non indexable"));
       refCount++;
     }
   }
