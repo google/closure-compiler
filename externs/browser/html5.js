@@ -2990,8 +2990,53 @@ WebSocket.prototype.onopen;
 WebSocket.prototype.onmessage;
 
 /**
+ * @record
+ * @extends {EventInit}
+ * @see https://html.spec.whatwg.org/multipage/web-sockets.html#the-websocket-interface
+ */
+function CloseEventInit() {}
+
+/**
+ * @type {undefined|boolean}
+ */
+CloseEventInit.prototype.wasClean;
+
+/**
+ * @type {undefined|number}
+ */
+CloseEventInit.prototype.code;
+
+/**
+ * @type {undefined|string}
+ */
+CloseEventInit.prototype.reason;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {!CloseEventInit=} opt_init
+ */
+var CloseEvent = function(type, opt_init) {};
+
+/**
+ * @type {boolean}
+ */
+CloseEvent.prototype.wasClean;
+
+/**
+ * @type {number}
+ */
+CloseEvent.prototype.code;
+
+/**
+ * @type {string}
+ */
+CloseEvent.prototype.reason;
+
+/**
  * An event handler called on close event.
- * @type {?function(!Event): void}
+ * @type {?function(!CloseEvent): void}
  */
 WebSocket.prototype.onclose;
 
