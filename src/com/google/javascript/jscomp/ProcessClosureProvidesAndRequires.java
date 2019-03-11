@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 The Closure Compiler Authors.
+ * Copyright 2019 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -41,21 +42,30 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Replaces goog.provide calls, removes goog.{require,requireType} calls, verifies that each
- * goog.{require,requireType} has a corresponding goog.provide, and performs some Closure-pecific
- * simplifications.
+ * Replaces goog.provide calls, removes goog.{require,requireType,forwardDeclare} calls and verifies
+ * that each goog.{require,requireType} has a corresponding goog.provide.
+ *
+ * <p>We expect all goog.modules and goog.requires in modules to have been rewritten. This is why
+ * all remaining require/requireType calls must refer to a goog.provide, although the original JS
+ * code may contain goog.requires of a goog.module.
+ *
+ * <p>This is designed to work during a hotswap pass, under the assumption that no rewriting has
+ * been done of goog.provides and definitions other than this pass.
+ *
+ * <p>This also annotates all provided namespace definitions `a.b = {};` with {@link
+ * Node#IS_NAMESPACE} so that later passes know they refer to a goog.provide'd namespace.
  *
  * @author chrisn@google.com (Chris Nokleberg)
  */
 class ProcessClosureProvidesAndRequires {
 
-  /** The root Closure namespace */
-  static final String GOOG = "goog";
+  // The root Closure namespace
+  private static final String GOOG = "goog";
 
   private final AbstractCompiler compiler;
   private final JSModuleGraph moduleGraph;
 
-  // The goog.provides must be processed in a deterministic order.
+  // Use a LinkedHashMap because the goog.provides must be processed in a deterministic order.
   private final Map<String, ProvidedName> providedNames = new LinkedHashMap<>();
 
   private final List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
@@ -66,6 +76,7 @@ class ProcessClosureProvidesAndRequires {
   private final List<Node> requiresToBeRemoved = new ArrayList<>();
   // Set of nodes to report changed at the end of rewriting
   private final Set<Node> maybeTemporarilyLiveNodes = new HashSet<>();
+  // Whether this instance has already rewritten goog.provides, which can only happen once
   private boolean hasRewritingOccurred = false;
 
   ProcessClosureProvidesAndRequires(
@@ -80,7 +91,8 @@ class ProcessClosureProvidesAndRequires {
     this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
 
     // goog is special-cased because it is provided in Closure's base library.
-    providedNames.put(GOOG, new ProvidedName(GOOG, null, null, false /* implicit */));
+    providedNames.put(
+        GOOG, new ProvidedName(GOOG, /* node= */ null, /* module= */ null, /* explicit= */ false));
   }
 
   /** Collects all goog.provides and goog.require namespace */
@@ -320,7 +332,7 @@ class ProcessClosureProvidesAndRequires {
         }
       } else {
         registerAnyProvidedPrefixes(ns, parent, t.getModule());
-        providedNames.put(ns, new ProvidedName(ns, parent, t.getModule(), true));
+        providedNames.put(ns, new ProvidedName(ns, parent, t.getModule(), /* explicit= */ true));
       }
     }
   }
@@ -347,7 +359,7 @@ class ProcessClosureProvidesAndRequires {
         } else if (n.getBooleanProp(Node.WAS_PREVIOUSLY_PROVIDED)) {
           // We didn't find it in the providedNames, but it was previously marked as provided.
           // This implies we're in hotswap pass and the current typedef is a provided namespace.
-          ProvidedName provided = new ProvidedName(name, n, t.getModule(), true);
+          ProvidedName provided = new ProvidedName(name, n, t.getModule(), /* explicit= */ true);
           providedNames.put(name, provided);
         }
       }
@@ -380,6 +392,8 @@ class ProcessClosureProvidesAndRequires {
   /**
    * Processes the output of processed-provide from a previous pass. This will update our data
    * structures in the same manner as if the provide had been processed in this pass.
+   *
+   * <p>TODO(b/128120127): delete this method
    */
   private void processProvideFromPreviousPass(NodeTraversal t, String name, Node parent) {
     if (!providedNames.containsKey(name)) {
@@ -388,11 +402,10 @@ class ProcessClosureProvidesAndRequires {
       Node expr = new Node(Token.EXPR_RESULT);
       expr.useSourceInfoIfMissingFromForTree(parent);
       parent.getParent().addChildBefore(expr, parent);
-      /**
-       * 'expr' has been newly added to the AST, but it might be removed again before this pass
-       * finishes. Keep it in a list for later change reporting if it doesn't get removed again
-       * before the end of the pass.
-       */
+
+      // 'expr' has been newly added to the AST, but it might be removed again before this pass
+      // finishes. Keep it in a list for later change reporting if it doesn't get removed again
+      // before the end of the pass.
       maybeTemporarilyLiveNodes.add(expr);
 
       JSModule module = t.getModule();
@@ -530,39 +543,49 @@ class ProcessClosureProvidesAndRequires {
       String prefixNs = ns.substring(0, pos);
       pos = ns.indexOf('.', pos + 1);
       if (providedNames.containsKey(prefixNs)) {
-        providedNames.get(prefixNs).addProvide(node, module, false /* implicit */);
+        providedNames.get(prefixNs).addProvide(node, module, /* explicit= */ false);
       } else {
-        providedNames.put(prefixNs, new ProvidedName(prefixNs, node, module, false /* implicit */));
+        providedNames.put(
+            prefixNs, new ProvidedName(prefixNs, node, module, /* explicit= */ false));
       }
     }
   }
 
   // -------------------------------------------------------------------------
 
-  /** Information required to replace a goog.provide call later in the traversal. */
-  private class ProvidedName {
+  /** Stores information about a Closure namespace created by a goog.provide */
+  class ProvidedName {
+    // The Closure namespace this name represents, e.g. `a.b` for `goog.provide('a.b');`
     private final String namespace;
 
-    // The node and module where the call was explicitly or implicitly
-    // goog.provided.
+    // The first node in the AST that creates this ProvidedName.
+    // This is always a goog.provide('a.b'), null (for implicit namespaces and 'goog'), or an
+    // EXPR_RESULT representing a dummy goog.provide for when we're in a hotswap pass.
+    // TODO(lharker): make it so that this is always either a goog.provide() or null.
     private final Node firstNode;
+    // The module where this namespace was first goog.provided, if modules exist. */
     private final JSModule firstModule;
 
-    // The node where the call was explicitly goog.provided. May be null
-    // if the namespace is always provided implicitly.
+    // The node where the call was explicitly goog.provided. Null if the namespace is implicit.
     private Node explicitNode = null;
+    // The JSModule of explicitNode, null if this is not explicit or there are no input modules.
     private JSModule explicitModule = null;
-
-    // There are child namespaces of this one.
+    // Whether there are child namespaces of this one.
     private boolean hasAChildNamespace = false;
 
-    // The candidate definition.
+    // The candidate definition for this namespace. For example, given
+    //      goog.provide('a.b');
+    //      /** @constructor * /
+    //      a.b = function() {};
+    // the 'candidate definition' of 'a.b' is the GETPROP 'a.b' from the constructor declaration.
     private Node candidateDefinition = null;
 
-    // The minimum module where the provide must appear.
+    // The minimum module where the provide namespace definition must appear. If child namespaces of
+    // this provide appear in multiple modules, this module must be earlier than all child
+    // namespace's modules.
     private JSModule minimumModule = null;
 
-    // The replacement declaration.
+    // The replacement declaration. Null until replace() has been called.
     private Node replacementNode = null;
 
     ProvidedName(String namespace, Node node, JSModule module, boolean explicit) {
@@ -574,12 +597,19 @@ class ProcessClosureProvidesAndRequires {
       addProvide(node, module, explicit);
     }
 
-    /** Add an implicit or explicit provide. */
-    void addProvide(Node node, JSModule module, boolean explicit) {
+    /**
+     * Adds an implicit or explicit provide.
+     *
+     * <p>Every provided name can have multiple implicit provides but a maximum of one explicit
+     * provide.
+     *
+     * @param node the EXPR_RESULT representing this provide
+     */
+    private void addProvide(Node node, JSModule module, boolean explicit) {
       if (explicit) {
         // goog.provide('name.space');
         checkState(explicitNode == null);
-        checkArgument(node.isExprResult());
+        checkArgument(node.isExprResult(), node);
         explicitNode = node;
         explicitModule = module;
       } else {
@@ -598,11 +628,13 @@ class ProcessClosureProvidesAndRequires {
     }
 
     /**
-     * Record function declaration, variable declaration or assignment that refers to the same name
-     * as the provide statement. Give preference to declarations; if no declaration exists, record a
-     * reference to an assignment so it repurposed later.
+     * Records function declaration, variable declarations, and assignments that refer to this
+     * provided namespace.
+     *
+     * <p>This pass gives preference to declarations. If no declaration exists, records a reference
+     * to an assignment so it can be repurposed later into a declaration.
      */
-    void addDefinition(Node node, JSModule module) {
+    private void addDefinition(Node node, JSModule module) {
       Preconditions.checkArgument(
           node.isExprResult() // assign
               || node.isFunction()
@@ -632,7 +664,7 @@ class ProcessClosureProvidesAndRequires {
      * <p>If we're providing a name with no definition, then create one. If we're providing a name
      * with a duplicate definition, then make sure that definition becomes a declaration.
      */
-    void replace() {
+    private void replace() {
       if (firstNode == null) {
         // Don't touch the base case ('goog').
         replacementNode = candidateDefinition;
@@ -746,8 +778,13 @@ class ProcessClosureProvidesAndRequires {
       compiler.reportChangeToEnclosingScope(replacementNode);
     }
 
-    /** Create the declaration node for this name, without inserting it into the AST. */
+    /**
+     * Create the declaration node for this name, without inserting it into the AST.
+     *
+     * @param value the object literal namespace, possibly in a CAST
+     */
     private Node createDeclarationNode(Node value) {
+      checkArgument(value.isObjectLit() || value.isCast(), value);
       if (namespace.indexOf('.') == -1) {
         return makeVarDeclNode(value);
       } else {
@@ -829,6 +866,13 @@ class ProcessClosureProvidesAndRequires {
           ? firstNode.getFirstChild().getLastChild()
           : null;
     }
+
+    @Override
+    @GwtIncompatible("Unnecessary") // This is just for debugging in an IDE.
+    public String toString() {
+      String explicitOrImplicit = isExplicitlyProvided() ? "explicit" : "implicit";
+      return String.format("ProvidedName: %s, %s", namespace, explicitOrImplicit);
+    }
   }
 
   private JSDocInfo createUnknownTypeJsDocInfo() {
@@ -839,7 +883,10 @@ class ProcessClosureProvidesAndRequires {
     return castToUnknownBuilder.build();
   }
 
-  /** @return Whether the node is namespace placeholder. */
+  /**
+   * Returns whether the node initializes a goog.provide'd namespace (e.g. `a.b = {};`) with a
+   * simple namespace object literal (e.g. not `a.b = class {}`;)
+   */
   private static boolean isNamespacePlaceholder(Node n) {
     if (!n.getBooleanProp(Node.IS_NAMESPACE)) {
       return false;
