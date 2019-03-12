@@ -48,9 +48,11 @@ final class InlineAliases implements CompilerPass {
   private final AbstractCompiler compiler;
   private final Map<String, String> aliases = new LinkedHashMap<>();
   private GlobalNamespace namespace;
+  private final AstFactory astFactory;
 
   InlineAliases(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.astFactory = compiler.createAstFactory();
   }
 
   @Override
@@ -139,7 +141,8 @@ final class InlineAliases implements CompilerPass {
               return;
             }
 
-            Node newNode = NodeUtil.newQName(compiler, resolveAlias(n.getQualifiedName(), n));
+            Node newNode =
+                astFactory.createQName(t.getScope(), resolveAlias(n.getQualifiedName(), n));
 
             // If n is get_prop like "obj.foo" then newNode should use only location of foo, not
             // obj.foo.
