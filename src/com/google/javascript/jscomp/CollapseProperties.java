@@ -73,12 +73,11 @@ class CollapseProperties implements CompilerPass {
   static final DiagnosticType UNSAFE_NAMESPACE_WARNING =
       DiagnosticType.warning(
           "JSC_UNSAFE_NAMESPACE",
-          "incomplete alias created for namespace {0}");
+          "incomplete alias created for namespace {0}, possibly due to await/yield transpilation.\n"
+              + "See https://github.com/google/closure-compiler/wiki/FAQ#i-got-an-incomplete-alias-created-for-namespace-error--what-do-i-do for more details.");
 
   static final DiagnosticType NAMESPACE_REDEFINED_WARNING =
-      DiagnosticType.warning(
-          "JSC_NAMESPACE_REDEFINED",
-          "namespace {0} should not be redefined");
+      DiagnosticType.warning("JSC_NAMESPACE_REDEFINED", "namespace {0} should not be redefined");
 
   static final DiagnosticType UNSAFE_THIS = DiagnosticType.warning(
       "JSC_UNSAFE_THIS",
