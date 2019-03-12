@@ -3845,6 +3845,11 @@ Window.prototype.WebKitMutationObserver;
  */
 Window.prototype.MozMutationObserver;
 
+/**
+ * @type {Document}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/document
+ */
+Window.prototype.document;
 
 /**
  * @see http://www.w3.org/TR/page-visibility/
