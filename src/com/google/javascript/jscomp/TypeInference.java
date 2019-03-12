@@ -989,11 +989,24 @@ class TypeInference
                 && !var.isTypeInferred()
                 && var.getNameNode() != null;
 
+        // Whether this variable is declared not because it has JSDoc with a declaration, but
+        // because it is const and the right-hand-side is easily inferrable.
+        // e.g. these are 'typeless const declarations':
+        //   const x = 0;
+        //   /** @const */
+        //   a.b.c = SomeOtherConstructor;
+        // but these are not:
+        //    let x = 0;
+        //    /** @const @constructor */
+        //    a.b.c = someMixin();
+        // This is messy, since the definition of 'typeless const' is duplicated in
+        // TypedScopeCreator and this code.
         boolean isTypelessConstDecl =
             isVarDeclaration
                 && NodeUtil.isConstantDeclaration(
                     compiler.getCodingConvention(), var.getJSDocInfo(), var.getNameNode())
-                && !(var.getJSDocInfo() != null && var.getJSDocInfo().hasType());
+                && !(var.getJSDocInfo() != null
+                    && var.getJSDocInfo().containsDeclarationExcludingTypelessConst());
 
         // When looking at VAR initializers for declared VARs, we tend
         // to use the declared type over the type it's being

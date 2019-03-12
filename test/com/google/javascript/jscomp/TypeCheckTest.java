@@ -23102,6 +23102,47 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         });
   }
 
+  @Test
+  public void testAtRecordOnVarObjectLiteral_warns() {
+    testTypes(
+        "/** @record */ var X = {};",
+        lines(
+            "initializing variable", //
+            "found   : {}",
+            "required: function(this:X): ?"));
+  }
+
+  @Test
+  public void testAtRecordOnConstObjectLiteral_warns() {
+    testTypes(
+        "/** @record */ const X = {};",
+        lines(
+            "initializing variable", //
+            "found   : {}",
+            "required: function(this:X): ?"));
+  }
+
+  @Test
+  public void testAtConstructorOnConstObjectLiteral_warns() {
+    testTypes(
+        "/** @constructor */ const X = {};",
+        lines(
+            "initializing variable", //
+            "found   : {}",
+            "required: function(new:X): ?"));
+  }
+
+  @Test
+  public void testDeclarationAnnotatedEnum_warnsIfAssignedNonEnumRhs() {
+    testTypes(
+        // Y looks similar to an enum but is not actually annotated as such
+        "const Y = {A: 0, B: 1}; /** @enum {number} */ const X = Y;",
+        lines(
+            "initializing variable", //
+            "found   : {A: number, B: number}",
+            "required: enum{X}"));
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));

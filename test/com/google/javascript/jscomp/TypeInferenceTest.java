@@ -2750,6 +2750,33 @@ public final class TypeInferenceTest {
     assertTypeOfExpression("Y").toStringIsEqualTo("undefined");
   }
 
+  @Test
+  public void constDeclarationWithReturnJSDoc_ignoresUnknownRhsType() {
+    assuming("foo", UNKNOWN_TYPE);
+
+    inFunction(lines("/** @return {number} */ const fn = foo;"));
+
+    JSType fooWithInterfaceType = getType("fn");
+    assertType(fooWithInterfaceType).isFunctionTypeThat().hasReturnTypeThat().isNumber();
+  }
+
+  @Test
+  public void constDeclarationWithCtorJSDoc_ignoresKnownMixinReturnType() {
+    // Create a function always returning a constructor for 'Foo'
+    JSType fooType = FunctionType.builder(registry).forConstructor().withName("Foo").build();
+    assuming("Foo", fooType);
+    FunctionType mixinType = FunctionType.builder(registry).withReturnType(fooType).build();
+    assuming("mixin", mixinType);
+
+    // The @constructor JSDoc should declare a new type, and FooExtended should refer to that
+    // type instead of the constructor for Foo
+    inFunction(lines("/** @constructor @extends {Foo} */ const FooExtended = mixin();"));
+
+    JSType fooWithInterfaceType = getType("FooExtended");
+    assertType(fooWithInterfaceType).isNotEqualTo(fooType);
+    assertType(fooWithInterfaceType).toStringIsEqualTo("function(new:FooExtended): ?");
+  }
+
   private ObjectType getNativeObjectType(JSTypeNative t) {
     return registry.getNativeObjectType(t);
   }
