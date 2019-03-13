@@ -25,7 +25,11 @@ import static com.google.javascript.rhino.Token.AWAIT;
 import static com.google.javascript.rhino.Token.CALL;
 import static com.google.javascript.rhino.Token.CLASS;
 import static com.google.javascript.rhino.Token.DESTRUCTURING_LHS;
+import static com.google.javascript.rhino.Token.FOR_AWAIT_OF;
+import static com.google.javascript.rhino.Token.FOR_OF;
 import static com.google.javascript.rhino.Token.FUNCTION;
+import static com.google.javascript.rhino.Token.REST;
+import static com.google.javascript.rhino.Token.SPREAD;
 import static com.google.javascript.rhino.Token.YIELD;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -53,11 +57,13 @@ import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 /** Tests for NodeUtil */
-@RunWith(JUnit4.class)
+@RunWith(Enclosed.class)
 public final class NodeUtilTest {
 
   private static Node parse(String js) {
@@ -1016,6 +1022,114 @@ public final class NodeUtilTest {
       }
     }
     return null;
+  }
+
+  @RunWith(Parameterized.class)
+  public static final class IteratesImpureIterableTest {
+
+    @Parameters(name = "{0} in \"{1}\"")
+    public static Iterable<Object[]> cases() {
+      return ImmutableList.copyOf(
+          new Object[][] {
+            // SPREAD < ARRAYLIT
+            {SPREAD, "[...[]]", false},
+            {SPREAD, "[...[danger()]]", false},
+            {SPREAD, "[...'lit']", false},
+            {SPREAD, "[...`template`]", false},
+            {SPREAD, "[...`template ${sub}`]", false},
+            {SPREAD, "[...`template ${danger()}`]", false},
+            {SPREAD, "[...danger]", true},
+            {SPREAD, "[...danger()]", true},
+            {SPREAD, "[...5]", true},
+            // SPREAD < CALL
+            {SPREAD, "foo(...[])", false},
+            {SPREAD, "foo(...[danger()])", false},
+            {SPREAD, "foo(...'lit')", false},
+            {SPREAD, "foo(...`template`)", false},
+            {SPREAD, "foo(...`template ${safe}`)", false},
+            {SPREAD, "foo(...`template ${danger()}`)", false},
+            {SPREAD, "foo(...danger)", true},
+            {SPREAD, "foo(...danger())", true},
+            {SPREAD, "foo(...5)", true},
+            // SPREAD < NEW
+            {SPREAD, "new foo(...[])", false},
+            {SPREAD, "new foo(...[danger()])", false},
+            {SPREAD, "new foo(...'lit')", false},
+            {SPREAD, "new foo(...`template`)", false},
+            {SPREAD, "new foo(...`template ${safe}`)", false},
+            {SPREAD, "new foo(...`template ${danger()}`)", false},
+            {SPREAD, "new foo(...danger)", true},
+            {SPREAD, "new foo(...danger())", true},
+            {SPREAD, "new foo(...5)", true},
+            // SPREAD < OBJECTLIT
+            {SPREAD, "({...danger()})", false},
+            // REST < ARRAY_PATTERN
+            {REST, "const [...rest] = []", true},
+            {REST, "const [...rest] = 'lit'", true},
+            {REST, "const [...rest] = `template`", true},
+            {REST, "const [...rest] = safe", true},
+            {REST, "function f([...rest]) { }", true},
+            {REST, "const [[...rest]] = safe", true},
+            {REST, "const {key: [...rest]} = safe", true},
+            // REST < PARAM_LIST
+            {REST, "function f(...x) { }", false},
+            {REST, "function f(a, ...x) { }", false},
+            {REST, "async function f(...x) { }", false},
+            {REST, "function* f(...x) { }", false},
+            {REST, "async function* f(...x) { }", false},
+            {REST, "((...x) => { })", false},
+            // REST < OBJECT_PATTERN
+            {REST, "const {...rest} = danger();", false},
+            // FOR_OF
+            {FOR_OF, "for (let x of []) {}", false},
+            {FOR_OF, "for (let x of [danger()]) {}", false},
+            {FOR_OF, "for (let x of 'lit') {}", false},
+            {FOR_OF, "for (let x of `template`) {}", false},
+            {FOR_OF, "for (let x of `template ${safe}`) {}", false},
+            {FOR_OF, "for (let x of `template ${danger()}`) {}", false},
+            {FOR_OF, "for (let x of danger) {}", true},
+            {FOR_OF, "for (let x of danger()) {}", true},
+            {FOR_OF, "for (let x of 5) {}", true},
+            // FOR_AWAIT_OF
+            {FOR_AWAIT_OF, "(async()=>{ for await (let x of []) {} })", false},
+            {FOR_AWAIT_OF, "(async()=>{ for await (let x of [danger()]) {} })", false},
+            {FOR_AWAIT_OF, "(async()=>{ for await (let x of 'literal') {} })", false},
+            {FOR_AWAIT_OF, "(async()=>{ for await (let x of `template`) {} })", false},
+            {FOR_AWAIT_OF, "(async()=>{ for await (let x of `t ${safe}`) {} })", false},
+            {FOR_AWAIT_OF, "(async()=>{ for await (let x of `t ${dn()}`) {} })", false},
+            {FOR_AWAIT_OF, "(async()=>{ for await (let x of danger) {} })", true},
+            {FOR_AWAIT_OF, "(async()=>{ for await (let x of danger()) {} })", true},
+            {FOR_AWAIT_OF, "(async()=>{ for await (let x of 5) {} })", true},
+            // YIELD*
+            {YIELD, "function* f() { yield* []; }", false},
+            {YIELD, "function* f() { yield* [danger()]; }", false},
+            {YIELD, "function* f() { yield* 'lit'; }", false},
+            {YIELD, "function* f() { yield* `template`; }", false},
+            {YIELD, "function* f() { yield* `template ${sub}`; }", false},
+            {YIELD, "function* f() { yield* `template ${danger()}`; }", false},
+            {YIELD, "function* f() { yield* danger; }", true},
+            {YIELD, "function* f() { yield* danger(); }", true},
+            {YIELD, "function* f() { yield* 5; }", true},
+            // YIELD
+            {YIELD, "function* f() { yield danger(); }", false},
+          });
+    }
+
+    private final Token token;
+    private final String source;
+    private final boolean expectation;
+
+    public IteratesImpureIterableTest(Token token, String source, boolean expectation) {
+      this.token = token;
+      this.source = source;
+      this.expectation = expectation;
+    }
+
+    @Test
+    public void test() {
+      Node node = parseFirst(token, source);
+      assertThat(NodeUtil.iteratesImpureIterable(node)).isEqualTo(expectation);
+    }
   }
 
   @Test

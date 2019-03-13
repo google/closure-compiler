@@ -1322,6 +1322,82 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns {@code true} if {@code node} <em>might</em> execute an `Iterable` iteration that has
+   * side-effects, {@code false} if there are <em>definitely<em> no such side-effects.
+   *
+   * <p>This function only considers purity of the iteration. Other expressions within the {@code
+   * node} subtree may still have side-effects.
+   *
+   * @throws IllegalStateException if {@code node} is of a kind that does not trigger iteration. An
+   *     explicit goal of this function is to record all the kinds of nodes that do.
+   */
+  static boolean iteratesImpureIterable(Node node) {
+    Node parent = node.getParent();
+
+    final Node iterable;
+    switch (node.getToken()) {
+      case SPREAD:
+        switch (parent.getToken()) {
+          case OBJECTLIT:
+            return false; // Object spread does not iterate.
+          case NEW:
+          case ARRAYLIT:
+          case CALL:
+            iterable = node.getOnlyChild();
+            break;
+          default:
+            throw new IllegalStateException(
+                "Unexpected parent of SPREAD: " + parent.toStringTree());
+        }
+        break;
+
+      case YIELD:
+        if (!node.isYieldAll()) {
+          return false; // Regular `yield` does not iterate, only `yield*`.
+        }
+        iterable = node.getOnlyChild();
+        break;
+
+      case FOR_OF:
+      case FOR_AWAIT_OF:
+        iterable = node.getSecondChild();
+        break;
+
+      case REST:
+        switch (parent.getToken()) {
+          case OBJECT_PATTERN: // Object rest does not iterate.
+          case PARAM_LIST: // Rest arguments are flat at the call-site.
+            return false;
+          case ARRAY_PATTERN:
+            return true; // We assume the r-value to be an impure iterable.
+          default:
+            throw new IllegalStateException("Unexpected parent of REST: " + parent.toStringTree());
+        }
+
+      default:
+        throw new IllegalStateException(
+            "Expected a kind of node that may trigger iteration: " + node.toStringTree());
+    }
+
+    return !isPureIterable(iterable);
+  }
+
+  /**
+   * Returns {@code true} if {@code node} is guaranteed to be an `Iterable` that causes no
+   * side-effects during iteration, {@code false} otherwise.
+   */
+  private static boolean isPureIterable(Node node) {
+    switch (node.getToken()) {
+      case ARRAYLIT:
+      case STRING:
+      case TEMPLATELIT:
+        return true; // These iterables are known to be pure.
+      default:
+        return false; // Anything else, including a non-iterable (e.g. `null`), would be impure.
+    }
+  }
+
+  /**
    * Do calls to this constructor have side effects?
    *
    * @param callNode - constructor call node
