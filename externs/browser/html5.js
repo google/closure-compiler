@@ -2926,25 +2926,25 @@ function WebSocket(url, opt_protocol) {}
 
 /**
  * The connection has not yet been established.
- * @type {number}
+ * @const {number}
  */
 WebSocket.CONNECTING = 0;
 
 /**
  * The WebSocket connection is established and communication is possible.
- * @type {number}
+ * @const {number}
  */
 WebSocket.OPEN = 1;
 
 /**
  * The connection is going through the closing handshake, or the close() method has been invoked.
- * @type {number}
+ * @const {number}
  */
 WebSocket.CLOSING = 2;
 
 /**
  * The connection has been closed or could not be opened.
- * @type {number}
+ * @const {number}
  */
 WebSocket.CLOSED = 3;
 
