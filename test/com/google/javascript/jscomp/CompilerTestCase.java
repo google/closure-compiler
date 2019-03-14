@@ -22,6 +22,7 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
@@ -1746,16 +1747,7 @@ public abstract class CompilerTestCase {
 
       // Generally, externs should not be changed by the compiler passes.
       if (externsChange && !allowExternsChanges) {
-        String explanation = externsRootClone.checkTreeEquals(externsRoot);
-        assertWithMessage(
-                "Unexpected changes to externs"
-                    + "\nExpected: "
-                    + compiler.toSource(externsRootClone)
-                    + "\nResult:   "
-                    + compiler.toSource(externsRoot)
-                    + "\n"
-                    + explanation)
-            .fail();
+        assertNode(externsRootClone).usingSerializer(compiler::toSource).isEqualTo(externsRoot);
       }
 
       if (!codeChange && !externsChange) {
@@ -1788,27 +1780,12 @@ public abstract class CompilerTestCase {
           }
         }
         if (compareAsTree) {
-          String explanation;
           if (compareJsDoc) {
-            explanation = expectedRoot.checkTreeEqualsIncludingJsDoc(mainRoot);
+            assertNode(mainRoot)
+                .usingSerializer(compiler::toSource)
+                .isEqualIncludingJsDocTo(expectedRoot);
           } else {
-            explanation = expectedRoot.checkTreeEquals(mainRoot);
-          }
-          if (explanation != null) {
-            String expectedAsSource = compiler.toSource(expectedRoot);
-            String mainAsSource = compiler.toSource(mainRoot);
-            if (expectedAsSource.equals(mainAsSource)) {
-              assertWithMessage("In: " + expectedAsSource + "\n" + explanation).fail();
-            } else {
-              assertWithMessage(
-                      "\nExpected: "
-                          + expectedAsSource
-                          + "\nResult:   "
-                          + mainAsSource
-                          + "\n"
-                          + explanation)
-                  .fail();
-            }
+            assertNode(mainRoot).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
           }
         } else {
           String[] expectedSources = new String[expected.size()];
@@ -1828,17 +1805,10 @@ public abstract class CompilerTestCase {
       Node normalizeCheckExternsRootClone = normalizeCheckRootClone.getFirstChild();
       Node normalizeCheckMainRootClone = normalizeCheckRootClone.getLastChild();
       new PrepareAst(compiler).process(normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
-      String explanation = normalizeCheckMainRootClone.checkTreeEquals(mainRoot);
-      assertWithMessage(
-              "Node structure normalization invalidated."
-                  + "\nExpected: "
-                  + compiler.toSource(normalizeCheckMainRootClone)
-                  + "\nResult:   "
-                  + compiler.toSource(mainRoot)
-                  + "\n"
-                  + explanation)
-          .that(explanation)
-          .isNull();
+
+      assertNode(normalizeCheckMainRootClone)
+          .usingSerializer(compiler::toSource)
+          .isEqualTo(mainRoot);
 
       // TODO(johnlenz): enable this for most test cases.
       // Currently, this invalidates test for while-loops, for-loop
@@ -1848,17 +1818,10 @@ public abstract class CompilerTestCase {
       if (normalizeEnabled) {
         new Normalize(compiler, true)
             .process(normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
-        explanation = normalizeCheckMainRootClone.checkTreeEquals(mainRoot);
-        assertWithMessage(
-                "Normalization invalidated."
-                    + "\nExpected: "
-                    + compiler.toSource(normalizeCheckMainRootClone)
-                    + "\nResult:   "
-                    + compiler.toSource(mainRoot)
-                    + "\n"
-                    + explanation)
-            .that(explanation)
-            .isNull();
+
+        assertNode(normalizeCheckMainRootClone)
+            .usingSerializer(compiler::toSource)
+            .isEqualTo(mainRoot);
       }
     } else {
       assertThat(compiler.getErrors())
@@ -2020,17 +1983,8 @@ public abstract class CompilerTestCase {
       checkState(
           externs.hasOneChild(), "Compare as tree only works when output has a single script.");
       externs = externs.getFirstChild();
-      String explanation = expected.checkTreeEqualsIncludingJsDoc(externs);
-      assertWithMessage(
-              ""
-                  + "\nExpected: "
-                  + compiler.toSource(expected)
-                  + "\nResult:   "
-                  + compiler.toSource(externs)
-                  + "\n"
-                  + explanation)
-          .that(explanation)
-          .isNull();
+
+      assertNode(externs).usingSerializer(compiler::toSource).isEqualIncludingJsDocTo(externs);
     } else {
       String externsCode = compiler.toSource(externs);
       String expectedCode = compiler.toSource(expected);

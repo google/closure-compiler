@@ -1880,99 +1880,6 @@ public class Node implements Serializable {
     return false;
   }
 
-  /**
-   * Checks if the subtree under this node is the same as another subtree. Returns null if it's
-   * equal, or a message describing the differences. Should be called with {@code this} as the
-   * "expected" node and {@code actual} as the "actual" node.
-   */
-  @VisibleForTesting
-  @Nullable
-  public final String checkTreeEquals(Node actual) {
-      NodeMismatch diff = checkTreeEqualsImpl(actual);
-      if (diff != null) {
-        return "Node tree inequality:" +
-            "\nTree1:\n" + toStringTree() +
-            "\n\nTree2:\n" + actual.toStringTree() +
-            "\n\nSubtree1: " + diff.nodeExpected.toStringTree() +
-            "\n\nSubtree2: " + diff.nodeActual.toStringTree();
-      }
-      return null;
-  }
-
-  /**
-   * Checks if the subtree under this node is the same as another subtree. Returns null if it's
-   * equal, or a message describing the differences. Considers two nodes to be unequal if their
-   * JSDocInfo doesn't match. Should be called with {@code this} as the "expected" node and {@code
-   * actual} as the "actual" node.
-   *
-   * @see JSDocInfo#equals(Object)
-   */
-  @VisibleForTesting
-  @Nullable
-  public final String checkTreeEqualsIncludingJsDoc(Node actual) {
-      NodeMismatch diff = checkTreeEqualsImpl(actual, true);
-      if (diff != null) {
-        if (diff.nodeActual.isEquivalentTo(diff.nodeExpected, false, true, false)) {
-          // The only difference is that the JSDoc is different on
-          // the subtree.
-          String jsDocActual = diff.nodeActual.getJSDocInfo() == null ?
-              "(none)" :
-              diff.nodeActual.getJSDocInfo().toStringVerbose();
-
-          String jsDocExpected = diff.nodeExpected.getJSDocInfo() == null ?
-              "(none)" :
-              diff.nodeExpected.getJSDocInfo().toStringVerbose();
-
-          return "Node tree inequality:" +
-              "\nTree:\n" + toStringTree() +
-              "\n\nJSDoc differs on subtree: " + diff.nodeExpected +
-              "\nExpected JSDoc: " + jsDocExpected +
-              "\nActual JSDoc  : " + jsDocActual;
-        }
-        return "Node tree inequality:" +
-            "\nExpected tree:\n" + toStringTree() +
-            "\n\nActual tree:\n" + actual.toStringTree() +
-            "\n\nExpected subtree: " + diff.nodeExpected.toStringTree() +
-            "\n\nActual subtree: " + diff.nodeActual.toStringTree();
-      }
-      return null;
-  }
-
-  /**
-   * Compare this node to the given node recursively and return the first pair of nodes that differs
-   * doing a preorder depth-first traversal. Package private for testing. Returns null if the nodes
-   * are equivalent. Should be called with {@code this} as the "expected" node and {@code actual} as
-   * the "actual" node.
-   */
-  @Nullable
-  final NodeMismatch checkTreeEqualsImpl(Node actual) {
-    return checkTreeEqualsImpl(actual, false);
-  }
-
-  /**
-   * Compare this node to the given node recursively and return the first pair of nodes that differs
-   * doing a preorder depth-first traversal. Should be called with {@code this} as the "expected"
-   * node and {@code actual} as the "actual" node.
-   *
-   * @param jsDoc Whether to check for differences in JSDoc.
-   */
-  @Nullable
-  private NodeMismatch checkTreeEqualsImpl(Node actual, boolean jsDoc) {
-    if (!isEquivalentTo(actual, false, false, jsDoc)) {
-      return new NodeMismatch(this, actual);
-    }
-
-    for (Node expectedChild = first, actualChild = actual.first;
-         expectedChild != null;
-         expectedChild = expectedChild.next, actualChild = actualChild.next) {
-      NodeMismatch res = expectedChild.checkTreeEqualsImpl(actualChild, jsDoc);
-      if (res != null) {
-        return res;
-      }
-    }
-    return null;
-  }
-
   /** Checks equivalence without going into child nodes */
   public final boolean isEquivalentToShallow(Node node) {
     return isEquivalentTo(node, false, false, false, false);
@@ -3079,31 +2986,6 @@ public class Node implements Serializable {
    */
   public void setQuotedString() {
     throw new IllegalStateException(this + " is not a StringNode");
-  }
-
-  static final class NodeMismatch {
-    final Node nodeExpected;
-    final Node nodeActual;
-
-    NodeMismatch(Node nodeExpected, Node nodeActual) {
-      this.nodeExpected = nodeExpected;
-      this.nodeActual = nodeActual;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object object) {
-      if (object instanceof NodeMismatch) {
-        NodeMismatch that = (NodeMismatch) object;
-        return that.nodeExpected.equals(this.nodeExpected)
-            && that.nodeActual.equals(this.nodeActual);
-      }
-      return false;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(nodeExpected, nodeActual);
-    }
   }
 
 

@@ -183,9 +183,12 @@ final class ReplaceMessages extends JsMessageVisitor {
     Node valueNode = constructAddOrStringNode(iterator, argListNode);
     Node newBlockNode = IR.block(IR.returnNode(valueNode));
 
-    // TODO(user): checkTreeEqual is overkill. I am in process of rewriting
-    // these functions.
-    if (newBlockNode.checkTreeEquals(oldBlockNode) != null) {
+    if (!newBlockNode.isEquivalentTo(
+        oldBlockNode,
+        /* compareType= */ false,
+        /* recurse= */ true,
+        /* jsDoc= */ false,
+        /* sideEffect= */ false)) {
       newBlockNode.useSourceInfoIfMissingFromForTree(oldBlockNode);
       functionNode.replaceChild(oldBlockNode, newBlockNode);
       compiler.reportChangeToEnclosingScope(newBlockNode);

@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.FunctionInjector.isDirectCallNodeReplacementPossible;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -1908,17 +1909,11 @@ public final class FunctionInjectorTest {
 
             Node result = injector.inline(ref, fnName, fnNode);
             validateSourceInfo(compiler, result);
-            String explanation = expectedRoot.checkTreeEquals(tree.getFirstChild());
-            assertWithMessage(
-                    ""
-                        + "\nExpected: "
-                        + toSource(expectedRoot)
-                        + "\nResult:   "
-                        + toSource(tree.getFirstChild())
-                        + "\n"
-                        + explanation)
-                .that(explanation)
-                .isNull();
+
+            assertNode(tree.getFirstChild())
+                .usingSerializer(FunctionInjectorTest::toSource)
+                .isEqualTo(expectedRoot);
+
             return true;
           }
         };

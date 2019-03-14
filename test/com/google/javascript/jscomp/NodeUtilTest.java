@@ -3507,7 +3507,7 @@ public final class NodeUtilTest {
     Node expected = IR.getprop(
         IR.name("ns"),
         IR.string("prop"));
-    assertNodeTreesEqual(expected, actual);
+    assertNode(actual).isEqualTo(expected);
   }
 
   @Test
@@ -3520,7 +3520,7 @@ public final class NodeUtilTest {
     Node expected = IR.getprop(
         IR.thisNode(),
         IR.string("prop"));
-    assertNodeTreesEqual(expected, actual);
+    assertNode(actual).isEqualTo(expected);
   }
 
   @Test
@@ -4011,12 +4011,6 @@ public final class NodeUtilTest {
     Node funcNode = getNode(ast, FUNCTION);
     assertWithMessage("No function node to test").that(funcNode).isNotNull();
     return funcNode == NodeUtil.getRValueOfLValue(nameNode);
-  }
-
-  private void assertNodeTreesEqual(
-      Node expected, Node actual) {
-    String error = expected.checkTreeEquals(actual);
-    assertThat(error).isNull();
   }
 
   private static void testFunctionName(String js, String expected) {

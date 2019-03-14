@@ -17,8 +17,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -302,16 +302,7 @@ public final class FunctionToBlockMutatorTest {
           Node result =
               mutator.mutate(fnName, fnNode, n, resultName, needsDefaultResult, isCallInLoop);
           validateSourceInfo(compiler, result);
-          String explanation = expected.checkTreeEquals(result);
-          assertWithMessage(
-                  "\nExpected: "
-                      + compiler.toSource(expected)
-                      + "\nResult:   "
-                      + compiler.toSource(result)
-                      + "\n"
-                      + explanation)
-              .that(explanation)
-              .isNull();
+          assertNode(result).usingSerializer(compiler::toSource).isEqualTo(expected);
           return true;
         };
 

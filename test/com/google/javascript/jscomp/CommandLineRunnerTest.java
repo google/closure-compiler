@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -2282,14 +2283,17 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{"
-                + "\"src\":\"function log(a){console.log(a)}log(\\\"one.js\\\");\\n\","
-                + "\"path\":\"bar.js\","
-                + "\"source_map\":\"{\\n\\\"version\\\":3,\\n\\\"file\\\":\\\"bar.js\\\",\\n"
-                + "\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,"
+            "[{\"src\":\"function log(a){console.log(a)}log(\\\"one.js\\\");\\n"
+                + "\",\"path\":\"bar.js\",\"source_map\":\"{\\n"
+                + "\\\"version\\\":3,\\n"
+                + "\\\"file\\\":\\\"bar.js\\\",\\n"
+                + "\\\"lineCount\\\":1,\\n"
+                + "\\\"mappings\\\":\\\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,"
                 + "OAAAA,IAAAA,CAAYD,CAAZC,CADc,CAGhBF,GAAAA,CAAI,QAAJA;\\\",\\n"
                 + "\\\"sources\\\":[\\\"one.js\\\"],\\n"
-                + "\\\"names\\\":[\\\"log\\\",\\\"a\\\",\\\"console\\\"]\\n}\\n\"}]");
+                + "\\\"names\\\":[\\\"log\\\",\\\"a\\\",\\\"console\\\"]\\n"
+                + "}\\n"
+                + "\"}]");
   }
 
   @Test
@@ -2405,12 +2409,18 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"var module$bar={default:{}};"
-                + "console.log(\\\"bar\\\");var module$foo={default:{}};\\n\",\"path\":\"out.js\","
-                + "\"source_map\":\"{\\n\\\"version\\\":3,\\n\\\"file\\\":\\\"out.js\\\",\\n\\"
-                + "\"lineCount\\\":1,\\n\\\"mappings\\\":\\\"AAAA,IAAA,WAAA,CAAA,QAAA,EAAA,CAAAA,QAAAC,"
-                + "IAAA,CAAY,KAAZ,C,CCAA,IAAA,WAAA,CAAA,QAAA,EAAA;\\\",\\n\\\"sources\\\":[\\\"bar.js\\\","
-                + "\\\"foo.js\\\"],\\n\\\"names\\\":[\\\"console\\\",\\\"log\\\"]\\n}\\n\"}]");
+            "[{\"src\":\"var module$bar={default:{}};console.log(\\\"bar\\\");var"
+                + " module$foo={default:{}};\\n"
+                + "\",\"path\":\"out.js\",\"source_map\":\"{\\n"
+                + "\\\"version\\\":3,\\n"
+                + "\\\"file\\\":\\\"out.js\\\",\\n"
+                + "\\\"lineCount\\\":1,\\n"
+                + "\\\"mappings\\\":\\\"AAAA,IAAA,WAAA,CAAA,QAAA,EAAA,CAAAA,QAAAC,"
+                + "IAAA,CAAY,KAAZ,C,CCAA,IAAA,WAAA,CAAA,QAAA,EAAA;\\\",\\n"
+                + "\\\"sources\\\":[\\\"bar.js\\\",\\\"foo.js\\\"],\\n"
+                + "\\\"names\\\":[\\\"console\\\",\\\"log\\\"]\\n"
+                + "}\\n"
+                + "\"}]");
   }
 
   @Test
@@ -2491,16 +2501,35 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"\\n\",\"path\":\"./m1.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
-                + "\\n\\\"file\\\":\\\"./m1.js\\\",\\n\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\";\\\""
-                + ",\\n\\\"sources\\\":[],\\n\\\"names\\\":[]\\n}\\n\"},{\"src\":\"alert(\\\"foo\\\");"
-                + "\\n\",\"path\":\"./m2.js\",\"source_map\":\"{\\n\\\"version\\\":3,\\n\\\"file\\\":"
-                + "\\\"./m2.js\\\",\\n\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;"
-                + "\\\",\\n\\\"sources\\\":[\\\"foo.js\\\"],\\n\\\"sourcesContent\\\":[\\\""
-                + "alert('foo');\\\"],\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"},"
-                + "{\"src\":\"\\n\",\"path\":\"./$weak$.js\",\"source_map\":\"{\\n\\\"version\\\":3,\\n"
-                + "\\\"file\\\":\\\"./$weak$.js\\\",\\n\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\";"
-                + "\\\",\\n\\\"sources\\\":[],\\n\\\"names\\\":[]\\n}\\n\"}]");
+            "[{\"src\":\"\\n"
+                + "\",\"path\":\"./m1.js\",\"source_map\":\"{\\n"
+                + "\\\"version\\\":3,\\n"
+                + "\\\"file\\\":\\\"./m1.js\\\",\\n"
+                + "\\\"lineCount\\\":1,\\n"
+                + "\\\"mappings\\\":\\\";\\\",\\n"
+                + "\\\"sources\\\":[],\\n"
+                + "\\\"names\\\":[]\\n"
+                + "}\\n"
+                + "\"},{\"src\":\"alert(\\\"foo\\\");\\n"
+                + "\",\"path\":\"./m2.js\",\"source_map\":\"{\\n"
+                + "\\\"version\\\":3,\\n"
+                + "\\\"file\\\":\\\"./m2.js\\\",\\n"
+                + "\\\"lineCount\\\":1,\\n"
+                + "\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\",\\n"
+                + "\\\"sources\\\":[\\\"foo.js\\\"],\\n"
+                + "\\\"sourcesContent\\\":[\\\"alert('foo');\\\"],\\n"
+                + "\\\"names\\\":[\\\"alert\\\"]\\n"
+                + "}\\n"
+                + "\"},{\"src\":\"\\n"
+                + "\",\"path\":\"./$weak$.js\",\"source_map\":\"{\\n"
+                + "\\\"version\\\":3,\\n"
+                + "\\\"file\\\":\\\"./$weak$.js\\\",\\n"
+                + "\\\"lineCount\\\":1,\\n"
+                + "\\\"mappings\\\":\\\";\\\",\\n"
+                + "\\\"sources\\\":[],\\n"
+                + "\\\"names\\\":[]\\n"
+                + "}\\n"
+                + "\"}]");
   }
 
   @Test
@@ -2566,16 +2595,7 @@ public final class CommandLineRunnerTest {
       assertThat(compiler.toSource()).isEqualTo(Joiner.on("").join(compiled));
     } else {
       Node expectedRoot = parse(compiled);
-      String explanation = expectedRoot.checkTreeEquals(root);
-      assertWithMessage(
-              "\nExpected: "
-                  + compiler.toSource(expectedRoot)
-                  + "\nResult: "
-                  + compiler.toSource(root)
-                  + "\n"
-                  + explanation)
-          .that(explanation)
-          .isNull();
+      assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
     }
   }
 
