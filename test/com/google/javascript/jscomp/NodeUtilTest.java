@@ -93,15 +93,10 @@ public final class NodeUtilTest {
 
   /** Returns the parsed expression (e.g. returns a NAME given 'a') */
   private Node parseExpr(String js) {
-    Node root = parse(js);
-    return root.getFirstFirstChild();
-  }
-
-  private static Node getNode(String js) {
-    Node root = parse("var a=(" + js + ");");
-    Node expr = root.getFirstChild();
-    Node var = expr.getFirstChild();
-    return var.getFirstChild();
+    Node script = parse("(" + js + ");"); // Parens force interpretation as an expression.
+    return script
+        .getFirstChild() // EXPR_RESULT
+        .getFirstChild(); // expr
   }
 
   /**
@@ -187,23 +182,23 @@ public final class NodeUtilTest {
 
   @Test
   public void testIsLiteralOrConstValue() {
-    assertLiteralAndImmutable(getNode("10"));
-    assertLiteralAndImmutable(getNode("-10"));
-    assertLiteralButNotImmutable(getNode("[10, 20]"));
-    assertLiteralButNotImmutable(getNode("{'a': 20}"));
-    assertLiteralButNotImmutable(getNode("[10, , 1.0, [undefined], 'a']"));
-    assertLiteralButNotImmutable(getNode("/abc/"));
-    assertLiteralAndImmutable(getNode("\"string\""));
-    assertLiteralAndImmutable(getNode("'aaa'"));
-    assertLiteralAndImmutable(getNode("null"));
-    assertLiteralAndImmutable(getNode("undefined"));
-    assertLiteralAndImmutable(getNode("void 0"));
-    assertNotLiteral(getNode("abc"));
-    assertNotLiteral(getNode("[10, foo(), 20]"));
-    assertNotLiteral(getNode("foo()"));
-    assertNotLiteral(getNode("c + d"));
-    assertNotLiteral(getNode("{'a': foo()}"));
-    assertNotLiteral(getNode("void foo()"));
+    assertLiteralAndImmutable(parseExpr("10"));
+    assertLiteralAndImmutable(parseExpr("-10"));
+    assertLiteralButNotImmutable(parseExpr("[10, 20]"));
+    assertLiteralButNotImmutable(parseExpr("{'a': 20}"));
+    assertLiteralButNotImmutable(parseExpr("[10, , 1.0, [undefined], 'a']"));
+    assertLiteralButNotImmutable(parseExpr("/abc/"));
+    assertLiteralAndImmutable(parseExpr("\"string\""));
+    assertLiteralAndImmutable(parseExpr("'aaa'"));
+    assertLiteralAndImmutable(parseExpr("null"));
+    assertLiteralAndImmutable(parseExpr("undefined"));
+    assertLiteralAndImmutable(parseExpr("void 0"));
+    assertNotLiteral(parseExpr("abc"));
+    assertNotLiteral(parseExpr("[10, foo(), 20]"));
+    assertNotLiteral(parseExpr("foo()"));
+    assertNotLiteral(parseExpr("c + d"));
+    assertNotLiteral(parseExpr("{'a': foo()}"));
+    assertNotLiteral(parseExpr("void foo()"));
   }
 
   @Test
@@ -238,11 +233,11 @@ public final class NodeUtilTest {
   }
 
   private boolean isLiteralValueExcludingFunctions(String code) {
-    return NodeUtil.isLiteralValue(getNode(code), /* includeFunctions */ false);
+    return NodeUtil.isLiteralValue(parseExpr(code), /* includeFunctions */ false);
   }
 
   private boolean isLiteralValue(String code) {
-    return NodeUtil.isLiteralValue(getNode(code), /* includeFunctions */ true);
+    return NodeUtil.isLiteralValue(parseExpr(code), /* includeFunctions */ true);
   }
 
   private void assertLiteralAndImmutable(Node n) {
@@ -335,15 +330,15 @@ public final class NodeUtilTest {
   }
 
   private void assertPureBooleanTrue(String val) {
-    assertThat(NodeUtil.getPureBooleanValue(getNode(val))).isEqualTo(TernaryValue.TRUE);
+    assertThat(NodeUtil.getPureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.TRUE);
   }
 
   private void assertPureBooleanFalse(String val) {
-    assertThat(NodeUtil.getPureBooleanValue(getNode(val))).isEqualTo(TernaryValue.FALSE);
+    assertThat(NodeUtil.getPureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.FALSE);
   }
 
   private void assertPureBooleanUnknown(String val) {
-    assertThat(NodeUtil.getPureBooleanValue(getNode(val))).isEqualTo(TernaryValue.UNKNOWN);
+    assertThat(NodeUtil.getPureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.UNKNOWN);
   }
 
   @Test
@@ -411,64 +406,64 @@ public final class NodeUtilTest {
   }
 
   private void assertImpureBooleanTrue(String val) {
-    assertThat(NodeUtil.getImpureBooleanValue(getNode(val))).isEqualTo(TernaryValue.TRUE);
+    assertThat(NodeUtil.getImpureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.TRUE);
   }
 
   private void assertImpureBooleanFalse(String val) {
-    assertThat(NodeUtil.getImpureBooleanValue(getNode(val))).isEqualTo(TernaryValue.FALSE);
+    assertThat(NodeUtil.getImpureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.FALSE);
   }
 
   private void assertImpureBooleanUnknown(String val) {
-    assertThat(NodeUtil.getImpureBooleanValue(getNode(val))).isEqualTo(TernaryValue.UNKNOWN);
+    assertThat(NodeUtil.getImpureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.UNKNOWN);
   }
 
   @Test
   public void testGetStringValue() {
-    assertThat(NodeUtil.getStringValue(getNode("true"))).isEqualTo("true");
-    assertThat(NodeUtil.getStringValue(getNode("10"))).isEqualTo("10");
-    assertThat(NodeUtil.getStringValue(getNode("1.0"))).isEqualTo("1");
+    assertThat(NodeUtil.getStringValue(parseExpr("true"))).isEqualTo("true");
+    assertThat(NodeUtil.getStringValue(parseExpr("10"))).isEqualTo("10");
+    assertThat(NodeUtil.getStringValue(parseExpr("1.0"))).isEqualTo("1");
 
     /* See https://github.com/google/closure-compiler/issues/1262 */
-    assertThat(NodeUtil.getStringValue(getNode("1.2323919403474454e+21")))
+    assertThat(NodeUtil.getStringValue(parseExpr("1.2323919403474454e+21")))
         .isEqualTo("1.2323919403474454e+21");
 
-    assertThat(NodeUtil.getStringValue(getNode("'0'"))).isEqualTo("0");
-    assertThat(NodeUtil.getStringValue(getNode("/a/"))).isNull();
-    assertThat(NodeUtil.getStringValue(getNode("{}"))).isEqualTo("[object Object]");
-    assertThat(NodeUtil.getStringValue(getNode("[]"))).isEmpty();
-    assertThat(NodeUtil.getStringValue(getNode("false"))).isEqualTo("false");
-    assertThat(NodeUtil.getStringValue(getNode("null"))).isEqualTo("null");
-    assertThat(NodeUtil.getStringValue(getNode("0"))).isEqualTo("0");
-    assertThat(NodeUtil.getStringValue(getNode("''"))).isEmpty();
-    assertThat(NodeUtil.getStringValue(getNode("undefined"))).isEqualTo("undefined");
-    assertThat(NodeUtil.getStringValue(getNode("void 0"))).isEqualTo("undefined");
-    assertThat(NodeUtil.getStringValue(getNode("void foo()"))).isEqualTo("undefined");
+    assertThat(NodeUtil.getStringValue(parseExpr("'0'"))).isEqualTo("0");
+    assertThat(NodeUtil.getStringValue(parseExpr("/a/"))).isNull();
+    assertThat(NodeUtil.getStringValue(parseExpr("{}"))).isEqualTo("[object Object]");
+    assertThat(NodeUtil.getStringValue(parseExpr("[]"))).isEmpty();
+    assertThat(NodeUtil.getStringValue(parseExpr("false"))).isEqualTo("false");
+    assertThat(NodeUtil.getStringValue(parseExpr("null"))).isEqualTo("null");
+    assertThat(NodeUtil.getStringValue(parseExpr("0"))).isEqualTo("0");
+    assertThat(NodeUtil.getStringValue(parseExpr("''"))).isEmpty();
+    assertThat(NodeUtil.getStringValue(parseExpr("undefined"))).isEqualTo("undefined");
+    assertThat(NodeUtil.getStringValue(parseExpr("void 0"))).isEqualTo("undefined");
+    assertThat(NodeUtil.getStringValue(parseExpr("void foo()"))).isEqualTo("undefined");
 
-    assertThat(NodeUtil.getStringValue(getNode("NaN"))).isEqualTo("NaN");
-    assertThat(NodeUtil.getStringValue(getNode("Infinity"))).isEqualTo("Infinity");
-    assertThat(NodeUtil.getStringValue(getNode("x"))).isNull();
+    assertThat(NodeUtil.getStringValue(parseExpr("NaN"))).isEqualTo("NaN");
+    assertThat(NodeUtil.getStringValue(parseExpr("Infinity"))).isEqualTo("Infinity");
+    assertThat(NodeUtil.getStringValue(parseExpr("x"))).isNull();
 
-    assertThat(NodeUtil.getStringValue(getNode("`Hello`"))).isEqualTo("Hello");
-    assertThat(NodeUtil.getStringValue(getNode("`Hello ${'foo'}`"))).isEqualTo("Hello foo");
-    assertThat(NodeUtil.getStringValue(getNode("`Hello ${name}`"))).isNull();
-    assertThat(NodeUtil.getStringValue(getNode("`${4} bananas`"))).isEqualTo("4 bananas");
-    assertThat(NodeUtil.getStringValue(getNode("`This is ${true}.`"))).isEqualTo("This is true.");
-    assertThat(NodeUtil.getStringValue(getNode("`${'hello'} ${name}`"))).isNull();
+    assertThat(NodeUtil.getStringValue(parseExpr("`Hello`"))).isEqualTo("Hello");
+    assertThat(NodeUtil.getStringValue(parseExpr("`Hello ${'foo'}`"))).isEqualTo("Hello foo");
+    assertThat(NodeUtil.getStringValue(parseExpr("`Hello ${name}`"))).isNull();
+    assertThat(NodeUtil.getStringValue(parseExpr("`${4} bananas`"))).isEqualTo("4 bananas");
+    assertThat(NodeUtil.getStringValue(parseExpr("`This is ${true}.`"))).isEqualTo("This is true.");
+    assertThat(NodeUtil.getStringValue(parseExpr("`${'hello'} ${name}`"))).isNull();
   }
 
   @Test
   public void testGetArrayStringValue() {
-    assertThat(NodeUtil.getStringValue(getNode("[]"))).isEmpty();
-    assertThat(NodeUtil.getStringValue(getNode("['']"))).isEmpty();
-    assertThat(NodeUtil.getStringValue(getNode("[null]"))).isEmpty();
-    assertThat(NodeUtil.getStringValue(getNode("[undefined]"))).isEmpty();
-    assertThat(NodeUtil.getStringValue(getNode("[void 0]"))).isEmpty();
-    assertThat(NodeUtil.getStringValue(getNode("[NaN]"))).isEqualTo("NaN");
-    assertThat(NodeUtil.getStringValue(getNode("[,'']"))).isEqualTo(",");
-    assertThat(NodeUtil.getStringValue(getNode("[[''],[''],['']]"))).isEqualTo(",,");
-    assertThat(NodeUtil.getStringValue(getNode("[[1.0],[2.0]]"))).isEqualTo("1,2");
-    assertThat(NodeUtil.getStringValue(getNode("[a]"))).isNull();
-    assertThat(NodeUtil.getStringValue(getNode("[1,a]"))).isNull();
+    assertThat(NodeUtil.getStringValue(parseExpr("[]"))).isEmpty();
+    assertThat(NodeUtil.getStringValue(parseExpr("['']"))).isEmpty();
+    assertThat(NodeUtil.getStringValue(parseExpr("[null]"))).isEmpty();
+    assertThat(NodeUtil.getStringValue(parseExpr("[undefined]"))).isEmpty();
+    assertThat(NodeUtil.getStringValue(parseExpr("[void 0]"))).isEmpty();
+    assertThat(NodeUtil.getStringValue(parseExpr("[NaN]"))).isEqualTo("NaN");
+    assertThat(NodeUtil.getStringValue(parseExpr("[,'']"))).isEqualTo(",");
+    assertThat(NodeUtil.getStringValue(parseExpr("[[''],[''],['']]"))).isEqualTo(",,");
+    assertThat(NodeUtil.getStringValue(parseExpr("[[1.0],[2.0]]"))).isEqualTo("1,2");
+    assertThat(NodeUtil.getStringValue(parseExpr("[a]"))).isNull();
+    assertThat(NodeUtil.getStringValue(parseExpr("[1,a]"))).isNull();
   }
 
   @Test
@@ -577,11 +572,11 @@ public final class NodeUtilTest {
 
   @Test
   public void testContainsFunctionDeclaration() {
-    assertThat(NodeUtil.containsFunction(getNode("function foo(){}"))).isTrue();
-    assertThat(NodeUtil.containsFunction(getNode("(b?function(){}:null)"))).isTrue();
+    assertThat(NodeUtil.containsFunction(parseExpr("function foo(){}"))).isTrue();
+    assertThat(NodeUtil.containsFunction(parseExpr("(b?function(){}:null)"))).isTrue();
 
-    assertThat(NodeUtil.containsFunction(getNode("(b?foo():null)"))).isFalse();
-    assertThat(NodeUtil.containsFunction(getNode("foo()"))).isFalse();
+    assertThat(NodeUtil.containsFunction(parseExpr("(b?foo():null)"))).isFalse();
+    assertThat(NodeUtil.containsFunction(parseExpr("foo()"))).isFalse();
   }
 
   @Test
@@ -1778,128 +1773,128 @@ public final class NodeUtilTest {
   @Test
   public void testLocalValue1() {
     // Names are not known to be local.
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x"))).isFalse();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x()"))).isFalse();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("this"))).isFalse();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("arguments"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x()"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("this"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("arguments"))).isFalse();
 
     // We can't know if new objects are local unless we know
     // that they don't alias themselves.
     // TODO(tdeegan): Revisit this.
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("new x()"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("new x()"))).isFalse();
 
     // property references are assumed to be non-local
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("(new x()).y"))).isFalse();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("(new x())['y']"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("(new x()).y"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("(new x())['y']"))).isFalse();
 
     // Primitive values are local
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("null"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("undefined"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("Infinity"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("NaN"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("1"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("'a'"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("true"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("false"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("[]"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{}"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("null"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("undefined"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("Infinity"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("NaN"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("1"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("'a'"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("true"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("false"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("[]"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{}"))).isTrue();
 
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("[x]"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{'a':x}"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{'a': {'b': 2}}"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{'a': {'b': global}}"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{get someGetter() { return 1; }}")))
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("[x]"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{'a':x}"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{'a': {'b': 2}}"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{'a': {'b': global}}"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{get someGetter() { return 1; }}")))
         .isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{get someGetter() { return global; }}")))
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{get someGetter() { return global; }}")))
         .isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{set someSetter(value) {}}"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {}}"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: global}")))
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{set someSetter(value) {}}"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{[someComputedProperty]: {}}"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{[someComputedProperty]: global}")))
         .isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {'a':x}}")))
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{[someComputedProperty]: {'a':x}}")))
         .isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {'a':1}}")))
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{[someComputedProperty]: {'a':1}}")))
         .isTrue();
 
     // increment/decrement results in primitive number, the previous value is
     // always coersed to a number (even in the post.
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("++x"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("--x"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x++"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x--"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("++x"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("--x"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x++"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x--"))).isTrue();
 
     // The left side of an only assign matters if it is an alias or mutable.
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x=1"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x=[]"))).isFalse();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x=y"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x=1"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x=[]"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x=y"))).isFalse();
     // The right hand side of assignment opts don't matter, as they force
     // a local result.
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x+=y"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x*=y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x+=y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x*=y"))).isTrue();
     // Comparisons always result in locals, as they force a local boolean
     // result.
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x==y"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x!=y"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x>y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x==y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x!=y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x>y"))).isTrue();
     // Only the right side of a comma matters
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("(1,2)"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("(x,1)"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("(x,y)"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("(1,2)"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("(x,1)"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("(x,y)"))).isFalse();
 
     // Both the operands of OR matter
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("1||2"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x||1"))).isFalse();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x||y"))).isFalse();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("1||y"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("1||2"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x||1"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x||y"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("1||y"))).isFalse();
 
     // Both the operands of AND matter
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("1&&2"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x&&1"))).isFalse();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x&&y"))).isFalse();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("1&&y"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("1&&2"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x&&1"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x&&y"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("1&&y"))).isFalse();
 
     // Only the results of HOOK matter
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x?1:2"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x?x:2"))).isFalse();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x?1:x"))).isFalse();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x?x:y"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?1:2"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?x:2"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?1:x"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?x:y"))).isFalse();
 
     // Results of ops are local values
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("!y"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("~y"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("y + 1"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("y + z"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("y * z"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("!y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("~y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("y + 1"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("y + z"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("y * z"))).isTrue();
 
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("'a' in x"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("typeof x"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("x instanceof y"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("'a' in x"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("typeof x"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x instanceof y"))).isTrue();
 
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("void x"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("void 0"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("void x"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("void 0"))).isTrue();
 
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{}.x"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{}.x"))).isFalse();
 
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{}.toString()"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("o.toString()"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{}.toString()"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("o.toString()"))).isTrue();
 
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("o.valueOf()"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("o.valueOf()"))).isFalse();
 
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("delete a.b"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("delete a.b"))).isTrue();
   }
 
   @Test
   public void testLocalValueTemplateLit() {
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("`hello`"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("`hello ${name}`"))).isTrue();
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("`${'name'}`"))).isTrue();
-    assertThat(NodeUtil.isLiteralValue(getNode("`${'name'}`"), false)).isTrue();
-    assertThat(NodeUtil.isImmutableValue(getNode("`${'name'}`"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("`hello`"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("`hello ${name}`"))).isTrue();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("`${'name'}`"))).isTrue();
+    assertThat(NodeUtil.isLiteralValue(parseExpr("`${'name'}`"), false)).isTrue();
+    assertThat(NodeUtil.isImmutableValue(parseExpr("`${'name'}`"))).isTrue();
   }
 
   @Test
   public void testLocalValueTaggedTemplateLit1() {
-    Node n = getNode("tag`simple string`");
+    Node n = parseExpr("tag`simple string`");
     assertThat(NodeUtil.evaluatesToLocalValue(n)).isFalse();
 
     // Set 'tag' function as producing a local result
@@ -1913,7 +1908,7 @@ public final class NodeUtilTest {
   @Test
   public void testLocalValueTaggedTemplateLit2() {
     // Here, replacement() may have side effects.
-    Node n = getNode("tag`string with ${replacement()}`");
+    Node n = parseExpr("tag`string with ${replacement()}`");
     assertThat(NodeUtil.evaluatesToLocalValue(n)).isFalse();
 
     // Set 'tag' function as producing a local result
@@ -1926,7 +1921,7 @@ public final class NodeUtilTest {
 
   @Test
   public void testLocalValueNewExpr() {
-    Node newExpr = getNode("new x()");
+    Node newExpr = parseExpr("new x()");
     assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isFalse();
 
     checkState(newExpr.isNew());
@@ -1971,13 +1966,13 @@ public final class NodeUtilTest {
   @Test
   public void testLocalValueSpread() {
     // Array literals are always known local values.
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("[...x]"))).isTrue();
-    assertThat(NodeUtil.isLiteralValue(getNode("[...x]"), false)).isFalse();
-    assertThat(NodeUtil.isImmutableValue(getNode("[...x]"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("[...x]"))).isTrue();
+    assertThat(NodeUtil.isLiteralValue(parseExpr("[...x]"), false)).isFalse();
+    assertThat(NodeUtil.isImmutableValue(parseExpr("[...x]"))).isFalse();
 
-    assertThat(NodeUtil.evaluatesToLocalValue(getNode("{...x}"))).isTrue();
-    assertThat(NodeUtil.isLiteralValue(getNode("{...x}"), false)).isFalse();
-    assertThat(NodeUtil.isImmutableValue(getNode("{...x}"))).isFalse();
+    assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("{...x}"))).isTrue();
+    assertThat(NodeUtil.isLiteralValue(parseExpr("{...x}"), false)).isFalse();
+    assertThat(NodeUtil.isImmutableValue(parseExpr("{...x}"))).isFalse();
   }
 
   @Test
@@ -2006,7 +2001,7 @@ public final class NodeUtilTest {
 
   @Test
   public void testCallSideEffects() {
-    Node callExpr = getNode("new x().method()");
+    Node callExpr = parseExpr("new x().method()");
     assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isTrue();
 
     Node newExpr = callExpr.getFirstFirstChild();
@@ -2106,394 +2101,394 @@ public final class NodeUtilTest {
 
   @Test
   public void testGetOctalNumberValue() {
-    assertThat(NodeUtil.getNumberValue(getNode("022"))).isEqualTo(18.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("022"))).isEqualTo(18.0);
   }
 
   @SuppressWarnings("JUnit3FloatingPointComparisonWithoutDelta")
   @Test
   public void testGetNumberValue() {
     // Strings
-    assertThat(NodeUtil.getNumberValue(getNode("'\\uFEFF1'"))).isEqualTo(1.0);
-    assertThat(NodeUtil.getNumberValue(getNode("''"))).isEqualTo(0.0);
-    assertThat(NodeUtil.getNumberValue(getNode("' '"))).isEqualTo(0.0);
-    assertThat(NodeUtil.getNumberValue(getNode("' \\t'"))).isEqualTo(0.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'+0'"))).isEqualTo(0.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'-0'"))).isEqualTo(-0.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'+2'"))).isEqualTo(2.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'-1.6'"))).isEqualTo(-1.6);
-    assertThat(NodeUtil.getNumberValue(getNode("'16'"))).isEqualTo(16.0);
-    assertThat(NodeUtil.getNumberValue(getNode("' 16 '"))).isEqualTo(16.0);
-    assertThat(NodeUtil.getNumberValue(getNode("' 16 '"))).isEqualTo(16.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'123e2'"))).isEqualTo(12300.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'123E2'"))).isEqualTo(12300.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'123e-2'"))).isEqualTo(1.23);
-    assertThat(NodeUtil.getNumberValue(getNode("'123E-2'"))).isEqualTo(1.23);
-    assertThat(NodeUtil.getNumberValue(getNode("'-123e-2'"))).isEqualTo(-1.23);
-    assertThat(NodeUtil.getNumberValue(getNode("'-123E-2'"))).isEqualTo(-1.23);
-    assertThat(NodeUtil.getNumberValue(getNode("'+123e-2'"))).isEqualTo(1.23);
-    assertThat(NodeUtil.getNumberValue(getNode("'+123E-2'"))).isEqualTo(1.23);
-    assertThat(NodeUtil.getNumberValue(getNode("'+123e+2'"))).isEqualTo(12300.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'+123E+2'"))).isEqualTo(12300.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'\\uFEFF1'"))).isEqualTo(1.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("''"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("' '"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("' \\t'"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'+0'"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'-0'"))).isEqualTo(-0.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'+2'"))).isEqualTo(2.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'-1.6'"))).isEqualTo(-1.6);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'16'"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("' 16 '"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("' 16 '"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'123e2'"))).isEqualTo(12300.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'123E2'"))).isEqualTo(12300.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'123e-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'123E-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'-123e-2'"))).isEqualTo(-1.23);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'-123E-2'"))).isEqualTo(-1.23);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'+123e-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'+123E-2'"))).isEqualTo(1.23);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'+123e+2'"))).isEqualTo(12300.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'+123E+2'"))).isEqualTo(12300.0);
 
-    assertThat(NodeUtil.getNumberValue(getNode("'0xf'"))).isEqualTo(15.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'0xF'"))).isEqualTo(15.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'0xf'"))).isEqualTo(15.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'0xF'"))).isEqualTo(15.0);
 
     // Chrome and rhino behavior differently from FF and IE. FF and IE
     // consider a negative hex number to be invalid
-    assertThat(NodeUtil.getNumberValue(getNode("'-0xf'"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("'-0xF'"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("'+0xf'"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("'+0xF'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'-0xf'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'-0xF'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'+0xf'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'+0xF'"))).isNull();
 
-    assertThat(NodeUtil.getNumberValue(getNode("'0X10'"))).isEqualTo(16.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'0X10.8'"))).isNaN();
-    assertThat(NodeUtil.getNumberValue(getNode("'077'"))).isEqualTo(77.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'-077'"))).isEqualTo(-77.0);
-    assertThat(NodeUtil.getNumberValue(getNode("'-077.5'"))).isEqualTo(-77.5);
-    assertThat(NodeUtil.getNumberValue(getNode("'-Infinity'"))).isNegativeInfinity();
-    assertThat(NodeUtil.getNumberValue(getNode("'Infinity'"))).isPositiveInfinity();
-    assertThat(NodeUtil.getNumberValue(getNode("'+Infinity'"))).isPositiveInfinity();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'0X10'"))).isEqualTo(16.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'0X10.8'"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'077'"))).isEqualTo(77.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'-077'"))).isEqualTo(-77.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'-077.5'"))).isEqualTo(-77.5);
+    assertThat(NodeUtil.getNumberValue(parseExpr("'-Infinity'"))).isNegativeInfinity();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'Infinity'"))).isPositiveInfinity();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'+Infinity'"))).isPositiveInfinity();
     // Firefox treats "infinity" as "Infinity", IE treats it as NaN
-    assertThat(NodeUtil.getNumberValue(getNode("'-infinity'"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("'infinity'"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("'+infinity'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'-infinity'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'infinity'"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'+infinity'"))).isNull();
 
-    assertThat(NodeUtil.getNumberValue(getNode("'NaN'"))).isNaN();
-    assertThat(NodeUtil.getNumberValue(getNode("'some unknown string'"))).isNaN();
-    assertThat(NodeUtil.getNumberValue(getNode("'123 blah'"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'NaN'"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'some unknown string'"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(parseExpr("'123 blah'"))).isNaN();
 
     // Literals
-    assertThat(NodeUtil.getNumberValue(getNode("1"))).isEqualTo(1.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("1"))).isEqualTo(1.0);
     // "-1" is parsed as a literal
-    assertThat(NodeUtil.getNumberValue(getNode("-1"))).isEqualTo(-1.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("-1"))).isEqualTo(-1.0);
     // "+1" is parse as an op + literal
-    assertThat(NodeUtil.getNumberValue(getNode("+1"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("22"))).isEqualTo(22.0);
-    assertThat(NodeUtil.getNumberValue(getNode("022"))).isEqualTo(18.0);
-    assertThat(NodeUtil.getNumberValue(getNode("0x22"))).isEqualTo(34.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("+1"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("22"))).isEqualTo(22.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("022"))).isEqualTo(18.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("0x22"))).isEqualTo(34.0);
 
-    assertThat(NodeUtil.getNumberValue(getNode("true"))).isEqualTo(1.0);
-    assertThat(NodeUtil.getNumberValue(getNode("false"))).isEqualTo(0.0);
-    assertThat(NodeUtil.getNumberValue(getNode("null"))).isEqualTo(0.0);
-    assertThat(NodeUtil.getNumberValue(getNode("void 0"))).isNaN();
-    assertThat(NodeUtil.getNumberValue(getNode("void f"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(parseExpr("true"))).isEqualTo(1.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("false"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("null"))).isEqualTo(0.0);
+    assertThat(NodeUtil.getNumberValue(parseExpr("void 0"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(parseExpr("void f"))).isNaN();
     // values with side-effects are ignored.
-    assertThat(NodeUtil.getNumberValue(getNode("void f()"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("NaN"))).isNaN();
-    assertThat(NodeUtil.getNumberValue(getNode("Infinity"))).isPositiveInfinity();
-    assertThat(NodeUtil.getNumberValue(getNode("-Infinity"))).isNegativeInfinity();
+    assertThat(NodeUtil.getNumberValue(parseExpr("void f()"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("NaN"))).isNaN();
+    assertThat(NodeUtil.getNumberValue(parseExpr("Infinity"))).isPositiveInfinity();
+    assertThat(NodeUtil.getNumberValue(parseExpr("-Infinity"))).isNegativeInfinity();
 
     // "infinity" is not a known name.
-    assertThat(NodeUtil.getNumberValue(getNode("infinity"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("-infinity"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("infinity"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("-infinity"))).isNull();
 
     // getNumberValue only converts literals
-    assertThat(NodeUtil.getNumberValue(getNode("x"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("x.y"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("1/2"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("1-2"))).isNull();
-    assertThat(NodeUtil.getNumberValue(getNode("+1"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("x"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("x.y"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("1/2"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("1-2"))).isNull();
+    assertThat(NodeUtil.getNumberValue(parseExpr("+1"))).isNull();
   }
 
   @Test
   public void testIsNumericResult() {
-    assertThat(NodeUtil.isNumericResult(getNode("1"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("true"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("+true"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("+1"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("-1"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("-Infinity"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("Infinity"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("NaN"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("undefined"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("void 0"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("true"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("+true"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("+1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("-1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("-Infinity"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("Infinity"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("NaN"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("undefined"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("void 0"))).isFalse();
 
-    assertThat(NodeUtil.isNumericResult(getNode("a << b"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("a >> b"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("a >>> b"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a << b"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a >> b"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a >>> b"))).isTrue();
 
-    assertThat(NodeUtil.isNumericResult(getNode("a == b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a != b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a === b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a !== b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a < b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a > b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a <= b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a >= b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a in b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a instanceof b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a == b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a != b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a === b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a !== b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a < b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a > b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a <= b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a >= b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a in b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a instanceof b"))).isFalse();
 
-    assertThat(NodeUtil.isNumericResult(getNode("'a'"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("'a'+b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a+'b'"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a+b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a()"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("''.a"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a.b"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a.b()"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("a().b()"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("new a()"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("'a'"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("'a'+b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a+'b'"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a+b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a()"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("''.a"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a.b"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a.b()"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a().b()"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("new a()"))).isFalse();
 
     // Definitely not numeric
-    assertThat(NodeUtil.isNumericResult(getNode("([1,2])"))).isFalse();
-    assertThat(NodeUtil.isNumericResult(getNode("({a:1})"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("([1,2])"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("({a:1})"))).isFalse();
 
     // Recurse into the expression when necessary.
-    assertThat(NodeUtil.isNumericResult(getNode("1 && 2"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("1 || 2"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("a ? 2 : 3"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("a,1"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("a=1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("1 && 2"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("1 || 2"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a ? 2 : 3"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a,1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a=1"))).isTrue();
 
-    assertThat(NodeUtil.isNumericResult(getNode("a += 1"))).isFalse();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a += 1"))).isFalse();
 
-    assertThat(NodeUtil.isNumericResult(getNode("a -= 1"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("a *= 1"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("--a"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("++a"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("a++"))).isTrue();
-    assertThat(NodeUtil.isNumericResult(getNode("a--"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a -= 1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a *= 1"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("--a"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("++a"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a++"))).isTrue();
+    assertThat(NodeUtil.isNumericResult(parseExpr("a--"))).isTrue();
   }
 
   @Test
   public void testIsBooleanResult() {
-    assertThat(NodeUtil.isBooleanResult(getNode("1"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("true"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("+true"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("+1"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("-1"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("-Infinity"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("Infinity"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("NaN"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("undefined"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("void 0"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("1"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("true"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("+true"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("+1"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("-1"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("-Infinity"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("Infinity"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("NaN"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("undefined"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("void 0"))).isFalse();
 
-    assertThat(NodeUtil.isBooleanResult(getNode("a << b"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("a >> b"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("a >>> b"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a << b"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a >> b"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a >>> b"))).isFalse();
 
-    assertThat(NodeUtil.isBooleanResult(getNode("a == b"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a != b"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a === b"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a !== b"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a < b"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a > b"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a <= b"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a >= b"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a in b"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a instanceof b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a == b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a != b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a === b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a !== b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a < b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a > b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a <= b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a >= b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a in b"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a instanceof b"))).isTrue();
 
-    assertThat(NodeUtil.isBooleanResult(getNode("'a'"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("'a'+b"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("a+'b'"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("a+b"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("a()"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("''.a"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("a.b"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("a.b()"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("a().b()"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("new a()"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("delete a"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("'a'"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("'a'+b"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a+'b'"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a+b"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a()"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("''.a"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a.b"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a.b()"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a().b()"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("new a()"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("delete a"))).isTrue();
 
     // Definitely not boolean
-    assertThat(NodeUtil.isBooleanResult(getNode("([true,false])"))).isFalse();
-    assertThat(NodeUtil.isBooleanResult(getNode("({a:true})"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("([true,false])"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("({a:true})"))).isFalse();
 
     // These are boolean
-    assertThat(NodeUtil.isBooleanResult(getNode("true && false"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("true || false"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a ? true : false"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a,true"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a=true"))).isTrue();
-    assertThat(NodeUtil.isBooleanResult(getNode("a=1"))).isFalse();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("true && false"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("true || false"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a ? true : false"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a,true"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a=true"))).isTrue();
+    assertThat(NodeUtil.isBooleanResult(parseExpr("a=1"))).isFalse();
   }
 
   @Test
   public void testMayBeString() {
-    assertThat(NodeUtil.mayBeString(getNode("1"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("true"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("+true"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("+1"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("-1"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("-Infinity"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("Infinity"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("NaN"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("undefined"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("void 0"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("null"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("1"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("true"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("+true"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("+1"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("-1"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("-Infinity"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("Infinity"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("NaN"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("undefined"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("void 0"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("null"))).isFalse();
 
-    assertThat(NodeUtil.mayBeString(getNode("a << b"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a >> b"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a >>> b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a << b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a >> b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a >>> b"))).isFalse();
 
-    assertThat(NodeUtil.mayBeString(getNode("a == b"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a != b"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a === b"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a !== b"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a < b"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a > b"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a <= b"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a >= b"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a in b"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a instanceof b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a == b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a != b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a === b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a !== b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a < b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a > b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a <= b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a >= b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a in b"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a instanceof b"))).isFalse();
 
-    assertThat(NodeUtil.mayBeString(getNode("'a'"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("'a'+b"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("a+'b'"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("a+b"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("a()"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("''.a"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("a.b"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("a.b()"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("a().b()"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("new a()"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("'a'"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("'a'+b"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("a+'b'"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("a+b"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("a()"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("''.a"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("a.b"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("a.b()"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("a().b()"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("new a()"))).isTrue();
 
     // These can't be strings but they aren't handled yet.
-    assertThat(NodeUtil.mayBeString(getNode("1 && 2"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("1 || 2"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("1 ? 2 : 3"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("1,2"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("a=1"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("1+1"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("true+true"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("null+null"))).isFalse();
-    assertThat(NodeUtil.mayBeString(getNode("NaN+NaN"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("1 && 2"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("1 || 2"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("1 ? 2 : 3"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("1,2"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("a=1"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("1+1"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("true+true"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("null+null"))).isFalse();
+    assertThat(NodeUtil.mayBeString(parseExpr("NaN+NaN"))).isFalse();
 
     // These are not strings but they aren't primitives either
-    assertThat(NodeUtil.mayBeString(getNode("([1,2])"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("({a:1})"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("({}+1)"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("(1+{})"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("([]+1)"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("(1+[])"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("([1,2])"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("({a:1})"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("({}+1)"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("(1+{})"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("([]+1)"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("(1+[])"))).isTrue();
 
-    assertThat(NodeUtil.mayBeString(getNode("a += 'x'"))).isTrue();
-    assertThat(NodeUtil.mayBeString(getNode("a += 1"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("a += 'x'"))).isTrue();
+    assertThat(NodeUtil.mayBeString(parseExpr("a += 1"))).isTrue();
   }
 
   @Test
   public void testIsStringResult() {
-    assertThat(NodeUtil.isStringResult(getNode("1"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("true"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("+true"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("+1"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("-1"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("-Infinity"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("Infinity"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("NaN"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("undefined"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("void 0"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("null"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("1"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("true"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("+true"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("+1"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("-1"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("-Infinity"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("Infinity"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("NaN"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("undefined"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("void 0"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("null"))).isFalse();
 
-    assertThat(NodeUtil.isStringResult(getNode("a << b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a >> b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a >>> b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a << b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a >> b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a >>> b"))).isFalse();
 
-    assertThat(NodeUtil.isStringResult(getNode("a == b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a != b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a === b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a !== b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a < b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a > b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a <= b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a >= b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a in b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a instanceof b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a == b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a != b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a === b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a !== b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a < b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a > b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a <= b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a >= b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a in b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a instanceof b"))).isFalse();
 
-    assertThat(NodeUtil.isStringResult(getNode("'a'"))).isTrue();
-    assertThat(NodeUtil.isStringResult(getNode("'a'+b"))).isTrue();
-    assertThat(NodeUtil.isStringResult(getNode("a+'b'"))).isTrue();
-    assertThat(NodeUtil.isStringResult(getNode("a+b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a()"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("''.a"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a.b"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a.b()"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a().b()"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("new a()"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("'a'"))).isTrue();
+    assertThat(NodeUtil.isStringResult(parseExpr("'a'+b"))).isTrue();
+    assertThat(NodeUtil.isStringResult(parseExpr("a+'b'"))).isTrue();
+    assertThat(NodeUtil.isStringResult(parseExpr("a+b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a()"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("''.a"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a.b"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a.b()"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a().b()"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("new a()"))).isFalse();
 
     // These can't be strings but they aren't handled yet.
-    assertThat(NodeUtil.isStringResult(getNode("1 && 2"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("1 || 2"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("1 ? 2 : 3"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("1,2"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("a=1"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("1+1"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("true+true"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("null+null"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("NaN+NaN"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("1 && 2"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("1 || 2"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("1 ? 2 : 3"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("1,2"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("a=1"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("1+1"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("true+true"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("null+null"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("NaN+NaN"))).isFalse();
 
     // These are not strings but they aren't primitives either
-    assertThat(NodeUtil.isStringResult(getNode("([1,2])"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("({a:1})"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("({}+1)"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("(1+{})"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("([]+1)"))).isFalse();
-    assertThat(NodeUtil.isStringResult(getNode("(1+[])"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("([1,2])"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("({a:1})"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("({}+1)"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("(1+{})"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("([]+1)"))).isFalse();
+    assertThat(NodeUtil.isStringResult(parseExpr("(1+[])"))).isFalse();
 
-    assertThat(NodeUtil.isStringResult(getNode("a += 'x'"))).isTrue();
+    assertThat(NodeUtil.isStringResult(parseExpr("a += 'x'"))).isTrue();
 
     // Template literals
-    assertThat(NodeUtil.isStringResult(getNode("`x`"))).isTrue();
-    assertThat(NodeUtil.isStringResult(getNode("`a${b}c`"))).isTrue();
+    assertThat(NodeUtil.isStringResult(parseExpr("`x`"))).isTrue();
+    assertThat(NodeUtil.isStringResult(parseExpr("`a${b}c`"))).isTrue();
   }
 
   @Test
   public void testIsObjectResult() {
-    assertThat(NodeUtil.isObjectResult(getNode("1"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("true"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("+true"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("+1"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("-1"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("-Infinity"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("Infinity"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("NaN"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("undefined"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("void 0"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("1"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("true"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("+true"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("+1"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("-1"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("-Infinity"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("Infinity"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("NaN"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("undefined"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("void 0"))).isFalse();
 
-    assertThat(NodeUtil.isObjectResult(getNode("a << b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a >> b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a >>> b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a << b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a >> b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a >>> b"))).isFalse();
 
-    assertThat(NodeUtil.isObjectResult(getNode("a == b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a != b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a === b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a !== b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a < b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a > b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a <= b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a >= b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a in b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a instanceof b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a == b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a != b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a === b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a !== b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a < b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a > b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a <= b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a >= b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a in b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a instanceof b"))).isFalse();
 
-    assertThat(NodeUtil.isObjectResult(getNode("delete a"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("'a'"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("'a'+b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a+'b'"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a+b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("{},true"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("delete a"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("'a'"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("'a'+b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a+'b'"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a+b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("{},true"))).isFalse();
 
     // "false" here means "unknown"
-    assertThat(NodeUtil.isObjectResult(getNode("a()"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("''.a"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a.b"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a.b()"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a().b()"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("a ? true : {}"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a()"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("''.a"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a.b"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a.b()"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a().b()"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a ? true : {}"))).isFalse();
 
     // These are objects but aren't handled yet.
-    assertThat(NodeUtil.isObjectResult(getNode("true && {}"))).isFalse();
-    assertThat(NodeUtil.isObjectResult(getNode("true || {}"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("true && {}"))).isFalse();
+    assertThat(NodeUtil.isObjectResult(parseExpr("true || {}"))).isFalse();
 
     // Definitely objects
-    assertThat(NodeUtil.isObjectResult(getNode("new a.b()"))).isTrue();
-    assertThat(NodeUtil.isObjectResult(getNode("([true,false])"))).isTrue();
-    assertThat(NodeUtil.isObjectResult(getNode("({a:true})"))).isTrue();
-    assertThat(NodeUtil.isObjectResult(getNode("a={}"))).isTrue();
-    assertThat(NodeUtil.isObjectResult(getNode("[] && {}"))).isTrue();
-    assertThat(NodeUtil.isObjectResult(getNode("[] || {}"))).isTrue();
-    assertThat(NodeUtil.isObjectResult(getNode("a ? [] : {}"))).isTrue();
-    assertThat(NodeUtil.isObjectResult(getNode("{},[]"))).isTrue();
-    assertThat(NodeUtil.isObjectResult(getNode("/a/g"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(parseExpr("new a.b()"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(parseExpr("([true,false])"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(parseExpr("({a:true})"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a={}"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(parseExpr("[] && {}"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(parseExpr("[] || {}"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(parseExpr("a ? [] : {}"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(parseExpr("{},[]"))).isTrue();
+    assertThat(NodeUtil.isObjectResult(parseExpr("/a/g"))).isTrue();
   }
 
   @Test
@@ -2644,12 +2639,12 @@ public final class NodeUtilTest {
 
   @Test
   public void testIsNaN() {
-    assertThat(NodeUtil.isNaN(getNode("NaN"))).isTrue();
-    assertThat(NodeUtil.isNaN(getNode("Infinity"))).isFalse();
-    assertThat(NodeUtil.isNaN(getNode("x"))).isFalse();
-    assertThat(NodeUtil.isNaN(getNode("0/0"))).isTrue();
-    assertThat(NodeUtil.isNaN(getNode("1/0"))).isFalse();
-    assertThat(NodeUtil.isNaN(getNode("0/1"))).isFalse();
+    assertThat(NodeUtil.isNaN(parseExpr("NaN"))).isTrue();
+    assertThat(NodeUtil.isNaN(parseExpr("Infinity"))).isFalse();
+    assertThat(NodeUtil.isNaN(parseExpr("x"))).isFalse();
+    assertThat(NodeUtil.isNaN(parseExpr("0/0"))).isTrue();
+    assertThat(NodeUtil.isNaN(parseExpr("1/0"))).isFalse();
+    assertThat(NodeUtil.isNaN(parseExpr("0/1"))).isFalse();
     assertThat(NodeUtil.isNaN(IR.number(0.0))).isFalse();
   }
 
@@ -3944,9 +3939,9 @@ public final class NodeUtilTest {
   public void testIsVarArgs() {
     assertThat(
             NodeUtil.doesFunctionReferenceOwnArgumentsObject(
-                getNode("function() {return () => arguments}")))
+                parseExpr("function() {return () => arguments}")))
         .isTrue();
-    assertThat(NodeUtil.doesFunctionReferenceOwnArgumentsObject(getNode("() => arguments")))
+    assertThat(NodeUtil.doesFunctionReferenceOwnArgumentsObject(parseExpr("() => arguments")))
         .isFalse();
   }
 
