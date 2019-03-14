@@ -30,6 +30,7 @@ import static com.google.javascript.rhino.Token.FOR_OF;
 import static com.google.javascript.rhino.Token.FUNCTION;
 import static com.google.javascript.rhino.Token.REST;
 import static com.google.javascript.rhino.Token.SPREAD;
+import static com.google.javascript.rhino.Token.THROW;
 import static com.google.javascript.rhino.Token.YIELD;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -645,7 +646,7 @@ public final class NodeUtilTest {
   }
 
   @Test
-  public void testMayHaveSideEffects() {
+  public void testMayHaveSideEffects_undifferentiatedCases() {
     assertSideEffect(false, "[1]");
     assertSideEffect(false, "[1, 2]");
     assertSideEffect(false, "[...[]]");
@@ -719,7 +720,6 @@ public final class NodeUtilTest {
     assertSideEffect(true, "st = `${name}template`");
     assertSideEffect(true, "tempFunc = templateFunction`template`");
 
-
     assertSideEffect(false, "new RegExp('foobar', 'i')");
     assertSideEffect(true, "new RegExp(SomethingWacky(), 'i')");
     assertSideEffect(false, "new Array()");
@@ -764,7 +764,24 @@ public final class NodeUtilTest {
   }
 
   @Test
-  public void testComputedPropSideEffects() {
+  public void testMayHaveSideEffects_contextSwitch() {
+    assertSideEffect(true, parseFirst(AWAIT, "async function f() { await 0; }"));
+    assertSideEffect(true, parseFirst(FOR_AWAIT_OF, "(async()=>{ for await (let x of []) {} })"));
+    assertSideEffect(true, parseFirst(THROW, "function f() { throw 'something'; }"));
+    assertSideEffect(true, parseFirst(YIELD, "function* f() { yield 'something'; }"));
+    assertSideEffect(true, parseFirst(YIELD, "function* f() { yield* 'something'; }"));
+  }
+
+  @Test
+  public void testMayHaveSideEffects_enhancedForLoop() {
+    // These edge cases are actually side-effect free. We include them to confirm we just give up on
+    // enhanced for loops.
+    assertSideEffect(true, "for (const x in []) { }");
+    assertSideEffect(true, "for (const x of []) { }");
+  }
+
+  @Test
+  public void testMayHaveSideEffects_computedProp() {
     assertSideEffect(false, "({[a]: x})");
     assertSideEffect(true, "({[a()]: x})");
     assertSideEffect(true, "({[a]: x()})");
@@ -792,7 +809,7 @@ public final class NodeUtilTest {
   }
 
   @Test
-  public void testObjectMethodSideEffects() {
+  public void testMayHaveSideEffects_objectMethod() {
     // "toString" and "valueOf" are assumed to be side-effect free
     assertSideEffect(false, "o.toString()");
     assertSideEffect(false, "o.valueOf()");
@@ -802,7 +819,7 @@ public final class NodeUtilTest {
   }
 
   @Test
-  public void testRegExpSideEffect() {
+  public void testMayHaveSideEffects_regExp() {
     // A RegExp Object by itself doesn't have any side-effects
     assertSideEffect(false, "/abc/gi", true);
     assertSideEffect(false, "/abc/gi", false);
@@ -847,10 +864,7 @@ public final class NodeUtilTest {
     // in combination with a RegExp instance "exec" method.
     assertSideEffect(true, "''.match(a)", true);
     assertSideEffect(true, "''.match(a)", false);
-  }
 
-  @Test
-  public void testRegExpSideEffect2() {
     assertSideEffect(true, "'a'.replace(/a/, function (s) {alert(s)})", false);
     assertSideEffect(false, "'a'.replace(/a/, 'x')", false);
   }

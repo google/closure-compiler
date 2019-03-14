@@ -1144,13 +1144,21 @@ public final class NodeUtil {
     // Rather than id which ops may have side effects, id the ones
     // that we know to be safe
     switch (n.getToken()) {
-      // Throws are by definition side effects, and yield and export are similar.
       case THROW:
+        // Throw is a side-effect by definition.
       case YIELD:
-      case EXPORT:
+      case AWAIT:
+      case FOR_AWAIT_OF:
+        // Context switches can conceal side-effects.
+      case FOR_OF:
+      case FOR_IN:
+        // Enhanced for loops are almost always side-effectful; it's not worth checking them
+        // further. Particularly, they represent a kind of assignment op.
       case VAR:
       case LET:
       case CONST:
+      case EXPORT:
+        // Variable declarations are side-effects in practically all contexts.
         return true;
 
       case OBJECTLIT:
@@ -1234,6 +1242,7 @@ public final class NodeUtil {
         return true;
 
       case TAGGED_TEMPLATELIT:
+        // TODO(b/128527671): Inspect the children of the expression for side-effects.
         return functionCallHasSideEffects(n, compiler);
 
       case CAST:
