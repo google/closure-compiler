@@ -58,8 +58,8 @@ buffer.SlowBuffer.prototype.toString;
 
 /**
  * @param {number} size
- * @param {(string|Buffer|number)=} fill
- * @param {number=} encoding
- * @return {Buffer}
+ * @param {(string|!Buffer|number)=} fill
+ * @param {string=} encoding
+ * @return {!Buffer}
  */
 buffer.Buffer.alloc;
