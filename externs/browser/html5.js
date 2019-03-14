@@ -2580,6 +2580,50 @@ MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
     canBubbleArg, cancelableArg, dataArg, originArg, lastEventIdArg, sourceArg,
     portsArg) {};
 
+/**
+ * @record
+ * @extends {EventInit}
+ * @see https://html.spec.whatwg.org/multipage/web-sockets.html#the-closeevent-interface
+ */
+function CloseEventInit() {}
+
+/**
+ * @type {undefined|boolean}
+ */
+CloseEventInit.prototype.wasClean;
+
+/**
+ * @type {undefined|number}
+ */
+CloseEventInit.prototype.code;
+
+/**
+ * @type {undefined|string}
+ */
+CloseEventInit.prototype.reason;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {!CloseEventInit=} opt_init
+ */
+var CloseEvent = function(type, opt_init) {};
+
+/**
+ * @type {boolean}
+ */
+CloseEvent.prototype.wasClean;
+
+/**
+ * @type {number}
+ */
+CloseEvent.prototype.code;
+
+/**
+ * @type {string}
+ */
+CloseEvent.prototype.reason;
 
 /**
  * HTML5 BroadcastChannel class.
@@ -2997,7 +3041,7 @@ WebSocket.prototype.onmessage;
 
 /**
  * An event handler called on close event.
- * @type {?function(!Event): void}
+ * @type {?function(!CloseEvent): void}
  */
 WebSocket.prototype.onclose;
 
