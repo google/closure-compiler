@@ -1518,7 +1518,8 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testObjectSpread() {
+  public void testObjectSpread_isInferredToBeObject() {
+    // Given
     JSType recordType =
         registry.createRecordType(
             ImmutableMap.of(
@@ -1526,136 +1527,18 @@ public final class TypeInferenceTest {
                 "y", getNativeType(NUMBER_TYPE)));
     assuming("obj", recordType);
 
-    inFunction(
-        lines(
-            "let copy = {...obj}; ", // preserve newline
-            "X: copy.x;",
-            "Y: copy.y;"));
-    assertTypeOfExpression("X").toStringIsEqualTo("string");
-    assertTypeOfExpression("Y").toStringIsEqualTo("number");
+    assuming("before", BOOLEAN_TYPE);
+    assuming("after", NULL_TYPE);
 
-    assertScopeEnclosing("X")
-        .declares("copy")
-        .withTypeThat()
-        .toStringIsEqualTo("{x: string, y: number}");
-  }
+    // When
+    inFunction(lines("let spread = {before, ...obj, after};"));
 
-  @Test
-  public void testObjectSpreadWithAdditionalProperties() {
-    JSType recordType =
-        registry.createRecordType(
-            ImmutableMap.of(
-                "x", getNativeType(STRING_TYPE),
-                "y", getNativeType(NUMBER_TYPE)));
-    assuming("obj", recordType);
-    assuming("a", NUMBER_TYPE);
-    assuming("b", STRING_TYPE);
+    // Then
 
-    inFunction(
-        lines(
-            "let copy = {a, c: 0, ...obj, b}; ", // preserve newline
-            "A: copy.a",
-            "B: copy.b",
-            "C: copy.c",
-            "X: copy.x;",
-            "Y: copy.y;"));
-    assertTypeOfExpression("A").toStringIsEqualTo("number");
-    assertTypeOfExpression("B").toStringIsEqualTo("string");
-    assertTypeOfExpression("C").toStringIsEqualTo("number");
-    assertTypeOfExpression("X").toStringIsEqualTo("string");
-    assertTypeOfExpression("Y").toStringIsEqualTo("number");
-
-    assertScopeEnclosing("X")
-        .declares("copy")
-        .withTypeThat()
-        .toStringIsEqualTo(
-            lines(
-                "{",
-                "  a: number,",
-                "  b: string,",
-                "  c: number,",
-                "  x: string,",
-                "  y: number",
-                "}"));
-  }
-
-  @Test
-  public void testObjectSpreadMergeObjects() {
-    JSType recordType =
-        registry.createRecordType(
-            ImmutableMap.of(
-                "x", getNativeType(STRING_TYPE),
-                "y", getNativeType(NUMBER_TYPE)));
-    assuming("xy", recordType);
-    recordType =
-        registry.createRecordType(
-            ImmutableMap.of(
-                "a", getNativeType(NUMBER_TYPE),
-                "b", getNativeType(STRING_TYPE)));
-    assuming("ab", recordType);
-
-    inFunction(
-        lines(
-            "let copy = {...ab, c: 0, ...xy}; ", // preserve newline
-            "A: copy.a",
-            "B: copy.b",
-            "C: copy.c",
-            "X: copy.x;",
-            "Y: copy.y;"));
-    assertTypeOfExpression("A").toStringIsEqualTo("number");
-    assertTypeOfExpression("B").toStringIsEqualTo("string");
-    assertTypeOfExpression("C").toStringIsEqualTo("number");
-    assertTypeOfExpression("X").toStringIsEqualTo("string");
-    assertTypeOfExpression("Y").toStringIsEqualTo("number");
-
-    assertScopeEnclosing("X")
-        .declares("copy")
-        .withTypeThat()
-        .toStringIsEqualTo(
-            lines(
-                "{",
-                "  a: number,",
-                "  b: string,",
-                "  c: number,",
-                "  x: string,",
-                "  y: number",
-                "}"));
-  }
-
-  @Test
-  public void testObjectSpreadPrimitivesAddsNoProperties() {
-    assuming("num", NUMBER_TYPE);
-
-    inFunction(
-        lines(
-            "let obj = {...0, ...'str', ...[0], ...num, ...function() {}}; ", // preserve newline
-            "OBJ: obj"));
-
-    assertTypeOfExpression("OBJ").toStringIsEqualTo("{}");
-  }
-
-  @Test
-  public void testObjectSpreadUnknown() {
-    assuming("what", UNKNOWN_TYPE);
-
-    inFunction(
-        lines(
-            "let obj = {...what}; ", // preserve newline
-            "OBJ: obj"));
-
-    assertTypeOfExpression("OBJ").toStringIsEqualTo("{}");
-  }
-
-  @Test
-  public void testObjectSpreadUnknownExtraProperties() {
-    assuming("what", UNKNOWN_TYPE);
-
-    inFunction(
-        lines(
-            "let obj = {a: 0, ...{b: ''}, ...what}; ", // preserve newline
-            "OBJ: obj"));
-
-    assertTypeOfExpression("OBJ").toStringIsEqualTo("{a: number, b: string}");
+    // TODO(b/128355893): Do smarter inferrence. There are a lot of potential issues with
+    // inference on object-rest, so for now we just give up and say `Object`. In theory we could
+    // infer something like `{after: null, before: boolean, x: string, y: number}`.
+    verify("spread", OBJECT_TYPE);
   }
 
   @Test
@@ -2528,35 +2411,11 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testObjectRestInferredAsObjectIfGivenUnknownType() {
-    assuming("unknown", UNKNOWN_TYPE);
-    inFunction("const {a, ...rest} = unknown;  A: a; REST: rest;");
-
-    assertTypeOfExpression("REST").toStringIsEqualTo("Object");
-  }
-
-  @Test
-  public void testObjectRestInferredGivenRecordType() {
+  public void testObjectRest_inferredGivenObjectLiteralType() {
     inFunction("var obj = {a: 1, b: 2, c: 3}; const {a, ...rest} = obj;  A: a; REST: rest;");
 
     assertTypeOfExpression("A").toStringIsEqualTo("number");
-    assertTypeOfExpression("REST").toStringIsEqualTo("{b: number, c: number}");
-  }
-
-  @Test
-  public void testObjectRestInferredGivenRecordTypeAndComputedProperty() {
-    inFunction(
-        "var obj =  {a: 1, b: 2, c: 3}; const {['a']: a, ...rest} = obj;  A: a; REST: rest;");
-
-    assertTypeOfExpression("A").toStringIsEqualTo("?");
-    assertTypeOfExpression("REST").toStringIsEqualTo("Object");
-  }
-
-  @Test
-  public void testObjectRestInferredAsTemplatizedObjectType() {
-    inFunction("var /** !Object<number, string> */ obj = {}; const {...rest} = obj; REST: rest;");
-
-    assertTypeOfExpression("REST").toStringIsEqualTo("Object<number,string>");
+    assertTypeOfExpression("REST").isEqualTo(registry.getNativeType(OBJECT_TYPE));
   }
 
   @Test

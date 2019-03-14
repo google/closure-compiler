@@ -994,16 +994,29 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   private void checkSpread(Node spreadNode) {
-    if (spreadNode.getParent().isObjectLit()) {
-      // Nothing to check for object spread, anything can be spread.
-      return;
-    }
+    Node target = spreadNode.getOnlyChild();
+    ensureTyped(target);
+    JSType targetType = getJSType(target);
 
-    Node iterableNode = spreadNode.getOnlyChild();
-    ensureTyped(iterableNode);
-    JSType iterableType = getJSType(iterableNode);
-    validator.expectAutoboxesToIterable(
-        iterableNode, iterableType, "Spread operator only applies to Iterable types");
+    switch (spreadNode.getParent().getToken()) {
+      case OBJECTLIT:
+        // Case: `var x = {A: a, B: b, ...obj}`.
+        // Nothing to check about object spread.
+        break;
+
+      case ARRAYLIT:
+      case CALL:
+      case NEW:
+        // Case: `var x = [a, b, ...itr]`
+        // Case: `var x = fn(a, b, ...itr)`
+        validator.expectAutoboxesToIterable(
+            target, targetType, "Spread operator only applies to Iterable types");
+        break;
+
+      default:
+        throw new IllegalStateException(
+            "Unexpected parent of SPREAD: " + spreadNode.getParent().toStringTree());
+    }
   }
 
   private void checkTypeofString(Node n, String s) {

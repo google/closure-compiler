@@ -3370,7 +3370,29 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testObjectRest_blocksDisambiguation_ofRestedType() {
+  public void testObjectRest_blocksDisambiguation_ofPropertiesAccessedFromResultType() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    testSets(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "",
+            "  /** @return {number} */",
+            "  method() { return 5; }",
+            "}",
+            "",
+            "const {...rest} = new Foo();",
+            "alert(rest.prop);"),
+        // `method` can be disambiguated, because it's always accesed from a reveiver known to
+        // possess it. This is not true for `prop`.
+        "{method=[[Foo.prototype]]}");
+  }
+
+  @Test
+  public void testObjectRest_allowsDisambiguation_betweenInstanceAndRecordType() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     testSets(
         lines(
@@ -3380,11 +3402,58 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "    this.prop = 3;",
             "  }",
             "}",
-            "/** @type {string} */",
-            "Foo.prop = 'static property!';",
-            "const {...rest} = (new Foo());",
-            "alert(rest.prop);"),
-        "{}");
+            "",
+            "/** @record */",
+            "class Bar {", //
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "",
+            // Generates a type mismatch warning because `bar` is just an `Object`. The
+            // relationship with `Foo` is hidden by spreading its instance. If the user chooses to
+            // ignore the mismatch warning, the compiler is free to break them by disambiguating
+            // "prop". See b/128355893#comment3
+            "const {.../** !Bar */ bar} = new Foo();",
+            "alert(bar.prop);"),
+        "{prop=[[Bar.prototype], [Foo]]}",
+        TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
+  @Test
+  public void testObjectRest_allowsDisambiguation_betweenPairOfRecordTypes() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    testSets(
+        lines(
+            "/** @record */",
+            "class Foo {",
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "    /** @const {string} */",
+            "    this.uniqueProp = 'str';",
+            "  }",
+            "}",
+            "",
+            "/** @record */",
+            "class Bar {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "",
+            "function f(/** !Foo */ f) {",
+            // Generates a type mismatch warning because `bar` is just an `Object`. The
+            // relationship with `Foo` is hidden by spreading its instance. If the user chooses to
+            // ignore the mismatch warning, the compiler is free to break them by disambiguating
+            // "prop". See b/128355893#comment3
+            "  const {.../** !Bar */ bar} = f;",
+            "  alert(bar.prop);",
+            "}"),
+        "{prop=[[Bar.prototype], [Foo.prototype]], uniqueProp=[[Foo.prototype]]}",
+        TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
   @Test
@@ -3404,13 +3473,13 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "",
             "const spread = {...new Foo()};",
             "alert(spread.prop);"),
-        // `method` can be disambiguated, because we know it is never accessed via `spread.method`.
-        // This is not true for `prop`.
+        // `method` can be disambiguated, because weit's always accesed from a reveiver known to
+        // possess it. This is not true for `prop`.
         "{method=[[Foo.prototype]]}");
   }
 
   @Test
-  public void testObjectSpread_blocksDisambiguation_whenResultIsUsedAsIntermediaryType() {
+  public void testObjectSpread_allowsDisambiguation_betweenInstanceAndRecordType() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     testSets(
         lines(
@@ -3429,12 +3498,49 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "}",
             "",
-            "const spread = {...new Foo()};",
-            "const /** !Bar */ bar = spread;",
+            // Generates a type mismatch warning because `bar` is just an `Object`. The
+            // relationship with `Foo` is hidden by spreading its instance. If the user chooses to
+            // ignore the mismatch warning, the compiler is free to break them by disambiguating
+            // "prop". See b/128355893#comment3
+            "const /** !Bar */ bar = {...new Foo()};",
             "alert(bar.prop);"),
-        // Both Bar and Foo types are conflated with an anonymous object type created via spread,
-        // so none of their properties can be disambiguated.
-        "{}");
+        "{prop=[[Bar.prototype], [Foo]]}",
+        TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
+  @Test
+  public void testObjectSpread_allowsDisambiguation_betweenPairOfRecordTypes() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    testSets(
+        lines(
+            "/** @record */",
+            "class Foo {",
+            "  constructor() {",
+            "    /** @const {number} */",
+            "    this.prop = 3;",
+            "    /** @const {string} */",
+            "    this.uniqueProp = 'str';",
+            "  }",
+            "}",
+            "",
+            "/** @record */",
+            "class Bar {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.prop = 3;",
+            "  }",
+            "}",
+            "",
+            "function f(/** !Foo */ f) {",
+            // Generates a type mismatch warning because `bar` is just an `Object`. The
+            // relationship with `Foo` is hidden by spreading its instance. If the user chooses to
+            // ignore the mismatch warning, the compiler is free to break them by disambiguating
+            // "prop". See b/128355893#comment3
+            "  const /** !Bar */ bar = {...f};",
+            "  alert(bar.prop);",
+            "}"),
+        "{prop=[[Bar.prototype], [Foo.prototype]], uniqueProp=[[Foo.prototype]]}",
+        TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
   @Test

@@ -1381,31 +1381,10 @@ class TypeInference
       }
 
       if (key.isSpread()) {
-        Node name = key.getFirstChild();
-        JSType nameType = name.getJSType();
-
-        if (nameType == null) {
-          continue;
-        }
-
-        ObjectType spreadType = nameType.toMaybeObjectType();
-
-        while (spreadType != null) {
-          Set<String> spreadPropertyNames = spreadType.getOwnPropertyNames();
-          for (String propertyName : spreadPropertyNames) {
-            objectType.defineInferredProperty(
-                propertyName, spreadType.getPropertyType(propertyName), key);
-          }
-          if ((!spreadType.isConstructor()
-                  && !spreadType.isInterface()
-                  && !spreadType.isInstanceType())
-              || spreadType.getSuperClassConstructor() == null) {
-            break;
-          }
-          spreadType = spreadType.getSuperClassConstructor().getInstanceType();
-        }
-
-        continue;
+        // TODO(b/128355893): Do smarter inferrence. There are a lot of potential issues with
+        // inference on object-spread, so for now we just give up and say `Object`.
+        n.setJSType(registry.getNativeType(JSTypeNative.OBJECT_TYPE));
+        break;
       }
 
       String memberName = NodeUtil.getObjectLitKeyName(key);
