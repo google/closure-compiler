@@ -1162,6 +1162,18 @@ public final class NodeUtil {
         return true;
 
       case OBJECTLIT:
+        if (checkForNewObjects) {
+          return true;
+        }
+        for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+          for (Node c = key.getFirstChild(); c != null; c = c.getNext()) {
+            if (checkForStateChangeHelper(c, checkForNewObjects, compiler)) {
+              return true;
+            }
+          }
+        }
+        return false;
+
       case ARRAYLIT:
       case REGEXP:
         if (checkForNewObjects) {
@@ -1169,9 +1181,11 @@ public final class NodeUtil {
         }
         break;
 
-      case REST:
       case SPREAD:
-        if (iteratesImpureIterable(n)) {
+        Node expr = n.getOnlyChild();
+        if (!expr.isArrayLit()) {
+          // Anything other than an array, in the absense of any other information,
+          // we have to assume is going to invoke invoke a stateful generator or the like.
           return true;
         }
         break;
@@ -1616,9 +1630,6 @@ public final class NodeUtil {
       case NAME:
         // A variable definition.
         return n.hasChildren();
-      case REST:
-      case SPREAD:
-        return NodeUtil.iteratesImpureIterable(n);
       default:
         return false;
     }

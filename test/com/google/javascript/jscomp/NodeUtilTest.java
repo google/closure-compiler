@@ -24,7 +24,6 @@ import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
 import static com.google.javascript.rhino.Token.AWAIT;
 import static com.google.javascript.rhino.Token.CALL;
 import static com.google.javascript.rhino.Token.CLASS;
-import static com.google.javascript.rhino.Token.COMPUTED_PROP;
 import static com.google.javascript.rhino.Token.DESTRUCTURING_LHS;
 import static com.google.javascript.rhino.Token.FOR_AWAIT_OF;
 import static com.google.javascript.rhino.Token.FOR_OF;
@@ -645,6 +644,16 @@ public final class NodeUtilTest {
   public void testMayHaveSideEffects_undifferentiatedCases() {
     assertSideEffect(false, "[1]");
     assertSideEffect(false, "[1, 2]");
+    assertSideEffect(false, "[...[]]");
+    assertSideEffect(false, "[...[1]]");
+    assertSideEffect(true, "[...[i++]]");
+    assertSideEffect(true, "[...f()]");
+    assertSideEffect(false, "({...x})");
+    assertSideEffect(false, "({...{}})");
+    assertSideEffect(false, "({...{a:1}})");
+    assertSideEffect(true, "({...{a:i++}})");
+    assertSideEffect(true, "({...{a:f()}})");
+    assertSideEffect(true, "({...f()})");
     assertSideEffect(true, "i++");
     assertSideEffect(true, "[b, [a, i++]]");
     assertSideEffect(true, "i=3");
@@ -741,75 +750,12 @@ public final class NodeUtilTest {
     assertSideEffect(true, "Math.random(seed);");
     assertSideEffect(false, "[1, 1].foo;");
 
-
     assertSideEffect(true, "export var x = 0;");
     assertSideEffect(true, "export let x = 0;");
     assertSideEffect(true, "export const x = 0;");
     assertSideEffect(true, "export class X {};");
     assertSideEffect(true, "export function x() {};");
     assertSideEffect(true, "export {x};");
-  }
-
-  @Test
-  public void testMayHaveSideEffects_iterableSpread() {
-    // ARRAYLIT-SPREAD
-    assertSideEffect(false, "[...[]]");
-    assertSideEffect(false, "[...[1]]");
-    assertSideEffect(true, "[...[i++]]");
-    assertSideEffect(false, "[...'string']");
-    assertSideEffect(false, "[...`templatelit`]");
-    assertSideEffect(false, "[...`templatelit ${safe}`]");
-    assertSideEffect(true, "[...`templatelit ${unsafe()}`]");
-    assertSideEffect(true, "[...f()]");
-    assertSideEffect(true, "[...5]");
-    assertSideEffect(true, "[...null]");
-    assertSideEffect(true, "[...true]");
-
-    // CALL-SPREAD
-    assertSideEffect(false, "(function pure(){})(...[])");
-    assertSideEffect(false, "(function pure(){})(...[1])");
-    assertSideEffect(true, "(function pure(){})(...[i++])");
-    assertSideEffect(false, "(function pure(){})(...'string')");
-    assertSideEffect(false, "(function pure(){})(...`templatelit`)");
-    assertSideEffect(false, "(function pure(){})(...`templatelit ${safe}`)");
-    assertSideEffect(true, "(function pure(){})(...`templatelit ${unsafe()}`)");
-    assertSideEffect(true, "(function pure(){})(...f())");
-    assertSideEffect(true, "(function pure(){})(...5)");
-    assertSideEffect(true, "(function pure(){})(...null)");
-    assertSideEffect(true, "(function pure(){})(...true)");
-
-    // NEW-SPREAD
-    assertSideEffect(false, "new (function pure(){})(...[])");
-    assertSideEffect(false, "new (function pure(){})(...[1])");
-    assertSideEffect(true, "new (function pure(){})(...[i++])");
-    assertSideEffect(false, "new (function pure(){})(...'string')");
-    assertSideEffect(false, "new (function pure(){})(...`templatelit`)");
-    assertSideEffect(false, "new (function pure(){})(...`templatelit ${safe}`)");
-    assertSideEffect(true, "new (function pure(){})(...`templatelit ${unsafe()}`)");
-    assertSideEffect(true, "new (function pure(){})(...f())");
-    assertSideEffect(true, "new (function pure(){})(...5)");
-    assertSideEffect(true, "new (function pure(){})(...null)");
-    assertSideEffect(true, "new (function pure(){})(...true)");
-  }
-
-  @Test
-  public void testMayHaveSideEffects_objectSpread() {
-    // OBJECT-SPREAD
-    assertSideEffect(false, "({...x})");
-    assertSideEffect(false, "({...{}})");
-    assertSideEffect(false, "({...{a:1}})");
-    assertSideEffect(true, "({...{a:i++}})");
-    assertSideEffect(true, "({...{a:f()}})");
-    assertSideEffect(true, "({...f()})");
-  }
-
-  @Test
-  public void testMayHaveSideEffects_rest() {
-    // REST
-    assertSideEffect(false, "const ({...x}) = something");
-    // We currently assume all iterable-rests are side-effectful.
-    assertSideEffect(true, "const [...x] = 'safe'");
-    assertSideEffect(false, "(function (...x) { })");
   }
 
   @Test
@@ -831,9 +777,30 @@ public final class NodeUtilTest {
 
   @Test
   public void testMayHaveSideEffects_computedProp() {
-    assertSideEffect(false, parseFirst(COMPUTED_PROP, "({[a]: x})"));
-    assertSideEffect(true, parseFirst(COMPUTED_PROP, "({[a()]: x})"));
-    assertSideEffect(true, parseFirst(COMPUTED_PROP, "({[a]: x()})"));
+    assertSideEffect(false, "({[a]: x})");
+    assertSideEffect(true, "({[a()]: x})");
+    assertSideEffect(true, "({[a]: x()})");
+
+    Node computedProp = parse("({[a]: x})")  // SCRIPT
+        .getFirstChild()   // EXPR_RESULT
+        .getFirstChild()   // OBJECT_LIT
+        .getFirstChild();  // COMPUTED_PROP
+    checkState(computedProp.isComputedProp(), computedProp);
+    assertSideEffect(false, computedProp);
+
+    computedProp = parse("({[a()]: x})")  // SCRIPT
+        .getFirstChild()   // EXPR_RESULT
+        .getFirstChild()   // OBJECT_LIT
+        .getFirstChild();  // COMPUTED_PROP
+    checkState(computedProp.isComputedProp(), computedProp);
+    assertSideEffect(true, computedProp);
+
+    computedProp = parse("({[a]: x()})")  // SCRIPT
+        .getFirstChild()   // EXPR_RESULT
+        .getFirstChild()   // OBJECT_LIT
+        .getFirstChild();  // COMPUTED_PROP
+    checkState(computedProp.isComputedProp(), computedProp);
+    assertSideEffect(true, computedProp);
   }
 
   @Test
