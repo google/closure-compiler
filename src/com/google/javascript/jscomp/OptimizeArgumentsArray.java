@@ -133,7 +133,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
   @Override
   public void visit(NodeTraversal traversal, Node node, Node parent) {
-    if (traversal.inGlobalScope()) {
+    if (traversal.inGlobalHoistScope()) {
       return; // Do no rewriting in the global scope.
     }
 

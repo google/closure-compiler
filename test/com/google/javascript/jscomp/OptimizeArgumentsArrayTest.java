@@ -342,4 +342,14 @@ public final class OptimizeArgumentsArrayTest extends CompilerTestCase {
 
     testSame("function f({x: y}) { arguments[0]; }");
   }
+
+  @Test
+  public void testGlobalArgumentsReferences() {
+    testSame("arguments;");
+    testSame(
+        lines(
+            "if (typeof arguments != \"undefined\") {", //
+            "  console.log(arguments);",
+            "}"));
+  }
 }
