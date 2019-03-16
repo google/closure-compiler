@@ -572,6 +572,11 @@ class PureFunctionIdentifier implements CompilerPass {
           encloserSummary.setFunctionThrows();
           break;
 
+        case FOR_AWAIT_OF:
+        case REST:
+        case SPREAD:
+          break; // TODO(b/123649765): Actually check for related side-effects.
+
         default:
           if (NodeUtil.isCompoundAssignmentOp(node)) {
             // e.g.

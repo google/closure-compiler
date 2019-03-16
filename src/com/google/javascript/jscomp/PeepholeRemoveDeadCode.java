@@ -356,7 +356,9 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         }
         break;
       default:
-        if (!nodeTypeMayHaveSideEffects(n)) {
+        if (!nodeTypeMayHaveSideEffects(n)
+            // TODO(b/123649765): Actually suppport SPREAD as being side-effectful
+            || n.isSpread()) {
           // This is the meat of this function. The node itself doesn't generate
           // any side-effects but preserve any side-effects in the children.
           Node resultList = null;
