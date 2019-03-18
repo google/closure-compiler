@@ -170,8 +170,7 @@ class PureFunctionIdentifier implements CompilerPass {
   private static Iterable<Node> unwrapCallableExpression(Node exp) {
     switch (exp.getToken()) {
       case GETPROP:
-        String propName = exp.getLastChild().getString();
-        if (propName.equals("apply") || propName.equals("call")) {
+        if (isCallOrApply(exp.getParent())) {
           return unwrapCallableExpression(exp.getFirstChild());
         }
         return ImmutableList.of(exp);
@@ -224,15 +223,15 @@ class PureFunctionIdentifier implements CompilerPass {
   }
 
   @Nullable
-  private List<AmbiguatedFunctionSummary> getSummariesForCallee(Node call) {
-    checkArgument(call.isCall() || call.isNew(), call);
+  private List<AmbiguatedFunctionSummary> getSummariesForCallee(Node invocation) {
+    checkArgument(NodeUtil.isInvocation(invocation), invocation);
 
     Iterable<Node> expanded;
-    Cache cacheCall = compiler.getCodingConvention().describeCachingCall(call);
+    Cache cacheCall = compiler.getCodingConvention().describeCachingCall(invocation);
     if (cacheCall != null) {
       expanded = getGoogCacheCallableExpression(cacheCall);
     } else {
-      expanded = unwrapCallableExpression(call.getFirstChild());
+      expanded = unwrapCallableExpression(invocation.getFirstChild());
     }
     if (expanded == null) {
       return null;
@@ -243,7 +242,7 @@ class PureFunctionIdentifier implements CompilerPass {
         // isExtern is false in the call to the constructor for the
         // FunctionExpressionDefinition below because we know that
         // getFunctionDefinitions() will only be called on the first
-        // child of a call and thus the function expression
+        // child of an invocation and thus the function expression
         // definition will never be an extern.
         results.addAll(summariesForAllNamesOfFunctionByNode.get(expression));
         continue;
@@ -374,11 +373,11 @@ class PureFunctionIdentifier implements CompilerPass {
             flags.setThrows();
           }
 
-          if (callNode.isCall()) {
+          if (isCallOrTaggedTemplateLit(callNode)) {
             if (calleeSummary.mutatesThis()) {
               // A FunctionInfo for "f" maps to both "f()" and "f.call()" nodes.
               if (isCallOrApply(callNode)) {
-                flags.setMutatesArguments();
+                flags.setMutatesArguments(); // `this` is actually an argument.
               } else {
                 flags.setMutatesThis();
               }
@@ -392,7 +391,7 @@ class PureFunctionIdentifier implements CompilerPass {
       }
 
       // Handle special cases (Math, RegExp)
-      if (callNode.isCall()) {
+      if (isCallOrTaggedTemplateLit(callNode)) {
         if (!NodeUtil.functionCallHasSideEffects(callNode, compiler)) {
           flags.clearSideEffectFlags();
         }
@@ -458,7 +457,7 @@ class PureFunctionIdentifier implements CompilerPass {
         return;
       }
 
-      if (NodeUtil.isCallOrNew(node)) {
+      if (NodeUtil.isInvocation(node)) {
         allFunctionCalls.add(node);
       }
 
@@ -481,6 +480,7 @@ class PureFunctionIdentifier implements CompilerPass {
         NodeTraversal traversal,
         Node node,
         Node enclosingFunction) {
+
       switch (node.getToken()) {
         case ASSIGN:
           // e.g.
@@ -506,6 +506,9 @@ class PureFunctionIdentifier implements CompilerPass {
               RHS_IS_ALWAYS_LOCAL);
           break;
 
+        case FOR_AWAIT_OF:
+          setSideEffectsForControlLoss(encloserSummary); // Control is lost while awaiting.
+          // Fall through.
         case FOR_OF:
           // e.g.
           // for (const {prop1, prop2} of iterable) {...}
@@ -521,6 +524,7 @@ class PureFunctionIdentifier implements CompilerPass {
               // The RHS of a for-of must always be an iterable, making it a container, so we can't
               // consider its contents to be local
               RHS_IS_NEVER_LOCAL);
+          checkIteratesImpureIterable(node, encloserSummary);
           break;
 
         case FOR_IN:
@@ -539,6 +543,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
         case CALL:
         case NEW:
+        case TAGGED_TEMPLATELIT:
           visitCall(encloserSummary, node);
           break;
 
@@ -567,15 +572,21 @@ class PureFunctionIdentifier implements CompilerPass {
           }
           break;
 
-        case YIELD: // 'yield' throws if the caller calls `.throw` on the generator object.
-        case AWAIT: // 'await' throws if the promise it's waiting on is rejected.
-          encloserSummary.setFunctionThrows();
+        case YIELD:
+          checkIteratesImpureIterable(node, encloserSummary); // `yield*` triggers iteration.
+          // 'yield' throws if the caller calls `.throw` on the generator object.
+          setSideEffectsForControlLoss(encloserSummary);
           break;
 
-        case FOR_AWAIT_OF:
+        case AWAIT:
+          // 'await' throws if the promise it's waiting on is rejected.
+          setSideEffectsForControlLoss(encloserSummary);
+          break;
+
         case REST:
         case SPREAD:
-          break; // TODO(b/123649765): Actually check for related side-effects.
+          checkIteratesImpureIterable(node, encloserSummary);
+          break;
 
         default:
           if (NodeUtil.isCompoundAssignmentOp(node)) {
@@ -594,6 +605,32 @@ class PureFunctionIdentifier implements CompilerPass {
 
           throw new IllegalArgumentException("Unhandled side effect node type " + node);
       }
+    }
+
+    /**
+     * Inspect {@code node} for impure iteration and assign the appropriate side-effects to {@code
+     * encloserSummary} if so.
+     */
+    private void checkIteratesImpureIterable(Node node, AmbiguatedFunctionSummary encloserSummary) {
+      if (!NodeUtil.iteratesImpureIterable(node)) {
+        return;
+      }
+
+      // Treat the (possibly implicit) call to `iterator.next()` as having the same effects as any
+      // other unknown function call.
+      encloserSummary.setFunctionThrows();
+      encloserSummary.setMutatesGlobalState();
+
+      // The iterable may be stateful and a param.
+      encloserSummary.setMutatesArguments();
+    }
+
+    /**
+     * Assigns the set of side-effects associated with an arbitrary loss of control flow to {@code
+     * encloserSummary}.
+     */
+    private void setSideEffectsForControlLoss(AmbiguatedFunctionSummary encloserSummary) {
+      encloserSummary.setFunctionThrows();
     }
 
     @Override
@@ -744,6 +781,10 @@ class PureFunctionIdentifier implements CompilerPass {
     return NodeUtil.isFunctionObjectCall(callSite) || NodeUtil.isFunctionObjectApply(callSite);
   }
 
+  private static boolean isCallOrTaggedTemplateLit(Node invocation) {
+    return invocation.isCall() || invocation.isTaggedTemplateLit();
+  }
+
   /**
    * This class stores all the information about a call site needed to propagate side effects from
    * one instance of {@link AmbiguatedFunctionSummary} to another.
@@ -753,7 +794,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
     private CallSitePropagationInfo(
         boolean allArgsUnescapedLocal, boolean calleeThisEqualsCallerThis, Token callType) {
-      checkArgument(callType == Token.CALL || callType == Token.NEW);
+      checkArgument(NodeUtil.isInvocation(new Node(callType)), callType);
       this.allArgsUnescapedLocal = allArgsUnescapedLocal;
       this.calleeThisEqualsCallerThis = calleeThisEqualsCallerThis;
       this.callType = callType;
@@ -814,10 +855,10 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     static CallSitePropagationInfo computePropagationType(Node callSite) {
-      checkArgument(callSite.isCall() || callSite.isNew());
+      checkArgument(NodeUtil.isInvocation(callSite), callSite);
 
       boolean thisIsOuterThis = false;
-      if (callSite.isCall()) {
+      if (isCallOrTaggedTemplateLit(callSite)) {
         // Side effects only propagate via regular calls.
         // Calling a constructor that modifies "this" has no side effects.
         // Notice that we're using "mutatesThis" from the callee

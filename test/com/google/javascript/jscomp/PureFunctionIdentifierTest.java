@@ -242,7 +242,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         if (!NodeUtil.constructorCallHasSideEffects(n)) {
           noSideEffectCalls.add(generateNameString(n.getFirstChild()));
         }
-      } else if (n.isCall()) {
+      } else if (NodeUtil.isInvocation(n)) {
         if (!NodeUtil.functionCallHasSideEffects(n, compiler)) {
           noSideEffectCalls.add(generateNameString(n.getFirstChild()));
         }
@@ -1744,6 +1744,18 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSideEffectsArePropagated_toPredecingCaller_fromFollowingCallee() {
+    assertPureCallsMarked(
+        lines(
+            "var following = function() { };", // This implementation is pure...
+            "var preceding = function() { following(); };", // so this one should be initially...
+            "following = function() { throw 'something'; };", //  but then it becomes impure.
+            "",
+            "preceding();"),
+        ImmutableList.of());
+  }
+
+  @Test
   public void testConstructorThatModifiesThis1() {
     String source = lines(
         "/**@constructor*/function A(){this.foo = 1}",
@@ -2367,6 +2379,145 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
               .isEqualTo(
                   new Node.SideEffectFlags().clearAllFlags().setMutatesArguments().valueOf());
         });
+  }
+
+  @Test
+  public void testAwait_makesFunctionImpure() {
+    assertNoPureCalls(
+        lines(
+            "async function foo() { await 0; }", //
+            "foo();"));
+  }
+
+  @Test
+  public void testTaggedTemplatelit_propagatesCalleeSideEffects() {
+    assertPureCallsMarked(
+        lines(
+            "function tag(a) { throw 'something'; }", //
+            "",
+            "function foo() { tag`Hello World!`; }",
+            "foo();"),
+        ImmutableList.of(),
+        compiler -> {
+          Node lastRoot = compiler.getRoot();
+          Node tagDef = findQualifiedNameNode("tag", lastRoot).getParent();
+          Node fooDef = findQualifiedNameNode("foo", lastRoot).getParent();
+          assertThat(fooDef.getSideEffectFlags()).isEqualTo(tagDef.getSideEffectFlags());
+        });
+  }
+
+  @Test
+  public void testIterableIteration_forOf_makesFunctionImpure() {
+    // TODO(b/127862986): We could consider iteration over a known Array value to be pure.
+    assertNoPureCalls(
+        lines(
+            "function foo(a) { for (const t of a) { } }", //
+            "foo(x);"));
+  }
+
+  @Test
+  public void testIterableIteration_forAwaitOf_makesFunctionImpure() {
+    // TODO(b/127862986): We could consider iteration over a known Array value to be pure.
+    assertNoPureCalls(
+        lines(
+            "function foo(a) { for await (const t of a) { } }", //
+            "foo(x);"));
+  }
+
+  @Test
+  public void testIterableIteration_arraySpread_makesFunctionImpure() {
+    // TODO(b/127862986): We could consider iteration over a known Array value to be pure.
+    assertNoPureCalls(
+        lines(
+            "function foo(a) { [...a]; }", //
+            "foo(x);"));
+  }
+
+  @Test
+  public void testIterableIteration_callSpread_makesFunctionImpure() {
+    // TODO(b/127862986): We could consider iteration over a known Array value to be pure.
+    assertPureCallsMarked(
+        lines(
+            "function pure(...rest) { }",
+            "",
+            "function foo(a) { pure(...a); }", //
+            "foo(x);"),
+        ImmutableList.of("pure"));
+  }
+
+  @Test
+  public void testIterableIteration_newSpread_makesFunctionImpure() {
+    // TODO(b/127862986): We could consider iteration over a known Array value to be pure.
+    assertPureCallsMarked(
+        lines(
+            "/** @constructor */",
+            "function pure(...rest) { }",
+            "",
+            "function foo(a) { new pure(...a); }", //
+            "foo(x);"),
+        ImmutableList.of("pure"));
+  }
+
+  @Test
+  public void testIterableIteration_paramListRest_leavesFunctionPure() {
+    assertPureCallsMarked(
+        lines(
+            "function foo(...a) { }", //
+            "foo();"),
+        ImmutableList.of("foo"));
+  }
+
+  @Test
+  public void testIterableIteration_arrayPatternRest_makesFunctionImpure() {
+    // TODO(b/127862986): We could consider iteration over a known Array value to be pure.
+    assertNoPureCalls(
+        lines(
+            "function foo(a) { const [...x] = a; }", //
+            "foo(x);"));
+  }
+
+  @Test
+  public void testIterableIteration_yieldStar_makesFunctionImpure() {
+    // TODO(b/127862986): We could consider iteration over a known Array value to be pure.
+    assertNoPureCalls(
+        lines(
+            "function* foo(a) { yield* a; }", //
+            "foo(x);"));
+  }
+
+  @Test
+  public void testObjectSpread_leavesFunctionPure() {
+    // We assume that getters are pure, so getters on `a` aren't an issue.
+    //
+    // Spreading doesn't have any _direct_ side-effects; only using members of the extracted
+    // properties would.
+    assertPureCallsMarked(
+        lines(
+            "function foo(a) { ({...a}); }", //
+            "foo(x);"),
+        ImmutableList.of("foo"));
+  }
+
+  @Test
+  public void testObjectRest_leavesFunctionPure() {
+    // We assume that getters are pure, so getters on `a` aren't an issue.
+    //
+    // Resting doesn't have any _direct_ side-effects; only using members of the extracted
+    // properties would.
+    assertPureCallsMarked(
+        lines(
+            "function foo(a, b) { ({...b} = a); }", //
+            "foo(x, y);"),
+        ImmutableList.of("foo"));
+  }
+
+  @Test
+  public void testForAwaitOf_makesFunctionImpure() {
+    assertNoPureCalls(
+        lines(
+            // We use an array-literal so that it's not just the iteration that's impure.
+            "function foo() { for await (const t of []) { } }", //
+            "foo();"));
   }
 
   @Test

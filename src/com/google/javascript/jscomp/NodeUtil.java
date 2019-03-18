@@ -1158,7 +1158,7 @@ public final class NodeUtil {
       case LET:
       case CONST:
       case EXPORT:
-        // Variable declarations are side-effects in practically all contexts.
+        // Variable declarations are side-effects.
         return true;
 
       case OBJECTLIT:
@@ -1606,10 +1606,11 @@ public final class NodeUtil {
       case THROW:
       case AWAIT:
       case FOR_IN: // assigns to a loop LHS
-      case FOR_OF: // assigns to a loop LHS
-      case FOR_AWAIT_OF: // assigns to a loop LHS
+      case FOR_OF: // assigns to a loop LHS, runs an iterator
+      case FOR_AWAIT_OF: // assigns to a loop LHS, runs an iterator, async operations.
         return true;
       case CALL:
+      case TAGGED_TEMPLATELIT:
         return NodeUtil.functionCallHasSideEffects(n, compiler);
       case NEW:
         return NodeUtil.constructorCallHasSideEffects(n);
@@ -1620,8 +1621,10 @@ public final class NodeUtil {
       case SPREAD:
         return NodeUtil.iteratesImpureIterable(n);
       default:
-        return false;
+        break;
     }
+
+    return false;
   }
 
   static boolean allArgsUnescapedLocal(Node callOrNew) {

@@ -741,7 +741,6 @@ public final class NodeUtilTest {
     assertSideEffect(true, "Math.random(seed);");
     assertSideEffect(false, "[1, 1].foo;");
 
-
     assertSideEffect(true, "export var x = 0;");
     assertSideEffect(true, "export let x = 0;");
     assertSideEffect(true, "export const x = 0;");
