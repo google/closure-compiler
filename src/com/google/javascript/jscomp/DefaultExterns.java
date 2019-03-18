@@ -50,6 +50,7 @@ public final class DefaultExterns {
           "w3c_dom4.js",
           "gecko_dom.js",
           "ie_dom.js",
+          "whatwg_console.js",
           "webkit_dom.js",
           "w3c_css.js",
           "gecko_css.js",
