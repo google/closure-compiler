@@ -1774,6 +1774,13 @@ RTCStatsReport.prototype.forEach = function(callback, opt_thisObj) {};
 
 /**
  * @param {string} key
+ * @return {!IteratorIterable<!Array<string|!RTCStats>>}
+ * @readonly
+ */
+RTCStatsReport.prototype.entries = function(key) {};
+
+/**
+ * @param {string} key
  * @return {!RTCStats}
  * @readonly
  */
@@ -1784,6 +1791,30 @@ RTCStatsReport.prototype.get = function(key) {};
  * @readonly
  */
 RTCStatsReport.prototype.keys = function() {};
+
+/**
+ * @return {!IteratorIterable<!RTCStats>}
+ * @readonly
+ */
+RTCStatsReport.prototype.values = function() {};
+
+/**
+ * @param {string} key
+ * @return {boolean}
+ * @readonly
+ */
+RTCStatsReport.prototype.has = function(key) {};
+
+/**
+ * @readonly {number}
+ */
+RTCStatsReport.prototype.size;
+
+/**
+ * @return {!Iterator<!Array<string|!RTCStats>>}
+ */
+RTCStatsReport.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * TODO(bemasc): Remove this type once it is no longer in use.  It has already
