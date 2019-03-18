@@ -1015,7 +1015,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold comparison nodes, e.g ==
    */
   private Node tryFoldComparison(Node n, Node left, Node right) {
-    TernaryValue result = evaluateComparison(n.getToken(), left, right);
+    TernaryValue result = evaluateComparison(this, n.getToken(), left, right);
     if (result == TernaryValue.UNKNOWN) {
       return n;
     }
@@ -1182,9 +1182,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return TernaryValue.UNKNOWN;
   }
 
-  static TernaryValue evaluateComparison(Token op, Node left, Node right) {
+  static TernaryValue evaluateComparison(
+      AbstractPeepholeOptimization peepholeOptimization, Token op, Node left, Node right) {
     // Don't try to minimize side-effects here.
-    if (NodeUtil.mayHaveSideEffects(left) || NodeUtil.mayHaveSideEffects(right)) {
+    if (peepholeOptimization.mayHaveSideEffects(left)
+        || peepholeOptimization.mayHaveSideEffects(right)) {
       return TernaryValue.UNKNOWN;
     }
 

@@ -180,7 +180,7 @@ class PeepholeSubstituteAlternateSyntax
       n.replaceWith(newRoot);
       reportChangeToEnclosingScope(newRoot);
       return newRoot;
-    } else if (NodeUtil.isCommutative(n.getToken()) && !NodeUtil.mayHaveSideEffects(n)) {
+    } else if (NodeUtil.isCommutative(n.getToken()) && !mayHaveSideEffects(n)) {
       // Transform a * (b / c) to b / c * a
       Node lhs = n.getFirstChild();
       while (lhs.getToken() == n.getToken()) {
