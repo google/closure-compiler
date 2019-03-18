@@ -162,10 +162,10 @@ Console.prototype.table = function(data, opt_columns) {};
 Console.prototype.trace = function(var_args) {};
 
 /**
- * @param {*} value
+ * @param {string=} label
  * @return {undefined}
  */
-Console.prototype.count = function(value) {};
+Console.prototype.count = function(label) {};
 
 /**
  * @param {*} value
