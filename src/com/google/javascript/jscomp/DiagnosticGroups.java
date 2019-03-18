@@ -320,6 +320,12 @@ public class DiagnosticGroups {
           FunctionTypeBuilder.ALL_DIAGNOSTICS,
           DiagnosticGroups.GLOBAL_THIS);
 
+  // TODO(b/112639311): Populate this group with appropriate diagnostics.
+  // This group isn't registered because it has no associated suppression. It's only ever referenced
+  // in Java code.
+  public static final DiagnosticGroup CHECK_STATIC_OVERRIDES =
+      new DiagnosticGroup("checkStaticOverrides_unregistered", UNUSED);
+
   // Run the new type inference, but omit many warnings that are not
   // found by the old type checker. This makes migration to NTI more manageable.
   public static final DiagnosticGroup NEW_CHECK_TYPES_COMPATIBILITY_MODE =
