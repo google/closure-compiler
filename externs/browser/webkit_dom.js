@@ -168,6 +168,12 @@ Console.prototype.trace = function(var_args) {};
 Console.prototype.count = function(value) {};
 
 /**
+ * @param {string=} label
+ * @return {undefined}
+ */
+Console.prototype.countReset = function(label) {};
+
+/**
  * @param {*} value
  * @return {undefined}
  */
@@ -193,6 +199,13 @@ Console.prototype.profileEnd = function(opt_title) {};
  * @return {undefined}
  */
 Console.prototype.time = function(name) {};
+
+/**
+ * @param {string} label
+ * @param {...*} data
+ * @return {undefined}
+ */
+Console.prototype.timeLog = function(label, data) {};
 
 /**
  * @param {string} name
