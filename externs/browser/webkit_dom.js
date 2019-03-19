@@ -231,8 +231,14 @@ Console.prototype.group = function(var_args) {};
  */
 Console.prototype.groupCollapsed = function(var_args) {};
 
+/**
+ * @return {undefined}
+ */
 Console.prototype.groupEnd = function() {};
 
+/**
+ * @return {undefined}
+ */
 Console.prototype.clear = function() {};
 
 /** @type {MemoryInfo} */
