@@ -23,6 +23,10 @@ public class J2clSuppressWarningsGuard extends DiagnosticGroupWarningsGuard {
   private static final DiagnosticGroup DEFAULT_J2CL_SUPRRESIONS =
       new DiagnosticGroup(
           "j2clIncomaptible",
+          // Do not warn when static overrides do not match. This is safe, because J2CL generated
+          // code directly points to declaration and this is also required with collapse properties
+          // pass, which does not support dynamic dispatch for static methods.
+          DiagnosticGroups.CHECK_STATIC_OVERRIDES,
           DiagnosticGroups.CHECK_USELESS_CODE,
           DiagnosticGroups.CONST,
           DiagnosticGroups.EXTRA_REQUIRE,
