@@ -20,9 +20,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
@@ -1269,7 +1270,7 @@ public final class DefaultPassConfig extends PassConfig {
         public FeatureSet featureSet() {
           // Should be FeatureSet.latest() since it's a trivial pass, but must match "normalize"
           // TODO(johnlenz): Update this and normalize to latest()
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -1341,7 +1342,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -1360,7 +1361,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -1460,7 +1461,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -1677,30 +1678,30 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
   private final PassFactory earlyInlineVariables =
       new PassFactory("earlyInlineVariables", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      InlineVariables.Mode mode;
-      if (options.inlineVariables) {
-        mode = InlineVariables.Mode.ALL;
-      } else if (options.inlineLocalVariables) {
-        mode = InlineVariables.Mode.LOCALS_ONLY;
-      } else {
-        throw new IllegalStateException("No variable inlining option set.");
-      }
-      return new InlineVariables(compiler, mode, true);
-    }
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          InlineVariables.Mode mode;
+          if (options.inlineVariables) {
+            mode = InlineVariables.Mode.ALL;
+          } else if (options.inlineLocalVariables) {
+            mode = InlineVariables.Mode.LOCALS_ONLY;
+          } else {
+            throw new IllegalStateException("No variable inlining option set.");
+          }
+          return new InlineVariables(compiler, mode, true);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES2018_MODULES;
+        }
+      };
 
   /** Various peephole optimizations. */
   private static CompilerPass createPeepholeOptimizationsPass(
@@ -1732,7 +1733,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -1746,7 +1747,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -1771,7 +1772,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2205,31 +2206,40 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   /**
-   * Strips code for smaller compiled code. This is useful for removing debug
-   * statements to prevent leaking them publicly.
+   * Strips code for smaller compiled code. This is useful for removing debug statements to prevent
+   * leaking them publicly.
    */
-  private final PassFactory stripCode = new PassFactory("stripCode", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
+  private final PassFactory stripCode =
+      new PassFactory("stripCode", true) {
         @Override
-        public void process(Node externs, Node jsRoot) {
-          CompilerOptions options = compiler.getOptions();
-          StripCode pass = new StripCode(compiler, options.stripTypes, options.stripNameSuffixes,
-              options.stripTypePrefixes, options.stripNamePrefixes);
-          if (options.getTweakProcessing().shouldStrip()) {
-            pass.enableTweakStripping();
-          }
-          pass.process(externs, jsRoot);
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new CompilerPass() {
+            @Override
+            public void process(Node externs, Node jsRoot) {
+              CompilerOptions options = compiler.getOptions();
+              StripCode pass =
+                  new StripCode(
+                      compiler,
+                      options.stripTypes,
+                      options.stripNameSuffixes,
+                      options.stripTypePrefixes,
+                      options.stripNamePrefixes);
+              if (options.getTweakProcessing().shouldStrip()) {
+                pass.enableTweakStripping();
+              }
+              pass.process(externs, jsRoot);
+            }
+          };
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          // TODO(johnlenz): StripCode may be fooled by some newer features, like destructuring, and
+          // fail to strip code we'd like stripped, but use of those features won't make it any more
+          // likely to crash or cause runtime errors than pure ES5 code.
+          return ES2018_MODULES;
         }
       };
-    }
-
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
 
   /** Release references to data that is only needed during checks. */
   final PassFactory garbageCollectChecks =
@@ -2281,7 +2291,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2322,7 +2332,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2349,7 +2359,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2363,24 +2373,24 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
   /** Remove variables set to goog.abstractMethod. */
   private final PassFactory closureCodeRemoval =
       new PassFactory("closureCodeRemoval", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new ClosureCodeRemoval(compiler, options.removeAbstractMethods,
-          options.removeClosureAsserts);
-    }
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new ClosureCodeRemoval(
+              compiler, options.removeAbstractMethods, options.removeClosureAsserts);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES2018_MODULES;
+        }
+      };
 
   /** Special case optimizations for closure functions. */
   private final PassFactory closureOptimizePrimitives =
@@ -2395,7 +2405,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2426,7 +2436,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2440,7 +2450,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2468,7 +2478,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2484,7 +2494,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2506,7 +2516,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2520,7 +2530,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2556,7 +2566,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2570,7 +2580,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2584,25 +2594,23 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES2018_MODULES;
         }
       };
 
-  /**
-   * Use data flow analysis to remove dead branches.
-   */
+  /** Use data flow analysis to remove dead branches. */
   private final PassFactory removeUnusedPolyfills =
       new PassFactory("removeUnusedPolyfills", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new RemoveUnusedPolyfills(compiler);
-    }
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new RemoveUnusedPolyfills(compiler);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES2018_MODULES;
+        }
+      };
 
   /** Inlines simple methods, like getters */
   private final PassFactory inlineSimpleMethods =
@@ -2614,7 +2622,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2628,7 +2636,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2642,7 +2650,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2662,7 +2670,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2676,7 +2684,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2704,10 +2712,9 @@ public final class DefaultPassConfig extends PassConfig {
 
       @Override
       public FeatureSet featureSet() {
-        return ES8_MODULES;
+        return ES2018_MODULES;
       }
     };
-
   }
 
   /** Move global symbols to a deeper common module */
@@ -2723,7 +2730,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2743,7 +2750,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2757,7 +2764,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2771,7 +2778,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2785,7 +2792,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2799,7 +2806,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2825,7 +2832,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES2018;
         }
       };
 
@@ -2853,7 +2860,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2867,7 +2874,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES2018;
         }
       };
 
@@ -2943,7 +2950,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2976,7 +2983,7 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           // TODO(johnlenz): Update this and gatherRawExports to latest()
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -2989,36 +2996,37 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
   /** Denormalize the AST for code generation. */
-  private final PassFactory denormalize = new PassFactory("denormalize", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new Denormalize(compiler);
-    }
+  private final PassFactory denormalize =
+      new PassFactory("denormalize", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new Denormalize(compiler);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES2018_MODULES;
+        }
+      };
 
   /** Inverting name normalization. */
   private final PassFactory invertContextualRenaming =
       new PassFactory("invertContextualRenaming", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return MakeDeclaredNamesUnique.getContextualRenameInverter(compiler);
-    }
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return MakeDeclaredNamesUnique.getContextualRenameInverter(compiler);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES2018_MODULES;
+        }
+      };
 
   /** Renames properties. */
   private final PassFactory renameProperties =
@@ -3043,30 +3051,33 @@ public final class DefaultPassConfig extends PassConfig {
             }
           };
         }
+
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
   /** Renames variables. */
-  private final PassFactory renameVars = new PassFactory("renameVars", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      final VariableMap prevVariableMap = options.inputVariableMap;
-      return new CompilerPass() {
-        @Override public void process(Node externs, Node root) {
-          compiler.setVariableMap(runVariableRenaming(
-              compiler, prevVariableMap, externs, root));
+  private final PassFactory renameVars =
+      new PassFactory("renameVars", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          final VariableMap prevVariableMap = options.inputVariableMap;
+          return new CompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              compiler.setVariableMap(
+                  runVariableRenaming(compiler, prevVariableMap, externs, root));
+            }
+          };
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES2018_MODULES;
         }
       };
-    }
-
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
 
   private VariableMap runVariableRenaming(
       AbstractCompiler compiler, VariableMap prevVariableMap,
@@ -3108,7 +3119,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -3122,7 +3133,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -3149,7 +3160,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -3182,15 +3193,16 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
-     };
+      };
 
   /**
    * Runs custom passes that are designated to run at a particular time.
+   *
+   * <p>TODO(nickreid): Deprecate this API
    */
-  private PassFactory getCustomPasses(
-      final CustomPassExecutionTime executionTime) {
+  private PassFactory getCustomPasses(final CustomPassExecutionTime executionTime) {
     return new PassFactory("runCustomPasses", true) {
       @Override
       protected CompilerPass create(final AbstractCompiler compiler) {
@@ -3199,7 +3211,7 @@ public final class DefaultPassConfig extends PassConfig {
 
       @Override
       protected FeatureSet featureSet() {
-        return ES5;
+        return ES_NEXT;
       }
     };
   }
@@ -3286,7 +3298,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -3301,7 +3313,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -3315,7 +3327,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -3343,7 +3355,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -3356,7 +3368,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -3410,7 +3422,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 

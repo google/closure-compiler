@@ -6819,17 +6819,92 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testTypeCheckObjectSpread() {
+  public void testObjectSpreadAndRest_optimizeAndTypecheck() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
     test(
         options,
-        lines(
-            "let x = {a: 0, b: ''};", //
-            "let /** !{a: string, b: number} */ y = {...x};"),
+        new String[] {
+          lines(
+              "/**",
+              " * @param {{a: number, b: string}} x",
+              " * @return {*}",
+              " */",
+              "function fun({a, b, ...c}) {", //
+              "  const /** !{a: string, b: number} */ x = {a, b, ...c};",
+              "  const y = {...x};",
+              "  y['a'] = 5;",
+              "",
+              "  let {...z} = y;",
+              "  return z;",
+              "}",
+              "",
+              "alert(fun({a: 1, b: 'hello', c: null}));")
+        },
+        new String[] {
+          lines(
+              "alert(function({b:a, c:b,...c}) {",
+              // TODO(b/123102446): We'd really like to collapse these chained assignments.
+              "  a = {b:a, c:b, ...c, a:5};",
+              "  ({...a} = a);",
+              "  return a;",
+              "}({b:1, c:'hello', d:null}));")
+        },
         TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
+  @Test
+  public void testObjectSpreadAndRest_inlineAndCollapseProperties() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    // This is just a melunge of various global namespace operations. The exact squence of values
+    // aren't important so much as trying out lots of combinations.
+    test(
+        options,
+        lines(
+            "const a = {",
+            "  aa: 2,",
+            "  ab: 'hello',",
+            "};",
+            "",
+            "a.ac = {",
+            "  aca: true,",
+            "  ...a,",
+            "  acb: false,",
+            "};",
+            "",
+            "const {ab, ac,...c} = a;",
+            "",
+            "const d = ac;",
+            "",
+            "({aa: d.acc} = a);",
+            "",
+            "alert(d.acc);"),
+        lines(
+            "const a = {",
+            "  a: 2,",
+            "  d: 'hello',",
+            "};",
+            "",
+            "a.b = {",
+            "  e: !0,",
+            "  ...a,",
+            "  f: !1,",
+            "};",
+            "",
+            "const {b,...c} = a;",
+            "",
+            "({a: b.c} = a);",
+            "",
+            "alert(b.c);"));
   }
 
   @Test
