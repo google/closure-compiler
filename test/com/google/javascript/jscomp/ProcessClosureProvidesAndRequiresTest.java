@@ -26,9 +26,13 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.LATE_PROVIDE
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.MISSING_PROVIDE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.WEAK_NAMESPACE_TYPE;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.XMODULE_REQUIRE_ERROR;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.ProcessClosureProvidesAndRequires.ProvidedName;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,11 +72,13 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     return (Node externs, Node root) -> {
       if ((additionalCode == null) && (additionalEndCode == null)) {
+        verifyCollectProvidedNamesDoesntChangeAst(externs, root, CheckLevel.ERROR, compiler);
         ProcessClosureProvidesAndRequires processor =
             createClosureProcessor(compiler, CheckLevel.ERROR);
         processor.rewriteProvidesAndRequires(externs, root);
       } else {
         // Process the original code.
+        verifyCollectProvidedNamesDoesntChangeAst(externs, root, CheckLevel.OFF, compiler);
         ProcessClosureProvidesAndRequires processor =
             createClosureProcessor(compiler, CheckLevel.OFF);
         processor.rewriteProvidesAndRequires(externs, root);
@@ -107,6 +113,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
           }
         }
 
+        verifyCollectProvidedNamesDoesntChangeAst(externs, root, CheckLevel.ERROR, compiler);
         processor = createClosureProcessor(compiler, CheckLevel.ERROR);
         processor.rewriteProvidesAndRequires(externs, root);
       }
@@ -617,6 +624,24 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
             "c.d.D={};"));
   }
 
+  @Test
+  public void testTypedefAdditionalProvide() {
+    additionalEndCode = "goog.require('foo.Cat'); goog.require('foo.Bar');";
+
+    test(
+        lines(
+            "goog.provide('foo.Cat');",
+            "goog.provide('foo.Bar');",
+            "/** @typedef {!Array<string>} */",
+            "foo.Bar;",
+            "foo.Cat={};"),
+        lines(
+            "/** @const */ var foo={};", //
+            "/** @const */ foo.Bar={};", //
+            "/** @typedef {!Array<string>} */ foo.Bar;", //
+            "foo.Cat={}"));
+  }
+
   // Tests providing additional code with overlapping var namespace.
   @Test
   public void testOverlappingAdditionalProvide() {
@@ -1064,6 +1089,51 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   public void testProvideRequireSameFile() {
     test("goog.provide('x');\ngoog.require('x');", "/** @const */ var x = {};");
     test("goog.provide('x');\ngoog.requireType('x');", "/** @const */ var x = {};");
+  }
+
+  @Test
+  public void testSimpleProvidedNameCollection() {
+    Map<String, ProvidedName> providedNameMap =
+        getProvidedNameCollection(
+            lines(
+                "goog.provide('a.b');", //
+                "goog.provide('a.b.c');",
+                "goog.provide('a.b.d');"));
+
+    assertThat(providedNameMap.keySet()).containsExactly("goog", "a", "a.b", "a.b.c", "a.b.d");
+  }
+
+  private Map<String, ProvidedName> getProvidedNameCollection(String js) {
+    Compiler compiler = createCompiler();
+    ProcessClosureProvidesAndRequires processor =
+        createClosureProcessor(compiler, CheckLevel.ERROR);
+    Node jsRoot = compiler.parseTestCode(js);
+    Node scopeRoot = IR.root(IR.root(), IR.root(jsRoot));
+    Map<String, ProvidedName> providedNameMap =
+        processor.collectProvidedNames(scopeRoot.getFirstChild(), scopeRoot.getSecondChild());
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(compiler.getErrors()).isEmpty();
+    return providedNameMap;
+  }
+
+  /**
+   * Validates that running {@link ProcessClosureProvidesAndRequires#collectProvidedNames(Node,
+   * Node)} does not modify the AST.
+   *
+   * <p>This is important because we want to call this method to gain information about
+   * goog.provides but preserve the original AST structure for future checks.
+   */
+  private void verifyCollectProvidedNamesDoesntChangeAst(
+      Node externs, Node root, CheckLevel requireCheckLevel, Compiler compiler) {
+    // Validate that this does not modify the AST at all!
+    Node originalExterns = externs.cloneTree();
+    Node originalRoot = root.cloneTree();
+    ProcessClosureProvidesAndRequires processor =
+        createClosureProcessor(compiler, requireCheckLevel);
+    processor.collectProvidedNames(externs, root);
+
+    assertNode(externs).isEqualIncludingJsDocTo(originalExterns);
+    assertNode(root).isEqualIncludingJsDocTo(originalRoot);
   }
 
   private void testModule(String[] moduleInputs, String[] expected) {
