@@ -1179,10 +1179,10 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   @Test
   public void testCall() {
+    testSame("foo(0)");
     // We use a function with no side-effects, otherwise the entire invocation would be preserved.
     test("Math.sin(0);", "");
     test("1 + Math.sin(0);", "");
-    test("Math.sin(...c)", "([...c])");
   }
 
   @Test
@@ -1197,10 +1197,10 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   @Test
   public void testNew() {
+    testSame("new foo(0)");
     // We use a function with no side-effects, otherwise the entire invocation would be preserved.
     test("new Date;", "");
     test("1 + new Date;", "");
-    test("new Date(...c)", "([...c])");
   }
 
   @Test
@@ -1211,6 +1211,22 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test("new Date(foo(), ...c, bar())", "(foo(), [...c], bar())");
     test("new Date(...a, b, ...c)", "([...a], [...c])");
     test("new Date(...b, ...c)", "([...b], [...c])");
+  }
+
+  @Test
+  public void testTaggedTemplateLit_simpleTemplate() {
+    testSame("foo`Simple`");
+    // We use a function with no side-effects, otherwise the entire invocation would be preserved.
+    test("Math.sin`Simple`", "");
+    test("1 + Math.sin`Simple`", "");
+  }
+
+  @Test
+  public void testTaggedTemplateLit_substitutingTemplate() {
+    testSame("foo`Complex ${butSafe}`");
+    // We use a function with no side-effects, otherwise the entire invocation would be preserved.
+    test("Math.sin`Complex ${butSafe}`", "");
+    test("Math.sin`Complex ${andDangerous()}`", "andDangerous()");
   }
 
   @Test
