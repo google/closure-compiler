@@ -382,16 +382,26 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
 
   @Override
   public ImmutableCollection<AssertionFunctionSpec> getAssertionFunctions() {
-    return ImmutableList.of(
-        AssertionFunctionSpec.makeTruthyAssertion("goog.asserts.assert"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertArray"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertBoolean"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertElement"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertFunction"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertInstanceof"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertNumber"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertObject"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("goog.asserts.assertString"));
+    return ImmutableSet.<AssertionFunctionSpec>builder()
+        .addAll(super.getAssertionFunctions())
+        .add(
+            AssertionFunctionSpec.forTruthy().setFunctionName("goog.asserts.assert").build(),
+            createGoogAssertOnReturn("Array"),
+            createGoogAssertOnReturn("Boolean"),
+            createGoogAssertOnReturn("Element"),
+            createGoogAssertOnReturn("Function"),
+            createGoogAssertOnReturn("Instanceof"),
+            createGoogAssertOnReturn("Number"),
+            createGoogAssertOnReturn("Object"),
+            createGoogAssertOnReturn("String"))
+        .build();
+  }
+
+  /** Returns a new assertion function goog.asserts.assert[assertedTypeName] */
+  private static AssertionFunctionSpec createGoogAssertOnReturn(String assertedTypeName) {
+    return AssertionFunctionSpec.forMatchesReturn()
+        .setFunctionName("goog.asserts.assert" + assertedTypeName)
+        .build();
   }
 
   @Override

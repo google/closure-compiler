@@ -7490,6 +7490,52 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "required: number");
   }
 
+  private static final String PRIMITIVE_ASSERT_DEFS =
+      lines(
+          "/**",
+          " * @param {T} p",
+          " * @return {T}",
+          " * @template T",
+          " * @closurePrimitive {asserts.truthy}",
+          " */",
+          "function assertTruthy(p) { return p; }",
+          "/**",
+          " * @param {*} p",
+          " * @return {string}",
+          " * @closurePrimitive {asserts.matchesReturn}",
+          " */",
+          "function assertString(p) { return /** @type {string} */ (p); }");
+
+  @Test
+  public void testPrimitiveAssertTruthy_removesNullAndUndefinedFromString() {
+    testTypes(
+        PRIMITIVE_ASSERT_DEFS
+            + lines(
+                "function f(/** ?string|undefined */ str) {",
+                "  assertTruthy(str);",
+                "  const /** number */ n = str;",
+                "}"),
+        lines(
+            "initializing variable", //
+            "found   : string",
+            "required: number"));
+  }
+
+  @Test
+  public void testPrimitiveAssertString_narrowsAllTypeToString() {
+    testTypes(
+        PRIMITIVE_ASSERT_DEFS
+            + lines(
+                "function f(/** * */ str) {",
+                "  assertString(str);",
+                "  const /** number */ n = str;",
+                "}"),
+        lines(
+            "initializing variable", //
+            "found   : string",
+            "required: number"));
+  }
+
   @Test
   public void testReturn1() {
     testTypes("/**@return {void}*/function foo(){ return 3; }",

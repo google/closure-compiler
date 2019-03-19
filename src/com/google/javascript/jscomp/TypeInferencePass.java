@@ -18,12 +18,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A compiler pass to run the type inference analysis.
@@ -39,22 +37,19 @@ class TypeInferencePass implements CompilerPass {
   private final ReverseAbstractInterpreter reverseInterpreter;
   private final TypedScope topScope;
   private final TypedScopeCreator scopeCreator;
-  private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
+  private final AssertionFunctionLookup assertionFunctionLookup;
 
-  TypeInferencePass(AbstractCompiler compiler,
+  TypeInferencePass(
+      AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
-      TypedScope topScope, TypedScopeCreator scopeCreator) {
+      TypedScope topScope,
+      TypedScopeCreator scopeCreator) {
     this.compiler = compiler;
     this.reverseInterpreter = reverseInterpreter;
     this.topScope = topScope;
     this.scopeCreator = scopeCreator;
-
-    assertionFunctionsMap = new HashMap<>();
-    for (AssertionFunctionSpec assertionFunction :
-        compiler.getCodingConvention().getAssertionFunctions()) {
-      assertionFunctionsMap.put(assertionFunction.getFunctionName(),
-          assertionFunction);
-    }
+    this.assertionFunctionLookup =
+        AssertionFunctionLookup.of(compiler.getCodingConvention().getAssertionFunctions());
   }
 
   /**
@@ -115,8 +110,12 @@ class TypeInferencePass implements CompilerPass {
   void inferScope(Node n, TypedScope scope) {
     TypeInference typeInference =
         new TypeInference(
-            compiler, computeCfg(n), reverseInterpreter, scope, scopeCreator,
-            assertionFunctionsMap);
+            compiler,
+            computeCfg(n),
+            reverseInterpreter,
+            scope,
+            scopeCreator,
+            assertionFunctionLookup);
     try {
       typeInference.analyze();
     } catch (DataFlowAnalysis.MaxIterationsExceededException e) {

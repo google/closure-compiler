@@ -54,7 +54,9 @@ import javax.annotation.Nullable;
  * these calls more accurate than previous methods of finding primitives by qualified name.
  */
 public enum ClosurePrimitive {
-  ASSERTS_FAIL; // Indicates that a function always throws an error
+  ASSERTS_FAIL, // A function that always throws an error
+  ASSERTS_MATCHES_RETURN, // A function that asserts its first parameter matches the return type
+  ASSERTS_TRUTHY; // A function that asserts its first parameter is truthy and returns the param
 
   /**
    * Maps human-readable ids to enum members.
@@ -63,7 +65,13 @@ public enum ClosurePrimitive {
    * to a lowercase string with "_" replaced with "."
    */
   private static final ImmutableMap<String, ClosurePrimitive> ID_TO_ENUM =
-      ImmutableMap.of("asserts.fail", ASSERTS_FAIL);
+      ImmutableMap.of(
+          "asserts.fail",
+          ASSERTS_FAIL,
+          "asserts.truthy",
+          ASSERTS_TRUTHY,
+          "asserts.matchesReturn",
+          ASSERTS_MATCHES_RETURN);
 
   /**
    * Returns the ClosurePrimitive corresponding to the given string id.

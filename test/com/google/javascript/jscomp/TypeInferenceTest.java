@@ -44,13 +44,14 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
-import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.testing.ScopeSubject;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
+import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -84,15 +85,8 @@ public final class TypeInferenceTest {
   private Map<String, JSType> assumptions;
   private JSType assumedThisType;
   private FlowScope returnScope;
-  // TODO(bradfordcsmith): This should be an ImmutableMap.
-  private static final Map<String, AssertionFunctionSpec> ASSERTION_FUNCTION_MAP = new HashMap<>();
-
-  static {
-    for (AssertionFunctionSpec func :
-        new ClosureCodingConvention().getAssertionFunctions()) {
-      ASSERTION_FUNCTION_MAP.put(func.getFunctionName(), func);
-    }
-  }
+  private static final AssertionFunctionLookup ASSERTION_FUNCTION_MAP =
+      AssertionFunctionLookup.of(new ClosureCodingConvention().getAssertionFunctions());
 
   /**
    * Maps a label name to information about the labeled statement.
@@ -515,17 +509,6 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testAssert10() {
-    JSType startType = createNullableType(OBJECT_TYPE);
-    assuming("x", startType);
-    assuming("y", startType);
-    inFunction("out1 = x; out2 = goog.asserts.assert(x && y); out3 = x;");
-    verify("out1", startType);
-    verify("out2", OBJECT_TYPE);
-    verify("out3", OBJECT_TYPE);
-  }
-
-  @Test
   public void testAssert11() {
     JSType startType = createNullableType(OBJECT_TYPE);
     assuming("x", startType);
@@ -536,9 +519,44 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testPrimitiveAssertTruthy_narrowsNullableObjectToObject() {
+    JSType startType = createNullableType(OBJECT_TYPE);
+    includePrimitiveTruthyAssertionFunction("assertTruthy");
+    assuming("x", startType);
+
+    inFunction("out1 = x; assertTruthy(x); out2 = x;");
+
+    verify("out1", startType);
+    verify("out2", OBJECT_TYPE);
+  }
+
+  @Test
+  public void testPrimitiveAssertTruthy_narrowsNullableObjectInNeqNullToObject() {
+    JSType startType = createNullableType(OBJECT_TYPE);
+    includePrimitiveTruthyAssertionFunction("assertTruthy");
+    assuming("x", startType);
+
+    inFunction("out1 = x; assertTruthy(x !== null); out2 = x;");
+
+    verify("out1", startType);
+    verify("out2", OBJECT_TYPE);
+  }
+
+  @Test
+  public void testPrimitiveAssertTruthy_ignoresSecondArgumentEvenIfNullable() {
+    JSType startType = createNullableType(OBJECT_TYPE);
+    includePrimitiveTruthyAssertionFunction("assertTruthy");
+    assuming("x", startType);
+
+    inFunction("assertTruthy(1, x); out1 = x;");
+
+    verify("out1", startType);
+  }
+
+  @Test
   public void testAssertNumber_narrowsAllTypeToNumber() {
     JSType startType = createNullableType(ALL_TYPE);
-    includeAssertionFunction("assertNumber", getNativeType(NUMBER_TYPE));
+    includeGoogAssertionFn("assertNumber", getNativeType(NUMBER_TYPE));
     assuming("x", startType);
 
     inFunction("out1 = x; goog.asserts.assertNumber(x); out2 = x;");
@@ -551,7 +569,7 @@ public final class TypeInferenceTest {
   public void testAssertNumber_doesNotNarrowNamesInExpression() {
     // Make sure it ignores expressions.
     JSType startType = createNullableType(ALL_TYPE);
-    includeAssertionFunction("assertNumber", getNativeType(NUMBER_TYPE));
+    includeGoogAssertionFn("assertNumber", getNativeType(NUMBER_TYPE));
     assuming("x", startType);
 
     inFunction("goog.asserts.assertNumber(x + x); out1 = x;");
@@ -563,7 +581,7 @@ public final class TypeInferenceTest {
   public void testAssertNumber_returnsNumberGivenExpression() {
     // Make sure it ignores expressions.
     JSType startType = createNullableType(ALL_TYPE);
-    includeAssertionFunction("assertNumber", getNativeType(NUMBER_TYPE));
+    includeGoogAssertionFn("assertNumber", getNativeType(NUMBER_TYPE));
     assuming("x", startType);
 
     inFunction("out1 = x; out2 = goog.asserts.assertNumber(x + x);");
@@ -573,9 +591,46 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testPrimitiveAssertNumber_narrowsAllTypeToNumber() {
+    JSType startType = createNullableType(ALL_TYPE);
+    includePrimitiveAssertionFn("assertNumber", getNativeType(NUMBER_TYPE));
+    assuming("x", startType);
+
+    inFunction("out1 = x; assertNumber(x); out2 = x;");
+
+    verify("out1", startType);
+    verify("out2", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testPrimitiveAssertNumber_doesNotNarrowNamesInExpression() {
+    // Make sure it ignores expressions.
+    JSType startType = createNullableType(ALL_TYPE);
+    includePrimitiveAssertionFn("assertNumber", getNativeType(NUMBER_TYPE));
+    assuming("x", startType);
+
+    inFunction("assertNumber(x + x); out1 = x;");
+
+    verify("out1", startType);
+  }
+
+  @Test
+  public void testPrimitiveAssertNumber_returnsNumberGivenExpression() {
+    // Make sure it ignores expressions.
+    JSType startType = createNullableType(ALL_TYPE);
+    includePrimitiveAssertionFn("assertNumber", getNativeType(NUMBER_TYPE));
+    assuming("x", startType);
+
+    inFunction("out1 = x; out2 = assertNumber(x + x);");
+
+    verify("out1", startType);
+    verify("out2", NUMBER_TYPE);
+  }
+
+  @Test
   public void testAssertBoolean_narrowsAllTypeToBoolean() {
     JSType startType = createNullableType(ALL_TYPE);
-    includeAssertionFunction("assertBoolean", getNativeType(BOOLEAN_TYPE));
+    includeGoogAssertionFn("assertBoolean", getNativeType(BOOLEAN_TYPE));
     assuming("x", startType);
 
     inFunction("out1 = x; goog.asserts.assertBoolean(x); out2 = x;");
@@ -587,7 +642,7 @@ public final class TypeInferenceTest {
   @Test
   public void testAssertString_narrowsAllTypeToString() {
     JSType startType = createNullableType(ALL_TYPE);
-    includeAssertionFunction("assertString", getNativeType(STRING_TYPE));
+    includeGoogAssertionFn("assertString", getNativeType(STRING_TYPE));
     assuming("x", startType);
 
     inFunction("out1 = x; goog.asserts.assertString(x); out2 = x;");
@@ -599,7 +654,7 @@ public final class TypeInferenceTest {
   @Test
   public void testAssertFunction_narrowsAllTypeToFunction() {
     JSType startType = createNullableType(ALL_TYPE);
-    includeAssertionFunction("assertFunction", getNativeType(FUNCTION_INSTANCE_TYPE));
+    includeGoogAssertionFn("assertFunction", getNativeType(FUNCTION_INSTANCE_TYPE));
     assuming("x", startType);
 
     inFunction("out1 = x; goog.asserts.assertFunction(x); out2 = x;");
@@ -612,7 +667,7 @@ public final class TypeInferenceTest {
   public void testAssertElement_doesNotChangeElementType() {
     JSType elementType =
         registry.createObjectType("Element", registry.getNativeObjectType(OBJECT_TYPE));
-    includeAssertionFunction("assertElement", elementType);
+    includeGoogAssertionFn("assertElement", elementType);
     assuming("x", elementType);
 
     inFunction("out1 = x; goog.asserts.assertElement(x); out2 = x;");
@@ -624,7 +679,7 @@ public final class TypeInferenceTest {
   @Test
   public void testAssertObject_narrowsNullableArrayToArray() {
     JSType startType = createNullableType(ARRAY_TYPE);
-    includeAssertionFunction("assertObject", getNativeType(OBJECT_TYPE));
+    includeGoogAssertionFn("assertObject", getNativeType(OBJECT_TYPE));
     assuming("x", startType);
 
     inFunction("out1 = x; goog.asserts.assertObject(x); out2 = x;");
@@ -636,7 +691,7 @@ public final class TypeInferenceTest {
   @Test
   public void testAssertObject_narrowsNullableObjectToObject() {
     JSType startType = createNullableType(OBJECT_TYPE);
-    includeAssertionFunction("assertObject", getNativeType(OBJECT_TYPE));
+    includeGoogAssertionFn("assertObject", getNativeType(OBJECT_TYPE));
     assuming("x", startType);
 
     inFunction("out1 = x; goog.asserts.assertObject(x); out2 = x;");
@@ -648,7 +703,7 @@ public final class TypeInferenceTest {
   @Test
   public void testAssertObject_narrowsQualifiedNameArgument() {
     JSType startType = createNullableType(OBJECT_TYPE);
-    includeAssertionFunction("assertObject", getNativeType(OBJECT_TYPE));
+    includeGoogAssertionFn("assertObject", getNativeType(OBJECT_TYPE));
     assuming("x.y", startType);
 
     // test a property "x.y" instead of a simple name
@@ -661,7 +716,7 @@ public final class TypeInferenceTest {
   @Test
   public void testAssertObject_inCastToArray_returnsArray() {
     JSType startType = createNullableType(ALL_TYPE);
-    includeAssertionFunction("assertObject", getNativeType(OBJECT_TYPE));
+    includeGoogAssertionFn("assertObject", getNativeType(OBJECT_TYPE));
     assuming("x", startType);
 
     inFunction(
@@ -675,7 +730,7 @@ public final class TypeInferenceTest {
   @Test
   public void testAssertArray_narrowsNullableAllTypeToArray() {
     JSType startType = createNullableType(ALL_TYPE);
-    includeAssertionFunction("assertArray", getNativeType(ARRAY_TYPE));
+    includeGoogAssertionFn("assertArray", getNativeType(ARRAY_TYPE));
     assuming("x", startType);
 
     inFunction("out1 = x; goog.asserts.assertArray(x); out2 = x;");
@@ -687,7 +742,7 @@ public final class TypeInferenceTest {
   @Test
   public void testAssertArray_narrowsObjectTypeToArray() {
     JSType startType = getNativeType(OBJECT_TYPE);
-    includeAssertionFunction("assertArray", getNativeType(ARRAY_TYPE));
+    includeGoogAssertionFn("assertArray", getNativeType(ARRAY_TYPE));
     assuming("x", startType);
 
     inFunction("out1 = x; goog.asserts.assertArray(x); out2 = x;");
@@ -2650,13 +2705,42 @@ public final class TypeInferenceTest {
   }
 
   /** Adds a goog.asserts.assert[name] function to the scope that asserts the given returnType */
-  private void includeAssertionFunction(String fnName, JSType returnType) {
+  private void includeGoogAssertionFn(String fnName, JSType returnType) {
     String fullName = "goog.asserts." + fnName;
     FunctionType fnType =
         FunctionType.builder(registry)
             .withReturnType(returnType)
             .withParamsNode(IR.paramList(IR.name("p")))
             .withName(fullName)
+            .build();
+    assuming(fullName, fnType);
+  }
+
+  /** Adds a function with {@link ClosurePrimitive#ASSERTS_TRUTHY} and the given name */
+  private void includePrimitiveTruthyAssertionFunction(String fnName) {
+    TemplateType t = registry.createTemplateType("T");
+    FunctionType assertType =
+        FunctionType.builder(registry)
+            .withName(fnName)
+            .withClosurePrimitiveId(ClosurePrimitive.ASSERTS_TRUTHY)
+            .withReturnType(t)
+            .withParamsNode(IR.paramList(IR.name("x").setJSType(t)))
+            .withTemplateKeys(t)
+            .build();
+    assuming(fnName, assertType);
+  }
+
+  /**
+   * Adds a function with {@link ClosurePrimitive#ASSERTS_MATCHES_RETURN} that asserts the given
+   * returnType
+   */
+  private void includePrimitiveAssertionFn(String fullName, JSType returnType) {
+    FunctionType fnType =
+        FunctionType.builder(registry)
+            .withReturnType(returnType)
+            .withParamsNode(IR.paramList(IR.name("p")))
+            .withName(fullName)
+            .withClosurePrimitiveId(ClosurePrimitive.ASSERTS_MATCHES_RETURN)
             .build();
     assuming(fullName, fnType);
   }

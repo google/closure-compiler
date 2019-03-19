@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -89,7 +90,7 @@ class TypeInference
   private final FlowScope bottomScope;
   private final TypedScope containerScope;
   private final TypedScopeCreator scopeCreator;
-  private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
+  private final AssertionFunctionLookup assertionFunctionLookup;
 
   // Scopes that have had their unbound untyped vars inferred as undefined.
   private final Set<TypedScope> inferredUnboundVars = new HashSet<>();
@@ -97,10 +98,13 @@ class TypeInference
   // For convenience
   private final ObjectType unknownType;
 
-  TypeInference(AbstractCompiler compiler, ControlFlowGraph<Node> cfg,
-                ReverseAbstractInterpreter reverseInterpreter,
-                TypedScope syntacticScope, TypedScopeCreator scopeCreator,
-                Map<String, AssertionFunctionSpec> assertionFunctionsMap) {
+  TypeInference(
+      AbstractCompiler compiler,
+      ControlFlowGraph<Node> cfg,
+      ReverseAbstractInterpreter reverseInterpreter,
+      TypedScope syntacticScope,
+      TypedScopeCreator scopeCreator,
+      AssertionFunctionLookup assertionFunctionLookup) {
     super(cfg, new LinkedFlowScope.FlowScopeJoinOp());
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
@@ -110,7 +114,7 @@ class TypeInference
     this.containerScope = syntacticScope;
 
     this.scopeCreator = scopeCreator;
-    this.assertionFunctionsMap = assertionFunctionsMap;
+    this.assertionFunctionLookup = assertionFunctionLookup;
 
     FlowScope entryScope =
         inferDeclarativelyUnboundVarsWithoutTypes(
@@ -1519,9 +1523,13 @@ class TypeInference
   private FlowScope tightenTypesAfterAssertions(FlowScope scope, Node callNode) {
     Node left = callNode.getFirstChild();
     Node firstParam = left.getNext();
-    AssertionFunctionSpec assertionFunctionSpec =
-        assertionFunctionsMap.get(left.getQualifiedName());
-    if (assertionFunctionSpec == null || firstParam == null) {
+    if (firstParam == null) {
+      // this may be an assertion call but there are no arguments to assert
+      return scope;
+    }
+    AssertionFunctionSpec assertionFunctionSpec = assertionFunctionLookup.lookupByCallee(left);
+    if (assertionFunctionSpec == null) {
+      // this is not a recognized assertion function
       return scope;
     }
     Node assertedNode = assertionFunctionSpec.getAssertedArg(firstParam);
