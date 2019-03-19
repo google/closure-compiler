@@ -231,6 +231,13 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("var {a: {key: b}} = {}; b;", "({a: {key: _.b}} = {}); _.b;");
     test("var {['computed']: a} = {}; a;", "({['computed']: _.a} = {}); _.a;");
 
+    test(
+        "var {...a} = {a: 1, b: 2, c: 3}; a;", //
+        "({..._.a} = {a: 1, b: 2, c: 3}); _.a;");
+    test(
+        "var {a, ...b} = {x: 1, y: 2, z: 3}; a; b;",
+        "({a: _.a, ..._.b} = {x: 1, y: 2, z: 3}); _.a; _.b;");
+
     test("var {a = 3} = {}; a;", "({a: _.a = 3} = {}); _.a");
     test("var {key: a = 3} = {}; a;", "({key: _.a = 3} = {}); _.a");
     test("var {a} = {}, [b] = [], c = 3", "({a: _.a} = {}); [_.b] = []; _.c = 3;");
@@ -250,6 +257,8 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("var {a} = {}, b = 3;");
     testSame("var [a] = [], b = 3;");
     testSame("var a = 1, [b] = [], {c} = {};");
+    testSame("var {...a} = {x: 1, y: 2, z: 3}; a;");
+    testSame("var {a, ...b} = {x: 1, y: 2, z: 3}; a; b;");
   }
 
   @Test
@@ -272,6 +281,13 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         createModules("var {a} = {}, b = 3;", "b"),
         new String[] {"var a; ({a} = {}); _.b = 3;", "_.b"});
+
+    test(
+        createModules("var {a: a, ...c} = {};", "a;"),
+        new String[] {"var c; ({a: _.a, ...c} = {});", "_.a;"});
+    test(
+        createModules("var {a: a, ...c} = {};", "c;"),
+        new String[] {"var a; ({a: a, ..._.c} = {});", "_.c"});
   }
 
   @Test
@@ -285,6 +301,13 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "var obj = {}; ({a:   obj['foo bar']} = {});   obj['foo bar'];",
         "  _.obj = {}; ({a: _.obj['foo bar']} = {}); _.obj['foo bar'];");
+
+    test(
+        "var a = {}; ({...a.b} = {a: 1, b: 2, c: 3}); a.b;", //
+        "_.a = {}; ({..._.a.b} = {a: 1, b: 2, c: 3}); _.a.b;");
+    test(
+        "var a = {}; ({c, ...a.b} = {a: 1, b: 2, c: 3}); a.b;", //
+        "_.a = {}; ({c, ..._.a.b} = {a: 1, b: 2, c: 3}); _.a.b;");
   }
 
   @Test
@@ -324,6 +347,13 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         createModules("var [a, b, c] = []; b; c;", "a; c;"),
         new String[] {"var b; [_.a, b, _.c] = []; b; _.c;", "_.a; _.c"});
+
+    test(
+        createModules("var [a, ...c] = [];", "a;"),
+        new String[] {"var c; ([_.a, ...c] = []);", "_.a;"});
+    test(
+        createModules("var [a, ...c] = [];", "c;"),
+        new String[] {"var a; ([a, ..._.c] = []);", "_.c"});
   }
 
   @Test
@@ -338,6 +368,13 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "var obj = {}; [  obj['foo bar']] = [];   obj['foo bar'];",
         "  _.obj = {}; [_.obj['foo bar']] = []; _.obj['foo bar'];");
+
+    test(
+        "var a = {}; ([...a.b] = [1, 2, 3]); a.b;", //
+        "_.a = {}; ([..._.a.b] = [1, 2, 3]); _.a.b;");
+    test(
+        "var a = {}; ([c, ...a.b] = [1, 2, 3]); a.b;", //
+        "_.a = {}; ([c, ..._.a.b] = [1, 2, 3]); _.a.b;");
   }
 
   @Test
@@ -466,6 +503,28 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         createModules("       for (var {i: i, c:   c} of []);", "c"),
         new String[] {"var i; for (    {i: i, c: _.c} of []);", "_.c"});
+  }
+
+  @Test
+  public void testForAwaitOfLoops_allSameModule() {
+    assumeCrossModuleNames = false;
+    testSame("for await (var i of [1, 2, 3]);");
+    testSame("for await (var [a] of []);");
+    testSame("for await (var {a: a} of {});");
+  }
+
+  @Test
+  public void testForAwaitOfLoops_acrossModules() {
+    assumeCrossModuleNames = false;
+    test(
+        createModules("for await (var i of []);", "i"), //
+        new String[] {"for await (_.i of []);", "_.i"});
+    test(
+        createModules("       for await (var [  a, b] of []);", "a;"),
+        new String[] {"var b; for await (    [_.a, b] of []);", "_.a"});
+    test(
+        createModules("       for await (var {i: i, c:   c} of []);", "c"),
+        new String[] {"var i; for await (    {i: i, c: _.c} of []);", "_.c"});
   }
 
   @Test
