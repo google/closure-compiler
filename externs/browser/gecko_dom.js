@@ -735,8 +735,8 @@ Selection.prototype.selectAllChildren;
 Selection.prototype.selectionLanguageChange;
 
 /**
- * @type {!NodeList<!Element>}
- * @see https://developer.mozilla.org/en/DOM/element.children
+ * @type {!HTMLCollection<!Element>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
  */
 Element.prototype.children;
 
