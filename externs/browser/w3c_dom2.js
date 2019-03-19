@@ -2734,31 +2734,31 @@ HTMLIFrameElement.prototype.src;
 HTMLIFrameElement.prototype.width;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
 DOMException.INVALID_STATE_ERR = 11;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
 DOMException.SYNTAX_ERR = 12;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
 DOMException.INVALID_MODIFICATION_ERR = 13;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
 DOMException.NAMESPACE_ERR = 14;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
 DOMException.INVALID_ACCESS_ERR = 15;

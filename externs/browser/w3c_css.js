@@ -236,49 +236,49 @@ CSSRule.prototype.style;
 
 /**
  * Indicates that the rule is a {@see CSSUnknownRule}.
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRule-ruleType
  */
 CSSRule.UNKNOWN_RULE = 0;
 
 /**
  * Indicates that the rule is a {@see CSSStyleRule}.
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRule-ruleType
  */
 CSSRule.STYLE_RULE = 1;
 
 /**
  * Indicates that the rule is a {@see CSSCharsetRule}.
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRule-ruleType
  */
 CSSRule.CHARSET_RULE = 2;
 
 /**
  * Indicates that the rule is a {@see CSSImportRule}.
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRule-ruleType
  */
 CSSRule.IMPORT_RULE = 3;
 
 /**
  * Indicates that the rule is a {@see CSSMediaRule}.
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRule-ruleType
  */
 CSSRule.MEDIA_RULE = 4;
 
 /**
  * Indicates that the rule is a {@see CSSFontFaceRule}.
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRule-ruleType
  */
 CSSRule.FONT_FACE_RULE = 5;
 
 /**
  * Indicates that the rule is a {@see CSSPageRule}.
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRule-ruleType
  */
 CSSRule.PAGE_RULE = 6;
@@ -558,25 +558,25 @@ CSSValue.prototype.cssText;
 CSSValue.prototype.cssValueType;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSValue-types
  */
 CSSValue.CSS_INHERIT = 0;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSValue-types
  */
 CSSValue.CSS_PRIMITIVE_VALUE = 1;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSValue-types
  */
 CSSValue.CSS_VALUE_LIST = 2;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSValue-types
  */
 CSSValue.CSS_CUSTOM = 3;
@@ -595,157 +595,157 @@ function CSSPrimitiveValue() {}
 CSSPrimitiveValue.prototype.primitiveType;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_UNKNOWN = 0;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_NUMBER = 1;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_PERCENTAGE = 2;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_EMS = 3;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_EXS = 4;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_PX = 5;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_CM = 6;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_MM = 7;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_IN = 8;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_PT = 9;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_PC = 10;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_DEG = 11;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_RAD = 12;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_GRAD = 13;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_MS = 14;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_S = 15;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_HZ = 16;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_KHZ = 17;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_DIMENSION = 18;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_STRING = 19;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_URI = 20;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_IDENT = 21;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_ATTR = 22;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_COUNTER = 23;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_RECT = 24;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue
  */
 CSSPrimitiveValue.CSS_RGBCOLOR = 25;

@@ -114,10 +114,10 @@ function PerformanceNavigationTiming() {}
 
 /** @constructor */
 function PerformanceNavigation() {}
-/** @type {number} */ PerformanceNavigation.prototype.TYPE_NAVIGATE = 0;
-/** @type {number} */ PerformanceNavigation.prototype.TYPE_RELOAD = 1;
-/** @type {number} */ PerformanceNavigation.prototype.TYPE_BACK_FORWARD = 2;
-/** @type {number} */ PerformanceNavigation.prototype.TYPE_RESERVED = 255;
+/** @const {number} */ PerformanceNavigation.prototype.TYPE_NAVIGATE = 0;
+/** @const {number} */ PerformanceNavigation.prototype.TYPE_RELOAD = 1;
+/** @const {number} */ PerformanceNavigation.prototype.TYPE_BACK_FORWARD = 2;
+/** @const {number} */ PerformanceNavigation.prototype.TYPE_RESERVED = 255;
 /** @type {number} */ PerformanceNavigation.prototype.type;
 /** @type {number} */ PerformanceNavigation.prototype.redirectCount;
 
