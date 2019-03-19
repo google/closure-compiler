@@ -1768,45 +1768,39 @@ RTCStatsReport.prototype.id;
  * @param {SCOPE=} opt_thisObj The value of "this" inside callback function.
  * @this {MAP}
  * @template MAP,SCOPE
- * @readonly
  */
 RTCStatsReport.prototype.forEach = function(callback, opt_thisObj) {};
 
 /**
  * @param {string} key
  * @return {!IteratorIterable<!Array<string|!RTCStats>>}
- * @readonly
  */
 RTCStatsReport.prototype.entries = function(key) {};
 
 /**
  * @param {string} key
  * @return {!RTCStats}
- * @readonly
  */
 RTCStatsReport.prototype.get = function(key) {};
 
 /**
  * @return {!IteratorIterable<string>}
- * @readonly
  */
 RTCStatsReport.prototype.keys = function() {};
 
 /**
  * @return {!IteratorIterable<!RTCStats>}
- * @readonly
  */
 RTCStatsReport.prototype.values = function() {};
 
 /**
  * @param {string} key
  * @return {boolean}
- * @readonly
  */
 RTCStatsReport.prototype.has = function(key) {};
 
 /**
- * @readonly {number}
+ * @const {number}
  */
 RTCStatsReport.prototype.size;
 
