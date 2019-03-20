@@ -50,7 +50,7 @@ Symbol.prototype.description;
  * @return {symbol|undefined}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/for
  */
-Symbol.for;
+Symbol.for = function(sym) {};
 
 
 /**
@@ -58,7 +58,7 @@ Symbol.for;
  * @return {string|undefined}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/keyFor
  */
-Symbol.keyFor;
+Symbol.keyFor = function(sym) {};
 
 
 // Well known symbols
@@ -114,7 +114,7 @@ function Iterator() {}
  * @param {?=} opt_value
  * @return {!IIterableResult<VALUE>}
  */
-Iterator.prototype.next;
+Iterator.prototype.next = function(opt_value) {};
 
 
 /**

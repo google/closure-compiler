@@ -349,12 +349,12 @@ CanvasDrawingStyles.prototype.miterLimit;
  * @param {Array<number>} segments
  * @return {undefined}
  */
-CanvasDrawingStyles.prototype.setLineDash;
+CanvasDrawingStyles.prototype.setLineDash = function(segments) {};
 
 /**
  * @return {!Array<number>}
  */
-CanvasDrawingStyles.prototype.getLineDash;
+CanvasDrawingStyles.prototype.getLineDash = function() {};
 
 /** @type {string} */
 CanvasDrawingStyles.prototype.font;
@@ -725,8 +725,10 @@ CanvasRenderingContext2D.prototype.putImageData = function(imagedata, dx, dy,
  * @param {number=} opt_e
  * @see http://developer.apple.com/library/safari/#documentation/appleapplications/reference/WebKitDOMRef/CanvasRenderingContext2D_idl/Classes/CanvasRenderingContext2D/index.html
  * @return {undefined}
+ * @deprecated
  */
-CanvasRenderingContext2D.prototype.setFillColor;
+CanvasRenderingContext2D.prototype.setFillColor = function(
+    opt_a, opt_b, opt_c, opt_d, opt_e) {};
 
 /**
  * Note: WebKit only
@@ -737,19 +739,23 @@ CanvasRenderingContext2D.prototype.setFillColor;
  * @param {number=} opt_e
  * @see http://developer.apple.com/library/safari/#documentation/appleapplications/reference/WebKitDOMRef/CanvasRenderingContext2D_idl/Classes/CanvasRenderingContext2D/index.html
  * @return {undefined}
+ * @deprecated
  */
-CanvasRenderingContext2D.prototype.setStrokeColor;
+CanvasRenderingContext2D.prototype.setStrokeColor = function(
+    opt_a, opt_b, opt_c, opt_d, opt_e) {};
 
 /**
  * @return {!Array<number>}
+ * @override
  */
-CanvasRenderingContext2D.prototype.getLineDash;
+CanvasRenderingContext2D.prototype.getLineDash = function() {};
 
 /**
  * @param {Array<number>} segments
  * @return {undefined}
+ * @override
  */
-CanvasRenderingContext2D.prototype.setLineDash;
+CanvasRenderingContext2D.prototype.setLineDash = function(segments) {};
 
 /** @type {string} */
 CanvasRenderingContext2D.prototype.fillColor;
@@ -2640,14 +2646,14 @@ function BroadcastChannel(channelName) {}
  * listening to the same channel.
  * @param {*} message
  */
-BroadcastChannel.prototype.postMessage;
+BroadcastChannel.prototype.postMessage = function(message) {};
 
 /**
  * Closes the channel object, indicating it won't get any new messages, and
  * allowing it to be, eventually, garbage collected.
  * @return {void}
  */
-BroadcastChannel.prototype.close;
+BroadcastChannel.prototype.close = function() {};
 
 /** @override */
 BroadcastChannel.prototype.addEventListener = function(
