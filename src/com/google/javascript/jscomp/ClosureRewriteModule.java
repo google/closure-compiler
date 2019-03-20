@@ -1664,7 +1664,19 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       case CONST:
         {
           Node rhs = nameNode.hasChildren() ? nameNode.getLastChild().detach() : null;
+          if (jsdoc == null) {
+            // Get inline JSDocInfo if there is no JSDoc on the actual declaration.
+            jsdoc = nameNode.getJSDocInfo();
+          }
           Node newStatement = NodeUtil.newQNameDeclaration(compiler, newString, rhs, jsdoc);
+          if (NodeUtil.isExprAssign(newStatement) && nameParent.isConst()) {
+            // When replacing `const name = ...;` with `some.prop = ...`, ensure that `some.prop`
+            // is annotated @const.
+            JSDocInfoBuilder jsdocBuilder = JSDocInfoBuilder.maybeCopyFrom(jsdoc);
+            jsdocBuilder.recordConstancy();
+            jsdoc = jsdocBuilder.build();
+            newStatement.getOnlyChild().setJSDocInfo(jsdoc);
+          }
           newStatement.useSourceInfoIfMissingFromForTree(nameParent);
           int nameLength =
               nameNode.getOriginalName() != null

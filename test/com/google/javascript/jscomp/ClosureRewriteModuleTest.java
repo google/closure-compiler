@@ -210,6 +210,147 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNamedExportInliningJSDoc_atConstJSDoc() {
+    test(
+        new String[] {
+          lines(
+              "goog.module('ns.b');", //
+              "/** @const */ var Foo = {a: 0};",
+              "exports.Foo = Foo;"),
+          lines(
+              "goog.module('ns.a');", //
+              "var {Foo} = goog.require('ns.b');",
+              "var f = Foo;")
+        },
+        new String[] {
+          lines(
+              "/** @const */ var module$exports$ns$b = {};",
+              "/** @const */ module$exports$ns$b.Foo = {a: 0};"),
+          lines(
+              "/** @const */ var module$exports$ns$a = {}",
+              "var module$contents$ns$a_f = module$exports$ns$b.Foo;")
+        });
+  }
+
+  @Test
+  public void testNamedExportInliningJSDoc_semanticConst() {
+    test(
+        new String[] {
+          lines(
+              "goog.module('ns.b');", //
+              "const Foo = {a: 0};",
+              "exports.Foo = Foo;"),
+          lines(
+              "goog.module('ns.a');", //
+              "var {Foo} = goog.require('ns.b');",
+              "var f = Foo;")
+        },
+        new String[] {
+          lines(
+              "/** @const */ var module$exports$ns$b = {};",
+              "/** @const */ module$exports$ns$b.Foo = {a: 0};"),
+          lines(
+              "/** @const */ var module$exports$ns$a = {}",
+              "var module$contents$ns$a_f = module$exports$ns$b.Foo;")
+        });
+  }
+
+  @Test
+  public void testNamedExportInliningJSDoc_semanticConstWithExistingJSDoc() {
+    test(
+        new String[] {
+          lines(
+              "goog.module('ns.b');", //
+              "/** @interface */ const Foo = class {};",
+              "exports.Foo = Foo;"),
+          lines(
+              "goog.module('ns.a');", //
+              "var {Foo} = goog.require('ns.b');",
+              "var f = Foo;")
+        },
+        new String[] {
+          lines(
+              "/** @const */ var module$exports$ns$b = {};",
+              "/** @const @interface */ module$exports$ns$b.Foo = class {};"),
+          lines(
+              "/** @const */ var module$exports$ns$a = {}",
+              "var module$contents$ns$a_f = module$exports$ns$b.Foo;")
+        });
+  }
+
+  @Test
+  public void testNamedExportInliningJSDoc_semanticConstWithInlineJSDoc() {
+    test(
+        new String[] {
+          lines(
+              "goog.module('ns.b');", //
+              "const /** number */ foo = 0;",
+              "exports.foo = foo;"),
+          lines(
+              "goog.module('ns.a');", //
+              "var {foo} = goog.require('ns.b');",
+              "var f = foo;")
+        },
+        new String[] {
+          lines(
+              "/** @const */ var module$exports$ns$b = {};",
+              "/** @const {number} */ module$exports$ns$b.foo = 0;"),
+          lines(
+              "/** @const */ var module$exports$ns$a = {}",
+              "var module$contents$ns$a_f = module$exports$ns$b.foo;")
+        });
+  }
+
+  @Test
+  public void testNamedExportInliningJSDoc_nonConstWithInlineJSDoc() {
+    test(
+        new String[] {
+          lines(
+              "goog.module('ns.b');", //
+              "let /** number */ foo = 0;",
+              "exports.foo = foo;"),
+          lines(
+              "goog.module('ns.a');", //
+              "var {foo} = goog.require('ns.b');",
+              "var f = foo;")
+        },
+        new String[] {
+          lines(
+              "/** @const */ var module$exports$ns$b = {};",
+              "/** @type {number} */ module$exports$ns$b.foo = 0;"),
+          lines(
+              "/** @const */ var module$exports$ns$a = {}",
+              "var module$contents$ns$a_f = module$exports$ns$b.foo;")
+        });
+  }
+
+  @Test
+  public void testNamedExportInliningJSDoc_mutatedLocal() {
+    // TODO(lharker): Stop inlining 'exports.Foo -> Foo' in this case.
+    test(
+        new String[] {
+          lines(
+              "goog.module('ns.b');", //
+              "let Foo = {a: 0};",
+              "exports.Foo = Foo;",
+              "Foo = {};"),
+          lines(
+              "goog.module('ns.a');", //
+              "var {Foo} = goog.require('ns.b');",
+              "var f = Foo;")
+        },
+        new String[] {
+          lines(
+              "/** @const */ var module$exports$ns$b = {};",
+              "module$exports$ns$b.Foo = {a: 0};",
+              "module$exports$ns$b.Foo = {};"),
+          lines(
+              "/** @const */ var module$exports$ns$a = {}",
+              "var module$contents$ns$a_f = module$exports$ns$b.Foo;")
+        });
+  }
+
+  @Test
   public void testDestructuringImports() {
     test(
         new String[] {
