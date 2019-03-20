@@ -18,15 +18,14 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.common.collect.Iterables;
+import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
+import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -79,20 +78,32 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
     testSame(js);
   }
 
+  private static final Correspondence<Reference, Boolean> IS_DECLARATION =
+      JSCompCorrespondences.transforming(Reference::isDeclaration, "isDeclaration() is");
+
   @Test
-  public void testRestDeclaration() {
+  public void testIterableRest_declaration() {
     testBehavior(
         "let [x, ...arr] = [1, 2, 3]; [x, ...arr] = [4, 5, 6];",
         (NodeTraversal t, ReferenceMap rm) -> {
           ReferenceCollection arrReferenceCollection = rm.getReferences(t.getScope().getVar("arr"));
-          List<Reference> references = arrReferenceCollection.references;
-          assertThat(references).hasSize(2);
-          assertWithMessage("First reference is a declaration")
-              .that(references.get(0).isDeclaration())
-              .isTrue();
-          assertWithMessage("Second reference is a declaration")
-              .that(references.get(1).isDeclaration())
-              .isFalse();
+          assertThat(arrReferenceCollection)
+              .comparingElementsUsing(IS_DECLARATION)
+              .containsExactly(true, false)
+              .inOrder();
+        });
+  }
+
+  @Test
+  public void testObjectRest_declaration() {
+    testBehavior(
+        "let {x, ...obj} = {x: 1, y: 2, z: 3}; ({x, ...obj} = {x: 4, q: 5, u: 6});",
+        (NodeTraversal t, ReferenceMap rm) -> {
+          ReferenceCollection objReferenceCollection = rm.getReferences(t.getScope().getVar("obj"));
+          assertThat(objReferenceCollection)
+              .comparingElementsUsing(IS_DECLARATION)
+              .containsExactly(true, false)
+              .inOrder();
         });
   }
 
@@ -107,7 +118,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
             assertThat(x.isAssignedOnceInLifetime()).isTrue();
             assertThat(x.isWellDefined()).isTrue();
-            assertThat(Iterables.getOnlyElement(x).isDeclaration()).isTrue();
+            assertThat(x).comparingElementsUsing(IS_DECLARATION).containsExactly(true).inOrder();
           }
         });
   }
@@ -123,7 +134,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
             assertThat(x.isAssignedOnceInLifetime()).isTrue();
             assertThat(x.isWellDefined()).isTrue();
-            assertThat(Iterables.getOnlyElement(x).isDeclaration()).isTrue();
+            assertThat(x).comparingElementsUsing(IS_DECLARATION).containsExactly(true).inOrder();
           }
         });
   }
@@ -139,7 +150,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
             assertThat(x.isAssignedOnceInLifetime()).isTrue();
             assertThat(x.isWellDefined()).isTrue();
-            assertThat(Iterables.getOnlyElement(x).isDeclaration()).isTrue();
+            assertThat(x).comparingElementsUsing(IS_DECLARATION).containsExactly(true).inOrder();
           }
         });
   }
@@ -156,7 +167,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
             assertThat(x.isAssignedOnceInLifetime()).isTrue();
             assertThat(x.isWellDefined()).isTrue();
-            assertThat(Iterables.getOnlyElement(x).isDeclaration()).isTrue();
+            assertThat(x).comparingElementsUsing(IS_DECLARATION).containsExactly(true).inOrder();
           }
         });
   }
@@ -175,7 +186,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
             assertThat(x.isAssignedOnceInLifetime()).isTrue();
             assertThat(x.isWellDefined()).isTrue();
-            assertThat(Iterables.getOnlyElement(x).isDeclaration()).isTrue();
+            assertThat(x).comparingElementsUsing(IS_DECLARATION).containsExactly(true).inOrder();
           }
         });
   }
