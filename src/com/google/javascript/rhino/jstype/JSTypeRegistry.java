@@ -1943,6 +1943,14 @@ public class JSTypeRegistry implements Serializable {
     nonNullableTypeNames.add(name);
   }
 
+  /**
+   * Identifies the name of a typedef or enum before we actually declare it.
+   */
+  public boolean isNonNullableName(String name) {
+    checkNotNull(name);
+    return nonNullableTypeNames.contains(name);
+  }
+
   public JSType evaluateTypeExpression(JSTypeExpression expr, StaticTypedScope scope) {
     return createTypeFromCommentNode(expr.getRoot(), expr.getSourceName(), scope);
   }

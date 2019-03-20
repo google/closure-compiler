@@ -419,14 +419,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   }
 
   /**
-   * Create the outermost scope. This scope contains native binding such as
-   * {@code Object}, {@code Date}, etc.
+   * Create the outermost scope. This scope contains native binding such as {@code Object}, {@code
+   * Date}, etc.
    */
   @VisibleForTesting
   TypedScope createInitialScope(Node root) {
 
     NodeTraversal.traverse(
-        compiler, root, new IdentifyGlobalEnumsAndTypedefsAsNonNullable(typeRegistry));
+        compiler,
+        root,
+        new IdentifyGlobalEnumsAndTypedefsAsNonNullable(typeRegistry, codingConvention));
 
     TypedScope s = TypedScope.createGlobalScope(root);
     declareNativeFunctionType(s, ARRAY_FUNCTION_TYPE);
@@ -489,14 +491,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   /**
    * Adds all globally-defined enums and typedefs to the registry's list of non-nullable types.
    *
-   * TODO(bradfordcsmith): We should also make locally-defined enums and typedefs non-nullable.
+   * <p>TODO(b/123710194): We should also make locally-defined enums and typedefs non-nullable.
    */
   private static class IdentifyGlobalEnumsAndTypedefsAsNonNullable
       extends AbstractShallowStatementCallback {
     private final JSTypeRegistry registry;
+    private final CodingConvention codingConvention;
 
-    IdentifyGlobalEnumsAndTypedefsAsNonNullable(JSTypeRegistry registry) {
+    IdentifyGlobalEnumsAndTypedefsAsNonNullable(
+        JSTypeRegistry registry, CodingConvention codingConvention) {
       this.registry = registry;
+      this.codingConvention = codingConvention;
     }
 
     @Override
@@ -510,20 +515,22 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           Scope scope = t.getScope();
           checkState(scope.isGlobal() || scope.getClosestHoistScope().isGlobal());
           if (node.isVar() || scope.isGlobal()) {
-            for (Node child = node.getFirstChild();
-                 child != null; child = child.getNext()) {
-              identifyNameNode(child, NodeUtil.getBestJSDocInfo(child));
+            for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
+              // TODO(b/116853368): make this work for destructuring aliases as well.
+              identifyEnumOrTypedefDeclaration(
+                  child, child.getFirstChild(), NodeUtil.getBestJSDocInfo(child));
             }
           }
           break;
         case EXPR_RESULT:
           Node firstChild = node.getFirstChild();
           if (firstChild.isAssign()) {
-            identifyNameNode(
-                firstChild.getFirstChild(), firstChild.getJSDocInfo());
+            Node assign = firstChild;
+            identifyEnumOrTypedefDeclaration(
+                assign.getFirstChild(), assign.getSecondChild(), assign.getJSDocInfo());
           } else {
-            identifyNameNode(
-                firstChild, firstChild.getJSDocInfo());
+            identifyEnumOrTypedefDeclaration(
+                firstChild, /* rvalue= */ null, firstChild.getJSDocInfo());
           }
           break;
         default:
@@ -531,14 +538,20 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
-    private void identifyNameNode(
-        Node nameNode, JSDocInfo info) {
-      if (info != null && nameNode.isQualifiedName()) {
-        if (info.hasEnumParameterType()) {
-          registry.identifyNonNullableName(nameNode.getQualifiedName());
-        } else if (info.hasTypedefType()) {
-          registry.identifyNonNullableName(nameNode.getQualifiedName());
-        }
+    private void identifyEnumOrTypedefDeclaration(
+        Node nameNode, @Nullable Node rvalue, JSDocInfo info) {
+      if (!nameNode.isQualifiedName()) {
+        return;
+      }
+      if (info != null && info.hasEnumParameterType()) {
+        registry.identifyNonNullableName(nameNode.getQualifiedName());
+      } else if (info != null && info.hasTypedefType()) {
+        registry.identifyNonNullableName(nameNode.getQualifiedName());
+      } else if (rvalue != null
+          && rvalue.isQualifiedName()
+          && registry.isNonNullableName(rvalue.getQualifiedName())
+          && NodeUtil.isConstantDeclaration(codingConvention, info, nameNode)) {
+        registry.identifyNonNullableName(nameNode.getQualifiedName());
       }
     }
   }

@@ -5726,14 +5726,32 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testForwardDeclaredGlobalAliasOfEnumIsNonNullable() {
-    // TODO(b/116853368): this should be non-nullable and warn
+  public void testForwardDeclaredGlobalAliasOfEnumIsNonNullable_constDeclaration() {
     testTypes(
         lines(
             "/** @enum {string} */",
             "const Colors = {RED: 'red', YELLOW: 'yellow'};",
             "const /** ColorsAlias */ c = null",
-            "const ColorsAlias = Colors;"));
+            "const ColorsAlias = Colors;"),
+        lines(
+            "initializing variable", //
+            "found   : null",
+            "required: Colors<string>"));
+  }
+
+  @Test
+  public void testForwardDeclaredGlobalAliasOfEnumIsNonNullable_constJSDoc() {
+    testTypes(
+        lines(
+            "/** @enum {string} */",
+            "const Colors = {RED: 'red', YELLOW: 'yellow'};",
+            "const /** ns.ColorsAlias */ c = null",
+            "const ns = {};",
+            "/** @const */ ns.ColorsAlias = Colors;"),
+        lines(
+            "initializing variable", //
+            "found   : null",
+            "required: Colors<string>"));
   }
 
   @Test
