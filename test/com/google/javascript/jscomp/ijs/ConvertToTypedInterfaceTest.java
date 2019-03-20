@@ -471,6 +471,25 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRequireAlias5() {
+    test(
+        lines(
+            "goog.module('FooAlias');",
+            "",
+            "const {Foo} = goog.require('a.b.c');",
+            "/** @const {number} */",
+            "Foo = 1;",
+            "",
+            "exports = Foo;"),
+        lines(
+            "goog.module('FooAlias');",
+            "",
+            "/** @const @type {number} */ var Foo;",
+            "",
+            "exports = Foo;"));
+  }
+
+  @Test
   public void testRequireTypeAlias1() {
     testSame(
         lines(
@@ -514,6 +533,136 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "const {Foo} = goog.requireType('a.b.c');",
             "",
             "exports = Foo;"));
+  }
+
+  @Test
+  public void testRequireTypeAlias5() {
+    test(
+        lines(
+            "goog.module('FooAlias');",
+            "",
+            "const {Foo, Bar} = goog.requireType('a.b.c');",
+            "/** @const {string} */",
+            "Foo = 'foo';",
+            "",
+            "exports = Foo;"),
+        lines(
+            "goog.module('FooAlias');",
+            "",
+            "const {Bar} = goog.requireType('a.b.c');",
+            "/** @const @type {string} */ var Foo;",
+            "",
+            "exports = Foo;"));
+  }
+
+  @Test
+  public void testDestructuredAlias1() {
+    testSame("const {Foo} = a.b.c; const {Bar} = x; exports = Foo;");
+  }
+
+  @Test
+  public void testDestructuredAlias2() {
+    testSame("const {Foo, Bar} = a.b.c;  exports = Foo;");
+  }
+
+  @Test
+  public void testDestructuredAlias3() {
+    test(
+        lines("const {Foo} = a.b.c, bar = 1;", "exports = Foo;"),
+        lines(
+            "const {Foo} = a.b.c;",
+            "",
+            "/** @const @type {number} */ var bar;",
+            "",
+            "exports = Foo;"));
+  }
+
+  @Test
+  public void testDestructuredAlias4() {
+    test(
+        "const {Foo} = a.b.c, Baz = p.q.Baz; exports = Foo;",
+        "const {Foo} = a.b.c; const Baz = p.q.Baz; exports = Foo;");
+  }
+
+  @Test
+  public void testDuplicateDeclarationWAliasRemoved1() {
+    test(
+        lines(
+            "const {Foo, Bar} = x.y;", //
+            "/** @const {number} */",
+            "Bar = 1;",
+            "",
+            "exports = Foo;"),
+        lines(
+            "const {Foo} = x.y",
+            "",
+            "/** @const @type {number} */ var Bar;",
+            "",
+            "exports = Foo;"));
+  }
+
+  @Test
+  public void testDuplicateDeclarationWAliasRemoved2() {
+    test(
+        lines(
+            "/** @const {string} */",
+            "Foo = 'hello';",
+            "",
+            "const {Foo, Bar} = x.y;",
+            "",
+            "/** @const {number} */",
+            "Bar = 1;",
+            "",
+            "exports = Foo;"),
+        lines(
+            "/** @const @type {string} */ var Foo;",
+            "",
+            "/** @const @type {number} */ var Bar;",
+            "",
+            "exports = Foo;"));
+  }
+
+  @Test
+  public void testDuplicateDeclarationWAliasRemoved3() {
+    test(
+        lines(
+            "/** @const {string} */",
+            "Foo = 'hello';",
+            "",
+            "const {Foo, Bar, Baz} = x.y;",
+            "",
+            "/** @const {number} */",
+            "Baz = 1;",
+            "",
+            "exports = Foo;"),
+        lines(
+            "/** @const @type {string} */ var Foo;",
+            "",
+            "const {Bar} = x.y;",
+            "",
+            "/** @const @type {number} */ var Baz;",
+            "",
+            "exports = Foo;"));
+  }
+
+  @Test
+  public void testDuplicateDeclarationWAliasNotRemoved() {
+    test(
+        lines(
+            "const {Foo, Bar} = x.y;", //
+            "",
+            "Bar = z;",
+            "",
+            "exports = Foo;"),
+        lines(
+            "const {Foo, Bar} = x.y;", //
+            "",
+            "exports = Foo;"));
+  }
+
+  @Test
+  public void testLetDestructuringDeclarationsRemoved() {
+    test("let {Foo, Bar} = a.b.c; exports = Foo;", "exports = Foo;");
   }
 
   @Test
@@ -1587,6 +1736,8 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "",
             "const Enum = goog.require('Enum');",
             "const Foo = goog.require('Foo');",
+            "",
+            "const {A, B} = Enum;",
             "",
             "/** @type {Foo} */",
             "exports.foo;",

@@ -74,7 +74,7 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
               currentFile.recordDefine(rhs);
             } else {
               currentFile.recordNameDeclaration(lhs);
-              processDeclarationWithRhs(t, lhs, expr.getLastChild());
+              processDeclarationWithRhs(t, lhs);
             }
             break;
           case GETPROP:
@@ -95,13 +95,13 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
         } else {
           recordNameDeclaration(n);
           if (name.isName() && name.hasChildren()) {
-            processDeclarationWithRhs(t, name, rhs);
+            processDeclarationWithRhs(t, name);
           }
         }
         break;
       case STRING_KEY:
         if (parent.isObjectLit() && n.hasOneChild()) {
-          processDeclarationWithRhs(t, n, n.getFirstChild());
+          processDeclarationWithRhs(t, n);
           currentFile.recordStringKeyDeclaration(n);
         }
         break;
@@ -119,16 +119,17 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
     checkArgument(NodeUtil.isNameDeclaration(decl));
     Node rhs = decl.getFirstChild().getLastChild();
     boolean isImport = PotentialDeclaration.isImportRhs(rhs);
+    boolean isAlias = PotentialDeclaration.isAliasDeclaration(decl.getFirstChild(), rhs);
     for (Node name : NodeUtil.findLhsNodesInNode(decl)) {
-      if (isImport) {
-        currentFile.recordImport(name.getString());
+      if (isAlias || isImport) {
+        currentFile.recordAliasDeclaration(name);
       } else {
         currentFile.recordNameDeclaration(name);
       }
     }
   }
 
-  private void processDeclarationWithRhs(NodeTraversal t, Node lhs, Node rhs) {
+  private void processDeclarationWithRhs(NodeTraversal t, Node lhs) {
     checkArgument(
         lhs.isQualifiedName() || lhs.isStringKey() || lhs.isDestructuringLhs(),
         lhs);

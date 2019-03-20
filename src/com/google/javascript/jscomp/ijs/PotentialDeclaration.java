@@ -80,6 +80,11 @@ abstract class PotentialDeclaration {
     return DefineDeclaration.from(callNode);
   }
 
+  static PotentialDeclaration fromAlias(Node nameNode) {
+    checkArgument(nameNode.isQualifiedName(), nameNode);
+    return new AliasDeclaration(nameNode.getQualifiedName(), nameNode);
+  }
+
   String getFullyQualifiedName() {
     return fullyQualifiedName;
   }
@@ -395,6 +400,51 @@ abstract class PotentialDeclaration {
 
   }
 
+  private static class AliasDeclaration extends PotentialDeclaration {
+
+    /**
+     * @param name The alias name being declared.
+     * @param lhs The NAME node that represents the name of the individual alias.
+     */
+    AliasDeclaration(String name, Node lhs) {
+      super(name, lhs, null);
+    }
+
+    @Override
+    void simplify(AbstractCompiler compiler) {
+      // Does not simplify
+    }
+
+    /**
+     * If the declaration is a destructuring declaration: 1) If the lhs's destructuring pattern
+     * parent has only one child, e.g. const {Foo} = x; returns the enclosing statement to remove
+     * the entire statement. 2) If the parent has more than one children, e.g. const {Foo, Bar} = x;
+     * returns the lhs so that when Foo is removed, const {Foo, Bar} = x; becomes const {Bar} = x;
+     * Otherwise, returns the enclosing statement.
+     */
+    @Override
+    Node getRemovableNode() {
+      Node lhs = getLhs();
+      if (lhs.getParent().isArrayPattern() && lhs.getParent().hasMoreThanOneChild()) {
+        return lhs;
+      }
+      if (lhs.getGrandparent().isObjectPattern() && lhs.getGrandparent().hasMoreThanOneChild()) {
+        return lhs.getParent();
+      }
+      return NodeUtil.getEnclosingStatement(lhs);
+    }
+
+    @Override
+    boolean isAliasDefinition() {
+      return true;
+    }
+
+    @Override
+    boolean isDefiniteDeclaration() {
+      return true;
+    }
+  }
+
   /** Remove values from enums */
   private void simplifyEnumValues(AbstractCompiler compiler) {
     if (getRhs().isObjectLit() && getRhs().hasChildren()) {
@@ -463,6 +513,10 @@ abstract class PotentialDeclaration {
         || callee.matchesQualifiedName("goog.requireType")
         || callee.matchesQualifiedName("goog.forwardDeclare")
         || callee.matchesQualifiedName("require");
+  }
+
+  static boolean isAliasDeclaration(Node lhs, @Nullable Node rhs) {
+    return isConstToBeInferred(lhs) && rhs != null && rhs.isQualifiedName();
   }
 
   private static void removeStringKeyValue(Node stringKey) {

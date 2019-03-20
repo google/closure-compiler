@@ -288,9 +288,13 @@ public class ConvertToTypedInterface implements CompilerPass {
 
     /**
      * Does three simplifications to const/let/var nodes.
-     * 1. Splits them so that each declaration is a separate statement.
-     * 2. Removes non-import destructuring statements, which we assume are not type declarations.
-     * 3. Moves inline JSDoc annotations onto the declaration nodes.
+     *
+     * <ul>
+     *   <li>Splits them so that each declaration is a separate statement.
+     *   <li>Removes non-import and non-alias destructuring statements, which we assume are not type
+     *       declarations.
+     *   <li>Moves inline JSDoc annotations onto the declaration nodes.
+     * </ul>
      */
     static void splitNameDeclarationsAndRemoveDestructuring(Node n, NodeTraversal t) {
       checkArgument(NodeUtil.isNameDeclaration(n));
@@ -300,7 +304,8 @@ public class ConvertToTypedInterface implements CompilerPass {
       while (n.hasChildren()) {
         Node lhsToSplit = n.getLastChild();
         if (lhsToSplit.isDestructuringLhs()
-            && !PotentialDeclaration.isImportRhs(lhsToSplit.getLastChild())) {
+            && !PotentialDeclaration.isImportRhs(lhsToSplit.getLastChild())
+            && !PotentialDeclaration.isAliasDeclaration(lhsToSplit, lhsToSplit.getLastChild())) {
           // Remove destructuring statements, which we assume are not type declarations
           NodeUtil.markFunctionsDeleted(lhsToSplit, t.getCompiler());
           NodeUtil.removeChild(n, lhsToSplit);
