@@ -228,3 +228,9 @@ CharacterData.prototype.after = function(nodes) {};
  * @see https://dom.spec.whatwg.org/#dom-element-toggleattribute
  */
 Element.prototype.toggleAttribute = function(name, force) {};
+
+/**
+ * @type {Element}
+ * @see http://msdn.microsoft.com/en-us/library/ms534327(VS.85).aspx
+ */
+Node.prototype.parentElement;
