@@ -6968,4 +6968,56 @@ public final class IntegrationTest extends IntegrationTestCase {
               "}")
         });
   }
+
+  @Test
+  public void testOptionalCatchBinding_optimizeAndTypecheck() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    testSame(
+        options,
+        new String[] {
+          lines(
+              "try {", //
+              " alert('try');",
+              "} catch {",
+              "  alert('caught');",
+              "}")
+        });
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "function doNothing() {}",
+              "try {",
+              " doNothing();",
+              "} catch {",
+              "  alert('caught');",
+              "}")
+        },
+        new String[] {});
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "function doNothing() {}",
+              "try {",
+              " alert('try');",
+              "} catch {",
+              "  doNothing();",
+              "}")
+        },
+        new String[] {
+          lines(
+              "try {", //
+              " alert('try');",
+              "} catch {",
+              "}")
+        });
+  }
 }

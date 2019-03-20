@@ -798,8 +798,11 @@ class RemoveUnusedCode implements CompilerPass {
   private void traverseCatch(Node catchNode, Scope scope) {
     Node exceptionNameNode = catchNode.getFirstChild();
     Node block = exceptionNameNode.getNext();
-    VarInfo exceptionVarInfo = traverseNameNode(exceptionNameNode, scope);
-    exceptionVarInfo.setIsExplicitlyNotRemovable();
+    if (exceptionNameNode.isName()) {
+      // exceptionNameNode can be an empty node if not using a binding in 2019.
+      VarInfo exceptionVarInfo = traverseNameNode(exceptionNameNode, scope);
+      exceptionVarInfo.setIsExplicitlyNotRemovable();
+    }
     traverseNode(block, scope);
   }
 

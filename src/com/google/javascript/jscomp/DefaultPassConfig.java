@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018_MODULES;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2019_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
@@ -1270,7 +1270,7 @@ public final class DefaultPassConfig extends PassConfig {
         public FeatureSet featureSet() {
           // Should be FeatureSet.latest() since it's a trivial pass, but must match "normalize"
           // TODO(johnlenz): Update this and normalize to latest()
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -1342,7 +1342,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -1361,7 +1361,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -1461,7 +1461,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -1678,7 +1678,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -1699,7 +1699,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -1733,7 +1733,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -1747,7 +1747,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -1772,7 +1772,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2237,7 +2237,7 @@ public final class DefaultPassConfig extends PassConfig {
           // TODO(johnlenz): StripCode may be fooled by some newer features, like destructuring, and
           // fail to strip code we'd like stripped, but use of those features won't make it any more
           // likely to crash or cause runtime errors than pure ES5 code.
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2291,7 +2291,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2332,7 +2332,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2359,7 +2359,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2373,7 +2373,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2388,7 +2388,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2405,7 +2405,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2436,7 +2436,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2450,7 +2450,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2478,7 +2478,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2494,7 +2494,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2516,7 +2516,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2530,7 +2530,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2566,7 +2566,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2580,7 +2580,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2594,7 +2594,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2608,7 +2608,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2622,7 +2622,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2636,7 +2636,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2650,7 +2650,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2670,7 +2670,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2684,7 +2684,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2712,7 +2712,7 @@ public final class DefaultPassConfig extends PassConfig {
 
       @Override
       public FeatureSet featureSet() {
-        return ES2018_MODULES;
+        return ES2019_MODULES;
       }
     };
   }
@@ -2730,7 +2730,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2750,7 +2750,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2764,7 +2764,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2778,7 +2778,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2792,7 +2792,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2806,7 +2806,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2860,7 +2860,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2950,7 +2950,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2983,7 +2983,7 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           // TODO(johnlenz): Update this and gatherRawExports to latest()
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2996,7 +2996,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3010,7 +3010,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3024,7 +3024,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3054,7 +3054,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3075,7 +3075,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3119,7 +3119,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3133,7 +3133,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3160,7 +3160,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3193,7 +3193,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3298,7 +3298,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3313,7 +3313,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3327,7 +3327,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3355,7 +3355,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3368,7 +3368,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -3422,7 +3422,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES2019_MODULES;
         }
       };
 

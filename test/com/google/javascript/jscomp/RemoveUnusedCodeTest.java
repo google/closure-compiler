@@ -80,7 +80,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
     return options;
   }
 
@@ -260,7 +260,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testRemoveUnusedVars1() {
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     test(
         lines(
             "var a;",
@@ -2756,5 +2755,12 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             lines(
                 "$jscomp$polyfill('Map', function() {}, 'es6', 'es3');", //
                 "console.log(new Map());")));
+  }
+
+  @Test
+  public void testNoCatchBinding() {
+    testSame("function doNothing() {} try { doNothing(); } catch { doNothing(); }");
+    testSame("function doNothing() {} try { throw 0; } catch { doNothing(); }");
+    testSame("function doNothing() {} try { doNothing(); } catch { console.log('stuff'); }");
   }
 }
