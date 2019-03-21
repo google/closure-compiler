@@ -62,6 +62,7 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
+import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
@@ -90,29 +91,25 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /**
- * Creates the symbol table of variables available in the current scope and
- * their types.
+ * Creates the symbol table of variables available in the current scope and their types.
  *
- * Scopes created by this class are very different from scopes created
- * by the syntactic scope creator. These scopes have type information, and
- * include some qualified names in addition to variables
- * (like Class.staticMethod).
+ * <p>Scopes created by this class are very different from scopes created by the syntactic scope
+ * creator. These scopes have type information, and include some qualified names in addition to
+ * variables (like Class.staticMethod).
  *
- * When building scope information, also declares relevant information
- * about types in the type registry.
+ * <p>When building scope information, also declares relevant information about types in the type
+ * registry.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
 final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, TypedVar> {
-  /**
-   * A suffix for naming delegate proxies differently from their base.
-   */
-  static final String DELEGATE_PROXY_SUFFIX =
-      ObjectType.createDelegateSuffix("Proxy");
+  /** A suffix for naming delegate proxies differently from their base. */
+  static final String DELEGATE_PROXY_SUFFIX = ObjectType.createDelegateSuffix("Proxy");
 
   static final DiagnosticType MALFORMED_TYPEDEF =
       DiagnosticType.warning(
@@ -188,6 +185,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   private final TypeValidator validator;
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
+  private final ModuleMap moduleMap;
+  private final ModuleImportResolver moduleImportResolver;
   private final List<FunctionType> delegateProxyCtors = new ArrayList<>();
   private final Map<String, String> delegateCallingConventions = new HashMap<>();
   private final Map<Node, TypedScope> memoized = new LinkedHashMap<>();
@@ -250,6 +249,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     this.typeRegistry = compiler.getTypeRegistry();
     this.typeParsingErrorReporter = typeRegistry.getErrorReporter();
     this.unknownType = typeRegistry.getNativeObjectType(UNKNOWN_TYPE);
+    this.moduleMap = compiler.getModuleMap();
+    this.moduleImportResolver = new ModuleImportResolver(this.moduleMap, getNodeToScopeMapper());
   }
 
   private void report(JSError error) {
@@ -273,6 +274,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       Iterables.addAll(vars, s.getAllSymbols());
     }
     return vars;
+  }
+
+  /**
+   * Returns a function mapping a scope root node to a {@link TypedScope}.
+   *
+   * <p>This method mostly exists in liu of an interface represnting root node -> scope.
+   */
+  public Function<Node, TypedScope> getNodeToScopeMapper() {
+    return memoized::get;
   }
 
   Collection<TypedScope> getAllMemoizedScopes() {
@@ -513,7 +523,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // Note that this class expects to be invoked on the root node and does not traverse into
           // functions.
           Scope scope = t.getScope();
-          checkState(scope.isGlobal() || scope.getClosestHoistScope().isGlobal());
+          if (!(scope.isGlobal() || scope.getClosestHoistScope().isGlobal())) {
+            return;
+          }
           if (node.isVar() || scope.isGlobal()) {
             for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
               // TODO(b/116853368): make this work for destructuring aliases as well.
@@ -858,6 +870,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
+    /** Defines an assignment to a name as if it were an actual declaration. */
+    void defineAssignAsIfDeclaration(Node assignment) {
+      JSDocInfo info = assignment.getJSDocInfo();
+      Node name = assignment.getFirstChild();
+      checkArgument(name.isName(), name);
+      Node rvalue = assignment.getSecondChild();
+      defineName(name, rvalue, currentScope, info);
+    }
+
     /** Defines a variable declared with `var`, `let`, or `const`. */
     void defineVars(Node n) {
       checkState(sourceName != null);
@@ -883,7 +904,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // TODO(bradfordcsmith): Report an error if both the declaration node and the name itself
           //     have JSDoc.
         }
-        defineName(child, scope, declarationInfo);
+        defineName(child, child.getFirstChild(), scope, declarationInfo);
       } else {
         checkState(child.isDestructuringLhs(), child);
         Node pattern = child.getFirstChild();
@@ -1041,12 +1062,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * Defines a variable based on the {@link Token#NAME} node passed.
      *
      * @param name The {@link Token#NAME} node.
+     * @param value Optionally, the value assigned to the name node.
      * @param scope
      * @param info the {@link JSDocInfo} information relating to this {@code name} node.
      */
-    private void defineName(Node name, TypedScope scope, JSDocInfo info) {
-      Node value = name.getFirstChild();
-
+    private void defineName(Node name, Node value, TypedScope scope, JSDocInfo info) {
       // variable's type
       JSType type = getDeclaredType(info, name, value, /* declaredRValueTypeSupplier= */ null);
       if (type == null) {
@@ -1890,8 +1910,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
+      // Check if this is a goog dependency loading call. If so, find its type.
+      if (moduleImportResolver.isGoogModuleDependencyCall(rValue)) {
+        TypedVar exportedVar = moduleImportResolver.getClosureNamespaceTypeFromCall(rValue);
+        if (exportedVar != null) {
+          return exportedVar.getType();
+        }
+        return null;
+      }
+
       // Check if this is constant, and if it has a known type.
-      if (NodeUtil.isConstantDeclaration(compiler.getCodingConvention(), info, lValue)) {
+      if (NodeUtil.isConstantDeclaration(compiler.getCodingConvention(), info, lValue)
+          || isGoogModuleExports(lValue)) {
         if (rValue != null) {
           JSType rValueType = getDeclaredRValueType(lValue, rValue);
           maybeDeclareAliasType(lValue, rValue.getQualifiedNameObject(), rValueType);
@@ -1983,6 +2013,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (rhsNamedType != null) {
         typeRegistry.declareType(currentScope, lValueName, rhsNamedType);
       }
+    }
+
+    boolean isGoogModuleExports(Node lValue) {
+      // TODO(b/124919359): this could also be an ES module scope, filter out that case
+      return currentScope.isModuleScope()
+          && lValue.isName()
+          && lValue.getString().equals("exports");
     }
 
     /** Returns the AST node associated with the definition, if any. */
@@ -2603,6 +2640,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           Node firstChild = n.getFirstChild();
           if (firstChild.isGetProp() && firstChild.isQualifiedName()) {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), firstChild, n, firstChild.getNext());
+          } else if (isGoogModuleExports(firstChild)) {
+            defineAssignAsIfDeclaration(n);
           }
           break;
 

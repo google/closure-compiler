@@ -91,6 +91,7 @@ class TypeInference
   private final TypedScope containerScope;
   private final TypedScopeCreator scopeCreator;
   private final AssertionFunctionLookup assertionFunctionLookup;
+  private final ModuleImportResolver moduleImportResolver;
 
   // Scopes that have had their unbound untyped vars inferred as undefined.
   private final Set<TypedScope> inferredUnboundVars = new HashSet<>();
@@ -110,6 +111,8 @@ class TypeInference
     this.registry = compiler.getTypeRegistry();
     this.reverseInterpreter = reverseInterpreter;
     this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
+    this.moduleImportResolver =
+        new ModuleImportResolver(compiler.getModuleMap(), scopeCreator.getNodeToScopeMapper());
 
     this.containerScope = syntacticScope;
 
@@ -709,6 +712,7 @@ class TypeInference
 
       case ROOT:
       case SCRIPT:
+      case MODULE_BODY:
       case FUNCTION:
       case PARAM_LIST:
       case BLOCK:
@@ -1500,6 +1504,16 @@ class TypeInference
   private FlowScope traverseFunctionInvocation(Node n, FlowScope scope) {
     checkArgument(n.isCall() || n.isTaggedTemplateLit(), n);
     scope = traverseChildren(n, scope);
+
+    // Resolve goog.require, goog.requireType, and goog.forwardDeclare calls separately, as they
+    // are not normal functions.
+    if (n.isCall()
+        && (n.getParent().isName() || n.getParent().isDestructuringLhs())
+        && moduleImportResolver.isGoogModuleDependencyCall(n)) {
+      TypedVar otherVar = moduleImportResolver.getClosureNamespaceTypeFromCall(n);
+      n.setJSType(otherVar != null ? otherVar.getType() : unknownType);
+      return scope;
+    }
 
     Node left = n.getFirstChild();
     JSType functionType = getJSType(left).restrictByNotNullOrUndefined();

@@ -315,6 +315,13 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
       return assertType(actualFunctionType().getReturnType());
     }
 
+    public void isConstructorFor(String name) {
+      check("isConstructor()").that(actual().isConstructor()).isTrue();
+      check("getInstanceType().getDisplayName()")
+          .that(actualFunctionType().getInstanceType().getDisplayName())
+          .isEqualTo(name);
+    }
+
     public void hasPrimitiveId(ClosurePrimitive id) {
       check("getClosurePrimitive()")
           .that(actualNonNull().toMaybeFunctionType().getClosurePrimitive())
