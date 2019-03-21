@@ -1144,28 +1144,24 @@ public final class NodeUtil {
     // Rather than id which ops may have side effects, id the ones
     // that we know to be safe
     switch (n.getToken()) {
-      // Throws are by definition side effects, and yield and export are similar.
       case THROW:
+        // Throw is a side-effect by definition.
       case YIELD:
-      case EXPORT:
+      case AWAIT:
+      case FOR_AWAIT_OF:
+        // Context switches can conceal side-effects.
+      case FOR_OF:
+      case FOR_IN:
+        // Enhanced for loops are almost always side-effectful; it's not worth checking them
+        // further. Particularly, they represent a kind of assignment op.
       case VAR:
       case LET:
       case CONST:
+      case EXPORT:
+        // Variable declarations are side-effects.
         return true;
 
       case OBJECTLIT:
-        if (checkForNewObjects) {
-          return true;
-        }
-        for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-          for (Node c = key.getFirstChild(); c != null; c = c.getNext()) {
-            if (checkForStateChangeHelper(c, checkForNewObjects, compiler)) {
-              return true;
-            }
-          }
-        }
-        return false;
-
       case ARRAYLIT:
       case REGEXP:
         if (checkForNewObjects) {
@@ -1173,11 +1169,9 @@ public final class NodeUtil {
         }
         break;
 
+      case REST:
       case SPREAD:
-        Node expr = n.getOnlyChild();
-        if (!expr.isArrayLit()) {
-          // Anything other than an array, in the absense of any other information,
-          // we have to assume is going to invoke invoke a stateful generator or the like.
+        if (iteratesImpureIterable(n)) {
           return true;
         }
         break;
@@ -1234,6 +1228,7 @@ public final class NodeUtil {
         return true;
 
       case TAGGED_TEMPLATELIT:
+        // TODO(b/128527671): Inspect the children of the expression for side-effects.
         return functionCallHasSideEffects(n, compiler);
 
       case CAST:
@@ -1319,6 +1314,82 @@ public final class NodeUtil {
     }
 
     return false;
+  }
+
+  /**
+   * Returns {@code true} if {@code node} <em>might</em> execute an `Iterable` iteration that has
+   * side-effects, {@code false} if there are <em>definitely<em> no such side-effects.
+   *
+   * <p>This function only considers purity of the iteration. Other expressions within the {@code
+   * node} subtree may still have side-effects.
+   *
+   * @throws IllegalStateException if {@code node} is of a kind that does not trigger iteration. An
+   *     explicit goal of this function is to record all the kinds of nodes that do.
+   */
+  static boolean iteratesImpureIterable(Node node) {
+    Node parent = node.getParent();
+
+    final Node iterable;
+    switch (node.getToken()) {
+      case SPREAD:
+        switch (parent.getToken()) {
+          case OBJECTLIT:
+            return false; // Object spread does not iterate.
+          case NEW:
+          case ARRAYLIT:
+          case CALL:
+            iterable = node.getOnlyChild();
+            break;
+          default:
+            throw new IllegalStateException(
+                "Unexpected parent of SPREAD: " + parent.toStringTree());
+        }
+        break;
+
+      case YIELD:
+        if (!node.isYieldAll()) {
+          return false; // Regular `yield` does not iterate, only `yield*`.
+        }
+        iterable = node.getOnlyChild();
+        break;
+
+      case FOR_OF:
+      case FOR_AWAIT_OF:
+        iterable = node.getSecondChild();
+        break;
+
+      case REST:
+        switch (parent.getToken()) {
+          case OBJECT_PATTERN: // Object rest does not iterate.
+          case PARAM_LIST: // Rest arguments are flat at the call-site.
+            return false;
+          case ARRAY_PATTERN:
+            return true; // We assume the r-value to be an impure iterable.
+          default:
+            throw new IllegalStateException("Unexpected parent of REST: " + parent.toStringTree());
+        }
+
+      default:
+        throw new IllegalStateException(
+            "Expected a kind of node that may trigger iteration: " + node.toStringTree());
+    }
+
+    return !isPureIterable(iterable);
+  }
+
+  /**
+   * Returns {@code true} if {@code node} is guaranteed to be an `Iterable` that causes no
+   * side-effects during iteration, {@code false} otherwise.
+   */
+  private static boolean isPureIterable(Node node) {
+    switch (node.getToken()) {
+      case ARRAYLIT:
+      case STRING:
+      case TEMPLATELIT:
+        return true; // These iterables are known to be pure.
+      default:
+        return false; // Anything else, including a non-iterable (e.g. `null`), would be impure.
+    }
   }
 
   /**
@@ -1500,7 +1571,7 @@ public final class NodeUtil {
    */
   static boolean callHasLocalResult(Node n) {
     checkState(n.isCall() || n.isTaggedTemplateLit(), n);
-    return (n.getSideEffectFlags() & Node.FLAG_LOCAL_RESULTS) > 0;
+    return n.isLocalResultCall();
   }
 
   /**
@@ -1535,19 +1606,25 @@ public final class NodeUtil {
       case THROW:
       case AWAIT:
       case FOR_IN: // assigns to a loop LHS
-      case FOR_OF: // assigns to a loop LHS
-      case FOR_AWAIT_OF: // assigns to a loop LHS
+      case FOR_OF: // assigns to a loop LHS, runs an iterator
+      case FOR_AWAIT_OF: // assigns to a loop LHS, runs an iterator, async operations.
         return true;
       case CALL:
+      case TAGGED_TEMPLATELIT:
         return NodeUtil.functionCallHasSideEffects(n, compiler);
       case NEW:
         return NodeUtil.constructorCallHasSideEffects(n);
       case NAME:
         // A variable definition.
         return n.hasChildren();
+      case REST:
+      case SPREAD:
+        return NodeUtil.iteratesImpureIterable(n);
       default:
-        return false;
+        break;
     }
+
+    return false;
   }
 
   static boolean allArgsUnescapedLocal(Node callOrNew) {

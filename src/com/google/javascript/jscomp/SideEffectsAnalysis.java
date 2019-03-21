@@ -100,7 +100,7 @@ import java.util.Set;
   public void process(Node externs, Node root) {
     switch(locationAbstractionIdentifier) {
       case DEGENERATE:
-        locationAbstraction = new DegenerateLocationAbstraction();
+        locationAbstraction = new DegenerateLocationAbstraction(compiler);
         break;
       case VISIBILITY_BASED:
         locationAbstraction = createVisibilityAbstraction(externs, root);
@@ -619,6 +619,12 @@ import java.util.Set;
     private static final EffectLocation NO_LOCATION =
         new DegenerateEffectLocation();
 
+    private final AbstractCompiler compiler;
+
+    DegenerateLocationAbstraction(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
     @Override
     EffectLocation getBottomLocation() {
       return NO_LOCATION;
@@ -637,8 +643,8 @@ import java.util.Set;
       }
     }
 
-    static EffectLocation calculateModSet(Node node) {
-      if (NodeUtil.mayHaveSideEffects(node)) {
+    EffectLocation calculateModSet(Node node) {
+      if (NodeUtil.mayHaveSideEffects(node, compiler)) {
         return EVERY_LOCATION;
       } else {
         return NO_LOCATION;

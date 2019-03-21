@@ -67,6 +67,11 @@ class DefinitionsRemover {
     } else if (NodeUtil.mayBeObjectLitKey(n)) {
       return new ObjectLiteralPropertyDefinition(n, n.getFirstChild(), isExtern);
     } else if (NodeUtil.getEnclosingType(n, Token.PARAM_LIST) != null && n.isName()) {
+      // TODO(b/128035138): This fails when there are arbitrary expressions inside the PARAM_LIST,
+      // which may contain NAMEs.
+      // Error case: `function f(a = b) { }`, `b` is not a param
+      // Error case: `function f({[b]: a}) { }`, `b` is not a param
+
       Node paramList = NodeUtil.getEnclosingType(n, Token.PARAM_LIST);
       Node function = paramList.getParent();
       return new FunctionArgumentDefinition(function, n, isExtern);

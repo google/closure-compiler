@@ -20,19 +20,21 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
+import com.google.errorprone.annotations.DoNotCall;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.CodingConvention.Cache;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
-import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -48,53 +50,72 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /**
- * Compiler pass that computes function purity. A function is pure if it has no outside visible side
- * effects, and the result of the computation does not depend on external factors that are beyond
- * the control of the application; repeated calls to the function should return the same value as
- * long as global state hasn't changed.
+ * Compiler pass that computes function purity and annotates invocation nodes with those purities.
  *
- * <p>Date.now is an example of a function that has no side effects but is not pure.
+ * <p>A function is pure if it has no outside visible side effects, and the result of the
+ * computation does not depend on external factors that are beyond the control of the application;
+ * repeated calls to the function should return the same value as long as global state hasn't
+ * changed.
  *
- * <p>TODO: This pass could be greatly improved by proper tracking of locals within function bodies.
- * Every instance of the call to {@link NodeUtil#evaluatesToLocalValue(Node)} and {@link
+ * <p>`Date.now` is an example of a function that has no side effects but is not pure.
+ *
+ * <p>Functions are not tracked individually but rather in aggregate by their name. This is because
+ * it's impossible to determine exactly which function named "foo" is being called at a particular
+ * site. Therefore, if <em>any</em> function "foo" has a particular side-effect, <em>all</em>
+ * invocations "foo" are assumed to trigger it.
+ *
+ * <p>This pass could be greatly improved by proper tracking of locals within function bodies. Every
+ * instance of the call to {@link NodeUtil#evaluatesToLocalValue(Node)} and {@link
  * NodeUtil#allArgsUnescapedLocal(Node)} do not actually take into account local variables. They
  * only assume literals, primitives, and operations on primitives are local.
  *
  * @author johnlenz@google.com (John Lenz)
  * @author tdeegan@google.com (Thomas Deegan)
- *     <p>We will prevail, in peace and freedom from fear, and in true health, through the purity
- *     and essence of our natural... fluids. - General Turgidson
  */
 class PureFunctionIdentifier implements CompilerPass {
   private final AbstractCompiler compiler;
   private final NameBasedDefinitionProvider definitionProvider;
 
-  /** Map of function names to side effect gathering representative nodes */
-  private final Map<String, FunctionInformation> functionInfoByName = new HashMap<>();
+  /**
+   * Map of function names to the summary of the functions with that name.
+   *
+   * @see {@link AmbiguatedFunctionSummary}
+   */
+  private final Map<String, AmbiguatedFunctionSummary> summaryByName = new HashMap<>();
 
   /**
    * Mapping from function node to side effects for all names associated with that node.
    *
-   * <p>This is a multimap because you can construct situations in which a function node represents
-   * the side effects for two different FunctionInformation instances. For example:
+   * <p>This is a multimap because you can construct situations in which a function node has
+   * multiple names, and therefore multiple associated side-effect infos. For example:
    *
    * <pre>
    *   // Not enough type information to collapse/disambiguate properties on "staticMethod".
    *   SomeClass.staticMethod = function anotherName() {};
-   *   OtherClass.staticMethod = function() {global++}
+   *   OtherClass.staticMethod = function() { global++; }
    * </pre>
    *
-   * <p>In this situation we want to keep the side effects for "X.staticMethod()" which are "global"
-   * separate from "anotherName()". Hence the function node should point to the {@link
-   * FunctionInformation} for both "staticMethod" and "anotherName".
+   * <p>In this situation we want to keep the side effects for "staticMethod" which are "global"
+   * separate from "anotherName". Hence the function node should point to the {@link
+   * AmbiguatedFunctionSummary} for both "staticMethod" and "anotherName".
+   *
+   * <p>We could instead store a map of FUNCTION nodes to names, and then join that with the name of
+   * names to infos. However, since names are 1:1 with infos, it's more effecient to "pre-join" in
+   * this way.
    */
-  private final Multimap<Node, FunctionInformation> functionSideEffectMap;
+  private final Multimap<Node, AmbiguatedFunctionSummary> summariesForAllNamesOfFunctionByNode;
 
   // List of all function call sites; used to iterate in markPureFunctionCalls.
   private final List<Node> allFunctionCalls;
 
-  private final LinkedDirectedGraph<FunctionInformation, CallSitePropagationInfo> sideEffectGraph =
-      LinkedDirectedGraph.createWithoutAnnotations();
+  /**
+   * A graph linking the summary of function callees to the summaries of their callers.
+   *
+   * <p>The edge values indicate the details of the invocation necessary to propagate function
+   * purity from callee to caller.
+   */
+  private final LinkedDirectedGraph<AmbiguatedFunctionSummary, CallSitePropagationInfo>
+      reverseCallGraph = LinkedDirectedGraph.createWithoutAnnotations();
 
   // Externs and ast tree root, for use in getDebugReport.  These two
   // fields are null until process is called.
@@ -105,7 +126,7 @@ class PureFunctionIdentifier implements CompilerPass {
       AbstractCompiler compiler, NameBasedDefinitionProvider definitionProvider) {
     this.compiler = checkNotNull(compiler);
     this.definitionProvider = definitionProvider;
-    this.functionSideEffectMap = ArrayListMultimap.create();
+    this.summariesForAllNamesOfFunctionByNode = ArrayListMultimap.create();
     this.allFunctionCalls = new ArrayList<>();
     this.externs = null;
     this.root = null;
@@ -115,13 +136,12 @@ class PureFunctionIdentifier implements CompilerPass {
   public void process(Node externsAst, Node srcAst) {
     checkState(
         externs == null && root == null,
-        "It is illegal to call PureFunctionIdentifier.process  twice the same instance.  Please "
-            + " use a new PureFunctionIdentifier instance each time.");
+        "PureFunctionIdentifier::process may only be called once per instance.");
 
     externs = externsAst;
     root = srcAst;
 
-    buildGraph();
+    buildReverseCallGraph();
 
     NodeTraversal.traverse(compiler, externs, new FunctionAnalyzer(true));
     NodeTraversal.traverse(compiler, root, new FunctionAnalyzer(false));
@@ -150,8 +170,7 @@ class PureFunctionIdentifier implements CompilerPass {
   private static Iterable<Node> unwrapCallableExpression(Node exp) {
     switch (exp.getToken()) {
       case GETPROP:
-        String propName = exp.getLastChild().getString();
-        if (propName.equals("apply") || propName.equals("call")) {
+        if (isCallOrApply(exp.getParent())) {
           return unwrapCallableExpression(exp.getFirstChild());
         }
         return ImmutableList.of(exp);
@@ -204,35 +223,35 @@ class PureFunctionIdentifier implements CompilerPass {
   }
 
   @Nullable
-  private List<FunctionInformation> getSideEffectsForCall(Node call) {
-    checkArgument(call.isCall() || call.isNew(), call);
+  private List<AmbiguatedFunctionSummary> getSummariesForCallee(Node invocation) {
+    checkArgument(NodeUtil.isInvocation(invocation), invocation);
 
     Iterable<Node> expanded;
-    Cache cacheCall = compiler.getCodingConvention().describeCachingCall(call);
+    Cache cacheCall = compiler.getCodingConvention().describeCachingCall(invocation);
     if (cacheCall != null) {
       expanded = getGoogCacheCallableExpression(cacheCall);
     } else {
-      expanded = unwrapCallableExpression(call.getFirstChild());
+      expanded = unwrapCallableExpression(invocation.getFirstChild());
     }
     if (expanded == null) {
       return null;
     }
-    List<FunctionInformation> results = new ArrayList<>();
+    List<AmbiguatedFunctionSummary> results = new ArrayList<>();
     for (Node expression : expanded) {
       if (NodeUtil.isFunctionExpression(expression)) {
         // isExtern is false in the call to the constructor for the
         // FunctionExpressionDefinition below because we know that
         // getFunctionDefinitions() will only be called on the first
-        // child of a call and thus the function expression
+        // child of an invocation and thus the function expression
         // definition will never be an extern.
-        results.addAll(functionSideEffectMap.get(expression));
+        results.addAll(summariesForAllNamesOfFunctionByNode.get(expression));
         continue;
       }
 
       String name = DefinitionsRemover.Definition.getSimplifiedName(expression);
-      FunctionInformation info = null;
+      AmbiguatedFunctionSummary info = null;
       if (name != null) {
-        info = functionInfoByName.get(name);
+        info = summaryByName.get(name);
       }
 
       if (info != null) {
@@ -245,22 +264,25 @@ class PureFunctionIdentifier implements CompilerPass {
   }
 
   /**
-   * When propagating side effects we construct a graph from every function definition A to every
+   * Construct an "ambiguated" reverse call graph where all functions of the same name are unified
+   * to a single node, and edges point from callee to caller.
+   *
+   * <p>When propagating side effects we construct a graph from every function definition A to every
    * function definition B that calls A(). Since the definition provider cannot always provide a
    * unique definition for a name, there may be many possible definitions for a given call site. In
    * the case where multiple defs share the same node in the graph.
    *
-   * <p>We need to build the map {@link PureFunctionIdentifier#functionInfoByName} to get a
-   * reference to the side effects for a call and we need the map {@link
-   * PureFunctionIdentifier#functionSideEffectMap} to get a reference to the side effects for a
-   * given function node.
+   * <p>We need to build the map {@link PureFunctionIdentifier#summaryByName} to get a reference to
+   * the side effects for a call and we need the map {@link #summariesForAllNamesOfFunctionByNode}
+   * to get a reference to the side effects for a given function node.
    */
-  private void buildGraph() {
-    final FunctionInformation unknownDefinitionFunction = new FunctionInformation();
-    unknownDefinitionFunction.setTaintsGlobalState();
+  private void buildReverseCallGraph() {
+    final AmbiguatedFunctionSummary unknownDefinitionFunction =
+        AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<unknown>");
+    unknownDefinitionFunction.setMutatesGlobalState();
     unknownDefinitionFunction.setFunctionThrows();
-    unknownDefinitionFunction.setTaintsReturn();
-    unknownDefinitionFunction.graphNode = sideEffectGraph.createNode(unknownDefinitionFunction);
+    unknownDefinitionFunction.setEscapedReturn();
+
     for (DefinitionSite site : definitionProvider.getDefinitionSites()) {
       Definition definition = site.definition;
       if (definition.getLValue() != null) {
@@ -273,13 +295,13 @@ class PureFunctionIdentifier implements CompilerPass {
         } else {
           // Unsupported function definition. Mark a global side effect here since we don't
           // actually know anything about what's being defined.
-          FunctionInformation info = functionInfoByName.get(name);
+          AmbiguatedFunctionSummary info = summaryByName.get(name);
           if (info != null) {
-            info.setTaintsGlobalState();
+            info.setMutatesGlobalState();
             info.setFunctionThrows();
-            info.setTaintsReturn();
+            info.setEscapedReturn();
           } else {
-            functionInfoByName.put(name, unknownDefinitionFunction);
+            summaryByName.put(name, unknownDefinitionFunction);
           }
         }
       }
@@ -287,96 +309,89 @@ class PureFunctionIdentifier implements CompilerPass {
   }
 
   /**
-   * Add the definition to the {@link PureFunctionIdentifier#sideEffectGraph} as a
-   * FunctionInformation node or link it to the existing functionInformation node if there is
-   * already a function with the same definition name.
+   * Add the definition to the {@link #reverseCallGraph} as a {@link AmbiguatedFunctionSummary} node
+   * or link it to the existing {@link AmbiguatedFunctionSummary} node if there is already a
+   * function with the same definition name.
    */
   private void addSupportedDefinition(DefinitionSite definitionSite, String name) {
     for (Node function : unwrapCallableExpression(definitionSite.definition.getRValue())) {
       // A function may have multiple definitions.
-      // Link this function definition to the existing FunctionInfo node.
-      FunctionInformation functionInfo = functionInfoByName.get(name);
-      if (functionInfo == null) {
+      // Link this function definition to the existing summary node.
+      AmbiguatedFunctionSummary summary = summaryByName.get(name);
+      if (summary == null) {
         // Need to create a function info node.
-        functionInfo = new FunctionInformation();
-        functionInfo.graphNode = sideEffectGraph.createNode(functionInfo);
+        summary = AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, name);
         // Keep track of this so that later functions of the same name can point to the same
-        // FunctionInformation.
-        functionInfoByName.put(name, functionInfo);
+        // AmbiguatedFunctionSummary.
+        summaryByName.put(name, summary);
       }
-      functionSideEffectMap.put(function, functionInfo);
+      summariesForAllNamesOfFunctionByNode.put(function, summary);
       if (definitionSite.inExterns) {
         // Externs have their side effects computed here, otherwise in FunctionAnalyzer.
-        functionInfo.updateSideEffectsFromExtern(function, compiler);
+        summary.updateSideEffectsFromExtern(function, compiler);
       }
     }
   }
 
   /**
-   * Propagate side effect information by building a graph based on call site information stored in
-   * FunctionInformation and the NameBasedDefinitionProvider and then running GraphReachability to
-   * determine the set of functions that have side effects.
+   * Propagate side effect information in {@link #reverseCallGraph} from callees to callers.
+   *
+   * <p>This is an iterative process executed until a fixed point, where no caller summary would be
+   * given new side-effects from from any callee summary, is reached.
    */
   private void propagateSideEffects() {
-    // Propagate side effect information to a fixed point.
     FixedPointGraphTraversal.newTraversal(
-            new EdgeCallback<FunctionInformation, CallSitePropagationInfo>() {
-              @Override
-              public boolean traverseEdge(
-                  FunctionInformation source,
-                  CallSitePropagationInfo edge,
-                  FunctionInformation destination) {
-                return edge.propagate(source, destination);
-              }
-            })
-        .computeFixedPoint(sideEffectGraph);
+            (AmbiguatedFunctionSummary source,
+                CallSitePropagationInfo edge,
+                AmbiguatedFunctionSummary destination) -> edge.propagate(source, destination))
+        .computeFixedPoint(reverseCallGraph);
   }
 
   /** Set no side effect property at pure-function call sites. */
   private void markPureFunctionCalls() {
     for (Node callNode : allFunctionCalls) {
-      List<FunctionInformation> possibleSideEffects = getSideEffectsForCall(callNode);
+      List<AmbiguatedFunctionSummary> calleeSummaries = getSummariesForCallee(callNode);
       // Default to side effects, non-local results
       Node.SideEffectFlags flags = new Node.SideEffectFlags();
-      if (possibleSideEffects == null) {
+      if (calleeSummaries == null) {
         flags.setMutatesGlobalState();
         flags.setThrows();
         flags.setReturnsTainted();
       } else {
         flags.clearAllFlags();
-        for (FunctionInformation functionInfo : possibleSideEffects) {
-          checkNotNull(functionInfo);
-          if (functionInfo.mutatesGlobalState()) {
+        for (AmbiguatedFunctionSummary calleeSummary : calleeSummaries) {
+          checkNotNull(calleeSummary);
+          if (calleeSummary.mutatesGlobalState()) {
             flags.setMutatesGlobalState();
           }
 
-          if (functionInfo.mutatesArguments()) {
+          if (calleeSummary.mutatesArguments()) {
             flags.setMutatesArguments();
           }
 
-          if (functionInfo.functionThrows()) {
+          if (calleeSummary.functionThrows()) {
             flags.setThrows();
           }
 
-          if (callNode.isCall()) {
-            if (functionInfo.taintsThis()) {
+          if (isCallOrTaggedTemplateLit(callNode)) {
+            if (calleeSummary.mutatesThis()) {
               // A FunctionInfo for "f" maps to both "f()" and "f.call()" nodes.
               if (isCallOrApply(callNode)) {
-                flags.setMutatesArguments();
+                flags.setMutatesArguments(); // `this` is actually an argument.
               } else {
                 flags.setMutatesThis();
               }
             }
           }
 
-          if (functionInfo.taintsReturn()) {
+          if (calleeSummary.escapedReturn()) {
             flags.setReturnsTainted();
           }
         }
       }
 
       // Handle special cases (Math, RegExp)
-      if (callNode.isCall()) {
+      if (isCallOrTaggedTemplateLit(callNode)) {
         if (!NodeUtil.functionCallHasSideEffects(callNode, compiler)) {
           flags.clearSideEffectFlags();
         }
@@ -420,14 +435,14 @@ class PureFunctionIdentifier implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal traversal, Node node, Node parent) {
       // Functions need to be processed as part of pre-traversal so that an entry for the function
-      // exists in the functionSideEffectMap map when processing assignments and calls within the
-      // body.
-      if (node.isFunction() && !functionSideEffectMap.containsKey(node)) {
+      // exists in the summariesForAllNamesOfFunctionByNode map when processing assignments and
+      // calls within the body.
+      if (node.isFunction() && !summariesForAllNamesOfFunctionByNode.containsKey(node)) {
         // This function was not part of a definition which is why it was not created by
-        // {@link buildGraph}. For example, an anonymous function.
-        FunctionInformation functionInfo = new FunctionInformation();
-        functionSideEffectMap.put(node, functionInfo);
-        functionInfo.graphNode = sideEffectGraph.createNode(functionInfo);
+        // {@link buildReverseCallGraph}. For example, an anonymous function.
+        AmbiguatedFunctionSummary summary =
+            AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<anonymous>");
+        summariesForAllNamesOfFunctionByNode.put(node, summary);
       }
       return true;
     }
@@ -442,7 +457,7 @@ class PureFunctionIdentifier implements CompilerPass {
         return;
       }
 
-      if (NodeUtil.isCallOrNew(node)) {
+      if (NodeUtil.isInvocation(node)) {
         allFunctionCalls.add(node);
       }
 
@@ -453,24 +468,26 @@ class PureFunctionIdentifier implements CompilerPass {
       }
       Node enclosingFunction = containerScope.getRootNode();
 
-      for (FunctionInformation sideEffectInfo : functionSideEffectMap.get(enclosingFunction)) {
-        checkNotNull(sideEffectInfo);
-        updateSideEffectsForNode(sideEffectInfo, traversal, node, enclosingFunction);
+      for (AmbiguatedFunctionSummary encloserSummary :
+          summariesForAllNamesOfFunctionByNode.get(enclosingFunction)) {
+        checkNotNull(encloserSummary);
+        updateSideEffectsForNode(encloserSummary, traversal, node, enclosingFunction);
       }
     }
 
     public void updateSideEffectsForNode(
-        FunctionInformation sideEffectInfo,
+        AmbiguatedFunctionSummary encloserSummary,
         NodeTraversal traversal,
         Node node,
         Node enclosingFunction) {
+
       switch (node.getToken()) {
         case ASSIGN:
           // e.g.
           // lhs = rhs;
           // ({x, y} = object);
           visitLhsNodes(
-              sideEffectInfo,
+              encloserSummary,
               traversal.getScope(),
               enclosingFunction,
               NodeUtil.findLhsNodesInNode(node),
@@ -481,7 +498,7 @@ class PureFunctionIdentifier implements CompilerPass {
         case DEC:
         case DELPROP:
           visitLhsNodes(
-              sideEffectInfo,
+              encloserSummary,
               traversal.getScope(),
               enclosingFunction,
               ImmutableList.of(node.getOnlyChild()),
@@ -489,6 +506,9 @@ class PureFunctionIdentifier implements CompilerPass {
               RHS_IS_ALWAYS_LOCAL);
           break;
 
+        case FOR_AWAIT_OF:
+          setSideEffectsForControlLoss(encloserSummary); // Control is lost while awaiting.
+          // Fall through.
         case FOR_OF:
           // e.g.
           // for (const {prop1, prop2} of iterable) {...}
@@ -497,13 +517,14 @@ class PureFunctionIdentifier implements CompilerPass {
           // TODO(bradfordcsmith): Possibly we should try to determine whether the iteration itself
           //     could have side effects.
           visitLhsNodes(
-              sideEffectInfo,
+              encloserSummary,
               traversal.getScope(),
               enclosingFunction,
               NodeUtil.findLhsNodesInNode(node),
               // The RHS of a for-of must always be an iterable, making it a container, so we can't
               // consider its contents to be local
               RHS_IS_NEVER_LOCAL);
+          checkIteratesImpureIterable(node, encloserSummary);
           break;
 
         case FOR_IN:
@@ -512,7 +533,7 @@ class PureFunctionIdentifier implements CompilerPass {
           // Also this, though not very useful or readable.
           // for ([char1, char2, ...x.rest] in obj) {...}
           visitLhsNodes(
-              sideEffectInfo,
+              encloserSummary,
               traversal.getScope(),
               enclosingFunction,
               NodeUtil.findLhsNodesInNode(node),
@@ -522,7 +543,8 @@ class PureFunctionIdentifier implements CompilerPass {
 
         case CALL:
         case NEW:
-          visitCall(sideEffectInfo, node);
+        case TAGGED_TEMPLATELIT:
+          visitCall(encloserSummary, node);
           break;
 
         case NAME:
@@ -541,18 +563,29 @@ class PureFunctionIdentifier implements CompilerPass {
           break;
 
         case THROW:
-          sideEffectInfo.setFunctionThrows();
+          encloserSummary.setFunctionThrows();
           break;
 
         case RETURN:
           if (node.hasChildren() && !NodeUtil.evaluatesToLocalValue(node.getFirstChild())) {
-            sideEffectInfo.setTaintsReturn();
+            encloserSummary.setEscapedReturn();
           }
           break;
 
-        case YIELD: // 'yield' throws if the caller calls `.throw` on the generator object.
-        case AWAIT: // 'await' throws if the promise it's waiting on is rejected.
-          sideEffectInfo.setFunctionThrows();
+        case YIELD:
+          checkIteratesImpureIterable(node, encloserSummary); // `yield*` triggers iteration.
+          // 'yield' throws if the caller calls `.throw` on the generator object.
+          setSideEffectsForControlLoss(encloserSummary);
+          break;
+
+        case AWAIT:
+          // 'await' throws if the promise it's waiting on is rejected.
+          setSideEffectsForControlLoss(encloserSummary);
+          break;
+
+        case REST:
+        case SPREAD:
+          checkIteratesImpureIterable(node, encloserSummary);
           break;
 
         default:
@@ -560,7 +593,7 @@ class PureFunctionIdentifier implements CompilerPass {
             // e.g.
             // x += 3;
             visitLhsNodes(
-                sideEffectInfo,
+                encloserSummary,
                 traversal.getScope(),
                 enclosingFunction,
                 ImmutableList.of(node.getFirstChild()),
@@ -572,6 +605,32 @@ class PureFunctionIdentifier implements CompilerPass {
 
           throw new IllegalArgumentException("Unhandled side effect node type " + node);
       }
+    }
+
+    /**
+     * Inspect {@code node} for impure iteration and assign the appropriate side-effects to {@code
+     * encloserSummary} if so.
+     */
+    private void checkIteratesImpureIterable(Node node, AmbiguatedFunctionSummary encloserSummary) {
+      if (!NodeUtil.iteratesImpureIterable(node)) {
+        return;
+      }
+
+      // Treat the (possibly implicit) call to `iterator.next()` as having the same effects as any
+      // other unknown function call.
+      encloserSummary.setFunctionThrows();
+      encloserSummary.setMutatesGlobalState();
+
+      // The iterable may be stateful and a param.
+      encloserSummary.setMutatesArguments();
+    }
+
+    /**
+     * Assigns the set of side-effects associated with an arbitrary loss of control flow to {@code
+     * encloserSummary}.
+     */
+    private void setSideEffectsForControlLoss(AmbiguatedFunctionSummary encloserSummary) {
+      encloserSummary.setFunctionThrows();
     }
 
     @Override
@@ -589,7 +648,8 @@ class PureFunctionIdentifier implements CompilerPass {
       Node function = closestContainerScope.getRootNode();
 
       // Handle deferred local variable modifications:
-      for (FunctionInformation sideEffectInfo : functionSideEffectMap.get(function)) {
+      for (AmbiguatedFunctionSummary sideEffectInfo :
+          summariesForAllNamesOfFunctionByNode.get(function)) {
         checkNotNull(sideEffectInfo, "%s has no side effect info.", function);
 
         if (sideEffectInfo.mutatesGlobalState()) {
@@ -600,7 +660,7 @@ class PureFunctionIdentifier implements CompilerPass {
           if (v.isParam()
               && !blacklistedVarsByFunction.containsEntry(function, v)
               && taintedVarsByFunction.containsEntry(function, v)) {
-            sideEffectInfo.setTaintsArguments();
+            sideEffectInfo.setMutatesArguments();
             continue;
           }
 
@@ -617,7 +677,7 @@ class PureFunctionIdentifier implements CompilerPass {
             if (taintedVarsByFunction.containsEntry(function, v)) {
               // If the function has global side-effects
               // don't bother with the local side-effects.
-              sideEffectInfo.setTaintsGlobalState();
+              sideEffectInfo.setMutatesGlobalState();
               break;
             }
           }
@@ -648,7 +708,7 @@ class PureFunctionIdentifier implements CompilerPass {
      * @param hasLocalRhs Predicate indicating whether a given LHS is being assigned a local value
      */
     private void visitLhsNodes(
-        FunctionInformation sideEffectInfo,
+        AmbiguatedFunctionSummary sideEffectInfo,
         Scope scope,
         Node enclosingFunction,
         Iterable<Node> lhsNodes,
@@ -656,7 +716,7 @@ class PureFunctionIdentifier implements CompilerPass {
       for (Node lhs : lhsNodes) {
         if (NodeUtil.isGet(lhs)) {
           if (lhs.getFirstChild().isThis()) {
-            sideEffectInfo.setTaintsThis();
+            sideEffectInfo.setMutatesThis();
           } else {
             Node objectNode = lhs.getFirstChild();
             if (objectNode.isName()) {
@@ -666,11 +726,11 @@ class PureFunctionIdentifier implements CompilerPass {
                 // we exit the scope and can validate the value of the local.
                 taintedVarsByFunction.put(enclosingFunction, var);
               } else {
-                sideEffectInfo.setTaintsGlobalState();
+                sideEffectInfo.setMutatesGlobalState();
               }
             } else {
               // Don't track multi level locals: local.prop.prop2++;
-              sideEffectInfo.setTaintsGlobalState();
+              sideEffectInfo.setMutatesGlobalState();
             }
           }
         } else {
@@ -684,35 +744,35 @@ class PureFunctionIdentifier implements CompilerPass {
               blacklistedVarsByFunction.put(enclosingFunction, var);
             }
           } else {
-            sideEffectInfo.setTaintsGlobalState();
+            sideEffectInfo.setMutatesGlobalState();
           }
         }
       }
     }
 
     /** Record information about a call site. */
-    private void visitCall(FunctionInformation sideEffectInfo, Node node) {
+    private void visitCall(AmbiguatedFunctionSummary callerInfo, Node invocation) {
       // Handle special cases (Math, RegExp)
       // TODO: This logic can probably be replaced with @nosideeffects annotations in externs.
-      if (node.isCall() && !NodeUtil.functionCallHasSideEffects(node, compiler)) {
+      if (invocation.isCall() && !NodeUtil.functionCallHasSideEffects(invocation, compiler)) {
         return;
       }
 
       // Handle known cases now (Object, Date, RegExp, etc)
-      if (node.isNew() && !NodeUtil.constructorCallHasSideEffects(node)) {
+      if (invocation.isNew() && !NodeUtil.constructorCallHasSideEffects(invocation)) {
         return;
       }
 
-      List<FunctionInformation> possibleSideEffects = getSideEffectsForCall(node);
-      if (possibleSideEffects == null) {
-        sideEffectInfo.setTaintsGlobalState();
-        sideEffectInfo.setFunctionThrows();
+      List<AmbiguatedFunctionSummary> calleeSummaries = getSummariesForCallee(invocation);
+      if (calleeSummaries == null) {
+        callerInfo.setMutatesGlobalState();
+        callerInfo.setFunctionThrows();
         return;
       }
 
-      for (FunctionInformation sideEffectNode : possibleSideEffects) {
-        CallSitePropagationInfo edge = CallSitePropagationInfo.computePropagationType(node);
-        sideEffectGraph.connect(sideEffectNode.graphNode, edge, sideEffectInfo.graphNode);
+      for (AmbiguatedFunctionSummary calleeInfo : calleeSummaries) {
+        CallSitePropagationInfo edge = CallSitePropagationInfo.computePropagationType(invocation);
+        reverseCallGraph.connect(calleeInfo.graphNode, edge, callerInfo.graphNode);
       }
     }
   }
@@ -721,16 +781,20 @@ class PureFunctionIdentifier implements CompilerPass {
     return NodeUtil.isFunctionObjectCall(callSite) || NodeUtil.isFunctionObjectApply(callSite);
   }
 
+  private static boolean isCallOrTaggedTemplateLit(Node invocation) {
+    return invocation.isCall() || invocation.isTaggedTemplateLit();
+  }
+
   /**
    * This class stores all the information about a call site needed to propagate side effects from
-   * one instance of {@link FunctionInformation} to another.
+   * one instance of {@link AmbiguatedFunctionSummary} to another.
    */
   @Immutable
   private static class CallSitePropagationInfo {
 
     private CallSitePropagationInfo(
         boolean allArgsUnescapedLocal, boolean calleeThisEqualsCallerThis, Token callType) {
-      checkArgument(callType == Token.CALL || callType == Token.NEW);
+      checkArgument(NodeUtil.isInvocation(new Node(callType)), callType);
       this.allArgsUnescapedLocal = allArgsUnescapedLocal;
       this.calleeThisEqualsCallerThis = calleeThisEqualsCallerThis;
       this.callType = callType;
@@ -754,12 +818,12 @@ class PureFunctionIdentifier implements CompilerPass {
      * @param caller propagate to
      * @return Returns true if the propagation changed the side effects on the caller.
      */
-    boolean propagate(FunctionInformation callee, FunctionInformation caller) {
+    boolean propagate(AmbiguatedFunctionSummary callee, AmbiguatedFunctionSummary caller) {
       CallSitePropagationInfo propagationType = this;
       boolean changed = false;
       // If the callee modifies global state then so does that caller.
       if (callee.mutatesGlobalState() && !caller.mutatesGlobalState()) {
-        caller.setTaintsGlobalState();
+        caller.setMutatesGlobalState();
         changed = true;
       }
       // If the callee throws an exception then so does the caller.
@@ -772,18 +836,18 @@ class PureFunctionIdentifier implements CompilerPass {
       if (callee.mutatesArguments()
           && !propagationType.allArgsUnescapedLocal
           && !caller.mutatesGlobalState()) {
-        caller.setTaintsGlobalState();
+        caller.setMutatesGlobalState();
         changed = true;
       }
       if (callee.mutatesThis() && propagationType.calleeThisEqualsCallerThis) {
         if (!caller.mutatesThis()) {
-          caller.setTaintsThis();
+          caller.setMutatesThis();
           changed = true;
         }
       } else if (callee.mutatesThis() && propagationType.callType != Token.NEW) {
         // NEW invocations of a constructor that modifies "this" don't cause side effects.
         if (!caller.mutatesGlobalState()) {
-          caller.setTaintsGlobalState();
+          caller.setMutatesGlobalState();
           changed = true;
         }
       }
@@ -791,14 +855,14 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     static CallSitePropagationInfo computePropagationType(Node callSite) {
-      checkArgument(callSite.isCall() || callSite.isNew());
+      checkArgument(NodeUtil.isInvocation(callSite), callSite);
 
       boolean thisIsOuterThis = false;
-      if (callSite.isCall()) {
+      if (isCallOrTaggedTemplateLit(callSite)) {
         // Side effects only propagate via regular calls.
         // Calling a constructor that modifies "this" has no side effects.
         // Notice that we're using "mutatesThis" from the callee
-        // FunctionInfo. If the call site is actually a .call or .apply, then
+        // summary. If the call site is actually a .call or .apply, then
         // the "this" is going to be one of its arguments.
         boolean isCallOrApply = isCallOrApply(callSite);
         Node objectNode = isCallOrApply ? callSite.getSecondChild() : callSite.getFirstFirstChild();
@@ -823,101 +887,120 @@ class PureFunctionIdentifier implements CompilerPass {
   }
 
   /**
-   * Keeps track of a function's known side effects by type and the list of calls that appear in a
-   * function's body.
+   * A summary for the set of functions that share a particular name.
+   *
+   * <p>Side-effects of the functions are the most significant aspect of this summary. Because the
+   * functions are "ambiguated", the recorded side-effects are the union of all side effects
+   * detected in any member of the set.
+   *
+   * <p>Name in this context refers to a short name, not a qualified name; only the last segment of
+   * a qualified name is used.
    */
-  private static class FunctionInformation {
-    DiGraphNode<FunctionInformation, CallSitePropagationInfo> graphNode;
-    private int bitmask = 0;
+  private static final class AmbiguatedFunctionSummary {
 
     // Side effect types:
-    private static final int FUNCTION_THROWS_MASK = 1 << 1;
-    private static final int TAINTS_GLOBAL_STATE_MASK = 1 << 2;
-    private static final int TAINTS_THIS_MASK = 1 << 3;
-    private static final int TAINTS_ARGUMENTS_MASK = 1 << 4;
-
+    private static final int THROWS = 1 << 1;
+    private static final int MUTATES_GLOBAL_STATE = 1 << 2;
+    private static final int MUTATES_THIS = 1 << 3;
+    private static final int MUTATES_ARGUMENTS = 1 << 4;
     // Function metatdata
-    private static final int TAINTS_RETURN_MASK = 1 << 5;
+    private static final int ESCAPED_RETURN = 1 << 5;
 
-    void setMask(int mask) {
+    // The name shared by the set of functions that defined this summary.
+    private final String name;
+    // The node holding this summary in the reverse call graph.
+    private final DiGraphNode<AmbiguatedFunctionSummary, CallSitePropagationInfo> graphNode;
+    // The side effect flags for this set of functions.
+    // TODO(nickreid): Replace this with a `Node.SideEffectFlags`.
+    private int bitmask = 0;
+
+    /** Adds a new summary node to {@code graph}, storing the node and returning the summary. */
+    static AmbiguatedFunctionSummary createInGraph(
+        DiGraph<AmbiguatedFunctionSummary, CallSitePropagationInfo> graph, String name) {
+      return new AmbiguatedFunctionSummary(graph, name);
+    }
+
+    private AmbiguatedFunctionSummary(
+        DiGraph<AmbiguatedFunctionSummary, CallSitePropagationInfo> graph, String name) {
+      this.name = checkNotNull(name);
+      this.graphNode = graph.createDirectedGraphNode(this);
+    }
+
+    private void setMask(int mask) {
       bitmask |= mask;
     }
 
-    boolean getMask(int mask) {
+    private boolean getMask(int mask) {
       return (bitmask & mask) != 0;
     }
 
-    boolean taintsThis() {
-      return getMask(TAINTS_THIS_MASK);
+    boolean mutatesThis() {
+      return getMask(MUTATES_THIS);
+    }
+
+    /** Marks the function as having "modifies this" side effects. */
+    void setMutatesThis() {
+      setMask(MUTATES_THIS);
     }
 
     /**
-     * @return Whether the function returns something that is not affected by global state. In this
-     *     case, only true if return value is a literal or primitive since locals are not tracked
-     *     correctly.
+     * Returns whether the function returns something that is not affected by global state.
+     *
+     * <p>In the current implementation, this is only true if the return value is a literal or
+     * primitive since locals are not tracked correctly.
      */
-    boolean taintsReturn() {
-      return getMask(TAINTS_RETURN_MASK);
+    boolean escapedReturn() {
+      return getMask(ESCAPED_RETURN);
+    }
+
+    /** Marks the function as having non-local return result. */
+    void setEscapedReturn() {
+      setMask(ESCAPED_RETURN);
     }
 
     /** Returns true if function has an explicit "throw". */
     boolean functionThrows() {
-      return getMask(FUNCTION_THROWS_MASK);
-    }
-
-    /** @return false if function known to have side effects. */
-    boolean isPure() {
-      return !getMask(
-          FUNCTION_THROWS_MASK
-              | TAINTS_GLOBAL_STATE_MASK
-              | TAINTS_THIS_MASK
-              | TAINTS_ARGUMENTS_MASK);
-    }
-
-    /** Marks the function as having "modifies globals" side effects. */
-    void setTaintsGlobalState() {
-      setMask(TAINTS_GLOBAL_STATE_MASK);
-    }
-
-    /** Marks the function as having "modifies this" side effects. */
-    void setTaintsThis() {
-      setMask(TAINTS_THIS_MASK);
-    }
-
-    /** Marks the function as having "modifies arguments" side effects. */
-    void setTaintsArguments() {
-      setMask(TAINTS_ARGUMENTS_MASK);
+      return getMask(THROWS);
     }
 
     /** Marks the function as having "throw" side effects. */
     void setFunctionThrows() {
-      setMask(FUNCTION_THROWS_MASK);
-    }
-
-    /** Marks the function as having non-local return result. */
-    void setTaintsReturn() {
-      setMask(TAINTS_RETURN_MASK);
+      setMask(THROWS);
     }
 
     /** Returns true if function mutates global state. */
     boolean mutatesGlobalState() {
-      return getMask(TAINTS_GLOBAL_STATE_MASK);
+      return getMask(MUTATES_GLOBAL_STATE);
+    }
+
+    /** Marks the function as having "modifies globals" side effects. */
+    void setMutatesGlobalState() {
+      setMask(MUTATES_GLOBAL_STATE);
     }
 
     /** Returns true if function mutates its arguments. */
     boolean mutatesArguments() {
-      return getMask(TAINTS_GLOBAL_STATE_MASK | TAINTS_ARGUMENTS_MASK);
+      return getMask(MUTATES_GLOBAL_STATE | MUTATES_ARGUMENTS);
     }
 
-    /** Returns true if function mutates "this". */
-    boolean mutatesThis() {
-      return taintsThis();
+    /** Marks the function as having "modifies arguments" side effects. */
+    void setMutatesArguments() {
+      setMask(MUTATES_ARGUMENTS);
     }
 
     @Override
+    @DoNotCall // For debugging only.
     public String toString() {
+      return MoreObjects.toStringHelper(getClass())
+          .add("name", name)
+          .add("graphNode", graphNode)
+          .add("sideEffects", sideEffectsToString())
+          .toString();
+    }
+
+    private String sideEffectsToString() {
       List<String> status = new ArrayList<>();
-      if (taintsThis()) {
+      if (mutatesThis()) {
         status.add("this");
       }
 
@@ -929,7 +1012,7 @@ class PureFunctionIdentifier implements CompilerPass {
         status.add("args");
       }
 
-      if (taintsReturn()) {
+      if (escapedReturn()) {
         status.add("return");
       }
 
@@ -937,7 +1020,7 @@ class PureFunctionIdentifier implements CompilerPass {
         status.add("throw");
       }
 
-      return "Side effects: " + status;
+      return status.toString();
     }
 
     /** Update function for @nosideeffects annotations. */
@@ -951,29 +1034,29 @@ class PureFunctionIdentifier implements CompilerPass {
       FunctionType functionType = typei == null ? null : typei.toMaybeFunctionType();
       if (functionType == null) {
         // Assume extern functions return tainted values when we have no type info to say otherwise.
-        setTaintsReturn();
+        setEscapedReturn();
       } else {
         JSType retType = functionType.getReturnType();
         if (!PureFunctionIdentifier.isLocalValueType(retType, compiler)) {
-          setTaintsReturn();
+          setEscapedReturn();
         }
       }
 
       if (info == null) {
         // We don't know anything about this function so we assume it has side effects.
-        setTaintsGlobalState();
+        setMutatesGlobalState();
         setFunctionThrows();
       } else {
         if (info.modifiesThis()) {
-          setTaintsThis();
+          setMutatesThis();
         } else if (info.hasSideEffectsArgumentsAnnotation()) {
-          setTaintsArguments();
+          setMutatesArguments();
         } else if (!info.getThrownTypes().isEmpty()) {
           setFunctionThrows();
         } else if (info.isNoSideEffects()) {
           // Do nothing.
         } else {
-          setTaintsGlobalState();
+          setMutatesGlobalState();
         }
       }
     }
@@ -992,7 +1075,6 @@ class PureFunctionIdentifier implements CompilerPass {
     // anything about the locality of the value.
     return subtype.isEmptyType();
   }
-
 
   /**
    * A compiler pass that constructs a reference graph and drives the PureFunctionIdentifier across

@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -89,7 +90,7 @@ class TypeInference
   private final FlowScope bottomScope;
   private final TypedScope containerScope;
   private final TypedScopeCreator scopeCreator;
-  private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
+  private final AssertionFunctionLookup assertionFunctionLookup;
 
   // Scopes that have had their unbound untyped vars inferred as undefined.
   private final Set<TypedScope> inferredUnboundVars = new HashSet<>();
@@ -97,10 +98,13 @@ class TypeInference
   // For convenience
   private final ObjectType unknownType;
 
-  TypeInference(AbstractCompiler compiler, ControlFlowGraph<Node> cfg,
-                ReverseAbstractInterpreter reverseInterpreter,
-                TypedScope syntacticScope, TypedScopeCreator scopeCreator,
-                Map<String, AssertionFunctionSpec> assertionFunctionsMap) {
+  TypeInference(
+      AbstractCompiler compiler,
+      ControlFlowGraph<Node> cfg,
+      ReverseAbstractInterpreter reverseInterpreter,
+      TypedScope syntacticScope,
+      TypedScopeCreator scopeCreator,
+      AssertionFunctionLookup assertionFunctionLookup) {
     super(cfg, new LinkedFlowScope.FlowScopeJoinOp());
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
@@ -110,7 +114,7 @@ class TypeInference
     this.containerScope = syntacticScope;
 
     this.scopeCreator = scopeCreator;
-    this.assertionFunctionsMap = assertionFunctionsMap;
+    this.assertionFunctionLookup = assertionFunctionLookup;
 
     FlowScope entryScope =
         inferDeclarativelyUnboundVarsWithoutTypes(
@@ -989,11 +993,24 @@ class TypeInference
                 && !var.isTypeInferred()
                 && var.getNameNode() != null;
 
+        // Whether this variable is declared not because it has JSDoc with a declaration, but
+        // because it is const and the right-hand-side is easily inferrable.
+        // e.g. these are 'typeless const declarations':
+        //   const x = 0;
+        //   /** @const */
+        //   a.b.c = SomeOtherConstructor;
+        // but these are not:
+        //    let x = 0;
+        //    /** @const @constructor */
+        //    a.b.c = someMixin();
+        // This is messy, since the definition of 'typeless const' is duplicated in
+        // TypedScopeCreator and this code.
         boolean isTypelessConstDecl =
             isVarDeclaration
                 && NodeUtil.isConstantDeclaration(
                     compiler.getCodingConvention(), var.getJSDocInfo(), var.getNameNode())
-                && !(var.getJSDocInfo() != null && var.getJSDocInfo().hasType());
+                && !(var.getJSDocInfo() != null
+                    && var.getJSDocInfo().containsDeclarationExcludingTypelessConst());
 
         // When looking at VAR initializers for declared VARs, we tend
         // to use the declared type over the type it's being
@@ -1368,31 +1385,10 @@ class TypeInference
       }
 
       if (key.isSpread()) {
-        Node name = key.getFirstChild();
-        JSType nameType = name.getJSType();
-
-        if (nameType == null) {
-          continue;
-        }
-
-        ObjectType spreadType = nameType.toMaybeObjectType();
-
-        while (spreadType != null) {
-          Set<String> spreadPropertyNames = spreadType.getOwnPropertyNames();
-          for (String propertyName : spreadPropertyNames) {
-            objectType.defineInferredProperty(
-                propertyName, spreadType.getPropertyType(propertyName), key);
-          }
-          if ((!spreadType.isConstructor()
-                  && !spreadType.isInterface()
-                  && !spreadType.isInstanceType())
-              || spreadType.getSuperClassConstructor() == null) {
-            break;
-          }
-          spreadType = spreadType.getSuperClassConstructor().getInstanceType();
-        }
-
-        continue;
+        // TODO(b/128355893): Do smarter inferrence. There are a lot of potential issues with
+        // inference on object-spread, so for now we just give up and say `Object`.
+        n.setJSType(registry.getNativeType(JSTypeNative.OBJECT_TYPE));
+        break;
       }
 
       String memberName = NodeUtil.getObjectLitKeyName(key);
@@ -1527,9 +1523,13 @@ class TypeInference
   private FlowScope tightenTypesAfterAssertions(FlowScope scope, Node callNode) {
     Node left = callNode.getFirstChild();
     Node firstParam = left.getNext();
-    AssertionFunctionSpec assertionFunctionSpec =
-        assertionFunctionsMap.get(left.getQualifiedName());
-    if (assertionFunctionSpec == null || firstParam == null) {
+    if (firstParam == null) {
+      // this may be an assertion call but there are no arguments to assert
+      return scope;
+    }
+    AssertionFunctionSpec assertionFunctionSpec = assertionFunctionLookup.lookupByCallee(left);
+    if (assertionFunctionSpec == null) {
+      // this is not a recognized assertion function
       return scope;
     }
     Node assertedNode = assertionFunctionSpec.getAssertedArg(firstParam);

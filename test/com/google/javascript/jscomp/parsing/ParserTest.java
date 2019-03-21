@@ -1621,10 +1621,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   private static void assertNodeEquality(Node expected, Node found) {
-    String message = expected.checkTreeEquals(found);
-    if (message != null) {
-      assertWithMessage(message).fail();
-    }
+    assertNode(found).isEqualTo(expected);
   }
 
   @SuppressWarnings("unchecked")
@@ -2923,9 +2920,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
     expectFeatures(Feature.TEMPLATE_LITERALS);
-    Node n = parseWarning("`string \\\ncontinuation`",
-        "String continuations are not recommended. See"
-        + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
+    Node n =
+        parseWarning(
+            "`string \\\ncontinuation`",
+            "String continuations are not recommended. See"
+                + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
     Node templateLiteral = n.getFirstFirstChild();
     Node stringNode = templateLiteral.getFirstChild();
     assertNode(stringNode).hasType(Token.TEMPLATELIT_STRING);

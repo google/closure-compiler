@@ -970,9 +970,13 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * @return Whether there is a declaration present on this {@link JSDocInfo}.
+   * Returns whether there is a declaration present on this {@link JSDocInfo}.
+   *
+   * <p>Does not consider `@const` (without a following type) to indicate a declaration. Whether you
+   * want this method, or the`containsDeclaration` that includes const, depends on whether you want
+   * to consider {@code /** @const * / a.b.c = 0} a declaration or not.
    */
-  public boolean containsDeclaration() {
+  public boolean containsDeclarationExcludingTypelessConst() {
     return (hasType()
         || hasReturnType()
         || hasEnumParameterType()
@@ -982,8 +986,8 @@ public class JSDocInfo implements Serializable {
         || getImplementedInterfaceCount() > 0
         || hasBaseType()
         || visibility != Visibility.INHERITED
-        || getFlag(MASK_CONSTANT
-                | MASK_CONSTRUCTOR
+        || getFlag(
+            MASK_CONSTRUCTOR
                 | MASK_DEFINE
                 | MASK_OVERRIDE
                 | MASK_EXPORT
@@ -993,6 +997,14 @@ public class JSDocInfo implements Serializable {
                 | MASK_IMPLICITCAST
                 | MASK_NOSIDEEFFECTS
                 | MASK_RECORD));
+  }
+
+  /**
+   * Returns whether there is a declaration present on this {@link JSDocInfo}, including a
+   * typeless @const like {@code /** @const * / a.b.c = 0}
+   */
+  public boolean containsDeclaration() {
+    return containsDeclarationExcludingTypelessConst() || getFlag(MASK_CONSTANT);
   }
 
   /**

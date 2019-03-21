@@ -33,7 +33,9 @@ public final class JSCompCorrespondences {
   public static final Correspondence<CompilerInput, String> INPUT_NAME_EQUALITY =
       transforming(CompilerInput::getName, "has name equal to");
 
-  private static final <A, E> Correspondence<A, E> transforming(
+  // TODO(nickreid): Delete this when `Correspondence::transforming` is available in our Maven
+  // tests.
+  public static final <A, E> Correspondence<A, E> transforming(
       Function<? super A, ? extends E> transformation, String description) {
     return new Correspondence<A, E>() {
       @Override

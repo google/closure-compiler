@@ -48,6 +48,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Objects;
+import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
@@ -581,6 +582,8 @@ public class Node implements Serializable {
     checkArgument(child.previous == null, "new child has existing previous sibling");
 
     token = nodeType;
+    validateSpreadParent(this, child);
+
     parent = null;
     first = child;
     child.next = null;
@@ -596,7 +599,11 @@ public class Node implements Serializable {
     checkArgument(right.parent == null, "second new child has existing parent");
     checkArgument(right.next == null, "second new child has existing next sibling");
     checkArgument(right.previous == null, "second new child has existing previous sibling");
+
     token = nodeType;
+    validateSpreadParent(this, left);
+    validateSpreadParent(this, right);
+
     parent = null;
     first = left;
     left.next = right;
@@ -618,7 +625,12 @@ public class Node implements Serializable {
     checkArgument(right.parent == null);
     checkArgument(right.next == null);
     checkArgument(right.previous == null);
+
     token = nodeType;
+    validateSpreadParent(this, left);
+    validateSpreadParent(this, mid);
+    validateSpreadParent(this, right);
+
     parent = null;
     first = left;
     left.next = mid;
@@ -646,7 +658,13 @@ public class Node implements Serializable {
     checkArgument(right.parent == null);
     checkArgument(right.next == null);
     checkArgument(right.previous == null);
+
     token = nodeType;
+    validateSpreadParent(this, left);
+    validateSpreadParent(this, mid);
+    validateSpreadParent(this, mid2);
+    validateSpreadParent(this, right);
+
     parent = null;
     first = left;
     left.next = mid;
@@ -800,10 +818,27 @@ public class Node implements Serializable {
     return -1;
   }
 
+  public static final void validateSpreadParent(Node parent, Node spread) {
+    if (!spread.isSpread()) {
+      return;
+    }
+
+    switch (parent.getToken()) {
+      case ARRAYLIT:
+      case CALL:
+      case NEW:
+      case OBJECTLIT:
+        break;
+      default:
+        throw new AssertionError(parent.toStringTree());
+    }
+  }
+
   public final void addChildToFront(Node child) {
     checkArgument(child.parent == null);
     checkArgument(child.next == null);
     checkArgument(child.previous == null);
+    validateSpreadParent(this, child);
     child.parent = this;
     child.next = first;
     if (first == null) {
@@ -824,6 +859,8 @@ public class Node implements Serializable {
         child.parent == null,
         "Cannot add already-owned child node.\nChild: %s\nExisting parent: %s\nNew parent: %s",
         child, child.parent, this);
+    validateSpreadParent(this, child);
+
     checkArgument(child.next == null);
     checkArgument(child.previous == null);
 
@@ -859,6 +896,8 @@ public class Node implements Serializable {
     checkNotNull(children.previous, children);
     for (Node child = children; child != null; child = child.next) {
       checkArgument(child.parent == null);
+      validateSpreadParent(this, child);
+
       child.parent = this;
     }
 
@@ -886,6 +925,8 @@ public class Node implements Serializable {
     checkArgument(newChild.previous == null, "The new child node has previous siblings.");
     checkArgument(newChild.parent == null, "The new child node already has a parent.");
     if (first == node) {
+      validateSpreadParent(this, newChild);
+
       Node last = first.previous;
       // NOTE: last.next remains null
       newChild.parent = this;
@@ -932,6 +973,7 @@ public class Node implements Serializable {
 
     for (Node child = children; child != null; child = child.next) {
       checkArgument(child.parent == null);
+      validateSpreadParent(this, child);
       child.parent = this;
     }
 
@@ -987,6 +1029,8 @@ public class Node implements Serializable {
     checkArgument(newChild.previous == null, "The new child node has previous siblings.");
     checkArgument(newChild.parent == null, "The new child node already has a parent.");
     checkState(child.parent == this, "%s is not the parent of %s", this, child);
+
+    validateSpreadParent(this, newChild);
 
     // Copy over important information.
     newChild.useSourceInfoIfMissingFrom(child);
@@ -1879,99 +1923,6 @@ public class Node implements Serializable {
     return false;
   }
 
-  /**
-   * Checks if the subtree under this node is the same as another subtree. Returns null if it's
-   * equal, or a message describing the differences. Should be called with {@code this} as the
-   * "expected" node and {@code actual} as the "actual" node.
-   */
-  @VisibleForTesting
-  @Nullable
-  public final String checkTreeEquals(Node actual) {
-      NodeMismatch diff = checkTreeEqualsImpl(actual);
-      if (diff != null) {
-        return "Node tree inequality:" +
-            "\nTree1:\n" + toStringTree() +
-            "\n\nTree2:\n" + actual.toStringTree() +
-            "\n\nSubtree1: " + diff.nodeExpected.toStringTree() +
-            "\n\nSubtree2: " + diff.nodeActual.toStringTree();
-      }
-      return null;
-  }
-
-  /**
-   * Checks if the subtree under this node is the same as another subtree. Returns null if it's
-   * equal, or a message describing the differences. Considers two nodes to be unequal if their
-   * JSDocInfo doesn't match. Should be called with {@code this} as the "expected" node and {@code
-   * actual} as the "actual" node.
-   *
-   * @see JSDocInfo#equals(Object)
-   */
-  @VisibleForTesting
-  @Nullable
-  public final String checkTreeEqualsIncludingJsDoc(Node actual) {
-      NodeMismatch diff = checkTreeEqualsImpl(actual, true);
-      if (diff != null) {
-        if (diff.nodeActual.isEquivalentTo(diff.nodeExpected, false, true, false)) {
-          // The only difference is that the JSDoc is different on
-          // the subtree.
-          String jsDocActual = diff.nodeActual.getJSDocInfo() == null ?
-              "(none)" :
-              diff.nodeActual.getJSDocInfo().toStringVerbose();
-
-          String jsDocExpected = diff.nodeExpected.getJSDocInfo() == null ?
-              "(none)" :
-              diff.nodeExpected.getJSDocInfo().toStringVerbose();
-
-          return "Node tree inequality:" +
-              "\nTree:\n" + toStringTree() +
-              "\n\nJSDoc differs on subtree: " + diff.nodeExpected +
-              "\nExpected JSDoc: " + jsDocExpected +
-              "\nActual JSDoc  : " + jsDocActual;
-        }
-        return "Node tree inequality:" +
-            "\nExpected tree:\n" + toStringTree() +
-            "\n\nActual tree:\n" + actual.toStringTree() +
-            "\n\nExpected subtree: " + diff.nodeExpected.toStringTree() +
-            "\n\nActual subtree: " + diff.nodeActual.toStringTree();
-      }
-      return null;
-  }
-
-  /**
-   * Compare this node to the given node recursively and return the first pair of nodes that differs
-   * doing a preorder depth-first traversal. Package private for testing. Returns null if the nodes
-   * are equivalent. Should be called with {@code this} as the "expected" node and {@code actual} as
-   * the "actual" node.
-   */
-  @Nullable
-  final NodeMismatch checkTreeEqualsImpl(Node actual) {
-    return checkTreeEqualsImpl(actual, false);
-  }
-
-  /**
-   * Compare this node to the given node recursively and return the first pair of nodes that differs
-   * doing a preorder depth-first traversal. Should be called with {@code this} as the "expected"
-   * node and {@code actual} as the "actual" node.
-   *
-   * @param jsDoc Whether to check for differences in JSDoc.
-   */
-  @Nullable
-  private NodeMismatch checkTreeEqualsImpl(Node actual, boolean jsDoc) {
-    if (!isEquivalentTo(actual, false, false, jsDoc)) {
-      return new NodeMismatch(this, actual);
-    }
-
-    for (Node expectedChild = first, actualChild = actual.first;
-         expectedChild != null;
-         expectedChild = expectedChild.next, actualChild = actualChild.next) {
-      NodeMismatch res = expectedChild.checkTreeEqualsImpl(actualChild, jsDoc);
-      if (res != null) {
-        return res;
-      }
-    }
-    return null;
-  }
-
   /** Checks equivalence without going into child nodes */
   public final boolean isEquivalentToShallow(Node node) {
     return isEquivalentTo(node, false, false, false, false);
@@ -2848,42 +2799,23 @@ public class Node implements Serializable {
     putProp(Prop.DEFINE_NAME, name);
   }
 
-  // There are four values of interest:
-  //   global state changes
-  //   this state changes
-  //   arguments state changes
-  //   whether the call throws an exception
-  //   locality of the result
-  // We want a value of 0 to mean "global state changes and
-  // unknown locality of result".
-
-  public static final int FLAG_GLOBAL_STATE_UNMODIFIED = 1;
-  public static final int FLAG_THIS_UNMODIFIED = 2;
-  public static final int FLAG_ARGUMENTS_UNMODIFIED = 4;
-  public static final int FLAG_NO_THROWS = 8;
-  public static final int FLAG_LOCAL_RESULTS = 16;
-
-  public static final int SIDE_EFFECTS_FLAGS_MASK = 31;
-
-  public static final int SIDE_EFFECTS_ALL = 0;
-  public static final int NO_SIDE_EFFECTS =
-    FLAG_GLOBAL_STATE_UNMODIFIED
-    | FLAG_THIS_UNMODIFIED
-    | FLAG_ARGUMENTS_UNMODIFIED
-    | FLAG_NO_THROWS;
-
   /**
    * Marks this function or constructor call's side effect flags.
    * This property is only meaningful for {@link Token#CALL} and
    * {@link Token#NEW} nodes.
    */
   public final void setSideEffectFlags(int flags) {
-    checkArgument(
+    checkState(
         this.isCall() || this.isNew() || this.isTaggedTemplateLit(),
-        "setIsNoSideEffectsCall only supports call-like nodes, got %s",
+        "Side-effect flags can only be set on invocation nodes; got %s",
         this);
 
-    putIntProp(Prop.SIDE_EFFECT_FLAGS, flags);
+    // We invert the flags before setting because we also invert the them when getting; they go
+    // full circle.
+    //
+    // We apply the mask after inversion so that if all flags are being set (all 1s), it's
+    // equivalent to storing a 0, the default value of an int-prop, which has no memory cost.
+    putIntProp(Prop.SIDE_EFFECT_FLAGS, ~flags & SideEffectFlags.USED_BITS_MASK);
   }
 
   public final void setSideEffectFlags(SideEffectFlags flags) {
@@ -2894,15 +2826,45 @@ public class Node implements Serializable {
    * Returns the side effects flags for this node.
    */
   public final int getSideEffectFlags() {
-    return getIntProp(Prop.SIDE_EFFECT_FLAGS);
+    // Int props default to 0, but we want the default for side-effect flags to be all 1s.
+    // Therefore, we invert the value returned here. This is correct for non-defaults because we
+    // also invert when setting the flags.
+    return ~getIntProp(Prop.SIDE_EFFECT_FLAGS) & SideEffectFlags.USED_BITS_MASK;
   }
 
   /**
-   * A helper class for getting and setting the side-effect flags.
+   * A helper class for getting and setting invocation side-effect flags.
+   *
+   * <p>The following values are of interest:
+   *
+   * <ol>
+   *   <li>Is global state mutated? ({@code MUTATES_GLOBAL_STATE})
+   *   <li>Is the receiver (`this`) mutated? ({@code MUTATES_THIS})
+   *   <li>Are any arguments mutated? ({@code MUTATES_ARGUMENTS})
+   *   <li>Does the call throw an error? ({@code THROWS})
+   *   <li>Is the return an escaped (mutable by other code) value? ({@code ESCAPED_RETURN})
+   * </ol>
+   *
    * @author johnlenz@google.com (John Lenz)
    */
   public static final class SideEffectFlags {
-    private int value = Node.SIDE_EFFECTS_ALL;
+    public static final int MUTATES_GLOBAL_STATE = 1;
+    public static final int MUTATES_THIS = 2;
+    public static final int MUTATES_ARGUMENTS = 4;
+    public static final int THROWS = 8;
+    public static final int ESCAPED_RETURN = 16;
+
+    private static final int USED_BITS_MASK = (1 << 5) - 1;
+
+    // TODO(nickreid): Delete one of these values. They should be symmetric with respect to
+    // inversion. We need better noenclature to describe ESCAPED_RETURN.
+    public static final int NO_SIDE_EFFECTS = ESCAPED_RETURN;
+    public static final int ALL_SIDE_EFFECTS =
+        MUTATES_GLOBAL_STATE | MUTATES_THIS | MUTATES_ARGUMENTS | THROWS | ESCAPED_RETURN;
+
+    // A bitfield indicating the flag statuses. All bits set to 1 means "global state changes and
+    // unknown locality of result".
+    private int value = ALL_SIDE_EFFECTS;
 
     public SideEffectFlags() {
     }
@@ -2917,13 +2879,13 @@ public class Node implements Serializable {
 
     /** All side-effect occur and the returned results are non-local. */
     public SideEffectFlags setAllFlags() {
-      value = Node.SIDE_EFFECTS_ALL;
+      value = ALL_SIDE_EFFECTS;
       return this;
     }
 
     /** No side-effects occur and the returned results are local. */
     public SideEffectFlags clearAllFlags() {
-      value = Node.NO_SIDE_EFFECTS | Node.FLAG_LOCAL_RESULTS;
+      value = NO_SIDE_EFFECTS & ~ESCAPED_RETURN;
       return this;
     }
 
@@ -2932,63 +2894,56 @@ public class Node implements Serializable {
      *   no global state change, no throws, no this change, no arguments change
      */
     public void clearSideEffectFlags() {
-      value |= Node.NO_SIDE_EFFECTS;
+      value &= ESCAPED_RETURN;
     }
 
     public SideEffectFlags setMutatesGlobalState() {
       // Modify global means everything must be assumed to be modified.
-      removeFlag(Node.FLAG_GLOBAL_STATE_UNMODIFIED);
-      removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
-      removeFlag(Node.FLAG_THIS_UNMODIFIED);
+      value |= MUTATES_GLOBAL_STATE | MUTATES_ARGUMENTS | MUTATES_THIS;
       return this;
     }
 
     public SideEffectFlags setThrows() {
-      removeFlag(Node.FLAG_NO_THROWS);
+      value |= THROWS;
       return this;
     }
 
     public SideEffectFlags setMutatesThis() {
-      removeFlag(Node.FLAG_THIS_UNMODIFIED);
+      value |= MUTATES_THIS;
       return this;
     }
 
     public SideEffectFlags setMutatesArguments() {
-      removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
+      value |= MUTATES_ARGUMENTS;
       return this;
     }
 
     public SideEffectFlags setReturnsTainted() {
-      removeFlag(Node.FLAG_LOCAL_RESULTS);
+      value |= ESCAPED_RETURN;
       return this;
     }
 
-    private void removeFlag(int flag) {
-      value &= ~flag;
-    }
-
     @Override
+    @DoNotCall // For debugging only.
     public String toString() {
       StringBuilder builder = new StringBuilder("Side effects: ");
-      if ((value & Node.FLAG_THIS_UNMODIFIED) == 0) {
+
+      if ((value & MUTATES_THIS) != 0) {
         builder.append("this ");
       }
-
-      if ((value & Node.FLAG_GLOBAL_STATE_UNMODIFIED) == 0) {
+      if ((value & MUTATES_GLOBAL_STATE) != 0) {
         builder.append("global ");
       }
-
-      if ((value & Node.FLAG_NO_THROWS) == 0) {
+      if ((value & THROWS) != 0) {
         builder.append("throw ");
       }
-
-      if ((value & Node.FLAG_ARGUMENTS_UNMODIFIED) == 0) {
+      if ((value & MUTATES_ARGUMENTS) != 0) {
         builder.append("args ");
       }
-
-      if ((value & Node.FLAG_LOCAL_RESULTS) == 0) {
+      if ((value & ESCAPED_RETURN) != 0) {
         builder.append("return ");
       }
+
       return builder.toString();
     }
   }
@@ -2997,22 +2952,28 @@ public class Node implements Serializable {
    * @return Whether the only side-effect is "modifies this"
    */
   public final boolean isOnlyModifiesThisCall() {
-    return areBitFlagsSet(
-        getSideEffectFlags() & Node.NO_SIDE_EFFECTS,
-        Node.FLAG_GLOBAL_STATE_UNMODIFIED
-            | Node.FLAG_ARGUMENTS_UNMODIFIED
-            | Node.FLAG_NO_THROWS);
+    int consideredFlags = getSideEffectFlags();
+    consideredFlags |= SideEffectFlags.NO_SIDE_EFFECTS; // Set non-side-effect bits to 1.
+
+    // TODO(nickreid): Delete this; check if MUTATES_THIS is actually set. This was left in to
+    // maintain existing behaviour but it makes the name of this method misleading.
+    consideredFlags &= ~SideEffectFlags.MUTATES_THIS;
+
+    return consideredFlags == SideEffectFlags.NO_SIDE_EFFECTS;
   }
 
   /**
    * @return Whether the only side-effect is "modifies arguments"
    */
   public final boolean isOnlyModifiesArgumentsCall() {
-    return areBitFlagsSet(
-        getSideEffectFlags() & Node.NO_SIDE_EFFECTS,
-        Node.FLAG_GLOBAL_STATE_UNMODIFIED
-            | Node.FLAG_THIS_UNMODIFIED
-            | Node.FLAG_NO_THROWS);
+    int consideredFlags = getSideEffectFlags();
+    consideredFlags |= SideEffectFlags.NO_SIDE_EFFECTS; // Set non-side-effect bits to 1.
+
+    // TODO(nickreid): Delete this; check if MUTATES_ARGUMENTS is actually set. This was left in to
+    // maintain existing behaviour but it makes the name of this method misleading.
+    consideredFlags &= ~SideEffectFlags.MUTATES_ARGUMENTS;
+
+    return consideredFlags == SideEffectFlags.NO_SIDE_EFFECTS;
   }
 
   /**
@@ -3020,7 +2981,10 @@ public class Node implements Serializable {
    * has no side effects.
    */
   public final boolean isNoSideEffectsCall() {
-    return areBitFlagsSet(getSideEffectFlags(), NO_SIDE_EFFECTS);
+    int consideredFlags = getSideEffectFlags();
+    consideredFlags |= SideEffectFlags.NO_SIDE_EFFECTS; // Set non-side-effect bits to 1.
+
+    return consideredFlags == SideEffectFlags.NO_SIDE_EFFECTS;
   }
 
   /**
@@ -3029,25 +2993,28 @@ public class Node implements Serializable {
    * references).
    */
   public final boolean isLocalResultCall() {
-    return areBitFlagsSet(getSideEffectFlags(), FLAG_LOCAL_RESULTS);
+    return !allBitsSet(getSideEffectFlags(), SideEffectFlags.ESCAPED_RETURN);
   }
 
   /** Returns true if this is a new/call that may mutate its arguments. */
   public final boolean mayMutateArguments() {
-    return !areBitFlagsSet(getSideEffectFlags(), FLAG_ARGUMENTS_UNMODIFIED);
+    return allBitsSet(getSideEffectFlags(), SideEffectFlags.MUTATES_ARGUMENTS);
   }
 
   /** Returns true if this is a new/call that may mutate global state or throw. */
   public final boolean mayMutateGlobalStateOrThrow() {
-    return !areBitFlagsSet(getSideEffectFlags(),
-        FLAG_GLOBAL_STATE_UNMODIFIED | FLAG_NO_THROWS);
+    return anyBitSet(
+        getSideEffectFlags(), SideEffectFlags.MUTATES_GLOBAL_STATE | SideEffectFlags.THROWS);
   }
 
-  /**
-   * returns true if all the flags are set in value.
-   */
-  private static boolean areBitFlagsSet(int value, int flags) {
-    return (value & flags) == flags;
+  /** Returns true iff all the set bits in {@code mask} are also set in {@code value}. */
+  private static boolean allBitsSet(int value, int mask) {
+    return (value & mask) == mask;
+  }
+
+  /** Returns true iff any the bit set in {@code mask} is also set in {@code value}. */
+  private static boolean anyBitSet(int value, int mask) {
+    return (value & mask) != 0;
   }
 
   /**
@@ -3062,31 +3029,6 @@ public class Node implements Serializable {
    */
   public void setQuotedString() {
     throw new IllegalStateException(this + " is not a StringNode");
-  }
-
-  static final class NodeMismatch {
-    final Node nodeExpected;
-    final Node nodeActual;
-
-    NodeMismatch(Node nodeExpected, Node nodeActual) {
-      this.nodeExpected = nodeExpected;
-      this.nodeActual = nodeActual;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object object) {
-      if (object instanceof NodeMismatch) {
-        NodeMismatch that = (NodeMismatch) object;
-        return that.nodeExpected.equals(this.nodeExpected)
-            && that.nodeActual.equals(this.nodeActual);
-      }
-      return false;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(nodeExpected, nodeActual);
-    }
   }
 
 

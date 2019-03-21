@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.ScopeSubject.assertScope;
+import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;

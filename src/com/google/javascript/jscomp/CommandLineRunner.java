@@ -53,6 +53,7 @@ import java.io.StringWriter;
 import java.lang.reflect.AnnotatedElement;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
@@ -62,6 +63,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -2111,7 +2113,10 @@ public class CommandLineRunner extends
 
     final PathMatcher matcher = fs.getPathMatcher("glob:" + prefix + separator + pattern);
     java.nio.file.Files.walkFileTree(
-        fs.getPath(prefix), new SimpleFileVisitor<Path>() {
+        fs.getPath(prefix),
+        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+        Integer.MAX_VALUE,
+        new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path p, BasicFileAttributes attrs) {
             if (matcher.matches(p) || matcher.matches(p.normalize())) {

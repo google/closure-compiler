@@ -389,6 +389,18 @@ assert.isDefined = function(value, opt_message) {};
 
 /**
  * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.isFunction = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.isNotFunction = function(value, opt_message) {};
+
+/**
+ * @param {*} value
  * @param {string=} message
  */
 assert.isNotNull = function(value, message) {}
@@ -470,6 +482,14 @@ assert.propertyVal = function(object, property, value, opt_message) {};
 assert.throws = function(fn, constructor, opt_regexp, opt_message) {};
 
 /**
+ * @param {function()} fn
+ * @param {function(new: Object)|string|!RegExp} constructor
+ * @param {string|!RegExp=} opt_regexp
+ * @param {string=} opt_message
+ */
+assert.doesNotThrow = function(fn, constructor, opt_regexp, opt_message) {};
+
+/**
  * @param {!Array<*>} set1
  * @param {!Array<*>} set2
  * @param {string=} opt_message
@@ -514,3 +534,13 @@ chai.Assertion.prototype.assert = function(
 
 /** @const */
 chai.assert = assert;
+
+/** @const */
+chai.util = {};
+
+/**
+ * @param {!chai.Assertion} obj
+ * @param {string} key
+ * @param {*=} value
+ */
+chai.util.flag = function(obj, key, value) {};

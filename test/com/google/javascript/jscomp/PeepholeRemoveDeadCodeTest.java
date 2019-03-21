@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -57,15 +56,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-  }
-
-  @Override
   protected int getNumRepetitions() {
-    // Reduce this to 2 if we get better expression evaluators.
     return 2;
   }
 
@@ -1187,23 +1178,55 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCall1() {
+  public void testCall() {
+    testSame("foo(0)");
+    // We use a function with no side-effects, otherwise the entire invocation would be preserved.
     test("Math.sin(0);", "");
-  }
-
-  @Test
-  public void testCall2() {
     test("1 + Math.sin(0);", "");
   }
 
   @Test
-  public void testNew1() {
-    test("new Date;", "");
+  public void testCall_containingSpread() {
+    // We use a function with no side-effects, otherwise the entire invocation would be preserved.
+    test("Math.sin(...c)", "([...c])");
+    test("Math.sin(4, ...c, a)", "([...c])");
+    test("Math.sin(foo(), ...c, bar())", "(foo(), [...c], bar())");
+    test("Math.sin(...a, b, ...c)", "([...a], [...c])");
+    test("Math.sin(...b, ...c)", "([...b], [...c])");
   }
 
   @Test
-  public void testNew2() {
+  public void testNew() {
+    testSame("new foo(0)");
+    // We use a function with no side-effects, otherwise the entire invocation would be preserved.
+    test("new Date;", "");
     test("1 + new Date;", "");
+  }
+
+  @Test
+  public void testNew_containingSpread() {
+    // We use a function with no side-effects, otherwise the entire invocation would be preserved.
+    test("new Date(...c)", "([...c])");
+    test("new Date(4, ...c, a)", "([...c])");
+    test("new Date(foo(), ...c, bar())", "(foo(), [...c], bar())");
+    test("new Date(...a, b, ...c)", "([...a], [...c])");
+    test("new Date(...b, ...c)", "([...b], [...c])");
+  }
+
+  @Test
+  public void testTaggedTemplateLit_simpleTemplate() {
+    testSame("foo`Simple`");
+    // We use a function with no side-effects, otherwise the entire invocation would be preserved.
+    test("Math.sin`Simple`", "");
+    test("1 + Math.sin`Simple`", "");
+  }
+
+  @Test
+  public void testTaggedTemplateLit_substitutingTemplate() {
+    testSame("foo`Complex ${butSafe}`");
+    // We use a function with no side-effects, otherwise the entire invocation would be preserved.
+    test("Math.sin`Complex ${butSafe}`", "");
+    test("Math.sin`Complex ${andDangerous()}`", "andDangerous()");
   }
 
   @Test
@@ -1239,6 +1262,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test("({a:1})", "");
     test("({a:foo()})", "foo()");
     test("({'a':foo()})", "foo()");
+    test("({...a})", "");
+    test("({...foo()})", "foo()");
   }
 
   @Test
@@ -1247,6 +1272,15 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test("([1])", "");
     test("([a])", "");
     test("([foo()])", "foo()");
+  }
+
+  @Test
+  public void testArrayLiteral_containingSpread() {
+    testSame("([...c])");
+    test("([4, ...c, a])", "([...c])");
+    test("([foo(), ...c, bar()])", "(foo(), [...c], bar())");
+    test("([...a, b, ...c])", "([...a], [...c])");
+    testSame("([...b, ...c])"); // It would also be fine if the spreads were split apart.
   }
 
   @Test

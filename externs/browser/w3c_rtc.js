@@ -1256,6 +1256,21 @@ MediaRecorder.prototype.requestData = function() {};
 MediaRecorder.isTypeSupported = function(type) {};
 
 /**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {{data: !Blob, timecode: (number|undefined)}} eventInitDict
+ * @see https://www.w3.org/TR/mediastream-recording/#blobevent-section
+ */
+function BlobEvent(type, eventInitDict) {}
+
+/** @type {!Blob} */
+BlobEvent.prototype.data;
+
+/** @type {number} */
+BlobEvent.prototype.timecode;
+
+/**
  * @interface
  * @see https://w3c.github.io/mediacapture-image/##photosettings-section
  */
@@ -1753,22 +1768,47 @@ RTCStatsReport.prototype.id;
  * @param {SCOPE=} opt_thisObj The value of "this" inside callback function.
  * @this {MAP}
  * @template MAP,SCOPE
- * @readonly
  */
 RTCStatsReport.prototype.forEach = function(callback, opt_thisObj) {};
 
 /**
  * @param {string} key
+ * @return {!IteratorIterable<!Array<string|!RTCStats>>}
+ */
+RTCStatsReport.prototype.entries = function(key) {};
+
+/**
+ * @param {string} key
  * @return {!RTCStats}
- * @readonly
  */
 RTCStatsReport.prototype.get = function(key) {};
 
 /**
  * @return {!IteratorIterable<string>}
- * @readonly
  */
 RTCStatsReport.prototype.keys = function() {};
+
+/**
+ * @return {!IteratorIterable<!RTCStats>}
+ */
+RTCStatsReport.prototype.values = function() {};
+
+/**
+ * @param {string} key
+ * @return {boolean}
+ */
+RTCStatsReport.prototype.has = function(key) {};
+
+/**
+ * @const {number}
+ */
+RTCStatsReport.prototype.size;
+
+/**
+ * @return {!Iterator<!Array<string|!RTCStats>>}
+ */
+RTCStatsReport.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * TODO(bemasc): Remove this type once it is no longer in use.  It has already

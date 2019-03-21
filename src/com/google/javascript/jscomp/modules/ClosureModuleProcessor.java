@@ -97,7 +97,6 @@ final class ClosureModuleProcessor implements ModuleProcessor {
     public Module resolve(
         ModuleRequestResolver moduleRequestResolver, @Nullable String moduleSpecifier) {
       if (resolved == null) {
-
         // Every import creates a locally bound name.
         Map<String, Binding> boundNames =
             new LinkedHashMap<>(getAllResolvedImports(moduleRequestResolver));
@@ -109,7 +108,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
                 .namespace(namespace)
                 .boundNames(ImmutableMap.copyOf(boundNames))
                 .localNameToLocalExport(ImmutableMap.of())
-                .closureNamespace(moduleSpecifier)
+                .closureNamespace(Iterables.getOnlyElement(metadata.googNamespaces()))
                 .unresolvedModule(this)
                 .build();
       }

@@ -66,8 +66,8 @@ public final class ChromeCodingConvention extends CodingConventions.Proxy {
   @Override
   public ImmutableCollection<AssertionFunctionSpec> getAssertionFunctions() {
     return ImmutableList.of(
-        AssertionFunctionSpec.makeTruthyAssertion("assert"),
-        AssertionFunctionSpec.makeReturnTypeAssertion("cr.ui.decorate"));
+        AssertionFunctionSpec.forTruthy().setFunctionName("assert").build(),
+        AssertionFunctionSpec.forMatchesReturn().setFunctionName("cr.ui.decorate").build());
   }
 
   @Override

@@ -136,6 +136,7 @@ public class ModificationVisitor implements Visitor<JSType> {
               .withReturnType(afterReturn)
               .withTypeOfThis(afterThis)
               .withTemplateKeys(type.getTemplateTypeMap().getUnfilledTemplateKeys())
+              .withClosurePrimitiveId(type.getClosurePrimitive())
               .build();
       return ft;
     }

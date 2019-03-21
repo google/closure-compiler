@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -1999,18 +1999,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   private void testReparse(String code) {
     Compiler compiler = new Compiler();
-    Node parse1 = parse(code);
-    Node parse2 = parse(new CodePrinter.Builder(parse1).build());
-    String explanation = parse1.checkTreeEquals(parse2);
-    assertWithMessage(
-            "\nExpected: "
-                + compiler.toSource(parse1)
-                + "\nResult: "
-                + compiler.toSource(parse2)
-                + "\n"
-                + explanation)
-        .that(explanation)
-        .isNull();
+    Node parseOnce = parse(code);
+    Node parseTwice = parse(new CodePrinter.Builder(parseOnce).build());
+    assertNode(parseTwice).usingSerializer(compiler::toSource).isEqualTo(parseOnce);
   }
 
   @Test
@@ -3256,7 +3247,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "exports.fn = fn;\n";
     String expectedCode = ""
         + "goog.module('foo.bar');\n"
-        + "void 0;\n"
         + "var module$exports$foo$bar = {};\n"
         + "const STR = '3';\n"
         + "module$exports$foo$bar.fn = function fn() {\n"

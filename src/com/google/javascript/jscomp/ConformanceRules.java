@@ -55,6 +55,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -322,11 +323,14 @@ public final class ConformanceRules {
       List<String> whitelistedTypeNames = requirement.getValueList();
       whitelistedTypes = union(whitelistedTypeNames);
 
-      ImmutableList.Builder<Node> builder = ImmutableList.builder();
-      for (AssertionFunctionSpec fn : compiler.getCodingConvention().getAssertionFunctions()) {
-        builder.add(NodeUtil.newQName(compiler, fn.getFunctionName()));
-      }
-      assertionsFunctionNames = builder.build();
+      // TODO(b/126254920): make this use ClosurePrimitive instead
+      // so that we don't have to filter out the null functionNames.
+      assertionsFunctionNames =
+          compiler.getCodingConvention().getAssertionFunctions().stream()
+              .map(AssertionFunctionSpec::getFunctionName)
+              .filter(Objects::nonNull)
+              .map(name -> NodeUtil.newQName(compiler, name))
+              .collect(ImmutableList.toImmutableList());
     }
 
     protected boolean isWhitelistedType(Node n) {

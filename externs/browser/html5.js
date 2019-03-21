@@ -349,12 +349,12 @@ CanvasDrawingStyles.prototype.miterLimit;
  * @param {Array<number>} segments
  * @return {undefined}
  */
-CanvasDrawingStyles.prototype.setLineDash;
+CanvasDrawingStyles.prototype.setLineDash = function(segments) {};
 
 /**
  * @return {!Array<number>}
  */
-CanvasDrawingStyles.prototype.getLineDash;
+CanvasDrawingStyles.prototype.getLineDash = function() {};
 
 /** @type {string} */
 CanvasDrawingStyles.prototype.font;
@@ -725,8 +725,10 @@ CanvasRenderingContext2D.prototype.putImageData = function(imagedata, dx, dy,
  * @param {number=} opt_e
  * @see http://developer.apple.com/library/safari/#documentation/appleapplications/reference/WebKitDOMRef/CanvasRenderingContext2D_idl/Classes/CanvasRenderingContext2D/index.html
  * @return {undefined}
+ * @deprecated
  */
-CanvasRenderingContext2D.prototype.setFillColor;
+CanvasRenderingContext2D.prototype.setFillColor = function(
+    opt_a, opt_b, opt_c, opt_d, opt_e) {};
 
 /**
  * Note: WebKit only
@@ -737,19 +739,23 @@ CanvasRenderingContext2D.prototype.setFillColor;
  * @param {number=} opt_e
  * @see http://developer.apple.com/library/safari/#documentation/appleapplications/reference/WebKitDOMRef/CanvasRenderingContext2D_idl/Classes/CanvasRenderingContext2D/index.html
  * @return {undefined}
+ * @deprecated
  */
-CanvasRenderingContext2D.prototype.setStrokeColor;
+CanvasRenderingContext2D.prototype.setStrokeColor = function(
+    opt_a, opt_b, opt_c, opt_d, opt_e) {};
 
 /**
  * @return {!Array<number>}
+ * @override
  */
-CanvasRenderingContext2D.prototype.getLineDash;
+CanvasRenderingContext2D.prototype.getLineDash = function() {};
 
 /**
  * @param {Array<number>} segments
  * @return {undefined}
+ * @override
  */
-CanvasRenderingContext2D.prototype.setLineDash;
+CanvasRenderingContext2D.prototype.setLineDash = function(segments) {};
 
 /** @type {string} */
 CanvasRenderingContext2D.prototype.fillColor;
@@ -2580,6 +2586,50 @@ MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
     canBubbleArg, cancelableArg, dataArg, originArg, lastEventIdArg, sourceArg,
     portsArg) {};
 
+/**
+ * @record
+ * @extends {EventInit}
+ * @see https://html.spec.whatwg.org/multipage/web-sockets.html#the-closeevent-interface
+ */
+function CloseEventInit() {}
+
+/**
+ * @type {undefined|boolean}
+ */
+CloseEventInit.prototype.wasClean;
+
+/**
+ * @type {undefined|number}
+ */
+CloseEventInit.prototype.code;
+
+/**
+ * @type {undefined|string}
+ */
+CloseEventInit.prototype.reason;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {!CloseEventInit=} opt_init
+ */
+var CloseEvent = function(type, opt_init) {};
+
+/**
+ * @type {boolean}
+ */
+CloseEvent.prototype.wasClean;
+
+/**
+ * @type {number}
+ */
+CloseEvent.prototype.code;
+
+/**
+ * @type {string}
+ */
+CloseEvent.prototype.reason;
 
 /**
  * HTML5 BroadcastChannel class.
@@ -2596,14 +2646,14 @@ function BroadcastChannel(channelName) {}
  * listening to the same channel.
  * @param {*} message
  */
-BroadcastChannel.prototype.postMessage;
+BroadcastChannel.prototype.postMessage = function(message) {};
 
 /**
  * Closes the channel object, indicating it won't get any new messages, and
  * allowing it to be, eventually, garbage collected.
  * @return {void}
  */
-BroadcastChannel.prototype.close;
+BroadcastChannel.prototype.close = function() {};
 
 /** @override */
 BroadcastChannel.prototype.addEventListener = function(
@@ -2919,32 +2969,32 @@ TimeRanges.prototype.end = function(index) { return 0; };
  * @see http://dev.w3.org/html5/websockets/
  * @constructor
  * @param {string} url
- * @param {string=} opt_protocol
+ * @param {(string|!Array<string>)=} opt_protocol
  * @implements {EventTarget}
  */
 function WebSocket(url, opt_protocol) {}
 
 /**
  * The connection has not yet been established.
- * @type {number}
+ * @const {number}
  */
 WebSocket.CONNECTING = 0;
 
 /**
  * The WebSocket connection is established and communication is possible.
- * @type {number}
+ * @const {number}
  */
 WebSocket.OPEN = 1;
 
 /**
  * The connection is going through the closing handshake, or the close() method has been invoked.
- * @type {number}
+ * @const {number}
  */
 WebSocket.CLOSING = 2;
 
 /**
  * The connection has been closed or could not be opened.
- * @type {number}
+ * @const {number}
  */
 WebSocket.CLOSED = 3;
 
@@ -2977,8 +3027,14 @@ WebSocket.prototype.readyState;
 WebSocket.prototype.bufferedAmount;
 
 /**
+ * An event handler called on error event.
+ * @type {?function(!Event): void}
+ */
+WebSocket.prototype.onerror;
+
+/**
  * An event handler called on open event.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 WebSocket.prototype.onopen;
 
@@ -2990,14 +3046,14 @@ WebSocket.prototype.onmessage;
 
 /**
  * An event handler called on close event.
- * @type {?function(!Event)}
+ * @type {?function(!CloseEvent): void}
  */
 WebSocket.prototype.onclose;
 
 /**
  * Transmits data using the connection.
- * @param {string|ArrayBuffer|ArrayBufferView} data
- * @return {boolean}
+ * @param {string|ArrayBuffer|ArrayBufferView|Blob} data
+ * @return {void}
  */
 WebSocket.prototype.send = function(data) {};
 

@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -176,14 +177,15 @@ final class ClosureCodeRemoval implements CompilerPass {
     final Set<String> assertionNames;
 
     FindAssertionCalls() {
-      ImmutableSet.Builder<String> assertionNamesBuilder = ImmutableSet.builder();
-      for (AssertionFunctionSpec spec :
-               compiler.getCodingConvention().getAssertionFunctions()) {
-        assertionNamesBuilder.add(spec.getFunctionName());
-      }
-      assertionNames = assertionNamesBuilder.build();
+      // TODO(b/126254920): make this use ClosurePrimitive instead,
+      assertionNames =
+          compiler.getCodingConvention().getAssertionFunctions().stream()
+              .map(AssertionFunctionSpec::getFunctionName)
+              // Filter out assertion functions with a null functionName, which are identified only
+              // by ClosurePrimitive id.
+              .filter(Objects::nonNull)
+              .collect(ImmutableSet.toImmutableSet());
     }
-
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {

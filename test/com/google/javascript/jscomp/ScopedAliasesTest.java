@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
@@ -1385,7 +1386,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
                 .that(actualTypes.size())
                 .isEqualTo(expectedTypes.size());
             for (int i = 0; i < expectedTypes.size(); i++) {
-              assertThat(expectedTypes.get(i).checkTreeEquals(actualTypes.get(i))).isNull();
+              assertNode(actualTypes.get(i)).isEqualTo(expectedTypes.get(i));
             }
           } else {
             actualTypes = new ArrayList<>();

@@ -162,10 +162,16 @@ Console.prototype.table = function(data, opt_columns) {};
 Console.prototype.trace = function(var_args) {};
 
 /**
- * @param {*} value
+ * @param {string=} label
  * @return {undefined}
  */
-Console.prototype.count = function(value) {};
+Console.prototype.count = function(label) {};
+
+/**
+ * @param {string=} label
+ * @return {undefined}
+ */
+Console.prototype.countReset = function(label) {};
 
 /**
  * @param {*} value
@@ -195,6 +201,13 @@ Console.prototype.profileEnd = function(opt_title) {};
 Console.prototype.time = function(name) {};
 
 /**
+ * @param {string} label
+ * @param {...*} data
+ * @return {undefined}
+ */
+Console.prototype.timeLog = function(label, data) {};
+
+/**
  * @param {string} name
  * @return {undefined}
  */
@@ -218,8 +231,14 @@ Console.prototype.group = function(var_args) {};
  */
 Console.prototype.groupCollapsed = function(var_args) {};
 
+/**
+ * @return {undefined}
+ */
 Console.prototype.groupEnd = function() {};
 
+/**
+ * @return {undefined}
+ */
 Console.prototype.clear = function() {};
 
 /** @type {MemoryInfo} */

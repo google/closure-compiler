@@ -406,6 +406,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   void initWarningsGuard(WarningsGuard warningsGuard) {
     this.warningsGuard =
         new ComposeWarningsGuard(
+            new J2clSuppressWarningsGuard(),
             new SuppressDocWarningsGuard(this, getDiagnosticGroups().getRegisteredGroups()),
             warningsGuard);
   }

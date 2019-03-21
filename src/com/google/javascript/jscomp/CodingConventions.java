@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.Node;
@@ -28,7 +29,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -551,8 +551,14 @@ public final class CodingConventions {
     }
 
     @Override
-    public Collection<AssertionFunctionSpec> getAssertionFunctions() {
-      return Collections.emptySet();
+    public ImmutableSet<AssertionFunctionSpec> getAssertionFunctions() {
+      return ImmutableSet.of(
+          AssertionFunctionSpec.forTruthy()
+              .setClosurePrimitive(ClosurePrimitive.ASSERTS_TRUTHY)
+              .build(),
+          AssertionFunctionSpec.forMatchesReturn()
+              .setClosurePrimitive(ClosurePrimitive.ASSERTS_MATCHES_RETURN)
+              .build());
     }
 
     @Override

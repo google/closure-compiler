@@ -283,7 +283,26 @@ chrome.app.runtime.LaunchItem.prototype.type;
 chrome.app.runtime.onEmbedRequested;
 
 
-/** @type {!ChromeObjectEvent} */
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/app_runtime#event-onLaunched
+ */
+chrome.app.runtime.LaunchData = function() {};
+
+
+/** @type {!Array<{entry: !FileEntry, type: (string|undefined)}>|undefined} */
+chrome.app.runtime.LaunchData.prototype.items;
+
+
+/** @type {boolean|undefined} */
+chrome.app.runtime.LaunchData.prototype.isKioskSession;
+
+
+/** @type {string|undefined} */
+chrome.app.runtime.LaunchData.prototype.source;
+
+
+/** @type {!ChromeBaseEvent<function(!chrome.app.runtime.LaunchData)>} */
 chrome.app.runtime.onLaunched;
 
 

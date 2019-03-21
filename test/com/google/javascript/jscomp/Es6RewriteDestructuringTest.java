@@ -16,10 +16,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.rhino.Node;
@@ -1709,7 +1709,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   @Test
-  public void testObjectDestructuringRest_getsCorrectTypes() {
+  public void testObjectDestructuringRest_typesRestAsObject() {
     test(
         lines(
             "const obj = {a: 3, b: 'string', c: null};", //
@@ -1733,18 +1733,10 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     Node jscompDestructuringVar1Name = getNodeMatchingQName(jsRoot, "$jscomp$destructuring$var1");
     assertType(jscompDestructuringVar1Name.getJSType()).isEqualTo(objType);
 
-    // `rest` has the type `{a: number, b: string, c: null}`
+    // TODO(b/128355893) Do better inferrence. For now we just consider `rest` an `Object` rather
+    // than trying to figure out what properties it gets.
     Node restName = getNodeMatchingQName(jsRoot, "rest");
-    assertType(restName.getJSType())
-        .isEqualTo(
-            registry.createRecordType(
-                ImmutableMap.of(
-                    "a", registry.getNativeType(JSTypeNative.NUMBER_TYPE),
-                    "b", registry.getNativeType(JSTypeNative.STRING_TYPE),
-                    "c", registry.getNativeType(JSTypeNative.NULL_TYPE))));
-    // TODO(lharker): should this be true? it's not because objType is a PrototypeObjectType, which
-    // does not compare as structurally equal by default.
-    assertType(restName.getJSType()).isNotEqualTo(objType);
+    assertType(restName.getJSType()).isEqualTo(registry.getNativeType(OBJECT_TYPE));
   }
 
   /** Returns a list of all nodes in the given AST that matches the given qualified name */

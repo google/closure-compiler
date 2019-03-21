@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -517,7 +518,9 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   }
 
   // TODO (simranarora) Make the pass handle ES6 Modules correctly.
-  public void disabled_testRemoveFromImportStatement_ES6Modules() {
+  @Test
+  @Ignore
+  public void testRemoveFromImportStatement_ES6Modules() {
     // Error: Invalid attempt to remove: STRING ./foo 1 [length: 7] [source_file: testcode] from
     // IMPORT 1 [length: 24] [source_file: testcode]
     testSame("import foo from './foo'; foo('hello');");
@@ -554,7 +557,9 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   // SCRIPT
   //   MODULE_BODY
   // TODO(tbreisacher): Fix and enable.
-  public void disabled_testLetConstBlocks_withES6Modules2() {
+  @Test
+  @Ignore
+  public void testLetConstBlocks_withES6Modules2() {
     test("export let x = 2;", "");
   }
 

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -367,18 +368,7 @@ abstract class IntegrationTestCase {
     Node root = compiler.getJsRoot();
     if (compiled != null) {
       Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
-      String explanation = expectedRoot.checkTreeEquals(root);
-      assertWithMessage(
-              "\n"
-                  + "Expected: "
-                  + compiler.toSource(expectedRoot)
-                  + "\n"
-                  + "Result:   "
-                  + compiler.toSource(root)
-                  + "\n"
-                  + explanation)
-          .that(explanation)
-          .isNull();
+      assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
     }
   }
 
@@ -422,16 +412,7 @@ abstract class IntegrationTestCase {
     if (compiled != null) {
       Node root = compiler.getRoot().getLastChild();
       Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
-      String explanation = expectedRoot.checkTreeEquals(root);
-      assertWithMessage(
-              "\nExpected: "
-                  + compiler.toSource(expectedRoot)
-                  + "\nResult: "
-                  + compiler.toSource(root)
-                  + "\n"
-                  + explanation)
-          .that(explanation)
-          .isNull();
+      assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
     }
   }
 
@@ -444,16 +425,7 @@ abstract class IntegrationTestCase {
     if (compiled != null) {
       Node root = compiler.getRoot().getLastChild();
       Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
-      String explanation = expectedRoot.checkTreeEquals(root);
-      assertWithMessage(
-              "\nExpected: "
-                  + compiler.toSource(expectedRoot)
-                  + "\nResult:   "
-                  + compiler.toSource(root)
-                  + "\n"
-                  + explanation)
-          .that(explanation)
-          .isNull();
+      assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
     }
   }
 
@@ -483,16 +455,7 @@ abstract class IntegrationTestCase {
       Node root = compiler.getRoot().getLastChild();
       Node expectedRoot = parseExpectedCode(
           new String[] {compiled}, options, normalizeResults);
-      String explanation = expectedRoot.checkTreeEquals(root);
-      assertWithMessage(
-              "\nExpected: "
-                  + compiler.toSource(expectedRoot)
-                  + "\nResult: "
-                  + compiler.toSource(root)
-                  + "\n"
-                  + explanation)
-          .that(explanation)
-          .isNull();
+      assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
     }
   }
 

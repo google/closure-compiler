@@ -817,7 +817,10 @@ SinonFakeServer.prototype.restore = function() {};
  */
 SinonFakeServer.prototype.respondWith = function(var_args) {};
 
-
+/**
+ * @return {!SinonFakeXmlHttpRequest}
+ */
+sinon.useFakeXMLHttpRequest = function() {};
 
 /**
  * @constructor
@@ -851,6 +854,8 @@ SinonFakeXmlHttpRequest.prototype.url;
  * @param {?string} body
  */
 SinonFakeXmlHttpRequest.prototype.respond = function(status, headers, body) {};
+
+SinonFakeXmlHttpRequest.prototype.restore = function() {};
 
 
 

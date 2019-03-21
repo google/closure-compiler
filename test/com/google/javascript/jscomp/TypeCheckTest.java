@@ -19,10 +19,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.ScopeSubject.assertScope;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
+import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
@@ -7488,6 +7488,52 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "initializing variable\n" +
         "found   : string\n" +
         "required: number");
+  }
+
+  private static final String PRIMITIVE_ASSERT_DEFS =
+      lines(
+          "/**",
+          " * @param {T} p",
+          " * @return {T}",
+          " * @template T",
+          " * @closurePrimitive {asserts.truthy}",
+          " */",
+          "function assertTruthy(p) { return p; }",
+          "/**",
+          " * @param {*} p",
+          " * @return {string}",
+          " * @closurePrimitive {asserts.matchesReturn}",
+          " */",
+          "function assertString(p) { return /** @type {string} */ (p); }");
+
+  @Test
+  public void testPrimitiveAssertTruthy_removesNullAndUndefinedFromString() {
+    testTypes(
+        PRIMITIVE_ASSERT_DEFS
+            + lines(
+                "function f(/** ?string|undefined */ str) {",
+                "  assertTruthy(str);",
+                "  const /** number */ n = str;",
+                "}"),
+        lines(
+            "initializing variable", //
+            "found   : string",
+            "required: number"));
+  }
+
+  @Test
+  public void testPrimitiveAssertString_narrowsAllTypeToString() {
+    testTypes(
+        PRIMITIVE_ASSERT_DEFS
+            + lines(
+                "function f(/** * */ str) {",
+                "  assertString(str);",
+                "  const /** number */ n = str;",
+                "}"),
+        lines(
+            "initializing variable", //
+            "found   : string",
+            "required: number"));
   }
 
   @Test
@@ -23100,6 +23146,47 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                   "found   : (number|string)",
                   "required: null"));
         });
+  }
+
+  @Test
+  public void testAtRecordOnVarObjectLiteral_warns() {
+    testTypes(
+        "/** @record */ var X = {};",
+        lines(
+            "initializing variable", //
+            "found   : {}",
+            "required: function(this:X): ?"));
+  }
+
+  @Test
+  public void testAtRecordOnConstObjectLiteral_warns() {
+    testTypes(
+        "/** @record */ const X = {};",
+        lines(
+            "initializing variable", //
+            "found   : {}",
+            "required: function(this:X): ?"));
+  }
+
+  @Test
+  public void testAtConstructorOnConstObjectLiteral_warns() {
+    testTypes(
+        "/** @constructor */ const X = {};",
+        lines(
+            "initializing variable", //
+            "found   : {}",
+            "required: function(new:X): ?"));
+  }
+
+  @Test
+  public void testDeclarationAnnotatedEnum_warnsIfAssignedNonEnumRhs() {
+    testTypes(
+        // Y looks similar to an enum but is not actually annotated as such
+        "const Y = {A: 0, B: 1}; /** @enum {number} */ const X = Y;",
+        lines(
+            "initializing variable", //
+            "found   : {A: number, B: number}",
+            "required: enum{X}"));
   }
 
   private void testClosureTypes(String js, String description) {
