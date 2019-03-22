@@ -81,7 +81,7 @@ EventSource.prototype.readyState;
 EventSource.prototype.onopen = function(e) {};
 
 /**
- * @type {?function(!MessageEvent<*>): void}
+ * @type {?function(!MessageEvent<string>): void}
  */
 EventSource.prototype.onmessage = function(e) {};
 
