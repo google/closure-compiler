@@ -37,6 +37,7 @@ import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.jscomp.AbstractCompiler.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -1846,17 +1847,30 @@ public abstract class CompilerTestCase {
     GatherModuleMetadata gatherModuleMetadata =
         new GatherModuleMetadata(
             compiler, options.processCommonJSModules, options.moduleResolutionMode);
-    factories.add(new PassFactory(PassNames.GATHER_MODULE_METADATA, /* isOneTimePass= */ true) {
-      @Override
-      protected CompilerPass create(AbstractCompiler compiler) {
-        return gatherModuleMetadata;
-      }
+    factories.add(
+        new PassFactory(PassNames.GATHER_MODULE_METADATA, /* isOneTimePass= */ true) {
+          @Override
+          protected CompilerPass create(AbstractCompiler compiler) {
+            return gatherModuleMetadata;
+          }
 
-      @Override
-      protected FeatureSet featureSet() {
-        return FeatureSet.ES_NEXT;
-      }
-    });
+          @Override
+          protected FeatureSet featureSet() {
+            return FeatureSet.ES_NEXT;
+          }
+        });
+    factories.add(
+        new PassFactory(PassNames.CREATE_MODULE_MAP, /* isOneTimePass= */ true) {
+          @Override
+          protected CompilerPass create(AbstractCompiler compiler) {
+            return new ModuleMapCreator(compiler, compiler.getModuleMetadataMap());
+          }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return FeatureSet.ES_NEXT;
+          }
+        });
     TranspilationPasses.addEs6ModulePass(
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);

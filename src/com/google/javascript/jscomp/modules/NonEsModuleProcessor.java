@@ -68,7 +68,7 @@ final class NonEsModuleProcessor implements ModuleProcessor {
       return ResolveExportResult.of(
           Binding.from(
               Export.builder()
-                  .localName(exportName)
+                  .exportName(exportName)
                   .moduleMetadata(metadata)
                   .modulePath(path)
                   .closureNamespace(namespace)

@@ -67,7 +67,7 @@ import javax.annotation.Nullable;
  * href="https://www.ecma-international.org/ecma-262/9.0/index.html#sec-source-text-module-records">
  * Suggested reading</a>
  */
-final class EsModuleProcessor implements Callback, ModuleProcessor {
+public final class EsModuleProcessor implements Callback, ModuleProcessor {
 
   /**
    * Error occurs when there is an ambiguous export, which can happen if there are multiple {@code
@@ -99,23 +99,23 @@ final class EsModuleProcessor implements Callback, ModuleProcessor {
    * error if an import attempts to use an ambiguous name. But just having ambiguous names is not
    * itself an error.
    */
-  static final DiagnosticType AMBIGUOUS_EXPORT_DEFINITION =
+  public static final DiagnosticType AMBIGUOUS_EXPORT_DEFINITION =
       DiagnosticType.warning("JSC_AMBIGUOUS_EXPORT_DEFINITION", "The export \"{0}\" is ambiguous.");
 
-  static final DiagnosticType CYCLIC_EXPORT_DEFINITION =
+  public static final DiagnosticType CYCLIC_EXPORT_DEFINITION =
       DiagnosticType.error(
           "JSC_CYCLIC_EXPORT_DEFINITION", "Cyclic export detected while resolving name \"{0}\".");
 
   // Note: We only check for duplicate exports, not imports. Imports cannot be shadowed (by any
   // other binding, including other imports) and so we check that in VariableReferenceCheck.
-  static final DiagnosticType DUPLICATE_EXPORT =
+  public static final DiagnosticType DUPLICATE_EXPORT =
       DiagnosticType.error("JSC_DUPLICATE_EXPORT", "Duplicate export of \"{0}\".");
 
-  static final DiagnosticType IMPORTED_AMBIGUOUS_EXPORT =
+  public static final DiagnosticType IMPORTED_AMBIGUOUS_EXPORT =
       DiagnosticType.error(
           "JSC_IMPORTED_AMBIGUOUS_EXPORT", "The requested name \"{0}\" is ambiguous.");
 
-  static final DiagnosticType NAMESPACE_IMPORT_CANNOT_USE_STAR =
+  public static final DiagnosticType NAMESPACE_IMPORT_CANNOT_USE_STAR =
       DiagnosticType.error(
           "JSC_NAMESPACE_IMPORT_CANNOT_USE_STAR",
           "Namespace imports ('goog:some.Namespace') cannot use import * as. "

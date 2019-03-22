@@ -262,10 +262,17 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
+    if (!options.processCommonJSModules
+        && options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+      checks.add(rewriteScriptsToEs6Modules);
+    }
+
+    // Run these passes after promoting scripts to modules, but before rewriting any other modules.
+    checks.add(gatherModuleMetadataPass);
+    checks.add(createModuleMapPass);
+
     if (options.processCommonJSModules) {
       checks.add(rewriteCommonJsModules);
-    } else if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
-      checks.add(rewriteScriptsToEs6Modules);
     }
 
     // Note: ChromePass can rewrite invalid @type annotations into valid ones, so should run before
@@ -278,9 +285,6 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(checkJsDocAndEs6Modules);
 
     checks.add(checkTypeImportCodeReferences);
-
-    checks.add(gatherModuleMetadataPass);
-    checks.add(createModuleMapPass);
 
     if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
       checks.add(lintChecks);
@@ -1102,6 +1106,18 @@ public final class DefaultPassConfig extends PassConfig {
         gatherModuleMetadataPass,
         createModuleMapPass,
         "Need to gather module metadata before scanning modules.");
+
+    assertPassOrder(
+        checks,
+        createModuleMapPass,
+        rewriteCommonJsModules,
+        "Need to gather module information before rewriting CommonJS modules.");
+
+    assertPassOrder(
+        checks,
+        rewriteScriptsToEs6Modules,
+        gatherModuleMetadataPass,
+        "Need to gather module information after rewriting scripts to modules.");
 
     assertPassOrder(
         checks,

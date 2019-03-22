@@ -46,7 +46,8 @@ final class PolymerPassStaticUtils {
       return false;
     }
     Node name = call.getFirstChild();
-    // When imported from an ES module, we'll have a GETPROP like
+    // When imported from an ES module, the rewriting should set the original name.
+    // When imported from an goog module (TS), we'll have a GETPROP like
     // `module$polymer$polymer_legacy.Polymer`.
     return name.matchesQualifiedName("Polymer")
         || "Polymer".equals(name.getOriginalQualifiedName())
@@ -66,7 +67,8 @@ final class PolymerPassStaticUtils {
     }
     Node heritage = cls.getSecondChild();
     // In Polymer 3, the base class was renamed from `Polymer.Element` to `PolymerElement`. When
-    // imported from an ES module, we'll have a GETPROP like
+    // imported from an ES module, the rewriting should set the original name to `PolymerElement`.
+    // When imported from an goog module (TS), we'll have a GETPROP like
     // `module$polymer$polymer_element.PolymerElement`.
     return !heritage.isEmpty()
         && (heritage.matchesQualifiedName("Polymer.Element")

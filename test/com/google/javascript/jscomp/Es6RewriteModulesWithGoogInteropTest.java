@@ -22,12 +22,14 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.Es6RewriteModules.FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST;
 import static com.google.javascript.jscomp.Es6RewriteModules.LHS_OF_GOOG_REQUIRE_MUST_BE_CONST;
-import static com.google.javascript.jscomp.Es6RewriteModules.NAMESPACE_IMPORT_CANNOT_USE_STAR;
 import static com.google.javascript.jscomp.Es6RewriteModules.REQUIRE_TYPE_FOR_ES6_SHOULD_BE_CONST;
+import static com.google.javascript.jscomp.modules.EsModuleProcessor.NAMESPACE_IMPORT_CANNOT_USE_STAR;
+import static com.google.javascript.jscomp.modules.ModuleMapCreator.MISSING_NAMESPACE_IMPORT;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,12 +43,15 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
       SourceFile.fromCode("closure_provide.js", "goog.provide('closure.provide');");
 
   private static final SourceFile CLOSURE_MODULE =
-      SourceFile.fromCode("closure_module.js", "goog.module('closure.module');");
+      SourceFile.fromCode("closure_module.js", "goog.module('closure.module'); exports.Bar = 0;");
 
   private static final SourceFile CLOSURE_LEGACY_MODULE =
       SourceFile.fromCode(
           "closure_legacy_module.js",
-          "goog.module('closure.legacy.module'); goog.module.declareLegacyNamespace();");
+          lines(
+              "goog.module('closure.legacy.module');",
+              "goog.module.declareLegacyNamespace();",
+              "exports.Bar = 0;"));
 
   @Override
   @Before
@@ -73,8 +78,12 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
       new GatherModuleMetadata(
               compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER)
           .process(externs, root);
+      new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()).process(externs, root);
       new Es6RewriteModules(
-              compiler, compiler.getModuleMetadataMap(), /* preprocessorSymbolTable= */ null)
+              compiler,
+              compiler.getModuleMetadataMap(),
+              compiler.getModuleMap(),
+              /* preprocessorSymbolTable= */ null)
           .process(externs, root);
     };
   }
@@ -91,7 +100,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
             CLOSURE_MODULE,
             CLOSURE_LEGACY_MODULE,
             SourceFile.fromCode("testcode", input)),
-        super.expected(
+        expected(
             CLOSURE_PROVIDE,
             CLOSURE_MODULE,
             CLOSURE_LEGACY_MODULE,
@@ -609,8 +618,25 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
     testModules(
         lines(
+            "import {Bar} from 'goog:closure.module';", "/** @type {Bar} */ var foo = new Bar();"),
+        lines(
+            "/** @type {module$exports$closure$module.Bar} */",
+            "var foo$$module$testcode = new module$exports$closure$module.Bar();",
+            "/** @const */ var module$testcode = {};"));
+
+    testModules(
+        lines(
             "import Foo from 'goog:closure.legacy.module';",
             "/** @type {Foo.Bar} */ var foo = new Foo.Bar();"),
+        lines(
+            "/** @type {closure.legacy.module.Bar} */",
+            "var foo$$module$testcode = new closure.legacy.module.Bar();",
+            "/** @const */ var module$testcode = {};"));
+
+    testModules(
+        lines(
+            "import {Bar} from 'goog:closure.legacy.module';",
+            "/** @type {Bar} */ var foo = new Bar();"),
         lines(
             "/** @type {closure.legacy.module.Bar} */",
             "var foo$$module$testcode = new closure.legacy.module.Bar();",
@@ -974,22 +1000,28 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
   @Test
   public void testMissingRequireAssumesGoogProvide() {
-    ignoreWarnings(MISSING_MODULE_OR_PROVIDE);
+    ignoreWarnings(MISSING_MODULE_OR_PROVIDE, MISSING_NAMESPACE_IMPORT);
 
     test(
         srcs(
             lines(
                 "const missing = goog.require('is.missing');", //
-                "use(missing);",
+                "use(missing, missing.x);",
                 "export {};")),
-        expected(lines("use(is.missing);", "/** @const */ var module$testcode = {};")));
+        expected(
+            lines(
+                "use(is.missing, is.missing.x);", //
+                "/** @const */ var module$testcode = {};")));
 
     test(
         srcs(
             lines(
-                "import missing from 'goog:is.missing';", //
-                "use(missing);",
+                "import missing, {y} from 'goog:is.missing';", //
+                "use(missing, missing.x, y);",
                 "export {};")),
-        expected(lines("use(is.missing);", "/** @const */ var module$testcode = {};")));
+        expected(
+            lines(
+                "use(is.missing, is.missing.x, is.missing.y);", //
+                "/** @const */ var module$testcode = {};")));
   }
 }

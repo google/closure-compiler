@@ -29,15 +29,15 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature.MODULES;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.modules.Binding;
+import com.google.javascript.jscomp.modules.Module;
+import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -47,7 +47,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,22 +62,11 @@ import javax.annotation.Nullable;
  */
 public final class Es6RewriteModules extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
-  private static final String DEFAULT_EXPORT_NAME = "$jscompDefaultExport";
-
   static final DiagnosticType LHS_OF_GOOG_REQUIRE_MUST_BE_CONST =
       DiagnosticType.error(
           "JSC_LHS_OF_GOOG_REQUIRE_MUST_BE_CONST",
           "The left side of a goog.require() or goog.requireType() "
               + "must use ''const'' (not ''let'' or ''var'')");
-
-  static final DiagnosticType NAMESPACE_IMPORT_CANNOT_USE_STAR =
-      DiagnosticType.error(
-          "JSC_NAMESPACE_IMPORT_CANNOT_USE_STAR",
-          "Namespace imports ('goog:some.Namespace') cannot use import * as. "
-              + "Did you mean to import {0} from ''{1}'';?");
-
-  static final DiagnosticType DUPLICATE_EXPORT =
-      DiagnosticType.error("JSC_DUPLICATE_EXPORT", "Duplicate export ''{0}''.");
 
   static final DiagnosticType REQUIRE_TYPE_FOR_ES6_SHOULD_BE_CONST =
       DiagnosticType.error(
@@ -99,21 +87,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   @Nullable private final PreprocessorSymbolTable preprocessorSymbolTable;
   private int scriptNodeCount;
-
-  /**
-   * Maps local names to their exported names. Multimap since the same name can be exported multiple
-   * times.
-   */
-  private Multimap<String, NameNodePair> exportsByLocalName;
-
-  /**
-   * Maps symbol names to a pair of (moduleName, originalName). The original
-   * name is the name of the symbol exported by the module. This is required
-   * because we want to be able to update the original property on the module
-   * object. Eg: "import {foo as f} from 'm'" maps 'f' to the pair ('m', 'foo').
-   * In the entry for "import * as ns", the originalName will be the empty string.
-   */
-  private Map<String, ModuleOriginalNamePair> importMap;
 
   /**
    * Local variable names that were goog.require'd to qualified name we need to line.
@@ -153,6 +126,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   private Set<String> typedefs;
 
   private final ModuleMetadataMap moduleMetadataMap;
+  private final ModuleMap moduleMap;
 
   /**
    * Creates a new Es6RewriteModules instance which can be used to rewrite ES6 modules to a
@@ -161,10 +135,12 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   public Es6RewriteModules(
       AbstractCompiler compiler,
       ModuleMetadataMap moduleMetadataMap,
+      ModuleMap moduleMap,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable) {
     checkNotNull(moduleMetadataMap);
     this.compiler = compiler;
     this.moduleMetadataMap = moduleMetadataMap;
+    this.moduleMap = moduleMap;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
   }
 
@@ -212,8 +188,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   public void clearState() {
     this.scriptNodeCount = 0;
-    this.exportsByLocalName = LinkedHashMultimap.create();
-    this.importMap = new HashMap<>();
     this.typedefs = new HashSet<>();
     this.namesToInlineByAlias = new HashMap<>();
   }
@@ -420,23 +394,19 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   private void visitImport(NodeTraversal t, Node importDecl, Node parent) {
     checkArgument(parent.isModuleBody(), parent);
-    String moduleName;
     String importName = importDecl.getLastChild().getString();
     boolean isNamespaceImport = importName.startsWith("goog:");
     if (isNamespaceImport) {
       // Allow importing Closure namespace objects (e.g. from goog.provide or goog.module) as
       //   import ... from 'goog:my.ns.Object'.
       String namespace = importName.substring("goog:".length());
-      moduleName = namespace;
       ModuleMetadata m = moduleMetadataMap.getModulesByGoogNamespace().get(namespace);
 
       if (m == null) {
         t.report(importDecl, MISSING_MODULE_OR_PROVIDE, namespace);
-        m = getFallbackMetadataForNamespace(namespace);
+      } else {
+        checkState(m.isEs6Module() || m.isGoogModule() || m.isGoogProvide());
       }
-
-      moduleName = ModuleRenaming.getGlobalName(m, namespace);
-      checkState(m.isEs6Module() || m.isGoogModule() || m.isGoogProvide());
     } else {
       ModuleLoader.ModulePath modulePath =
           t.getInput()
@@ -452,42 +422,20 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         modulePath = t.getInput().getPath().resolveModuleAsPath(importName);
       }
 
-      moduleName = modulePath.toModuleName();
       maybeAddImportedFileReferenceToSymbolTable(importDecl.getLastChild(), modulePath.toString());
       // TODO(johnplaisted): Use ModuleMetadata to ensure the path required is CommonJs or ES6 and
       // if not give a better error.
     }
 
     for (Node child : importDecl.children()) {
-      if (child.isEmpty() || child.isString()) {
-        continue;
-      } else if (child.isName()) { // import a from "mod"
-        // Namespace imports' default export is the namespace itself.
-        String name = isNamespaceImport ? "" : "default";
-        importMap.put(child.getString(), new ModuleOriginalNamePair(moduleName, name));
-      } else if (child.isImportSpecs()) {
+      if (child.isImportSpecs()) {
         for (Node grandChild : child.children()) {
-          String origName = grandChild.getFirstChild().getString();
           maybeAddAliasToSymbolTable(grandChild.getFirstChild(), t.getSourceName());
           checkState(grandChild.hasTwoChildren());
-          importMap.put(
-              grandChild.getLastChild().getString(),
-              new ModuleOriginalNamePair(moduleName, origName));
         }
-      } else {
+      } else if (child.isImportStar()) {
         // import * as ns from "mod"
-        Preconditions.checkState(
-            child.isImportStar(), "Expected an IMPORT_STAR node, but was: %s", child);
-        // Namespace imports cannot be imported "as *".
-        if (isNamespaceImport) {
-          compiler.report(
-              JSError.make(
-                  importDecl, NAMESPACE_IMPORT_CANNOT_USE_STAR, child.getString(), moduleName));
-        }
         maybeAddAliasToSymbolTable(child, t.getSourceName());
-        importMap.put(
-            child.getString(),
-            new ModuleOriginalNamePair(moduleName, ""));
       }
     }
 
@@ -524,64 +472,25 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       if (name != null) {
         Node decl = child.detach();
         parent.replaceChild(export, decl);
-        exportsByLocalName.put(name, new NameNodePair("default", child));
       } else {
-        Node var = IR.var(IR.name(DEFAULT_EXPORT_NAME), export.removeFirstChild());
+        Node var =
+            IR.var(IR.name(ModuleRenaming.DEFAULT_EXPORT_VAR_PREFIX), export.removeFirstChild());
         var.setJSDocInfo(child.getJSDocInfo());
         child.setJSDocInfo(null);
         var.useSourceInfoIfMissingFromForTree(export);
         parent.replaceChild(export, var);
-        exportsByLocalName.put(DEFAULT_EXPORT_NAME, new NameNodePair("default", child));
-      }
-    } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)) {
-      //   export * from 'moduleIdentifier';
-      compiler.report(JSError.make(export, Es6ToEs3Util.CANNOT_CONVERT_YET, "Wildcard export"));
-    } else if (export.hasTwoChildren()) {
-      //   export {x, y as z} from 'moduleIdentifier';
-      Node moduleIdentifier = export.getLastChild();
-      Node importNode = IR.importNode(IR.empty(), IR.empty(), moduleIdentifier.cloneNode());
-      importNode.useSourceInfoFrom(export);
-      parent.addChildBefore(importNode, export);
-      visit(t, importNode, parent);
-
-      ModuleLoader.ModulePath path =
-          t.getInput()
-              .getPath()
-              .resolveJsModule(
-                  moduleIdentifier.getString(),
-                  export.getSourceFileName(),
-                  export.getLineno(),
-                  export.getCharno());
-      if (path == null) {
-        path = t.getInput().getPath().resolveModuleAsPath(moduleIdentifier.getString());
-      }
-      String moduleName = path.toModuleName();
-
-      for (Node exportSpec : export.getFirstChild().children()) {
-        String nameFromOtherModule = exportSpec.getFirstChild().getString();
-        String exportedName = exportSpec.getLastChild().getString();
-        NameNodePair pair = new NameNodePair(exportedName, exportSpec);
-        // No way of knowing if the thing we're reexporting is mutated or not. So to be on the
-        // safe side we need to assume it is mutated.
-        // TODO(johnplaisted): Preparse ES6 modules to figure this out and support export *.
-        pair.mutated = true;
-        exportsByLocalName.put(moduleName + "." + nameFromOtherModule, pair);
-      }
-      parent.removeChild(export);
-    } else {
-      if (export.getFirstChild().getToken() == Token.EXPORT_SPECS) {
-        //     export {Foo};
-        for (Node exportSpec : export.getFirstChild().children()) {
-          checkState(exportSpec.hasTwoChildren());
-          exportsByLocalName.put(
-              exportSpec.getFirstChild().getString(),
-              new NameNodePair(exportSpec.getLastChild().getString(), exportSpec));
-        }
-        parent.removeChild(export);
-      } else {
-        visitExportDeclaration(t, export, parent);
       }
       t.reportCodeChange();
+    } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)
+        || export.hasTwoChildren()
+        || export.getFirstChild().getToken() == Token.EXPORT_SPECS) {
+      //   export * from 'moduleIdentifier';
+      //   export {x, y as z} from 'moduleIdentifier';
+      //   export {Foo};
+      parent.removeChild(export);
+      t.reportCodeChange();
+    } else {
+      visitExportDeclaration(t, export, parent);
     }
   }
 
@@ -593,7 +502,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     for (Node lhs : lhsNodes) {
       checkState(lhs.isName());
       String name = lhs.getString();
-      exportsByLocalName.put(name, new NameNodePair(name, lhs));
 
       if (declaration.getJSDocInfo() != null && declaration.getJSDocInfo().hasTypedefType()) {
         typedefs.add(name);
@@ -609,11 +517,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
     if (NodeUtil.isNameDeclaration(declaration)) {
       visitExportNameDeclaration(declaration);
-    } else {
-      checkState(declaration.isFunction() || declaration.isClass());
-      Node nameNode = declaration.getFirstChild();
-      String name = nameNode.getString();
-      exportsByLocalName.put(name, new NameNodePair(name, nameNode));
     }
 
     parent.replaceChild(export, declaration.detach());
@@ -628,22 +531,22 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   }
 
   private void visitScript(NodeTraversal t, Node script) {
-    NodeTraversal.traverse(compiler, script, new FindMutatedExports());
-
     inlineModuleToGlobalScope(script.getFirstChild());
 
     ClosureRewriteModule.checkAndSetStrictModeDirective(t, script);
 
     checkArgument(
         scriptNodeCount == 1,
-        "Es6RewriteModules supports only one invocation per " + "CompilerInput / script node");
+        "Es6RewriteModules supports only one invocation per CompilerInput / script node");
 
-    String moduleName = t.getInput().getPath().toModuleName();
+    Module thisModule = moduleMap.getModule(t.getInput().getPath());
+    String moduleName =
+        ModuleRenaming.getGlobalName(thisModule.metadata(), /* googNamespace= */ null);
 
-    Node moduleVar = createExportsObject(t, script);
+    Node moduleVar = createExportsObject(moduleName, t, script);
 
     // Rename vars to not conflict in global scope.
-    NodeTraversal.traverse(compiler, script, new RenameGlobalVars(moduleName));
+    NodeTraversal.traverse(compiler, script, new RenameGlobalVars(thisModule));
 
     // rewriteRequires is here (rather than being part of the main visit() method, because we only
     // want to rewrite the requires if this is an ES6 module. Note that we also want to do this
@@ -661,12 +564,24 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     t.reportCodeChange();
   }
 
-  private Node createExportsObject(NodeTraversal t, Node script) {
-    String moduleName = t.getInput().getPath().toModuleName();
-    Set<String> exportedNames = new HashSet<>();
-
+  private Node createExportsObject(String moduleName, NodeTraversal t, Node script) {
     Node objLit = IR.objectlit();
-    // Going to get renamed by rename global vars, doesn't matter
+    // Going to get renamed by RenameGlobalVars, so the name we choose here doesn't matter (i.e. we
+    // can't use "moduleName" since it will get renamed to something else). We'll fix the name in
+    // visitScript after the global renaming to ensure it has a name that is deterministic from the
+    // path.
+    //
+    // So after this method we'll have:
+    // var exports = {};
+    // module$name.exportName = localName;
+    //
+    // After RenameGlobalVars:
+    // var exports$globalized = {};
+    // module$name.exportName = localName$globalized;
+    //
+    // After visitScript:
+    // var module$name = {};
+    // module$name.exportName = localName$globalized;
     Node moduleVar = IR.var(IR.name("exports"), objLit);
     moduleVar.getFirstChild().putBooleanProp(Node.MODULE_EXPORT, true);
     JSDocInfoBuilder infoBuilder = new JSDocInfoBuilder(false);
@@ -674,18 +589,15 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     moduleVar.setJSDocInfo(infoBuilder.build());
     script.addChildToBack(moduleVar.useSourceInfoIfMissingFromForTree(script));
 
-    for (Map.Entry<String, NameNodePair> entry : exportsByLocalName.entries()) {
-      NameNodePair pair = entry.getValue();
-      String exportedName = pair.exportedName;
-      Node nodeForSourceInfo = pair.nodeForSourceInfo;
+    Module thisModule = moduleMap.getModule(t.getInput().getPath());
 
-      if (!exportedNames.add(exportedName)) {
-        t.report(nodeForSourceInfo, DUPLICATE_EXPORT, exportedName);
-        continue;
-      }
+    for (Map.Entry<String, Binding> entry : thisModule.namespace().entrySet()) {
+      String exportedName = entry.getKey();
+      Binding binding = entry.getValue();
+      Node nodeForSourceInfo = binding.sourceNode();
+      boolean mutated = binding.isMutated();
+      String boundVariableName = ModuleRenaming.getGlobalName(binding);
 
-      String withSuffix = entry.getKey();
-      boolean mutated = pair.mutated;
       Node getProp = IR.getprop(IR.name(moduleName), IR.string(exportedName));
       getProp.putBooleanProp(Node.MODULE_EXPORT, true);
 
@@ -701,15 +613,15 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         Node exprResult = IR.exprResult(getProp)
             .useSourceInfoIfMissingFromForTree(nodeForSourceInfo);
         script.addChildToBack(exprResult);
-      } else if (mutated || importMap.containsKey(withSuffix)) {
-        addGetterExport(script, nodeForSourceInfo, objLit, exportedName, withSuffix);
+      } else if (mutated) {
+        addGetterExport(script, nodeForSourceInfo, objLit, exportedName, boundVariableName);
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.GETTER);
       } else {
         // This step is done before type checking and the type checker doesn't understand getters.
         // However it does understand aliases. So if an export isn't mutated use an alias to make it
         // actually type checkable.
         // exports.foo = foo;
-        Node assign = IR.assign(getProp, NodeUtil.newQName(compiler, withSuffix));
+        Node assign = IR.assign(getProp, NodeUtil.newQName(compiler, boundVariableName));
         JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
         builder.recordConstancy();
         JSDocInfo info = builder.build();
@@ -718,8 +630,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             IR.exprResult(assign).useSourceInfoIfMissingFromForTree(nodeForSourceInfo));
       }
     }
-
-    exportsByLocalName.clear();
 
     return moduleVar;
   }
@@ -913,47 +823,19 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     }
   }
 
-  private class FindMutatedExports extends AbstractPostOrderCallback {
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getToken()) {
-        case NAME:
-          Scope scope = t.getScope();
-          if (NodeUtil.isLValue(n) && !scope.getClosestHoistScope().isModuleScope()) {
-            Collection<NameNodePair> pairs = exportsByLocalName.get(n.getString());
-            if (pairs != null) {
-              Var var = scope.getVar(n.getString());
-              // A var declared in the module scope with the same name as an export must be the
-              // export. And we know we're setting it in a function scope, so this cannot be the
-              // declaration itself. We must be mutating.
-              if (var != null && var.getScope().isModuleScope()) {
-                for (NameNodePair pair : pairs) {
-                  pair.mutated = true;
-                }
-              }
-            }
-          }
-          break;
-        default:
-          break;
-      }
-    }
-  }
-
   /**
    * Traverses a node tree and
    *
    * <ol>
    *   <li>Appends a suffix to all global variable names defined in this module.
-   *   <li>Changes references to imported values to be property accesses on the
-   *    imported module object.
+   *   <li>Changes references to imported values to access the exported variable.
    * </ol>
    */
   private class RenameGlobalVars extends AbstractPostOrderCallback {
-    private final String suffix;
+    private final Module thisModule;
 
-    RenameGlobalVars(String suffix) {
-      this.suffix = suffix;
+    RenameGlobalVars(Module thisModule) {
+      this.thisModule = thisModule;
     }
 
     @Override
@@ -967,37 +849,32 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
       if (n.isName()) {
         String name = n.getString();
-        if (suffix.equals(name)) {
-          // TODO(moz): Investigate whether we need to return early in this unlikely situation.
-          return;
-        }
 
         Var var = t.getScope().getVar(name);
         if (var != null && var.isGlobal()) {
           // Avoid polluting the global namespace.
-          String newName = name + "$$" + suffix;
+          String newName =
+              ModuleRenaming.getGlobalNameOfEsModuleLocalVariable(thisModule.metadata(), name);
           n.setString(newName);
           n.setOriginalName(name);
           t.reportCodeChange(n);
-        } else if (var == null && importMap.containsKey(name)) {
-          // Change to property access on the imported module object.
-          if (parent.isCall() && parent.getFirstChild() == n) {
-            parent.putBooleanProp(Node.FREE_CALL, false);
-          }
-
-          ModuleOriginalNamePair pair = importMap.get(name);
-          boolean isImportStar = pair.originalName.isEmpty();
-          Node moduleAccess = NodeUtil.newQName(compiler, pair.module);
-
+        } else if (var == null && thisModule.boundNames().containsKey(name)) {
+          // Imports have been detached, so they won't show up in scope. Thus if we have a variable
+          // not in scope that shares the name of an import it is the import.
           maybeAddAliasToSymbolTable(n, t.getSourceName());
-          if (isImportStar) {
-            n.replaceWith(moduleAccess.useSourceInfoIfMissingFromForTree(n));
-          } else {
-            n.replaceWith(
-                IR.getprop(moduleAccess, IR.string(pair.originalName))
-                    .useSourceInfoIfMissingFromForTree(n));
-            t.reportCodeChange(moduleAccess);
+          Binding binding = thisModule.boundNames().get(name);
+
+          Node replacement = ModuleRenaming.replace(compiler, moduleMap, binding, n);
+
+          // `n.x()` may become `foo()`
+          if (replacement.isName()
+              && parent.isCall()
+              && parent.getFirstChild() == n
+              && parent.getBooleanProp(Node.FREE_CALL)) {
+            parent.putBooleanProp(Node.FREE_CALL, true);
           }
+
+          t.reportCodeChange();
         }
       }
     }
@@ -1008,23 +885,30 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
      */
     private void fixTypeNode(NodeTraversal t, Node typeNode) {
       if (typeNode.isString()) {
+        Module thisModule = moduleMap.getModule(t.getInput().getPath());
         String name = typeNode.getString();
-        List<String> splitted = Splitter.on('.').limit(2).splitToList(name);
+        List<String> splitted = Splitter.on('.').splitToList(name);
         String baseName = splitted.get(0);
         String rest = "";
-        if (splitted.size() == 2) {
-          rest = "." + splitted.get(1);
+        if (splitted.size() > 1) {
+          rest = name.substring(baseName.length());
         }
         Var var = t.getScope().getVar(baseName);
         if (var != null && var.isGlobal()) {
-          maybeSetNewName(t, typeNode, name, baseName + "$$" + suffix + rest);
-        } else if (var == null && importMap.containsKey(baseName)) {
-          ModuleOriginalNamePair pair = importMap.get(baseName);
-          if (pair.originalName.isEmpty()) {
-            maybeSetNewName(t, typeNode, name, pair.module + rest);
-          } else {
-            maybeSetNewName(t, typeNode, name, pair.module + "." + pair.originalName + rest);
-          }
+          maybeSetNewName(
+              t,
+              typeNode,
+              name,
+              ModuleRenaming.getGlobalNameOfEsModuleLocalVariable(thisModule.metadata(), baseName)
+                  + rest);
+        } else if (var == null && thisModule.boundNames().containsKey(baseName)) {
+          // Imports have been detached, so they won't show up in scope. Thus if we have a variable
+          // not in scope that shares the name of an import it is the import.
+          Binding binding = thisModule.boundNames().get(baseName);
+          String globalName =
+              ModuleRenaming.getGlobalNameForJsDoc(
+                  moduleMap, binding, splitted.subList(1, splitted.size()));
+          maybeSetNewName(t, typeNode, name, globalName);
 
           if (preprocessorSymbolTable != null) {
             // Jsdoc type node is a single STRING node that spans the whole type. For example
@@ -1036,6 +920,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             maybeAddAliasToSymbolTable(onlyBaseName, t.getSourceName());
           }
         }
+
         typeNode.setOriginalName(name);
       }
 
@@ -1063,7 +948,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    *   console.log(doBar);
    * </pre>
    *
-   * @param n Alias node. In the example above alias nodes are foo, doBar and doBar.
+   * @param n Alias node. In the example above alias nodes are foo, doBar, and doBar.
    * @param module Name of the module currently being processed.
    */
   private void maybeAddAliasToSymbolTable(Node n, String module) {
@@ -1087,16 +972,18 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    * Add reference to a file that current module imports. Example:
    *
    * <pre>
-   * import * from '../some/file.js';
+   * import * as qux from '../some/file.js';
    * </pre>
    *
-   * @param importNode String node from the import statement that references imported file. In the
-   *     example above it is the '../some/file.js' STRING node.
+   * <p>Will add a reference to file.js on the string node `'../some/file.js'`.
+   *
+   * @param importStringNode String node from the import statement that references imported file. In
+   *     the example above it is the '../some/file.js' STRING node.
    * @param importedFilePath Absolute path to the imported file. In the example above it can be
    *     myproject/folder/some/file.js
    */
   private void maybeAddImportedFileReferenceToSymbolTable(
-      Node importNode, String importedFilePath) {
+      Node importStringNode, String importedFilePath) {
     if (preprocessorSymbolTable == null) {
       return;
     }
@@ -1110,38 +997,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       }
     }
 
-    preprocessorSymbolTable.addReference(importNode, importedFilePath);
-  }
-
-  private static class ModuleOriginalNamePair {
-    private final String module;
-    private final String originalName;
-
-    private ModuleOriginalNamePair(String module, String originalName) {
-      this.module = module;
-      this.originalName = originalName;
-    }
-
-    @Override
-    public String toString() {
-      return "(" + module + ", " + originalName + ")";
-    }
-  }
-
-  private static class NameNodePair {
-    final String exportedName;
-    final Node nodeForSourceInfo;
-    boolean mutated;
-
-    private NameNodePair(String exportedName, Node nodeForSourceInfo) {
-      this.exportedName = exportedName;
-      this.nodeForSourceInfo = nodeForSourceInfo;
-      mutated = false;
-    }
-
-    @Override
-    public String toString() {
-      return "(" + exportedName + ", " + nodeForSourceInfo + ")";
-    }
+    preprocessorSymbolTable.addReference(importStringNode, importedFilePath);
   }
 }

@@ -127,11 +127,11 @@ public abstract class Export {
 
     /** Some faux export from a non-ES module. */
     private static void validateOtherModule(Export e) {
-      checkNotNull(e.localName());
+      checkNotNull(e.exportName());
 
       // Fields ignored for these fake exports. Should not set these.
       checkState(e.exportNode() == null);
-      checkState(e.exportName() == null);
+      checkState(e.localName() == null);
       checkState(e.moduleRequest() == null);
       checkState(e.importName() == null);
       checkState(e.nameNode() == null);
