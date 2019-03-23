@@ -3040,7 +3040,7 @@ WebSocket.prototype.onopen;
 
 /**
  * An event handler called on message event.
- * @type {?function(!MessageEvent<string|ArrayBuffer|Blob>): void}
+ * @type {?function(!MessageEvent<string|!ArrayBuffer|!Blob>): void}
  */
 WebSocket.prototype.onmessage;
 
