@@ -39,7 +39,9 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticScope;
+import javax.annotation.Nullable;
 
 /**
  * The {@code StaticTypedScope} interface must be implemented by any object that defines variables
@@ -68,4 +70,28 @@ public interface StaticTypedScope extends StaticScope {
 
   /** Returns the expected type of {@code this} in the current scope. */
   JSType getTypeOfThis();
+
+  /**
+   * Looks up a given qualified name in the scope. if that fails, looks up the component properties
+   * off of any owner types that are in scope.
+   *
+   * <p>This is always more or equally expensive as calling getSlot(String name), so should only be
+   * used when necessary.
+   */
+  @Nullable
+  default JSType lookupQualifiedName(QualifiedName qname) {
+    StaticTypedSlot slot = getSlot(qname.join());
+    if (slot != null && !slot.isTypeInferred()) {
+      JSType type = slot.getType();
+      if (type != null && !type.isUnknownType()) {
+        return type;
+      }
+    } else if (!qname.isSimple()) {
+      JSType type = lookupQualifiedName(qname.getOwner());
+      if (type != null) {
+        return type.findPropertyType(qname.getComponent());
+      }
+    }
+    return null;
+  }
 }

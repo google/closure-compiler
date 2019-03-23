@@ -22289,7 +22289,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeofType_notInScope() {
-    testTypes("var /** typeof ns */ x;", "Parse error. Not in scope: ns");
+    testTypes(
+        "var /** typeof ns */ x;",
+        "Parse error. Missing type for `typeof` value. The value must be declared and const.");
   }
 
   @Test
@@ -22446,6 +22448,38 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testTypeofType_unknownType() {
+    testTypes(
+        lines("var /** ? */ x;", "/** @type {typeof x} */ var y;"),
+        "Parse error. Missing type for `typeof` value. The value must be declared and const.");
+  }
+
+  @Test
+  public void testTypeofType_namespacedTypeOnIndirectAccessNameResolves() {
+    testTypes(
+        lines(
+            "/** @const */ var ns1 = {};",
+            "/** @constructor */ ns1.Foo = function() {};",
+            "const ns2 = ns1;",
+            // Verify this works although we have never seen any assignments to `ns2.Foo`
+            "/** @const {typeof ns2.Foo} */ var Foo2 = /** @type {?} */ (x);",
+            "/** @type {null} */ var x = new Foo2();"),
+        lines(
+            "initializing variable", //
+            "found   : ns1.Foo",
+            "required: null"));
+  }
+
+  @Test
+  public void testTypeofType_namespacedTypeMissing() {
+    testTypes(
+        lines(
+            "/** @const */ var ns = {};",
+            "/** @const {typeof ns.Foo} */ var Foo = /** @type {?} */ (x);"),
+        "Parse error. Missing type for `typeof` value. The value must be declared and const.");
+  }
+
+  @Test
   public void testTypeofType_withGlobalDeclaredVariableWithHoistedFunction() {
     // TODO(sdh): fix this.  This is another form of problems with partially constructed scopes.
     // "x" is in scope but because "g" is hoisted its type is created before "x" is introduced
@@ -22457,7 +22491,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function g(/** typeof x */ a) {}",
             "x = 'str';",
             "g(null);"),
-        lines("Parse error. Not in scope: x"));
+        lines(
+            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
   }
 
   @Test
@@ -22483,7 +22518,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var g = function (/** typeof x */ a) {}",
             "x = 'str';",
             "g(null);"),
-        lines("Parse error. No type for: x"));
+        lines(
+            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
   }
 
   @Test
@@ -22499,7 +22535,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  x = 'str';",
             "  g(null);",
             "}"),
-        lines("Parse error. Not in scope: x"));
+        lines(
+            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
   }
 
   @Test
@@ -22516,7 +22553,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  x = 'str';",
             "  g(null);",
             "}"),
-        lines("Parse error. Not in scope: x"));
+        lines(
+            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
   }
 
   @Test
@@ -22529,7 +22567,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  x = 'str';",
             "  g(null);",
             "}"),
-        lines("Parse error. No type for: x"));
+        lines(
+            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
   }
 
   @Test
@@ -22559,7 +22598,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  var g = null",
             "  x = 'str';",
             "}"),
-        lines("Parse error. No type for: x"));
+        lines(
+            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
   }
 
   @Test

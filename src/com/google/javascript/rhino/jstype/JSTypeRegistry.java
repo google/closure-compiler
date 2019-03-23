@@ -65,6 +65,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.PMap;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
@@ -2023,21 +2024,21 @@ public class JSTypeRegistry implements Serializable {
       case TYPEOF:
         {
           String name = n.getFirstChild().getString();
-          StaticTypedSlot slot = scope.getSlot(name);
-          if (slot == null) {
-            reporter.warning("Not in scope: " + name, sourceName, n.getLineno(), n.getCharno());
-            return getNativeType(UNKNOWN_TYPE);
-          }
           // TODO(sdh): require var to be const?
-          JSType type = slot.getType();
-          if (type == null) {
-            reporter.warning("No type for: " + name, sourceName, n.getLineno(), n.getCharno());
+          JSType type = scope.lookupQualifiedName(QualifiedName.of(name));
+          if (type == null || type.isUnknownType()) {
+            reporter.warning(
+                "Missing type for `typeof` value. The value must be declared and const.",
+                sourceName,
+                n.getLineno(),
+                n.getCharno());
             return getNativeType(UNKNOWN_TYPE);
           }
           if (type.isLiteralObject()) {
+            JSType scopeType = type;
             type =
                 createNamedType(scope, "typeof " + name, sourceName, n.getLineno(), n.getCharno());
-            ((NamedType) type).setReferencedType(slot.getType());
+            ((NamedType) type).setReferencedType(scopeType);
           }
           return type;
         }
