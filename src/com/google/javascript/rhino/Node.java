@@ -582,8 +582,6 @@ public class Node implements Serializable {
     checkArgument(child.previous == null, "new child has existing previous sibling");
 
     token = nodeType;
-    validateSpreadParent(this, child);
-
     parent = null;
     first = child;
     child.next = null;
@@ -599,11 +597,7 @@ public class Node implements Serializable {
     checkArgument(right.parent == null, "second new child has existing parent");
     checkArgument(right.next == null, "second new child has existing next sibling");
     checkArgument(right.previous == null, "second new child has existing previous sibling");
-
     token = nodeType;
-    validateSpreadParent(this, left);
-    validateSpreadParent(this, right);
-
     parent = null;
     first = left;
     left.next = right;
@@ -625,12 +619,7 @@ public class Node implements Serializable {
     checkArgument(right.parent == null);
     checkArgument(right.next == null);
     checkArgument(right.previous == null);
-
     token = nodeType;
-    validateSpreadParent(this, left);
-    validateSpreadParent(this, mid);
-    validateSpreadParent(this, right);
-
     parent = null;
     first = left;
     left.next = mid;
@@ -658,13 +647,7 @@ public class Node implements Serializable {
     checkArgument(right.parent == null);
     checkArgument(right.next == null);
     checkArgument(right.previous == null);
-
     token = nodeType;
-    validateSpreadParent(this, left);
-    validateSpreadParent(this, mid);
-    validateSpreadParent(this, mid2);
-    validateSpreadParent(this, right);
-
     parent = null;
     first = left;
     left.next = mid;
@@ -818,27 +801,10 @@ public class Node implements Serializable {
     return -1;
   }
 
-  public static final void validateSpreadParent(Node parent, Node spread) {
-    if (!spread.isSpread()) {
-      return;
-    }
-
-    switch (parent.getToken()) {
-      case ARRAYLIT:
-      case CALL:
-      case NEW:
-      case OBJECTLIT:
-        break;
-      default:
-        throw new AssertionError(parent.toStringTree());
-    }
-  }
-
   public final void addChildToFront(Node child) {
     checkArgument(child.parent == null);
     checkArgument(child.next == null);
     checkArgument(child.previous == null);
-    validateSpreadParent(this, child);
     child.parent = this;
     child.next = first;
     if (first == null) {
@@ -859,8 +825,6 @@ public class Node implements Serializable {
         child.parent == null,
         "Cannot add already-owned child node.\nChild: %s\nExisting parent: %s\nNew parent: %s",
         child, child.parent, this);
-    validateSpreadParent(this, child);
-
     checkArgument(child.next == null);
     checkArgument(child.previous == null);
 
@@ -896,8 +860,6 @@ public class Node implements Serializable {
     checkNotNull(children.previous, children);
     for (Node child = children; child != null; child = child.next) {
       checkArgument(child.parent == null);
-      validateSpreadParent(this, child);
-
       child.parent = this;
     }
 
@@ -925,8 +887,6 @@ public class Node implements Serializable {
     checkArgument(newChild.previous == null, "The new child node has previous siblings.");
     checkArgument(newChild.parent == null, "The new child node already has a parent.");
     if (first == node) {
-      validateSpreadParent(this, newChild);
-
       Node last = first.previous;
       // NOTE: last.next remains null
       newChild.parent = this;
@@ -973,7 +933,6 @@ public class Node implements Serializable {
 
     for (Node child = children; child != null; child = child.next) {
       checkArgument(child.parent == null);
-      validateSpreadParent(this, child);
       child.parent = this;
     }
 
@@ -1029,8 +988,6 @@ public class Node implements Serializable {
     checkArgument(newChild.previous == null, "The new child node has previous siblings.");
     checkArgument(newChild.parent == null, "The new child node already has a parent.");
     checkState(child.parent == this, "%s is not the parent of %s", this, child);
-
-    validateSpreadParent(this, newChild);
 
     // Copy over important information.
     newChild.useSourceInfoIfMissingFrom(child);
