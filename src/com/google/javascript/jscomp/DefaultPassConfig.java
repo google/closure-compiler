@@ -20,11 +20,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2019;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2019_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPE_CHECK_SUPPORTED;
@@ -1852,7 +1851,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2428,19 +2427,19 @@ public final class DefaultPassConfig extends PassConfig {
   /** Puts global symbols into a single object. */
   private final PassFactory rescopeGlobalSymbols =
       new PassFactory("rescopeGlobalSymbols", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new RescopeGlobalSymbols(
-          compiler,
-          options.renamePrefixNamespace,
-          options.renamePrefixNamespaceAssumeCrossChunkNames);
-    }
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new RescopeGlobalSymbols(
+              compiler,
+              options.renamePrefixNamespace,
+              options.renamePrefixNamespaceAssumeCrossChunkNames);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES2019_MODULES;
+        }
+      };
 
   /** Collapses names in the global scope. */
   private final PassFactory collapseProperties =
@@ -2480,7 +2479,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2848,7 +2847,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018;
+          return ES2019;
         }
       };
 
@@ -2890,7 +2889,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018;
+          return ES2019;
         }
       };
 
@@ -2903,7 +2902,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2019_MODULES;
         }
       };
 
@@ -2925,30 +2924,28 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2019_MODULES;
         }
       };
 
-  /**
-   * Alias string literals with global variables, to avoid creating lots of
-   * transient objects.
-   */
-  private final PassFactory aliasStrings = new PassFactory("aliasStrings", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new AliasStrings(
-          compiler,
-          compiler.getModuleGraph(),
-          options.aliasAllStrings ? null : options.aliasableStrings,
-          options.aliasStringsBlacklist,
-          options.outputJsStringUsage);
-    }
+  /** Alias string literals with global variables, to avoid creating lots of transient objects. */
+  private final PassFactory aliasStrings =
+      new PassFactory("aliasStrings", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new AliasStrings(
+              compiler,
+              compiler.getModuleGraph(),
+              options.aliasAllStrings ? null : options.aliasableStrings,
+              options.aliasStringsBlacklist,
+              options.outputJsStringUsage);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES2019_MODULES;
+        }
+      };
 
   /**
    * Renames properties so that the two properties that never appear on the same object get the same
@@ -3278,17 +3275,18 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  private final PassFactory chromePass = new PassFactory("chromePass", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new ChromePass(compiler);
-    }
+  private final PassFactory chromePass =
+      new PassFactory("chromePass", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new ChromePass(compiler);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES2019_MODULES;
+        }
+      };
 
   /** Rewrites the super accessors calls to support Dart Dev Compiler output. */
   private final HotSwapPassFactory dartSuperAccessorsPass =
