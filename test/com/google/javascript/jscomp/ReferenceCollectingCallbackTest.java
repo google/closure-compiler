@@ -34,7 +34,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   private Behavior behavior;
-  private boolean es6ScopeCreator;
 
   @Override
   @Before
@@ -42,7 +41,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
     super.setUp();
     setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
     behavior = null;
-    es6ScopeCreator = true;
   }
 
   @Override
@@ -56,10 +54,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    ScopeCreator scopeCreator =
-        es6ScopeCreator
-            ? new Es6SyntacticScopeCreator(compiler)
-            : SyntacticScopeCreator.makeUntyped(compiler);
+    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
     return new ReferenceCollectingCallback(
         compiler,
         this.behavior,
@@ -109,7 +104,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   @Test
   public void testImport1() {
-    es6ScopeCreator = true;
     testBehavior(
         "import x from '/m';",
         (NodeTraversal t, ReferenceMap rm) -> {
@@ -125,7 +119,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   @Test
   public void testImport2() {
-    es6ScopeCreator = true;
     testBehavior(
         "import {x} from '/m';",
         (NodeTraversal t, ReferenceMap rm) -> {
@@ -141,7 +134,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   @Test
   public void testImport2_alternate() {
-    es6ScopeCreator = true;
     testBehavior(
         "import {x as x} from '/m';",
         (NodeTraversal t, ReferenceMap rm) -> {
@@ -157,7 +149,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   @Test
   public void testImport3() {
-    es6ScopeCreator = true;
     testBehavior(
         "import {y as x} from '/m';",
         (NodeTraversal t, ReferenceMap rm) -> {
@@ -174,7 +165,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   @Test
   public void testImport4() {
-    es6ScopeCreator = true;
     testBehavior(
         "import * as x from '/m';",
         (NodeTraversal t, ReferenceMap rm) -> {
@@ -187,30 +177,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
             assertThat(x.isAssignedOnceInLifetime()).isTrue();
             assertThat(x.isWellDefined()).isTrue();
             assertThat(x).comparingElementsUsing(IS_DECLARATION).containsExactly(true).inOrder();
-          }
-        });
-  }
-
-  @Test
-  public void testVarInBlock_oldScopeCreator() {
-    es6ScopeCreator = false;
-    testBehavior(
-        lines(
-            "function f(x) {",
-            "  if (true) {",
-            "    var y = x;",
-            "    y;",
-            "    y;",
-            "  }",
-            "}"),
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isFunctionScope()) {
-              ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-              assertThat(y.isAssignedOnceInLifetime()).isTrue();
-              assertThat(y.isWellDefined()).isTrue();
-            }
           }
         });
   }
@@ -420,12 +386,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   @Test
   public void testBasicBlocks() {
-    testBasicBlocks(true);
-    testBasicBlocks(false);
-  }
-
-  private void testBasicBlocks(boolean scopeCreator) {
-    es6ScopeCreator = scopeCreator;
     testBehavior(
         lines(
             "var x = 0;",
@@ -449,32 +409,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   @Test
   public void testThis() {
-    testBehavior(
-        lines(
-            "/** @constructor */",
-            "function C() {}",
-            "",
-            "C.prototype.m = function m() {",
-            "  var self = this;",
-            "  if (true) {",
-            "    alert(self);",
-            "  }",
-            "};"),
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isFunctionBlockScope()
-                && t.getScopeRoot().getParent().getFirstChild().matchesQualifiedName("m")) {
-              ReferenceCollection self = rm.getReferences(t.getScope().getVar("self"));
-              assertThat(self.isEscaped()).isFalse();
-            }
-          }
-        });
-  }
-
-  @Test
-  public void testThis_oldScopeCreator() {
-    es6ScopeCreator = false;
     testBehavior(
         lines(
             "/** @constructor */",
