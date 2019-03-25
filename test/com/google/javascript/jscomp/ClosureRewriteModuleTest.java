@@ -27,6 +27,7 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LATE_PROVIDE_ERROR;
+import static com.google.javascript.jscomp.ClosureRewriteModule.LOAD_MODULE_FN_MISSING_RETURN;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
@@ -1071,6 +1072,16 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ var module$exports$mod_A = {};",
             "/** @constructor @implements {module$exports$mod_B.B} */",
             "function module$contents$mod_A_A(){}"));
+  }
+
+  @Test
+  public void testGoogLoadModule_missingReturn() {
+    testError(
+        lines(
+            "goog.loadModule(function(exports) {", //
+            "  goog.module('ns.b');",
+            "});"),
+        LOAD_MODULE_FN_MISSING_RETURN);
   }
 
   @Test

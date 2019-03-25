@@ -156,6 +156,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           "JSC_ILLEGAL_DESTRUCTURING_NOT_EXPORTED",
           "Destructuring import reference to name \"{0}\" was not exported in module {1}");
 
+  static final DiagnosticType LOAD_MODULE_FN_MISSING_RETURN =
+      DiagnosticType.error(
+          "JSC_LOAD_MODULE_FN_MISSING_RETURN",
+          "goog.loadModule function should end with 'return exports;'");
+
   private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
 
   private static final String MODULE_EXPORTS_PREFIX = "module$exports$";
@@ -667,8 +672,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             moduleBody.setToken(Token.MODULE_BODY);
             n.replaceWith(moduleBody);
             Node returnNode = moduleBody.getLastChild();
-            checkState(returnNode.isReturn(), returnNode);
-            returnNode.detach();
+            if (!returnNode.isReturn()) {
+              compiler.report(JSError.make(moduleBody, LOAD_MODULE_FN_MISSING_RETURN));
+            } else {
+              returnNode.detach();
+            }
+            t.reportCodeChange();
           }
           return false;
         default:
