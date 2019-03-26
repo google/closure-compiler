@@ -426,9 +426,6 @@ public class ConvertToTypedInterface implements CompilerPass {
         decl.remove(compiler);
         return;
       }
-      if (decl.isAliasDefinition()) {
-        return;
-      }
       if (decl.getRhs() != null && decl.getRhs().isFunction()) {
         processFunction(decl.getRhs());
       } else if (decl.getRhs() != null && isClass(decl.getRhs())) {

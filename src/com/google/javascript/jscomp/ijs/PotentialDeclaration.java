@@ -135,11 +135,6 @@ abstract class PotentialDeclaration {
    */
   abstract void simplify(AbstractCompiler compiler);
 
-  boolean isAliasDefinition() {
-    Node rhs = getRhs();
-    return isConstToBeInferred() && rhs != null && rhs.isQualifiedName();
-  }
-
   /**
    * A potential declaration that has a fully qualified name to describe it.
    * This includes things like:
@@ -244,13 +239,6 @@ abstract class PotentialDeclaration {
       super(fullyQualifiedName, lhs, rhs);
       Node thisPropDefinition = NodeUtil.getEnclosingStatement(lhs);
       this.insertionPoint = NodeUtil.getEnclosingStatement(thisPropDefinition.getParent());
-    }
-
-    @Override
-    boolean isAliasDefinition() {
-      // Constructor 'this' property declarations are executed in each constructor invocation
-      // and are not aliases in the traditional sense
-      return false;
     }
 
     @Override
@@ -435,12 +423,12 @@ abstract class PotentialDeclaration {
     }
 
     @Override
-    boolean isAliasDefinition() {
+    boolean isDefiniteDeclaration() {
       return true;
     }
 
     @Override
-    boolean isDefiniteDeclaration() {
+    boolean shouldPreserve() {
       return true;
     }
   }
@@ -516,7 +504,10 @@ abstract class PotentialDeclaration {
   }
 
   static boolean isAliasDeclaration(Node lhs, @Nullable Node rhs) {
-    return isConstToBeInferred(lhs) && rhs != null && rhs.isQualifiedName();
+    return !ClassUtil.isThisProp(lhs)
+        && isConstToBeInferred(lhs)
+        && rhs != null
+        && rhs.isQualifiedName();
   }
 
   private static void removeStringKeyValue(Node stringKey) {

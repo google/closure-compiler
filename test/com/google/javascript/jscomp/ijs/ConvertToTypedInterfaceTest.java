@@ -666,6 +666,13 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAtConstAnnotationAlias() {
+    test(
+        "/** @const */ var x = a.b.c; var y = x;",
+        "/** @const */ var x = a.b.c; /** @const @type {UnusableType} */ var y;");
+  }
+
+  @Test
   public void testConstPropagationPrivateProperties1() {
     test(
         lines(
