@@ -365,7 +365,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
     Node call = n.getLastChild().getLastChild();
     Node name = call.getLastChild();
 
-    TypedScope scope = (TypedScope) SyntacticScopeCreator.makeTyped(compiler).createScope(n, null);
+    TypedScope scope = new TypedScopeCreator(compiler).createScope(n, null);
     FlowScope flowScope = LinkedFlowScope.createEntryLattice(scope);
 
     assertThat(call.getToken()).isEqualTo(Token.CALL);

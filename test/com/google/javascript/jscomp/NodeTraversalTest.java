@@ -292,7 +292,7 @@ public final class NodeTraversalTest {
   @Test
   public void testGetCurrentNode() {
     Compiler compiler = new Compiler();
-    ScopeCreator creator = SyntacticScopeCreator.makeUntyped(compiler);
+    ScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
     NodeTraversal t = new NodeTraversal(compiler, callback, creator);
 
@@ -774,7 +774,7 @@ public final class NodeTraversalTest {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      return true;
+      return !entered;
     }
   }
 
