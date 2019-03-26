@@ -27,9 +27,19 @@
 function Geolocation() {}
 
 /**
- * @param {function(!GeolocationPosition)} successCallback
- * @param {(function(!GeolocationPositionError)|null)=} opt_errorCallback
- * @param {GeolocationPositionOptions=} opt_options
+ * @typedef {function(!Position): void}
+ */
+var PositionCallback;
+
+/**
+ * @typedef {function(!PositionError): void}
+ */
+var PositionErrorCallback;
+
+/**
+ * @param {PositionCallback} successCallback
+ * @param {PositionErrorCallback=} opt_errorCallback
+ * @param {PositionOptions=} opt_options
  * @return {undefined}
  */
 Geolocation.prototype.getCurrentPosition = function(successCallback,
@@ -37,9 +47,9 @@ Geolocation.prototype.getCurrentPosition = function(successCallback,
                                                        opt_options) {};
 
 /**
- * @param {function(!GeolocationPosition)} successCallback
- * @param {(function(!GeolocationPositionError)|null)=} opt_errorCallback
- * @param {GeolocationPositionOptions=} opt_options
+ * @param {PositionCallback} successCallback
+ * @param {PositionErrorCallback=} opt_errorCallback
+ * @param {PositionOptions=} opt_options
  * @return {number}
  */
 Geolocation.prototype.watchPosition = function(successCallback,
@@ -57,64 +67,61 @@ Geolocation.prototype.clearWatch = function(watchId) {};
  * @record
  * @see http://www.w3.org/TR/geolocation-API/#coordinates
  */
-function GeolocationCoordinates() {}
+function Coordinates() {}
 /** @type {number} */
-GeolocationCoordinates.prototype.latitude;
+Coordinates.prototype.latitude;
 /** @type {number} */
-GeolocationCoordinates.prototype.longitude;
+Coordinates.prototype.longitude;
 /** @type {number} */
-GeolocationCoordinates.prototype.accuracy;
+Coordinates.prototype.accuracy;
 /** @type {number} */
-GeolocationCoordinates.prototype.altitude;
+Coordinates.prototype.altitude;
 /** @type {number} */
-GeolocationCoordinates.prototype.altitudeAccuracy;
+Coordinates.prototype.altitudeAccuracy;
 /** @type {number} */
-GeolocationCoordinates.prototype.heading;
+Coordinates.prototype.heading;
 /** @type {number} */
-GeolocationCoordinates.prototype.speed;
-
+Coordinates.prototype.speed;
 
 /**
  * @record
  * @see http://www.w3.org/TR/geolocation-API/#position
  */
-function GeolocationPosition() {}
-/** @type {GeolocationCoordinates} */
-GeolocationPosition.prototype.coords;
+function Position() {}
+/** @type {Coordinates} */
+Position.prototype.coords;
 /** @type {number} */
-GeolocationPosition.prototype.timestamp;
-
+Position.prototype.timestamp;
 
 /**
  * @record
  * @see http://www.w3.org/TR/geolocation-API/#position-options
  */
-function GeolocationPositionOptions() {}
+function PositionOptions() {}
 /** @type {boolean|undefined} */
-GeolocationPositionOptions.prototype.enableHighAccuracy;
+PositionOptions.prototype.enableHighAccuracy;
 /** @type {number|undefined} */
-GeolocationPositionOptions.prototype.maximumAge;
+PositionOptions.prototype.maximumAge;
 /** @type {number|undefined} */
-GeolocationPositionOptions.prototype.timeout;
-
+PositionOptions.prototype.timeout;
 
 /**
  * @record
  * @see http://www.w3.org/TR/geolocation-API/#position-error
  */
-function GeolocationPositionError() {}
+function PositionError() {}
 /** @type {number} */
-GeolocationPositionError.prototype.code;
+PositionError.prototype.code;
 /** @type {string} */
-GeolocationPositionError.prototype.message;
-/** @type {number} */
-GeolocationPositionError.prototype.UNKNOWN_ERROR;
-/** @type {number} */
-GeolocationPositionError.prototype.PERMISSION_DENIED;
-/** @type {number} */
-GeolocationPositionError.prototype.POSITION_UNAVAILABLE;
-/** @type {number} */
-GeolocationPositionError.prototype.TIMEOUT;
+PositionError.prototype.message;
+/** @const {number} */
+PositionError.UNKNOWN_ERROR;
+/** @const {number} */
+PositionError.PERMISSION_DENIED;
+/** @const {number} */
+PositionError.POSITION_UNAVAILABLE;
+/** @const {number} */
+PositionError.TIMEOUT;
 
 /** @type {Geolocation} */
 Navigator.prototype.geolocation;
