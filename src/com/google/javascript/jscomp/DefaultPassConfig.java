@@ -220,9 +220,6 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   private void addTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
-    if (!options.allowsHotswapReplaceScript()) {
-      checks.add(inlineTypeAliases);
-    }
     if (options.checkTypes || options.inferTypes) {
       checks.add(resolveTypes);
       checks.add(inferTypes);
@@ -395,6 +392,11 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
     addTypeCheckerPasses(checks, options);
+
+    // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
+    if (!options.allowsHotswapReplaceScript()) {
+      checks.add(inlineTypeAliases);
+    }
 
     // CheckSuspiciousCode requires type information, so must run after the type checker.
     if (options.checkSuspiciousCode
