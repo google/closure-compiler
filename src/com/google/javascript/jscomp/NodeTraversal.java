@@ -647,7 +647,8 @@ public class NodeTraversal {
       }
     };
 
-    NodeTraversal.traverseEs6ScopeRoot(compiler, scopeNode, scb, scopeCreator);
+    NodeTraversal t = new NodeTraversal(compiler, scb, scopeCreator);
+    t.traverseScopeRoot(scopeNode);
   }
 
   /**
@@ -788,40 +789,6 @@ public class NodeTraversal {
             return true;
           }
         });
-  }
-
-  /**
-   * Use #traverse(AbstractCompiler, Node, Callback)
-   */
-  @Deprecated
-  public static final void traverseEs6(AbstractCompiler compiler, Node root, Callback cb) {
-    traverse(compiler, root, cb);
-  }
-
-  /** Traverses from a particular scope node using the ES6SyntacticScopeCreator */
-  private static void traverseEs6ScopeRoot(
-      AbstractCompiler compiler, Node scopeNode, Callback cb, MemoizedScopeCreator scopeCreator) {
-    NodeTraversal t = new NodeTraversal(compiler, cb, scopeCreator);
-    t.traverseScopeRoot(scopeNode);
-  }
-
-  /**
-   * @deprecated Use the ES6SyntacticScopeCreator instead.
-   */
-  @Deprecated
-  public static void traverseTyped(AbstractCompiler compiler, Node root, Callback cb) {
-    NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
-    t.traverse(root);
-  }
-
-  /**
-   * @deprecated Use the ES6SyntacticScopeCreator instead.
-   */
-  @Deprecated
-  public static void traverseRootsTyped(
-      AbstractCompiler compiler, Callback cb, Node externs, Node root) {
-    NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
-    t.traverseRoots(externs, root);
   }
 
   private void handleScript(Node n, Node parent) {
