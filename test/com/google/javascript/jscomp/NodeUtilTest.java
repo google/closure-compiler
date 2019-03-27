@@ -29,7 +29,10 @@ import static com.google.javascript.rhino.Token.DESTRUCTURING_LHS;
 import static com.google.javascript.rhino.Token.FOR_AWAIT_OF;
 import static com.google.javascript.rhino.Token.FOR_OF;
 import static com.google.javascript.rhino.Token.FUNCTION;
+import static com.google.javascript.rhino.Token.GETTER_DEF;
+import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.REST;
+import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.SPREAD;
 import static com.google.javascript.rhino.Token.THROW;
 import static com.google.javascript.rhino.Token.YIELD;
@@ -62,6 +65,7 @@ import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 /** Tests for NodeUtil */
@@ -2634,6 +2638,37 @@ public final class NodeUtilTest {
         .hasType(Token.STRING);
     assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var {x} = 'rhs';")))
         .hasType(Token.STRING);
+  }
+
+  @RunWith(Parameterized.class)
+  public static final class GetRValueOfLValueTest {
+
+    @Parameters(name = "{0} in \"{1}\"")
+    public static Iterable<Object[]> cases() {
+      return ImmutableList.copyOf(
+          new Object[][] {
+            // CLASS_MEMBERS
+            {MEMBER_FUNCTION_DEF, "constructor() { }"},
+            {MEMBER_FUNCTION_DEF, "foo() { }"},
+            {MEMBER_FUNCTION_DEF, "static foo() { }"},
+            {GETTER_DEF, "get foo() { }"},
+            {GETTER_DEF, "static get foo() { }"},
+            {SETTER_DEF, "set foo(x) { }"},
+            {SETTER_DEF, "static set foo(x) { }"},
+          });
+    }
+
+    @Parameter(0)
+    public Token token;
+
+    @Parameter(1)
+    public String member;
+
+    @Test
+    public void test() {
+      Node node = parseFirst(token, "class F { " + member + " }");
+      assertNode(NodeUtil.getRValueOfLValue(node)).hasType(Token.FUNCTION);
+    }
   }
 
   @Test

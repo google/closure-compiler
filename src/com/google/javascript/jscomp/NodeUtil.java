@@ -5387,15 +5387,15 @@ public final class NodeUtil {
       case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case DESTRUCTURING_LHS:
         return n.getNext();
       case VAR:
       case LET:
       case CONST:
         return n.getLastChild();
-      case DESTRUCTURING_LHS:
-        return parent.getLastChild();
       case OBJECTLIT:
-        return n.getFirstChild();
+      case CLASS_MEMBERS:
+        return n.getOnlyChild();
       case FUNCTION:
       case CLASS:
         return parent;
