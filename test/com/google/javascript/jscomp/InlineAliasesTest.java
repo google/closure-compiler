@@ -53,38 +53,24 @@ public class InlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSimpleAliasInJSDoc() {
-    test(
-        "/** @constructor */ function Foo(){} const alias = Foo; /** @type {alias} */ var x;",
-        "/** @constructor */ function Foo(){} const alias = Foo; /** @type {Foo} */ var x;");
+  public void testSimpleAliasInJSDoc_isUnchanged() {
+    testSame("/** @constructor */ function Foo(){} const alias = Foo; /** @type {alias} */ var x;");
 
-    test(
+    testSame(
         lines(
             "var ns={};",
             "/** @constructor */ function Foo(){};",
             "/** @const */ ns.alias = Foo;",
-            "/** @type {ns.alias} */ var x;"),
-        lines(
-            "var ns={};",
-            "/** @constructor */ function Foo(){};",
-            "/** @const */ ns.alias = Foo;",
-            "/** @type {Foo} */ var x;"));
+            "/** @type {ns.alias} */ var x;"));
 
-    test(
+    testSame(
         lines(
             "/** @const */",
             "var ns={};",
             "/** @constructor */ function Foo(){};",
             "Foo.Subfoo = class {};",
             "/** @const */ ns.alias = Foo;",
-            "/** @type {ns.alias.Subfoo} */ var x;"),
-        lines(
-            "/** @const */",
-            "var ns={};",
-            "/** @constructor */ function Foo(){};",
-            "Foo.Subfoo = class {};",
-            "/** @const */ ns.alias = Foo;",
-            "/** @type {Foo.Subfoo} */ var x;"));
+            "/** @type {ns.alias.Subfoo} */ var x;"));
   }
 
   @Test
@@ -117,21 +103,14 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testAliasQualifiedName() {
-    test(
+    testSame(
         lines(
             "/** @const */",
             "var ns = {};",
             "ns.Foo = function(){};",
             "ns.Foo.Subfoo = class {};",
             "/** @const */ ns.alias = ns.Foo;",
-            "/** @type {ns.alias.Subfoo} */ var x;"),
-        lines(
-            "/** @const */",
-            "var ns = {};",
-            "ns.Foo = function(){};",
-            "ns.Foo.Subfoo = class {};",
-            "/** @const */ ns.alias = ns.Foo;",
-            "/** @type {ns.Foo.Subfoo} */ var x;"));
+            "/** @type {ns.alias.Subfoo} */ var x;"));
 
     test(
         lines(
@@ -567,34 +546,10 @@ public class InlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSimpleConstAliasInJSDoc() {
-    test(
-        "/** @constructor */ function Foo(){}; const alias = Foo; /** @type {alias} */ var x;",
-        "/** @constructor */ function Foo(){}; const alias = Foo; /** @type {Foo} */ var x;");
-  }
-
-  @Test
   public void testSimpleConstAliasInCode() {
     test(
         "/** @constructor */ function Foo(){}; const alias = Foo; var x = new alias;",
         "/** @constructor */ function Foo(){}; const alias = Foo; var x = new Foo;");
-  }
-
-  /**
-   * Note: having @const annotating a let is very strange style, but it's very little extra work to
-   * support it.
-   */
-  @Test
-  public void testSimpleLetAliasInJSDoc() {
-    test(
-        lines(
-            "/** @constructor */ function Foo(){}",
-            "let /** @const */ alias = Foo;",
-            "/** @type {alias} */ var x;"),
-        lines(
-            "/** @constructor */ function Foo(){}",
-            "let /** @const */ alias = Foo;",
-            "/** @type {Foo} */ var x;"));
   }
 
   @Test

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -27,16 +26,19 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Inline aliases created by exports of modules before type checking.
+ * Inline constant aliases
  *
- * <p>The old type inference doesn't deal as well with aliased types as with unaliased ones, such as
- * in extends clauses (@extends {alias}) and templated types (alias<T>). This pass inlines these
- * aliases to make type checking's job easier.
+ * <p>This pass was originally necessary because typechecking did not handle type aliases well. Now
+ * typechecking understands type aliases. In theory, this pass can be deleted, but in practice this
+ * pass affects some check passes that run post-typechecking.
  *
  * <p>This alias inliner is not very aggressive. It will only inline explicitly const aliases but
  * not effectively const ones (for example ones that are only ever assigned a value once). This is
- * done to be conservative since it's not a good idea to be making dramatic AST changes before type
- * checking. There is a more aggressive alias inliner that runs at the start of optimization.
+ * done to be conservative since it's not a good idea to be making dramatic AST changes during
+ * checks (or really, any AST changes at all). There is a more aggressive alias inliner that runs at
+ * the start of optimization.
+ *
+ * <p>TODO(b/124915436): Delete this pass.
  *
  * @author blickly@gmail.com (Ben Lickly)
  */
@@ -159,7 +161,6 @@ final class InlineAliases implements CompilerPass {
         default:
           break;
       }
-      maybeRewriteJsdoc(n.getJSDocInfo());
     }
 
     /**
@@ -182,38 +183,5 @@ final class InlineAliases implements CompilerPass {
       }
       return name;
     }
-
-    private void maybeRewriteJsdoc(JSDocInfo info) {
-      if (info == null) {
-        return;
-      }
-      for (Node typeNode : info.getTypeNodes()) {
-        NodeUtil.visitPreOrder(typeNode, fixJsdocTypeNodes, Predicates.alwaysTrue());
-      }
-    }
-
-    private final NodeUtil.Visitor fixJsdocTypeNodes =
-        new NodeUtil.Visitor() {
-          @Override
-          public void visit(Node aliasReference) {
-            if (!aliasReference.isString()) {
-              return;
-            }
-            String fullTypeName = aliasReference.getString();
-            int dotIndex = 0;
-            do {
-              dotIndex = fullTypeName.indexOf('.', dotIndex + 1);
-              String aliasName =
-                  dotIndex == -1 ? fullTypeName : fullTypeName.substring(0, dotIndex);
-              if (aliases.containsKey(aliasName)) {
-                String replacement =
-                    resolveAlias(aliasName, aliasReference)
-                        + fullTypeName.substring(aliasName.length());
-                aliasReference.setString(replacement);
-                return;
-              }
-            } while (dotIndex != -1);
-          }
-        };
   }
 }
