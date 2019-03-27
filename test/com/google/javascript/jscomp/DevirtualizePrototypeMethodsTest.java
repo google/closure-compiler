@@ -51,6 +51,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableNormalize(); // Required for `OptimizeCalls`.
     disableTypeCheck();
   }
 
@@ -460,9 +461,9 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewrite_ifMultipleIdenticalDefinitions_withLocalNames() {
-    // TODO(nickreid): This is actually dangerous, however because `Normalize` is run before
-    // devirtualization, this shouldn't ever happen. All local names will be unique. Maybe back off
-    // in this case too.
+    // This case is included for completeness. `Normalization` is a prerequisite for this pass so
+    // the naming conflict is resolved before devirtualization even begins. The change in names
+    // invalidates devirtualization by making the definition subtrees unequal.
     test(
         lines(
             // Note how `f` refers to different objects in the function bodies, even though the
@@ -475,14 +476,13 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
             "",
             "x.getFoo();"),
         lines(
-            "function A() {}; ",
-            "var JSCompiler_StaticMethods_getFoo =",
-            "    function f(JSCompiler_StaticMethods_getFoo$self) { return f.prop; };",
+            "function A() {};",
+            "A.prototype.getFoo = function f() { return f.prop; }; ",
             "",
             "function B() {};",
-            "B.prototype.getFoo = function f() { return f.prop; };", // Dead definition.
+            "B.prototype.getFoo = function f$jscomp$1() { return f$jscomp$1.prop; }; ",
             "",
-            "JSCompiler_StaticMethods_getFoo(x);"));
+            "x.getFoo();"));
   }
 
   @Test
@@ -1192,8 +1192,10 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    OptimizeCalls pass = new OptimizeCalls(compiler);
-    pass.addPass(new DevirtualizePrototypeMethods(compiler));
-    return pass;
+    return OptimizeCalls.builder()
+        .setCompiler(compiler)
+        .setConsiderExterns(false)
+        .addPass(new DevirtualizePrototypeMethods(compiler))
+        .build();
   }
 }

@@ -17,11 +17,13 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -45,30 +47,82 @@ import javax.annotation.Nullable;
  * @author johnlenz@google.com (John Lenz)
  */
 class OptimizeCalls implements CompilerPass {
-  private final List<CallGraphCompilerPass> passes = new ArrayList<>();
-  private final AbstractCompiler compiler;
 
-  OptimizeCalls(AbstractCompiler compiler) {
+  private final AbstractCompiler compiler;
+  private final ImmutableList<CallGraphCompilerPass> passes;
+  private final boolean considerExterns;
+
+  private OptimizeCalls(
+      AbstractCompiler compiler,
+      ImmutableList<CallGraphCompilerPass> passes,
+      boolean considerExterns) {
     this.compiler = compiler;
+    this.passes = passes;
+    this.considerExterns = considerExterns;
+  }
+
+  static Builder builder() {
+    return new Builder();
   }
 
   interface CallGraphCompilerPass {
     void process(Node externs, Node root, ReferenceMap references);
   }
 
-  OptimizeCalls addPass(CallGraphCompilerPass pass) {
-    passes.add(pass);
-    return this;
+  static final class Builder {
+    private AbstractCompiler compiler;
+    private ImmutableList.Builder<CallGraphCompilerPass> passes = ImmutableList.builder();
+    @Nullable private Boolean considerExterns; // Nullable to force users to specify a value.
+
+    public Builder setCompiler(AbstractCompiler compiler) {
+      this.compiler = compiler;
+      return this;
+    }
+
+    /**
+     * Sets whether or not to include references to extern names and properties in the {@link
+     * ReferenceMap} being generated.
+     *
+     * <p>If considered, references to externs in both extern code <em>and</em> executable code will
+     * be collected. Otherwise, neither will be.
+     *
+     * <p>This setting allows extern references to be effectively invisible to passes that should
+     * not mutate them.
+     */
+    public Builder setConsiderExterns(boolean b) {
+      this.considerExterns = b;
+      return this;
+    }
+
+    public Builder addPass(CallGraphCompilerPass pass) {
+      this.passes.add(pass);
+      return this;
+    }
+
+    public OptimizeCalls build() {
+      checkNotNull(considerExterns);
+
+      return new OptimizeCalls(compiler, passes.build(), considerExterns);
+    }
+
+    private Builder() {}
   }
 
   @Override
   public void process(Node externs, Node root) {
-    if (!passes.isEmpty()) {
-      ReferenceMap refMap = buildPropAndGlobalNameReferenceMap(
-          compiler, externs, root);
-      for (CallGraphCompilerPass pass : passes) {
-        pass.process(externs, root, refMap);
-      }
+    // Only global names are collected, which is insufficient if names have not been normalized.
+    checkState(compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
+
+    if (passes.isEmpty()) {
+      return;
+    }
+
+    final ReferenceMap references = new ReferenceMap();
+    NodeTraversal.traverseRoots(
+        compiler, new ReferenceMapBuildingCallback(references), externs, root);
+
+    for (CallGraphCompilerPass pass : passes) {
+      pass.process(externs, root, references);
     }
   }
 
@@ -308,8 +362,7 @@ class OptimizeCalls implements CompilerPass {
     return (set != null) ? ImmutableSet.copyOf(set) : ImmutableSet.of();
   }
 
-  static class ReferenceMapBuildingCallback implements ScopedCallback {
-    AbstractCompiler compiler;
+  private final class ReferenceMapBuildingCallback implements ScopedCallback {
     final Set<String> externProps;
     final ReferenceMap references;
     private Scope globalScope;
@@ -318,8 +371,7 @@ class OptimizeCalls implements CompilerPass {
      * @param compiler
      * @param references
      */
-    public ReferenceMapBuildingCallback(AbstractCompiler compiler, ReferenceMap references) {
-      this.compiler = compiler;
+    public ReferenceMapBuildingCallback(ReferenceMap references) {
       this.externProps = safeSet(compiler.getExternProperties());
       this.references = references;
     }
@@ -360,27 +412,29 @@ class OptimizeCalls implements CompilerPass {
 
     private void maybeAddNameReference(Node n) {
       String name = n.getString();
-      if (isGlobalNonExternNameReference(name)) {
+      Var var = globalScope.getSlot(name);
+      if (var != null && (considerExterns || !var.isExtern())) {
+        // As every name declaration is unique due to normalizations, it is only necessary to build
+        // the global scope and ask it if it knows about a name as it can never be shadowed.
         references.addNameReference(name, n);
       }
     }
 
     private void maybeAddPropReference(String name, Node n) {
-      if (!externProps.contains(name)) {
+      if (considerExterns || !externProps.contains(name)) {
         references.addPropReference(name, n);
       }
     }
 
-    // As every name declaration is unique due to normalizations, it is only necessary to build
-    // the global scope and ask it if it knows about a name as it can never be shadowed.
-    private boolean isGlobalNonExternNameReference(String name) {
-      Var v = globalScope.getSlot(name);
-      return  v != null && !v.isExtern();
-    }
-
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      return !n.isScript() || !t.getInput().isExtern();
+      if (n.isFromExterns()) {
+        // Even when considering externs, we only care about top-level identifiers. Dummy function
+        // parameters, for example, shouldn't be considered references.
+        return considerExterns && t.inGlobalScope();
+      } else {
+        return true;
+      }
     }
 
     @Override
@@ -394,14 +448,6 @@ class OptimizeCalls implements CompilerPass {
     @Override
     public void exitScope(NodeTraversal t) {
     }
-  }
-
-  static ReferenceMap buildPropAndGlobalNameReferenceMap(
-      AbstractCompiler compiler, Node externs, Node root) {
-    final ReferenceMap references = new ReferenceMap();
-    NodeTraversal.traverseRoots(compiler, new ReferenceMapBuildingCallback(
-        compiler, references), externs, root);
-    return references;
   }
 
   /**

@@ -43,6 +43,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableNormalize(); // Required for `OptimizeCalls`.
     enableGatherExternProperties();
   }
 

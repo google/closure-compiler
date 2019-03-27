@@ -47,9 +47,12 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
   @Override
   @VisibleForTesting
   public void process(Node externs, Node root) {
-    ReferenceMap refMap = OptimizeCalls.buildPropAndGlobalNameReferenceMap(
-        compiler, externs, root);
-    process(externs, root, refMap);
+    OptimizeCalls.builder()
+        .setCompiler(compiler)
+        .setConsiderExterns(false)
+        .addPass(this)
+        .build()
+        .process(externs, root);
   }
 
   @Override

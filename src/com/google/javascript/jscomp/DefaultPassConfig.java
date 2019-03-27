@@ -2504,9 +2504,11 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory(PassNames.DEVIRTUALIZE_PROTOTYPE_METHODS, true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          OptimizeCalls passes = new OptimizeCalls(compiler);
-          passes.addPass(new DevirtualizePrototypeMethods(compiler));
-          return passes;
+          return OptimizeCalls.builder()
+              .setCompiler(compiler)
+              .setConsiderExterns(false)
+              .addPass(new DevirtualizePrototypeMethods(compiler))
+              .build();
         }
 
         @Override
@@ -2523,12 +2525,14 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory(PassNames.OPTIMIZE_CALLS, false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          OptimizeCalls passes = new OptimizeCalls(compiler);
-          // Remove unused return values.
-          passes.addPass(new OptimizeReturns(compiler));
-          // Remove all parameters that are constants or unused.
-          passes.addPass(new OptimizeParameters(compiler));
-          return passes;
+          return OptimizeCalls.builder()
+              .setCompiler(compiler)
+              .setConsiderExterns(false)
+              // Remove unused return values.
+              .addPass(new OptimizeReturns(compiler))
+              // Remove all parameters that are constants or unused.
+              .addPass(new OptimizeParameters(compiler))
+              .build();
         }
 
         @Override
