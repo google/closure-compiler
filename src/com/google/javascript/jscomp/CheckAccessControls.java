@@ -320,6 +320,8 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       return type.toMaybeObjectType();
     } else if (type.isConstructor() || type.isInterface()) {
       return type.toMaybeFunctionType().getInstanceType();
+    } else if (type.isFunctionType()) {
+      return null; // Functions that aren't ctors or interfaces have no instance type.
     } else if (type.isFunctionPrototypeType()) {
       return instanceTypeFor(type.toMaybeObjectType().getOwnerFunction());
     }
@@ -1183,14 +1185,17 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
    */
   @Nullable
   private static ObjectType getSuperClassInstanceIfFinal(@Nullable JSType type) {
-    if (type != null) {
-      ObjectType obj = castToObject(type);
-      FunctionType ctor = obj == null ? null : obj.getSuperClassConstructor();
-      JSDocInfo doc = ctor == null ? null : ctor.getJSDocInfo();
-      if (doc != null && doc.isFinal()) {
-        return ctor.getInstanceType();
-      }
+    if (type == null) {
+      return null;
     }
+
+    ObjectType obj = type.toObjectType();
+    FunctionType ctor = (obj == null) ? null : obj.getSuperClassConstructor();
+    JSDocInfo doc = (ctor == null) ? null : ctor.getJSDocInfo();
+    if (doc != null && doc.isFinal()) {
+      return ctor.getInstanceType();
+    }
+
     return null;
   }
 

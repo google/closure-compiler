@@ -2468,4 +2468,17 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
             "Foo.prop = 2;"),
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
+
+  @Test
+  public void testCheckFinalClass_prototypeMethodMarkedCtor_butNotOwnerFunction_doesNotCrash() {
+    // Covers an edge case reported in b/129361702.
+    testSame(
+        lines(
+            "function Foo() {}",
+            "",
+            "Foo.prototype = {",
+            "  /** @constructor */",
+            "  init: function() { }",
+            "};"));
+  }
 }
