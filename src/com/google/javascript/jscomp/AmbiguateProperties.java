@@ -543,23 +543,38 @@ class AmbiguateProperties implements CompilerPass {
       // are the children of the keys.
       JSType type = getJSType(objectLit);
       for (Node key = objectLit.getFirstChild(); key != null; key = key.getNext()) {
-        // We only want keys that were unquoted.
-        // Keys are STRING, GET, SET
-        if (key.isComputedProp()) {
-          if (key.getFirstChild().isString()) {
-            // Ensure that we never rename some other property in a way that could conflict with
-            // this computed prop. This is largely because we store quoted member fns as
-            // computed properties and want to be consistent with how other quoted properties
-            // invalidate property names
-            quotedNames.add(key.getFirstChild().getString());
-          }
-          // Never rename computed properties
-        } else if (key.isQuotedString()) {
-          // Ensure that we never rename some other property in a way
-          // that could conflict with this quoted key.
-          quotedNames.add(key.getString());
-        } else {
-          maybeMarkCandidate(key, type);
+        switch (key.getToken()) {
+          case COMPUTED_PROP:
+            if (key.getFirstChild().isString()) {
+              // If this quoted prop name is statically determinable, ensure we don't rename some
+              // other property in a way that could conflict with it.
+              //
+              // This is largely because we store quoted member functions as computed properties and
+              // want to be consistent with how other quoted properties invalidate property names.
+              quotedNames.add(key.getFirstChild().getString());
+            }
+            break;
+
+          case MEMBER_FUNCTION_DEF:
+          case GETTER_DEF:
+          case SETTER_DEF:
+          case STRING_KEY:
+            if (key.isQuotedString()) {
+              // If this quoted prop name is statically determinable, ensure we don't rename some
+              // other property in a way that could conflict with it
+              quotedNames.add(key.getString());
+            } else {
+              maybeMarkCandidate(key, type);
+            }
+            break;
+
+          case REST:
+          case SPREAD:
+            break; // Nothing to do.
+
+          default:
+            throw new IllegalStateException(
+                "Unexpected child of " + objectLit.getToken() + ": " + key.toStringTree());
         }
       }
     }

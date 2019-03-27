@@ -935,6 +935,16 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     testSame(js);
   }
 
+  @Test
+  public void testObjectSpreadDoesNotCrash() {
+    testSame("var lit1 = {...a};");
+  }
+
+  @Test
+  public void testObjectRestDoesNotCrash() {
+    testSame("var {...a} = b;");
+  }
+
   // See https://github.com/google/closure-compiler/issues/2119
   @Test
   public void testUnrelatedObjectLiterals() {
