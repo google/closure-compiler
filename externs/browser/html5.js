@@ -1722,6 +1722,9 @@ HTMLAnchorElement.prototype.port;
 /** @type {string} */
 HTMLAnchorElement.prototype.protocol;
 
+/** @type {!DOMTokenList} */
+HTMLAnchorElement.prototype.relList;
+
 /** @type {string} */
 HTMLAnchorElement.prototype.search;
 
@@ -3395,6 +3398,14 @@ DOMTokenList.prototype.remove = function(var_args) {};
  * @return {undefined}
  */
 DOMTokenList.prototype.replace = function(token, newToken) {};
+
+/**
+ * @param {string} token The token to query for.
+ * @return {boolean} Whether the token was found.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/supports
+ * @nosideeffects
+ */
+DOMTokenList.prototype.supports = function(token) {};
 
 /**
  * @param {string} token The CSS class to toggle from this element.
