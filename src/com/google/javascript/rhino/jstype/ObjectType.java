@@ -45,6 +45,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -52,6 +53,7 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -318,6 +320,33 @@ public abstract class ObjectType extends JSType implements Serializable {
    * Gets the implicit prototype (a.k.a. the {@code [[Prototype]]} property).
    */
   public abstract ObjectType getImplicitPrototype();
+
+  /**
+   * Returns a lazy, dynamic {@link Iterable} for the types forming the implicit prototype chain of
+   * this type.
+   *
+   * <p>The chain is iterated bottom to top; from the nearest ancestor to the most distant.
+   * Iteration stops when the next ancestor would be a {@code null} reference.
+   *
+   * <p>The created {@link Iterator}s will not reflect changes to the prototype chain of elements it
+   * has already iterated past, but will reflect those of upcoming elements. Neither the {@link
+   * Iterable} nor its {@link Iterator} support mutation.
+   */
+  public final Iterable<ObjectType> getImplicitPrototypeChain() {
+    final ObjectType self = this;
+
+    return () ->
+        new AbstractIterator<ObjectType>() {
+
+          private ObjectType next = self; // We increment past this type before first access.
+
+          @Override
+          public ObjectType computeNext() {
+            next = next.getImplicitPrototype();
+            return (next != null) ? next : endOfData();
+          }
+        };
+  }
 
   /**
    * Defines a property whose type is explicitly declared by the programmer.

@@ -120,6 +120,7 @@ public class DiagnosticGroups {
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, "
           + "ambiguousFunctionDecl, "
+          + "checkPrototypalTypes, "
           + "checkRegExp, "
           + "checkTypes, "
           + "checkVars, "
@@ -146,27 +147,27 @@ public class DiagnosticGroups {
           + "missingProvide, "
           + "missingRequire, "
           + "missingReturn, "
+          + "missingSourcesWarnings, "
           + "moduleLoad, "
           + "msgDescriptions, "
           + "newCheckTypes, "
           + "nonStandardJsDocs, "
-          + "missingSourcesWarnings, "
           + "polymer, "
           + "reportUnknownTypes, "
-          + "suspiciousCode, "
           + "strictCheckTypes, "
           + "strictMissingProperties, "
           + "strictModuleDepCheck, "
           + "strictPrimitiveOperators, "
+          + "suspiciousCode, "
           + "typeInvalidation, "
           + "undefinedNames, "
           + "undefinedVars, "
+          + "underscore, "
           + "unknownDefines, "
           + "unusedLocalVariables, "
           + "unusedPrivateMembers, "
-          + "uselessCode, "
           + "useOfGoogBase, "
-          + "underscore, "
+          + "uselessCode, "
           + "untranspilableFeatures,"
           + "visibility";
 
@@ -269,6 +270,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "missingOverride",
           TypeCheck.HIDDEN_INTERFACE_PROPERTY,
+          TypeCheck.HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY,
           TypeCheck.HIDDEN_SUPERCLASS_PROPERTY);
 
   public static final DiagnosticGroup MISSING_PROPERTIES =
@@ -320,11 +322,16 @@ public class DiagnosticGroups {
           FunctionTypeBuilder.ALL_DIAGNOSTICS,
           DiagnosticGroups.GLOBAL_THIS);
 
-  // TODO(b/112639311): Populate this group with appropriate diagnostics.
-  // This group isn't registered because it has no associated suppression. It's only ever referenced
-  // in Java code.
-  public static final DiagnosticGroup CHECK_STATIC_OVERRIDES =
-      new DiagnosticGroup("checkStaticOverrides_unregistered", UNUSED);
+  public static final DiagnosticGroup CHECK_PROTOTYPAL_TYPES =
+      DiagnosticGroups.registerGroup(
+          "checkPrototypalTypes",
+          TypeCheck.UNKNOWN_PROTOTYPAL_OVERRIDE,
+          TypeCheck.HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY,
+          TypeCheck.HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH);
+
+  // This group exists for the J2CL team to suppress the associated diagnostics using Java code
+  // rather than `@suppress` annotations.
+  public static final DiagnosticGroup CHECK_STATIC_OVERRIDES = CHECK_PROTOTYPAL_TYPES;
 
   // Run the new type inference, but omit many warnings that are not
   // found by the old type checker. This makes migration to NTI more manageable.

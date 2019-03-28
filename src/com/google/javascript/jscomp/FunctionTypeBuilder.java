@@ -424,7 +424,7 @@ final class FunctionTypeBuilder {
       @Nullable JSDocInfo info, @Nullable ObjectType classExtendsType) {
 
     if (info != null && info.hasBaseType()) {
-      if (isConstructor) {
+      if (isConstructor || isInterface) {
         ObjectType infoBaseType =
             info.getBaseType().evaluate(templateScope, typeRegistry).toMaybeObjectType();
         // TODO(sdh): ensure JSDoc's baseType and AST's baseType are compatible if both are set
@@ -434,7 +434,7 @@ final class FunctionTypeBuilder {
       } else {
         reportWarning(EXTENDS_WITHOUT_TYPEDEF, formatFnName());
       }
-    } else if (classExtendsType != null && isConstructor) {
+    } else if (classExtendsType != null && (isConstructor || isInterface)) {
       // This case is:
       // // no JSDoc here
       // class extends astBaseType {...}
@@ -937,7 +937,7 @@ final class FunctionTypeBuilder {
   }
 
   private void maybeSetBaseType(FunctionType fnType) {
-    if (!fnType.isInterface() && baseType != null) {
+    if (fnType.hasInstanceType() && baseType != null) {
       fnType.setPrototypeBasedOn(baseType);
       fnType.extendTemplateTypeMapBasedOn(baseType);
     }
@@ -1050,6 +1050,7 @@ final class FunctionTypeBuilder {
     }
     return fnType;
   }
+
   private void reportWarning(DiagnosticType warning, String ... args) {
     compiler.report(JSError.make(errorRoot, warning, args));
   }

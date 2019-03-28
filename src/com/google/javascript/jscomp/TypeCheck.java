@@ -35,6 +35,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -211,6 +212,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_HIDDEN_SUPERCLASS_PROPERTY",
           "property {0} already defined on superclass {1}; use @override to override it");
 
+  static final DiagnosticType HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY =
+      DiagnosticType.disabled(
+          "JSC_PROTOTYPAL_HIDDEN_SUPERCLASS_PROPERTY",
+          "property {0} already defined on supertype {1}; use @override to override it");
+
   // disabled by default.
   static final DiagnosticType HIDDEN_INTERFACE_PROPERTY =
       DiagnosticType.disabled(
@@ -225,10 +231,23 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
               + "original: {2}\n"
               + "override: {3}");
 
+  static final DiagnosticType HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH =
+      DiagnosticType.warning(
+          "JSC_HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH",
+          "mismatch of the {0} property type and the type "
+              + "of the property it overrides from supertype {1}\n"
+              + "original: {2}\n"
+              + "override: {3}");
+
   static final DiagnosticType UNKNOWN_OVERRIDE =
       DiagnosticType.warning(
           "JSC_UNKNOWN_OVERRIDE",
           "property {0} not defined on any superclass of {1}");
+
+  static final DiagnosticType UNKNOWN_PROTOTYPAL_OVERRIDE =
+      DiagnosticType.warning(
+          "JSC_UNKNOWN_PROTOTYPAL_OVERRIDE", //
+          "property {0} not defined on any supertype of {1}");
 
   static final DiagnosticType INTERFACE_METHOD_OVERRIDE =
       DiagnosticType.warning(
@@ -316,7 +335,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           CONFLICTING_IMPLEMENTED_TYPE,
           BAD_IMPLEMENTED_TYPE,
           HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
+          HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH,
           UNKNOWN_OVERRIDE,
+          UNKNOWN_PROTOTYPAL_OVERRIDE,
           INTERFACE_METHOD_OVERRIDE,
           UNRESOLVED_TYPE,
           WRONG_ARGUMENT_COUNT,
@@ -1236,22 +1257,38 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // all the methods are implemented.
     //
     // As-is, this misses many other ways to override a property.
-    //
-    // object.prototype.property = ...;
-    if (object.isGetProp()) {
-      Node object2 = object.getFirstChild();
-      String property2 = NodeUtil.getStringValue(object.getLastChild());
 
-      if ("prototype".equals(property2)) {
-        JSType jsType = getJSType(object2);
-        if (jsType.isFunctionType()) {
-          FunctionType functionType = jsType.toMaybeFunctionType();
-          if (functionType.isConstructor() || functionType.isInterface()) {
-            checkDeclaredPropertyInheritance(assign, functionType, property, info, propertyType);
-            checkAbstractMethodInConcreteClass(assign, functionType, info);
-          }
-        }
+    if (object.isGetProp() && object.getSecondChild().getString().equals("prototype")) {
+      // ASSIGN = assign
+      //   GETPROP
+      //     GETPROP = object
+      //       ? = preObject
+      //       STRING = "prototype"
+      //     STRING = property
+
+      Node preObject = object.getFirstChild();
+      @Nullable FunctionType ctorType = getJSType(preObject).toMaybeFunctionType();
+      if (ctorType == null || !ctorType.hasInstanceType()) {
+        return;
       }
+
+      checkDeclaredPropertyAgainstNominalInheritance(
+          assign, ctorType, property, info, propertyType);
+      checkAbstractMethodInConcreteClass(assign, ctorType, info);
+    } else {
+      // ASSIGN = assign
+      //   GETPROP
+      //     ? = object
+      //     STRING = property
+
+      // We only care about checking a static property assignment.
+      @Nullable FunctionType ctorType = getJSType(object).toMaybeFunctionType();
+      if (ctorType == null || !ctorType.hasInstanceType()) {
+        return;
+      }
+
+      checkDeclaredPropertyAgainstPrototypalInheritance(
+          assign, ctorType, property, info, propertyType);
     }
   }
 
@@ -1274,20 +1311,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkPropertyInheritanceOnClassMember(
       Node key, String propertyName, FunctionType ctorType) {
     if (key.isStaticMember()) {
-      // TODO(sdh): Handle static members later - will probably need to add an extra boolean
-      // parameter to checkDeclaredPropertyInheritance, as well as an extra case to getprop
-      // assigns to check if the owner's type is an ES6 constructor.  Put it off for now
-      // because it's a change in behavior from transpiled code and it may break things.
-      return;
+      checkDeclaredPropertyAgainstPrototypalInheritance(
+          key, ctorType, propertyName, key.getJSDocInfo(), ctorType.getPropertyType(propertyName));
+    } else {
+      checkPropertyInheritance(key, propertyName, ctorType, ctorType.getInstanceType());
     }
-    ObjectType owner = key.isStaticMember() ? ctorType : ctorType.getInstanceType();
-    checkPropertyInheritance(key, propertyName, ctorType, owner);
   }
 
   private void checkPropertyInheritance(
       Node key, String propertyName, FunctionType ctorType, ObjectType type) {
     if (ctorType != null && (ctorType.isConstructor() || ctorType.isInterface())) {
-      checkDeclaredPropertyInheritance(
+      checkDeclaredPropertyAgainstNominalInheritance(
           key.getFirstChild(),
           ctorType,
           propertyName,
@@ -1454,14 +1488,27 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /**
-   * Given a constructor type and a property name, check that the property has the JSDoc
-   * annotation @override iff the property is declared on a superclass. Several checks regarding
-   * inheritance correctness are also performed.
+   * Given a {@code ctorType}, check that the property ({@code propertyName}), on the corresponding
+   * instance type ({@code receiverType}), conforms to inheritance rules.
+   *
+   * <p>This method only checks nominal inheritance (via extends and implements declarations).
+   * Compare to {@link #checkDeclaredPropertyAgainstPrototypalInheritance()}.
+   *
+   * <p>To be conformant, the {@code propertyName} must
+   *
+   * <ul>
+   *   <li>Carry the {@code @override} annotation iff it is an override.
+   *   <li>Be typed as a subtype of the type of {@code propertyName} on all supertypes of {@code
+   *       receiverType}.
+   * </ul>
    */
-  private void checkDeclaredPropertyInheritance(
-      Node n, FunctionType ctorType, String propertyName, JSDocInfo info, JSType propertyType) {
-    // If the supertype doesn't resolve correctly, we've warned about this
-    // already.
+  private void checkDeclaredPropertyAgainstNominalInheritance(
+      Node n,
+      FunctionType ctorType,
+      String propertyName,
+      @Nullable JSDocInfo info,
+      JSType propertyType) {
+    // If the supertype doesn't resolve correctly, we've warned about this already.
     if (hasUnknownOrEmptySupertype(ctorType)) {
       return;
     }
@@ -1483,7 +1530,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             superInterfaceHasDeclaredProperty || interfaceType.isPropertyTypeDeclared(propertyName);
       }
     }
-    boolean declaredOverride = info != null && info.isOverride();
+    boolean declaredOverride = declaresOverride(info);
 
     boolean foundInterfaceProperty = false;
     if (ctorType.isConstructor()) {
@@ -1588,6 +1635,74 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // there is no superclass nor interface implementation
       compiler.report(
           JSError.make(n, UNKNOWN_OVERRIDE, propertyName, ctorType.getInstanceType().toString()));
+    }
+  }
+
+  /**
+   * Given a {@code receiverType}, check that the property ({@code propertyName}) conforms to
+   * inheritance rules.
+   *
+   * <p>This method only checks prototypal inheritance (via the prototype chain). Compare to {@link
+   * #checkDeclaredPropertyAgainstNominalInheritance()}.
+   *
+   * <p>To be conformant, the {@code propertyName} must
+   *
+   * <ul>
+   *   <li>Carry the {@code @override} annotation iff it is an override.
+   *   <li>Be typed as a subtype of the type of {@code propertyName} on all supertypes of {@code
+   *       receiverType}.
+   * </ul>
+   */
+  private void checkDeclaredPropertyAgainstPrototypalInheritance(
+      Node n,
+      ObjectType receiverType,
+      String propertyName,
+      @Nullable JSDocInfo info,
+      JSType propertyType) {
+    // TODO(nickreid): Right now this is only expected to run on ctors. However, it wouldn't be bad
+    // if it ran on more things. Consider a precondition on the arguments.
+
+    boolean declaredOverride = declaresOverride(info);
+    @Nullable
+    ObjectType supertypeWithProperty =
+        Streams.stream(receiverType.getImplicitPrototypeChain())
+            // We want to report the supertype that actually had the overidden declaration.
+            .filter((type) -> type.hasOwnProperty(propertyName))
+            // We only care about the lowest match in the chain because it must be the most
+            // specific.
+            .findFirst()
+            .orElse(null);
+
+    if (supertypeWithProperty == null) {
+      if (declaredOverride) {
+        compiler.report(
+            JSError.make(
+                n, //
+                UNKNOWN_PROTOTYPAL_OVERRIDE,
+                propertyName,
+                receiverType.toString()));
+      }
+    } else {
+      if (!declaredOverride) {
+        compiler.report(
+            JSError.make(
+                n, //
+                HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY,
+                propertyName,
+                supertypeWithProperty.toString()));
+      }
+
+      JSType overriddenPropertyType = supertypeWithProperty.getPropertyType(propertyName);
+      if (!propertyType.isSubtypeOf(overriddenPropertyType)) {
+        compiler.report(
+            JSError.make(
+                n,
+                HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH,
+                propertyName,
+                supertypeWithProperty.toString(),
+                overriddenPropertyType.toString(),
+                propertyType.toString()));
+      }
     }
   }
 
@@ -3092,5 +3207,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return classHasToString(parent);
     }
     return false;
+  }
+
+  private static boolean declaresOverride(@Nullable JSDocInfo jsdoc) {
+    return (jsdoc != null) && jsdoc.isOverride();
   }
 }

@@ -3199,7 +3199,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static foo(/** string */ arg) {}",
             "}",
             "class Bar extends Foo {",
-            // TODO(sdh): Should need @override here.
+            "  /** @override */",
             "  static foo(arg) {",
             "    var /** null */ x = arg;",
             "  }",
@@ -3273,7 +3273,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testClassStaticMethodParameters() {
+  public void testStaticMethodParameters() {
     testTypes(
         lines(
             "class C {",
@@ -3304,7 +3304,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testClassStaticMethodReturns() {
+  public void testStaticMethodReturns() {
     testTypes(
         lines(
             "var D = class {",
@@ -3335,7 +3335,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testClassStaticMethodCalledOnInstance() {
+  public void testStaticMethodCalledOnInstance() {
     testTypes(
         lines(
             "class C {",
@@ -3425,22 +3425,59 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testClassStaticMethodOverriddenWithWidenedType() {
+  public void testStaticMethod_overriddenInBody_withSubtype_atOverride_isOk() {
     testTypes(
         lines(
             "class Base {",
             "  /** @param {string} arg */",
             "  static method(arg) {}",
             "}",
+            "",
             "class Sub extends Base {",
-            // TODO(sdh): should need @override (new warning: wait until later)
-            "  /** @param {string|number} arg */",
+            "  /**",
+            "   * @override",
+            // Method is a subtype due to parameter contravariance.
+            "   * @param {string|number} arg",
+            "   */",
             "  static method(arg) {}",
             "}"));
   }
 
   @Test
-  public void testClassStaticMethodOverriddenWithIncompatibleType() {
+  public void testStaticMethod_overriddenInBody_notAtOverride_isBad() {
+    testTypes(
+        lines(
+            "class Base {",
+            "  /** @param {string} arg */",
+            "  static method(arg) {}",
+            "}",
+            "",
+            "class Sub extends Base {",
+            // Method is a subtype due to parameter contravariance.
+            "  /** @param {string|number} arg */",
+            "  static method(arg) {}",
+            "}"),
+        lines(
+            "property method already defined on supertype function(new:Base): undefined; "
+                + "use @override to override it"));
+  }
+
+  @Test
+  public void testStaticMethod_thatIsNotAnOverride_atOverride_isBad() {
+    testTypes(
+        lines(
+            "class Base {",
+            "  /**",
+            "   * @override",
+            "   * @param {string} arg",
+            "   */",
+            "  static method(arg) {}",
+            "}"),
+        lines("property method not defined on any supertype of function(new:Base): undefined"));
+  }
+
+  @Test
+  public void testStaticMethod_overriddenInBody_withSupertype_isBad() {
     testTypes(
         lines(
             "class Base {",
@@ -3448,19 +3485,22 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static method(arg) {}",
             "}",
             "class Sub extends Base {",
-            "  /** @override @param {string} arg */",
+            "  /**",
+            "   * @override",
+            // Method is a supertype due to parameter contravariance.
+            "   * @param {string} arg",
+            "   */",
             "  static method(arg) {}",
-            "}"));
-        // TODO(sdh): This should actually check the override (new warning: wait until later).
-        // lines(
-        //     "mismatch of the method property type and the type of the property it overrides "
-        //         + "from superclass Base",
-        //     "original: function((number|string)): undefined",
-        //     "override: function(string): undefined"));
+            "}"),
+        lines(
+            "mismatch of the method property type and the type of the property it overrides "
+                + "from supertype function(new:Base): undefined",
+            "original: function((number|string)): undefined",
+            "override: function(string): undefined"));
   }
 
   @Test
-  public void testClassStaticMethodOverriddenWithIncompatibleInlineType() {
+  public void testStaticMethod_overriddenInBody_withSupertype_fromInline_isBad() {
     testTypes(
         lines(
             "class Base {",
@@ -3469,13 +3509,162 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "class Sub extends Base {",
             "  /** @override */",
             "  static method(/** string */ arg) {}",
+            "}"),
+        lines(
+            "mismatch of the method property type and the type of the property it overrides "
+                + "from supertype function(new:Base): undefined",
+            "original: function((number|string)): undefined",
+            "override: function(string): undefined"));
+  }
+
+  @Test
+  public void testStaticMethod_overriddenOutsideBody_withSubtype_atOverride_isOk() {
+    testTypes(
+        lines(
+            "class Base {",
+            "  static method(/** string */ arg) {}",
+            "}",
+            "",
+            "class Sub extends Base { }",
+            "",
+            "/**",
+            " * @override",
+            // Method is a subtype due to parameter contravariance.
+            " * @param {string|number} arg",
+            " */",
+            "Sub.method = function(arg) {};"));
+  }
+
+  @Test
+  public void testStaticMethod_overriddenOutsideBody_withSupertype_isBad() {
+    testTypes(
+        lines(
+            "class Base {",
+            "  static method(/** string|number */ arg) {}",
+            "}",
+            "",
+            "class Sub extends Base { }",
+            "",
+            "/**",
+            " * @override",
+            " * @param {string} arg",
+            " */",
+            "Sub.method = function(arg) {};"),
+        lines(
+            "mismatch of the method property type and the type of the property it overrides "
+                + "from supertype function(new:Base): undefined",
+            "original: function((number|string)): undefined",
+            "override: function(string): undefined"));
+  }
+
+  @Test
+  public void testStaticMethod_onInterface_overriddenInBody_withSubtype_atOverride_isOk() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Base {",
+            "  /** @param {string} arg */",
+            "  static method(arg) {}",
+            "}",
+            "",
+            "/** @interface */",
+            "class Sub extends Base {",
+            "  /**",
+            "   * @override",
+            // Method is a subtype due to parameter contravariance.
+            "   * @param {string|number} arg",
+            "   */",
+            "  static method(arg) {}",
             "}"));
-        // TODO(sdh): This should actually check the override.
-        // lines(
-        //     "mismatch of the method property type and the type of the property it overrides "
-        //         + "from superclass Base",
-        //     "original: function((number|string)): undefined",
-        //     "override: function(string): undefined"));
+  }
+
+  @Test
+  public void
+      testStaticMethod_onNamespacedType_overriddenOutsideBody_withSubtype_atOverride_isOk() {
+    testTypes(
+        lines(
+            "const ns = {};",
+            "",
+            "ns.Base = class {",
+            "  /** @param {string} arg */",
+            "  static method(arg) {}",
+            "};",
+            "",
+            "ns.Sub = class extends ns.Base {};",
+            "",
+            "/**",
+            " * @override",
+            // Method is a subtype due to parameter contravariance.
+            " * @param {string|number} arg",
+            " */",
+            // We specifically want to check that q-name lookups are checked.
+            "ns.Sub.method = function(arg) {};"));
+  }
+
+  @Test
+  public void testStaticMethod_onNamespacedType_overriddenOutsideBody_notAtOverride_isBad() {
+    testTypes(
+        lines(
+            "const ns = {};",
+            "",
+            "ns.Base = class {",
+            "  /** @param {string} arg */",
+            "  static method(arg) {}",
+            "};",
+            "",
+            "ns.Sub = class extends ns.Base {};",
+            "",
+            // Method is a subtype due to parameter contravariance.
+            "/** @param {string|number} arg */",
+            // We specifically want to check that q-name lookups are checked.
+            "ns.Sub.method = function(arg) {};"),
+        lines(
+            "property method already defined on supertype function(new:ns.Base): undefined; "
+                + "use @override to override it"));
+  }
+
+  @Test
+  public void testStaticMethod_onNamespacedType_overridden_withNonSubtype_isBad() {
+    testTypes(
+        lines(
+            "const ns = {};",
+            "",
+            "ns.Base = class {",
+            "  /** @param {string} arg */",
+            "  static method(arg) {}",
+            "};",
+            "",
+            "ns.Sub = class extends ns.Base {};",
+            "",
+            "/**",
+            " * @override",
+            // Method is a subtype due to parameter contravariance.
+            " * @param {number} arg",
+            " */",
+            // We specifically want to check that q-name lookups are checked.
+            "ns.Sub.method = function(arg) {};"),
+        lines(
+            "mismatch of the method property type and the type of the property it overrides "
+                + "from supertype function(new:ns.Base): undefined",
+            "original: function(string): undefined",
+            "override: function(number): undefined"));
+  }
+
+  @Test
+  public void testStaticMethod_onNamespacedType_thatIsNotAnOverride_atOverride_isBad() {
+    testTypes(
+        lines(
+            "const ns = {};",
+            "",
+            "ns.Base = class {};",
+            "",
+            "/**",
+            " * @override",
+            " * @param {string} arg",
+            " */",
+            // We specifically want to check that q-name lookups are checked.
+            "ns.Base.method = function(arg) {};"),
+        lines("property method not defined on any supertype of function(new:ns.Base): undefined"));
   }
 
   @Test
