@@ -808,9 +808,6 @@ public class CompilerOptions implements Serializable {
   protected transient
       Multimap<CustomPassExecutionTime, CompilerPass> customPasses;
 
-  /** Mark no side effect calls */
-  public boolean markNoSideEffectCalls;
-
   /** Replacements for @defines. Will be Boolean, Numbers, or Strings */
   private Map<String, Object> defineReplacements;
 
@@ -1296,7 +1293,6 @@ public class CompilerOptions implements Serializable {
     stripNamePrefixes = ImmutableSet.of();
     stripTypePrefixes = ImmutableSet.of();
     customPasses = null;
-    markNoSideEffectCalls = false;
     defineReplacements = new HashMap<>();
     tweakProcessing = TweakProcessing.OFF;
     tweakReplacements = new HashMap<>();
@@ -2475,10 +2471,6 @@ public class CompilerOptions implements Serializable {
     customPasses.put(time, customPass);
   }
 
-  public void setMarkNoSideEffectCalls(boolean markNoSideEffectCalls) {
-    this.markNoSideEffectCalls = markNoSideEffectCalls;
-  }
-
   public void setDefineReplacements(Map<String, Object> defineReplacements) {
     this.defineReplacements = defineReplacements;
   }
@@ -2939,7 +2931,6 @@ public class CompilerOptions implements Serializable {
             .add("lineLengthThreshold", lineLengthThreshold)
             .add("locale", locale)
             .add("markAsCompiled", markAsCompiled)
-            .add("markNoSideEffectCalls", markNoSideEffectCalls)
             .add("maxFunctionSizeAfterInlining", maxFunctionSizeAfterInlining)
             .add("messageBundle", messageBundle)
             .add("moduleRoots", moduleRoots)

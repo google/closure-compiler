@@ -1863,7 +1863,7 @@ public final class FunctionInjectorTest {
     final Node expectedRoot = parseExpected(new Compiler(), expectedResult);
 
     Node mainRoot = tree;
-    MarkNoSideEffectCalls mark = new MarkNoSideEffectCalls(compiler);
+    PureFunctionIdentifier.Driver mark = new PureFunctionIdentifier.Driver(compiler);
     mark.process(externsRoot, mainRoot);
 
     Normalize normalize = new Normalize(compiler, false);

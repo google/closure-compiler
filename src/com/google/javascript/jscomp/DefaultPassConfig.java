@@ -651,17 +651,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.computeFunctionSideEffects) {
       passes.add(markPureFunctions);
-    } else if (options.markNoSideEffectCalls) {
-      // TODO(user) The properties that this pass adds to CALL and NEW
-      // AST nodes increase the AST's in-memory size.  Given that we are
-      // already running close to our memory limits, we could run into
-      // trouble if we end up using the @nosideeffects annotation a lot
-      // or compute @nosideeffects annotations by looking at function
-      // bodies.  It should be easy to propagate @nosideeffects
-      // annotations as part of passes that depend on this property and
-      // store the result outside the AST (which would allow garbage
-      // collection once the pass is done).
-      passes.add(markNoSideEffectCalls);
     }
 
     if (options.smartNameRemoval) {
@@ -2552,20 +2541,6 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           return ES2019_MODULES;
-        }
-      };
-
-  /** Look for function calls that have no side effects, and annotate them that way. */
-  private final PassFactory markNoSideEffectCalls =
-      new PassFactory(PassNames.MARK_NO_SIDE_EFFECT_CALLS, true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new MarkNoSideEffectCalls(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES5;
         }
       };
 

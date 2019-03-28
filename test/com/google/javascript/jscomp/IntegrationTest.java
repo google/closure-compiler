@@ -2423,18 +2423,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testMarkNoSideEffects() {
-    String testCode = "noSideEffects();";
-    CompilerOptions options = createCompilerOptions();
-    options.setRemoveDeadCode(true);
-
-    testSame(options, testCode);
-
-    options.markNoSideEffectCalls = true;
-    test(options, testCode, "");
-  }
-
-  @Test
   public void testExtraAnnotationNames() {
     CompilerOptions options = createCompilerOptions();
     options.setExtraAnnotationNames(ImmutableSet.of("TagA", "TagB"));

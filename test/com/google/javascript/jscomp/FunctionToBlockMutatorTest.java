@@ -288,7 +288,7 @@ public final class FunctionToBlockMutatorTest {
     compiler.externsRoot = new Node(Token.ROOT);
     compiler.jsRoot = IR.root(script);
     compiler.externAndJsRoot = IR.root(compiler.externsRoot, compiler.jsRoot);
-    MarkNoSideEffectCalls mark = new MarkNoSideEffectCalls(compiler);
+    PureFunctionIdentifier.Driver mark = new PureFunctionIdentifier.Driver(compiler);
     mark.process(compiler.externsRoot, compiler.jsRoot);
 
     final Node fnNode = findFunction(script, fnName);

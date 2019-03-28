@@ -453,18 +453,6 @@ public enum CompilationParam {
     }
   },
 
-  MARK_NO_SIDE_EFFECT_CALLS(ParamGroup.OPTIMIZATION){
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setMarkNoSideEffectCalls(value);
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.markNoSideEffectCalls;
-    }
-  },
-
   /** Converts quoted property accesses to dot syntax (a['b'] -> a.b) */
   CONVERT_TO_DOTTED_PROPERTIES(ParamGroup.OPTIMIZATION){
     @Override

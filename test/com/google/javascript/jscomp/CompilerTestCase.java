@@ -165,11 +165,6 @@ public abstract class CompilerTestCase {
   private DiagnosticType expectedSymbolTableError;
 
   /**
-   * Whether the MarkNoSideEffectsCalls pass runs before the pass being tested
-   */
-  private boolean markNoSideEffects;
-
-  /**
    * Whether the PureFunctionIdentifier pass runs before the pass being tested
    */
   private boolean computeSideEffects;
@@ -631,7 +626,6 @@ public abstract class CompilerTestCase {
     this.verifyNoNewGettersOrSetters = false;
     this.inferConsts = false;
     this.languageOut = LanguageMode.ECMASCRIPT5;
-    this.markNoSideEffects = false;
     this.multistageCompilation = true;
     this.normalizeEnabled = false;
     this.parseTypeInfo = false;
@@ -939,19 +933,9 @@ public abstract class CompilerTestCase {
   }
 
   /**
-   * Run the MarkSideEffectCalls pass before running the test pass.
-   *
-   * @see MarkNoSideEffectCalls
-   */
-  protected final void enableMarkNoSideEffects() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    markNoSideEffects = true;
-  }
-
-  /**
    * Run the PureFunctionIdentifier pass before running the test pass.
    *
-   * @see MarkNoSideEffectCalls
+   * @see PureFunctionIdentifier
    */
   protected final void enableComputeSideEffects() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
@@ -1601,11 +1585,6 @@ public abstract class CompilerTestCase {
           PureFunctionIdentifier.Driver mark = new PureFunctionIdentifier.Driver(compiler);
           mark.process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
-        }
-
-        if (markNoSideEffects && i == 0) {
-          MarkNoSideEffectCalls mark = new MarkNoSideEffectCalls(compiler);
-          mark.process(externsRoot, mainRoot);
         }
 
         if (gatherExternPropertiesEnabled && i == 0) {

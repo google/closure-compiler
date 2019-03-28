@@ -2538,7 +2538,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testInlineObject() {
     disableCompareAsTree();
-    enableMarkNoSideEffects();
+    enableComputeSideEffects();
 
     this.inliningReach = Reach.LOCAL_ONLY;
     assumeStrictThis = true;
