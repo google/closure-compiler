@@ -53,4 +53,9 @@ public class J2clSuppressWarningsGuard extends DiagnosticGroupWarningsGuard {
     boolean isJ2clSource = error.sourceName != null && error.sourceName.endsWith(".java.js");
     return isJ2clSource ? super.level(error) /* suppress */ : null /* proceed */;
   }
+
+  @Override
+  protected int getPriority() {
+    return Priority.MAX.getValue();
+  }
 }
