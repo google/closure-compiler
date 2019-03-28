@@ -106,42 +106,79 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
    */
   private static final class LexicalContext {
 
+    // Node that creates the context
+    private final Node contextRoot;
     // The current function, or null if root scope where we are not in a function.
     private final Node function;
     // The context of the most recent definition of this/super/arguments
     private final ThisSuperArgsContext thisSuperArgsContext;
 
     // Represents the global/root scope. Should only exist on the bottom of the contextStack.
-    private LexicalContext() {
+    private LexicalContext(Node contextRoot) {
+      this.contextRoot = checkNotNull(contextRoot);
       this.function = null;
       this.thisSuperArgsContext = null;
     }
 
-    private LexicalContext(LexicalContext parent, Node function) {
+    /**
+     * Represents the context of a function or its parameter list.
+     *
+     * @param parent enclosing context
+     * @param contextRoot FUNCTION or PARAM_LIST node
+     * @param function same as contextRoot or the FUNCTION containing the PARAM_LIST
+     */
+    private LexicalContext(LexicalContext parent, Node contextRoot, Node function) {
       checkNotNull(parent);
+      checkNotNull(contextRoot);
+      checkArgument(contextRoot == function || contextRoot.isParamList(), contextRoot);
       checkNotNull(function);
-      checkArgument(function.isFunction());
+      checkArgument(function.isFunction(), function);
+      this.contextRoot = contextRoot;
       this.function = function;
 
       if (function.isArrowFunction()) {
-        // Use the parent context to inherit this, arguments, and super.
+        // Use the parent context to inherit this, arguments, and super for an arrow function or its
+        // parameter list.
         this.thisSuperArgsContext = parent.thisSuperArgsContext;
-      } else {
-        // Non-arrow gets its own context defining this, arguments, and super.
+      } else if (contextRoot.isFunction()) {
+        // Non-arrow function gets its own context defining `this`, `arguments`, and `super`.
         this.thisSuperArgsContext = new ThisSuperArgsContext(this);
+      } else {
+        // contextRoot is a parameter list.
+        // Never alias `this`, `arguments`, or `super` for normal function parameter lists.
+        // They are implicitly defined there.
+        this.thisSuperArgsContext = null;
       }
     }
 
-    static LexicalContext newGlobalContext() {
-      return new LexicalContext();
+    static LexicalContext newGlobalContext(Node contextRoot) {
+      return new LexicalContext(contextRoot);
     }
 
     static LexicalContext newContextForFunction(LexicalContext parent, Node function) {
-      return new LexicalContext(parent, function);
+      // Functions need their own context because:
+      //     - async generator functions must be transpiled
+      //     - non-async generator functions must NOT be transpiled
+      //     - arrow functions inside of async generator functions need to have
+      //       `this`, `arguments`, and `super` references aliased, including in their
+      //       parameter lists
+      return new LexicalContext(parent, function, function);
+    }
+
+    static LexicalContext newContextForParamList(LexicalContext parent, Node paramList) {
+      // Parameter lists need their own context because `this`, `arguments`, and `super` must NOT be
+      // aliased for non-arrow function parameter lists, even for async generator functions.
+      return new LexicalContext(parent, paramList, parent.function);
     }
 
     Node getFunctionDeclaringThisArgsSuper() {
       return thisSuperArgsContext.ctx.function;
+    }
+
+    /** Is it necessary to replace `this`, `super`, and `arguments` with aliases in this context? */
+    boolean mustReplaceThisSuperArgs() {
+      return thisSuperArgsContext != null
+          && getFunctionDeclaringThisArgsSuper().isAsyncGeneratorFunction();
     }
   }
 
@@ -224,7 +261,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
    */
   private void process(Node root, boolean hotSwap) {
     checkState(contextStack.isEmpty());
-    contextStack.push(LexicalContext.newGlobalContext());
+    contextStack.push(LexicalContext.newGlobalContext(root));
     if (hotSwap) {
       TranspilationPasses.hotSwapTranspile(compiler, root, transpiledFeatures, this);
     } else {
@@ -236,15 +273,12 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     checkState(contextStack.isEmpty());
   }
 
-  private boolean isInContextOfAsyncGenerator(LexicalContext ctx) {
-    return ctx.thisSuperArgsContext != null
-        && ctx.getFunctionDeclaringThisArgsSuper().isAsyncGeneratorFunction();
-  }
-
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
     if (n.isFunction()) {
       contextStack.push(LexicalContext.newContextForFunction(contextStack.element(), n));
+    } else if (n.isParamList()) {
+      contextStack.push(LexicalContext.newContextForParamList(contextStack.element(), n));
     }
     return true;
   }
@@ -254,12 +288,18 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     LexicalContext ctx = contextStack.element();
     switch (n.getToken()) {
         // Async Generators (and popping contexts)
+      case PARAM_LIST:
+        // Done handling parameter list, so pop its context
+        checkState(n.equals(ctx.contextRoot), n);
+        contextStack.pop();
+        break;
       case FUNCTION:
-        checkState(n.equals(ctx.function));
+        checkState(n.equals(ctx.contextRoot));
         if (n.isAsyncGeneratorFunction()) {
           convertAsyncGenerator(t, n);
           prependTempVarDeclarations(ctx, t);
         }
+        // Done handling function, so pop its context
         contextStack.pop();
         break;
       case AWAIT:
@@ -285,17 +325,17 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
 
         // Maintaining references to this/arguments/super
       case THIS:
-        if (isInContextOfAsyncGenerator(ctx)) {
+        if (ctx.mustReplaceThisSuperArgs()) {
           replaceThis(t, ctx, n);
         }
         break;
       case NAME:
-        if (isInContextOfAsyncGenerator(ctx) && n.matchesQualifiedName("arguments")) {
+        if (ctx.mustReplaceThisSuperArgs() && n.matchesQualifiedName("arguments")) {
           replaceArguments(t, ctx, n);
         }
         break;
       case SUPER:
-        if (isInContextOfAsyncGenerator(ctx)) {
+        if (ctx.mustReplaceThisSuperArgs()) {
           replaceSuper(t, ctx, n, parent);
         }
         break;
@@ -569,7 +609,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
 
   private void replaceThis(NodeTraversal t, LexicalContext ctx, Node n) {
     checkArgument(n.isThis());
-    checkArgument(ctx != null && isInContextOfAsyncGenerator(ctx));
+    checkArgument(ctx != null && ctx.mustReplaceThisSuperArgs());
     checkArgument(ctx.function != null, "Cannot prepend declarations to root scope");
     checkNotNull(ctx.thisSuperArgsContext);
 
@@ -580,7 +620,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
 
   private void replaceArguments(NodeTraversal t, LexicalContext ctx, Node n) {
     checkArgument(n.isName() && "arguments".equals(n.getString()));
-    checkArgument(ctx != null && isInContextOfAsyncGenerator(ctx));
+    checkArgument(ctx != null && ctx.mustReplaceThisSuperArgs());
     checkArgument(ctx.function != null, "Cannot prepend declarations to root scope");
     checkNotNull(ctx.thisSuperArgsContext);
 
@@ -599,7 +639,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
       return;
     }
     checkArgument(n.isSuper());
-    checkArgument(ctx != null && isInContextOfAsyncGenerator(ctx));
+    checkArgument(ctx != null && ctx.mustReplaceThisSuperArgs());
     checkArgument(ctx.function != null, "Cannot prepend declarations to root scope");
     checkNotNull(ctx.thisSuperArgsContext);
 

@@ -358,20 +358,47 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   @Test
   public void testThisInAsyncGeneratorNestedInAsyncGenerator() {
     test(
-        "async function* baz() { return async function*() { yield this; } }",
         lines(
-            "function baz() {",
+            "async function* baz(outerT = this) {",
+            "  return async function*(innerT = this) {",
+            "    yield innerT || this;",
+            "  }",
+            "}"),
+        lines(
+            // `this` in parameter list shouldn't be aliased
+            "function baz(outerT = this) {",
             "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    return function() {",
+            // `this` in parameter list shouldn't be aliased
+            "    return function(innerT = this) {",
             "      const $jscomp$asyncIter$this = this;",
             "      return new $jscomp.AsyncGeneratorWrapper((function*() {",
+            // `this` in body should be aliased
             "        yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
             "          $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            "          $jscomp$asyncIter$this);",
+            "          innerT || $jscomp$asyncIter$this);",
             "      })());",
             "    };",
             "  })());",
             "}"));
+  }
+
+  @Test
+  public void testThisInArrowNestedInAsyncGenerator() {
+    test(
+        lines(
+            "async function* baz() {",
+            // both instances of `this` musts be changed to aliases
+            "  return (t = this) => t || this;",
+            "}"),
+        lines(
+            "function baz() {",
+            "  const $jscomp$asyncIter$this = this;",
+            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
+            "    return (t = $jscomp$asyncIter$this) =>",
+            "        t || $jscomp$asyncIter$this;",
+            "      })());",
+            "}",
+            ""));
   }
 
   @Test
