@@ -987,7 +987,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     // enclosing class.
     // TODO(tbreisacher): Should we also include the filename where ownerType is defined?
     String readableTypeName =
-        Objects.equals(ownerType, propRef.getReceiverType())
+        ownerType == null || ownerType.equals(propRef.getReceiverType())
             ? propRef.getReadableTypeNameOrDefault()
             : ownerType.toString();
     compiler.report(
