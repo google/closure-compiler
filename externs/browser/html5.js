@@ -1152,22 +1152,22 @@ Document.prototype.getSelection = function() {};
 Document.prototype.readyState;
 
 /**
- * @see https://developer.apple.com/webapps/docs/documentation/AppleApplications/Reference/SafariJSRef/DOMApplicationCache/DOMApplicationCache.html
+ * @see https://html.spec.whatwg.org/#application-cache-api
  * @constructor
  * @implements {EventTarget}
  */
-function DOMApplicationCache() {}
+function ApplicationCache() {}
 
 /** @override */
-DOMApplicationCache.prototype.addEventListener = function(
+ApplicationCache.prototype.addEventListener = function(
     type, listener, opt_options) {};
 
 /** @override */
-DOMApplicationCache.prototype.removeEventListener = function(
+ApplicationCache.prototype.removeEventListener = function(
     type, listener, opt_options) {};
 
 /** @override */
-DOMApplicationCache.prototype.dispatchEvent = function(evt) {};
+ApplicationCache.prototype.dispatchEvent = function(evt) {};
 
 /**
  * The object isn't associated with an application cache. This can occur if the
@@ -1175,108 +1175,108 @@ DOMApplicationCache.prototype.dispatchEvent = function(evt) {};
  * is no manifest file.
  * @const {number}
  */
-DOMApplicationCache.prototype.UNCACHED = 0;
+ApplicationCache.prototype.UNCACHED = 0;
 
 /**
  * The cache is idle.
  * @const {number}
  */
-DOMApplicationCache.prototype.IDLE = 1;
+ApplicationCache.prototype.IDLE = 1;
 
 /**
  * The update has started but the resources are not downloaded yet - for
  * example, this can happen when the manifest file is fetched.
  * @const {number}
  */
-DOMApplicationCache.prototype.CHECKING = 2;
+ApplicationCache.prototype.CHECKING = 2;
 
 /**
  * The resources are being downloaded into the cache.
  * @const {number}
  */
-DOMApplicationCache.prototype.DOWNLOADING = 3;
+ApplicationCache.prototype.DOWNLOADING = 3;
 
 /**
  * Resources have finished downloading and the new cache is ready to be used.
  * @const {number}
  */
-DOMApplicationCache.prototype.UPDATEREADY = 4;
+ApplicationCache.prototype.UPDATEREADY = 4;
 
 /**
  * The cache is obsolete.
  * @const {number}
  */
-DOMApplicationCache.prototype.OBSOLETE = 5;
+ApplicationCache.prototype.OBSOLETE = 5;
 
 /**
  * The current status of the application cache.
  * @type {number}
  */
-DOMApplicationCache.prototype.status;
+ApplicationCache.prototype.status;
 
 /**
  * Sent when the update process finishes for the first time; that is, the first
  * time an application cache is saved.
  * @type {?function(!Event)}
  */
-DOMApplicationCache.prototype.oncached;
+ApplicationCache.prototype.oncached;
 
 /**
  * Sent when the cache update process begins.
  * @type {?function(!Event)}
  */
-DOMApplicationCache.prototype.onchecking;
+ApplicationCache.prototype.onchecking;
 
 /**
  * Sent when the update process begins downloading resources in the manifest
  * file.
  * @type {?function(!Event)}
  */
-DOMApplicationCache.prototype.ondownloading;
+ApplicationCache.prototype.ondownloading;
 
 /**
  * Sent when an error occurs.
  * @type {?function(!Event)}
  */
-DOMApplicationCache.prototype.onerror;
+ApplicationCache.prototype.onerror;
 
 /**
  * Sent when the update process finishes but the manifest file does not change.
  * @type {?function(!Event)}
  */
-DOMApplicationCache.prototype.onnoupdate;
+ApplicationCache.prototype.onnoupdate;
 
 /**
  * Sent when each resource in the manifest file begins to download.
  * @type {?function(!Event)}
  */
-DOMApplicationCache.prototype.onprogress;
+ApplicationCache.prototype.onprogress;
 
 /**
  * Sent when there is an existing application cache, the update process
  * finishes, and there is a new application cache ready for use.
  * @type {?function(!Event)}
  */
-DOMApplicationCache.prototype.onupdateready;
+ApplicationCache.prototype.onupdateready;
 
 /**
  * Replaces the active cache with the latest version.
  * @throws {DOMException}
  * @return {undefined}
  */
-DOMApplicationCache.prototype.swapCache = function() {};
+ApplicationCache.prototype.swapCache = function() {};
 
 /**
  * Manually triggers the update process.
  * @throws {DOMException}
  * @return {undefined}
  */
-DOMApplicationCache.prototype.update = function() {};
+ApplicationCache.prototype.update = function() {};
 
-/** @type {DOMApplicationCache} */
+/** @type {ApplicationCache} */
 var applicationCache;
 
-/** @type {DOMApplicationCache} */
+/** @type {ApplicationCache} */
 Window.prototype.applicationCache;
 
 /**
