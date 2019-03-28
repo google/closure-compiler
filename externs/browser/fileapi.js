@@ -373,110 +373,110 @@ function FileError() {}
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-NOT_FOUND_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.NOT_FOUND_ERR = 1;
 
-/** @type {number} */
+/** @const {number} */
 FileError.NOT_FOUND_ERR = 1;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-SECURITY_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.SECURITY_ERR = 2;
 
-/** @type {number} */
+/** @const {number} */
 FileError.SECURITY_ERR = 2;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-ABORT_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.ABORT_ERR = 3;
 
-/** @type {number} */
+/** @const {number} */
 FileError.ABORT_ERR = 3;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-NOT_READABLE_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.NOT_READABLE_ERR = 4;
 
-/** @type {number} */
+/** @const {number} */
 FileError.NOT_READABLE_ERR = 4;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-ENCODING_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.ENCODING_ERR = 5;
 
-/** @type {number} */
+/** @const {number} */
 FileError.ENCODING_ERR = 5;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileError-NO_MODIFICATION_ALLOWED_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.NO_MODIFICATION_ALLOWED_ERR = 6;
 
-/** @type {number} */
+/** @const {number} */
 FileError.NO_MODIFICATION_ALLOWED_ERR = 6;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileException-INVALID_STATE_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.INVALID_STATE_ERR = 7;
 
-/** @type {number} */
+/** @const {number} */
 FileError.INVALID_STATE_ERR = 7;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileException-SYNTAX_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.SYNTAX_ERR = 8;
 
-/** @type {number} */
+/** @const {number} */
 FileError.SYNTAX_ERR = 8;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileError-INVALID_MODIFICATION_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.INVALID_MODIFICATION_ERR = 9;
 
-/** @type {number} */
+/** @const {number} */
 FileError.INVALID_MODIFICATION_ERR = 9;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileError-QUOTA_EXCEEDED_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.QUOTA_EXCEEDED_ERR = 10;
 
-/** @type {number} */
+/** @const {number} */
 FileError.QUOTA_EXCEEDED_ERR = 10;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileException-TYPE_MISMATCH_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.TYPE_MISMATCH_ERR = 11;
 
-/** @type {number} */
+/** @const {number} */
 FileError.TYPE_MISMATCH_ERR = 11;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileException-PATH_EXISTS_ERR
- * @type {number}
+ * @const {number}
  */
 FileError.prototype.PATH_EXISTS_ERR = 12;
 
-/** @type {number} */
+/** @const {number} */
 FileError.PATH_EXISTS_ERR = 12;
 
 /**
@@ -635,19 +635,19 @@ FileSaver.prototype.abort = function() {};
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-INIT
- * @type {number}
+ * @const {number}
  */
 FileSaver.prototype.INIT = 0;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-WRITING
- * @type {number}
+ * @const {number}
  */
 FileSaver.prototype.WRITING = 1;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-DONE
- * @type {number}
+ * @const {number}
  */
 FileSaver.prototype.DONE = 2;
 
@@ -785,13 +785,13 @@ Metadata.prototype.size;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-LocalFileSystem-TEMPORARY
- * @type {number}
+ * @const {number}
 */
 Window.prototype.TEMPORARY = 0;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-LocalFileSystem-PERSISTENT
- * @type {number}
+ * @const {number}
 */
 Window.prototype.PERSISTENT = 1;
 
@@ -944,13 +944,13 @@ function StorageInfo() {}
 
 /**
  * @see https://developers.google.com/chrome/whitepapers/storage
- * @type {number}
+ * @const {number}
  * */
 StorageInfo.prototype.TEMPORARY = 0;
 
 /**
  * @see https://developers.google.com/chrome/whitepapers/storage
- * @type {number}
+ * @const {number}
  */
 StorageInfo.prototype.PERSISTENT = 1;
 

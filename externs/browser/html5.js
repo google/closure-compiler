@@ -1173,38 +1173,38 @@ DOMApplicationCache.prototype.dispatchEvent = function(evt) {};
  * The object isn't associated with an application cache. This can occur if the
  * update process fails and there is no previous cache to revert to, or if there
  * is no manifest file.
- * @type {number}
+ * @const {number}
  */
 DOMApplicationCache.prototype.UNCACHED = 0;
 
 /**
  * The cache is idle.
- * @type {number}
+ * @const {number}
  */
 DOMApplicationCache.prototype.IDLE = 1;
 
 /**
  * The update has started but the resources are not downloaded yet - for
  * example, this can happen when the manifest file is fetched.
- * @type {number}
+ * @const {number}
  */
 DOMApplicationCache.prototype.CHECKING = 2;
 
 /**
  * The resources are being downloaded into the cache.
- * @type {number}
+ * @const {number}
  */
 DOMApplicationCache.prototype.DOWNLOADING = 3;
 
 /**
  * Resources have finished downloading and the new cache is ready to be used.
- * @type {number}
+ * @const {number}
  */
 DOMApplicationCache.prototype.UPDATEREADY = 4;
 
 /**
  * The cache is obsolete.
- * @type {number}
+ * @const {number}
  */
 DOMApplicationCache.prototype.OBSOLETE = 5;
 
@@ -3829,10 +3829,10 @@ Document.prototype.msFullscreenEnabled;
 /** @type {Element} */
 Document.prototype.msFullscreenElement;
 
-/** @type {number} */
+/** @const {number} */
 Element.ALLOW_KEYBOARD_INPUT = 1;
 
-/** @type {number} */
+/** @const {number} */
 Element.prototype.ALLOW_KEYBOARD_INPUT = 1;
 
 

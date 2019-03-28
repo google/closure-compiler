@@ -40,13 +40,13 @@
 function XPathException() {}
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#INVALID_EXPRESSION_ERR
  */
 XPathException.INVALID_EXPRESSION_ERR = 52;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#TYPE_ERR
  */
 XPathException.TYPE_ERR = 52;
@@ -202,61 +202,61 @@ XPathResult.prototype.iterateNext = function() {};
 XPathResult.prototype.snapshotItem = function(index) {};
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-ANY-TYPE
  */
 XPathResult.ANY_TYPE = 0;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-NUMBER-TYPE
  */
 XPathResult.NUMBER_TYPE = 1;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-STRING-TYPE
  */
 XPathResult.STRING_TYPE = 2;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-BOOLEAN-TYPE
  */
 XPathResult.BOOLEAN_TYPE = 3;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-UNORDERED-NODE-ITERATOR-TYPE
  */
 XPathResult.UNORDERED_NODE_ITERATOR_TYPE = 4;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-ORDERED-NODE-ITERATOR-TYPE
  */
 XPathResult.ORDERED_NODE_ITERATOR_TYPE = 5;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-UNORDERED-NODE-SNAPSHOT-TYPE
  */
 XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE = 6;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-ORDERED-NODE-SNAPSHOT-TYPE
  */
 XPathResult.ORDERED_NODE_SNAPSHOT_TYPE = 7;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-ANY-UNORDERED-NODE-TYPE
  */
 XPathResult.ANY_UNORDERED_NODE_TYPE = 8;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-FIRST-ORDERED-NODE-TYPE
  */
 XPathResult.FIRST_ORDERED_NODE_TYPE = 9;
@@ -275,7 +275,7 @@ function XPathNamespace() {}
 XPathNamespace.prototype.ownerElement;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPATH_NAMESPACE_NODE
  */
 XPathNamespace.XPATH_NAMESPACE_NODE = 13;

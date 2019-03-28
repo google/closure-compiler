@@ -32,13 +32,13 @@
 DOMException.prototype.code;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-258A00AF
  */
 DOMException.VALIDATION_ERR = 16;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-258A00AF
  */
 DOMException.TYPE_MISMATCH_ERR = 17;
@@ -617,31 +617,31 @@ TypeInfo.prototype.isDerivedFrom = function(typeNamespaceArg, typeNameArg, deriv
 function UserDataHandler() {}
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#UserDataHandler-CLONED
  */
 UserDataHandler.prototype.NODE_CLONED = 1;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#UserDataHandler-IMPORTED
  */
 UserDataHandler.prototype.NODE_IMPORTED = 2;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#UserDataHandler-DELETED
  */
 UserDataHandler.prototype.NODE_DELETED = 3;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#UserDataHandler-RENAMED
  */
 UserDataHandler.prototype.NODE_RENAMED = 4;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#UserDataHandler-ADOPTED
  */
 UserDataHandler.prototype.NODE_ADOPTED = 5;
@@ -689,19 +689,19 @@ DOMError.prototype.relatedData;
 DOMError.prototype.relatedException;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ERROR-DOMError-severity-warning
  */
 DOMError.SEVERITY_WARNING = 1;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ERROR-DOMError-severity-error
  */
 DOMError.SEVERITY_ERROR = 2;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ERROR-DOMError-severity-fatal-error
  */
 DOMError.SEVERITY_FATAL_ERROR = 3;
