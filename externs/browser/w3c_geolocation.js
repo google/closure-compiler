@@ -107,13 +107,13 @@ function GeolocationPositionError() {}
 GeolocationPositionError.prototype.code;
 /** @type {string} */
 GeolocationPositionError.prototype.message;
-/** @type {number} */
+/** @const {number} */
 GeolocationPositionError.prototype.UNKNOWN_ERROR;
-/** @type {number} */
+/** @const {number} */
 GeolocationPositionError.prototype.PERMISSION_DENIED;
-/** @type {number} */
+/** @const {number} */
 GeolocationPositionError.prototype.POSITION_UNAVAILABLE;
-/** @type {number} */
+/** @const {number} */
 GeolocationPositionError.prototype.TIMEOUT;
 
 /** @type {Geolocation} */
