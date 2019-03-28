@@ -1176,10 +1176,24 @@ ApplicationCache.prototype.dispatchEvent = function(evt) {};
 ApplicationCache.prototype.UNCACHED = 0;
 
 /**
+ * The object isn't associated with an application cache. This can occur if the
+ * update process fails and there is no previous cache to revert to, or if there
+ * is no manifest file.
+ * @const {number}
+ */
+ApplicationCache.UNCACHED = 0;
+
+/**
  * The cache is idle.
  * @const {number}
  */
 ApplicationCache.prototype.IDLE = 1;
+
+/**
+ * The cache is idle.
+ * @const {number}
+ */
+ApplicationCache.IDLE = 1;
 
 /**
  * The update has started but the resources are not downloaded yet - for
@@ -1189,10 +1203,23 @@ ApplicationCache.prototype.IDLE = 1;
 ApplicationCache.prototype.CHECKING = 2;
 
 /**
+ * The update has started but the resources are not downloaded yet - for
+ * example, this can happen when the manifest file is fetched.
+ * @const {number}
+ */
+ApplicationCache.CHECKING = 2;
+
+/**
  * The resources are being downloaded into the cache.
  * @const {number}
  */
 ApplicationCache.prototype.DOWNLOADING = 3;
+
+/**
+ * The resources are being downloaded into the cache.
+ * @const {number}
+ */
+ApplicationCache.DOWNLOADING = 3;
 
 /**
  * Resources have finished downloading and the new cache is ready to be used.
@@ -1201,10 +1228,22 @@ ApplicationCache.prototype.DOWNLOADING = 3;
 ApplicationCache.prototype.UPDATEREADY = 4;
 
 /**
+ * Resources have finished downloading and the new cache is ready to be used.
+ * @const {number}
+ */
+ApplicationCache.UPDATEREADY = 4;
+
+/**
  * The cache is obsolete.
  * @const {number}
  */
 ApplicationCache.prototype.OBSOLETE = 5;
+
+/**
+ * The cache is obsolete.
+ * @const {number}
+ */
+ApplicationCache.OBSOLETE = 5;
 
 /**
  * The current status of the application cache.
@@ -1215,45 +1254,45 @@ ApplicationCache.prototype.status;
 /**
  * Sent when the update process finishes for the first time; that is, the first
  * time an application cache is saved.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 ApplicationCache.prototype.oncached;
 
 /**
  * Sent when the cache update process begins.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 ApplicationCache.prototype.onchecking;
 
 /**
  * Sent when the update process begins downloading resources in the manifest
  * file.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 ApplicationCache.prototype.ondownloading;
 
 /**
  * Sent when an error occurs.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 ApplicationCache.prototype.onerror;
 
 /**
  * Sent when the update process finishes but the manifest file does not change.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 ApplicationCache.prototype.onnoupdate;
 
 /**
  * Sent when each resource in the manifest file begins to download.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 ApplicationCache.prototype.onprogress;
 
 /**
  * Sent when there is an existing application cache, the update process
  * finishes, and there is a new application cache ready for use.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 ApplicationCache.prototype.onupdateready;
 
