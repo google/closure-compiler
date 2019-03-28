@@ -685,8 +685,8 @@ public class CommandLineRunner extends
         name = "--language_out",
         usage =
             "Sets the language spec to which output should conform. "
-                + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
-                + "ECMASCRIPT_2015, STABLE")
+                + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, ECMASCRIPT6, "
+                + "ECMASCRIPT_2015, ECMASCRIPT_2016, ECMASCRIPT_2017, STABLE")
     private String languageOut = "STABLE";
 
 
