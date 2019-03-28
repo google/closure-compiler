@@ -160,38 +160,135 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
   }
 
   /**
-   * Keeps track of whether we're examining nodes within an async function & what changes are needed
-   * for the function currently in context.
+   * Determines both what to do when visiting a node and how to determine the context for its
+   * descendents.
    */
-  private final class LexicalContext {
-    @Nullable final Node function;
-    @Nullable final LexicalContext asyncThisAndArgumentsContext;
+  private abstract class LexicalContext {
+    final Node contextRootNode;
+
+    LexicalContext(Node contextRootNode) {
+      this.contextRootNode = checkNotNull(contextRootNode);
+    }
+
+    Node getContextRootNode() {
+      return contextRootNode;
+    }
+
+    /**
+     * Returns the LexicalContext to use for visiting a node.
+     *
+     * @param n This context's root node or one of its descendents.
+     * @return this context or a new one for a child context
+     */
+    public abstract LexicalContext getContextForNode(Node n);
+
+    public abstract void visit(NodeTraversal t, Node n);
+  }
+
+  /** Defines behavior for nodes in the root scope, outside of any functions. */
+  private final class RootContext extends LexicalContext {
+
+    private RootContext(Node contextRootNode) {
+      super(contextRootNode);
+    }
+
+    @Override
+    public LexicalContext getContextForNode(Node n) {
+      if (n.isFunction()) {
+        return new FunctionContext(n);
+      } else {
+        return this;
+      }
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n) {
+      // In root context we haven't entered an async function yet, so there's nothing to do.
+    }
+  }
+
+  /** Defines the behavior for function definition parameter lists and their contents. */
+  private final class ParameterListContext extends LexicalContext {
+    final FunctionContext functionContext;
+
+    public ParameterListContext(FunctionContext functionContext, Node contextRootNode) {
+      super(contextRootNode);
+      this.functionContext = checkNotNull(functionContext);
+    }
+
+    @Override
+    public LexicalContext getContextForNode(Node n) {
+      if (n.isFunction()) {
+        // Function defined within a parameter list.
+        // e.g. `() => something`
+        // function someFunc(callback = () => something) {}
+        return new FunctionContext(functionContext, n);
+      } else {
+        return this;
+      }
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n) {
+      if (functionContext.asyncThisAndArgumentsContext != null
+          && functionContext.asyncThisAndArgumentsContext != functionContext) {
+        // e.g.
+        // async function outer(outerT = this) {
+        //   // `this` in outer parameter list must remain unchanged
+        //   // but inner parameter list must be aliased
+        //   const inner = async (t = this) => t;
+        // }
+        functionContext.visit(t, n);
+      }
+    }
+  }
+
+  /**
+   * Defines behavior for replacing references to `this`, `arguments`, and `super` within async
+   * functions and rewriting the async functions themselves.
+   */
+  private final class FunctionContext extends LexicalContext {
+
+    // If references to `this`, `arguments`, and `super` should be considered in the context of
+    // an async function, this will point to that function's FunctionContext.
+    // Otherwise, it will be `null`.
+    // TODO(bradfordcsmith): It would cost less memory if we defined a separate object to hold
+    // the data for async context accounting instead of having the booleans and super property
+    // wrapper fields on every FunctionContext.
+    @Nullable final FunctionContext asyncThisAndArgumentsContext;
     final SuperPropertyWrappers superPropertyWrappers = new SuperPropertyWrappers();
 
     boolean mustAddAsyncThisVariable = false;
     boolean mustAddAsyncArgumentsVariable = false;
 
-    LexicalContext() {
-      function = null;
-      asyncThisAndArgumentsContext = null;
+    FunctionContext(Node contextRootNode) {
+      super(contextRootNode);
+      if (contextRootNode.isAsyncFunction()) {
+        asyncThisAndArgumentsContext = this;
+      } else {
+        asyncThisAndArgumentsContext = null;
+      }
     }
 
-    LexicalContext(LexicalContext outer, Node function) {
-      this.function = checkNotNull(function);
-
-      if (function.isAsyncFunction()) {
-        if (function.isArrowFunction()) {
+    FunctionContext(FunctionContext outer, Node contextRootNode) {
+      super(contextRootNode);
+      checkState(contextRootNode.isFunction(), contextRootNode);
+      if (contextRootNode.isAsyncFunction()) {
+        if (contextRootNode.isArrowFunction()) {
           // An async arrow function context points to outer.asyncThisAndArgumentsContext
           // if non-null, otherwise to itself.
-          asyncThisAndArgumentsContext = outer.asyncThisAndArgumentsContext == null
-              ? this : outer.asyncThisAndArgumentsContext;
+          asyncThisAndArgumentsContext =
+              outer.asyncThisAndArgumentsContext == null
+                  ? this
+                  : outer.asyncThisAndArgumentsContext;
         } else {
           // An async non-arrow function context always points to itself
           asyncThisAndArgumentsContext = this;
         }
       } else {
-        if (function.isArrowFunction()) {
-          // A non-async arrow function context always points to outer.asyncThisAndArgumentsContext
+        if (contextRootNode.isArrowFunction()) {
+          // A non-async arrow function context always points to
+          // outer.asyncThisAndArgumentsContext
           asyncThisAndArgumentsContext = outer.asyncThisAndArgumentsContext;
         } else {
           // A non-async, non-arrow function has no async context.
@@ -200,39 +297,45 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       }
     }
 
-    boolean isAsyncContext() {
-      return function.isAsyncFunction();
+    @Override
+    public LexicalContext getContextForNode(Node n) {
+      if (n == contextRootNode) {
+        return this;
+      } else if (n.isFunction()) {
+        return new FunctionContext(this, n);
+      } else if (n.isParamList()) {
+        return new ParameterListContext(this, n);
+      } else {
+        return this;
+      }
     }
 
-    boolean mustReplaceThisAndArguments() {
-      return asyncThisAndArgumentsContext != null;
-    }
-
-    void recordAsyncThisReplacementWasDone() {
+    private void recordAsyncThisReplacementWasDone() {
       asyncThisAndArgumentsContext.mustAddAsyncThisVariable = true;
     }
 
-    SuperPropertyWrapperInfo getOrCreateSuperPropertyWrapperInfo(Node superDotPropertyNode) {
+    private SuperPropertyWrapperInfo getOrCreateSuperPropertyWrapperInfo(
+        Node superDotPropertyNode) {
       return asyncThisAndArgumentsContext.superPropertyWrappers.getOrCreateSuperPropertyWrapperInfo(
           superDotPropertyNode);
     }
 
-    void recordAsyncArgumentsReplacementWasDone() {
+    private void recordAsyncArgumentsReplacementWasDone() {
       asyncThisAndArgumentsContext.mustAddAsyncArgumentsVariable = true;
     }
 
     /**
      * Creates a new reference to the variable used to hold the value of `this` for async functions.
      */
-    Node createThisVariableReference() {
+    private Node createThisVariableReference() {
       recordAsyncThisReplacementWasDone();
       return astFactory.createThisAliasReferenceForFunction(
-          ASYNC_THIS, asyncThisAndArgumentsContext.function);
+          ASYNC_THIS, asyncThisAndArgumentsContext.getContextRootNode());
     }
 
     /** Creates a correctly typed `this` node for this context. */
-    Node createThisReference() {
-      return astFactory.createThisForFunction(asyncThisAndArgumentsContext.function);
+    private Node createThisReference() {
+      return astFactory.createThisForFunction(asyncThisAndArgumentsContext.getContextRootNode());
     }
 
     private Node createWrapperArrowFunction(SuperPropertyWrapperInfo wrapperInfo) {
@@ -249,7 +352,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
         final Node originalSuperNode = superDotProperty.getFirstChild();
 
         // NOTE: must look at the enclosing MEMBER_FUNCTION_DEF to see if the method is static
-        if (asyncThisAndArgumentsContext.function.getParent().isStaticMember()) {
+        if (asyncThisAndArgumentsContext.getContextRootNode().getParent().isStaticMember()) {
           // For static methods `this` is the class and its direct prototype is the parent
           // class and the super node we want
           // super.propertyName -> Object.getPrototypeOf(this).propertyName
@@ -269,6 +372,79 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       // OR avoid super for instance method (instance -> prototype -> super prototype)
       // () => Object.getPrototypeOf(Object.getPrototypeOf(this)).x
       return astFactory.createZeroArgArrowFunctionForExpression(superDotProperty);
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n) {
+      if (contextRootNode == n && contextRootNode.isAsyncFunction()) {
+        // We're visiting an async function.
+        // All of its descendent nodes will have been updated as necessary, so now we just need to
+        // convert the function itself.
+        convertAsyncFunction(t, this);
+      } else if (asyncThisAndArgumentsContext != null) {
+        // We're in the context of an async function's body, so we need to do some replacements.
+        switch (n.getToken()) {
+          case NAME:
+            if (n.matchesQualifiedName("arguments")) {
+              n.setString(ASYNC_ARGUMENTS);
+              asyncThisAndArgumentsContext.recordAsyncArgumentsReplacementWasDone();
+              compiler.reportChangeToChangeScope(contextRootNode);
+            }
+            break;
+
+          case THIS:
+            n.getParent()
+                .replaceChild(n, asyncThisAndArgumentsContext.createThisVariableReference());
+            compiler.reportChangeToChangeScope(contextRootNode);
+            break;
+
+          case SUPER:
+            {
+              Node parent = n.getParent();
+              if (!parent.isGetProp()) {
+                compiler.report(
+                    JSError.make(parent, Es6ToEs3Util.CANNOT_CONVERT_YET, "super expression"));
+              }
+              // different name for parent for better readability
+              Node superDotProperty = parent;
+
+              SuperPropertyWrapperInfo superPropertyWrapperInfo =
+                  asyncThisAndArgumentsContext.getOrCreateSuperPropertyWrapperInfo(
+                      superDotProperty);
+
+              // super.x   =>   $jscomp$super$get$x()
+              Node getPropReplacement = superPropertyWrapperInfo.createWrapperFunctionCallNode();
+              Node grandparent = superDotProperty.getParent();
+              if (grandparent.isCall() && grandparent.getFirstChild() == superDotProperty) {
+                // $jscomp$super$get$x(...)   =>   $jscomp$super$get$x().call($jscomp$async$this,
+                // ...)
+                getPropReplacement = astFactory.createGetProp(getPropReplacement, "call");
+                grandparent.addChildAfter(
+                    astFactory
+                        .createThisAliasReferenceForFunction(
+                            ASYNC_THIS, asyncThisAndArgumentsContext.getContextRootNode())
+                        .useSourceInfoFrom(superDotProperty),
+                    superDotProperty);
+                asyncThisAndArgumentsContext.recordAsyncThisReplacementWasDone();
+              }
+              getPropReplacement.useSourceInfoFromForTree(superDotProperty);
+              grandparent.replaceChild(superDotProperty, getPropReplacement);
+              compiler.reportChangeToChangeScope(contextRootNode);
+            }
+            break;
+
+          case AWAIT:
+            checkState(
+                n.hasOneChild(), "await should have 1 operand, but has %s", n.getChildCount());
+            // Awaits become yields in the converted async function's inner generator function.
+            n.getParent()
+                .replaceChild(n, astFactory.createYield(n.getJSType(), n.removeFirstChild()));
+            break;
+
+          default:
+            break;
+        }
+      }
     }
   }
 
@@ -301,7 +477,6 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     checkNotNull(builder);
     this.compiler = builder.compiler;
     this.contextStack = new ArrayDeque<>();
-    this.contextStack.addFirst(new LexicalContext());
     this.rewriteSuperPropertyReferencesWithoutSuper =
         builder.rewriteSuperPropertyReferencesWithoutSuper;
     this.registry = checkNotNull(builder.registry);
@@ -346,88 +521,30 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
 
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-    if (n.isFunction()) {
-      contextStack.addFirst(new LexicalContext(contextStack.getFirst(), n));
+    if (parent == null) {
+      checkState(contextStack.isEmpty());
+      contextStack.push(new RootContext(n));
+    } else {
+      LexicalContext parentContext = contextStack.peek();
+      LexicalContext nodeContext = parentContext.getContextForNode(n);
+      if (nodeContext != parentContext) {
+        contextStack.push(nodeContext);
+      }
     }
     return true;
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    LexicalContext context = contextStack.getFirst();
-    switch (n.getToken()) {
-      case FUNCTION:
-        checkState(
-            context.function == n,
-            "unexpected function context:\nexpected: %s\nactual: %s",
-            n,
-            context.function);
-        checkState(contextStack.removeFirst() == context);
-        if (context.isAsyncContext()) {
-          convertAsyncFunction(t, context);
-        }
-        break;
-
-      case NAME:
-        if (context.mustReplaceThisAndArguments() && n.matchesQualifiedName("arguments")) {
-          n.setString(ASYNC_ARGUMENTS);
-          context.recordAsyncArgumentsReplacementWasDone();
-          compiler.reportChangeToChangeScope(context.function);
-        }
-        break;
-
-      case THIS:
-        if (context.mustReplaceThisAndArguments()) {
-          parent.replaceChild(n, context.createThisVariableReference());
-          compiler.reportChangeToChangeScope(context.function);
-        }
-        break;
-
-      case SUPER:
-        if (context.mustReplaceThisAndArguments()) {
-          if (!parent.isGetProp()) {
-            compiler.report(
-                JSError.make(parent, Es6ToEs3Util.CANNOT_CONVERT_YET, "super expression"));
-          }
-          // different name for parent for better readability
-          Node superDotProperty = parent;
-
-          SuperPropertyWrapperInfo superPropertyWrapperInfo =
-              context.getOrCreateSuperPropertyWrapperInfo(superDotProperty);
-
-          // super.x   =>   $jscomp$super$get$x()
-          Node getPropReplacement = superPropertyWrapperInfo.createWrapperFunctionCallNode();
-          Node grandparent = superDotProperty.getParent();
-          if (grandparent.isCall() && grandparent.getFirstChild() == superDotProperty) {
-            // $jscomp$super$get$x(...)   =>   $jscomp$super$get$x().call($jscomp$async$this, ...)
-            getPropReplacement = astFactory.createGetProp(getPropReplacement, "call");
-            grandparent.addChildAfter(
-                astFactory
-                    .createThisAliasReferenceForFunction(ASYNC_THIS, context.function)
-                    .useSourceInfoFrom(superDotProperty),
-                superDotProperty);
-            context.recordAsyncThisReplacementWasDone();
-          }
-          getPropReplacement.useSourceInfoFromForTree(superDotProperty);
-          grandparent.replaceChild(superDotProperty, getPropReplacement);
-          compiler.reportChangeToChangeScope(context.function);
-        }
-        break;
-
-      case AWAIT:
-        checkState(context.isAsyncContext(), "await found within non-async function body");
-        checkState(n.hasOneChild(), "await should have 1 operand, but has %s", n.getChildCount());
-        // Awaits become yields in the converted async function's inner generator function.
-        parent.replaceChild(n, astFactory.createYield(n.getJSType(), n.removeFirstChild()));
-        break;
-
-      default:
-        break;
+    LexicalContext context = contextStack.peek();
+    context.visit(t, n);
+    if (context.getContextRootNode() == n) {
+      contextStack.pop();
     }
   }
 
-  private void convertAsyncFunction(NodeTraversal t, LexicalContext functionContext) {
-    Node originalFunction = checkNotNull(functionContext.function);
+  private void convertAsyncFunction(NodeTraversal t, FunctionContext functionContext) {
+    Node originalFunction = functionContext.getContextRootNode();
     originalFunction.setIsAsyncFunction(false);
     Node originalBody = originalFunction.getLastChild();
     if (originalFunction.isFromExterns()) {
@@ -447,7 +564,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     if (functionContext.mustAddAsyncThisVariable) {
       // const this$ = this;
       newBody.addChildToBack(
-          astFactory.createThisAliasDeclarationForFunction(ASYNC_THIS, functionContext.function));
+          astFactory.createThisAliasDeclarationForFunction(ASYNC_THIS, originalFunction));
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS);
     }
     if (functionContext.mustAddAsyncArgumentsVariable) {

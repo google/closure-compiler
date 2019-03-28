@@ -149,6 +149,65 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDefaultParameterUsingThis() {
+    test(
+        lines(
+            "class X {",
+            "  /**",
+            "   * @param {number} a",
+            "   */",
+            "  constructor(a) {",
+            "    /** @const */ this.a = a;",
+            "  }",
+            "  /**",
+            "   * @param {number} b",
+            "   * @return {!Promise<number>}",
+            "   */",
+            "  async m(b = this.a) {",
+            "      return this.a + b;",
+            "  }",
+            "}"),
+        lines(
+            "class X {",
+            "  /**",
+            "   * @param {number} a",
+            "   */",
+            "  constructor(a) {",
+            "    /** @const */ this.a = a;",
+            "  }",
+            "  /**",
+            "   * @param {number} b",
+            "   * @return {!Promise<number>}",
+            "   */",
+            "  m(b = this.a) {", // this in parameter default value doesn't get changed
+            "    const $jscomp$async$this = this;",
+            "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
+            "        function* () {",
+            "            return $jscomp$async$this.a + b;",
+            "        });",
+            "  }",
+            "}"));
+
+    ObjectType classXInstanceType = getGlobalObjectType("X");
+
+    ImmutableList<Node> thisAliasNameReferences =
+        findClassDefinition("X")
+            .findMethodDefinition("m")
+            .findMatchingQNameReferences("$jscomp$async$this");
+    assertThat(thisAliasNameReferences).hasSize(2);
+
+    // const $jscomp$async$this = this;
+    // confirm that `this` and `$jscomp$async$this` nodes have the right types in declaration
+    Node aliasDeclarationReference = thisAliasNameReferences.get(0);
+    assertNode(aliasDeclarationReference).hasJSTypeThat().isEqualTo(classXInstanceType);
+    Node thisNode = aliasDeclarationReference.getOnlyChild();
+    assertNode(thisNode).isThis().hasJSTypeThat().isEqualTo(classXInstanceType);
+
+    // make sure the single reference to $jscomp$async$this has the right type
+    assertNode(thisAliasNameReferences.get(1)).hasJSTypeThat().isEqualTo(classXInstanceType);
+  }
+
+  @Test
   public void testInnerArrowFunctionUsingThis() {
     test(
         lines(
@@ -841,5 +900,54 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "          return 1;",
             "        });",
             "}"));
+  }
+
+  @Test
+  public void testGlobalScopeArrowFunctionRefersToThis() {
+    test(
+        "let f = async () => this;",
+        lines(
+            "let f = () => {",
+            "    const $jscomp$async$this = this;",
+            "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
+            "        function* () {",
+            "          return $jscomp$async$this;",
+            "        });",
+            "}"));
+  }
+
+  @Test
+  public void testGlobalScopeAsyncArrowFunctionDefaultParamValueRefersToThis() {
+    test(
+        "let f = async (t = this) => t;",
+        lines(
+            "let f = (t = this) => {",
+            "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
+            "        function* () {",
+            "          return t;",
+            "        });",
+            "}"));
+  }
+
+  @Test
+  public void testNestedAsyncArrowFunctionDefaultParamValueRefersToThis() {
+    test(
+        lines("let f = async function(outerT = this) {", "  return async (t = this) => t;", "};"),
+        lines(
+            // `this` is not aliased here
+            "let f = function(outerT = this) {",
+            "  const $jscomp$async$this = this;",
+            "  return $jscomp.asyncExecutePromiseGeneratorFunction(",
+            "      function* () {",
+            // `this` is aliased here
+            "        return (t = $jscomp$async$this) => {",
+            "          return $jscomp.asyncExecutePromiseGeneratorFunction(",
+            "              function* () {",
+            "                return t;",
+            "              });",
+            "        };",
+            "      });",
+            "};",
+            ""));
   }
 }
