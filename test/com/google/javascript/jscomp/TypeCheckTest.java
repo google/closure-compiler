@@ -22362,6 +22362,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testTypeofType_enumFromCall() {
+    testTypes(
+        lines(
+            "/** @enum */ var Foo = {A: 1}", //
+            "/** @return {*} */ function getFoo() { return Foo; }",
+            "var x = /** @type {typeof Foo} */ (getFoo());"));
+  }
+
+  @Test
   public void testTypeofType_enumMismatch1() {
     testTypes(
         lines("/** @enum */ var Foo = {A: 1}", "var /** typeof Foo */ x = Foo.A;"),

@@ -748,7 +748,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (createEnumType) {
         Node lValue = NodeUtil.getBestLValue(objectLit);
         String lValueName = NodeUtil.getBestLValueName(lValue);
-        type = createEnumTypeFromNodes(objectLit, lValueName, info);
+        type = createEnumTypeFromNodes(objectLit, lValueName, lValue, info);
       }
 
       if (type == null) {
@@ -1504,20 +1504,25 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * <p>This function will always create an enum type, so only call it if you're sure that's what
      * you want.
      *
-     * @param rValue The node of the enum.
-     * @param name The enum's name
+     * @param rValue The right-hand side of the enum, or null if none.
+     * @param lValue The left-hand side of the enum.
+     * @param name The qualified name of the enum
      * @param info The {@link JSDocInfo} attached to the enum definition.
      */
-    private EnumType createEnumTypeFromNodes(Node rValue, String name, JSDocInfo info) {
+    private EnumType createEnumTypeFromNodes(
+        @Nullable Node rValue, @Nullable String name, Node lValue, JSDocInfo info) {
       checkNotNull(info);
       checkState(info.hasEnumParameterType());
+      checkState(
+          lValue != null || rValue != null,
+          "An enum initializer should come from either an lvalue or rvalue");
 
       EnumType enumType = null;
       if (rValue != null && rValue.isQualifiedName()) {
-        // Handle an aliased enum.
+        // Handle an aliased enum. Note that  putting @enum on an enum alias is optional.
         TypedVar var = currentScope.getVar(rValue.getQualifiedName());
-        if (var != null && var.getType() instanceof EnumType) {
-          enumType = (EnumType) var.getType();
+        if (var != null && var.getType().isEnumType()) {
+          enumType = var.getType().toMaybeEnumType();
         }
       }
 
@@ -1546,6 +1551,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         typeRegistry.declareType(currentScope, name, enumType.getElementsType());
       }
 
+      if (rValue == null || !(rValue.isObjectLit() || rValue.isQualifiedName())) {
+        report(JSError.make(lValue != null ? lValue : rValue, ENUM_INITIALIZER));
+      }
       return enumType;
     }
 
@@ -1692,10 +1700,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                   type,
                   input,
                   allowLaterTypeInference);
-
-          if (type instanceof EnumType) {
-            validateEnumInitializer(newVar, declarationNode);
-          }
         }
 
         // We need to do some additional work for constructors and interfaces.
@@ -1738,28 +1742,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           globalThisCtor.getPrototype().clearCachedValues();
           globalThisCtor.setPrototypeBasedOn((type.toMaybeFunctionType()).getInstanceType());
         }
-      }
-    }
-
-    /**
-     * Validates that anything typed as an enum is initialized to either a qualified name or another
-     * enum.
-     *
-     * <p>Explicitly allows any name created through destructuring to be of the enum type, because
-     * the only way to have a destructuring name typed as an enum if it is aliasing something else.
-     * You cannot put the @enum JSDoc on destructuring declarations
-     */
-    private void validateEnumInitializer(TypedVar var, Node declarationNode) {
-      final boolean isValidValue;
-      if (NodeUtil.isLhsByDestructuring(var.getNameNode())) {
-        isValidValue = true;
-      } else {
-        Node initialValue = var.getInitialValue();
-        isValidValue =
-            initialValue != null && (initialValue.isObjectLit() || initialValue.isQualifiedName());
-      }
-      if (!isValidValue) {
-        report(JSError.make(declarationNode, ENUM_INITIALIZER));
       }
     }
 
@@ -1903,7 +1885,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           if (rValue != null && rValue.isObjectLit()) {
             return rValue.getJSType();
           } else {
-            return createEnumTypeFromNodes(rValue, lValue.getQualifiedName(), info);
+            return createEnumTypeFromNodes(rValue, lValue.getQualifiedName(), lValue, info);
           }
         } else if (info.isConstructorOrInterface()) {
           return createFunctionTypeFromNodes(rValue, lValue.getQualifiedName(), info, lValue);
