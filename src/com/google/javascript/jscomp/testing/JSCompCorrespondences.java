@@ -15,10 +15,16 @@
  */
 package com.google.javascript.jscomp.testing;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.truth.Correspondence;
+import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerInput;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.rhino.Node;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 /** Well known {@link Correspondence} instances for use in tests. */
@@ -32,6 +38,11 @@ public final class JSCompCorrespondences {
 
   public static final Correspondence<CompilerInput, String> INPUT_NAME_EQUALITY =
       transforming(CompilerInput::getName, "has name equal to");
+
+  public static final Correspondence<Node, String> EQUALITY_WHEN_PARSED_AS_EXPRESSION =
+      from(
+          (actual, expected) -> parseExpr(expected).isEquivalentTo(actual),
+          "matches nodes parsed from");
 
   // TODO(nickreid): Delete this when `Correspondence::transforming` is available in our Maven
   // tests.
@@ -48,6 +59,36 @@ public final class JSCompCorrespondences {
         return description;
       }
     };
+  }
+
+  // TODO(nickreid): Delete this when `Correspondence::from` is available in our Maven
+  // tests.
+  public static final <A, E> Correspondence<A, E> from(
+      BiPredicate<? super A, ? super E> predicate, String description) {
+    return new Correspondence<A, E>() {
+      @Override
+      public boolean compare(A actual, E expected) {
+        return predicate.test(actual, expected);
+      }
+
+      @Override
+      public String toString() {
+        return description;
+      }
+    };
+  }
+
+  /** A compiler for parsing snippets of code into AST as leniently as possible. */
+  private static final Compiler COMPILER_FOR_PARSING = new Compiler();
+
+  /** Parses {@code expr} into an expression AST as leniently as possible. */
+  private static Node parseExpr(String expr) {
+    Node exprRoot =
+        COMPILER_FOR_PARSING
+            .parse(SourceFile.fromCode("expr", "(" + expr + ")")) // SCRIPT
+            .getFirstChild() // EXPR_RESULT
+            .getFirstChild(); // expr
+    return checkNotNull(exprRoot, "Failed to parse expression");
   }
 
   // Not instantiable.
