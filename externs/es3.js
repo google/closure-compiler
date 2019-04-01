@@ -543,8 +543,8 @@ Function.prototype.toString = function() {};
  * @constructor
  * @implements {IArrayLike<T>}
  * @implements {Iterable<T>}
- * @param {...*} var_args
- * @return {!Array<?>}
+ * @param {...T} var_args
+ * @return {!Array<T>}
  * @nosideeffects
  * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array
