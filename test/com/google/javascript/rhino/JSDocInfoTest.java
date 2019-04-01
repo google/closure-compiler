@@ -645,6 +645,18 @@ public class JSDocInfoTest {
     assertThat(info.containsDeclaration()).isTrue();
   }
 
+  @Test
+  public void testClosurePrimitiveId_affectsEquality() {
+    JSDocInfo assertsFailJSDoc = new JSDocInfo();
+    assertsFailJSDoc.setClosurePrimitiveId("asserts.fail");
+
+    JSDocInfo otherInfo = new JSDocInfo();
+    assertThat(JSDocInfo.areEquivalent(assertsFailJSDoc, otherInfo)).isFalse();
+
+    otherInfo.setClosurePrimitiveId("asserts.fail");
+    assertThat(JSDocInfo.areEquivalent(assertsFailJSDoc, otherInfo)).isTrue();
+  }
+
   /** Gets the type expression for a simple type name. */
   private JSTypeExpression fromString(String s) {
     return new JSTypeExpression(Node.newString(s), "");

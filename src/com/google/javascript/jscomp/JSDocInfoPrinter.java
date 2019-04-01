@@ -74,6 +74,7 @@ public final class JSDocInfoPrinter {
     //   polymer
     //   polymerBehavior
     //   mixinFunction
+    //   closurePrimitive
     parts.add("/**");
 
     if (info.isExterns()) {
@@ -255,6 +256,10 @@ public final class JSDocInfoPrinter {
     if (info.isCustomElement()) {
       multiline = true;
       parts.add("@customElement");
+    }
+
+    if (info.getClosurePrimitiveId() != null) {
+      parts.add("@closurePrimitive {" + info.getClosurePrimitiveId() + "}");
     }
 
     parts.add("*/");

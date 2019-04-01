@@ -621,6 +621,7 @@ public class JSDocInfo implements Serializable {
         && Objects.equals(jsDoc1.getType(), jsDoc2.getType())
         && Objects.equals(jsDoc1.getVersion(), jsDoc2.getVersion())
         && Objects.equals(jsDoc1.getVisibility(), jsDoc2.getVisibility())
+        && Objects.equals(jsDoc1.getClosurePrimitiveId(), jsDoc2.getClosurePrimitiveId())
         && jsDoc1.bitset == jsDoc2.bitset;
   }
 

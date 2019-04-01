@@ -251,6 +251,7 @@ public final class JsDocInfoParser {
         Config.builder()
             .setLanguageMode(LanguageMode.ECMASCRIPT3)
             .setStrictMode(Config.StrictMode.SLOPPY)
+            .setClosurePrimitiveNames(ImmutableSet.of("testPrimitive"))
             .build();
     JsDocInfoParser parser =
         new JsDocInfoParser(

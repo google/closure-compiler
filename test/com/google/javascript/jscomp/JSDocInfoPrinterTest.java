@@ -400,6 +400,11 @@ public final class JSDocInfoPrinterTest {
     testSame("/** @nocollapse */ ");
   }
 
+  @Test
+  public void testClosurePrimitive() {
+    testSame("/** @closurePrimitive {testPrimitive} */ ");
+  }
+
   private void testSame(String jsdoc) {
     test(jsdoc, jsdoc);
   }
