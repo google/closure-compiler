@@ -360,13 +360,13 @@ public class SourceFile implements StaticSourceFile, Serializable {
   }
 
   @GwtIncompatible("java.io.File")
-  private static SourceFile fromZipEntry(String zipURL, Charset inputCharset) {
+  private static SourceFile fromZipEntry(String zipURL, Charset inputCharset, SourceKind kind) {
     checkArgument(isZipEntry(zipURL));
     String[] components = zipURL.split(Pattern.quote(BANG_SLASH.replace("/", File.separator)));
     try {
       String zipPath = components[0];
       String relativePath = components[1];
-      return fromZipEntry(zipPath, zipPath, relativePath, inputCharset);
+      return fromZipEntry(zipPath, zipPath, relativePath, inputCharset, kind);
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
     }
@@ -376,8 +376,21 @@ public class SourceFile implements StaticSourceFile, Serializable {
   public static SourceFile fromZipEntry(
       String originalZipPath, String absoluteZipPath, String entryPath, Charset inputCharset)
       throws MalformedURLException {
+    return fromZipEntry(
+        originalZipPath, absoluteZipPath, entryPath, inputCharset, SourceKind.STRONG);
+  }
+
+  @GwtIncompatible("java.io.File")
+  public static SourceFile fromZipEntry(
+      String originalZipPath,
+      String absoluteZipPath,
+      String entryPath,
+      Charset inputCharset,
+      SourceKind kind)
+      throws MalformedURLException {
     // No longer throws MalformedURLException but we are keeping it for backward compatbility.
     return builder()
+        .withKind(kind)
         .withCharset(inputCharset)
         .withOriginalPath(originalZipPath + BANG_SLASH + entryPath)
         .buildFromZipEntry(
@@ -489,7 +502,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
       checkNotNull(path);
       checkNotNull(charset);
       if (isZipEntry(path.toString())) {
-        return fromZipEntry(path.toString(), charset);
+        return fromZipEntry(path.toString(), charset, kind);
       }
       return new OnDisk(path, originalPath, charset, kind);
     }
@@ -658,7 +671,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
     private transient Charset inputCharset;
 
     AtZip(ZipEntryReader zipEntryReader, String originalPath, Charset c, SourceKind kind) {
-      super(originalPath, SourceKind.STRONG);
+      super(originalPath, kind);
       this.inputCharset = c;
       this.zipEntryReader = zipEntryReader;
       setOriginalPath(originalPath);

@@ -135,14 +135,26 @@ public final class SourceFileTest {
     Path jsZipPath = Files.createTempFile("test", ".js.zip");
     createZipWithContent(jsZipPath, expectedContent);
 
-    // Test SourceFile#fromZipEntry(String, String, String, Charset)
+    // Test SourceFile#fromZipEntry(String, String, String, Charset, SourceKind)
     SourceFile sourceFileFromZipEntry =
         SourceFile.fromZipEntry(
             jsZipPath.toString(),
             jsZipPath.toAbsolutePath().toString(),
             "foo.js",
-            StandardCharsets.UTF_8);
+            StandardCharsets.UTF_8,
+            SourceKind.WEAK);
     assertThat(sourceFileFromZipEntry.getCode()).isEqualTo(expectedContent);
+    assertThat(sourceFileFromZipEntry.getKind()).isEqualTo(SourceKind.WEAK);
+
+    // Test SourceFile#fromZipEntry(String, String, String, Charset)
+    SourceFile sourceFileFromZipEntryDefaultKind =
+        SourceFile.fromZipEntry(
+            jsZipPath.toString(),
+            jsZipPath.toAbsolutePath().toString(),
+            "foo.js",
+            StandardCharsets.UTF_8);
+    assertThat(sourceFileFromZipEntryDefaultKind.getCode()).isEqualTo(expectedContent);
+    assertThat(sourceFileFromZipEntryDefaultKind.getKind()).isEqualTo(SourceKind.STRONG);
 
     // Test SourceFile#fromFile(String)
     SourceFile sourceFileFromFileString =
