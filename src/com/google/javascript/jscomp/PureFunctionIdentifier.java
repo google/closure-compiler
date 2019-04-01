@@ -134,6 +134,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
   @Override
   public void process(Node externsAst, Node srcAst) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     checkState(
         externs == null && root == null,
         "PureFunctionIdentifier::process may only be called once per instance.");

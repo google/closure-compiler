@@ -90,7 +90,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       case IF:
         return tryFoldIf(subtree);
       case WHILE:
-        return tryFoldWhile(subtree);
+        throw checkNormalization(false, "WHILE");
       case FOR:
         {
           Node condition = NodeUtil.getConditionExpression(subtree);
@@ -755,6 +755,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     for (Node c = n.getFirstChild(); c != null; ) {
       Node next = c.getNext();  // save c.next, since 'c' may be removed
       if (!isUnremovableNode(c) && !mayHaveSideEffects(c)) {
+        checkNormalization(!NodeUtil.isFunctionDeclaration(n), "function declaration");
         // TODO(johnlenz): determine what this is actually removing. Candidates
         //    include: EMPTY nodes, control structures without children
         //    (removing infinite loops), empty try blocks.  What else?
@@ -1268,5 +1269,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       reportChangeToEnclosingScope(forCondition);
       forCondition.replaceWith(IR.empty());
     }
+  }
+
+  private static IllegalStateException checkNormalization(boolean condition, String feature) {
+    checkState(condition, "Unexpected %s. AST should be normalized.", feature);
+    return null;
   }
 }

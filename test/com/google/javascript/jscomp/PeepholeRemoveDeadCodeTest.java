@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -53,6 +54,15 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         peepholePass.process(externs, root);
       }
     };
+  }
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+
+    enableNormalize();
+    enableComputeSideEffects();
   }
 
   @Override
@@ -116,7 +126,6 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("{x = 2; y = 4; let z;}");
     fold("{'hi'; let x;}", "{let x}");
     fold("{x = 4; {let y}}", "x = 4; {let y}");
-    foldSame("{function f() {} } {function f() {}}");
     foldSame("{class C {}} {class C {}}");
     fold("{label: var x}", "label: var x");
     // `{label: let x}` is a syntax error
@@ -129,8 +138,9 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("function f() { if (false) {} }", "function f(){}");
     fold("function f() { { if (false) {} if (true) {} {} } }",
          "function f(){}");
-    fold("{var x; var y; var z; function f() { { var a; { var b; } } } }",
-         "{var x;var y;var z;function f(){var a;var b} }");
+    fold(
+        "{var x; var y; var z; class Foo { constructor() { var a; { var b; } } } }",
+        "{var x;var y;var z;class Foo { constructor() { var a;var b} } }");
     fold("{var x; var y; var z; { { var a; { var b; } } } }",
         "var x;var y;var z; var a;var b");
   }
@@ -138,7 +148,6 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   @Test
   public void testIf() {
     fold("if (1){ x=1; } else { x = 2;}", "x=1");
-    fold("if (1) {} else { function foo(){} }", "");
     fold("if (false){ x = 1; } else { x = 2; }", "x=2");
     fold("if (undefined){ x = 1; } else { x = 2; }", "x=2");
     fold("if (null){ x = 1; } else { x = 2; }", "x=2");
@@ -226,23 +235,6 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFoldUselessWhile() {
-    fold("while(false) { foo() }", "");
-
-    fold("while(void 0) { foo() }", "");
-    fold("while(undefined) { foo() }", "");
-
-    foldSame("while(true) foo()");
-
-    fold("while(false) { var a = 0; }", "var a");
-
-    // Make sure it plays nice with minimizing
-    fold("while(false) { foo(); continue }", "");
-
-    fold("while(0) { foo() }", "");
-  }
-
-  @Test
   public void testFoldUselessFor() {
     fold("for(;false;) { foo() }", "");
     fold("for(;void 0;) { foo() }", "");
@@ -271,8 +263,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("do { foo(); continue; } while(0)");
     foldSame("do { try { foo() } catch (e) { break; } } while (0);");
     foldSame("do { foo(); break; } while(0)");
-    fold("do { while (1) {foo(); continue;} } while(0)", "while (1) {foo(); continue;}");
-    foldSame("l1: do { while (1) { foo() } } while(0)");
+    fold("do { for (;;) {foo(); continue;} } while(0)", "for (;;) {foo(); continue;}");
+    foldSame("l1: do { for (;;) { foo() } } while(0)");
     fold("do { switch (1) { default: foo(); break} } while(0)", "foo();");
     fold("do { switch (1) { default: foo(); continue} } while(0)",
         "do { foo(); continue } while(0)");
@@ -290,14 +282,25 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMinimizeWhileConstantCondition() {
-    foldSame("while(true) foo()");
-    fold("while(0) foo()", "");
-    fold("while(0.0) foo()", "");
-    fold("while(NaN) foo()", "");
-    fold("while(null) foo()", "");
-    fold("while(undefined) foo()", "");
-    fold("while('') foo()", "");
+  public void testMinimizeLoop_withConstantCondition_vanillaFor() {
+    fold("for(;true;) foo()", "for(;;) foo()");
+    fold("for(;0;) foo()", "");
+    fold("for(;0.0;) foo()", "");
+    fold("for(;NaN;) foo()", "");
+    fold("for(;null;) foo()", "");
+    fold("for(;undefined;) foo()", "");
+    fold("for(;'';) foo()", "");
+  }
+
+  @Test
+  public void testMinimizeLoop_withConstantCondition_doWhile() {
+    fold("do { foo(); } while (true)", "do { foo(); } while (true);");
+    fold("do { foo(); } while (0)", "foo();");
+    fold("do { foo(); } while (0.0)", "foo();");
+    fold("do { foo(); } while (NaN)", "foo();");
+    fold("do { foo(); } while (null)", "foo();");
+    fold("do { foo(); } while (undefined)", "foo();");
+    fold("do { foo(); } while ('')", "foo();");
   }
 
   @Test
@@ -557,25 +560,24 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     fold(
         lines(
-            "let x;",
+            "let x;", //
             "switch (use(x)) {",
-            "  default: {let x;}",
+            "  default: {let y;}",
             "}"),
         lines(
-            "let x;",
-            "use(x);",
-            "{let x}"));
+            "let x;", //
+            "use(x);", "{let y}"));
 
     fold(
         lines(
-            "let x;",
+            "let x;", //
             "switch (use(x)) {",
-            "  default: let x;",
+            "  default: let y;",
             "}"),
         lines(
-            "let x;",
-            "use(x);",
-            "{let x}"));
+            "let x;", //
+            "use(x);", //
+            "{let y}"));
   }
 
   @Test
@@ -749,14 +751,14 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test(
         lines(
             "function f() {",
-            "  while (true) {",
+            "  for (;;) {",
             "    switch('x') {",
             "      case 'x': continue;",
             "      case 'y': continue;",
             "    }",
             "  }",
             "}"),
-        "function f() { while (true) { continue; } }");
+        "function f() { for (;;) { continue; } }");
   }
 
   @Test
@@ -868,14 +870,14 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test(
         lines(
             "loop: ",
-            "while (true) {",
+            "for (;;) {",
             "  switch (a()) {",
             "    default:",
             "      bar();",
             "      break loop;",
             "  }",
             "}"),
-        "loop: while (true) { a(); bar(); break loop; }");
+        "loop: for (;;) { a(); bar(); break loop; }");
   }
 
   @Test
@@ -1007,11 +1009,6 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   @Test
   public void testRemoveInControlStructure1() {
     test("if(x()) 1", "x()");
-  }
-
-  @Test
-  public void testRemoveInControlStructure2() {
-    test("while(2) 1", "while(2);");
   }
 
   @Test

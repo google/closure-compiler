@@ -1863,8 +1863,8 @@ public final class FunctionInjectorTest {
     final Node expectedRoot = parseExpected(new Compiler(), expectedResult);
 
     Node mainRoot = tree;
-    PureFunctionIdentifier.Driver mark = new PureFunctionIdentifier.Driver(compiler);
-    mark.process(externsRoot, mainRoot);
+    new Normalize(compiler, false).process(externsRoot, mainRoot);
+    new PureFunctionIdentifier.Driver(compiler).process(externsRoot, mainRoot);
 
     Normalize normalize = new Normalize(compiler, false);
     normalize.process(externsRoot, mainRoot);

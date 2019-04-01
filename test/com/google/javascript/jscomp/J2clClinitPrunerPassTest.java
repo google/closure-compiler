@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +42,15 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
   protected int getNumRepetitions() {
     // A single run should be sufficient.
     return 1;
+  }
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+
+    enableNormalize();
+    enableComputeSideEffects();
   }
 
   @Test

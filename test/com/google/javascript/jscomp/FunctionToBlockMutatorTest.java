@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -163,12 +162,13 @@ public final class FunctionToBlockMutatorTest {
   @Test
   public void testMutateInitializeUninitializedVars2() {
     helperMutate(
-        "function foo(a) {for(var b in c)return a;}; foo(1);",
+        "function foo(a) {var b; for(b in c)return a;}; foo(1);",
         lines(
             "{",
             "  JSCompiler_inline_label_foo_2:",
             "  {",
-            "    for (var b$jscomp$inline_1 in c) {",
+            "    var b$jscomp$inline_1;",
+            "    for (b$jscomp$inline_1 in c) {",
             "      1;",
             "      break JSCompiler_inline_label_foo_2;",
             "    }",
@@ -256,11 +256,11 @@ public final class FunctionToBlockMutatorTest {
             "foo(1);"),
         lines(
             "{",
-            "  var g$jscomp$inline_2 = function(c$jscomp$inline_6) {return c$jscomp$inline_6};",
-            "  var h$jscomp$inline_4 = function(){};",
-            "  var i$jscomp$inline_5 = function(){};",
-            "  var b$jscomp$inline_1 = g$jscomp$inline_2(1);",
-            "  var c$jscomp$inline_3 = i$jscomp$inline_5();",
+            "  var g$jscomp$inline_1 = function(c$jscomp$inline_6) {return c$jscomp$inline_6};",
+            "  var h$jscomp$inline_2 = function(){};",
+            "  var i$jscomp$inline_3 = function(){};",
+            "  var b$jscomp$inline_4 = g$jscomp$inline_1(1);",
+            "  var c$jscomp$inline_5 = i$jscomp$inline_3();",
             "}"),
         "foo",
         null);
@@ -288,13 +288,11 @@ public final class FunctionToBlockMutatorTest {
     compiler.externsRoot = new Node(Token.ROOT);
     compiler.jsRoot = IR.root(script);
     compiler.externAndJsRoot = IR.root(compiler.externsRoot, compiler.jsRoot);
-    PureFunctionIdentifier.Driver mark = new PureFunctionIdentifier.Driver(compiler);
-    mark.process(compiler.externsRoot, compiler.jsRoot);
+
+    new Normalize(compiler, false).process(compiler.externsRoot, compiler.jsRoot);
+    new PureFunctionIdentifier.Driver(compiler).process(compiler.externsRoot, compiler.jsRoot);
 
     final Node fnNode = findFunction(script, fnName);
-
-    // Fake precondition.
-    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
     // inline tester
     Method tester =

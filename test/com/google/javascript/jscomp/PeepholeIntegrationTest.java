@@ -32,6 +32,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+
+    enableNormalize();
     this.late = false;
     this.numRepetitions = 2;
   }
@@ -136,9 +138,6 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     // ensure that folding blocks with a single var node doesn't explode
     test("if(x){var y=3;}var z=5", "if(x)var y=3;var z=5");
 
-    // With normalization, we no longer have this case.
-    testSame("if(x){var y=3;}else{var y=4;}var z=5");
-    test("while(x){var y=3;}var z=5", "while(x)var y=3;var z=5");
     test("for(var i=0;i<10;i++){var y=3;}var z=5",
          "for(var i=0;i<10;i++)var y=3;var z=5");
     test("for(var i in x){var y=3;}var z=5",
@@ -186,7 +185,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testFoldBitwiseOpStringCompareIntegration() {
-    test("while (-1 | 0) {}", "while (1);");
+    test("for (;-1 | 0;) {}", "for (;;);");
   }
 
   @Test
@@ -204,16 +203,6 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   @Test
   public void testBug1438784() {
     test("for(var i=0;i<10;i++)if(x)x.y;", "for(var i=0;i<10;i++);");
-  }
-
-  @Test
-  public void testFoldUselessWhileIntegration() {
-    test("while(!true) { foo() }", "");
-    test("while(!false) foo() ", "while(1) foo()");
-    test("while(!void 0) foo()", "while(1) foo()");
-
-    // Make sure proper empty nodes are inserted.
-    test("if(foo())while(false){foo()}else bar()", "foo()||bar()");
   }
 
   @Test
@@ -237,17 +226,6 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
     // Make sure proper empty nodes are inserted.
     test("if(foo())do {foo()} while(false) else bar()", "foo()?foo():bar()");
-  }
-
-  @Test
-  public void testMinimizeWhileConstantConditionIntegration() {
-    test("while(!false) foo()", "while(1) foo()");
-    test("while(202) foo()", "while(1) foo()");
-    test("while(Infinity) foo()", "while(1) foo()");
-    test("while('text') foo()", "while(1) foo()");
-    test("while([]) foo()", "while(1) foo()");
-    test("while({}) foo()", "while(1) foo()");
-    test("while(/./) foo()", "while(1) foo()");
   }
 
   @Test
@@ -286,7 +264,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testFoldNegativeBug() {
-    test("while(-3){};", "while(1);");
+    test("for (;-3;){};", "for (;;);");
   }
 
   @Test

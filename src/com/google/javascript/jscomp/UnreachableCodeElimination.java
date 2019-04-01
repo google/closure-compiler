@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
-import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -59,6 +59,8 @@ class UnreachableCodeElimination implements CompilerPass {
 
   @Override
   public void process(Node externs, Node toplevel) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
+
     NodeTraversal.traverseChangedFunctions(compiler, new ChangeScopeRootCallback() {
         @Override
         public void enterChangeScopeRoot(AbstractCompiler compiler, Node root) {
@@ -80,10 +82,28 @@ class UnreachableCodeElimination implements CompilerPass {
       });
   }
 
-  private class EliminationPass extends AbstractShallowCallback {
+  private class EliminationPass implements Callback {
     private final ControlFlowGraph<Node> cfg;
+
     private EliminationPass(ControlFlowGraph<Node> cfg) {
       this.cfg = cfg;
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      if (parent == null) {
+        return true;
+      } else if (n.isExport()) {
+        // TODO(b/129564961): We should be exploring EXPORTs. We don't because their descendants
+        // have side-effects that `NodeUtil::mayHaveSideEffects` doesn't recognize. Since this pass
+        // currently runs after exports are removed anyway, this isn't yet an issue.
+        return false;
+      } else if (parent.isFunction()) {
+        // We only want to traverse the name of a function.
+        return n.isFirstChildOf(parent);
+      }
+
+      return true;
     }
 
     @Override

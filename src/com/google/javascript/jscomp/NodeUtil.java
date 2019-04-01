@@ -1177,6 +1177,7 @@ public final class NodeUtil {
         break;
 
       case NAME:
+        // TODO(b/129564961): Consider EXPORT declarations.
         if (n.hasChildren()) {
           // This is the left side of a var/let/const
           return true;
@@ -1616,6 +1617,7 @@ public final class NodeUtil {
         return NodeUtil.constructorCallHasSideEffects(n);
       case NAME:
         // A variable definition.
+        // TODO(b/129564961): Consider EXPORT declarations.
         return n.hasChildren();
       case REST:
       case SPREAD:

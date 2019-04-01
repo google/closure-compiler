@@ -37,6 +37,8 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
+
+    enableNormalize();
     enableComputeSideEffects();
   }
 
@@ -481,18 +483,35 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
 
   @Test
   public void testGenerators() {
+    // TODO(b/129557644): Make this test more broad.
     test(
         lines(
-            "function* f() {", "  while(true) {", "    yield 1;", "  }", "  x = 1;", "}"),
-        lines("function* f() {", "  while(true) {", "    yield 1;", "  }", "}"));
+            "function* f() {", //
+            "  for (;;) {",
+            "    yield 1;",
+            "  }",
+            "  x = 1;",
+            "}"),
+        lines(
+            "function* f() {", //
+            "  for (;;) {",
+            "    yield 1;",
+            "  }",
+            "}"));
 
-    testSame(lines("function* f() {", "  while(true) {", "    yield 1;", "  }", "}"));
+    testSame(
+        lines(
+            "function* f() {", //
+            "  for (;;) {",
+            "    yield 1;",
+            "  }",
+            "}"));
 
     testSame(
         lines(
             "function* f() {",
             "  let i = 0;",
-            "  while (true) {",
+            "  for (;;) {",
             "    if (i < 10) {",
             "      yield i;",
             "    } else {",

@@ -198,7 +198,9 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+
     enableTypeCheck();
+    enableNormalize();
   }
 
   @Override
@@ -688,12 +690,13 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   @Test
   public void testNoSideEffectsSimple3() {
     regExpHaveSideEffects = false;
-    String source = lines(
-        "function f(/** string */ str) {",
-        "  return str.replace(/xyz/g, '');",
-        "}",
-        "f('')");
-    assertPureCallsMarked(source, ImmutableList.of("str.replace", "f"));
+    String source =
+        lines(
+            "function f(/** string */ x) {", //
+            "  return x.replace(/xyz/g, '');",
+            "}",
+            "f('')");
+    assertPureCallsMarked(source, ImmutableList.of("x.replace", "f"));
   }
 
   @Test
@@ -1586,8 +1589,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "var i = function() {F.f.apply({})};", // it can't tell {} is local.
             "g();",
             "new h();",
-            "i();" // With better locals tracking i could be identified as pure
-            );
+            "i();");
     assertPureCallsMarked(source, ImmutableList.of("F.f.apply", "h"));
   }
 
@@ -1670,46 +1672,54 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
   @Test
   public void testAmbiguousDefinitionsDoubleDefinition2() {
-    String source = lines(
-        "var global = 1;",
-        "A.x = function a() { global++; }",
-        "a = function() {}",
-        "B.x(); a();"
-    );
-    assertNoPureCalls(source);
+    String source =
+        lines(
+            "var global = 1;",
+            "A.x = function a() { global++; }",
+            "a = function() {}", // This is the only `a` is in scope here.
+            "B.x();",
+            "a();");
+    assertPureCallsMarked(source, ImmutableList.of("a"));
   }
 
   @Test
   public void testAmbiguousDefinitionsDoubleDefinition3() {
-    String source = lines(
-        "var global = 1;",
-        "A.x = function a() {}",
-        "a = function() { global++; }",
-        "B.x(); a();"
-    );
+    String source =
+        lines(
+            "var global = 1;",
+            "A.x = function a() {}",
+            "a = function() { global++; }",
+            "B.x();",
+            "a();" // `a` is not in scope here.
+            );
     assertPureCallsMarked(source, ImmutableList.of("B.x"));
   }
 
   @Test
   public void testAmbiguousDefinitionsDoubleDefinition4() {
-    String source = lines(
-        "var global = 1;",
-        "A.x = function a() {}",
-        "B.x = function() { global++; }",
-        "B.x(); a();"
-    );
-    assertPureCallsMarked(source, ImmutableList.of("a"));
+    String source =
+        lines(
+            "var global = 1;",
+            "A.x = function a() {}",
+            "B.x = function() { global++; }",
+            "B.x();",
+            "a();" // `a` is not in scope here.
+            );
+    assertNoPureCalls(source);
   }
 
   @Test
   public void testAmbiguousDefinitionsDoubleDefinition5() {
-    String source = lines(
-        "var global = 1;",
-        "A.x = cond ? function a() { global++ } : function b() {}",
-        "B.x = function() { global++; }",
-        "B.x(); a(); b();"
-    );
-    assertPureCallsMarked(source, ImmutableList.of("b"));
+    String source =
+        lines(
+            "var global = 1;",
+            "A.x = cond ? function a() { global++ } : function b() {}",
+            "B.x = function() { global++; }",
+            "B.x();",
+            "a();", // `a` is not in scope here.
+            "b();" // `b` is not in scope here.
+            );
+    assertNoPureCalls(source);
   }
 
   @Test
