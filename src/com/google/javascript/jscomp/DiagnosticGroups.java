@@ -107,7 +107,7 @@ public class DiagnosticGroups {
   }
 
   /** Find the diagnostic group registered under the given name. */
-  public DiagnosticGroup forName(String name) {
+  public static DiagnosticGroup forName(String name) {
     return groupsByName.get(name);
   }
 
