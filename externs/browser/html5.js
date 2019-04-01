@@ -2969,7 +2969,7 @@ TimeRanges.prototype.end = function(index) { return 0; };
 
 // HTML5 Web Socket class
 /**
- * @see http://dev.w3.org/html5/websockets/
+ * @see https://html.spec.whatwg.org/multipage/web-sockets.html#network
  * @constructor
  * @param {string} url
  * @param {(string|!Array<string>)=} opt_protocol
@@ -3043,8 +3043,7 @@ WebSocket.prototype.onopen;
 
 /**
  * An event handler called on message event.
- * TODO(blickly): Change this to MessageEvent<*> and add casts as needed
- * @type {?function(!MessageEvent<?>): void}
+ * @type {?function(!MessageEvent<string|!ArrayBuffer|!Blob>): void}
  */
 WebSocket.prototype.onmessage;
 
