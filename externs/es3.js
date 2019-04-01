@@ -1974,19 +1974,21 @@ String.prototype.sup = function() {};
 
 /**
  * @this {String|string}
+ * @param {(string|Array<string>)=} opt_locales
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLocaleUpperCase
  */
-String.prototype.toLocaleUpperCase = function() {};
+String.prototype.toLocaleUpperCase = function(opt_locales) {};
 
 /**
  * @this {String|string}
+ * @param {(string|Array<string>)=} opt_locales
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLocaleLowerCase
  */
-String.prototype.toLocaleLowerCase = function() {};
+String.prototype.toLocaleLowerCase = function(opt_locales) {};
 
 /**
  * @this {String|string}
