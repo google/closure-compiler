@@ -62,9 +62,6 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
-import com.google.javascript.jscomp.modules.Binding;
-import com.google.javascript.jscomp.modules.Export;
-import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
@@ -206,12 +203,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
   private final List<DeferredSetType> deferredSetTypes = new ArrayList<>();
 
-  // Set of NAME, GETPROP, and STRING_KEY lvalues which should be treated as const declarations when
-  // assigned. Treat simple names in this list as if they were declared `const`. E.g. treat `exports
-  // = class {};` as `const exports = class {};`. Treat GETPROP and STRING_KEY nodes as if they were
-  // annotated @const.
-  private final Set<Node> undeclaredNamesForClosure = new HashSet<>();
-
   /**
    * Defer attachment of types to nodes until all type names
    * have been resolved. Then, we can resolve the type and attach it.
@@ -288,7 +279,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   /**
    * Returns a function mapping a scope root node to a {@link TypedScope}.
    *
-   * <p>This method mostly exists in lieu of an interface representing root node -> scope.
+   * <p>This method mostly exists in liu of an interface represnting root node -> scope.
    */
   public Function<Node, TypedScope> getNodeToScopeMapper() {
     return memoized::get;
@@ -361,10 +352,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     } else {
       newScope = new TypedScope(typedParent, root);
     }
-
-    if (root.isModuleBody()) {
-      initializeModuleScope(root, newScope);
-    }
     if (root.isFunction()) {
       scopeBuilder = new FunctionScopeBuilder(newScope);
     } else if (root.isClass()) {
@@ -385,60 +372,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     return newScope;
-  }
-
-  /** Builds the beginning of a module-scope. This can be an ES module or a goog.module. */
-  private void initializeModuleScope(Node moduleBody, TypedScope moduleScope) {
-    Node scriptNode = moduleBody.getParent();
-
-    if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
-      Node googModuleCall = moduleBody.getFirstChild();
-      Node namespace = googModuleCall.getFirstChild().getSecondChild();
-
-      String closureModuleNamespace = namespace.getString();
-      Module module = moduleMap.getClosureModule(closureModuleNamespace);
-
-      declareExportsInModuleScope(module, moduleBody, moduleScope);
-      markGoogModuleExportsAsConst(module);
-    }
-  }
-
-  /**
-   * Ensures that the name `exports` is declared in goog.module scope.
-   *
-   * <p>If a goog.module explicitly assigns to exports, we want to treat that assignment inside the
-   * scope as if it were a declaration: `const exports = ...`. This method only handles cases where
-   * we want to treat exports as implicitly declared.
-   */
-  private void declareExportsInModuleScope(
-      Module googModule, Node moduleBody, TypedScope moduleScope) {
-    if (!googModule.namespace().containsKey(Export.NAMESPACE)) {
-      // The goog.module never assigns `exports = ...`, so declare `exports` as an object literal.
-      moduleScope.declare(
-          "exports",
-          googModule.metadata().rootNode(),
-          typeRegistry.createAnonymousObjectType(null),
-          compiler.getInput(moduleBody.getInputId()),
-          /* inferred= */ false);
-    }
-  }
-
-  /**
-   * Adds nodes representing goog.module exports to a list, to treat them as @const.
-   *
-   * <p>This method handles the following styles of exports:
-   *
-   * <ul>
-   *   <li>{@code exports = class {}} adds the NAME node `exports`
-   *   <li>{@code exports = {Foo};} adds the NAME node `exports` and the STRING_KEY node `Foo`
-   *   <li>{@code exports.Foo = Foo;} adds the GETPROP node `exports.Foo`
-   * </ul>
-   */
-  private void markGoogModuleExportsAsConst(Module googModule) {
-    for (Binding binding : googModule.namespace().values()) {
-      Node exportedNode = binding.originatingExport().exportNode();
-      undeclaredNamesForClosure.add(exportedNode);
-    }
   }
 
   /**
@@ -1959,6 +1892,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
+      // Check if this is a goog dependency loading call. If so, find its type.
+      if (moduleImportResolver.isGoogModuleDependencyCall(rValue)) {
+        TypedVar exportedVar = moduleImportResolver.getClosureNamespaceTypeFromCall(rValue);
+        if (exportedVar != null) {
+          return exportedVar.getType();
+        }
+        return null;
+      }
+
       // Check if this is constant, and if it has a known type.
       if (NodeUtil.isConstantDeclaration(compiler.getCodingConvention(), info, lValue)
           || isGoogModuleExports(lValue)) {
@@ -2056,7 +1998,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     boolean isGoogModuleExports(Node lValue) {
-      return currentScope.isModuleScope() && undeclaredNamesForClosure.contains(lValue);
+      // TODO(b/124919359): this could also be an ES module scope, filter out that case
+      return currentScope.isModuleScope()
+          && lValue.isName()
+          && lValue.getString().equals("exports");
     }
 
     /** Returns the AST node associated with the definition, if any. */
@@ -2083,15 +2028,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       JSDocInfo rValueInfo = rValue.getJSDocInfo();
       if (rValue.isCast() && rValueInfo != null && rValueInfo.hasType()) {
         return rValueInfo.getType().evaluate(currentScope, typeRegistry);
-      }
-
-      // Check if this is a goog dependency loading call. If so, find its type.
-      if (moduleImportResolver.isGoogModuleDependencyCall(rValue)) {
-        TypedVar exportedVar = moduleImportResolver.getClosureNamespaceTypeFromCall(rValue);
-        if (exportedVar != null) {
-          return exportedVar.getType();
-        }
-        return null;
       }
 
       // Check if the type has already been computed during scope-creation.
@@ -2423,11 +2359,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return false;
       }
 
-      // If this is a typed goog.module export, it's not inferred.
-      if (valueType != null && !valueType.isUnknownType() && isGoogModuleExports(n)) {
-        return false;
-      }
-
       // At this point, we're pretty sure it's inferred, since there's neither
       // useful jsdoc info, nor a useful const or doc'd function RHS.  But
       // there's still one case where it may still not be: if the RHS is a
@@ -2691,7 +2622,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           Node firstChild = n.getFirstChild();
           if (firstChild.isGetProp() && firstChild.isQualifiedName()) {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), firstChild, n, firstChild.getNext());
-          } else if (undeclaredNamesForClosure.contains(firstChild)) {
+          } else if (isGoogModuleExports(firstChild)) {
             defineAssignAsIfDeclaration(n);
           }
           break;

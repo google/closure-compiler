@@ -51,7 +51,7 @@ public abstract class Export {
    * The {@link Export#exportName()} of goog.module default exports, e.g. {@code exports = class
    * {};}
    */
-  public static final String NAMESPACE = "*exports*";
+  static final String NAMESPACE = "*exports*";
 
   // Prevent unwanted subclasses.
   Export() {}
