@@ -2737,28 +2737,28 @@ HTMLIFrameElement.prototype.width;
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
-DOMException.INVALID_STATE_ERR = 11;
+DOMException.INVALID_STATE_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
-DOMException.SYNTAX_ERR = 12;
+DOMException.SYNTAX_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
-DOMException.INVALID_MODIFICATION_ERR = 13;
+DOMException.INVALID_MODIFICATION_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
-DOMException.NAMESPACE_ERR = 14;
+DOMException.NAMESPACE_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
-DOMException.INVALID_ACCESS_ERR = 15;
+DOMException.INVALID_ACCESS_ERR;

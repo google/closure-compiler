@@ -57,17 +57,17 @@ EventSource.prototype.withCredentials;
 /**
  * @const {number}
  */
-EventSource.prototype.CONNECTING = 0;
+EventSource.prototype.CONNECTING;
 
 /**
  * @const {number}
  */
-EventSource.prototype.OPEN = 1;
+EventSource.prototype.OPEN;
 
 /**
  * @const {number}
  */
-EventSource.prototype.CLOSED = 2;
+EventSource.prototype.CLOSED;
 
 /**
  * @type {number}

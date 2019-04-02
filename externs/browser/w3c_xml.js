@@ -43,13 +43,13 @@ function XPathException() {}
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#INVALID_EXPRESSION_ERR
  */
-XPathException.INVALID_EXPRESSION_ERR = 52;
+XPathException.INVALID_EXPRESSION_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#TYPE_ERR
  */
-XPathException.TYPE_ERR = 52;
+XPathException.TYPE_ERR;
 
 /**
  * @type {number}
@@ -205,61 +205,61 @@ XPathResult.prototype.snapshotItem = function(index) {};
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-ANY-TYPE
  */
-XPathResult.ANY_TYPE = 0;
+XPathResult.ANY_TYPE;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-NUMBER-TYPE
  */
-XPathResult.NUMBER_TYPE = 1;
+XPathResult.NUMBER_TYPE;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-STRING-TYPE
  */
-XPathResult.STRING_TYPE = 2;
+XPathResult.STRING_TYPE;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-BOOLEAN-TYPE
  */
-XPathResult.BOOLEAN_TYPE = 3;
+XPathResult.BOOLEAN_TYPE;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-UNORDERED-NODE-ITERATOR-TYPE
  */
-XPathResult.UNORDERED_NODE_ITERATOR_TYPE = 4;
+XPathResult.UNORDERED_NODE_ITERATOR_TYPE;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-ORDERED-NODE-ITERATOR-TYPE
  */
-XPathResult.ORDERED_NODE_ITERATOR_TYPE = 5;
+XPathResult.ORDERED_NODE_ITERATOR_TYPE;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-UNORDERED-NODE-SNAPSHOT-TYPE
  */
-XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE = 6;
+XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-ORDERED-NODE-SNAPSHOT-TYPE
  */
-XPathResult.ORDERED_NODE_SNAPSHOT_TYPE = 7;
+XPathResult.ORDERED_NODE_SNAPSHOT_TYPE;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-ANY-UNORDERED-NODE-TYPE
  */
-XPathResult.ANY_UNORDERED_NODE_TYPE = 8;
+XPathResult.ANY_UNORDERED_NODE_TYPE;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-FIRST-ORDERED-NODE-TYPE
  */
-XPathResult.FIRST_ORDERED_NODE_TYPE = 9;
+XPathResult.FIRST_ORDERED_NODE_TYPE;
 
 /**
  * @constructor
@@ -278,7 +278,7 @@ XPathNamespace.prototype.ownerElement;
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPATH_NAMESPACE_NODE
  */
-XPathNamespace.XPATH_NAMESPACE_NODE = 13;
+XPathNamespace.XPATH_NAMESPACE_NODE;
 
 /**
  * From http://www.w3.org/TR/XMLHttpRequest/

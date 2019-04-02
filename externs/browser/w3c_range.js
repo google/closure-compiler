@@ -38,25 +38,25 @@ function Range() {}
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
  */
-Range.START_TO_START = 0;
+Range.START_TO_START;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
  */
-Range.START_TO_END = 1;
+Range.START_TO_END;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
  */
-Range.END_TO_END = 2;
+Range.END_TO_END;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
  */
-Range.END_TO_START = 3;
+Range.END_TO_START;
 
 // constants repeated on the prototype
 
@@ -64,25 +64,25 @@ Range.END_TO_START = 3;
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
  */
-Range.prototype.START_TO_START = 0;
+Range.prototype.START_TO_START;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
  */
-Range.prototype.START_TO_END = 1;
+Range.prototype.START_TO_END;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
  */
-Range.prototype.END_TO_END = 2;
+Range.prototype.END_TO_END;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
  */
-Range.prototype.END_TO_START = 3;
+Range.prototype.END_TO_START;
 
 /**
  * @type {Node}
@@ -267,10 +267,10 @@ RangeException.prototype.code;
  * @type {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#RangeExceptionCode
  */
-RangeException.prototype.BAD_BOUNDARYPOINTS_ERR = 1;
+RangeException.prototype.BAD_BOUNDARYPOINTS_ERR;
 
 /**
  * @type {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#RangeExceptionCode
  */
-RangeException.prototype.INVALID_NODE_TYPE_ERR = 2;
+RangeException.prototype.INVALID_NODE_TYPE_ERR;

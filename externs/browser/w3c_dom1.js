@@ -35,61 +35,61 @@ function DOMException(message, name) {}
  * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-258A00AF
  */
-DOMException.INDEX_SIZE_ERR = 1;
+DOMException.INDEX_SIZE_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-258A00AF
  */
-DOMException.DOMSTRING_SIZE_ERR = 2;
+DOMException.DOMSTRING_SIZE_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-258A00AF
  */
-DOMException.HIERARCHY_REQUEST_ERR = 3;
+DOMException.HIERARCHY_REQUEST_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-258A00AF
  */
-DOMException.WRONG_DOCUMENT_ERR = 4;
+DOMException.WRONG_DOCUMENT_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-258A00AF
  */
-DOMException.INVALID_CHARACTER_ERR = 5;
+DOMException.INVALID_CHARACTER_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-258A00AF
  */
-DOMException.NO_DATA_ALLOWED_ERR = 6;
+DOMException.NO_DATA_ALLOWED_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-258A00AF
  */
-DOMException.NO_MODIFICATION_ALLOWED_ERR = 7;
+DOMException.NO_MODIFICATION_ALLOWED_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-258A00AF
  */
-DOMException.NOT_FOUND_ERR = 8;
+DOMException.NOT_FOUND_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-258A00AF
  */
-DOMException.NOT_SUPPORTED_ERR = 9;
+DOMException.NOT_SUPPORTED_ERR;
 
 /**
  * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-258A00AF
  */
-DOMException.INUSE_ATTRIBUTE_ERR = 10;
+DOMException.INUSE_ATTRIBUTE_ERR;
 
 /**
  * @constructor

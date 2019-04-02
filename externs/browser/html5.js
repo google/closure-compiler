@@ -1827,31 +1827,31 @@ HTMLInputElement.prototype.stepUp = function(opt_n) {};
 function HTMLMediaElement() {}
 
 /** @const {number} */
-HTMLMediaElement.NETWORK_EMPTY;  // = 0
+HTMLMediaElement.NETWORK_EMPTY;
 
 /** @const {number} */
-HTMLMediaElement.NETWORK_IDLE;  // = 1
+HTMLMediaElement.NETWORK_IDLE;
 
 /** @const {number} */
-HTMLMediaElement.NETWORK_LOADING;  // = 2
+HTMLMediaElement.NETWORK_LOADING;
 
 /** @const {number} */
-HTMLMediaElement.NETWORK_NO_SOURCE;  // = 3
+HTMLMediaElement.NETWORK_NO_SOURCE;
 
 /** @const {number} */
-HTMLMediaElement.HAVE_NOTHING;  // = 0
+HTMLMediaElement.HAVE_NOTHING;
 
 /** @const {number} */
-HTMLMediaElement.HAVE_METADATA;  // = 1
+HTMLMediaElement.HAVE_METADATA;
 
 /** @const {number} */
-HTMLMediaElement.HAVE_CURRENT_DATA;  // = 2
+HTMLMediaElement.HAVE_CURRENT_DATA;
 
 /** @const {number} */
-HTMLMediaElement.HAVE_FUTURE_DATA;  // = 3
+HTMLMediaElement.HAVE_FUTURE_DATA;
 
 /** @const {number} */
-HTMLMediaElement.HAVE_ENOUGH_DATA;  // = 4
+HTMLMediaElement.HAVE_ENOUGH_DATA;
 
 /** @type {MediaError} */
 HTMLMediaElement.prototype.error;
@@ -2981,25 +2981,25 @@ function WebSocket(url, opt_protocol) {}
  * The connection has not yet been established.
  * @const {number}
  */
-WebSocket.CONNECTING = 0;
+WebSocket.CONNECTING;
 
 /**
  * The WebSocket connection is established and communication is possible.
  * @const {number}
  */
-WebSocket.OPEN = 1;
+WebSocket.OPEN;
 
 /**
  * The connection is going through the closing handshake, or the close() method has been invoked.
  * @const {number}
  */
-WebSocket.CLOSING = 2;
+WebSocket.CLOSING;
 
 /**
  * The connection has been closed or could not be opened.
  * @const {number}
  */
-WebSocket.CLOSED = 3;
+WebSocket.CLOSED;
 
 /** @override */
 WebSocket.prototype.addEventListener = function(type, listener, opt_options) {};
@@ -3830,10 +3830,10 @@ Document.prototype.msFullscreenEnabled;
 Document.prototype.msFullscreenElement;
 
 /** @const {number} */
-Element.ALLOW_KEYBOARD_INPUT = 1;
+Element.ALLOW_KEYBOARD_INPUT;
 
 /** @const {number} */
-Element.prototype.ALLOW_KEYBOARD_INPUT = 1;
+Element.prototype.ALLOW_KEYBOARD_INPUT;
 
 
 /**
