@@ -4147,6 +4147,11 @@ chrome.idle.queryState = function(thresholdSeconds, callback) {};
  */
 chrome.idle.setDetectionInterval = function(intervalInSeconds) {};
 
+/**
+ * @param {function(number): void} callback Callback to receive the delay
+ * @return {undefined}
+ */
+chrome.idle.getAutoLockDelay = function(callback) {};
 
 /** @type {!ChromeEvent} */
 chrome.idle.onStateChanged;
