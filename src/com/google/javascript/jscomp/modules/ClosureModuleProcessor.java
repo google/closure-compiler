@@ -282,9 +282,8 @@ final class ClosureModuleProcessor implements ModuleProcessor {
         // whose values are all names.
         if (isNamedExportsLiteral(rhs)) {
           initializeNamedExportsLiteral(rhs);
-        } else {
-          markExportsAssignmentInNamespace(lhs);
         }
+        markExportsAssignmentInNamespace(lhs);
       } else if (lhs.isGetProp()
           && lhs.getFirstChild().isName()
           && lhs.getFirstChild().getString().equals("exports")) {
