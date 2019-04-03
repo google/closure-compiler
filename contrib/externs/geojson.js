@@ -194,6 +194,11 @@ GeoJSON.GeometryCollection.prototype.geometries;
 GeoJSON.Feature = function() {};
 
 /**
+ * @type {?string}
+ */
+GeoJSON.Feature.prototype.id;
+
+/**
  * @type {?GeoJSON.Geometry}
  */
 GeoJSON.Feature.prototype.geometry;
