@@ -169,12 +169,21 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   void testTypesWithExterns(String externs, String js, List<String> descriptions, boolean isError) {
     parseAndTypeCheck(externs, js);
 
-    (isError
-            ? assertWithMessage("Regarding errors:").that(compiler.getErrors())
-            : assertWithMessage("Regarding warnings:").that(compiler.getWarnings()))
-        .comparingElementsUsing(DESCRIPTION_EQUALITY)
-        .containsExactlyElementsIn(descriptions)
-        .inOrder();
+    if (isError) {
+      assertWithMessage("Regarding errors:")
+          .that(compiler.getErrors())
+          .comparingElementsUsing(DESCRIPTION_EQUALITY)
+          .containsExactlyElementsIn(descriptions)
+          .inOrder();
+      assertWithMessage("Regarding warnings").that(compiler.getWarnings()).isEmpty();
+    } else {
+      assertWithMessage("Regarding warnings:")
+          .that(compiler.getWarnings())
+          .comparingElementsUsing(DESCRIPTION_EQUALITY)
+          .containsExactlyElementsIn(descriptions)
+          .inOrder();
+      assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
+    }
   }
 
   void testTypesWithExterns(
@@ -184,12 +193,21 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     ImmutableList<DiagnosticType> expectedTypes =
         (diagnosticType == null) ? ImmutableList.of() : ImmutableList.of(diagnosticType);
 
-    (isError
-            ? assertWithMessage("Regarding errors:").that(compiler.getErrors())
-            : assertWithMessage("Regarding warnings:").that(compiler.getWarnings()))
-        .comparingElementsUsing(DIAGNOSTIC_TYPE_EQUALITY)
-        .containsExactlyElementsIn(expectedTypes)
-        .inOrder();
+    if (isError) {
+      assertWithMessage("Regarding errors:")
+          .that(compiler.getErrors())
+          .comparingElementsUsing(DIAGNOSTIC_TYPE_EQUALITY)
+          .containsExactlyElementsIn(expectedTypes)
+          .inOrder();
+      assertWithMessage("Regarding warnings").that(compiler.getWarnings()).isEmpty();
+    } else {
+      assertWithMessage("Regarding warnings:")
+          .that(compiler.getWarnings())
+          .comparingElementsUsing(DIAGNOSTIC_TYPE_EQUALITY)
+          .containsExactlyElementsIn(expectedTypes)
+          .inOrder();
+      assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
+    }
   }
 
   protected void testTypesWithExterns(String externs, String js, String description) {
