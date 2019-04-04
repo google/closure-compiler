@@ -1426,7 +1426,7 @@ jQuery.prototype.nextUntil = function(arg1, filter) {};
 
 /**
  * @param {boolean=} removeAll
- * @return {Object}
+ * @return {function(new:jQuery, (Object|null|string)=, (Document|Element|Object<string,(function(!jQuery.Event): ?|string)>|jQuery|null)=): !jQuery}
  */
 jQuery.noConflict = function(removeAll) {};
 
