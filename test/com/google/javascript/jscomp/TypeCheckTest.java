@@ -23399,6 +23399,47 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: enum{X}"));
   }
 
+  @Test
+  public void testClosurePrimitive_invalidOnEsClassStatic() {
+    testTypes(
+        "class C { /** @closurePrimitive {asserts.fail} */ static fail() {} }",
+        "@closurePrimitive only works on top-level names or namespace properties");
+  }
+
+  @Test
+  public void testClosurePrimitive_invalidOnEsClassPrototype() {
+    testTypes(
+        "class C { /** @closurePrimitive {asserts.fail} */ fail() {} }",
+        "@closurePrimitive only works on top-level names or namespace properties");
+  }
+
+  @Test
+  public void testClosurePrimitive_invalidOnEsInterfacePrototype() {
+    testTypes(
+        "/** @interface */ class C { /** @closurePrimitive {asserts.fail} */ fail() {} }",
+        "@closurePrimitive only works on top-level names or namespace properties");
+  }
+
+  @Test
+  public void testClosurePrimitive_invalidOnEs5ClassPrototype() {
+    testTypes(
+        lines(
+            "/** @constructor */ function C() {}",
+            "/** @closurePrimitive {asserts.fail} */",
+            "C.prototype.fail = function() {};"),
+        lines("@closurePrimitive only works on top-level names or namespace properties"));
+  }
+
+  @Test
+  public void testClosurePrimitive_canAliasFromNamespace() {
+    testTypes(
+        lines(
+            "const asserts = {};",
+            "/** @closurePrimitive {asserts.fail} */",
+            "asserts.fail = function() { throw new Error(); };",
+            "const fail = asserts.fail;"));
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
