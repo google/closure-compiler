@@ -27,8 +27,18 @@
 function Geolocation() {}
 
 /**
- * @param {function(!GeolocationPosition)} successCallback
- * @param {(function(!GeolocationPositionError)|null)=} opt_errorCallback
+ * @typedef {function(!GeolocationPosition): void}
+ */
+var PositionCallback;
+
+/**
+ * @typedef {function(!GeolocationPositionError): void}
+ */
+var PositionErrorCallback;
+
+/**
+ * @param {PositionCallback} successCallback
+ * @param {PositionErrorCallback=} opt_errorCallback
  * @param {GeolocationPositionOptions=} opt_options
  * @return {undefined}
  */
@@ -37,8 +47,8 @@ Geolocation.prototype.getCurrentPosition = function(successCallback,
                                                        opt_options) {};
 
 /**
- * @param {function(!GeolocationPosition)} successCallback
- * @param {(function(!GeolocationPositionError)|null)=} opt_errorCallback
+ * @param {PositionCallback} successCallback
+ * @param {PositionErrorCallback=} opt_errorCallback
  * @param {GeolocationPositionOptions=} opt_options
  * @return {number}
  */
