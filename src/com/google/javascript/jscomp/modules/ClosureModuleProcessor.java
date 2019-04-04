@@ -283,8 +283,9 @@ final class ClosureModuleProcessor implements ModuleProcessor {
         if (isNamedExportsLiteral(rhs)) {
           initializeNamedExportsLiteral(rhs);
         } else {
-          markExportsAssignmentInNamespace(lhs);
+          seenExportsAssignment = true;
         }
+        markExportsAssignmentInNamespace(lhs);
       } else if (lhs.isGetProp()
           && lhs.getFirstChild().isName()
           && lhs.getFirstChild().getString().equals("exports")) {
@@ -310,8 +311,6 @@ final class ClosureModuleProcessor implements ModuleProcessor {
      * the Module namespace if there is an explicit' exports = ...' assignment
      */
     private void markExportsAssignmentInNamespace(Node exportsNode) {
-      seenExportsAssignment = true;
-
       namespace.put(
           Export.NAMESPACE,
           Binding.from(
