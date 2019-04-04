@@ -1327,6 +1327,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           propertyName,
           key.getJSDocInfo(),
           type.getPropertyType(propertyName));
+      checkAbstractMethodInConcreteClass(key, ctorType, key.getJSDocInfo());
     }
   }
 

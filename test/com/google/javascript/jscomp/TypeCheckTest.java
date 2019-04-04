@@ -1798,11 +1798,31 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testAbstractMethodInAbstractEs6Class() {
+    testTypes(
+        lines(
+            "/** @abstract */ class C {", //
+            "  /** @abstract */ foo() {}", //
+            "}"));
+  }
+
+  @Test
   public void testAbstractMethodInConcreteClass() {
     testTypes(
         lines(
             "/** @constructor */ var C = function() {};",
             "/** @abstract */ C.prototype.foo = function() {};"),
+        "Abstract methods can only appear in abstract classes. Please declare the class as "
+            + "@abstract");
+  }
+
+  @Test
+  public void testAbstractMethodInConcreteEs6Class() {
+    testTypes(
+        lines(
+            "class C {", //
+            "  /** @abstract */ foo() {}", //
+            "}"),
         "Abstract methods can only appear in abstract classes. Please declare the class as "
             + "@abstract");
   }
@@ -1819,6 +1839,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testAbstractMethodInConcreteEs6ClassExtendingAbstractEs6Class() {
+    testTypes(
+        lines(
+            "/** @abstract */ class A {}", //
+            "/** @extends {A} */ class B {", //
+            "  /** @abstract */ foo() {}", //
+            "}"),
+        "Abstract methods can only appear in abstract classes. Please declare the class as "
+            + "@abstract");
+  }
+
+  @Test
   public void testConcreteMethodOverridingAbstractMethod() {
     testTypes(
         lines(
@@ -1829,12 +1861,34 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testConcreteMethodOverridingAbstractMethodInEs6() {
+    testTypes(
+        lines(
+            "/** @abstract */ class A {", //
+            "  /** @abstract*/ foo() {}", //
+            "}", //
+            "/** @extends {A} */ class B {", //
+            "  /** @override */ foo() {}", //
+            "}"));
+  }
+
+  @Test
   public void testConcreteMethodInAbstractClass1() {
     testTypes(
         lines(
             "/** @abstract @constructor */ var A = function() {};",
             "A.prototype.foo = function() {};",
             "/** @constructor @extends {A} */ var B = function() {};"));
+  }
+
+  @Test
+  public void testConcreteMethodInAbstractEs6Class1() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */ class A {", //
+            "  foo() {}", //
+            "}", //
+            "class B extends A {}"));
   }
 
   @Test
@@ -1860,12 +1914,34 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testAbstractMethodInEs6Interface() {
+    // TODO(moz): There's no need to tag methods with @abstract in interfaces, maybe give a warning
+    // on this.
+    testTypesWithCommonExterns(
+        lines(
+            "/** @interface */ class I {", //
+            "  /** @abstract */ foo() {}", //
+            "};"));
+  }
+
+  @Test
   public void testAbstractMethodNotImplemented1() {
     testTypes(
         lines(
             "/** @abstract @constructor */ var A = function() {};",
             "/** @abstract */ A.prototype.foo = function() {};",
             "/** @constructor @extends {A} */ var B = function() {};"),
+        "property foo on abstract class A is not implemented by type B");
+  }
+
+  @Test
+  public void testAbstractMethodInEs6NotImplemented1() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */ class A {", //
+            "  /** @abstract */ foo() {}", //
+            "}", //
+            "class B extends A {}"),
         "property foo on abstract class A is not implemented by type B");
   }
 
@@ -1882,6 +1958,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testAbstractMethodInEs6NotImplemented2() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */ class A {", //
+            "  /** @abstract */ foo() {}", //
+            "  /** @abstract */ bar() {}", //
+            "}", //
+            "class B extends A {", //
+            "  /** @override */ foo() {}", //
+            "}"),
+        "property bar on abstract class A is not implemented by type B");
+  }
+
+  @Test
   public void testAbstractMethodNotImplemented3() {
     testTypes(
         lines(
@@ -1890,6 +1980,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @abstract @constructor @extends {A} */ var B = function() {};",
             "/** @abstract @override */ B.prototype.foo = function() {};",
             "/** @constructor @extends {B} */ var C = function() {};"),
+        "property foo on abstract class B is not implemented by type C");
+  }
+
+  @Test
+  public void testAbstractMethodInEs6NotImplemented3() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */ class A {", //
+            "  /** @abstract */ foo() {}", //
+            "}", //
+            "/** @abstract */ class B extends A {", //
+            "  /** @abstract @override */ foo() {}", //
+            "}", //
+            "class C extends B {}"),
         "property foo on abstract class B is not implemented by type C");
   }
 
@@ -1905,6 +2009,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testAbstractMethodInEs6NotImplemented4() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */ class A {", //
+            "  /** @abstract */ foo() {}", //
+            "}", //
+            "/** @abstract */ class B extends A {}", //
+            "class C extends B {}"),
+        "property foo on abstract class A is not implemented by type C");
+  }
+
+  @Test
   public void testAbstractMethodNotImplemented5() {
     testTypes(
         lines(
@@ -1913,6 +2029,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @abstract @constructor @implements {I} */ var A = function() {};",
             "/** @abstract @override */ A.prototype.foo = function() {};",
             "/** @constructor @extends {A} */ var B = function() {};"),
+        "property foo on abstract class A is not implemented by type B");
+  }
+
+  @Test
+  public void testAbstractMethodInEs6NotImplemented5() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @interface */ class I {", //
+            "  foo() {}", //
+            "}", //
+            "/** @abstract @implements {I} */ class A {", //
+            "  /** @abstract @override */ foo() {}", //
+            "}", //
+            "class B extends A {}"),
         "property foo on abstract class A is not implemented by type B");
   }
 
@@ -1941,6 +2071,21 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testAbstractMethodInEs6Implemented1() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */ class A {", //
+            "  /** @abstract */ foo() {}", //
+            "  /** @abstract */ bar() {}", //
+            "}", //
+            "class B extends A {", //
+            "  /** @override */ foo() {}", //
+            "  /** @override */ bar() {}", //
+            "}", //
+            "class C extends B {}"));
+  }
+
+  @Test
   public void testAbstractMethodImplemented2() {
     testTypes(
         lines(
@@ -1951,6 +2096,22 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @override */ B.prototype.foo = function() {};",
             "/** @constructor @extends {B} */ var C = function() {};",
             "/** @override */ C.prototype.bar = function() {};"));
+  }
+
+  @Test
+  public void testAbstractMethodInEs6Implemented2() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @abstract */ class A {", //
+            "  /** @abstract */ foo() {}", //
+            "  /** @abstract */ bar() {}", //
+            "}", //
+            "/** @abstract */ class B extends A {", //
+            "  /** @override */ foo() {}", //
+            "}", //
+            "class C extends B {", //
+            "  /** @override */ bar() {}", //
+            "}"));
   }
 
   @Test

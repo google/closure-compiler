@@ -2969,7 +2969,7 @@ TimeRanges.prototype.end = function(index) { return 0; };
 
 // HTML5 Web Socket class
 /**
- * @see https://html.spec.whatwg.org/multipage/web-sockets.html#network
+ * @see https://html.spec.whatwg.org/multipage/web-sockets.html
  * @constructor
  * @param {string} url
  * @param {(string|!Array<string>)=} opt_protocol
@@ -2981,25 +2981,49 @@ function WebSocket(url, opt_protocol) {}
  * The connection has not yet been established.
  * @const {number}
  */
-WebSocket.CONNECTING = 0;
+WebSocket.CONNECTING;
+
+/**
+ * The connection has not yet been established.
+ * @const {number}
+ */
+WebSocket.prototype.CONNECTING;
 
 /**
  * The WebSocket connection is established and communication is possible.
  * @const {number}
  */
-WebSocket.OPEN = 1;
+WebSocket.OPEN;
+
+/**
+ * The WebSocket connection is established and communication is possible.
+ * @const {number}
+ */
+WebSocket.prototype.OPEN;
 
 /**
  * The connection is going through the closing handshake, or the close() method has been invoked.
  * @const {number}
  */
-WebSocket.CLOSING = 2;
+WebSocket.CLOSING;
+
+/**
+ * The connection is going through the closing handshake, or the close() method has been invoked.
+ * @const {number}
+ */
+WebSocket.prototype.CLOSING;
 
 /**
  * The connection has been closed or could not be opened.
  * @const {number}
  */
-WebSocket.CLOSED = 3;
+WebSocket.CLOSED;
+
+/**
+ * The connection has been closed or could not be opened.
+ * @const {number}
+ */
+WebSocket.prototype.CLOSED;
 
 /** @override */
 WebSocket.prototype.addEventListener = function(type, listener, opt_options) {};
