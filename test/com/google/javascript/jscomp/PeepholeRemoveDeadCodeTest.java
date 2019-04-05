@@ -46,9 +46,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, true);
-        defFinder.process(externs, root);
-        new PureFunctionIdentifier(compiler, defFinder).process(externs, root);
+        new PureFunctionIdentifier.Driver(compiler).process(externs, root);
+
         PeepholeOptimizationsPass peepholePass =
             new PeepholeOptimizationsPass(compiler, getName(), new PeepholeRemoveDeadCode());
         peepholePass.process(externs, root);

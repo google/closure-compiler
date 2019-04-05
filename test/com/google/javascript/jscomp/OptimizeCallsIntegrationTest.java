@@ -62,10 +62,7 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
 
       @Override
       public void process(Node externs, Node root) {
-        NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, true);
-        defFinder.process(externs, root);
-
-        new PureFunctionIdentifier(compiler, defFinder).process(externs, root);
+        new PureFunctionIdentifier.Driver(compiler).process(externs, root);
         new RemoveUnusedCode.Builder(compiler)
             .removeLocalVars(true)
             .removeGlobals(true)

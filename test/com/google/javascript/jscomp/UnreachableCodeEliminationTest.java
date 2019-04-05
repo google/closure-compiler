@@ -558,10 +558,10 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLetConstBlocks_withES6Modules() {
+  public void testLetConstBlocks_inFunction_exportedFromEs6Module() {
     test(
-        "export function f() {return 1; let a; } f();",
-        "export function f() {return 1;}");
+        "export function f() {return 1; let a; }", //
+        "export function f() {return 1;};");
 
     test(
         "export function f() {return 1; const a = 1; }",
@@ -578,7 +578,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   // TODO(tbreisacher): Fix and enable.
   @Test
   @Ignore
-  public void testLetConstBlocks_withES6Modules2() {
+  public void testLetConstBlocks_asEs6ModuleExport() {
     test("export let x = 2;", "");
   }
 

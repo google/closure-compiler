@@ -100,6 +100,7 @@ class OptimizeCalls implements CompilerPass {
     }
 
     public OptimizeCalls build() {
+      checkNotNull(compiler);
       checkNotNull(considerExterns);
 
       return new OptimizeCalls(compiler, passes.build(), considerExterns);
@@ -412,6 +413,7 @@ class OptimizeCalls implements CompilerPass {
 
     private void maybeAddNameReference(Node n) {
       String name = n.getString();
+      // TODO(b/129503101): Why are we limiting ourselves to global names?
       Var var = globalScope.getSlot(name);
       if (var != null && (considerExterns || !var.isExtern())) {
         // As every name declaration is unique due to normalizations, it is only necessary to build

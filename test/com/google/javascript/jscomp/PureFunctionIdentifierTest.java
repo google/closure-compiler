@@ -199,8 +199,9 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
 
-    enableTypeCheck();
     enableNormalize();
+    enableGatherExternProperties();
+    enableTypeCheck();
   }
 
   @Override
@@ -228,13 +229,8 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
       localResultCalls = new ArrayList<>();
       compiler.setHasRegExpGlobalReferences(regExpHaveSideEffects);
       compiler.getOptions().setUseTypesForLocalOptimization(true);
-      NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, true);
-      defFinder.process(externs, root);
 
-      PureFunctionIdentifier pureFunctionIdentifier =
-          new PureFunctionIdentifier(compiler, defFinder);
-      pureFunctionIdentifier.process(externs, root);
-
+      new PureFunctionIdentifier.Driver(compiler).process(externs, root);
       NodeTraversal.traverse(compiler, externs, this);
       NodeTraversal.traverse(compiler, root, this);
     }
@@ -566,24 +562,33 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
   @Test
   public void testAnnotationInExternStubs1() {
-    assertPureCallsMarked("o.propWithStubBefore('a');",
-        ImmutableList.of("o.propWithStubBefore"));
+    // In the case where a property is defined first as a stub and then with a FUNCTION:
+    // we have to make a conservative assumption about the behaviour of the extern, since the stub
+    // carried no information.
+    assertNoPureCalls("o.propWithStubBefore('a');");
   }
 
   @Test
   public void testAnnotationInExternStubs1b() {
-    assertPureCallsMarked("o.propWithStubBeforeWithJSDoc('a');",
-        ImmutableList.of("o.propWithStubBeforeWithJSDoc"));
+    // In the case where a property is defined first as a stub and then with a FUNCTION:
+    // we have to make a conservative assumption about the behaviour of the extern, since the stub
+    // carried no information.
+    assertNoPureCalls("o.propWithStubBeforeWithJSDoc('a');");
   }
 
   @Test
   public void testAnnotationInExternStubs2() {
-    assertPureCallsMarked("o.propWithStubAfter('a');",
-        ImmutableList.of("o.propWithStubAfter"));
+    // In the case where a property is defined first with a FUNCTION and then as a stub:
+    // we have to make a conservative assumption about the behaviour of the extern, since the stub
+    // carried no information.
+    assertNoPureCalls("o.propWithStubAfter('a');");
   }
 
   @Test
   public void testAnnotationInExternStubs3() {
+    // In the case where a property is defined first with a FUNCTION and then as a stub:
+    // we have to make a conservative assumption about the behaviour of the extern, since the stub
+    // carried no information.
     assertNoPureCalls("propWithAnnotatedStubAfter('a');");
   }
 
@@ -1586,7 +1591,9 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "C.f = function() { };",
             "var g = function() {D.f()};",
             "/** @constructor */ var h = function() {E.f.apply(this)};",
-            "var i = function() {F.f.apply({})};", // it can't tell {} is local.
+            // TODO(nickreid): Detect that `{}` being passed as `this` is local. With that
+            // understanding, we could determine that `i` has no side-effects.
+            "var i = function() { F.f.apply({}); };",
             "g();",
             "new h();",
             "i();");
@@ -1679,7 +1686,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "a = function() {}", // This is the only `a` is in scope here.
             "B.x();",
             "a();");
-    assertPureCallsMarked(source, ImmutableList.of("a"));
+    assertNoPureCalls(source);
   }
 
   @Test
@@ -1700,10 +1707,12 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     String source =
         lines(
             "var global = 1;",
+            "",
             "A.x = function a() {}",
             "B.x = function() { global++; }",
+            "",
             "B.x();",
-            "a();" // `a` is not in scope here.
+            "a();" // `a` isn't in scope here.
             );
     assertNoPureCalls(source);
   }
@@ -1713,11 +1722,13 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     String source =
         lines(
             "var global = 1;",
+            "",
             "A.x = cond ? function a() { global++ } : function b() {}",
             "B.x = function() { global++; }",
+            "",
             "B.x();",
-            "a();", // `a` is not in scope here.
-            "b();" // `b` is not in scope here.
+            "a();", // `a` isn't in scope here.
+            "b();" // `b` isn't in scope here.
             );
     assertNoPureCalls(source);
   }
@@ -1731,6 +1742,27 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "}",
             "SetCustomData1(window, \"foo\", \"bar\");");
     assertNoPureCalls(source);
+  }
+
+  @Test
+  public void testInnerFunction_isNeverPure() {
+    // TODO(b/129503101): `pure` should be marked pure in this case.
+    assertNoPureCalls(
+        lines(
+            "function f() {", //
+            "  function pure() { };",
+            "  pure();",
+            "}"));
+  }
+
+  @Test
+  public void testNamedFunctionExpression_isNeverPure() {
+    // TODO(b/129503101): `pure` should be marked pure in this case.
+    assertNoPureCalls(
+        lines(
+            "(function pure() {", //
+            "  pure();",
+            "})"));
   }
 
   @Test
@@ -2341,9 +2373,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "",
             "function foo(a = pure()) { }",
             "foo();"),
-        ImmutableList.of(
-            // TODO(b/128035138): Should be ["pure", "foo"]. "pure" is being polluted.
-            ));
+        ImmutableList.of("pure", "foo"));
 
     assertPureCallsMarked(
         lines(
