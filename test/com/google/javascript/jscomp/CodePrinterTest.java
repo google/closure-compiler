@@ -1790,7 +1790,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         lines(
             "function f() {",
             "  return (/**",
-            "   @return {number}",
+            "   * @return {number}",
             "   */",
             "  function() {",
             "    return 42;",
@@ -1804,8 +1804,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     String js =
         LINE_JOINER.join(
             "/**",
-            " @type {number}",
-            " @deprecated See {@link replacementClass} for more details.",
+            " * @type {number}",
+            " * @deprecated See {@link replacementClass} for more details.",
             " */",
             "var x;",
             "");
@@ -2651,9 +2651,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     assertPrintSame(
         LINE_JOINER.join(
-            "/**",
-            " @const",
-            " @suppress {const,duplicate}",
+            "/**", //
+            " * @const",
+            " * @suppress {const,duplicate}",
             " */",
             "var ns={}"));
   }
@@ -3336,25 +3336,26 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "  alert(Quux.someProperty);\n"
         + "}\n"
         + "}); // goog.scope\n";
-    String expectedCode = ""
-        + "/** @const */ var $jscomp = $jscomp || {};\n"
-        + "/** @const */ $jscomp.scope = {};\n"
-        + "/** @const */ var foo = {};\n"
-        + "/** @const */ foo.bar = {};\n"
-        + "goog.provide('foo.bar');\n"
-        + "goog.require('baz.qux.Quux');\n"
-        + "goog.require('foo.ScopedType');\n"
-        + "/**\n"
-        + " @param {ScopedType} obj\n"
-        + " */\n"
-        + "var fn = /**\n"
-        + " @param {ScopedType} obj\n"
-        + " */\n"
-        + "function(obj) {\n"
-        + "  alert(STR);\n"
-        + "  alert(Quux.someProperty);\n"
-        + "};\n"
-        + "var STR = '3';\n";
+    String expectedCode =
+        ""
+            + "/** @const */ var $jscomp = $jscomp || {};\n"
+            + "/** @const */ $jscomp.scope = {};\n"
+            + "/** @const */ var foo = {};\n"
+            + "/** @const */ foo.bar = {};\n"
+            + "goog.provide('foo.bar');\n"
+            + "goog.require('baz.qux.Quux');\n"
+            + "goog.require('foo.ScopedType');\n"
+            + "/**\n"
+            + " * @param {ScopedType} obj\n"
+            + " */\n"
+            + "var fn = /**\n"
+            + " * @param {ScopedType} obj\n"
+            + " */\n"
+            + "function(obj) {\n"
+            + "  alert(STR);\n"
+            + "  alert(Quux.someProperty);\n"
+            + "};\n"
+            + "var STR = '3';\n";
 
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.setClosurePass(true);

@@ -38,9 +38,19 @@ import java.util.Set;
 public final class JSDocInfoPrinter {
 
   private final boolean useOriginalName;
+  private final boolean printDesc;
 
-  JSDocInfoPrinter(boolean useOriginalName) {
+  public JSDocInfoPrinter(boolean useOriginalName) {
+    this(useOriginalName, false);
+  }
+
+  /**
+   * @param useOriginalName Whether to use the original name field when printing types.
+   * @param printDesc Whether to print block, param, and return descriptions.
+   */
+  public JSDocInfoPrinter(boolean useOriginalName, boolean printDesc) {
     this.useOriginalName = useOriginalName;
+    this.printDesc = printDesc;
   }
 
   public String print(JSDocInfo info) {
@@ -108,7 +118,10 @@ public final class JSDocInfoPrinter {
 
     String description = info.getDescription();
     if (description != null) {
-      parts.add("@desc " + description + '\n');
+      if (description.contains("\n")) {
+        multiline = true;
+      }
+      parts.add("@desc " + description);
     }
 
     if (info.makesDicts()) {
@@ -162,13 +175,14 @@ public final class JSDocInfoPrinter {
     if (info.getParameterCount() > 0) {
       multiline = true;
       for (String name : info.getParameterNames()) {
-        parts.add("@param " + buildParamType(name, info.getParameterType(name)));
+        parts.add("@param " + buildParamType(info, name));
       }
     }
 
     if (info.hasReturnType()) {
       multiline = true;
-      parts.add(buildAnnotationWithType("return", info.getReturnType()));
+      parts.add(
+          buildAnnotationWithType("return", info.getReturnType(), info.getReturnDescription()));
     }
 
     if (!info.getThrownTypes().isEmpty()) {
@@ -177,7 +191,7 @@ public final class JSDocInfoPrinter {
 
     ImmutableList<String> names = info.getTemplateTypeNames();
     if (!names.isEmpty()) {
-      parts.add("@template " + Joiner.on(',').join(names));
+      parts.add("@template " + Joiner.on(", ").join(names));
       multiline = true;
     }
 
@@ -262,16 +276,36 @@ public final class JSDocInfoPrinter {
       parts.add("@closurePrimitive {" + info.getClosurePrimitiveId() + "}");
     }
 
-    parts.add("*/");
+    if (printDesc && info.getBlockDescription() != null) {
+      String cleaned = info.getBlockDescription().replaceAll("\n\\s*\\*\\s*", "\n");
+      if (!cleaned.isEmpty()) {
+        multiline = true;
+        cleaned = cleaned.trim();
+        if (parts.size() > 1) {
+          // If there is more than one part - the opening "/**" - then add blank line between the
+          // description and everything else.
+          cleaned += '\n';
+        }
+        parts.add(1, cleaned);
+      }
+    }
 
     StringBuilder sb = new StringBuilder();
     if (multiline) {
-      Joiner.on("\n ").appendTo(sb, parts);
+      Joiner.on("\n").appendTo(sb, parts);
     } else {
       Joiner.on(" ").appendTo(sb, parts);
+      sb.append(" */");
     }
-    sb.append((multiline) ? "\n" : " ");
-    return sb.toString();
+    // Ensure all lines start with " *", and then ensure all non blank lines have a space after
+    // the *.
+    String s = sb.toString().replaceAll("\n", "\n *").replaceAll("\n \\*([^ \n])", "\n * $1");
+    if (multiline) {
+      s += "\n */\n";
+    } else {
+      s += " ";
+    }
+    return s;
   }
 
   private Node stripBang(Node typeNode) {
@@ -282,22 +316,45 @@ public final class JSDocInfoPrinter {
   }
 
   private String buildAnnotationWithType(String annotation, JSTypeExpression type) {
-    return buildAnnotationWithType(annotation, type.getRoot());
+    return buildAnnotationWithType(annotation, type, null);
+  }
+
+  private String buildAnnotationWithType(
+      String annotation, JSTypeExpression type, String description) {
+    return buildAnnotationWithType(annotation, type.getRoot(), description);
   }
 
   private String buildAnnotationWithType(String annotation, Node type) {
+    return buildAnnotationWithType(annotation, type, null);
+  }
+
+  private String buildAnnotationWithType(String annotation, Node type, String description) {
     StringBuilder sb = new StringBuilder();
     sb.append("@");
     sb.append(annotation);
     sb.append(" {");
     appendTypeNode(sb, type);
     sb.append("}");
+    if (description != null) {
+      sb.append(" ");
+      sb.append(description);
+    }
     return sb.toString();
   }
 
-  private String buildParamType(String name, JSTypeExpression type) {
+  private String buildParamType(JSDocInfo info, String name) {
+    JSTypeExpression type = info.getParameterType(name);
     if (type != null) {
-      return "{" + typeNode(type.getRoot()) + "} " + name;
+      String p =
+          "{"
+              + typeNode(type.getRoot())
+              + "} "
+              + name
+              + (printDesc && info.getDescriptionForParameter(name) != null
+                  // Don't add a leading space; the parser retained it.
+                  ? info.getDescriptionForParameter(name)
+                  : "");
+      return p.trim();
     } else {
       return name;
     }
