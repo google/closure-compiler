@@ -118,9 +118,7 @@ public final class JSDocInfoPrinter {
 
     String description = info.getDescription();
     if (description != null) {
-      if (description.contains("\n")) {
-        multiline = true;
-      }
+      multiline = true;
       parts.add("@desc " + description);
     }
 

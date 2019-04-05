@@ -81,7 +81,13 @@ public final class JSDocInfoPrinterTest {
   public void testDescTag() {
     builder.recordDescription("foo");
     JSDocInfo info = builder.buildAndReset();
-    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/** @desc foo */ ");
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            LINE_JOINER.join(
+                "/**", //
+                " * @desc foo",
+                " */",
+                ""));
   }
 
   @Test
