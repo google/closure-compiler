@@ -311,11 +311,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "Abstract methods can only appear in abstract classes. Please declare the class as "
               + "@abstract");
 
-  static final DiagnosticType CLOSURE_PRIMITIVE_ON_NON_NAMESPACE =
-      DiagnosticType.warning(
-          "JSC_CLOSURE_PRIMITIVE_ON_NON_NAMESPACE",
-          "@closurePrimitive only works on top-level names or namespace properties");
-
   // If a diagnostic is disabled by default, do not add it in this list
   // TODO(dimvar): Either INEXISTENT_PROPERTY shouldn't be here, or we should
   // change DiagnosticGroups.setWarningLevel to not accidentally enable it.
@@ -1180,13 +1175,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ObjectType objectCastType = ObjectType.cast(objectJsType.restrictByNotNullOrUndefined());
       JSType expectedPropertyType = getPropertyTypeIfDeclared(objectCastType, pname);
 
-      if (objectCastType != null
-          && !objectCastType.isLiteralObject()
-          && rightType.toMaybeFunctionType() != null
-          && rightType.toMaybeFunctionType().getClosurePrimitive() != null) {
-        report(lvalue, CLOSURE_PRIMITIVE_ON_NON_NAMESPACE);
-      }
-
       checkPropertyInheritanceOnGetpropAssign(
           nodeToWarn, object, pname, info, expectedPropertyType);
 
@@ -1473,11 +1461,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         checkPropertyInheritanceOnClassMember(key, property, type.toMaybeFunctionType());
       } else {
         checkPropertyInheritanceOnPrototypeLitKey(key, property, type);
-      }
-      if (!type.isLiteralObject()
-          && rightType.toMaybeFunctionType() != null
-          && rightType.toMaybeFunctionType().getClosurePrimitive() != null) {
-        report(key, CLOSURE_PRIMITIVE_ON_NON_NAMESPACE);
       }
       // TODO(lharker): add a unit test for the following if case or remove it.
       // Removing the check doesn't break any unit tests, but it does have coverage in
