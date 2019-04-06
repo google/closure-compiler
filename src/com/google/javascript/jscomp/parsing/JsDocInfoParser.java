@@ -2184,6 +2184,7 @@ public final class JsDocInfoParser {
         case "undefined":
           return newStringNode(string);
         case "typeof":
+          skipEOLs();
           return parseTypeofType(next());
         default:
           return parseTypeName(token);
@@ -2245,7 +2246,6 @@ public final class JsDocInfoParser {
   /** TypeofType := 'typeof' NameExpression | 'typeof' '(' NameExpression ')' */
   private Node parseTypeofType(JsDocToken token) {
     Node typeofType = newNode(Token.TYPEOF);
-    skipEOLs();
     Node name = parseNameExpression(token);
     skipEOLs();
     typeofType.addChildToFront(name);

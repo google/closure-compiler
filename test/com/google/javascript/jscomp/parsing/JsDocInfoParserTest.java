@@ -825,8 +825,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Node node = parse("@type {typeof Foo}*/").getType().getRoot();
     assertNode(node).hasToken(Token.TYPEOF);
     assertThat(node.getChildCount()).isEqualTo(1);
-    assertNode(node.getFirstChild()).hasToken(Token.STRING);
-    assertNode(node.getFirstChild()).hasStringThat().isEqualTo("Foo");
+    Node fooNode = node.getFirstChild();
+    assertNode(fooNode).hasToken(Token.STRING);
+    assertNode(fooNode).hasStringThat().isEqualTo("Foo");
+    assertNode(fooNode).hasCharno(14);
   }
 
   @Test
@@ -834,8 +836,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Node node = parse("@type {(typeof Foo)}*/").getType().getRoot();
     assertNode(node).hasToken(Token.TYPEOF);
     assertThat(node.getChildCount()).isEqualTo(1);
-    assertNode(node.getFirstChild()).hasToken(Token.STRING);
-    assertNode(node.getFirstChild()).hasStringThat().isEqualTo("Foo");
+    Node fooNode = node.getFirstChild();
+    assertNode(fooNode).hasToken(Token.STRING);
+    assertNode(fooNode).hasStringThat().isEqualTo("Foo");
+    assertNode(fooNode).hasCharno(15);
   }
 
   @Test
@@ -843,16 +847,32 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Node node = parse("@type {typeof Foo|Bar<typeof Baz>}*/").getType().getRoot();
     assertNode(node).hasToken(Token.PIPE);
     assertNode(node.getFirstChild()).hasToken(Token.TYPEOF);
-    assertNode(node.getFirstFirstChild()).hasToken(Token.STRING);
-    assertNode(node.getFirstFirstChild()).hasStringThat().isEqualTo("Foo");
-    assertNode(node.getLastChild()).hasToken(Token.STRING);
-    assertNode(node.getLastChild()).hasStringThat().isEqualTo("Bar");
-    assertNode(node.getLastChild().getFirstChild()).hasToken(Token.BLOCK);
-    assertNode(node.getLastChild().getFirstFirstChild()).hasToken(Token.TYPEOF);
-    assertNode(node.getLastChild().getFirstFirstChild().getFirstChild()).hasToken(Token.STRING);
-    assertNode(node.getLastChild().getFirstFirstChild().getFirstChild())
-        .hasStringThat()
-        .isEqualTo("Baz");
+    Node fooNode = node.getFirstFirstChild();
+    assertNode(fooNode).hasToken(Token.STRING);
+    assertNode(fooNode).hasStringThat().isEqualTo("Foo");
+    assertNode(fooNode).hasCharno(14);
+    Node barNode = node.getLastChild();
+    assertNode(barNode).hasToken(Token.STRING);
+    assertNode(barNode).hasStringThat().isEqualTo("Bar");
+    assertNode(barNode).hasCharno(18);
+    assertNode(barNode.getFirstChild()).hasToken(Token.BLOCK);
+    assertNode(barNode.getFirstFirstChild()).hasToken(Token.TYPEOF);
+    Node bazNode = barNode.getFirstFirstChild().getFirstChild();
+    assertNode(bazNode).hasToken(Token.STRING);
+    assertNode(bazNode).hasStringThat().isEqualTo("Baz");
+    assertNode(bazNode).hasCharno(29);
+  }
+
+  @Test
+  public void testParseTypeofTypeNewLine() {
+    Node node = parse("@type {typeof \n  Foo}*/").getType().getRoot();
+    assertNode(node).hasToken(Token.TYPEOF);
+    assertThat(node.getChildCount()).isEqualTo(1);
+    Node fooNode = node.getFirstChild();
+    assertNode(fooNode).hasToken(Token.STRING);
+    assertNode(fooNode).hasStringThat().isEqualTo("Foo");
+    assertNode(fooNode).hasCharno(2);
+    assertNode(fooNode).hasLineno(1);
   }
 
   private JSType testParseType(String type) {
