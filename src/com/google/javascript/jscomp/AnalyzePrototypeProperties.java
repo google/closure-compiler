@@ -569,10 +569,6 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
   }
 
-  // TODO(user): We can use DefinitionsRemover and UseSite here. Then all
-  // we need to do is call getDefinition() and we'll magically know everything
-  // about the definition.
-
   /** The declaration of an abstract symbol. */
   interface Symbol {
     /** The variable for the root of this symbol. */
