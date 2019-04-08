@@ -77,3 +77,9 @@ BatteryManager.prototype.ondischargingtimechange;
  * @type {?function(!Event)}
  */
 BatteryManager.prototype.onlevelchange;
+
+/**
+ * @return {!Promise<!BatteryManager>}
+ * @see http://www.w3.org/TR/battery-status/
+ */
+Navigator.prototype.getBattery = function() {};
