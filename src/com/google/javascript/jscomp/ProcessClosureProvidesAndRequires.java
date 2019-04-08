@@ -331,7 +331,7 @@ class ProcessClosureProvidesAndRequires {
 
       if (providedNames.containsKey(ns)) {
         ProvidedName previouslyProvided = providedNames.get(ns);
-        if (!previouslyProvided.isExplicitlyProvided()) {
+        if (!previouslyProvided.isExplicitlyProvided() || previouslyProvided.isPreviouslyProvided) {
           previouslyProvided.addProvide(parent, t.getModule(), true);
         } else {
           String explicitSourceName = previouslyProvided.explicitNode.getSourceFileName();
@@ -373,6 +373,7 @@ class ProcessClosureProvidesAndRequires {
           // This implies we're in hotswap pass and the current typedef is a provided namespace.
           ProvidedName provided = new ProvidedName(name, n, t.getModule(), true, true);
           providedNames.put(name, provided);
+          provided.addDefinition(n, t.getModule());
         }
       }
     }
@@ -420,21 +421,25 @@ class ProcessClosureProvidesAndRequires {
    * <p>TODO(b/128120127): delete this method
    */
   private void processProvideFromPreviousPass(NodeTraversal t, String name, Node parent) {
-    if (!providedNames.containsKey(name)) {
+    JSModule module = t.getModule();
+    if (providedNames.containsKey(name)) {
+      ProvidedName provided = providedNames.get(name);
+      provided.addDefinition(parent, module);
+      if (isNamespacePlaceholder(parent)) {
+        // Remove this later if it is a simple object literal. Replacing the corresponding
+        // ProvidedName will create a new definition.
+        // Don't add this as a 'definition' of the provided name to support pushing provides
+        // into earlier modules.
+        previouslyProvidedDefinitions.add(parent);
+      }
+    } else {
       // Record this provide created on a previous pass. This can happen if the previous pass had
       // goog.provide('foo.bar');, but all we have now is the rewritten `foo.bar = {};`.
-
-      JSModule module = t.getModule();
       registerAnyProvidedPrefixes(name, parent, module);
 
       ProvidedName provided = new ProvidedName(name, parent, module, true, true);
       providedNames.put(name, provided);
       provided.addDefinition(parent, module);
-    } else if (isNamespacePlaceholder(parent)) {
-      // Remove this later if it is a simple object literal. Replacing the corresponding
-      // ProvidedName will create a new definition. Note that non-object-literal definitions will
-      // not be removed and will be duplicates.
-      previouslyProvidedDefinitions.add(parent);
     }
   }
 
@@ -660,7 +665,7 @@ class ProcessClosureProvidesAndRequires {
     void addProvide(Node node, JSModule module, boolean explicit) {
       if (explicit) {
         // goog.provide('name.space');
-        checkState(explicitNode == null);
+        checkState(explicitNode == null || isPreviouslyProvided);
         checkArgument(
             node.isExprResult() || (NodeUtil.isNameDeclaration(node) && isPreviouslyProvided),
             node);
@@ -680,6 +685,14 @@ class ProcessClosureProvidesAndRequires {
 
     boolean isFromExterns() {
       return explicitNode.isFromExterns();
+    }
+
+    private boolean hasCandidateDefinitionNotFromPreviousPass() {
+      // Exclude 'candidate definitions' that were added by previous pass runs because when
+      // rewriting provides, we can erase definitions that the compiler itself added, but not
+      // definitions that a user added.
+      return candidateDefinition != null
+          && !previouslyProvidedDefinitions.contains(candidateDefinition);
     }
 
     /**
@@ -728,7 +741,7 @@ class ProcessClosureProvidesAndRequires {
 
       // Handle the case where there is a duplicate definition for an explicitly
       // provided symbol.
-      if (candidateDefinition != null && explicitNode != null) {
+      if (hasCandidateDefinitionNotFromPreviousPass() && explicitNode != null) {
         JSDocInfo info;
         if (candidateDefinition.isExprResult()) {
           info = candidateDefinition.getFirstChild().getJSDocInfo();
@@ -758,21 +771,16 @@ class ProcessClosureProvidesAndRequires {
         if (candidateDefinition.isExprResult()) {
           Node exprNode = candidateDefinition.getOnlyChild();
           if (exprNode.isAssign()) {
-            // namespace = value;
-            candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
             Node nameNode = exprNode.getFirstChild();
             if (nameNode.isName()) {
-              // Need to convert this assign to a var declaration.
-              Node valueNode = nameNode.getNext();
-              exprNode.removeChild(nameNode);
-              exprNode.removeChild(valueNode);
-              nameNode.addChildToFront(valueNode);
-              Node varNode = IR.var(nameNode);
-              varNode.useSourceInfoFrom(candidateDefinition);
-              candidateDefinition.replaceWith(varNode);
-              varNode.setJSDocInfo(exprNode.getJSDocInfo());
-              compiler.reportChangeToEnclosingScope(varNode);
-              replacementNode = varNode;
+              // In the case of a simple name, `name = value;`, we need to ensure the name is
+              // actually declared with `var`.
+              convertProvideAssignmentToVarDeclaration(exprNode, nameNode);
+            } else {
+              // `some.provided.namespace = value;`
+              // We don't need to change the definition, but mark it as 'IS_NAMESPACE' so that
+              // future passes know this was originally provided.
+              candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
             }
           } else {
             // /** @typedef {something} */ name.space.Type;
@@ -800,6 +808,23 @@ class ProcessClosureProvidesAndRequires {
         compiler.reportChangeToEnclosingScope(explicitNode);
         explicitNode.detach();
       }
+    }
+
+    private void convertProvideAssignmentToVarDeclaration(Node assignNode, Node nameNode) {
+      // Convert `providedName = value;` into `var providedName = value;`.
+      checkArgument(assignNode.isAssign(), assignNode);
+      checkArgument(nameNode.isName(), nameNode);
+      Node valueNode = nameNode.getNext();
+      assignNode.removeChild(nameNode);
+      assignNode.removeChild(valueNode);
+
+      Node varNode = IR.var(nameNode, valueNode).useSourceInfoFrom(candidateDefinition);
+      varNode.setJSDocInfo(assignNode.getJSDocInfo());
+      varNode.putBooleanProp(Node.IS_NAMESPACE, true);
+
+      candidateDefinition.replaceWith(varNode);
+      replacementNode = varNode;
+      compiler.reportChangeToEnclosingScope(varNode);
     }
 
     /** Adds an assignment or declaration to this namespace to the AST, using the provided value */
@@ -853,7 +878,7 @@ class ProcessClosureProvidesAndRequires {
       if (compiler.getCodingConvention().isConstant(namespace)) {
         name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
-      if (candidateDefinition == null) {
+      if (!hasCandidateDefinitionNotFromPreviousPass()) {
         decl.setJSDocInfo(NodeUtil.createConstantJsDoc());
       }
 
@@ -872,7 +897,7 @@ class ProcessClosureProvidesAndRequires {
               namespace);
       Node decl = IR.exprResult(IR.assign(lhs, value));
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
-      if (candidateDefinition == null) {
+      if (!hasCandidateDefinitionNotFromPreviousPass()) {
         decl.getFirstChild().setJSDocInfo(NodeUtil.createConstantJsDoc());
       }
       checkState(isNamespacePlaceholder(decl));

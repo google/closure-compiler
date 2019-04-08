@@ -394,11 +394,31 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
+  public void testProvideAfterDeclaration_noErrorInExterns() {
+    test(externs("var x = {};"), srcs("goog.provide('x');"), expected("/** @const */ var x = {}"));
+  }
+
+  @Test
   public void testProvideErrorCases() {
     testError("goog.provide('foo'); goog.provide('foo');", DUPLICATE_NAMESPACE_ERROR);
     testError(
         "goog.provide('foo.bar'); goog.provide('foo'); goog.provide('foo');",
         DUPLICATE_NAMESPACE_ERROR);
+  }
+
+  @Test
+  public void testPreserveGoogProvidesAndRequires_withSecondPassRun_noDuplicateNamespaceWarning() {
+    additionalCode = "";
+    preserveGoogProvidesAndRequires = true;
+
+    test(
+        lines(
+            "goog.provide('foo');", //
+            "foo.baz = function() {};"),
+        lines(
+            "/** @const */ var foo = {};", //
+            "goog.provide('foo');",
+            "foo.baz = function() {};"));
   }
 
   @Test
@@ -606,6 +626,73 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
         "/** @const */ var a={}; a.A={}; /** @const */ var b={};b.B={};");
   }
 
+  @Test
+  public void testSimpleAdditionalProvide_withPreserveGoogProvidesAndRequires() {
+    additionalCode = "goog.provide('b.B'); b.B = {};";
+    preserveGoogProvidesAndRequires = true;
+
+    test(
+        "goog.provide('a.A'); a.A = {};",
+        lines(
+            "/** @const */ var b={};",
+            "goog.provide('b.B');",
+            "b.B={};",
+            "/** @const */ var a={};",
+            "/** @const */ a.A={};",
+            "goog.provide('a.A'); "));
+  }
+
+  @Test
+  public void testNonNamespaceAdditionalProvide_withPreserveGoogProvidesAndRequires() {
+    additionalCode = "goog.provide('b.B'); b.B = {};";
+    preserveGoogProvidesAndRequires = true;
+
+    test(
+        "goog.provide('a.A'); a.A = function() {}",
+        lines(
+            "/** @const */ var b={};",
+            "goog.provide('b.B');",
+            "b.B={};",
+            "/** @const */ var a={};",
+            "goog.provide('a.A');",
+            "a.A = function() {};"));
+  }
+
+  @Test
+  public void testNamespaceInExterns() {
+    // Note: This style is not recommended but the compiler sort-of supports it.
+    test(
+        externs("var root = {}; /** @type {number} */ root.someProperty;"),
+        srcs(
+            lines(
+                "goog.provide('root.branch.Leaf')", //
+                "root.branch.Leaf = class {};")),
+        expected(
+            lines(
+                "/** @const */",
+                "var root = {};",
+                "/** @const */ root.branch = {};",
+                "root.branch.Leaf = class {};")));
+  }
+
+  @Test
+  public void testNamespaceInExterns_withExplicitNamespaceReinitialization() {
+    // Note: This style is not recommended but the compiler sort-of supports it.
+    test(
+        externs("var root = {}; /** @type {number} */ root.someProperty;"),
+        srcs(
+            lines(
+                "goog.provide('root.branch.Leaf')", //
+                "var root = {};",
+                "root.branch.Leaf = class {};")),
+        expected(
+            lines(
+                "var root = {};",
+                "/** @const */ root.branch = {};",
+                "var root = {};",
+                "root.branch.Leaf = class {};")));
+  }
+
   // Tests providing additional code with non-overlapping dotted namespace.
   @Test
   public void testSimpleDottedAdditionalProvide() {
@@ -625,7 +712,38 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testTypedefAdditionalProvide() {
+  public void testAdditionalCode_onSingleNameNamespaceWithoutVar() {
+    additionalEndCode = "goog.provide('Name.child'); Name.child = 1;";
+
+    test(
+        lines(
+            "goog.provide('Name');", //
+            "Name = class {};"),
+        lines(
+            "var Name = class {};", //
+            "Name.child = 1;"));
+  }
+
+  @Test
+  public void testTypedefProvide() {
+    test(
+        lines(
+            "goog.provide('foo.Bar');",
+            "goog.provide('foo.Bar.Baz');",
+            "/** @typedef {!Array<string>} */",
+            "foo.Bar;",
+            "foo.Bar.Baz = {};"),
+        lines(
+            "/** @const */ var foo = {};", //
+            // Cast to unknown to support also having @typedef. We want the type system to treat
+            // this as a typedef, but need an actual namespace to hang foo.Bar.Baz on.
+            "foo.Bar = /** @type {?} */ ({});",
+            "/** @typedef {!Array<string>} */ foo.Bar;",
+            "foo.Bar.Baz = {}"));
+  }
+
+  @Test
+  public void testTypedefAdditionalProvide_noChildNamespace() {
     additionalEndCode = "goog.require('foo.Cat'); goog.require('foo.Bar');";
 
     test(
@@ -637,9 +755,29 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
             "foo.Cat={};"),
         lines(
             "/** @const */ var foo={};", //
-            "/** @const */ foo.Bar={};", //
             "/** @typedef {!Array<string>} */ foo.Bar;", //
-            "foo.Cat={}"));
+            "foo.Cat = {};"));
+  }
+
+  @Test
+  public void testTypedefAdditionalProvide_withChildNamespace() {
+    additionalEndCode = "goog.require('foo.Cat'); goog.require('foo.Bar');";
+
+    test(
+        lines(
+            "goog.provide('foo.Cat');",
+            "goog.provide('foo.Bar');",
+            "goog.provide('foo.Bar.Baz');",
+            "/** @typedef {!Array<string>} */",
+            "foo.Bar;",
+            "foo.Cat={};",
+            "foo.Bar.Baz = {};"),
+        lines(
+            "/** @const */ var foo={};", //
+            "foo.Bar = /** @type {?} */ ({});", //
+            "/** @typedef {!Array<string>} */ foo.Bar;", //
+            "foo.Cat = {};",
+            "foo.Bar.Baz = {};"));
   }
 
   // Tests providing additional code with overlapping var namespace.
@@ -752,7 +890,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
         lines(
             "/** @const */",
             "var a = {};",
-            "/** @const */",
             "a.b = {};",
             "/** @const */",
             "a.b.c = {};",
@@ -775,7 +912,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
         lines(
             "/** @const */",
             "var a = {};",
-            "/** @const */",
             "a.b = {};",
             "/** @const */",
             "a.b.c = {};",
