@@ -56,25 +56,25 @@ BatteryManager.prototype.level;
 
 
 /**
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 BatteryManager.prototype.onchargingchange;
 
 
 /**
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 BatteryManager.prototype.onchargingtimechange;
 
 
 /**
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 BatteryManager.prototype.ondischargingtimechange;
 
 
 /**
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 BatteryManager.prototype.onlevelchange;
 
