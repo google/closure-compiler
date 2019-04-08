@@ -80,7 +80,6 @@ public final class UnionTypeBuilder implements Serializable {
   private static final int PROPERTY_CHECKING_MAX_UNION_SIZE = 3000;
 
   private final JSTypeRegistry registry;
-  private final boolean structuralSubtypesAreCollapsed;
   private final int maxUnionSize;
 
   private final List<JSType> alternates = new ArrayList<>();
@@ -115,24 +114,17 @@ public final class UnionTypeBuilder implements Serializable {
   private JSType result = null;
 
   public static UnionTypeBuilder create(JSTypeRegistry registry) {
-    return new UnionTypeBuilder(registry, DEFAULT_MAX_UNION_SIZE, false);
+    return new UnionTypeBuilder(registry, DEFAULT_MAX_UNION_SIZE);
   }
 
   // This is only supposed to be used within `JSTypeRegistry`.
   static UnionTypeBuilder createForPropertyChecking(JSTypeRegistry registry) {
-    return new UnionTypeBuilder(registry, PROPERTY_CHECKING_MAX_UNION_SIZE, false);
+    return new UnionTypeBuilder(registry, PROPERTY_CHECKING_MAX_UNION_SIZE);
   }
 
-  // This is only supposed to be used within `UnionType`.
-  static UnionTypeBuilder createForCollapsingStructuralSubtypes(JSTypeRegistry registry) {
-    return new UnionTypeBuilder(registry, DEFAULT_MAX_UNION_SIZE, true);
-  }
-
-  private UnionTypeBuilder(
-      JSTypeRegistry registry, int maxUnionSize, boolean structuralSubtypesAreCollapsed) {
+  private UnionTypeBuilder(JSTypeRegistry registry, int maxUnionSize) {
     this.registry = registry;
     this.maxUnionSize = maxUnionSize;
-    this.structuralSubtypesAreCollapsed = structuralSubtypesAreCollapsed;
   }
 
   ImmutableList<JSType> getAlternates() {
@@ -155,22 +147,19 @@ public final class UnionTypeBuilder implements Serializable {
   }
 
   private boolean isSubtype(JSType rightType, JSType leftType) {
-    // if thisType or thatType is an unresolved templatized type,
-    // then there is no structural interface matching
-    boolean thisUnresolved = rightType.isTemplatizedType()
-        && !rightType.toMaybeTemplatizedType().isResolved();
-    boolean thatUnresolved = leftType.isTemplatizedType()
-        && !leftType.toMaybeTemplatizedType().isResolved();
-    if (structuralSubtypesAreCollapsed && !thisUnresolved && !thatUnresolved) {
-      return rightType.isSubtypeOf(leftType);
-    } else {
-      return rightType.isSubtypeWithoutStructuralTyping(leftType);
-    }
+    return rightType.isSubtypeWithoutStructuralTyping(leftType);
   }
 
   public UnionTypeBuilder addAlternates(Collection<JSType> c) {
     for (JSType type : c) {
       addAlternate(type);
+    }
+    return this;
+  }
+
+  public UnionTypeBuilder addAlternates(List<JSType> list) {
+    for (int i = 0; i < list.size(); i++) {
+      addAlternate(list.get(i));
     }
     return this;
   }
@@ -181,7 +170,7 @@ public final class UnionTypeBuilder implements Serializable {
    * <p>Returns this for easy chaining.
    *
    * <p>TODO(nickreid): This method shouldn't eagerly collapse types. Doing so risks holding onto a
-   * nested union if an alternate resolves so a union after being added. We should do use some
+   * nested union if an alternate resolves to a union after being added. We should do use some
    * technique to determine if the builder has become dirty and caching the result of `build()`
    * until then.
    */
@@ -198,18 +187,11 @@ public final class UnionTypeBuilder implements Serializable {
     boolean isAlternateUnknown = alternate instanceof UnknownType;
     isNativeUnknownType = isNativeUnknownType || isAlternateUnknown;
     if (isAlternateUnknown) {
-      areAllUnknownsChecked = areAllUnknownsChecked &&
-          alternate.isCheckedUnknownType();
+      areAllUnknownsChecked = areAllUnknownsChecked && alternate.isCheckedUnknownType();
     }
     if (!isAllType && !isNativeUnknownType) {
       if (alternate.isUnionType()) {
-        UnionType union = alternate.toMaybeUnionType();
-        List<JSType> alternatesWithoutStructuralTyping =
-            union.getAlternatesWithoutStructuralTyping();
-        for (int i = 0; i < alternatesWithoutStructuralTyping.size(); i++) {
-          JSType unionAlt = alternatesWithoutStructuralTyping.get(i);
-          addAlternate(unionAlt);
-        }
+        addAlternates(alternate.toMaybeUnionType().getAlternates());
       } else {
         if (alternates.size() > maxUnionSize) {
           return this;
@@ -241,23 +223,23 @@ public final class UnionTypeBuilder implements Serializable {
           // Unknown and NoResolved types may just be names that haven't
           // been resolved yet. So keep these in the union, and just use
           // equality checking for simple de-duping.
-          if (alternate.isUnknownType() ||
-              current.isUnknownType() ||
-              alternate.isNoResolvedType() ||
-              current.isNoResolvedType() ||
-              alternate.hasAnyTemplateTypes() ||
-              current.hasAnyTemplateTypes()) {
-            if (alternate.isEquivalentTo(current, structuralSubtypesAreCollapsed)) {
+          if (alternate.isUnknownType()
+              || current.isUnknownType()
+              || alternate.isNoResolvedType()
+              || current.isNoResolvedType()
+              || alternate.hasAnyTemplateTypes()
+              || current.hasAnyTemplateTypes()) {
+            if (alternate.isEquivalentTo(current, false)) {
               // Alternate is unnecessary.
               return this;
             }
           } else {
 
-            // Because "Foo" and "Foo.<?>" are roughly equivalent
+            // Because "Foo" and "Foo<?>" are roughly equivalent
             // templatized types, special care is needed when building the
             // union. For example:
-            //   Object is consider a subtype of Object.<string>
-            // but we want to leave "Object" not "Object.<string>" when
+            //   Object is consider a subtype of Object<string>
+            // but we want to leave "Object" not "Object<string>" when
             // building the subtype.
             //
 
@@ -265,7 +247,7 @@ public final class UnionTypeBuilder implements Serializable {
               // Cases:
               // 1) alternate:Array<string> and current:Object ==> Object
               // 2) alternate:Array<string> and current:Array ==> Array
-              // 3) alternate:Object.<string> and
+              // 3) alternate:Object<string> and
               //    current:Array ==> Array|Object<string>
               // 4) alternate:Object and current:Array<string> ==> Object
               // 5) alternate:Array and current:Array<string> ==> Array

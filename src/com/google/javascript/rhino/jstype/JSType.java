@@ -1448,9 +1448,7 @@ public abstract class JSType implements Serializable {
   }
 
   public Iterable<JSType> getUnionMembers() {
-    return isUnionType()
-        ? this.toMaybeUnionType().getAlternatesWithoutStructuralTyping()
-        : null;
+    return isUnionType() ? this.toMaybeUnionType().getAlternates() : null;
   }
 
   /**
@@ -1558,10 +1556,9 @@ public abstract class JSType implements Serializable {
     if (thatType.isUnionType()) {
       UnionType union = thatType.toMaybeUnionType();
       // use an indexed for-loop to avoid allocations
-      ImmutableList<JSType> alternatesWithoutStucturalTyping =
-          union.getAlternatesWithoutStructuralTyping();
-      for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
-        JSType element = alternatesWithoutStucturalTyping.get(i);
+      ImmutableList<JSType> alternates = union.getAlternates();
+      for (int i = 0; i < alternates.size(); i++) {
+        JSType element = alternates.get(i);
         if (thisType.isSubtype(element, implicitImplCache, subtypingMode)) {
           return true;
         }

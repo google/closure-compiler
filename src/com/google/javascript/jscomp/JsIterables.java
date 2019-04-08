@@ -135,7 +135,7 @@ final class JsIterables {
     // Note: we don't just use JSType.autobox() here because that removes null and undefined.
     // We want to keep null and undefined around because they should cause a mismatch.
     if (type.isUnionType()) {
-      for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
+      for (JSType alt : type.toMaybeUnionType().getAlternates()) {
         alt = alt.isBoxableScalar() ? alt.autoboxesTo() : alt;
         boolean isIterable = alt.isSubtypeOf(typeRegistry.getNativeType(ITERABLE_TYPE));
         boolean isAsyncIterable = alt.isSubtypeOf(typeRegistry.getNativeType(ASYNC_ITERABLE_TYPE));

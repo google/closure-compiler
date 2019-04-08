@@ -283,7 +283,7 @@ class TypeValidator implements Serializable {
     // Note: we don't just use JSType.autobox() here because that removes null and undefined.
     // We want to keep null and undefined around.
     if (type.isUnionType()) {
-      for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
+      for (JSType alt : type.toMaybeUnionType().getAlternates()) {
         alt = alt.isBoxableScalar() ? alt.autoboxesTo() : alt;
         if (!alt.isSubtypeOf(getNativeType(ITERABLE_TYPE))) {
           mismatch(n, msg, type, ITERABLE_TYPE);

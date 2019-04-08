@@ -74,7 +74,7 @@ final class Promises {
 
     if (type.isUnionType()) {
       UnionTypeBuilder unionTypeBuilder = UnionTypeBuilder.create(registry);
-      for (JSType alternate : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
+      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
         unionTypeBuilder.addAlternate(getResolvedType(registry, alternate));
       }
       return unionTypeBuilder.build();
