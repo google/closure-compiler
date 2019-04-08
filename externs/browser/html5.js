@@ -2780,13 +2780,13 @@ WheelEventInit.prototype.deltaMode;
  */
 function WheelEvent(type, opt_eventInitDict) {}
 
-/** @type {number} */
+/** @const {number} */
 WheelEvent.DOM_DELTA_PIXEL;
 
-/** @type {number} */
+/** @const {number} */
 WheelEvent.DOM_DELTA_LINE;
 
-/** @type {number} */
+/** @const {number} */
 WheelEvent.DOM_DELTA_PAGE;
 
 /** @const {number} */

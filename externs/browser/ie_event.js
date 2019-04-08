@@ -135,13 +135,13 @@ MSPointerPoint.prototype.pointerType;
  */
 function MSPointerEvent() {}
 
-/** @type {number} */
+/** @const {number} */
 MSPointerEvent.MSPOINTER_TYPE_MOUSE;
 
-/** @type {number} */
+/** @const {number} */
 MSPointerEvent.MSPOINTER_TYPE_PEN;
 
-/** @type {number} */
+/** @const {number} */
 MSPointerEvent.MSPOINTER_TYPE_TOUCH;
 
 /** @type {number} */

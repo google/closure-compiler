@@ -402,31 +402,31 @@ XMLHttpRequest.prototype.onreadystatechange;
 XMLHttpRequest.prototype.onerror;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/XMLHttpRequest/#states
  */
 XMLHttpRequest.UNSENT;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/XMLHttpRequest/#states
  */
 XMLHttpRequest.OPENED;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/XMLHttpRequest/#states
  */
 XMLHttpRequest.HEADERS_RECEIVED;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/XMLHttpRequest/#states
  */
 XMLHttpRequest.LOADING;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/XMLHttpRequest/#states
  */
 XMLHttpRequest.DONE;

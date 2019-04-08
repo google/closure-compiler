@@ -1068,11 +1068,10 @@ MediaStreamConstraints.prototype.video;
 function NavigatorUserMediaError() {}
 
 /**
- * @type {number}
+ * @const {number}
  * @deprecated Removed from the standard and some browsers.
- * @const
  */
-NavigatorUserMediaError.prototype.PERMISSION_DENIED;  /** 1 */
+NavigatorUserMediaError.prototype.PERMISSION_DENIED;
 
 /**
  * @type {number}
