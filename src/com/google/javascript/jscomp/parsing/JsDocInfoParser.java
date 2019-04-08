@@ -1941,7 +1941,11 @@ public final class JsDocInfoParser {
       if (typeNode != null) {
         skipEOLs();
         if (!match(JsDocToken.RIGHT_CURLY)) {
-          reportTypeSyntaxWarning("msg.jsdoc.missing.rc");
+          if (typeNode.isString() && typeNode.getString() == "import") {
+            reportTypeSyntaxWarning("msg.jsdoc.import");
+          } else {
+            reportTypeSyntaxWarning("msg.jsdoc.missing.rc");
+          }
         } else {
           next();
         }

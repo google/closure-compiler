@@ -228,6 +228,7 @@ public class DiagnosticGroups {
           "nonStandardJsDocs",
           RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
           RhinoErrorReporter.INVALID_PARAM,
+          RhinoErrorReporter.JSDOC_IMPORT_TYPE_WARNING,
           CheckJSDoc.JSDOC_IN_BLOCK_COMMENT);
 
   public static final DiagnosticGroup INVALID_CASTS =

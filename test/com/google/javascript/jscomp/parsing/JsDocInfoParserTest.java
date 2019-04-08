@@ -692,6 +692,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseImportTypeError() {
+    parse(
+        "@type {import('http').Stream} */",
+        "Bad type annotation. Import in typedef is not supported." + BAD_TYPE_WIKI_LINK);
+  }
+
+  @Test
   public void testParseFunctionalTypeError1() {
     parse(
         "@type {function number):string}*/",
