@@ -30,21 +30,17 @@ testSuite({
     return !userAgent.IE || userAgent.isVersionOrHigher(9);
   },
 
-  // TODO(sdh): this is the *only* ES6 feature that's missing in Chrome 50,
-  // and it's not yet been added to es6.js externs, so we'll cheat by just
-  // commenting out the calls to Array.prototype.values (since they don't
-  // type check) and the corresponding assertions.
   testValues() {
-    // assertIteratorContents(['x', 'c'].values(), 'x', 'c');
+    assertIteratorContents(['x', 'c'].values(), 'x', 'c');
 
-    // const arr = new Array();
-    // arr[3] = 42;
-    // assertIteratorContents(arr.values(), void 0, void 0, void 0, 42);
+    const arr = new Array();
+    arr[3] = 42;
+    assertIteratorContents(arr.values(), void 0, void 0, void 0, 42);
 
-    // assertIteratorContents(
-    //     [].values.call(noCheck({length: 3, 1: 'x'})), void 0, 'x', void 0);
+    assertIteratorContents(
+        [].values.call(noCheck({length: 3, 1: 'x'})), void 0, 'x', void 0);
 
-    // assertIteratorContents(
-    //     Array.prototype.values.call(noCheck('yq')), 'y', 'q');
+    assertIteratorContents(
+        Array.prototype.values.call(noCheck('yq')), 'y', 'q');
   },
 });
