@@ -1768,7 +1768,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void orderInputs() {
-    hoistExterns();
+    maybeDoThreadedParsing();
+
+    // Before dependency pruning, save a copy of the original inputs to use for externs hoisting.
+    ImmutableList<CompilerInput> originalInputs = ImmutableList.copyOf(moduleGraph.getAllInputs());
+
+    // Externs must be marked before dependency management since it needs to know what is an extern.
+    markExterns(originalInputs);
+
     // Check if the sources need to be re-ordered.
     boolean staleInputs = false;
     if (options.getDependencyOptions().needsManagement()) {
@@ -1791,6 +1798,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             MISSING_MODULE_ERROR, e.getMessage()));
       }
     }
+    hoistExterns(originalInputs);
 
     // Manage dependencies may move weak sources around, and end up with empty modules.
     fillEmptyModules(getModules());
@@ -1813,7 +1821,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   private void findModulesFromEntryPoints(
       boolean supportEs6Modules, boolean supportCommonJSModules) {
-    hoistExterns();
+    maybeDoThreadedParsing();
     List<CompilerInput> entryPoints = new ArrayList<>();
     Map<String, CompilerInput> inputsByProvide = new HashMap<>();
     Map<String, CompilerInput> inputsByIdentifier = new HashMap<>();
@@ -1909,14 +1917,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  /**
-   * Hoists inputs with the @externs annotation into the externs list.
-   */
-  void hoistExterns() {
+  /** Hoists inputs with the @externs annotation into the externs list. */
+  void hoistExterns(ImmutableList<CompilerInput> originalInputs) {
     boolean staleInputs = false;
-    maybeDoThreadedParsing();
-    // Iterate a copy because hoisting modifies what we're iterating over.
-    for (CompilerInput input : ImmutableList.copyOf(moduleGraph.getAllInputs())) {
+
+    for (CompilerInput input : originalInputs) {
       if (hoistIfExtern(input)) {
         staleInputs = true;
       }
@@ -1935,14 +1940,29 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // If the input file is explicitly marked as an externs file, then move it out of the main
       // JS root and put it with the other externs.
       externsRoot.addChildToBack(input.getAstRoot(this));
-      input.setIsExtern();
 
-      input.getModule().remove(input);
+      JSModule module = input.getModule();
+      if (module != null) {
+        module.remove(input);
+      }
 
       externs.add(input);
       return true;
     }
     return false;
+  }
+
+  /**
+   * Marks inputs with the @externs annotation as an Extern source file type.
+   * This is so that externs marking can be done before dependency management,
+   * and externs hoisting done after dependency management.
+   */
+  private void markExterns(ImmutableList<CompilerInput> originalInputs) {
+    for (CompilerInput input : originalInputs) {
+      if (input.getHasExternsAnnotation()) {
+        input.setIsExtern();
+      }
+    }
   }
 
   /**

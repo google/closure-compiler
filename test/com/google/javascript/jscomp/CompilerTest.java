@@ -1460,6 +1460,167 @@ public final class CompilerTest {
   }
 
   @Test
+  public void testExternsFileAsEntryPoint() throws Exception {
+    // Test that you can specify externs as entry points.
+    // This allows all inputs to be passed to the compiler under the --js flag,
+    // relying on dependency management to sort out which ones are externs or weak files
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "/externs.js", "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;"),
+            SourceFile.fromCode("/foo.js", "console.log(0);"));
+
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/externs.js"));
+
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.errors).isEmpty();
+    assertThat(compiler.toSource()).isEmpty(); // Empty since srcs are pruned.
+  }
+
+  @Test
+  public void testExternsFileAsEntryPoint2() throws Exception {
+    // Test code reference to an extern that doesn't exist,
+    // but the extern is still the sole entry point.
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "/externs.js", "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;"),
+            SourceFile.fromCode("/foo.js", "console.log(nonexistentExtern);"));
+
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/externs.js"));
+
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.errors).isEmpty();
+    assertThat(compiler.toSource()).isEmpty();
+  }
+
+  @Test
+  public void testExternsFileAsEntryPoint3() throws Exception {
+    // Test code reference to an extern that doesn't exist,
+    // but the extern and source files are both entry points
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "/externs.js", "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;"),
+            SourceFile.fromCode("/foo.js", "console.log(nonexistentExtern);"));
+
+    List<ModuleIdentifier> entryPoints =
+        ImmutableList.of(
+            ModuleIdentifier.forFile("/externs.js"), ModuleIdentifier.forFile("/foo.js"));
+
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.errors).hasSize(1);
+    assertThat(result.errors.get(0).getType()).isEqualTo(VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
+  @Test
+  public void testExternsFileAsEntryPoint4() throws Exception {
+    // Test that has a code reference to an extern that does exist,
+    // and the extern and source files are both entry points
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "/externs.js", "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;"),
+            SourceFile.fromCode("/foo.js", "console.log(bar);"));
+
+    List<ModuleIdentifier> entryPoints =
+        ImmutableList.of(
+            ModuleIdentifier.forFile("/externs.js"), ModuleIdentifier.forFile("/foo.js"));
+
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.errors).isEmpty();
+    assertThat(compiler.toSource()).isEqualTo("console.log(bar);");
+  }
+
+  @Test
+  public void testExternsFileAsEntryPoint5() throws Exception {
+    // Test that has a code reference to an extern that does exist,
+    // and only the source source file is an entry point
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "/externs.js", "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;"),
+            SourceFile.fromCode("/foo.js", "console.log(bar);"));
+
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/foo.js"));
+
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.errors).isEmpty();
+    assertThat(compiler.toSource()).isEqualTo("console.log(bar);");
+  }
+
+  @Test
+  public void testWeakExternsFileAsEntryPointNoError() throws Exception {
+    // Test that if a weak extern file is passed in as entry point, there is no error thrown.
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "/externs.js",
+                "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;",
+                SourceKind.WEAK));
+
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/externs.js"));
+
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.errors).isEmpty();
+    assertThat(compiler.toSource()).isEmpty();
+  }
+
+  @Test
   public void testGetEmptyResult() {
     Result result = new Compiler().getResult();
     assertThat(result.errors).isEmpty();
