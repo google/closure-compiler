@@ -66,6 +66,13 @@ URLSearchParams.prototype.append = function(name, value) {};
 URLSearchParams.prototype.delete = function(name) {};
 
 /**
+ * @return {!IteratorIterable<!Array<string>>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/entries
+ */
+URLSearchParams.prototype.entries = function() {};
+
+/**
  * @param {string} name
  * @return {?string}
  */
