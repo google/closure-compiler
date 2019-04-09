@@ -23,10 +23,10 @@ import com.google.javascript.rhino.TokenUtil;
 /**
  * This class implements the scanner for JsDoc strings.
  *
- * It is heavily based on Rhino's TokenStream.
+ * <p>It is heavily based on Rhino's TokenStream.
  *
  */
-class JsDocTokenStream {
+public class JsDocTokenStream {
   /*
    * For chars - because we need something out-of-range
    * to check.  (And checking EOF by exception is annoying.)
@@ -34,7 +34,7 @@ class JsDocTokenStream {
    */
   private static final int EOF_CHAR = -1;
 
-  JsDocTokenStream(String sourceString) {
+  public JsDocTokenStream(String sourceString) {
     this(sourceString, 0);
   }
 

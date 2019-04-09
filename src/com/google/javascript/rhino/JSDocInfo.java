@@ -156,7 +156,7 @@ public class JSDocInfo implements Serializable {
           .toString();
     }
 
-    @SuppressWarnings("MissingOverride")  // Adding @Override breaks the GWT compilation.
+    @SuppressWarnings("MissingOverride") // Adding @Override breaks the GWT compilation.
     protected LazilyInitializedInfo clone() {
       return clone(false);
     }
@@ -185,6 +185,20 @@ public class JSDocInfo implements Serializable {
       other.closurePrimitiveId = closurePrimitiveId;
 
       other.propertyBitField = propertyBitField;
+      return other;
+    }
+
+    protected LazilyInitializedInfo cloneClassDoc() {
+      LazilyInitializedInfo other = clone(/* cloneTypeNodes= */ false);
+      other.parameters = null;
+      other.suppressions = null;
+      return other;
+    }
+
+    protected LazilyInitializedInfo cloneConstructorDoc() {
+      LazilyInitializedInfo other = new LazilyInitializedInfo();
+      other.parameters = cloneTypeMap(parameters, /* cloneTypeExpressionNodes= */ false);
+      other.suppressions = suppressions == null ? null : ImmutableSet.copyOf(suppressions);
       return other;
     }
 
@@ -248,6 +262,31 @@ public class JSDocInfo implements Serializable {
 
     private List<String> authors;
     private List<String> sees;
+
+    LazilyInitializedDocumentation cloneConstructorDoc() {
+      LazilyInitializedDocumentation other = new LazilyInitializedDocumentation();
+      if (parameters != null) {
+        other.parameters = new LinkedHashMap<>(parameters);
+      }
+      return other;
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .add("sourceComment", sourceComment)
+          .add("markers", markers)
+          .add("parameters", parameters)
+          .add("throwsDescriptions", throwsDescriptions)
+          .add("blockDescription", blockDescription)
+          .add("fileOverview", fileOverview)
+          .add("returnDescription", returnDescription)
+          .add("version", version)
+          .add("authors", authors)
+          .add("sees", sees)
+          .omitNullValues()
+          .toString();
+    }
   }
 
   /**
@@ -561,6 +600,40 @@ public class JSDocInfo implements Serializable {
     return other;
   }
 
+  /**
+   * This is used to get all nodes + the description, excluding the param nodes. Used to help in an
+   * ES5 to ES6 class converter only.
+   */
+  public JSDocInfo cloneClassDoc() {
+    JSDocInfo other = new JSDocInfo();
+    other.info = this.info == null ? null : this.info.cloneClassDoc();
+    other.documentation = this.documentation;
+    other.visibility = this.visibility;
+    other.bitset = this.bitset;
+    other.type = cloneType(this.type, false);
+    other.thisType = cloneType(this.thisType, false);
+    other.includeDocumentation = this.includeDocumentation;
+    other.originalCommentPosition = this.originalCommentPosition;
+    other.setConstructor(false);
+    other.setStruct(false);
+    if (!isInterface() && other.info != null) {
+      other.info.baseType = null;
+    }
+    return other;
+  }
+
+  /**
+   * This is used to get only the parameter nodes. Used to help in an ES5 to ES6 converter class
+   * only.
+   */
+  public JSDocInfo cloneConstructorDoc() {
+    JSDocInfo other = new JSDocInfo();
+    other.info = this.info == null ? null : this.info.cloneConstructorDoc();
+    other.documentation =
+        this.documentation == null ? null : this.documentation.cloneConstructorDoc();
+    return other;
+  }
+
   private static JSTypeExpression cloneType(JSTypeExpression expr, boolean cloneTypeNodes) {
     if (expr != null) {
       return cloneTypeNodes ? expr.copy() : expr;
@@ -666,7 +739,11 @@ public class JSDocInfo implements Serializable {
   }
 
   void setStruct() {
-    setFlag(true, MASK_STRUCT);
+    setStruct(true);
+  }
+
+  void setStruct(boolean value) {
+    setFlag(value, MASK_STRUCT);
   }
 
   void setDict() {

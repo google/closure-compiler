@@ -160,13 +160,13 @@ public final class JsDocInfoParser {
     NEXT_IS_ANNOTATION
   }
 
-
-  JsDocInfoParser(JsDocTokenStream stream,
-                  String comment,
-                  int commentPosition,
-                  Node templateNode,
-                  Config config,
-                  ErrorReporter errorReporter) {
+  public JsDocInfoParser(
+      JsDocTokenStream stream,
+      String comment,
+      int commentPosition,
+      Node templateNode,
+      Config config,
+      ErrorReporter errorReporter) {
     this.stream = stream;
 
     boolean parseDocumentation = config.jsDocParsingMode().shouldParseDescriptions();
@@ -261,14 +261,12 @@ public final class JsDocInfoParser {
   }
 
   /**
-   * Parses a {@link JSDocInfo} object. This parsing method reads all tokens
-   * returned by the {@link JsDocTokenStream#getJsDocToken()} method until the
-   * {@link JsDocToken#EOC} is returned.
+   * Parses a {@link JSDocInfo} object. This parsing method reads all tokens returned by the {@link
+   * JsDocTokenStream#getJsDocToken()} method until the {@link JsDocToken#EOC} is returned.
    *
-   * @return {@code true} if JSDoc information was correctly parsed,
-   *     {@code false} otherwise
+   * @return {@code true} if JSDoc information was correctly parsed, {@code false} otherwise
    */
-  boolean parse() {
+  public boolean parse() {
     state = State.SEARCHING_ANNOTATION;
     skipEOLs();
 
@@ -2763,7 +2761,7 @@ public final class JsDocInfoParser {
     return jsdocBuilder.isPopulatedWithFileOverview();
   }
 
-  JSDocInfo retrieveAndResetParsedJSDocInfo() {
+  public JSDocInfo retrieveAndResetParsedJSDocInfo() {
     return jsdocBuilder.build();
   }
 
