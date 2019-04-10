@@ -1190,6 +1190,12 @@ public final class NodeUtil {
         // check the children, since they aren't executed at declaration time.
         return checkForNewObjects || isFunctionDeclaration(n);
 
+      case GETTER_DEF:
+      case SETTER_DEF:
+      case MEMBER_FUNCTION_DEF:
+        // simply defining a member function, getter, or setter has no side effects
+        return false;
+
       case CLASS:
         return checkForNewObjects || isClassDeclaration(n)
             // Check the extends clause for side effects.

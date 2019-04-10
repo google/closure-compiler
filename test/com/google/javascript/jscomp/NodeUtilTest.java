@@ -839,8 +839,7 @@ public final class NodeUtilTest {
     @Test
     public void testMayHaveSideEffects_enhancedForLoop() {
       // These edge cases are actually side-effect free. We include them to confirm we just give up
-      // on
-      // enhanced for loops.
+      // on enhanced for loops.
       assertSideEffect(true, "for (const x in []) { }");
       assertSideEffect(true, "for (const x of []) { }");
     }
@@ -850,6 +849,46 @@ public final class NodeUtilTest {
       assertSideEffect(false, parseFirst(COMPUTED_PROP, "({[a]: x})"));
       assertSideEffect(true, parseFirst(COMPUTED_PROP, "({[a()]: x})"));
       assertSideEffect(true, parseFirst(COMPUTED_PROP, "({[a]: x()})"));
+
+      // computed property getters and setters are modeled as COMPUTED_PROP with an
+      // annotation to indicate getter or setter.
+      assertSideEffect(false, parseFirst(COMPUTED_PROP, "({ get [a]() {} })"));
+      assertSideEffect(true, parseFirst(COMPUTED_PROP, "({ get [a()]() {} })"));
+
+      assertSideEffect(false, parseFirst(COMPUTED_PROP, "({ set [a](x) {} })"));
+      assertSideEffect(true, parseFirst(COMPUTED_PROP, "({ set [a()](x) {} })"));
+    }
+
+    @Test
+    public void testMayHaveSideEffects_classComputedProp() {
+      assertSideEffect(false, parseFirst(COMPUTED_PROP, "class C { [a]() {} }"));
+      assertSideEffect(true, parseFirst(COMPUTED_PROP, "class C { [a()]() {} }"));
+
+      // computed property getters and setters are modeled as COMPUTED_PROP with an
+      // annotation to indicate getter or setter.
+      assertSideEffect(false, parseFirst(COMPUTED_PROP, "class C { get [a]() {} }"));
+      assertSideEffect(true, parseFirst(COMPUTED_PROP, "class C { get [a()]() {} }"));
+
+      assertSideEffect(false, parseFirst(COMPUTED_PROP, "class C { set [a](x) {} }"));
+      assertSideEffect(true, parseFirst(COMPUTED_PROP, "class C { set [a()](x) {} }"));
+    }
+
+    @Test
+    public void testMayHaveSideEffects_getter() {
+      assertSideEffect(false, parseFirst(GETTER_DEF, "({ get a() {} })"));
+      assertSideEffect(false, parseFirst(GETTER_DEF, "class C { get a() {} }"));
+    }
+
+    @Test
+    public void testMayHaveSideEffects_setter() {
+      assertSideEffect(false, parseFirst(SETTER_DEF, "({ set a(x) {} })"));
+      assertSideEffect(false, parseFirst(SETTER_DEF, "class C { set a(x) {} }"));
+    }
+
+    @Test
+    public void testMayHaveSideEffects_method() {
+      assertSideEffect(false, parseFirst(MEMBER_FUNCTION_DEF, "({ a(x) {} })"));
+      assertSideEffect(false, parseFirst(MEMBER_FUNCTION_DEF, "class C { a(x) {} }"));
     }
 
     @Test
