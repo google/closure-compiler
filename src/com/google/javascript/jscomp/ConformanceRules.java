@@ -1727,11 +1727,14 @@ public final class ConformanceRules {
         throw new InvalidRequirementSpec("Specify one or more values.");
       }
       domHelperType = compiler.getTypeRegistry().getGlobalType("goog.dom.DomHelper");
-      classNameTypes = compiler.getTypeRegistry().createUnionType(ImmutableList.of(
-          compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE),
-          compiler.getTypeRegistry().getNativeType(JSTypeNative.ARRAY_TYPE),
-          compiler.getTypeRegistry().getNativeType(JSTypeNative.NULL_TYPE),
-          compiler.getTypeRegistry().getNativeType(JSTypeNative.VOID_TYPE)));
+      classNameTypes =
+          compiler
+              .getTypeRegistry()
+              .createUnionType(
+                  compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE),
+                  compiler.getTypeRegistry().getNativeType(JSTypeNative.ARRAY_TYPE),
+                  compiler.getTypeRegistry().getNativeType(JSTypeNative.NULL_TYPE),
+                  compiler.getTypeRegistry().getNativeType(JSTypeNative.VOID_TYPE));
     }
 
     @Override
