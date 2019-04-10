@@ -23,6 +23,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.TypedScopeCreator.CTOR_INITIALIZER;
 import static com.google.javascript.jscomp.TypedScopeCreator.IFACE_INITIALIZER;
 import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT;
+import static com.google.javascript.jscomp.modules.ModuleMapCreator.MISSING_NAMESPACE_IMPORT;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.jscomp.testing.TypedVarSubject.assertThat;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -4369,6 +4370,18 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogModule_requiringMissingNamespace() {
+    testError("goog.module('a'); const b = goog.require('b'); B: b;", MISSING_NAMESPACE_IMPORT);
+
+    assertNode(getLabeledStatement("B").statementNode.getOnlyChild()).hasJSTypeThat().isUnknown();
+  }
+
+  @Test
+  public void testGoogModule_requiringMissingNamespace_emptyDestructuring() {
+    testSame("goog.module('a'); const {} = goog.require('b');");
+  }
+
+  @Test
   public void testGoogModule_declaresExportsVariableImplicitly() {
     testSame("goog.module('a'); EXPORTS: exports;");
 
@@ -4431,8 +4444,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar xVar = getLabeledStatement("X").enclosingScope.getSlot("x");
     assertThat(xVar).hasJSTypeThat().isNumber();
-    // TODO(b/124919359): find out why 'x' is not inferred
-    assertThat(xVar).isInferred();
+    assertThat(xVar).isNotInferred();
   }
 
   @Test
@@ -4465,16 +4477,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testGoogModuleRequire_defaultExportOfLocalTypedef() {
-    testWarning(
+    testSame(
         new String[] {
           "goog.module('a.Foo'); /** @typedef {number} */ var numType; exports = numType;",
           "goog.module('b'); const Foo = goog.require('a.Foo'); var /** !Foo */ x; X: x"
-        },
-        // TODO(b/124919359): this should find the type Foo
-        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+        });
 
     Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
-    assertNode(xNode).hasJSTypeThat().isUnknown();
+    assertNode(xNode).hasJSTypeThat().isNumber();
   }
 
   @Test
@@ -4491,23 +4501,86 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGoogModuleRequireAndRequireType_namedExportOfClasses() {
-    testWarning(
+  public void testGoogModuleRequireAndRequireType_defaultExportOfClasses() {
+    testSame(
         new String[] {
-          "goog.module('a.Foo'); const Bar = goog.requireType('b.Bar'); "
-              + "var /** !Bar */ b; B: b; exports = class {};",
-          "goog.module('b.Bar'); const Foo = goog.require('a.Foo'); "
-              + "const /** !Foo */ f = new Foo(); F: f; exports = class {};"
-        },
-        // TODO(b/124919359): typed scope creation should recognize 'Bar'
-        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+          lines(
+              "goog.module('a.Foo');",
+              "const Bar = goog.requireType('b.Bar'); ",
+              "var /** !Bar */ b;",
+              "B: b;",
+              "exports = class {};"),
+          lines(
+              "goog.module('b.Bar');",
+              "const Foo = goog.require('a.Foo'); ",
+              "const /** !Foo */ f = new Foo();",
+              "F: f;",
+              "exports = class {};")
+        });
 
     Node fNode = getLabeledStatement("F").statementNode.getOnlyChild();
     assertNode(fNode).hasJSTypeThat().toStringIsEqualTo("exports");
 
     Node bNode = getLabeledStatement("B").statementNode.getOnlyChild();
-    // TODO(b/124919359): this should not be unknown
-    assertNode(bNode).hasJSTypeThat().isUnknown();
+    assertNode(bNode).hasJSTypeThat().toStringIsEqualTo("exports");
+  }
+
+  @Test
+  public void testGoogModuleRequireAndRequireType_namedExportOfClasses() {
+    testSame(
+        new String[] {
+          lines(
+              "goog.module('a');",
+              "const {Bar} = goog.requireType('b');",
+              "var /** !Bar */ b;",
+              "B: b;",
+              "exports.Foo = class {};"),
+          lines(
+              "goog.module('b');",
+              "const {Foo} = goog.require('a');",
+              "const /** !Foo */ f = new Foo();",
+              "F: f;",
+              "exports.Bar = class {};")
+        });
+
+    Node fNode = getLabeledStatement("F").statementNode.getOnlyChild();
+    assertNode(fNode).hasJSTypeThat().toStringIsEqualTo("exports.Foo");
+
+    Node bNode = getLabeledStatement("B").statementNode.getOnlyChild();
+    assertNode(bNode).hasJSTypeThat().toStringIsEqualTo("exports.Bar");
+  }
+
+  @Test
+  public void testGoogModuleRequireAndRequireType_typedef() {
+    testWarning(
+        new String[] {
+          lines(
+              "goog.module('a.Foo');",
+              "const Bar = goog.requireType('b.Bar'); ",
+              "var /** !Bar */ x;",
+              "X: x;"),
+          lines(
+              "goog.module('b.Bar');",
+              "/** @typedef {number} */",
+              "let numType;",
+              "exports = numType;")
+        },
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+
+    Node fNode = getLabeledStatement("X").statementNode.getOnlyChild();
+    assertNode(fNode).hasJSTypeThat().isUnknown();
+  }
+
+  @Test
+  public void testGoogModuleRequireAndRequireType_invalidDestructuringImport() {
+    testError(
+        new String[] {
+          lines(
+              "goog.module('a.Foo');", //
+              "const {Bar} = goog.requireType('b.Bar');"),
+          "goog.module('b.Bar');"
+        },
+        DOES_NOT_HAVE_EXPORT);
   }
 
   @Test

@@ -111,8 +111,7 @@ class TypeInference
     this.registry = compiler.getTypeRegistry();
     this.reverseInterpreter = reverseInterpreter;
     this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
-    this.moduleImportResolver =
-        new ModuleImportResolver(compiler.getModuleMap(), scopeCreator.getNodeToScopeMapper());
+    this.moduleImportResolver = new ModuleImportResolver(compiler.getModuleMap());
 
     this.containerScope = syntacticScope;
 
@@ -1513,8 +1512,16 @@ class TypeInference
     if (n.isCall()
         && (n.getParent().isName() || n.getParent().isDestructuringLhs())
         && moduleImportResolver.isGoogModuleDependencyCall(n)) {
-      TypedVar otherVar = moduleImportResolver.getClosureNamespaceTypeFromCall(n);
-      n.setJSType(otherVar != null ? otherVar.getType() : unknownType);
+      ScopedName name = moduleImportResolver.getClosureNamespaceTypeFromCall(n);
+      if (name != null) {
+        TypedScope otherModuleScope =
+            scopeCreator.getNodeToScopeMapper().apply(name.getScopeRoot());
+        TypedVar otherVar =
+            otherModuleScope != null ? otherModuleScope.getSlot(name.getName()) : null;
+        n.setJSType(otherVar != null ? otherVar.getType() : unknownType);
+      } else {
+        n.setJSType(unknownType);
+      }
       return scope;
     }
 
