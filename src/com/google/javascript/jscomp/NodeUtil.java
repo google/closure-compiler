@@ -5717,6 +5717,18 @@ public final class NodeUtil {
     return n.isModuleBody() || isBundledGoogModuleScopeRoot(n);
   }
 
+  static boolean isBundledGoogModuleCall(Node n) {
+    if (!(n.isCall()
+        && n.hasTwoChildren()
+        && n.getFirstChild().matchesQualifiedName("goog.loadModule"))) {
+      return false;
+    }
+    return n.getParent() != null
+        && n.getParent().isExprResult()
+        && n.getGrandparent() != null
+        && n.getGrandparent().isScript();
+  }
+
   static boolean isBundledGoogModuleScopeRoot(Node n) {
     if (!n.isBlock() || !n.hasChildren() || !isGoogModuleCall(n.getFirstChild())) {
       return false;

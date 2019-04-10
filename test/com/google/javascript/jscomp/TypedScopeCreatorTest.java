@@ -4682,7 +4682,97 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
     assertNode(xNode).hasJSTypeThat().isUnknown(); // Note: we warn for this case elsewhere.
   }
-  // TODO(b/124919359): Add tests for goog.loadModule.
+
+  @Test
+  public void testRequire_requireRegularModuleInLoadModule() {
+    testSame(
+        new String[] {
+          "goog.module('A'); exports = class {};",
+          lines(
+              "goog.loadModule(function(exports) {",
+              "  goog.module('b');",
+              "  const A = goog.require('A');",
+              "  /** @type {!A} */ var a;",
+              "  A: a;",
+              "  return exports;",
+              "});")
+        });
+
+    Node aNode = getLabeledStatement("A").statementNode.getOnlyChild();
+    assertNode(aNode).hasJSTypeThat().toStringIsEqualTo("exports");
+  }
+
+  @Test
+  public void testGoogRequire_requireLoadModuleInRegularModule() {
+    testSame(
+        new String[] {
+          lines(
+              "goog.loadModule(function(exports) {",
+              "  goog.module('A');",
+              "  /** @constructor*/",
+              "  exports = function() {};",
+              " return exports;",
+              "});"),
+          "goog.module('b'); const A = goog.require('A'); /** @type {!A} */ var a; A: a;"
+        });
+
+    Node aNode = getLabeledStatement("A").statementNode.getOnlyChild();
+    assertNode(aNode).hasJSTypeThat().toStringIsEqualTo("exports");
+  }
+
+  @Test
+  public void testGoogRequire_requireLoadModuleInRegularModule_destructuring() {
+    testSame(
+        new String[] {
+          lines(
+              "goog.loadModule(function(exports) {",
+              "  goog.module('mod');", //
+              "  /** @constructor*/",
+              "  exports.A = function() {};",
+              "  return exports;",
+              "});"),
+          "goog.module('b'); const {A} = goog.require('mod'); /** @type {!A} */ var a; A: a;"
+        });
+
+    Node aNode = getLabeledStatement("A").statementNode.getOnlyChild();
+    assertNode(aNode).hasJSTypeThat().toStringIsEqualTo("exports.A");
+  }
+
+  @Test
+  public void testRequire_requireLoadModuleInRegularModule_inferredDefaultExport() {
+    testSame(
+        new String[] {
+          lines(
+              "goog.loadModule(function(exports) {",
+              "  goog.module('a');",
+              "  /** @return {number} */ function f() {}",
+              "  exports = f();",
+              "  return exports;",
+              "});"),
+          "goog.module('b'); const x = goog.require('a'); X: x;"
+        });
+
+    Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
+    assertNode(xNode).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testRequire_requireLoadModuleInRegularModule_inferredNamedExport() {
+    testSame(
+        new String[] {
+          lines(
+              "goog.loadModule(function(exports) {",
+              "  goog.module('a');",
+              "  /** @return {number} */ function f() {}",
+              "  exports.x = f();",
+              "  return exports;",
+              "});"),
+          "goog.module('b'); const {x} = goog.require('a'); X: x;"
+        });
+
+    Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
+    assertNode(xNode).hasJSTypeThat().isNumber();
+  }
 
   @Test
   public void testMemoization() {

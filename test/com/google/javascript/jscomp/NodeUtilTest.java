@@ -4065,6 +4065,34 @@ public final class NodeUtilTest {
     assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo[0]()"), IR.name("foo"))).isFalse();
   }
 
+  @Test
+  public void testIsBundledGoogModule() {
+    Node googLoadModule =
+        parse("goog.loadModule(function(exports) { goog.module('a.b'); return exports; });");
+
+    Node googName = getNameNode(googLoadModule, "goog");
+    Node callNode = googName.getGrandparent();
+
+    assertNode(callNode).hasToken(Token.CALL);
+    assertThat(NodeUtil.isBundledGoogModuleCall(callNode)).isTrue();
+  }
+
+  @Test
+  public void testIsBundledGoogModule_onlyIfInScript() {
+    Node callNode =
+        IR.call(
+            IR.getelem(IR.name("goog"), IR.string("loadModule")),
+            IR.string("imaginary module text here"));
+
+    assertThat(NodeUtil.isBundledGoogModuleCall(callNode)).isFalse();
+
+    Node exprResult = IR.exprResult(callNode);
+    assertThat(NodeUtil.isBundledGoogModuleCall(callNode)).isFalse();
+
+    IR.script(exprResult); // Call this for its side effect of modifying `exprResult`.
+    assertThat(NodeUtil.isBundledGoogModuleCall(callNode)).isTrue();
+  }
+
   private Node getNameNodeFrom(String code, String name) {
     Node ast = parse(code);
     Node nameNode = getNameNode(ast, name);

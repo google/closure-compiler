@@ -362,7 +362,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       newScope = new TypedScope(typedParent, root);
     }
 
-    if (root.isModuleBody()) {
+    if (root.isModuleBody() || isGoogLoadModuleBlock(root)) {
+
       initializeModuleScope(root, newScope);
     }
     if (root.isFunction()) {
@@ -387,12 +388,30 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     return newScope;
   }
 
+  private static boolean isGoogLoadModuleBlock(Node scopeRoot) {
+    return scopeRoot.isBlock()
+        && scopeRoot.getParent().isFunction()
+        && NodeUtil.isBundledGoogModuleCall(scopeRoot.getGrandparent());
+  }
+
   /** Builds the beginning of a module-scope. This can be an ES module or a goog.module. */
   private void initializeModuleScope(Node moduleBody, TypedScope moduleScope) {
-    Node scriptNode = moduleBody.getParent();
 
-    if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
-      Node googModuleCall = moduleBody.getFirstChild();
+    Node googModuleCall;
+    if (moduleBody.isModuleBody()) {
+      Node scriptNode = moduleBody.getParent();
+      if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
+        googModuleCall = moduleBody.getFirstChild();
+      } else {
+        googModuleCall = null;
+      }
+    } else {
+      checkArgument(moduleBody.isBlock());
+      googModuleCall = moduleBody.getFirstChild();
+    }
+
+    if (googModuleCall != null) {
+
       Node namespace = googModuleCall.getFirstChild().getSecondChild();
 
       String closureModuleNamespace = namespace.getString();
@@ -2777,12 +2796,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      declareParameters();
+      declareParameters(fnNode);
     }
 
     /** Declares all of a function's parameters inside the function's scope. */
-    void declareParameters() {
-      Node functionNode = currentScope.getRootNode();
+    void declareParameters(Node functionNode) {
+      if (NodeUtil.isBundledGoogModuleCall(functionNode.getParent())) {
+        // Skip declaring 'exports' for a goog.loadModule(function(exports) {.
+        // We pretend that any assignments to 'exports' in the body are actually declarations.
+        return;
+      }
+
       Node astParameters = functionNode.getSecondChild();
       Node iifeArgumentNode = null;
 

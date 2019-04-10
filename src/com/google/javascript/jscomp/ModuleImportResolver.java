@@ -73,26 +73,37 @@ final class ModuleImportResolver {
     }
     String moduleId = googRequire.getSecondChild().getString();
     Module module = moduleMap.getClosureModule(moduleId);
-    if (module == null) {
-      // Requiring an unknown module, just return null.
-      return null;
-    }
-    // The module root node should be a SCRIPT, whose first child is a MODULE_BODY.
-    // TODO(b/124919359): also handle goog.loadModule, ES modules, and goog.provides
-    Node scriptNode = module.metadata().rootNode();
-    if (scriptNode == null || !scriptNode.isScript() || !scriptNode.hasOneChild()) {
-      return null;
-    }
 
-    // Try to get the module scope. This may be null if this is an early reference, like
-    // requireType or forwardDeclare. The map is keyed off a MODULE_BODY node for a goog.module,
-    // which is the only child of our SCRIPT node.
-    TypedScope moduleScope = nodeToScopeMapper.apply(scriptNode.getOnlyChild());
-
+    TypedScope moduleScope = module != null ? getModuleScope(module) : null;
     if (moduleScope != null) {
       return moduleScope.getVar("exports");
     }
     // TODO(b/124919359): handle this case, which happens with, e.g., requireType
+    return null;
+  }
+
+  /** Converts a {@link Module} reference to a {@link TypedScope} */
+  @Nullable
+  private TypedScope getModuleScope(@Nullable Module module) {
+
+    // TODO(b/124919359): also handle ES modules and goog.provides
+    Node scriptNode = module.metadata().rootNode();
+    if (scriptNode == null) {
+      return null;
+    }
+
+    if (scriptNode.isScript() && scriptNode.hasOneChild()) {
+      // The module root node should be a SCRIPT, whose first child is a MODULE_BODY.
+      // The map is keyed off a MODULE_BODY node for a goog.module,
+      // which is the only child of our SCRIPT node.
+      return nodeToScopeMapper.apply(scriptNode.getOnlyChild());
+    } else if (NodeUtil.isBundledGoogModuleCall(scriptNode)) {
+      // This is a goog.loadModule call, and the scope is keyed off the FUNCTION node's BLOCK in:
+      //   goog.loadModule(function(exports) {
+      Node functionLiteral = scriptNode.getSecondChild();
+      return nodeToScopeMapper.apply(NodeUtil.getFunctionBody(functionLiteral));
+    }
+
     return null;
   }
 }

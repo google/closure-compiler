@@ -154,6 +154,9 @@ class TypeInference
     Node functionNode = containerScope.getRootNode();
     if (!functionNode.isFunction()) {
       return entryFlowScope; // we're in the global scope
+    } else if (NodeUtil.isBundledGoogModuleCall(functionNode.getParent())) {
+      // Pretend the function literal in `goog.loadModule(function(exports) {` does not exist.
+      return entryFlowScope;
     }
     Node astParameters = functionNode.getSecondChild();
     Node iifeArgumentNode = null;
