@@ -407,31 +407,31 @@ XMLHttpRequest.prototype.onreadystatechange;
 XMLHttpRequest.prototype.onerror;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://xhr.spec.whatwg.org/#states
  */
 XMLHttpRequest.UNSENT;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://xhr.spec.whatwg.org/#states
  */
 XMLHttpRequest.OPENED;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://xhr.spec.whatwg.org/#states
  */
 XMLHttpRequest.HEADERS_RECEIVED;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://xhr.spec.whatwg.org/#states
  */
 XMLHttpRequest.LOADING;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://xhr.spec.whatwg.org/#states
  */
 XMLHttpRequest.DONE;

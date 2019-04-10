@@ -120,13 +120,13 @@ PointerEvent.prototype.pointerType;
 PointerEvent.prototype.isPrimary;
 
 // Microsoft pointerType values
-/** @type {string} */
+/** @const {string} */
 PointerEvent.prototype.MSPOINTER_TYPE_TOUCH;
 
-/** @type {string} */
+/** @const {string} */
 PointerEvent.prototype.MSPOINTER_TYPE_PEN;
 
-/** @type {string} */
+/** @const {string} */
 PointerEvent.prototype.MSPOINTER_TYPE_MOUSE;
 
 /**

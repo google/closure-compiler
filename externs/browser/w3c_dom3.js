@@ -565,25 +565,25 @@ Text.prototype.wholeText;
 function TypeInfo() {}
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-DERIVATION_EXTENSION
  */
 TypeInfo.prototype.DERIVATION_EXTENSION;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-DERIVATION_LIST
  */
 TypeInfo.prototype.DERIVATION_LIST;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-DERIVATION_RESTRICTION
  */
 TypeInfo.prototype.DERIVATION_RESTRICTION;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-DERIVATION_UNION
  */
 TypeInfo.prototype.DERIVATION_UNION;

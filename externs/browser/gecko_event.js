@@ -24,8 +24,8 @@
 
 // TODO: Almost all of it has not been annotated with types.
 
-/** @type {number} */ Event.prototype.HORIZONTAL_AXIS;
-/** @type {number} */ Event.prototype.VERTICAL_AXIS;
+/** @const {number} */ Event.prototype.HORIZONTAL_AXIS;
+/** @const {number} */ Event.prototype.VERTICAL_AXIS;
 /** @type {boolean} */ Event.prototype.altKey;
 /** @type {number} */ Event.prototype.axis;
 /** @type {number} */ Event.prototype.button;
