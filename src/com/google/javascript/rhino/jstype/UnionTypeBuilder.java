@@ -157,7 +157,9 @@ public final class UnionTypeBuilder implements Serializable {
     return this;
   }
 
-  public UnionTypeBuilder addAlternates(List<JSType> list) {
+  // A specific override that avoid creating an iterator.  This version is currently used when
+  // adding a union as an alternate.
+  public UnionTypeBuilder addAlternates(ImmutableList<JSType> list) {
     for (int i = 0; i < list.size(); i++) {
       addAlternate(list.get(i));
     }
