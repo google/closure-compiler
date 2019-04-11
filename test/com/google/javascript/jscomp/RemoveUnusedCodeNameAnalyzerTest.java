@@ -670,7 +670,7 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
             "c.add();",
             "use(c.x);"));
 
-    test("class C{} class D{} var d = new D;", "");
+    test("class C{} class D{} var d = new D;", "class D{} new D;");
 
     test("{class C{} }", "{}");
     testSame("{class C{} var c = new C; use(c)}");

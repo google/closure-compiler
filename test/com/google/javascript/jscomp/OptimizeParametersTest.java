@@ -1181,45 +1181,4 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "f()"));
   }
 
-  @Test
-  public void testSuperInvocation_preventsParamInlining_whenImplicit() {
-    // TODO(b/130054506): It would be better if we did inline in this case. However, right now it's
-    // sufficient that we don't inline at all, since it would be dangerous if we overlooked `super`
-    // calls.
-    testSame(
-        lines(
-            "class Foo {",
-            "  constructor(x) {",
-            "    this.x = x;",
-            "  }",
-            "}",
-            "",
-            "class Bar extends Foo { }",
-            "",
-            "new Foo(4);",
-            "new Bar(4);"));
-  }
-
-  @Test
-  public void testSuperInvocation_preventsParamInlining_whenExplicit() {
-    // TODO(b/130054506): It would be better if we did inline in this case. However, right now it's
-    // sufficient that we don't inline at all, since it would be dangerous if we overlooked `super`
-    // calls.
-    testSame(
-        lines(
-            "class Foo {",
-            "  constructor(x) {",
-            "    this.x = x;",
-            "  }",
-            "}",
-            "",
-            "class Bar extends Foo {",
-            "  constructor() {",
-            "    super(4);",
-            "  }",
-            "}",
-            "",
-            "new Foo(4);",
-            "new Bar();"));
-  }
 }
