@@ -814,8 +814,9 @@ public class Scanner {
 
     // Workaround b/36459436
     // When running under GWT, Character.isLetter only handles ASCII
-    // Angular relies heavily on U+0275 (Latin Barred O)
+    // Angular relies heavily on U+0275 (Latin Barred O) and U+0394 (Greek Capital Letter Delta).
     return ch == 0x0275
+        || ch == 0x0394
         // TODO: UnicodeLetter also includes Letter Number (NI)
         || Character.isLetter(ch);
   }
