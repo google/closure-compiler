@@ -483,34 +483,6 @@ Window.prototype.external;
 Window.prototype.msCrypto;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms535864(VS.85).aspx
- * @param {number|string} delta The number of entries to go back, or
- *     the URL to which to go back. (URL form is supported only in IE)
- * @return {undefined}
- */
-History.prototype.go = function(delta) {};
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms535864(VS.85).aspx
- * @param {number=} opt_distance The number of entries to go back
- *     (Mozilla doesn't support distance -- use #go instead)
- * @return {undefined}
- */
-History.prototype.back = function(opt_distance) {};
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms535864(VS.85).aspx
- * @type {number}
- */
-History.prototype.length;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms535864(VS.85).aspx
- * @return {undefined}
- */
-History.prototype.forward = function() {};
-
-/**
  * @type {boolean}
  * @implicitCast
  * @see http://msdn.microsoft.com/en-us/library/ie/ms533072(v=vs.85).aspx
