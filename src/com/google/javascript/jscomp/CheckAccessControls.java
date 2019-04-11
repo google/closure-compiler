@@ -631,7 +631,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     return srcPackage != null && refPackage != null && Objects.equals(srcPackage, refPackage);
   }
 
-  private void checkOverriddenPropertyVisibilityMismatch(
+  private void checkPropertyOverrideVisibilityIsSame(
       Visibility overriding,
       Visibility overridden,
       @Nullable Visibility fileOverview,
@@ -762,8 +762,32 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     return typeOrUnknown(dereference(type));
   }
 
-  /** Reports an error if the given property is not visible in the current context. */
+  /**
+   * Reports an error if the given property is not visible in the current context.
+   *
+   * <p>This method covers both:
+   *
+   * <ul>
+   *   <li>accesses to properties during execution
+   *   <li>overrides of properties during declaration
+   * </ul>
+   *
+   * TODO(nickreid): Things would probably be a lot simpler, though a bit duplicated, if these two
+   * concepts were separated. Much of the underlying logic could stop checking various inconsistent
+   * definitions of "is this an override".
+   */
   private void checkPropertyVisibility(PropertyReference propRef) {
+    if (NodeUtil.isEs6ConstructorMemberFunctionDef(propRef.getSourceNode())) {
+      // Class ctor *declarations* can never violate visibility restrictions. They are not
+      // accesses and we don't consider them overrides.
+      //
+      // TODO(nickreid): It would be a lot cleaner if we could model this using `PropertyReference`
+      // rather than defining a special case here. I think the problem is that the current
+      // implementation of this method conflates "override" with "declaration". But that only works
+      // because it ignores cases where there's no overridden definition.
+      return;
+    }
+
     JSType rawReferenceType = typeOrUnknown(propRef.getReceiverType()).autobox();
     ObjectType referenceType = castToObject(rawReferenceType);
 
@@ -798,7 +822,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     if (isOverride) {
       Visibility overriding = getOverridingPropertyVisibility(propRef);
       if (overriding != null) {
-        checkOverriddenPropertyVisibilityMismatch(
+        checkPropertyOverrideVisibilityIsSame(
             overriding, visibility, fileOverviewVisibility, propRef);
       }
     }
@@ -824,10 +848,10 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     if (isOverride) {
       boolean sameInput = referenceSource != null
           && referenceSource.getName().equals(definingSource.getName());
-      checkOverriddenPropertyVisibility(
+      checkPropertyOverrideVisibility(
           propRef, visibility, fileOverviewVisibility, reportType, sameInput);
     } else {
-      checkNonOverriddenPropertyVisibility(
+      checkPropertyAccessVisibility(
           propRef, visibility, reportType, referenceSource, definingSource);
     }
   }
@@ -853,7 +877,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
 
     // Synthesize a `PropertyReference` for this constructor call as if we're accessing
     // `Foo.prototype.constructor`. This object allows us to reuse the
-    // `checkNonOverriddenPropertyVisibility` method which actually reports violations.
+    // `checkPropertyAccessVisibility` method which actually reports violations.
     PropertyReference fauxCtorRef =
         PropertyReference.builder()
             .setSourceNode(target)
@@ -878,7 +902,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
             ? Visibility.PUBLIC
             : annotatedCtorVisibility;
 
-    checkNonOverriddenPropertyVisibility(
+    checkPropertyAccessVisibility(
         fauxCtorRef,
         effectiveCtorVisibility,
         ctorType,
@@ -899,7 +923,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     return true;
   }
 
-  private void checkOverriddenPropertyVisibility(
+  private void checkPropertyOverrideVisibility(
       PropertyReference propRef,
       Visibility visibility,
       Visibility fileOverviewVisibility,
@@ -930,7 +954,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     }
   }
 
-  private void checkNonOverriddenPropertyVisibility(
+  private void checkPropertyAccessVisibility(
       PropertyReference propRef,
       Visibility visibility,
       JSType objectType,

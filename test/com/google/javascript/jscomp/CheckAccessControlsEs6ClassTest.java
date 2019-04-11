@@ -2181,6 +2181,38 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstructorVisibility_canBeNarrowed() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @public */",
+                "  constructor() {}",
+                "};"),
+            lines(
+                "class Bar extends Foo {", //
+                "  /** @private */",
+                "  constructor() {}",
+                "};")));
+  }
+
+  @Test
+  public void testConstructorVisibility_canBeExpanded() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  constructor() {}",
+                "};"),
+            lines(
+                "class Bar extends Foo {", //
+                "  /** @public */",
+                "  constructor() {}",
+                "};")));
+  }
+
+  @Test
   public void testPublicFileOverviewVisibilityDoesNotApplyToNameWithExplicitPackageVisibility() {
     test(
         srcs(
