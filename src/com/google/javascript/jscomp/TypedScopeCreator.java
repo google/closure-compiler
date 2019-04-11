@@ -373,14 +373,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     AbstractScopeBuilder scopeBuilder = null;
     if (typedParent == null) {
-      JSType globalThis =
-          typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);
+      checkState(root.isRoot(), root);
+      Node externsRoot = root.getFirstChild();
+      Node jsRoot = root.getSecondChild();
+      checkState(externsRoot.isRoot(), externsRoot);
+      checkState(jsRoot.isRoot(), jsRoot);
+      JSType globalThis = typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);
 
       // Mark the main root, the externs root, and the src root
       // with the global this type.
       root.setJSType(globalThis);
-      root.getFirstChild().setJSType(globalThis);
-      root.getLastChild().setJSType(globalThis);
+      externsRoot.setJSType(globalThis);
+      jsRoot.setJSType(globalThis);
 
       // Run a first-order analysis over the syntax tree.
       new FirstOrderFunctionAnalyzer().process(root.getFirstChild(), root.getLastChild());
@@ -545,9 +549,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   /**
    * Create the outermost scope. This scope contains native binding such as {@code Object}, {@code
    * Date}, etc.
+   *
+   * @param root The global ROOT node
    */
   @VisibleForTesting
   TypedScope createInitialScope(Node root) {
+    checkArgument(root.isRoot(), root);
 
     NodeTraversal.traverse(
         compiler,

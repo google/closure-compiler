@@ -41,6 +41,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.JsFileLineParser;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -4875,8 +4876,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   private static Node createEmptyRoot() {
-    Node root = new Node(Token.ROOT, new Node(Token.SCRIPT));
-    root.getFirstChild().setInputId(new InputId("input"));
+    Node script = IR.script();
+    Node root = IR.root(IR.root(), IR.root(script));
+    script.setInputId(new InputId("input"));
     return root;
   }
 

@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.parsing.TypeTransformationParser;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -1158,8 +1159,9 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
       Node ast = ttlParser.getTypeTransformationAst();
       // Create the scope using the extra definitions
       Node extraTypeDefs = compiler.parseTestCode(EXTRA_TYPE_DEFS);
-      TypedScope scope = new TypedScopeCreator(compiler).createScope(
-          extraTypeDefs, null);
+      TypedScope scope =
+          new TypedScopeCreator(compiler)
+              .createScope(IR.root(IR.root(), IR.root(extraTypeDefs)), null);
       // Evaluate the type transformation
       TypeTransformation typeTransformation =
           new TypeTransformation(compiler, scope);

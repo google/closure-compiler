@@ -449,26 +449,37 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     check(jsRoot, false);
   }
 
-  /** Main entry point of this phase for testing code. */
+  /**
+   * Main entry point of this phase for testing code.
+   *
+   * @param externsRoot may be null or a ROOT node. If null the externs are not typechecked. Note:
+   *     the externs node must always exist in the AST, even if not typechecked.
+   * @param jsRoot must be a ROOT node and the second child of the global ROOT.
+   */
   public TypedScope processForTesting(Node externsRoot, Node jsRoot) {
     checkState(scopeCreator == null);
     checkState(topScope == null);
 
-    checkState(jsRoot.getParent() != null);
+    checkArgument(externsRoot == null || externsRoot.isRoot(), externsRoot);
+    checkArgument(jsRoot.isRoot(), jsRoot);
+
+    checkState(jsRoot.getParent() != null && jsRoot.getParent().isRoot(), jsRoot.getParent());
     Node externsAndJsRoot = jsRoot.getParent();
+    checkState(
+        externsRoot == null || externsRoot.getNext() == jsRoot,
+        "externs root must be the preceding sibling of the js root");
 
     scopeCreator = new TypedScopeCreator(compiler);
     topScope = scopeCreator.createScope(externsAndJsRoot, null);
 
-    TypeInferencePass inference = new TypeInferencePass(compiler,
-        reverseInterpreter, topScope, scopeCreator);
+    TypeInferencePass inference =
+        new TypeInferencePass(compiler, reverseInterpreter, topScope, scopeCreator);
 
     inference.process(externsRoot, jsRoot);
     process(externsRoot, jsRoot);
 
     return topScope;
   }
-
 
   void check(Node node, boolean externs) {
     checkNotNull(node);

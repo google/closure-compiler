@@ -145,14 +145,15 @@ public final class TypeInferenceTest {
   }
 
   private void parseAndRunTypeInference(String js) {
-    Node root = compiler.parseTestCode(js);
+    Node script = compiler.parseTestCode(js);
+    Node root = IR.root(IR.root(), IR.root(script));
     assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
         .that(compiler.getErrorCount())
         .isEqualTo(0);
 
     // SCRIPT -> EXPR_RESULT -> FUNCTION
     // `(function() { TEST CODE HERE });`
-    Node n = root.getFirstFirstChild();
+    Node n = script.getFirstFirstChild();
 
     // Create the scope with the assumptions.
     TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);

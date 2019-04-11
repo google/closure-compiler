@@ -21,6 +21,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.FlowScope;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
@@ -365,7 +366,8 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
     Node call = n.getLastChild().getLastChild();
     Node name = call.getLastChild();
 
-    TypedScope scope = new TypedScopeCreator(compiler).createScope(n, null);
+    Node root = IR.root(IR.root(), IR.root(n));
+    TypedScope scope = new TypedScopeCreator(compiler).createScope(root, null);
     FlowScope flowScope = LinkedFlowScope.createEntryLattice(scope);
 
     assertThat(call.getToken()).isEqualTo(Token.CALL);

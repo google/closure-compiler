@@ -79,13 +79,13 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   }
 
   protected double getTypedPercentWithExterns(String externs, String js) {
-    Node n = compiler.parseTestCode(js);
+    Node jsRoot = IR.root(compiler.parseTestCode(js));
 
-    Node externsRoot = compiler.parseTestCode(externs);
-    IR.root(externsRoot, n);
+    Node externsRoot = IR.root(compiler.parseTestCode(externs));
+    IR.root(externsRoot, jsRoot);
 
     TypeCheck t = makeTypeCheck();
-    t.processForTesting(null, n);
+    t.processForTesting(externsRoot, jsRoot);
     return t.getTypedPercent();
   }
 
@@ -138,9 +138,9 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     assertThat(compiler.getErrors()).isEmpty();
     Node externsNode = IR.root();
     // create a parent node for the extern and source blocks
-    IR.root(externsNode, n);
+    Node root = IR.root(externsNode, IR.root(n));
 
-    makeTypeCheck().processForTesting(null, n);
+    makeTypeCheck().processForTesting(root.getFirstChild(), root.getSecondChild());
     assertThat(compiler.getErrors()).isEmpty();
     checkReportedWarningsHelper(warnings);
   }
@@ -280,12 +280,24 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     return new TypeCheckResult(jsNode.getFirstChild(), s);
   }
 
+  /** @param n A valid statement node, SCRIPT, or ROOT node. */
   protected Node typeCheck(Node n) {
+    Node jsRoot;
+    if (n.isRoot()) {
+      // This is fine as is.
+      jsRoot = n;
+    } else if (n.isScript()) {
+      jsRoot = IR.root(n);
+    } else {
+      Node script = IR.script(n);
+      jsRoot = IR.root(script);
+      script.setInputId(new InputId("test"));
+    }
     Node externsNode = IR.root();
     Node externAndJsRoot = IR.root(externsNode);
-    externAndJsRoot.addChildToBack(n);
+    externAndJsRoot.addChildToBack(jsRoot);
 
-    makeTypeCheck().processForTesting(null, n);
+    makeTypeCheck().processForTesting(externsNode, externAndJsRoot.getSecondChild());
     return n;
   }
 

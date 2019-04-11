@@ -8989,28 +8989,32 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNumberNode() {
-    Node n = typeCheck(Node.newNumber(0));
+    Node n = IR.number(0);
+    typeCheck(IR.exprResult(n));
 
     assertTypeEquals(getNativeNumberType(), n.getJSType());
   }
 
   @Test
   public void testStringNode() {
-    Node n = typeCheck(Node.newString("hello"));
+    Node n = IR.string("hello");
+    typeCheck(IR.exprResult(n));
 
     assertTypeEquals(getNativeStringType(), n.getJSType());
   }
 
   @Test
   public void testBooleanNodeTrue() {
-    Node trueNode = typeCheck(new Node(Token.TRUE));
+    Node trueNode = IR.trueNode();
+    typeCheck(IR.exprResult(trueNode));
 
     assertTypeEquals(getNativeBooleanType(), trueNode.getJSType());
   }
 
   @Test
   public void testBooleanNodeFalse() {
-    Node falseNode = typeCheck(new Node(Token.FALSE));
+    Node falseNode = IR.falseNode();
+    typeCheck(IR.exprResult(falseNode));
 
     assertTypeEquals(getNativeBooleanType(), falseNode.getJSType());
   }
@@ -9021,7 +9025,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     Node n = Node.newString(Token.NAME, "undefined");
     p.addChildToBack(n);
     p.addChildToBack(Node.newNumber(5));
-    typeCheck(p);
+    typeCheck(IR.exprResult(p));
 
     assertTypeEquals(getNativeVoidType(), n.getJSType());
   }
@@ -10670,9 +10674,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     Node externs = new Node(Token.SCRIPT);
     externs.setInputId(new InputId("externs"));
 
-    IR.root(externs, parent);
+    Node root = IR.root(IR.root(externs), IR.root(parent));
 
-    makeTypeCheck().processForTesting(null, parent);
+    makeTypeCheck().processForTesting(root.getFirstChild(), root.getSecondChild());
     return node.getJSType();
   }
 
@@ -15444,15 +15448,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeCheckStandaloneAST() {
-    Node n = compiler.parseTestCode("function Foo() { }");
-    typeCheck(n);
-    TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
-    TypedScope topScope = scopeCreator.createScope(n, null);
-
-    Node second = compiler.parseTestCode("new Foo");
-
     Node externs = IR.root();
-    IR.root(externs, second);
+    Node firstScript = compiler.parseTestCode("function Foo() { }");
+    typeCheck(firstScript);
+    Node root = IR.root(externs, IR.root(firstScript.detach()));
+    TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
+    TypedScope topScope = scopeCreator.createScope(root, null);
+
+    Node secondScript = compiler.parseTestCode("new Foo");
+
+    firstScript.replaceWith(secondScript);
 
     new TypeCheck(
             compiler,
@@ -15460,7 +15465,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             registry,
             topScope,
             scopeCreator)
-        .process(null, second);
+        .process(externs, secondScript.getParent());
 
     assertThat(compiler.getWarningCount()).isEqualTo(1);
     assertThat(compiler.getWarnings().get(0).description)
@@ -23404,26 +23409,26 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         description == null ? null : ImmutableList.of(description));
   }
 
-  private void testClosureTypesMultipleWarnings(
-      String js, List<String> descriptions) {
+  private void testClosureTypesMultipleWarnings(String js, List<String> descriptions) {
     compiler.initOptions(compiler.getOptions());
-    Node n = compiler.parseTestCode(js);
-    Node externs = compiler.parseTestCode(new TestExternsBuilder().addString().build());
-    IR.root(externs, n);
+    Node jsRoot = IR.root(compiler.parseTestCode(js));
+    Node externs = IR.root(compiler.parseTestCode(new TestExternsBuilder().addString().build()));
+    IR.root(externs, jsRoot);
 
     assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
         .that(compiler.getErrorCount())
         .isEqualTo(0);
 
     // For processing goog.addDependency for forward typedefs.
-    new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false).process(externs, n);
+    new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false).process(externs, jsRoot);
 
-    new TypeCheck(compiler,
-        new ClosureReverseAbstractInterpreter(registry).append(
-                new SemanticReverseAbstractInterpreter(registry))
-            .getFirst(),
-        registry)
-        .processForTesting(null, n);
+    new TypeCheck(
+            compiler,
+            new ClosureReverseAbstractInterpreter(registry)
+                .append(new SemanticReverseAbstractInterpreter(registry))
+                .getFirst(),
+            registry)
+        .processForTesting(externs, jsRoot);
 
     assertWithMessage("unexpected error(s) : " + Joiner.on(", ").join(compiler.getErrors()))
         .that(compiler.getErrorCount())
