@@ -294,10 +294,13 @@ ServiceWorkerContainer.prototype.getRegistration = function(opt_documentURL) {};
  */
 ServiceWorkerContainer.prototype.getRegistrations = function() {};
 
-/** @type {?function(!Event)} */
+/** @type {?function(!Event): void} */
 ServiceWorkerContainer.prototype.oncontrollerchange;
 
-/** @type {?function(!ErrorEvent)} */
+/** @type {?function(!ExtendableMessageEvent): void} */
+ServiceWorkerContainer.prototype.onmessage;
+
+/** @type {?function(!ErrorEvent): void} */
 ServiceWorkerContainer.prototype.onerror;
 
 /**
