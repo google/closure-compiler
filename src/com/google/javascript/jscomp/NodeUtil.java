@@ -1596,10 +1596,6 @@ public final class NodeUtil {
    * check; used to check wherever the current node's type is one of
    * the reasons why a subtree has side effects.
    */
-  static boolean nodeTypeMayHaveSideEffects(Node n) {
-    return nodeTypeMayHaveSideEffects(n, null);
-  }
-
   static boolean nodeTypeMayHaveSideEffects(Node n, AbstractCompiler compiler) {
     if (isAssignmentOp(n)) {
       return true;

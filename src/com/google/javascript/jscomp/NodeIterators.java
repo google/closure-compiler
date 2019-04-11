@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -151,6 +152,7 @@ class NodeIterators {
    * assignment {@code X = 5}.
    */
   static class LocalVarMotion implements Iterator<Node> {
+    private final AbstractCompiler compiler;
     private final boolean valueHasSideEffects;
     private final FunctionlessLocalScope iterator;
     private final String varName;
@@ -158,44 +160,45 @@ class NodeIterators {
 
     /**
      * The name is a bit of a misnomer; this works with let and const as well.
-     * @return Create a LocalVarMotion for use with moving a value assigned
-     * at a variable declaration.
+     *
+     * @return Create a LocalVarMotion for use with moving a value assigned at a variable
+     *     declaration.
      */
-    static LocalVarMotion forVar(
-        Node name, Node var, Node block) {
+    static LocalVarMotion forVar(AbstractCompiler compiler, Node name, Node var, Node block) {
       checkArgument(NodeUtil.isNameDeclaration(var));
       checkArgument(NodeUtil.isStatement(var));
       // The FunctionlessLocalScope must start at "name" as this may be used
       // before the Normalize pass, and thus the VAR node may define multiple
       // names and the "name" node may have siblings.  The actual assigned
       // value is skipped as it is a child of name.
-      return new LocalVarMotion(
-          name, new FunctionlessLocalScope(name, var, block));
+      return new LocalVarMotion(compiler, name, new FunctionlessLocalScope(name, var, block));
     }
 
     /**
-     * @return Create a LocalVarMotion for use with moving a value assigned
-     * as part of a simple assignment expression ("a = b;").
+     * @return Create a LocalVarMotion for use with moving a value assigned as part of a simple
+     *     assignment expression ("a = b;").
      */
     static LocalVarMotion forAssign(
-        Node name, Node assign, Node expr, Node block) {
+        AbstractCompiler compiler, Node name, Node assign, Node expr, Node block) {
       checkArgument(assign.isAssign());
       checkArgument(expr.isExprResult());
       // The FunctionlessLocalScope must start at "assign", to skip the value
       // assigned to "name" (which would be its sibling).
-      return new LocalVarMotion(
-          name, new FunctionlessLocalScope(assign, expr, block));
+      return new LocalVarMotion(compiler, name, new FunctionlessLocalScope(assign, expr, block));
     }
 
     /**
+     * @param compiler
      * @param iterator The iterator to use while inspecting the node
-     *     beginning with the deepest ancestor.
      */
-    private LocalVarMotion(Node nameNode, FunctionlessLocalScope iterator) {
+    private LocalVarMotion(
+        AbstractCompiler compiler, Node nameNode, FunctionlessLocalScope iterator) {
       checkArgument(nameNode.isName());
       Node valueNode = NodeUtil.getAssignedValue(nameNode);
+      this.compiler = checkNotNull(compiler);
       this.varName = nameNode.getString();
-      this.valueHasSideEffects = valueNode != null && NodeUtil.mayHaveSideEffects(valueNode);
+      this.valueHasSideEffects =
+          valueNode != null && NodeUtil.mayHaveSideEffects(valueNode, compiler);
       this.iterator = iterator;
       advanceLookAhead(true);
     }
@@ -276,7 +279,7 @@ class NodeIterators {
       //   var a = b;
       //   var b = 3;
       //   alert(a);
-      if ((NodeUtil.nodeTypeMayHaveSideEffects(nextNode) && type != Token.NAME)
+      if ((NodeUtil.nodeTypeMayHaveSideEffects(nextNode, compiler) && type != Token.NAME)
           || (type == Token.NAME && nextParent.isCatch())) {
         lookAhead = null;
         return;

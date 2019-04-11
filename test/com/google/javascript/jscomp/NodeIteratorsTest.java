@@ -174,7 +174,8 @@ public final class NodeIteratorsTest {
     List<Node> ancestors = new ArrayList<>();
 
     // Add an empty node to the beginning of the code and start there.
-    Node root = (new Compiler()).parseTestCode(";" + code);
+    Compiler compiler = new Compiler();
+    Node root = compiler.parseTestCode(";" + code);
     for (Node n = root; n != null; n = n.getFirstChild()) {
       ancestors.add(0, n);
     }
@@ -196,10 +197,9 @@ public final class NodeIteratorsTest {
 
     List<Node> currentAncestors = searchIt.currentAncestors();
     assert(currentAncestors.size() >= 3);
-    Iterator<Node> moveIt = LocalVarMotion.forVar(
-        currentAncestors.get(0),
-        currentAncestors.get(1),
-        currentAncestors.get(2));
+    Iterator<Node> moveIt =
+        LocalVarMotion.forVar(
+            compiler, currentAncestors.get(0), currentAncestors.get(1), currentAncestors.get(2));
     List<Token> actualTokens = new ArrayList<>();
     while (moveIt.hasNext()) {
       actualTokens.add(moveIt.next().getToken());

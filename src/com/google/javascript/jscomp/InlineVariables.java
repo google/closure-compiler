@@ -573,16 +573,19 @@ class InlineVariables implements CompilerPass {
       if (NodeUtil.isNameDeclaration(initialization.getParent())) {
         it =
             NodeIterators.LocalVarMotion.forVar(
+                compiler,
                 initialization.getNode(), // NAME
                 initialization.getParent(), // VAR/LET/CONST
                 initialization.getGrandparent()); // VAR/LET/CONST container
       } else if (initialization.getParent().isAssign()) {
         checkState(initialization.getGrandparent().isExprResult());
-        it = NodeIterators.LocalVarMotion.forAssign(
-            initialization.getNode(),     // NAME
-            initialization.getParent(),       // ASSIGN
-            initialization.getGrandparent(),  // EXPR_RESULT
-            initialization.getGrandparent().getParent()); // EXPR container
+        it =
+            NodeIterators.LocalVarMotion.forAssign(
+                compiler,
+                initialization.getNode(), // NAME
+                initialization.getParent(), // ASSIGN
+                initialization.getGrandparent(), // EXPR_RESULT
+                initialization.getGrandparent().getParent()); // EXPR container
       } else {
         throw new IllegalStateException("Unexpected initialization parent\n"
             + initialization.getParent().toStringTree());
