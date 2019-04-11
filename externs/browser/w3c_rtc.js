@@ -675,6 +675,10 @@ RTCRtpContributingSource.prototype.source;
  */
 RTCRtpContributingSource.prototype.timestamp;
 
+/**
+ * @type {number|undefined}
+ */
+RTCRtpContributingSource.prototype.audioLevel;
 
 /**
  * @interface
