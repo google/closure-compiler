@@ -485,23 +485,30 @@ public final class SymbolTable {
     if (sym == null) {
       // JSCompiler has no symbol for this scope. Check to see if it's a
       // local function. If it is, give it a name.
+      Node rootNode = scope.getRootNode();
       if (scope.isLexicalScope()
           && !scope.isGlobalScope()
-          && scope.getRootNode() != null
-          && !scope.getRootNode().isFromExterns()
+          && rootNode != null
+          && !rootNode.isFromExterns()
           && scope.getParentScope() != null
-          && scope.getRootNode().isFunction()) {
+          && rootNode.isFunction()) {
         SymbolScope parent = scope.getParentScope();
 
         String innerName = "function%" + scope.getIndexInParent();
+        JSType type = rootNode.getJSType();
+
+        // Functions defined on anonymous objects are considered anonymous as well:
+        // doFoo({bar() {}});
+        // bar is not technically anonymous, but it's a method on an anonymous object literal so
+        // effectively it's anonymous/inaccessible. In this case, slightly correct rootNode to
+        // be a MEMBER_FUNCTION_DEF node instead of a FUNCTION node.
+        if (rootNode.getParent().isMemberFunctionDef()) {
+          rootNode = rootNode.getParent();
+        }
+
         Symbol anonymousFunctionSymbol =
             declareSymbol(
-                innerName,
-                scope.getRootNode().getJSType(),
-                /* inferred= */ true,
-                parent,
-                scope.getRootNode(),
-                /* info= */ null);
+                innerName, type, /* inferred= */ true, parent, rootNode, /* info= */ null);
         scope.setSymbolForScope(anonymousFunctionSymbol);
       }
     }
