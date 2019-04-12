@@ -59,20 +59,17 @@ SourceInfo.prototype.facing;
 function MediaSettingsRange() {}
 
 /**
- * @type {number}
- * @const
+ * @const {number}
  */
 MediaSettingsRange.prototype.max;
 
 /**
- * @type {number}
- * @const
+ * @const {number}
  */
 MediaSettingsRange.prototype.min;
 
 /**
- * @type {number}
- * @const
+ * @const {number}
  */
 MediaSettingsRange.prototype.step;
 
@@ -304,31 +301,27 @@ MediaTrackSupportedConstraints.prototype.groupId;
 function MediaStreamTrack() {}
 
 /**
- * @type {string}
- * @const
+ * @const {string}
  */
 MediaStreamTrack.prototype.kind;
 
 /**
- * @type {string}
- * @const
+ * @const {string}
  */
 MediaStreamTrack.prototype.id;
 
 /**
- * @type {string}
- * @const
+ * @const {string}
  */
 MediaStreamTrack.prototype.label;
 
 /**
- * @type {boolean}
+ * @const {boolean}
  */
 MediaStreamTrack.prototype.enabled;
 
 /**
- * @type {boolean}
- * @const
+ * @const {boolean}
  */
 MediaStreamTrack.prototype.muted;
 
@@ -340,8 +333,7 @@ MediaStreamTrack.prototype.muted;
 MediaStreamTrack.prototype.contentHint;
 
 /**
- * @type {boolean}
- * @const
+ * @const {boolean}
  */
 MediaStreamTrack.prototype.remote;
 
@@ -416,8 +408,7 @@ var MediaStreamTrackEventInit;
 function MediaStreamTrackEvent(type, eventInitDict) {}
 
 /**
- * @type {!MediaStreamTrack}
- * @const
+ * @const {!MediaStreamTrack}
  */
 MediaStreamTrackEvent.prototype.track;
 
@@ -450,14 +441,12 @@ MediaStream.prototype.dispatchEvent = function(evt) {};
 /**
  * TODO(bemasc): Remove this property.
  * @deprecated
- * @type {string}
- * @const
+ * @const {string}
  */
 MediaStream.prototype.label;
 
 /**
- * @type {string}
- * @const
+ * @const {string}
  */
 MediaStream.prototype.id;
 
@@ -1123,8 +1112,7 @@ Navigator.prototype.webkitGetUserMedia =
 function MediaStreamEvent(type, eventInitDict) {}
 
 /**
- * @type {?MediaStream}
- * @const
+ * @const {?MediaStream}
  */
 MediaStreamEvent.prototype.stream;
 
@@ -1299,26 +1287,22 @@ PhotoSettings.prototype.redEyeReduction;
 function PhotoCapabilities() {}
 
 /**
- * @type {string}
- * @const
+ * @const {string}
  */
 PhotoCapabilities.prototype.redEyeReduction;
 
 /**
- * @type {!MediaSettingsRange}
- * @const
+ * @const {!MediaSettingsRange}
  */
 PhotoCapabilities.prototype.imageHeight;
 
 /**
- * @type {!MediaSettingsRange}
- * @const
+ * @const {!MediaSettingsRange}
  */
 PhotoCapabilities.prototype.imageWidth;
 
 /**
- * @type {!Array<!string>}
- * @const
+ * @const {!Array<!string>}
  */
 PhotoCapabilities.prototype.fillLightMode;
 
@@ -1346,8 +1330,7 @@ ImageCapture.prototype.getPhotoCapabilities = function() {};
 ImageCapture.prototype.grabFrame = function() {};
 
 /**
- * @type {!MediaStreamTrack}
- * @const
+ * @const {!MediaStreamTrack}
  */
 ImageCapture.prototype.track;
 
@@ -1360,26 +1343,22 @@ ImageCapture.prototype.track;
 function RTCTrackEvent(type, eventInitDict) {}
 
 /**
- * @type {?RTCRtpReceiver}
- * @const
+ * @const {?RTCRtpReceiver}
  */
 RTCTrackEvent.prototype.receiver;
 
 /**
- * @type {?MediaStreamTrack}
- * @const
+ * @const {?MediaStreamTrack}
  */
 RTCTrackEvent.prototype.track;
 
 /**
- * @type {?Array<!MediaStream>}
- * @const
+ * @const {?Array<!MediaStream>}
  */
 RTCTrackEvent.prototype.streams;
 
 /**
- * @type {?RTCRtpTransceiver}
- * @const
+ * @const {?RTCRtpTransceiver}
  */
 RTCTrackEvent.prototype.transceiver;
 
@@ -1639,8 +1618,7 @@ var RTCIceGatheringState;
 function RTCPeerConnectionIceEvent(type, eventInitDict) {}
 
 /**
- * @type {RTCIceCandidate}
- * @const
+ * @const {RTCIceCandidate}
  */
 RTCPeerConnectionIceEvent.prototype.candidate;
 
@@ -1655,21 +1633,18 @@ RTCPeerConnectionIceEvent.prototype.candidate;
 function RTCStats() {}
 
 /**
- * @type {?Date|number}
- * @const
+ * @const {?Date|number}
  */
 RTCStats.prototype.timestamp;
 
 /**
  * https://www.w3.org/TR/webrtc-stats/#rtcstatstype-str*
- * @type {string}
- * @const
+ * @const {string}
  */
 RTCStats.prototype.type;
 
 /**
- * @type {string}
- * @const
+ * @const {string}
  */
 RTCStats.prototype.id;
 
@@ -1713,8 +1688,7 @@ RTCStreamStats.prototype.qpSum;
 function RTCStatsReport() {}
 
 /**
- * @type {?Date|number}
- * @const
+ * @const {?Date|number}
  */
 RTCStatsReport.prototype.timestamp;
 
@@ -1731,27 +1705,23 @@ RTCStatsReport.prototype.stat = function(name) {};
 
 /**
  * @deprecated
- * @type {RTCStatsReport}
- * @const
+ * @const {RTCStatsReport}
  */
 RTCStatsReport.prototype.local;
 
 /**
  * @deprecated
- * @type {RTCStatsReport}
- * @const
+ * @const {RTCStatsReport}
  */
 RTCStatsReport.prototype.remote;
 
 /**
- * @type {string}
- * @const
+ * @const {string}
  */
 RTCStatsReport.prototype.type;
 
 /**
- * @type {string}
- * @const
+ * @const {string}
  */
 RTCStatsReport.prototype.id;
 
@@ -1900,14 +1870,12 @@ var MediaConstraints;
 function RTCDataChannel() {}
 
 /**
- * @type {string}
- * @const
+ * @const {string}
  */
 RTCDataChannel.prototype.label;
 
 /**
- * @type {boolean}
- * @const
+ * @const {boolean}
  */
 RTCDataChannel.prototype.reliable;
 

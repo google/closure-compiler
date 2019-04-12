@@ -114,8 +114,7 @@ function URL(url, base) {}
 URL.prototype.href;
 
 /**
- * @const
- * @type {string}
+ * @const {string}
  */
 URL.prototype.origin;
 
@@ -144,8 +143,7 @@ URL.prototype.pathname;
 URL.prototype.search;
 
 /**
- * @const
- * @type {!URLSearchParams}
+ * @const {!URLSearchParams}
  */
 URL.prototype.searchParams;
 
