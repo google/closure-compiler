@@ -25,12 +25,10 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.errorprone.annotations.DoNotCall;
-import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.CodingConvention.Cache;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -41,11 +39,11 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,30 +74,10 @@ import javax.annotation.Nullable;
  * @author tdeegan@google.com (Thomas Deegan)
  */
 class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
-
   // A prefix to differentiate property names from variable names.
   // TODO(nickreid): This pass could be made more efficient if props and variables were maintained
   // in separate datastructures. We wouldn't allocate a bunch of extra strings.
   private static final String PROP_NAME_PREFIX = ".";
-
-  /**
-   * Property names which are known to refer to functions that are too dynamic to analyze.
-   *
-   * <p>In particular, this includes functions which invoke other functions that they don't clearly
-   * alias.
-   *
-   * <p>This is of interest primarily if these properties are themselves being aliased, not when
-   * they are invoked. (i.e. `foo.bar = fn.call').
-   *
-   * <p>In some cases, like "call" and "apply", there may be special casing of how these functions
-   * propagate side-effects. For example, it is not the case that every invocation `foo.call(this)`
-   * is considered side-effectful.
-   */
-  private static final ImmutableSet<String> DYNAMIC_FUNCTION_PROPS =
-      ImmutableSet.of(
-          PROP_NAME_PREFIX + "call", //
-          PROP_NAME_PREFIX + "apply",
-          PROP_NAME_PREFIX + "constructor");
 
   private final AbstractCompiler compiler;
 
@@ -114,10 +92,10 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   private final Map<String, AmbiguatedFunctionSummary> summariesByName = new HashMap<>();
 
   /**
-   * Mapping from function node to side effects for all names associated with that node.
+   * Mapping from function node to summaries for all names associated with that node.
    *
    * <p>This is a multimap because you can construct situations in which a function node has
-   * multiple names, and therefore multiple associated side-effect infos. For example:
+   * multiple names, and therefore multiple associated summaries. For example:
    *
    * <pre>
    *   // Not enough type information to collapse/disambiguate properties on "staticMethod".
@@ -136,7 +114,9 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   private final Multimap<Node, AmbiguatedFunctionSummary> summariesForAllNamesOfFunctionByNode =
       ArrayListMultimap.create();
 
-  // List of all function call sites; used to iterate in markPureFunctionCalls.
+  // List of all function call sites. Storing them here during the function analysis traversal
+  // prevents us from doing a second traversal to annotate them with side-effects. We can just
+  // iterate the list.
   private final List<Node> allFunctionCalls = new ArrayList<>();
 
   /**
@@ -150,8 +130,17 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    * propagate side-effect information across it's entire structure. The resultant side-effects can
    * then be attached to invocation sites.
    */
-  private final LinkedDirectedGraph<AmbiguatedFunctionSummary, CallSitePropagationInfo>
+  private final LinkedDirectedGraph<AmbiguatedFunctionSummary, SideEffectPropagation>
       reverseCallGraph = LinkedDirectedGraph.createWithoutAnnotations();
+
+  /**
+   * A summary for a function for which no definition was found.
+   *
+   * <p>We assume it has all possible side-effects. It's useful for references like function
+   * parameters, or inner functions.
+   */
+  private final AmbiguatedFunctionSummary unknownFunctionSummary =
+      AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<unknown>").setAllFlags();
 
   private boolean hasProcessed = false;
 
@@ -177,48 +166,95 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   }
 
   /**
-   * Unwraps a complicated expression to reveal directly callable nodes that correspond to
-   * definitions. For example: (a.c || b) or (x ? a.c : b) are turned into [a.c, b]. Since when you
-   * call
+   * Traverses an {@code expr} to collect nodes representing potential callables that it may resolve
+   * to well known callables.
    *
-   * <pre>
-   *   var result = (a.c || b)(some, parameters);
-   * </pre>
-   *
-   * either a.c or b are called.
-   *
-   * @param exp A possibly complicated expression.
-   * @return A list of GET_PROP NAME and function expression nodes (all of which can be called). Or
-   *     null if any of the callable nodes are of an unsupported type. e.g. x['asdf'](param);
+   * @see {@link #collectCallableLeavesInternal}
+   * @return the disovered callables, or {@code null} if an unexpected possible value was found.
    */
   @Nullable
-  private static ImmutableList<Node> unwrapCallableExpression(Node exp) {
-    switch (exp.getToken()) {
-      case GETPROP:
-        if (isInvocationViaCallOrApply(exp.getParent())) {
-          return unwrapCallableExpression(exp.getFirstChild());
-        }
-        return ImmutableList.of(exp);
-      case FUNCTION:
-      case NAME:
-        return ImmutableList.of(exp);
-      case OR:
-      case HOOK:
-        Node firstVal;
-        if (exp.isHook()) {
-          firstVal = exp.getSecondChild();
-        } else {
-          firstVal = exp.getFirstChild();
-        }
-        ImmutableList<Node> firstCallable = unwrapCallableExpression(firstVal);
-        ImmutableList<Node> secondCallable = unwrapCallableExpression(firstVal.getNext());
+  private static ImmutableList<Node> collectCallableLeaves(Node expr) {
+    ArrayList<Node> callables = new ArrayList<>();
+    boolean allLegal = collectCallableLeavesInternal(expr, callables);
+    return allLegal ? ImmutableList.copyOf(callables) : null;
+  }
 
-        if (firstCallable == null || secondCallable == null) {
-          return null;
+  /**
+   * Traverses an {@code expr} to collect nodes representing potential callables that it may resolve
+   * to well known callables.
+   *
+   * <p>For example:
+   *
+   * <pre>
+   *   `a.c || b` => [a.c, b]
+   *   `x ? a.c : b` => [a.c, b]
+   *   `(function f() { }) && x || class Foo { constructor() { } }` => [function, x, constructor]`
+   * </pre>
+   *
+   * <p>This function is applicable to finding both assignment aliases and call targets. That is,
+   * one way to find the possible callees of an invocation is to pass the complex expression
+   * representing the final callee to this method.
+   *
+   * <p>This function uses a white-list approach. If a node that isn't understood is detected, the
+   * entire collection is invalidated.
+   *
+   * @see {@link #collectCallableLeaves}
+   * @param exp A possibly complicated expression.
+   * @param results The collection of qualified names and functions.
+   * @return {@code true} iff only understood results were discovered.
+   */
+  private static boolean collectCallableLeavesInternal(Node expr, ArrayList<Node> results) {
+    switch (expr.getToken()) {
+      case FUNCTION:
+      case GETPROP:
+      case NAME:
+        results.add(expr);
+        return true;
+
+      case SUPER:
+        {
+          // Pretend that `super` is an alias for the superclass reference.
+          Node clazz = checkNotNull(NodeUtil.getEnclosingClass(expr));
+          Node function = checkNotNull(NodeUtil.getEnclosingFunction(expr));
+          Node ctorDef = checkNotNull(NodeUtil.getEs6ClassConstructorMemberFunctionDef(clazz));
+
+          // The only place SUPER should be a callable expression is in a class ctor.
+          checkState(
+              function.isFirstChildOf(ctorDef), "Unknown SUPER reference: %s", expr.toStringTree());
+          return collectCallableLeavesInternal(clazz.getSecondChild(), results);
         }
-        return ImmutableList.<Node>builder().addAll(firstCallable).addAll(secondCallable).build();
+
+      case CLASS:
+        {
+          // Collect the constructor function, or failing that, the superclass reference.
+          @Nullable Node ctorDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(expr);
+          if (ctorDef != null) {
+            return collectCallableLeavesInternal(ctorDef.getOnlyChild(), results);
+          } else if (expr.getSecondChild().isEmpty()) {
+            return true; // A class an implicit ctor is pure when there is no superclass.
+          } else {
+            return collectCallableLeavesInternal(expr.getSecondChild(), results);
+          }
+        }
+
+      case AND:
+      case OR:
+        return collectCallableLeavesInternal(expr.getFirstChild(), results)
+            && collectCallableLeavesInternal(expr.getSecondChild(), results);
+
+      case COMMA:
+      case ASSIGN:
+        return collectCallableLeavesInternal(expr.getSecondChild(), results);
+
+      case HOOK:
+        return collectCallableLeavesInternal(expr.getChildAtIndex(1), results)
+            && collectCallableLeavesInternal(expr.getChildAtIndex(2), results);
+
+      case NEW_TARGET:
+      case THIS:
+        // These could be an alias to any function. Treat them as an unknown callable.
       default:
-        return null; // Unsupported call type.
+        return false; // Unsupported call type.
     }
   }
 
@@ -293,69 +329,48 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
   }
 
-  private static boolean isSupportedFunctionDefinition(@Nullable Node definitionRValue) {
-    if (definitionRValue == null) {
-      return false;
-    }
-    switch (definitionRValue.getToken()) {
-      case FUNCTION:
-        return true;
-      case HOOK:
-        return isSupportedFunctionDefinition(definitionRValue.getSecondChild())
-            && isSupportedFunctionDefinition(definitionRValue.getLastChild());
-      default:
-        return false;
-    }
-  }
-
   private ImmutableList<Node> getGoogCacheCallableExpression(Cache cacheCall) {
     checkNotNull(cacheCall);
 
-    if (cacheCall.keyFn == null) {
-      return unwrapCallableExpression(cacheCall.valueFn);
+    ImmutableList.Builder<Node> builder =
+        ImmutableList.<Node>builder().addAll(collectCallableLeaves(cacheCall.valueFn));
+    if (cacheCall.keyFn != null) {
+      builder.addAll(collectCallableLeaves(cacheCall.keyFn));
     }
-    return ImmutableList.<Node>builder()
-        .addAll(unwrapCallableExpression(cacheCall.valueFn))
-        .addAll(unwrapCallableExpression(cacheCall.keyFn))
-        .build();
+    return builder.build();
   }
 
-  @Nullable
   private List<AmbiguatedFunctionSummary> getSummariesForCallee(Node invocation) {
     checkArgument(NodeUtil.isInvocation(invocation), invocation);
 
-    ImmutableList<Node> expanded;
     Cache cacheCall = compiler.getCodingConvention().describeCachingCall(invocation);
+
+    final ImmutableList<Node> callees;
     if (cacheCall != null) {
-      expanded = getGoogCacheCallableExpression(cacheCall);
+      callees = getGoogCacheCallableExpression(cacheCall);
+    } else if (isInvocationViaCallOrApply(invocation)) {
+      callees = ImmutableList.of(invocation.getFirstFirstChild());
     } else {
-      expanded = unwrapCallableExpression(invocation.getFirstChild());
+      callees = collectCallableLeaves(invocation.getFirstChild());
     }
-    if (expanded == null) {
-      return null;
+
+    if (callees == null) {
+      return ImmutableList.of(unknownFunctionSummary);
     }
+
     List<AmbiguatedFunctionSummary> results = new ArrayList<>();
-    for (Node expression : expanded) {
-      if (NodeUtil.isFunctionExpression(expression)) {
-        // isExtern is false in the call to the constructor for the
-        // FunctionExpressionDefinition below because we know that
-        // getFunctionDefinitions() will only be called on the first
-        // child of an invocation and thus the function expression
-        // definition will never be an extern.
-        results.addAll(summariesForAllNamesOfFunctionByNode.get(expression));
-        continue;
-      }
+    for (Node callee : callees) {
+      if (callee.isFunction()) {
+        checkState(callee.isFunction(), callee);
 
-      String name = nameForReference(expression);
-      AmbiguatedFunctionSummary info = null;
-      if (name != null) {
-        info = summariesByName.get(name);
-      }
+        Collection<AmbiguatedFunctionSummary> summariesForFunction =
+            summariesForAllNamesOfFunctionByNode.get(callee);
+        checkState(!summariesForFunction.isEmpty(), "Function missed during analysis: %s", callee);
 
-      if (info != null) {
-        results.add(info);
+        results.addAll(summariesForFunction);
       } else {
-        return null;
+        String calleeName = nameForReference(callee);
+        results.add(summariesByName.getOrDefault(calleeName, unknownFunctionSummary));
       }
     }
     return results;
@@ -389,14 +404,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       summariesByName.put(name, AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, name));
     }
 
-    // Blacklist some highly dynamic names as definitely having side-effects.
-    for (String prop : DYNAMIC_FUNCTION_PROPS) {
-      summariesByName
-          .computeIfAbsent(
-              prop, (n) -> AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, n))
-          .setAllFlags();
-    }
-
     Multimaps.asMap(referencesByName).forEach(this::populateFunctionDefinitions);
   }
 
@@ -423,7 +430,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
             // If the assigned R-value is an analyzable expression, collect all the possible
             // FUNCTIONs that could result from that expression. If the expression isn't analyzable,
             // represent that with `null` so we can blacklist `name`.
-            .map((n) -> isSupportedFunctionDefinition(n) ? unwrapCallableExpression(n) : null)
+            .map((n) -> (n == null) ? null : collectCallableLeaves(n))
             .collect(toList());
 
     if (rvaluesAssignedToName.isEmpty() || rvaluesAssignedToName.contains(null)) {
@@ -436,9 +443,19 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       rvaluesAssignedToName.stream()
           .flatMap(List::stream)
           .forEach(
-              (f) -> {
-                checkState(f.isFunction(), f);
-                summariesForAllNamesOfFunctionByNode.put(f, summaryForName);
+              (rvalue) -> {
+                if (rvalue.isFunction()) {
+                  summariesForAllNamesOfFunctionByNode.put(rvalue, summaryForName);
+                } else {
+                  String rvalueName = nameForReference(rvalue);
+                  AmbiguatedFunctionSummary rvalueSummary =
+                      summariesByName.getOrDefault(rvalueName, unknownFunctionSummary);
+
+                  reverseCallGraph.connect(
+                      rvalueSummary.graphNode,
+                      SideEffectPropagation.forAlias(),
+                      summaryForName.graphNode);
+                }
               });
     }
   }
@@ -452,7 +469,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   private void propagateSideEffects() {
     FixedPointGraphTraversal.newTraversal(
             (AmbiguatedFunctionSummary source,
-                CallSitePropagationInfo edge,
+                SideEffectPropagation edge,
                 AmbiguatedFunctionSummary destination) -> edge.propagate(source, destination))
         .computeFixedPoint(reverseCallGraph);
   }
@@ -463,10 +480,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       List<AmbiguatedFunctionSummary> calleeSummaries = getSummariesForCallee(callNode);
       // Default to side effects, non-local results
       Node.SideEffectFlags flags = new Node.SideEffectFlags();
-      if (calleeSummaries == null) {
-        flags.setMutatesGlobalState();
-        flags.setThrows();
-        flags.setReturnsTainted();
+      if (calleeSummaries.isEmpty()) {
+        flags.setAllFlags();
       } else {
         flags.clearAllFlags();
         for (AmbiguatedFunctionSummary calleeSummary : calleeSummaries) {
@@ -485,7 +500,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
           if (isCallOrTaggedTemplateLit(callNode)) {
             if (calleeSummary.mutatesThis()) {
-              // A FunctionInfo for "f" maps to both "f()" and "f.call()" nodes.
+              // A summary for "f" maps to both "f()" and "f.call()" nodes.
               if (isInvocationViaCallOrApply(callNode)) {
                 flags.setMutatesArguments(); // `this` is actually an argument.
               } else {
@@ -500,6 +515,13 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         }
       }
 
+      if (callNode.getFirstChild().isSuper()) {
+        // All `super()` calls (i.e. from subclass constructors) implicitly mutate `this`; they
+        // determine its value in the caller scope. Concretely, `super()` calls must not be removed
+        // or reordered. Marking them this way ensures that without pinning the enclosing function.
+        flags.setMutatesThis();
+      }
+
       // Handle special cases (Math, RegExp)
       if (isCallOrTaggedTemplateLit(callNode)) {
         if (!NodeUtil.functionCallHasSideEffects(callNode, compiler)) {
@@ -512,9 +534,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         }
       }
 
-      int newSideEffectFlags = flags.valueOf();
-      if (callNode.getSideEffectFlags() != newSideEffectFlags) {
-        callNode.setSideEffectFlags(newSideEffectFlags);
+      if (callNode.getSideEffectFlags() != flags.valueOf()) {
+        callNode.setSideEffectFlags(flags);
         compiler.reportChangeToEnclosingScope(callNode);
       }
     }
@@ -955,20 +976,24 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       }
 
       List<AmbiguatedFunctionSummary> calleeSummaries = getSummariesForCallee(invocation);
-      if (calleeSummaries == null) {
-        callerInfo.setMutatesGlobalState();
-        callerInfo.setFunctionThrows();
+      if (calleeSummaries.isEmpty()) {
+        callerInfo.setAllFlags();
         return;
       }
 
       for (AmbiguatedFunctionSummary calleeInfo : calleeSummaries) {
-        CallSitePropagationInfo edge = CallSitePropagationInfo.computePropagationType(invocation);
+        SideEffectPropagation edge = SideEffectPropagation.forInvocation(invocation);
         reverseCallGraph.connect(calleeInfo.graphNode, edge, callerInfo.graphNode);
       }
     }
   }
 
   private static boolean isInvocationViaCallOrApply(Node callSite) {
+    Node receiver = callSite.getFirstFirstChild();
+    if (receiver == null || (!receiver.isName() && !receiver.isGetProp())) {
+      return false;
+    }
+
     return NodeUtil.isFunctionObjectCall(callSite) || NodeUtil.isFunctionObjectApply(callSite);
   }
 
@@ -994,30 +1019,87 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   }
 
   /**
-   * This class stores all the information about a call site needed to propagate side effects from
-   * one instance of {@link AmbiguatedFunctionSummary} to another.
+   * This class stores all the information about a connection between functions needed to propagate
+   * side effects from one instance of {@link AmbiguatedFunctionSummary} to another.
    */
-  @Immutable
-  private static class CallSitePropagationInfo {
+  private static class SideEffectPropagation {
 
-    private CallSitePropagationInfo(
-        boolean allArgsUnescapedLocal, boolean calleeThisEqualsCallerThis, Token callType) {
-      checkArgument(NodeUtil.isInvocation(new Node(callType)), callType);
-      this.allArgsUnescapedLocal = allArgsUnescapedLocal;
-      this.calleeThisEqualsCallerThis = calleeThisEqualsCallerThis;
-      this.callType = callType;
-    }
+    // Whether this propagation represents an aliasing of one name by another. In that case, all
+    // side effects of the "callee" just need to be copied onto the "caller".
+    private final boolean callerIsAlias;
 
-    // If all the arguments values are local to the scope in which the call site occurs.
+    // If all the arguments passed to the callee are local to the caller.
     private final boolean allArgsUnescapedLocal;
-    /**
+
+    /*
      * If you call a function with apply or call, one of the arguments at the call site will be used
      * as 'this' inside the implementation. If this is pass into apply like so: function.apply(this,
      * ...) then 'this' in the caller is tainted.
      */
     private final boolean calleeThisEqualsCallerThis;
-    // Whether this represents CALL (not a NEW node).
-    private final Token callType;
+
+    // The token used to invoke the callee by the caller.
+    @Nullable private final Node invocation;
+
+    private SideEffectPropagation(
+        boolean callerIsAlias,
+        boolean allArgsUnescapedLocal,
+        boolean calleeThisEqualsCallerThis,
+        Node invocation) {
+      checkArgument(invocation == null || NodeUtil.isInvocation(invocation), invocation);
+
+      this.callerIsAlias = callerIsAlias;
+      this.allArgsUnescapedLocal = allArgsUnescapedLocal;
+      this.calleeThisEqualsCallerThis = calleeThisEqualsCallerThis;
+      this.invocation = invocation;
+    }
+
+    static SideEffectPropagation forAlias() {
+      return new SideEffectPropagation(true, false, false, null);
+    }
+
+    static SideEffectPropagation forInvocation(Node invocation) {
+      checkArgument(NodeUtil.isInvocation(invocation), invocation);
+
+      return new SideEffectPropagation(
+          false,
+          NodeUtil.allArgsUnescapedLocal(invocation),
+          calleeAndCallerShareThis(invocation),
+          invocation);
+    }
+
+    private static boolean calleeAndCallerShareThis(Node invocation) {
+      if (!isCallOrTaggedTemplateLit(invocation)) {
+        return false; // Calling a constructor creates a new object bound to `this`.
+      }
+
+      Node callee = invocation.getFirstChild();
+      if (callee.isSuper()) {
+        return true;
+      }
+
+      @Nullable final Node thisArg;
+      if (isInvocationViaCallOrApply(invocation)) {
+        // If the call site is actually a `.call` or `.apply`, then `this` will be an argument.
+        thisArg = invocation.getSecondChild();
+      } else if (callee.isGetProp()) {
+        thisArg = callee.getFirstChild();
+      } else {
+        thisArg = null;
+      }
+
+      if (thisArg == null) {
+        return false; // No `this` is being passed.
+      } else if (thisArg.isThis()) {
+        return true;
+      }
+
+      // TODO(nickreid): If `thisArg` is a known local or known arg we could say something more
+      // specific about the effect of the callee mutating `this`.
+
+      // We're not sure what `this` is being passed, so make a conservative choice.
+      return false;
+    }
 
     /**
      * Propagate the side effects from the callee to the caller.
@@ -1027,71 +1109,37 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      * @return Returns true if the propagation changed the side effects on the caller.
      */
     boolean propagate(AmbiguatedFunctionSummary callee, AmbiguatedFunctionSummary caller) {
-      CallSitePropagationInfo propagationType = this;
-      boolean changed = false;
-      // If the callee modifies global state then so does that caller.
-      if (callee.mutatesGlobalState() && !caller.mutatesGlobalState()) {
-        caller.setMutatesGlobalState();
-        changed = true;
+      int initialCallerFlags = caller.bitmask;
+
+      if (callerIsAlias) {
+        caller.setMask(callee.bitmask);
+        return caller.bitmask != initialCallerFlags;
       }
-      // If the callee throws an exception then so does the caller.
-      if (callee.functionThrows() && !caller.functionThrows()) {
+
+      if (callee.mutatesGlobalState()) {
+        // If the callee modifies global state then so does that caller.
+        caller.setMutatesGlobalState();
+      }
+      if (callee.functionThrows()) {
+        // If the callee throws an exception then so does the caller.
         caller.setFunctionThrows();
-        changed = true;
       }
-      // If the callee mutates its input arguments and the arguments escape the caller then it has
-      // unbounded side effects.
-      if (callee.mutatesArguments()
-          && !propagationType.allArgsUnescapedLocal
-          && !caller.mutatesGlobalState()) {
+      if (callee.mutatesArguments() && !allArgsUnescapedLocal) {
+        // If the callee mutates its input arguments and the arguments escape the caller then it has
+        // unbounded side effects.
         caller.setMutatesGlobalState();
-        changed = true;
       }
-      if (callee.mutatesThis() && propagationType.calleeThisEqualsCallerThis) {
-        if (!caller.mutatesThis()) {
+      if (callee.mutatesThis()) {
+        if (invocation.isNew()) {
+          // NEWing a constructor provide a unescaped "this" making side-effects impossible.
+        } else if (calleeThisEqualsCallerThis) {
           caller.setMutatesThis();
-          changed = true;
-        }
-      } else if (callee.mutatesThis() && propagationType.callType != Token.NEW) {
-        // NEW invocations of a constructor that modifies "this" don't cause side effects.
-        if (!caller.mutatesGlobalState()) {
+        } else {
           caller.setMutatesGlobalState();
-          changed = true;
-        }
-      }
-      return changed;
-    }
-
-    static CallSitePropagationInfo computePropagationType(Node callSite) {
-      checkArgument(NodeUtil.isInvocation(callSite), callSite);
-
-      boolean thisIsOuterThis = false;
-      if (isCallOrTaggedTemplateLit(callSite)) {
-        // Side effects only propagate via regular calls.
-        // Calling a constructor that modifies "this" has no side effects.
-        // Notice that we're using "mutatesThis" from the callee
-        // summary. If the call site is actually a .call or .apply, then
-        // the "this" is going to be one of its arguments.
-        boolean isInvocationViaCallOrApply = isInvocationViaCallOrApply(callSite);
-        Node objectNode =
-            isInvocationViaCallOrApply ? callSite.getSecondChild() : callSite.getFirstFirstChild();
-        if (objectNode != null && objectNode.isName() && !isInvocationViaCallOrApply) {
-          // Exclude ".call" and ".apply" as the value may still be
-          // null or undefined. We don't need to worry about this with a
-          // direct method call because null and undefined don't have any
-          // properties.
-
-          // TODO(nicksantos): Turn this back on when locals-tracking
-          // is fixed. See testLocalizedSideEffects11.
-          //if (!caller.knownLocals.contains(name)) {
-          //}
-        } else if (objectNode != null && objectNode.isThis()) {
-          thisIsOuterThis = true;
         }
       }
 
-      boolean argsUnescapedLocal = NodeUtil.allArgsUnescapedLocal(callSite);
-      return new CallSitePropagationInfo(argsUnescapedLocal, thisIsOuterThis, callSite.getToken());
+      return caller.bitmask != initialCallerFlags;
     }
   }
 
@@ -1108,35 +1156,36 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   private static final class AmbiguatedFunctionSummary {
 
     // Side effect types:
-    private static final int THROWS = 1 << 1;
-    private static final int MUTATES_GLOBAL_STATE = 1 << 2;
-    private static final int MUTATES_THIS = 1 << 3;
-    private static final int MUTATES_ARGUMENTS = 1 << 4;
+    private static final int THROWS = 1 << 0;
+    private static final int MUTATES_GLOBAL_STATE = 1 << 1;
+    private static final int MUTATES_THIS = 1 << 2;
+    private static final int MUTATES_ARGUMENTS = 1 << 3;
     // Function metatdata
-    private static final int ESCAPED_RETURN = 1 << 5;
+    private static final int ESCAPED_RETURN = 1 << 4;
 
     // The name shared by the set of functions that defined this summary.
     private final String name;
     // The node holding this summary in the reverse call graph.
-    private final DiGraphNode<AmbiguatedFunctionSummary, CallSitePropagationInfo> graphNode;
+    private final DiGraphNode<AmbiguatedFunctionSummary, SideEffectPropagation> graphNode;
     // The side effect flags for this set of functions.
     // TODO(nickreid): Replace this with a `Node.SideEffectFlags`.
     private int bitmask = 0;
 
     /** Adds a new summary node to {@code graph}, storing the node and returning the summary. */
     static AmbiguatedFunctionSummary createInGraph(
-        DiGraph<AmbiguatedFunctionSummary, CallSitePropagationInfo> graph, String name) {
+        DiGraph<AmbiguatedFunctionSummary, SideEffectPropagation> graph, String name) {
       return new AmbiguatedFunctionSummary(graph, name);
     }
 
     private AmbiguatedFunctionSummary(
-        DiGraph<AmbiguatedFunctionSummary, CallSitePropagationInfo> graph, String name) {
+        DiGraph<AmbiguatedFunctionSummary, SideEffectPropagation> graph, String name) {
       this.name = checkNotNull(name);
       this.graphNode = graph.createDirectedGraphNode(this);
     }
 
-    private void setMask(int mask) {
+    private AmbiguatedFunctionSummary setMask(int mask) {
       bitmask |= mask;
+      return this;
     }
 
     private boolean getMask(int mask) {
@@ -1148,23 +1197,18 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     /** Marks the function as having "modifies this" side effects. */
-    void setMutatesThis() {
-      setMask(MUTATES_THIS);
+    AmbiguatedFunctionSummary setMutatesThis() {
+      return setMask(MUTATES_THIS);
     }
 
-    /**
-     * Returns whether the function returns something that is not affected by global state.
-     *
-     * <p>In the current implementation, this is only true if the return value is a literal or
-     * primitive since locals are not tracked correctly.
-     */
+    /** Returns whether the function returns something that may be affected by global state. */
     boolean escapedReturn() {
       return getMask(ESCAPED_RETURN);
     }
 
     /** Marks the function as having non-local return result. */
-    void setEscapedReturn() {
-      setMask(ESCAPED_RETURN);
+    AmbiguatedFunctionSummary setEscapedReturn() {
+      return setMask(ESCAPED_RETURN);
     }
 
     /** Returns true if function has an explicit "throw". */
@@ -1173,8 +1217,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     /** Marks the function as having "throw" side effects. */
-    void setFunctionThrows() {
-      setMask(THROWS);
+    AmbiguatedFunctionSummary setFunctionThrows() {
+      return setMask(THROWS);
     }
 
     /** Returns true if function mutates global state. */
@@ -1183,8 +1227,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     /** Marks the function as having "modifies globals" side effects. */
-    void setMutatesGlobalState() {
-      setMask(MUTATES_GLOBAL_STATE);
+    AmbiguatedFunctionSummary setMutatesGlobalState() {
+      return setMask(MUTATES_GLOBAL_STATE);
     }
 
     /** Returns true if function mutates its arguments. */
@@ -1193,13 +1237,13 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     /** Marks the function as having "modifies arguments" side effects. */
-    void setMutatesArguments() {
-      setMask(MUTATES_ARGUMENTS);
+    AmbiguatedFunctionSummary setMutatesArguments() {
+      return setMask(MUTATES_ARGUMENTS);
     }
 
     AmbiguatedFunctionSummary setAllFlags() {
-      setMask(THROWS | MUTATES_THIS | MUTATES_ARGUMENTS | MUTATES_GLOBAL_STATE | ESCAPED_RETURN);
-      return this;
+      return setMask(
+          THROWS | MUTATES_THIS | MUTATES_ARGUMENTS | MUTATES_GLOBAL_STATE | ESCAPED_RETURN);
     }
 
     @Override
@@ -1244,7 +1288,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    * A compiler pass that constructs a reference graph and drives the PureFunctionIdentifier across
    * it.
    */
-  static class Driver implements CompilerPass {
+  static final class Driver implements CompilerPass {
     private final AbstractCompiler compiler;
 
     Driver(AbstractCompiler compiler) {

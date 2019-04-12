@@ -111,6 +111,30 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testClassConstructorSuperCallIsNeverRemoved() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    options.checkTypes = false; // This is more a syntax test.
+
+    testSame(
+        options,
+        lines(
+            "function Super() { }", // A pure function that *might* be used as a constructor.
+            "",
+            "class Sub extends Super {",
+            "  constructor() {",
+            // We can't delete this call despite being pointless. It's syntactically required.
+            "    super();",
+            "  }",
+            "}",
+            "",
+            // We have to use the class somehow or the entire this is removable.
+            "alert(new Sub());"));
+  }
+
+  @Test
   public void testForOfDoesNotFoolSideEffectDetection() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
