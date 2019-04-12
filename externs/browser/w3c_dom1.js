@@ -240,73 +240,73 @@ Node.prototype.removeChild = function(oldChild) {};
 Node.prototype.replaceChild = function(newChild, oldChild) {};
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.ATTRIBUTE_NODE;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.CDATA_SECTION_NODE;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.COMMENT_NODE;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.DOCUMENT_FRAGMENT_NODE;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.DOCUMENT_NODE;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.DOCUMENT_TYPE_NODE;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.ELEMENT_NODE;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.ENTITY_NODE;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.ENTITY_REFERENCE_NODE;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.PROCESSING_INSTRUCTION_NODE;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.TEXT_NODE;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
 Node.NOTATION_NODE;
