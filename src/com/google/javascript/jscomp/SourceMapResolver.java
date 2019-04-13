@@ -98,8 +98,14 @@ public class SourceMapResolver {
    */
   @Nullable
   static SourceFile getRelativePath(String baseFilePath, String relativePath) {
-    return SourceFile.fromPath(
-        FileSystems.getDefault().getPath(baseFilePath).resolveSibling(relativePath).normalize(),
-        UTF_8);
+    try {
+      // Resolving a sibling can throw when the path contains invalid characters such
+      // as the ":" character when running on windows.
+      return SourceFile.fromPath(
+          FileSystems.getDefault().getPath(baseFilePath).resolveSibling(relativePath).normalize(),
+          UTF_8);
+    } catch (Exception e) {
+      return null;
+    }
   }
 }
