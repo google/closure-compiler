@@ -2258,6 +2258,74 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMutatesThis_traversesThisAsReceiver() {
+    assertPureCallsMarked(
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.foo;",
+            "",
+            "    this.mutateThis();",
+            "  }",
+            "",
+            "  mutateThis() { this.foo = 9; }",
+            "}",
+            "",
+            // Instantiation swallows "mutates this" side-effects.
+            "var x = new C();",
+            // But in general it is still a side-effect.
+            "x.mutateThis()"),
+        ImmutableList.of("C"));
+  }
+
+  @Test
+  public void testMutatesThis_traversesSuperAsReceiver() {
+    assertPureCallsMarked(
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.foo;",
+            "",
+            // Ignore the fact that there's no superclass.
+            "    super.mutateThis();",
+            "  }",
+            "",
+            "  mutateThis() { this.foo = 9; }",
+            "}",
+            "",
+            // Instantiation swallows "mutates this" side-effects.
+            "var x = new C();",
+            // But in general it is still a side-effect.
+            "x.mutateThis()"),
+        ImmutableList.of("C"));
+  }
+
+  @Test
+  public void testMutatesThis_expandsToMutatesGlobalScope_traversingArbitraryReceiver() {
+    assertNoPureCalls(
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.foo;",
+            "",
+            "    somethingElse.mutateThis();",
+            "  }",
+            "",
+            "  mutateThis() {",
+            "    this.foo = 9;",
+            "  }",
+            "}",
+            "",
+            // Instantiation swallows "mutates this" side-effects.
+            "var x = new C();",
+            // But in general it is still a side-effect.
+            "x.mutateThis()"));
+  }
+
+  @Test
   public void testGlobalScopeTaintedByWayOfThisPropertyAndForOfLoop() {
     // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
     disableTypeCheck();

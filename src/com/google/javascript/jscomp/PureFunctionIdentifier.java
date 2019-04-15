@@ -1090,7 +1090,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       if (thisArg == null) {
         return false; // No `this` is being passed.
-      } else if (thisArg.isThis()) {
+      } else if (thisArg.isThis() || thisArg.isSuper()) {
         return true;
       }
 
