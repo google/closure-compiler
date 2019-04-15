@@ -39,7 +39,7 @@ HTMLObjectElement.prototype.CallFunction = function(xmlString) {};
  * Returns the value of the Flash variable specified by varName or null if the
  * variable does not exist.
  * @param {string} varName The variable name.
- * @return {string?} The variable value.
+ * @return {?string} The variable value.
  */
 HTMLObjectElement.prototype.GetVariable = function(varName) {};
 

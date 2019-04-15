@@ -134,20 +134,20 @@ function alert(message) {}
 function clearImmediate(immediateID) {}
 
 /**
- * @param {number|undefined?} intervalID
+ * @param {number=} opt_intervalID
  * @see https://developer.mozilla.org/en/DOM/window.clearInterval
  * @suppress {duplicate}
  * @return {undefined}
  */
-function clearInterval(intervalID) {}
+function clearInterval(opt_intervalID) {}
 
 /**
- * @param {number|undefined?} timeoutID
+ * @param {number=} opt_timeoutID
  * @see https://developer.mozilla.org/en/DOM/window.clearTimeout
  * @suppress {duplicate}
  * @return {undefined}
  */
-function clearTimeout(timeoutID) {}
+function clearTimeout(opt_timeoutID) {}
 
 /**
  * @param {*} message
