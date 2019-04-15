@@ -52,6 +52,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
@@ -62,6 +63,7 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
+import com.google.javascript.jscomp.ProcessClosureProvidesAndRequires.ProvidedName;
 import com.google.javascript.jscomp.modules.Binding;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
@@ -190,6 +192,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   private final JSTypeRegistry typeRegistry;
   private final ModuleMap moduleMap;
   private final ModuleImportResolver moduleImportResolver;
+  private final boolean processClosurePrimitives;
   private final List<FunctionType> delegateProxyCtors = new ArrayList<>();
   private final Map<String, String> delegateCallingConventions = new HashMap<>();
   private final Map<Node, TypedScope> memoized = new LinkedHashMap<>();
@@ -214,6 +217,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   // = class {};` as `const exports = class {};`. Treat GETPROP and STRING_KEY nodes as if they were
   // annotated @const.
   private final Set<Node> undeclaredNamesForClosure = new HashSet<>();
+
+  // Maps EXPR_RESULT nodes from goog.provides to all implicitly provided names from the call
+  private final Multimap<Node, ProvidedName> providedNamesFromCall = LinkedHashMultimap.create();
 
   private class WeakModuleImport {
     private final Node moduleLocalNode;
@@ -242,8 +248,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   }
 
   /**
-   * Defer attachment of types to nodes until all type names
-   * have been resolved. Then, we can resolve the type and attach it.
+   * Defer attachment of types to nodes until all type names have been resolved. Then, we can
+   * resolve the type and attach it.
    */
   private class DeferredSetType {
     final Node node;
@@ -289,6 +295,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     this.unknownType = typeRegistry.getNativeObjectType(UNKNOWN_TYPE);
     this.moduleMap = compiler.getModuleMap();
     this.moduleImportResolver = new ModuleImportResolver(this.moduleMap);
+    this.processClosurePrimitives = compiler.getOptions().closurePass;
   }
 
   private void report(JSError error) {
@@ -493,8 +500,49 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   }
 
   /**
-   * Patches a given global scope by removing variables previously declared in
-   * a script and re-traversing a new version of that script.
+   * Gathers all namespaces created by goog.provide and any definitions in code.
+   *
+   * <p>This method does not actually declare anything in the scope. In order to accurately report
+   * redefinition warnings, wait to declare implicit names until the actual goog.provide call.
+   *
+   * @param root The global ROOT or a SCRIPT
+   */
+  private void gatherAllProvides(Node root) {
+    if (!processClosurePrimitives) {
+      return;
+    }
+
+    Node externs = root.getFirstChild();
+    Node js = root.getSecondChild();
+    Map<String, ProvidedName> providedNames =
+        new ProcessClosureProvidesAndRequires(
+                compiler,
+                /* preprocessorSymbolTable= */ null,
+                CheckLevel.OFF,
+                /* preserveGoogProvidesAndRequires= */ true)
+            .collectProvidedNames(externs, js);
+
+    for (ProvidedName name : providedNames.values()) {
+      if (name.getCandidateDefinition() != null) {
+        // This name will be defined eventually. Don't worry about it.
+        Node firstDefinitionNode = name.getCandidateDefinition();
+        if (NodeUtil.isExprAssign(firstDefinitionNode)
+            && firstDefinitionNode.getFirstFirstChild().isName()) {
+          // Treat assignments of provided names as declarations.
+          undeclaredNamesForClosure.add(firstDefinitionNode.getFirstFirstChild());
+        }
+      } else if (name.getFirstProvideCall() != null
+          && NodeUtil.isExprCall(name.getFirstProvideCall())) {
+        // This name is implicitly created by a goog.provide call; declare it in the scope once
+        // reaching the provide call.
+        providedNamesFromCall.put(name.getFirstProvideCall(), name);
+      }
+    }
+  }
+
+  /**
+   * Patches a given global scope by removing variables previously declared in a script and
+   * re-traversing a new version of that script.
    *
    * @param globalScope The global scope generated by {@code createScope}.
    * @param scriptRoot The script that is modified.
@@ -574,6 +622,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     declareNativeFunctionType(s, REGEXP_FUNCTION_TYPE);
     declareNativeFunctionType(s, STRING_OBJECT_FUNCTION_TYPE);
     declareNativeValueType(s, "undefined", VOID_TYPE);
+
+    gatherAllProvides(root);
 
     return s;
   }
@@ -2590,6 +2640,30 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       return false;
     }
 
+    /** Given a `goog.provide()` call and implicit ProvidedName, declares the name in the scope. */
+    void declareProvidedNs(Node provideCall, ProvidedName providedName) {
+      // Redefine this name if we haven't already added a provide definition.
+      // Note: in some cases, this will cause a redefinition error.
+      ObjectType anonymousObjectType = typeRegistry.createAnonymousObjectType(null);
+      new SlotDefiner()
+          .inScope(currentScope)
+          .allowLaterTypeInference(false)
+          .forVariableName(providedName.getNamespace())
+          .forDeclarationNode(provideCall)
+          .withType(anonymousObjectType)
+          .defineSlot();
+
+      QualifiedName namespace = QualifiedName.of(providedName.getNamespace());
+      if (!namespace.isSimple()) {
+        ObjectType ownerType =
+            currentScope.lookupQualifiedName(namespace.getOwner()).toMaybeObjectType();
+        if (ownerType != null) {
+          ownerType.defineDeclaredProperty(
+              namespace.getComponent(), anonymousObjectType, provideCall);
+        }
+      }
+    }
+
     private boolean isConstantDeclarationWithKnownType(JSDocInfo info, Node n, JSType valueType) {
       return NodeUtil.isConstantDeclaration(compiler.getCodingConvention(), info, n)
           && valueType != null
@@ -2845,6 +2919,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // properties to these class-types. We want to ensure declarations within the CLASS have
           // priority.
           createScope(n, currentScope);
+          break;
+
+        case EXPR_RESULT:
+          Collection<ProvidedName> names = providedNamesFromCall.get(n);
+          if (names != null) {
+            for (ProvidedName name : names) {
+              declareProvidedNs(n, name);
+            }
+          }
           break;
 
         default:

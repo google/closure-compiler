@@ -39,6 +39,7 @@ import org.junit.Before;
 abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
   private boolean reportUnknownTypes = false;
+  private boolean runClosurePass = false;
 
   @Override
   @Before
@@ -63,6 +64,10 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
   protected void enableReportUnknownTypes() {
     this.reportUnknownTypes = true;
+  }
+
+  protected void enableRunClosurePass() {
+    this.runClosurePass = true;
   }
 
   protected static ObjectType getInstanceType(Node js1Node) {
@@ -258,6 +263,7 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
         ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
         compiler.getOptions());
     compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
+    compiler.getOptions().setClosurePass(runClosurePass);
 
     Node jsNode = IR.root(compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler));
     Node externsNode = IR.root(compiler.getInput(new InputId("[externs]")).getAstRoot(compiler));

@@ -111,6 +111,10 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
     check("isBooleanValueType()").that(actualNonNull().isBooleanValueType()).isTrue();
   }
 
+  public void isNoType() {
+    check("isNoType()").that(actualNonNull().isNoType()).isTrue();
+  }
+
   public void isUnknown() {
     check("isUnknownType()").that(actualNonNull().isUnknownType()).isTrue();
   }
@@ -150,6 +154,14 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
     return check("toMaybeObjectType().getPropertyType(%s)", propName)
         .about(types())
         .that(actualNonNull().toMaybeObjectType().getPropertyType(propName));
+  }
+
+  public void hasDeclaredProperty(String propName) {
+    check("isObjectType()").that(actualNonNull().isObjectType()).isTrue();
+
+    check("toMaybeObjectType().isPropertyTypeDeclared(%s)", propName)
+        .that(actualNonNull().toMaybeObjectType().isPropertyTypeDeclared(propName))
+        .isTrue();
   }
 
   public void isObjectTypeWithoutProperty(String propName) {

@@ -24,7 +24,6 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSUR
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -149,7 +148,12 @@ class ProcessClosureProvidesAndRequires {
     compiler.report(JSError.make(r.requireNode, requiresLevel, error, r.namespace));
   }
 
-  private class CollectDefinitions extends AbstractPostOrderCallback {
+  private class CollectDefinitions implements NodeTraversal.Callback {
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return !n.isModuleBody();
+    }
+
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
@@ -693,6 +697,38 @@ class ProcessClosureProvidesAndRequires {
       // definitions that a user added.
       return candidateDefinition != null
           && !previouslyProvidedDefinitions.contains(candidateDefinition);
+    }
+
+    /**
+     * Returns the `goog.provide` call that created this name, if any, or otherwise the first
+     * 'previous provide' assignmetn that created this name.
+     */
+    Node getFirstProvideCall() {
+      return firstNode;
+    }
+
+    /**
+     * Returns the definition of this provided namespace in the input code, if any, or null.
+     *
+     * <p>For example, this returns `a.b = class {};` given 'a.b' in
+     *
+     * <pre>
+     *   goog.provide('a.b');
+     *   a.b = class {};
+     * </pre>
+     *
+     * Note: this method will only return candidate definitions that count towards provide
+     * rewriting. If a name is defined, then provided, the candidate definition will not be the
+     * early definition. This doesn't completely mimic uncompiled behavior, but supports some legacy
+     * code. Externs definitions never count.
+     */
+    Node getCandidateDefinition() {
+      return candidateDefinition;
+    }
+
+    /** Returns the Closure namespace of this provide, e.g. "a.b" for `goog.provide('a.b');` */
+    String getNamespace() {
+      return namespace;
     }
 
     /**

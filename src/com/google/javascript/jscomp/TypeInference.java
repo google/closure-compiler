@@ -299,7 +299,7 @@ class TypeInference
   private FlowScope updateNamedParameter(
       Node paramName, boolean hasDefaultValue, JSType inferredType, FlowScope entryFlowScope) {
     TypedVar var = containerScope.getVar(paramName.getString());
-    checkNotNull(var);
+    checkNotNull(var, "Missing var for parameter %s", paramName);
 
     paramName.setJSType(inferredType);
 

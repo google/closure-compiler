@@ -2640,6 +2640,21 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testProvidingTopLevelVar() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    testNoWarnings(
+        options,
+        lines(
+            "goog.provide('Placer');",
+            "goog.provide('Placer.Alignment');",
+            "/** @param {*} image */ var Placer = function(image) {};",
+            "Placer.Alignment = {LEFT: 'left'};"));
+  }
+
+  @Test
   public void testAtDefineReassigned() {
     test(createCompilerOptions(),
          "/** @define {boolean} */ var HI = true; HI = false;",
