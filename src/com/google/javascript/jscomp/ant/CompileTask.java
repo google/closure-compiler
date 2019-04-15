@@ -468,7 +468,7 @@ public final class CompileTask
     for (Warning warning : warnings) {
       CheckLevel level = warning.getLevel();
       String groupName = warning.getGroup();
-      DiagnosticGroup group = new DiagnosticGroups().forName(groupName);
+      DiagnosticGroup group = DiagnosticGroups.forName(groupName);
       if (group == null) {
         throw new BuildException(
             "Unrecognized 'warning' option value (" + groupName + ")");

@@ -36,7 +36,7 @@ public class J2clSuppressWarningsGuard extends DiagnosticGroupWarningsGuard {
           DiagnosticGroups.STRICT_MODULE_DEP_CHECK,
           DiagnosticGroups.SUSPICIOUS_CODE,
           DiagnosticGroups.UNUSED_LOCAL_VARIABLE,
-          new DiagnosticGroups().forName("transitionalSuspiciousCodeWarnings"));
+          DiagnosticGroups.forName("transitionalSuspiciousCodeWarnings"));
 
   public J2clSuppressWarningsGuard() {
     super(DEFAULT_J2CL_SUPRRESIONS, CheckLevel.OFF);
