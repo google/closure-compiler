@@ -22,6 +22,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOL
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
@@ -31,11 +32,13 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.TernaryValue;
 import java.text.MessageFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -213,14 +216,14 @@ class ProcessDefines implements CompilerPass {
     //         : new GlobalNamespace(compiler, externs, root);
 
     // Find all the global names with a @define annotation
-    List<Name> allDefines = new ArrayList<>();
+    List<Name> listOfDefines = new ArrayList<>();
     for (Name name : namespace.getNameIndex().values()) {
       Ref decl = name.getDeclaration();
       if (name.getJSDocInfo() != null && name.getJSDocInfo().isDefine()) {
         // Process defines should not depend on check types being enabled,
         // so we look for the JSDoc instead of the inferred type.
         if (isValidDefineType(name.getJSDocInfo().getType())) {
-          allDefines.add(name);
+          listOfDefines.add(name);
         } else {
           JSError error = JSError.make(decl.getNode(), INVALID_DEFINE_TYPE_ERROR);
           compiler.report(error);
@@ -240,24 +243,25 @@ class ProcessDefines implements CompilerPass {
           }
 
           if (info != null && info.isDefine()) {
-            allDefines.add(name);
+            listOfDefines.add(name);
             break;
           }
         }
       }
     }
 
-    CollectDefines pass = new CollectDefines(allDefines);
+    CollectDefines pass = new CollectDefines(namespace, listOfDefines);
     NodeTraversal.traverseRoots(compiler, pass, externs, root);
-    return pass.getAllDefines();
+    return pass.allDefines;
   }
 
   /** Finds all assignments to @defines, and figures out the last value of the @define. */
   private final class CollectDefines implements Callback {
 
-    private final Map<String, DefineInfo> assignableDefines;
-    private final Map<String, DefineInfo> allDefines;
-    private final Map<Node, RefInfo> allRefInfo;
+    private final Map<String, DefineInfo> assignableDefines = new HashMap<>();
+    private final Map<String, DefineInfo> allDefines = new HashMap<>();
+    private final Map<Node, RefInfo> allRefInfo = new HashMap<>();
+    private final Set<Node> validDefineAliases = new HashSet<>();
 
     // A hack that allows us to remove ASSIGN/VAR statements when
     // we're currently visiting one of the children of the assign.
@@ -266,18 +270,18 @@ class ProcessDefines implements CompilerPass {
     // A stack tied to the node traversal, to keep track of whether
     // we're in a conditional block. If 1 is at the top, assignment to
     // a define is allowed. Otherwise, it's not allowed.
-    private final Deque<Integer> assignAllowed;
+    private final Deque<Integer> assignAllowed = new ArrayDeque<>();
 
-    CollectDefines(List<Name> listOfDefines) {
-      this.allDefines = new HashMap<>();
-
-      assignableDefines = new HashMap<>();
-      assignAllowed = new ArrayDeque<>();
+    // listOfDefines is a list of all Names annotated with @define.
+    CollectDefines(GlobalNamespace namespace, List<Name> listOfDefines) {
       assignAllowed.push(1);
 
       // Create a map of references to defines keyed by node for easy lookup
-      allRefInfo = new HashMap<>();
+      // This map also includes aliases to defines
+      Set<Name> symbols = new HashSet<>();
+      Iterables.addAll(symbols, namespace.getAllSymbols());
       for (Name name : listOfDefines) {
+        symbols.remove(name);
         Ref decl = name.getDeclaration();
         if (decl != null) {
           allRefInfo.put(decl.getNode(), new RefInfo(decl, name));
@@ -294,14 +298,35 @@ class ProcessDefines implements CompilerPass {
           }
         }
       }
-    }
 
-    /**
-     * Get a map of {@link DefineInfo} structures, keyed by the name of
-     * the define.
-     */
-    Map<String, DefineInfo> getAllDefines() {
-      return allDefines;
+      // Find any valid aliases by looking at all constant definitions and determining whether the
+      // RHS is a valid define value.  If any alias is actually added to the list of refs, the
+      // loop will repeat, checking only the constant declarations whose values were still
+      // indeterminate from the previous iteration.
+      Iterables.addAll(validDefineAliases, allRefInfo.keySet());
+      boolean repeat = true;
+      while (repeat) {
+        repeat = false;
+        Set<Name> indeterminateNames = new HashSet<>();
+        for (Name name : symbols) {
+          if (name.getDeclaration() != null) {
+            Node declValue = getConstantDeclValue(name.getDeclaration().getNode());
+            // Make sure this is a constant.
+            TernaryValue validDefine =
+                declValue != null ? isValidDefineValue(declValue) : TernaryValue.FALSE;
+            if (validDefine.toBoolean(false)) {
+              for (Ref ref : name.getRefs()) {
+                validDefineAliases.add(ref.getNode());
+              }
+              repeat = true;
+            }
+            if (validDefine == TernaryValue.UNKNOWN) {
+              indeterminateNames.add(name);
+            }
+          }
+        }
+        symbols = indeterminateNames;
+      }
     }
 
     /**
@@ -331,14 +356,46 @@ class ProcessDefines implements CompilerPass {
         switch (ref.type) {
           case SET_FROM_GLOBAL:
           case SET_FROM_LOCAL:
-            Node valParent = getValueParent(ref);
-            Node val = valParent.getLastChild();
-            if (valParent.isAssign() && name.isSimpleName() && name.getDeclaration() == ref) {
-              // For defines, it's an error if a simple name is assigned
-              // before it's declared
-              Node errNode = val == null ? valParent : val;
-              compiler.report(JSError.make(errNode, INVALID_DEFINE_INIT_ERROR, fullName));
-            } else if (processDefineAssignment(fullName, val, valParent)) {
+            // Note: this may be a NAME, a GETPROP, or even STRING_KEY or GETTER_DEF. We only care
+            // about the first two, in which case the parent should be either VAR/CONST or ASSIGN.
+            // We could accept STRING_KEY (i.e. `@define` on a property in an object literal), but
+            // there's no reason to add another new way to do the same thing.
+            Node nameNode = ref.getNode();
+            Node nameParent = nameNode.getParent();
+            // The assigned value is either the RHS of an assign, or the child of a name node.
+            // If the reference is a stub from externs, then the assigned value will be null.
+            Node assignedValue = null;
+            // The parent of the assigned value, or the NAME node of a stub.
+            Node valueParent = null;
+
+            // Set valueParent if this is a valid define initializer.
+            if (nameParent.isVar() || nameParent.isConst()) {
+              // Simple case of `var` or `const`. There's no reason to support `let` here, and we
+              // don't explicitly check that it's not `let` anywhere else.
+              checkState(nameNode.isName(), nameNode);
+              assignedValue = nameNode.getFirstChild();
+              valueParent = nameNode;
+            } else if (nameParent.isAssign() && nameNode.isFirstChildOf(nameParent)) {
+              // Assignment. Must either assign to a qualified name, or else be a different ref than
+              // the declaration to not emit an error (we don't allow assignment before it's
+              // declared).
+              assignedValue = nameParent.getLastChild();
+              if (!name.isSimpleName() || name.getDeclaration() != ref) {
+                valueParent = nameParent;
+              }
+            } else if (nameNode.isFromExterns()) {
+              // Stub, only allowed in externs. There is no value in this case.
+              valueParent = nameNode;
+            } else {
+              // Anything else is an error (destructuring assignments, object literals, etc). We
+              // don't support @define on any of these non-simple assignments, but can at least make
+              // a "best guess" at the assigned value for the node to error on.
+              assignedValue = nameParent.getLastChild();
+            }
+
+            if (valueParent == null) {
+              compiler.report(JSError.make(assignedValue, INVALID_DEFINE_INIT_ERROR, fullName));
+            } else if (processDefineAssignment(fullName, assignedValue, valueParent)) {
               // remove the assignment so that the variable is still declared,
               // but no longer assigned to a value, e.g.,
               // DEF_FOO = 5; // becomes "5;"
@@ -346,7 +403,7 @@ class ProcessDefines implements CompilerPass {
               // We can't remove the ASSIGN/VAR when we're still visiting its
               // children, so we'll have to come back later to remove it.
               refInfo.name.removeRef(ref);
-              lvalueToRemoveLater = valParent;
+              lvalueToRemoveLater = valueParent;
             }
             break;
           default:
@@ -451,8 +508,7 @@ class ProcessDefines implements CompilerPass {
      */
     private boolean processDefineAssignment(String name, Node value, Node valueParent) {
       boolean fromExterns = valueParent.isFromExterns();
-      if (!fromExterns
-          && (value == null || !NodeUtil.isValidDefineValue(value, allDefines.keySet()))) {
+      if (!fromExterns && (value == null || !isValidDefineValue(value).toBoolean(false))) {
         Node errNode = value == null ? valueParent : value;
         compiler.report(JSError.make(errNode, INVALID_DEFINE_INIT_ERROR, name));
       } else if (!isAssignAllowed()) {
@@ -482,18 +538,95 @@ class ProcessDefines implements CompilerPass {
 
       return false;
     }
+
+    /**
+     * Determines whether the given value may be assigned to a define.
+     *
+     * @param val The value being assigned.
+     * @param defines The list of names of existing defines.
+     */
+    TernaryValue isValidDefineValue(Node val) {
+      switch (val.getToken()) {
+        case STRING:
+        case NUMBER:
+        case TRUE:
+        case FALSE:
+          return TernaryValue.TRUE;
+
+          // Binary operators are only valid if both children are valid.
+        case AND:
+        case OR:
+        case ADD:
+        case BITAND:
+        case BITNOT:
+        case BITOR:
+        case BITXOR:
+        case DIV:
+        case EQ:
+        case EXPONENT:
+        case GE:
+        case GT:
+        case LE:
+        case LSH:
+        case LT:
+        case MOD:
+        case MUL:
+        case NE:
+        case RSH:
+        case SHEQ:
+        case SHNE:
+        case SUB:
+        case URSH:
+          return isValidDefineValue(val.getFirstChild())
+              .and(isValidDefineValue(val.getLastChild()));
+
+        case HOOK:
+          return isValidDefineValue(val.getFirstChild())
+              .and(isValidDefineValue(val.getSecondChild()))
+              .and(isValidDefineValue(val.getLastChild()));
+
+          // Unary operators are valid if the child is valid.
+        case NOT:
+        case NEG:
+        case POS:
+          return isValidDefineValue(val.getFirstChild());
+
+          // Names are valid if and only if they are defines themselves.
+        case NAME:
+        case GETPROP:
+          if (val.isQualifiedName()) {
+            return validDefineAliases.contains(val) ? TernaryValue.TRUE : TernaryValue.UNKNOWN;
+          }
+          break;
+        default:
+          break;
+      }
+      return TernaryValue.FALSE;
+    }
   }
 
   /**
-   * Gets the parent node of the value for any assignment to a Name. For example, in the assignment
-   * {@code var x = 3;} the parent would be the NAME node.
+   * Checks whether the NAME node is inside either a CONST or a @const VAR. Returns the RHS node if
+   * so, otherwise returns null.
    */
-  private static Node getValueParent(Ref ref) {
-    // there are two types of declarations: VARs, ASSIGNs, and CONSTs
-    return ref.getNode().getParent() != null
-            && (ref.getNode().getParent().isVar() || ref.getNode().getParent().isConst())
-        ? ref.getNode()
-        : ref.getNode().getParent();
+  private static Node getConstantDeclValue(Node name) {
+    Node parent = name.getParent();
+    if (parent == null) {
+      return null;
+    }
+    if (name.isName()) {
+      if (parent.isConst()) {
+        return name.getFirstChild();
+      } else if (!parent.isVar()) {
+        return null;
+      }
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(name);
+      return jsdoc != null && jsdoc.isConstant() ? name.getFirstChild() : null;
+    } else if (name.isGetProp() && parent.isAssign()) {
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(name);
+      return jsdoc != null && jsdoc.isConstant() ? name.getNext() : null;
+    }
+    return null;
   }
 
   /**

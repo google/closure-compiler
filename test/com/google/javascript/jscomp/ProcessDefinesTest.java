@@ -118,6 +118,37 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDefineWithBadValue3() {
+    // alias is not const
+    testError(
+        "let x = 'x'; /** @define {string} */ var DEF = x;",
+        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
+  }
+
+  @Test
+  public void testDefineWithBadValue4() {
+    testError("/** @define {string} */ var DEF = null;", ProcessDefines.INVALID_DEFINE_INIT_ERROR);
+  }
+
+  @Test
+  public void testDefineWithBadValue5() {
+    testError(
+        "/** @define {string} */ var DEF = undefined;", ProcessDefines.INVALID_DEFINE_INIT_ERROR);
+  }
+
+  @Test
+  public void testDefineWithBadValue6() {
+    testError("/** @define {string} */ var DEF = NaN;", ProcessDefines.INVALID_DEFINE_INIT_ERROR);
+  }
+
+  @Test
+  public void testDefineWithLet() {
+    testError(
+        "/** @define {boolean} */ let DEF = new Boolean(true);",
+        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
+  }
+
+  @Test
   public void testDefineInExterns() {
     testSame(externs(DEFAULT_EXTERNS + "/** @define {boolean} */ var EXTERN_DEF;"), srcs(""));
   }
@@ -165,8 +196,9 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   @Test
   public void testDefineWithInvalidDependentValue() {
     testError(
-        "var BASE = false;\n"
-            + "/** @define {boolean} */ var DEF = !BASE;",
+        lines(
+            "var BASE = false;", //
+            "/** @define {boolean} */ var DEF = !BASE;"),
         ProcessDefines.INVALID_DEFINE_INIT_ERROR);
   }
 
@@ -283,6 +315,66 @@ public final class ProcessDefinesTest extends CompilerTestCase {
             "/** @define {boolean} */ var DEF = true;",
             "var x;",
             "x = true"));
+  }
+
+  @Test
+  public void testDefineAssignedToSimpleAlias() {
+    test(
+        lines(
+            "const x = true;", "const ALIAS = x;", "/** @define {boolean} */ const DEF2 = ALIAS;"),
+        lines(
+            "const x = true", "const ALIAS = x;", "/** @define {boolean} */ const DEF2 = ALIAS;"));
+  }
+
+  @Test
+  public void testDefineAssignedToDefineAlias() {
+    overrides.put("DEF2", new Node(Token.TRUE));
+    test(
+        lines(
+            "/** @define {boolean} */ const DEF1 = false;",
+            "const ALIAS = DEF1;",
+            "/** @define {boolean} */ const DEF2 = ALIAS;"),
+        lines(
+            "/** @define {boolean} */ const DEF1 = false;",
+            "const ALIAS = DEF1;",
+            "/** @define {boolean} */ const DEF2 = true;"));
+  }
+
+  @Test
+  public void testDefineAssignedToQualifiedNameAlias() {
+    overrides.put("DEF1", new Node(Token.TRUE));
+    test(
+        lines(
+            "const ns = {};",
+            "/** @define {boolean} */ const DEF1 = false;",
+            "/** @const */ ns.ALIAS = DEF1;",
+            "/** @define {boolean} */ const DEF2 = ns.ALIAS;"),
+        lines(
+            "const ns = {};",
+            "/** @define {boolean} */ const DEF1 = true;",
+            "/** @const */ ns.ALIAS = DEF1;",
+            "/** @define {boolean} */ const DEF2 = ns.ALIAS;"));
+  }
+
+  @Test
+  public void testDefineAssignedToNonconstDefineAlias() {
+    testError(
+        lines(
+            "/** @define {boolean} */ const DEF1 = false;",
+            "var ALIAS = DEF1;",
+            "/** @define {boolean} */ const DEF2 = ALIAS;"),
+        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
+  }
+
+  @Test
+  public void testDefineAssignedToNonconstQualifiedNameAlias() {
+    testError(
+        lines(
+            "const ns = {};",
+            "/** @define {boolean} */ const DEF1 = false;",
+            "ns.ALIAS = DEF1;",
+            "/** @define {boolean} */ const DEF2 = ns.ALIAS;"),
+        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
   }
 
   @Test

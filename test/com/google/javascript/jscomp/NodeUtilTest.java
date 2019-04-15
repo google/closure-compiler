@@ -2015,40 +2015,6 @@ public final class NodeUtilTest {
     }
 
     @Test
-    public void testValidDefine() {
-      assertThat(getIsValidDefineValueResultFor("1")).isTrue();
-      assertThat(getIsValidDefineValueResultFor("-3")).isTrue();
-      assertThat(getIsValidDefineValueResultFor("true")).isTrue();
-      assertThat(getIsValidDefineValueResultFor("false")).isTrue();
-      assertThat(getIsValidDefineValueResultFor("'foo'")).isTrue();
-
-      assertThat(getIsValidDefineValueResultFor("x")).isFalse();
-      assertThat(getIsValidDefineValueResultFor("null")).isFalse();
-      assertThat(getIsValidDefineValueResultFor("undefined")).isFalse();
-      assertThat(getIsValidDefineValueResultFor("NaN")).isFalse();
-
-      assertThat(getIsValidDefineValueResultFor("!true")).isTrue();
-      assertThat(getIsValidDefineValueResultFor("-true")).isTrue();
-      assertThat(getIsValidDefineValueResultFor("1 & 8")).isTrue();
-      assertThat(getIsValidDefineValueResultFor("1 + 8")).isTrue();
-      assertThat(getIsValidDefineValueResultFor("'a' + 'b'")).isTrue();
-      assertThat(getIsValidDefineValueResultFor("true ? 'a' : 'b'")).isTrue();
-
-      assertThat(getIsValidDefineValueResultFor("1 & foo")).isFalse();
-      assertThat(getIsValidDefineValueResultFor("foo ? 'a' : 'b'")).isFalse();
-    }
-
-    private boolean getIsValidDefineValueResultFor(String js) {
-      Node script = parse("var test = " + js + ";");
-      Node var = script.getFirstChild();
-      Node name = var.getFirstChild();
-      Node value = name.getFirstChild();
-
-      ImmutableSet<String> defines = ImmutableSet.of();
-      return NodeUtil.isValidDefineValue(value, defines);
-    }
-
-    @Test
     public void testGetOctalNumberValue() {
       assertThat(NodeUtil.getNumberValue(parseExpr("022"))).isEqualTo(18.0);
     }
