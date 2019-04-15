@@ -261,8 +261,9 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (processCommonJsModules && currentModule != null && currentModule.isScript()) {
-        if (ProcessCommonJSModules.isCommonJsExport(t, n, moduleResolutionMode)
-            || ProcessCommonJSModules.isCommonJsImport(n, moduleResolutionMode)) {
+        // A common JS import (call to "require") does not force a module to be rewritten as
+        // commonJS. Only an export statement.
+        if (ProcessCommonJSModules.isCommonJsExport(t, n, moduleResolutionMode)) {
           currentModule.moduleType(ModuleType.COMMON_JS, t, n);
           return;
         }
