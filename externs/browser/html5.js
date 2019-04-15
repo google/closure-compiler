@@ -1335,7 +1335,7 @@ WebWorker.prototype.onerror;
 
 /**
  * @see http://dev.w3.org/html5/workers/
- * @param {!string} scriptURL
+ * @param {string} scriptURL
  * @param {!WorkerOptions=} opt_options
  * @constructor
  * @implements {EventTarget}
@@ -3970,7 +3970,7 @@ Document.prototype.msHidden;
  * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-register
  * @param {string} type
  * @param {{extends: (string|undefined), prototype: (Object|undefined)}=} options
- * @return {!function(new:Element, ...*)} a constructor for the new tag.
+ * @return {function(new:Element, ...*)} a constructor for the new tag.
  * @deprecated document.registerElement() is deprecated in favor of customElements.define()
  */
 Document.prototype.registerElement = function(type, options) {};
@@ -4120,7 +4120,7 @@ ShadowRoot.prototype.styleSheets;
 function HTMLContentElement() {}
 
 /**
- * @type {!string}
+ * @type {string}
  */
 HTMLContentElement.prototype.select;
 
@@ -4970,7 +4970,7 @@ function CustomElementRegistry() {}
 
 /**
  * @param {string} tagName
- * @param {!function(new:HTMLElement)} klass
+ * @param {function(new:HTMLElement)} klass
  * @param {{extends: string}=} options
  * @return {undefined}
  */
@@ -4984,7 +4984,7 @@ CustomElementRegistry.prototype.get = function(tagName) {};
 
 /**
  * @param {string} tagName
- * @return {Promise<!function(new:HTMLElement)>}
+ * @return {Promise<function(new:HTMLElement)>}
  */
 CustomElementRegistry.prototype.whenDefined = function(tagName) {};
 

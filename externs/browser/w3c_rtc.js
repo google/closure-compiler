@@ -1302,7 +1302,7 @@ PhotoCapabilities.prototype.imageHeight;
 PhotoCapabilities.prototype.imageWidth;
 
 /**
- * @const {!Array<!string>}
+ * @const {!Array<string>}
  */
 PhotoCapabilities.prototype.fillLightMode;
 
@@ -1510,7 +1510,7 @@ RTCIceCandidate.prototype.sdpMid;
 RTCIceCandidate.prototype.sdpMLineIndex;
 
 /**
- * @typedef {{urls: string}|{urls: !Array<!string>}}
+ * @typedef {{urls: string}|{urls: !Array<string>}}
  * @private
  * @see https://www.w3.org/TR/webrtc/#rtciceserver-dictionary
  * This dictionary type also has an optional key {credential: ?string}.
@@ -1524,7 +1524,7 @@ var RTCIceServerRecord_;
 function RTCIceServerInterface_() {}
 
 /**
- * @type {string|!Array<!string>}
+ * @type {string|!Array<string>}
  */
 RTCIceServerInterface_.prototype.urls;
 
@@ -1693,7 +1693,7 @@ function RTCStatsReport() {}
 RTCStatsReport.prototype.timestamp;
 
 /**
- * @return {!Array<!string>}
+ * @return {!Array<string>}
  */
 RTCStatsReport.prototype.names = function() {};
 
@@ -2094,7 +2094,7 @@ RTCPeerConnection.prototype.updateIce = function(configuration, constraints) {};
  * Void in Chrome for now, a promise that you can then/catch in Firefox.
  * @param {!RTCIceCandidate} candidate
  * @param {!RTCVoidCallback=} successCallback
- * @param {!function(DOMException)=} errorCallback
+ * @param {function(DOMException)=} errorCallback
  * @return {!Promise|undefined}
  */
 RTCPeerConnection.prototype.addIceCandidate = function(candidate, successCallback, errorCallback) {};
