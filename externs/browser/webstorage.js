@@ -26,8 +26,7 @@
 function Storage() {}
 
 /**
- * @type {number}
- * @const
+ * @const {number}
  */
 Storage.prototype.length;
 

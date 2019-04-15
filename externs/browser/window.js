@@ -26,60 +26,52 @@
 // should be used with an explicit Window object.
 
 /**
- * @type {!Window}
+ * @const {!Window}
  * @see https://developer.mozilla.org/en/DOM/window.top
- * @const
  */
 var top;
 
 /**
- * @type {!Navigator}
+ * @const {!Navigator}
  * @see https://developer.mozilla.org/en/DOM/window.navigator
- * @const
  */
 var navigator;
 
 /**
- * @type {!HTMLDocument}
+ * @const {!HTMLDocument}
  * @see https://developer.mozilla.org/en/DOM/window.document
- * @const
  */
 var document;
 
 /**
- * @type {!Location}
+ * @const {!Location}
  * @see https://developer.mozilla.org/en/DOM/window.location
- * @const
  * @suppress {duplicate}
  * @implicitCast
  */
 var location;
 
 /**
- * @type {!Screen}
+ * @const {!Screen}
  * @see https://developer.mozilla.org/En/DOM/window.screen
- * @const
  */
 var screen;
 
 /**
- * @type {!Window}
+ * @const {!Window}
  * @see https://developer.mozilla.org/En/DOM/Window.self
- * @const
  */
 var self;
 
 /**
- * @type {boolean}
+ * @const {boolean}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/isSecureContext
- * @const
  */
 var isSecureContext;
 
 /**
- * @type {!VisualViewport}
+ * @const {!VisualViewport}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/visualViewport
- * @const
  */
 var visualViewport;
 

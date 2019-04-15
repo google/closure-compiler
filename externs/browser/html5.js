@@ -875,14 +875,12 @@ ImageData.prototype.height;
 function ImageBitmap() {}
 
 /**
- * @type {number}
- * @const
+ * @const {number}
  */
 ImageBitmap.prototype.width;
 
 /**
- * @type {number}
- * @const
+ * @const {number}
  */
 ImageBitmap.prototype.height;
 
@@ -1607,8 +1605,7 @@ HTMLElement.prototype.draggable;
  * interface isn't currently defined and no known browsers implement this
  * feature, just define the property for now.
  *
- * @const
- * @type {Object}
+ * @const {Object}
  */
 HTMLElement.prototype.dropzone;
 
@@ -3369,8 +3366,7 @@ function Image(opt_width, opt_height) {}
  * Dataset collection.
  * This is really a DOMStringMap but it behaves close enough to an object to
  * pass as an object.
- * @type {!Object<string, string>}
- * @const
+ * @const {!Object<string, string>}
  */
 HTMLElement.prototype.dataset;
 
@@ -3458,9 +3454,8 @@ DOMTokenList.prototype.values = function() {};
 
 /**
  * A better interface to CSS classes than className.
- * @type {!DOMTokenList}
+ * @const {!DOMTokenList}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/classList
- * @const
  */
 Element.prototype.classList;
 
@@ -3521,8 +3516,7 @@ HTMLButtonElement.prototype.autofocus;
 /**
  * Can return null when hidden.
  * See https://html.spec.whatwg.org/multipage/forms.html#dom-lfe-labels
- * @const
- * @type {?NodeList<!HTMLLabelElement>}
+ * @const {?NodeList<!HTMLLabelElement>}
  */
 HTMLButtonElement.prototype.labels;
 
@@ -3530,8 +3524,7 @@ HTMLButtonElement.prototype.labels;
 HTMLButtonElement.prototype.validationMessage;
 
 /**
- * @const
- * @type {ValidityState}
+ * @const {ValidityState}
  */
 HTMLButtonElement.prototype.validity;
 
@@ -3609,8 +3602,7 @@ HTMLInputElement.prototype.formTarget;
 /**
  * Can return null when hidden.
  * See https://html.spec.whatwg.org/multipage/forms.html#dom-lfe-labels
- * @const
- * @type {?NodeList<!HTMLLabelElement>}
+ * @const {?NodeList<!HTMLLabelElement>}
  */
 HTMLInputElement.prototype.labels;
 
@@ -3618,8 +3610,7 @@ HTMLInputElement.prototype.labels;
 HTMLInputElement.prototype.validationMessage;
 
 /**
- * @const
- * @type {ValidityState}
+ * @const {ValidityState}
  */
 HTMLInputElement.prototype.validity;
 
@@ -3647,8 +3638,7 @@ HTMLSelectElement.prototype.autofocus;
 /**
  * Can return null when hidden.
  * See https://html.spec.whatwg.org/multipage/forms.html#dom-lfe-labels
- * @const
- * @type {?NodeList<!HTMLLabelElement>}
+ * @const {?NodeList<!HTMLLabelElement>}
  */
 HTMLSelectElement.prototype.labels;
 
@@ -3659,8 +3649,7 @@ HTMLSelectElement.prototype.selectedOptions;
 HTMLSelectElement.prototype.validationMessage;
 
 /**
- * @const
- * @type {ValidityState}
+ * @const {ValidityState}
  */
 HTMLSelectElement.prototype.validity;
 
@@ -3685,8 +3674,7 @@ HTMLTextAreaElement.prototype.autofocus;
 /**
  * Can return null when hidden.
  * See https://html.spec.whatwg.org/multipage/forms.html#dom-lfe-labels
- * @const
- * @type {?NodeList<!HTMLLabelElement>}
+ * @const {?NodeList<!HTMLLabelElement>}
  */
 HTMLTextAreaElement.prototype.labels;
 
@@ -3697,8 +3685,7 @@ HTMLTextAreaElement.prototype.placeholder;
 HTMLTextAreaElement.prototype.validationMessage;
 
 /**
- * @const
- * @type {ValidityState}
+ * @const {ValidityState}
  */
 HTMLTextAreaElement.prototype.validity;
 

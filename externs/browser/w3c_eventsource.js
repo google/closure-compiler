@@ -85,8 +85,7 @@ EventSource.prototype.CLOSED;
 EventSource.CLOSED;
 
 /**
- * @type {number}
- * @const
+ * @const {number}
  */
 EventSource.prototype.readyState;
 

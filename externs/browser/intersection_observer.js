@@ -34,8 +34,7 @@ function IntersectionObserverEntry() {}
 /**
  * The time the change was observed.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserverentry-time
- * @type {number}
- * @const
+ * @const {number}
  */
 IntersectionObserverEntry.prototype.time;
 
@@ -44,18 +43,16 @@ IntersectionObserverEntry.prototype.time;
  * related similar-origin browsing contexts as the intersection root, null
  * otherwise.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserverentry-rootbounds
- * @type {{top: number, right: number, bottom: number, left: number,
+ * @const {{top: number, right: number, bottom: number, left: number,
  *     height: number, width: number}}
- * @const
  */
 IntersectionObserverEntry.prototype.rootBounds;
 
 /**
  * The rectangle describing the element being observed.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserverentry-boundingclientrect
- * @type {!{top: number, right: number, bottom: number, left: number,
+ * @const {!{top: number, right: number, bottom: number, left: number,
  *     height: number, width: number}}
- * @const
  */
 IntersectionObserverEntry.prototype.boundingClientRect;
 
@@ -63,41 +60,36 @@ IntersectionObserverEntry.prototype.boundingClientRect;
  * The rectangle describing the intersection between the observed element and
  * the viewport.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserverentry-intersectionrect
- * @type {!{top: number, right: number, bottom: number, left: number,
+ * @const {!{top: number, right: number, bottom: number, left: number,
  *     height: number, width: number}}
- * @const
  */
 IntersectionObserverEntry.prototype.intersectionRect;
 
 /**
  * Ratio of intersectionRect area to boundingClientRect area.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserverentry-intersectionratio
- * @type {!number}
- * @const
+ * @const {!number}
  */
 IntersectionObserverEntry.prototype.intersectionRatio;
 
 /**
  * The Element whose intersection with the intersection root changed.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserverentry-target
- * @type {!Element}
- * @const
+ * @const {!Element}
  */
 IntersectionObserverEntry.prototype.target;
 
 /**
  * Whether or not the target is intersecting with the root.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserverentry-isintersecting
- * @type {boolean}
- * @const
+ * @const {boolean}
  */
 IntersectionObserverEntry.prototype.isIntersecting;
 
 /**
  * Whether or not the target is visible with the root.
  * @see https://w3c.github.io/IntersectionObserver/v2/#dom-intersectionobserverentry-isvisible
- * @type {boolean|undefined}
- * @const
+ * @const {boolean|undefined}
  */
 IntersectionObserverEntry.prototype.isVisible;
 
@@ -135,8 +127,7 @@ function IntersectionObserver(handler, opt_options) {};
  * The root Element to use for intersection, or null if the observer uses the
  * implicit root.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-root
- * @type {?Element}
- * @const
+ * @const {?Element}
  */
 IntersectionObserver.prototype.root;
 
@@ -144,8 +135,7 @@ IntersectionObserver.prototype.root;
  * Offsets applied to the intersection root’s bounding box, effectively growing
  * or shrinking the box that is used to calculate intersections.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-rootmargin
- * @type {!string}
- * @const
+ * @const {!string}
  */
 IntersectionObserver.prototype.rootMargin;
 
@@ -154,8 +144,7 @@ IntersectionObserver.prototype.rootMargin;
  * threshold is a ratio of intersection area to bounding box area of an observed
  * target.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-thresholds
- * @type {!Array.<!number>}
- * @const
+ * @const {!Array<!number>}
  */
 IntersectionObserver.prototype.thresholds;
 

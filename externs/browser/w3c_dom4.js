@@ -55,15 +55,13 @@ CharacterData.prototype.remove = function() {};
 DocumentType.prototype.replaceWith = function(nodes) {};
 
 /**
- * @type {string}
- * @const
+ * @const {string}
  * @see https://www.w3.org/TR/2015/REC-dom-20151119/#sec-domerror
  */
 DOMException.prototype.name;
 
 /**
- * @type {string}
- * @const
+ * @const {string}
  * @see https://www.w3.org/TR/2015/REC-dom-20151119/#sec-domerror
  */
 DOMException.prototype.message;
