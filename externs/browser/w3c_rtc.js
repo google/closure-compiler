@@ -316,7 +316,7 @@ MediaStreamTrack.prototype.id;
 MediaStreamTrack.prototype.label;
 
 /**
- * @const {boolean}
+ * @type {boolean}
  */
 MediaStreamTrack.prototype.enabled;
 
