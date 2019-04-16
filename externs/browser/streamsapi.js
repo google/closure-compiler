@@ -102,15 +102,16 @@ TransformStreamTransformer.prototype.flush;
 
 
 /**
+ * A transform stream (https://streams.spec.whatwg.org/#transform-stream).
  * @record
  */
-function TransformStream() {};
+function ITransformStream() {};
 
 /** @type {!WritableStream} */
-TransformStream.prototype.writable;
+ITransformStream.prototype.writable;
 
 /** @type {!ReadableStream} */
-TransformStream.prototype.readable;
+ITransformStream.prototype.readable;
 
 
 /**
@@ -184,7 +185,7 @@ ReadableStream.prototype.cancel = function(reason) {};
 ReadableStream.prototype.getReader = function(opt_options) {};
 
 /**
- * @param {!TransformStream} transform
+ * @param {!ITransformStream} transform
  * @param {!PipeOptions=} opt_options
  * @return {!ReadableStream}
  * @see https://streams.spec.whatwg.org/#rs-pipe-through
