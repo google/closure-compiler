@@ -63,11 +63,6 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     return new Es6ForOfConverter(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testForOf() {
 

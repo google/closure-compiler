@@ -68,11 +68,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     disableScriptFeatureValidation();
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   private void setupModuleExportsOnly() {
     this.setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     this.setLanguageOut(LanguageMode.ECMASCRIPT5);

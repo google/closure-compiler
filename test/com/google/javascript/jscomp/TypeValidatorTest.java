@@ -57,11 +57,6 @@ public final class TypeValidatorTest extends CompilerTestCase {
     };
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testBasicMismatch() {
     testWarning("/** @param {number} x */ function f(x) {} f('a');", TYPE_MISMATCH_WARNING);

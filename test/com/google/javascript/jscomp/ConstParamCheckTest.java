@@ -46,11 +46,6 @@ public final class ConstParamCheckTest extends CompilerTestCase {
     return new ConstParamCheck(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   // Tests for string literal arguments.
 
   @Test

@@ -55,11 +55,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     return new Es6RewriteBlockScopedDeclaration(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testSimple() {
     test("let x = 3;", "var x = 3;");

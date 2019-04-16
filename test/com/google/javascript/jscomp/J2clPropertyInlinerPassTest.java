@@ -45,11 +45,6 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
     return compiler;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   private void testDoesntChange(List<SourceFile> js) {
     test(js, js);
   }

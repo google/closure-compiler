@@ -37,11 +37,6 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
-  @Override
   protected Compiler createCompiler() {
     return new NoninjectingCompiler();
   }

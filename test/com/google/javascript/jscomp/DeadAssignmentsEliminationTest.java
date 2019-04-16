@@ -59,11 +59,6 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     };
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testSimple() {
     inFunction("var a; a=1", "var a; 1");

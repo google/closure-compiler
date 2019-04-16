@@ -71,11 +71,6 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
     previousMappings = null;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testBackwardCompat() {
     testWithPseudo("foo.bar = goog.events.getUniqueId('foo_bar')",

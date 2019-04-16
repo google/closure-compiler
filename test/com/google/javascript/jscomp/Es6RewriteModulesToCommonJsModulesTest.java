@@ -67,11 +67,6 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
     return new Es6RewriteModulesToCommonJsModules(compiler, "test pragma");
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testExports() {
     test(

@@ -66,11 +66,6 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     return peepholePass;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   private void foldSame(String js) {
     testSame(js);
   }

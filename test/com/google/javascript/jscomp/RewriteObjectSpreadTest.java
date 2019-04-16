@@ -53,11 +53,6 @@ public final class RewriteObjectSpreadTest extends CompilerTestCase {
     return new RewriteObjectSpread(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testObjectLiteralWithSpread() {
     test("({first, ...spread});", "Object.assign({}, {first}, spread)");

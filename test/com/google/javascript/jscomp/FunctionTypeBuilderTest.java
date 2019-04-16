@@ -53,11 +53,6 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
         };
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testValidBuiltInTypeRedefinition() {
     testSame(externs(ALL_NATIVE_EXTERN_TYPES), srcs(""));

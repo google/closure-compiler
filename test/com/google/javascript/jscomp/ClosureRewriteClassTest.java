@@ -71,11 +71,6 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
     enableRunTypeCheckAfterProcessing();
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   private void testRewrite(String code, String expected, LanguageMode lang) {
     setAcceptedLanguage(lang);
     test(code, expected);

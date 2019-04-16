@@ -47,11 +47,6 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     assumeCrossModuleNames = true;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testVarDeclarations() {
     test("var a = 1;", "_.a = 1;");

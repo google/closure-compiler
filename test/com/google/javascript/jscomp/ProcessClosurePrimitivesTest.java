@@ -73,10 +73,6 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
         compiler, null, CheckLevel.ERROR, /* preserveGoogProvidesAndRequires= */ true);
   }
 
-  @Override protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testAddDependency() {
     test("goog.addDependency('x.js', ['A', 'B'], []);", "0");

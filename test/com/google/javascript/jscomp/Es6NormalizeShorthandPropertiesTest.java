@@ -61,11 +61,6 @@ public final class Es6NormalizeShorthandPropertiesTest extends CompilerTestCase 
     return new Es6NormalizeShorthandProperties(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testNormalizationInSource() {
     test(

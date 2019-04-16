@@ -106,11 +106,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     enableTypeInfoValidation();
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   private class ScopeFinder extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {

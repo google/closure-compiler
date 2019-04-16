@@ -42,11 +42,6 @@ public final class ConstCheckTest extends CompilerTestCase {
     return new ConstCheck(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   private void testWarning(String js){
     testWarning(js, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }

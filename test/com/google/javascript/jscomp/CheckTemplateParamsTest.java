@@ -39,11 +39,6 @@ public final class CheckTemplateParamsTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
-  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     // No-op. We're just checking for warnings during JSDoc parsing.
     return (externs, root) -> {};

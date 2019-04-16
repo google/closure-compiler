@@ -54,11 +54,6 @@ public final class CheckGoogJsImportTest extends CompilerTestCase {
     };
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testNoGoogJsImport() {
     testSame("var x");

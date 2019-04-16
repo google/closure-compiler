@@ -772,9 +772,4 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   protected RuntimeTypeCheck getProcessor(final Compiler compiler) {
     return new RuntimeTypeCheck(compiler, logFunction);
   }
-
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
 }

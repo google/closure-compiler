@@ -51,11 +51,6 @@ public class Es6RewriteBlockScopedDeclarationEs6LangOutTest extends CompilerTest
     return new Es6RewriteBlockScopedDeclaration(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testNoTranspilationForBlockScopedFunctionDeclarations() {
     testSame("for (var x of y) { function f() { x; } }");

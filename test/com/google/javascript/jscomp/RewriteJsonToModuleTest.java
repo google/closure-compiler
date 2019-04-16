@@ -50,11 +50,6 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
     return options;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testJsonFile() {
     test(

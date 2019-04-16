@@ -45,11 +45,6 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
     return new PeepholeOptimizationsPass(compiler, getName(), new MinimizeExitPoints());
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   void foldSame(String js) {
     testSame(js);
   }

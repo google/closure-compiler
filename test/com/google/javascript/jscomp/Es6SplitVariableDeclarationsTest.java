@@ -45,11 +45,6 @@ public final class Es6SplitVariableDeclarationsTest extends CompilerTestCase {
     return new Es6SplitVariableDeclarations(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testSplitArrayDestructuring() {
     test("var   [a] = [], b = 3;", "var [a] = []; var b = 3;");

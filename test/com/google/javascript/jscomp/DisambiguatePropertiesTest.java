@@ -82,11 +82,6 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     };
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testOneType1() {
     String js = ""

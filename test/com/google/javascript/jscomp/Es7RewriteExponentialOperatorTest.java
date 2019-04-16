@@ -42,11 +42,6 @@ public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
     return new Es7RewriteExponentialOperator(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testExponentiationOperator() {
     test(srcs("2 ** 2"), expected("Math.pow(2, 2)"));

@@ -33,11 +33,6 @@ public class J2clSourceFileCheckerTest extends CompilerTestCase {
   private AbstractCompiler compiler;
 
   @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
-  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     this.compiler = compiler;
     return new J2clSourceFileChecker(compiler);

@@ -35,11 +35,6 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   private boolean usePseudoName = false;
 
   @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
-  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

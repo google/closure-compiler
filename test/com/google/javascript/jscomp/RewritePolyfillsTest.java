@@ -92,11 +92,6 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     };
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   private String addLibraries(String code, String[] libraries) {
     StringBuilder expected = new StringBuilder();
     for (String library : libraries) {

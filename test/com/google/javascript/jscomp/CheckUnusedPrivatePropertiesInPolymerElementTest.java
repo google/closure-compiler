@@ -69,11 +69,6 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
     return options;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testPolymerPropertyUsedAsObserver1() {
     allowExternsChanges();

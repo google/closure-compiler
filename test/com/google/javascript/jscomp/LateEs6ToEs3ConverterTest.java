@@ -47,11 +47,6 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     return new LateEs6ToEs3Converter(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testObjectLiteralMemberFunctionDef() {
     test(

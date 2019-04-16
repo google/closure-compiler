@@ -47,10 +47,6 @@ public class InlineAliasesTest extends CompilerTestCase {
    *
    * This pass is not idempotent so we only run it once.
    */
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
 
   @Test
   public void testSimpleAliasInJSDoc_isUnchanged() {

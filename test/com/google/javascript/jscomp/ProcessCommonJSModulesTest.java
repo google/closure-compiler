@@ -52,11 +52,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     return new ProcessCommonJSModules(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   void testModules(String filename, String input, String expected) {
     ModulesTestUtils.testModules(this, filename, input, expected);
   }

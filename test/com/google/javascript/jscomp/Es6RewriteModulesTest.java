@@ -99,11 +99,6 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     };
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   void testModules(String input, String expected) {
     test(
         srcs(other, SourceFile.fromCode("testcode", input)),

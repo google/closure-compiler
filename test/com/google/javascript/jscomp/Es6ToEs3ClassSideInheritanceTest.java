@@ -42,11 +42,6 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
     return new Es6ToEs3ClassSideInheritance(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testSimple() {
     test(

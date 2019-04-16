@@ -127,11 +127,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     return optimizer;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testSimpleClassStatement() {
     test("class C { }", "/** @constructor @struct */ let C = function() {};");

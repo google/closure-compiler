@@ -46,11 +46,6 @@ public final class OptimizeCallsTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
-  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return OptimizeCalls.builder()
         .setCompiler(compiler)

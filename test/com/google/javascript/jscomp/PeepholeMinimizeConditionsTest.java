@@ -51,11 +51,6 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     return peepholePass;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   private void foldSame(String js) {
     testSame(js);
   }

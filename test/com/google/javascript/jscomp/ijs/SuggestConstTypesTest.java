@@ -45,11 +45,6 @@ public final class SuggestConstTypesTest extends CompilerTestCase {
     return new ConvertToTypedInterface(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   private void suggests(String code, String type) {
     test(
         srcs(code),

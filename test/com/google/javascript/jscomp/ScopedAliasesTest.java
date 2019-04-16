@@ -1320,11 +1320,6 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     return new ScopedAliases(compiler, null, transformationHandler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   private static class TransformationHandlerSpy
       implements AliasTransformationHandler {
 

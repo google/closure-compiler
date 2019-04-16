@@ -76,11 +76,6 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
     return new DartSuperAccessorsPass(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testSuperGetElem() {
     checkConversionWithinMembers(

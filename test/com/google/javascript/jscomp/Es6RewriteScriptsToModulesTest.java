@@ -40,11 +40,6 @@ public final class Es6RewriteScriptsToModulesTest extends CompilerTestCase {
     return options;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testImportedScript() {
     Compiler compiler = createCompiler();

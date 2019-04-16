@@ -150,11 +150,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     return optimizer;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testObjectLiteralStringKeysWithNoValue() {
     test("var x = {a, b};", "var x = {a: a, b: b};");

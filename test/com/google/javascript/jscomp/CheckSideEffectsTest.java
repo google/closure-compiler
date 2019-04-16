@@ -35,11 +35,6 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
-  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckSideEffects(compiler, true, true);
   }

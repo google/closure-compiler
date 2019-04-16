@@ -67,10 +67,6 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     enableNormalize();
   }
 
-  @Override protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testCollapse() {
     test("var a = {}; a.b = {}; var c = a.b;",

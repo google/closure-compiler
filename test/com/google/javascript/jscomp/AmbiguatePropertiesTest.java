@@ -73,11 +73,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     };
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testOneVar1() {
     test("/** @constructor */ var Foo = function(){};Foo.prototype.b = 0;",

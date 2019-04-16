@@ -45,11 +45,6 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     return new Es6TypedToEs6Converter(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testMemberVariable() {
     test(lines(

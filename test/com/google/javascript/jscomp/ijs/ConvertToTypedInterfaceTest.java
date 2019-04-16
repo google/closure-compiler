@@ -51,11 +51,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     return options;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testInferAnnotatedTypeFromTypeInference() {
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");

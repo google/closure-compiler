@@ -46,11 +46,6 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     enableGatherExternProperties();
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testNoRemoval1() {
     testSame("function foo(p1) { } foo(1); foo(2)"); // required "remove unused vars"

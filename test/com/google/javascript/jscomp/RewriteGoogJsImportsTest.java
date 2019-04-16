@@ -70,11 +70,6 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
     };
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testBaseAndGoogUntouched() {
     testSame(srcs(BASE, GOOG));

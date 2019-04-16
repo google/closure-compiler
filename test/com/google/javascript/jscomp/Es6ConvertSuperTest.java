@@ -78,11 +78,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     return new Es6ConvertSuper(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   // Instance `super` resolution
 
   @Test

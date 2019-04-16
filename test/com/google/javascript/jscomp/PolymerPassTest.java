@@ -153,11 +153,6 @@ public class PolymerPassTest extends CompilerTestCase {
     enableParseTypeInfo();
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   @Test
   public void testVarTarget() {
     test(
