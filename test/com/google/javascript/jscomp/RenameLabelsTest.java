@@ -29,6 +29,12 @@ public final class RenameLabelsTest extends CompilerTestCase {
     return new RenameLabels(compiler);
   }
 
+  @Override
+  protected int getNumRepetitions() {
+    // TODO(b/33104006): remove this override.
+    return 2;
+  }
+
   @Test
   public void testRenameInFunction() {
     test("function x(){ Foo:a(); }",

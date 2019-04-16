@@ -45,6 +45,12 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   @Override
+  protected int getNumRepetitions() {
+    // TODO(b/33104006): remove this override.
+    return 2;
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new InlineVariables(
         compiler,

@@ -58,6 +58,12 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   }
 
   @Override
+  protected int getNumRepetitions() {
+    // TODO(b/33104006): remove this override.
+    return 2;
+  }
+
+  @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_NO_WHITESPACE);

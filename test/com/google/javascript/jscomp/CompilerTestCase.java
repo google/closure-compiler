@@ -718,9 +718,7 @@ public abstract class CompilerTestCase {
    */
   @ForOverride
   protected int getNumRepetitions() {
-    // Since most compiler passes should be idempotent, we run each pass twice
-    // by default.
-    return 2;
+    return 1;
   }
 
   /** Adds the given DiagnosticTypes to the set of warnings to ignore. */
