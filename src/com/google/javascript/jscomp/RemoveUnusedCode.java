@@ -1404,22 +1404,19 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private void markUnusedParameters(Node paramList, Scope fparamScope) {
     for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
-      if (!param.isUnusedParameter()) {
-        Node lValue = param;
-        if (lValue.isDefaultValue()) {
-          lValue = lValue.getFirstChild();
-        }
-        if (lValue.isRest()) {
-          lValue = lValue.getOnlyChild();
-        }
-        if (lValue.isDestructuringPattern()) {
-          continue;
-        }
-        VarInfo varInfo = traverseNameNode(lValue, fparamScope);
-        if (varInfo.isRemovable()) {
-          param.setUnusedParameter(true);
-          compiler.reportChangeToEnclosingScope(paramList);
-        }
+      if (param.isUnusedParameter()) {
+        continue;
+      }
+
+      Node lValue = nameOfParam(param);
+      if (lValue == null) {
+        continue;
+      }
+
+      VarInfo varInfo = traverseNameNode(lValue, fparamScope);
+      if (varInfo.isRemovable()) {
+        param.setUnusedParameter(true);
+        compiler.reportChangeToEnclosingScope(paramList);
       }
     }
   }
@@ -1486,22 +1483,38 @@ class RemoveUnusedCode implements CompilerPass {
       Scope functionScope = var.getScope().getClosestHoistScope();
       Node paramList = NodeUtil.getFunctionParameters(functionScope.getRootNode());
       for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
-        Node lValue = param;
-        if (lValue.isDefaultValue()) {
-          lValue = lValue.getFirstChild();
-        }
-        if (lValue.isRest()) {
-          lValue = lValue.getOnlyChild();
-        }
-        if (lValue.isDestructuringPattern()) {
+        Node lValue = nameOfParam(param);
+        if (lValue == null) {
           continue;
         }
+
         getVarInfo(getVarForNameNode(lValue, functionScope)).markAsReferenced();
       }
       // `arguments` is never removable.
       return canonicalUnremovableVarInfo;
     } else {
       return getVarInfo(var);
+    }
+  }
+
+  /**
+   * Return the NAME node associated with a function parameter (the child of a PARAM_LIST), or null
+   * if there is no single name.
+   */
+  @Nullable
+  private static Node nameOfParam(Node param) {
+    switch (param.getToken()) {
+      case NAME:
+        return param;
+      case DEFAULT_VALUE:
+        return nameOfParam(param.getFirstChild());
+      case REST:
+        return nameOfParam(param.getOnlyChild());
+      case ARRAY_PATTERN:
+      case OBJECT_PATTERN:
+        return null;
+      default:
+        throw new IllegalStateException("Unexpected child of PARAM_LIST: " + param.toStringTree());
     }
   }
 
