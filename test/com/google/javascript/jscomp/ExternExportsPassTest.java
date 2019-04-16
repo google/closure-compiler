@@ -1460,14 +1460,11 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""),
         lines(
             "/**",
-            // subclass has no explicit constructor.
-            // The generated one assumes variable args and passes them on to the superclass
-            " * @param {...?} var_args$jscomp$1",
             // TODO(b/123352214): SuperClass should be called Foo in exported @extends annotation
             " * @extends {SuperClass}",
             " * @constructor",
             " */",
-            "var Bar = function(var_args$jscomp$1) {",
+            "var Bar = function() {",
             "};",
             "/**",
             " * @constructor",
@@ -1491,14 +1488,11 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""),
         lines(
             "/**",
-            // subclass has no explicit constructor.
-            // The generated one assumes variable args and passes them on to the superclass
-            " * @param {...?} var_args$jscomp$1",
             // TODO(b/123352214): SuperClass should be called Foo in exported @extends annotation
             " * @extends {SuperClass}",
             " * @constructor",
             " */",
-            "var Bar = function(var_args$jscomp$1) {",
+            "var Bar = function() {",
             "};",
             ""));
   }
@@ -1518,14 +1512,11 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""),
         lines(
             "/**",
-            // subclass has no explicit constructor.
-            // The generated one assumes variable args and passes them on to the superclass
-            " * @param {...?} var_args$jscomp$1",
             // TODO(b/123352214): SuperClass should be called Foo in exported @extends annotation
             " * @extends {SuperClass}",
             " * @constructor",
             " */",
-            "var Bar = function(var_args$jscomp$1) {",
+            "var Bar = function() {",
             "};",
             ""));
   }

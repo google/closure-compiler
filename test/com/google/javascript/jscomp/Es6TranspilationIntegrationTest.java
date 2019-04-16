@@ -259,9 +259,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         lines(
             "/** @constructor @struct @const",
             " * @extends {D}",
-            " * @param {...?} var_args",
             " */",
-            "var testcode$classdecl$var0 = function(var_args) {",
+            "var testcode$classdecl$var0 = function() {",
             "  return D.apply(this,arguments) || this; ",
             "};",
             "$jscomp.inherits(testcode$classdecl$var0, D);",
@@ -560,9 +559,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var D = function() {};",
             "/** @constructor @struct",
             " * @extends {D}",
-            " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) { D.apply(this, arguments); };",
+            "var C = function() { D.apply(this, arguments); };",
             "$jscomp.inherits(C, D);"));
     assertThat(getLastCompiler().injected)
         .containsExactly("es6/util/inherits", "es6/util/arrayfromiterable");
@@ -594,24 +592,23 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         lines(
             "/** @constructor @struct",
             " * @extends {ns.D}",
-            " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) {",
+            "var C = function() {",
             " return ns.D.apply(this, arguments) || this;",
             "};",
             "$jscomp.inherits(C, ns.D);"));
 
     // Don't inject $jscomp.inherits() or apply() for externs
     testExternChanges(
-        "class D {} class C extends D {}", "",
+        "class D {} class C extends D {}",
+        "",
         lines(
             "/** @constructor @struct */",
             "var D = function() {};",
             "/** @constructor @struct",
             " * @extends {D}",
-            " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) {};"));
+            "var C = function() {};"));
   }
 
   @Test
@@ -634,9 +631,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "};",
             "/** @constructor @struct",
             " * @extends {Error}",
-            " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) { Error.apply(this, arguments); };",
+            "var C = function() { Error.apply(this, arguments); };",
             "$jscomp.inherits(C, Error);"));
     test(
         lines(
@@ -673,9 +669,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         lines(
             "/** @constructor @struct",
             " * @extends {Error}",
-            " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) {",
+            "var C = function() {",
             "  var $jscomp$tmp$error;",
             "  $jscomp$tmp$error = Error.apply(this, arguments),",
             "      this.message = $jscomp$tmp$error.message,",
@@ -732,9 +727,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "D.prototype.f = function() {};",
             "/**",
             " * @struct @interface",
-            " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {};",
+            "var C = function() {};",
             "$jscomp.inherits(C, D);",
             "C.prototype.g = function() {};"));
   }
@@ -757,9 +751,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "D.prototype.f = function() {};",
             "/**",
             " * @struct @record",
-            " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {};",
+            "var C = function() {};",
             "$jscomp.inherits(C, D);",
             "C.prototype.g = function() {};"));
   }
@@ -1048,8 +1041,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "/** @constructor @struct */",
             "var Foo = function() {};",
             "Foo.prototype['m'] = function() { return 1; };",
-            "/** @constructor @struct @extends {Foo} @param {...?} var_args */",
-            "var Bar = function(var_args) { Foo.apply(this, arguments); };",
+            "/** @constructor @struct @extends {Foo} */",
+            "var Bar = function() { Foo.apply(this, arguments); };",
             "$jscomp.inherits(Bar, Foo);",
             "Bar.prototype['m'] = function () { return Foo.prototype['m'].call(this) + 1; };"));
   }
@@ -1187,9 +1180,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         lines(
             "/**",
             " * @constructor @struct @extends {Object}",
-            " * @param {...?} var_args",
             " */",
-            "var Foo = function(var_args) {",
+            "var Foo = function() {",
             "  this;", // super.apply(this, arguments) replaced with its return value
             "};",
             "$jscomp.inherits(Foo, Object);"));
@@ -1236,7 +1228,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         externs(""),
         srcs(
             lines(
-                "class Object {}",
+                "class Object {}", //
                 "class Foo extends Object {}")), // autogenerated constructor
         expected(
             lines(
@@ -1247,9 +1239,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "};",
                 "/**",
                 " * @constructor @struct @extends {Object}",
-                " * @param {...?} var_args",
                 " */",
-                "var Foo = function(var_args) {",
+                "var Foo = function() {",
                 "  Object.apply(this, arguments);", // all arguments passed on to super()
                 "};",
                 "$jscomp.inherits(Foo, Object);")));
@@ -1294,9 +1285,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "C.prototype.f = function() {",
             "  /**",
             " * @constructor @struct",
-            " * @param {...?} var_args",
             " * @extends{C} */",
-            "  var D = function(var_args) {",
+            "  var D = function() {",
             "    C.apply(this, arguments); ",
             "  };",
             "  $jscomp.inherits(D, C);",
@@ -1313,9 +1303,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "D.prototype.d = function() {};",
             "/**",
             " * @constructor @struct",
-            " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {",
+            "var C = function() {",
             "  D.apply(this, arguments); ",
             "};",
             "$jscomp.inherits(C, D);",
@@ -1331,9 +1320,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "D.prototype['d'] = function() {};",
             "/**",
             " * @constructor @struct",
-            " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {",
+            "var C = function() {",
             "  D.apply(this, arguments); ",
             "};",
             "$jscomp.inherits(C, D);",
@@ -1349,9 +1337,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "D.prototype.d = function() {};",
             "/**",
             " * @constructor @struct",
-            " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {",
+            "var C = function() {",
             "  D.apply(this, arguments); ",
             "};",
             "$jscomp.inherits(C, D);",
@@ -1367,9 +1354,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "D.prototype['d'] = function() {};",
             "/**",
             " * @constructor @struct",
-            " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {",
+            "var C = function() {",
             "  D.apply(this, arguments); ",
             "};",
             "$jscomp.inherits(C, D);",
@@ -1384,9 +1370,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var D = function() {};",
             "/**",
             " * @constructor @struct",
-            " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {",
+            "var C = function() {",
             "  D.apply(this, arguments); ",
             "};",
             "$jscomp.inherits(C, D);",
@@ -1401,9 +1386,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var D = function() {};",
             "/**",
             " * @constructor @struct",
-            " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {",
+            "var C = function() {",
             "  D.apply(this, arguments); ",
             "};",
             "$jscomp.inherits(C, D);",
@@ -1418,9 +1402,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var D = function() {};",
             "/**",
             " * @constructor @struct",
-            " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {",
+            "var C = function() {",
             "  D.apply(this, arguments); ",
             "};",
             "$jscomp.inherits(C, D);",
@@ -1435,9 +1418,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var D = function() {};",
             "/**",
             " * @constructor @struct",
-            " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {",
+            "var C = function() {",
             "  D.apply(this, arguments); ",
             "};",
             "$jscomp.inherits(C, D);",
@@ -1479,9 +1461,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "/**",
             " * @constructor @struct",
             " * @extends {Base}",
-            " * @param {...?} var_args",
             " */",
-            "var Sub = function(var_args) {",
+            "var Sub = function() {",
             "  Base.apply(this, arguments);",
             "};",
             "/** @type {?} */",
@@ -1617,9 +1598,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             lines(
                 "/** @constructor @struct",
                 " * @extends {ExternsClass}",
-                " * @param {...?} var_args",
                 " */",
-                "var CodeClass = function(var_args) {",
+                "var CodeClass = function() {",
                 "  return ExternsClass.apply(this,arguments) || this;",
                 "};",
                 "$jscomp.inherits(CodeClass,ExternsClass)")));
@@ -1673,9 +1653,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "/**",
             " * @constructor @struct",
             " * @extends {Foo}",
-            " * @param {...?} var_args",
             " */",
-            "var Sub=function(var_args) { Foo.apply(this, arguments); }",
+            "var Sub=function() { Foo.apply(this, arguments); }",
             "$jscomp.inherits(Sub, Foo);",
             "(new Sub).f();"));
 
@@ -1701,9 +1680,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "Foo.f = function() {};",
             "/** @constructor @struct",
             " * @extends {Foo}",
-            " * @param {...?} var_args",
             " */",
-            "var Sub = function(var_args) { Foo.apply(this, arguments); };",
+            "var Sub = function() { Foo.apply(this, arguments); };",
             "$jscomp.inherits(Sub, Foo);"));
   }
 
@@ -1842,9 +1820,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "});",
             "/** @constructor @struct",
             " * @extends {C}",
-            " * @param {...?} var_args",
             " */",
-            "var D = function(var_args) {",
+            "var D = function() {",
             "  C.apply(this,arguments); ",
             "};",
             "/** @nocollapse @type {?} */",
@@ -1999,9 +1976,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "",
             "/** @constructor @struct",
             " * @extends {C}",
-            " * @param {...?} var_args",
             " */",
-            "var Sub = function(var_args) {",
+            "var Sub = function() {",
             "  C.apply(this, arguments);",
             "};",
             "$jscomp.inherits(Sub, C)"));

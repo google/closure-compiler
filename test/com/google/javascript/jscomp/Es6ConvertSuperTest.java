@@ -1041,8 +1041,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
                 "}",
                 "",
                 "class B extends A {",
-                "  /** @param {...?} var_args */",
-                "  constructor(var_args) { super(...arguments); }",
+                "  constructor() { super(...arguments); }",
                 "}")));
 
     // get the types we'll need to check
@@ -1238,10 +1237,9 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         srcs("/** @interface */ class B extends A { }"),
         expected(
             lines(
-                "/** @interface */",
+                "/** @interface */", //
                 "class B extends A {",
-                "  /** @param {...?} var_args */",
-                "  constructor(var_args) { }",
+                "  constructor() { }",
                 "}")));
   }
 

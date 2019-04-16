@@ -25,12 +25,8 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
 
 /**
  * Converts {@code super.method()} calls and adds constructors to any classes that lack them.
@@ -94,20 +90,8 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.SUPER);
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.SPREAD_EXPRESSIONS);
       }
-      Node constructor =
-          astFactory.createFunction(
-              "",
-              IR.paramList(astFactory.createName("var_args", JSTypeNative.UNKNOWN_TYPE)),
-              body,
-              classNode.getJSType());
+      Node constructor = astFactory.createFunction("", IR.paramList(), body, classNode.getJSType());
       memberDef = astFactory.createMemberFunctionDef("constructor", constructor);
-      // TODO(bradfordcsmith): Drop creation of JSDoc once transpilation moves after all checks.
-      JSDocInfoBuilder info = new JSDocInfoBuilder(false);
-      info.recordParameter(
-          "var_args",
-          new JSTypeExpression(
-              new Node(Token.ELLIPSIS, new Node(Token.QMARK)), "<Es6ConvertSuper>"));
-      memberDef.setJSDocInfo(info.build());
     }
     memberDef.useSourceInfoIfMissingFromForTree(classNode);
     memberDef.makeNonIndexableRecursive();
