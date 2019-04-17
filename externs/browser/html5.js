@@ -3097,8 +3097,42 @@ WebSocket.prototype.binaryType;
 // HTML5 History
 /**
  * @constructor
+ * @see http://w3c.github.io/html/browsers.html#the-history-interface
  */
 function History() {}
+
+/**
+ * Goes back one step in the joint session history.
+ * If there is no previous page, does nothing.
+ *
+ * @return {undefined}
+ */
+History.prototype.back = function(opt_distance) {};
+
+/**
+ * Goes forward one step in the joint session history.
+ * If there is no next page, does nothing.
+ *
+ * @return {undefined}
+ */
+History.prototype.forward = function() {};
+
+/**
+ * The number of entries in the joint session history.
+ *
+ * @type {number}
+ */
+History.prototype.length;
+
+/**
+ * Goes back or forward the specified number of steps in the joint session
+ * history. A zero delta will reload the current page. If the delta is out of
+ * range, does nothing.
+ *
+ * @param {number} delta The number of entries to go back.
+ * @return {undefined}
+ */
+History.prototype.go = function(delta) {};
 
 /**
  * Pushes a new state into the session history.
