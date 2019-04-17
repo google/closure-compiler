@@ -710,46 +710,31 @@ public final class NodeUtil {
 
       case OBJECTLIT:
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-          switch (child.getToken()) {
-            case MEMBER_FUNCTION_DEF:
-            case GETTER_DEF:
-            case SETTER_DEF:
-              // { methodName() {...} }
-              // { get propertyName() {...} }
-              // { set propertyName(value) {...} }
-              if (!includeFunctions) {
-                return false;
-              }
-              break;
-
-            case COMPUTED_PROP:
-              // { [key_expression]: value, ... }
-              // { [key_expression](args) {...}, ... }
-              // { get [key_expression]() {...}, ... }
-              // { set [key_expression](args) {...}, ... }
-              if (!isLiteralValue(child.getFirstChild(), includeFunctions)
-                  || !isLiteralValue(child.getLastChild(), includeFunctions)) {
-                return false;
-              }
-              break;
-
-            case SPREAD:
-              if (!isLiteralValue(child.getOnlyChild(), includeFunctions)) {
-                return false;
-              }
-              break;
-
-            case STRING_KEY:
-              // { key: value, ... }
-              // { "quoted_key": value, ... }
-              if (!isLiteralValue(child.getOnlyChild(), includeFunctions)) {
-                return false;
-              }
-              break;
-
-            default:
-              throw new IllegalArgumentException(
-                  "Unexpected child of OBJECTLIT: " + child.toStringTree());
+          if (child.isMemberFunctionDef() || NodeUtil.isGetOrSetKey(child)) {
+            // { methodName() {...} }
+            // { get propertyName() {...} }
+            // { set propertyName(value) {...} }
+            if (!includeFunctions) {
+              return false;
+            }
+          } else if (child.isComputedProp()) {
+            // { [key_expression]: value, ... }
+            // { [key_expression](args) {...}, ... }
+            if (!isLiteralValue(child.getFirstChild(), includeFunctions)
+                || !isLiteralValue(child.getLastChild(), includeFunctions)) {
+              return false;
+            }
+          } else if (child.isSpread()) {
+            if (!isLiteralValue(child.getOnlyChild(), includeFunctions)) {
+              return false;
+            }
+          } else {
+            // { key: value, ... }
+            // { "quoted_key": value, ... }
+            checkState(child.isStringKey(), child);
+            if (!isLiteralValue(child.getOnlyChild(), includeFunctions)) {
+              return false;
+            }
           }
         }
         return true;
@@ -3756,9 +3741,6 @@ public final class NodeUtil {
       case GETTER_DEF:
       case SETTER_DEF:
         return true;
-      case COMPUTED_PROP:
-        return node.getBooleanProp(Node.COMPUTED_PROP_GETTER)
-            || node.getBooleanProp(Node.COMPUTED_PROP_SETTER);
       default:
         break;
     }

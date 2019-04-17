@@ -640,14 +640,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testUnusedSetterParam_isRetained() {
-    // These params are a syntactic requirement.
-    testSame("class Foo { set foo(x)     { } }; use(new Foo);");
-    testSame("class Foo { set ['foo'](x) { } }; use(new Foo);");
-    testSame("class Foo { set 'foo'(x)   { } }; use(new Foo);");
-  }
-
-  @Test
   public void testArrayDestructuringParams() {
     // Default values in array pattern unused
     test(
