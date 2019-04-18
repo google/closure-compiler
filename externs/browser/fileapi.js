@@ -375,109 +375,109 @@ function FileError() {}
  * @see http://www.w3.org/TR/FileAPI/#dfn-NOT_FOUND_ERR
  * @const {number}
  */
-FileError.prototype.NOT_FOUND_ERR = 1;
+FileError.prototype.NOT_FOUND_ERR;
 
 /** @const {number} */
-FileError.NOT_FOUND_ERR = 1;
+FileError.NOT_FOUND_ERR;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-SECURITY_ERR
  * @const {number}
  */
-FileError.prototype.SECURITY_ERR = 2;
+FileError.prototype.SECURITY_ERR;
 
 /** @const {number} */
-FileError.SECURITY_ERR = 2;
+FileError.SECURITY_ERR;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-ABORT_ERR
  * @const {number}
  */
-FileError.prototype.ABORT_ERR = 3;
+FileError.prototype.ABORT_ERR;
 
 /** @const {number} */
-FileError.ABORT_ERR = 3;
+FileError.ABORT_ERR;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-NOT_READABLE_ERR
  * @const {number}
  */
-FileError.prototype.NOT_READABLE_ERR = 4;
+FileError.prototype.NOT_READABLE_ERR;
 
 /** @const {number} */
-FileError.NOT_READABLE_ERR = 4;
+FileError.NOT_READABLE_ERR;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-ENCODING_ERR
  * @const {number}
  */
-FileError.prototype.ENCODING_ERR = 5;
+FileError.prototype.ENCODING_ERR;
 
 /** @const {number} */
-FileError.ENCODING_ERR = 5;
+FileError.ENCODING_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileError-NO_MODIFICATION_ALLOWED_ERR
  * @const {number}
  */
-FileError.prototype.NO_MODIFICATION_ALLOWED_ERR = 6;
+FileError.prototype.NO_MODIFICATION_ALLOWED_ERR;
 
 /** @const {number} */
-FileError.NO_MODIFICATION_ALLOWED_ERR = 6;
+FileError.NO_MODIFICATION_ALLOWED_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileException-INVALID_STATE_ERR
  * @const {number}
  */
-FileError.prototype.INVALID_STATE_ERR = 7;
+FileError.prototype.INVALID_STATE_ERR;
 
 /** @const {number} */
-FileError.INVALID_STATE_ERR = 7;
+FileError.INVALID_STATE_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileException-SYNTAX_ERR
  * @const {number}
  */
-FileError.prototype.SYNTAX_ERR = 8;
+FileError.prototype.SYNTAX_ERR;
 
 /** @const {number} */
-FileError.SYNTAX_ERR = 8;
+FileError.SYNTAX_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileError-INVALID_MODIFICATION_ERR
  * @const {number}
  */
-FileError.prototype.INVALID_MODIFICATION_ERR = 9;
+FileError.prototype.INVALID_MODIFICATION_ERR;
 
 /** @const {number} */
-FileError.INVALID_MODIFICATION_ERR = 9;
+FileError.INVALID_MODIFICATION_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileError-QUOTA_EXCEEDED_ERR
  * @const {number}
  */
-FileError.prototype.QUOTA_EXCEEDED_ERR = 10;
+FileError.prototype.QUOTA_EXCEEDED_ERR;
 
 /** @const {number} */
-FileError.QUOTA_EXCEEDED_ERR = 10;
+FileError.QUOTA_EXCEEDED_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileException-TYPE_MISMATCH_ERR
  * @const {number}
  */
-FileError.prototype.TYPE_MISMATCH_ERR = 11;
+FileError.prototype.TYPE_MISMATCH_ERR;
 
 /** @const {number} */
-FileError.TYPE_MISMATCH_ERR = 11;
+FileError.TYPE_MISMATCH_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileException-PATH_EXISTS_ERR
  * @const {number}
  */
-FileError.prototype.PATH_EXISTS_ERR = 12;
+FileError.prototype.PATH_EXISTS_ERR;
 
 /** @const {number} */
-FileError.PATH_EXISTS_ERR = 12;
+FileError.PATH_EXISTS_ERR;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-code-exception
@@ -544,28 +544,28 @@ FileReader.prototype.abort = function() {};
  * @see http://www.w3.org/TR/FileAPI/#dfn-empty
  * @type {number}
  */
-FileReader.prototype.EMPTY = 0;
+FileReader.prototype.EMPTY;
 
 /** @type {number} */
-FileReader.EMPTY = 0;
+FileReader.EMPTY;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-loading
  * @type {number}
  */
-FileReader.prototype.LOADING = 1;
+FileReader.prototype.LOADING;
 
 /** @type {number} */
-FileReader.LOADING = 1;
+FileReader.LOADING;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-done
  * @type {number}
  */
-FileReader.prototype.DONE = 2;
+FileReader.prototype.DONE;
 
 /** @type {number} */
-FileReader.DONE = 2;
+FileReader.DONE;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-readystate
@@ -637,19 +637,19 @@ FileSaver.prototype.abort = function() {};
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-INIT
  * @const {number}
  */
-FileSaver.prototype.INIT = 0;
+FileSaver.prototype.INIT;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-WRITING
  * @const {number}
  */
-FileSaver.prototype.WRITING = 1;
+FileSaver.prototype.WRITING;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-DONE
  * @const {number}
  */
-FileSaver.prototype.DONE = 2;
+FileSaver.prototype.DONE;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-readyState
@@ -787,13 +787,13 @@ Metadata.prototype.size;
  * @see http://www.w3.org/TR/file-system-api/#widl-LocalFileSystem-TEMPORARY
  * @const {number}
 */
-Window.prototype.TEMPORARY = 0;
+Window.prototype.TEMPORARY;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-LocalFileSystem-PERSISTENT
  * @const {number}
 */
-Window.prototype.PERSISTENT = 1;
+Window.prototype.PERSISTENT;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-LocalFileSystem-requestFileSystem
@@ -946,13 +946,13 @@ function StorageInfo() {}
  * @see https://developers.google.com/chrome/whitepapers/storage
  * @const {number}
  * */
-StorageInfo.prototype.TEMPORARY = 0;
+StorageInfo.prototype.TEMPORARY;
 
 /**
  * @see https://developers.google.com/chrome/whitepapers/storage
  * @const {number}
  */
-StorageInfo.prototype.PERSISTENT = 1;
+StorageInfo.prototype.PERSISTENT;
 
 /**
  * @see https://developers.google.com/chrome/whitepapers/storage#requestQuota

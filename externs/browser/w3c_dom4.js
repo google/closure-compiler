@@ -70,49 +70,49 @@ DOMException.prototype.message;
  * @const {number}
  * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
  */
-DOMException.SECURITY_ERR = 18;
+DOMException.SECURITY_ERR;
 
 /**
  * @const {number}
  * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
  */
-DOMException.NETWORK_ERR = 19;
+DOMException.NETWORK_ERR;
 
 /**
  * @const {number}
  * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
  */
-DOMException.ABORT_ERR = 20;
+DOMException.ABORT_ERR;
 
 /**
  * @const {number}
  * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
  */
-DOMException.URL_MISMATCH_ERR = 21;
+DOMException.URL_MISMATCH_ERR;
 
 /**
  * @const {number}
  * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
  */
-DOMException.QUOTA_EXCEEDED_ERR = 22;
+DOMException.QUOTA_EXCEEDED_ERR;
 
 /**
  * @const {number}
  * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
  */
-DOMException.TIMEOUT_ERR = 23;
+DOMException.TIMEOUT_ERR;
 
 /**
  * @const {number}
  * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
  */
-DOMException.INVALID_NODE_TYPE_ERR = 24;
+DOMException.INVALID_NODE_TYPE_ERR;
 
 /**
  * @const {number}
  * @see https://www.w3.org/TR/2015/REC-dom-20151119/#dfn-error-names-table
  */
-DOMException.DATA_CLONE_ERR = 25;
+DOMException.DATA_CLONE_ERR;
 
 /**
  * @param {...(!Node|string)} nodes
