@@ -5046,6 +5046,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "_.f = function() { return 3; }; _.x = _.f;");
   }
 
+  @GwtIncompatible // b/63595345
   @Test
   public void testBrokenNameSpace() {
     CompilerOptions options = createCompilerOptions();
