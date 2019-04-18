@@ -222,6 +222,12 @@ public final class ErrorToFixMapper {
 
   private static ImmutableList<SuggestedFix> getFixesForImplicitNullabilityErrors(
       JSError error, AbstractCompiler compiler) {
+
+    if (error.node.getSourceFileName() == null) {
+      // If we don't have a source location we can't generate a valid fix.
+      return ImmutableList.of();
+    }
+
     SuggestedFix qmark =
         new SuggestedFix.Builder()
             .attachMatchedNodeInfo(error.node, compiler)
