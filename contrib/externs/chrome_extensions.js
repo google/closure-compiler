@@ -9312,9 +9312,9 @@ chrome.serial = {};
  *   persistent: (boolean|undefined),
  *   name: (string|undefined),
  *   bufferSize: (number|undefined),
- *   bitRate: (number|undefined),
+ *   bitrate: (number|undefined),
  *   dataBits: (string|undefined),
- *   parityBits: (string|undefined),
+ *   parityBit: (string|undefined),
  *   stopBits: (string|undefined),
  *   ctsFlowControl: (boolean|undefined),
  *   receiveTimeout: (number|undefined),
@@ -9334,9 +9334,9 @@ chrome.serial.ConnectionOptions;
  *   bufferSize: number,
  *   receiveTimeout: number,
  *   sendTimeout: number,
- *   bitRate: (number|undefined),
+ *   bitrate: (number|undefined),
  *   dataBits: (string|undefined),
- *   parityBits: (string|undefined),
+ *   parityBit: (string|undefined),
  *   stopBits: (string|undefined),
  *   ctsFlowControl: (boolean|undefined)
  * }}
