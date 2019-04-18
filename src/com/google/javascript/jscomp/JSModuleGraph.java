@@ -235,17 +235,6 @@ public final class JSModuleGraph implements Serializable {
     return subtreeSize;
   }
 
-  /**
-   * This only exists as a temprorary workaround.
-   * @deprecated Fix the tests that use this.
-   */
-  @Deprecated
-  public void breakThisGraphSoItsModulesCanBeReused() {
-    for (JSModule m : modules) {
-      m.resetThisModuleSoItCanBeReused();
-    }
-  }
-
   /** Gets an iterable over all input source files in dependency order. */
   Iterable<CompilerInput> getAllInputs() {
     return Iterables.concat(Iterables.transform(Arrays.asList(modules), JSModule::getInputs));

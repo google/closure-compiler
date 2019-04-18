@@ -301,22 +301,6 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
   }
 
   /**
-   * Removes any references to nodes of the AST and resets fields used by JSModuleGraph.
-   *
-   * <p>This method is needed by some tests to allow modules to be reused and their ASTs garbage
-   * collected.
-   * @deprecated Fix tests to avoid reusing modules.
-   */
-  @Deprecated
-  void resetThisModuleSoItCanBeReused() {
-    for (CompilerInput input : inputs) {
-      input.clearAst();
-    }
-    depth = -1;
-    index = -1;
-  }
-
-  /**
    * Puts the JS files into a topologically sorted order by their dependencies.
    */
   public void sortInputsByDeps(AbstractCompiler compiler) {

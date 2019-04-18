@@ -516,16 +516,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Exists only for some tests that want to reuse JSModules.
-   * @deprecated Fix those tests.
-   */
-  @Deprecated
-  public void breakThisCompilerSoItsModulesCanBeReused() {
-    moduleGraph.breakThisGraphSoItsModulesCanBeReused();
-    moduleGraph = null;
-  }
-
-  /**
    * Do any initialization that is dependent on the compiler options.
    */
   public void initBasedOnOptions() {
