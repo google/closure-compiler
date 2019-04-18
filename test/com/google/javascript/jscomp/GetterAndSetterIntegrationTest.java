@@ -490,7 +490,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "/** @constructor */",
             "function ES5Class() {",
             "  /** @private {number} */",
-            "  this.unusedProp_ = 1;",
+            "  this.onlySetProp_ = 1;",
             "  /** @private {number} */",
             "  this.usedProp_ = 2;",
             "}",
@@ -513,7 +513,8 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
         lines(
             "/** @constructor */",
             "function ES5Class() {",
-            // TODO(b/130682799): onlySetProp_ shouldn't have been removed
+            "  /** @private {number} */",
+            "  this.onlySetProp_ = 1;",
             "  /** @private {number} */",
             "  this.usedProp_ = 2;",
             "}",
