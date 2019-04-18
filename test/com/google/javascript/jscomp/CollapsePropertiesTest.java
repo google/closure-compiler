@@ -2208,9 +2208,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "    x = xIn;",
             "  }",
             "}",
-            "var barObj = new Bar(1);",
-            "bar.foo();",
-            "bar.foo(2);"));
+            "var bar = new Bar(1);",
+            "bar.foo;",
+            "bar.foo = 2;"));
   }
 
   @Test
