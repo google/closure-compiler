@@ -113,6 +113,21 @@ ITransformStream.prototype.writable;
 /** @type {!ReadableStream} */
 ITransformStream.prototype.readable;
 
+/**
+ * @param {!TransformStreamTransformer=} transformer
+ * @param {!QueuingStrategy=} writableStrategy
+ * @param {!QueuingStrategy=} readableStrategy
+ * @constructor
+ * @implements ITransformStream
+ * @see https://streams.spec.whatwg.org/#ts-class
+ */
+function TransformStream(transformer, writableStrategy, readableStrategy) {};
+
+/** @type {!WritableStream} */
+TransformStream.prototype.writable;
+
+/** @type {!ReadableStream} */
+TransformStream.prototype.readable;
 
 /**
  * @record
