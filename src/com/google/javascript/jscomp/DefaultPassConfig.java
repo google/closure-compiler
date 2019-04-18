@@ -1726,6 +1726,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
     optimizations.add(new PeepholeFoldConstants(late, useTypesForOptimization));
     optimizations.add(new PeepholeCollectPropertyAssignments());
+    optimizations.add(new PeepholeCombineArrayPush());
     return new PeepholeOptimizationsPass(compiler, passName, optimizations);
   }
 
