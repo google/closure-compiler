@@ -317,6 +317,7 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
           "isNaN",
           "parseFloat",
           "parseInt",
+          "self",
           "undefined",
           "window");
 
