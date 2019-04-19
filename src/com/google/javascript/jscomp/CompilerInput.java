@@ -426,8 +426,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
             }
           } else if (parent.isGetProp()
               // TODO(johnplaisted): Consolidate on declareModuleId
-              && (parent.matchesQualifiedName("goog.module.declareNamespace")
-                  || parent.matchesQualifiedName("goog.declareModuleId"))
+              && parent.matchesQualifiedName("goog.declareModuleId")
               && parent.getParent().isCall()) {
             Node argument = parent.getParent().getSecondChild();
             if (!argument.isString()) {

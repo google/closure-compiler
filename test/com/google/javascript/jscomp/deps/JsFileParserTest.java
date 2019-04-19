@@ -341,29 +341,6 @@ public final class JsFileParserTest {
   }
 
   @Test
-  public void testEs6ModuleWithDeclareNamespace() {
-    ModuleLoader loader =
-        new ModuleLoader(
-            null,
-            ImmutableList.of("/foo"),
-            ImmutableList.of(),
-            BrowserModuleResolver.FACTORY);
-
-    String contents = "goog.module.declareNamespace('my.namespace');\nexport {};";
-
-    DependencyInfo expected =
-        SimpleDependencyInfo.builder("../bar/baz.js", "/foo/js/bar/baz.js")
-            .setProvides(ImmutableList.of("my.namespace", "module$js$bar$baz"))
-            .setLoadFlags(ImmutableMap.of("module", "es6"))
-            .build();
-
-    DependencyInfo result =
-        parser.setModuleLoader(loader).parseFile("/foo/js/bar/baz.js", "../bar/baz.js", contents);
-
-    assertDeps(expected, result);
-  }
-
-  @Test
   public void testEs6ModuleWithDeclareModuleId() {
     ModuleLoader loader =
         new ModuleLoader(

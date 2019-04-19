@@ -379,25 +379,16 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   }
 
   @Test
-  public void testEs6ModuleDeclareNamespace() {
-    testSame("export var x; goog.module.declareNamespace('my.module');");
-    assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("my.module");
-    ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("my.module");
-    assertThat(m.googNamespaces()).containsExactly("my.module");
-    assertThat(m.isEs6Module()).isTrue();
-    assertThat(m.isGoogModule()).isFalse();
-  }
-
-  @Test
-  public void testEs6ModuleDeclareNamespaceImportedGoog() {
+  public void testEs6ModuleDeclareModuleIdImportedGoog() {
     testSame(
         ImmutableList.of(
             SourceFile.fromCode("goog.js", ""),
             SourceFile.fromCode(
-                "testcode", lines(
+                "testcode",
+                lines(
                     "import * as goog from './goog.js';",
                     "export var x;",
-                    "goog.module.declareNamespace('my.module');"))));
+                    "goog.declareModuleId('my.module');"))));
     assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("my.module");
     ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("my.module");
     assertThat(m.googNamespaces()).containsExactly("my.module");
@@ -441,12 +432,12 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   public void testDuplicateProvideAndEs6Module() {
     testError(
         new String[] {
-          "goog.provide('duplciated');", "export {}; goog.module.declareNamespace('duplciated');"
+          "goog.provide('duplciated');", "export {}; goog.declareModuleId('duplciated');"
         },
         ClosureRewriteModule.DUPLICATE_NAMESPACE);
     testError(
         new String[] {
-          "export {}; goog.module.declareNamespace('duplciated');", "goog.provide('duplciated');"
+          "export {}; goog.declareModuleId('duplciated');", "goog.provide('duplciated');"
         },
         ClosureRewriteModule.DUPLICATE_MODULE);
   }
@@ -462,12 +453,12 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   public void testDuplicateGoogAndEs6Module() {
     testError(
         new String[] {
-            "goog.module('duplciated');", "export {}; goog.module.declareNamespace('duplciated');"
+          "goog.module('duplciated');", "export {}; goog.declareModuleId('duplciated');"
         },
         ClosureRewriteModule.DUPLICATE_MODULE);
     testError(
         new String[] {
-            "export {}; goog.module.declareNamespace('duplciated');", "goog.module('duplciated');"
+          "export {}; goog.declareModuleId('duplciated');", "goog.module('duplciated');"
         },
         ClosureRewriteModule.DUPLICATE_MODULE);
   }
@@ -476,14 +467,14 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   public void testDuplicatEs6Modules() {
     testError(
         new String[] {
-          "export {}; goog.module.declareNamespace('duplciated');",
-          "export {}; goog.module.declareNamespace('duplciated');"
+          "export {}; goog.declareModuleId('duplciated');",
+          "export {}; goog.declareModuleId('duplciated');"
         },
         ClosureRewriteModule.DUPLICATE_MODULE);
     testError(
         new String[] {
-          "export {}; goog.module.declareNamespace('duplciated');",
-          "export {}; goog.module.declareNamespace('duplciated');"
+          "export {}; goog.declareModuleId('duplciated');",
+          "export {}; goog.declareModuleId('duplciated');"
         },
         ClosureRewriteModule.DUPLICATE_MODULE);
   }
@@ -596,7 +587,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   @Test
   public void testGatherFromExterns() {
     // js_lib will put data in externs for .i.js files.
-    test(externs("export var x; goog.module.declareNamespace('my.module');"), srcs(""));
+    test(externs("export var x; goog.declareModuleId('my.module');"), srcs(""));
     assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("my.module");
     ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("my.module");
     assertThat(m.googNamespaces()).containsExactly("my.module");

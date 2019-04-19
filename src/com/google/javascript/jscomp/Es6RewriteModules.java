@@ -378,8 +378,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       visitScript(t, n);
     } else if (n.isCall()) {
       // TODO(johnplaisted): Consolidate on declareModuleId.
-      if (n.getFirstChild().matchesQualifiedName("goog.module.declareNamespace")
-          || n.getFirstChild().matchesQualifiedName("goog.declareModuleId")) {
+      if (n.getFirstChild().matchesQualifiedName("goog.declareModuleId")) {
         n.getParent().detach();
       }
     }

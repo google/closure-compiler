@@ -44,21 +44,11 @@ public class CheckEs6ModuleFileStructureTest extends CompilerTestCase {
   @Test
   public void testDeclareModuleIdAfterImportsIfPresent() {
     testSame("import noDeclareNamespace from 'file';");
-
     testSame("goog.declareModuleId('name.space'); export let noImports;");
-    testSame("goog.module.declareNamespace('name.space'); export let noImports;");
-
     testSame("import first from 'file'; goog.declareModuleId('name.space');");
-    testSame("import first from 'file'; goog.module.declareNamespace('name.space');");
-
     testWarning("export let first; goog.declareModuleId('name.space');", MUST_COME_BEFORE);
-    testWarning("export let first; goog.module.declareNamespace('name.space');", MUST_COME_BEFORE);
-
     testWarning(
         "import first from 'file'; let second; goog.declareModuleId('name.space');",
-        MUST_COME_BEFORE);
-    testWarning(
-        "import first from 'file'; let second; goog.module.declareNamespace('name.space');",
         MUST_COME_BEFORE);
   }
 
@@ -71,9 +61,9 @@ public class CheckEs6ModuleFileStructureTest extends CompilerTestCase {
     testSame("const bar = goog.require('bar'); export {};");
     testSame("export {}; const bar = goog.require('bar');", MUST_COME_BEFORE);
 
-    testSame("goog.module.declareNamespace('name'); const bar = goog.require('bar'); export {};");
+    testSame("goog.declareModuleId('name'); const bar = goog.require('bar'); export {};");
     testWarning(
-        "const bar = goog.require('bar'); goog.module.declareNamespace('name'); export {};",
+        "const bar = goog.require('bar'); goog.declareModuleId('name'); export {};",
         MUST_COME_BEFORE);
 
     testSame("import 'file'; const bar = goog.require('bar');");
@@ -85,7 +75,7 @@ public class CheckEs6ModuleFileStructureTest extends CompilerTestCase {
     testSame(
         lines(
             "import 'file';",
-            "goog.module.declareNamespace('name');",
+            "goog.declareModuleId('name');",
             "const bar = goog.require('bar');",
             "let rest;"));
   }
