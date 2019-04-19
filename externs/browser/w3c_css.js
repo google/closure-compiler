@@ -2339,14 +2339,6 @@ Element.prototype.scrollIntoView = function(opt_top) {};
 /**
  * @param {number|ScrollToOptions} scrollToOptionsOrX
  * @param {number=} y
- * @see https://www.w3.org/TR/cssom-view/#dom-element-scroll
- * @return {undefined}
- */
-Element.prototype.scroll = function(scrollToOptionsOrX, y) {};
-
-/**
- * @param {number|ScrollToOptions} scrollToOptionsOrX
- * @param {number=} y
  * @see https://www.w3.org/TR/cssom-view/#dom-element-scrollto
  * @return {undefined}
  */
