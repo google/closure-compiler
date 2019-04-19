@@ -4362,15 +4362,30 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
           "goog.module('b'); var x = 0; MOD_B_X: x"
         });
 
-    TypedScope modAScope = getLabeledStatement("MOD_A_X").enclosingScope;
-    TypedScope modBScope = getLabeledStatement("MOD_B_X").enclosingScope;
+    assertScope(globalScope).doesNotDeclare("x");
 
-    TypedVar modAX = modAScope.getSlot("x");
-    TypedVar modBX = modBScope.getSlot("x");
+    TypedVar modAX = getLabeledStatement("MOD_A_X").enclosingScope.getSlot("x");
+    TypedVar modBX = getLabeledStatement("MOD_B_X").enclosingScope.getSlot("x");
 
     assertThat(modAX).isNotEqualTo(modBX);
     assertType(modAX.getType()).isString();
     assertType(modBX.getType()).isNumber();
+  }
+
+  @Test
+  public void testTwoGoogModuleWithSameNamedFunctionDeclaration() {
+    testSame(
+        new String[] {
+          "goog.module('a'); function foo() {} MOD_A_FOO: foo;", //
+          "goog.module('b'); function foo() {} MOD_B_FOO: foo;"
+        });
+
+    assertScope(globalScope).doesNotDeclare("foo");
+
+    TypedVar modAX = getLabeledStatement("MOD_A_FOO").enclosingScope.getSlot("foo");
+    TypedVar modBX = getLabeledStatement("MOD_B_FOO").enclosingScope.getSlot("foo");
+
+    assertThat(modAX).isNotEqualTo(modBX);
   }
 
   @Test

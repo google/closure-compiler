@@ -820,30 +820,43 @@ public class NodeTraversal {
     setChangeScope(changeScope);
   }
 
-  /**
-   * Traverses a branch.
-   */
-  private void traverseBranch(Node n, Node parent) {
-    Token type = n.getToken();
-    if (type == Token.SCRIPT) {
-      handleScript(n, parent);
-      return;
-    } else if (type == Token.FUNCTION) {
-      handleFunction(n, parent);
-      return;
+  /** Traverses a module. */
+  private void handleModule(Node n, Node parent) {
+    pushScope(n);
+    curNode = n;
+    if (callback.shouldTraverse(this, n, parent)) {
+      curNode = n;
+      traverseChildren(n);
+      callback.visit(this, n, parent);
     }
+    popScope();
+  }
 
+  /** Traverses a branch. */
+  private void traverseBranch(Node n, Node parent) {
+    switch (n.getToken()) {
+      case SCRIPT:
+        handleScript(n, parent);
+        return;
+      case FUNCTION:
+        handleFunction(n, parent);
+        return;
+      case MODULE_BODY:
+        handleModule(n, parent);
+        return;
+      default:
+        break;
+    }
     curNode = n;
     if (!callback.shouldTraverse(this, n, parent)) {
       return;
     }
 
+    Token type = n.getToken();
     if (type == Token.CLASS) {
       traverseClass(n);
     } else if (type == Token.CLASS_MEMBERS) {
       traverseClassMembers(n);
-    } else if (type == Token.MODULE_BODY) {
-      traverseModule(n);
     } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
       traverseBlockScope(n);
     } else {
@@ -966,13 +979,6 @@ public class NodeTraversal {
       traverseBranch(child, n);
       child = next;
     }
-  }
-
-  /** Traverses a module. */
-  private void traverseModule(Node n) {
-    pushScope(n);
-    traverseChildren(n);
-    popScope();
   }
 
   /** Traverses a non-function block. */

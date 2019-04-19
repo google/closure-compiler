@@ -127,6 +127,66 @@ public final class NodeTraversalTest {
   }
 
   @Test
+  public void testGetScopeRoot_inEsModule() {
+    Compiler compiler = new Compiler();
+    String code =
+        lines(
+            "const x = 0;", //
+            "export {x};");
+    Node tree = parse(compiler, code);
+    NodeTraversal.traverse(
+        compiler,
+        tree,
+        new NodeTraversal.Callback() {
+          @Override
+          public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            if (n.isModuleBody() || (parent != null && parent.isModuleBody())) {
+              assertNode(t.getScopeRoot()).hasToken(Token.MODULE_BODY);
+            }
+            return true;
+          }
+
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (n.isModuleBody() || (parent != null && parent.isModuleBody())) {
+              assertNode(t.getScopeRoot()).hasToken(Token.MODULE_BODY);
+            }
+          }
+        });
+  }
+
+  @Test
+  public void testGetScopeRoot_inGoogModule() {
+    Compiler compiler = new Compiler();
+    String code =
+        lines(
+            "goog.module('a.b');", //
+            "function foo() {",
+            "  var b",
+            "}");
+    Node tree = parse(compiler, code);
+    NodeTraversal.traverse(
+        compiler,
+        tree,
+        new NodeTraversal.Callback() {
+          @Override
+          public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            if (n.isModuleBody() || (parent != null && parent.isModuleBody())) {
+              assertNode(t.getScopeRoot()).hasToken(Token.MODULE_BODY);
+            }
+            return true;
+          }
+
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (n.isModuleBody() || (parent != null && parent.isModuleBody())) {
+              assertNode(t.getScopeRoot()).hasToken(Token.MODULE_BODY);
+            }
+          }
+        });
+  }
+
+  @Test
   public void testGetHoistScopeRoot() {
     Compiler compiler = new Compiler();
     String code = lines(
