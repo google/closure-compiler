@@ -1192,7 +1192,7 @@ public class CompilerOptions implements Serializable {
    */
   public CompilerOptions() {
     // Accepted language
-    languageIn = LanguageMode.ECMASCRIPT_2017;
+    languageIn = LanguageMode.STABLE_IN;
 
     // Which environment to use
     environment = Environment.BROWSER;
