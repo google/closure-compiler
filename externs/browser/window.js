@@ -126,12 +126,12 @@ var netscape;
 function alert(message) {}
 
 /**
- * @param {number|undefined|null} immediateID
+ * @param {number=} opt_immediateID
  * @see https://developer.mozilla.org/en-US/docs/DOM/window.clearImmediate
  * @see http://msdn.microsoft.com/en-us/library/ie/hh924825(v=vs.85).aspx
  * @return {undefined}
  */
-function clearImmediate(immediateID) {}
+function clearImmediate(opt_immediateID) {}
 
 /**
  * @param {number|undefined?} intervalID

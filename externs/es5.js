@@ -22,7 +22,7 @@
 
 
 /**
- * @param {Object|undefined} selfObj Specifies the object to which |this| should
+ * @param {?Object=} opt_selfObj Specifies the object to which |this| should
  *     point when the function is run. If the value is null or undefined, it
  *     will default to the global object.
  * @param {...*} var_args Additional arguments that are partially
@@ -32,7 +32,7 @@
  * @nosideeffects
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
  */
-Function.prototype.bind = function(selfObj, var_args) {};
+Function.prototype.bind = function(opt_selfObj, var_args) {};
 
 
 /**
