@@ -76,9 +76,15 @@ final class PeepholeCombineArrayPush extends AbstractPeepholeOptimization {
         Node arrayDotPushNode = callNode.getFirstChild();
         if (arrayDotPushNode != null && arrayDotPushNode.getToken() == Token.GETPROP) {
           Node array = arrayDotPushNode.getFirstChild();
-          Node push = array.getNext();
-          JSType arrayJsType = array.getJSType();
-          return (array.getToken() == Token.NAME && arrayJsType.isArrayType() && push.getString().equals("push"));
+          if (array != null) {
+            Node push = array.getNext();
+            if (push != null) {
+              JSType arrayJsType = array.getJSType();
+              if (arrayJsType != null) {
+                return (array.getToken() == Token.NAME && arrayJsType.isArrayType() && push.getString().equals("push"));
+              }
+            }
+          }
         }
       }
     }
