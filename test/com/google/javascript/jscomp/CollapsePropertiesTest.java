@@ -88,6 +88,216 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void doNotCollapseAStaticPropertyUsedInAGetter() {
+    test(
+        lines(
+            "class C {",
+            "  /** @type {number} */",
+            "  static get p() { return this.p_; }",
+            "}",
+            // declaration and initialization of private static field
+            "/** @private {number} */",
+            "C.p_ = 1;",
+            // reference via getter
+            "alert(C.p);",
+            ""),
+        lines(
+            "class C {",
+            "  /** @type {number} */",
+            "  static get p() { return this.p_; }",
+            "}",
+            // TODO(b/130682799): C.p_ should not be collapsed
+            "/** @private {number} */",
+            "var C$p_ = 1;",
+            "alert(C.p);",
+            ""));
+  }
+
+  @Test
+  public void doNotCollapseAStaticPropertyUsedInASetter() {
+    test(
+        lines(
+            "class C {",
+            "  /** @param {number} v */",
+            "  static set p(v) { this.p_ = v; }",
+            "}",
+            // declaration and initialization of private static field
+            "/** @private {number} */",
+            "C.p_ = 0;",
+            // changing private static field through setter property
+            "C.p = 1;",
+            "alert(C.p_);",
+            ""),
+        lines(
+            "class C {",
+            "  /** @param {number} v */",
+            "  static set p(v) { this.p_ = v; }",
+            "}",
+            // TODO(b/130682799): C.p_ should not be collapsed
+            "/** @private {number} */",
+            "var C$p_ = 0;",
+            "C.p = 1;",
+            "alert(C$p_);",
+            ""));
+  }
+
+  @Test
+  public void doNotCollapseAStaticPropertyReadInAStaticMethod() {
+    testWarning(
+        lines(
+            "class C {",
+            "  /** @return {number} */",
+            "  static getP() { return this.p_; }",
+            "}",
+            // declaration and initialization of private static field
+            "/** @private {number} */",
+            "C.p_ = 1;",
+            // reference via method
+            "alert(C.getP());",
+            ""),
+        lines(
+            "class C {",
+            "  /** @return {number} */",
+            "  static getP() { return this.p_; }",
+            "}",
+            // declaration and initialization of private static field
+            "/** @private {number} */",
+            "C.p_ = 1;",
+            // reference via method
+            "alert(C.getP());",
+            ""),
+        // TODO(b/117437011): should recognize type of `this` in a static method
+        UNSAFE_THIS);
+  }
+
+  @Test
+  public void doNotCollapseAStaticPropertyAssignedInAStaticMethod() {
+    testWarning(
+        lines(
+            "class C {",
+            "  /** @param {number} v */",
+            "  static setP(v) { this.p_ = v; }",
+            "}",
+            // declaration and initialization of private static field
+            "/** @private {number} */",
+            "C.p_ = 0;",
+            // changing private static field through method
+            "C.setP(1);",
+            "alert(C.p_);",
+            ""),
+        lines(
+            "class C {",
+            "  /** @param {number} v */",
+            "  static setP(v) { this.p_ = v; }",
+            "}",
+            // declaration and initialization of private static field
+            "/** @private {number} */",
+            "C.p_ = 0;",
+            // changing private static field through method
+            "C.setP(1);",
+            "alert(C.p_);",
+            ""),
+        // TODO(b/117437011): should recognize type of `this` in a static method
+        UNSAFE_THIS);
+  }
+
+  @Test
+  public void doNotCollapseAPropertyReadByAnObjectLiteralMethod() {
+    test(
+        lines(
+            "const obj = {",
+            "  /** @private {number} */",
+            "  p_: 0,",
+            "  /**",
+            "   * @this {{p_: number}}",
+            "   * @return {number}",
+            "   */",
+            "  getP() { return this.p_; }",
+            "};",
+            "alert(obj.getP());",
+            ""),
+        lines(
+            // TODO(b/130829946): Should not collapse obj.p_ and obj.getP
+            "var obj$p_ = 0;",
+            "var obj$getP = function() { return this.p_; };",
+            "alert(obj$getP());",
+            ""));
+  }
+
+  @Test
+  public void doNotCollapseAPropertyAssignedInAnObjectLiteralMethod() {
+    test(
+        lines(
+            "const obj = {",
+            "  /** @private {number} */",
+            "  p_: 0,",
+            "  /**",
+            "   * @this {{p_: number}}",
+            "   * @param {number} v",
+            "   */",
+            "  setP(v) { this.p_ = v; }",
+            "}",
+            "obj.setP(1);",
+            "alert(obj.p_);",
+            ""),
+        lines(
+            // TODO(b/130829946): Should not collapse obj.p_ and obj.getP
+            "var obj$p_ = 0;",
+            "var obj$setP = function(v) { this.p_ = v; };",
+            "obj$setP(1);",
+            "alert(obj$p_);",
+            ""));
+  }
+
+  @Test
+  public void doNotCollapseAPropertyUsedInAnObjectLiteralGetter() {
+    test(
+        lines(
+            "const obj = {",
+            "  /** @private {number} */",
+            "  p_: 0,",
+            "  /** @type {number} */",
+            "  get p() { return this.p_; }",
+            "}",
+            "alert(obj.p);",
+            ""),
+        lines(
+            // TODO(b/130829946): Should not collapse obj.p_
+            "var obj$p_ = 0;",
+            "const obj = {",
+            "  /** @type {number} */",
+            "  get p() { return this.p_; }",
+            "}",
+            "alert(obj.p);",
+            ""));
+  }
+
+  @Test
+  public void doNotCollapseAPropertyUsedInAnObjectLiteralSetter() {
+    test(
+        lines(
+            "const obj = {",
+            "  /** @private {number} */",
+            "  p_: 0,",
+            "  /** @param {number} v */",
+            "  set p(v) { this.p_ = v; }",
+            "}",
+            "obj.p = 1;",
+            "alert(obj.p_);",
+            ""),
+        lines(
+            // TODO(b/130829946): Should not collapse obj.p_
+            "var obj$p_ = 0;",
+            "const obj = {",
+            "  /** @param {number} v */",
+            "  set p(v) { this.p_ = v; }",
+            "}",
+            "obj.p = 1;",
+            "alert(obj$p_);",
+            ""));
+  }
+
+  @Test
   public void testMultiLevelCollapse() {
     test("var a = {}; a.b = {}; a.b.c = {}; var d = 1; d = a.b.c;",
          "var a$b$c = {}; var d = 1; d = a$b$c;");
