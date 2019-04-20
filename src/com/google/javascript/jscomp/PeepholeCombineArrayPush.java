@@ -40,48 +40,57 @@ final class PeepholeCombineArrayPush extends AbstractPeepholeOptimization {
     }
 
     boolean codeChanged = false;
-
-    for (Node child = subtree.getFirstChild(); child != null; child = child.getNext()) {
-      if (isArrayDotPush(child)) {
-        Node next = child.getNext();
-        if (isArrayDotPush(next)) {
-          Node firstCall = child.getFirstChild();
-          Node secondCall = next.getFirstChild();
-          String firstArrayName = firstCall.getFirstChild().getFirstChild().getString();
-          String secondArrayName = secondCall.getFirstChild().getFirstChild().getString();
-          if (firstArrayName.equals(secondArrayName)) {
-            Node secondArgument = secondCall.getFirstChild().getNext();
-            while (secondArgument != null) {
-              Node temp = secondArgument.getNext();
-              firstCall.addChildToBack(secondArgument.detach());
-              secondArgument = temp;
-            }
-            subtree.removeChild(next);
-            codeChanged = true;
-          }
-        }
+    for (Node statement = subtree.getFirstChild(); statement != null; statement = statement.getNext()) {
+      ArrayDotPushStatementSequence arrayDotPushStatementSequence = asArrayDotPushStatementSequence(statement);
+      if (arrayDotPushStatementSequence != null) {
+        arrayDotPushStatementSequence.combine(subtree);
+        codeChanged = true;
       }
     }
-
     if (codeChanged) {
       reportChangeToEnclosingScope(subtree);
     }
     return subtree;
   }
 
-  private boolean isArrayDotPush(Node child) {    
-    if (child != null && child.getToken() == Token.EXPR_RESULT) {
-      Node callNode = child.getFirstChild();
-      if (callNode != null && callNode.getToken() == Token.CALL) {
+  private ArrayDotPushStatementSequence asArrayDotPushStatementSequence(Node statement) {
+    ArrayDotPushStatementSequence arrayDotPushStatementSequence = new ArrayDotPushStatementSequence();
+    if (isArrayDotPush(statement, true, arrayDotPushStatementSequence)) {
+      Node nextStatement = statement.getNext();
+      if (isArrayDotPush(nextStatement, false, arrayDotPushStatementSequence)) {
+        if (arrayDotPushStatementSequence.firstArrayName.equals(arrayDotPushStatementSequence.secondArrayName)) {
+          return arrayDotPushStatementSequence;
+        }
+      }
+    }
+    return null;
+  }
+
+  private boolean isArrayDotPush(Node statement, boolean first, ArrayDotPushStatementSequence arrayDotPushStatementSequence) {
+    if (statement != null && statement.isExprResult()) {
+      Node callNode = statement.getOnlyChild();
+      if (callNode != null && callNode.isCall()) {
         Node arrayDotPushNode = callNode.getFirstChild();
-        if (arrayDotPushNode != null && arrayDotPushNode.getToken() == Token.GETPROP) {
+        if (arrayDotPushNode != null && arrayDotPushNode.isGetProp()) {
           Node array = arrayDotPushNode.getFirstChild();
           if (array != null) {
             Node push = array.getNext();
             if (push != null) {
               JSType arrayJsType = array.getJSType();
               if (arrayJsType != null) {
-                return (array.getToken() == Token.NAME && arrayJsType.isArrayType() && push.getString().equals("push"));
+                boolean result = (array.getToken() == Token.NAME && arrayJsType.isArrayType() && push.getString().equals("push"));
+                if (result) {
+                  if (first) {
+                    arrayDotPushStatementSequence.firstCall = callNode;
+                    arrayDotPushStatementSequence.firstArrayName = array.getString();
+                  } else {
+                    arrayDotPushStatementSequence.nextStatement = statement;
+                    arrayDotPushStatementSequence.secondCall = callNode;
+                    arrayDotPushStatementSequence.secondArrayName = array.getString();
+                    arrayDotPushStatementSequence.secondArgument = arrayDotPushNode.getNext();
+                  }
+                }
+                return result;
               }
             }
           }
@@ -89,5 +98,23 @@ final class PeepholeCombineArrayPush extends AbstractPeepholeOptimization {
       }
     }
     return false;
+  }
+
+  private class ArrayDotPushStatementSequence {
+    public Node firstCall;
+    public String firstArrayName;
+    public Node nextStatement;
+    public Node secondCall;
+    public String secondArrayName;
+    public Node secondArgument;
+
+    public void combine(Node subtree) {
+      while (secondArgument != null) {
+        Node temp = secondArgument.getNext();
+        firstCall.addChildToBack(secondArgument.detach());
+        secondArgument = temp;
+      }
+      subtree.removeChild(nextStatement);
+    }
   }
 }
