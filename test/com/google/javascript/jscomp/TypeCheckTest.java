@@ -721,22 +721,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testWellKnownSymbolAccessTransitional1() {
-    testTypesWithExtraExterns(
-        lines(
-            "/** @typedef {?} */ var symbol;",
-            "/** @type {symbol} */ Symbol.somethingNew;"),
-        lines(
-            "/**",
-            " * @param {Array<string>} x",
-            " */",
-            "function f(x) {",
-            "  const iter = x[Symbol.somethingNew]();",
-            "}"
-        ));
-  }
-
-  @Test
   public void testWellKnownSymbolAccess1() {
     testTypesWithCommonExterns(
         lines(
@@ -23195,7 +23179,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes(
         lines(
             "/** @typedef {{foo: number}} */",
-            "var Component = {};",
+            "var Component;",
             "",
             "/** @const {!Component} */",
             "var MyComponent = {foo: 1};",
@@ -23207,13 +23191,35 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testCanUseConstToAssignValueToTypedef() {
+    testTypes(
+        lines(
+            "/** @typedef {!Object<string, number>} */", //
+            "const Type = {};"));
+  }
+
+  @Test
+  public void testCannotUseLetToAssignValueToTypedef() {
+    // Note: 'const' works but not 'let' because const declarations with a literal rhs have a
+    // 'declared type'.
+    testTypes(
+        lines(
+            "/** @typedef {!Object<string, number>} */", //
+            "let Type = {};"),
+        lines(
+            "initializing variable", //
+            "found   : {}",
+            "required: None"));
+  }
+
+  @Test
   public void testStrayPropertyOnRecordTypedefDoesNotModifyRecord() {
     // This is a common pattern for angular.  This test is checking that adding the property to one
     // instance does not require all other instances to specify it as well.
     testTypes(
         lines(
             "/** @typedef {{foo: number}} */",
-            "var Component = {};",
+            "var Component;",
             "",
             "/** @const {!Component} */",
             "var MyComponent = {foo: 1 };",

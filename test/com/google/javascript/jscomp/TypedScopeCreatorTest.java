@@ -570,11 +570,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "/** @const {number} */ let   CONST_LET_WITH_TYPE = 1;",
             "/** @type  {number} */ const CONST_WITH_TYPE     = 1;",
             ""));
-    String[] expectedVarNames =
-        new String[] {
-          "uninitializedVar",
-          "typedefVar",
-        };
+    String[] expectedVarNames = new String[] {"uninitializedVar"};
     List<TypedVar> expectedVars = new ArrayList<>();
     for (String varName : expectedVarNames) {
       expectedVars.add(globalScope.getVar(varName));
@@ -4290,8 +4286,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(findNameType("x", globalScope)).isNumber();
     ObjectType eType = findNameType("E", globalScope).toMaybeObjectType();
     assertThat(eType).isNotNull();
-    // TODO(b/124121835): fix this assertion - 'E.F' should be considered declared.
-    assertThat(eType.isPropertyTypeDeclared("F")).isFalse();
+    assertThat(eType.isPropertyTypeDeclared("F")).isTrue();
   }
 
   @Test
@@ -4315,6 +4310,77 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "const E = F.E;",
             "/** @type {E} */ let x;"));
     assertThat(findNameType("x", globalScope).toString()).isEqualTo("number");
+  }
+
+  @Test
+  public void testTypedefName_hasNoType() {
+    testSame("/** @typedef {number} */ let Foo;");
+
+    TypedVar foo = globalScope.getSlot("Foo");
+    assertThat(foo).isNotInferred();
+    assertThat(foo).hasJSTypeThat().isNoType();
+  }
+
+  @Test
+  public void testTypedefQualifiedName_hasNoType() {
+    testSame("const ns = {}; /** @typedef {number} */ ns.Foo;");
+
+    TypedVar foo = globalScope.getSlot("ns.Foo");
+    assertThat(foo).isNotInferred();
+    assertThat(foo).hasJSTypeThat().isNoType(); // Note: we would like this to be 'void' eventually.
+  }
+
+  @Test
+  public void testTypedefName_usingLetWithLiteralRhs_hasNoType() {
+    testSame("/** @typedef {number} */ let Foo = 'a string';"); // This will cause a type error.
+
+    TypedVar foo = globalScope.getSlot("Foo");
+    assertThat(foo).isNotInferred();
+    assertThat(foo).hasJSTypeThat().isNoType();
+  }
+
+  @Test
+  public void testTypedefNameVar_usingConstWithLiteralRhs_hasLiteralType() {
+    testSame("/** @enum */ let Enum = {A: 0}; /** @typedef {number} */ const Foo = Enum;");
+
+    TypedVar foo = globalScope.getSlot("Foo");
+    assertThat(foo).isNotInferred();
+    // Currently a typedef can be a const alias of a type.
+    assertThat(foo).hasJSTypeThat().toStringIsEqualTo("enum{Enum}");
+
+    assertType(registry.getGlobalType("Foo")).isNumber();
+  }
+
+  @Test
+  public void testTypedefNameVar_usingConstWithObjectLitRhs_canHaveAdditionalProperties() {
+    testSame("/** @typedef {number} */ const Foo = {}; Foo.Builder = () => 0;");
+
+    TypedVar foo = globalScope.getSlot("Foo");
+    assertThat(foo).isNotInferred();
+    assertThat(foo).hasJSTypeThat().isObjectTypeWithProperty("Builder");
+
+    assertType(registry.getGlobalType("Foo")).isNumber();
+  }
+
+  @Test
+  public void testTypedefQualifiedName_withLiteralRhs_hasNoType() {
+    testSame("const ns = {}; /** @typedef {number} */ ns.Foo = 'a string';");
+
+    TypedVar foo = globalScope.getSlot("ns.Foo");
+    assertThat(foo).isNotNull();
+    assertThat(foo).isNotInferred();
+    assertThat(foo).hasJSTypeThat().isNoType();
+  }
+
+  @Test
+  public void testTypedefQualifiedName_withObjectLiteralRhs_hasNoType() {
+    testSame("const ns = {}; /** @typedef {number} */ ns.Foo = {}; ns.Foo.Builder = () => 0;");
+
+    TypedVar foo = globalScope.getSlot("ns.Foo");
+    assertThat(foo).isNotInferred();
+    assertThat(foo).hasJSTypeThat().isNoType(); // Note: eventually we may want to make this {}.
+
+    assertType(registry.getGlobalType("ns.Foo")).isNumber();
   }
 
   @Test
@@ -4718,28 +4784,24 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testGoogRequire_namedExportDeclaredAsTypedef() {
-    testWarning(
+    testSame(
         srcs(
             "goog.module('a'); /** @typedef {number} */ exports.numType;",
-            "goog.module('b'); const {numType} = goog.require('a'); var /** numType */ x; X: x;"),
-        // TODO(b/124919359): We should recognize 'numType'.
-        warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
+            "goog.module('b'); const {numType} = goog.require('a'); var /** numType */ x; X: x;"));
 
     Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
-    assertNode(xNode).hasJSTypeThat().isUnknown();
+    assertNode(xNode).hasJSTypeThat().isNumber();
   }
 
   @Test
   public void testGoogRequire_namedExportOfLocalTypedef() {
-    testWarning(
+    testSame(
         srcs(
             "goog.module('a'); /** @typedef {number} */ let numType; exports.numType = numType;",
-            "goog.module('b'); const {numType} = goog.require('a'); var /** numType */ x; X: x;"),
-        // TODO(b/124919359): We should recognize 'numType'.
-        warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
+            "goog.module('b'); const {numType} = goog.require('a'); var /** numType */ x; X: x;"));
 
     Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
-    assertNode(xNode).hasJSTypeThat().isUnknown();
+    assertNode(xNode).hasJSTypeThat().isNumber();
   }
 
   @Test

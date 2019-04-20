@@ -30,7 +30,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_FUNCTION
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERATOR_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -1069,6 +1068,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       for (Node child : n.children()) {
         defineVarChild(info, child, scope);
+      }
+      if (n.hasOneChild() && isValidTypedefDeclaration(n.getOnlyChild(), n.getJSDocInfo())) {
+        declareTypedefType(n.getOnlyChild(), n.getJSDocInfo());
       }
     }
 
@@ -2161,6 +2163,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return createFunctionTypeFromNodes(null, fnName, info, lValue);
       }
 
+      if (isValidTypedefDeclaration(lValue, info)) {
+        return getNativeType(JSTypeNative.NO_TYPE);
+      }
+
       return null;
     }
 
@@ -2224,14 +2230,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // TODO(b/123710194): Also make local aliases non-nullable
           typeRegistry.identifyNonNullableName(lValueName);
         }
-      }
-
-      // TODO(b/124121835): remove this case. Currently it's only necessary for a few places where
-      // we alias typedefs, but cannot find the 'definition node' for the typedef.
-      // It also leads to strange behavior like "const f = undefined;" making `f` a type.
-      JSType rhsNamedType = typeRegistry.getType(currentScope, rValue.join());
-      if (rhsNamedType != null) {
-        typeRegistry.declareType(currentScope, lValueName, rhsNamedType);
       }
     }
 
@@ -2451,7 +2449,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      */
     void maybeDeclareQualifiedName(NodeTraversal t, JSDocInfo info,
         Node n, Node parent, Node rhsValue) {
-      checkForTypedef(t, n, info);
+      boolean isTypedef = isValidTypedefDeclaration(n, info);
+      if (isTypedef) {
+        declareTypedefType(n, info);
+      }
 
       Node ownerNode = n.getFirstChild();
       String ownerName = ownerNode.getQualifiedName();
@@ -2588,6 +2589,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (info != null
           && (info.hasType()
               || info.hasEnumParameterType()
+              || isValidTypedefDeclaration(n, info)
               || isConstantDeclarationWithKnownType(info, n, valueType)
               || FunctionTypeBuilder.isFunctionTypeDeclaration(info)
               || (rhsValue != null && rhsValue.isFunction()))) {
@@ -2750,25 +2752,21 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Handle typedefs.
+     * Returns whether this is a valid declaration of a @typedef.
      *
      * @param candidate A qualified name node.
      * @param info JSDoc comments.
      */
-    void checkForTypedef(NodeTraversal t, Node candidate, JSDocInfo info) {
+    private boolean isValidTypedefDeclaration(Node candidate, @Nullable JSDocInfo info) {
       if (info == null || !info.hasTypedefType()) {
-        return;
+        return false;
       }
+      return candidate.isQualifiedName();
+    }
 
+    /** Declares a typedef'd name in the {@link JSTypeRegistry}. */
+    void declareTypedefType(Node candidate, JSDocInfo info) {
       String typedef = candidate.getQualifiedName();
-      if (typedef == null) {
-        return;
-      }
-
-      // TODO(b/73386087): Remove this check after the extern definitions are cleaned up.
-      if (currentScope.isGlobal() && typedef.equals("symbol")) {
-        return;
-      }
 
       // TODO(nicksantos|user): This is a terrible, terrible hack
       // to bail out on recursive typedefs. We'll eventually need
@@ -2783,24 +2781,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       typeRegistry.overwriteDeclaredType(currentScope, typedef, realType);
-      if (candidate.isGetProp()) {
-        new SlotDefiner()
-            .forDeclarationNode(candidate)
-            .forVariableName(typedef)
-            .inScope(getLValueRootScope(candidate))
-            .withType(getNativeType(NO_TYPE))
-            .allowLaterTypeInference(false)
-            .defineSlot();
-        Node definitionNode =
-            getDefinitionNode(candidate.getFirstChild().getQualifiedNameObject(), currentScope);
-        if (definitionNode != null) {
-          ObjectType parent = ObjectType.cast(definitionNode.getJSType());
-          if (parent != null) {
-            JSType valueType = getNativeType(NO_TYPE);
-            declarePropertyIfNamespaceType(t, parent, candidate, valueType);
-          }
-        }
-      }
     }
 
     void declarePropertyIfNamespaceType(
@@ -2900,10 +2880,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         case LET:
         case CONST:
           defineVars(n);
-          // Handle typedefs.
-          if (n.hasOneChild()) {
-            checkForTypedef(t, n.getFirstChild(), n.getJSDocInfo());
-          }
           break;
 
         case GETPROP:

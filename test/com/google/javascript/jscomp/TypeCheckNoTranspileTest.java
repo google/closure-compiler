@@ -760,11 +760,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "var ns = {};",
             "ns.MyNumber = MyNumber;",
             "/** @type {string} */ (ns.MyNumber);",
-            ""),
-        lines(
-            "invalid cast - must be a subtype or supertype", // preserve newlines
-            "from: undefined",
-            "to  : string"));
+            ""));
   }
 
   @Test
