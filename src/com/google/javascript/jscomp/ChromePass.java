@@ -51,7 +51,6 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   private static final String CR_EXPORT_PATH = "cr.exportPath";
   private static final String OBJECT_DEFINE_PROPERTY = "Object.defineProperty";
   private static final String CR_DEFINE_PROPERTY = "cr.defineProperty";
-  private static final String CR_MAKE_PUBLIC = "cr.makePublic";
 
   private static final String CR_DEFINE_COMMON_EXPLANATION =
       "It should be called like this:"
@@ -90,21 +89,6 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
           "Invalid cr.PropertyKind passed to cr.defineProperty(): expected ATTR,"
               + " BOOL_ATTR or JS, found \"{0}\".");
 
-  static final DiagnosticType CR_MAKE_PUBLIC_HAS_NO_JSDOC =
-      DiagnosticType.error(
-          "JSC_CR_MAKE_PUBLIC_HAS_NO_JSDOC",
-          "Private method exported by cr.makePublic() has no JSDoc.");
-
-  static final DiagnosticType CR_MAKE_PUBLIC_MISSED_DECLARATION =
-      DiagnosticType.error(
-          "JSC_CR_MAKE_PUBLIC_MISSED_DECLARATION",
-          "Method \"{1}_\" exported by cr.makePublic() on \"{0}\" has no declaration.");
-
-  static final DiagnosticType CR_MAKE_PUBLIC_INVALID_SECOND_ARGUMENT =
-      DiagnosticType.error(
-          "JSC_CR_MAKE_PUBLIC_INVALID_SECOND_ARGUMENT",
-          "Invalid second argument passed to cr.makePublic(): should be array of strings.");
-
   public ChromePass(AbstractCompiler compiler) {
     this.compiler = compiler;
     // The global variable "cr" is declared in ui/webui/resources/js/cr.js.
@@ -127,8 +111,6 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
       } else if (callee.matchesQualifiedName(OBJECT_DEFINE_PROPERTY)
           || callee.matchesQualifiedName(CR_DEFINE_PROPERTY)) {
         visitPropertyDefinition(node, parent);
-      } else if (callee.matchesQualifiedName(CR_MAKE_PUBLIC)) {
-        visitMakePublic(node, parent);
       }
     }
   }
@@ -198,98 +180,6 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
     builder.recordType(new JSTypeExpression(type, "<ChromePass.java>"));
     target.setJSDocInfo(builder.build());
-  }
-
-  private void visitMakePublic(Node call, Node exprResult) {
-    Node scope = exprResult.getParent();
-    String className = call.getSecondChild().getQualifiedName();
-    String prototype = className + ".prototype";
-    Node methods = call.getChildAtIndex(2);
-
-    if (methods == null || !methods.isArrayLit()) {
-      compiler.report(JSError.make(exprResult, CR_MAKE_PUBLIC_INVALID_SECOND_ARGUMENT));
-      return;
-    }
-
-    Set<String> methodNames = new HashSet<>();
-    for (Node methodName : methods.children()) {
-      if (!methodName.isString()) {
-        compiler.report(JSError.make(methodName, CR_MAKE_PUBLIC_INVALID_SECOND_ARGUMENT));
-        return;
-      }
-      methodNames.add(methodName.getString());
-    }
-
-    for (Node child : scope.children()) {
-      if (isAssignmentToPrototype(child, prototype)) {
-        Node objectLit = child.getFirstChild().getSecondChild();
-        for (Node stringKey : objectLit.children()) {
-          String field = stringKey.getString();
-          maybeAddPublicDeclaration(field, methodNames, className, stringKey, scope, exprResult);
-        }
-      } else if (isAssignmentToPrototypeMethod(child, prototype)) {
-        Node assignNode = child.getFirstChild();
-        String qualifiedName = assignNode.getFirstChild().getQualifiedName();
-        String field = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
-        maybeAddPublicDeclaration(field, methodNames, className, assignNode, scope, exprResult);
-      } else if (isDummyPrototypeMethodDeclaration(child, prototype)) {
-        String qualifiedName = child.getFirstChild().getQualifiedName();
-        String field = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
-        maybeAddPublicDeclaration(
-            field, methodNames, className, child.getFirstChild(), scope, exprResult);
-      }
-    }
-
-    for (String missedDeclaration : methodNames) {
-      compiler.report(
-          JSError.make(
-              exprResult, CR_MAKE_PUBLIC_MISSED_DECLARATION, className, missedDeclaration));
-    }
-  }
-
-  private static boolean isAssignmentToPrototype(Node node, String prototype) {
-    Node assignNode;
-    return node.isExprResult()
-        && (assignNode = node.getFirstChild()).isAssign()
-        && assignNode.getFirstChild().matchesQualifiedName(prototype);
-  }
-
-  private static boolean isAssignmentToPrototypeMethod(Node node, String prototype) {
-    Node assignNode;
-    return node.isExprResult()
-        && (assignNode = node.getFirstChild()).isAssign()
-        && assignNode.getFirstChild().getQualifiedName().startsWith(prototype + ".");
-  }
-
-  private static boolean isDummyPrototypeMethodDeclaration(Node node, String prototype) {
-    Node getPropNode;
-    return node.isExprResult()
-        && (getPropNode = node.getFirstChild()).isGetProp()
-        && getPropNode.getQualifiedName().startsWith(prototype + ".");
-  }
-
-  private void maybeAddPublicDeclaration(
-      String field,
-      Set<String> publicAPIStrings,
-      String className,
-      Node jsDocSourceNode,
-      Node scope,
-      Node exprResult) {
-    if (field.endsWith("_")) {
-      String publicName = field.substring(0, field.length() - 1);
-      if (publicAPIStrings.contains(publicName)) {
-        Node methodDeclaration = NodeUtil.newQName(compiler, className + "." + publicName);
-        if (jsDocSourceNode.getJSDocInfo() != null) {
-          methodDeclaration.setJSDocInfo(jsDocSourceNode.getJSDocInfo());
-          Node publicDeclaration = IR.exprResult(methodDeclaration).srcrefTree(exprResult);
-          scope.addChildBefore(publicDeclaration, exprResult);
-          compiler.reportChangeToEnclosingScope(publicDeclaration);
-        } else {
-          compiler.report(JSError.make(jsDocSourceNode, CR_MAKE_PUBLIC_HAS_NO_JSDOC));
-        }
-        publicAPIStrings.remove(publicName);
-      }
-    }
   }
 
   private void visitExportPath(Node crExportPathNode, Node parent) {
