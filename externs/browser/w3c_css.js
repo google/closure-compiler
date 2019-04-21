@@ -2705,11 +2705,11 @@ FontFaceSet.prototype.has = function(font) {};
 
 /**
  * @param {function(!FontFace, number, !FontFaceSet)} callback
- * @param {Object|undefined=} opt_selfObj
+ * @param {?Object=} selfObj
  * see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-foreach
  * @return {undefined}
  */
-FontFaceSet.prototype.forEach = function(callback, opt_selfObj) {};
+FontFaceSet.prototype.forEach = function(callback, selfObj) {};
 
 /**
  * @param {string} font

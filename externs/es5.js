@@ -22,9 +22,9 @@
 
 
 /**
- * @param {Object|undefined} selfObj Specifies the object to which |this| should
- *     point when the function is run. If the value is null or undefined, it
- *     will default to the global object.
+ * @param {?Object|undefined} selfObj Specifies the object to which |this|
+ *     should point when the function is run. If the value is null or undefined,
+ *     it will default to the global object.
  * @param {...*} var_args Additional arguments that are partially
  *     applied to fn.
  * @return {!Function} A partially-applied form of the Function on which
