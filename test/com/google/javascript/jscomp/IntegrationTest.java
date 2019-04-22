@@ -459,7 +459,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "A$z();"));
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testBug1949424() {
     CompilerOptions options = createCompilerOptions();
@@ -469,7 +468,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         CLOSURE_COMPILED + "var FOO$bar = 3;");
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testBug1949424_v2() {
     CompilerOptions options = createCompilerOptions();
@@ -486,7 +484,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var FOO$BAR = 3;"));
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testUnresolvedDefine() {
     CompilerOptions options = new CompilerOptions();
@@ -1369,7 +1366,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testTypedefBeforeOwner1() {
     CompilerOptions options = createCompilerOptions();
@@ -1387,7 +1383,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "foo.Bar = function() {};"));
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testTypedefBeforeOwner2() {
     CompilerOptions options = createCompilerOptions();
@@ -1405,7 +1400,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var foo$Bar = function() {};"));
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testTypedefProvides() {
     CompilerOptions options = createCompilerOptions();
@@ -1502,7 +1496,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "goog.exportSymbol('testFoo', testFoo);");
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testExportTestFunctionsOn2() {
     CompilerOptions options = createCompilerOptions();
@@ -1662,7 +1655,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "x = 3; var x = 5;", VariableReferenceCheck.EARLY_REFERENCE);
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testInferTypes() {
     CompilerOptions options = createCompilerOptions();
@@ -2254,7 +2246,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, CLOSURE_COMPILED + " var FLAG = false;");
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testGoogDefine2() {
     String code = CLOSURE_BOILERPLATE +
@@ -2550,7 +2541,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, originalText, expectedText);
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testClosurePassPreservesJsDoc() {
     CompilerOptions options = createCompilerOptions();
@@ -2575,7 +2565,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var COMPILED=true;var goog={};goog.exportSymbol=function(){};var Foo={a:3}");
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testProvidedNamespaceIsConst() {
     CompilerOptions options = createCompilerOptions();
@@ -2594,7 +2583,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testProvidedNamespaceIsConst3() {
     CompilerOptions options = createCompilerOptions();
@@ -2611,7 +2599,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "var foo$bar$baz = function(){};");
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testProvidedNamespaceIsConst4() {
     CompilerOptions options = createCompilerOptions();
@@ -2625,7 +2612,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var foo = {}; foo = {}; foo.Bar = {};");
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testProvidedNamespaceIsConst5() {
     CompilerOptions options = createCompilerOptions();

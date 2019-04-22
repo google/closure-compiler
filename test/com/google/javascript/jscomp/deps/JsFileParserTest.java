@@ -325,8 +325,7 @@ public final class JsFileParserTest {
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder("../bar/baz.js", "/foo/js/bar/baz.js")
-            .setProvides(ImmutableList.of("my.namespace", "module$js$bar$baz"))
-            .setLoadFlags(ImmutableMap.of("module", "es6"))
+            .setProvides(ImmutableList.of("my.namespace"))
             .build();
 
     DependencyInfo result =

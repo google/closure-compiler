@@ -228,7 +228,11 @@ public final class JsFileParser extends JsFileLineParser {
     return dependencyInfo;
   }
 
-  private void setModuleType(ModuleType type) {
+  /**
+   * @return {@code true} if the moduleType is successfully set and {@code false} otherwise (e.g.
+   *     goog.provide, goog.module conflict).
+   */
+  private boolean setModuleType(ModuleType type) {
     boolean provide = type == ModuleType.GOOG_PROVIDE || moduleType == ModuleType.GOOG_PROVIDE;
     boolean es6Module = type == ModuleType.ES6_MODULE || moduleType == ModuleType.ES6_MODULE;
     boolean googModule = type == ModuleType.GOOG_MODULE || moduleType == ModuleType.GOOG_MODULE;
@@ -237,7 +241,7 @@ public final class JsFileParser extends JsFileLineParser {
       // We have to assume this is a top level goog.provide and a wrapped goog.loadModule. We can't
       // correctly validate this with just regular expressions.
       moduleType = ModuleType.GOOG_PROVIDE;
-      return;
+      return true;
     }
 
     boolean provideGoogModuleConflict = googModule && provide && !seenLoadModule;
@@ -249,9 +253,11 @@ public final class JsFileParser extends JsFileLineParser {
       // TODO(sdh): should this be an error?
       errorManager.report(
           CheckLevel.WARNING, JSError.make(ModuleLoader.MODULE_CONFLICT, file.toString()));
+      return false;
     }
 
     moduleType = type;
+    return true;
   }
 
   @Override
@@ -308,11 +314,11 @@ public final class JsFileParser extends JsFileLineParser {
         boolean isRequire = firstChar == 'r';
 
         if (isModule && !seenLoadModule) {
-          setModuleType(ModuleType.GOOG_MODULE);
+          providesNamespace = setModuleType(ModuleType.GOOG_MODULE);
         }
 
         if (isProvide) {
-          setModuleType(ModuleType.GOOG_PROVIDE);
+          providesNamespace = setModuleType(ModuleType.GOOG_PROVIDE);
         }
 
         if (providesNamespace || isRequire) {
