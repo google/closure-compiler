@@ -3181,6 +3181,121 @@ History.prototype.scrollRestoration;
 Window.prototype.history;
 
 /**
+ * @interface
+ * @see https://html.spec.whatwg.org/multipage/history.html#the-location-interface
+ */
+function Location() {}
+
+/**
+ * Returns the Location object's URL. Can be set, to navigate to the given URL.
+ * @implicitCast
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-href
+ */
+Location.prototype.href;
+
+/**
+ * Returns the Location object's URL's origin.
+ * @const {string}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-origin
+ */
+Location.prototype.origin;
+
+/**
+ * Returns the Location object's URL's scheme. Can be set, to navigate to the
+ * same URL with a changed scheme.
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-protocol
+ */
+Location.prototype.protocol;
+
+/**
+ * Returns the Location object's URL's host and port (if different from the
+ * default port for the scheme). Can be set, to navigate to the same URL with
+ * a changed host and port.
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-host
+ */
+Location.prototype.host;
+
+/**
+ * Returns the Location object's URL's host. Can be set, to navigate to the
+ * same URL with a changed host.
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-hostname
+ */
+Location.prototype.hostname;
+
+/**
+ * Returns the Location object's URL's port. Can be set, to navigate to the
+ * same URL with a changed port.
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/history.html#the-location-interface:dom-location-port
+ */
+Location.prototype.port;
+
+/**
+ * Returns the Location object's URL's path. Can be set, to navigate to the
+ * same URL with a changed path.
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-pathname
+ */
+Location.prototype.pathname;
+
+/**
+ * Returns the Location object's URL's query (includes leading "?" if
+ * non-empty). Can be set, to navigate to the same URL with a changed query
+ * (ignores leading "?").
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-search
+ */
+Location.prototype.search;
+
+/**
+ * Returns the Location object's URL's fragment (includes leading "#" if
+ * non-empty). Can be set, to navigate to the same URL with a changed fragment
+ * (ignores leading "#").
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-hash
+ */
+Location.prototype.hash;
+
+/**
+ * Navigates to the given page.
+ * @param {!TrustedURL|string} url
+ * @return {undefined}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-assign
+ */
+Location.prototype.assign = function(url) {};
+
+/**
+ * Removes the current page from the session history and navigates to the given
+ * page.
+ * @param {!TrustedURL|string} url
+ * @return {undefined}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-replace
+ */
+Location.prototype.replace = function(url) {};
+
+/**
+ * Reloads the current page.
+ * @param {boolean=} opt_forceReload If true, reloads the page from
+ *     the server. Defaults to false.
+ * @return {undefined}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-reload
+ */
+Location.prototype.reload = function(opt_forceReload) {};
+
+/**
+ * Returns a DOMStringList object listing the origins of the ancestor browsing
+ * contexts, from the parent browsing context to the top-level browsing
+ * context.
+ * @type {DOMStringList}
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-ancestororigins
+ */
+Location.prototype.ancestorOrigins;
+
+/**
  * @see http://www.whatwg.org/specs/web-apps/current-work/#popstateevent
  * @constructor
  * @extends {Event}
