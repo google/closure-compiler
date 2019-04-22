@@ -358,6 +358,12 @@ class ExpressionDecomposer {
       // The TEMPLATELIT_SUB node is not actually an expression and can't be extracted, but we may
       // need to extract the expression inside of it.
       n = n.getFirstChild();
+    } else if (n.isSpread()) {
+      // Object spread is assumed pure. We just need to extract the expression being spread.
+      if (n.getParent().isObjectLit()) {
+        n = n.getFirstChild();
+      }
+      // Iterable spreads are not expressions, but they can still be extracted using temp variables.
     } else if (!IR.mayBeExpression(n)) {
       // If n is not an expression then it can't be extracted. For example if n is the destructuring
       // pattern on the left side of a VAR statement:
@@ -553,8 +559,9 @@ class ExpressionDecomposer {
           tempNameValue = astFactory.createArraylit(expr).useSourceInfoFrom(expr.getOnlyChild());
           break;
         case OBJECTLIT:
-          // Object spread is assumed pure, so delgate to extracting the expression *being* spread.
-          return extractExpression(expr.getOnlyChild(), injectionPoint);
+          // Object-spread is assumed to be side-effectless by the compiler. Therefore, it should
+          // never be processed here.
+          // Fall through.
         default:
           throw new IllegalStateException("Unexpected parent of SPREAD:" + parent.toStringTree());
       }

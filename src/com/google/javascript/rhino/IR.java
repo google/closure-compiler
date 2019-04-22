@@ -371,7 +371,7 @@ public class IR {
   public static Node call(Node target, Node ... args) {
     Node call = new Node(Token.CALL, target);
     for (Node arg : args) {
-      checkState(mayBeExpression(arg), arg);
+      checkState(mayBeExpression(arg) || arg.isSpread(), arg);
       call.addChildToBack(arg);
     }
     return call;
@@ -380,7 +380,7 @@ public class IR {
   public static Node newNode(Node target, Node ... args) {
     Node newcall = new Node(Token.NEW, target);
     for (Node arg : args) {
-      checkState(mayBeExpression(arg));
+      checkState(mayBeExpression(arg) || arg.isSpread(), arg);
       newcall.addChildToBack(arg);
     }
     return newcall;
@@ -593,7 +593,7 @@ public class IR {
   public static Node arraylit(Node ... exprs) {
     Node arraylit = new Node(Token.ARRAYLIT);
     for (Node expr : exprs) {
-      checkState(mayBeExpressionOrEmpty(expr));
+      checkState(mayBeExpressionOrEmpty(expr) || expr.isSpread(), expr);
       arraylit.addChildToBack(expr);
     }
     return arraylit;
@@ -818,7 +818,6 @@ public class IR {
       case RSH:
       case SHEQ:
       case SHNE:
-      case SPREAD:
       case STRING:
       case SUB:
       case SUPER:

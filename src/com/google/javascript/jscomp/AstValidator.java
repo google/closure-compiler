@@ -397,10 +397,6 @@ public final class AstValidator implements CompilerPass {
         validateCall(n);
         return;
 
-      case SPREAD:
-        validateSpread(n);
-        return;
-
       case NEW:
         validateNew(n);
         return;
@@ -445,10 +441,6 @@ public final class AstValidator implements CompilerPass {
           // TODO(sdh): need to validate super() using validateNewType() instead, if it existed
           validateCallType(n);
         }
-        break;
-
-      case SPREAD:
-        // we don't type spread nodes
         break;
 
       default:
@@ -983,7 +975,14 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.CALL, n);
     validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateExpression(c);
+      switch (c.getToken()) {
+        case SPREAD:
+          validateSpread(c);
+          break;
+        default:
+          validateExpression(c);
+          break;
+      }
     }
   }
 
@@ -1044,7 +1043,14 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.NEW, n);
     validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateExpression(c);
+      switch (c.getToken()) {
+        case SPREAD:
+          validateSpread(c);
+          break;
+        default:
+          validateExpression(c);
+          break;
+      }
     }
   }
 
@@ -1472,8 +1478,15 @@ public final class AstValidator implements CompilerPass {
   private void validateArrayLit(Node n) {
     validateNodeType(Token.ARRAYLIT, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      // EMPTY is allowed to represent empty slots.
-      validateOptionalExpression(c);
+      switch (c.getToken()) {
+        case SPREAD:
+          validateSpread(c);
+          break;
+        default:
+          // Optional because array-literals may have empty slots.
+          validateOptionalExpression(c);
+          break;
+      }
     }
   }
 

@@ -1033,8 +1033,8 @@ public final class ExpressionDecomposerTest {
         "({...x, y: foo()});",
         "foo",
         lines(
-            "var temp_const$jscomp$1 = x;", // This is a temp var, not a temp *object*.
-            "({...temp_const$jscomp$1, y: foo()});"));
+            "var temp_const$jscomp$0 = x;", // This is a temp var, not a temp *object*.
+            "({...temp_const$jscomp$0, y: foo()});"));
   }
 
   @Test
