@@ -456,7 +456,7 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
 
     /** Whether this kind of implicit variable is created/owned by the given scope. */
     boolean isMadeByScope(AbstractScope<?, ?> scope) {
-      return NodeUtil.isVanillaFunction(scope.getRootNode());
+      return NodeUtil.isNonArrowFunction(scope.getRootNode());
     }
 
     static ImplicitVar of(String name) {

@@ -757,7 +757,7 @@ class TypeInference
   private void traverseSuper(Node superNode) {
     // Find the closest non-arrow function (TODO(sdh): this could be an AbstractScope method).
     TypedScope scope = containerScope;
-    while (scope != null && !NodeUtil.isVanillaFunction(scope.getRootNode())) {
+    while (scope != null && !NodeUtil.isNonArrowFunction(scope.getRootNode())) {
       scope = scope.getParent();
     }
     if (scope == null) {
@@ -816,7 +816,7 @@ class TypeInference
     // constructor.
     // Find the closest non-arrow function (TODO(sdh): this could be an AbstractScope method).
     TypedScope scope = containerScope;
-    while (scope != null && !NodeUtil.isVanillaFunction(scope.getRootNode())) {
+    while (scope != null && !NodeUtil.isNonArrowFunction(scope.getRootNode())) {
       scope = scope.getParent();
     }
     if (scope == null) {

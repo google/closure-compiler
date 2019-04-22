@@ -183,7 +183,8 @@ class FunctionInjector {
 
     // If the function references "arguments" directly in the function or in an arrow function
     boolean referencesArguments =
-        NodeUtil.isNameReferenced(block, "arguments", NodeUtil.MATCH_NOT_VANILLA_FUNCTION);
+        NodeUtil.isNameReferenced(
+            block, "arguments", NodeUtil.MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION);
 
     Predicate<Node> blocksInjection =
         new Predicate<Node>() {

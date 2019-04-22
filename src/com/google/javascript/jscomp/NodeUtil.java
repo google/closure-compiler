@@ -2343,7 +2343,7 @@ public final class NodeUtil {
    */
   static boolean referencesThis(Node n) {
     Node start = (n.isFunction()) ? n.getLastChild() : n;
-    return containsType(start, Token.THIS, MATCH_NOT_VANILLA_FUNCTION);
+    return containsType(start, Token.THIS, MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION);
   }
 
   /**
@@ -2461,7 +2461,7 @@ public final class NodeUtil {
         && n.getFirstChild().isCall();
   }
 
-  static boolean isVanillaFunction(Node n) {
+  static boolean isNonArrowFunction(Node n) {
     return n.isFunction() && !n.isArrowFunction();
   }
 
@@ -3242,7 +3242,7 @@ public final class NodeUtil {
       return true;
     }
 
-    if (NodeUtil.isVanillaFunction(node)) {
+    if (NodeUtil.isNonArrowFunction(node)) {
       return false;
     }
 
@@ -4614,8 +4614,14 @@ public final class NodeUtil {
 
   static final Predicate<Node> MATCH_NOT_FUNCTION = n -> !n.isFunction();
 
-  /** A predicate for matching anything except for a vanilla function (i.e. not arrow functions) */
-  static final Predicate<Node> MATCH_NOT_VANILLA_FUNCTION = n -> !NodeUtil.isVanillaFunction(n);
+  /**
+   * A predicate for matching anything except for a non-arrow function.
+   *
+   * <p>Useful to avoid traversing into scopes that don't share the same values for {@code this},
+   * {@code super}, or {@code arguments}.
+   */
+  static final Predicate<Node> MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION =
+      n -> !NodeUtil.isNonArrowFunction(n);
 
   /**
    * A predicate for matching statements without exiting the current scope.

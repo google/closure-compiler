@@ -110,7 +110,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     Node root = getRootNode();
     if (isGlobal()) {
       return ObjectType.cast(root.getJSType());
-    } else if (NodeUtil.isVanillaFunction(root)) {
+    } else if (NodeUtil.isNonArrowFunction(root)) {
       JSType nodeType = root.getJSType();
       if (nodeType != null && nodeType.isFunctionType()) {
         return nodeType.toMaybeFunctionType().getTypeOfThis();
