@@ -1359,6 +1359,7 @@ Array.prototype.fill = function(value, opt_begin, opt_end) {};
  * @param {number} start
  * @param {number=} opt_end
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.copywithin
+ * @this {!IArrayLike<T>|string}
  * @template T
  * @return {!Array<T>}
  */
