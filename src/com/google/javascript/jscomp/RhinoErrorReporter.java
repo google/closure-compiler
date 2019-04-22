@@ -48,6 +48,10 @@ class RhinoErrorReporter {
   static final DiagnosticType JSDOC_MISSING_TYPE_WARNING =
       DiagnosticType.disabled("JSC_JSDOC_MISSING_TYPE_WARNING", "{0}");
 
+  // Import is supported by VSCode and is pretty much a standard now.
+  static final DiagnosticType JSDOC_IMPORT_TYPE_WARNING =
+      DiagnosticType.disabled("JSC_JSDOC_IMPORT_TYPE_WARNING", "{0}");
+
   static final DiagnosticType TOO_MANY_TEMPLATE_PARAMS =
       DiagnosticType.disabled("JSC_TOO_MANY_TEMPLATE_PARAMS", "{0}");
 
@@ -152,6 +156,11 @@ class RhinoErrorReporter {
 
             // Unresolved types that aren't forward declared.
             .put(Pattern.compile(".*Unknown type.*"), UNRECOGNIZED_TYPE_ERROR)
+
+            // Import annotation errors.
+            .put(
+                Pattern.compile("^Bad type annotation. Import in typedef.*"),
+                JSDOC_IMPORT_TYPE_WARNING)
 
             // Type annotation errors.
             .put(Pattern.compile("^Bad type annotation.*"), TYPE_PARSE_ERROR)
