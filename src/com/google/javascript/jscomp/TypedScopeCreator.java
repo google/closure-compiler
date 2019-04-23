@@ -1765,9 +1765,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       EnumType enumType = null;
       if (rValue != null && rValue.isQualifiedName()) {
-        // Handle an aliased enum. Note that  putting @enum on an enum alias is optional.
+        // Handle an aliased enum. Note that putting @enum on an enum alias is optional. If the
+        // rValue is not an enum, then this assignment errors during TypeCheck.
         TypedVar var = currentScope.getVar(rValue.getQualifiedName());
-        if (var != null && var.getType().isEnumType()) {
+        if (var != null && var.getType() != null && var.getType().isEnumType()) {
           enumType = var.getType().toMaybeEnumType();
         }
       }

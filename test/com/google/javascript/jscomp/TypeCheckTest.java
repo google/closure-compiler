@@ -4891,6 +4891,30 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testAliasedEnum_rhsIsStubDeclaration() {
+    testTypes(
+        lines(
+            "let YourEnum;", //
+            "/** @enum */ const MyEnum = YourEnum;"),
+        lines(
+            "initializing variable", //
+            "found   : undefined",
+            "required: enum{MyEnum}"));
+  }
+
+  @Test
+  public void testAliasedEnum_rhsIsNonEnum() {
+    testTypes(
+        lines(
+            "let YourEnum = 0;", //
+            "/** @enum */ const MyEnum = YourEnum;"),
+        lines(
+            "initializing variable", //
+            "found   : number",
+            "required: enum{MyEnum}"));
+  }
+
+  @Test
   public void testConstAliasedEnum() {
     testTypes(
         lines(
