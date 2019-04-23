@@ -2342,8 +2342,12 @@ public final class NodeUtil {
    * Returns true if the shallow scope contains references to 'this' keyword
    */
   static boolean referencesThis(Node n) {
-    Node start = (n.isFunction()) ? n.getLastChild() : n;
-    return containsType(start, Token.THIS, MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION);
+    if (n.isFunction()) {
+      return referencesThis(NodeUtil.getFunctionParameters(n))
+          || referencesThis(NodeUtil.getFunctionBody(n));
+    } else {
+      return has(n, node -> node.isThis(), MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION);
+    }
   }
 
   /**

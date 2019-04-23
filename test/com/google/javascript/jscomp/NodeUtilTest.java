@@ -32,11 +32,14 @@ import static com.google.javascript.rhino.Token.FUNCTION;
 import static com.google.javascript.rhino.Token.GETTER_DEF;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.REST;
+import static com.google.javascript.rhino.Token.SCRIPT;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.SPREAD;
 import static com.google.javascript.rhino.Token.THROW;
 import static com.google.javascript.rhino.Token.YIELD;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
@@ -45,6 +48,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -95,11 +99,16 @@ public final class NodeUtilTest {
     return n;
   }
 
-  /** Parses {@code js} into an AST and then returns {@link #getNode}{@code(token, root)}. */
-  // TODO(nickreid): Consider an overload that takes a `Predicate` rather than a `Token`.
+  /**
+   * Parses {@code js} into an AST and then returns the first Node in pre-traversal order with the
+   * given token.
+   *
+   * <p>TODO(nickreid): Consider an overload that takes a `Predicate` rather than a `Token`.
+   */
   private static Node parseFirst(Token token, String js) {
-    // It's fine that we don't inspect the top node because it's always a SCRIPT.
-    return getNode(parse(js), token);
+    Node rootNode = parse(js);
+    checkState(rootNode.isScript(), rootNode);
+    return token.equals(SCRIPT) ? rootNode : getNode(rootNode, token);
   }
 
   /** Returns the parsed expression (e.g. returns a NAME given 'a') */
@@ -1132,27 +1141,6 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.containsType(parse("a"), Token.THIS)).isFalse();
       assertThat(NodeUtil.containsType(parse("function foo(){}"), Token.THIS)).isFalse();
       assertThat(NodeUtil.containsType(parse("(b?foo():null)"), Token.THIS)).isFalse();
-    }
-
-    @Test
-    public void testReferencesThis() {
-      assertThat(NodeUtil.referencesThis(parse("this"))).isTrue();
-      // Don't descend into functions (starts at the script node)
-      assertThat(NodeUtil.referencesThis(parse("function foo(){this}"))).isFalse();
-      // But starting with a function properly check for 'this'
-      Node n = parse("function foo(){this}").getFirstChild();
-      assertNode(n).hasToken(Token.FUNCTION);
-      assertThat(NodeUtil.referencesThis(n)).isTrue();
-      assertThat(NodeUtil.referencesThis(parse("b?this:null"))).isTrue();
-
-      assertThat(NodeUtil.referencesThis(parse("a"))).isFalse();
-      n = parse("function foo(){}").getFirstChild();
-      assertNode(n).hasToken(Token.FUNCTION);
-      assertThat(NodeUtil.referencesThis(n)).isFalse();
-      assertThat(NodeUtil.referencesThis(parse("(b?foo():null)"))).isFalse();
-
-      assertThat(NodeUtil.referencesThis(parse("()=>this"))).isTrue();
-      assertThat(NodeUtil.referencesThis(parse("() => { () => alert(this); }"))).isTrue();
     }
 
     @Test
@@ -3977,6 +3965,86 @@ public final class NodeUtilTest {
 
       IR.script(exprResult); // Call this for its side effect of modifying `exprResult`.
       assertThat(NodeUtil.isBundledGoogModuleCall(callNode)).isTrue();
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static final class ReferencesThisTest {
+    @Parameters(name = "{0} node in \"{1}\" referencesThis() should be {2}")
+    public static Iterable<Object[]> cases() {
+      ImmutableList.Builder<Object[]> builder = ImmutableList.builder();
+
+      builder.add(
+          new Object[][] {
+            {SCRIPT, "this", TRUE},
+            {SCRIPT, "b?this:null", TRUE},
+            {SCRIPT, "a", FALSE},
+            {SCRIPT, "(b?foo():null)", FALSE},
+            {SCRIPT, "() => { () => alert(this); }", TRUE},
+          });
+
+      // %s represents the location to fill with an expression that may or may not refer to `this`
+      ImmutableList<String> arrowFunctionTemplates =
+          ImmutableList.of(
+              "      (x = %s) => {}", //
+              "      (      ) => %s", //
+              "async (x = %s) => {}",
+              "async (      ) => %s");
+
+      for (String arrowTemplate : arrowFunctionTemplates) {
+        String arrowReferencingThis = SimpleFormat.format(arrowTemplate, "this");
+        String arrowWithoutThis = SimpleFormat.format(arrowTemplate, "1");
+        builder.add(
+            new Object[][] {
+              // 'this' in a non-arrow function IS a reference to
+              // the 'this' of its enclosing scope
+              {SCRIPT, arrowReferencingThis, TRUE},
+              {FUNCTION, arrowReferencingThis, TRUE},
+              {SCRIPT, arrowWithoutThis, FALSE},
+              {FUNCTION, arrowWithoutThis, FALSE},
+            });
+      }
+
+      // %s represents the location to fill with an expression that may or may not refer to `this`
+      ImmutableList<String> nonArrowFunctionTemplates =
+          ImmutableList.of(
+              "      function  f(x = %s) {     }",
+              "      function *f(x = %s) {     }",
+              "async function  f(x = %s) {     }",
+              "async function *f(x = %s) {     }",
+              "      function  f(      ) { %s; }",
+              "      function *f(      ) { %s; }",
+              "async function  f(      ) { %s; }",
+              "async function *f(      ) { %s; }");
+
+      for (String nonArrowTemplate : nonArrowFunctionTemplates) {
+        String nonArrowReferencingThis = SimpleFormat.format(nonArrowTemplate, "this");
+        String nonArrowWithoutThis = SimpleFormat.format(nonArrowTemplate, "1");
+        builder.add(
+            new Object[][] {
+              // 'this' in a non-arrow function IS NOT a reference to
+              // the 'this' of its enclosing scope
+              {SCRIPT, nonArrowReferencingThis, FALSE},
+              {FUNCTION, nonArrowReferencingThis, TRUE},
+              {SCRIPT, nonArrowWithoutThis, FALSE},
+              {FUNCTION, nonArrowWithoutThis, FALSE},
+            });
+      }
+      return builder.build();
+    }
+
+    @Parameter(0)
+    public Token token;
+
+    @Parameter(1)
+    public String js;
+
+    @Parameter(2)
+    public Boolean expectedResult;
+
+    @Test
+    public void test() {
+      assertThat(NodeUtil.referencesThis(parseFirst(token, js))).isEqualTo(expectedResult);
     }
   }
 
