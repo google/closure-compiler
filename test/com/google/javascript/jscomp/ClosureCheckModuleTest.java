@@ -826,17 +826,6 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "exports = class {};",
             "exports.y = 'str';",
             "exports.y = decorate(exports.y);"));
-
-    // This pattern is used by typescript in a way that won't violate our goog.module assumptions.
-    testSame(
-        lines(
-            "/** @fileoverview @suppress {googModuleExportNotAStatement} */",
-            "goog.module('xyz');",
-            "",
-            "((x) => {})(exports.y || (exports.y = {}));",
-            "",
-            "((x) => {})(exports.y || (exports.y = {}));",
-            ""));
   }
 
   @Test

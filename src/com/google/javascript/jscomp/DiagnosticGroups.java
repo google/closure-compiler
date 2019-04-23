@@ -731,10 +731,6 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerDeprecatedGroup("duplicateZipContents");
 
     DiagnosticGroups.registerGroup("conflictingIjsFile", IjsErrors.CONFLICTING_IJS_FILE);
-
-    // Only exposed for tsickle-generated code.
-    DiagnosticGroups.registerGroup(
-        "googModuleExportNotAStatement", ClosureCheckModule.EXPORT_NOT_A_STATEMENT);
   }
 
   /** Adds warning levels by name. */
