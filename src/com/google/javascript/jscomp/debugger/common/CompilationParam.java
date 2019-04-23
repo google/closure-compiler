@@ -57,7 +57,7 @@ public enum CompilationParam {
   },
 
   /** If true, the output language is ES5. If false, we skip transpilation. */
-  TRANSPILE(true, ParamGroup.TRANSPILATION) {
+  TRANSPILE(ParamGroup.TRANSPILATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
