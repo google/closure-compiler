@@ -38,41 +38,40 @@ import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import org.junit.Before;
 
-/**
- * This class is mostly used by passes testing the old type checker. Passes that run after type
- * checking and need type information use the class TypeICompilerTestCase.
- */
+/** This class is mostly used by passes testing {@link TypeCheck}. */
 abstract class CompilerTypeTestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
-  static final String CLOSURE_DEFS = LINE_JOINER.join(
-      "/** @const */ var goog = {};",
-      "goog.inherits = function(x, y) {};",
-      "/** @type {!Function} */ goog.abstractMethod = function() {};",
-      "goog.isArray = function(x) {};",
-      "goog.isDef = function(x) {};",
-      "goog.isFunction = function(x) {};",
-      "goog.isNull = function(x) {};",
-      "goog.isString = function(x) {};",
-      "goog.isObject = function(x) {};",
-      "goog.isDefAndNotNull = function(x) {};",
-      "/** @const */ goog.array = {};",
-      // simplified ArrayLike definition
-      "/**",
-      " * @typedef {Array|{length: number}}",
-      " */",
-      "goog.array.ArrayLike;",
-      "/**",
-      " * @param {Array.<T>|{length:number}} arr",
-      " * @param {function(this:S, T, number, goog.array.ArrayLike):boolean} f",
-      " * @param {S=} opt_obj",
-      " * @return {!Array.<T>}",
-      " * @template T,S",
-      " */",
-      // return empty array to satisfy return type
-      "goog.array.filter = function(arr, f, opt_obj){ return []; };",
-      "goog.asserts = {};",
-      "/** @return {*} */ goog.asserts.assert = function(x) { return x; };");
+  static final String CLOSURE_DEFS =
+      LINE_JOINER.join(
+          "/** @const */ var goog = {};",
+          "goog.inherits = function(x, y) {};",
+          "/** @type {!Function} */ goog.abstractMethod = function() {};",
+          "goog.isArray = function(x) {};",
+          "goog.isDef = function(x) {};",
+          "goog.isFunction = function(x) {};",
+          "goog.isNull = function(x) {};",
+          "goog.isString = function(x) {};",
+          "goog.isObject = function(x) {};",
+          "goog.isDefAndNotNull = function(x) {};",
+          "/** @const */ goog.array = {};",
+          // simplified ArrayLike definition
+          "/**",
+          " * @typedef {Array|{length: number}}",
+          " */",
+          "goog.array.ArrayLike;",
+          "/**",
+          " * @param {Array<T>|{length:number}} arr",
+          " * @param {function(this:S, T, number, goog.array.ArrayLike):boolean} f",
+          " * @param {S=} obj",
+          " * @return {!Array<T>}",
+          " * @template T,S",
+          " */",
+          // return empty array to satisfy return type
+          "goog.array.filter = function(arr, f, obj){ return []; };",
+          "goog.asserts = {};",
+          "/** @return {*} */ goog.asserts.assert = function(x) { return x; };",
+          "goog.module = function(ns) {};");
 
   /**
    * A default set of externs for testing.

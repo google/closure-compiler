@@ -22,6 +22,8 @@ import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIP
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -271,6 +273,8 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     compiler.jsRoot = jsNode;
     compiler.externsRoot = externsNode;
     compiler.externAndJsRoot = externAndJsRoot;
+    new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER).process(externsNode, jsNode);
+    new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()).process(externsNode, jsNode);
 
     assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
 

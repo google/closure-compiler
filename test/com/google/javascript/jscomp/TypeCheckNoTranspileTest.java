@@ -6704,4 +6704,19 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             ""),
         "Bad type annotation. Unknown type Foo.Bar");
   }
+
+  @Test
+  public void testTypeCheckingInsideGoogModule() {
+    testTypesWithExterns(
+        CLOSURE_DEFS,
+        lines(
+            "goog.module('mod.A');", //
+            "const /** number */ n = 'a string';"),
+        lines(
+            "initializing variable", //
+            "found   : string",
+            "required: number"));
+  }
+
+  // TODO(b/128633181): add tests for ES modules and exports
 }
