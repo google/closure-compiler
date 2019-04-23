@@ -8525,10 +8525,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testThisTypeOfFunction1() {
-    testTypes(
-        "/** @type {function(this:Object)} */ function f() {}" +
-        "f();");
+  public void testThisType_whichTypesSupport_freeCallsOfFunction() {
+    testTypes("/** @type {function(this:*)} */ function f() {}; f();");
+    testTypes("/** @type {function(this:?)} */ function f() {}; f();");
+    testTypes("/** @type {function(this:undefined)} */ function f() {}; f();");
+    testTypes("/** @type {function(this:Object)} */ function f() {}; f();");
   }
 
   @Test

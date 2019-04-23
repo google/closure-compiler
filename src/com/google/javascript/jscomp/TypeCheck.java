@@ -2554,14 +2554,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         report(n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
       }
 
-      // Functions with explicit 'this' types must be called in a GETPROP
-      // or GETELEM.
-      if (functionType.isOrdinaryFunction()
-          && !functionType.getTypeOfThis().isUnknownType()
-          && !(functionType.getTypeOfThis().toObjectType() != null
-              && functionType.getTypeOfThis().toObjectType().isNativeObjectType())
-          && !(child.isGetElem() || child.isGetProp())) {
-        report(n, EXPECTED_THIS_TYPE, functionType.toString());
+      // Functions with explicit 'this' types must be called in a GETPROP or GETELEM.
+      if (functionType.isOrdinaryFunction() && !NodeUtil.isGet(child)) {
+        JSType receiverType = functionType.getTypeOfThis();
+        if (receiverType.isUnknownType()
+            || receiverType.isAllType()
+            || receiverType.isVoidType()
+            || (receiverType.isObjectType() && receiverType.toObjectType().isNativeObjectType())) {
+          // Allow these special cases.
+        } else {
+          report(n, EXPECTED_THIS_TYPE, functionType.toString());
+        }
       }
 
       visitArgumentList(n, functionType);
