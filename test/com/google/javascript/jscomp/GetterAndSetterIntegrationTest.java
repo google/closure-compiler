@@ -737,35 +737,20 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "        set: function(value) { this.usedProp_ = value; },",
             "      }",
             "    });",
-            "const obj = new ES5Class();",
-            "obj.onlySetProp = 1;",
-            "obj.usedProp = 2;",
-            "alert(obj.usedProp);",
+            "const onlySetObj = new ES5Class();",
+            "onlySetObj.onlySetProp = 1;",
+            "const usedObj = new ES5Class();",
+            "usedObj.usedProp = 2;",
+            "alert(usedObj.usedProp);",
             ""),
         lines(
             "/** @constructor */",
             "function ES5Class() {",
-            "  /** @private {number} */ this.onlySetProp_ = 1;",
             "  /** @private {number} */ this.usedProp_ = 2;",
             "}",
             "Object.defineProperties(",
             "    ES5Class.prototype,",
             "    {",
-            "      onlySetProp: {",
-            "        configurable: !1,", // unrelated optimization
-            "        writable: !0,",
-            "        /**",
-            "         * @this {ES5Class}",
-            "         * @return {number}",
-            "         */",
-            "        get: function() { return this.onlySetProp_; },",
-            "        /**",
-            "         * @this {ES5Class}",
-            "         * @param {number} value",
-            "         */",
-            "        set: function(value) { this.onlySetProp_ = value; },",
-            "      },",
-            // used property included for comparison, to show that it isn't removed
             "      usedProp: {",
             "        configurable: !1,",
             "        writable: !0,",
@@ -781,12 +766,10 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "        set: function(value) { this.usedProp_ = value; },",
             "      }",
             "    });",
-            "const obj = new ES5Class();",
-            // assignment to property with setter must remain even though the property is
-            // never read
-            "obj.onlySetProp = 1;",
-            "obj.usedProp = 2;",
-            "alert(obj.usedProp);",
+            // TODO(b/131178806): Assignment to onlySetProp should not be removed
+            "const usedObj = new ES5Class();",
+            "usedObj.usedProp = 2;",
+            "alert(usedObj.usedProp);",
             ""));
   }
 
@@ -858,31 +841,26 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "  set usedProp(value) { this.usedProp_ = value; }",
             "",
             "}",
-            "const obj = new C;",
-            "obj.onlySetProp = 1;",
-            "obj.usedProp = 2;",
-            "alert(obj.usedProp);",
+            "const onlySetObj = new C;",
+            "onlySetObj.onlySetProp = 1;", // use of setter should prevent removal
+            "const usedObj = new C;",
+            "usedObj.usedProp = 2;",
+            "alert(usedObj.usedProp);",
             ""),
         lines(
             "class C {",
             "  constructor() {",
-            "    /** @private {number} */ this.onlySetProp_ = 1;",
             "    /** @private {number} */ this.usedProp_ = 2;",
             "  }",
-            // TODO(b/115853720): Should remove unused getter
-            "  /** @type {number} */",
-            "  get onlySetProp() { return this.onlySetProp_; }",
-            "  set onlySetProp(value) { this.onlySetProp_ = value; }",
-            // used property included for comparison, to show that it isn't removed
+            // TODO(b/131178806): Should not remove used onlySetProp setter
             "  /** @type {number} */",
             "  get usedProp() { return this.usedProp_; }",
             "  set usedProp(value) { this.usedProp_ = value; }",
             "}",
-            "const obj = new C;",
-            // assignment to property with setter cannot be removed
-            "obj.onlySetProp = 1;",
-            "obj.usedProp = 2;",
-            "alert(obj.usedProp);", // property with getter cannot be inlined
+            // TODO(b/131178806): Should not remove onlySetObj due to use of setter.
+            "const usedObj = new C;",
+            "usedObj.usedProp = 2;",
+            "alert(usedObj.usedProp);", // property with getter cannot be inlined
             ""));
   }
 
@@ -1233,35 +1211,20 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "        set: function(value) { this.usedProp_ = value; },",
             "      }",
             "    });",
-            "const obj = new ES5Class();",
-            "obj.onlyGetProp;", // only read, never written, and value unused
-            "obj.usedProp = 2;",
-            "alert(obj.usedProp);",
+            "const onlyGetObj = new ES5Class();",
+            "const unusedVar = onlyGetObj.onlyGetProp;",
+            "const usedObj = new ES5Class();",
+            "usedObj.usedProp = 2;",
+            "alert(usedObj.usedProp);",
             ""),
         lines(
             "/** @constructor */",
             "function ES5Class() {",
-            "  /** @private {number} */ this.onlyGetProp_ = 1;",
             "  /** @private {number} */ this.usedProp_ = 2;",
             "}",
             "Object.defineProperties(",
             "    ES5Class.prototype,",
             "    {",
-            "      onlyGetProp: {",
-            "        configurable: !1,", // unrelated optimization
-            "        writable: !0,",
-            "        /**",
-            "         * @this {ES5Class}",
-            "         * @return {number}",
-            "         */",
-            "        get: function() { return this.onlyGetProp_; },",
-            "        /**",
-            "         * @this {ES5Class}",
-            "         * @param {number} value",
-            "         */",
-            "        set: function(value) { this.onlyGetProp_ = value; },",
-            "      },",
-            // used property included for comparison, to show that it isn't removed
             "      usedProp: {",
             "        configurable: !1,",
             "        writable: !0,",
@@ -1277,11 +1240,10 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "        set: function(value) { this.usedProp_ = value; },",
             "      }",
             "    });",
-            "const obj = new ES5Class();",
-            // reference to property with getter must remain even though the value isn't used
-            "obj.onlyGetProp;",
-            "obj.usedProp = 2;",
-            "alert(obj.usedProp);",
+            // TODO(b/131178806): Reference to onlyGetProp should not be removed
+            "const usedObj = new ES5Class();",
+            "usedObj.usedProp = 2;",
+            "alert(usedObj.usedProp);",
             ""));
   }
 
@@ -1353,31 +1315,29 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "  set usedProp(value) { this.usedProp_ = value; }",
             "",
             "}",
-            "const obj = new C;",
-            "obj.onlyGetProp;",
-            "obj.usedProp = 2;",
-            "alert(obj.usedProp);",
+            "const onlyGetObj = new C;",
+            // reference to property with getter cannot be removed
+            "var unusedVar = onlyGetObj.onlyGetProp;",
+            "const usedObj = new C;",
+            "usedObj.usedProp = 2;",
+            "alert(usedObj.usedProp);", // property with getter cannot be inlined
             ""),
         lines(
             "class C {",
             "  constructor() {",
-            "    /** @private {number} */ this.onlyGetProp_ = 1;",
             "    /** @private {number} */ this.usedProp_ = 2;",
             "  }",
             "  /** @type {number} */",
-            "  get onlyGetProp() { return this.onlyGetProp_; }",
-            // TODO(b/115853720): Should remove unused setter
-            "  set onlyGetProp(value) { this.onlyGetProp_ = value; }",
+            // TODO(b/131178806): Should not remove used getter for onlyGetProp
             // used property included for comparison, to show that it isn't removed
             "  /** @type {number} */",
             "  get usedProp() { return this.usedProp_; }",
             "  set usedProp(value) { this.usedProp_ = value; }",
             "}",
-            "const obj = new C;",
-            // reference to property with getter cannot be removed
-            "obj.onlyGetProp;",
-            "obj.usedProp = 2;",
-            "alert(obj.usedProp);", // property with getter cannot be inlined
+            // TODO(b/131178806): reference to property with getter should not be removed
+            "const usedObj = new C;",
+            "usedObj.usedProp = 2;",
+            "alert(usedObj.usedProp);", // property with getter cannot be inlined
             ""));
   }
 }
