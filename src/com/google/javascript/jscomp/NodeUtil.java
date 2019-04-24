@@ -2346,7 +2346,7 @@ public final class NodeUtil {
       return referencesThis(NodeUtil.getFunctionParameters(n))
           || referencesThis(NodeUtil.getFunctionBody(n));
     } else {
-      return has(n, node -> node.isThis(), MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION);
+      return has(n, Node::isThis, MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION);
     }
   }
 
