@@ -304,16 +304,27 @@ public abstract class ObjectType extends JSType implements Serializable {
   }
 
   public final ObjectType getTopDefiningInterface(String propertyName) {
-    ObjectType foundType = null;
-    if (hasProperty(propertyName)) {
-      foundType = this;
-    }
     for (ObjectType interfaceType : getCtorExtendedInterfaces()) {
-      if (interfaceType.hasProperty(propertyName)) {
-        foundType = interfaceType.getTopDefiningInterface(propertyName);
+      ObjectType foundType = interfaceType.getTopDefiningInterface(propertyName);
+      if (foundType != null) {
+        return foundType;
       }
     }
-    return foundType;
+
+    if (hasOwnProperty(propertyName) || getImplicitPrototype().hasOwnProperty(propertyName)) {
+      return this;
+    }
+
+    // Note that even if this is an interface and doesn't extend anything, we need to inherit
+    // properties expected in all objects like 'toString'. We should arguably return Object in that
+    // case (b/131192047) but we are returning 'this' to preserve the backward compatibility of the
+    // method.
+    ObjectType nativeType = registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
+    if (nativeType.hasProperty(propertyName)) {
+      return this;
+    }
+
+    return null;
   }
 
   /**
