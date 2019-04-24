@@ -319,11 +319,21 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   @Test
   public void testDefineAssignedToSimpleAlias() {
-    test(
+    testSame(
         lines(
-            "const x = true;", "const ALIAS = x;", "/** @define {boolean} */ const DEF2 = ALIAS;"),
+            "const x = true;", //
+            "const ALIAS = x;",
+            "/** @define {boolean} */ const DEF2 = ALIAS;"));
+  }
+
+  @Test
+  public void testDefineAssignedToEnumAlias() {
+    testError(
         lines(
-            "const x = true", "const ALIAS = x;", "/** @define {boolean} */ const DEF2 = ALIAS;"));
+            "/** @enum {string} */ const E = {A: 'a'};", //
+            "/** @define {string} */ const DEF2 = E.A;"),
+        // TODO(sdh): It would be nice if this worked, but doesn't seem worth implementing.
+        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
   }
 
   @Test
