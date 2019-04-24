@@ -144,22 +144,38 @@ function prompt(message, opt_value) {}
 function setImmediate(callback, callbackParams) {}
 
 /**
- * @param {Function|!TrustedScript|string} callback
+ * A function to invoke when a timer expires.
+ *
+ * NOTE: The typing is explicitly loose in order to allow a function with any signature (params and return type) to be
+ * used. Having an explicit typedef for use in the declarations of the timer methods below instead of just using
+ * Function there helps Elemental2 to do a better job synthesizing Java code for this interface.
+ *
+ * @typedef {Function}
+ */
+var TimerCallbackFunction;
+
+/**
+ * @typedef {!TimerCallbackFunction|!TrustedScript|string}
+ */
+var TimerCallback;
+
+/**
+ * @param {?TimerCallback} callback
  * @param {number=} opt_delay
- * @param {...?} callbackParams
+ * @param {...*} callbackParams
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setInterval
- * @see https://html.spec.whatwg.org/multipage/webappapis.html#timers
+ * @see https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timers
  */
 function setInterval(callback, opt_delay, callbackParams) {}
 
 /**
- * @param {Function|!TrustedScript|string} callback
+ * @param {?TimerCallback} callback
  * @param {number=} opt_delay
  * @param {...*} callbackParams
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setTimeout
- * @see https://html.spec.whatwg.org/multipage/webappapis.html#timers
+ * @see https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timers
  */
 function setTimeout(callback, opt_delay, callbackParams) {}
 
