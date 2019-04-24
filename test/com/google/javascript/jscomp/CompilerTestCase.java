@@ -1460,8 +1460,8 @@ public abstract class CompilerTestCase {
 
     if (root == null) {
       // Might be an expected parse error.
-      assertThat(compiler.getErrors())
-          .named("parse errors")
+      assertWithMessage("parse errors")
+          .that(compiler.getErrors())
           .comparingElementsUsing(new DiagnosticCorrespondence())
           .containsExactlyElementsIn(expectedErrors);
       for (Postcondition postcondition : postconditions) {
@@ -1689,10 +1689,10 @@ public abstract class CompilerTestCase {
       if (expectedSymbolTableError != null) {
         assertError(getOnlyElement(stErrors)).hasType(expectedSymbolTableError);
       } else {
-        assertThat(stErrors).named("symbol table errors").isEmpty();
+        assertWithMessage("symbol table errors").that(stErrors).isEmpty();
       }
       if (expectedWarnings.isEmpty()) {
-        assertThat(aggregateWarnings).named("aggregate warnings").isEmpty();
+        assertWithMessage("aggregate warnings").that(aggregateWarnings).isEmpty();
       } else {
         assertWithMessage(
                 "There should be "
@@ -1704,8 +1704,8 @@ public abstract class CompilerTestCase {
             .that(aggregateWarningCount)
             .isEqualTo(numRepetitions);
         for (int i = 0; i < numRepetitions; i++) {
-          assertThat(errorManagers[i].getWarnings())
-              .named("compile warnings from repetition " + (i + 1))
+          assertWithMessage("compile warnings from repetition " + (i + 1))
+              .that(errorManagers[i].getWarnings())
               .comparingElementsUsing(new DiagnosticCorrespondence())
               .containsExactlyElementsIn(expectedWarnings);
           for (JSError warning : errorManagers[i].getWarnings()) {
@@ -1802,8 +1802,8 @@ public abstract class CompilerTestCase {
             .isEqualTo(mainRoot);
       }
     } else {
-      assertThat(compiler.getErrors())
-          .named("compile errors")
+      assertWithMessage("compile errors")
+          .that(compiler.getErrors())
           .comparingElementsUsing(new DiagnosticCorrespondence())
           .containsExactlyElementsIn(expectedErrors);
       for (JSError error : compiler.getErrors()) {

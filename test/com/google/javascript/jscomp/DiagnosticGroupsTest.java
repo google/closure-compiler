@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.Sets;
 import org.junit.Test;
@@ -40,12 +40,12 @@ public final class DiagnosticGroupsTest {
       if (group.equals(lintChecks)) {
         continue;
       }
-      assertThat(Sets.intersection(lintChecks.getTypes(), group.getTypes()))
-          .named(
+      assertWithMessage(
               "DiagnosticTypes common to DiagnosticGroups "
                   + lintChecks.getName()
                   + " and "
                   + group.getName())
+          .that(Sets.intersection(lintChecks.getTypes(), group.getTypes()))
           .isEmpty();
     }
   }

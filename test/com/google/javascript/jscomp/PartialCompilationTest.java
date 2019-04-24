@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -155,7 +156,7 @@ public class PartialCompilationTest {
     assertPartialCompilationSucceeds(
         "/** @type {!some.thing.Missing<string, !AlsoMissing<!More>>} */", "var x;");
     TypedVar x = compiler.getTopScope().getSlot("x");
-    assertThat(x.getType().isNoResolvedType()).named("type %s", x.getType()).isTrue();
+    assertWithMessage("type %s", x.getType()).that(x.getType().isNoResolvedType()).isTrue();
     NoType templatizedType = (NoType) x.getType();
     assertThat(templatizedType.getReferenceName()).isEqualTo("some.thing.Missing");
     ImmutableList<JSType> templateTypes = templatizedType.getTemplateTypes();
@@ -172,7 +173,7 @@ public class PartialCompilationTest {
   public void testUnresolvedUnions() throws Exception {
     assertPartialCompilationSucceeds("/** @type {some.thing.Foo|some.thing.Bar} */", "var x;");
     TypedVar x = compiler.getTopScope().getSlot("x");
-    assertThat(x.getType().isUnionType()).named("type %s", x.getType()).isTrue();
+    assertWithMessage("type %s", x.getType()).that(x.getType().isUnionType()).isTrue();
     UnionType unionType = (UnionType) x.getType();
 
     Collection<JSType> alternatives = unionType.getAlternates();

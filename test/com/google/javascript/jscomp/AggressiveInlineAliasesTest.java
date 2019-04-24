@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import org.junit.After;
@@ -2212,27 +2212,33 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
       }
       String fullName = expectedName.getFullName();
       Name actualName = passGlobalNamespace.getSlot(expectedName.getFullName());
-      assertThat(actualName).named(fullName).isNotNull();
+      assertWithMessage(fullName).that(actualName).isNotNull();
 
-      assertThat(actualName.getAliasingGets())
-          .named(fullName)
+      assertWithMessage(fullName)
+          .that(actualName.getAliasingGets())
           .isEqualTo(expectedName.getAliasingGets());
-      assertThat(actualName.getSubclassingGets())
-          .named(fullName)
+      assertWithMessage(fullName)
+          .that(actualName.getSubclassingGets())
           .isEqualTo(expectedName.getSubclassingGets());
-      assertThat(actualName.getLocalSets()).named(fullName).isEqualTo(expectedName.getLocalSets());
-      assertThat(actualName.getGlobalSets())
-          .named(fullName)
+      assertWithMessage(fullName)
+          .that(actualName.getLocalSets())
+          .isEqualTo(expectedName.getLocalSets());
+      assertWithMessage(fullName)
+          .that(actualName.getGlobalSets())
           .isEqualTo(expectedName.getGlobalSets());
-      assertThat(actualName.getDeleteProps())
-          .named(fullName)
+      assertWithMessage(fullName)
+          .that(actualName.getDeleteProps())
           .isEqualTo(expectedName.getDeleteProps());
-      assertThat(actualName.getCallGets()).named(fullName).isEqualTo(expectedName.getCallGets());
+      assertWithMessage(fullName)
+          .that(actualName.getCallGets())
+          .isEqualTo(expectedName.getCallGets());
     }
     // Verify that no names in the actual name forest are not present in the expected name forest
     for (Name actualName : passGlobalNamespace.getNameForest()) {
       String actualFullName = actualName.getFullName();
-      assertThat(expectedGlobalNamespace.getSlot(actualFullName)).named(actualFullName).isNotNull();
+      assertWithMessage(actualFullName)
+          .that(expectedGlobalNamespace.getSlot(actualFullName))
+          .isNotNull();
     }
   }
 }

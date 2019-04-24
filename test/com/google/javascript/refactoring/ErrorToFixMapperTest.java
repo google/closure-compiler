@@ -16,6 +16,7 @@
 package com.google.javascript.refactoring;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
 import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
@@ -761,8 +762,12 @@ public class ErrorToFixMapperTest {
   public void testFixRequires_veryLongNames() {
     assertNoChanges(
         fileWithImports(
-            "const veryLongIdentifierSoLongThatItGoesPastThe80CharactersLimitAndYetWeShouldNotLineBreak = goog.require('b');",
-            "const {anotherVeryLongIdentifierSoLongThatItGoesPastThe80CharactersLimitAndYetWeShouldNotLineBreak} = goog.require('a');",
+            "const"
+                + " veryLongIdentifierSoLongThatItGoesPastThe80CharactersLimitAndYetWeShouldNotLineBreak"
+                + " = goog.require('b');",
+            "const"
+                + " {anotherVeryLongIdentifierSoLongThatItGoesPastThe80CharactersLimitAndYetWeShouldNotLineBreak}"
+                + " = goog.require('a');",
             "",
             useInCode(
                 "veryLongIdentifierSoLongThatItGoesPastThe80CharactersLimitAndYetWeShouldNotLineBreak",
@@ -774,10 +779,12 @@ public class ErrorToFixMapperTest {
     assertChanges(
         fileWithImports(
             "const {veryLongSymbolThatMapsTo: veryLongLocalNameForIt} = goog.require('a');",
-            "const {anotherVeryLongSymbolThatMapsTo: veryLongLocalNameForItAlso} = goog.require('a');",
+            "const {anotherVeryLongSymbolThatMapsTo: veryLongLocalNameForItAlso} ="
+                + " goog.require('a');",
             useInCode("veryLongLocalNameForIt", "veryLongLocalNameForItAlso")),
         fileWithImports(
-            "const {anotherVeryLongSymbolThatMapsTo: veryLongLocalNameForItAlso, veryLongSymbolThatMapsTo: veryLongLocalNameForIt} = goog.require('a');",
+            "const {anotherVeryLongSymbolThatMapsTo: veryLongLocalNameForItAlso,"
+                + " veryLongSymbolThatMapsTo: veryLongLocalNameForIt} = goog.require('a');",
             useInCode("veryLongLocalNameForIt", "veryLongLocalNameForItAlso")));
   }
 
@@ -1655,9 +1662,9 @@ public class ErrorToFixMapperTest {
             .addAll(compiler.getWarnings())
             .addAll(compiler.getErrors())
             .build();
-    assertThat(warningsAndErrors).named("warnings/errors").isNotEmpty();
+    assertWithMessage("warnings/errors").that(warningsAndErrors).isNotEmpty();
     Collection<SuggestedFix> fixes = errorManager.getAllFixes();
-    assertThat(fixes).named("fixes").isNotEmpty();
+    assertWithMessage("fixes").that(fixes).isNotEmpty();
     String newCode =
         ApplySuggestedFixes.applySuggestedFixesToCode(fixes, ImmutableMap.of("test", originalCode))
             .get("test");
@@ -1674,9 +1681,9 @@ public class ErrorToFixMapperTest {
             .addAll(compiler.getWarnings())
             .addAll(compiler.getErrors())
             .build();
-    assertThat(warningsAndErrors).named("warnings/errors").isNotEmpty();
+    assertWithMessage("warnings/errors").that(warningsAndErrors).isNotEmpty();
     SuggestedFix[] fixes = errorManager.getAllFixes().toArray(new SuggestedFix[0]);
-    assertThat(fixes).named("fixes").hasLength(expectedFixes.length);
+    assertWithMessage("fixes").that(fixes).hasLength(expectedFixes.length);
     for (int i = 0; i < fixes.length; i++) {
       String newCode =
           ApplySuggestedFixes.applySuggestedFixesToCode(

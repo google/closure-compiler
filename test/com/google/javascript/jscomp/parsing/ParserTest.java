@@ -4891,7 +4891,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     long stop = System.currentTimeMillis();
 
-    assertThat(stop - start).named("runtime").isLessThan(5000L);
+    assertWithMessage("runtime").that(stop - start).isLessThan(5000L);
   }
 
   @Test
