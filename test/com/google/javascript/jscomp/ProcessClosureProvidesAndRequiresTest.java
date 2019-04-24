@@ -1234,6 +1234,42 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
     assertThat(providedNameMap.keySet()).containsExactly("goog", "a", "a.b", "a.b.c", "a.b.d");
   }
 
+  @Test
+  public void testLegacyGoogModule() {
+    Map<String, ProvidedName> providedNameMap =
+        getProvidedNameCollection(
+            lines(
+                "goog.module('a.b.c');", //
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "exports = class {};"));
+
+    assertThat(providedNameMap.keySet()).containsExactly("goog", "a", "a.b", "a.b.c");
+  }
+
+  @Test
+  public void testLegacyGoogModule_inLoadModuleCall() {
+    Map<String, ProvidedName> providedNameMap =
+        getProvidedNameCollection(
+            lines(
+                "goog.loadModule(function(exports) {",
+                "  goog.module('a.b.c');", //
+                "  goog.module.declareLegacyNamespace();",
+                "  exports = class {};",
+                "  return exports;",
+                "});"));
+
+    assertThat(providedNameMap.keySet()).containsExactly("goog", "a", "a.b", "a.b.c");
+  }
+
+  @Test
+  public void testEsModule_ignored() {
+    Map<String, ProvidedName> providedNameMap =
+        getProvidedNameCollection("goog.declareModuleId('a.b.c'); export const x = 0;");
+
+    assertThat(providedNameMap.keySet()).containsExactly("goog");
+  }
+
   private Map<String, ProvidedName> getProvidedNameCollection(String js) {
     Compiler compiler = createCompiler();
     ProcessClosureProvidesAndRequires processor =

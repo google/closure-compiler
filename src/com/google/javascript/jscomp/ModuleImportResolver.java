@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.modules.Module;
@@ -74,23 +75,36 @@ final class ModuleImportResolver {
     if (module == null) {
       return null;
     }
+    switch (module.metadata().moduleType()) {
+      case GOOG_PROVIDE:
+        // Expect this to be a global variable
+        Node provide = module.metadata().rootNode();
+        if (provide != null && provide.isScript()) {
+          return ScopedName.of(moduleId, provide.getGrandparent());
+        } else {
+          // Unknown module requires default to 'goog provides', but we don't want to type them.
+          return null;
+        }
 
-    Node scopeRoot = getModuleScopeRoot(module);
-    if (scopeRoot != null) {
-      return ScopedName.of("exports", scopeRoot);
+      case GOOG_MODULE:
+      case LEGACY_GOOG_MODULE:
+        // TODO(b/124919359): Fix getGoogModuleScopeRoot to never return null.
+        Node scopeRoot = getGoogModuleScopeRoot(module);
+        return scopeRoot != null ? ScopedName.of("exports", scopeRoot) : null;
+      case ES6_MODULE:
+        throw new IllegalStateException("Type checking ES modules not yet supported");
+      case COMMON_JS:
+        throw new IllegalStateException("Type checking CommonJs modules not yet supported");
+      case SCRIPT:
+        throw new IllegalStateException("Cannot import a name from a SCRIPT");
     }
-    // TODO(b/124919359): assert that this is non-nullable once getModuleScopeRoot handles modules
-    // other than goog.modules.
-    return null;
+    throw new AssertionError();
   }
 
-  /** Converts a {@link Module} reference to a {@link Node} scope root. */
+  /** Returns the corresponding scope root Node from a goog.module. */
   @Nullable
-  private Node getModuleScopeRoot(@Nullable Module module) {
-    if (!module.metadata().isGoogModule()) {
-      // TODO(b/124919359): also handle ES modules and goog.provides
-      return null;
-    }
+  private Node getGoogModuleScopeRoot(@Nullable Module module) {
+    checkArgument(module.metadata().isGoogModule(), module.metadata());
     Node scriptNode = module.metadata().rootNode();
 
     if (scriptNode.isScript()

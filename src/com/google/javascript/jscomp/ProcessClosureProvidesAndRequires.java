@@ -54,6 +54,9 @@ import javax.annotation.Nullable;
  * <p>This also annotates all provided namespace definitions `a.b = {};` with {@link
  * Node#IS_NAMESPACE} so that later passes know they refer to a goog.provide'd namespace.
  *
+ * <p>If modules have not been rewritten, this pass also includes legacy Closure module namespaces
+ * in the list of {@link ProvidedName}s.
+ *
  * @author chrisn@google.com (Chris Nokleberg)
  */
 class ProcessClosureProvidesAndRequires {
@@ -151,6 +154,20 @@ class ProcessClosureProvidesAndRequires {
   private class CollectDefinitions implements NodeTraversal.Callback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      // Don't recurse into modules, which cannot have goog.provides.  We do need to handle legacy
+      // goog.modules, but we do that quickly here rather than descending all the way into them.
+      // We completely ignore ES modules and CommonJS modules.
+      if ((n.isModuleBody() && n.getParent().getBooleanProp(Node.GOOG_MODULE))
+          || NodeUtil.isBundledGoogModuleScopeRoot(n)) {
+        Node googModuleCall = n.getFirstChild();
+        String closureNamespace = googModuleCall.getFirstChild().getSecondChild().getString();
+        Node maybeLegacyNamespaceCall = googModuleCall.getNext();
+        if (maybeLegacyNamespaceCall != null
+            && NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(maybeLegacyNamespaceCall)) {
+          processLegacyModuleCall(closureNamespace, googModuleCall, t.getModule());
+        }
+        return false;
+      }
       return !n.isModuleBody();
     }
 
@@ -320,6 +337,19 @@ class ProcessClosureProvidesAndRequires {
         requiresToBeRemoved.add(parent);
       }
     }
+  }
+
+  /** Handles a goog.module that is a legacy namespace. */
+  private void processLegacyModuleCall(String namespace, Node googModuleCall, JSModule module) {
+    registerAnyProvidedPrefixes(namespace, googModuleCall, module);
+    providedNames.put(
+        namespace,
+        new ProvidedName(
+            namespace,
+            googModuleCall,
+            module,
+            /* explicit= */ true,
+            /* fromPreviousProvide= */ false));
   }
 
   /** Handles a goog.provide call. */
@@ -700,8 +730,8 @@ class ProcessClosureProvidesAndRequires {
     }
 
     /**
-     * Returns the `goog.provide` call that created this name, if any, or otherwise the first
-     * 'previous provide' assignmetn that created this name.
+     * Returns the `goog.provide` or legacy namespace `goog.module` call that created this name, if
+     * any, or otherwise the first 'previous provide' assignment that created this name.
      */
     Node getFirstProvideCall() {
       return firstNode;

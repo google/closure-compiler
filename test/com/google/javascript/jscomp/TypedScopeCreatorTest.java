@@ -4628,7 +4628,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testGoogModuleRequireAndRequireType_typedef() {
-    testWarning(
+    testSame(
         srcs(
             lines(
                 "goog.module('a.Foo');",
@@ -4639,12 +4639,13 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "goog.module('b.Bar');",
                 "/** @typedef {number} */",
                 "let numType;",
-                "exports = numType;")),
-        // TODO(b/124919359): We should recognize 'Bar'.
-        warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
+                "exports = numType;")));
 
     Node fNode = getLabeledStatement("X").statementNode.getOnlyChild();
-    assertNode(fNode).hasJSTypeThat().isUnknown();
+    assertNode(fNode).hasJSTypeThat().isNumber();
+
+    Node barDeclaration = getLabeledStatement("X").enclosingScope.getVar("Bar").getNameNode();
+    assertType(barDeclaration.getTypedefTypeProp()).isNumber();
   }
 
   @Test
@@ -5081,7 +5082,175 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         warning(TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH));
   }
 
-  // TODO(b/124919359): Verify that you can access legacy namespaces in code.
+  @Test
+  public void testLegacyGoogLoadModule_accessibleWithGoogRequire_exportingConstructor() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.loadModule(function (exports) {",
+                "  goog.module('mod.A');",
+                "  goog.module.declareLegacyNamespace();",
+                "",
+                "  exports = class A {};",
+                "});"),
+            lines(
+                "goog.require('mod.A');", //
+                "const /** !mod.A */ a = new mod.A();",
+                "A: a;")));
+
+    assertType(getLabeledStatement("A").statementNode.getOnlyChild().getJSType())
+        .toStringIsEqualTo("exports");
+  }
+
+  @Test
+  public void testLegacyGoogModule_accessibleWithGoogRequire_exportingConstructor() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('mod.A');",
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "exports = class A {};"),
+            lines(
+                "goog.require('mod.A');", //
+                "const /** !mod.A */ a = new mod.A();",
+                "A: a;")));
+
+    assertType(getLabeledStatement("A").statementNode.getOnlyChild().getJSType())
+        .toStringIsEqualTo("exports");
+  }
+
+  @Test
+  public void testLegacyGoogModule_accessibleWithGoogRequire_exportingLocalTypedef() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('mod.A');",
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "/** @typedef {number} */",
+                "let numType;",
+                "",
+                "exports = numType;"),
+            lines(
+                "goog.require('mod.A');", //
+                "var /** !mod.A */ x;",
+                "X: x")));
+
+    assertType(getLabeledStatement("X").statementNode.getOnlyChild().getJSType()).isNumber();
+  }
+
+  @Test
+  public void testLegacyGoogModule_accessibleWithGoogRequire_exportingNamespace() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('mod');",
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "exports.A = class A {};"),
+            lines(
+                "goog.require('mod');", //
+                "const /** !mod.A */ a = new mod.A();")));
+  }
+
+  @Test
+  public void testLegacyGoogModule_withNamedExport_extendedByGoogProvide() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('mod');",
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "exports.A = class A {};"),
+            lines(
+                "goog.provide('mod.B');", // This is bad style, but probably people do it.
+                "mod.B = class B {};")));
+
+    JSType modType = globalScope.getVar("mod").getType();
+    assertType(modType).withTypeOfProp("A").toStringIsEqualTo("function(new:exports.A): undefined");
+    assertType(modType).withTypeOfProp("B").toStringIsEqualTo("function(new:mod.B): undefined");
+  }
+
+  @Test
+  public void testLegacyGoogModule_withDefaultExport_extendedByGoogProvide() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('mod');",
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "/** @return {number} */",
+                "exports = function() { return 0; };"),
+            lines(
+                "goog.provide('mod.B');", // This is bad style, but probably people do it.
+                "mod.B = class B {};")));
+
+    JSType modType = globalScope.getVar("mod").getType();
+    assertType(modType).isFunctionTypeThat().hasReturnTypeThat().isNumber();
+    assertType(modType).withTypeOfProp("B").toStringIsEqualTo("function(new:mod.B): undefined");
+  }
+
+  @Test
+  public void testLegacyGoogModule_accessibleWithGoogRequire_exportingTypedef() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('mod');",
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "/** @typedef {number} */",
+                "exports.numType;"),
+            lines(
+                "goog.require('mod');", //
+                "var /** !mod.numType */ a;")));
+
+    JSType modType = globalScope.getVar("a").getType();
+    assertType(modType).isNumber();
+  }
+
+  @Test
+  public void testGoogModuleRequiringGoogProvide_class() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.provide('a.b.Foo')", //
+                "a.b.Foo = class {};"),
+            lines(
+                "goog.module('c');",
+                "const Foo = goog.require('a.b.Foo');",
+                "var /** !Foo */ x;",
+                "X: x;")));
+
+    assertType(getLabeledStatement("X").statementNode.getOnlyChild().getJSType())
+        .toStringIsEqualTo("a.b.Foo");
+  }
+
+  @Test
+  public void testGoogModuleRequiringGoogProvide_classWithDestructuring() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.provide('a.b')", //
+                "a.b.Foo = class {};"),
+            lines(
+                "goog.module('c');",
+                "const {Foo} = goog.require('a.b');",
+                "var /** !Foo */ x;",
+                "X: x;")));
+
+    assertType(getLabeledStatement("X").statementNode.getOnlyChild().getJSType())
+        .toStringIsEqualTo("a.b.Foo");
+  }
 
   @Test
   public void testMemoization() {
@@ -5159,6 +5328,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
       lines(
           "var goog = {};",
           "goog.module = function(name) {};",
+          "/** @return {?} */",
           "goog.require = function(id) {};",
           "goog.provide = function(id) {};");
 }

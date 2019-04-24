@@ -466,16 +466,17 @@ public final class AstValidator implements CompilerPass {
   private void validateCallType(Node callNode) {
     // TODO(b/74537281): Shouldn't CALL nodes always have a type, even if it is unknown?
     Node callee = callNode.getFirstChild();
-    JSType calleeTypeI =
+    JSType calleeType =
         checkNotNull(callee.getJSType(), "Callee of\n\n%s\nhas no type.", callNode.toStringTree());
 
-    if (calleeTypeI.isFunctionType()) {
-      FunctionType calleeFunctionTypeI = calleeTypeI.toMaybeFunctionType();
-      JSType returnTypeI = calleeFunctionTypeI.getReturnType();
+    if (calleeType.isFunctionType()) {
+      FunctionType calleeFunctionType = calleeType.toMaybeFunctionType();
+      JSType returnType = calleeFunctionType.getReturnType();
       // Skip this check if the call node was originally in a cast, because the cast type may be
-      // narrower than the return type.
-      if (callNode.getJSTypeBeforeCast() == null) {
-        expectMatchingTypeInformation(callNode, returnTypeI);
+      // narrower than the return type. Also skip the check if the function's return type is the
+      // any (formerly unknown) type, since we may have inferred a better type.
+      if (callNode.getJSTypeBeforeCast() == null && !returnType.isUnknownType()) {
+        expectMatchingTypeInformation(callNode, returnType);
       }
     } // TODO(b/74537281): What other cases should be covered?
   }
