@@ -40,10 +40,12 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.Asserts;
@@ -465,13 +467,47 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testPrint() {
+  public void testPrint_ordinaryFunction_withTemplatedThis() {
     FunctionType fn =
         FunctionType.builder(registry)
             .withTypeOfThis(new TemplateType(registry, "T"))
             .withReturnType(BOOLEAN_TYPE)
             .build();
     assertThat(fn.toString()).isEqualTo("function(this:T, ...?): boolean");
+  }
+
+  @Test
+  public void testPrint_constructorFunction_withoutSource() {
+    FunctionType fn = FunctionType.builder(registry).forConstructor().withName("Foo").build();
+    assertType(fn).toStringIsEqualTo("function(new:Foo, ...?): ?");
+  }
+
+  @Test
+  public void testPrint_interfaceFunction_withoutSource() {
+    FunctionType fn = FunctionType.builder(registry).forInterface().withName("Foo").build();
+    assertType(fn).toStringIsEqualTo("function(this:Foo): ?");
+  }
+
+  @Test
+  public void testPrint_constructorFunction_withSource() {
+    FunctionType fn =
+        FunctionType.builder(registry)
+            .forConstructor()
+            .withName("Foo")
+            .withSourceNode(IR.function(IR.name(""), IR.paramList(), IR.block()))
+            .build();
+    assertType(fn).toStringIsEqualTo("(typeof Foo)");
+  }
+
+  @Test
+  public void testPrint_interfaceFunction_withSource() {
+    FunctionType fn =
+        FunctionType.builder(registry)
+            .forInterface()
+            .withName("Foo")
+            .withSourceNode(IR.function(IR.name(""), IR.paramList(), IR.block()))
+            .build();
+    assertType(fn).toStringIsEqualTo("(typeof Foo)");
   }
 
   @Test

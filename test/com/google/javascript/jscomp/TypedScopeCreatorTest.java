@@ -280,7 +280,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "const /** !Foo */ fooInstance = new Foo();"));
 
     TypedVar fooVar = checkNotNull(globalScope.getVar("Foo"));
-    assertType(fooVar.getType()).toStringIsEqualTo("function(new:ns.Foo): undefined");
+    assertType(fooVar.getType()).toStringIsEqualTo("(typeof ns.Foo)");
     assertThat(fooVar.isTypeInferred()).isFalse();
 
     TypedVar fooInstanceVar = checkNotNull(globalScope.getVar("fooInstance"));
@@ -1314,7 +1314,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(foo.isPropertyTypeInferred("Bar")).isFalse();
 
     JSType fooBar = foo.getPropertyType("Bar");
-    assertThat(fooBar.toString()).isEqualTo("function(new:foo.Bar): undefined");
+    assertThat(fooBar.toString()).isEqualTo("(typeof foo.Bar)");
   }
 
   @Test
@@ -2103,7 +2103,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "I.prototype.baz = function(){};");
 
     TypedVar i = globalScope.getVar("I");
-    assertThat(i.getType().toString()).isEqualTo("function(this:I): ?");
+    assertThat(i.getType().toString()).isEqualTo("(typeof I)");
     assertThat(i.getType().isInterface()).isTrue();
     assertThat(i.getType().isFunctionType()).isTrue();
     assertThat(i.getType().toMaybeFunctionType().isStructuralInterface()).isTrue();
@@ -2116,7 +2116,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "I.prototype.baz = function(){};");
 
     TypedVar i = globalScope.getVar("I");
-    assertThat(i.getType().toString()).isEqualTo("function(this:I): ?");
+    assertThat(i.getType().toString()).isEqualTo("(typeof I)");
     assertThat(i.getType().isInterface()).isTrue();
     assertThat(i.getType().isFunctionType()).isTrue();
     assertThat(i.getType().toMaybeFunctionType().isStructuralInterface()).isFalse();
@@ -2177,7 +2177,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "I.prototype.baz = function(){};");
 
     TypedVar i = globalScope.getVar("I");
-    assertThat(i.getType().toString()).isEqualTo("function(this:I): ?");
+    assertThat(i.getType().toString()).isEqualTo("(typeof I)");
     assertThat(i.getType().isInterface()).isTrue();
 
     ObjectType iPrototype = (ObjectType)
@@ -2199,7 +2199,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @type {number} */ I.prototype.bar;");
 
     TypedVar i = globalScope.getVar("I");
-    assertThat(i.getType().toString()).isEqualTo("function(this:I): ?");
+    assertThat(i.getType().toString()).isEqualTo("(typeof I)");
     assertThat(i.getType().isInterface()).isTrue();
 
     ObjectType iPrototype = (ObjectType)
@@ -2286,7 +2286,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         externs("Extern.prototype.foo;" + "/** @constructor */ function Extern() {}"), srcs(""));
 
     JSType e = globalScope.getVar("Extern").getType();
-    assertThat(e.toString()).isEqualTo("function(new:Extern): ?");
+    assertThat(e.toString()).isEqualTo("(typeof Extern)");
 
     ObjectType externProto = ((FunctionType) e).getPrototype();
     assertWithMessage(globalScope.getRootNode().toStringTree())
@@ -2394,7 +2394,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar v = globalScope.getVar("Object");
     FunctionType obj = (FunctionType) v.getType();
-    assertThat(obj.toString()).isEqualTo("function(new:Object, *=): Object");
+    assertThat(obj.toString()).isEqualTo("(typeof Object)");
     assertThat(v.getNode()).isNotNull();
     assertThat(v.input).isNotNull();
   }
@@ -2497,7 +2497,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     ObjectType ctor = (ObjectType) (findNameType("goog.Foo", globalScope));
     assertThat(ctor).isNotNull();
     assertThat(ctor.isConstructor()).isTrue();
-    assertThat(ctor.toString()).isEqualTo("function(new:goog.Foo): undefined");
+    assertThat(ctor.toString()).isEqualTo("(typeof goog.Foo)");
   }
 
   @Test
@@ -2521,9 +2521,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     // Test constructor property.
     assertThat(fooProto.hasOwnProperty("constructor")).isTrue();
     assertNode(fooProto.getOwnPropertyDefSite("constructor")).isNull();
-    assertType(fooProto)
-        .withTypeOfProp("constructor")
-        .toStringIsEqualTo("function(new:Foo, ...?): ?");
+    assertType(fooProto).withTypeOfProp("constructor").toStringIsEqualTo("(typeof Foo)");
   }
 
   @Test
@@ -2550,9 +2548,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     // Test constructor property.
     assertThat(fooProto.hasOwnProperty("constructor")).isTrue();
     assertNode(fooProto.getOwnPropertyDefSite("constructor")).isSameAs(ctorDef);
-    assertType(fooProto)
-        .withTypeOfProp("constructor")
-        .toStringIsEqualTo("function(new:Foo, ...?): ?");
+    assertType(fooProto).withTypeOfProp("constructor").toStringIsEqualTo("(typeof Foo)");
   }
 
   @Test
@@ -2619,9 +2615,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     // Test constructor property.
     assertThat(fooProto.hasOwnProperty("constructor")).isTrue();
     assertNode(fooProto.getOwnPropertyDefSite("constructor")).isNull();
-    assertType(fooProto)
-        .withTypeOfProp("constructor")
-        .toStringIsEqualTo("function(new:Foo, ...?): ?");
+    assertType(fooProto).withTypeOfProp("constructor").toStringIsEqualTo("(typeof Foo)");
   }
 
   @Test
@@ -2652,9 +2646,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     List<JSType> params = ImmutableList.copyOf(foo.getParameterTypes());
     assertThat(params).hasSize(1);
     assertType(params.get(0)).isNumber();
-    assertType(barConstructorProperty).toStringIsEqualTo("function(new:Bar, ...?): ?");
+    assertType(barConstructorProperty).toStringIsEqualTo("(typeof Bar)");
 
-    assertType(fooConstructorProperty).toStringIsEqualTo("function(new:Foo, ...?): ?");
+    assertType(fooConstructorProperty).toStringIsEqualTo("(typeof Foo)");
     assertNode(fooProto.getOwnPropertyDefSite("constructor")).isSameAs(fooCtorDef);
 
     assertType(fooConstructorProperty).isSubtypeOf(barConstructorProperty);
@@ -2976,12 +2970,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .declares("Foo")
         .directly()
         .withTypeThat()
-        .toStringIsEqualTo("function(new:Foo): undefined");
+        .toStringIsEqualTo("(typeof Foo)");
     assertScope(globalScope)
         .declares("Foo.Something")
         .directly()
         .withTypeThat()
-        .toStringIsEqualTo("function(new:Foo.Something): undefined");
+        .toStringIsEqualTo("(typeof Foo.Something)");
   }
 
   @Test
@@ -3002,7 +2996,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .directly()
         .withTypeThat()
         // TODO(sdh): Print a better name (https://github.com/google/closure-compiler/issues/2982)
-        .toStringIsEqualTo("function(new:<anonymous@testcode:2>): undefined");
+        .toStringIsEqualTo("(typeof <anonymous@testcode:2>)");
     assertScope(globalScope).doesNotDeclare("Bar");
   }
 
@@ -5173,8 +5167,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "mod.B = class B {};")));
 
     JSType modType = globalScope.getVar("mod").getType();
-    assertType(modType).withTypeOfProp("A").toStringIsEqualTo("function(new:exports.A): undefined");
-    assertType(modType).withTypeOfProp("B").toStringIsEqualTo("function(new:mod.B): undefined");
+    assertType(modType).withTypeOfProp("A").toStringIsEqualTo("(typeof exports.A)");
+    assertType(modType).withTypeOfProp("B").toStringIsEqualTo("(typeof mod.B)");
   }
 
   @Test
@@ -5194,7 +5188,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     JSType modType = globalScope.getVar("mod").getType();
     assertType(modType).isFunctionTypeThat().hasReturnTypeThat().isNumber();
-    assertType(modType).withTypeOfProp("B").toStringIsEqualTo("function(new:mod.B): undefined");
+    assertType(modType).withTypeOfProp("B").toStringIsEqualTo("(typeof mod.B)");
   }
 
   @Test

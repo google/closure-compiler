@@ -2397,8 +2397,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  }",
             "}",
             "let /** ? */ x = Foo()"),
-        lines(
-            "Constructor function(new:Foo): undefined should be called with the \"new\" keyword"));
+        lines("Constructor (typeof Foo) should be called with the \"new\" keyword"));
   }
 
   @Test
@@ -2411,8 +2410,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  }",
             "}",
             "let /** ? */ x = Foo()"),
-        lines(
-            "Constructor function(new:Foo): undefined should be called with the \"new\" keyword"));
+        lines("Constructor (typeof Foo) should be called with the \"new\" keyword"));
   }
 
   @Test
@@ -2643,13 +2641,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassPassedAsParameterClassMismatch() {
     testTypes(
-        lines(
-            "class Foo {}",
-            "function foo(/** function(new: Foo) */ arg) {}",
-            "foo(class {});"),
+        lines("class Foo {}", "function foo(/** function(new: Foo) */ arg) {}", "foo(class {});"),
         lines(
             "actual parameter 1 of foo does not match formal parameter",
-            "found   : function(new:<anonymous@[testcode]:3>): undefined",
+            "found   : (typeof <anonymous@[testcode]:3>)",
             "required: function(new:Foo): ?"));
   }
 
@@ -2664,7 +2659,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "foo(Foo);"),
         lines(
             "actual parameter 1 of foo does not match formal parameter",
-            "found   : function(new:Foo, string): undefined",
+            "found   : (typeof Foo)",
             "required: function(new:Foo, number): ?"));
   }
 
@@ -3454,7 +3449,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static method(arg) {}",
             "}"),
         lines(
-            "property method already defined on supertype function(new:Base): undefined; "
+            "property method already defined on supertype (typeof Base); "
                 + "use @override to override it"));
   }
 
@@ -3469,7 +3464,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "   */",
             "  static method(arg) {}",
             "}"),
-        lines("property method not defined on any supertype of function(new:Base): undefined"));
+        lines("property method not defined on any supertype of (typeof Base)"));
   }
 
   @Test
@@ -3490,7 +3485,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "}"),
         lines(
             "mismatch of the method property type and the type of the property it overrides "
-                + "from supertype function(new:Base): undefined",
+                + "from supertype (typeof Base)",
             "original: function((number|string)): undefined",
             "override: function(string): undefined"));
   }
@@ -3508,7 +3503,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "}"),
         lines(
             "mismatch of the method property type and the type of the property it overrides "
-                + "from supertype function(new:Base): undefined",
+                + "from supertype (typeof Base)",
             "original: function((number|string)): undefined",
             "override: function(string): undefined"));
   }
@@ -3548,7 +3543,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "Sub.method = function(arg) {};"),
         lines(
             "mismatch of the method property type and the type of the property it overrides "
-                + "from supertype function(new:Base): undefined",
+                + "from supertype (typeof Base)",
             "original: function((number|string)): undefined",
             "override: function(string): undefined"));
   }
@@ -3615,7 +3610,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             // We specifically want to check that q-name lookups are checked.
             "ns.Sub.method = function(arg) {};"),
         lines(
-            "property method already defined on supertype function(new:ns.Base): undefined; "
+            "property method already defined on supertype (typeof ns.Base); "
                 + "use @override to override it"));
   }
 
@@ -3641,7 +3636,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "ns.Sub.method = function(arg) {};"),
         lines(
             "mismatch of the method property type and the type of the property it overrides "
-                + "from supertype function(new:ns.Base): undefined",
+                + "from supertype (typeof ns.Base)",
             "original: function(string): undefined",
             "override: function(number): undefined"));
   }
@@ -3660,7 +3655,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             " */",
             // We specifically want to check that q-name lookups are checked.
             "ns.Base.method = function(arg) {};"),
-        lines("property method not defined on any supertype of function(new:ns.Base): undefined"));
+        lines("property method not defined on any supertype of (typeof ns.Base)"));
   }
 
   @Test
@@ -4483,8 +4478,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "}"),
         lines(
             "attempted re-definition of type Object",
-            "found   : function(new:Object): undefined",
-            "expected: function(new:Object, *=): Object"));
+            "found   : (typeof Object)",
+            "expected: (typeof Object)"));
   }
 
   @Test

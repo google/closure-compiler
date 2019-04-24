@@ -4037,14 +4037,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeRedefinition() {
-    testClosureTypesMultipleWarnings("a={};/**@enum {string}*/ a.A = {ZOR:'b'};"
-        + "/** @constructor */ a.A = function() {}",
+    testClosureTypesMultipleWarnings(
+        "a={};/**@enum {string}*/ a.A = {ZOR:'b'};" + "/** @constructor */ a.A = function() {}",
         ImmutableList.of(
-            "variable a.A redefined with type function(new:a.A): undefined, " +
-            "original definition at [testcode]:1 with type enum{a.A}",
-            "assignment to property A of a\n" +
-            "found   : function(new:a.A): undefined\n" +
-            "required: enum{a.A}"));
+            "variable a.A redefined with type (typeof a.A), "
+                + "original definition at [testcode]:1 with type enum{a.A}",
+            lines(
+                "assignment to property A of a", //
+                "found   : (typeof a.A)", //
+                "required: enum{a.A}")));
   }
 
   @Test
@@ -8517,11 +8518,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testThis14() {
     testTypesWithCommonExterns(
-        "/** @param {number} x */ function f(x) {}" +
-        "f(this.Object);",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : function(new:Object, *=): Object\n" +
-        "required: number");
+        "/** @param {number} x */ function f(x) {}" + "f(this.Object);",
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : (typeof Object)",
+            "required: number"));
   }
 
   @Test
@@ -9466,14 +9467,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testIssue635b() {
     testTypes(
-        "/** @constructor */" +
-        "function F() {}" +
-        "/** @constructor */" +
-        "function G() {}" +
-        "/** @type {function(new:G)} */ var x = F;",
-        "initializing variable\n" +
-        "found   : function(new:F): undefined\n" +
-        "required: function(new:G): ?");
+        lines(
+            "/** @constructor */",
+            "function F() {}",
+            "/** @constructor */",
+            "function G() {}",
+            "/** @type {function(new:G)} */ var x = F;"),
+        lines(
+            "initializing variable", //
+            "found   : (typeof F)",
+            "required: function(new:G): ?"));
   }
 
   @Test
@@ -12042,10 +12045,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testBadConstructorCall() {
     testTypes(
-        "/** @constructor */ function Foo() {}" +
-        "Foo();",
-        "Constructor function(new:Foo): undefined should be called " +
-        "with the \"new\" keyword");
+        lines(
+            "/** @constructor */ function Foo() {}", //
+            "Foo();"),
+        "Constructor (typeof Foo) should be called with the \"new\" keyword");
   }
 
   @Test
@@ -14496,12 +14499,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testDuplicateTypeDef() {
     testTypes(
-        "var goog = {};" +
-        "/** @constructor */ goog.Bar = function() {};" +
-        "/** @typedef {number} */ goog.Bar;",
-        "variable goog.Bar redefined with type None, " +
-        "original definition at [testcode]:1 " +
-        "with type function(new:goog.Bar): undefined");
+        lines(
+            "var goog = {};",
+            "/** @constructor */ goog.Bar = function() {};",
+            "/** @typedef {number} */ goog.Bar;"),
+        "variable goog.Bar redefined with type None, "
+            + "original definition at [testcode]:2 "
+            + "with type (typeof goog.Bar)");
   }
 
   @Test
@@ -22510,7 +22514,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "actual parameter 1 of Array.prototype.push does not match formal parameter",
             "found   : Foo",
-            "required: function(new:Foo): undefined"));
+            "required: (typeof Foo)"));
   }
 
   @Test
@@ -22524,7 +22528,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "x.push(y);"),
         lines(
             "actual parameter 1 of Array.prototype.push does not match formal parameter",
-            "found   : function(new:Foo): undefined",
+            "found   : (typeof Foo)",
             "required: Foo"));
   }
 
@@ -22891,7 +22895,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "() => f({/** @constructor */ g: function() {}});"),
         lines(
             "actual parameter 1 of f does not match formal parameter",
-            "found   : {g: function(new:<anonymous@[testcode]:2>): undefined}",
+            "found   : {g: (typeof <anonymous@[testcode]:2>)}",
             "required: {g: function(): string}",
             "missing : []",
             "mismatch: [g]"));
@@ -22906,7 +22910,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "() => f({/** @constructor */ g: G});"),
         lines(
             "actual parameter 1 of f does not match formal parameter",
-            "found   : {g: function(new:G): undefined}",
+            "found   : {g: (typeof G)}",
             "required: {g: function(): string}",
             "missing : []",
             "mismatch: [g]"));

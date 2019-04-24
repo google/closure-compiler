@@ -354,7 +354,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
                 )));
 
     JSType xType = inferredTypeOfName("x");
-    assertThat(xType.toString()).isEqualTo("function(new:Foo): undefined");
+    assertThat(xType.toString()).isEqualTo("(typeof Foo)");
 
     // Then
     assertThat(xType.getJSDocInfo().getBlockDescription()).isEqualTo("I'm a user class.");
@@ -919,7 +919,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
                 )));
 
     ObjectType xType = (ObjectType) inferredTypeOfName("x");
-    assertThat(xType.toString()).isEqualTo("function(new:Foo): undefined");
+    assertThat(xType.toString()).isEqualTo("(typeof Foo)");
 
     // Then
     assertThat(xType.getPropertyJSDocInfo("static").getBlockDescription())
@@ -944,7 +944,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
                 )));
 
     ObjectType xType = (ObjectType) inferredTypeOfName("x");
-    assertThat(xType.toString()).isEqualTo("function(new:Foo): undefined");
+    assertThat(xType.toString()).isEqualTo("(typeof Foo)");
 
     // Then
     assertThat(xType.getPropertyJSDocInfo("static").getBlockDescription())

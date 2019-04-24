@@ -613,14 +613,14 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
       + "Bar.a = 0;";
     String output;
 
-    output = ""
-        + "/** @constructor */ function Foo(){}"
-        + "/** @constructor */ function Bar(){}"
-        + "Foo.function_new_Foo___undefined$a = 0;"
-        + "Bar.function_new_Bar___undefined$a = 0;";
+    output =
+        ""
+            + "/** @constructor */ function Foo(){}"
+            + "/** @constructor */ function Bar(){}"
+            + "Foo._typeof_Foo_$a = 0;"
+            + "Bar._typeof_Bar_$a = 0;";
 
-    testSets(js, output, "{a=[[function(new:Bar): undefined]," +
-    " [function(new:Foo): undefined]]}");
+    testSets(js, output, "{a=[[(typeof Bar)]," + " [(typeof Foo)]]}");
   }
 
   @Test
@@ -1629,9 +1629,13 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "",
         "(new Bar()).alias();");
 
-    testSets("", js, js, "{}", TypeValidator.TYPE_MISMATCH_WARNING, "assignment\n"
-            + "found   : function(new:Foo): undefined\n"
-            + "required: function(new:Bar): undefined");
+    testSets(
+        "",
+        js,
+        js,
+        "{}",
+        TypeValidator.TYPE_MISMATCH_WARNING,
+        "assignment\n" + "found   : (typeof Foo)\n" + "required: (typeof Bar)");
   }
 
   @Test
@@ -2968,13 +2972,13 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "Bar.method();"),
         lines(
             "class Foo {",
-            "  function_new_Foo___undefined$method() {}",
+            "  _typeof_Foo_$method() {}",
             "}",
             "class Bar {",
-            "  function_new_Bar___undefined$method() {}",
+            "  _typeof_Bar_$method() {}",
             "}",
-            "Foo.function_new_Foo___undefined$method();",
-            "Bar.function_new_Bar___undefined$method();"));
+            "Foo._typeof_Foo_$method();",
+            "Bar._typeof_Bar_$method();"));
   }
 
   @Test
@@ -2995,17 +2999,17 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "Bar.method();"),
         lines(
             "class Foo {",
-            "  function_new_Foo___undefined$method() {}",
+            "  _typeof_Foo_$method() {}",
             "}",
             "class SubFoo extends Foo {",
-            "  static function_new_Foo___undefined$method() {}",
+            "  static _typeof_Foo_$method() {}",
             "}",
             "class Bar {",
-            "  function_new_Bar___undefined$method() {}",
+            "  _typeof_Bar_$method() {}",
             "}",
-            "Foo.function_new_Foo___undefined$method();",
-            "SubFoo.function_new_Foo___undefined$method();",
-            "Bar.function_new_Bar___undefined$method();"));
+            "Foo._typeof_Foo_$method();",
+            "SubFoo._typeof_Foo_$method();",
+            "Bar._typeof_Bar_$method();"));
   }
 
   @Test
@@ -3051,18 +3055,18 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "Bar.method();"),
         lines(
             "class Foo {",
-            "  static function_new_Foo___undefined$method() {}",
+            "  static _typeof_Foo_$method() {}",
             "}",
             "class SubFoo extends Foo {",
             "  static method2() {",
-            "    super.function_new_Foo___undefined$method();",
+            "    super._typeof_Foo_$method();",
             "  }",
             "}",
             "class Bar {",
-            "  static function_new_Bar___undefined$method() {}",
+            "  static _typeof_Bar_$method() {}",
             "}",
-            "Foo.function_new_Foo___undefined$method();",
-            "Bar.function_new_Bar___undefined$method();"));
+            "Foo._typeof_Foo_$method();",
+            "Bar._typeof_Bar_$method();"));
   }
 
   @Test
@@ -3228,9 +3232,9 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "}",
             "/** @type {string} */",
-            "Foo.function_new_Foo___undefined$prop = 'static property!';",
+            "Foo._typeof_Foo_$prop = 'static property!';",
             "const {Foo$prop: prop} = (new Foo());"),
-        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+        "{prop=[[(typeof Foo)], [Foo]]}");
   }
 
   @Test
@@ -3254,10 +3258,10 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "}",
             "/** @type {string} */",
-            "Foo.function_new_Foo___undefined$prop = 'static property!';",
+            "Foo._typeof_Foo_$prop = 'static property!';",
             // we still rewrite the other 'prop' references, but ignore the quoted 'prop'
             "const {'prop': prop} = {'prop': 3};"),
-        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+        "{prop=[[(typeof Foo)], [Foo]]}");
   }
 
   @Test
@@ -3281,9 +3285,9 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "}",
             "/** @type {string} */",
-            "Foo.function_new_Foo___undefined$prop = 'static property!';",
-            "const {function_new_Foo___undefined$prop: prop} = Foo;"),
-        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+            "Foo._typeof_Foo_$prop = 'static property!';",
+            "const {_typeof_Foo_$prop: prop} = Foo;"),
+        "{prop=[[(typeof Foo)], [Foo]]}");
   }
 
   @Test
@@ -3307,9 +3311,9 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "}",
             "/** @type {string} */",
-            "Foo.function_new_Foo___undefined$prop = 'static property!';",
+            "Foo._typeof_Foo_$prop = 'static property!';",
             "const {Foo$prop: prop = 0} = (new Foo());"),
-        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+        "{prop=[[(typeof Foo)], [Foo]]}");
   }
 
   @Test
@@ -3333,9 +3337,9 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "}",
             "/** @type {string} */",
-            "Foo.function_new_Foo___undefined$prop = 'static property!';",
+            "Foo._typeof_Foo_$prop = 'static property!';",
             "const fn = (/** !Foo */ {Foo$prop: prop}) => prop;"),
-        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+        "{prop=[[(typeof Foo)], [Foo]]}");
   }
 
   @Test
@@ -3359,9 +3363,9 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "}",
             "/** @type {string} */",
-            "Foo.function_new_Foo___undefined$prop = 'static property!';",
+            "Foo._typeof_Foo_$prop = 'static property!';",
             "const {f: {Foo$prop: prop}} = {f: new Foo()};"),
-        "{prop=[[Foo], [function(new:Foo): undefined]]}");
+        "{prop=[[(typeof Foo)], [Foo]]}");
   }
 
   @Test

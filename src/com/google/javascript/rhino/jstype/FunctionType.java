@@ -953,6 +953,16 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       return sb.append(forAnnotations ? "!Function" : "Function");
     }
 
+    if (hasInstanceType() && getSource() != null) {
+      // Render function types known to be type definitions as "(typeof Foo)". This includes types
+      // defined like "/** @constructor */ function Foo() { }" but not to those defined like "@param
+      // {function(new:Foo)}". Only the former will have a source node.
+      sb.append("(typeof ");
+      getInstanceType().appendTo(sb, forAnnotations);
+      sb.append(")");
+      return sb;
+    }
+
     setPrettyPrint(false);
 
     sb.append("function(");
