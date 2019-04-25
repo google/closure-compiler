@@ -76,11 +76,6 @@ var isSecureContext;
 var visualViewport;
 
 /**
- * @see https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/netscape
- */
-var netscape;
-
-/**
  * @param {*} message
  * @see https://developer.mozilla.org/en/DOM/window.alert
  * @return {undefined}
