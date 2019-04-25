@@ -3981,7 +3981,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(namedGoogBar.getImplicitPrototype().isNativeObjectType()).isFalse();
 
     JSType resolvedNamedGoogBar = Asserts.assertValidResolve(namedGoogBar);
-    assertThat(namedGoogBar).isNotSameAs(resolvedNamedGoogBar);
+    assertThat(namedGoogBar).isNotSameInstanceAs(resolvedNamedGoogBar);
     assertThat(googBar.getInstanceType()).isSameAs(resolvedNamedGoogBar);
   }
 
@@ -4737,11 +4737,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(b, realB);
 
     JSType resolvedA = Asserts.assertValidResolve(a);
-    assertThat(a).isNotSameAs(resolvedA);
+    assertThat(a).isNotSameInstanceAs(resolvedA);
     assertThat(realA).isSameAs(resolvedA);
 
     JSType resolvedB = Asserts.assertValidResolve(b);
-    assertThat(b).isNotSameAs(resolvedB);
+    assertThat(b).isNotSameInstanceAs(resolvedB);
     assertThat(realB).isSameAs(resolvedB);
   }
 
@@ -6223,7 +6223,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSType firstType = registry.createRecordType(ImmutableMap.of("x", NUMBER_TYPE));
     JSType secondType = registry.createRecordType(ImmutableMap.of("x", NUMBER_TYPE));
 
-    assertType(firstType).isNotSameAs(secondType);
+    assertType(firstType).isNotSameInstanceAs(secondType);
     assertType(firstType).isEqualTo(secondType);
     assertType(firstType).isStructurallyEqualTo(secondType);
   }

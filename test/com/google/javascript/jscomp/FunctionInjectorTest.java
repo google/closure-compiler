@@ -1858,7 +1858,7 @@ public final class FunctionInjectorTest {
     Node externsRoot = parseRoot.getFirstChild();
     final Node tree = parseRoot.getLastChild();
     assertThat(tree).isNotNull();
-    assertThat(tree).isNotSameAs(externsRoot);
+    assertThat(tree).isNotSameInstanceAs(externsRoot);
 
     final Node expectedRoot = parseExpected(new Compiler(), expectedResult);
 

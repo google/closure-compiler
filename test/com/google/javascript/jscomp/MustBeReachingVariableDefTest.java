@@ -158,19 +158,19 @@ public final class MustBeReachingVariableDefTest {
   @Test
   public void testFunctionParams2() {
     computeDefUse("if (param2) { D: param1 = 1} U: param1");
-    assertThat(defUse.getDefNode("param1", use)).isNotSameAs(def);
+    assertThat(defUse.getDefNode("param1", use)).isNotSameInstanceAs(def);
   }
 
   @Test
   public void testArgumentsObjectModifications() {
     computeDefUse("D: param1 = 1; arguments[0] = 2; U: param1");
-    assertThat(defUse.getDefNode("param1", use)).isNotSameAs(def);
+    assertThat(defUse.getDefNode("param1", use)).isNotSameInstanceAs(def);
   }
 
   @Test
   public void testArgumentsObjectEscaped() {
     computeDefUse("D: param1 = 1; var x = arguments; x[0] = 2; U: param1");
-    assertThat(defUse.getDefNode("param1", use)).isNotSameAs(def);
+    assertThat(defUse.getDefNode("param1", use)).isNotSameInstanceAs(def);
   }
 
   @Test
@@ -222,7 +222,7 @@ public final class MustBeReachingVariableDefTest {
    */
   private void assertNotMatch(String src) {
     computeDefUse(src);
-    assertThat(defUse.getDefNode("x", use)).isNotSameAs(def);
+    assertThat(defUse.getDefNode("x", use)).isNotSameInstanceAs(def);
   }
 
   /**

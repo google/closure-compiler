@@ -160,7 +160,7 @@ public class RecoverableJsAstTest {
         .containsExactlyElementsIn(expectedErrors)
         .inOrder();
 
-    assertThat(ast.getAstRoot(compiler)).isNotSameAs(realAst.getAstRoot(compiler));
+    assertThat(ast.getAstRoot(compiler)).isNotSameInstanceAs(realAst.getAstRoot(compiler));
   }
 
   /**

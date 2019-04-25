@@ -121,11 +121,11 @@ public final class JSCompilerSourceExcerptProviderTest {
       assertThat(region.getBeginningLineNumber()).isAtMost(lineNumber);
     }
     assertThat(lineNumber).isAtMost(region.getEndingLineNumber());
-    assertWithMessage(sourceRegion).that(sourceRegion.length()).isNotSameAs(0);
-    assertWithMessage(sourceRegion).that(sourceRegion.charAt(0)).isNotSameAs('\n');
+    assertWithMessage(sourceRegion).that(sourceRegion.length()).isNotSameInstanceAs(0);
+    assertWithMessage(sourceRegion).that(sourceRegion.charAt(0)).isNotSameInstanceAs('\n');
     assertWithMessage(sourceRegion)
         .that(sourceRegion.charAt(sourceRegion.length() - 1))
-        .isNotSameAs('\n');
+        .isNotSameInstanceAs('\n');
     String line = provider.getSourceLine(sourceName, lineNumber);
     assertWithMessage(sourceRegion).that(sourceRegion.contains(line)).isTrue();
   }

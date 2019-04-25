@@ -793,7 +793,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     type = compiler.getTypeRegistry().getGlobalType("ns.Foo");
     fnType = type.toObjectType().getConstructor();
     StaticTypedSlot newSlot = fnType.getSlot("prototype");
-    assertThat(newSlot).isNotSameAs(originalSlot);
+    assertThat(newSlot).isNotSameInstanceAs(originalSlot);
   }
 
   /** This test will fail if global scope generation happens before closure-pass. */

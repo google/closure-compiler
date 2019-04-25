@@ -4166,10 +4166,10 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedScope secondCatchScope = getLabeledStatement("SECOND_CATCH").enclosingScope;
     assertScope(firstCatchScope).declares("err").directly();
-    assertThat(firstCatchScope).isNotSameAs(secondCatchScope);
+    assertThat(firstCatchScope).isNotSameInstanceAs(secondCatchScope);
 
     TypedVar secondErrVar = secondCatchScope.getVar("err");
-    assertThat(firstErrVar).isNotSameAs(secondErrVar);
+    assertThat(firstErrVar).isNotSameInstanceAs(secondErrVar);
   }
 
   @Test
@@ -5255,7 +5255,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedScopeCreator creator = new TypedScopeCreator(compiler);
     TypedScope scopeA = creator.createScope(root1, null);
     assertThat(creator.createScope(root1, null)).isSameAs(scopeA);
-    assertThat(creator.createScope(root2, null)).isNotSameAs(scopeA);
+    assertThat(creator.createScope(root2, null)).isNotSameInstanceAs(scopeA);
   }
 
   @Test

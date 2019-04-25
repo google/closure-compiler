@@ -520,14 +520,15 @@ public class JSDocInfoTest {
 
     JSDocInfo cloned = info.clone(true);
 
-    assertThat(cloned.getBaseType().getRoot()).isNotSameAs(info.getBaseType().getRoot());
+    assertThat(cloned.getBaseType().getRoot()).isNotSameInstanceAs(info.getBaseType().getRoot());
     assertType(resolve(cloned.getBaseType()))
         .isStructurallyEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
     assertThat(cloned.getDescription()).isEqualTo("The source info");
-    assertThat(cloned.getReturnType().getRoot()).isNotSameAs(info.getReturnType().getRoot());
+    assertThat(cloned.getReturnType().getRoot())
+        .isNotSameInstanceAs(info.getReturnType().getRoot());
     assertType(resolve(cloned.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertThat(cloned.getParameterType("a").getRoot())
-        .isNotSameAs(info.getParameterType("a").getRoot());
+        .isNotSameInstanceAs(info.getParameterType("a").getRoot());
     assertType(resolve(cloned.getParameterType("a")))
         .isStructurallyEqualTo(getNativeType(STRING_TYPE));
   }

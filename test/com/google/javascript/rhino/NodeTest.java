@@ -530,11 +530,11 @@ public class NodeTest {
     // This is required because compiler classes are modifying the type expressions in place
     clone = original.cloneTree(true);
     assertThat(clone.getFirstChild().getJSDocInfo())
-        .isNotSameAs(original.getFirstChild().getJSDocInfo());
+        .isNotSameInstanceAs(original.getFirstChild().getJSDocInfo());
     assertThat(clone.getFirstChild().getJSDocInfo().getType())
-        .isNotSameAs(original.getFirstChild().getJSDocInfo().getType());
+        .isNotSameInstanceAs(original.getFirstChild().getJSDocInfo().getType());
     assertThat(clone.getFirstChild().getJSDocInfo().getType().getRoot())
-        .isNotSameAs(original.getFirstChild().getJSDocInfo().getType().getRoot());
+        .isNotSameInstanceAs(original.getFirstChild().getJSDocInfo().getType().getRoot());
   }
 
   @Test
