@@ -181,7 +181,7 @@ public final class MaybeReachingVariableUseTest {
   private void assertMatch(String src, boolean async) {
     computeUseDef(src, async);
     Collection<Node> result = useDef.getUses("x", def);
-    assertThat(result).containsAllIn(uses);
+    assertThat(result).containsAtLeastElementsIn(uses);
   }
 
   private void assertNotMatch(String src) {
