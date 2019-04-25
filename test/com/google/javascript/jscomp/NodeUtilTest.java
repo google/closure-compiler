@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -83,20 +84,39 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Enclosed.class)
 public final class NodeUtilTest {
 
+  /** Provides methods for parsing and accessing the compiler used for the parsing. */
+  private static class ParseHelper {
+    private Compiler compiler = null;
+
+    private Node parse(String js) {
+      CompilerOptions options = new CompilerOptions();
+      options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+
+      // To allow octal literals such as 0123 to be parsed.
+      options.setStrictModeInput(false);
+      options.setWarningLevel(ES5_STRICT, CheckLevel.OFF);
+
+      compiler = new Compiler();
+      compiler.initOptions(options);
+      Node n = compiler.parseTestCode(js);
+      assertThat(compiler.getErrors()).isEmpty();
+      return n;
+    }
+
+    private Compiler getCompiler() {
+      checkNotNull(compiler, "no parse method called yet");
+      return compiler;
+    }
+
+    private Node parseFirst(Token token, String js) {
+      Node rootNode = this.parse(js);
+      checkState(rootNode.isScript(), rootNode);
+      return token.equals(SCRIPT) ? rootNode : getNode(rootNode, token);
+    }
+  }
+
   private static Node parse(String js) {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
-
-    // To allow octal literals such as 0123 to be parsed.
-    options.setStrictModeInput(false);
-    options.setWarningLevel(ES5_STRICT, CheckLevel.OFF);
-
-    Compiler compiler = new Compiler();
-    compiler.initOptions(options);
-
-    Node n = compiler.parseTestCode(js);
-    assertThat(compiler.getErrors()).isEmpty();
-    return n;
+    return new ParseHelper().parse(js);
   }
 
   /**
@@ -106,9 +126,7 @@ public final class NodeUtilTest {
    * <p>TODO(nickreid): Consider an overload that takes a `Predicate` rather than a `Token`.
    */
   private static Node parseFirst(Token token, String js) {
-    Node rootNode = parse(js);
-    checkState(rootNode.isScript(), rootNode);
-    return token.equals(SCRIPT) ? rootNode : getNode(rootNode, token);
+    return new ParseHelper().parseFirst(token, js);
   }
 
   /** Returns the parsed expression (e.g. returns a NAME given 'a') */
@@ -650,12 +668,18 @@ public final class NodeUtilTest {
     }
 
     private void assertSideEffect(boolean se, String js) {
-      Node n = parse(js);
-      assertThat(NodeUtil.mayHaveSideEffects(n.getFirstChild())).isEqualTo(se);
+      ParseHelper helper = new ParseHelper();
+
+      Node n = helper.parse(js);
+      assertThat(NodeUtil.mayHaveSideEffects(n.getFirstChild(), helper.getCompiler()))
+          .isEqualTo(se);
     }
 
-    private void assertSideEffect(boolean se, Node n) {
-      assertThat(NodeUtil.mayHaveSideEffects(n)).isEqualTo(se);
+    private void assertNodeHasSideEffect(boolean se, Token token, String js) {
+      ParseHelper helper = new ParseHelper();
+
+      Node node = helper.parseFirst(token, js);
+      assertThat(NodeUtil.mayHaveSideEffects(node, helper.getCompiler())).isEqualTo(se);
     }
 
     private void assertSideEffect(boolean se, String js, boolean globalRegExp) {
@@ -830,19 +854,19 @@ public final class NodeUtilTest {
     @Test
     public void testMayHaveSideEffects_rest() {
       // REST
-      assertSideEffect(false, parseFirst(REST, "({...x} = something)"));
+      assertNodeHasSideEffect(false, REST, "({...x} = something)");
       // We currently assume all iterable-rests are side-effectful.
-      assertSideEffect(true, parseFirst(REST, "([...x] = 'safe')"));
-      assertSideEffect(false, parseFirst(REST, "(function(...x) { })"));
+      assertNodeHasSideEffect(true, REST, "([...x] = 'safe')");
+      assertNodeHasSideEffect(false, REST, "(function(...x) { })");
     }
 
     @Test
     public void testMayHaveSideEffects_contextSwitch() {
-      assertSideEffect(true, parseFirst(AWAIT, "async function f() { await 0; }"));
-      assertSideEffect(true, parseFirst(FOR_AWAIT_OF, "(async()=>{ for await (let x of []) {} })"));
-      assertSideEffect(true, parseFirst(THROW, "function f() { throw 'something'; }"));
-      assertSideEffect(true, parseFirst(YIELD, "function* f() { yield 'something'; }"));
-      assertSideEffect(true, parseFirst(YIELD, "function* f() { yield* 'something'; }"));
+      assertNodeHasSideEffect(true, AWAIT, "async function f() { await 0; }");
+      assertNodeHasSideEffect(true, FOR_AWAIT_OF, "(async()=>{ for await (let x of []) {} })");
+      assertNodeHasSideEffect(true, THROW, "function f() { throw 'something'; }");
+      assertNodeHasSideEffect(true, YIELD, "function* f() { yield 'something'; }");
+      assertNodeHasSideEffect(true, YIELD, "function* f() { yield* 'something'; }");
     }
 
     @Test
@@ -855,49 +879,49 @@ public final class NodeUtilTest {
 
     @Test
     public void testMayHaveSideEffects_computedProp() {
-      assertSideEffect(false, parseFirst(COMPUTED_PROP, "({[a]: x})"));
-      assertSideEffect(true, parseFirst(COMPUTED_PROP, "({[a()]: x})"));
-      assertSideEffect(true, parseFirst(COMPUTED_PROP, "({[a]: x()})"));
+      assertNodeHasSideEffect(false, COMPUTED_PROP, "({[a]: x})");
+      assertNodeHasSideEffect(true, COMPUTED_PROP, "({[a()]: x})");
+      assertNodeHasSideEffect(true, COMPUTED_PROP, "({[a]: x()})");
 
       // computed property getters and setters are modeled as COMPUTED_PROP with an
       // annotation to indicate getter or setter.
-      assertSideEffect(false, parseFirst(COMPUTED_PROP, "({ get [a]() {} })"));
-      assertSideEffect(true, parseFirst(COMPUTED_PROP, "({ get [a()]() {} })"));
+      assertNodeHasSideEffect(false, COMPUTED_PROP, "({ get [a]() {} })");
+      assertNodeHasSideEffect(true, COMPUTED_PROP, "({ get [a()]() {} })");
 
-      assertSideEffect(false, parseFirst(COMPUTED_PROP, "({ set [a](x) {} })"));
-      assertSideEffect(true, parseFirst(COMPUTED_PROP, "({ set [a()](x) {} })"));
+      assertNodeHasSideEffect(false, COMPUTED_PROP, "({ set [a](x) {} })");
+      assertNodeHasSideEffect(true, COMPUTED_PROP, "({ set [a()](x) {} })");
     }
 
     @Test
     public void testMayHaveSideEffects_classComputedProp() {
-      assertSideEffect(false, parseFirst(COMPUTED_PROP, "class C { [a]() {} }"));
-      assertSideEffect(true, parseFirst(COMPUTED_PROP, "class C { [a()]() {} }"));
+      assertNodeHasSideEffect(false, COMPUTED_PROP, "class C { [a]() {} }");
+      assertNodeHasSideEffect(true, COMPUTED_PROP, "class C { [a()]() {} }");
 
       // computed property getters and setters are modeled as COMPUTED_PROP with an
       // annotation to indicate getter or setter.
-      assertSideEffect(false, parseFirst(COMPUTED_PROP, "class C { get [a]() {} }"));
-      assertSideEffect(true, parseFirst(COMPUTED_PROP, "class C { get [a()]() {} }"));
+      assertNodeHasSideEffect(false, COMPUTED_PROP, "class C { get [a]() {} }");
+      assertNodeHasSideEffect(true, COMPUTED_PROP, "class C { get [a()]() {} }");
 
-      assertSideEffect(false, parseFirst(COMPUTED_PROP, "class C { set [a](x) {} }"));
-      assertSideEffect(true, parseFirst(COMPUTED_PROP, "class C { set [a()](x) {} }"));
+      assertNodeHasSideEffect(false, COMPUTED_PROP, "class C { set [a](x) {} }");
+      assertNodeHasSideEffect(true, COMPUTED_PROP, "class C { set [a()](x) {} }");
     }
 
     @Test
     public void testMayHaveSideEffects_getter() {
-      assertSideEffect(false, parseFirst(GETTER_DEF, "({ get a() {} })"));
-      assertSideEffect(false, parseFirst(GETTER_DEF, "class C { get a() {} }"));
+      assertNodeHasSideEffect(false, GETTER_DEF, "({ get a() {} })");
+      assertNodeHasSideEffect(false, GETTER_DEF, "class C { get a() {} }");
     }
 
     @Test
     public void testMayHaveSideEffects_setter() {
-      assertSideEffect(false, parseFirst(SETTER_DEF, "({ set a(x) {} })"));
-      assertSideEffect(false, parseFirst(SETTER_DEF, "class C { set a(x) {} }"));
+      assertNodeHasSideEffect(false, SETTER_DEF, "({ set a(x) {} })");
+      assertNodeHasSideEffect(false, SETTER_DEF, "class C { set a(x) {} }");
     }
 
     @Test
     public void testMayHaveSideEffects_method() {
-      assertSideEffect(false, parseFirst(MEMBER_FUNCTION_DEF, "({ a(x) {} })"));
-      assertSideEffect(false, parseFirst(MEMBER_FUNCTION_DEF, "class C { a(x) {} }"));
+      assertNodeHasSideEffect(false, MEMBER_FUNCTION_DEF, "({ a(x) {} })");
+      assertNodeHasSideEffect(false, MEMBER_FUNCTION_DEF, "class C { a(x) {} }");
     }
 
     @Test
@@ -1938,10 +1962,14 @@ public final class NodeUtilTest {
 
     @Test
     public void testCallSideEffects() {
-      Node callExpr = parseExpr("new x().method()");
-      assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isTrue();
+      ParseHelper helper = new ParseHelper();
 
-      Node newExpr = callExpr.getFirstFirstChild();
+      // Parens force interpretation as an expression.
+      Node newXDotMethodCall = helper.parseFirst(CALL, "(new x().method());");
+      Compiler compiler = helper.getCompiler();
+      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isTrue();
+
+      Node newExpr = newXDotMethodCall.getFirstFirstChild();
       checkState(newExpr.isNew());
       Node.SideEffectFlags flags = new Node.SideEffectFlags();
 
@@ -1949,22 +1977,22 @@ public final class NodeUtilTest {
       flags.clearAllFlags();
       newExpr.setSideEffectFlags(flags);
       flags.clearAllFlags();
-      callExpr.setSideEffectFlags(flags);
+      newXDotMethodCall.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(callExpr)).isTrue();
-      assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isFalse();
-      assertThat(NodeUtil.mayHaveSideEffects(callExpr)).isFalse();
+      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
+      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
+      assertThat(NodeUtil.mayHaveSideEffects(newXDotMethodCall, compiler)).isFalse();
 
       // Modifies this, local result
       flags.clearAllFlags();
       newExpr.setSideEffectFlags(flags);
       flags.clearAllFlags();
       flags.setMutatesThis();
-      callExpr.setSideEffectFlags(flags);
+      newXDotMethodCall.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(callExpr)).isTrue();
-      assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isFalse();
-      assertThat(NodeUtil.mayHaveSideEffects(callExpr)).isFalse();
+      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
+      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
+      assertThat(NodeUtil.mayHaveSideEffects(newXDotMethodCall, compiler)).isFalse();
 
       // Modifies this, non-local result
       flags.clearAllFlags();
@@ -1972,22 +2000,22 @@ public final class NodeUtilTest {
       flags.clearAllFlags();
       flags.setMutatesThis();
       flags.setReturnsTainted();
-      callExpr.setSideEffectFlags(flags);
+      newXDotMethodCall.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(callExpr)).isFalse();
-      assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isFalse();
-      assertThat(NodeUtil.mayHaveSideEffects(callExpr)).isFalse();
+      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
+      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
+      assertThat(NodeUtil.mayHaveSideEffects(newXDotMethodCall, compiler)).isFalse();
 
       // No modifications, non-local result
       flags.clearAllFlags();
       newExpr.setSideEffectFlags(flags);
       flags.clearAllFlags();
       flags.setReturnsTainted();
-      callExpr.setSideEffectFlags(flags);
+      newXDotMethodCall.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(callExpr)).isFalse();
-      assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isFalse();
-      assertThat(NodeUtil.mayHaveSideEffects(callExpr)).isFalse();
+      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
+      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
+      assertThat(NodeUtil.mayHaveSideEffects(newXDotMethodCall, compiler)).isFalse();
 
       // The new modifies global state, no side-effect call, non-local result
       // This call could be removed, but not the new.
@@ -1995,11 +2023,11 @@ public final class NodeUtilTest {
       flags.setMutatesGlobalState();
       newExpr.setSideEffectFlags(flags);
       flags.clearAllFlags();
-      callExpr.setSideEffectFlags(flags);
+      newXDotMethodCall.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(callExpr)).isTrue();
-      assertThat(NodeUtil.functionCallHasSideEffects(callExpr)).isFalse();
-      assertThat(NodeUtil.mayHaveSideEffects(callExpr)).isTrue();
+      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
+      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
+      assertThat(NodeUtil.mayHaveSideEffects(newXDotMethodCall, compiler)).isTrue();
     }
 
     @Test
