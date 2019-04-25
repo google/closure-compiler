@@ -13,18 +13,15 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-  >
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.google.javascript</groupId>
+  <groupId>org.treblereel.gwt.javascript</groupId>
   <artifactId>closure-compiler-externs</artifactId>
   <packaging>jar</packaging>
 
   <name>Closure Compiler Externs</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1.1-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -32,9 +29,9 @@
   </properties>
 
   <parent>
-    <groupId>com.google.javascript</groupId>
+    <groupId>org.treblereel.gwt.javascript</groupId>
     <artifactId>closure-compiler-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1.1-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -48,8 +45,8 @@
             <phase>generate-sources</phase>
             <configuration>
               <tasks>
-                <zip destfile="../target/classes/externs.zip" basedir="." includes="**/*.js"/>
-                <zip destfile="target/classes/externs.zip" basedir="." includes="**/*.js"/>
+                <zip destfile="../target/classes/externs.zip" basedir="." includes="**/*.js" />
+                <zip destfile="target/classes/externs.zip" basedir="." includes="**/*.js" />
               </tasks>
             </configuration>
             <goals>

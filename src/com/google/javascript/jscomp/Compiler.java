@@ -3672,4 +3672,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
   }
+
+  public void resetCompilerInput() {
+    for (JSModule module : getModules()) {
+      for (CompilerInput input : module.getInputs()) {
+        input.reset();
+      }
+    }
+    for (CompilerInput input : this.externs) {
+      input.reset();
+    }
+  }
 }

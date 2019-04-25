@@ -579,6 +579,14 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     return modulePath;
   }
 
+    /**
+     * Resets the compiler input for reuse in another compile.
+     */
+    public void reset() {
+        this.module = null;
+        this.ast.clearAst();
+    }
+
   /** JavaScript module type. */
   public enum ModuleType {
     NONE,

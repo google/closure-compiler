@@ -13,17 +13,14 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-  >
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.google.javascript</groupId>
+  <groupId>org.treblereel.gwt.javascript</groupId>
   <artifactId>closure-compiler-parent</artifactId>
   <packaging>pom</packaging>
 
   <name>Closure Compiler Parent</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1.1-SNAPSHOT</version>
 
   <url>https://github.com/google/closure-compiler/</url>
   <description>
@@ -36,20 +33,10 @@
   </description>
   <inceptionYear>2009</inceptionYear>
 
-  <prerequisites>
-    <maven>2.2.1</maven>
-  </prerequisites>
-
   <scm>
-    <connection>
-      scm:git:https://github.com/google/closure-compiler.git
-    </connection>
-    <developerConnection>
-      scm:git:git@github.com:google/closure-compiler.git
-    </developerConnection>
-    <url>
-      https://github.com/google/closure-compiler
-    </url>
+    <url>https://github.com/treblereel/closure-compiler</url>
+    <connection>scm:git:git://github.com/treblereel/closure-compiler.git</connection>
+    <developerConnection>scm:git:git@github.com:treblereel/closure-compiler.git</developerConnection>
   </scm>
 
   <issueManagement>
@@ -84,15 +71,9 @@
     It may be sufficient to include a <distributionManagement> per
     http://central.sonatype.org/pages/apache-maven.html#distribution-management-and-authentication
   -->
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>9</version>
-  </parent>
 
   <modules>
     <module>externs/pom.xml</module>
-    <module>pom-gwt.xml</module>
     <module>pom-main.xml</module>
   </modules>
 
@@ -142,9 +123,6 @@
   </properties>
 
   <build>
-    <defaultGoal>install</defaultGoal>
-    <pluginManagement>
-      <!-- set versions/conf of common plugins for reproducibility, ordered alphabetically by owner -->
       <plugins>
         <plugin>
           <groupId>org.apache.felix</groupId>
@@ -192,7 +170,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.10.4</version>
+          <version>3.0.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -204,13 +182,50 @@
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.0.0</version>
         </plugin>
+
+        <plugin>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.8.2</version>
+          <executions>
+            <execution>
+              <id>default-deploy</id>
+              <phase>deploy</phase>
+              <goals>
+                <goal>deploy</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-report-plugin</artifactId>
-          <version>2.19.1</version>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.5.3</version>
+          <configuration>
+            <localCheckout>true</localCheckout>
+            <pushChanges>false</pushChanges>
+            <mavenExecutorId>forked-path</mavenExecutorId>
+            <arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.scm</groupId>
+              <artifactId>maven-scm-provider-gitexe</artifactId>
+              <version>1.9.5</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.sonatype.plugins</groupId>
+          <artifactId>nexus-staging-maven-plugin</artifactId>
+          <version>1.6.7</version>
+          <extensions>true</extensions>
+          <configuration>
+            <serverId>ossrh</serverId>
+            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+          </configuration>
         </plugin>
       </plugins>
-    </pluginManagement>
   </build>
 
   <dependencyManagement>
@@ -253,5 +268,95 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>3.0.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <!-- see http://central.sonatype.org/pages/working-with-pgp-signatures.html for more detail -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.6</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>google-snapshots</id>
+      <name>google-snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/google-snapshots/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>vertispan-releases</id>
+      <name>Vertispan hosted artifacts-releases</name>
+      <url>https://repo.vertispan.com/j2cl</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>vertispan-snapshots</id>
+      <name>Vertispan Snapshots</name>
+      <url>https://repo.vertispan.com/gwt-snapshot/</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>sonatype-snapshots-repo</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
+    </repository>
+  </repositories>
 </project>

@@ -19,7 +19,7 @@
   >
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.google.javascript</groupId>
+  <groupId>org.treblereel.gwt.javascript</groupId>
   <artifactId>closure-compiler-refasterjs</artifactId>
   <packaging>jar</packaging>
 
@@ -41,7 +41,7 @@
   <inceptionYear>2009</inceptionYear>
 
   <parent>
-    <groupId>com.google.javascript</groupId>
+    <groupId>org.treblereel.gwt.javascript</groupId>
     <artifactId>closure-compiler-main</artifactId>
     <version>1.0-SNAPSHOT</version>
     <relativePath>pom-main.xml</relativePath>
