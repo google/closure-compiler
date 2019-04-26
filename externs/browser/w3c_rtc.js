@@ -691,6 +691,13 @@ RTCRtpReceiver.prototype.getContributingSources = function() {};
 RTCRtpReceiver.prototype.getSynchronizationSources = function() {};
 
 /**
+ * Chrome extension to control jitter buffer delay.
+ * @see https://github.com/henbos/webrtc-timing/issues/1
+ * @type {?number|undefined}
+ */
+RTCRtpReceiver.prototype.jitterBufferDelayHint;
+
+/**
  * @see https://www.w3.org/TR/webrtc/#dom-rtcrtptransceiverinit
  * @record
  */
