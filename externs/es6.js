@@ -21,7 +21,12 @@
  * @externs
  */
 
-
+/**
+ * Some es6 definitions:
+ * Symbol, IIterableResult, Iterable, IteratorIterable, Iterator, IteratorIterable
+ * moved to es3 file, because some base type requires them, and we want to keep them together.
+ * If you add new externs related to those types define them together in the es3 file.
+ */
 
 /**
  * @interface
@@ -1762,13 +1767,6 @@ Atomics.wake = function(typedArray, index, count) {}
  * @return {number}
  */
 Atomics.xor = function(typedArray, index, value) {}
-
-
-/**
- * @see https://tc39.github.io/proposal-async-iteration/
- * @const {symbol}
- */
-Symbol.asyncIterator;
 
 
 /**
