@@ -764,51 +764,32 @@ class TypeInference
       superNode.setJSType(unknownType);
       return;
     }
-    Node root = scope.getRootNode();
-    JSType jsType = root.getJSType();
-    FunctionType functionType = jsType != null ? jsType.toMaybeFunctionType() : null;
-    ObjectType superNodeType = unknownType;
-    Node context = superNode.getParent();
-    // NOTE: we currently transpile subclass constructors to use "super.apply", which is not
-    // actually valid ES6.  For now, provide a special case to support this, but it should be
-    // removed once class transpilation is after type checking.
-    if (context.isCall()) {
-      // Call the superclass constructor.
-      if (functionType != null && functionType.isConstructor()) {
-        FunctionType superCtor = functionType.getSuperClassConstructor();
-        if (superCtor != null) {
-          superNodeType = superCtor;
+
+    FunctionType enclosingFunctionType =
+        JSType.toMaybeFunctionType(scope.getRootNode().getJSType());
+    ObjectType superNodeType = null;
+
+    switch (superNode.getParent().getToken()) {
+      case CALL:
+        // Inside a constructor, `super` may have two different types. Calls to `super()` use the
+        // super-ctor type, while property accesses use the super-instance type. `Scopes` are only
+        // aware of the latter case.
+        if (enclosingFunctionType != null && enclosingFunctionType.isConstructor()) {
+          superNodeType = enclosingFunctionType.getSuperClassConstructor();
         }
-      }
-    } else if (context.isGetProp() || context.isGetElem()) {
-      // TODO(sdh): once getTypeOfThis supports statics, we can get rid of this branch, as well as
-      // the vanilla function search at the top and just return functionScope.getVar("super").
-      if (root.getParent().isStaticMember()) {
-        // Since the root is a static member, we're guaranteed that the parent scope is a class.
-        Node classNode = scope.getParent().getRootNode();
-        checkState(classNode.isClass());
-        FunctionType thisCtor = JSType.toMaybeFunctionType(classNode.getJSType());
-        if (thisCtor != null) {
-          FunctionType superCtor = thisCtor.getSuperClassConstructor();
-          if (superCtor != null) {
-            superNodeType = superCtor;
-          }
-        }
-      } else if (functionType != null) {
-        // Refer to a superclass instance property.
-        ObjectType thisInstance = ObjectType.cast(functionType.getTypeOfThis());
-        if (thisInstance != null) {
-          FunctionType superCtor = thisInstance.getSuperClassConstructor();
-          if (superCtor != null) {
-            ObjectType superInstance = superCtor.getInstanceType();
-            if (superInstance != null) {
-              superNodeType = superInstance;
-            }
-          }
-        }
-      }
+        break;
+
+      case GETELEM:
+      case GETPROP:
+        superNodeType = ObjectType.cast(functionScope.getSlot("super").getType());
+        break;
+
+      default:
+        throw new IllegalStateException(
+            "Unexpected parent of SUPER: " + superNode.getParent().toStringTree());
     }
-    superNode.setJSType(superNodeType);
+
+    superNode.setJSType(superNodeType != null ? superNodeType : unknownType);
   }
 
   private void traverseNewTarget(Node newTargetNode) {

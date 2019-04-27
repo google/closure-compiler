@@ -581,8 +581,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     Node fakeSuperDotM = wrapperArrowFunction.getLastChild();
     assertNode(fakeSuperDotM).hasJSTypeThat().isEqualTo(classAPropertyMType);
     Node fakeSuperNode = fakeSuperDotM.getFirstChild();
-    // TODO(b/118174876): We currently type `super` as unknown in static methods.
-    assertNode(fakeSuperNode).isCall().hasJSTypeThat().toStringIsEqualTo("?");
+    assertNode(fakeSuperNode).isCall().hasJSTypeThat().toStringIsEqualTo("(typeof A)");
     assertNode(fakeSuperNode.getFirstChild()).matchesQualifiedName("Object.getPrototypeOf");
   }
 

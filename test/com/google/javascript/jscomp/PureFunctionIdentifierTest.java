@@ -1590,14 +1590,16 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
   @Test
   public void testAmbiguousDefinitionsCallWithThis() {
-    String source = CompilerTypeTestCase.CLOSURE_DEFS + lines(
-        "var globalVar = 1;",
-        "A.modifiesThis = function() { this.x = 5; };",
-        "/**@constructor*/function Constructor() { Constructor.modifiesThis.call(this); };",
-        "Constructor.modifiesThis = function() {};",
-        "new Constructor();",
-        "A.modifiesThis();"
-    );
+    String source =
+        CompilerTypeTestCase.CLOSURE_DEFS
+            + lines(
+                "A.modifiesThis = function() { this.x = 5; };",
+                "B.modifiesThis = function() {};",
+                "",
+                "/** @constructor */ function Constructor() { B.modifiesThis.call(this); };",
+                "",
+                "new Constructor();",
+                "A.modifiesThis();");
 
     // Can't tell which modifiesThis is being called so it assumes both.
     assertPureCallsMarked(source, ImmutableList.of("Constructor"));

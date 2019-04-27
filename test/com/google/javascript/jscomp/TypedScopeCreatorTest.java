@@ -2630,34 +2630,38 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "  static method() {}",
             "}"));
 
-    FunctionType bar = (FunctionType) (findNameType("Bar", globalScope));
-    ObjectType barObject = bar.getInstanceType();
+    FunctionType barCtor = (FunctionType) findNameType("Bar", globalScope);
+    ObjectType barObject = barCtor.getInstanceType();
     JSType barConstructorProperty = barObject.getPropertyType("constructor");
 
-    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
-    ObjectType fooObject = foo.getInstanceType();
-    ObjectType fooProto = foo.getPrototype();
+    FunctionType fooCtor = (FunctionType) findNameType("Foo", globalScope);
+    ObjectType fooObject = fooCtor.getInstanceType();
+    ObjectType fooProto = fooCtor.getPrototype();
     JSType fooConstructorProperty = fooObject.getPropertyType("constructor");
-    Node fooCtorDef = getLabeledStatement("CTOR_BODY").statementNode.getAncestor(3);
 
-    assertType(foo).withTypeOfProp("method").isNotUnknown();
-    assertType(foo).withTypeOfProp("method").isNotEmpty();
+    Node superInvocation = getLabeledStatement("CTOR_BODY").statementNode.getFirstChild();
 
-    List<JSType> params = ImmutableList.copyOf(foo.getParameterTypes());
+    Node superRef = superInvocation.getFirstChild();
+    assertNode(superRef).hasToken(Token.SUPER).hasJSTypeThat().isEqualTo(barCtor);
+
+    assertType(fooCtor).withTypeOfProp("method").isNotUnknown();
+    assertType(fooCtor).withTypeOfProp("method").isNotEmpty();
+
+    List<JSType> params = ImmutableList.copyOf(fooCtor.getParameterTypes());
     assertThat(params).hasSize(1);
     assertType(params.get(0)).isNumber();
     assertType(barConstructorProperty).toStringIsEqualTo("(typeof Bar)");
 
+    Node fooCtorDef = NodeUtil.getEnclosingFunction(superInvocation);
     assertType(fooConstructorProperty).toStringIsEqualTo("(typeof Foo)");
     assertNode(fooProto.getOwnPropertyDefSite("constructor")).isSameAs(fooCtorDef);
 
     assertType(fooConstructorProperty).isSubtypeOf(barConstructorProperty);
-    // TODO(b/118174876): The type of `this` should be equal to the Foo class itself.
     assertType(fooConstructorProperty)
         .withTypeOfProp("method")
         .isFunctionTypeThat()
         .hasTypeOfThisThat()
-        .isUnknown();
+        .toStringIsEqualTo("(typeof Foo)");
   }
 
   @Test
@@ -2737,7 +2741,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     // Then
     FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
-    assertType(foo).withTypeOfProp("method").toStringIsEqualTo("function(string): undefined");
+    assertType(foo)
+        .withTypeOfProp("method")
+        .toStringIsEqualTo("function(this:(typeof Foo), string): undefined");
   }
 
   @Test
@@ -2773,14 +2779,18 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "    METHOD:;",
             "  }",
             "}"));
+    ObjectType bar = ((FunctionType) findNameType("Bar", globalScope)).getInstanceType();
+    ObjectType foo = ((FunctionType) findNameType("Foo", globalScope)).getInstanceType();
+
     TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
     TypedScope methodScope = methodBlockScope.getParentScope();
     assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
+    // TODO(b/130757979): Make this assertion using `ScopeSubject`.
+    assertType(methodScope.getSlot("super").getType()).isEqualTo(bar);
 
     FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
     assertType(method).toStringIsEqualTo("function(this:Foo, string): undefined");
-    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
-    assertType(foo.getInstanceType()).withTypeOfProp("method").isEqualTo(method);
+    assertType(foo).withTypeOfProp("method").isEqualTo(method);
   }
 
   @Test
@@ -2799,8 +2809,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
 
     FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
-    // TODO(sdh): Probably want function(this:function(new:Foo), string): undefined
-    assertType(method).toStringIsEqualTo("function(string): undefined");
+    assertType(method).toStringIsEqualTo("function(this:(typeof Foo), string): undefined");
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
     assertType(foo).withTypeOfProp("method").isEqualTo(method);
   }
@@ -2815,18 +2824,26 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "}",
             "class Bar extends Foo {",
             "  static method(arg) {",
-            "    METHOD:;",
+            "    METHOD: super.method(arg);",
             "  }",
             "}"));
-    TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
-    TypedScope methodScope = methodBlockScope.getParentScope();
-    assertScope(methodScope).declares("arg").directly().withTypeThat().isNumber();
+    FunctionType fooCtor = (FunctionType) findNameType("Foo", globalScope);
+    LabeledStatement superMethodCall = getLabeledStatement("METHOD");
 
-    FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
-    // TODO(sdh): Probably want function(this:function(new:Foo), string): undefined
-    assertType(method).toStringIsEqualTo("function(number): undefined");
-    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
-    assertType(foo).withTypeOfProp("method").isEqualTo(method);
+    TypedScope methodOverrideBlockScope = superMethodCall.enclosingScope;
+    TypedScope methodOverrideScope = methodOverrideBlockScope.getParentScope();
+    assertScope(methodOverrideScope).declares("arg").directly().withTypeThat().isNumber();
+    // TODO(b/130757979): Make this assertion using `ScopeSubject`.
+    assertType(methodOverrideScope.getSlot("super").getType()).isEqualTo(fooCtor);
+
+    FunctionType methodOverride = (FunctionType) methodOverrideScope.getRootNode().getJSType();
+    assertType(methodOverride).toStringIsEqualTo("function(this:(typeof Bar), number): undefined");
+    assertType(fooCtor)
+        .withTypeOfProp("method")
+        .toStringIsEqualTo("function(this:(typeof Foo), number): undefined");
+
+    Node superRef = superMethodCall.statementNode.getFirstChild().getFirstFirstChild();
+    assertNode(superRef).hasToken(Token.SUPER).hasJSTypeThat().isEqualTo(fooCtor);
   }
 
   @Test
@@ -2952,8 +2969,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
 
     FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
-    // TODO(sdh): Probably want function(this:function(new:Foo), string): undefined
-    assertType(method).toStringIsEqualTo("function(string): undefined");
+    assertType(method).toStringIsEqualTo("function(this:(typeof Foo), string): undefined");
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
     assertType(foo).withTypeOfProp("method").isEqualTo(method);
   }

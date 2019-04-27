@@ -118,6 +118,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             "};",
             "/**",
             " * @return {undefined}",
+            " * @this {(typeof a.b.c)}",
             " */",
             "foobar.exportedStaticMethod = function() {",
             "};",

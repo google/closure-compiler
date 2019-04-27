@@ -929,15 +929,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "/** @param {*} a */\n" +
         "C.m = function(a){}\n";
 
-    testNoWarning(
-        code + "C.m(1);");
+    testNoWarning(code + "C.m(1);");
 
     testWarning(code + "C.m('str');", CheckConformance.CONFORMANCE_VIOLATION);
 
-    testNoWarning(
-        code + "C.m.call(this, 1);");
+    testNoWarning(code + "C.m.call(C, 1);");
 
-    testWarning(code + "C.m.call(this, 'str');", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "C.m.call(C, 'str');", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   @Test

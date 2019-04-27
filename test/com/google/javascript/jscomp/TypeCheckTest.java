@@ -3855,10 +3855,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testStubFunctionDeclaration3() {
+  public void testStubFunctionDeclaration_static_onEs5Class() {
     testFunctionType(
-        "/** @constructor */ function f() {};" +
-        "/** @return {undefined} */ f.foo;",
+        lines(
+            "/** @constructor */ function f() {};", //
+            "/** @return {undefined} */ f.foo;"),
         "f.foo",
         "function(): undefined");
   }
@@ -8453,11 +8454,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testThis9() {
-    // In A.bar, the type of {@code this} is unknown.
-    testTypes("/** @constructor */function A(){};" +
-        "A.prototype.foo = 3;" +
-        "/** @return {string} */ A.bar = function() { return this.foo; };");
+  public void testTypeOfThis_inStaticMethod_onEs5Ctor_isUnknown() {
+    testTypes(
+        lines(
+            "/** @constructor */function A(){};",
+            "A.foo = 3;",
+            "/** @return {string} */ A.bar = function() { return this.foo; };"));
   }
 
   @Test

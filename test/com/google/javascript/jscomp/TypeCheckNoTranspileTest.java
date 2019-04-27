@@ -3486,8 +3486,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "mismatch of the method property type and the type of the property it overrides "
                 + "from supertype (typeof Base)",
-            "original: function((number|string)): undefined",
-            "override: function(string): undefined"));
+            "original: function(this:(typeof Base), (number|string)): undefined",
+            "override: function(this:(typeof Sub), string): undefined"));
   }
 
   @Test
@@ -3504,8 +3504,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "mismatch of the method property type and the type of the property it overrides "
                 + "from supertype (typeof Base)",
-            "original: function((number|string)): undefined",
-            "override: function(string): undefined"));
+            "original: function(this:(typeof Base), (number|string)): undefined",
+            "override: function(this:(typeof Sub), string): undefined"));
   }
 
   @Test
@@ -3544,7 +3544,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "mismatch of the method property type and the type of the property it overrides "
                 + "from supertype (typeof Base)",
-            "original: function((number|string)): undefined",
+            "original: function(this:(typeof Base), (number|string)): undefined",
             "override: function(string): undefined"));
   }
 
@@ -3637,7 +3637,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "mismatch of the method property type and the type of the property it overrides "
                 + "from supertype (typeof ns.Base)",
-            "original: function(string): undefined",
+            "original: function(this:(typeof ns.Base), string): undefined",
             "override: function(number): undefined"));
   }
 
@@ -4064,16 +4064,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassTypeOfThisInStaticMethod() {
     testTypes(
         lines(
-            "class Foo {",
+            "class Foo {", //
             "  static foo() {",
             "    var /** null */ foo = this;",
             "  }",
-            "}"));
-        // TODO(sdh): Should be an error, but wait on it since it's a new warning.
-        // lines(
-        //     "initializing variable",
-        //     "found   : function(new:Foo): undefined",
-        //     "required: null"));
+            "}"),
+        lines(
+            "initializing variable", //
+            "found   : (typeof Foo)",
+            "required: null"));
   }
 
   @Test

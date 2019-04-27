@@ -1685,18 +1685,29 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       // Infer the context type.
+      JSType fallbackReceiverType = null;
       if (ownerType != null
           && ownerType.isFunctionPrototypeType()
           && ownerType.getOwnerFunction().hasInstanceType()) {
-        builder.inferThisType(info, ownerType.getOwnerFunction().getInstanceType());
+        fallbackReceiverType = ownerType.getOwnerFunction().getInstanceType();
+      } else if (ownerType != null
+          && ownerType.isFunctionType()
+          && ownerType.toMaybeFunctionType().hasInstanceType()
+          && lvalueNode != null
+          && lvalueNode.isStaticMember()) {
+        // Limit this case to members of ctors and interfaces decalared using `static`. Most
+        // namespaces, like object literals, are assumed to declare free functions, so we exclude
+        // them. Additionally, methods *assigned* to a ctor, especially an ES5 ctor, were never
+        // designed with static polymorphism in mind, so excluding them preserves their assumptions.
+        fallbackReceiverType = ownerType;
       } else if (ownerNode != null && ownerNode.isThis()) {
-        // If we have a 'this' node, use the scope type.
-        builder.inferThisType(info, currentScope.getTypeOfThis());
-      } else {
-        builder.inferThisType(info);
+        fallbackReceiverType = currentScope.getTypeOfThis();
       }
 
-      return builder.inferParameterTypes(parametersNode, info).buildAndRegister();
+      return builder
+          .inferThisType(info, fallbackReceiverType)
+          .inferParameterTypes(parametersNode, info)
+          .buildAndRegister();
     }
 
     /**

@@ -3014,26 +3014,45 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEs6ClassSideInheritedMethods_referencedWithThis_areDisambiguated() {
-    // TODO(b/117437011): compiler should disambiguate `method` but can't because `this` is unknown
-    // in static methods
-    testSame(
+    test(
         lines(
             "class Foo {",
             "  static method() {}",
             "  static useMethod() {",
-            "    this.method();", // this could refer to either Foo.method or SubFoo.method
+            "    this.method();",
             "  }",
             "}",
             "class SubFoo extends Foo {",
             "  static method() {}",
             "}",
+            "",
             "class Bar {",
             "  static method() {}",
             "}",
+            "",
             "SubFoo.useMethod();",
             "Foo.method();",
             "SubFoo.method();",
-            "Bar.method();"));
+            "Bar.method();"),
+        lines(
+            "class Foo {",
+            "  static _typeof_Foo_$method() {}",
+            "  static useMethod() {",
+            "    this._typeof_Foo_$method();",
+            "  }",
+            "}",
+            "class SubFoo extends Foo {",
+            "  static _typeof_Foo_$method() {}",
+            "}",
+            "",
+            "class Bar {",
+            "  static _typeof_Bar_$method() {}",
+            "}",
+            "",
+            "SubFoo.useMethod();",
+            "Foo._typeof_Foo_$method();",
+            "SubFoo._typeof_Foo_$method();",
+            "Bar._typeof_Bar_$method();"));
   }
 
   @Test

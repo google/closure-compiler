@@ -248,7 +248,7 @@ public class AstFactoryTest {
                 "class A {}",
                 "class B extends A {", //
                 "  method() {",
-                "    super;", // created `super` should match this one
+                "    super.method();", // created `super` should match this one
                 "  }",
                 "}",
                 ""));
@@ -268,7 +268,8 @@ public class AstFactoryTest {
         methodFunction
             .getLastChild() // method function body
             .getFirstChild() // expr_result
-            .getOnlyChild(); // super
+            .getOnlyChild() // call "method"
+            .getFirstFirstChild(); // super
 
     Node newSuper = astFactory.createSuperForFunction(methodFunction);
     assertNode(newSuper).isEqualTo(existingSuper);
