@@ -2389,6 +2389,21 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassErrorsReportedOnClassAndNotConstructor() {
+    testTypes(
+        lines(
+            "/** @implements {number} */",
+            "class Foo {", //
+            "  constructor() {",
+            // Make sure there's an explicit constructor.
+            "  }",
+            "}"),
+        // The actual error isn't important. What matters is that it's a class-level error and it's
+        // only reported once.
+        lines("can only implement interfaces"));
+  }
+
+  @Test
   public void testInvalidInvocationOfClassConstructor() {
     testTypes(
         lines(

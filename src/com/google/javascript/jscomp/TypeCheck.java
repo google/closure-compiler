@@ -2349,6 +2349,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param n The node being visited.
    */
   private void visitFunction(Node n) {
+    if (NodeUtil.isEs6Constructor(n)) {
+      return; // These will be checked via the CLASS node.
+    }
+
     FunctionType functionType = JSType.toMaybeFunctionType(n.getJSType());
     if (functionType.isConstructor()) {
       checkConstructor(n, functionType);
