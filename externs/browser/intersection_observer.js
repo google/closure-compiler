@@ -68,7 +68,7 @@ IntersectionObserverEntry.prototype.intersectionRect;
 /**
  * Ratio of intersectionRect area to boundingClientRect area.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserverentry-intersectionratio
- * @const {!number}
+ * @const {number}
  */
 IntersectionObserverEntry.prototype.intersectionRatio;
 
@@ -135,7 +135,7 @@ IntersectionObserver.prototype.root;
  * Offsets applied to the intersection root’s bounding box, effectively growing
  * or shrinking the box that is used to calculate intersections.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-rootmargin
- * @const {!string}
+ * @const {string}
  */
 IntersectionObserver.prototype.rootMargin;
 
@@ -144,7 +144,7 @@ IntersectionObserver.prototype.rootMargin;
  * threshold is a ratio of intersection area to bounding box area of an observed
  * target.
  * @see https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-thresholds
- * @const {!Array<!number>}
+ * @const {!Array<number>}
  */
 IntersectionObserver.prototype.thresholds;
 

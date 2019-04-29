@@ -34,7 +34,7 @@ function TextDecoder(encoding, options) {}
 /**
  * @param {!BufferSource=} input
  * @param {?Object=} options
- * @return {!string}
+ * @return {string}
  * @see https://encoding.spec.whatwg.org/#textdecoder
  */
 TextDecoder.prototype.decode = function decode(input, options) {};

@@ -134,7 +134,7 @@ function alert(message) {}
 function clearImmediate(immediateID) {}
 
 /**
- * @param {number|undefined?} intervalID
+ * @param {?number|undefined} intervalID
  * @see https://developer.mozilla.org/en/DOM/window.clearInterval
  * @suppress {duplicate}
  * @return {undefined}
@@ -142,7 +142,7 @@ function clearImmediate(immediateID) {}
 function clearInterval(intervalID) {}
 
 /**
- * @param {number|undefined?} timeoutID
+ * @param {?number|undefined} timeoutID
  * @see https://developer.mozilla.org/en/DOM/window.clearTimeout
  * @suppress {duplicate}
  * @return {undefined}

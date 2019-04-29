@@ -340,7 +340,7 @@ Document.prototype.anchors;
  */
 Document.prototype.applets;
 /** @type {boolean} */ Document.prototype.async;
-/** @type {string?} */ Document.prototype.baseURI;
+/** @type {?string} */ Document.prototype.baseURI;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.bgColor

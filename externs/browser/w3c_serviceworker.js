@@ -643,7 +643,7 @@ FetchEvent.prototype.client;
 /** @type {?string} */
 FetchEvent.prototype.clientId;
 
-/** @type {!boolean} */
+/** @type {boolean} */
 FetchEvent.prototype.isReload;
 
 /** @type {?string} */
@@ -673,7 +673,7 @@ FetchEvent.prototype.default = function() {};
  *   request: (!Request|undefined),
  *   preloadResponse: (!Promise<Response>),
  *   client: (!ServiceWorkerClient|undefined),
- *   isReload: (!boolean|undefined)
+ *   isReload: (boolean|undefined)
  * }}
  */
 var FetchEventInit;
