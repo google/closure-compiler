@@ -335,6 +335,7 @@ Object.prototype.constructor = function() {};
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineGetter
  * @return {undefined}
+ * @deprecated
  */
 Object.prototype.__defineGetter__ = function(sprop, fun) {};
 
@@ -348,6 +349,7 @@ Object.prototype.__defineGetter__ = function(sprop, fun) {};
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineSetter
  * @return {undefined}
+ * @deprecated
  */
 Object.prototype.__defineSetter__ = function(sprop, fun) {};
 
@@ -379,6 +381,7 @@ Object.prototype.isPrototypeOf = function(other) {};
  * getter should be returned
  * @return {Function}
  * @nosideeffects
+ * @deprecated
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/lookupGetter
  */
 Object.prototype.__lookupGetter__ = function(sprop) {};
@@ -391,6 +394,7 @@ Object.prototype.__lookupGetter__ = function(sprop) {};
  *     setter should be returned.
  * @return {Function}
  * @nosideeffects
+ * @deprecated
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/lookupSetter
  */
 Object.prototype.__lookupSetter__ = function(sprop) {};
@@ -401,6 +405,7 @@ Object.prototype.__lookupSetter__ = function(sprop) {};
  *
  * @param {Function} fun
  * @return {*}
+ * @deprecated
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/noSuchMethod
  */
 Object.prototype.__noSuchMethod__ = function(fun) {};
@@ -2398,5 +2403,6 @@ function URIError(opt_message, opt_file, opt_line) {}
 /**
  * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx
  * @type {function(new:?, string, string=)}
+ * @deprecated
  */
 function ActiveXObject(progId, opt_location) {}
