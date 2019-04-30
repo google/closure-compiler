@@ -1498,6 +1498,7 @@ public final class NodeUtil {
    * the current node's type is one of the reasons why a subtree has side effects.
    */
   static boolean nodeTypeMayHaveSideEffects(Node n, AbstractCompiler compiler) {
+    checkNotNull(compiler);
     if (isAssignmentOp(n)) {
       return true;
     }
