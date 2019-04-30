@@ -114,9 +114,13 @@ function PerformanceNavigationTiming() {}
 
 /** @constructor */
 function PerformanceNavigation() {}
+/** @const {number} */ PerformanceNavigation.TYPE_NAVIGATE;
 /** @const {number} */ PerformanceNavigation.prototype.TYPE_NAVIGATE;
+/** @const {number} */ PerformanceNavigation.TYPE_RELOAD;
 /** @const {number} */ PerformanceNavigation.prototype.TYPE_RELOAD;
+/** @const {number} */ PerformanceNavigation.TYPE_BACK_FORWARD;
 /** @const {number} */ PerformanceNavigation.prototype.TYPE_BACK_FORWARD;
+/** @const {number} */ PerformanceNavigation.TYPE_RESERVED;
 /** @const {number} */ PerformanceNavigation.prototype.TYPE_RESERVED;
 /** @type {number} */ PerformanceNavigation.prototype.type;
 /** @type {number} */ PerformanceNavigation.prototype.redirectCount;
