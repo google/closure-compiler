@@ -2785,8 +2785,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
     TypedScope methodScope = methodBlockScope.getParentScope();
     assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
-    // TODO(b/130757979): Make this assertion using `ScopeSubject`.
-    assertType(methodScope.getSlot("super").getType()).isEqualTo(bar);
+    assertScope(methodScope).declares("super").withTypeThat().isEqualTo(bar);
 
     FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
     assertType(method).toStringIsEqualTo("function(this:Foo, string): undefined");
@@ -2833,8 +2832,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedScope methodOverrideBlockScope = superMethodCall.enclosingScope;
     TypedScope methodOverrideScope = methodOverrideBlockScope.getParentScope();
     assertScope(methodOverrideScope).declares("arg").directly().withTypeThat().isNumber();
-    // TODO(b/130757979): Make this assertion using `ScopeSubject`.
-    assertType(methodOverrideScope.getSlot("super").getType()).isEqualTo(fooCtor);
+    assertScope(methodOverrideScope).declares("super").withTypeThat().isEqualTo(fooCtor);
 
     FunctionType methodOverride = (FunctionType) methodOverrideScope.getRootNode().getJSType();
     assertType(methodOverride).toStringIsEqualTo("function(this:(typeof Bar), number): undefined");

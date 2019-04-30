@@ -2067,7 +2067,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         return rValue.getFirstChild();
       }
 
-      Var var = info.scope.getVar(rValue.getQualifiedName());
+      if (!rValue.isName()) {
+        return null;
+      }
+
+      Var var = info.scope.getVar(rValue.getString());
       if (var == null) {
         return null;
       }

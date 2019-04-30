@@ -51,8 +51,6 @@ class LiveVariablesAnalysis
 
   static final int MAX_VARIABLES_TO_ANALYZE = 100;
 
-  public static final String ARGUMENT_ARRAY_ALIAS = "arguments";
-
   private static class LiveVariableJoinOp implements JoinOp<LiveVariableLattice> {
     @Override
     public LiveVariableLattice apply(List<LiveVariableLattice> in) {
@@ -314,7 +312,7 @@ class LiveVariablesAnalysis
         return;
 
       case NAME:
-        if (isArgumentsName(n)) {
+        if (n.getString().equals("arguments")) {
           markAllParametersEscaped();
         } else if (!NodeUtil.isLhsByDestructuring(n)) {
           // Only add names in destructuring patterns if they're not lvalues.
@@ -406,17 +404,5 @@ class LiveVariablesAnalysis
         escaped.add(jsScope.getVar(arg.getString()));
       }
     }
-  }
-
-  private boolean isArgumentsName(Node n) {
-    boolean childDeclared;
-    if (jsScopeChild != null) {
-      childDeclared = jsScopeChild.hasOwnSlot(ARGUMENT_ARRAY_ALIAS);
-    } else {
-      childDeclared = true;
-    }
-    return n.isName()
-        && n.getString().equals(ARGUMENT_ARRAY_ALIAS)
-        && (!jsScope.hasOwnSlot(ARGUMENT_ARRAY_ALIAS) || !childDeclared);
   }
 }

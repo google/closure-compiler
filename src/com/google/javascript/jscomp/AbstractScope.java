@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Scope contains information about a variable scope in JavaScript. Scopes can be nested, a scope
@@ -151,17 +152,48 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
     vars.clear();
   }
 
-  @Override
-  public final V getSlot(String name) {
-    // TODO(sdh): This behavior is inconsistent with getOwnSlot, hasSlot, and hasOwnSlot
-    // when it comes to implicit vars.  The other three methods all exclude implicits,
-    // but this one returns them.  It would be good to clean this up one way or the other.
-    return getVar(name);
+  /** Returns true iff this scope implies a slot with the given name. */
+  private final boolean hasOwnImplicitSlot(@Nullable ImplicitVar name) {
+    return name != null && name.isMadeByScope(this);
+  }
+
+  /** Returns true if a variable is declared in this scope, with no recursion. */
+  public final boolean hasOwnSlot(String name) {
+    return vars.containsKey(name) || hasOwnImplicitSlot(ImplicitVar.of(name));
+  }
+
+  /** Returns true if a variable is declared in this or any parent scope. */
+  public final boolean hasSlot(String name) {
+    for (S scope = thisScope(); scope != null; scope = scope.getParent()) {
+      if (scope.hasOwnSlot(name)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Nullable
+  private final V getOwnImplicitSlot(@Nullable ImplicitVar name) {
+    if (!hasOwnImplicitSlot(name)) {
+      return null;
+    }
+
+    return implicitVars.computeIfAbsent(name, this::makeImplicitVar);
   }
 
   @Override
   public final V getOwnSlot(String name) {
-    return vars.get(name);
+    V var = vars.get(name);
+    if (var != null) {
+      return var;
+    }
+
+    return getOwnImplicitSlot(ImplicitVar.of(name));
+  }
+
+  @Override
+  public final V getSlot(String name) {
+    return getVar(name);
   }
 
   /**
@@ -169,65 +201,29 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
    */
   // Non-final for jsdev tests
   public V getVar(String name) {
-    ImplicitVar implicit = name != null ? ImplicitVar.of(name) : null;
-    if (implicit != null) {
-      return getImplicitVar(implicit, true);
-    }
-    S scope = thisScope();
-    while (scope != null) {
-      V var = scope.getOwnSlot(name);
+    for (AbstractScope<S, V> scope = thisScope(); scope != null; scope = scope.getParent()) {
+      @Nullable V var = scope.getOwnSlot(name);
       if (var != null) {
         return var;
       }
-      // Recurse up the parent Scope
-      scope = scope.getParent();
     }
     return null;
   }
 
   /**
-   * Get a unique Var object to represent "arguments" within this scope
+   * Get a unique Var object to represent "arguments" within this scope.
+   *
+   * <p>This explicitly excludes user declared variables that are names "arguments". It only returns
+   * special "arguments" variable that is inherent to a function.
    */
   public final V getArgumentsVar() {
-    return getImplicitVar(ImplicitVar.ARGUMENTS, false);
-  }
-
-  /** Get a unique Var object of the given implicit var type. */
-  private final V getImplicitVar(ImplicitVar var, boolean allowDeclaredVars) {
-    S scope = thisScope();
-    while (scope != null) {
-      if (var.isMadeByScope(scope)) {
-        V result = ((AbstractScope<S, V>) scope).implicitVars.get(var);
-        if (result == null) {
-          ((AbstractScope<S, V>) scope).implicitVars.put(var, result = scope.makeImplicitVar(var));
-        }
-        return result;
+    for (AbstractScope<S, V> scope = thisScope(); scope != null; scope = scope.getParent()) {
+      @Nullable V arguments = scope.getOwnImplicitSlot(ImplicitVar.ARGUMENTS);
+      if (arguments != null) {
+        return arguments;
       }
-      V result = allowDeclaredVars ? scope.getOwnSlot(var.name) : null;
-      if (result != null) {
-        return result;
-      }
-      // Recurse up the parent Scope
-      scope = scope.getParent();
     }
     return null;
-  }
-
-  /** Returns true if a variable is declared in this scope, with no recursion. */
-  public final boolean hasOwnSlot(String name) {
-    return vars.containsKey(name);
-  }
-
-  /** Returns true if a variable is declared in this or any parent scope. */
-  public final boolean hasSlot(String name) {
-    S scope = thisScope();
-    while (scope != null) {
-      if (scope.hasOwnSlot(name)) {
-        return true;
-      }
-      scope = scope.getParent();
-    }
-    return false;
   }
 
   /**
@@ -249,7 +245,9 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
    */
   private boolean isBleedingFunctionName(String name) {
     V var = getVar(name);
-    return var != null && var.getNode().getParent().isFunction();
+    return var != null //
+        && var.getNode() != null //
+        && var.getNode().getParent().isFunction();
   }
 
   /**

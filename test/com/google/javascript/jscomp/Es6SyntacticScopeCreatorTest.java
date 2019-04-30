@@ -790,6 +790,9 @@ public final class Es6SyntacticScopeCreatorTest {
     Node function = root.getFirstChild();
     checkState(function.isFunction(), function);
     Scope fScope = scopeCreator.createScope(function, global);
+    // Check "has" before "get" to ensure it works before lazy instantiation.
+    assertThat(fScope.hasOwnSlot("arguments")).isTrue();
+    assertThat(fScope.hasSlot("arguments")).isTrue();
     Var arguments = fScope.getArgumentsVar();
     assertThat(fScope.getVar("arguments")).isSameAs(arguments);
 
@@ -838,25 +841,59 @@ public final class Es6SyntacticScopeCreatorTest {
     Node function = root.getFirstChild();
     checkState(function.isFunction(), function);
     Scope fScope = scopeCreator.createScope(function, global);
-    assertThat(fScope.hasSlot("this")).isFalse();
+    // Check "has" before "get" to ensure it works before lazy instantiation.
+    assertThat(fScope.hasOwnSlot("this")).isTrue();
+    assertThat(fScope.hasSlot("this")).isTrue();
     Var thisVar = fScope.getVar("this");
     assertThat(thisVar.isThis()).isTrue();
 
     Node fBlock = NodeUtil.getFunctionBody(function);
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
-    assertScope(fBlockScope).doesNotDeclare("this");
+    assertScope(fBlockScope).declares("this");
     assertThat(fBlockScope.getVar("this")).isSameAs(thisVar);
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
-    assertScope(blockScope).doesNotDeclare("this");
+    assertScope(blockScope).declares("this");
     assertThat(blockScope.getVar("this")).isSameAs(thisVar);
     assertThat(blockScope.getVar("this").getScope()).isSameAs(fScope);
 
     Node gFunction = ifBlock.getFirstChild();
     Scope gScope = scopeCreator.createScope(gFunction, blockScope);
-    assertScope(gScope).doesNotDeclare("this");
+    assertScope(gScope).declares("this").directly();
     assertThat(gScope.getVar("this").getScope()).isSameAs(gScope);
+  }
+
+  @Test
+  public void testTheSuperVariable() {
+    String js = "function f() { if (true) { function g() {} } }";
+    Node root = getRoot(js);
+    Scope global = scopeCreator.createScope(root, null);
+
+    Node function = root.getFirstChild();
+    checkState(function.isFunction(), function);
+    Scope fScope = scopeCreator.createScope(function, global);
+    // Check "has" before "get" to ensure it works before lazy instantiation.
+    assertThat(fScope.hasOwnSlot("super")).isTrue();
+    assertThat(fScope.hasSlot("super")).isTrue();
+    Var thisVar = fScope.getVar("super");
+
+    Node fBlock = NodeUtil.getFunctionBody(function);
+    Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
+    assertScope(fBlockScope).declares("super");
+    assertThat(fBlockScope.getVar("super")).isSameAs(thisVar);
+
+    Node ifBlock = fBlock.getFirstChild().getLastChild();
+    Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
+    assertScope(blockScope).declares("super");
+    assertThat(blockScope.getVar("super")).isSameAs(thisVar);
+    assertThat(blockScope.getVar("super").getScope()).isSameAs(fScope);
+
+    Node gFunction = ifBlock.getFirstChild();
+    Scope gScope = scopeCreator.createScope(gFunction, blockScope);
+    assertScope(gScope).declares("super").directly();
+    assertThat(gScope.getVar("super").getScope()).isSameAs(gScope);
+    assertThat(gScope.getVar("super")).isNotSameAs(gScope.getVar("this"));
   }
 
   @Test
