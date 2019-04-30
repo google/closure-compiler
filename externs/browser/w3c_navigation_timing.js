@@ -288,6 +288,8 @@ function PerformanceObserverInit() {}
 
 /** @type {undefined|!Array<string>} */
 PerformanceObserverInit.prototype.entryTypes;
+/** @type {undefined|string} */
+PerformanceObserverInit.prototype.type;
 /** @type {undefined|boolean} */
 PerformanceObserverInit.prototype.buffered;
 
