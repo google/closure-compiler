@@ -49,6 +49,8 @@ public class PolymerPassTest extends CompilerTestCase {
       lines(
           MINIMAL_EXTERNS,
           "/** @constructor */",
+          "var Element = function() {};",
+          "/** @constructor @extends {Element} */",
           "var HTMLElement = function() {};",
           "/** @constructor @extends {HTMLElement} */",
           "var HTMLInputElement = function() {};",
@@ -57,6 +59,23 @@ public class PolymerPassTest extends CompilerTestCase {
 
   private static final String EXTERNS_SUFFIX =
       lines(
+          "/**",
+          " * @typedef {{",
+          " *   type: !Function,",
+          " *   value: (* | undefined),",
+          " *   readOnly: (boolean | undefined),",
+          " *   computed: (string | undefined),",
+          " *   reflectToAttribute: (boolean | undefined),",
+          " *   notify: (boolean | undefined),",
+          " *   observer: (string | function(this:?, ?, ?) | undefined)",
+          " * }}",
+          " */",
+          "let PolymerElementPropertiesMeta;",
+          "",
+          "/**",
+          " * @typedef {Object<string, !Function|!PolymerElementPropertiesMeta>}",
+          " */",
+          "let PolymerElementProperties;",
           "/** @type {!Object} */",
           "PolymerElement.prototype.$;",
           "PolymerElement.prototype.created = function() {};",
@@ -79,6 +98,14 @@ public class PolymerPassTest extends CompilerTestCase {
           " * @return {!Function}",
           " */",
           "var Polymer = function(a) {};",
+          // In the actual code Polymer.Element comes from a mixin. This definition is simplified.
+          "/**",
+          " * @polymer",
+          " */",
+          "Polymer.Element = class {};",
+          "",
+          "/** @type {!Object<string, !Element>} */",
+          "Polymer.Element.prototype.$;",
           "var alert = function(msg) {};");
 
   private static final String EXTERNS = lines(EXTERNS_PREFIX, EXTERNS_SUFFIX);
@@ -168,9 +195,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  is: 'x-element',",
             "});"));
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
-
     test(
         lines(
             "var X = class extends Polymer.Element {",
@@ -201,9 +225,6 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testLetTarget() {
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
-
     test(
         lines(
             "let X = Polymer({",
@@ -218,8 +239,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "var X = function() {};",
             "X = Polymer(/** @lends {X.prototype} */ {is:'x-element'});"));
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
 
     test(
         lines(
@@ -238,9 +257,6 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testConstTarget() {
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
-
     testError(
         lines(
             "const X = Polymer({",
@@ -298,8 +314,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  is: 'x-element',",
             "});"));
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
 
     test(
         lines(
@@ -320,11 +334,9 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testComputedPropName() {
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
     // TypeCheck cannot grab a name from a complicated computedPropName
-    disableTypeCheck();
-
-    test("var X = Polymer({is:'x-element', [name + (() => 42)]: function() {return 42;}});",
+    test(
+        "var X = Polymer({is:'x-element', [name + (() => 42)]: function() {return 42;}});",
         lines(
             "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
             "var X = function() {}",
@@ -364,8 +376,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  });",
             "})()"));
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
 
     test(
         lines(
@@ -415,9 +425,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "    sayHi: function() { alert('hi'); },",
             "  });",
             "})()"));
-
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
 
     test(
         lines(
@@ -548,9 +555,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "    alert('Thank you for clicking');",
             "  },",
             "});"));
-
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
 
     test(
         lines(
@@ -718,9 +722,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"));
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
-
     test(
         lines(
             "/** @constructor */",
@@ -825,9 +826,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"));
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
-
     test(
         lines(
             "/** @constructor */",
@@ -921,9 +919,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "    },",
             "  },",
             "});"));
-
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
 
     test(
         lines(
@@ -1075,9 +1070,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @param {!Array<string>} pets **/",
             "Polymera_BInterface.prototype._setPets;"));
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
-
     String jsClass = lines(
         "class A extends Polymer.Element {",
         "  static get is() { return 'a-element'; }",
@@ -1223,8 +1215,6 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testPolymerClassObserversTyped() {
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         lines(
             "class FooElement extends Polymer.Element {",
@@ -1392,8 +1382,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"));
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         lines(
             "class Foo extends Polymer.Element {",
@@ -1435,7 +1423,7 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDollarSignPropsConvertedToBrackets() {
+  public void testDollarSignPropsConvertedToBrackets_polymer1Style() {
     test(
         lines(
             "/** @constructor */",
@@ -1468,7 +1456,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "    this.$.otherThing.touch();",
             "  },",
             "});"),
-
         lines(
             "/** @constructor */",
             "var SomeType = function() {};",
@@ -1506,9 +1493,11 @@ public class PolymerPassTest extends CompilerTestCase {
             "    this.$['otherThing'].touch();",
             "  },",
             "});"));
+  }
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
+  @Test
+  public void testDollarSignPropsConvertedToBrackets_polymer2Style() {
+    ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
     test(
         lines(
             "class Foo extends Polymer.Element {",
@@ -1518,7 +1507,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "      /** @type {!HTMLElement} */",
             "      propName: {",
             "        type: Object,",
-            "        value: function() { return this.$.id; },",
+            "        value: function() {",
+            "          return /** @type {!HTMLElement} */ (this.$['id']);",
+            "        },",
             "      }",
             "    };",
             "  }",
@@ -1547,7 +1538,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "      propName: {",
             "        type: Object,",
             "        /** @this {Foo} @return {!HTMLElement} */",
-            "        value: function() { return this.$['id']; },",
+            "        value: function() {",
+            "          return /** @type {!HTMLElement} */ (this.$['id']);",
+            "        },",
             "      }",
             "    };",
             "  }",
@@ -2845,10 +2838,11 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testInvalid1() {
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     testWarning("var x = Polymer('blah');", POLYMER_DESCRIPTOR_NOT_VALID);
-    testWarning("var x = Polymer('foo-bar', {});", POLYMER_DESCRIPTOR_NOT_VALID);
+    test(
+        srcs("var x = Polymer('foo-bar', {});"),
+        warning(POLYMER_DESCRIPTOR_NOT_VALID),
+        warning(TypeCheck.WRONG_ARGUMENT_COUNT));
     testError("var x = Polymer({},'blah');", POLYMER_UNEXPECTED_PARAMS);
     testError("var x = Polymer({});", POLYMER_MISSING_IS);
 
@@ -2908,8 +2902,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"),
         POLYMER_INVALID_PROPERTY);
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     testError(
         lines(
             "var x = class extends Polymer.Element {",
@@ -3054,8 +3046,6 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testFeaturesInFunctionBody() {
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         lines(
             "var X = Polymer({",
@@ -3094,10 +3084,9 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testPolymerElementAnnotation1() {
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         lines(
+            "class Bar {}",
             "/** @constructor */",
             "var User = function() {};",
             "/** @polymer */",
@@ -3117,6 +3106,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
+            "class Bar {}",
             "/** @constructor */",
             "var User = function() {};",
             "/** @polymer */",
@@ -3148,10 +3138,9 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testPolymerElementAnnotation2() {
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         lines(
+            "class Foo {}",
             "/** @constructor */",
             "var User = function() {};",
             "var a = {};",
@@ -3172,6 +3161,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "};"),
         lines(
+            "class Foo {}",
             "/** @constructor */",
             "var User = function() {};",
             "var a = {};",
@@ -3204,10 +3194,9 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testPolymerElementAnnotation3() {
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         lines(
+            "class Foo {}",
             "/** @interface */",
             "function User() {};",
             "/** @type {boolean} */ User.prototype.id;",
@@ -3229,6 +3218,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "};"),
         lines(
+            "class Foo {}",
             "/** @interface */",
             "function User() {};",
             "/** @type {boolean} */ User.prototype.id;",
@@ -3308,8 +3298,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }),",
             "});"));
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         2,
         lines(
@@ -3410,8 +3398,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }),",
             "});"));
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         2,
         lines(
@@ -3513,8 +3499,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }),",
             "});"));
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         2,
         lines(
@@ -3687,8 +3671,7 @@ public class PolymerPassTest extends CompilerTestCase {
   @Test
   public void testSimpleObserverStringsConvertedToReferences1() {
     propertyRenamingEnabled = true;
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
+
     test(
         2,
         lines(
@@ -3753,8 +3736,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testSimpleObserverStringsConvertedToReferences2() {
     propertyRenamingEnabled = true;
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         2,
         lines(
@@ -3821,8 +3802,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testSimpleObserverStringsConvertedToReferences3() {
     propertyRenamingEnabled = true;
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         2,
         lines(
@@ -3887,8 +3866,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testReflectionForComputedPropertyStrings1() {
     propertyRenamingEnabled = true;
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         2,
         lines(
@@ -3962,8 +3939,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testReflectionForComputedPropertyStrings2() {
     propertyRenamingEnabled = true;
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         2,
         lines(
@@ -4035,8 +4010,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testParseErrorForComputedPropertyStrings1() {
     propertyRenamingEnabled = true;
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     polymerVersion = 2;
     super.testError(
         lines(
@@ -4067,8 +4040,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testParseErrorForComputedPropertyStrings2() {
     propertyRenamingEnabled = true;
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     polymerVersion = 2;
     super.testError(
         lines(
@@ -4099,8 +4070,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testReflectionForComplexObservers() {
     propertyRenamingEnabled = true;
 
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    disableTypeCheck();
     test(
         2,
         lines(

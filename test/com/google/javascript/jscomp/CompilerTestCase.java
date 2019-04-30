@@ -1702,7 +1702,7 @@ public abstract class CompilerTestCase {
                     + " time(s). Warnings: \n"
                     + LINE_JOINER.join(aggregateWarnings))
             .that(aggregateWarningCount)
-            .isEqualTo(numRepetitions);
+            .isEqualTo(numRepetitions * expectedWarnings.size());
         for (int i = 0; i < numRepetitions; i++) {
           assertWithMessage("compile warnings from repetition " + (i + 1))
               .that(errorManagers[i].getWarnings())
