@@ -1889,7 +1889,7 @@ String.prototype.quote = function() {};
  *
  * @this {String|string}
  * @param {RegExp|string} pattern
- * @param {string|Function} replacement
+ * @param {?string|function(string, ...?):*} replacement
  * @return {string}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace
  */
