@@ -6984,6 +6984,31 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testTTL() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    DiagnosticType[] errors =
+        new DiagnosticType[] {RhinoErrorReporter.PARSE_ERROR, RhinoErrorReporter.TYPE_PARSE_ERROR};
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "/**",
+              " * @template T := maprecord(record({a: 'number'}), (k, v) => record({[k]: 'string'})"
+                  + " =:",
+              " */",
+              "function f() {}")
+        },
+        null,
+        errors);
+  }
+
+  @Test
   public void testOptionalCatchBinding_optimizeAndTypecheck() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
@@ -6996,7 +7021,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         new String[] {
           lines(
               "try {", //
-              " alert('try');",
+              "  alert('try');",
               "} catch {",
               "  alert('caught');",
               "}")

@@ -260,7 +260,10 @@ public final class TypeTransformationParser {
         sourceFile, typeTransformationString, config, errorReporter);
     Node ast = result.ast;
     // Check that the expression is a script with an expression result
-    if (!ast.isScript() || !ast.getFirstChild().isExprResult()) {
+    if (ast == null
+        || !ast.isScript()
+        || !ast.hasChildren()
+        || !ast.getFirstChild().isExprResult()) {
       warnInvalidExpression("type transformation", ast);
       return false;
     }
