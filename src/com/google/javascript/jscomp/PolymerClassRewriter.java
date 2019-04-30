@@ -73,9 +73,10 @@ final class PolymerClassRewriter {
    * @param exprRoot The root expression of the call to Polymer({}).
    * @param cls The extracted {@link PolymerClassDefinition} for the Polymer element created by this
    *     call.
+   * @param isInGlobalOrModuleScope whether this call is either directly in a script or module body
    */
   void rewritePolymerCall(
-      Node exprRoot, final PolymerClassDefinition cls, boolean isInGlobalScope) {
+      Node exprRoot, final PolymerClassDefinition cls, boolean isInGlobalOrModuleScope) {
     Node objLit = checkNotNull(cls.descriptor);
 
     // Add {@code @lends} to the object literal.
@@ -135,17 +136,22 @@ final class PolymerClassRewriter {
     Node statements = block.removeChildren();
     Node parent = exprRoot.getParent();
 
-    // If the call to Polymer() is not in the global scope and the assignment target
-    // is not namespaced (which likely means it's exported to the global scope), put the type
-    // declaration into the global scope at the start of the current script.
-    //
-    // This avoids unknown type warnings which are a result of the compiler's poor understanding of
-    // types declared inside IIFEs or any non-global scope. We should revisit this decision as
-    // the typechecker's support for non-global types improves.
-    if (!isInGlobalScope && !cls.target.isGetProp()) {
-      Node scriptNode = NodeUtil.getEnclosingScript(parent);
-      scriptNode.addChildrenToFront(statements);
-      compiler.reportChangeToChangeScope(scriptNode);
+    // Put the type declaration in to either the enclosing module scope, if in a module, or the
+    // enclosing script node. Compiler support for local scopes like IIFEs is sometimes lacking but
+    // module scopes are well-supported. If this is not in a module or the global scope it is likely
+    // exported.
+    if (!isInGlobalOrModuleScope && !cls.target.isGetProp()) {
+      Node scriptOrModuleNode =
+          NodeUtil.getEnclosingNode(parent, node -> node.isScript() || node.isModuleBody());
+      if (scriptOrModuleNode.isModuleBody()
+          && scriptOrModuleNode.getParent().getBooleanProp(Node.GOOG_MODULE)) {
+        // The goog.module('ns'); call must remain the first statement in the module.
+        Node insertionPoint = getInsertionPointForGoogModule(scriptOrModuleNode);
+        scriptOrModuleNode.addChildrenAfter(statements, insertionPoint);
+      } else {
+        scriptOrModuleNode.addChildrenToFront(statements);
+        compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(scriptOrModuleNode));
+      }
     } else {
       Node beforeRoot = exprRoot.getPrevious();
       if (beforeRoot == null) {
@@ -987,5 +993,20 @@ final class PolymerClassRewriter {
       }
     }
     return false;
+  }
+
+  private static Node getInsertionPointForGoogModule(Node moduleBody) {
+    checkArgument(moduleBody.isModuleBody(), moduleBody);
+    Node insertionPoint = moduleBody.getFirstChild(); // goog.module('ns');
+    Node next = insertionPoint.getNext();
+    while ((NodeUtil.isNameDeclaration(next)
+            && next.hasOneChild()
+            && ModuleImportResolver.isGoogModuleDependencyCall(next.getFirstFirstChild()))
+        || (NodeUtil.isExprCall(next)
+            && ModuleImportResolver.isGoogModuleDependencyCall(next.getOnlyChild()))) {
+      insertionPoint = next;
+      next = next.getNext();
+    }
+    return insertionPoint;
   }
 }

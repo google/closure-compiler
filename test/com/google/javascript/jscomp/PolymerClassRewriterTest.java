@@ -64,6 +64,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
   private Node rootNode;
   private GlobalNamespace globalNamespace;
   private Node polymerCall;
+  private boolean inGlobalScope;
 
   @Override
   @Before
@@ -71,6 +72,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
     super.setUp();
     polymerCall = null;
     rootNode = null;
+    inGlobalScope = true;
   }
 
   // TODO(jlklein): Add tests for non-global definitions, interface externs, read-only setters, etc.
@@ -96,6 +98,103 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
             "  static get is() { return 'x-element'; }",
             "  static get properties { return { }; }",
             "};"));
+  }
+
+  @Test
+  public void testVarTarget_inGoogModule() {
+    inGlobalScope = false;
+    test(
+        lines(
+            "goog.module('mod');", //
+            "var X = Polymer({",
+            "  is: 'x-element',",
+            "});"),
+        lines(
+            "goog.module('mod');",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
+            "var X = function() {};",
+            "X = Polymer(/** @lends {X.prototype} */ {",
+            "  is: 'x-element',",
+            "});"));
+
+    testSame(
+        lines(
+            "goog.module('mod');",
+            "var X = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties { return { }; }",
+            "};"));
+  }
+
+  @Test
+  public void testVarTarget_inIifeInGoogModule() {
+    inGlobalScope = false;
+    test(
+        lines(
+            "goog.module('mod');", //
+            "(function() {",
+            "  var X = Polymer({",
+            "    is: 'x-element',",
+            "  });",
+            "})();"),
+        lines(
+            "goog.module('mod');",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
+            "var X = function() {};",
+            "(function() {",
+            "    X = Polymer(/** @lends {X.prototype} */ {",
+            "    is: 'x-element',",
+            "  });",
+            "})();"));
+  }
+
+  @Test
+  public void testVarTarget_inGoogModuleWithRequires() {
+    inGlobalScope = false;
+    test(
+        lines(
+            "goog.module('mod');", //
+            "const Component = goog.require('goog.Component');",
+            "goog.forwardDeclare('something.else');",
+            "const someLocal = (function() { return 0; })();",
+            "var X = Polymer({",
+            "  is: 'x-element',",
+            "});"),
+        lines(
+            "goog.module('mod');",
+            "const Component = goog.require('goog.Component');",
+            "goog.forwardDeclare('something.else');",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
+            "var X = function() {};",
+            "const someLocal = (function() { return 0; })();",
+            "X = Polymer(/** @lends {X.prototype} */ {",
+            "  is: 'x-element',",
+            "});"));
+  }
+
+  @Test
+  public void testVarTarget_inEsModule() {
+    test(
+        lines(
+            "var X = Polymer({", //
+            "  is: 'x-element',",
+            "});",
+            "export {X};"),
+        lines(
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
+            "var X = function() {};",
+            "X = Polymer(/** @lends {X.prototype} */ {",
+            "  is: 'x-element',",
+            "});",
+            "export {X};"));
+
+    testSame(
+        lines(
+            "var X = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties { return { }; }",
+            "};",
+            "export {X};"));
   }
 
   @Test
@@ -144,6 +243,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
     options.setWarningLevel(
         DiagnosticGroups.INVALID_CASTS, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     options.setCodingConvention(getCodingConvention());
     options.setPreserveTypeAnnotations(true);
     options.setPrettyPrint(true);
@@ -153,21 +253,21 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
   private void test(String originalCode, String expectedResult) {
     parseAndRewrite(originalCode, 1);
     Node expectedNode = compiler.parseSyntheticCode(expectedResult);
-    assertNode(expectedNode).isEqualTo(rootNode);
+    assertNode(rootNode).isEqualTo(expectedNode);
 
     parseAndRewrite(originalCode, 2);
     expectedNode = compiler.parseSyntheticCode(expectedResult);
-    assertNode(expectedNode).isEqualTo(rootNode);
+    assertNode(rootNode).isEqualTo(expectedNode);
   }
 
   private void testSame(String originalCode) {
     parseAndRewrite(originalCode, 1);
     Node expectedNode = compiler.parseSyntheticCode(originalCode);
-    assertNode(expectedNode).isEqualTo(rootNode);
+    assertNode(rootNode).isEqualTo(expectedNode);
 
     parseAndRewrite(originalCode, 2);
     expectedNode = compiler.parseSyntheticCode(originalCode);
-    assertNode(expectedNode).isEqualTo(rootNode);
+    assertNode(rootNode).isEqualTo(expectedNode);
   }
 
   private void parseAndRewrite(String code, int version) {
@@ -203,9 +303,9 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
     Node parent = polymerCall.getParent();
     Node grandparent = parent.getParent();
     if (NodeUtil.isNameDeclaration(grandparent) || parent.isAssign()) {
-      rewriter.rewritePolymerCall(grandparent, classDef, true);
+      rewriter.rewritePolymerCall(grandparent, classDef, inGlobalScope);
     } else {
-      rewriter.rewritePolymerCall(parent, classDef, true);
+      rewriter.rewritePolymerCall(parent, classDef, inGlobalScope);
     }
   }
 

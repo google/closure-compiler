@@ -41,7 +41,7 @@ final class ModuleImportResolver {
   }
 
   /** Returns whether this is a CALL node for goog.require(Type) or goog.forwardDeclare */
-  boolean isGoogModuleDependencyCall(Node value) {
+  static boolean isGoogModuleDependencyCall(Node value) {
     if (value == null || !value.isCall()) {
       return false;
     }
