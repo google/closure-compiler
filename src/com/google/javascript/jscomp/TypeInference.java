@@ -714,6 +714,12 @@ class TypeInference
         scope = traverseChildren(n, scope);
         break;
 
+      case EXPORT:
+        if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
+          scope = traverseChildren(n, scope);
+        }
+        break;
+
       case ROOT:
       case SCRIPT:
       case MODULE_BODY:
@@ -736,7 +742,6 @@ class TypeInference
       case WITH:
       case DEBUGGER:
       case IMPORT:
-      case EXPORT:
       case IMPORT_SPEC:
       case IMPORT_SPECS:
         // These don't need to be typed here, since they only affect control flow.

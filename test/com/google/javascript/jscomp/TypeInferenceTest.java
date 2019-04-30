@@ -48,6 +48,8 @@ import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.testing.ScopeSubject;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -139,6 +141,22 @@ public final class TypeInferenceTest {
     parseAndRunTypeInference("(" + thisBlock + " function() {" + js + "});");
   }
 
+  private void inModule(String js) {
+    Node script = compiler.parseTestCode(js);
+    assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
+        .that(compiler.getErrorCount())
+        .isEqualTo(0);
+    Node root = IR.root(IR.root(), IR.root(script));
+    new GatherModuleMetadata(compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER)
+        .process(root.getFirstChild(), root.getSecondChild());
+    new ModuleMapCreator(compiler, compiler.getModuleMetadataMap())
+        .process(root.getFirstChild(), root.getSecondChild());
+
+    // SCRIPT -> MODULE_BODY
+    Node moduleBody = script.getFirstChild();
+    parseAndRunTypeInference(root, moduleBody);
+  }
+
   private void inGenerator(String js) {
     checkState(assumedThisType == null);
     parseAndRunTypeInference("(function *() {" + js + "});");
@@ -153,8 +171,11 @@ public final class TypeInferenceTest {
 
     // SCRIPT -> EXPR_RESULT -> FUNCTION
     // `(function() { TEST CODE HERE });`
-    Node n = script.getFirstFirstChild();
+    Node function = script.getFirstFirstChild();
+    parseAndRunTypeInference(root, function);
+  }
 
+  private void parseAndRunTypeInference(Node root, Node cfgRoot) {
     // Create the scope with the assumptions.
     TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
     // Also populate a map allowing us to look up labeled statements later.
@@ -179,13 +200,13 @@ public final class TypeInferenceTest {
             },
             scopeCreator)
         .traverse(root);
-    TypedScope assumedScope = scopeCreator.createScope(n);
+    TypedScope assumedScope = scopeCreator.createScope(cfgRoot);
     for (Map.Entry<String,JSType> entry : assumptions.entrySet()) {
       assumedScope.declare(entry.getKey(), null, entry.getValue(), null, false);
     }
     // Create the control graph.
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
-    cfa.process(null, n);
+    cfa.process(null, cfgRoot);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
     // Create a simple reverse abstract interpreter.
     ReverseAbstractInterpreter rai = compiler.getReverseAbstractInterpreter();
@@ -196,9 +217,15 @@ public final class TypeInferenceTest {
     // Get the scope of the implicit return.
     BranchedFlowState<FlowScope> rtnState =
         cfg.getImplicitReturn().getAnnotation();
-    // Reset the flow scope's syntactic scope to the function block, rather than the function node
-    // itself.  This allows pulling out local vars from the function by name to verify their types.
-    returnScope = rtnState.getIn().withSyntacticScope(scopeCreator.createScope(n.getLastChild()));
+    if (cfgRoot.isFunction()) {
+      // Reset the flow scope's syntactic scope to the function block, rather than the function node
+      // itself.  This allows pulling out local vars from the function by name to verify their
+      // types.
+      returnScope =
+          rtnState.getIn().withSyntacticScope(scopeCreator.createScope(cfgRoot.getLastChild()));
+    } else {
+      returnScope = rtnState.getIn();
+    }
   }
 
   private LabeledStatement getLabeledStatement(String label) {
@@ -2691,6 +2718,17 @@ public final class TypeInferenceTest {
     JSType fooWithInterfaceType = getType("FooExtended");
     assertType(fooWithInterfaceType).isNotEqualTo(fooType);
     assertType(fooWithInterfaceType).toStringIsEqualTo("function(new:FooExtended): ?");
+  }
+
+  @Test
+  public void testSideEffectsInEsExportDefaultInferred() {
+    assuming("foo", NUMBER_TYPE);
+    assuming("bar", UNKNOWN_TYPE);
+
+    inModule("export default (bar = foo, foo = 'not a number');");
+
+    assertType(getType("bar")).isNumber();
+    assertType(getType("foo")).isString();
   }
 
   private ObjectType getNativeObjectType(JSTypeNative t) {
