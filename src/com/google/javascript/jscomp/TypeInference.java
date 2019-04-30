@@ -111,7 +111,9 @@ class TypeInference
     this.registry = compiler.getTypeRegistry();
     this.reverseInterpreter = reverseInterpreter;
     this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
-    this.moduleImportResolver = new ModuleImportResolver(compiler.getModuleMap());
+    this.moduleImportResolver =
+        new ModuleImportResolver(
+            compiler.getModuleMap(), scopeCreator.getNodeToScopeMapper(), this.registry);
 
     this.containerScope = syntacticScope;
 
@@ -733,6 +735,10 @@ class TypeInference
       case DEFAULT_CASE:
       case WITH:
       case DEBUGGER:
+      case IMPORT:
+      case EXPORT:
+      case IMPORT_SPEC:
+      case IMPORT_SPECS:
         // These don't need to be typed here, since they only affect control flow.
         break;
 
@@ -1492,7 +1498,7 @@ class TypeInference
     // are not normal functions.
     if (n.isCall()
         && (n.getParent().isName() || n.getParent().isDestructuringLhs())
-        && moduleImportResolver.isGoogModuleDependencyCall(n)) {
+        && ModuleImportResolver.isGoogModuleDependencyCall(n)) {
       ScopedName name = moduleImportResolver.getClosureNamespaceTypeFromCall(n);
       if (name != null) {
         TypedScope otherModuleScope =

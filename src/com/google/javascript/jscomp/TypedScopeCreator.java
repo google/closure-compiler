@@ -300,7 +300,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     this.typeParsingErrorReporter = typeRegistry.getErrorReporter();
     this.unknownType = typeRegistry.getNativeObjectType(UNKNOWN_TYPE);
     this.moduleMap = compiler.getModuleMap();
-    this.moduleImportResolver = new ModuleImportResolver(this.moduleMap);
+    this.moduleImportResolver =
+        new ModuleImportResolver(this.moduleMap, getNodeToScopeMapper(), typeRegistry);
     this.processClosurePrimitives = compiler.getOptions().closurePass;
   }
 
@@ -408,7 +409,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       newScope = new TypedScope(typedParent, root);
     }
 
-    Module module = getModuleFromScopeRoot(root);
+    Module module = moduleImportResolver.getModuleFromScopeRoot(root);
     if (module != null) {
       initializeModuleScope(root, module, newScope);
     }
@@ -434,38 +435,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     return newScope;
   }
 
-  /** Returns the {@link Module} corresponding to this scope root, or null if not a module root. */
-  @Nullable
-  private Module getModuleFromScopeRoot(Node moduleBody) {
-    if (moduleBody.isModuleBody()) {
-      // TODO(b/128633181): handle ES modules here
-      Node scriptNode = moduleBody.getParent();
-      checkState(
-          scriptNode.getBooleanProp(Node.GOOG_MODULE),
-          "Typechecking of non-goog-modules not supported");
-      Node googModuleCall = moduleBody.getFirstChild();
-      String namespace = googModuleCall.getFirstChild().getSecondChild().getString();
-      return moduleMap.getClosureModule(namespace);
-
-    } else if (isGoogLoadModuleBlock(moduleBody)) {
-      Node googModuleCall = moduleBody.getFirstChild();
-      String namespace = googModuleCall.getFirstChild().getSecondChild().getString();
-      return moduleMap.getClosureModule(namespace);
-    }
-    return null;
-  }
-
-  private static boolean isGoogLoadModuleBlock(Node scopeRoot) {
-    return scopeRoot.isBlock()
-        && scopeRoot.getParent().isFunction()
-        && NodeUtil.isBundledGoogModuleCall(scopeRoot.getGrandparent());
-  }
-
   /** Builds the beginning of a module-scope. This can be an ES module or a goog.module. */
   private void initializeModuleScope(Node moduleBody, Module module, TypedScope moduleScope) {
     if (module.metadata().isGoogModule()) {
       declareExportsInModuleScope(module, moduleBody, moduleScope);
       markGoogModuleExportsAsConst(module);
+    } else {
+      // For now, assume this is an ES module. In the future, it might be a CommonJS module.
+      checkState(module.metadata().isEs6Module(), "CommonJS module typechecking not supported yet");
+      moduleImportResolver.declareEsModuleImports(
+          module, moduleScope, compiler.getInput(moduleBody.getInputId()));
     }
   }
 
@@ -598,7 +577,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     // Now re-traverse the given script.
-    NormalScopeBuilder scopeBuilder = new NormalScopeBuilder(globalScope, null);
+    NormalScopeBuilder scopeBuilder = new NormalScopeBuilder(globalScope, /* module= */ null);
     NodeTraversal.traverse(compiler, scriptRoot, scopeBuilder);
   }
 
@@ -1119,7 +1098,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         Node pattern = child.getFirstChild();
         Node value = child.getSecondChild();
 
-        if (moduleImportResolver.isGoogModuleDependencyCall(value)) {
+        if (ModuleImportResolver.isGoogModuleDependencyCall(value)) {
           // Define destructuring names here, since goog.require destructuring patterns can only
           // have one level and require some special handling.
           ScopedName defaultImport = moduleImportResolver.getClosureNamespaceTypeFromCall(value);
@@ -1287,7 +1266,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * @param info the {@link JSDocInfo} information relating to this {@code name} node.
      */
     private void defineName(Node name, Node value, TypedScope scope, JSDocInfo info) {
-      if (moduleImportResolver.isGoogModuleDependencyCall(value)) {
+      if (ModuleImportResolver.isGoogModuleDependencyCall(value)) {
         defineModuleImport(name, moduleImportResolver.getClosureNamespaceTypeFromCall(value), null);
         return;
       }
@@ -2883,7 +2862,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   /** A shallow traversal of the global scope to build up all classes, functions, and methods. */
   private final class NormalScopeBuilder extends AbstractScopeBuilder {
 
-    NormalScopeBuilder(TypedScope scope, Module module) {
+    NormalScopeBuilder(TypedScope scope, @Nullable Module module) {
       super(scope, module);
     }
 
@@ -2972,6 +2951,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             for (ProvidedName name : names) {
               declareProvidedNs(n, name);
             }
+          }
+          break;
+
+        case EXPORT:
+          if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
+            JSType declaredType = n.getOnlyChild().getJSType();
+            currentScope.declare(
+                Export.DEFAULT_EXPORT_NAME,
+                n,
+                declaredType,
+                compiler.getInput(n.getInputId()),
+                /* inferred= */ declaredType == null);
           }
           break;
 

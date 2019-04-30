@@ -36,6 +36,7 @@ public abstract class Binding {
   // Prevent unwanted subclasses.
   Binding() {}
 
+  /** Different ways that Bindings can be created. */
   enum CreatedBy {
     /**
      * A binding created by an export in an ES module.
@@ -45,6 +46,7 @@ public abstract class Binding {
      *   export function x() {}
      *   export {x};
      *   export * from ''; // creates bindings in the namespace
+     * </pre>
      */
     EXPORT,
     /**
@@ -54,6 +56,7 @@ public abstract class Binding {
      *   import {x} from '';
      *   import * as x from '';
      *   import x from '';
+     * </pre>
      */
     IMPORT,
     /**
@@ -62,6 +65,7 @@ public abstract class Binding {
      * <pre>
      *   const x = goog.require();
      *   const {x} = goog.require();
+     * </pre>
      */
     GOOG_REQUIRE,
     /**
@@ -70,6 +74,7 @@ public abstract class Binding {
      * <pre>
      *   const x = goog.requireType();
      *   const {x} = goog.requireType();
+     * </pre>
      */
     GOOG_REQUIRE_TYPE,
     /**
@@ -78,6 +83,7 @@ public abstract class Binding {
      * <pre>
      *   const x = goog.forwardDeclare();
      *   const {x} = goog.forwardDeclare();
+     * </pre>
      */
     GOOG_FORWARD_DECLARE;
 
@@ -194,5 +200,13 @@ public abstract class Binding {
     // Module namespaces can never be mutated. They are always imported, and import bound names
     // are const.
     return !isModuleNamespace() && originatingExport().mutated();
+  }
+
+  /**
+   * Returns whether this Binding originated from an ES import, as opposed to an export or
+   * goog.require.
+   */
+  public final boolean isCreatedByEsImport() {
+    return createdBy().equals(CreatedBy.IMPORT);
   }
 }

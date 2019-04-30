@@ -49,7 +49,7 @@ public abstract class Export {
 
   /**
    * The {@link Export#exportName()} of goog.module default exports, e.g. {@code exports = class
-   * {};}
+   * {};}, and the 'namespace' of an ES module consisting of all exported names.
    */
   public static final String NAMESPACE = "*exports*";
 

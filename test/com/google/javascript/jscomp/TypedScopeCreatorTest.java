@@ -5261,6 +5261,154 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEsModule_exportNameDeclaration() {
+    testSame("/** @type {string|number} */ export let strOrNum = 0; MOD: 0;");
+
+    TypedVar strOrNum = getLabeledStatement("MOD").enclosingScope.getVar("strOrNum");
+    assertThat(strOrNum).isNotNull();
+    assertThat(strOrNum).isNotInferred();
+    assertThat(strOrNum).hasJSTypeThat().toStringIsEqualTo("(number|string)");
+  }
+
+  @Test
+  public void testEsModule_importSpecs_declaredExport() {
+    testSame(
+        srcs(
+            lines(
+                "let /** number */ num;", //
+                "export {num as y};"),
+            lines(
+                "import {y as x} from './input0';", //
+                "X: x;")));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+    assertThat(getLabeledStatement("X").enclosingScope.getVar("x")).isNotInferred();
+  }
+
+  @Test
+  public void testEsModule_importSpecs_inferredExport() {
+    testSame(
+        srcs(
+            lines(
+                "/** @return {number} */ const f = () => 0;", //
+                "const num = f();",
+                "export {num as y};"),
+            lines(
+                "import {y as x} from './input0';", //
+                "X: x;")));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+    assertThat(getLabeledStatement("X").enclosingScope.getVar("x")).isInferred();
+  }
+
+  @Test
+  public void testEsModule_importSpecs_typedef() {
+    testSame(
+        srcs(
+            lines(
+                "/** @typedef {number} */ let numType;", //
+                "export {numType};"),
+            lines(
+                "import {numType} from './input0';", //
+                "var /** !numType */ x;",
+                "X: x;")));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testEsModule_exportDefault() {
+    testSame(srcs("export default 0;", "import x from './input0'; X: x;"));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testEsModule_exportDefaultImportedWithSpecs() {
+    testSame(srcs("export default 0;", "import {default as x} from './input0'; X: x;"));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testEsModule_importDefault_exportedUsingDefaultNamedKey() {
+    testSame(srcs("const x = 0; export {x as default};", "import x from './input0'; X: x;"));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testEsModule_importDefaultClass() {
+    testSame(
+        srcs(
+            "export default class Button {}; const /** !Button */ b = new Button(); B1: b;",
+            "import Button from './input0'; const /** !Button */ b = new Button(); B2: b;"));
+
+    assertNode(getLabeledStatement("B1").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Button");
+    assertNode(getLabeledStatement("B2").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Button");
+  }
+
+  @Test
+  public void testEsModule_exportNameFrom() {
+    testSame(
+        srcs(
+            "export const x = 0; export class Button {}",
+            "export {x, Button} from './input0';",
+            lines(
+                "import {x as y, Button} from './input0';",
+                "Y: y;",
+                "const /** !Button */ b = new Button();")));
+
+    assertNode(getLabeledStatement("Y").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testEsModule_exportStarFrom() {
+    testSame(
+        srcs(
+            "export const x = 0; export class Button {}",
+            "export * from './input0';",
+            lines(
+                "import {x as y, Button} from './input0';",
+                "Y: y;",
+                "const /** !Button */ b = new Button();")));
+
+    assertNode(getLabeledStatement("Y").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testGoogRequire_insideEsModule_namedExport() {
+    testSame(
+        srcs(
+            "goog.module('b'); exports.x = 0;",
+            "const {x} = goog.require('b'); X: x; export {x};"));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testGoogRequire_insideEsModule_class() {
+    testSame(
+        srcs(
+            lines(
+                "goog.module('b');", //
+                "exports.X = class {};"),
+            lines(
+                "const {X} = goog.require('b');", //
+                "var /** !X */ x;",
+                "X: x;",
+                "export {x};")));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("exports.X");
+  }
+
+  @Test
   public void testMemoization() {
     Node root1 = createEmptyRoot();
     Node root2 = createEmptyRoot();

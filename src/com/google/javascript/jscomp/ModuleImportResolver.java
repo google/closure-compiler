@@ -16,11 +16,20 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.deps.ModuleNames;
+import com.google.javascript.jscomp.modules.Binding;
+import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import java.util.Map;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -31,13 +40,18 @@ import javax.annotation.Nullable;
 final class ModuleImportResolver {
 
   private final ModuleMap moduleMap;
+  private final Function<Node, TypedScope> nodeToScopeMapper;
+  private final JSTypeRegistry registry;
 
   private static final String GOOG = "goog";
   private static final ImmutableSet<String> googDependencyCalls =
       ImmutableSet.of("require", "requireType", "forwardDeclare");
 
-  ModuleImportResolver(ModuleMap moduleMap) {
+  ModuleImportResolver(
+      ModuleMap moduleMap, Function<Node, TypedScope> nodeToScopeMapper, JSTypeRegistry registry) {
     this.moduleMap = moduleMap;
+    this.nodeToScopeMapper = nodeToScopeMapper;
+    this.registry = registry;
   }
 
   /** Returns whether this is a CALL node for goog.require(Type) or goog.forwardDeclare */
@@ -123,5 +137,81 @@ final class ModuleImportResolver {
     // TODO(b/124919359): this case should not happen, but is triggering on goog.require calls in
     // rewritten modules with preserveClosurePrimitives enabled.
     return null;
+  }
+
+  /** Declares/updates the type of all bindings imported into the ES module scope */
+  void declareEsModuleImports(Module module, TypedScope scope, CompilerInput moduleInput) {
+    checkArgument(module.metadata().isEs6Module(), module);
+    checkArgument(scope.isModuleScope(), scope);
+    for (Map.Entry<String, Binding> boundName : module.boundNames().entrySet()) {
+      Binding binding = boundName.getValue();
+      String localName = boundName.getKey();
+      if (!binding.isCreatedByEsImport()) {
+        continue;
+      }
+      // ES imports fall into two categories:
+      //  - namespace imports. These correspond to an object type containing all named exports.
+      //  - named imports. These always correspond, eventually, to a name local to a module.
+      //    Note that we include default imports in this case.
+      if (binding.isModuleNamespace()) {
+        // TODO(b/128633181): Support import *.
+        scope.declare(
+            localName,
+            binding.sourceNode(),
+            registry.getNativeType(JSTypeNative.UNKNOWN_TYPE),
+            moduleInput);
+      } else {
+        Export originatingExport = binding.originatingExport();
+        Node exportModuleRoot = originatingExport.moduleMetadata().rootNode().getFirstChild();
+        TypedScope modScope = nodeToScopeMapper.apply(exportModuleRoot);
+        // NB: If the original export was an `export default` then the local name is *default*.
+        // We've already declared a dummy variable named `*default*` in the scope.
+        TypedVar originalVar = modScope.getSlot(originatingExport.localName());
+        JSType importType = originalVar.getType();
+        scope.declare(
+            localName,
+            binding.sourceNode(),
+            importType,
+            moduleInput,
+            /* inferred= */ originalVar.isTypeInferred());
+        if (originalVar.getNameNode().getTypedefTypeProp() != null
+            && binding.sourceNode().getTypedefTypeProp() == null) {
+          binding.sourceNode().setTypedefTypeProp(originalVar.getNameNode().getTypedefTypeProp());
+          registry.declareType(scope, localName, originalVar.getNameNode().getTypedefTypeProp());
+        }
+      }
+    }
+  }
+
+  /** Returns the {@link Module} corresponding to this scope root, or null if not a module root. */
+  @Nullable
+  Module getModuleFromScopeRoot(Node moduleBody) {
+    if (moduleBody.isModuleBody()) {
+      Node scriptNode = moduleBody.getParent();
+      if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
+        Node googModuleCall = moduleBody.getFirstChild();
+        String namespace = googModuleCall.getFirstChild().getSecondChild().getString();
+        return moduleMap.getClosureModule(namespace);
+      } else {
+        String modulePath = ModuleNames.fileToModuleName(scriptNode.getSourceFileName());
+        Module module = moduleMap.getModule(modulePath);
+        // TODO(b/131418081): Also cover CommonJS modules.
+        checkState(
+            module.metadata().isEs6Module(),
+            "Typechecking of non-goog- and non-es-modules not supported");
+        return module;
+      }
+    } else if (isGoogLoadModuleBlock(moduleBody)) {
+      Node googModuleCall = moduleBody.getFirstChild();
+      String namespace = googModuleCall.getFirstChild().getSecondChild().getString();
+      return moduleMap.getClosureModule(namespace);
+    }
+    return null;
+  }
+
+  private static boolean isGoogLoadModuleBlock(Node scopeRoot) {
+    return scopeRoot.isBlock()
+        && scopeRoot.getParent().isFunction()
+        && NodeUtil.isBundledGoogModuleCall(scopeRoot.getGrandparent());
   }
 }
