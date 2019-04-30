@@ -392,16 +392,25 @@ class LiveVariablesAnalysis
   }
 
   /**
-   * Give up computing liveness of formal parameter by putting all the parameter names in the
+   * Give up computing liveness of formal parameters by putting all the simple parameters in the
    * escaped set.
+   *
+   * <p>This only applies to simple parameters, that is NAMEs, because other parameter syntaxes
+   * never need to be escaped in this way. The known applications of this method are for uses of
+   * `arguments`, and for IE8. In a function with non-simple paremeters, `arguments` is not
+   * parameter-mapped, and so referencing it doesn't escape paremeters. IE8 just doess't support
+   * non-simple parameters.
+   *
+   * <p>We could actaully continue tracking simple parameters if any parameter is non-simple, but it
+   * wasn't worth the complexity or cost to do so.
+   *
+   * @see https://tc39.github.io/ecma262/#sec-functiondeclarationinstantiation
    */
   void markAllParametersEscaped() {
     Node paramList = NodeUtil.getFunctionParameters(jsScope.getRootNode());
-    for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
-      if (arg.isRest() || arg.isDefaultValue()) {
-        escaped.add(jsScope.getVar(arg.getFirstChild().getString()));
-      } else {
-        escaped.add(jsScope.getVar(arg.getString()));
+    for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
+      if (param.isName()) {
+        escaped.add(jsScope.getVar(param.getString()));
       }
     }
   }

@@ -262,21 +262,34 @@ public final class LiveVariablesAnalysisTest {
     // Check that use of arguments forces the parameters into the
     // escaped set.
     assertEscaped("arguments[0]", "param1");
-    assertEscaped("arguments[0]", "param2");
-    assertEscaped("arguments[0]", "param3");
+    assertNotEscaped("arguments[0]", "param2");
+    assertNotEscaped("arguments[0]", "param3");
+
     assertEscaped("var args = arguments", "param1");
-    assertEscaped("var args = arguments", "param2");
-    assertEscaped("var args = arguments", "param3");
+    assertNotEscaped("var args = arguments", "param2");
+    assertNotEscaped("var args = arguments", "param3");
+
     assertNotEscaped("arguments = []", "param1");
     assertNotEscaped("arguments = []", "param2");
     assertNotEscaped("arguments = []", "param3");
-    assertEscaped("arguments[0] = 1", "param1");
-    assertEscaped("arguments[0] = 1", "param2");
-    assertEscaped("arguments[0] = 1", "param3");
-    assertEscaped("arguments[arguments[0]] = 1", "param1");
-    assertEscaped("arguments[arguments[0]] = 1", "param2");
-    assertEscaped("arguments[arguments[0]] = 1", "param3");
 
+    assertEscaped("arguments[0] = 1", "param1");
+    assertNotEscaped("arguments[0] = 1", "param2");
+    assertNotEscaped("arguments[0] = 1", "param3");
+
+    assertEscaped("arguments[arguments[0]] = 1", "param1");
+    assertNotEscaped("arguments[arguments[0]] = 1", "param2");
+    assertNotEscaped("arguments[arguments[0]] = 1", "param3");
+  }
+
+  @Test
+  public void testArgumentsArray_doesNotEscape_destructuredParams() {
+    // These cases also cover a crash related to assuming all RESTs have a NAME child.
+    assertNotEscaped("function f([a]) { arguments; }", "a");
+    assertNotEscaped("function f([a] = []) { arguments; }", "a");
+    assertNotEscaped("function f(...[a]) { arguments; }", "a");
+    assertNotEscaped("function f({a}) { arguments; }", "a");
+    assertNotEscaped("function f({a} = {}) { arguments; }", "a");
   }
 
   @Test
