@@ -8381,6 +8381,25 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testOverriddenPropertyWithUnknownInterfaceAncestor() {
+    testTypes(
+        lines(
+            "/** @interface @extends {Unknown}  */ function Foo() {}",
+            "/** @type {string} */ Foo.prototype.data;",
+            "/** @constructor @implements {Foo} */ function SubFoo() {}",
+            "/** @type {string|Object} */ ",
+            "SubFoo.prototype.data = null;"),
+        new String[] {
+          "Bad type annotation. Unknown type Unknown",
+          lines(
+              "mismatch of the data property on type SubFoo and the type "
+                  + "of the property it overrides from interface Foo",
+              "original: string",
+              "override: (Object|string)")
+        });
+  }
+
+  @Test
   public void testThis2() {
     testTypes("var goog = {};" +
         "/** @constructor */goog.A = function(){" +

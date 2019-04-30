@@ -311,7 +311,9 @@ public abstract class ObjectType extends JSType implements Serializable {
       }
     }
 
-    if (hasOwnProperty(propertyName) || getImplicitPrototype().hasOwnProperty(propertyName)) {
+    ObjectType implicitPrototype = getImplicitPrototype();
+    if (hasOwnProperty(propertyName)
+        || (implicitPrototype != null && implicitPrototype.hasOwnProperty(propertyName))) {
       return this;
     }
 
