@@ -77,17 +77,20 @@ public final class NodeUtil {
   // Utility class; do not instantiate.
   private NodeUtil() {}
 
-  static boolean isImpureTrue(Node n) {
-    return getImpureBooleanValue(n) == TernaryValue.TRUE;
-  }
-
   /**
-   * Gets the boolean value of a node that represents a expression. This method
-   * effectively emulates the <code>Boolean()</code> JavaScript cast function.
-   * Note: unlike getPureBooleanValue this function does not return UNKNOWN
-   * for expressions with side-effects.
+   * Gets the boolean value of a node that represents an expression, or {@code TernaryValue.UNKNOWN}
+   * if no such value can be determined.
+   *
+   * <p>This method expands on {@link #getLiteralBooleanValue(Node)}, by evaluating expressions
+   * consisting of literals when possible. Use that method instead if you only want to find literal
+   * values.
+   *
+   * <p>This method does not consider whether the node may have side-effects. Use {@link
+   * #getPureBooleanValue(Node)} if you need to avoid side-effects.
    */
   static TernaryValue getImpureBooleanValue(Node n) {
+    // This switch consists of cases that are not supported by getLiteralBooleanValue(),
+    // which we will call if none of these match.
     switch (n.getToken()) {
       case ASSIGN:
       case COMMA:
@@ -116,31 +119,40 @@ public final class NodeUtil {
           return TernaryValue.UNKNOWN;
         }
       }
-      case NEW:
-      case ARRAYLIT:
-      case OBJECTLIT:
-        // ignoring side-effects
-        return TernaryValue.TRUE;
-
-      case VOID:
-        return TernaryValue.FALSE;
 
       default:
-        return getPureBooleanValue(n);
+        return getLiteralBooleanValue(n);
     }
   }
 
   /**
-   * Gets the boolean value of a node that represents a literal. This method
-   * effectively emulates the <code>Boolean()</code> JavaScript cast function
-   * except it return UNKNOWN for known values with side-effects, use
-   * getImpureBooleanValue if you don't care about side-effects.
+   * If {@code n} represents a literal value that can be interpreted statically as a known boolean
+   * value, this method returns the corresponding {@code TernaryValue}. Otherwise, it returns {@code
+   * TernaryValue.UNKNOWN}.
+   *
+   * <p>Note that we will consider these things to be boolean literals, even though they are
+   * technically expressions. <code><pre>
+   *   void anyExpressionHere
+   *   ! anyBooleanLiteralHere
+   *   new anyFunctionHere()
+   *   undefined
+   *   NaN
+   *   Infinity
+   * </pre></code>
+   *
+   * <p>This method does not consider whether the literal might have side-effects when evaluated.
+   * This can be true for object literals, for example. Be sure to call {@link
+   * #getPureBooleanValue(Node)} if you need to care about side-effects.
+   *
+   * <p>Except for the cases listed above, this method also returns {@code TernaryValue.UNKNOWN} for
+   * boolean expressions even when it is possible to determine their value. If you want to evaluate
+   * such expressions, then you should use {@link #getImpureBooleanValue(Node)}.
    */
-  static TernaryValue getPureBooleanValue(Node n) {
+  static TernaryValue getLiteralBooleanValue(Node n) {
     switch (n.getToken()) {
       case TEMPLATELIT:
         if (n.hasOneChild()) {
-          return getPureBooleanValue(n.getFirstChild());
+          return getLiteralBooleanValue(n.getFirstChild());
         }
         break;
       case TEMPLATELIT_STRING:
@@ -154,22 +166,18 @@ public final class NodeUtil {
         return TernaryValue.forBoolean(n.getDouble() != 0);
 
       case NOT:
-        return getPureBooleanValue(n.getLastChild()).not();
+        return getLiteralBooleanValue(n.getLastChild()).not();
 
       case NULL:
       case FALSE:
         return TernaryValue.FALSE;
 
       case VOID:
-        if (!mayHaveSideEffects(n.getFirstChild())) {
-          return TernaryValue.FALSE;
-        }
-        break;
+        return TernaryValue.FALSE;
 
       case NAME:
         String name = n.getString();
-        if ("undefined".equals(name)
-            || "NaN".equals(name)) {
+        if ("undefined".equals(name) || "NaN".equals(name)) {
           // We assume here that programs don't change the value of the keyword
           // undefined to something other than the value undefined.
           return TernaryValue.FALSE;
@@ -187,10 +195,7 @@ public final class NodeUtil {
       case NEW:
       case ARRAYLIT:
       case OBJECTLIT:
-        if (!mayHaveSideEffects(n)) {
-          return TernaryValue.TRUE;
-        }
-        break;
+        return TernaryValue.TRUE;
       default:
         break;
     }
@@ -199,9 +204,28 @@ public final class NodeUtil {
   }
 
   /**
-   * Gets the value of a node as a String, or null if it cannot be converted.
-   * When it returns a non-null String, this method effectively emulates the
-   * <code>String()</code> JavaScript cast function.
+   * If {@code n} represents a literal value without side-effects that can be interpreted statically
+   * as a known boolean value, this method returns the corresponding {@code TernaryValue}.
+   * Otherwise, it returns {@code TernaryValue.UNKNOWN}.
+   *
+   * <p>Use {@link #getLiteralBooleanValue(Node)} if you don't care about side-effects. Use {@link
+   * #getImpureBooleanValue(Node)} if you don't care about side-effects and also want to compute
+   * values for non-literal expressions.
+   */
+  static TernaryValue getPureBooleanValue(Node n) {
+    // Determining whether n is a literal boolean is likely to be faster than determining whether
+    // it has side-effects when n is a large subtree.
+    TernaryValue value = getLiteralBooleanValue(n);
+    if (value != TernaryValue.UNKNOWN && mayHaveSideEffects(n)) {
+      value = TernaryValue.UNKNOWN;
+    }
+    return value;
+  }
+
+  /**
+   * Gets the value of a node as a String, or null if it cannot be converted. When it returns a
+   * non-null String, this method effectively emulates the <code>String()</code> JavaScript cast
+   * function.
    */
   public static String getStringValue(Node n) {
     // TODO(user): regex literals as well.

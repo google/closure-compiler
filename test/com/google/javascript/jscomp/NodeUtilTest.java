@@ -177,6 +177,132 @@ public final class NodeUtilTest {
   }
 
   /**
+   * Test the forms of getting a boolean value for a node.
+   *
+   * <p>The 3 forms differ based on when they decide the value is unknown. See more description on
+   * the method definitions.
+   *
+   * <dl>
+   *   <dt>pure
+   *   <dd>known only for side-effect free literal(ish) values
+   *   <dt>literal
+   *   <dd>known for literal(ish) values regardless of side-effects
+   *   <dt>impure
+   *   <dd>known for literal(ish) values and some simple expressions regardless of side-effects
+   * </dl>
+   */
+  @RunWith(Parameterized.class)
+  public static final class BooleanValueTests {
+
+    /** Snippet of JS that will be parsed as an expression. */
+    @Parameter(0)
+    public String jsExpression;
+
+    /** Expected result of NodeUtil.getPureBooleanValue() */
+    @Parameter(1)
+    public TernaryValue expectedPureResult;
+
+    /** Expected result of NodeUtil.getLiteralBooleanValue() */
+    @Parameter(2)
+    public TernaryValue expectedLiteralResult;
+
+    /** Expected result of NodeUtil.getImpureBooleanValue() */
+    @Parameter(3)
+    public TernaryValue expectedImpureResult;
+
+    @Parameters(name = "\"{0}\" is pure ({1}) literal ({2}) impure ({3})")
+    public static Iterable<Object[]> cases() {
+      return ImmutableList.copyOf(
+          new Object[][] {
+            // truly literal, side-effect free values are always known
+            {"true", TernaryValue.TRUE, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"10", TernaryValue.TRUE, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"'0'", TernaryValue.TRUE, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"/a/", TernaryValue.TRUE, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"{}", TernaryValue.TRUE, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"[]", TernaryValue.TRUE, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"false", TernaryValue.FALSE, TernaryValue.FALSE, TernaryValue.FALSE},
+            {"null", TernaryValue.FALSE, TernaryValue.FALSE, TernaryValue.FALSE},
+            {"0", TernaryValue.FALSE, TernaryValue.FALSE, TernaryValue.FALSE},
+            {"''", TernaryValue.FALSE, TernaryValue.FALSE, TernaryValue.FALSE},
+            {"undefined", TernaryValue.FALSE, TernaryValue.FALSE, TernaryValue.FALSE},
+
+            // literals that have side-effects aren't pure
+            {"{a:foo()}", TernaryValue.UNKNOWN, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"[foo()]", TernaryValue.UNKNOWN, TernaryValue.TRUE, TernaryValue.TRUE},
+
+            // not really literals, but we pretend they are for our purposes
+            {"void 0", TernaryValue.FALSE, TernaryValue.FALSE, TernaryValue.FALSE},
+            // side-effect keeps this one from being pure
+            {"void foo()", TernaryValue.UNKNOWN, TernaryValue.FALSE, TernaryValue.FALSE},
+            {"!true", TernaryValue.FALSE, TernaryValue.FALSE, TernaryValue.FALSE},
+            {"!false", TernaryValue.TRUE, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"!''", TernaryValue.TRUE, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"class Klass {}", TernaryValue.TRUE, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"new Date()", TernaryValue.TRUE, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"b", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+            {"-'0.0'", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+
+            // template literals
+            {"``", TernaryValue.FALSE, TernaryValue.FALSE, TernaryValue.FALSE},
+            {"`definiteLength`", TernaryValue.TRUE, TernaryValue.TRUE, TernaryValue.TRUE},
+            {"`${some}str`", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+
+            // non-literal expressions
+            {"a=true", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.TRUE},
+            {"a=false", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.FALSE},
+            {"a=(false,true)", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.TRUE},
+            {"a=(true,false)", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.FALSE},
+            {"a=(false || true)", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.TRUE},
+            {"a=(true && false)", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.FALSE},
+            {"a=!(true && false)", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.TRUE},
+            {"a,true", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.TRUE},
+            {"a,false", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.FALSE},
+            {"true||false", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.TRUE},
+            {"false||false", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.FALSE},
+            {"true&&true", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.TRUE},
+            {"true&&false", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.FALSE},
+
+            // Assignment ops other than ASSIGN are unknown.
+            {"a *= 2", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+
+            // Complex expressions that contain anything other then "=", ",", or "!" are
+            // unknown.
+            {"2 + 2", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+
+            // assignment values are the RHS
+            {"a=1", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.TRUE},
+            {"a=/a/", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.TRUE},
+            {"a={}", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.TRUE},
+
+            // hooks have impure boolean value if both cases have same impure boolean value
+            {"a?true:true", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.TRUE},
+            {"a?false:false", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.FALSE},
+            {"a?true:false", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+            {"a?true:foo()", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+          });
+    }
+
+    @Test
+    public void getPureBooleanValue() {
+      assertThat(NodeUtil.getPureBooleanValue(parseExpr(jsExpression)))
+          .isEqualTo(expectedPureResult);
+    }
+
+    @Test
+    public void getLiteralBooleanValue() {
+      assertThat(NodeUtil.getLiteralBooleanValue(parseExpr(jsExpression)))
+          .isEqualTo(expectedLiteralResult);
+    }
+
+    @Test
+    public void getImpureBooleanValue() {
+      assertThat(NodeUtil.getImpureBooleanValue(parseExpr(jsExpression)))
+          .isEqualTo(expectedImpureResult);
+    }
+  }
+
+  /**
    * A nested class to allow the `Enclosed` runner to run these tests since it doesn't run tests in
    * the outer class.
    *
@@ -339,124 +465,6 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? b : 'c'"))).isFalse();
       assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? 'b' : c"))).isFalse();
       assertThat(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? b : c"))).isFalse();
-    }
-
-    @Test
-    public void testGetBooleanValue() {
-      assertPureBooleanTrue("true");
-      assertPureBooleanTrue("10");
-      assertPureBooleanTrue("'0'");
-      assertPureBooleanTrue("/a/");
-      assertPureBooleanTrue("{}");
-      assertPureBooleanTrue("[]");
-      assertPureBooleanFalse("false");
-      assertPureBooleanFalse("null");
-      assertPureBooleanFalse("0");
-      assertPureBooleanFalse("''");
-      assertPureBooleanFalse("undefined");
-      assertPureBooleanFalse("void 0");
-      assertPureBooleanUnknown("void foo()");
-      assertPureBooleanUnknown("b");
-      assertPureBooleanUnknown("-'0.0'");
-
-      // Known but getBooleanValue return false for expressions with side-effects
-      assertPureBooleanUnknown("{a:foo()}");
-      assertPureBooleanUnknown("[foo()]");
-
-      assertPureBooleanTrue("`definiteLength`");
-      assertPureBooleanFalse("``");
-      assertPureBooleanUnknown("`${indefinite}Length`");
-
-      assertPureBooleanTrue("class Klass{}");
-      assertPureBooleanTrue("new Date()");
-    }
-
-    private void assertPureBooleanTrue(String val) {
-      assertThat(NodeUtil.getPureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.TRUE);
-    }
-
-    private void assertPureBooleanFalse(String val) {
-      assertThat(NodeUtil.getPureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.FALSE);
-    }
-
-    private void assertPureBooleanUnknown(String val) {
-      assertThat(NodeUtil.getPureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.UNKNOWN);
-    }
-
-    @Test
-    public void testGetExpressionBooleanValue() {
-      assertImpureBooleanTrue("a=true");
-      assertImpureBooleanFalse("a=false");
-
-      assertImpureBooleanTrue("a=(false,true)");
-      assertImpureBooleanFalse("a=(true,false)");
-
-      assertImpureBooleanTrue("a=(false || true)");
-      assertImpureBooleanFalse("a=(true && false)");
-
-      assertImpureBooleanTrue("a=!(true && false)");
-
-      assertImpureBooleanTrue("a,true");
-      assertImpureBooleanFalse("a,false");
-
-      assertImpureBooleanTrue("true||false");
-      assertImpureBooleanFalse("false||false");
-
-      assertImpureBooleanTrue("true&&true");
-      assertImpureBooleanFalse("true&&false");
-
-      assertImpureBooleanFalse("!true");
-      assertImpureBooleanTrue("!false");
-      assertImpureBooleanTrue("!''");
-
-      // Assignment ops other than ASSIGN are unknown.
-      assertImpureBooleanUnknown("a *= 2");
-
-      // Complex expressions that contain anything other then "=", ",", or "!" are
-      // unknown.
-      assertImpureBooleanUnknown("2 + 2");
-
-      assertImpureBooleanTrue("a=1");
-      assertImpureBooleanTrue("a=/a/");
-      assertImpureBooleanTrue("a={}");
-
-      assertImpureBooleanTrue("true");
-      assertImpureBooleanTrue("10");
-      assertImpureBooleanTrue("'0'");
-      assertImpureBooleanTrue("/a/");
-      assertImpureBooleanTrue("{}");
-      assertImpureBooleanTrue("[]");
-      assertImpureBooleanFalse("false");
-      assertImpureBooleanFalse("null");
-      assertImpureBooleanFalse("0");
-      assertImpureBooleanFalse("''");
-      assertImpureBooleanFalse("undefined");
-      assertImpureBooleanFalse("void 0");
-      assertImpureBooleanFalse("void foo()");
-
-      assertImpureBooleanTrue("a?true:true");
-      assertImpureBooleanFalse("a?false:false");
-      assertImpureBooleanUnknown("a?true:false");
-      assertImpureBooleanUnknown("a?true:foo()");
-
-      assertImpureBooleanUnknown("b");
-      assertImpureBooleanUnknown("-'0.0'");
-
-      assertImpureBooleanTrue("{a:foo()}");
-      assertImpureBooleanTrue("[foo()]");
-      assertImpureBooleanTrue("new Date()");
-    }
-
-    private void assertImpureBooleanTrue(String val) {
-      assertThat(NodeUtil.getImpureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.TRUE);
-    }
-
-    private void assertImpureBooleanFalse(String val) {
-      assertThat(NodeUtil.getImpureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.FALSE);
-    }
-
-    private void assertImpureBooleanUnknown(String val) {
-      assertThat(NodeUtil.getImpureBooleanValue(parseExpr(val))).isEqualTo(TernaryValue.UNKNOWN);
     }
 
     @Test
