@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -877,9 +876,13 @@ class TypeValidator implements Serializable {
   void expectAllInterfaceProperties(Node n, FunctionType type) {
     ObjectType instance = type.getInstanceType();
     for (ObjectType implemented : type.getAllImplementedInterfaces()) {
+      // Case: `/** @interface */ class Foo { constructor() { this.prop; } }`
+      for (String prop : implemented.getOwnPropertyNames()) {
+        expectInterfaceProperty(n, instance, implemented, prop);
+      }
       if (implemented.getImplicitPrototype() != null) {
-        for (String prop :
-             implemented.getImplicitPrototype().getOwnPropertyNames()) {
+        // Case: `/** @interface */ class Foo { prop() { } }`
+        for (String prop : implemented.getImplicitPrototype().getOwnPropertyNames()) {
           expectInterfaceProperty(n, instance, implemented, prop);
         }
       }
@@ -894,9 +897,6 @@ class TypeValidator implements Serializable {
       Node n, ObjectType instance, ObjectType implementedInterface, String prop) {
     StaticTypedSlot propSlot = instance.getSlot(prop);
     if (propSlot == null) {
-      // Not implemented
-      String sourceName = n.getSourceFileName();
-      sourceName = nullToEmpty(sourceName);
       registerMismatch(
           instance,
           implementedInterface,
@@ -918,8 +918,7 @@ class TypeValidator implements Serializable {
       JSType found = propSlot.getType();
       found = found.restrictByNotNullOrUndefined();
 
-      JSType required
-          = implementedInterface.getImplicitPrototype().getPropertyType(prop);
+      JSType required = implementedInterface.getPropertyType(prop);
       TemplateTypeMap typeMap = implementedInterface.getTemplateTypeMap();
       if (!typeMap.isEmpty()) {
         TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(
@@ -930,15 +929,13 @@ class TypeValidator implements Serializable {
 
       if (!found.isSubtype(required, this.subtypingMode)) {
         // Implemented, but not correctly typed
-        FunctionType constructor =
-            implementedInterface.toObjectType().getConstructor();
         JSError err =
             JSError.make(
                 propNode,
                 HIDDEN_INTERFACE_PROPERTY_MISMATCH,
                 prop,
                 instance.toString(),
-                constructor.getTopMostDefiningType(prop).toString(),
+                implementedInterface.getTopDefiningInterface(prop).toString(),
                 required.toString(),
                 found.toString());
         registerMismatch(found, required, err);
@@ -962,8 +959,7 @@ class TypeValidator implements Serializable {
 
     while (currSuperCtor != null && currSuperCtor.isAbstract()) {
       ObjectType superType = currSuperCtor.getInstanceType();
-      for (String prop :
-          currSuperCtor.getInstanceType().getImplicitPrototype().getOwnPropertyNames()) {
+      for (String prop : currSuperCtor.getPrototype().getOwnPropertyNames()) {
         FunctionType maybeAbstractMethod = superType.findPropertyType(prop).toMaybeFunctionType();
         if (maybeAbstractMethod != null
             && maybeAbstractMethod.isAbstract()
@@ -980,8 +976,6 @@ class TypeValidator implements Serializable {
       ObjectType superType = entry.getValue();
       FunctionType abstractMethod = instance.findPropertyType(method).toMaybeFunctionType();
       if (abstractMethod == null || abstractMethod.isAbstract()) {
-        String sourceName = n.getSourceFileName();
-        sourceName = nullToEmpty(sourceName);
         registerMismatch(
             instance,
             superType,

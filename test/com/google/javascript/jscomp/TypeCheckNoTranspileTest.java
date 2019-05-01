@@ -3002,6 +3002,28 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassMissingOverrideAnnotationForInterfaceInstanceProperty() {
+    testTypes(
+        lines(
+            "/** @record */", // `@interface` would also trigger this.
+            "class Foo {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.bar;",
+            "  }",
+            "}",
+            "",
+            "/** @implements {Foo} */",
+            "class MyFoo { }",
+            // No `@override`.
+            // For some reason we only check this when assigning to prototype properties, not to
+            // instance properties.
+            "/** @type {number} */",
+            "MyFoo.prototype.bar = 0;"),
+        "property bar already defined on interface Foo; use @override to override it");
+  }
+
+  @Test
   public void testClassIncompatibleInterfaceMethodImplementation() {
     testTypes(
         lines(
@@ -3032,6 +3054,68 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "/** @implements {Bar} */",
             "class Baz {}"),
         "property foo on interface Foo is not implemented by type Baz");
+  }
+
+  @Test
+  public void testClassMissingInterfaceInstanceProperty() {
+    testTypes(
+        lines(
+            "/** @record */", // `@interface` would also trigger this.
+            "class Foo {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.bar;",
+            "  }",
+            "}",
+            "",
+            "/** @implements {Foo} */",
+            "class MyFoo { }"),
+        "property bar on interface Foo is not implemented by type MyFoo");
+  }
+
+  @Test
+  public void testClassInvalidOverrideOfInterfaceInstanceProperty() {
+    testTypes(
+        lines(
+            "/** @record */", // `@interface` would also trigger this.
+            "class Foo {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.bar;",
+            "  }",
+            "}",
+            "",
+            "/** @implements {Foo} */",
+            "class MyFoo {",
+            "  constructor() {",
+            "    /** @type {string} */",
+            "    this.bar;",
+            "  }",
+            "}"),
+        lines(
+            "mismatch of the bar property on type MyFoo and the type "
+                + "of the property it overrides from interface Foo",
+            "original: number",
+            "override: string"));
+  }
+
+  @Test
+  public void testClassPrototypeOverrideOfInterfaceInstanceProperty() {
+    testTypes(
+        lines(
+            "/** @record */", // `@interface` would also trigger this.
+            "class Foo {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.bar;",
+            "  }",
+            "}",
+            "",
+            "/** @implements {Foo} */",
+            "class MyFoo { }",
+            // It's legal to fulfill the interface using either instance or prototype properties.
+            "/** @override */",
+            "MyFoo.prototype.bar;"));
   }
 
   @Test
@@ -5575,8 +5659,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testGetterOverridesInstancePropertyFromInterface() {
-    // We treat the interface fields in the constructor as different from prototype properties,
-    // so trying to override the `num` field with a getter doesn't work.
     testTypes(
         lines(
             "/** @interface */",
@@ -5591,8 +5673,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @override */",
             "  get num() { return 3; }",
             "}",
-            "var /** string */ x = (new Baz).num;"),
-        "property num not defined on any superclass of Baz");
+            "var /** string */ x = (new Baz).num;"));
   }
 
   @Test

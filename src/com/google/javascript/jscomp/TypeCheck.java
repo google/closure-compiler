@@ -1332,15 +1332,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   private void checkPropertyInheritance(
       Node key, String propertyName, FunctionType ctorType, ObjectType type) {
-    if (ctorType != null && (ctorType.isConstructor() || ctorType.isInterface())) {
-      checkDeclaredPropertyAgainstNominalInheritance(
-          key.getFirstChild(),
-          ctorType,
-          propertyName,
-          key.getJSDocInfo(),
-          type.getPropertyType(propertyName));
-      checkAbstractMethodInConcreteClass(key, ctorType, key.getJSDocInfo());
+    if (ctorType == null || !ctorType.hasInstanceType()) {
+      return;
     }
+
+    checkDeclaredPropertyAgainstNominalInheritance(
+        key.getFirstChild(),
+        ctorType,
+        propertyName,
+        key.getJSDocInfo(),
+        type.getPropertyType(propertyName));
+    checkAbstractMethodInConcreteClass(key, ctorType, key.getJSDocInfo());
   }
 
   /**
@@ -1547,17 +1549,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     boolean foundInterfaceProperty = false;
     if (ctorType.isConstructor()) {
-      for (JSType implementedInterface :
-          ctorType.getAllImplementedInterfaces()) {
+      for (ObjectType implementedInterface : ctorType.getAllImplementedInterfaces()) {
         if (implementedInterface.isUnknownType() || implementedInterface.isEmptyType()) {
           continue;
         }
-        FunctionType interfaceType =
-            implementedInterface.toObjectType().getConstructor();
-        checkNotNull(interfaceType);
+        checkState(implementedInterface.isInstanceType(), implementedInterface);
 
-        boolean interfaceHasProperty =
-            interfaceType.getPrototype().hasProperty(propertyName);
+        boolean interfaceHasProperty = implementedInterface.hasProperty(propertyName);
         foundInterfaceProperty = foundInterfaceProperty || interfaceHasProperty;
         if (!declaredOverride
             && interfaceHasProperty
@@ -1569,7 +1567,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                   n,
                   HIDDEN_INTERFACE_PROPERTY,
                   propertyName,
-                  interfaceType.getTopMostDefiningType(propertyName).toString()));
+                  implementedInterface.getTopDefiningInterface(propertyName).toString()));
         }
       }
     }

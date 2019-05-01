@@ -13242,14 +13242,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testInterfacePropertyNotImplemented3() {
     testTypes(
-        "/** @interface\n @template T */function Int() {};"
-            + "/** @return {T} */Int.prototype.foo = function() {};"
-            + "/** @constructor\n @implements {Int<string>} */function Foo() {};"
-            + "/** @return {number}\n @override */Foo.prototype.foo = function() {};",
-        "mismatch of the foo property on type Foo and the type of the property it "
-            + "overrides from interface Int\n"
-            + "original: function(this:Int): string\n"
-            + "override: function(this:Foo): number");
+        lines(
+            "/** @interface  @template T */ function Int() {};",
+            "/** @return {T} */ Int.prototype.foo = function() {};",
+            "",
+            "/** @constructor @implements {Int<string>} */ function Foo() {};",
+            "/** @return {number}  @override */ Foo.prototype.foo = function() {};"),
+        lines(
+            "mismatch of the foo property on type Foo and the type of the property it "
+                + "overrides from interface Int<string>",
+            "original: function(this:Int): string",
+            "override: function(this:Foo): number"));
   }
 
   @Test
