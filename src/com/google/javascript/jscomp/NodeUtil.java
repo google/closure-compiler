@@ -77,10 +77,15 @@ public final class NodeUtil {
   // Utility class; do not instantiate.
   private NodeUtil() {}
 
+  static boolean isImpureTrue(Node n) {
+    return getImpureBooleanValue(n) == TernaryValue.TRUE;
+  }
+
   /**
-   * Gets the boolean value of a node that represents a expression. This method effectively emulates
-   * the <code>Boolean()</code> JavaScript cast function. Note: unlike getPureBooleanValue this
-   * function does not return UNKNOWN for expressions with side-effects.
+   * Gets the boolean value of a node that represents a expression. This method
+   * effectively emulates the <code>Boolean()</code> JavaScript cast function.
+   * Note: unlike getPureBooleanValue this function does not return UNKNOWN
+   * for expressions with side-effects.
    */
   static TernaryValue getImpureBooleanValue(Node n) {
     switch (n.getToken()) {
@@ -91,59 +96,56 @@ public final class NodeUtil {
       case NOT:
         TernaryValue value = getImpureBooleanValue(n.getLastChild());
         return value.not();
-      case AND:
-        {
-          TernaryValue lhs = getImpureBooleanValue(n.getFirstChild());
-          TernaryValue rhs = getImpureBooleanValue(n.getLastChild());
-          return lhs.and(rhs);
-        }
-      case OR:
-        {
-          TernaryValue lhs = getImpureBooleanValue(n.getFirstChild());
-          TernaryValue rhs = getImpureBooleanValue(n.getLastChild());
-          return lhs.or(rhs);
-        }
-      case HOOK:
-        {
-          TernaryValue trueValue = getImpureBooleanValue(n.getSecondChild());
-          TernaryValue falseValue = getImpureBooleanValue(n.getLastChild());
-          if (trueValue.equals(falseValue)) {
-            return trueValue;
-          } else {
-            // TODO(bradfordcsmith): I believe we could check the condition value and use that to
-            // get a better answer than UNKNOWN in some cases.
-            return TernaryValue.UNKNOWN;
-          }
-        }
-
-      case FUNCTION:
-      case CLASS:
-      case NEW:
-      case ARRAYLIT:
-      case OBJECTLIT:
-      case TRUE:
-      case REGEXP:
-        return TernaryValue.TRUE;
-
-      case VOID:
-      case NULL:
-      case FALSE:
-        return TernaryValue.FALSE;
-
-      case TEMPLATELIT:
-        // TODO(bradfordcsmith): We could return TRUE if any of the children can be determined to
-        // evaluate to a non-empty string.
-        if (n.hasOneChild()) {
-          // A template literal with only one child will always contain a TEMPLATELIT_STRING.
-          // One containing only a substitution expression will actually contain 3 children, two
-          // empty TEMPLATELIT_STRING nodes on either side of the TEMPLATELIT_SUB node.
-          Node templatelitStringNode = n.getOnlyChild();
-          checkState(templatelitStringNode.isTemplateLitString(), templatelitStringNode);
-          String strValue = templatelitStringNode.getCookedString();
-          return TernaryValue.forBoolean(null != strValue && !strValue.isEmpty());
+      case AND: {
+        TernaryValue lhs = getImpureBooleanValue(n.getFirstChild());
+        TernaryValue rhs = getImpureBooleanValue(n.getLastChild());
+        return lhs.and(rhs);
+      }
+      case OR:  {
+        TernaryValue lhs = getImpureBooleanValue(n.getFirstChild());
+        TernaryValue rhs = getImpureBooleanValue(n.getLastChild());
+        return lhs.or(rhs);
+      }
+      case HOOK:  {
+        TernaryValue trueValue = getImpureBooleanValue(
+            n.getSecondChild());
+        TernaryValue falseValue = getImpureBooleanValue(n.getLastChild());
+        if (trueValue.equals(falseValue)) {
+          return trueValue;
         } else {
           return TernaryValue.UNKNOWN;
         }
+      }
+      case NEW:
+      case ARRAYLIT:
+      case OBJECTLIT:
+        // ignoring side-effects
+        return TernaryValue.TRUE;
+
+      case VOID:
+        return TernaryValue.FALSE;
+
+      default:
+        return getPureBooleanValue(n);
+    }
+  }
+
+  /**
+   * Gets the boolean value of a node that represents a literal. This method
+   * effectively emulates the <code>Boolean()</code> JavaScript cast function
+   * except it return UNKNOWN for known values with side-effects, use
+   * getImpureBooleanValue if you don't care about side-effects.
+   */
+  static TernaryValue getPureBooleanValue(Node n) {
+    switch (n.getToken()) {
+      case TEMPLATELIT:
+        if (n.hasOneChild()) {
+          return getPureBooleanValue(n.getFirstChild());
+        }
+        break;
+      case TEMPLATELIT_STRING:
+        return TernaryValue.forBoolean(
+            null != n.getCookedString() && !n.getCookedString().isEmpty());
 
       case STRING:
         return TernaryValue.forBoolean(n.getString().length() > 0);
@@ -151,36 +153,55 @@ public final class NodeUtil {
       case NUMBER:
         return TernaryValue.forBoolean(n.getDouble() != 0);
 
+      case NOT:
+        return getPureBooleanValue(n.getLastChild()).not();
+
+      case NULL:
+      case FALSE:
+        return TernaryValue.FALSE;
+
+      case VOID:
+        if (!mayHaveSideEffects(n.getFirstChild())) {
+          return TernaryValue.FALSE;
+        }
+        break;
+
       case NAME:
         String name = n.getString();
-        if ("undefined".equals(name) || "NaN".equals(name)) {
+        if ("undefined".equals(name)
+            || "NaN".equals(name)) {
           // We assume here that programs don't change the value of the keyword
           // undefined to something other than the value undefined.
           return TernaryValue.FALSE;
         } else if ("Infinity".equals(name)) {
           return TernaryValue.TRUE;
-        } else {
-          return TernaryValue.UNKNOWN;
         }
+        break;
 
+      case TRUE:
+      case REGEXP:
+        return TernaryValue.TRUE;
+
+      case FUNCTION:
+      case CLASS:
+      case NEW:
+      case ARRAYLIT:
+      case OBJECTLIT:
+        if (!mayHaveSideEffects(n)) {
+          return TernaryValue.TRUE;
+        }
+        break;
       default:
-        return TernaryValue.UNKNOWN;
+        break;
     }
+
+    return TernaryValue.UNKNOWN;
   }
 
   /**
-   * Gets the boolean value of a node that represents a literal. This method effectively emulates
-   * the <code>Boolean()</code> JavaScript cast function except it returns UNKNOWN for known values
-   * with side-effects, use getImpureBooleanValue if you don't care about side-effects.
-   */
-  static TernaryValue getPureBooleanValue(Node n) {
-    return mayHaveSideEffects(n) ? TernaryValue.UNKNOWN : getImpureBooleanValue(n);
-  }
-
-  /**
-   * Gets the value of a node as a String, or null if it cannot be converted. When it returns a
-   * non-null String, this method effectively emulates the <code>String()</code> JavaScript cast
-   * function.
+   * Gets the value of a node as a String, or null if it cannot be converted.
+   * When it returns a non-null String, this method effectively emulates the
+   * <code>String()</code> JavaScript cast function.
    */
   public static String getStringValue(Node n) {
     // TODO(user): regex literals as well.
@@ -211,7 +232,9 @@ public final class NodeUtil {
 
       case NAME:
         String name = n.getString();
-        if ("undefined".equals(name) || "Infinity".equals(name) || "NaN".equals(name)) {
+        if ("undefined".equals(name)
+            || "Infinity".equals(name)
+            || "NaN".equals(name)) {
           return name;
         }
         break;
@@ -250,15 +273,16 @@ public final class NodeUtil {
   }
 
   /**
-   * When converting arrays to string using Array.prototype.toString or Array.prototype.join, the
-   * rules for conversion to String are different than converting each element individually.
-   * Specifically, "null" and "undefined" are converted to an empty string.
-   *
+   * When converting arrays to string using Array.prototype.toString or
+   * Array.prototype.join, the rules for conversion to String are different
+   * than converting each element individually.  Specifically, "null" and
+   * "undefined" are converted to an empty string.
    * @param n A node that is a member of an Array.
    * @return The string representation.
    */
   static String getArrayElementStringValue(Node n) {
-    return (NodeUtil.isNullOrUndefined(n) || n.isEmpty()) ? "" : getStringValue(n);
+    return (NodeUtil.isNullOrUndefined(n) || n.isEmpty())
+        ? "" : getStringValue(n);
   }
 
   static String arrayToString(Node literal) {
@@ -278,9 +302,9 @@ public final class NodeUtil {
   }
 
   /**
-   * Gets the value of a node as a Number, or null if it cannot be converted. When it returns a
-   * non-null Double, this method effectively emulates the <code>Number()</code> JavaScript cast
-   * function.
+   * Gets the value of a node as a Number, or null if it cannot be converted.
+   * When it returns a non-null Double, this method effectively emulates the
+   * <code>Number()</code> JavaScript cast function.
    *
    * @param n The node.
    * @return The value of a node as a Number, or null if it cannot be converted.
@@ -319,8 +343,7 @@ public final class NodeUtil {
         return null;
 
       case NEG:
-        if (n.hasOneChild()
-            && n.getFirstChild().isName()
+        if (n.hasOneChild() && n.getFirstChild().isName()
             && n.getFirstChild().getString().equals("Infinity")) {
           return Double.NEGATIVE_INFINITY;
         }
@@ -366,7 +389,9 @@ public final class NodeUtil {
       return 0.0;
     }
 
-    if (s.length() > 2 && s.charAt(0) == '0' && (s.charAt(1) == 'x' || s.charAt(1) == 'X')) {
+    if (s.length() > 2
+        && s.charAt(0) == '0'
+        && (s.charAt(1) == 'x' || s.charAt(1) == 'X')) {
       // Attempt to convert hex numbers.
       try {
         return Double.valueOf(Integer.parseInt(s.substring(2), 16));
@@ -385,7 +410,9 @@ public final class NodeUtil {
 
     // Firefox and IE treat the "Infinity" differently. Firefox is case
     // insensitive, but IE treats "infinity" as NaN.  So leave it alone.
-    if (s.equals("infinity") || s.equals("-infinity") || s.equals("+infinity")) {
+    if (s.equals("infinity")
+        || s.equals("-infinity")
+        || s.equals("+infinity")) {
       return null;
     }
 
@@ -399,10 +426,12 @@ public final class NodeUtil {
   static String trimJsWhiteSpace(String s) {
     int start = 0;
     int end = s.length();
-    while (end > 0 && TokenUtil.isStrWhiteSpaceChar(s.charAt(end - 1)) == TernaryValue.TRUE) {
+    while (end > 0
+        && TokenUtil.isStrWhiteSpaceChar(s.charAt(end - 1)) == TernaryValue.TRUE) {
       end--;
     }
-    while (start < end && TokenUtil.isStrWhiteSpaceChar(s.charAt(start)) == TernaryValue.TRUE) {
+    while (start < end
+        && TokenUtil.isStrWhiteSpaceChar(s.charAt(start)) == TernaryValue.TRUE) {
       start++;
     }
     return s.substring(start, end);
@@ -419,17 +448,15 @@ public final class NodeUtil {
 
   /**
    * Gets the node of a function or class's name. This method recognizes five forms:
-   *
    * <ul>
-   *   <li>{@code class name {...}}
-   *   <li>{@code var name = class {...}}
-   *   <li>{@code qualified.name = class {...}}
-   *   <li>{@code var name2 = class name1 {...}}
-   *   <li>{@code qualified.name2 = class name1 {...}}
+   * <li>{@code class name {...}}</li>
+   * <li>{@code var name = class {...}}</li>
+   * <li>{@code qualified.name = class {...}}</li>
+   * <li>{@code var name2 = class name1 {...}}</li>
+   * <li>{@code qualified.name2 = class name1 {...}}</li>
    * </ul>
-   *
-   * In two last cases with named function expressions, the second name is returned (the variable or
-   * qualified name).
+   * In two last cases with named function expressions, the second name is
+   * returned (the variable or qualified name).
    *
    * @param n A function or class node
    * @return the node best representing the class's name
@@ -443,13 +470,12 @@ public final class NodeUtil {
         // var name2 = function name1() ...
         return parent;
 
-      case ASSIGN:
-        {
-          // qualified.name = function() ...
-          // qualified.name2 = function name1() ...
-          Node firstChild = parent.getFirstChild();
-          return firstChild.isQualifiedName() ? firstChild : null;
-        }
+      case ASSIGN: {
+        // qualified.name = function() ...
+        // qualified.name2 = function name1() ...
+        Node firstChild = parent.getFirstChild();
+        return firstChild.isQualifiedName() ? firstChild : null;
+      }
 
       default:
         // function name() ...
@@ -474,16 +500,15 @@ public final class NodeUtil {
 
   /**
    * Gets the function's name. This method recognizes the forms:
-   *
    * <ul>
-   *   <li>{@code &#123;'name': function() ...&#125;}
-   *   <li>{@code &#123;name: function() ...&#125;}
-   *   <li>{@code function name() ...}
-   *   <li>{@code var name = function() ...}
-   *   <li>{@code var obj = {name() {} ...}}
-   *   <li>{@code qualified.name = function() ...}
-   *   <li>{@code var name2 = function name1() ...}
-   *   <li>{@code qualified.name2 = function name1() ...}
+   * <li>{@code &#123;'name': function() ...&#125;}</li>
+   * <li>{@code &#123;name: function() ...&#125;}</li>
+   * <li>{@code function name() ...}</li>
+   * <li>{@code var name = function() ...}</li>
+   * <li>{@code var obj = {name() {} ...}}</li>
+   * <li>{@code qualified.name = function() ...}</li>
+   * <li>{@code var name2 = function name1() ...}</li>
+   * <li>{@code qualified.name2 = function name1() ...}</li>
    * </ul>
    *
    * @param n a node whose type is {@link Token#FUNCTION}
@@ -537,7 +562,9 @@ public final class NodeUtil {
     return null;
   }
 
-  /** Returns true if this is an immutable value. */
+  /**
+   * Returns true if this is an immutable value.
+   */
   static boolean isImmutableValue(Node n) {
     // TODO(johnlenz): rename this function.  It is currently being used
     // in two disjoint cases:
@@ -583,7 +610,9 @@ public final class NodeUtil {
     return false;
   }
 
-  /** Returns true if the operator on this node is symmetric */
+  /**
+   * Returns true if the operator on this node is symmetric
+   */
   static boolean isSymmetricOperation(Node n) {
     switch (n.getToken()) {
       case EQ: // equal
@@ -600,8 +629,8 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if the operator on this node is relational. the returned set does not include the
-   * equalities.
+   * Returns true if the operator on this node is relational.
+   * the returned set does not include the equalities.
    */
   static boolean isRelationalOperation(Node n) {
     switch (n.getToken()) {
@@ -616,7 +645,10 @@ public final class NodeUtil {
     return false;
   }
 
-  /** Returns the inverse of an operator if it is invertible. ex. '>' ==> '<' */
+  /**
+   * Returns the inverse of an operator if it is invertible.
+   * ex. '>' ==> '<'
+   */
   static Token getInverseOperator(Token type) {
     switch (type) {
       case GT:
@@ -633,20 +665,26 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if this is a literal value. We define a literal value as any node that evaluates
-   * to the same thing regardless of when or where it is evaluated. So /xyz/ and [3, 5] are
-   * literals, but the name a is not.
+   * Returns true if this is a literal value. We define a literal value
+   * as any node that evaluates to the same thing regardless of when or
+   * where it is evaluated. So /xyz/ and [3, 5] are literals, but
+   * the name a is not.
    *
-   * <p>Function literals do not meet this definition, because they lexically capture variables. For
-   * example, if you have <code>
+   * <p>Function literals do not meet this definition, because they
+   * lexically capture variables. For example, if you have
+   * <code>
    * function() { return a; }
-   * </code> If it is evaluated in a different scope, then it captures a different variable. Even if
-   * the function did not read any captured variables directly, it would still fail this definition,
+   * </code>
+   * If it is evaluated in a different scope, then it
+   * captures a different variable. Even if the function did not read
+   * any captured variables directly, it would still fail this definition,
    * because it affects the lifecycle of variables in the enclosing scope.
    *
-   * <p>However, a function literal with respect to a particular scope is a literal.
+   * <p>However, a function literal with respect to a particular scope is
+   * a literal.
    *
-   * @param includeFunctions If true, all function expressions will be treated as literals.
+   * @param includeFunctions If true, all function expressions will be
+   *     treated as literals.
    */
   public static boolean isLiteralValue(Node n, boolean includeFunctions) {
     switch (n.getToken()) {
@@ -779,9 +817,10 @@ public final class NodeUtil {
   }
 
   /**
-   * An operator with two operands that does not assign a value to either. Once you cut through the
-   * layers of rules, these all parse similarly, taking LeftHandSideExpression operands on either
-   * side. Comma is not included, because it takes AssignmentExpression operands, making its syntax
+   * An operator with two operands that does not assign a value to either.
+   * Once you cut through the layers of rules, these all parse similarly, taking
+   * LeftHandSideExpression operands on either side.
+   * Comma is not included, because it takes AssignmentExpression operands, making its syntax
    * different.
    */
   static boolean isBinaryOperatorType(Token type) {
@@ -822,8 +861,8 @@ public final class NodeUtil {
   }
 
   /**
-   * An operator taking only one operand. These all parse very similarly, taking
-   * LeftHandSideExpression operands.
+   * An operator taking only one operand.
+   * These all parse very similarly, taking LeftHandSideExpression operands.
    */
   static boolean isUnaryOperatorType(Token type) {
     switch (type) {
@@ -861,8 +900,9 @@ public final class NodeUtil {
   }
 
   /**
-   * A "simple" operator is one whose children are expressions, has no direct side-effects (unlike
-   * '+='), and has no conditional aspects (unlike '||').
+   * A "simple" operator is one whose children are expressions,
+   * has no direct side-effects (unlike '+='), and has no
+   * conditional aspects (unlike '||').
    */
   static boolean isSimpleOperatorType(Token type) {
     switch (type) {
@@ -904,7 +944,9 @@ public final class NodeUtil {
     }
   }
 
-  /** True for aliases defined with @const, not for aliases defined with @constructor/@interface. */
+  /**
+   * True for aliases defined with @const, not for aliases defined with @constructor/@interface.
+   */
   static boolean isAliasedConstDefinition(Node lhs) {
     JSDocInfo jsdoc = getBestJSDocInfo(lhs);
     if (jsdoc == null && !lhs.isFromExterns()) {
@@ -919,10 +961,8 @@ public final class NodeUtil {
     }
     Node parent = lhs.getParent();
     return (lhs.isName() && parent.isVar())
-        || (lhs.isGetProp()
-            && lhs.isQualifiedName()
-            && parent.isAssign()
-            && parent.getParent().isExprResult());
+        || (lhs.isGetProp() && lhs.isQualifiedName()
+            && parent.isAssign() && parent.getParent().isExprResult());
   }
 
   static boolean isTypedefDecl(Node n) {
@@ -949,8 +989,9 @@ public final class NodeUtil {
   /**
    * Returns true iff this node defines a namespace, e.g.,
    *
-   * <p>/** @const * / var goog = {}; /** @const * / var goog = goog || {}; /** @const * / goog.math
-   * = goog.math || {};
+   * /** @const * / var goog = {};
+   * /** @const * / var goog = goog || {};
+   * /** @const * / goog.math = goog.math || {};
    */
   public static boolean isNamespaceDecl(Node n) {
     JSDocInfo jsdoc = getBestJSDocInfo(n);
@@ -1034,17 +1075,19 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if the node which may have side effects when executed. This version default to the
-   * "safe" assumptions when the compiler object is not provided (RegExp have side-effects, etc).
+   * Returns true if the node which may have side effects when executed.
+   * This version default to the "safe" assumptions when the compiler object is not
+   * provided (RegExp have side-effects, etc).
    */
   public static boolean mayHaveSideEffects(Node n, AbstractCompiler compiler) {
     return checkForStateChangeHelper(n, false, compiler);
   }
 
   /**
-   * Returns true if some node in n's subtree changes application state. If {@code
-   * checkForNewObjects} is true, we assume that newly created mutable objects (like object
-   * literals) change state. Otherwise, we assume that they have no side effects.
+   * Returns true if some node in n's subtree changes application state.
+   * If {@code checkForNewObjects} is true, we assume that newly created
+   * mutable objects (like object literals) change state. Otherwise, we assume
+   * that they have no side effects.
    */
   private static boolean checkForStateChangeHelper(
       Node n, boolean checkForNewObjects, AbstractCompiler compiler) {
@@ -1104,8 +1147,7 @@ public final class NodeUtil {
         return false;
 
       case CLASS:
-        return checkForNewObjects
-            || isClassDeclaration(n)
+        return checkForNewObjects || isClassDeclaration(n)
             // Check the extends clause for side effects.
             || checkForStateChangeHelper(n.getSecondChild(), checkForNewObjects, compiler)
             // Check for class members that are computed properties with side effects.
@@ -1351,17 +1393,19 @@ public final class NodeUtil {
    * Returns true if calls to this function have side effects.
    *
    * @param callNode The call node to inspected.
-   * @param compiler A compiler object to provide program state changing context information. Can be
-   *     null.
+   * @param compiler A compiler object to provide program state changing
+   *     context information. Can be null.
    */
-  static boolean functionCallHasSideEffects(Node callNode, @Nullable AbstractCompiler compiler) {
+  static boolean functionCallHasSideEffects(
+      Node callNode, @Nullable AbstractCompiler compiler) {
     checkState(callNode.isCall() || callNode.isTaggedTemplateLit(), callNode);
 
     if (callNode.isNoSideEffectsCall()) {
       return false;
     }
 
-    if (callNode.isOnlyModifiesArgumentsCall() && allArgsUnescapedLocal(callNode)) {
+    if (callNode.isOnlyModifiesArgumentsCall()
+        && allArgsUnescapedLocal(callNode)) {
       return false;
     }
 
@@ -1379,17 +1423,17 @@ public final class NodeUtil {
         return false;
       }
 
-      if (callNode.isOnlyModifiesThisCall() && evaluatesToLocalValue(callee.getFirstChild())) {
+      if (callNode.isOnlyModifiesThisCall()
+          && evaluatesToLocalValue(callee.getFirstChild())) {
         return false;
       }
 
       // Many common Math functions have no side-effects.
       // TODO(nicksantos): This is a terrible terrible hack, until
       // I create a definitionProvider that understands namespacing.
-      if (callee.getFirstChild().isName()
-          && callee.isQualifiedName()
+      if (callee.getFirstChild().isName() && callee.isQualifiedName()
           && callee.getFirstChild().getString().equals("Math")) {
-        switch (callee.getLastChild().getString()) {
+        switch(callee.getLastChild().getString()) {
           case "abs":
           case "acos":
           case "acosh":
@@ -1468,8 +1512,8 @@ public final class NodeUtil {
     if (compiler.getOptions().useTypesForLocalOptimization) {
       JSType type = n.getJSType();
       if (type != null) {
-        JSType nativeStringType =
-            compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE);
+        JSType nativeStringType = compiler.getTypeRegistry()
+            .getNativeType(JSTypeNative.STRING_TYPE);
         if (type.isEquivalentTo(nativeStringType)) {
           return true;
         }
@@ -1479,13 +1523,17 @@ public final class NodeUtil {
     return false;
   }
 
-  /** @return Whether the call has a local result. */
+  /**
+   * @return Whether the call has a local result.
+   */
   static boolean callHasLocalResult(Node n) {
     checkState(n.isCall() || n.isTaggedTemplateLit(), n);
     return n.isLocalResultCall();
   }
 
-  /** @return Whether the new has a local result. */
+  /**
+   * @return Whether the new has a local result.
+   */
   static boolean newHasLocalResult(Node n) {
     checkState(n.isNew(), n);
     return n.isOnlyModifiesThisCall();
@@ -1494,8 +1542,9 @@ public final class NodeUtil {
   /**
    * Returns true if the current node's type implies side effects.
    *
-   * <p>This is a non-recursive version of the may have side effects check; used to check wherever
-   * the current node's type is one of the reasons why a subtree has side effects.
+   * <p>This is a non-recursive version of the may have side effects
+   * check; used to check wherever the current node's type is one of
+   * the reasons why a subtree has side effects.
    */
   static boolean nodeTypeMayHaveSideEffects(Node n, AbstractCompiler compiler) {
     checkNotNull(compiler);
@@ -1542,14 +1591,17 @@ public final class NodeUtil {
     return true;
   }
 
-  /** @return Whether the tree can be affected by side-effects or has side-effects. */
+  /**
+   * @return Whether the tree can be affected by side-effects or
+   * has side-effects.
+   */
   static boolean canBeSideEffected(Node n) {
     return canBeSideEffected(n, ImmutableSet.of("undefined", "Infinity", "NaN"), null);
   }
 
   /**
-   * @param knownConstants A set of names known to be constant value at node 'n' (such as locals
-   *     that are last written before n can execute).
+   * @param knownConstants A set of names known to be constant value at
+   * node 'n' (such as locals that are last written before n can execute).
    * @return Whether the tree can be affected by side-effects or has side-effects.
    */
   // TODO(nick): Get rid of the knownConstants argument in favor of using
@@ -1567,7 +1619,7 @@ public final class NodeUtil {
         // Non-constant names values may have been changed.
         return !isConstantVar(n, scope) && !knownConstants.contains(n.getString());
 
-        // Properties on constant NAMEs can still be side-effected.
+      // Properties on constant NAMEs can still be side-effected.
       case GETPROP:
       case GETELEM:
         return true;
@@ -1593,16 +1645,15 @@ public final class NodeUtil {
   }
 
   /**
-   * The comma operator has the lowest precedence, 0, followed by the assignment operators ({@code
-   * =}, {@code &=}, {@code +=}, etc.) which have precedence of 1, and so on.
+   * The comma operator has the lowest precedence, 0, followed by the assignment operators
+   * ({@code =}, {@code &=}, {@code +=}, etc.) which have precedence of 1, and so on.
    *
-   * <p>See
+   * See
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
    */
   public static int precedence(Token type) {
     switch (type) {
-      case COMMA:
-        return 0;
+      case COMMA:  return 0;
       case ASSIGN_BITOR:
       case ASSIGN_BITXOR:
       case ASSIGN_BITAND:
@@ -1615,41 +1666,29 @@ public final class NodeUtil {
       case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
-      case ASSIGN:
-        return 1;
-      case YIELD:
-        return 2;
-      case HOOK:
-        return 3; // ?: operator
-      case OR:
-        return 4;
-      case AND:
-        return 5;
-      case BITOR:
-        return 6;
-      case BITXOR:
-        return 7;
-      case BITAND:
-        return 8;
+      case ASSIGN: return 1;
+      case YIELD:  return 2;
+      case HOOK:   return 3;  // ?: operator
+      case OR:     return 4;
+      case AND:    return 5;
+      case BITOR:  return 6;
+      case BITXOR: return 7;
+      case BITAND: return 8;
       case EQ:
       case NE:
       case SHEQ:
-      case SHNE:
-        return 9;
+      case SHNE:   return 9;
       case LT:
       case GT:
       case LE:
       case GE:
       case INSTANCEOF:
-      case IN:
-        return 10;
+      case IN:     return 10;
       case LSH:
       case RSH:
-      case URSH:
-        return 11;
+      case URSH:   return 11;
       case SUB:
-      case ADD:
-        return 12;
+      case ADD:    return 12;
       case MUL:
       case MOD:
       case DIV:
@@ -1682,7 +1721,7 @@ public final class NodeUtil {
       case ARRAY_PATTERN:
       case DEFAULT_VALUE:
       case DESTRUCTURING_LHS:
-      case EMPTY: // TODO(johnlenz): remove this.
+      case EMPTY:  // TODO(johnlenz): remove this.
       case FALSE:
       case FUNCTION:
       case CLASS:
@@ -1753,7 +1792,10 @@ public final class NodeUtil {
     return allResultsMatch(n, NodeUtil::isImmutableValue);
   }
 
-  /** Apply the supplied predicate against all possible result Nodes of the expression. */
+  /**
+   * Apply the supplied predicate against
+   * all possible result Nodes of the expression.
+   */
   static boolean allResultsMatch(Node n, Predicate<Node> p) {
     switch (n.getToken()) {
       case CAST:
@@ -1763,9 +1805,11 @@ public final class NodeUtil {
         return allResultsMatch(n.getLastChild(), p);
       case AND:
       case OR:
-        return allResultsMatch(n.getFirstChild(), p) && allResultsMatch(n.getLastChild(), p);
+        return allResultsMatch(n.getFirstChild(), p)
+            && allResultsMatch(n.getLastChild(), p);
       case HOOK:
-        return allResultsMatch(n.getSecondChild(), p) && allResultsMatch(n.getLastChild(), p);
+        return allResultsMatch(n.getSecondChild(), p)
+            && allResultsMatch(n.getLastChild(), p);
       default:
         return p.apply(n);
     }
@@ -1782,7 +1826,10 @@ public final class NodeUtil {
     OBJECT
   }
 
-  /** Apply the supplied predicate against all possible result Nodes of the expression. */
+  /**
+   * Apply the supplied predicate against
+   * all possible result Nodes of the expression.
+   */
   public static ValueType getKnownValueType(Node n) {
     switch (n.getToken()) {
       case CAST:
@@ -1792,49 +1839,51 @@ public final class NodeUtil {
         return getKnownValueType(n.getLastChild());
       case AND:
       case OR:
-        return and(getKnownValueType(n.getFirstChild()), getKnownValueType(n.getLastChild()));
+        return and(
+            getKnownValueType(n.getFirstChild()),
+            getKnownValueType(n.getLastChild()));
       case HOOK:
-        return and(getKnownValueType(n.getSecondChild()), getKnownValueType(n.getLastChild()));
+        return and(
+            getKnownValueType(n.getSecondChild()),
+            getKnownValueType(n.getLastChild()));
 
-      case ADD:
-        {
-          ValueType last = getKnownValueType(n.getLastChild());
-          if (last == ValueType.STRING) {
-            return ValueType.STRING;
-          }
-          ValueType first = getKnownValueType(n.getFirstChild());
-          if (first == ValueType.STRING) {
-            return ValueType.STRING;
-          }
+      case ADD: {
+        ValueType last = getKnownValueType(n.getLastChild());
+        if (last == ValueType.STRING) {
+          return ValueType.STRING;
+        }
+        ValueType first = getKnownValueType(n.getFirstChild());
+        if (first == ValueType.STRING) {
+          return ValueType.STRING;
+        }
 
-          // There are some pretty weird cases for object types:
-          //   {} + [] === "0"
-          //   [] + {} ==== "[object Object]"
-          if (first == ValueType.OBJECT || last == ValueType.OBJECT) {
-            return ValueType.UNDETERMINED;
-          }
-
-          if (!mayBeString(first) && !mayBeString(last)) {
-            // ADD used with compilations of null, undefined, boolean and number always result
-            // in numbers.
-            return ValueType.NUMBER;
-          }
-
-          // There are some pretty weird cases for object types:
-          //   {} + [] === "0"
-          //   [] + {} ==== "[object Object]"
-
+        // There are some pretty weird cases for object types:
+        //   {} + [] === "0"
+        //   [] + {} ==== "[object Object]"
+        if (first == ValueType.OBJECT || last == ValueType.OBJECT) {
           return ValueType.UNDETERMINED;
         }
 
-      case ASSIGN_ADD:
-        {
-          ValueType last = getKnownValueType(n.getLastChild());
-          if (last == ValueType.STRING) {
-            return ValueType.STRING;
-          }
-          return ValueType.UNDETERMINED;
+        if (!mayBeString(first) && !mayBeString(last)) {
+          // ADD used with compilations of null, undefined, boolean and number always result
+          // in numbers.
+          return ValueType.NUMBER;
         }
+
+        // There are some pretty weird cases for object types:
+        //   {} + [] === "0"
+        //   [] + {} ==== "[object Object]"
+
+        return ValueType.UNDETERMINED;
+      }
+
+      case ASSIGN_ADD: {
+        ValueType last = getKnownValueType(n.getLastChild());
+        if (last == ValueType.STRING) {
+          return ValueType.STRING;
+        }
+        return ValueType.UNDETERMINED;
+      }
 
       case NAME:
         String name = n.getString();
@@ -1879,7 +1928,7 @@ public final class NodeUtil {
       case NUMBER:
         return ValueType.NUMBER;
 
-        // Primitives
+      // Primitives
       case TRUE:
       case FALSE:
         // Comparisons
@@ -1928,22 +1977,30 @@ public final class NodeUtil {
     return (a == b) ? a : ValueType.UNDETERMINED;
   }
 
-  /** Returns true if the result of node evaluation is always a number */
+  /**
+   * Returns true if the result of node evaluation is always a number
+   */
   public static boolean isNumericResult(Node n) {
     return getKnownValueType(n) == ValueType.NUMBER;
   }
 
-  /** @return Whether the result of node evaluation is always a boolean */
+  /**
+   * @return Whether the result of node evaluation is always a boolean
+   */
   public static boolean isBooleanResult(Node n) {
     return getKnownValueType(n) == ValueType.BOOLEAN;
   }
 
-  /** @return Whether the result of node evaluation is always a string */
+  /**
+   * @return Whether the result of node evaluation is always a string
+   */
   public static boolean isStringResult(Node n) {
     return getKnownValueType(n) == ValueType.STRING;
   }
 
-  /** @return Whether the result of node evaluation is always an object */
+  /**
+   * @return Whether the result of node evaluation is always an object
+   */
   public static boolean isObjectResult(Node n) {
     return getKnownValueType(n) == ValueType.OBJECT;
   }
@@ -1966,9 +2023,7 @@ public final class NodeUtil {
       if (type != null) {
         if (type.isStringValueType()) {
           return true;
-        } else if (type.isNumberValueType()
-            || type.isBooleanValueType()
-            || type.isNullType()
+        } else if (type.isNumberValueType() || type.isBooleanValueType() || type.isNullType()
             || type.isVoidType()) {
           return false;
         }
@@ -1978,8 +2033,8 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether the results is possibly a string, this includes Objects which may implicitly be
-   *     converted to a string.
+   * @return Whether the results is possibly a string, this includes Objects which may implicitly
+   * be converted to a string.
    */
   static boolean mayBeString(ValueType type) {
     switch (type) {
@@ -2018,9 +2073,10 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if the operator is associative. e.g. (a * b) * c = a * (b * c) Note: "+" is not
-   * associative because it is also the concatenation for strings. e.g. "a" + (1 + 2) is not "a" + 1
-   * + 2
+   * Returns true if the operator is associative.
+   * e.g. (a * b) * c = a * (b * c)
+   * Note: "+" is not associative because it is also the concatenation
+   * for strings. e.g. "a" + (1 + 2) is not "a" + 1 + 2
    */
   static boolean isAssociative(Token type) {
     switch (type) {
@@ -2037,9 +2093,11 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if the operator is commutative. e.g. (a * b) * c = c * (b * a) Note 1: "+" is not
-   * commutative because it is also the concatenation for strings. e.g. "a" + (1 + 2) is not "a" + 1
-   * + 2 Note 2: only operations on literals and pure functions are commutative.
+   * Returns true if the operator is commutative.
+   * e.g. (a * b) * c = c * (b * a)
+   * Note 1: "+" is not commutative because it is also the concatenation
+   * for strings. e.g. "a" + (1 + 2) is not "a" + 1 + 2
+   * Note 2: only operations on literals and pure functions are commutative.
    */
   static boolean isCommutative(Token type) {
     switch (type) {
@@ -2161,7 +2219,10 @@ public final class NodeUtil {
     }
   }
 
-  /** Determines if the given node contains a function statement or function expression. */
+  /**
+   * Determines if the given node contains a function statement or function
+   * expression.
+   */
   static boolean containsFunction(Node n) {
     return containsType(n, Token.FUNCTION);
   }
@@ -2227,7 +2288,9 @@ public final class NodeUtil {
     return curr;
   }
 
-  /** @return The first property in the objlit or class members, that matches the key. */
+  /**
+   * @return The first property in the objlit or class members, that matches the key.
+   */
   @Nullable
   static Node getFirstPropMatchingKey(Node n, String keyName) {
     checkState(n.isObjectLit() || n.isClassMembers());
@@ -2276,7 +2339,9 @@ public final class NodeUtil {
     return null;
   }
 
-  /** Returns true if the shallow scope contains references to 'this' keyword */
+  /**
+   * Returns true if the shallow scope contains references to 'this' keyword
+   */
   static boolean referencesThis(Node n) {
     if (n.isFunction()) {
       return referencesThis(NodeUtil.getFunctionParameters(n))
@@ -2287,9 +2352,9 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if the current scope contains references to the 'super' keyword. Note that if
-   * there are classes declared inside the current class, super calls which reference those classes
-   * are not reported.
+   * Returns true if the current scope contains references to the 'super' keyword.
+   * Note that if there are classes declared inside the current class, super calls which
+   * reference those classes are not reported.
    */
   static boolean referencesSuper(Node n) {
     Node curr = n.getFirstChild();
@@ -2302,14 +2367,17 @@ public final class NodeUtil {
     return false;
   }
 
-  /** Is this a GETPROP or GETELEM node? */
+  /**
+   * Is this a GETPROP or GETELEM node?
+   */
   public static boolean isGet(Node n) {
     return n.isGetProp() || n.isGetElem();
   }
 
+
   /**
-   * Is this node the name of a block-scoped declaration? Checks for let, const, class, or
-   * block-scoped function declarations.
+   * Is this node the name of a block-scoped declaration?
+   * Checks for let, const, class, or block-scoped function declarations.
    *
    * @param n The node
    * @return True if {@code n} is the NAME of a block-scoped declaration.
@@ -2344,7 +2412,8 @@ public final class NodeUtil {
 
   /**
    * @param n The node
-   * @return True if {@code n} is a VAR, LET or CONST that contains a destructuring pattern.
+   * @return True if {@code n} is a VAR, LET or CONST that contains a
+   *     destructuring pattern.
    */
   static boolean isDestructuringDeclaration(Node n) {
     if (isNameDeclaration(n)) {
@@ -2359,7 +2428,6 @@ public final class NodeUtil {
 
   /**
    * For an assignment or variable declaration get the assigned value.
-   *
    * @return The value node representing the new value.
    */
   public static Node getAssignedValue(Node n) {
@@ -2378,20 +2446,24 @@ public final class NodeUtil {
    * Is this node an assignment expression statement?
    *
    * @param n The node
-   * @return True if {@code n} is EXPR_RESULT and {@code n}'s first child is ASSIGN
+   * @return True if {@code n} is EXPR_RESULT and {@code n}'s
+   *     first child is ASSIGN
    */
   static boolean isExprAssign(Node n) {
-    return n.isExprResult() && n.getFirstChild().isAssign();
+    return n.isExprResult()
+        && n.getFirstChild().isAssign();
   }
 
   /**
    * Is this node a call expression statement?
    *
    * @param n The node
-   * @return True if {@code n} is EXPR_RESULT and {@code n}'s first child is CALL
+   * @return True if {@code n} is EXPR_RESULT and {@code n}'s
+   *     first child is CALL
    */
   public static boolean isExprCall(Node n) {
-    return n.isExprResult() && n.getFirstChild().isCall();
+    return n.isExprResult()
+        && n.getFirstChild().isCall();
   }
 
   static boolean isNonArrowFunction(Node n) {
@@ -2406,7 +2478,9 @@ public final class NodeUtil {
     return n.isVanillaFor() || n.isForIn() || n.isForOf() || n.isForAwaitOf();
   }
 
-  /** Determines whether the given node is a FOR, DO, or WHILE node. */
+  /**
+   * Determines whether the given node is a FOR, DO, or WHILE node.
+   */
   static boolean isLoopStructure(Node n) {
     switch (n.getToken()) {
       case FOR:
@@ -2423,8 +2497,8 @@ public final class NodeUtil {
 
   /**
    * @param n The node to inspect.
-   * @return If the node, is a FOR, WHILE, or DO, it returns the node for the code BLOCK, null
-   *     otherwise.
+   * @return If the node, is a FOR, WHILE, or DO, it returns the node for
+   * the code BLOCK, null otherwise.
    */
   static Node getLoopCodeBlock(Node n) {
     switch (n.getToken()) {
@@ -2441,7 +2515,10 @@ public final class NodeUtil {
     }
   }
 
-  /** @return Whether the specified node has a loop parent that is within the current scope. */
+  /**
+   * @return Whether the specified node has a loop parent that
+   * is within the current scope.
+   */
   static boolean isWithinLoop(Node n) {
     for (Node parent : n.getAncestors()) {
       if (NodeUtil.isLoopStructure(parent)) {
@@ -2455,7 +2532,9 @@ public final class NodeUtil {
     return false;
   }
 
-  /** Determines whether the given node is a FOR, DO, WHILE, WITH, or IF node. */
+  /**
+   * Determines whether the given node is a FOR, DO, WHILE, WITH, or IF node.
+   */
   public static boolean isControlStructure(Node n) {
     switch (n.getToken()) {
       case FOR:
@@ -2478,7 +2557,10 @@ public final class NodeUtil {
     }
   }
 
-  /** Determines whether the given node is code node for FOR, DO, WHILE, WITH, or IF node. */
+  /**
+   * Determines whether the given node is code node for FOR, DO,
+   * WHILE, WITH, or IF node.
+   */
   static boolean isControlStructureCodeBlock(Node parent, Node n) {
     switch (parent.getToken()) {
       case DO:
@@ -2508,7 +2590,6 @@ public final class NodeUtil {
 
   /**
    * Gets the condition of an ON_TRUE / ON_FALSE CFG edge.
-   *
    * @param n a node with an outgoing conditional CFG edge
    * @return the condition node or null if the condition is not obviously a node
    */
@@ -2532,17 +2613,20 @@ public final class NodeUtil {
     throw new IllegalArgumentException(n + " does not have a condition.");
   }
 
-  /** @return Whether the node is of a type that contain other statements. */
+  /**
+   * @return Whether the node is of a type that contain other statements.
+   */
   public static boolean isStatementBlock(Node n) {
     return n.isRoot() || n.isScript() || n.isBlock() || n.isModuleBody();
   }
 
   /**
-   * A block scope is created by a non-synthetic block node, a for loop node, or a for-of loop node.
+   * A block scope is created by a non-synthetic block node, a for loop node,
+   * or a for-of loop node.
    *
-   * <p>Note: for functions, we use two separate scopes for parameters and declarations in the body.
-   * We need to make sure default parameters cannot reference var / function declarations in the
-   * body.
+   * <p>Note: for functions, we use two separate scopes for parameters and
+   * declarations in the body. We need to make sure default parameters cannot
+   * reference var / function declarations in the body.
    *
    * @return Whether the node creates a block scope.
    */
@@ -2565,9 +2649,7 @@ public final class NodeUtil {
   }
 
   static boolean createsScope(Node n) {
-    return createsBlockScope(n)
-        || n.isFunction()
-        || n.isModuleBody()
+    return createsBlockScope(n) || n.isFunction() || n.isModuleBody()
         // The ROOT nodes that are the root of the externs tree or main JS tree do not
         // create scopes. The parent of those two, which is the root of the entire AST and
         // therefore has no parent, is the only ROOT node that creates a scope.
@@ -2581,7 +2663,9 @@ public final class NodeUtil {
     return DEFINITE_CFG_ROOTS.contains(n.getToken());
   }
 
-  /** @return Whether the node is used as a statement. */
+  /**
+   * @return Whether the node is used as a statement.
+   */
   public static boolean isStatement(Node n) {
     return !n.isModuleBody() && isStatementParent(n.getParent());
   }
@@ -2618,8 +2702,8 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether the node is a reference to a variable, function, class or function parameter
-   *     (not a label or an empty function expression name).
+   * @return Whether the node is a reference to a variable, function, class or
+   *     function parameter (not a label or an empty function expression name).
    */
   static boolean isReferenceName(Node n) {
     return n.isName() && !n.getString().isEmpty();
@@ -2633,20 +2717,22 @@ public final class NodeUtil {
   static boolean isNonlocalModuleExportName(Node n) {
     Node parent = n.getParent();
     return (parent != null
-        && n.isName()
-        && ((parent.isExportSpec() && n != parent.getFirstChild())
-            || (parent.isImportSpec() && n != parent.getLastChild())));
+            && n.isName()
+            && ((parent.isExportSpec() && n != parent.getFirstChild())
+                || (parent.isImportSpec() && n != parent.getLastChild())));
   }
 
   /** Whether the child node is the FINALLY block of a try. */
   static boolean isTryFinallyNode(Node parent, Node child) {
-    return parent.isTry() && parent.hasXChildren(3) && child == parent.getLastChild();
+    return parent.isTry() && parent.hasXChildren(3)
+        && child == parent.getLastChild();
   }
 
   /** Whether the node is a CATCH container BLOCK. */
   static boolean isTryCatchNodeContainer(Node n) {
     Node parent = n.getParent();
-    return parent.isTry() && parent.getSecondChild() == n;
+    return parent.isTry()
+        && parent.getSecondChild() == n;
   }
 
   // TODO(tbreisacher): Add a method for detecting nodes injected as runtime libraries.
@@ -2655,8 +2741,8 @@ public final class NodeUtil {
   }
 
   /**
-   * Permanently delete the given node from the AST, as well as report the related AST
-   * changes/deletions to the given compiler.
+   * Permanently delete the given node from the AST, as well as report
+   * the related AST changes/deletions to the given compiler.
    */
   public static void deleteNode(Node n, AbstractCompiler compiler) {
     Node parent = n.getParent();
@@ -2668,7 +2754,8 @@ public final class NodeUtil {
   /**
    * Permanently delete the given call from the AST while maintaining a valid node structure, as
    * well as report the related AST changes to the given compiler. In some cases, this is done by
-   * deleting the parent from the AST and is come cases expression is replaced by {@code undefined}.
+   * deleting the parent from the AST and is come cases expression is replaced by {@code
+   * undefined}.
    */
   public static void deleteFunctionCall(Node n, AbstractCompiler compiler) {
     checkState(n.isCall());
@@ -2687,7 +2774,9 @@ public final class NodeUtil {
     compiler.reportChangeToEnclosingScope(parent);
   }
 
-  /** Permanently delete all the children of the given node, including reporting changes. */
+  /**
+   * Permanently delete all the children of the given node, including reporting changes.
+   */
   public static void deleteChildren(Node n, AbstractCompiler compiler) {
     while (n.hasChildren()) {
       deleteNode(n.getFirstChild(), compiler);
@@ -2695,8 +2784,8 @@ public final class NodeUtil {
   }
 
   /**
-   * Safely remove children while maintaining a valid node structure. In some cases, this is done by
-   * removing the parent from the AST as well.
+   * Safely remove children while maintaining a valid node structure.
+   * In some cases, this is done by removing the parent from the AST as well.
    */
   public static void removeChild(Node parent, Node node) {
     if (isTryFinallyNode(parent, node)) {
@@ -2722,7 +2811,9 @@ public final class NodeUtil {
       // Simply empty the block.  This maintains source location and
       // "synthetic"-ness.
       node.detachChildren();
-    } else if (isStatementBlock(parent) || isSwitchCase(node) || node.isMemberFunctionDef()) {
+    } else if (isStatementBlock(parent)
+        || isSwitchCase(node)
+        || node.isMemberFunctionDef()) {
       // A statement in a block or a member function can simply be removed
       parent.removeChild(node);
     } else if (isNameDeclaration(parent) || parent.isExprResult()) {
@@ -2734,7 +2825,8 @@ public final class NodeUtil {
         // This would leave an empty VAR, remove the VAR itself.
         removeChild(parent.getParent(), parent);
       }
-    } else if (parent.isLabel() && node == parent.getLastChild()) {
+    } else if (parent.isLabel()
+        && node == parent.getLastChild()) {
       // Remove the node from the parent, so it can be reused.
       parent.removeChild(node);
       // A LABEL without children can not be referred to, remove it.
@@ -2812,7 +2904,9 @@ public final class NodeUtil {
     }
   }
 
-  /** Add a finally block if one does not exist. */
+  /**
+   * Add a finally block if one does not exist.
+   */
   static void maybeAddFinally(Node tryNode) {
     checkState(tryNode.isTry());
     if (!NodeUtil.hasFinally(tryNode)) {
@@ -2822,7 +2916,6 @@ public final class NodeUtil {
 
   /**
    * Merge a block with its parent block.
-   *
    * @return Whether the block was removed.
    */
   public static boolean tryMergeBlock(Node block, boolean alwaysMerge) {
@@ -2846,16 +2939,15 @@ public final class NodeUtil {
   }
 
   /**
-   * A check inside a block to see if there are const, let, class, or function declarations to be
-   * safe and not hoist them into the upper block.
-   *
+   * A check inside a block to see if there are const, let, class, or function declarations
+   * to be safe and not hoist them into the upper block.
    * @return Whether the block can be removed
    */
   public static boolean canMergeBlock(Node block) {
     for (Node c = block.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
         case LABEL:
-          if (canMergeBlock(c)) {
+          if (canMergeBlock(c)){
             continue;
           } else {
             return false;
@@ -2882,24 +2974,27 @@ public final class NodeUtil {
     return node.isCall() || node.isNew();
   }
 
-  /** Return a BLOCK node for the given FUNCTION node. */
+  /**
+   * Return a BLOCK node for the given FUNCTION node.
+   */
   public static Node getFunctionBody(Node fn) {
     checkArgument(fn.isFunction(), fn);
     return fn.getLastChild();
   }
 
+
   /**
-   * Is the node a var, const, let, function, or class declaration? See {@link
-   * #isFunctionDeclaration}, {@link #isClassDeclaration}, and {@link #isNameDeclaration}
+   * Is the node a var, const, let, function, or class declaration?
+   * See {@link #isFunctionDeclaration}, {@link #isClassDeclaration}, and {@link #isNameDeclaration}
    */
   static boolean isDeclaration(Node n) {
     return isNameDeclaration(n) || isFunctionDeclaration(n) || isClassDeclaration(n);
   }
 
   /**
-   * Is this node a function declaration? A function declaration is a function that has a name that
-   * is added to the current scope (i.e. a function that is not part of a expression; see {@link
-   * #isFunctionExpression}).
+   * Is this node a function declaration? A function declaration is a function
+   * that has a name that is added to the current scope (i.e. a function that
+   * is not part of a expression; see {@link #isFunctionExpression}).
    */
   public static boolean isFunctionDeclaration(Node n) {
     // Note: There is currently one case where an unnamed function has a declaration parent.
@@ -2957,14 +3052,17 @@ public final class NodeUtil {
     }
   }
 
-  /** see {@link #isClassDeclaration} */
+  /**
+   * see {@link #isClassDeclaration}
+   */
   public static boolean isClassDeclaration(Node n) {
     return n.isClass() && isDeclarationParent(n.getParent()) && isNamedClass(n);
   }
 
   /**
-   * Is this node a hoisted function declaration? A function declaration in the scope root is
-   * hoisted to the top of the scope. See {@link #isFunctionDeclaration}).
+   * Is this node a hoisted function declaration? A function declaration in the
+   * scope root is hoisted to the top of the scope.
+   * See {@link #isFunctionDeclaration}).
    */
   public static boolean isHoistedFunctionDeclaration(Node n) {
     if (isFunctionDeclaration(n)) {
@@ -3008,11 +3106,11 @@ public final class NodeUtil {
    * Is a FUNCTION node a function expression?
    *
    * <p>A function expression is a function that:
-   *
    * <ul>
    *   <li>has either no name or a name that is not added to the current scope
-   *   <li>AND can be manipulated as an expression (assigned to variables, passed to functions,
-   *       etc.) i.e. It is not a method declaration on a class or object literal.
+   *   <li>AND can be manipulated as an expression
+   *       (assigned to variables, passed to functions, etc.)
+   *       i.e. It is not a method declaration on a class or object literal.
    * </ul>
    *
    * <p>Some examples of function expressions:
@@ -3052,19 +3150,20 @@ public final class NodeUtil {
    * @return Whether n is a function used within an expression.
    */
   static boolean isFunctionExpression(Node n) {
-    return n.isFunction() && !NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isMethodDeclaration(n);
+    return n.isFunction()
+        && !NodeUtil.isFunctionDeclaration(n)
+        && !NodeUtil.isMethodDeclaration(n);
   }
 
   static boolean isUnannotatedCallback(Node n) {
     JSDocInfo jsdoc = getBestJSDocInfo(n);
-    return n.isFunction()
-        && n.getParent().isCall()
-        && n != n.getParent().getFirstChild()
-        && jsdoc == null
-        && !functionHasInlineJsdocs(n);
+    return n.isFunction() && n.getParent().isCall() && n != n.getParent().getFirstChild()
+        && jsdoc == null && !functionHasInlineJsdocs(n);
   }
 
-  /** @return Whether the node is both a function expression and the function is named. */
+  /**
+   * @return Whether the node is both a function expression and the function is named.
+   */
   static boolean isNamedFunctionExpression(Node n) {
     return NodeUtil.isFunctionExpression(n) && !n.getFirstChild().getString().isEmpty();
   }
@@ -3080,12 +3179,11 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns whether n is a function with a nonempty name. Differs from {@link
-   * #isFunctionDeclaration} because the name might in a function expression and not be added to the
-   * current scope.
+   * Returns whether n is a function with a nonempty name.
+   * Differs from {@link #isFunctionDeclaration} because the name might in a function expression
+   * and not be added to the current scope.
    *
-   * <p>Some named functions include
-   *
+   * Some named functions include
    * <pre>
    *   (function f() {})();
    *   export default function f() {};
@@ -3108,8 +3206,8 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns whether this is a bleeding function (an anonymous named function that bleeds into the
-   * inner scope).
+   * Returns whether this is a bleeding function (an anonymous named function
+   * that bleeds into the inner scope).
    */
   static boolean isBleedingFunctionName(Node n) {
     if (!n.isName() || n.getString().isEmpty()) {
@@ -3129,7 +3227,9 @@ public final class NodeUtil {
     return isFunctionExpression(node) && isEmptyBlock(node.getLastChild());
   }
 
-  /** @return Whether a function has a reference to its own "arguments" object. */
+  /**
+   * @return Whether a function has a reference to its own "arguments" object.
+   */
   static boolean doesFunctionReferenceOwnArgumentsObject(Node fn) {
     checkArgument(fn.isFunction());
     if (fn.isArrowFunction()) {
@@ -3138,10 +3238,9 @@ public final class NodeUtil {
     return referencesArgumentsHelper(fn.getLastChild());
   }
 
-  /**
-   * @return Whether any child is a reference to the "arguments" object of the root. Effectively,
-   *     this includes arrow method bodies (which don't have their own) and excludes other functions
-   *     which shadow the "arguments" value with their own.
+  /** @return Whether any child is a reference to the "arguments" object of the root. Effectively,
+   * this includes arrow method bodies (which don't have their own) and excludes other functions
+   * which shadow the "arguments" value with their own.
    */
   private static boolean referencesArgumentsHelper(Node node) {
     if (node.isName() && node.getString().equals("arguments")) {
@@ -3161,7 +3260,11 @@ public final class NodeUtil {
     return false;
   }
 
-  /** @return Whether node is a call to methodName. a.f(...) a['f'](...) */
+  /**
+   * @return Whether node is a call to methodName.
+   *    a.f(...)
+   *    a['f'](...)
+   */
   static boolean isObjectCallMethod(Node callNode, String methodName) {
     if (callNode.isCall()) {
       Node functionIndentifyingExpression = callNode.getFirstChild();
@@ -3176,17 +3279,20 @@ public final class NodeUtil {
     return false;
   }
 
+
   /**
-   * @return Whether the callNode represents an expression in the form of: x.call(...)
-   *     x['call'](...)
+   * @return Whether the callNode represents an expression in the form of:
+   *    x.call(...)
+   *    x['call'](...)
    */
   static boolean isFunctionObjectCall(Node callNode) {
     return isObjectCallMethod(callNode, "call");
   }
 
   /**
-   * @return Whether the callNode represents an expression in the form of: x.apply(...)
-   *     x['apply'](...)
+   * @return Whether the callNode represents an expression in the form of:
+   *    x.apply(...)
+   *    x['apply'](...)
    */
   static boolean isFunctionObjectApply(Node callNode) {
     return isObjectCallMethod(callNode, "apply");
@@ -3202,16 +3308,17 @@ public final class NodeUtil {
    * @return True if n is the left hand of an assign
    */
   public static boolean isNameDeclOrSimpleAssignLhs(Node n, Node parent) {
-    return (parent.isAssign() && parent.getFirstChild() == n) || NodeUtil.isNameDeclaration(parent);
+    return
+        (parent.isAssign() && parent.getFirstChild() == n) || NodeUtil.isNameDeclaration(parent);
   }
 
   /**
-   * Determines whether this node is used as an L-value. Notice that sometimes names are used as
-   * both L-values and R-values.
+   * Determines whether this node is used as an L-value. Notice that sometimes
+   * names are used as both L-values and R-values.
    *
-   * <p>We treat "var x;" and "let x;" as an L-value because it's syntactically similar to "var x =
-   * undefined", even though it's technically not an L-value. But it kind of makes sense if you
-   * treat it as "assignment to 'undefined' at the top of the scope".
+   * <p>We treat "var x;" and "let x;" as an L-value because it's syntactically similar to
+   * "var x = undefined", even though it's technically not an L-value. But it kind of makes
+   * sense if you treat it as "assignment to 'undefined' at the top of the scope".
    *
    * @param n The node
    * @return True if n is an L-value.
@@ -3373,7 +3480,6 @@ public final class NodeUtil {
    * <p>Returns targetNode itself if there is no enclosing target.
    *
    * <p>Examples:
-   *
    * <pre><code>
    *   const a = 1; // getRootTarget(a) returns a
    *   let {[expression]: [x = 3]} = obj; // getRootTarget(x) returns {[expression]: [x = 3]}
@@ -3645,8 +3751,8 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines whether a node represents an object literal get or set key (e.g. key1 in {get key1()
-   * {}, set key2(a){}).
+   * Determines whether a node represents an object literal get or set key
+   * (e.g. key1 in {get key1() {}, set key2(a){}).
    *
    * @param node A node
    */
@@ -3665,10 +3771,12 @@ public final class NodeUtil {
   }
 
   /**
-   * Converts an operator's token value (see {@link Token}) to a string representation.
+   * Converts an operator's token value (see {@link Token}) to a string
+   * representation.
    *
    * @param operator the operator's token value to convert
-   * @return the string representation or {@code null} if the token value is not an operator
+   * @return the string representation or {@code null} if the token value is
+   * not an operator
    */
   public static String opToStr(Token operator) {
     switch (operator) {
@@ -3762,7 +3870,8 @@ public final class NodeUtil {
   }
 
   /**
-   * Converts an operator's token value (see {@link Token}) to a string representation or fails.
+   * Converts an operator's token value (see {@link Token}) to a string
+   * representation or fails.
    *
    * @param operator the operator's token value to convert
    * @return the string representation
@@ -3781,14 +3890,18 @@ public final class NodeUtil {
     return has(node, new MatchNodeType(type), traverseChildrenPred);
   }
 
-  /** @return true if n or any of its descendants are of the specified type. */
+  /**
+   * @return true if n or any of its descendants are of the specified type.
+   */
   public static boolean containsType(Node node, Token type) {
     return containsType(node, type, Predicates.alwaysTrue());
   }
 
+
   /**
-   * Given a node tree, finds all the VAR declarations in that tree that are not in an inner scope.
-   * Then adds a new VAR node at the top of the current scope that redeclares them, if necessary.
+   * Given a node tree, finds all the VAR declarations in that tree that are
+   * not in an inner scope. Then adds a new VAR node at the top of the current
+   * scope that redeclares them, if necessary.
    */
   static void redeclareVarsInsideBranch(Node branch) {
     Collection<Node> vars = getVarsDeclaredInBranch(branch);
@@ -3798,7 +3911,10 @@ public final class NodeUtil {
 
     Node parent = getAddingRoot(branch);
     for (Node nameNode : vars) {
-      Node var = IR.var(IR.name(nameNode.getString()).srcref(nameNode)).srcref(nameNode);
+      Node var = IR.var(
+          IR.name(nameNode.getString())
+              .srcref(nameNode))
+          .srcref(nameNode);
       copyNameAnnotations(nameNode, var.getFirstChild());
       parent.addChildToFront(var);
     }
@@ -3806,7 +3922,6 @@ public final class NodeUtil {
 
   /**
    * Copy any annotations that follow a named value.
-   *
    * @param source
    * @param destination
    */
@@ -3817,13 +3932,13 @@ public final class NodeUtil {
   }
 
   /**
-   * Gets a Node at the top of the current scope where we can add new var declarations as children.
+   * Gets a Node at the top of the current scope where we can add new var
+   * declarations as children.
    */
   private static Node getAddingRoot(Node n) {
     Node addingRoot = null;
     Node ancestor = n;
-    crawl_ancestors:
-    while (null != (ancestor = ancestor.getParent())) {
+    crawl_ancestors: while (null != (ancestor = ancestor.getParent())) {
       switch (ancestor.getToken()) {
         case SCRIPT:
         case MODULE_BODY:
@@ -3856,7 +3971,8 @@ public final class NodeUtil {
    * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
    * @return A NAME or GETPROP node
    */
-  public static Node newQName(AbstractCompiler compiler, String name) {
+  public static Node newQName(
+      AbstractCompiler compiler, String name) {
     int endPos = name.indexOf('.');
     if (endPos == -1) {
       return newName(compiler, name);
@@ -3889,17 +4005,21 @@ public final class NodeUtil {
   }
 
   /**
-   * Creates a node representing a qualified name, copying over the source location information from
-   * the basis node and assigning the given original name to the node.
+   * Creates a node representing a qualified name, copying over the source
+   * location information from the basis node and assigning the given original
+   * name to the node.
    *
    * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
-   * @param basisNode The node that represents the name as currently found in the AST.
-   * @param originalName The original name of the item being represented by the NAME node. Used for
-   *     debugging information.
+   * @param basisNode The node that represents the name as currently found in
+   *     the AST.
+   * @param originalName The original name of the item being represented by the
+   *     NAME node. Used for debugging information.
+   *
    * @return A NAME or GETPROP node
    */
   static Node newQName(
-      AbstractCompiler compiler, String name, Node basisNode, String originalName) {
+      AbstractCompiler compiler, String name, Node basisNode,
+      String originalName) {
     Node node = newQName(compiler, name);
     useSourceInfoForNewQName(node, basisNode);
     if (!originalName.equals(node.getOriginalName())) {
@@ -3911,7 +4031,9 @@ public final class NodeUtil {
     return node;
   }
 
-  /** Creates a property access on the {@code context} tree. */
+  /**
+   * Creates a property access on the {@code context} tree.
+   */
   public static Node newPropertyAccess(AbstractCompiler compiler, Node context, String name) {
     Node propNode = IR.getprop(context, IR.string(name));
     if (compiler.getCodingConvention().isConstantKey(name)) {
@@ -3961,8 +4083,8 @@ public final class NodeUtil {
    * Custom update new QName node with source info from another node.
    *
    * <p>This is very similar to {@link Node#useSourceInfoIfMissingFromForTree(Node)}, but it avoids
-   * overwriting the length field of the nodes. TODO(bradfordcsmith): Eliminate the need for this
-   * custom method.
+   * overwriting the length field of the nodes.
+   * TODO(bradfordcsmith): Eliminate the need for this custom method.
    */
   private static void useSourceInfoForNewQName(Node newQName, Node basisNode) {
     if (newQName.getStaticSourceFile() == null) {
@@ -3979,7 +4101,9 @@ public final class NodeUtil {
     }
   }
 
-  /** Gets the root node of a qualified name. Must be either NAME, THIS or SUPER. */
+  /**
+   * Gets the root node of a qualified name. Must be either NAME, THIS or SUPER.
+   */
   static Node getRootOfQualifiedName(Node qName) {
     for (Node current = qName; true; current = current.getFirstChild()) {
       if (current.isName() || current.isThis() || current.isSuper()) {
@@ -4009,11 +4133,13 @@ public final class NodeUtil {
   }
 
   /**
-   * Creates a new node representing an *existing* name, copying over the source location
-   * information from the basis node.
+   * Creates a new node representing an *existing* name, copying over the source
+   * location information from the basis node.
    *
    * @param name The name for the new NAME node.
-   * @param srcref The node that represents the name as currently found in the AST.
+   * @param srcref The node that represents the name as currently found in
+   *     the AST.
+   *
    * @return The node created.
    */
   static Node newName(AbstractCompiler compiler, String name, Node srcref) {
@@ -4021,16 +4147,21 @@ public final class NodeUtil {
   }
 
   /**
-   * Creates a new node representing an *existing* name, copying over the source location
-   * information from the basis node and assigning the given original name to the node.
+   * Creates a new node representing an *existing* name, copying over the source
+   * location information from the basis node and assigning the given original
+   * name to the node.
    *
    * @param name The name for the new NAME node.
-   * @param basisNode The node that represents the name as currently found in the AST.
-   * @param originalName The original name of the item being represented by the NAME node. Used for
-   *     debugging information.
+   * @param basisNode The node that represents the name as currently found in
+   *     the AST.
+   * @param originalName The original name of the item being represented by the
+   *     NAME node. Used for debugging information.
+   *
    * @return The node created.
    */
-  static Node newName(AbstractCompiler compiler, String name, Node basisNode, String originalName) {
+  static Node newName(
+      AbstractCompiler compiler, String name,
+      Node basisNode, String originalName) {
     Node nameNode = newName(compiler, name, basisNode);
     nameNode.setOriginalName(originalName);
     return nameNode;
@@ -4057,7 +4188,9 @@ public final class NodeUtil {
     return true;
   }
 
-  /** Determines whether the given name is a valid variable name. */
+  /**
+   * Determines whether the given name is a valid variable name.
+   */
   static boolean isValidSimpleName(String name) {
     return TokenStream.isJSIdentifier(name)
         && !TokenStream.isKeyword(name)
@@ -4117,10 +4250,15 @@ public final class NodeUtil {
     }
   }
 
-  /** Retrieves vars declared in the current node tree, excluding descent scopes. */
+  /**
+   * Retrieves vars declared in the current node tree, excluding descent scopes.
+   */
   static Collection<Node> getVarsDeclaredInBranch(Node root) {
     VarCollector collector = new VarCollector();
-    visitPreOrder(root, collector, MATCH_NOT_FUNCTION);
+    visitPreOrder(
+        root,
+        collector,
+        MATCH_NOT_FUNCTION);
     return collector.vars.values();
   }
 
@@ -4204,7 +4342,9 @@ public final class NodeUtil {
     return lhsNodes;
   }
 
-  /** @return {@code true} if the node is a definition with Object.defineProperties */
+  /**
+   * @return {@code true} if the node is a definition with Object.defineProperties
+   */
   static boolean isObjectDefinePropertiesDefinition(Node n) {
     if (!n.isCall() || !n.hasXChildren(3)) {
       return false;
@@ -4244,7 +4384,9 @@ public final class NodeUtil {
         && isKnownGlobalObjectReference(first.getFirstChild());
   }
 
-  /** @return A list of STRING_KEY properties defined by a Object.defineProperties(o, {...}) call */
+  /**
+   * @return A list of STRING_KEY properties defined by a Object.defineProperties(o, {...}) call
+   */
   static Iterable<Node> getObjectDefinedPropertiesKeys(Node definePropertiesCall) {
     checkArgument(NodeUtil.isObjectDefinePropertiesDefinition(definePropertiesCall));
     List<Node> properties = new ArrayList<>();
@@ -4258,12 +4400,17 @@ public final class NodeUtil {
     return properties;
   }
 
-  /** @return {@code true} if the node an assignment to a prototype property of some constructor. */
+  /**
+   * @return {@code true} if the node an assignment to a prototype property of
+   *     some constructor.
+   */
   public static boolean isPrototypePropertyDeclaration(Node n) {
     return isExprAssign(n) && isPrototypeProperty(n.getFirstFirstChild());
   }
 
-  /** @return Whether the node represents a qualified prototype property. */
+  /**
+   * @return Whether the node represents a qualified prototype property.
+   */
   static boolean isPrototypeProperty(Node n) {
     if (!n.isGetProp()) {
       return false;
@@ -4272,7 +4419,9 @@ public final class NodeUtil {
     return recv.isGetProp() && recv.getLastChild().getString().equals("prototype");
   }
 
-  /** @return Whether the node represents a prototype method. */
+  /**
+   * @return Whether the node represents a prototype method.
+   */
   static boolean isPrototypeMethod(Node n) {
     if (!n.isFunction()) {
       return false;
@@ -4289,14 +4438,13 @@ public final class NodeUtil {
       return false;
     }
     Node parent = getProp.getParent();
-    return parent.isAssign()
-        && parent.getFirstChild() == getProp
+    return parent.isAssign() && parent.getFirstChild() == getProp
         && parent.getFirstChild().getLastChild().getString().equals("prototype");
   }
 
   /**
-   * Determines whether this node is testing for the existence of a property. If true, we will not
-   * emit warnings about a missing property.
+   * Determines whether this node is testing for the existence of a property.
+   * If true, we will not emit warnings about a missing property.
    *
    * @param propAccess The GETPROP or GETELEM being tested.
    */
@@ -4321,20 +4469,18 @@ public final class NodeUtil {
         return true;
 
       case NE:
-      case SHNE:
-        {
-          Node other =
-              parent.getFirstChild() == propAccess
-                  ? parent.getSecondChild()
-                  : parent.getFirstChild();
-          return isUndefined(other);
-        }
+      case SHNE: {
+        Node other = parent.getFirstChild() == propAccess
+            ? parent.getSecondChild() : parent.getFirstChild();
+        return isUndefined(other);
+      }
 
       case HOOK:
         return parent.getFirstChild() == propAccess;
 
       case NOT:
-        return parent.getParent().isOr() && parent.getParent().getFirstChild() == parent;
+        return parent.getParent().isOr()
+            && parent.getParent().getFirstChild() == parent;
 
       case CAST:
         return isPropertyTest(compiler, parent);
@@ -4348,14 +4494,11 @@ public final class NodeUtil {
     Node parent = propAccess.getParent();
     switch (parent.getToken()) {
       case EQ:
-      case SHEQ:
-        {
-          Node other =
-              parent.getFirstChild() == propAccess
-                  ? parent.getSecondChild()
-                  : parent.getFirstChild();
-          return isUndefined(other);
-        }
+      case SHEQ: {
+        Node other = parent.getFirstChild() == propAccess
+            ? parent.getSecondChild() : parent.getFirstChild();
+        return isUndefined(other);
+      }
       default:
         return false;
     }
@@ -4380,7 +4523,9 @@ public final class NodeUtil {
     return null;
   }
 
-  /** @return The string property name part of a qualified prototype name. */
+  /**
+   * @return The string property name part of a qualified prototype name.
+   */
   static String getPrototypePropertyName(Node qName) {
     String qNameStr = qName.getQualifiedName();
     int prototypeIdx = qNameStr.lastIndexOf(".prototype.");
@@ -4397,7 +4542,9 @@ public final class NodeUtil {
     return node;
   }
 
-  /** Create a VAR node containing the given name and initial value expression. */
+  /**
+   * Create a VAR node containing the given name and initial value expression.
+   */
   static Node newVarNode(String name, Node value) {
     Node lhs = IR.name(name);
     if (value != null) {
@@ -4407,8 +4554,8 @@ public final class NodeUtil {
   }
 
   /**
-   * Create a VAR node containing the given lhs (name or destructuring pattern) and initial value
-   * expression.
+   * Create a VAR node containing the given lhs (name or destructuring pattern) and
+   * initial value expression.
    */
   static Node newVarNode(Node lhs, Node value) {
     if (lhs.isDestructuringPattern()) {
@@ -4427,11 +4574,13 @@ public final class NodeUtil {
     return IR.function(IR.name(""), IR.paramList(), IR.block());
   }
 
-  /** A predicate for matching name nodes with the specified node. */
-  static class MatchNameNode implements Predicate<Node> {
+  /**
+   * A predicate for matching name nodes with the specified node.
+   */
+  static class MatchNameNode implements Predicate<Node>{
     final String name;
 
-    MatchNameNode(String name) {
+    MatchNameNode(String name){
       this.name = name;
     }
 
@@ -4441,11 +4590,13 @@ public final class NodeUtil {
     }
   }
 
-  /** A predicate for matching nodes with the specified type. */
-  static class MatchNodeType implements Predicate<Node> {
+  /**
+   * A predicate for matching nodes with the specified type.
+   */
+  static class MatchNodeType implements Predicate<Node>{
     final Token type;
 
-    MatchNodeType(Token type) {
+    MatchNodeType(Token type){
       this.type = type;
     }
 
@@ -4455,7 +4606,10 @@ public final class NodeUtil {
     }
   }
 
-  /** A predicate for matching var, let, const, class or function declarations. */
+
+  /**
+   * A predicate for matching var, let, const, class or function declarations.
+   */
   static class MatchDeclaration implements Predicate<Node> {
     @Override
     public boolean apply(Node n) {
@@ -4474,8 +4628,10 @@ public final class NodeUtil {
   static final Predicate<Node> MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION =
       n -> !NodeUtil.isNonArrowFunction(n);
 
-  /** A predicate for matching statements without exiting the current scope. */
-  static class MatchShallowStatement implements Predicate<Node> {
+  /**
+   * A predicate for matching statements without exiting the current scope.
+   */
+  static class MatchShallowStatement implements Predicate<Node>{
     @Override
     public boolean apply(Node n) {
       Node parent = n.getParent();
@@ -4486,7 +4642,9 @@ public final class NodeUtil {
     }
   }
 
-  /** Finds the number of times a type is referenced within the node tree. */
+  /**
+   * Finds the number of times a type is referenced within the node tree.
+   */
   static int getNodeTypeReferenceCount(
       Node node, Token type, Predicate<Node> traverseChildrenPred) {
     return getCount(node, new MatchNodeType(type), traverseChildrenPred);
@@ -4497,12 +4655,16 @@ public final class NodeUtil {
     return has(node, new MatchNameNode(name), traverseChildrenPred);
   }
 
-  /** Whether a simple name is referenced within the node tree. */
+  /**
+   * Whether a simple name is referenced within the node tree.
+   */
   static boolean isNameReferenced(Node node, String name) {
     return isNameReferenced(node, name, Predicates.alwaysTrue());
   }
 
-  /** Finds the number of times a simple name is referenced within the node tree. */
+  /**
+   * Finds the number of times a simple name is referenced within the node tree.
+   */
   static int getNameReferenceCount(Node node, String name) {
     return getCount(node, new MatchNameNode(name), Predicates.alwaysTrue());
   }
@@ -4526,8 +4688,12 @@ public final class NodeUtil {
     return false;
   }
 
-  /** @return The number of times the predicate is true for the node or any of its descendants. */
-  public static int getCount(Node n, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
+  /**
+   * @return The number of times the predicate is true for the node
+   * or any of its descendants.
+   */
+  public static int getCount(
+      Node n, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
     int total = 0;
 
     if (pred.apply(n)) {
@@ -4545,7 +4711,6 @@ public final class NodeUtil {
 
   /**
    * Interface for use with the visit method.
-   *
    * @see #visit
    */
   public static interface Visitor {
@@ -4586,19 +4751,26 @@ public final class NodeUtil {
     visitor.visit(node);
   }
 
-  /** @return Whether an EXPORT node has a from clause. */
+  /**
+   * @return Whether an EXPORT node has a from clause.
+   */
   static boolean isExportFrom(Node n) {
     checkArgument(n.isExport());
     return n.hasTwoChildren();
   }
 
-  /** @return Whether a TRY node has a finally block. */
+  /**
+   * @return Whether a TRY node has a finally block.
+   */
   static boolean hasFinally(Node n) {
     checkArgument(n.isTry());
     return n.hasXChildren(3);
   }
 
-  /** @return The BLOCK node containing the CATCH node (if any) of a TRY. */
+  /**
+   * @return The BLOCK node containing the CATCH node (if any)
+   * of a TRY.
+   */
   static Node getCatchBlock(Node n) {
     checkArgument(n.isTry());
     return n.getSecondChild();
@@ -4623,10 +4795,11 @@ public final class NodeUtil {
   }
 
   /**
-   * Counts the parameters of a function that are not marked optional or varargs. In ES5 functions,
-   * that's all parameters, in ES6 it's a prefix of the parameters. The result is an
-   * overapproximation: if a parameter is not marked as optional, it may still be optional, but it
-   * doesn't have a default value, and wasn't marked as optional during transpilation.
+   * Counts the parameters of a function that are not marked optional or varargs.
+   * In ES5 functions, that's all parameters, in ES6 it's a prefix of the parameters.
+   * The result is an overapproximation: if a parameter is not marked as optional, it may still
+   * be optional, but it doesn't have a default value, and wasn't marked as optional
+   * during transpilation.
    */
   public static int getApproxRequiredArity(Node fun) {
     checkArgument(fun.isFunction());
@@ -4655,24 +4828,25 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines whether a variable is constant:
-   *
+   * <p>Determines whether a variable is constant:
    * <ol>
-   *   <li>In Normalize, any name that matches the {@link CodingConvention#isConstant(String)} is
-   *       annotated with an IS_CONSTANT_NAME property.
+   * <li>In Normalize, any name that matches the
+   *     {@link CodingConvention#isConstant(String)} is annotated with an
+   *     IS_CONSTANT_NAME property.
    * </ol>
    *
    * @param node A NAME or STRING node
    * @return True if a name node represents a constant variable
-   *     <p>TODO(dimvar): this method and the next two do similar but not quite identical things.
-   *     Clean up
+   *
+   * TODO(dimvar): this method and the next two do similar but not quite identical things. Clean up
    */
   static boolean isConstantName(Node node) {
     return node.getBooleanProp(Node.IS_CONSTANT_NAME);
   }
 
   /** Whether the given name is constant by coding convention. */
-  static boolean isConstantByConvention(CodingConvention convention, Node node) {
+  static boolean isConstantByConvention(
+      CodingConvention convention, Node node) {
     Node parent = node.getParent();
     if (parent.isGetProp() && node == parent.getLastChild()) {
       return convention.isConstantKey(node.getString());
@@ -4685,10 +4859,13 @@ public final class NodeUtil {
   }
 
   /**
-   * Temporary function to determine if a node is constant in the old or new world. This does not
-   * check its inputs carefully because it will go away once we switch to the new world.
+   * Temporary function to determine if a node is constant
+   * in the old or new world. This does not check its inputs
+   * carefully because it will go away once we switch to the new
+   * world.
    */
-  static boolean isConstantDeclaration(CodingConvention convention, JSDocInfo info, Node node) {
+  static boolean isConstantDeclaration(
+      CodingConvention convention, JSDocInfo info, Node node) {
     // TODO(b/77597706): Update this method to handle destructured declarations.
     if (node.isName() && node.getParent().isConst()) {
       return true;
@@ -4790,7 +4967,8 @@ public final class NodeUtil {
       if (nextSibling != null) {
         int nextSiblingLineNo = nextSibling.getLineno();
         int nextSiblingColumNo = getColumnNoBase1(nextSibling);
-        if (result != null && lineNo == nextSiblingLineNo && columNo == nextSiblingColumNo) {
+        if (result != null
+            && lineNo == nextSiblingLineNo && columNo == nextSiblingColumNo) {
           // The cursor is in-between two nodes.
           // If just one of them is a variable, a property, or a literal, return that one.
           // Otherwise, return the node to the left of the cursor.
@@ -4831,7 +5009,9 @@ public final class NodeUtil {
     return n.getCharno() + 1;
   }
 
-  /** A new CALL node with the "FREE_CALL" set based on call target. */
+  /**
+   * A new CALL node with the "FREE_CALL" set based on call target.
+   */
   static Node newCallNode(Node callTarget, Node... parameters) {
     boolean isFreeCall = !isGet(callTarget);
     Node call = IR.call(callTarget);
@@ -4843,8 +5023,8 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether the result of the expression node is known to be a primitive value or an object
-   *     that has not yet escaped.
+   * @return Whether the result of the expression node is known to be a primitive value
+   * or an object that has not yet escaped.
    */
   static boolean evaluatesToLocalValue(Node value) {
     return evaluatesToLocalValue(value, Predicates.alwaysFalse());
@@ -4852,18 +5032,21 @@ public final class NodeUtil {
 
   /**
    * @param locals A predicate to apply to unknown local values.
-   * @return Whether the result of the expression node is known to be a primitive value or an object
-   *     that has not yet escaped. This guarantee is different than that provided by isLiteralValue
-   *     (where literal values are immune to side-effects if unescaped) or isImmutableValue (which
-   *     can be safely aliased).
-   *     <p>The concept of "local values" allow for the containment of side-effect operations. For
-   *     example, setting a property on a local value does not produce a global side-effect.
-   *     <p>Note that the concept of "local value" is not deep, it does not say anything about the
-   *     properties of the "local value" (all class instances have "constructor" properties that are
-   *     not local values for instance).
-   *     <p>Note that this method only provides the starting state of the expression result, it does
-   *     not guarantee that the value is forever a local value. If the containing method has any
-   *     non-local side-effect, "local values" may escape.
+   * @return Whether the result of the expression node is known to be a primitive value
+   * or an object that has not yet escaped.  This guarantee is different
+   * than that provided by isLiteralValue (where literal values are immune to side-effects
+   * if unescaped) or isImmutableValue (which can be safely aliased).
+   *
+   * The concept of "local values" allow for the containment of side-effect operations. For
+   * example, setting a property on a local value does not produce a global side-effect.
+   *
+   * Note that the concept of "local value" is not deep, it does not say anything
+   * about the properties of the "local value" (all class instances have "constructor" properties
+   * that are not local values for instance).
+   *
+   * Note that this method only provides the starting state of the expression result,
+   * it does not guarantee that the value is forever a local value.  If the containing
+   * method has any non-local side-effect, "local values" may escape.
    */
   static boolean evaluatesToLocalValue(Node value, Predicate<Node> locals) {
     switch (value.getToken()) {
@@ -4892,7 +5075,9 @@ public final class NodeUtil {
         // There is no information about the locality of object properties.
         return locals.apply(value);
       case CALL:
-        return callHasLocalResult(value) || isToStringMethodCall(value) || locals.apply(value);
+        return callHasLocalResult(value)
+            || isToStringMethodCall(value)
+            || locals.apply(value);
       case TAGGED_TEMPLATELIT:
         return callHasLocalResult(value) || locals.apply(value);
       case NEW:
@@ -4921,7 +5106,9 @@ public final class NodeUtil {
         // Other op force a local value:
         //  '' + g (a local string)
         //  x -= g (x is now an local number)
-        if (isAssignmentOp(value) || isSimpleOperator(value) || isImmutableValue(value)) {
+        if (isAssignmentOp(value)
+            || isSimpleOperator(value)
+            || isImmutableValue(value)) {
           return true;
         }
 
@@ -4930,15 +5117,18 @@ public final class NodeUtil {
     }
   }
 
-  /** @return Whether the provided expression is may evaluate to 'undefined'. */
+  /**
+   * @return Whether the provided expression is may evaluate to 'undefined'.
+   */
   static boolean mayBeUndefined(Node n) {
     return !isDefinedValue(n);
   }
 
   /**
    * @return Whether the provided expression is known not to evaluate to 'undefined'.
-   *     <p>Similar to #getKnownValueType only for 'undefined'. This is useful for simplifying
-   *     default value expressions.
+   *
+   * Similar to #getKnownValueType only for 'undefined'.  This is useful for simplifying
+   * default value expressions.
    */
   static boolean isDefinedValue(Node value) {
     switch (value.getToken()) {
@@ -4948,10 +5138,12 @@ public final class NodeUtil {
         return isDefinedValue(value.getLastChild());
       case AND:
       case OR:
-        return isDefinedValue(value.getFirstChild()) && isDefinedValue(value.getLastChild());
+        return isDefinedValue(value.getFirstChild())
+            && isDefinedValue(value.getLastChild());
       case HOOK:
-        return isDefinedValue(value.getSecondChild()) && isDefinedValue(value.getLastChild());
-        // Assume undefined leaks in this and call results.
+        return isDefinedValue(value.getSecondChild())
+            && isDefinedValue(value.getLastChild());
+      // Assume undefined leaks in this and call results.
       case CALL:
       case NEW:
       case GETELEM:
@@ -4999,8 +5191,9 @@ public final class NodeUtil {
   }
 
   /**
-   * Given the first sibling, this returns the nth sibling or null if no such sibling exists. This
-   * is like "getChildAtIndex" but returns null for non-existent indexes.
+   * Given the first sibling, this returns the nth
+   * sibling or null if no such sibling exists.
+   * This is like "getChildAtIndex" but returns null for non-existent indexes.
    */
   private static Node getNthSibling(Node first, int index) {
     Node sibling = first;
@@ -5011,30 +5204,37 @@ public final class NodeUtil {
     return sibling;
   }
 
-  /** Given the function, this returns the nth argument or null if no such parameter exists. */
+  /**
+   * Given the function, this returns the nth
+   * argument or null if no such parameter exists.
+   */
   static Node getArgumentForFunction(Node function, int index) {
     checkState(function.isFunction());
-    return getNthSibling(function.getSecondChild().getFirstChild(), index);
+    return getNthSibling(
+        function.getSecondChild().getFirstChild(), index);
   }
 
   /**
-   * Given the new or call, this returns the nth argument of the call or null if no such argument
-   * exists.
+   * Given the new or call, this returns the nth
+   * argument of the call or null if no such argument exists.
    */
   static Node getArgumentForCallOrNew(Node call, int index) {
     checkState(isCallOrNew(call));
     return getNthSibling(call.getSecondChild(), index);
   }
 
-  /** Returns whether this is a target of a call or new. */
+  /**
+   * Returns whether this is a target of a call or new.
+   */
   static boolean isInvocationTarget(Node n) {
     Node parent = n.getParent();
-    return parent != null
-        && (isCallOrNew(parent) || parent.isTaggedTemplateLit())
+    return parent != null && (isCallOrNew(parent) || parent.isTaggedTemplateLit())
         && parent.getFirstChild() == n;
   }
 
-  /** Returns whether this is a call (including tagged template lits) or new. */
+  /**
+   * Returns whether this is a call (including tagged template lits) or new.
+   */
   static boolean isInvocation(Node n) {
     return isCallOrNew(n) || n.isTaggedTemplateLit();
   }
@@ -5238,7 +5438,9 @@ public final class NodeUtil {
     }
   }
 
-  /** @return true iff the result of the expression is consumed. */
+  /**
+   * @return true iff the result of the expression is consumed.
+   */
   static boolean isExpressionResultUsed(Node expr) {
     Node parent = expr.getParent();
     switch (parent.getToken()) {
@@ -5279,12 +5481,11 @@ public final class NodeUtil {
 
   /**
    * @param n The expression to check.
-   * @return Whether the expression is unconditionally executed only once in the containing
-   *     execution scope.
+   * @return Whether the expression is unconditionally executed only once in the
+   *     containing execution scope.
    */
   static boolean isExecutedExactlyOnce(Node n) {
-    inspect:
-    do {
+    inspect: do {
       Node parent = n.getParent();
       switch (parent.getToken()) {
         case IF:
@@ -5332,12 +5533,16 @@ public final class NodeUtil {
     return true;
   }
 
-  /** @return An appropriate AST node for the boolean value. */
+  /**
+   * @return An appropriate AST node for the boolean value.
+   */
   static Node booleanNode(boolean value) {
     return value ? IR.trueNode() : IR.falseNode();
   }
 
-  /** @return An appropriate AST node for the double value. */
+  /**
+   * @return An appropriate AST node for the double value.
+   */
   static Node numberNode(double value, Node srcref) {
     Node result;
     if (Double.isNaN(value)) {
@@ -5368,8 +5573,8 @@ public final class NodeUtil {
   private static final Node NUMBER_NAN = IR.getprop(IR.name("Number"), IR.string("NaN"));
 
   /**
-   * A change scope does not directly correspond to a language scope but is an internal grouping of
-   * changes.
+   * A change scope does not directly correspond to a language scope but is an internal
+   * grouping of changes.
    *
    * @return Whether the node represents a change scope root.
    */
@@ -5377,13 +5582,16 @@ public final class NodeUtil {
     return (n.isScript() || n.isFunction());
   }
 
-  /** @return the change scope root */
+  /**
+   * @return the change scope root
+   */
   static Node getEnclosingChangeScopeRoot(Node n) {
     while (n != null && !isChangeScopeRoot(n)) {
       n = n.getParent();
     }
     return n;
   }
+
 
   static int countAstSizeUpToLimit(Node n, final int limit) {
     // Java doesn't allow accessing mutable local variables from another class.
@@ -5413,6 +5621,7 @@ public final class NodeUtil {
     return count;
   }
 
+
   static JSDocInfo createConstantJsDoc() {
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
     builder.recordConstancy();
@@ -5426,7 +5635,9 @@ public final class NodeUtil {
       return id;
     }
 
-    if (Double.isNaN(d) || d == Double.POSITIVE_INFINITY || d == Double.NEGATIVE_INFINITY) {
+    if (Double.isNaN(d)
+        || d == Double.POSITIVE_INFINITY
+        || d == Double.NEGATIVE_INFINITY) {
       return 0;
     }
 
@@ -5516,17 +5727,17 @@ public final class NodeUtil {
     return n.isScript() || n.isModuleBody();
   }
 
-  /** @return Whether the node is a goog.module file's SCRIPT node. */
+  /**
+   * @return Whether the node is a goog.module file's SCRIPT node.
+   */
   static boolean isGoogModuleFile(Node n) {
-    return n.isScript()
-        && n.hasChildren()
-        && n.getFirstChild().isModuleBody()
+    return n.isScript() && n.hasChildren() && n.getFirstChild().isModuleBody()
         && isGoogModuleCall(n.getFirstFirstChild());
   }
 
   /**
-   * @return Whether the node is a SCRIPT node for a goog.module that has a declareLegacyNamespace
-   *     call.
+   * @return Whether the node is a SCRIPT node for a goog.module that has a
+   *     declareLegacyNamespace call.
    */
   static boolean isLegacyGoogModuleFile(Node n) {
     return isGoogModuleFile(n)
@@ -5657,7 +5868,7 @@ public final class NodeUtil {
     return new ArrayList<>(uniqueScopeNodes);
   }
 
-  static Iterable<Node> getInvocationArgsAsIterable(Node invocation) {
+  static Iterable<Node> getInvocationArgsAsIterable(Node invocation){
     if (invocation.isTaggedTemplateLit()) {
       return new TemplateArgsIterable(invocation.getLastChild());
     } else {
@@ -5667,8 +5878,8 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns the number of arguments in this invocation. For template literals it takes into account
-   * the implicit first argument of ITemplateArray
+   * Returns the number of arguments in this invocation. For template literals it takes into
+   * account the implicit first argument of ITemplateArray
    */
   static int getInvocationArgsCount(Node invocation) {
     if (invocation.isTaggedTemplateLit()) {
@@ -5680,10 +5891,10 @@ public final class NodeUtil {
   }
 
   /**
-   * Represents an iterable of the children of templatelit_sub nodes of a template lit node This
-   * iterable will skip over the String children of the template lit node.
+   * Represents an iterable of the children of templatelit_sub nodes of a template lit node
+   * This iterable will skip over the String children of the template lit node.
    */
-  private static final class TemplateArgsIterable implements Iterable<Node> {
+  private static final class TemplateArgsIterable implements Iterable<Node>{
     private final Node templateLit;
 
     TemplateArgsIterable(Node templateLit) {
@@ -5777,8 +5988,8 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns a script node's FeatureSet, which is set at parse-time. This may not be up-to-date as
-   * passes can add/remove features from a script node's descendants.
+   * Returns a script node's FeatureSet, which is set at parse-time. This may not be up-to-date
+   * as passes can add/remove features from a script node's descendants.
    *
    * <p>The feature set will be null if the script node was created artificially or if the parser
    * didn't detect any interesting features.
