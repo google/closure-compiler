@@ -542,29 +542,29 @@ FileReader.prototype.abort = function() {};
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-empty
- * @type {number}
+ * @const {number}
  */
 FileReader.prototype.EMPTY;
 
-/** @type {number} */
+/** @const {number} */
 FileReader.EMPTY;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-loading
- * @type {number}
+ * @const {number}
  */
 FileReader.prototype.LOADING;
 
-/** @type {number} */
+/** @const {number} */
 FileReader.LOADING;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-done
- * @type {number}
+ * @const {number}
  */
 FileReader.prototype.DONE;
 
-/** @type {number} */
+/** @const {number} */
 FileReader.DONE;
 
 /**
