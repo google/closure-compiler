@@ -242,7 +242,9 @@ public final class ModuleLoader {
     // Sort longest length to shortest so that paths are applied most specific to least.
     Set<String> builder =
         new TreeSet<>(
-            Comparator.comparingInt(String::length).thenComparing(String::compareTo).reversed());
+            Comparator.comparingInt(String::length)
+                .thenComparing(Comparator.naturalOrder())
+                .reversed());
     for (String root : roots) {
       String rootModuleName = escaper.escape(resolver.apply(root));
       if (isAmbiguousIdentifier(rootModuleName)) {
