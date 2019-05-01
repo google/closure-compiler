@@ -286,37 +286,37 @@ Node.prototype.prefix;
 Node.prototype.textContent;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_DISCONNECTED
  */
 Node.DOCUMENT_POSITION_DISCONNECTED;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_PRECEDING
  */
 Node.DOCUMENT_POSITION_PRECEDING;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_FOLLOWING
  */
 Node.DOCUMENT_POSITION_FOLLOWING;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_CONTAINS
  */
 Node.DOCUMENT_POSITION_CONTAINS;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_CONTAINED_BY
  */
 Node.DOCUMENT_POSITION_CONTAINED_BY;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
  */
 Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
