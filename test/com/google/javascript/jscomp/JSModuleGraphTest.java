@@ -116,7 +116,7 @@ public final class JSModuleGraphTest {
             new JSModule[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
 
     assertThat(graph.getModuleCount()).isEqualTo(7);
-    assertThat(graph.getModuleByName(JSModule.WEAK_MODULE_NAME)).isSameAs(weakModule);
+    assertThat(graph.getModuleByName(JSModule.WEAK_MODULE_NAME)).isSameInstanceAs(weakModule);
   }
 
   @Test

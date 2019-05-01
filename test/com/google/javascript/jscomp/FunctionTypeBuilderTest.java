@@ -172,7 +172,7 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
       String typeName = type.getInstanceType().toString();
       FunctionType typeInRegistry = ((ObjectType) getLastCompiler()
           .getTypeRegistry().getGlobalType(typeName)).getConstructor();
-      assertThat(typeInRegistry).isSameAs(type);
+      assertThat(typeInRegistry).isSameInstanceAs(type);
     }
   }
 }

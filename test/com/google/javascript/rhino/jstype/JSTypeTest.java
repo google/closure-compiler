@@ -3820,7 +3820,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(objectType.isArrayType()).isFalse();
     assertThat(objectType.isDateType()).isFalse();
     assertThat(objectType.isFunctionPrototypeType()).isFalse();
-    assertThat(OBJECT_TYPE).isSameAs(objectType.getImplicitPrototype());
+    assertThat(OBJECT_TYPE).isSameInstanceAs(objectType.getImplicitPrototype());
 
     // isSubtype
     assertThat(objectType.isSubtypeOf(ALL_TYPE)).isTrue();
@@ -3982,7 +3982,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     JSType resolvedNamedGoogBar = Asserts.assertValidResolve(namedGoogBar);
     assertThat(namedGoogBar).isNotSameInstanceAs(resolvedNamedGoogBar);
-    assertThat(googBar.getInstanceType()).isSameAs(resolvedNamedGoogBar);
+    assertThat(googBar.getInstanceType()).isSameInstanceAs(resolvedNamedGoogBar);
   }
 
   /** Tests the prototype chaining of native objects. */
@@ -4738,11 +4738,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     JSType resolvedA = Asserts.assertValidResolve(a);
     assertThat(a).isNotSameInstanceAs(resolvedA);
-    assertThat(realA).isSameAs(resolvedA);
+    assertThat(realA).isSameInstanceAs(resolvedA);
 
     JSType resolvedB = Asserts.assertValidResolve(b);
     assertThat(b).isNotSameInstanceAs(resolvedB);
-    assertThat(realB).isSameAs(resolvedB);
+    assertThat(realB).isSameInstanceAs(resolvedB);
   }
 
   @Test

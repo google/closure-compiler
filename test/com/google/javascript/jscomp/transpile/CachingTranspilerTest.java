@@ -69,14 +69,14 @@ public final class CachingTranspilerTest {
   @Test
   public void testTranspileDelegates() {
     when(delegate.transpile(FOO_JS, "bar")).thenReturn(RESULT1);
-    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameAs(RESULT1);
+    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameInstanceAs(RESULT1);
   }
 
   @Test
   public void testTranspileCaches() {
     when(delegate.transpile(FOO_JS, "bar")).thenReturn(RESULT1);
-    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameAs(RESULT1);
-    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameAs(RESULT1);
+    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameInstanceAs(RESULT1);
+    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameInstanceAs(RESULT1);
     verify(delegate, times(1)).transpile(FOO_JS, "bar");
   }
 
@@ -85,22 +85,22 @@ public final class CachingTranspilerTest {
     when(delegate.transpile(FOO_JS, "bar")).thenReturn(RESULT1);
     when(delegate.transpile(BAR_JS, "bar")).thenReturn(RESULT2);
     when(delegate.transpile(FOO_JS, "bard")).thenReturn(RESULT3);
-    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameAs(RESULT1);
-    assertThat(transpiler.transpile(BAR_JS, "bar")).isSameAs(RESULT2);
-    assertThat(transpiler.transpile(FOO_JS, "bard")).isSameAs(RESULT3);
+    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameInstanceAs(RESULT1);
+    assertThat(transpiler.transpile(BAR_JS, "bar")).isSameInstanceAs(RESULT2);
+    assertThat(transpiler.transpile(FOO_JS, "bard")).isSameInstanceAs(RESULT3);
   }
 
   @Test
   public void testRuntimeDelegates() {
     when(delegate.runtime()).thenReturn("xyzzy");
-    assertThat(transpiler.runtime()).isSameAs("xyzzy");
+    assertThat(transpiler.runtime()).isSameInstanceAs("xyzzy");
   }
 
   @Test
   public void testRuntimeCaches() {
     when(delegate.runtime()).thenReturn("xyzzy");
-    assertThat(transpiler.runtime()).isSameAs("xyzzy");
-    assertThat(transpiler.runtime()).isSameAs("xyzzy");
+    assertThat(transpiler.runtime()).isSameInstanceAs("xyzzy");
+    assertThat(transpiler.runtime()).isSameInstanceAs("xyzzy");
     verify(delegate, times(1)).runtime();
   }
 }

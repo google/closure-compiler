@@ -2771,12 +2771,12 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeB);
       assertNotLhsByDestructuring(nameNodeObj);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
-      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -2806,12 +2806,12 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeD);
       assertNotLhsByDestructuring(nameNodeObj);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeC)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeD)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeC)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeD)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeC)).isSameAs(varNode);
-      assertThat(NodeUtil.getDeclaringParent(nameNodeD)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeC)).isSameInstanceAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeD)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -2841,12 +2841,12 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeB);
       assertNotLhsByDestructuring(nameNodeObj);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
-      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -2878,10 +2878,10 @@ public final class NodeUtilTest {
       assertNotLhsByDestructuring(nameNodeDefault);
       assertNotLhsByDestructuring(nameNodeObj);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -2912,10 +2912,10 @@ public final class NodeUtilTest {
       assertNotLhsByDestructuring(nameNodeDefaultValue);
       assertNotLhsByDestructuring(nameNodeObj);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -2943,10 +2943,10 @@ public final class NodeUtilTest {
       assertNotLhsByDestructuring(nameNodeDefault);
       assertNotLhsByDestructuring(nameNodeObj);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -2974,15 +2974,15 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeC);
       assertNotLhsByDestructuring(nameNodeObj);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(innerPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeC)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(innerPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeC)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
-      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
-      assertThat(NodeUtil.getDeclaringParent(nameNodeC)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameInstanceAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeC)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -3022,15 +3022,15 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeG);
       assertNotLhsByDestructuring(nameNodeObj);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeE)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(innerPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeF)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeG)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeE)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(innerPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeF)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeG)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeE)).isSameAs(varNode);
-      assertThat(NodeUtil.getDeclaringParent(nameNodeF)).isSameAs(varNode);
-      assertThat(NodeUtil.getDeclaringParent(nameNodeG)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeE)).isSameInstanceAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeF)).isSameInstanceAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeG)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -3057,12 +3057,12 @@ public final class NodeUtilTest {
       assertNotLhsByDestructuring(nameNodeC);
       assertNotLhsByDestructuring(nameNodeD);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
-      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -3088,12 +3088,12 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeC);
       assertLhsByDestructuring(nameNodeD);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeC)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeD)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeC)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeD)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeC)).isSameAs(varNode);
-      assertThat(NodeUtil.getDeclaringParent(nameNodeD)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeC)).isSameInstanceAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeD)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -3110,9 +3110,9 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeA);
       assertLhsByDestructuring(nameNodeB);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameInstanceAs(destructPat);
     }
 
     @Test
@@ -3135,9 +3135,9 @@ public final class NodeUtilTest {
       assertNotLhsByDestructuring(nameNodeC);
       assertNotLhsByDestructuring(nameNodeD);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameInstanceAs(destructPat);
     }
 
     @Test
@@ -3154,13 +3154,13 @@ public final class NodeUtilTest {
 
       checkState(nameNodeA.getString().equals("a"), nameNodeA);
 
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(nameNodeA);
-      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(nameNodeB);
-      assertThat(NodeUtil.getRootTarget(nameNodeRest)).isSameAs(nameNodeRest);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(nameNodeA);
+      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameInstanceAs(nameNodeB);
+      assertThat(NodeUtil.getRootTarget(nameNodeRest)).isSameInstanceAs(nameNodeRest);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(parameterList);
-      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(parameterList);
-      assertThat(NodeUtil.getDeclaringParent(nameNodeRest)).isSameAs(parameterList);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(parameterList);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameInstanceAs(parameterList);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeRest)).isSameInstanceAs(parameterList);
     }
 
     @Test
@@ -3183,9 +3183,9 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeB);
       assertNotLhsByDestructuring(nameNodeC);
 
-      assertThat(NodeUtil.getRootTarget(forOfTargetPat)).isSameAs(forOfTargetPat);
-      assertThat(NodeUtil.getRootTarget(innerPat)).isSameAs(forOfTargetPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(forOfTargetPat);
+      assertThat(NodeUtil.getRootTarget(forOfTargetPat)).isSameInstanceAs(forOfTargetPat);
+      assertThat(NodeUtil.getRootTarget(innerPat)).isSameInstanceAs(forOfTargetPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameInstanceAs(forOfTargetPat);
     }
 
     @Test
@@ -3208,9 +3208,9 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeB);
       assertNotLhsByDestructuring(nameNodeC);
 
-      assertThat(NodeUtil.getRootTarget(forInTargetPat)).isSameAs(forInTargetPat);
-      assertThat(NodeUtil.getRootTarget(innerPat)).isSameAs(forInTargetPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(forInTargetPat);
+      assertThat(NodeUtil.getRootTarget(forInTargetPat)).isSameInstanceAs(forInTargetPat);
+      assertThat(NodeUtil.getRootTarget(innerPat)).isSameInstanceAs(forInTargetPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameInstanceAs(forInTargetPat);
     }
 
     @Test
@@ -3230,11 +3230,11 @@ public final class NodeUtilTest {
       assertNotLhsByDestructuring(strKeyNodeA);
       assertLhsByDestructuring(nameNodeB);
 
-      assertThat(NodeUtil.getRootTarget(destructArr)).isSameAs(destructArr);
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructArr);
-      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructArr);
+      assertThat(NodeUtil.getRootTarget(destructArr)).isSameInstanceAs(destructArr);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructArr);
+      assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameInstanceAs(destructArr);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -3251,8 +3251,8 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeA);
       assertNotLhsByDestructuring(nameNodeC);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
     }
 
     @Test
@@ -3269,8 +3269,8 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeA);
       assertNotLhsByDestructuring(nameNodeC);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
     }
 
     @Test
@@ -3287,10 +3287,10 @@ public final class NodeUtilTest {
 
       assertLhsByDestructuring(nameNodeA);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -3307,10 +3307,10 @@ public final class NodeUtilTest {
 
       assertLhsByDestructuring(nameNodeA);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(letNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(letNode);
     }
 
     @Test
@@ -3327,10 +3327,10 @@ public final class NodeUtilTest {
 
       assertLhsByDestructuring(nameNodeA);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(constNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(constNode);
     }
 
     @Test
@@ -3349,10 +3349,10 @@ public final class NodeUtilTest {
 
       assertLhsByDestructuring(nameNodeA);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -3369,8 +3369,8 @@ public final class NodeUtilTest {
 
       assertLhsByDestructuring(getProp);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(getProp)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(getProp)).isSameInstanceAs(destructPat);
     }
 
     @Test
@@ -3389,10 +3389,10 @@ public final class NodeUtilTest {
 
       assertLhsByDestructuring(nameNodeA);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -3412,10 +3412,10 @@ public final class NodeUtilTest {
 
       assertLhsByDestructuring(nameNodeA);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(varNode);
     }
 
     @Test
@@ -3433,10 +3433,10 @@ public final class NodeUtilTest {
 
       assertLhsByDestructuring(nameNodeA);
 
-      assertThat(NodeUtil.getRootTarget(arrayPattern)).isSameAs(arrayPattern);
-      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(arrayPattern);
+      assertThat(NodeUtil.getRootTarget(arrayPattern)).isSameInstanceAs(arrayPattern);
+      assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameInstanceAs(arrayPattern);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(catchNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameInstanceAs(catchNode);
     }
 
     @Test
@@ -3459,10 +3459,10 @@ public final class NodeUtilTest {
       assertLhsByDestructuring(nameNodeRest);
       assertNotLhsByDestructuring(nameNodeObj);
 
-      assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
-      assertThat(NodeUtil.getRootTarget(nameNodeRest)).isSameAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(destructPat)).isSameInstanceAs(destructPat);
+      assertThat(NodeUtil.getRootTarget(nameNodeRest)).isSameInstanceAs(destructPat);
 
-      assertThat(NodeUtil.getDeclaringParent(nameNodeRest)).isSameAs(varNode);
+      assertThat(NodeUtil.getDeclaringParent(nameNodeRest)).isSameInstanceAs(varNode);
     }
 
     private static void assertLhsByDestructuring(Node n) {

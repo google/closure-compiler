@@ -36,7 +36,7 @@ public final class MemoizedScopeCreatorTest {
     compiler.initOptions(new CompilerOptions());
     ScopeCreator creator = new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
     Scope scopeA = (Scope) creator.createScope(root1, null);
-    assertThat(creator.createScope(root1, null)).isSameAs(scopeA);
+    assertThat(creator.createScope(root1, null)).isSameInstanceAs(scopeA);
     assertThat(creator.createScope(root2, null)).isNotSameInstanceAs(scopeA);
   }
 

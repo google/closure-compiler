@@ -234,7 +234,8 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
     ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("multiple.calls.c0");
     assertThat(m.googNamespaces()).containsExactly("multiple.calls.c0", "multiple.calls.c1");
-    assertThat(metadataMap().getModulesByGoogNamespace().get("multiple.calls.c1")).isSameAs(m);
+    assertThat(metadataMap().getModulesByGoogNamespace().get("multiple.calls.c1"))
+        .isSameInstanceAs(m);
     assertThat(m.isNonLegacyGoogModule()).isTrue();
     assertThat(m.path()).isNull();
 

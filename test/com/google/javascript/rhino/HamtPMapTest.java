@@ -75,7 +75,7 @@ public class HamtPMapTest {
   public void testPlus_alreadyExistsReturnsSame() {
     PMap<String, Integer> empty = HamtPMap.empty();
     PMap<String, Integer> map = empty.plus("foo", 42);
-    assertThat(map.plus("foo", 42)).isSameAs(map);
+    assertThat(map.plus("foo", 42)).isSameInstanceAs(map);
   }
 
   @Test
@@ -100,7 +100,7 @@ public class HamtPMapTest {
   public void testMinus_nonexistentKeyReturnsSame() {
     PMap<String, Integer> empty = HamtPMap.empty();
     PMap<String, Integer> map = empty.plus("foo", 42);
-    assertThat(map.minus("bar")).isSameAs(map);
+    assertThat(map.minus("bar")).isSameInstanceAs(map);
   }
 
   @Test
@@ -326,9 +326,9 @@ public class HamtPMapTest {
       for (int j = 1; j < 127; j++) {
         assertThat(map.get(j)).isEqualTo(ref.contains(j) ? String.valueOf(j) : null);
         if (ref.contains(j)) {
-          assertThat(map.plus(j, String.valueOf(j))).isSameAs(map);
+          assertThat(map.plus(j, String.valueOf(j))).isSameInstanceAs(map);
         } else {
-          assertThat(map.minus(j)).isSameAs(map);
+          assertThat(map.minus(j)).isSameInstanceAs(map);
         }
       }
       assertThat(map.values()).containsExactlyElementsIn(Iterables.transform(ref, String::valueOf));
@@ -343,15 +343,15 @@ public class HamtPMapTest {
       for (int j = 1; j < 127; j++) {
         assertThat(map.get(j)).isEqualTo(ref.contains(j) ? String.valueOf(j) : null);
         if (ref.contains(j)) {
-          assertThat(map.plus(j, String.valueOf(j))).isSameAs(map);
+          assertThat(map.plus(j, String.valueOf(j))).isSameInstanceAs(map);
         } else {
-          assertThat(map.minus(j)).isSameAs(map);
+          assertThat(map.minus(j)).isSameInstanceAs(map);
         }
       }
       assertThat(map.values()).containsExactlyElementsIn(Iterables.transform(ref, String::valueOf));
     }
     assertThat(ref).isEmpty();
-    assertThat(map).isSameAs(HamtPMap.empty());
+    assertThat(map).isSameInstanceAs(HamtPMap.empty());
   }
 
   private PMap<Integer, Integer> build(int... values) {

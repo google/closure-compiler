@@ -2547,7 +2547,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     // Test constructor property.
     assertThat(fooProto.hasOwnProperty("constructor")).isTrue();
-    assertNode(fooProto.getOwnPropertyDefSite("constructor")).isSameAs(ctorDef);
+    assertNode(fooProto.getOwnPropertyDefSite("constructor")).isSameInstanceAs(ctorDef);
     assertType(fooProto).withTypeOfProp("constructor").toStringIsEqualTo("(typeof Foo)");
   }
 
@@ -2654,7 +2654,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     Node fooCtorDef = NodeUtil.getEnclosingFunction(superInvocation);
     assertType(fooConstructorProperty).toStringIsEqualTo("(typeof Foo)");
-    assertNode(fooProto.getOwnPropertyDefSite("constructor")).isSameAs(fooCtorDef);
+    assertNode(fooProto.getOwnPropertyDefSite("constructor")).isSameInstanceAs(fooCtorDef);
 
     assertType(fooConstructorProperty).isSubtypeOf(barConstructorProperty);
     assertType(fooConstructorProperty)
@@ -5416,7 +5416,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     compiler.initOptions(new CompilerOptions());
     TypedScopeCreator creator = new TypedScopeCreator(compiler);
     TypedScope scopeA = creator.createScope(root1, null);
-    assertThat(creator.createScope(root1, null)).isSameAs(scopeA);
+    assertThat(creator.createScope(root1, null)).isSameInstanceAs(scopeA);
     assertThat(creator.createScope(root2, null)).isNotSameInstanceAs(scopeA);
   }
 

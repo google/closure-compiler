@@ -12528,7 +12528,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     assertThat(googNodeType).isInstanceOf(ObjectType.class);
 
     // goog scope type and goog type on VAR node must be the same
-    assertThat(googScopeType).isSameAs(googNodeType);
+    assertThat(googScopeType).isSameInstanceAs(googNodeType);
 
     // goog type on the left of the GETPROP node (under fist ASSIGN)
     Node getpropFoo1 = varNode.getNext().getFirstFirstChild();
@@ -12538,7 +12538,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     assertThat(googGetpropFoo1Type).isInstanceOf(ObjectType.class);
 
     // still the same type as the one on the variable
-    assertThat(googGetpropFoo1Type).isSameAs(googScopeType);
+    assertThat(googGetpropFoo1Type).isSameInstanceAs(googScopeType);
 
     // the foo property should be defined on goog
     JSType googFooType = ((ObjectType) googScopeType).getPropertyType("foo");
@@ -12554,7 +12554,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     assertThat(googGetpropFoo2Type).isInstanceOf(ObjectType.class);
 
     // still the same type as the one on the variable
-    assertThat(googGetpropFoo2Type).isSameAs(googScopeType);
+    assertThat(googGetpropFoo2Type).isSameInstanceAs(googScopeType);
 
     // goog.foo type on the left of the top-level GETPROP node
     // (under second ASSIGN)

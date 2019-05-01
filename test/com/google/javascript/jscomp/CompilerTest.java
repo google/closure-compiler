@@ -1376,7 +1376,7 @@ public final class CompilerTest {
 
   private void assertExternIndex(Compiler compiler, int index, String name) {
     assertThat(compiler.externsRoot.getChildAtIndex(index))
-        .isSameAs(compiler.getInput(new InputId(name)).getAstRoot(compiler));
+        .isSameInstanceAs(compiler.getInput(new InputId(name)).getAstRoot(compiler));
   }
 
   @Test

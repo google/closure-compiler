@@ -602,7 +602,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
 
     JSType test0Type = inferredTypeOfName("test0");
     JSType test1Type = inferredTypeOfName("test1");
-    assertThat(test1Type).isSameAs(test0Type);
+    assertThat(test1Type).isSameInstanceAs(test0Type);
 
     // Then
     assertThat(test0Type.getJSDocInfo().getBlockDescription()).isEqualTo("I'm test0.");
@@ -633,7 +633,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
 
     JSType test0Type = inferredTypeOfName("test0");
     JSType test1Type = inferredTypeOfName("test1");
-    assertThat(test1Type).isSameAs(test0Type);
+    assertThat(test1Type).isSameInstanceAs(test0Type);
 
     // Then
     assertThat(test0Type.getJSDocInfo().getBlockDescription()).isEqualTo("I'm test0.");

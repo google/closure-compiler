@@ -1896,7 +1896,7 @@ public final class FunctionInjectorTest {
               assertWithMessage(
                       "canInlineReferenceToFunction should be CAN_INLINE_AFTER_DECOMPOSITION")
                   .that(CanInlineResult.AFTER_PREPARATION)
-                  .isSameAs(canInline);
+                  .isSameInstanceAs(canInline);
 
               Set<String> knownConstants = new HashSet<>();
               injector.setKnownConstants(knownConstants);

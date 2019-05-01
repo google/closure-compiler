@@ -264,8 +264,8 @@ public final class GraphTest {
     // Test basic setting.
     a.setAnnotation(A);
     b.setAnnotation(B);
-    assertThat(a.<Annotation>getAnnotation()).isSameAs(A);
-    assertThat(b.<Annotation>getAnnotation()).isSameAs(B);
+    assertThat(a.<Annotation>getAnnotation()).isSameInstanceAs(A);
+    assertThat(b.<Annotation>getAnnotation()).isSameInstanceAs(B);
 
     // Test clearing.
     graph.clearEdgeAnnotations();
@@ -288,16 +288,16 @@ public final class GraphTest {
     b.setAnnotation(A);
 
     // Test restoring then restoring old values with pop.
-    assertThat(a.<Annotation>getAnnotation()).isSameAs(B);
-    assertThat(b.<Annotation>getAnnotation()).isSameAs(A);
+    assertThat(a.<Annotation>getAnnotation()).isSameInstanceAs(B);
+    assertThat(b.<Annotation>getAnnotation()).isSameInstanceAs(A);
     graph.popEdgeAnnotations();
     graph.popNodeAnnotations();
-    assertThat(a.<Annotation>getAnnotation()).isSameAs(B);
-    assertThat(b.<Annotation>getAnnotation()).isSameAs(B);
+    assertThat(a.<Annotation>getAnnotation()).isSameInstanceAs(B);
+    assertThat(b.<Annotation>getAnnotation()).isSameInstanceAs(B);
     graph.popEdgeAnnotations();
     graph.popNodeAnnotations();
-    assertThat(a.<Annotation>getAnnotation()).isSameAs(A);
-    assertThat(b.<Annotation>getAnnotation()).isSameAs(B);
+    assertThat(a.<Annotation>getAnnotation()).isSameInstanceAs(A);
+    assertThat(b.<Annotation>getAnnotation()).isSameInstanceAs(B);
   }
 
   @Test

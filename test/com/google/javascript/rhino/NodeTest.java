@@ -520,11 +520,11 @@ public class NodeTest {
     // By default the JSDocInfo and JSTypeExpression objects are not cloned
     Node clone = original.cloneTree();
     assertThat(clone.getFirstChild().getJSDocInfo())
-        .isSameAs(original.getFirstChild().getJSDocInfo());
+        .isSameInstanceAs(original.getFirstChild().getJSDocInfo());
     assertThat(clone.getFirstChild().getJSDocInfo().getType())
-        .isSameAs(original.getFirstChild().getJSDocInfo().getType());
+        .isSameInstanceAs(original.getFirstChild().getJSDocInfo().getType());
     assertThat(clone.getFirstChild().getJSDocInfo().getType().getRoot())
-        .isSameAs(original.getFirstChild().getJSDocInfo().getType().getRoot());
+        .isSameInstanceAs(original.getFirstChild().getJSDocInfo().getType().getRoot());
 
     // If requested the JSDocInfo and JSTypeExpression objects are cloned.
     // This is required because compiler classes are modifying the type expressions in place

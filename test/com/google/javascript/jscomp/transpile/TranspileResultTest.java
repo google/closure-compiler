@@ -45,8 +45,8 @@ public final class TranspileResultTest {
   @Test
   public void testEmbedSourceMap_noSourceMap() throws Exception {
     TranspileResult result = new TranspileResult(new URI("a"), "b", "c", "");
-    assertThat(result.embedSourcemap()).isSameAs(result);
-    assertThat(result.embedSourcemapUrl("foo")).isSameAs(result);
+    assertThat(result.embedSourcemap()).isSameInstanceAs(result);
+    assertThat(result.embedSourcemapUrl("foo")).isSameInstanceAs(result);
   }
 
   @Test

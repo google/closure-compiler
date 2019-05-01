@@ -794,17 +794,17 @@ public final class Es6SyntacticScopeCreatorTest {
     assertThat(fScope.hasOwnSlot("arguments")).isTrue();
     assertThat(fScope.hasSlot("arguments")).isTrue();
     Var arguments = fScope.getArgumentsVar();
-    assertThat(fScope.getVar("arguments")).isSameAs(arguments);
+    assertThat(fScope.getVar("arguments")).isSameInstanceAs(arguments);
 
     Node fBlock = NodeUtil.getFunctionBody(function);
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
-    assertThat(fBlockScope.getVar("arguments")).isSameAs(arguments);
-    assertThat(fBlockScope.getArgumentsVar()).isSameAs(arguments);
+    assertThat(fBlockScope.getVar("arguments")).isSameInstanceAs(arguments);
+    assertThat(fBlockScope.getArgumentsVar()).isSameInstanceAs(arguments);
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
     assertScope(blockScope).declares("arguments").directly();
-    assertThat(blockScope.getArgumentsVar()).isSameAs(arguments);
+    assertThat(blockScope.getArgumentsVar()).isSameInstanceAs(arguments);
     assertThat(blockScope.getVar("arguments")).isNotEqualTo(arguments);
   }
 
@@ -829,7 +829,7 @@ public final class Es6SyntacticScopeCreatorTest {
     checkState(inner.isFunction(), inner);
     checkState(inner.isArrowFunction(), inner);
     Scope innerFunctionScope = scopeCreator.createScope(inner, outerBodyScope);
-    assertThat(innerFunctionScope.getArgumentsVar()).isSameAs(arguments);
+    assertThat(innerFunctionScope.getArgumentsVar()).isSameInstanceAs(arguments);
   }
 
   @Test
@@ -850,18 +850,18 @@ public final class Es6SyntacticScopeCreatorTest {
     Node fBlock = NodeUtil.getFunctionBody(function);
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
     assertScope(fBlockScope).declares("this");
-    assertThat(fBlockScope.getVar("this")).isSameAs(thisVar);
+    assertThat(fBlockScope.getVar("this")).isSameInstanceAs(thisVar);
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
     assertScope(blockScope).declares("this");
-    assertThat(blockScope.getVar("this")).isSameAs(thisVar);
-    assertThat(blockScope.getVar("this").getScope()).isSameAs(fScope);
+    assertThat(blockScope.getVar("this")).isSameInstanceAs(thisVar);
+    assertThat(blockScope.getVar("this").getScope()).isSameInstanceAs(fScope);
 
     Node gFunction = ifBlock.getFirstChild();
     Scope gScope = scopeCreator.createScope(gFunction, blockScope);
     assertScope(gScope).declares("this").directly();
-    assertThat(gScope.getVar("this").getScope()).isSameAs(gScope);
+    assertThat(gScope.getVar("this").getScope()).isSameInstanceAs(gScope);
   }
 
   @Test
@@ -917,7 +917,7 @@ public final class Es6SyntacticScopeCreatorTest {
     checkState(inner.isFunction(), inner);
     checkState(inner.isArrowFunction(), inner);
     Scope innerFunctionScope = scopeCreator.createScope(inner, outerBodyScope);
-    assertThat(innerFunctionScope.getVar("this")).isSameAs(thisVar);
+    assertThat(innerFunctionScope.getVar("this")).isSameInstanceAs(thisVar);
   }
 
   @Test

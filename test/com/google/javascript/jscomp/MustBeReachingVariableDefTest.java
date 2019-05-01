@@ -152,7 +152,7 @@ public final class MustBeReachingVariableDefTest {
   @Test
   public void testFunctionParams1() {
     computeDefUse("if (param2) { D: param1 = 1; U: param1 }");
-    assertThat(defUse.getDefNode("param1", use)).isSameAs(def);
+    assertThat(defUse.getDefNode("param1", use)).isSameInstanceAs(def);
   }
 
   @Test
@@ -214,7 +214,7 @@ public final class MustBeReachingVariableDefTest {
    */
   private void assertMatch(String src) {
     computeDefUse(src);
-    assertThat(defUse.getDefNode("x", use)).isSameAs(def);
+    assertThat(defUse.getDefNode("x", use)).isSameInstanceAs(def);
   }
 
   /**

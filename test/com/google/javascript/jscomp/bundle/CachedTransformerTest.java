@@ -55,8 +55,8 @@ public final class CachedTransformerTest {
     when(delegate.apply(FOO)).thenReturn(BAR);
     when(delegate.apply(BAZ)).thenReturn(QUX);
 
-    assertThat(cached.transform(FOO)).isSameAs(BAR);
-    assertThat(cached.transform(BAZ)).isSameAs(QUX);
+    assertThat(cached.transform(FOO)).isSameInstanceAs(BAR);
+    assertThat(cached.transform(BAZ)).isSameInstanceAs(QUX);
   }
 
   @Test
@@ -65,8 +65,8 @@ public final class CachedTransformerTest {
         new CachedTransformer(Source.Transformer.of(delegate), CacheBuilder.newBuilder());
     when(delegate.apply(FOO)).thenReturn(BAR).thenReturn(null);
 
-    assertThat(cached.transform(FOO)).isSameAs(BAR);
-    assertThat(cached.transform(FOO)).isSameAs(BAR);
+    assertThat(cached.transform(FOO)).isSameInstanceAs(BAR);
+    assertThat(cached.transform(FOO)).isSameInstanceAs(BAR);
     verify(delegate, times(1)).apply(FOO);
   }
 }
