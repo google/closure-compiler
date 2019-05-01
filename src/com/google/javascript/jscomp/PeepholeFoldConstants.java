@@ -402,12 +402,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           parent.replaceChild(n, negNumNode);
           reportChangeToEnclosingScope(parent);
           return negNumNode;
-        } else {
-          // left is not a number node, so do not replace, but warn the
-          // user because they can't be doing anything good
-          report(NEGATING_A_NON_NUMBER_ERROR, left);
-          return n;
         }
+        return n;
+
       case BITNOT:
         try {
           double val = left.getDouble();
