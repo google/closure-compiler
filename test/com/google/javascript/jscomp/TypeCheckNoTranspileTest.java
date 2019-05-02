@@ -3074,6 +3074,26 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassMissingTransitiveInterfaceInstanceProperty() {
+    testTypes(
+        lines(
+            "/** @record */", // `@interface` would also trigger this.
+            "class Foo {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.bar;",
+            "  }",
+            "}",
+            "",
+            "/** @record */",
+            "class SubFoo extends Foo { }",
+            "",
+            "/** @implements {SubFoo} */",
+            "class MyFoo { }"),
+        "property bar on interface Foo is not implemented by type MyFoo");
+  }
+
+  @Test
   public void testClassInvalidOverrideOfInterfaceInstanceProperty() {
     testTypes(
         lines(

@@ -19827,9 +19827,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "mismatch: [fun,prop]"));
   }
 
-  /** test structural interface matching for object literals */
   @Test
-  public void testStructuralInterfaceMatching39() {
+  public void testStructuralInterfaceMatching_forObjectLiterals_39() {
     testTypesWithExtraExterns(
         lines(
             "/** @record */",
@@ -19845,9 +19844,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: (I2|null)"));
   }
 
-  /** test structural interface matching for object literals */
   @Test
-  public void testStructuralInterfaceMatching40() {
+  public void testStructuralInterfaceMatching_forObjectLiterals_prototypeProp_matching() {
     testTypesWithExtraExterns(
         lines(
             "/** @record */",
@@ -19859,23 +19857,116 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var o1 = {length : 123};"));
   }
 
-  /** test structural interface matching for object literals */
   @Test
-  public void testStructuralInterfaceMatching40_1() {
+  public void testStructuralInterfaceMatching_forObjectLiterals_instanceProp_matching() {
     testTypesWithExtraExterns(
         lines(
-            "/** @record */",
+            "/** @record */", //
+            "function I2() {",
+            "  /** @type {number} */",
+            "  this.length;",
+            "}"),
+        lines(
+            "/** @type {!I2} */", //
+            "var o1 = {length : 123};"));
+  }
+
+  @Test
+  public void testStructuralInterfaceMatching_forObjectLiterals_prototypeProp_missing() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @record */", //
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;"),
+        lines(
+            "/** @type {!I2} */", //
+            "var o1 = {};"),
+        lines(
+            "initializing variable", //
+            "found   : {}",
+            "required: I2",
+            "missing : [length]",
+            "mismatch: []"));
+  }
+
+  @Test
+  public void testStructuralInterfaceMatching_forObjectLiterals_instanceProp_missing() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @record */", //
+            "function I2() {",
+            "  /** @type {number} */",
+            "  this.length;",
+            "}"),
+        lines(
+            "/** @type {!I2} */", //
+            "var o1 = {};"),
+        lines(
+            "initializing variable", //
+            "found   : {}",
+            "required: I2",
+            "missing : [length]",
+            "mismatch: []"));
+  }
+
+  @Test
+  public void testStructuralInterfaceMatching_forObjectLiterals_prototypeProp_mismatch() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @record */", //
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;"),
+        lines(
+            "/** @type {!I2} */", //
+            "var o1 = {length: null};"),
+        lines(
+            "initializing variable", //
+            "found   : {length: null}",
+            "required: I2",
+            "missing : []",
+            "mismatch: [length]"));
+  }
+
+  @Test
+  public void testStructuralInterfaceMatching_forObjectLiterals_instanceProp_mismatch() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @record */", //
+            "function I2() {",
+            "  /** @type {number} */",
+            "  this.length;",
+            "}"),
+        lines(
+            "/** @type {!I2} */", //
+            "var o1 = {length: null};"),
+        lines(
+            "initializing variable", //
+            "found   : {length: null}",
+            "required: I2",
+            "missing : []",
+            "mismatch: [length]"));
+  }
+
+  @Test
+  public void testStructuralInterfaceMatching_forObjectLiterals_41() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @record */", //
             "function I2() {}",
             "/** @type {number} */",
             "I2.prototype.length;"),
         lines(
             "/** @type {I2} */",
-            "var o1 = {length : 123};"));
+            "var o1 = {length : 123};",
+            "/** @type {I2} */",
+            "var i;",
+            "i = o1;"));
   }
 
-  /** test structural interface matching for object literals */
   @Test
-  public void testStructuralInterfaceMatching41() {
+  public void testStructuralInterfaceMatching41_forObjectLiterals_41_1() {
     testTypesWithExtraExterns(
         lines(
             "/** @record */",
@@ -19890,26 +19981,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "i = o1;"));
   }
 
-  /** test structural interface matching for object literals */
   @Test
-  public void testStructuralInterfaceMatching41_1() {
-    testTypesWithExtraExterns(
-        lines(
-            "/** @record */",
-            "function I2() {}",
-            "/** @type {number} */",
-            "I2.prototype.length;"),
-        lines(
-            "/** @type {I2} */",
-            "var o1 = {length : 123};",
-            "/** @type {I2} */",
-            "var i;",
-            "i = o1;"));
-  }
-
-  /** test structural interface matching for object literals */
-  @Test
-  public void testStructuralInterfaceMatching42() {
+  public void testStructuralInterfaceMatching_forObjectLiterals_42() {
     testTypesWithExtraExterns(
         lines(
             "/** @record */",
@@ -19924,9 +19997,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "i = o1;"));
   }
 
-  /** test structural interface matching for object literals */
   @Test
-  public void testStructuralInterfaceMatching43() {
+  public void testStructuralInterfaceMatching_forObjectLiterals_43() {
     testTypesWithExtraExterns(
         lines(
             "/** @record */",
