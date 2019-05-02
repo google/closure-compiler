@@ -410,9 +410,12 @@ public final class EsModuleProcessor implements Callback, ModuleProcessor {
                     i.moduleRequest()));
             return ResolveExportResult.ERROR;
           }
+          String closureNamespace =
+              GoogEsImports.isGoogImportSpecifier(i.moduleRequest())
+                  ? GoogEsImports.getClosureIdFromGoogImportSpecifier(i.moduleRequest())
+                  : null;
           return ResolveExportResult.of(
-              Binding.from(
-                  requested.resolve(moduleRequestResolver, i.moduleRequest()), i.nameNode()));
+              Binding.from(requested.metadata(), closureNamespace, i.nameNode()));
         } else {
           ResolveExportResult result =
               requested.resolveExport(

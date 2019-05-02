@@ -123,13 +123,14 @@ public abstract class Binding {
   }
 
   /** Binding for an entire module namespace created by an <code>import *</code>. */
-  static Binding from(Module namespaceBoundModule, Node sourceNode) {
+  static Binding from(
+      ModuleMetadata metadataOfBoundModule, @Nullable String closureNamespace, Node sourceNode) {
     return new AutoValue_Binding(
-        namespaceBoundModule.metadata(),
+        metadataOfBoundModule,
         sourceNode,
         /* originatingExport= */ null,
         /* isModuleNamespace= */ true,
-        namespaceBoundModule.closureNamespace(),
+        closureNamespace,
         CreatedBy.IMPORT);
   }
 
