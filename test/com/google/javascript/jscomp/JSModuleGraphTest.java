@@ -342,7 +342,7 @@ public final class JSModuleGraphTest {
     makeGraph();
     setUpManageDependenciesTest();
     DependencyOptions depOptions = DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of());
-    List<CompilerInput> results = graph.manageDependencies(depOptions);
+    List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
     assertInputs(moduleA, "a1", "a3");
     assertInputs(moduleB, "a2", "b2");
@@ -361,7 +361,7 @@ public final class JSModuleGraphTest {
     DependencyOptions depOptions =
         DependencyOptions.pruneLegacyForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    List<CompilerInput> results = graph.manageDependencies(depOptions);
+    List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
     assertInputs(moduleA, "a1", "a3");
     assertInputs(moduleB, "a2", "b2");
@@ -379,7 +379,7 @@ public final class JSModuleGraphTest {
     setUpManageDependenciesTest();
     DependencyOptions depOptions =
         DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    List<CompilerInput> results = graph.manageDependencies(depOptions);
+    List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
     // Everything gets pushed up into module c, because that's
     // the only one that has entry points.
@@ -396,7 +396,7 @@ public final class JSModuleGraphTest {
     makeDeps();
     makeGraph();
     setUpManageDependenciesTest();
-    List<CompilerInput> results = graph.manageDependencies(DependencyOptions.sortOnly());
+    List<CompilerInput> results = graph.manageDependencies(compiler, DependencyOptions.sortOnly());
 
     assertInputs(moduleA, "a1", "a2", "a3");
     assertInputs(moduleB, "b1", "b2");
@@ -423,7 +423,7 @@ public final class JSModuleGraphTest {
       input.setCompiler(compiler);
     }
 
-    List<CompilerInput> results = graph.manageDependencies(DependencyOptions.sortOnly());
+    List<CompilerInput> results = graph.manageDependencies(compiler, DependencyOptions.sortOnly());
 
     assertInputs(moduleA, "base.js", "a1", "a2");
 
@@ -434,7 +434,7 @@ public final class JSModuleGraphTest {
   public void testNoFiles() throws Exception {
     makeDeps();
     makeGraph();
-    List<CompilerInput> results = graph.manageDependencies(DependencyOptions.sortOnly());
+    List<CompilerInput> results = graph.manageDependencies(compiler, DependencyOptions.sortOnly());
     assertThat(results).isEmpty();
   }
 
@@ -515,7 +515,7 @@ public final class JSModuleGraphTest {
         input.setCompiler(compiler);
       }
 
-      List<CompilerInput> results = graph.manageDependencies(depOptions);
+      List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
       assertInputs(moduleA, "base.js", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a1");
 
@@ -573,7 +573,7 @@ public final class JSModuleGraphTest {
         input.setHasFullParseDependencyInfo(true);
       }
 
-      List<CompilerInput> results = graph.manageDependencies(depOptions);
+      List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
       assertInputs(
           moduleA,
@@ -641,7 +641,7 @@ public final class JSModuleGraphTest {
     }
 
     makeGraph();
-    graph.manageDependencies(DependencyOptions.sortOnly());
+    graph.manageDependencies(compiler, DependencyOptions.sortOnly());
 
     assertThat(
             getWeakModule().getInputs().stream()
@@ -673,6 +673,7 @@ public final class JSModuleGraphTest {
 
     makeGraph();
     graph.manageDependencies(
+        compiler,
         DependencyOptions.pruneForEntryPoints(
             ImmutableList.of(
                 ModuleIdentifier.forFile("strong1"), ModuleIdentifier.forFile("strong2"))));
@@ -715,6 +716,7 @@ public final class JSModuleGraphTest {
 
     makeGraph();
     graph.manageDependencies(
+        compiler,
         DependencyOptions.pruneForEntryPoints(
             ImmutableList.of(
                 ModuleIdentifier.forFile("strong1"), ModuleIdentifier.forFile("strong2"))));
@@ -747,6 +749,7 @@ public final class JSModuleGraphTest {
 
     makeGraph();
     graph.manageDependencies(
+        compiler,
         DependencyOptions.pruneLegacyForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("strong"))));
 
@@ -779,7 +782,7 @@ public final class JSModuleGraphTest {
     }
 
     makeGraph();
-    graph.manageDependencies(DependencyOptions.sortOnly());
+    graph.manageDependencies(compiler, DependencyOptions.sortOnly());
 
     assertThat(getWeakModule().getInputs()).isEmpty();
     assertThat(
@@ -807,6 +810,7 @@ public final class JSModuleGraphTest {
 
     makeGraph();
     graph.manageDependencies(
+        compiler,
         DependencyOptions.pruneForEntryPoints(
             ImmutableList.of(
                 ModuleIdentifier.forFile("strong1"), ModuleIdentifier.forFile("strong2"))));
@@ -847,6 +851,7 @@ public final class JSModuleGraphTest {
 
     makeGraph();
     graph.manageDependencies(
+        compiler,
         DependencyOptions.pruneForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("strong1"))));
 

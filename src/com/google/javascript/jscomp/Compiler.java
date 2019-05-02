@@ -1778,7 +1778,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       try {
-        moduleGraph.manageDependencies(options.getDependencyOptions());
+        moduleGraph.manageDependencies(this, options.getDependencyOptions());
         staleInputs = true;
       } catch (MissingProvideException e) {
         report(JSError.make(

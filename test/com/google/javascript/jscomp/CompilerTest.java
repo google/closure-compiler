@@ -15,10 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
+import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.fail;
 
@@ -2538,7 +2540,7 @@ public final class CompilerTest {
   }
 
   @Test
-  public void testWeakAsEntryPointIsError() throws Exception {
+  public void testExplicitWeakEntryPointIsError() throws Exception {
     SourceFile extern = SourceFile.fromCode("extern.js", "");
     SourceFile weakEntry =
         SourceFile.fromCode(
@@ -2557,16 +2559,45 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
 
     compiler.init(ImmutableList.of(extern), ImmutableList.of(weakEntry), options);
+    compiler.parse();
 
-    try {
-      compiler.parse();
-      fail();
-    } catch (IllegalStateException e) {
-      // expected
-      assertThat(e)
-          .hasMessageThat()
-          .isEqualTo("A file that is reachable via an entry point cannot be marked as weak.");
-    }
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(compiler.getErrors()).hasSize(1);
+    assertError(getOnlyElement(compiler.getErrors()))
+        .hasMessage("Explicit entry point input must not be weak: weakEntry.js");
+  }
+
+  @Test
+  public void testImplicitWeakEntryPointIsWarning() throws Exception {
+    SourceFile extern = SourceFile.fromCode("extern.js", "/** @externs */ function alert(x) {}");
+    SourceFile weakMoocher =
+        SourceFile.fromCode(
+            "weakMoocher.js",
+            lines(
+                "const {T} = goog.require('weakByAssociation');",
+                "/** @param {!T} x */ function f(x) { alert(x); }"),
+            SourceKind.WEAK);
+    SourceFile weakByAssociation =
+        SourceFile.fromCode(
+            "weakByAssociation.js",
+            lines(
+                "goog.module('weakByAssociation');",
+                "/** @typedef {number|string} */ exports.T;",
+                "sideeffect();"));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of()));
+
+    Compiler compiler = new Compiler();
+
+    compiler.init(
+        ImmutableList.of(extern), ImmutableList.of(weakMoocher, weakByAssociation), options);
+    compiler.parse();
+
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).hasSize(1);
+    assertError(getOnlyElement(compiler.getWarnings()))
+        .hasMessage("Implicit entry point input should not be weak: weakMoocher.js");
   }
 
   @Test
@@ -2577,14 +2608,14 @@ public final class CompilerTest {
             "strong.js",
             lines(
                 "goog.module('strong');",
-                "const T = goog.require('weakEntry');",
+                "const T = goog.require('weak');",
                 "/** @param {!T} x */ function f(x) { alert(x); }"),
             SourceKind.STRONG);
-    SourceFile weakEntry =
+    SourceFile weak =
         SourceFile.fromCode(
-            "weakEntry.js",
+            "weak.js",
             lines(
-                "goog.module('weakEntry');",
+                "goog.module('weak');",
                 "/** @typedef {number|string} */ exports.T;",
                 "sideEffect();"),
             SourceKind.WEAK);
@@ -2596,16 +2627,12 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
 
-    compiler.init(ImmutableList.of(extern), ImmutableList.of(strong, weakEntry), options);
+    compiler.init(ImmutableList.of(extern), ImmutableList.of(strong, weak), options);
+    compiler.parse();
 
-    try {
-      compiler.parse();
-      fail();
-    } catch (IllegalStateException e) {
-      // expected
-      assertThat(e)
-          .hasMessageThat()
-          .isEqualTo("A file that is reachable via an entry point cannot be marked as weak.");
-    }
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(compiler.getErrors()).hasSize(1);
+    assertError(getOnlyElement(compiler.getErrors()))
+        .hasMessage("File strongly reachable from an entry point must not be weak: weak.js");
   }
 }

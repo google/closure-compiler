@@ -103,8 +103,8 @@ public abstract class DependencyOptions implements Serializable {
   /**
    * Returns whether moochers should be dropped.
    *
-   * <p>A moocher is a file that does not goog.provide a namespace and is not a goog.module, ES
-   * module or CommonJS module.
+   * <p>A moocher is a strong file that does not goog.provide a namespace and is not a goog.module,
+   * ES module or CommonJS module. Weak files are never considered moochers.
    *
    * <p>If true, moochers should not be considered implicit entry points.
    */

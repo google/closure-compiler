@@ -59,6 +59,21 @@ import javax.annotation.Nullable;
  */
 public final class JSModuleGraph implements Serializable {
 
+  static final DiagnosticType WEAK_FILE_REACHABLE_FROM_ENTRY_POINT_ERROR =
+      DiagnosticType.error(
+          "JSC_WEAK_FILE_REACHABLE_FROM_ENTRY_POINT_ERROR",
+          "File strongly reachable from an entry point must not be weak: {0}");
+
+  static final DiagnosticType EXPLICIT_WEAK_ENTRY_POINT_ERROR =
+      DiagnosticType.error(
+          "JSC_EXPLICIT_WEAK_ENTRY_POINT_ERROR",
+          "Explicit entry point input must not be weak: {0}");
+
+  static final DiagnosticType IMPLICIT_WEAK_ENTRY_POINT_ERROR =
+      DiagnosticType.warning(
+          "JSC_IMPLICIT_WEAK_ENTRY_POINT_ERROR",
+          "Implicit entry point input should not be weak: {0}");
+
   private final JSModule[] modules;
 
   /**
@@ -501,7 +516,8 @@ public final class JSModuleGraph implements Serializable {
    *
    * @throws MissingProvideException if an entry point was not provided by any of the inputs.
    */
-  public ImmutableList<CompilerInput> manageDependencies(DependencyOptions dependencyOptions)
+  public ImmutableList<CompilerInput> manageDependencies(
+      AbstractCompiler compiler, DependencyOptions dependencyOptions)
       throws MissingProvideException, MissingModuleException {
 
     // Make a copy since we're going to mutate the graph below.
@@ -510,7 +526,7 @@ public final class JSModuleGraph implements Serializable {
     SortedDependencies<CompilerInput> sorter = new Es6SortedDependencies<>(originalInputs);
 
     Set<CompilerInput> entryPointInputs =
-        createEntryPointInputs(dependencyOptions, getAllInputs(), sorter);
+        createEntryPointInputs(compiler, dependencyOptions, getAllInputs(), sorter);
 
     HashMap<String, CompilerInput> inputsByProvide = new HashMap<>();
     for (CompilerInput input : originalInputs) {
@@ -582,9 +598,12 @@ public final class JSModuleGraph implements Serializable {
                 entryPointInputsPerModule.get(module), dependencyOptions.shouldSort());
       }
       for (CompilerInput input : transitiveClosure) {
-        if (dependencyOptions.shouldPrune() && input.getSourceFile().isWeak()) {
-          throw new IllegalStateException(
-              "A file that is reachable via an entry point cannot be marked as weak.");
+        if (dependencyOptions.shouldPrune()
+            && input.getSourceFile().isWeak()
+            && !entryPointInputs.contains(input)) {
+          compiler.report(
+              JSError.make(
+                  WEAK_FILE_REACHABLE_FROM_ENTRY_POINT_ERROR, input.getSourceFile().getName()));
         }
         JSModule oldModule = input.getModule();
         if (oldModule == null) {
@@ -668,6 +687,7 @@ public final class JSModuleGraph implements Serializable {
   }
 
   private Set<CompilerInput> createEntryPointInputs(
+      AbstractCompiler compiler,
       DependencyOptions dependencyOptions,
       Iterable<CompilerInput> inputs,
       SortedDependencies<CompilerInput> sorter)
@@ -683,7 +703,15 @@ public final class JSModuleGraph implements Serializable {
       }
 
       if (!dependencyOptions.shouldDropMoochers()) {
-        entryPointInputs.addAll(sorter.getInputsWithoutProvides());
+        for (CompilerInput entryPointInput : sorter.getInputsWithoutProvides()) {
+          if (entryPointInput.getSourceFile().isWeak()) {
+            compiler.report(
+                JSError.make(
+                    IMPLICIT_WEAK_ENTRY_POINT_ERROR, entryPointInput.getSourceFile().getName()));
+          } else {
+            entryPointInputs.add(entryPointInput);
+          }
+        }
       }
 
       for (ModuleIdentifier entryPoint : dependencyOptions.getEntryPoints()) {
@@ -709,7 +737,13 @@ public final class JSModuleGraph implements Serializable {
           throw new MissingProvideException(entryPoint.getName(), e);
         }
 
-        entryPointInputs.add(entryPointInput);
+        if (entryPointInput.getSourceFile().isWeak()) {
+          compiler.report(
+              JSError.make(
+                  EXPLICIT_WEAK_ENTRY_POINT_ERROR, entryPointInput.getSourceFile().getName()));
+        } else {
+          entryPointInputs.add(entryPointInput);
+        }
       }
     } else {
       Iterables.addAll(entryPointInputs, inputs);
