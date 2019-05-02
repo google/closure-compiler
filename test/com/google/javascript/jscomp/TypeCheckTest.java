@@ -8225,22 +8225,47 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testOverriddenParams7() {
     testTypes(
-        "/** @constructor\n * @template T */ function Foo() {}" +
-        "/** @param {T} x */" +
-        "Foo.prototype.bar = function(x) { };" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {Foo<string>}\n" +
-        " */ function SubFoo() {}" +
-        "/**\n" +
-        " * @param {number} x\n" +
-        " * @override\n" +
-        " */" +
-        "SubFoo.prototype.bar = function(x) {};",
-        "mismatch of the bar property type and the type of the " +
-        "property it overrides from superclass Foo\n" +
-        "original: function(this:Foo, string): undefined\n" +
-        "override: function(this:SubFoo, number): undefined");
+        lines(
+            "/** @interface */ function Foo() {}",
+            "/** @param {number} x */",
+            "Foo.prototype.bar = function(x) { };",
+            "/**",
+            " * @interface",
+            " * @extends {Foo}",
+            " */ function SubFoo() {}",
+            "/**",
+            " * @override",
+            " */",
+            "SubFoo.prototype.bar = function() {};",
+            "var subFoo = /** @type {SubFoo} */ (null);",
+            "subFoo.bar(true);"),
+        lines(
+            "actual parameter 1 of SubFoo.prototype.bar does not match formal parameter",
+            "found   : boolean",
+            "required: number"));
+  }
+
+  @Test
+  public void testOverriddenParams8() {
+    testTypes(
+        lines(
+            "/** @constructor\n * @template T */ function Foo() {}",
+            "/** @param {T} x */",
+            "Foo.prototype.bar = function(x) { };",
+            "/**",
+            " * @constructor",
+            " * @extends {Foo<string>}",
+            " */ function SubFoo() {}",
+            "/**",
+            " * @param {number} x",
+            " * @override",
+            " */",
+            "SubFoo.prototype.bar = function(x) {};"),
+        lines(
+            "mismatch of the bar property type and the type of the "
+                + "property it overrides from superclass Foo",
+            "original: function(this:Foo, string): undefined",
+            "override: function(this:SubFoo, number): undefined"));
   }
 
   @Test

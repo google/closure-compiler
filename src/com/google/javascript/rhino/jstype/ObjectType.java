@@ -53,6 +53,7 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -324,6 +325,27 @@ public abstract class ObjectType extends JSType implements Serializable {
     ObjectType nativeType = registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
     if (nativeType.hasProperty(propertyName)) {
       return this;
+    }
+
+    return null;
+  }
+
+  /** Returns the closest ancestor that defines the property including this type itself. */
+  public final ObjectType getClosestDefiningType(String propertyName) {
+    ArrayDeque<ObjectType> parentsToSeek = new ArrayDeque<>();
+    parentsToSeek.add(this);
+
+    // Make a bread-first search to find the closest ancestor with the property.
+    while (!parentsToSeek.isEmpty()) {
+      ObjectType parent = parentsToSeek.pollFirst();
+      if (parent.hasOwnProperty(propertyName)) {
+        return parent;
+      }
+
+      if (parent.getImplicitPrototype() != null) {
+        parentsToSeek.add(parent.getImplicitPrototype());
+      }
+      Iterables.addAll(parentsToSeek, parent.getCtorExtendedInterfaces());
     }
 
     return null;
