@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1312,6 +1313,34 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "var F = new Foo;"
         + "var x = F.a;";
     testSets(js, "{a=[[Foo.prototype, I.prototype]]}");
+  }
+
+  // TODO(b/131257037): Support ES6 style instance properties on interfaces.
+  @Ignore
+  @Test
+  public void testInterface_es6() {
+    testSets(
+        lines(
+            "/** @interface */ class I { constructor(){ this.a; } };",
+            "/** @implements {I} */ class Foo {};",
+            "Foo.prototype.a;",
+            "/** @type {I} */",
+            "var f = new Foo;",
+            "var x = f.a;"),
+        "{a=[[Foo.prototype, I.prototype]]}");
+  }
+
+  @Test
+  public void testInterface_es6withTypeDeclaration() {
+    testSets(
+        lines(
+            "/** @interface */ class I { constructor(){ /** @type {number} */ this.a; } };",
+            "/** @implements {I} */ class Foo {};",
+            "Foo.prototype.a;",
+            "/** @type {I} */",
+            "var f = new Foo;",
+            "var x = f.a;"),
+        "{a=[[Foo.prototype, I.prototype]]}");
   }
 
   @Test

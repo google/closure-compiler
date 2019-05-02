@@ -6172,6 +6172,50 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testGetrop_interfaceWithoutTypeDeclaration() {
+    testTypes(
+        lines(
+            "/** @interface */var I = function() {};",
+            // Note that we didn't declare the type but we still expect JsCompiler to recognize the
+            // property.
+            "I.prototype.foo;",
+            "var v = /** @type {I} */ (null); ",
+            "v.foo = 5;"));
+  }
+
+  @Test
+  public void testGetrop_interfaceEs6WithoutTypeDeclaration() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class I {",
+            "  constructor() {",
+            "    this.foo;",
+            "  }",
+            "}",
+            "var v = /** @type {I} */ (null); ",
+            "v.foo = 5;"),
+        // TODO(b/131257037): Support ES6 style instance properties on interfaces.
+        new String[] {
+          "Property foo never defined on I", ILLEGAL_PROPERTY_CREATION_MESSAGE,
+        });
+  }
+
+  @Test
+  public void testGetrop_interfaceEs6WithTypeDeclaration() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class I {",
+            "  constructor() {",
+            "    /** @type {number} */ this.foo;",
+            "  }",
+            "}",
+            "var v = /** @type {I} */ (null); ",
+            "v.foo = 5;"));
+  }
+
+  @Test
   public void testSetprop1() {
     // Create property on struct in the constructor
     testTypes("/**\n" +
