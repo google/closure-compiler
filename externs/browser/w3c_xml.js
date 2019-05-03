@@ -436,21 +436,60 @@ XMLHttpRequest.LOADING;
  */
 XMLHttpRequest.DONE;
 
+
+/**
+ * @see https://xhr.spec.whatwg.org/#formdataentryvalue
+ * @typedef {!File|string}
+ */
+var FormDataEntryValue;
+
 /**
  * The FormData object represents an ordered collection of entries. Each entry
  * has a name and value.
  *
- * @param {?Element=} opt_form An optional form to use for constructing the form
+ * @param {?Element=} form An optional form to use for constructing the form
  *     data set.
  * @constructor
+ * @implements {Iterable<!Array<!FormDataEntryValue>>}
  * @see https://xhr.spec.whatwg.org/#interface-formdata
  */
-function FormData(opt_form) {}
+function FormData(form) {}
 
 /**
  * @param {string} name
- * @param {Blob|string} value
- * @param {string=} opt_filename
+ * @param {?Blob|string} value
+ * @param {string=} filename
  * @return {undefined}
  */
-FormData.prototype.append = function(name, value, opt_filename) {};
+FormData.prototype.append = function(name, value, filename) {};
+
+/**
+ * @param {string} name
+ */
+FormData.prototype.delete = function(name) {};
+
+/**
+ * @param {string} name
+ * @return {?FormDataEntryValue}
+ */
+FormData.prototype.get = function(name) {};
+
+/**
+ * @param {string} name
+ * @return {!Array<!FormDataEntryValue>}
+ */
+FormData.prototype.getAll = function(name) {};
+
+/**
+ * @param {string} name
+ * @return {boolean}
+ */
+FormData.prototype.has = function(name) {};
+
+/**
+ * @param {string} name
+ * @param {!Blob|string} value
+ * @param {string=} filename
+ */
+FormData.prototype.set = function(name, value, filename) {};
+
