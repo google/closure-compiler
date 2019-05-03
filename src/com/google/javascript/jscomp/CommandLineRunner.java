@@ -737,14 +737,6 @@ public class CommandLineRunner extends
     private CompilerOptions.TracerMode tracerMode =
         CompilerOptions.TracerMode.OFF;
 
-    @Option(
-      name = "--new_type_inf",
-      hidden = true,
-      handler = BooleanOptionHandler.class,
-      usage = "Deprecated.  Does nothing. Use jscomp_error=strictCheckTypes instead."
-    )
-    private boolean useNewTypeInference = false;
-
     @Option(name = "--rename_variable_prefix",
         usage = "Specifies a prefix that will be prepended to all variables.")
     private String renamePrefix = null;
@@ -822,12 +814,6 @@ public class CommandLineRunner extends
         handler = BooleanOptionHandler.class,
         usage = "Rewrite ES6 library calls to use polyfills provided by the compiler's runtime.")
     private boolean rewritePolyfills = true;
-
-    @Option(
-        name = "--allow_method_call_decomposing",
-        handler = BooleanOptionHandler.class,
-        usage = "This flag is a no-op.")
-    private boolean allowMethodCallDecomposing = true;
 
     @Option(
       name = "--print_source_after_each_pass",
