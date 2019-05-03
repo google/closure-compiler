@@ -891,5 +891,6 @@ Window.prototype.onerror;
 /** @type {?function (Event)} */ Window.prototype.onscroll;
 /** @type {?function (Event)} */ Window.prototype.onselect;
 /** @type {?function (Event=)} */ Window.prototype.onsubmit;
+/** @type {?function (Event)} */ Window.prototype.onunhandledrejection;
 /** @type {?function (Event)} */ Window.prototype.onunload;
 /** @type {?function (Event)} */ Window.prototype.onwheel;
