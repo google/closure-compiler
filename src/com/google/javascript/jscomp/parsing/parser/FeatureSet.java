@@ -414,7 +414,6 @@ public final class FeatureSet implements Serializable {
         return ES3;
       case "es5":
         return ES5;
-      case "es6-impl":
       case "es6":
         return ES6;
       case "typeCheckSupported":
