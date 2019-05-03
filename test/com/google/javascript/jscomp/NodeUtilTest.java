@@ -1275,6 +1275,22 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testIsNonlocalModuleExportNameOnExportFrom() {
+      Node root = parse("export {bar as baz} from './foo.js';");
+      Node moduleBody = root.getFirstChild();
+      Node exportNode = moduleBody.getFirstChild();
+      Node exportSpecs = exportNode.getFirstChild();
+      Node exportSpec = exportSpecs.getFirstChild();
+
+      Node bar = exportSpec.getFirstChild();
+      Node baz = exportSpec.getSecondChild();
+
+      // Neither identifier is defined locally.
+      assertThat(NodeUtil.isNonlocalModuleExportName(bar)).isTrue();
+      assertThat(NodeUtil.isNonlocalModuleExportName(baz)).isTrue();
+    }
+
+    @Test
     public void testIsNonlocalModuleExportNameOnImports1() {
       Node root = parse("import {exportName as localName} from './foo.js';");
       Node moduleBody = root.getFirstChild();

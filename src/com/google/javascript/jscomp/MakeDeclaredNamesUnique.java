@@ -108,7 +108,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     switch (n.getToken()) {
       case NAME:
       case IMPORT_STAR:
-        visitName(t, n, parent);
+        visitNameOrImportStar(t, n, parent);
         break;
 
       default:
@@ -116,9 +116,9 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     }
   }
 
-  private void visitName(NodeTraversal t, Node n, Node parent) {
+  private void visitNameOrImportStar(NodeTraversal t, Node n, Node parent) {
     // Don't rename the exported name foo in export {a as foo}; or import {foo as b};
-    if (NodeUtil.isNonlocalModuleExportName(n)) {
+    if (n.isName() && NodeUtil.isNonlocalModuleExportName(n)) {
       return;
     }
     String newName = getReplacementName(n.getString());

@@ -2734,16 +2734,37 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether the name in an import or export spec is not defined within the module, but is
-   *     an exported name from this or another module. e.g. nonlocal in "export {a as nonlocal}" or
-   *     "import {nonlocal as a} from './foo.js'"
+   * Returns whether the given name in an import or export spec is not defined within the module,
+   * but is an exported name from this or another module.
+   *
+   * <p>Examples include `nonlocal` in:
+   *
+   * <ul>
+   *   <li>export {a as nonlocal};
+   *   <li>import {nonlocal} from './foo.js';
+   *   <li>import {nonlocal as a} from './foo.js';
+   *   <li>export {nonlocal as a} from './foo.js';
+   *   <li>export {a as nonlocal} from './foo.js';
+   * </ul>
+   *
+   * @param n a NAME node.
    */
   static boolean isNonlocalModuleExportName(Node n) {
+    checkArgument(n.isName(), n);
     Node parent = n.getParent();
-    return (parent != null
-            && n.isName()
-            && ((parent.isExportSpec() && n != parent.getFirstChild())
-                || (parent.isImportSpec() && n != parent.getLastChild())));
+    if (parent.isImportSpec() && n.isFirstChildOf(parent)) {
+      // import {nonlocal as x} from './foo.js'
+      return true;
+    } else if (parent.isExportSpec()) {
+      if (n.isFirstChildOf(parent)) {
+        // export {nonlocal as b} from './foo.js';
+        return isExportFrom(parent.getGrandparent());
+      } else {
+        // export {local as nonlocal};
+        return true;
+      }
+    }
+    return false;
   }
 
   /** Whether the child node is the FINALLY block of a try. */
