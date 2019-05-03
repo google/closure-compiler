@@ -17,6 +17,7 @@
 goog.module('jscomp.runtime_tests.polyfill_tests.math_trunc_test');
 goog.setTestOnly();
 
+const browser = goog.require('goog.labs.userAgent.browser');
 const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
@@ -25,9 +26,15 @@ const assertPositiveZero = testing.assertPositiveZero;
 
 testSuite({
   testTrunc() {
+    // See https://bugs.chromium.org/p/v8/issues/detail?id=9203
+    const isBadChrome = browser.isChrome()
+        && browser.isVersionOrHigher('74')
+        && !browser.isVersionOrHigher('75');
     assertPositiveZero(Math.trunc(0));
     assertPositiveZero(Math.trunc(0.2));
-    assertNegativeZero(Math.trunc(-0));
+    if (!isBadChrome) {
+      assertNegativeZero(Math.trunc(-0));
+    }
     assertNegativeZero(Math.trunc(-0.2));
     assertEquals(1e12, Math.trunc(1e12 + 0.99));
 
