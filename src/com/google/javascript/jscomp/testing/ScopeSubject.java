@@ -18,6 +18,8 @@ package com.google.javascript.jscomp.testing;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.truth.Fact.fact;
+import static com.google.common.truth.Fact.simpleFact;
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
@@ -60,7 +62,10 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
   public void doesNotDeclare(String name) {
     AbstractVar<?, ?> var = getVar(name);
     if (var != null) {
-      failWithBadResults("does not declare", name, "declared", var);
+      failWithoutActual(
+          fact("expected not to declare", name),
+          fact("but declared it with value", var),
+          fact("scope was", actual()));
     }
   }
 
@@ -78,7 +83,11 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
                 .add("and " + (names.size() - 9) + " others")
                 .build();
       }
-      failWithBadResults("declares", name, "declares", Joiner.on(", ").join(names));
+      failWithoutActual(
+          fact("expected to declare", name),
+          simpleFact("but did not"),
+          fact("did declare", Joiner.on(", ").join(names)),
+          fact("scope was", actual()));
     }
     return new DeclarationSubject(var);
   }
@@ -103,11 +112,12 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
      */
     private void expectScope(String preposition, Object expected, AbstractScope<?, ?> scope) {
       if (var.getScope() != scope) {
-        failWithBadResults(
-            "declares " + var.getName() + (!preposition.isEmpty() ? " " : "") + preposition,
-            expected,
-            "declares it on",
-            var.getScope());
+        failWithoutActual(
+            fact("for var", var.getName()),
+            fact(
+                "expected to be declared" + (!preposition.isEmpty() ? " " : "") + preposition,
+                expected),
+            fact("but is declared on", var.getScope()));
       }
     }
 
@@ -147,8 +157,11 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
     /** Expects the declared variable to be declared on any scope other than the subject. */
     public DeclarationSubject onSomeParent() {
       if (var != null && var.getScope() == actual()) {
-        failWithBadResults(
-            "declares " + var.getName(), "on a parent scope", "declares it", "directly");
+        failWithoutActual(
+            fact("for var", var.getName()),
+            simpleFact("expected a declaration on a parent scope"),
+            simpleFact("but found it declared directly"),
+            fact("scope was", actual()));
       }
       return this;
     }
@@ -158,17 +171,17 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
       checkNotNull(expectedLabel);
       String actualLabel = getLabel(var.getScopeRoot());
       if (actualLabel == null) {
-        failWithBadResults(
-            "declares " + var.getName(),
-            "on a scope labeled \"" + expectedLabel + "\"",
-            "declares it",
-            "on an unlabeled scope");
+        failWithoutActual(
+            fact("expected to declare", var.getName()),
+            fact("on a scope labeled", expectedLabel),
+            simpleFact("but declared it on an unlabeled scope"),
+            fact("scope under test was", actual()));
       } else if (!actualLabel.equals(expectedLabel)) {
-        failWithBadResults(
-            "declares " + var.getName(),
-            "on a scope labeled \"" + expectedLabel + "\"",
-            "declares it",
-            "on a scope labeled \"" + actualLabel + "\"");
+        failWithoutActual(
+            fact("expected to declare", var.getName()),
+            fact("on a scope labeled", expectedLabel),
+            fact("but declared it on an scope labeled", actualLabel),
+            fact("scope under test was", actual()));
       }
       return this;
     }
