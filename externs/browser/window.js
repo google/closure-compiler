@@ -75,49 +75,6 @@ var isSecureContext;
  */
 var visualViewport;
 
-// Magic functions for Firefox's LiveConnect.
-// We'll probably never use these in practice. But redefining them
-// will fire up the JVM, so we want to reserve the symbol names.
-
-/**
- * @see https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/JavaArray
- */
-var JavaArray;
-
-/**
- * @see https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/JavaClass
- */
-var JavaClass;
-
-// We just ripped this from the FF source; it doesn't appear to be
-// publicly documented.
-var JavaMember;
-
-/**
- * @see https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/JavaObject
- */
-var JavaObject;
-
-/**
- * @see https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/JavaPackage
- */
-var JavaPackage;
-
-/**
- * @see https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Packages
- */
-var Packages;
-
-/**
- * @see https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/java
- */
-var java;
-
-/**
- * @see https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/netscape
- */
-var netscape;
-
 /**
  * @param {*} message
  * @see https://developer.mozilla.org/en/DOM/window.alert
