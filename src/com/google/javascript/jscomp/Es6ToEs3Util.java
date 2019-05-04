@@ -62,13 +62,6 @@ public final class Es6ToEs3Util {
   }
 
   /**
-   * Returns a call to {@code $jscomp.arrayFromIterator} with {@code iterator} as its argument.
-   */
-  static Node arrayFromIterator(AbstractCompiler compiler, Node iterator) {
-    return callEs6RuntimeFunction(compiler, iterator, "arrayFromIterator");
-  }
-
-  /**
    * Returns a call to $jscomp.arrayFromIterable with {@code iterable} as its argument.
    */
   static Node arrayFromIterable(AbstractCompiler compiler, Node iterable) {
