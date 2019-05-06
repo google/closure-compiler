@@ -16,12 +16,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.DisambiguateProperties.Warnings.INVALIDATION;
-import static com.google.javascript.jscomp.DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE;
+import static com.google.javascript.jscomp.PropertyRenamingDiagnostics.INVALIDATION;
+import static com.google.javascript.jscomp.PropertyRenamingDiagnostics.INVALIDATION_ON_TYPE;
 
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.DisambiguateProperties.Warnings;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.HashMap;
@@ -3605,7 +3604,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
                 "Foo.foobar = 'static property!';",
                 // cause a type mismatch warning on Foo, preventing disambiguation
                 "const /** !Foo */ foo = {};")),
-        error(Warnings.INVALIDATION).withMessageContaining("Foo"));
+        error(INVALIDATION).withMessageContaining("Foo"));
   }
 
   @Test
@@ -3623,7 +3622,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
                 "Foo.foobar = 'static property!';",
                 // because unknownName is of the unknown type '?', we can't disambiguate foobar
                 "const {foobar: someRandomName} = unknownName;")),
-        error(Warnings.INVALIDATION).withMessageContaining("someRandomName"));
+        error(INVALIDATION).withMessageContaining("someRandomName"));
   }
 
   private void testSets(String js, String expected, final String fieldTypes) {

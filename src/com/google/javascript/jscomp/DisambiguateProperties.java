@@ -95,23 +95,6 @@ class DisambiguateProperties implements CompilerPass {
       DisambiguateProperties.class.getName());
   private static final Pattern NONWORD_PATTERN = Pattern.compile("[^\\w$]");
 
-  static class Warnings {
-    // TODO(user): {1} and {2} are not exactly useful for most people.
-    static final DiagnosticType INVALIDATION = DiagnosticType.disabled(
-        "JSC_INVALIDATION",
-        "Property disambiguator skipping all instances of property {0} "
-            + "because of type {1} node {2}. {3}");
-
-    static final DiagnosticType INVALIDATION_ON_TYPE = DiagnosticType.disabled(
-        "JSC_INVALIDATION_TYPE",
-        "Property disambiguator skipping instances of property {0} on type {1}. {2}");
-
-    // TODO(tbreisacher): Check this in a separate pass, so that users get the error even if
-    // optimizations are not running.
-    static final DiagnosticType INVALID_RENAME_FUNCTION =
-        DiagnosticType.error("JSC_INVALID_RENAME_FUNCTION", "{0} call is invalid: {1}");
-  }
-
   private final AbstractCompiler compiler;
 
   private final InvalidatingTypes invalidatingTypes;
@@ -519,8 +502,14 @@ class DisambiguateProperties implements CompilerPass {
             suggestion += Joiner.on("\n").join(errors);
           }
         }
-        compiler.report(JSError.make(n, propertiesToErrorFor.get(name),
-                Warnings.INVALIDATION, name, String.valueOf(type), n.toString(),
+        compiler.report(
+            JSError.make(
+                n,
+                propertiesToErrorFor.get(name),
+                PropertyRenamingDiagnostics.INVALIDATION,
+                name,
+                String.valueOf(type),
+                n.toString(),
                 suggestion));
       }
     }
@@ -562,7 +551,7 @@ class DisambiguateProperties implements CompilerPass {
                     JSError.make(
                         child,
                         propertiesToErrorFor.get(name),
-                        Warnings.INVALIDATION,
+                        PropertyRenamingDiagnostics.INVALIDATION,
                         name,
                         String.valueOf(objlitType),
                         n.toString(),
@@ -628,7 +617,7 @@ class DisambiguateProperties implements CompilerPass {
               JSError.make(
                   member,
                   propertiesToErrorFor.get(name),
-                  Warnings.INVALIDATION,
+                  PropertyRenamingDiagnostics.INVALIDATION,
                   name,
                   String.valueOf(ownerType),
                   member.toString(),
@@ -678,7 +667,7 @@ class DisambiguateProperties implements CompilerPass {
               JSError.make(
                   stringKey,
                   propertiesToErrorFor.get(name),
-                  Warnings.INVALIDATION,
+                  PropertyRenamingDiagnostics.INVALIDATION,
                   name,
                   String.valueOf(objectPatternType),
                   stringKey.toString(),
@@ -693,7 +682,7 @@ class DisambiguateProperties implements CompilerPass {
         compiler.report(
             JSError.make(
                 call,
-                Warnings.INVALID_RENAME_FUNCTION,
+                PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
                 renameFunctionName,
                 " Must be called with 1 or 2 arguments"));
         return;
@@ -703,7 +692,7 @@ class DisambiguateProperties implements CompilerPass {
         compiler.report(
             JSError.make(
                 call,
-                Warnings.INVALID_RENAME_FUNCTION,
+                PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
                 renameFunctionName,
                 " The first argument must be a string literal."));
         return;
@@ -715,7 +704,7 @@ class DisambiguateProperties implements CompilerPass {
         compiler.report(
             JSError.make(
                 call,
-                Warnings.INVALID_RENAME_FUNCTION,
+                PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
                 renameFunctionName,
                 " The first argument must not be a property path."));
         return;
@@ -747,7 +736,7 @@ class DisambiguateProperties implements CompilerPass {
             JSError.make(
                 call,
                 propertiesToErrorFor.get(propName),
-                Warnings.INVALIDATION,
+                PropertyRenamingDiagnostics.INVALIDATION,
                 propName,
                 String.valueOf(type),
                 renameFunctionName,
@@ -831,11 +820,14 @@ class DisambiguateProperties implements CompilerPass {
                 && checkLevelForProp != CheckLevel.OFF
                 && !reported.contains(prop.name)) {
               reported.add(prop.name);
-              compiler.report(JSError.make(
-                  node,
-                  checkLevelForProp,
-                  Warnings.INVALIDATION_ON_TYPE, prop.name,
-                  rootType.toString(), ""));
+              compiler.report(
+                  JSError.make(
+                      node,
+                      checkLevelForProp,
+                      PropertyRenamingDiagnostics.INVALIDATION_ON_TYPE,
+                      prop.name,
+                      rootType.toString(),
+                      ""));
             }
           }
         }

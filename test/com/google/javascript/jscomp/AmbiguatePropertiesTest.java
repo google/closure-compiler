@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.javascript.jscomp.DisambiguateProperties.Warnings;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
@@ -1233,22 +1232,30 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testInvalidRenameFunction_withZeroArgs_causesWarning() {
-    testError("const p = JSCompiler_renameProperty()", Warnings.INVALID_RENAME_FUNCTION);
+    testError(
+        "const p = JSCompiler_renameProperty()",
+        PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION);
   }
 
   @Test
   public void testInvalidRenameFunction_withThreeArgs_causesWarning() {
-    testError("const p = JSCompiler_renameProperty('foo', 0, 1)", Warnings.INVALID_RENAME_FUNCTION);
+    testError(
+        "const p = JSCompiler_renameProperty('foo', 0, 1)",
+        PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION);
   }
 
   @Test
   public void testInvalidRenameFunction_withNonStringArg_causesWarning() {
-    testError("const p = JSCompiler_renameProperty(0)", Warnings.INVALID_RENAME_FUNCTION);
+    testError(
+        "const p = JSCompiler_renameProperty(0)",
+        PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION);
   }
 
   @Test
   public void testInvalidRenameFunction_withPropertyRefInFirstArg_causesWarning() {
-    testError("const p = JSCompiler_renameProperty('a.b')", Warnings.INVALID_RENAME_FUNCTION);
+    testError(
+        "const p = JSCompiler_renameProperty('a.b')",
+        PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION);
   }
 
   @Test

@@ -439,7 +439,7 @@ class AmbiguateProperties implements CompilerPass {
   private void reportInvalidRenameFunction(Node n, String functionName, String message) {
     compiler.report(
         JSError.make(
-            n, DisambiguateProperties.Warnings.INVALID_RENAME_FUNCTION, functionName, message));
+            n, PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION, functionName, message));
   }
   private static final String WRONG_ARGUMENT_COUNT = " Must be called with 1 or 2 arguments.";
   private static final String WANT_STRING_LITERAL = " The first argument must be a string literal.";

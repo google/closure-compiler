@@ -2405,7 +2405,8 @@ public final class IntegrationTest extends IntegrationTestCase {
        ImmutableMap.of("a", CheckLevel.ERROR));
     options.setRemoveDeadCode(true);
     options.setRemoveAbstractMethods(true);
-    test(options,
+    test(
+        options,
         lines(
             "function fn(x){return x.a;}",
             "/** @interface */ function I() {}",
@@ -2422,7 +2423,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "Foo.prototype.a = function(x) {};",
             "function Bar(){}",
             "Bar.prototype.a=function(x){};"),
-        DisambiguateProperties.Warnings.INVALIDATION);
+        PropertyRenamingDiagnostics.INVALIDATION);
   }
 
   @Test
