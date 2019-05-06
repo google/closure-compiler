@@ -6828,5 +6828,33 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: number"));
   }
 
-  // TODO(b/128633181): add tests for ES modules and exports
+  @Test
+  public void testTypeCheckingEsModule_exportSpecs() {
+    testTypes("const x = 0; export {x};");
+  }
+
+  @Test
+  public void testTypeCheckingEsExportedNameDecl() {
+    testTypes(
+        "export const /** number */ x = 'not a number';",
+        lines(
+            "initializing variable", //
+            "found   : string",
+            "required: number"));
+  }
+
+  @Test
+  public void testTypeCheckingInsideEsExportDefault() {
+    testTypes(
+        "let /** number */ x; export default (x = 'not a number');",
+        lines(
+            "assignment", //
+            "found   : string",
+            "required: number"));
+  }
+
+  @Test
+  public void testTypeCheckingEsModule_importSpecs() {
+    testTypes("import {x} from './input0';");
+  }
 }
