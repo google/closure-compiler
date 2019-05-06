@@ -1086,7 +1086,9 @@ public final class NodeUtil {
    * Returns true if the node may create new mutable state, or change existing state.
    *
    * @see <a href="http://www.xkcd.org/326/">XKCD Cartoon</a>
+   * @deprecated use {@link AstAnalyzer#mayEffectMutableState(Node)}.
    */
+  @Deprecated
   static boolean mayEffectMutableState(Node n, AbstractCompiler compiler) {
     checkNotNull(compiler);
     return checkForStateChangeHelper(n, true, compiler);

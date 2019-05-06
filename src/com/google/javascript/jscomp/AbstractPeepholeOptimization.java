@@ -31,6 +31,8 @@ abstract class AbstractPeepholeOptimization {
 
   /** Intentionally not exposed to subclasses */
   private AbstractCompiler compiler;
+  /** Intentionally not exposed to subclasses */
+  private AstAnalyzer astAnalyzer;
 
   /**
    * Given a node to optimize and a traversal, optimize the node. Subclasses
@@ -79,13 +81,13 @@ abstract class AbstractPeepholeOptimization {
 
   /** Informs the optimization that a traversal will begin. */
   void beginTraversal(AbstractCompiler compiler) {
-    this.compiler = compiler;
+    this.compiler = checkNotNull(compiler);
+    astAnalyzer = compiler.getAstAnalyzer();
   }
 
   /** Returns whether the node may create new mutable state, or change existing state. */
   protected boolean mayEffectMutableState(Node n) {
-    checkNotNull(compiler);
-    return NodeUtil.mayEffectMutableState(n, compiler);
+    return astAnalyzer.mayEffectMutableState(n);
   }
 
   /** Returns whether the node may have side effects when executed. */

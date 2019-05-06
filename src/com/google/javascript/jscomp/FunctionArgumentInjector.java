@@ -316,7 +316,7 @@ class FunctionArgumentInjector {
         //
         // This is done to help inline common trivial functions
         safe = true;
-      } else if (NodeUtil.mayEffectMutableState(cArg, compiler) && references > 0) {
+      } else if (compiler.getAstAnalyzer().mayEffectMutableState(cArg) && references > 0) {
         // Note: Mutable arguments should be assigned to temps, as the
         // may be within in a loop:
         //   function x(a) {

@@ -713,6 +713,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
         : AstFactory.createFactoryWithoutTypes();
   }
 
+  private final AstAnalyzer astAnalyzer = new AstAnalyzer(this);
+
+  /**
+   * Returns a new AstAnalyzer configured correctly to answer questions about Nodes in the AST
+   * currently being compiled.
+   */
+  public AstAnalyzer getAstAnalyzer() {
+    return astAnalyzer;
+  }
+
   public abstract ModuleMetadataMap getModuleMetadataMap();
 
   public abstract void setModuleMetadataMap(ModuleMetadataMap moduleMetadataMap);

@@ -993,68 +993,6 @@ public final class NodeUtilTest {
       assertSideEffect(false, "'a'.replace(/a/, 'x')", false);
     }
 
-    private void assertMutableState(boolean se, String js) {
-      Node n = parse(js);
-      assertThat(NodeUtil.mayEffectMutableState(n.getFirstChild(), new Compiler())).isEqualTo(se);
-    }
-
-    @Test
-    public void testMayEffectMutableState() {
-      assertMutableState(true, "i++");
-      assertMutableState(true, "[b, [a, i++]]");
-      assertMutableState(true, "i=3");
-      assertMutableState(true, "[0, i=3]");
-      assertMutableState(true, "b()");
-      assertMutableState(true, "void b()");
-      assertMutableState(true, "[1, b()]");
-      assertMutableState(true, "b.b=4");
-      assertMutableState(true, "b.b--");
-      assertMutableState(true, "i--");
-      assertMutableState(true, "a[0][i=4]");
-      assertMutableState(true, "a += 3");
-      assertMutableState(true, "a, b, z += 4");
-      assertMutableState(true, "a ? c : d++");
-      assertMutableState(true, "a + c++");
-      assertMutableState(true, "a + c - d()");
-      assertMutableState(true, "a + c - d()");
-
-      assertMutableState(true, "function foo() {}");
-      assertMutableState(true, "while(true);");
-      assertMutableState(true, "if(true){a()}");
-
-      assertMutableState(false, "if(true){a}");
-      assertMutableState(true, "(function() { })");
-      assertMutableState(true, "(function() { i++ })");
-      assertMutableState(true, "[function a(){}]");
-
-      assertMutableState(false, "a");
-      assertMutableState(true, "[b, c [d, [e]]]");
-      assertMutableState(true, "({a: x, b: y, c: z})");
-      // Note: RegExp objects are not immutable, for instance, the exec
-      // method maintains state for "global" searches.
-      assertMutableState(true, "/abc/gi");
-      assertMutableState(false, "'a'");
-      assertMutableState(false, "0");
-      assertMutableState(false, "a + c");
-      assertMutableState(false, "'c' + a[0]");
-      assertMutableState(false, "a[0][1]");
-      assertMutableState(false, "'a' + c");
-      assertMutableState(false, "'a' + a.name");
-      assertMutableState(false, "1, 2, 3");
-      assertMutableState(false, "a, b, 3");
-      assertMutableState(true, "(function(a, b) {  })");
-      assertMutableState(false, "a ? c : d");
-      assertMutableState(false, "'1' + navigator.userAgent");
-
-      assertMutableState(true, "new RegExp('foobar', 'i')");
-      assertMutableState(true, "new RegExp(SomethingWacky(), 'i')");
-      assertMutableState(true, "new Array()");
-      assertMutableState(true, "new Array");
-      assertMutableState(true, "new Array(4)");
-      assertMutableState(true, "new Array('a', 'b', 'c')");
-      assertMutableState(true, "new SomeClassINeverHeardOf()");
-    }
-
     @Test
     public void testIsFunctionExpression() {
       assertContainsAnonFunc(true, "(function(){})");
