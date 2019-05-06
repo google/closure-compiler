@@ -106,6 +106,13 @@ HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
 HTMLCanvasElement.prototype.captureStream = function(opt_framerate) {};
 
 /**
+ * @see https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-transfercontroltooffscreen
+ * @return {!OffscreenCanvas}
+ * @throws {Error}
+ * */
+HTMLCanvasElement.prototype.transferControlToOffscreen = function() {};
+
+/**
  * @see https://html.spec.whatwg.org/multipage/canvas.html#the-offscreencanvas-interface
  * @implements {EventTarget}
  * @implements {Transferable}
