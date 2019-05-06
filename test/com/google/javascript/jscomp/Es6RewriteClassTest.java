@@ -766,8 +766,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
                 " * @extends {D}",
                 " */",
                 "let C = function() { D.apply(this, arguments); };",
-                "$jscomp.inherits(C, D);")),
-        expectRuntimeLibraries("es6/util/inherits"));
+                "$jscomp.inherits(C, D);")));
   }
 
   @Test

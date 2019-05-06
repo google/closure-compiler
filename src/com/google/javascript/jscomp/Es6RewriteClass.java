@@ -208,7 +208,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         "Es6RewriteClasses expects all classes to have (possibly synthetic) constructors");
 
     if (metadata.getDefinePropertiesObjForPrototype().hasChildren()) {
-      compiler.ensureLibraryInjected("util/global", false);
       Node definePropsCall =
           IR.exprResult(
               astFactory.createCall(
@@ -220,7 +219,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     }
 
     if (metadata.getDefinePropertiesObjForClass().hasChildren()) {
-      compiler.ensureLibraryInjected("util/global", false);
       Node definePropsCall =
           IR.exprResult(
               astFactory.createCall(
@@ -250,7 +248,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
                 metadata.getSuperClassNameNode().getSourceFileName()));
       }
       if (!classNode.isFromExterns()) {
-        compiler.ensureLibraryInjected("es6/util/inherits", false);
         Node inheritsCall =
             IR.exprResult(
                     astFactory.createCall(
