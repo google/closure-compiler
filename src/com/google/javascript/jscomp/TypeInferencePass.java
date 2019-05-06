@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
-import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 
@@ -39,7 +38,6 @@ class TypeInferencePass implements CompilerPass {
   private final TypedScope topScope;
   private final TypedScopeCreator scopeCreator;
   private final AssertionFunctionLookup assertionFunctionLookup;
-  private final ModuleImportResolver moduleImportResolver;
 
   TypeInferencePass(
       AbstractCompiler compiler,
@@ -52,11 +50,6 @@ class TypeInferencePass implements CompilerPass {
     this.scopeCreator = scopeCreator;
     this.assertionFunctionLookup =
         AssertionFunctionLookup.of(compiler.getCodingConvention().getAssertionFunctions());
-    this.moduleImportResolver =
-        new ModuleImportResolver(
-            compiler.getModuleMap(),
-            this.scopeCreator.getNodeToScopeMapper(),
-            compiler.getTypeRegistry());
   }
 
   /**
@@ -115,13 +108,6 @@ class TypeInferencePass implements CompilerPass {
   }
 
   private void inferScope(Node n, TypedScope scope) {
-    // Inferred types of ES module imports/exports aren't knowable until after TypeInference runs.
-    // First update the type of all imports in the scope, then do flow-sensitive inference.
-    Module module = moduleImportResolver.getModuleFromScopeRoot(scope.getRootNode());
-    if (module != null && module.metadata().isEs6Module()) {
-      moduleImportResolver.declareEsModuleImports(module, scope, compiler.getInput(n.getInputId()));
-    }
-
     TypeInference typeInference =
         new TypeInference(
             compiler,
@@ -156,7 +142,9 @@ class TypeInferencePass implements CompilerPass {
       // This ensures that incremental compilation only touches the root
       // that's been swapped out.
       TypedScope scope = t.getTypedScope();
-      if (!scope.isBlockScope()) { // ignore scopes that don't have their own CFGs.
+      if (!scope.isBlockScope() && !scope.isModuleScope()) {
+        // ignore scopes that don't have their own CFGs and module scopes, which are visited
+        // as if they were a regular script.
         inferScope(t.getCurrentNode(), scope);
       }
     }

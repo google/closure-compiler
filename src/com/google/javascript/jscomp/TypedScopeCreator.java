@@ -97,6 +97,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -431,6 +432,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       codingConvention.defineDelegateProxyPrototypeProperties(
           typeRegistry, delegateProxies, delegateCallingConventions);
     }
+    if (module != null && module.metadata().isEs6Module()) {
+      // Declare an implicit variable representing the namespace of this module, then add a property
+      // for each exported name to that variable's type.
+      ObjectType namespace = typeRegistry.createAnonymousObjectType(null);
+      newScope.declare(
+          Export.NAMESPACE,
+          root, // Use the given MODULE_BODY as the 'declaration node' for lack of a better option.
+          namespace,
+          compiler.getInput(root.getInputId()),
+          /* inferred= */ false);
+
+      moduleImportResolver.updateEsModuleNamespaceType(namespace, module, newScope);
+    }
 
     return newScope;
   }
@@ -443,8 +457,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     } else {
       // For now, assume this is an ES module. In the future, it might be a CommonJS module.
       checkState(module.metadata().isEs6Module(), "CommonJS module typechecking not supported yet");
-      moduleImportResolver.declareEsModuleImports(
-          module, moduleScope, compiler.getInput(moduleBody.getInputId()));
+
+      Map<Node, ScopedName> unresolvedImports =
+          moduleImportResolver.declareEsModuleImports(
+              module, moduleScope, compiler.getInput(moduleBody.getInputId()));
+      weakImports.addAll(
+          unresolvedImports.entrySet().stream()
+              .map(entry -> new WeakModuleImport(entry.getKey(), entry.getValue(), moduleScope))
+              .collect(Collectors.toList()));
     }
   }
 
@@ -1311,17 +1331,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       TypedScope exportScope =
           exportedName.getScopeRoot() != null ? memoized.get(exportedName.getScopeRoot()) : null;
       if (exportScope != null) {
-        TypedVar exportsVar = exportScope.getSlot(exportedName.getName());
-        final JSType type;
-        if (exportsVar != null) {
+        JSType type = exportScope.lookupQualifiedName(QualifiedName.of(exportedName.getName()));
+        if (type != null) {
           declareAliasTypeIfRvalueIsAliasable(
-              localNameNode,
-              QualifiedName.of(exportedName.getName()),
-              exportsVar.getType(),
-              exportScope);
-          type = exportsVar.getType();
-        } else {
-          type = null;
+              localNameNode, QualifiedName.of(exportedName.getName()), type, exportScope);
         }
 
         new SlotDefiner()
@@ -1436,6 +1449,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         FunctionType qmarkCtor = classType.forgetParameterAndReturnTypes();
         ObjectType classPrototypeType = classType.getPrototypeProperty();
         classPrototypeType.defineDeclaredProperty("constructor", qmarkCtor, constructor);
+      }
+      if (classType.hasInstanceType()) {
+        Property classPrototype = classType.getSlot("prototype");
+        // SymbolTable users expect the class prototype and actual class to have the same
+        // declaration node.
+        classPrototype.setNode(lvalueNode != null ? lvalueNode : classPrototype.getNode());
       }
 
       return classType;
@@ -1683,10 +1702,22 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         fallbackReceiverType = currentScope.getTypeOfThis();
       }
 
-      return builder
-          .inferThisType(info, fallbackReceiverType)
-          .inferParameterTypes(parametersNode, info)
-          .buildAndRegister();
+      FunctionType fnType =
+          builder
+              .inferThisType(info, fallbackReceiverType)
+              .inferParameterTypes(parametersNode, info)
+              .buildAndRegister();
+
+      // Do some additional validation for constructors and interfaces.
+      if (fnType.hasInstanceType() && lvalueNode != null) {
+        Property prototypeSlot = fnType.getSlot("prototype");
+
+        // We want to make sure that the function and its prototype are declared at the same node.
+        // This consistency is helpful to users of SymbolTable, because everything gets declared at
+        // the same place.
+        prototypeSlot.setNode(lvalueNode);
+      }
+      return fnType;
     }
 
     /**
@@ -1946,28 +1977,25 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         // The input may be null if we are working with a AST snippet. So read
         // the extern info from the node.
-        TypedVar newVar = null;
 
         // declared in closest scope?
         CompilerInput input = compiler.getInput(inputId);
         if (!scopeToDeclareIn.canDeclare(variableName)) {
           TypedVar oldVar = scopeToDeclareIn.getVar(variableName);
-          newVar =
-              validator.expectUndeclaredVariable(
-                  sourceName, input, declarationNode, parent, oldVar, variableName, type);
+          validator.expectUndeclaredVariable(
+              sourceName, input, declarationNode, parent, oldVar, variableName, type);
         } else {
           if (type != null) {
             setDeferredType(declarationNode, type);
           }
 
-          newVar =
-              declare(
-                  scopeToDeclareIn,
-                  variableName,
-                  declarationNode,
-                  type,
-                  input,
-                  allowLaterTypeInference);
+          declare(
+              scopeToDeclareIn,
+              variableName,
+              declarationNode,
+              type,
+              input,
+              allowLaterTypeInference);
         }
 
         // We need to do some additional work for constructors and interfaces.
@@ -1983,7 +2011,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // the variable name is a sufficient check for this.
           if (fnType.isConstructor() || fnType.isInterface()) {
             finishConstructorDefinition(
-                declarationNode, variableName, fnType, scopeToDeclareIn, input, newVar);
+                declarationNode, variableName, fnType, scopeToDeclareIn, input);
           }
         }
 
@@ -2034,8 +2062,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     private void finishConstructorDefinition(
-        Node n, String variableName, FunctionType fnType,
-        TypedScope scopeToDeclareIn, CompilerInput input, TypedVar newVar) {
+        Node declarationNode,
+        String variableName,
+        FunctionType fnType,
+        TypedScope scopeToDeclareIn,
+        CompilerInput input) {
       // Declare var.prototype in the scope chain.
       FunctionType superClassCtor = fnType.getSuperClassConstructor();
       Property prototypeSlot = fnType.getSlot("prototype");
@@ -2052,35 +2083,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       scopeToDeclareIn.declare(
           prototypeName,
-          n,
+          declarationNode,
           prototypeSlot.getType(),
           input,
           // declared iff there's an explicit supertype
           superClassCtor == null
               || superClassCtor.getInstanceType().isEquivalentTo(getNativeType(OBJECT_TYPE)));
-
-      // Only do the following at the initial initialization of the constructor, not on an
-      // alias.
-      if (variableName.equals(fnType.getReferenceName())) {
-        // Make sure the variable is initialized to something if it constructs itself.
-        if (newVar.getInitialValue() == null && !n.isFromExterns()) {
-          report(
-              JSError.make(
-                  n, fnType.isConstructor() ? CTOR_INITIALIZER : IFACE_INITIALIZER, variableName));
-        }
-
-        // When we declare the function prototype implicitly, we
-        // want to make sure that the function and its prototype
-        // are declared at the same node. We also want to make sure
-        // that the if a symbol has both a TypedVar and a JSType, they have
-        // the same node.
-        //
-        // This consistency is helpful to users of SymbolTable,
-        // because everything gets declared at the same place.
-        // This is skipped for aliases of constructors; the .prototype property should point to the
-        // original definition.
-        prototypeSlot.setNode(n);
-      }
     }
 
     /** Check if the given node is a property of a name in the global scope. */
@@ -2156,7 +2164,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             return createEnumTypeFromNodes(rValue, lValue.getQualifiedName(), lValue, info);
           }
         } else if (info.isConstructorOrInterface()) {
-          return createFunctionTypeFromNodes(rValue, lValue.getQualifiedName(), info, lValue);
+          FunctionType fnType =
+              createFunctionTypeFromNodes(rValue, lValue.getQualifiedName(), info, lValue);
+          if (rValue == null && !lValue.isFromExterns()) {
+            report(
+                JSError.make(
+                    lValue,
+                    fnType.isConstructor() ? CTOR_INITIALIZER : IFACE_INITIALIZER,
+                    lValue.getQualifiedName()));
+          }
+          return fnType;
         }
       }
 

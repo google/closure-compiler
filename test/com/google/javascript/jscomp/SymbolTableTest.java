@@ -631,6 +631,18 @@ public final class SymbolTableTest {
   }
 
   @Test
+  public void testPrototypeReferences_es6Class() {
+    SymbolTable table = createSymbolTable(lines("class DomHelper { method() {} }"));
+    Symbol prototype = getGlobalVar(table, "DomHelper.prototype");
+    assertThat(prototype).isNotNull();
+    List<Reference> refs = table.getReferenceList(prototype);
+
+    // The class declaration creates an implicit .prototype reference.
+    assertWithMessage(refs.toString()).that(refs.size()).isEqualTo(1);
+    assertNode(refs.get(0).getNode().getParent()).hasToken(Token.CLASS);
+  }
+
+  @Test
   public void testReferencesInJSDocType() {
     SymbolTable table =
         createSymbolTable(

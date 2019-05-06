@@ -18,16 +18,19 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.deps.ModuleNames;
 import com.google.javascript.jscomp.modules.Binding;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMap;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Map;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -75,7 +78,7 @@ final class ModuleImportResolver {
    *
    * <p>This returns null if the given {@link ModuleMap} is null, if the required module does not
    * exist, or if support is missing for the type of required {@link Module}. Currently only
-   * requires of other goog.modules are supported.
+   * requires of goog.modules, goog.provides, and ES module with goog.declareModuleId are supported.
    *
    * @param googRequire a CALL node representing some kind of Closure require.
    */
@@ -106,7 +109,8 @@ final class ModuleImportResolver {
         Node scopeRoot = getGoogModuleScopeRoot(module);
         return scopeRoot != null ? ScopedName.of("exports", scopeRoot) : null;
       case ES6_MODULE:
-        throw new IllegalStateException("Type checking ES modules not yet supported");
+        Node moduleBody = module.metadata().rootNode().getFirstChild(); // SCRIPT -> MODULE_BODY
+        return ScopedName.of(Export.NAMESPACE, moduleBody);
       case COMMON_JS:
         throw new IllegalStateException("Type checking CommonJs modules not yet supported");
       case SCRIPT:
@@ -139,10 +143,19 @@ final class ModuleImportResolver {
     return null;
   }
 
-  /** Declares/updates the type of all bindings imported into the ES module scope */
-  void declareEsModuleImports(Module module, TypedScope scope, CompilerInput moduleInput) {
+  /**
+   * Declares/updates the type of all bindings imported into the ES module scope
+   *
+   * @return A map from local nodes to ScopedNames for which {@link #nodeToScopeMapper} couldn't
+   *     find a scope, despite the original module existing. This is expected to happen for circular
+   *     references if not all module scopes are created and the caller should handle declaring
+   *     these names later, e.g. in TypedScopeCreator.
+   */
+  Map<Node, ScopedName> declareEsModuleImports(
+      Module module, TypedScope scope, CompilerInput moduleInput) {
     checkArgument(module.metadata().isEs6Module(), module);
     checkArgument(scope.isModuleScope(), scope);
+    ImmutableMap.Builder<Node, ScopedName> missingNames = ImmutableMap.builder();
     for (Map.Entry<String, Binding> boundName : module.boundNames().entrySet()) {
       Binding binding = boundName.getValue();
       String localName = boundName.getKey();
@@ -152,35 +165,111 @@ final class ModuleImportResolver {
       // ES imports fall into two categories:
       //  - namespace imports. These correspond to an object type containing all named exports.
       //  - named imports. These always correspond, eventually, to a name local to a module.
-      //    Note that we include default imports in this case.
-      if (binding.isModuleNamespace()) {
-        // TODO(b/128633181): Support import *.
-        scope.declare(
-            localName,
-            binding.sourceNode(),
-            registry.getNativeType(JSTypeNative.UNKNOWN_TYPE),
-            moduleInput);
-      } else {
-        Export originatingExport = binding.originatingExport();
-        Node exportModuleRoot = originatingExport.moduleMetadata().rootNode().getFirstChild();
-        TypedScope modScope = nodeToScopeMapper.apply(exportModuleRoot);
-        // NB: If the original export was an `export default` then the local name is *default*.
-        // We've already declared a dummy variable named `*default*` in the scope.
-        TypedVar originalVar = modScope.getSlot(originatingExport.localName());
-        JSType importType = originalVar.getType();
-        scope.declare(
-            localName,
-            binding.sourceNode(),
-            importType,
-            moduleInput,
-            /* inferred= */ originalVar.isTypeInferred());
-        if (originalVar.getNameNode().getTypedefTypeProp() != null
-            && binding.sourceNode().getTypedefTypeProp() == null) {
-          binding.sourceNode().setTypedefTypeProp(originalVar.getNameNode().getTypedefTypeProp());
-          registry.declareType(scope, localName, originalVar.getNameNode().getTypedefTypeProp());
+      //    Note that we include imports of an `export default` in this case and map them to a
+      //    pseudo-variable named *default*.
+      ScopedName export = getScopedNameFromEsBinding(binding);
+      TypedScope modScope = nodeToScopeMapper.apply(export.getScopeRoot());
+      if (modScope == null) {
+        missingNames.put(binding.sourceNode(), export);
+        continue;
+      }
+
+      TypedVar originalVar = modScope.getVar(export.getName());
+      JSType importType = originalVar.getType();
+      scope.declare(
+          localName,
+          binding.sourceNode(),
+          importType,
+          moduleInput,
+          /* inferred= */ originalVar.isTypeInferred());
+
+      // Non-namespace imports may be typedefs; if so, propagate the typedef prop onto the
+      // export and import bindings, if not already there.
+      if (!binding.isModuleNamespace() && binding.sourceNode().getTypedefTypeProp() == null) {
+        JSType typedefType = originalVar.getNameNode().getTypedefTypeProp();
+        if (typedefType != null) {
+          binding.sourceNode().setTypedefTypeProp(typedefType);
+          registry.declareType(scope, localName, typedefType);
         }
       }
     }
+    return missingNames.build();
+  }
+
+  /**
+   * Declares or updates the type of properties representing exported names from ES module
+   *
+   * <p>When the given object type does not have existing properties corresponding to exported
+   * names, this method adds new properties to the object type. If the object type already has
+   * properties, this method will ignore declared properties and update the type of inferred
+   * properties.
+   *
+   * <p>The additional properties will be inferred (instead of declared) if and only if {@link
+   * TypedVar#isTypeInferred()} is true for the original exported name.
+   *
+   * <p>We create this type to support 'import *' and goog.requires of this module. Note: we could
+   * lazily initialize this type if always creating it hurts performance.
+   *
+   * @param namespace An object type which may already have properties representing exported names.
+   * @param scope The scope rooted at the given module.
+   */
+  void updateEsModuleNamespaceType(ObjectType namespace, Module module, TypedScope scope) {
+    checkArgument(module.metadata().isEs6Module(), module);
+    checkArgument(scope.isModuleScope(), scope);
+
+    for (Map.Entry<String, Binding> boundName : module.namespace().entrySet()) {
+      String exportKey = boundName.getKey();
+      if (namespace.isPropertyTypeDeclared(exportKey)) {
+        // Cannot change the type of a declared property after it is added to the ObjectType.
+        continue;
+      }
+
+      Binding binding = boundName.getValue();
+      Node bindingSourceNode = binding.sourceNode(); // e.g. 'x' in `export let x;` or `export {x};`
+      ScopedName export = getScopedNameFromEsBinding(binding);
+      TypedScope originalScope =
+          export.getScopeRoot() == scope.getRootNode()
+              ? scope
+              : nodeToScopeMapper.apply(export.getScopeRoot());
+      if (originalScope == null) {
+        // Exporting an import from an invalid module load or early reference.
+        namespace.defineInferredProperty(
+            exportKey, registry.getNativeType(JSTypeNative.UNKNOWN_TYPE), bindingSourceNode);
+        continue;
+      }
+
+      TypedVar originalName = originalScope.getSlot(export.getName());
+      JSType exportType = originalName.getType();
+      if (originalName.isTypeInferred()) {
+        // NB: this method may be either adding a new inferred property or updating the type of an
+        // existing inferred property.
+        namespace.defineInferredProperty(exportKey, exportType, bindingSourceNode);
+      } else {
+        namespace.defineDeclaredProperty(exportKey, exportType, bindingSourceNode);
+      }
+
+      bindingSourceNode.setTypedefTypeProp(originalName.getNameNode().getTypedefTypeProp());
+    }
+  }
+
+  /** Given a Binding from an ES module, return the name and scope of the bound name. */
+  private static ScopedName getScopedNameFromEsBinding(Binding binding) {
+    // NB: If the original export was an `export default` then the local name is *default*.
+    // We've already declared a dummy variable named `*default*` in the scope.
+    String name = binding.isModuleNamespace() ? Export.NAMESPACE : binding.boundName();
+    ModuleMetadata originalMetadata =
+        binding.isModuleNamespace()
+            ? binding.metadata()
+            : binding.originatingExport().moduleMetadata();
+    if (!originalMetadata.isEs6Module()) {
+      // Importing SCRIPTs should not allow you to look up names in scope.
+      return ScopedName.of(name, null);
+    }
+    Node scriptNode = originalMetadata.rootNode();
+    // Imports of nonexistent modules have a null 'root node'. Imports of names from scripts are
+    // meaningless.
+    checkState(scriptNode == null || scriptNode.isScript(), scriptNode);
+    return ScopedName.of(name, scriptNode != null ? scriptNode.getOnlyChild() : null);
   }
 
   /** Returns the {@link Module} corresponding to this scope root, or null if not a module root. */

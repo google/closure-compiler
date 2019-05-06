@@ -40,6 +40,8 @@ import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
+import com.google.javascript.jscomp.modules.Export;
+import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -349,10 +351,34 @@ class TypeInference
       return input;
     }
 
+    // This method also does some logic for ES modules right before and after entering/exiting the
+    // scope rooted at the module. The reasoning for separating out this logic is that we can just
+    // ignore the actual AST nodes for IMPORT/EXPORT, in most cases, because we have already
+    // created an abstraction of imports and exports.
     Node root = NodeUtil.getEnclosingScopeRoot(n);
-    FlowScope output = input.withSyntacticScope(scopeCreator.createScope(root));
+    // Inferred types of ES module imports/exports aren't knowable until after TypeInference runs.
+    // First update the type of all imports in the scope, then do flow-sensitive inference, then
+    // update the implicit '*exports*' object.
+    Module module = moduleImportResolver.getModuleFromScopeRoot(root);
+    TypedScope syntacticBlockScope = scopeCreator.createScope(root);
+    if (module != null && module.metadata().isEs6Module()) {
+      moduleImportResolver.declareEsModuleImports(
+          module, syntacticBlockScope, compiler.getInput(n.getInputId()));
+    }
+
+    // This logic is not specific to ES modules.
+    FlowScope output = input.withSyntacticScope(syntacticBlockScope);
     output = inferDeclarativelyUnboundVarsWithoutTypes(output);
     output = traverse(n, output);
+
+    if (module != null && module.metadata().isEs6Module()) {
+      // This call only affects exports with an inferred, not declared, type. Declared exports were
+      // already added to the namespace object type in TypedScopeCreator.
+      moduleImportResolver.updateEsModuleNamespaceType(
+          syntacticBlockScope.getVar(Export.NAMESPACE).getType().toObjectType(),
+          module,
+          syntacticBlockScope);
+    }
     return output;
   }
 
@@ -715,8 +741,14 @@ class TypeInference
         break;
 
       case EXPORT:
+        scope = traverseChildren(n, scope);
         if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
-          scope = traverseChildren(n, scope);
+          // TypedScopeCreator declared a dummy variable *default* to store this type. Update the
+          // variable with the inferred type.
+          TypedVar defaultExport = getDeclaredVar(scope, Export.DEFAULT_EXPORT_NAME);
+          if (defaultExport.isTypeInferred()) {
+            defaultExport.setType(getJSType(n.getOnlyChild()));
+          }
         }
         break;
 
@@ -744,6 +776,7 @@ class TypeInference
       case IMPORT:
       case IMPORT_SPEC:
       case IMPORT_SPECS:
+      case EXPORT_SPECS:
         // These don't need to be typed here, since they only affect control flow.
         break;
 

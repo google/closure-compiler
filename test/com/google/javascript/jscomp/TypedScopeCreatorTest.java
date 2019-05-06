@@ -39,7 +39,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.JsFileLineParser;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
@@ -4888,8 +4890,10 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "});"),
             "goog.module('b'); const x = goog.require('a'); X: x;"));
 
+    // This is unknown because we visit the CFG for the module before visiting the CFG for the
+    // function block. Users can work around this by explicitly typing their exports.
     Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
-    assertNode(xNode).hasJSTypeThat().isNumber();
+    assertNode(xNode).hasJSTypeThat().isUnknown();
   }
 
   @Test
@@ -4905,8 +4909,10 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "});"),
             "goog.module('b'); const {x} = goog.require('a'); X: x;"));
 
+    // This is unknown because we visit the CFG for the module before visiting the CFG for the
+    // function block. Users can work around this by explicitly typing their exports.
     Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
-    assertNode(xNode).hasJSTypeThat().isNumber();
+    assertNode(xNode).hasJSTypeThat().isUnknown();
   }
 
   @Test
@@ -5261,6 +5267,44 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEsModule_importStarMissingModule() {
+    // Make sure this does not crash the typechecker.
+    testError("import * as x from './invalid_path;'; X: x; export {x};", ModuleLoader.LOAD_WARNING);
+
+    assertScope(getLabeledStatement("X").enclosingScope).declares("x").withTypeThat().isUnknown();
+    assertScope(getLabeledStatement("X").enclosingScope)
+        .declares(Export.NAMESPACE)
+        .withTypeThat()
+        .hasInferredProperty("x");
+  }
+
+  @Test
+  public void testEsModule_importSpecsMissingModule() {
+    // Make sure this does not crash the typechecker.
+    testError("import {x} from './invalid_path;'; X: x; export {x};", ModuleLoader.LOAD_WARNING);
+
+    assertScope(getLabeledStatement("X").enclosingScope).declares("x").withTypeThat().isUnknown();
+    assertScope(getLabeledStatement("X").enclosingScope)
+        .declares(Export.NAMESPACE)
+        .withTypeThat()
+        .hasInferredProperty("x");
+  }
+
+  @Test
+  public void testEsModule_importNameFromScript() {
+    // Make sure this does not crash the typechecker. Importing a script for the side effects is
+    // fine, but you can't import a name.
+    testSame(
+        srcs(
+            lines("const x = 'oops, you did not export me.';"),
+            lines(
+                "import {x} from './input0';", //
+                "X: x;")));
+
+    assertScope(getLabeledStatement("X").enclosingScope).declares("x").withTypeThat().isUnknown();
+  }
+
+  @Test
   public void testEsModule_exportNameDeclaration() {
     testSame("/** @type {string|number} */ export let strOrNum = 0; MOD: 0;");
 
@@ -5286,7 +5330,22 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testEsModule_importSpecs_inferredExport() {
+  public void testEsModule_importSpecs_inferredExport_nameDeclaration() {
+    testSame(
+        srcs(
+            lines(
+                "/** @return {number} */ const f = () => 0;", //
+                "export const y = f();"),
+            lines(
+                "import {y as x} from './input0';", //
+                "X: x;")));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+    assertThat(getLabeledStatement("X").enclosingScope.getVar("x")).isInferred();
+  }
+
+  @Test
+  public void testEsModule_importSpecs_inferredExport_exportSpecs() {
     testSame(
         srcs(
             lines(
@@ -5381,6 +5440,100 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEsModule_importStar_declaredExport() {
+    testSame(
+        srcs(
+            "export let /** number */ x;",
+            lines(
+                "import * as ns from './input0';", //
+                "NS: ns;",
+                "X: ns.x;")));
+
+    JSType nsType = getLabeledStatement("NS").statementNode.getOnlyChild().getJSType();
+    assertType(nsType).hasDeclaredProperty("x");
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testEsModule_importStar_inferredExport() {
+    testSame(
+        srcs(
+            lines(
+                "/** @return {number} */ const f = () => 0;", //
+                "export const x = f();"),
+            lines(
+                "import * as ns from './input0';", //
+                "NS: ns;",
+                "X: ns.x;")));
+
+    JSType nsType = getLabeledStatement("NS").statementNode.getOnlyChild().getJSType();
+    assertType(nsType).hasInferredProperty("x");
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testEsModule_importStar_typedefInExportSpec() {
+    testSame(
+        srcs(
+            "/** @typedef {number} */ let numType; export {numType};",
+            "import * as ns from './input0'; var /** !ns.numType */ x; X: x;"));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testEsModule_importStar_typedefExportDeclaration() {
+    testSame(
+        srcs(
+            "/** @typedef {number} */ export let numType;",
+            "import * as ns from './input0'; var /** !ns.numType */ x; X: x;"));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testEsModule_importStar_typedefReexported() {
+    testSame(
+        srcs(
+            "/** @typedef {number} */ export let numType;",
+            "import * as mod from './input0'; export {mod};",
+            "import {mod} from './input1'; var /** !mod.numType */ x; X: x;"));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testEsModule_importStar_typedefReexportedThenImportStarred() {
+    testSame(
+        srcs(
+            "/** @typedef {number} */ export let numType;",
+            "import * as mod0 from './input0'; export {mod0};",
+            "import * as mod1 from './input1'; var /** !mod1.mod0.numType */ x; X: x;"));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testGoogRequire_esModuleId_namespaceRequire() {
+    testSame(
+        srcs(
+            "goog.declareModuleId('a'); export const x = 0;",
+            "goog.module('b'); const a = goog.require('a'); X: a.x;"));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testGoogRequire_esModuleId_destructuringRequire() {
+    testSame(
+        srcs(
+            "goog.declareModuleId('a'); export const x = 0;",
+            "goog.module('b'); const {x} = goog.require('a'); X: x;"));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
   public void testGoogRequire_insideEsModule_namedExport() {
     testSame(
         srcs(
@@ -5406,6 +5559,107 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild())
         .hasJSTypeThat()
         .toStringIsEqualTo("exports.X");
+  }
+
+  @Test
+  public void testEsModuleImportCycle_namedExports() {
+    // Note: we cannot reference circular imports directly in the module body but we can reference
+    // them by type and inside functions.
+    testSame(
+        srcs(
+            lines(
+                "import {Bar} from './input1';", //
+                "var /** !Bar */ b;",
+                "BAR: b;",
+                "export class Foo {}"),
+            lines(
+                "import {Foo} from './input0';", //
+                "var /** !Foo */ f;",
+                "FOO: f;",
+                "export class Bar {}")));
+
+    assertNode(getLabeledStatement("FOO").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Foo");
+    assertNode(getLabeledStatement("BAR").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Bar");
+  }
+
+  @Test
+  public void testEsModuleImportCycle_importStarPlusNamedExport() {
+    testSame(
+        srcs(
+            lines(
+                "import * as mod from './input1';", //
+                "var /** !mod.Bar */ b;",
+                "BAR: b;",
+                "export class Foo {}"),
+            lines(
+                "import {Foo} from './input0';", //
+                "var /** !Foo */ f;",
+                "FOO: f;",
+                "export class Bar {}")));
+
+    assertNode(getLabeledStatement("FOO").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Foo");
+    assertNode(getLabeledStatement("BAR").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Bar");
+  }
+
+  @Test
+  public void testEsModuleImportStar_reexportLateReference() {
+    testSame(
+        srcs(
+            lines(
+                "import * as mod from './input1';", //
+                "function f() {",
+                "  BAR1: new mod.Bar();",
+                "}",
+                "export {mod};"),
+            lines(
+                "import {mod} from './input0';", //
+                "var /** !mod.Bar */ b;",
+                "BAR: b;",
+                "function f() {",
+                "  BAR2: new mod.Bar();",
+                "}",
+                "export class Bar {}")));
+
+    assertNode(getLabeledStatement("BAR").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Bar");
+    assertNode(getLabeledStatement("BAR1").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Bar");
+    assertNode(getLabeledStatement("BAR2").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Bar");
+  }
+
+  @Test
+  public void testEsModuleImportCycle_importStar() {
+    testSame(
+        srcs(
+            lines(
+                "import * as mod from './input1';",
+                "var /** !mod.Bar */ b;",
+                "BAR: b;",
+                "export class Foo {}"),
+            lines(
+                "import * as mod from './input0';",
+                "var /** !mod.Foo */ f;",
+                "FOO: f;",
+                "export class Bar {}")));
+
+    assertNode(getLabeledStatement("FOO").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Foo");
+    assertNode(getLabeledStatement("BAR").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Bar");
   }
 
   @Test

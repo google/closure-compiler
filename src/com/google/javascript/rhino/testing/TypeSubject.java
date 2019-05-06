@@ -164,6 +164,14 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
         .isTrue();
   }
 
+  public void hasInferredProperty(String propName) {
+    check("isObjectType()").that(actualNonNull().isObjectType()).isTrue();
+
+    check("toMaybeObjectType().isPropertyTypeInferred(%s)", propName)
+        .that(actualNonNull().toMaybeObjectType().isPropertyTypeInferred(propName))
+        .isTrue();
+  }
+
   public void isObjectTypeWithoutProperty(String propName) {
     isLiteralObject();
     withTypeOfProp(propName).isNull();
