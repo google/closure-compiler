@@ -171,5 +171,6 @@ WebAssembly.Table.prototype.get = function(index) {};
 /**
  * @param {number} index
  * @param {?TableFunction} value
+ * @return {undefined}
  */
 WebAssembly.Table.prototype.set = function(index, value) {};
