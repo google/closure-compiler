@@ -19,7 +19,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -486,6 +488,36 @@ public final class CommandLineRunnerTest {
     args.add("--define=FOO=\"x'\"");
     test("/** @define {string} */ var FOO = \"a\";",
          "var FOO = \"x'\";");
+  }
+
+  @Test
+  public void googFeatureSetYearIsNotDefinedWhenBrowserFeaturesetYearFlagIsNotSupplied() {
+    testSame("var x = 3"); // input does not matter
+    assertThat(lastCompiler.options.getDefineReplacements())
+        .doesNotContainKey("goog.FEATURESET_YEAR");
+  }
+
+  /** Test that browser_featureset_year flag overrides the default goog.FEATURESET_YEAR define */
+  @Test
+  public void browserFeaturesetYearFlagDefinesGoogFeaturesetYear() {
+    args.add("--browser_featureset_year=2016");
+    String original =
+        lines(
+            "/** @define {number} */", //
+            "goog.FEATURESET_YEAR = goog.define('goog.FEATURESET_YEAR', 2012);");
+    String expected = "goog.FEATURESET_YEAR=2016";
+    test(original, expected);
+    assertThat(lastCompiler.options.getDefineReplacements()).containsKey("goog.FEATURESET_YEAR");
+    Node n = lastCompiler.options.getDefineReplacements().get("goog.FEATURESET_YEAR");
+    assertThat(n.getDouble()).isEqualTo(2016.0);
+  }
+
+  /** Minimum valid browser featureset year is 2012 */
+  @Test
+  public void invalidBrowserFeaturesetYearFlagGeneratesError() {
+    args.add("--browser_featureset_year=2011");
+    FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
+    assertThat(e).hasMessageThat().isEqualTo("Illegal --browser_featureset_year: 2011");
   }
 
   @Test

@@ -43,6 +43,7 @@ import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.jscomp.ijs.IjsErrors;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.TokenStream;
@@ -356,7 +357,17 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           ShowByPathWarningsGuard.ShowType.EXCLUDE));
     }
 
-    createDefineOrTweakReplacements(config.define, options, false);
+    List<String> define = new ArrayList<>(config.define);
+    if (config.browserFeaturesetYear != 0) {
+      // TODO(b/128873198): Add validation of the year.
+      if (config.browserFeaturesetYear < 2012) {
+        throw new FlagUsageException(
+            SimpleFormat.format(
+                "Illegal --browser_featureset_year: %d", config.browserFeaturesetYear));
+      }
+      define.add(SimpleFormat.format("goog.FEATURESET_YEAR=%d", config.browserFeaturesetYear));
+    }
+    createDefineOrTweakReplacements(define, options, false);
 
     options.setTweakProcessing(config.tweakProcessing);
     createDefineOrTweakReplacements(config.tweak, options, true);
@@ -2529,6 +2540,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     public CommandLineConfig setDefine(List<String> define) {
       this.define.clear();
       this.define.addAll(define);
+      return this;
+    }
+
+    private Integer browserFeaturesetYear = 0;
+
+    /** Indicates target browser's year */
+    public CommandLineConfig setBrowserFeaturesetYear(Integer browserFeaturesetYear) {
+      this.browserFeaturesetYear = browserFeaturesetYear;
       return this;
     }
 

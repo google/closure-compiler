@@ -183,6 +183,14 @@ public class CommandLineRunner extends
         Collections.synchronizedList(new ArrayList<FlagEntry<JsSourceType>>());
 
     @Option(
+        name = "--browser_featureset_year",
+        usage =
+            "shortcut for defining "
+                + "goog.FEATURESET_YEAR=YYYY."
+                + " The minimum valid value of the browser year is 2012")
+    private Integer browserFeaturesetYear = 0;
+
+    @Option(
       name = "--help",
       handler = BooleanOptionHandler.class,
       usage = "Displays this message on stdout and exit"
@@ -980,6 +988,7 @@ public class CommandLineRunner extends
                     "charset",
                     "checks_only",
                     "define",
+                    "browser_featureset_year",
                     "flagfile",
                     "help",
                     "third_party",
@@ -1724,6 +1733,7 @@ public class CommandLineRunner extends
           .setApplyInputSourceMaps(applyInputSourceMaps)
           .setWarningGuards(Flags.guardLevels)
           .setDefine(flags.define)
+          .setBrowserFeaturesetYear(flags.browserFeaturesetYear)
           .setCharset(flags.charset)
           .setDependencyOptions(dependencyOptions)
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
