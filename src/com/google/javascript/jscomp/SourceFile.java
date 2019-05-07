@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 /**
  * An abstract representation of a source file that provides access to language-neutral features.
@@ -342,6 +343,25 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
       while (zipEntries.hasMoreElements()) {
         ZipEntry zipEntry = zipEntries.nextElement();
+        String entryName = zipEntry.getName();
+        if (!entryName.endsWith(".js")) { // Only accept js files
+          continue;
+        }
+        sourceFiles.add(fromZipEntry(zipName, absoluteZipPath, entryName, inputCharset));
+      }
+    }
+    return sourceFiles;
+  }
+
+  @GwtIncompatible("java.util.zip.ZipInputStream")
+  public static List<SourceFile> fromZipInput(
+      String zipName, InputStream input, Charset inputCharset) throws IOException {
+    final String absoluteZipPath = new File(zipName).getAbsolutePath();
+    List<SourceFile> sourceFiles = new ArrayList<>();
+
+    try (ZipInputStream in = new ZipInputStream(input, inputCharset)) {
+      ZipEntry zipEntry;
+      while ((zipEntry = in.getNextEntry()) != null) {
         String entryName = zipEntry.getName();
         if (!entryName.endsWith(".js")) { // Only accept js files
           continue;

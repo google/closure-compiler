@@ -19,8 +19,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.collect.Iterables;
 import com.google.common.io.MoreFiles;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,15 +31,20 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 
 @RunWith(JUnit4.class)
 public final class SourceFileTest {
+
+  @Rule public TemporaryFolder folder = new TemporaryFolder();
 
   @Test
   public void testSourceKind() {
@@ -86,7 +93,8 @@ public final class SourceFileTest {
     // Setup environment.
     String expectedContent = "// content content content";
     String newExpectedContent = "// new content new content new content";
-    Path jsPath = Files.createTempFile("test", ".js");
+
+    Path jsPath = folder.newFile("test.js").toPath();
     MoreFiles.asCharSink(jsPath, StandardCharsets.UTF_8).write(expectedContent);
     SourceFile sourceFile = SourceFile.fromPath(jsPath, StandardCharsets.UTF_8);
 
@@ -106,7 +114,7 @@ public final class SourceFileTest {
     // Setup environment.
     String expectedContent = "// content content content";
     String newExpectedContent = "// new content new content new content";
-    Path jsZipFile = Files.createTempFile("test", ".js.zip");
+    Path jsZipFile = folder.newFile("test.js.zip").toPath();
     createZipWithContent(jsZipFile, expectedContent);
     SourceFile zipSourceFile =
         SourceFile.fromZipEntry(
@@ -132,7 +140,7 @@ public final class SourceFileTest {
   public void testSourceFileResolvesZipEntries() throws IOException {
     // Setup environment.
     String expectedContent = "// <program goes here>";
-    Path jsZipPath = Files.createTempFile("test", ".js.zip");
+    Path jsZipPath = folder.newFile("test.js.zip").toPath();
     createZipWithContent(jsZipPath, expectedContent);
 
     // Test SourceFile#fromZipEntry(String, String, String, Charset, SourceKind)
@@ -173,6 +181,39 @@ public final class SourceFileTest {
     assertThat(sourceFileFromPathCharset.getCode()).isEqualTo(expectedContent);
   }
 
+  @Test
+  public void testSourceFileFromZipFile() throws IOException {
+    // Setup environment.
+    String expectedContent = "// <program goes here>";
+    Path jsZipPath = folder.newFile("test.js.zip").toPath();
+    createZipWithContent(jsZipPath, "// <program goes here>");
+
+    List<SourceFile> sourceFiles =
+        SourceFile.fromZipFile(jsZipPath.toString(), StandardCharsets.UTF_8);
+    assertThat(sourceFiles).hasSize(1);
+
+    SourceFile sourceFile = Iterables.getOnlyElement(sourceFiles);
+    assertThat(sourceFile.getName()).isEqualTo(jsZipPath + "!/foo.js");
+    assertThat(sourceFile.getCode()).isEqualTo(expectedContent);
+  }
+
+  @Test
+  public void testSourceFileFromZipInput() throws IOException {
+    // Setup environment.
+    String expectedContent = "// <program goes here>";
+    Path jsZipPath = folder.newFile("test.js.zip").toPath();
+    createZipWithContent(jsZipPath, "// <program goes here>");
+
+    List<SourceFile> sourceFiles =
+        SourceFile.fromZipInput(
+            jsZipPath.toString(), new FileInputStream(jsZipPath.toFile()), StandardCharsets.UTF_8);
+    assertThat(sourceFiles).hasSize(1);
+
+    SourceFile sourceFile = Iterables.getOnlyElement(sourceFiles);
+    assertThat(sourceFile.getName()).isEqualTo(jsZipPath + "!/foo.js");
+    assertThat(sourceFile.getCode()).isEqualTo(expectedContent);
+  }
+
   private static void createZipWithContent(Path zipFile, String content) throws IOException {
     Instant lastModified = Instant.now();
     if (zipFile.toFile().exists()) {
@@ -194,7 +235,7 @@ public final class SourceFileTest {
   public void testDiskFile() throws IOException {
     String expectedContent = "var c;";
 
-    Path tempFile = Files.createTempFile("test", "file.js");
+    Path tempFile = folder.newFile("test.js").toPath();
     MoreFiles.asCharSink(tempFile, UTF_8).write(expectedContent);
 
     SourceFile newFile = SourceFile.fromFile(tempFile.toString());
