@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp.testing;
 
 import static com.google.common.truth.Truth.assertAbout;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
@@ -47,14 +46,10 @@ public final class JSErrorSubject extends Subject<JSErrorSubject, JSError> {
   }
 
   public void hasType(DiagnosticType type) {
-    String message = "Expected an error of type " + type + " but got: " + actual;
-    assertEquals(message, type, actual.getType());
+    check("getType()").that(actual.getType()).isEqualTo(type);
   }
 
   public void hasMessage(String msg) {
-    assertEquals(
-        "Expected an error with message:\n" + msg + " but got:\n" + actual,
-        msg,
-        actual.description);
+    check("description").that(actual.description).isEqualTo(msg);
   }
 }
