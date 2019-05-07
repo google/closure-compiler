@@ -74,8 +74,11 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
     return TypeSubject::new;
   }
 
+  private final JSType actual;
+
   private TypeSubject(FailureMetadata failureMetadata, JSType type) {
     super(failureMetadata, type);
+    this.actual = type;
   }
 
   @Override
@@ -209,15 +212,15 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
 
   private JSType actualNonNull() {
     isNotNull();
-    return actual();
+    return actual;
   }
 
   private void checkEqualityAgainst(
       @Nullable JSType provided, boolean expectation, Equivalence equivalence) {
     String providedString = debugStringOf(provided);
-    String actualString = debugStringOf(actual());
+    String actualString = debugStringOf(actual);
 
-    boolean actualEqualsProvided = equivalence.test(actual(), provided);
+    boolean actualEqualsProvided = equivalence.test(actual, provided);
     if (actualEqualsProvided != expectation) {
       failWithActual(
           fact("Types expected to be equal", expectation), //
@@ -225,7 +228,7 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
           fact("provided", providedString));
     }
 
-    boolean providedEqualsActual = equivalence.test(provided, actual());
+    boolean providedEqualsActual = equivalence.test(provided, actual);
     if (actualEqualsProvided != providedEqualsActual) {
       failWithActual(
           simpleFact("Equality should be symmetric"), //
@@ -235,11 +238,11 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
     }
 
     if (expectation) {
-      if (equivalence.hash(actual()) != equivalence.hash(provided)) {
+      if (equivalence.hash(actual) != equivalence.hash(provided)) {
         failWithActual(
             simpleFact("If two types are equal their hashcodes must also be equal"), //
             fact("definition of equality", equivalence.stringify("actual", "provided")),
-            fact("hash of actual", equivalence.hash(actual())),
+            fact("hash of actual", equivalence.hash(actual)),
             fact("hash of provided", equivalence.hash(provided)),
             fact("provided", providedString));
       }
@@ -312,7 +315,7 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
 
   @Override
   protected String actualCustomStringRepresentation() {
-    return debugStringOf(actual());
+    return debugStringOf(actual);
   }
 
   private static String debugStringOf(JSType type) {
@@ -324,7 +327,7 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
   /** Implements test functions specific to function types. */
   public class FunctionTypeSubject {
     private FunctionType actualFunctionType() {
-      return checkNotNull(actualNonNull().toMaybeFunctionType(), actual());
+      return checkNotNull(actualNonNull().toMaybeFunctionType(), actual);
     }
 
     public TypeSubject hasTypeOfThisThat() {
@@ -336,7 +339,7 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
     }
 
     public void isConstructorFor(String name) {
-      check("isConstructor()").that(actual().isConstructor()).isTrue();
+      check("isConstructor()").that(actual.isConstructor()).isTrue();
       check("getInstanceType().getDisplayName()")
           .that(actualFunctionType().getInstanceType().getDisplayName())
           .isEqualTo(name);

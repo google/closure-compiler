@@ -41,13 +41,16 @@ public final class TypedVarSubject extends Subject<TypedVarSubject, TypedVar> {
     return assertAbout((FailureMetadata fm, TypedVar v) -> new TypedVarSubject(fm, v)).that(var);
   }
 
+  private final TypedVar actual;
+
   private TypedVarSubject(FailureMetadata failureMetadata, TypedVar var) {
     super(failureMetadata, var);
+    this.actual = var;
   }
 
   private TypedVar actualNonNull() {
     isNotNull();
-    return actual();
+    return actual;
   }
 
   public TypeSubject hasJSTypeThat() {

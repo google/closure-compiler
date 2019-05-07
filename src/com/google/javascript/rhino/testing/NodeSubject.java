@@ -70,6 +70,7 @@ import javax.annotation.Nullable;
  */
 public final class NodeSubject extends Subject<NodeSubject, Node> {
 
+  private final Node actual;
   private Function<Node, String> serializer;
 
   @CheckReturnValue
@@ -83,6 +84,7 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
 
   private NodeSubject(FailureMetadata failureMetadata, Node node) {
     super(failureMetadata, node);
+    this.actual = node;
   }
 
   /**
@@ -136,11 +138,11 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
     isNotNull();
     assertNode(expected).isNotNull();
 
-    findFirstMismatch(actual(), expected, checkJsdoc)
+    findFirstMismatch(actual, expected, checkJsdoc)
         .ifPresent(
             (mismatch) -> {
               ArrayList<Fact> facts = new ArrayList<>();
-              facts.add(fact("Actual", serializeNode(actual())));
+              facts.add(fact("Actual", serializeNode(actual)));
               facts.add(fact("Expected", serializeNode(expected)));
 
               Node misActual = mismatch.actual;
@@ -161,17 +163,17 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
   }
 
   public NodeSubject isEquivalentTo(Node other) {
-    check("isEquivalentTo(%s)", other).that(actual().isEquivalentTo(other)).isTrue();
+    check("isEquivalentTo(%s)", other).that(actual.isEquivalentTo(other)).isTrue();
     return this;
   }
 
   public NodeSubject isNotEquivalentTo(Node other) {
-    check("isEquivalentTo(%s)", other).that(actual().isEquivalentTo(other)).isFalse();
+    check("isEquivalentTo(%s)", other).that(actual.isEquivalentTo(other)).isFalse();
     return this;
   }
 
   public TypeSubject hasJSTypeThat() {
-    return TypeSubject.assertType(actual().getJSTypeRequired());
+    return TypeSubject.assertType(actual.getJSTypeRequired());
   }
 
   public void hasType(Token type) {
@@ -179,13 +181,13 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
   }
 
   public NodeSubject hasToken(Token token) {
-    check("getToken()").that(actual().getToken()).isEqualTo(token);
+    check("getToken()").that(actual.getToken()).isEqualTo(token);
     return this;
   }
 
   public NodeSubject isName(String name) {
-    check("isName()").that(actual().isName()).isTrue();
-    check("getString()").that(actual().getString()).isEqualTo(name);
+    check("isName()").that(actual.isName()).isTrue();
+    check("getString()").that(actual.getString()).isEqualTo(name);
     return this;
   }
 
@@ -194,59 +196,59 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
   }
 
   public NodeSubject isNumber(double value) {
-    check("isNumber()").that(actual().isNumber()).isTrue();
-    check("getNumber()").that(actual().getDouble()).isEqualTo(value);
+    check("isNumber()").that(actual.isNumber()).isTrue();
+    check("getNumber()").that(actual.getDouble()).isEqualTo(value);
     return this;
   }
 
   public NodeSubject isAssign() {
-    check("isAssign()").that(actual().isAssign()).isTrue();
+    check("isAssign()").that(actual.isAssign()).isTrue();
     return this;
   }
 
   public NodeSubject isThis() {
-    check("isThis()").that(actual().isThis()).isTrue();
+    check("isThis()").that(actual.isThis()).isTrue();
     return this;
   }
 
   public NodeSubject isSuper() {
-    check("isSuper()").that(actual().isSuper()).isTrue();
+    check("isSuper()").that(actual.isSuper()).isTrue();
     return this;
   }
 
   public NodeSubject isArrowFunction() {
-    check("isArrowFunction()").that(actual().isArrowFunction()).isTrue();
+    check("isArrowFunction()").that(actual.isArrowFunction()).isTrue();
     return this;
   }
 
   public NodeSubject isCall() {
-    check("isCall()").that(actual().isCall()).isTrue();
+    check("isCall()").that(actual.isCall()).isTrue();
     return this;
   }
 
   public NodeSubject isMemberFunctionDef(String name) {
-    check("isMemberFunction()").that(actual().isMemberFunctionDef()).isTrue();
-    check("getString()").that(actual().getString()).isEqualTo(name);
+    check("isMemberFunction()").that(actual.isMemberFunctionDef()).isTrue();
+    check("getString()").that(actual.getString()).isEqualTo(name);
     return this;
   }
 
   public NodeSubject matchesQualifiedName(String qname) {
-    check("matchesQualifiedName(%s)", qname).that(actual().matchesQualifiedName(qname)).isTrue();
+    check("matchesQualifiedName(%s)", qname).that(actual.matchesQualifiedName(qname)).isTrue();
     return this;
   }
 
   public NodeSubject hasCharno(int charno) {
-    check("getCharno()").that(actual().getCharno()).isEqualTo(charno);
+    check("getCharno()").that(actual.getCharno()).isEqualTo(charno);
     return this;
   }
 
   public NodeSubject hasLineno(int lineno) {
-    check("getLineno()").that(actual().getLineno()).isEqualTo(lineno);
+    check("getLineno()").that(actual.getLineno()).isEqualTo(lineno);
     return this;
   }
 
   public NodeSubject hasLength(int length) {
-    check("getLength()").that(actual().getLength()).isEqualTo(length);
+    check("getLength()").that(actual.getLength()).isEqualTo(length);
     return this;
   }
 
@@ -255,28 +257,28 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
   }
 
   public NodeSubject isIndexable(boolean isIndexable) {
-    check("isIndexable()").that(actual().isIndexable()).isEqualTo(isIndexable);
+    check("isIndexable()").that(actual.isIndexable()).isEqualTo(isIndexable);
     return this;
   }
 
   public NodeSubject hasOriginalName(String originalName) {
-    check("getOriginalName()").that(actual().getOriginalName()).isEqualTo(originalName);
+    check("getOriginalName()").that(actual.getOriginalName()).isEqualTo(originalName);
     return this;
   }
 
   public NodeSubject hasChildren(boolean hasChildren) {
-    check("hasChildren()").that(actual().hasChildren()).isEqualTo(hasChildren);
+    check("hasChildren()").that(actual.hasChildren()).isEqualTo(hasChildren);
     return this;
   }
 
   @CheckReturnValue
   public StringSubject hasStringThat() {
-    return check("getString()").that(actual().getString());
+    return check("getString()").that(actual.getString());
   }
 
   @Override
   protected String actualCustomStringRepresentation() {
-    return serializeNode(actual());
+    return serializeNode(actual);
   }
 
   /**

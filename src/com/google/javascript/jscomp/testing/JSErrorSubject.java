@@ -39,19 +39,22 @@ public final class JSErrorSubject extends Subject<JSErrorSubject, JSError> {
     return assertAbout(JSErrorSubject::new).that(error);
   }
 
+  private final JSError actual;
+
   public JSErrorSubject(FailureMetadata failureMetadata, JSError error) {
     super(failureMetadata, error);
+    this.actual = error;
   }
 
   public void hasType(DiagnosticType type) {
-    String message = "Expected an error of type " + type + " but got: " + actual();
-    assertEquals(message, type, actual().getType());
+    String message = "Expected an error of type " + type + " but got: " + actual;
+    assertEquals(message, type, actual.getType());
   }
 
   public void hasMessage(String msg) {
     assertEquals(
-        "Expected an error with message:\n" + msg + " but got:\n" + actual(),
+        "Expected an error with message:\n" + msg + " but got:\n" + actual,
         msg,
-        actual().description);
+        actual.description);
   }
 }

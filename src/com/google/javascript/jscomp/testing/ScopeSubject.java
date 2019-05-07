@@ -55,8 +55,11 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
         .that(scope);
   }
 
+  private final AbstractScope<?, ?> actual;
+
   private ScopeSubject(FailureMetadata failureMetadata, AbstractScope<?, ?> scope) {
     super(failureMetadata, scope);
+    this.actual = scope;
   }
 
   public void doesNotDeclare(String name) {
@@ -65,7 +68,7 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
       failWithoutActual(
           fact("expected not to declare", name),
           fact("but declared it with value", var),
-          fact("scope was", actual()));
+          fact("scope was", actual));
     }
   }
 
@@ -73,7 +76,7 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
     AbstractVar<?, ?> var = getVar(name);
     if (var == null) {
       ImmutableList<AbstractVar<?, ?>> declared =
-          ImmutableList.copyOf(actual().getAllAccessibleVariables());
+          ImmutableList.copyOf(actual.getAllAccessibleVariables());
       ImmutableList<String> names =
           declared.stream().map(AbstractVar::getName).collect(toImmutableList());
       if (names.size() > 10) {
@@ -87,13 +90,13 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
           fact("expected to declare", name),
           simpleFact("but did not"),
           fact("did declare", Joiner.on(", ").join(names)),
-          fact("scope was", actual()));
+          fact("scope was", actual));
     }
     return new DeclarationSubject(var);
   }
 
   private AbstractVar<?, ?> getVar(String name) {
-    return actual().hasSlot(name) ? checkNotNull(actual().getVar(name)) : null;
+    return actual.hasSlot(name) ? checkNotNull(actual.getVar(name)) : null;
   }
 
   /** A subject for an {@link AbstractVar} declared by this particular scope. */
@@ -123,14 +126,14 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
 
     /** Expects the declared variable to be declared on the subject scope. */
     public DeclarationSubject directly() {
-      expectScope("", "directly", actual());
+      expectScope("", "directly", actual);
       return this;
     }
 
     /** Expects the declared variable to be declared on the given scope. */
     public DeclarationSubject on(AbstractScope<?, ?> scope) {
       checkState(
-          scope != actual(),
+          scope != actual,
           "It doesn't make sense to pass the scope already being asserted about. Use .directly()");
       expectScope("on", scope, scope);
       return this;
@@ -138,30 +141,30 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
 
     /** Expects the declared variable to be declared on the closest container scope. */
     public DeclarationSubject onClosestContainerScope() {
-      expectScope("on", "the closest container scope", actual().getClosestContainerScope());
+      expectScope("on", "the closest container scope", actual.getClosestContainerScope());
       return this;
     }
 
     /** Expects the declared variable to be declared on the closest hoist scope. */
     public DeclarationSubject onClosestHoistScope() {
-      expectScope("on", "the closest hoist scope", actual().getClosestHoistScope());
+      expectScope("on", "the closest hoist scope", actual.getClosestHoistScope());
       return this;
     }
 
     /** Expects the declared variable to be declared on the global scope. */
     public DeclarationSubject globally() {
-      expectScope("", "globally", actual().getGlobalScope());
+      expectScope("", "globally", actual.getGlobalScope());
       return this;
     }
 
     /** Expects the declared variable to be declared on any scope other than the subject. */
     public DeclarationSubject onSomeParent() {
-      if (var != null && var.getScope() == actual()) {
+      if (var != null && var.getScope() == actual) {
         failWithoutActual(
             fact("for var", var.getName()),
             simpleFact("expected a declaration on a parent scope"),
             simpleFact("but found it declared directly"),
-            fact("scope was", actual()));
+            fact("scope was", actual));
       }
       return this;
     }
@@ -175,13 +178,13 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
             fact("expected to declare", var.getName()),
             fact("on a scope labeled", expectedLabel),
             simpleFact("but declared it on an unlabeled scope"),
-            fact("scope under test was", actual()));
+            fact("scope under test was", actual));
       } else if (!actualLabel.equals(expectedLabel)) {
         failWithoutActual(
             fact("expected to declare", var.getName()),
             fact("on a scope labeled", expectedLabel),
             fact("but declared it on an scope labeled", actualLabel),
-            fact("scope under test was", actual()));
+            fact("scope under test was", actual));
       }
       return this;
     }
