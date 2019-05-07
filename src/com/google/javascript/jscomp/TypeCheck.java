@@ -1573,7 +1573,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                   n,
                   HIDDEN_INTERFACE_PROPERTY,
                   propertyName,
-                  implementedInterface.getTopDefiningInterface(propertyName).toString()));
+                  TypeValidator.getClosestDefiningTypeName(implementedInterface, propertyName)));
         }
       }
     }
@@ -1585,8 +1585,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return;
     }
 
-    ObjectType topInstanceType = superClassHasDeclaredProperty
-        ? superClass.getTopMostDefiningType(propertyName) : null;
     boolean declaredLocally =
         ctorType.isConstructor()
             && (ctorType.getPrototype().hasOwnProperty(propertyName)
@@ -1601,7 +1599,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // @override not present, but the property does override a superclass
       // property
       compiler.report(
-          JSError.make(n, HIDDEN_SUPERCLASS_PROPERTY, propertyName, topInstanceType.toString()));
+          JSError.make(
+              n,
+              HIDDEN_SUPERCLASS_PROPERTY,
+              propertyName,
+              TypeValidator.getClosestDefiningTypeName(
+                  superClass.getInstanceType(), propertyName)));
     }
 
     // @override is present and we have to check that it is ok
@@ -1622,7 +1625,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                 n,
                 HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
                 propertyName,
-                topInstanceType.toString(),
+                TypeValidator.getClosestDefiningTypeName(
+                    superClass.getInstanceType(), propertyName),
                 superClassPropType.toString(),
                 propertyType.toString()));
       }
@@ -1633,14 +1637,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           JSType superPropertyType =
               interfaceType.getPropertyType(propertyName);
           if (!propertyType.isSubtype(superPropertyType, this.subtypingMode)) {
-            topInstanceType = interfaceType.getConstructor().
-                getTopMostDefiningType(propertyName);
             compiler.report(
                 JSError.make(
                     n,
                     HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
                     propertyName,
-                    topInstanceType.toString(),
+                    TypeValidator.getClosestDefiningTypeName(interfaceType, propertyName),
                     superPropertyType.toString(),
                     propertyType.toString()));
           }

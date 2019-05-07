@@ -13319,7 +13319,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @return {number}  @override */ Foo.prototype.foo = function() {};"),
         lines(
             "mismatch of the foo property on type Foo and the type of the property it "
-                + "overrides from interface Int<string>",
+                + "overrides from interface Int",
             "original: function(this:Int): string",
             "override: function(this:Foo): number"));
   }

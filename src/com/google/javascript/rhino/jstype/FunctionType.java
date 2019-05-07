@@ -874,28 +874,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   /**
-   * Given a constructor or an interface type and a property, finds the top-most superclass that has
-   * the property defined (including this constructor).
-   */
-  public final ObjectType getTopMostDefiningType(String propertyName) {
-    checkState(isConstructor() || isInterface());
-    checkArgument(getInstanceType().hasProperty(propertyName));
-    FunctionType ctor = this;
-
-    if (isInterface()) {
-      return getInstanceType().getTopDefiningInterface(propertyName);
-    }
-
-    ObjectType topInstanceType = null;
-    do {
-      topInstanceType = ctor.getInstanceType();
-      ctor = ctor.getSuperClassConstructor();
-    } while (ctor != null && ctor.getPrototype().hasProperty(propertyName));
-
-    return topInstanceType;
-  }
-
-  /**
    * Two function types are equal if their signatures match. Since they don't have signatures, two
    * interfaces are equal if their names match.
    */
