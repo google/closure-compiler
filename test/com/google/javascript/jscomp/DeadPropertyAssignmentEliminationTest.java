@@ -978,6 +978,24 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEs5Getter_computed() {
+    testSame(
+        lines(
+            "var bar = {",
+            "  enabled: false,",
+            "  get ['baz']() {",
+            "    return this.enabled ? 'enabled' : 'disabled';",
+            "  }",
+            "};",
+            "function f() {",
+            "  bar.enabled = true;",
+            "  var ret = bar.baz;",
+            "  bar.enabled = false;",
+            "  return ret;",
+            "};"));
+  }
+
+  @Test
   public void testEs5Setter() {
     testSame(
         lines(
@@ -993,6 +1011,23 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  bar.enabled = false;",
             "};")
     );
+  }
+
+  @Test
+  public void testEs5Setter_computed() {
+    testSame(
+        lines(
+            "var bar = {",
+            "  enabled: false,",
+            "  set ['baz'](x) {",
+            "    this.x = this.enabled ? x * 2 : x;",
+            "  }",
+            "};",
+            "function f() {",
+            "  bar.enabled = true;",
+            "  bar.baz = 10;",
+            "  bar.enabled = false;",
+            "};"));
   }
 
   @Test

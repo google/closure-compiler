@@ -526,9 +526,12 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       // Keep track of any potential getters/setters.
       if (NodeUtil.isGetterOrSetter(n)) {
         Node grandparent = parent.getParent();
-        if (NodeUtil.isGetOrSetKey(n) && n.getString() != null) {
+        if (n.isGetterDef() || n.isSetterDef()) {
           // ES5 getter/setter nodes contain the property name directly on the node.
           propNames.add(n.getString());
+        } else if (n.isComputedProp()) {
+          // Ignore computed props as being too dynamic.
+          unknownGetterSetterPresent = true;
         } else if (NodeUtil.isObjectDefinePropertyDefinition(grandparent)) {
           // Handle Object.defineProperties(obj, 'propName', { ... }).
           Node propNode = grandparent.getChildAtIndex(2);
