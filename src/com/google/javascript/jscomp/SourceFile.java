@@ -27,6 +27,7 @@ import com.google.common.io.CharStreams;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -41,11 +42,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 /**
@@ -332,25 +331,12 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return fileName;
   }
 
-  @GwtIncompatible("java.util.zip.ZipFile")
+  @GwtIncompatible("fromZipInput")
   public static List<SourceFile> fromZipFile(String zipName, Charset inputCharset)
       throws IOException {
-    final String absoluteZipPath = new File(zipName).getAbsolutePath();
-    List<SourceFile> sourceFiles = new ArrayList<>();
-
-    try (ZipFile zipFile = new ZipFile(absoluteZipPath)) {
-      Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-
-      while (zipEntries.hasMoreElements()) {
-        ZipEntry zipEntry = zipEntries.nextElement();
-        String entryName = zipEntry.getName();
-        if (!entryName.endsWith(".js")) { // Only accept js files
-          continue;
-        }
-        sourceFiles.add(fromZipEntry(zipName, absoluteZipPath, entryName, inputCharset));
-      }
+    try (InputStream input = new FileInputStream(zipName)) {
+      return fromZipInput(zipName, input, inputCharset);
     }
-    return sourceFiles;
   }
 
   @GwtIncompatible("java.util.zip.ZipInputStream")
