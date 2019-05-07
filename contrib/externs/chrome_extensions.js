@@ -11109,3 +11109,70 @@ chrome.declarativeContent.RequestContentScript = function(literalValue) {};
  * @see https://developer.chrome.com/extensions/declarativeContent#event-onPageChanged
  */
 chrome.declarativeContent.onPageChanged;
+
+/**
+ * @see https://developer.chrome.com/extensions/instanceID
+ * @const
+ */
+chrome.instanceID = {};
+
+/**
+ * @param {function(string)} callback
+ * @see https://developer.chrome.com/extensions/instanceID#method-getID
+ */
+chrome.instanceID.getID = function(callback) {};
+
+/**
+ * @param {function(number)} callback
+ * @see https://developer.chrome.com/extensions/instanceID#method-getCreationTime
+ */
+chrome.instanceID.getCreationTime = function(callback) {};
+
+/**
+ * @typedef {{
+ *   authorizedEntity: string,
+ *   scope: string,
+ *   options: (!Object|undefined)
+ * }}
+ */
+chrome.instanceID.GetTokenParams;
+
+/**
+ * @param {!chrome.instanceID.GetTokenParams} getTokenParams
+ * @param {function(string)} callback
+ * @see https://developer.chrome.com/extensions/instanceID#method-getToken
+ */
+chrome.instanceID.getToken = function(getTokenParams, callback) {};
+
+/**
+ * @typedef {{
+ *   authorizedEntity: string,
+ *   scope: string,
+ * }}
+ */
+chrome.instanceID.DeleteTokenParams;
+
+/**
+ * @param {!chrome.instanceID.DeleteTokenParams} deleteTokenParams
+ * @param {function()} callback
+ * @see https://developer.chrome.com/extensions/instanceID#method-deleteToken
+ */
+chrome.instanceID.deleteToken = function(deleteTokenParams, callback) {};
+
+/**
+ * @param {function()} callback
+ * @see https://developer.chrome.com/extensions/instanceID#method-deleteID
+ */
+chrome.instanceID.deleteID = function(callback) {};
+
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/instanceID#event-onTokenRefresh
+ */
+chrome.instanceID.onTokenRefresh = {};
+
+/**
+ * @param {function()} callback
+ * @see https://developer.chrome.com/extensions/instanceID#event-onTokenRefresh
+ */
+chrome.instanceID.onTokenRefresh.addListener = function(callback) {};
