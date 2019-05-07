@@ -1379,7 +1379,6 @@ Array.prototype.copyWithin = function(target, start, opt_end) {};
 Array.prototype.includes = function(searchElement, opt_fromIndex) {};
 
 /**
- * NOTE: this is a stage 3 proposal extern.
  * @param {function(this: THIS, T, number, !IArrayLike<T>): S|!Array<S>}
  *     callback
  * @param {THIS=} thisArg
@@ -1391,8 +1390,7 @@ Array.prototype.includes = function(searchElement, opt_fromIndex) {};
 Array.prototype.flatMap = function(callback, thisArg) {};
 
 /**
- * NOTE: this is a stage 3 proposal extern.
- * @param {*=} depth
+ * @param {number=} depth
  * @return {!Array<S>}
  * @this {!IArrayLike<T>}
  * @template T, S

@@ -25,7 +25,7 @@ $jscomp.polyfill('Array.prototype.flat', function(orig) {
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
    *
-   * @param {*=} depth
+   * @param {number=} depth
    * @return {!Array<S>}
    * @this {!IArrayLike<T>}
    * @template T, S
@@ -33,7 +33,7 @@ $jscomp.polyfill('Array.prototype.flat', function(orig) {
    */
   var flat = function(depth) {
     // TODO(sdh): Consider respecting Symbol.species (b/121061255).
-    depth = depth === undefined ? 1 : Number(depth);
+    depth = depth === undefined ? 1 : depth;
     var flattened = [];
     for (var i = 0; i < this.length; i++) {
       var element = this[i];
