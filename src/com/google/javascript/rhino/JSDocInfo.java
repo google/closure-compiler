@@ -192,6 +192,7 @@ public class JSDocInfo implements Serializable {
       LazilyInitializedInfo other = clone(/* cloneTypeNodes= */ false);
       other.parameters = null;
       other.suppressions = null;
+      other.setBit(Property.NG_INJECT, false);
       return other;
     }
 
@@ -199,6 +200,7 @@ public class JSDocInfo implements Serializable {
       LazilyInitializedInfo other = new LazilyInitializedInfo();
       other.parameters = cloneTypeMap(parameters, /* cloneTypeExpressionNodes= */ false);
       other.suppressions = suppressions == null ? null : ImmutableSet.copyOf(suppressions);
+      other.setBit(Property.NG_INJECT, isBitSet(Property.NG_INJECT));
       return other;
     }
 
@@ -234,7 +236,7 @@ public class JSDocInfo implements Serializable {
       if (value) {
         propertyBitField |= mask;
       } else {
-        propertyBitField ^= mask;
+        propertyBitField &= ~mask;
       }
     }
 

@@ -114,7 +114,9 @@ final class Es6ClassConverterJsDocHelper implements EntryPoint {
     parser.parse();
     JSDocInfo parsed = parser.retrieveAndResetParsedJSDocInfo();
     JSDocInfo params = parsed.cloneConstructorDoc();
-    if (parsed.getParameterNames().isEmpty() && parsed.getSuppressions().isEmpty()) {
+    if (parsed.getParameterNames().isEmpty()
+        && parsed.getSuppressions().isEmpty()
+        && !parsed.isNgInject()) {
       return null;
     }
     JSDocInfoPrinter printer =
