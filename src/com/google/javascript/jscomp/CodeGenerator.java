@@ -1061,7 +1061,9 @@ public class CodeGenerator {
           }
         }
         add("[");
-        add(first);
+        // Must use addExpr() with a priority of 1, because comma expressions aren't allowed.
+        // https://www.ecma-international.org/ecma-262/9.0/index.html#prod-ComputedPropertyName
+        addExpr(first, 1, Context.OTHER);
         add("]");
         // TODO(martinprobst): There's currently no syntax for properties in object literals that
         // have type declarations on them (a la `{foo: number: 12}`). This comes up for, e.g.,
@@ -1084,8 +1086,10 @@ public class CodeGenerator {
             // Object literal value.
             checkState(
                 !isInClass, "initializers should only exist in object literals, not classes");
-            cc.addOp(":", false);
-            add(initializer);
+            cc.add(":");
+            // Must use addExpr() with a priority of 1, because a comma expression here would cause
+            // a syntax error within the object literal.
+            addExpr(initializer, 1, Context.OTHER);
           } else {
             // Computed properties must either have an initializer or be computed member-variable
             // properties that exist for their type declaration.

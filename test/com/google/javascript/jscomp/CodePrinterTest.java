@@ -140,6 +140,15 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testObjectLiteralWithComma() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertPrintSame("({[(a,b)]:c})");
+    assertPrintSame("({a:(b,c)})");
+    assertPrintSame("({[(a,b)]:(c,d)})");
+    assertPrintSame("({[(a,b)]:c,[d]:(e,f)})");
+  }
+
+  @Test
   public void testPrint() {
     assertPrint("10 + a + b", "10+a+b");
     assertPrint("10 + (30*50)", "10+30*50");
