@@ -2299,6 +2299,29 @@ chrome.enterprise.platformKeys.importCertificate = function(
 chrome.enterprise.platformKeys.removeCertificate = function(
     tokenId, certificate, opt_callback) {};
 
+/**
+ * reportingPrivate is a Private API for reporting Chrome browser status to
+ * admin console.
+ * @see https://cs.chromium.org/chromium/src/chrome/common/extensions/api/enterprise_reporting_private.idl
+ */
+chrome.enterprise.reportingPrivate = {};
+
+/**
+ * Uploads the status of Chrome browser to the admin console by sending
+ * request to the DMServer. Sets runtime.lastError on failure.
+ * @param {!Object} report Object to report to admin console.
+ * @param {(function(): void)=} callback Called back when this operation is
+ *     finished.
+ */
+chrome.enterprise.reportingPrivate.uploadChromeDesktopReport = function(
+    report, callback) {};
+
+/**
+ * Gets the identity of device that Chrome browser is running on. The ID is
+ * retrieved from the local device and used by the Google admin console.
+ * @param {(function(!string): void)=} callback Called with the device ID.
+ */
+chrome.enterprise.reportingPrivate.getDeviceId = function(callback) {};
 
 /**
  * @see https://developer.chrome.com/extensions/extension.html
