@@ -140,13 +140,8 @@ class InlineSimpleMethods extends MethodCompilerPass {
       return false;
     }
 
-    Node leftChild = expectedGetprop.getFirstChild();
-    if (!leftChild.isThis() && !isPropertyTree(leftChild)) {
-      return false;
-    }
-
-    Node retVal = leftChild.getNext();
-    return NodeUtil.getStringValue(retVal) != null;
+    Node getpropLhs = expectedGetprop.getFirstChild();
+    return getpropLhs.isThis() || isPropertyTree(getpropLhs);
   }
 
   /**
