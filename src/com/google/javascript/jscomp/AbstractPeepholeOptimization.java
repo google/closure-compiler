@@ -92,8 +92,7 @@ abstract class AbstractPeepholeOptimization {
 
   /** Returns whether the node may have side effects when executed. */
   protected boolean mayHaveSideEffects(Node n) {
-    checkNotNull(compiler);
-    return NodeUtil.mayHaveSideEffects(n, compiler);
+    return astAnalyzer.mayHaveSideEffects(n);
   }
 
   /**

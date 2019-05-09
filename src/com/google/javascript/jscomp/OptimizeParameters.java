@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -46,10 +47,12 @@ import javax.annotation.Nullable;
  */
 class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
   private final AbstractCompiler compiler;
+  private final AstAnalyzer astAnalyzer;
   private Scope globalScope;
 
   OptimizeParameters(AbstractCompiler compiler) {
-    this.compiler = compiler;
+    this.compiler = checkNotNull(compiler);
+    this.astAnalyzer = compiler.getAstAnalyzer();
   }
 
   @Override
@@ -238,7 +241,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
               break;
             }
 
-            if (!unremovable.get(paramIndex) && NodeUtil.mayHaveSideEffects(param, compiler)) {
+            if (!unremovable.get(paramIndex) && astAnalyzer.mayHaveSideEffects(param)) {
               unremovable.set(paramIndex);
             }
 
@@ -301,7 +304,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
           arg.getNext(), index + 1);
 
       if (index < firstRestIndex && unused.get(index)) {
-        if (!NodeUtil.mayHaveSideEffects(arg, compiler)) {
+        if (!astAnalyzer.mayHaveSideEffects(arg)) {
           if (unremovable.get(index)) {
             if (!arg.isNumber() || arg.getDouble() != 0) {
               toReplaceWithZero.add(arg);
@@ -316,7 +319,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     void removeArgAndFollowing(Node arg) {
       if (arg != null) {
         removeArgAndFollowing(arg.getNext());
-        if (!NodeUtil.mayHaveSideEffects(arg, compiler)) {
+        if (!astAnalyzer.mayHaveSideEffects(arg)) {
           toRemove.add(arg);
         }
       }
@@ -731,7 +734,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
   }
 
   private void setParameterSideEffectInfo(Parameter p, Node value) {
-    p.setHasSideEffects(NodeUtil.mayHaveSideEffects(value, compiler));
+    p.setHasSideEffects(astAnalyzer.mayHaveSideEffects(value));
     p.setCanBeSideEffected(NodeUtil.canBeSideEffected(value));
     p.setMayBeUndefined(NodeUtil.mayBeUndefined(value));
   }

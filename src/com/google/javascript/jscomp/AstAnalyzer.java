@@ -57,4 +57,14 @@ public class AstAnalyzer {
     // TODO(bradfordcsmith): Move the implementation into this class when possible.
     return NodeUtil.mayEffectMutableState(n, compiler);
   }
+
+  /**
+   * Returns true if the node which may have side effects when executed. This version default to the
+   * "safe" assumptions when the compiler object is not provided (RegExp have side-effects, etc).
+   */
+  public boolean mayHaveSideEffects(Node n) {
+    // TODO(b/131178806): Move implementation here when it is possible to
+    //     remove the mayHaveSideEffects(n) version
+    return NodeUtil.mayHaveSideEffects(n, compiler);
+  }
 }

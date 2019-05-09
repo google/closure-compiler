@@ -62,6 +62,7 @@ class ExpressionDecomposer {
   }
 
   private final AbstractCompiler compiler;
+  private final AstAnalyzer astAnalyzer;
   private final AstFactory astFactory;
   private final Supplier<String> safeNameIdSupplier;
   private final Set<String> knownConstants;
@@ -86,6 +87,7 @@ class ExpressionDecomposer {
     checkNotNull(safeNameIdSupplier);
     checkNotNull(constNames);
     this.compiler = compiler;
+    this.astAnalyzer = compiler.getAstAnalyzer();
     this.astFactory = compiler.createAstFactory();
     this.safeNameIdSupplier = safeNameIdSupplier;
     this.knownConstants = constNames;
@@ -164,7 +166,7 @@ class ExpressionDecomposer {
   private void exposeExpression(Node expressionRoot, Node subExpression) {
     Node nonconditionalExpr = findNonconditionalParent(subExpression, expressionRoot);
     // Before extraction, record whether there are side-effect
-    boolean hasFollowingSideEffects = NodeUtil.mayHaveSideEffects(nonconditionalExpr, compiler);
+    boolean hasFollowingSideEffects = astAnalyzer.mayHaveSideEffects(nonconditionalExpr);
 
     Node exprInjectionPoint = findInjectionPoint(nonconditionalExpr);
     DecompositionState state = new DecompositionState();
@@ -860,7 +862,7 @@ class ExpressionDecomposer {
   /** @see {@link #canDecomposeExpression} */
   private DecompositionType isSubexpressionMovable(Node expressionRoot, Node subExpression) {
     boolean requiresDecomposition = false;
-    boolean seenSideEffects = NodeUtil.mayHaveSideEffects(subExpression, compiler);
+    boolean seenSideEffects = astAnalyzer.mayHaveSideEffects(subExpression);
 
     Node child = subExpression;
     for (Node parent : child.getAncestors()) {
@@ -1088,7 +1090,7 @@ class ExpressionDecomposer {
     } else {
       // The function called doesn't have side-effects but check to see if there
       // are side-effects that that may affect it.
-      return NodeUtil.mayHaveSideEffects(tree, compiler);
+      return astAnalyzer.mayHaveSideEffects(tree);
     }
   }
 }

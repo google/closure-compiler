@@ -96,7 +96,7 @@ class FunctionArgumentInjector {
         // Remove the value.  This isn't required but it ensures that we won't
         // inject side-effects multiple times as it will trigger the null
         // check above if we do.
-        if (NodeUtil.mayHaveSideEffects(replacementTemplate, compiler)) {
+        if (compiler.getAstAnalyzer().mayHaveSideEffects(replacementTemplate)) {
           replacements.remove(THIS_MARKER);
         }
 
@@ -304,7 +304,7 @@ class FunctionArgumentInjector {
       boolean safe = true;
       int references = NodeUtil.getNameReferenceCount(block, argName);
 
-      boolean argSideEffects = NodeUtil.mayHaveSideEffects(cArg, compiler);
+      boolean argSideEffects = compiler.getAstAnalyzer().mayHaveSideEffects(cArg);
       if (!argSideEffects && references == 0) {
         safe = true;
       } else if (isTrivialBody && hasMinimalParameters

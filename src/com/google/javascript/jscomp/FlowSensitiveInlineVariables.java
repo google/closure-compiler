@@ -417,7 +417,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       // TODO(user): Side-effect is OK sometimes. As long as there are no
       // side-effect function down all paths to the use. Once we have all the
       // side-effect analysis tool.
-      if (NodeUtil.mayHaveSideEffects(def.getLastChild(), compiler)) {
+      if (compiler.getAstAnalyzer().mayHaveSideEffects(def.getLastChild())) {
         return false;
       }
 

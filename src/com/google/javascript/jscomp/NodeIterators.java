@@ -198,7 +198,7 @@ class NodeIterators {
       this.compiler = checkNotNull(compiler);
       this.varName = nameNode.getString();
       this.valueHasSideEffects =
-          valueNode != null && NodeUtil.mayHaveSideEffects(valueNode, compiler);
+          valueNode != null && compiler.getAstAnalyzer().mayHaveSideEffects(valueNode);
       this.iterator = iterator;
       advanceLookAhead(true);
     }

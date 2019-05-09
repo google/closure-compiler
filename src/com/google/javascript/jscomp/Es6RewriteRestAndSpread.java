@@ -352,7 +352,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     Node callee = spreadParent.getFirstChild();
     // Check if the callee has side effects before removing it from the AST (since some NodeUtil
     // methods assume the node they are passed has a non-null parent).
-    boolean calleeMayHaveSideEffects = NodeUtil.mayHaveSideEffects(callee, compiler);
+    boolean calleeMayHaveSideEffects = compiler.getAstAnalyzer().mayHaveSideEffects(callee);
     // Must remove callee before extracting argument groups.
     spreadParent.removeChild(callee);
 

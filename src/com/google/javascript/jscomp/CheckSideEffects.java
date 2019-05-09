@@ -118,7 +118,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     boolean isResultUsed = NodeUtil.isExpressionResultUsed(n);
     boolean isSimpleOp = NodeUtil.isSimpleOperator(n);
     if (!isResultUsed) {
-      if (isSimpleOp || !NodeUtil.mayHaveSideEffects(n, t.getCompiler())) {
+      if (isSimpleOp || !t.getCompiler().getAstAnalyzer().mayHaveSideEffects(n)) {
         if (report) {
           String msg = "This code lacks side-effects. Is there a bug?";
           if (n.isString() || n.isTemplateLit()) {

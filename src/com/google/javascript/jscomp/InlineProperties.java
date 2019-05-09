@@ -240,7 +240,7 @@ final class InlineProperties implements CompilerPass {
             && info != INVALIDATED
             && isMatchingType(target, info.type)) {
           Node replacement = info.value.cloneTree();
-          if (NodeUtil.mayHaveSideEffects(n.getFirstChild(), compiler)) {
+          if (compiler.getAstAnalyzer().mayHaveSideEffects(n.getFirstChild())) {
             replacement = IR.comma(n.removeFirstChild(), replacement).srcref(n);
           }
           parent.replaceChild(n, replacement);

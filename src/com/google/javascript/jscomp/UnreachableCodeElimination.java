@@ -116,7 +116,7 @@ class UnreachableCodeElimination implements CompilerPass {
         return;
       }
       if (gNode.getAnnotation() != GraphReachability.REACHABLE
-          || !NodeUtil.mayHaveSideEffects(n, compiler)) {
+          || !compiler.getAstAnalyzer().mayHaveSideEffects(n)) {
         removeDeadExprStatementSafely(n);
         return;
       }

@@ -124,7 +124,7 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
         Node lhsNode = classNodeParent.getFirstChild();
         // We can extract a temporary variable for some_expression as long as lhs expression
         // has no side effects.
-        return !NodeUtil.mayHaveSideEffects(lhsNode, compiler);
+        return !compiler.getAstAnalyzer().mayHaveSideEffects(lhsNode);
       } else {
         return false;
       }

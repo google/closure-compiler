@@ -340,17 +340,15 @@ class FunctionToBlockMutator {
 
             Node value = entry.getValue();
             if (!value.isThis()
-                && (referencesThis
-                    || NodeUtil.mayHaveSideEffects(value, compiler))) {
+                && (referencesThis || compiler.getAstAnalyzer().mayHaveSideEffects(value))) {
               String newName = getUniqueThisName();
               Node newValue = entry.getValue().cloneTree();
-              Node newNode = NodeUtil.newVarNode(newName, newValue)
-                  .useSourceInfoIfMissingFromForTree(newValue);
+              Node newNode =
+                  NodeUtil.newVarNode(newName, newValue)
+                      .useSourceInfoIfMissingFromForTree(newValue);
               newVars.add(0, newNode);
               // Remove the parameter from the list to replace.
-              newArgMap.put(THIS_MARKER,
-                  IR.name(newName)
-                      .srcrefTree(newValue));
+              newArgMap.put(THIS_MARKER, IR.name(newName).srcrefTree(newValue));
             }
           } else {
             Node newValue = entry.getValue().cloneTree();

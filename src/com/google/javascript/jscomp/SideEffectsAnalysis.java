@@ -644,7 +644,7 @@ import java.util.Set;
     }
 
     EffectLocation calculateModSet(Node node) {
-      if (NodeUtil.mayHaveSideEffects(node, compiler)) {
+      if (compiler.getAstAnalyzer().mayHaveSideEffects(node)) {
         return EVERY_LOCATION;
       } else {
         return NO_LOCATION;
