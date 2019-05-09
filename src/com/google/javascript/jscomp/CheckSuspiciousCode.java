@@ -25,27 +25,31 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
  * Checks for common errors, such as misplaced semicolons:
+ *
  * <pre>
  * if (x); act_now();
  * </pre>
- *  or comparison against NaN:
+ *
+ * or comparison against NaN:
+ *
  * <pre>
  * if (x === NaN) act();
  * </pre>
+ *
  * and generates warnings.
  *
  * @author johnlenz@google.com (John Lenz)
  */
 final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
-  static final DiagnosticType SUSPICIOUS_SEMICOLON = DiagnosticType.warning(
-      "JSC_SUSPICIOUS_SEMICOLON",
-      "If this if/for/while really shouldn''t have a body, use '{}'");
+  static final DiagnosticType SUSPICIOUS_SEMICOLON =
+      DiagnosticType.warning(
+          "JSC_SUSPICIOUS_SEMICOLON",
+          "If this if/for/while really shouldn''t have a body, use '{}'");
 
   static final DiagnosticType SUSPICIOUS_COMPARISON_WITH_NAN =
       DiagnosticType.warning(
-          "JSC_SUSPICIOUS_NAN",
-          "Comparison against NaN is always false. Did you mean isNaN()?");
+          "JSC_SUSPICIOUS_NAN", "Comparison against NaN is always false. Did you mean isNaN()?");
 
   static final DiagnosticType SUSPICIOUS_IN_OPERATOR =
       DiagnosticType.warning(
@@ -143,13 +147,11 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
   private void checkNonObjectInstanceOf(NodeTraversal t, Node n) {
     if (n.isInstanceOf()) {
-      reportIfNonObject(
-          t, n.getFirstChild(), SUSPICIOUS_INSTANCEOF_LEFT_OPERAND);
+      reportIfNonObject(t, n.getFirstChild(), SUSPICIOUS_INSTANCEOF_LEFT_OPERAND);
     }
   }
 
-  private static boolean reportIfNonObject(
-      NodeTraversal t, Node n, DiagnosticType diagnosticType) {
+  private static boolean reportIfNonObject(NodeTraversal t, Node n, DiagnosticType diagnosticType) {
     if (n.isAdd() || !NodeUtil.mayBeObject(n)) {
       t.report(n.getParent(), diagnosticType);
       return true;
@@ -247,21 +249,19 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     }
     // If we reach this point then all the composite structures that we can decompose have
     // already been handled, leaving only qualified names and type-aware checks to handle below.
-    // Note that much of the switch above in fact duplicates the logic in getPureBooleanValue,
+    // Note that much of the switch above in fact duplicates the logic in getImpureBooleanValue,
     // though with some subtle differences.  Important differences include (1) avoiding recursion
     // into the left-hand-side of nested logical operators, instead treating them as unknown since
     // they would have already been reported elsewhere in the traversal had they been otherwise
     // (this guarantees we visit each node once, rather than quadratically repeating work);
-    // (2) it allows side effects to still have a boolean value (this is more in line with
-    // NodeUtil#getBooleanValue); (3) it propagates our unique amalgam of syntax-based and
-    // type-based checks to work when more deeply nested (i.e. recursively).  These differences
-    // rely on assumptions that are very specific to this use case, so it does not make sense to
-    // upstream them.
-    TernaryValue pure = NodeUtil.getPureBooleanValue(n);
-    if (pure != TernaryValue.UNKNOWN || n.isName()) {
+    // (2) it propagates our unique amalgam of syntax-based and type-based checks to work when more
+    // deeply nested (i.e. recursively).  These differences rely on assumptions that are very
+    // specific to this use case, so it does not make sense to upstream them.
+    TernaryValue literalValue = NodeUtil.getLiteralBooleanValue(n);
+    if (literalValue != TernaryValue.UNKNOWN || n.isName()) {
       // If the truthiness is determinstic from the syntax then return that immediately.
       // Alternatively, NAME nodes also get a pass since we don't trust the type information.
-      return pure;
+      return literalValue;
     }
     JSType type = n.getJSType();
     if (type != null) {

@@ -279,7 +279,7 @@ public final class NodeUtil {
         return "undefined";
 
       case NOT:
-        TernaryValue child = getPureBooleanValue(n.getFirstChild());
+        TernaryValue child = getLiteralBooleanValue(n.getFirstChild());
         if (child != TernaryValue.UNKNOWN) {
           return child.toBoolean(true) ? "false" : "true"; // reversed.
         }
@@ -374,7 +374,7 @@ public final class NodeUtil {
         return null;
 
       case NOT:
-        TernaryValue child = getPureBooleanValue(n.getFirstChild());
+        TernaryValue child = getLiteralBooleanValue(n.getFirstChild());
         if (child != TernaryValue.UNKNOWN) {
           return child.toBoolean(true) ? 0.0 : 1.0; // reversed.
         }
