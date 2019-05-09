@@ -235,7 +235,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
 
     String propertyName;
     if (property.isNumber()) {
-      propertyName = NodeUtil.getStringValue(property);
+      propertyName = getSideEffectFreeStringValue(property);
     } else {
       propertyName = property.getString();
     }

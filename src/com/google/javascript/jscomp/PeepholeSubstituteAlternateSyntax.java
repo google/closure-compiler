@@ -669,7 +669,7 @@ class PeepholeSubstituteAlternateSyntax
     if (n.getParent().isTaggedTemplateLit()) {
       return n;
     }
-    String string = NodeUtil.getStringValue(n);
+    String string = getSideEffectFreeStringValue(n);
     if (string == null) {
       return n;
     }

@@ -269,8 +269,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         break;
     }
 
-    Double result = NodeUtil.getNumberValue(n);
-    if (result == null) {
+    Double result = getSideEffectFreeNumberValue(n);
+    if (result == null || mayHaveSideEffects(n)) {
       return;
     }
 
@@ -656,7 +656,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // foo() + 2 + 'a' because we don't know what foo() will return, and
       // therefore we don't know if left is a string concat, or a numeric add.
       if (lr.isString()) {
-        String leftString = NodeUtil.getStringValue(lr);
+        String leftString = lr.getString();
+        // Note that we don't have to call getSideEffectFreeStringValue() here because
+        // the enclosing logic guarantees that `right` is a literal value.
         String rightString = NodeUtil.getStringValue(right);
         if (leftString != null && rightString != null) {
           left.removeChild(ll);
@@ -679,8 +681,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // foo() + 2 + 'a' because we don't know what foo() will return, and
       // therefore we don't know if left is a string concat, or a numeric add.
       if (rl.isString()) {
+        // Note that we don't have to call getSideEffectFreeStringValue() here because
+        // the enclosing logic guarantees that `left` is a literal value.
         String leftString = NodeUtil.getStringValue(left);
-        String rightString = NodeUtil.getStringValue(rl);
+        String rightString = rl.getString();
         if (leftString != null && rightString != null) {
           right.removeChild(rr);
           String result = leftString + rightString;
@@ -702,8 +706,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     if (left.isString() || right.isString()
         || left.isArrayLit() || right.isArrayLit()) {
       // Add strings.
-      String leftString = NodeUtil.getStringValue(left);
-      String rightString = NodeUtil.getStringValue(right);
+      String leftString = getSideEffectFreeStringValue(left);
+      String rightString = getSideEffectFreeStringValue(right);
       if (leftString != null && rightString != null) {
         Node newStringNode = IR.string(leftString + rightString);
         n.replaceWith(newStringNode);
@@ -746,10 +750,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // TODO(johnlenz): Handle NaN with unknown value. BIT ops convert NaN
     // to zero so this is a little awkward here.
 
-    Double lValObj = NodeUtil.getNumberValue(left);
-    Double rValObj = NodeUtil.getNumberValue(right);
+    Double lValObj = getSideEffectFreeNumberValue(left);
+    Double rValObj = getSideEffectFreeNumberValue(right);
     // at least one of the two operands must have a value and both must be numeric
     if ((lValObj == null && rValObj == null) || !isNumeric(left) || !isNumeric(right)) {
+      return null;
+    }
+    // Cannot replace if either has side effects.
+    if (mayHaveSideEffects(left) || mayHaveSideEffects(right)) {
       return null;
     }
     // handle the operations that have algebraic identities, since we can simplify the tree without
@@ -883,7 +891,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // Use getNumberValue to handle constants like "NaN" and "Infinity"
     // other values are converted to numbers elsewhere.
-    Double rightValObj = NodeUtil.getNumberValue(right);
+    Double rightValObj = getSideEffectFreeNumberValue(right);
     if (rightValObj != null && left.getToken() == opType) {
       checkState(left.hasTwoChildren());
 
@@ -1026,15 +1034,18 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /** http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-relational-comparison */
-  private static TernaryValue tryAbstractRelationalComparison(Node left, Node right,
+  private static TernaryValue tryAbstractRelationalComparison(
+      AbstractPeepholeOptimization peepholeOptimization,
+      Node left,
+      Node right,
       boolean willNegate) {
     // First, try to evaluate based on the general type.
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
     ValueType rightValueType = NodeUtil.getKnownValueType(right);
     if (leftValueType != ValueType.UNDETERMINED && rightValueType != ValueType.UNDETERMINED) {
       if (leftValueType == ValueType.STRING && rightValueType == ValueType.STRING) {
-        String lv = NodeUtil.getStringValue(left);
-        String rv = NodeUtil.getStringValue(right);
+        String lv = peepholeOptimization.getSideEffectFreeStringValue(left);
+        String rv = peepholeOptimization.getSideEffectFreeStringValue(right);
         if (lv != null && rv != null) {
           // In JS, browsers parse \v differently. So do not compare strings if one contains \v.
           if (lv.indexOf('\u000B') != -1 || rv.indexOf('\u000B') != -1) {
@@ -1042,8 +1053,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           } else {
             return TernaryValue.forBoolean(lv.compareTo(rv) < 0);
           }
-        } else if (left.isTypeOf() && right.isTypeOf()
-            && left.getFirstChild().isName() && right.getFirstChild().isName()
+        } else if (left.isTypeOf()
+            && right.isTypeOf()
+            && left.getFirstChild().isName()
+            && right.getFirstChild().isName()
             && left.getFirstChild().getString().equals(right.getFirstChild().getString())) {
           // Special case: `typeof a < typeof a` is always false.
           return TernaryValue.FALSE;
@@ -1051,8 +1064,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
     }
     // Then, try to evaluate based on the value of the node. Try comparing as numbers.
-    Double lv = NodeUtil.getNumberValue(left);
-    Double rv = NodeUtil.getNumberValue(right);
+    Double lv = peepholeOptimization.getSideEffectFreeNumberValue(left);
+    Double rv = peepholeOptimization.getSideEffectFreeNumberValue(right);
     if (lv == null || rv == null) {
       // Special case: `x < x` is always false.
       //
@@ -1073,14 +1086,15 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /** http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-equality-comparison */
-  private static TernaryValue tryAbstractEqualityComparison(Node left, Node right) {
+  private static TernaryValue tryAbstractEqualityComparison(
+      AbstractPeepholeOptimization peepholeOptimization, Node left, Node right) {
     // Evaluate based on the general type.
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
     ValueType rightValueType = NodeUtil.getKnownValueType(right);
     if (leftValueType != ValueType.UNDETERMINED && rightValueType != ValueType.UNDETERMINED) {
       // Delegate to strict equality comparison for values of the same type.
       if (leftValueType == rightValueType) {
-        return tryStrictEqualityComparison(left, right);
+        return tryStrictEqualityComparison(peepholeOptimization, left, right);
       }
       if ((leftValueType == ValueType.NULL && rightValueType == ValueType.VOID)
           || (leftValueType == ValueType.VOID && rightValueType == ValueType.NULL)) {
@@ -1088,17 +1102,17 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
       if ((leftValueType == ValueType.NUMBER && rightValueType == ValueType.STRING)
           || rightValueType == ValueType.BOOLEAN) {
-        Double rv = NodeUtil.getNumberValue(right);
+        Double rv = peepholeOptimization.getSideEffectFreeNumberValue(right);
         return rv == null
             ? TernaryValue.UNKNOWN
-            : tryAbstractEqualityComparison(left, IR.number(rv));
+            : tryAbstractEqualityComparison(peepholeOptimization, left, IR.number(rv));
       }
       if ((leftValueType == ValueType.STRING && rightValueType == ValueType.NUMBER)
           || leftValueType == ValueType.BOOLEAN) {
-        Double lv = NodeUtil.getNumberValue(left);
+        Double lv = peepholeOptimization.getSideEffectFreeNumberValue(left);
         return lv == null
             ? TernaryValue.UNKNOWN
-            : tryAbstractEqualityComparison(IR.number(lv), right);
+            : tryAbstractEqualityComparison(peepholeOptimization, IR.number(lv), right);
       }
       if ((leftValueType == ValueType.STRING || leftValueType == ValueType.NUMBER)
           && rightValueType == ValueType.OBJECT) {
@@ -1115,7 +1129,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /** http://www.ecma-international.org/ecma-262/6.0/#sec-strict-equality-comparison */
-  private static TernaryValue tryStrictEqualityComparison(Node left, Node right) {
+  private static TernaryValue tryStrictEqualityComparison(
+      AbstractPeepholeOptimization peepholeOptimization, Node left, Node right) {
     // First, try to evaluate based on the general type.
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
     ValueType rightValueType = NodeUtil.getKnownValueType(right);
@@ -1128,44 +1143,49 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         case VOID:
         case NULL:
           return TernaryValue.TRUE;
-        case NUMBER: {
-          if (NodeUtil.isNaN(left)) {
-            return TernaryValue.FALSE;
-          }
-          if (NodeUtil.isNaN(right)) {
-            return TernaryValue.FALSE;
-          }
-          Double lv = NodeUtil.getNumberValue(left);
-          Double rv = NodeUtil.getNumberValue(right);
-          if (lv != null && rv != null) {
-            return TernaryValue.forBoolean(lv.doubleValue() == rv.doubleValue());
-          }
-          break;
-        }
-        case STRING: {
-          String lv = NodeUtil.getStringValue(left);
-          String rv = NodeUtil.getStringValue(right);
-          if (lv != null && rv != null) {
-            // In JS, browsers parse \v differently. So do not consider strings
-            // equal if one contains \v.
-            if (lv.indexOf('\u000B') != -1 || rv.indexOf('\u000B') != -1) {
-              return TernaryValue.UNKNOWN;
-            } else {
-              return lv.equals(rv) ? TernaryValue.TRUE : TernaryValue.FALSE;
+        case NUMBER:
+          {
+            if (NodeUtil.isNaN(left)) {
+              return TernaryValue.FALSE;
             }
-          } else if (left.isTypeOf() && right.isTypeOf()
-              && left.getFirstChild().isName() && right.getFirstChild().isName()
-              && left.getFirstChild().getString().equals(right.getFirstChild().getString())) {
-            // Special case, typeof a == typeof a is always true.
-            return TernaryValue.TRUE;
+            if (NodeUtil.isNaN(right)) {
+              return TernaryValue.FALSE;
+            }
+            Double lv = peepholeOptimization.getSideEffectFreeNumberValue(left);
+            Double rv = peepholeOptimization.getSideEffectFreeNumberValue(right);
+            if (lv != null && rv != null) {
+              return TernaryValue.forBoolean(lv.doubleValue() == rv.doubleValue());
+            }
+            break;
           }
-          break;
-        }
-        case BOOLEAN: {
-          TernaryValue lv = NodeUtil.getPureBooleanValue(left);
-          TernaryValue rv = NodeUtil.getPureBooleanValue(right);
-          return lv.and(rv).or(lv.not().and(rv.not()));
-        }
+        case STRING:
+          {
+            String lv = peepholeOptimization.getSideEffectFreeStringValue(left);
+            String rv = peepholeOptimization.getSideEffectFreeStringValue(right);
+            if (lv != null && rv != null) {
+              // In JS, browsers parse \v differently. So do not consider strings
+              // equal if one contains \v.
+              if (lv.indexOf('\u000B') != -1 || rv.indexOf('\u000B') != -1) {
+                return TernaryValue.UNKNOWN;
+              } else {
+                return lv.equals(rv) ? TernaryValue.TRUE : TernaryValue.FALSE;
+              }
+            } else if (left.isTypeOf()
+                && right.isTypeOf()
+                && left.getFirstChild().isName()
+                && right.getFirstChild().isName()
+                && left.getFirstChild().getString().equals(right.getFirstChild().getString())) {
+              // Special case, typeof a == typeof a is always true.
+              return TernaryValue.TRUE;
+            }
+            break;
+          }
+        case BOOLEAN:
+          {
+            TernaryValue lv = NodeUtil.getPureBooleanValue(left);
+            TernaryValue rv = NodeUtil.getPureBooleanValue(right);
+            return lv.and(rv).or(lv.not().and(rv.not()));
+          }
         default: // Symbol and Object cannot be folded in the general case.
           return TernaryValue.UNKNOWN;
       }
@@ -1189,21 +1209,21 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     switch (op) {
       case EQ:
-        return tryAbstractEqualityComparison(left, right);
+        return tryAbstractEqualityComparison(peepholeOptimization, left, right);
       case NE:
-        return tryAbstractEqualityComparison(left, right).not();
+        return tryAbstractEqualityComparison(peepholeOptimization, left, right).not();
       case SHEQ:
-        return tryStrictEqualityComparison(left, right);
+        return tryStrictEqualityComparison(peepholeOptimization, left, right);
       case SHNE:
-        return tryStrictEqualityComparison(left, right).not();
+        return tryStrictEqualityComparison(peepholeOptimization, left, right).not();
       case LT:
-        return tryAbstractRelationalComparison(left, right, false);
+        return tryAbstractRelationalComparison(peepholeOptimization, left, right, false);
       case GT:
-        return tryAbstractRelationalComparison(right, left, false);
+        return tryAbstractRelationalComparison(peepholeOptimization, right, left, false);
       case LE:
-        return tryAbstractRelationalComparison(right, left, true).not();
+        return tryAbstractRelationalComparison(peepholeOptimization, right, left, true).not();
       case GE:
-        return tryAbstractRelationalComparison(left, right, true).not();
+        return tryAbstractRelationalComparison(peepholeOptimization, left, right, true).not();
       default:
         break;
     }
@@ -1269,11 +1289,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (value == null) {
         stringValue = "";
       } else {
-        if (!NodeUtil.isImmutableValue(value)) {
-          return n;
-        }
-
-        stringValue = NodeUtil.getStringValue(value);
+        stringValue = getSideEffectFreeStringValue(value);
       }
 
       if (stringValue == null) {

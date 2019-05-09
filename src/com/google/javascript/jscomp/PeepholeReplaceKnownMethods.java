@@ -91,7 +91,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     // first collect the arguments, if they are all numbers then we proceed
     List<Double> args = ImmutableList.of();
     for (Node arg = callTarget.getNext(); arg != null; arg = arg.getNext()) {
-      Double d = NodeUtil.getNumberValue(arg);
+      Double d = getSideEffectFreeNumberValue(arg);
       if (d != null) {
         if (args.isEmpty()) {
           // lazily allocate, most calls will not be optimizable
@@ -248,10 +248,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             || (stringNode.getJSType() != null
                 && stringNode.getJSType().isStringValueType()))) {
       if (subtree.hasXChildren(3)) {
-        Double maybeStart = NodeUtil.getNumberValue(firstArg);
+        Double maybeStart = getSideEffectFreeNumberValue(firstArg);
         if (maybeStart != null) {
           int start = maybeStart.intValue();
-          Double maybeLengthOrEnd = NodeUtil.getNumberValue(firstArg.getNext());
+          Double maybeLengthOrEnd = getSideEffectFreeNumberValue(firstArg.getNext());
           if (maybeLengthOrEnd != null) {
             switch (functionNameString) {
               case "substr":
@@ -408,7 +408,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     String stringVal = null;
     Double checkVal;
     if (firstArg.isNumber()) {
-      checkVal = NodeUtil.getNumberValue(firstArg);
+      checkVal = getSideEffectFreeNumberValue(firstArg);
       if (!(radix == 0 || radix == 10) && isParseInt) {
         //Convert a numeric first argument to a different base
         stringVal = String.valueOf(checkVal.intValue());
@@ -428,7 +428,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         return numericNode;
       }
     } else {
-      stringVal = NodeUtil.getStringValue(firstArg);
+      stringVal = getSideEffectFreeStringValue(firstArg);
       if (stringVal == null) {
         return n;
       }
@@ -510,10 +510,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     checkArgument(n.isCall());
     checkArgument(lstringNode.isString());
 
-    String lstring = NodeUtil.getStringValue(lstringNode);
+    String lstring = lstringNode.getString();
     boolean isIndexOf = functionName.equals("indexOf");
     Node secondArg = firstArg.getNext();
-    String searchValue = NodeUtil.getStringValue(firstArg);
+    String searchValue = getSideEffectFreeStringValue(firstArg);
     // searchValue must be a valid string.
     if (searchValue == null) {
       return n;
@@ -567,6 +567,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       reportChangeToEnclosingScope(n);
     }
 
+    // logic above ensures that `right` is immutable, so no need to check for
+    // side effects with getSideEffectFreeStringValue(right)
     String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
     List<Node> arrayFoldedChildren = new ArrayList<>();
     StringBuilder sb = null;
@@ -667,7 +669,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     int length;
     String stringAsString = stringNode.getString();
 
-    Double maybeStart = NodeUtil.getNumberValue(arg1);
+    Double maybeStart = getSideEffectFreeNumberValue(arg1);
     if (maybeStart != null) {
       start = maybeStart.intValue();
     } else {
@@ -676,7 +678,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     Node arg2 = arg1.getNext();
     if (arg2 != null) {
-      Double maybeLength = NodeUtil.getNumberValue(arg2);
+      Double maybeLength = getSideEffectFreeNumberValue(arg2);
       if (maybeLength != null) {
         length = maybeLength.intValue();
       } else {
@@ -723,7 +725,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     int end;
     String stringAsString = stringNode.getString();
 
-    Double maybeStart = NodeUtil.getNumberValue(arg1);
+    Double maybeStart = getSideEffectFreeNumberValue(arg1);
     if (maybeStart != null) {
       start = maybeStart.intValue();
     } else {
@@ -732,7 +734,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     Node arg2 = arg1.getNext();
     if (arg2 != null) {
-      Double maybeEnd = NodeUtil.getNumberValue(arg2);
+      Double maybeEnd = getSideEffectFreeNumberValue(arg2);
       if (maybeEnd != null) {
         end = maybeEnd.intValue();
       } else {

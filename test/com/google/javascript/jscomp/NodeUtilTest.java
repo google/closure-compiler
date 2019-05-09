@@ -2065,8 +2065,8 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValue(parseExpr("null"))).isEqualTo(0.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("void 0"))).isNaN();
       assertThat(NodeUtil.getNumberValue(parseExpr("void f"))).isNaN();
-      // values with side-effects are ignored.
-      assertThat(NodeUtil.getNumberValue(parseExpr("void f()"))).isNull();
+      // we pay no attention to possible side effects.
+      assertThat(NodeUtil.getNumberValue(parseExpr("void f()"))).isNaN();
       assertThat(NodeUtil.getNumberValue(parseExpr("NaN"))).isNaN();
       assertThat(NodeUtil.getNumberValue(parseExpr("Infinity"))).isPositiveInfinity();
       assertThat(NodeUtil.getNumberValue(parseExpr("-Infinity"))).isNegativeInfinity();

@@ -96,6 +96,41 @@ abstract class AbstractPeepholeOptimization {
   }
 
   /**
+   * Returns the number value of the node if it has one and it cannot have side effects.
+   *
+   * <p>Returns {@code null} otherwise.
+   */
+  protected Double getSideEffectFreeNumberValue(Node n) {
+    Double value = NodeUtil.getNumberValue(n);
+    // Calculating the number value, if any, is likely to be faster than calculating side effects,
+    // and there are only a very few cases where we can compute a number value, but there could
+    // also be side effects. e.g. `void doSomething()` has value NaN, regardless of the behavior
+    // of `doSomething()`
+    if (value != null && astAnalyzer.mayHaveSideEffects(n)) {
+      value = null;
+    }
+    return value;
+  }
+
+  /**
+   * Gets the value of a node as a String, or {@code null} if it cannot be converted.
+   *
+   * <p>This method effectively emulates the <code>String()</code> JavaScript cast function when
+   * possible and the node has no side effects. Otherwise, it returns {@code null}.
+   */
+  protected String getSideEffectFreeStringValue(Node n) {
+    String value = NodeUtil.getStringValue(n);
+    // Calculating the string value, if any, is likely to be faster than calculating side effects,
+    // and there are only a very few cases where we can compute a string value, but there could
+    // also be side effects. e.g. `void doSomething()` has value 'undefined', regardless of the
+    // behavior of `doSomething()`
+    if (value != null && astAnalyzer.mayHaveSideEffects(n)) {
+      value = null;
+    }
+    return value;
+  }
+
+  /**
    * Returns true if the current node's type implies side effects.
    *
    * <p>This is a non-recursive version of the may have side effects check; used to check wherever

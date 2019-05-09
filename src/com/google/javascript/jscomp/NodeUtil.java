@@ -346,11 +346,7 @@ public final class NodeUtil {
         return n.getDouble();
 
       case VOID:
-        if (mayHaveSideEffects(n.getFirstChild())) {
-          return null;
-        } else {
-          return Double.NaN;
-        }
+        return Double.NaN;
 
       case NAME:
         // Check for known constants
