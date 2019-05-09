@@ -2053,6 +2053,20 @@ CSSProperties.prototype.userSelect;
 
 // http://www.w3.org/TR/cssom-view/#extensions-to-the-window-interface
 
+// CSS 3 Images
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css3-images/#the-object-fit
+ */
+CSSProperties.prototype.objectFit;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css3-images/#object-position
+ */
+CSSProperties.prototype.objectPosition;
+
 /**
  * @param {string} media_query_list
  * @return {!MediaQueryList}
