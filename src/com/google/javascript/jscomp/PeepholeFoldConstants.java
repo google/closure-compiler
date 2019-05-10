@@ -270,7 +270,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     Double result = getSideEffectFreeNumberValue(n);
-    if (result == null || mayHaveSideEffects(n)) {
+    if (result == null) {
       return;
     }
 
@@ -754,10 +754,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Double rValObj = getSideEffectFreeNumberValue(right);
     // at least one of the two operands must have a value and both must be numeric
     if ((lValObj == null && rValObj == null) || !isNumeric(left) || !isNumeric(right)) {
-      return null;
-    }
-    // Cannot replace if either has side effects.
-    if (mayHaveSideEffects(left) || mayHaveSideEffects(right)) {
       return null;
     }
     // handle the operations that have algebraic identities, since we can simplify the tree without

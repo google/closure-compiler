@@ -226,6 +226,8 @@ public final class NodeUtil {
    * Gets the value of a node as a String, or null if it cannot be converted. When it returns a
    * non-null String, this method effectively emulates the <code>String()</code> JavaScript cast
    * function.
+   *
+   * <p>IMPORTANT: This method does not consider whether {@code n} may have side effects.
    */
   public static String getStringValue(Node n) {
     // TODO(user): regex literals as well.
@@ -326,9 +328,11 @@ public final class NodeUtil {
   }
 
   /**
-   * Gets the value of a node as a Number, or null if it cannot be converted.
-   * When it returns a non-null Double, this method effectively emulates the
-   * <code>Number()</code> JavaScript cast function.
+   * Gets the value of a node as a Number, or null if it cannot be converted. When it returns a
+   * non-null Double, this method effectively emulates the <code>Number()</code> JavaScript cast
+   * function.
+   *
+   * <p>IMPORTANT: This method does not consider whether {@code n} may have side effects.
    *
    * @param n The node.
    * @return The value of a node as a Number, or null if it cannot be converted.
