@@ -42,6 +42,9 @@ Window.prototype.webkitIndexedDB;
 /** @type {!IDBFactory|undefined} */
 Window.prototype.msIndexedDB;
 
+/** @type {!IDBFactory|undefined} */
+ServiceWorkerGlobalScope.prototype.indexedDB;
+
 
 
 /**

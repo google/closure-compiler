@@ -363,9 +363,6 @@ ServiceWorkerGlobalScope.prototype.onevicted;
 /** @type {?function(!MessageEvent)} */
 ServiceWorkerGlobalScope.prototype.onmessage;
 
-/** @type {!IDBFactory|undefined} */
-ServiceWorkerGlobalScope.prototype.indexedDB;
-
 /**
  * While not strictly correct, this should be effectively correct. Notification
  * is the Notification constructor but calling it from the Service Worker throws
