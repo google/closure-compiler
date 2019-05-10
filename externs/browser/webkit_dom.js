@@ -83,49 +83,6 @@ ScriptProfile.prototype.head;
  */
 Window.prototype.devicePixelRatio;
 
-/** @type {Node} */
-Selection.prototype.baseNode;
-
-/** @type {number} */
-Selection.prototype.baseOffset;
-
-/** @type {Node} */
-Selection.prototype.extentNode;
-
-/** @type {number} */
-Selection.prototype.extentOffset;
-
-/**
- * @type {string}
- * @see https://w3c.github.io/selection-api/#dom-selection-type
- */
-Selection.prototype.type;
-
-/**
- * @return {undefined}
- * @see https://w3c.github.io/selection-api/#dom-selection-empty
- */
-Selection.prototype.empty = function() {};
-
-/**
- * @param {Node} anchorNode
- * @param {number} anchorOffset
- * @param {Node} focusNode
- * @param {number} focusOffset
- * @return {undefined}
- * @see https://w3c.github.io/selection-api/#dom-selection-setbaseandextent
- */
-Selection.prototype.setBaseAndExtent =
- function(anchorNode, anchorOffset, focusNode, focusOffset) {};
-
-/**
- * @param {string} alter
- * @param {string} direction
- * @param {string} granularity
- * @return {undefined}
- */
-Selection.prototype.modify = function(alter, direction, granularity) {};
-
 /**
  * @param {string} contextId
  * @param {string} name

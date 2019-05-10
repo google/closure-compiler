@@ -1155,13 +1155,6 @@ Document.prototype.postMessage = function(message) {};
 Document.prototype.head;
 
 /**
- * @return {?Selection}
- * @nosideeffects
- * @see https://w3c.github.io/selection-api/#dom-document-getselection
- */
-Document.prototype.getSelection = function() {};
-
-/**
  * @type {string}
  * @see https://html.spec.whatwg.org/multipage/dom.html#current-document-readiness
  */
