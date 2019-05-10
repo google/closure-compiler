@@ -2119,6 +2119,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               return currentScope;
 
             default:
+              if (isGoogModuleExports(root)) {
+                // Ensure that 'exports = class {}' in a goog.module returns the module scope.
+                return currentScope;
+              }
               TypedVar var = currentScope.getVar(root.getString());
               if (var != null) {
                 return var.getScope();
@@ -2227,9 +2231,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         @Nullable QualifiedName rValue,
         @Nullable JSType rValueType,
         TypedScope rValueLookupScope) {
-      if (!lValue.isQualifiedName()) {
-        return;
-      }
       declareAliasTypeIfRvalueIsAliasable(
           lValue.getQualifiedName(), lValue, rValue, rValueType, rValueLookupScope, currentScope);
     }
@@ -2243,11 +2244,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * 1) there's no GETPROP node representing the lvalue and 2) the type is declared in the global
      * scope, not the current module-local scope.
      *
+     * @param lValueName the fully qualified lValue name, if any. If null, all this method will do
+     *     is propagate the @typedef Node annotation to actualLvalueNode.
      * @param aliasDeclarationScope The scope in which to declare the alias name. In most cases,
      *     this should just be the {@link #currentScope}.
      */
     private void declareAliasTypeIfRvalueIsAliasable(
-        String lValueName,
+        @Nullable String lValueName,
         @Nullable Node actualLvalueNode,
         @Nullable QualifiedName rValue,
         @Nullable JSType rValueType,
@@ -2268,10 +2271,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         if (typedefType != null) {
           // Propagate typedef type to typedef aliases.
           actualLvalueNode.setTypedefTypeProp(typedefType);
-          typeRegistry.identifyNonNullableName(lValueName);
-          typeRegistry.declareType(aliasDeclarationScope, lValueName, typedefType);
+          if (lValueName != null) {
+            typeRegistry.identifyNonNullableName(lValueName);
+            typeRegistry.declareType(aliasDeclarationScope, lValueName, typedefType);
+          }
           return;
         }
+      }
+
+      if (lValueName == null) {
+        return;
       }
 
       // Check if the provided rValueType indicates that we should declare this type
@@ -2290,7 +2299,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (rValueType != null && rValueType.isEnumType()) {
         // Look for cases where the rValue is an Enum namespace
         typeRegistry.declareType(
-            currentScope, lValueName, rValueType.toMaybeEnumType().getElementsType());
+            aliasDeclarationScope, lValueName, rValueType.toMaybeEnumType().getElementsType());
         if (isLValueRootedInGlobalScope(actualLvalueNode)) {
           // TODO(b/123710194): Also make local aliases non-nullable
           typeRegistry.identifyNonNullableName(lValueName);
@@ -2298,8 +2307,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
+    /** Whether this lvalue is either `exports`, `exports.x`, or a string key in `exports = {x}`. */
     boolean isGoogModuleExports(Node lValue) {
-      return currentScope.isModuleScope() && undeclaredNamesForClosure.contains(lValue);
+      if (module == null) {
+        return false;
+      }
+      if (undeclaredNamesForClosure.contains(lValue)) {
+        return true;
+      }
+      return lValue.isStringKey()
+          && lValue.getParent().isObjectLit()
+          && lValue.getGrandparent().isAssign()
+          && undeclaredNamesForClosure.contains(lValue.getParent().getPrevious());
     }
 
     /** Returns the AST node associated with the definition, if any. */
@@ -2707,13 +2726,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       return false;
     }
 
-    /** Given a `goog.provide()` call and implicit ProvidedName, declares the name in the scope. */
+    /**
+     * Given a `goog.provide()` or legacy `goog.module()` call and implicit ProvidedName, declares
+     * the name in the global scope.
+     */
     void declareProvidedNs(Node provideCall, ProvidedName providedName) {
       // Redefine this name if we haven't already added a provide definition.
       // Note: in some cases, this will cause a redefinition error.
       ObjectType anonymousObjectType = typeRegistry.createAnonymousObjectType(null);
       new SlotDefiner()
-          .inScope(currentScope)
+          .inScope(currentScope.getGlobalScope())
           .allowLaterTypeInference(false)
           .forVariableName(providedName.getNamespace())
           .forDeclarationNode(provideCall)
@@ -2722,11 +2744,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       QualifiedName namespace = QualifiedName.of(providedName.getNamespace());
       if (!namespace.isSimple()) {
-        ObjectType ownerType =
-            currentScope.lookupQualifiedName(namespace.getOwner()).toMaybeObjectType();
-        if (ownerType != null) {
-          ownerType.defineDeclaredProperty(
-              namespace.getComponent(), anonymousObjectType, provideCall);
+        JSType ownerType = currentScope.lookupQualifiedName(namespace.getOwner());
+        if (ownerType != null && ownerType.isObjectType()) {
+          ownerType
+              .toMaybeObjectType()
+              .defineDeclaredProperty(namespace.getComponent(), anonymousObjectType, provideCall);
         }
       }
     }

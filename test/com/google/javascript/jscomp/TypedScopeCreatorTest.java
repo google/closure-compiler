@@ -4486,6 +4486,24 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogModule_exportsDeclaresTypeInModuleScope() {
+    testSame("goog.module('mod.a'); exports = class {}; MOD_A: 0;");
+
+    assertType(registry.getGlobalType("exports")).isNull();
+    assertType(registry.getTypeForScope(getLabeledStatement("MOD_A").enclosingScope, "exports"))
+        .isNotNull();
+  }
+
+  @Test
+  public void testGoogModule_namedExportDeclaresTypeInModuleScope() {
+    testSame("goog.module('mod.a'); exports.B = class {}; MOD_A: 0;");
+
+    assertType(registry.getGlobalType("exports.B")).isNull();
+    assertType(registry.getTypeForScope(getLabeledStatement("MOD_A").enclosingScope, "exports.B"))
+        .isNotNull();
+  }
+
+  @Test
   public void testGoogRequireDefaultExport_getsInferredType() {
     // Do some indirection when assigning `exports = f()` so  that we don't find the type of
     // `exports` until flow-sensitive inference runs. This is to verify that required variables
@@ -4916,6 +4934,23 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRequire_requireLoadModule_defaultExportOfLocalClass() {
+    testSame(
+        srcs(
+            lines(
+                "goog.loadModule(function(exports) {",
+                "  goog.module('a');",
+                "  class X {}",
+                "  exports = X;",
+                "  return exports;",
+                "});"),
+            lines(
+                "goog.module('b');", //
+                "const Y = goog.require('a');",
+                "var /** !Y */ x;")));
+  }
+
+  @Test
   public void testGoogProvide_singleNameWithConstJSDocIsDeclared() {
     processClosurePrimitives = true;
     testSame(srcs(CLOSURE_GLOBALS, "goog.provide('foo'); /** @const */ foo = 3;"));
@@ -5061,6 +5096,16 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogProvide_parentNamespaceIsInferred() {
+    processClosurePrimitives = true;
+    testSame(srcs(CLOSURE_GLOBALS, "goog.provide('a.b.c'); a.b = {};"));
+
+    assertThat(globalScope.getVar("a")).hasJSTypeThat().withTypeOfProp("b").isLiteralObject();
+    assertThat(globalScope.getVar("a.b")).isNull(); // Only declared qnames get TypedVars.
+    assertThat(globalScope.getVar("a.b.c")).isNotInferred();
+  }
+
+  @Test
   public void testGoogProvide_extendsExternsNamespace() {
     processClosurePrimitives = true;
     testSame(
@@ -5115,6 +5160,50 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertType(getLabeledStatement("A").statementNode.getOnlyChild().getJSType())
         .toStringIsEqualTo("exports");
+  }
+
+  @Test
+  public void testLegacyGoogModule_declaresParentNamespacesGlobally() {
+    processClosurePrimitives = true;
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            "goog.module('a.b.c'); goog.module.declareLegacyNamespace(); MOD: 0;"));
+
+    assertScope(globalScope).declares("a").directly();
+    assertScope(globalScope).declares("a.b").directly();
+    assertScope(globalScope).declares("a.b.c").directly();
+    assertScope(getLabeledStatement("MOD").enclosingScope).declares("a").onSomeParent();
+  }
+
+  @Test
+  public void testGoogRequire_multipleRequiresInModule() {
+    // TODO(b/132208293): we should not get this error.
+    testSame(
+        srcs(
+            lines(
+                "goog.module('mod.A');", //
+                "/** @interface */",
+                "exports = class {};"),
+            lines(
+                "goog.module('mod.B');", //
+                "/** @interface */",
+                "exports = class {};"),
+            lines(
+                "goog.module('mod.C');",
+                "const A = goog.require('mod.A');",
+                "const B = goog.require('mod.B');",
+                "/** @implements {A} @implements {B} */",
+                "class C {};",
+                "MOD_C: 0;")),
+        warning(FunctionTypeBuilder.SAME_INTERFACE_MULTIPLE_IMPLEMENTS));
+
+    TypedScope modCScope = getLabeledStatement("MOD_C").enclosingScope;
+    FunctionType aCtor = modCScope.getVar("A").getType().toMaybeFunctionType();
+    FunctionType cCtor = modCScope.getVar("C").getType().toMaybeFunctionType();
+
+    // TODO(b/132208293): This list should include B.
+    assertThat(cCtor.getAllImplementedInterfaces()).containsExactly(aCtor.getInstanceType());
   }
 
   @Test
@@ -5192,6 +5281,53 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLegacyGoogModule_withDefaultClassExport_createsGlobalType() {
+    processClosurePrimitives = true;
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('mod.MyClass');",
+                "goog.module.declareLegacyNamespace();",
+                "class MyClass {}",
+                "exports = MyClass;")));
+
+    assertType(registry.getGlobalType("mod.MyClass")).toStringIsEqualTo("MyClass");
+  }
+
+  @Test
+  public void testLegacyGoogModule_withDefaultEnumExport_createsGlobalType() {
+    processClosurePrimitives = true;
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('mod.MyEnum');",
+                "goog.module.declareLegacyNamespace();",
+                "/** @enum {string} */",
+                "const MyEnum = {A: 'a', B: 'b'};",
+                "exports = MyEnum;")));
+
+    assertType(registry.getGlobalType("mod.MyEnum")).toStringIsEqualTo("MyEnum<string>");
+  }
+
+  @Test
+  public void testLegacyGoogModule_withDefaultTypedefExport_createsGlobalType() {
+    processClosurePrimitives = true;
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('mod.MyTypedef');",
+                "goog.module.declareLegacyNamespace();",
+                "/** @typedef {number} */",
+                "let MyTypedef;",
+                "exports = MyTypedef;")));
+
+    assertType(registry.getGlobalType("mod.MyTypedef")).isNumber();
+  }
+
+  @Test
   public void testLegacyGoogModule_withDefaultExport_extendedByGoogProvide() {
     testSame(
         srcs(
@@ -5246,6 +5382,22 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertType(getLabeledStatement("X").statementNode.getOnlyChild().getJSType())
         .toStringIsEqualTo("a.b.Foo");
+  }
+
+  @Test
+  public void testTypedef_namedExportInObjectLit() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('a');", //
+                "/** @typedef {number} */",
+                "let Foo;",
+                "exports = {Foo};"),
+            lines(
+                "goog.module('b');", //
+                "const {Foo} = goog.require('a');",
+                "var /** !Foo */ x;")));
   }
 
   @Test
