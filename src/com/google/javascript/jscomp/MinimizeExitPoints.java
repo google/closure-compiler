@@ -51,7 +51,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
         tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
 
         Node cond = NodeUtil.getConditionExpression(n);
-        if (NodeUtil.getPureBooleanValue(cond) == TernaryValue.FALSE) {
+        if (getSideEffectFreeBooleanValue(cond) == TernaryValue.FALSE) {
           // Normally, we wouldn't be able to optimize BREAKs inside a loop
           // but as we know the condition will always be false, we can treat them
           // as we would a CONTINUE.

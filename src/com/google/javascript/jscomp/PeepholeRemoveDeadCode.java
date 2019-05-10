@@ -1071,22 +1071,6 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Removes WHILEs that always evaluate to false.
-   */
-  Node tryFoldWhile(Node n) {
-    checkArgument(n.isWhile());
-    Node cond = NodeUtil.getConditionExpression(n);
-    if (NodeUtil.getPureBooleanValue(cond) != TernaryValue.FALSE) {
-      return n;
-    }
-    NodeUtil.redeclareVarsInsideBranch(n);
-    reportChangeToEnclosingScope(n.getParent());
-    NodeUtil.removeChild(n.getParent(), n);
-
-    return null;
-  }
-
-  /**
    * Removes FORs that always evaluate to false.
    */
   Node tryFoldFor(Node n) {
@@ -1265,7 +1249,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Remove always true loop conditions.
    */
   private void tryFoldForCondition(Node forCondition) {
-    if (NodeUtil.getPureBooleanValue(forCondition) == TernaryValue.TRUE) {
+    if (getSideEffectFreeBooleanValue(forCondition) == TernaryValue.TRUE) {
       reportChangeToEnclosingScope(forCondition);
       forCondition.replaceWith(IR.empty());
     }

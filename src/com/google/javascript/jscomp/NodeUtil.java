@@ -85,8 +85,7 @@ public final class NodeUtil {
    * consisting of literals when possible. Use that method instead if you only want to find literal
    * values.
    *
-   * <p>This method does not consider whether the node may have side-effects. Use {@link
-   * #getPureBooleanValue(Node)} if you need to avoid side-effects.
+   * <p>This method does not consider whether the node may have side-effects.
    */
   static TernaryValue getImpureBooleanValue(Node n) {
     // This switch consists of cases that are not supported by getLiteralBooleanValue(),
@@ -141,8 +140,7 @@ public final class NodeUtil {
    * </pre></code>
    *
    * <p>This method does not consider whether the literal might have side-effects when evaluated.
-   * This can be true for object literals, for example. Be sure to call {@link
-   * #getPureBooleanValue(Node)} if you need to care about side-effects.
+   * This can be true for object literals, for example.
    *
    * <p>Except for the cases listed above, this method also returns {@code TernaryValue.UNKNOWN} for
    * boolean expressions even when it is possible to determine their value. If you want to evaluate
@@ -201,25 +199,6 @@ public final class NodeUtil {
     }
 
     return TernaryValue.UNKNOWN;
-  }
-
-  /**
-   * If {@code n} represents a literal value without side-effects that can be interpreted statically
-   * as a known boolean value, this method returns the corresponding {@code TernaryValue}.
-   * Otherwise, it returns {@code TernaryValue.UNKNOWN}.
-   *
-   * <p>Use {@link #getLiteralBooleanValue(Node)} if you don't care about side-effects. Use {@link
-   * #getImpureBooleanValue(Node)} if you don't care about side-effects and also want to compute
-   * values for non-literal expressions.
-   */
-  static TernaryValue getPureBooleanValue(Node n) {
-    // Determining whether n is a literal boolean is likely to be faster than determining whether
-    // it has side-effects when n is a large subtree.
-    TernaryValue value = getLiteralBooleanValue(n);
-    if (value != TernaryValue.UNKNOWN && mayHaveSideEffects(n)) {
-      value = TernaryValue.UNKNOWN;
-    }
-    return value;
   }
 
   /**
@@ -1092,12 +1071,6 @@ public final class NodeUtil {
   static boolean mayEffectMutableState(Node n, AbstractCompiler compiler) {
     checkNotNull(compiler);
     return checkForStateChangeHelper(n, true, compiler);
-  }
-
-  // TODO(johnplaisted): All call sites should pass in the compiler.
-  @Deprecated
-  public static boolean mayHaveSideEffects(Node n) {
-    return mayHaveSideEffects(n, null);
   }
 
   /**

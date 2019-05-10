@@ -355,7 +355,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    TernaryValue leftVal = NodeUtil.getPureBooleanValue(left);
+    TernaryValue leftVal = getSideEffectFreeBooleanValue(left);
     if (leftVal == TernaryValue.UNKNOWN) {
       return n;
     }
@@ -1178,8 +1178,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           }
         case BOOLEAN:
           {
-            TernaryValue lv = NodeUtil.getPureBooleanValue(left);
-            TernaryValue rv = NodeUtil.getPureBooleanValue(right);
+            TernaryValue lv = peepholeOptimization.getSideEffectFreeBooleanValue(left);
+            TernaryValue rv = peepholeOptimization.getSideEffectFreeBooleanValue(right);
             return lv.and(rv).or(lv.not().and(rv.not()));
           }
         default: // Symbol and Object cannot be folded in the general case.

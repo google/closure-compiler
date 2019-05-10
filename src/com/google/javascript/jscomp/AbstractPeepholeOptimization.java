@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
  * An abstract class whose implementations run peephole optimizations:
@@ -126,6 +127,24 @@ abstract class AbstractPeepholeOptimization {
     // behavior of `doSomething()`
     if (value != null && astAnalyzer.mayHaveSideEffects(n)) {
       value = null;
+    }
+    return value;
+  }
+
+  /**
+   * Calculate the known boolean value for a node if possible and if it has no side effects.
+   *
+   * <p>Returns {@link TernaryValue#UNKNOWN} if the node has side effects or its value cannot be
+   * statically determined.
+   */
+  protected TernaryValue getSideEffectFreeBooleanValue(Node n) {
+    TernaryValue value = NodeUtil.getLiteralBooleanValue(n);
+    // Calculating the boolean value, if any, is likely to be faster than calculating side effects,
+    // and there are only a very few cases where we can compute a boolean value, but there could
+    // also be side effects. e.g. `void doSomething()` has value `false`, regardless of the
+    // behavior of `doSomething()`
+    if (value != TernaryValue.UNKNOWN && astAnalyzer.mayHaveSideEffects(n)) {
+      value = TernaryValue.UNKNOWN;
     }
     return value;
   }

@@ -1033,8 +1033,8 @@ class PeepholeMinimizeConditions
           // In the last two cases, code size may increase slightly (adding
           // some parens because the comma operator has a low precedence) but
           // the new AST is easier for other passes to handle.
-          TernaryValue rightVal = NodeUtil.getPureBooleanValue(right);
-          if (NodeUtil.getPureBooleanValue(right) != TernaryValue.UNKNOWN) {
+          TernaryValue rightVal = getSideEffectFreeBooleanValue(right);
+          if (getSideEffectFreeBooleanValue(right) != TernaryValue.UNKNOWN) {
             Token type = n.getToken();
             Node replacement = null;
             boolean rval = rightVal.toBoolean(true);
@@ -1083,8 +1083,8 @@ class PeepholeMinimizeConditions
           //   Only when x is NAME, hence x does not have side effects
           //   x ? x : y        --> x || y
           Node replacement = null;
-          TernaryValue trueNodeVal = NodeUtil.getPureBooleanValue(trueNode);
-          TernaryValue falseNodeVal = NodeUtil.getPureBooleanValue(falseNode);
+          TernaryValue trueNodeVal = getSideEffectFreeBooleanValue(trueNode);
+          TernaryValue falseNodeVal = getSideEffectFreeBooleanValue(falseNode);
           if (trueNodeVal == TernaryValue.TRUE && falseNodeVal == TernaryValue.FALSE) {
             // Remove useless conditionals, keep the condition
             condition.detach();
@@ -1120,7 +1120,7 @@ class PeepholeMinimizeConditions
 
       default:
         // while(true) --> while(1)
-        TernaryValue nVal = NodeUtil.getPureBooleanValue(n);
+        TernaryValue nVal = getSideEffectFreeBooleanValue(n);
         if (nVal != TernaryValue.UNKNOWN) {
           boolean result = nVal.toBoolean(true);
           int equivalentResult = result ? 1 : 0;
