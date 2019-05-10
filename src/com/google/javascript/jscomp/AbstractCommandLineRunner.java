@@ -38,6 +38,7 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.OutputJs;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -65,6 +66,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -360,7 +362,21 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     List<String> define = new ArrayList<>(config.define);
     if (config.browserFeaturesetYear != 0) {
       // TODO(b/128873198): Add validation of the year.
-      if (config.browserFeaturesetYear < 2012) {
+      int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+      if (config.browserFeaturesetYear > currentYear) {
+        throw new FlagUsageException(
+            SimpleFormat.format(
+                "--browser_featureset_year=%d is the latest meaningful value to use", currentYear));
+      } else if (config.browserFeaturesetYear >= 2019) {
+        options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+      } else if (config.browserFeaturesetYear > 2012) {
+        throw new FlagUsageException(
+            SimpleFormat.format(
+                "--browser_featureset_year=2019 is the earliest meaningful value"
+                    + " to use after 2012"));
+      } else if (config.browserFeaturesetYear == 2012) {
+        options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
+      } else {
         throw new FlagUsageException(
             SimpleFormat.format(
                 "Illegal --browser_featureset_year: %d", config.browserFeaturesetYear));
