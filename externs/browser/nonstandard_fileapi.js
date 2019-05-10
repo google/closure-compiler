@@ -250,6 +250,14 @@ Entry.prototype.getMetadata = function(successCallback, errorCallback) {};
 Entry.prototype.getParent = function(successCallback, errorCallback) {};
 
 /**
+ * @return {?Entry} The Entry corresponding to this item, or null. Note that
+ * despite its name,this method only works in Chrome, and will eventually
+ * be renamed to {@code getAsEntry}.
+ * @nosideeffects
+ */
+DataTransferItem.prototype.webkitGetAsEntry = function() {};
+
+/**
  * @see https://wicg.github.io/entries-api/#dom-file-webkitrelativepath
  * @type {string}
  */

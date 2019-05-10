@@ -2873,14 +2873,6 @@ DataTransferItem.prototype.getAsString = function(callback) {};
 DataTransferItem.prototype.getAsFile = function() { return null; };
 
 /**
- * @return {?Entry} The Entry corresponding to this item, or null. Note that
- * despite its name,this method only works in Chrome, and will eventually
- * be renamed to {@code getAsEntry}.
- * @nosideeffects
- */
-DataTransferItem.prototype.webkitGetAsEntry = function() { return null; };
-
-/**
  * HTML5 DataTransferItemList class. There are some discrepancies in the docs
  * on the whatwg.org site. When in doubt, these prototypes match what is
  * implemented as of Chrome 30.
