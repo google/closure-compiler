@@ -881,19 +881,19 @@ public final class Es6SyntacticScopeCreatorTest {
     Node fBlock = NodeUtil.getFunctionBody(function);
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
     assertScope(fBlockScope).declares("super");
-    assertThat(fBlockScope.getVar("super")).isSameAs(thisVar);
+    assertThat(fBlockScope.getVar("super")).isSameInstanceAs(thisVar);
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
     assertScope(blockScope).declares("super");
-    assertThat(blockScope.getVar("super")).isSameAs(thisVar);
-    assertThat(blockScope.getVar("super").getScope()).isSameAs(fScope);
+    assertThat(blockScope.getVar("super")).isSameInstanceAs(thisVar);
+    assertThat(blockScope.getVar("super").getScope()).isSameInstanceAs(fScope);
 
     Node gFunction = ifBlock.getFirstChild();
     Scope gScope = scopeCreator.createScope(gFunction, blockScope);
     assertScope(gScope).declares("super").directly();
-    assertThat(gScope.getVar("super").getScope()).isSameAs(gScope);
-    assertThat(gScope.getVar("super")).isNotSameAs(gScope.getVar("this"));
+    assertThat(gScope.getVar("super").getScope()).isSameInstanceAs(gScope);
+    assertThat(gScope.getVar("super")).isNotSameInstanceAs(gScope.getVar("this"));
   }
 
   @Test
