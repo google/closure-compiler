@@ -325,7 +325,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (warningGuards != null) {
       for (FlagEntry<CheckLevel> entry : warningGuards) {
         if ("*".equals(entry.value)) {
-          Set<String> groupNames = diagnosticGroups.getRegisteredGroups().keySet();
+          Set<String> groupNames = DiagnosticGroups.getRegisteredGroups().keySet();
           for (String groupName : groupNames) {
             if (!DiagnosticGroups.wildcardExcludedGroups.contains(groupName)) {
               diagnosticGroups.setWarningLevel(options, groupName, entry.flag);
@@ -734,8 +734,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           continue;
         }
         String relativeName = getModuleRootRelativeName(absoluteName, moduleRoots);
-        String relativeNonIjsName =
-            relativeName.substring(0, relativeName.length() - ".i.js".length());
+        String relativeNonIjsName;
+        if (relativeName.endsWith(".starlark_aspect.i.js")) {
+          relativeNonIjsName =
+              relativeName.substring(0, relativeName.length() - ".starlark_aspect.i.js".length());
+        } else {
+          relativeNonIjsName = relativeName.substring(0, relativeName.length() - ".i.js".length());
+        }
         if (relativeToAbsoluteName.containsKey(relativeNonIjsName)) {
           errors.add(
               JSError.make(
