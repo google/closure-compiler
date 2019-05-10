@@ -1040,109 +1040,109 @@ function FileException() {}
  * @see http://www.w3.org/TR/FileAPI/#dfn-NOT_FOUND_ERR
  * @type {number}
  */
-FileException.prototype.NOT_FOUND_ERR = 1;
+FileException.prototype.NOT_FOUND_ERR;
 
 /** @type {number} */
-FileException.NOT_FOUND_ERR = 1;
+FileException.NOT_FOUND_ERR;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-SECURITY_ERR
  * @type {number}
  */
-FileException.prototype.SECURITY_ERR = 2;
+FileException.prototype.SECURITY_ERR;
 
 /** @type {number} */
-FileException.SECURITY_ERR = 2;
+FileException.SECURITY_ERR;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#widl-FileException-ABORT_ERR
  * @type {number}
  */
-FileException.prototype.ABORT_ERR = 3;
+FileException.prototype.ABORT_ERR;
 
 /** @type {number} */
-FileException.ABORT_ERR = 3;
+FileException.ABORT_ERR;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#widl-FileException-NOT_READABLE_ERR
  * @type {number}
  */
-FileException.prototype.NOT_READABLE_ERR = 4;
+FileException.prototype.NOT_READABLE_ERR;
 
 /** @type {number} */
-FileException.NOT_READABLE_ERR = 4;
+FileException.NOT_READABLE_ERR;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#widl-FileException-ENCODING_ERR
  * @type {number}
  */
-FileException.prototype.ENCODING_ERR = 5;
+FileException.prototype.ENCODING_ERR;
 
 /** @type {number} */
-FileException.ENCODING_ERR = 5;
+FileException.ENCODING_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileException-NO_MODIFICATION_ALLOWED_ERR
  * @type {number}
  */
-FileException.prototype.NO_MODIFICATION_ALLOWED_ERR = 6;
+FileException.prototype.NO_MODIFICATION_ALLOWED_ERR;
 
 /** @type {number} */
-FileException.NO_MODIFICATION_ALLOWED_ERR = 6;
+FileException.NO_MODIFICATION_ALLOWED_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileException-INVALID_STATE_ERR
  * @type {number}
  */
-FileException.prototype.INVALID_STATE_ERR = 7;
+FileException.prototype.INVALID_STATE_ERR;
 
 /** @type {number} */
-FileException.INVALID_STATE_ERR = 7;
+FileException.INVALID_STATE_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileException-SYNTAX_ERR
  * @type {number}
  */
-FileException.prototype.SYNTAX_ERR = 8;
+FileException.prototype.SYNTAX_ERR;
 
 /** @type {number} */
-FileException.SYNTAX_ERR = 8;
+FileException.SYNTAX_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileException-INVALID_MODIFICATION_ERR
  * @type {number}
  */
-FileException.prototype.INVALID_MODIFICATION_ERR = 9;
+FileException.prototype.INVALID_MODIFICATION_ERR;
 
 /** @type {number} */
-FileException.INVALID_MODIFICATION_ERR = 9;
+FileException.INVALID_MODIFICATION_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileException-QUOTA_EXCEEDED_ERR
  * @type {number}
  */
-FileException.prototype.QUOTA_EXCEEDED_ERR = 10;
+FileException.prototype.QUOTA_EXCEEDED_ERR;
 
 /** @type {number} */
-FileException.QUOTA_EXCEEDED_ERR = 10;
+FileException.QUOTA_EXCEEDED_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileException-TYPE_MISMATCH_ERR
  * @type {number}
  */
-FileException.prototype.TYPE_MISMATCH_ERR = 11;
+FileException.prototype.TYPE_MISMATCH_ERR;
 
 /** @type {number} */
-FileException.TYPE_MISMATCH_ERR = 11;
+FileException.TYPE_MISMATCH_ERR;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileException-PATH_EXISTS_ERR
  * @type {number}
  */
-FileException.prototype.PATH_EXISTS_ERR = 12;
+FileException.prototype.PATH_EXISTS_ERR;
 
 /** @type {number} */
-FileException.PATH_EXISTS_ERR = 12;
+FileException.PATH_EXISTS_ERR;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-code-exception
