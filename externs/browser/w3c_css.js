@@ -2097,24 +2097,34 @@ Window.prototype.scrollY;
 Window.prototype.pageYOffset;
 
 /**
- * @param {number} x
- * @param {number} y
+ * @typedef {{
+ *   left: (number|undefined),
+ *   top: (number|undefined),
+ *   behavior: (string|undefined)
+ * }}
+ * @see https://www.w3.org/TR/cssom-view/#dictdef-scrolltooptions
+ */
+var ScrollToOptions;
+
+/**
+ * @param {number|!ScrollToOptions} x
+ * @param {number=} y
  * @see http://www.w3.org/TR/cssom-view/#dom-window-scroll
  * @return {undefined}
  */
 Window.prototype.scroll = function(x, y) {};
 
 /**
- * @param {number} x
- * @param {number} y
+ * @param {number|!ScrollToOptions} x
+ * @param {number=} y
  * @see http://www.w3.org/TR/cssom-view/#dom-window-scrollto
  * @return {undefined}
  */
 Window.prototype.scrollTo = function(x, y) {};
 
 /**
- * @param {number} x
- * @param {number} y
+ * @param {number|!ScrollToOptions} x
+ * @param {number=} y
  * @see http://www.w3.org/TR/cssom-view/#dom-window-scrollby
  * @return {undefined}
  */
