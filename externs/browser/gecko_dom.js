@@ -285,9 +285,9 @@ Window.prototype.forward = function() {};
 Window.prototype.getAttention = function() {};
 
 /**
- * @return {Selection}
- * @see https://developer.mozilla.org/en/DOM/window.getSelection
+ * @return {?Selection}
  * @nosideeffects
+ * @see https://w3c.github.io/selection-api/#dom-window-getselection
  */
 Window.prototype.getSelection = function() {};
 
@@ -607,119 +607,130 @@ Range.prototype.intersectsNode;
 Range.prototype.compareNode;
 
 
-/** @constructor */
+/**
+ * @constructor
+ * @see http://w3c.github.io/selection-api/#selection-interface
+ */
 function Selection() {}
 
 /**
- * @type {Node}
- * @see https://developer.mozilla.org/en/DOM/Selection/anchorNode
+ * @type {?Node}
+ * @see https://w3c.github.io/selection-api/#dom-selection-anchornode
  */
 Selection.prototype.anchorNode;
 
 /**
  * @type {number}
- * @see https://developer.mozilla.org/en/DOM/Selection/anchorOffset
+ * @see https://w3c.github.io/selection-api/#dom-selection-anchoroffset
  */
 Selection.prototype.anchorOffset;
 
 /**
- * @type {Node}
- * @see https://developer.mozilla.org/en/DOM/Selection/focusNode
+ * @type {?Node}
+ * @see https://w3c.github.io/selection-api/#dom-selection-focusnode
  */
 Selection.prototype.focusNode;
 
 /**
  * @type {number}
- * @see https://developer.mozilla.org/en/DOM/Selection/focusOffset
+ * @see https://w3c.github.io/selection-api/#dom-selection-focusoffset
  */
 Selection.prototype.focusOffset;
 
 /**
  * @type {boolean}
- * @see https://developer.mozilla.org/en/DOM/Selection/isCollapsed
+ * @see https://w3c.github.io/selection-api/#dom-selection-iscollapsed
  */
 Selection.prototype.isCollapsed;
 
 /**
  * @type {number}
- * @see https://developer.mozilla.org/en/DOM/Selection/rangeCount
+ * @see https://w3c.github.io/selection-api/#dom-selection-rangecount
  */
 Selection.prototype.rangeCount;
 
 /**
  * @param {Range} range
  * @return {undefined}
- * @see https://developer.mozilla.org/en/DOM/Selection/addRange
+ * @see https://w3c.github.io/selection-api/#dom-selection-addrange
  */
 Selection.prototype.addRange = function(range) {};
 
 /**
  * @param {number} index
  * @return {Range}
- * @see https://developer.mozilla.org/en/DOM/Selection/getRangeAt
  * @nosideeffects
+ * @see https://w3c.github.io/selection-api/#dom-selection-getrangeat
  */
 Selection.prototype.getRangeAt = function(index) {};
 
 /**
- * @param {Node} node
- * @param {number} index
+ * @param {?Node} node
+ * @param {number=} offset
  * @return {undefined}
- * @see https://developer.mozilla.org/en/DOM/Selection/collapse
+ * @see https://w3c.github.io/selection-api/#dom-selection-collapse
  */
-Selection.prototype.collapse = function(node, index) {};
+Selection.prototype.collapse = function(node, offset) {};
+
+/**
+ * @param {?Node} node
+ * @param {number=} offset
+ * @return {undefined}
+ * @see https://w3c.github.io/selection-api/#dom-selection-setposition
+ */
+Selection.prototype.setPosition = function(node, offset) {};
 
 /**
  * @return {undefined}
- * @see https://developer.mozilla.org/en/DOM/Selection/collapseToEnd
+ * @see https://w3c.github.io/selection-api/#dom-selection-collapsetoend
  */
 Selection.prototype.collapseToEnd = function() {};
 
 /**
  * @return {undefined}
- * @see https://developer.mozilla.org/en/DOM/Selection/collapseToStart
+ * @see https://w3c.github.io/selection-api/#dom-selection-collapsetostart
  */
 Selection.prototype.collapseToStart = function() {};
 
 /**
  * @param {Node} node
- * @param {boolean} partlyContained
+ * @param {boolean=} allowPartialContainment
  * @return {boolean}
- * @see https://developer.mozilla.org/en/DOM/Selection/containsNode
  * @nosideeffects
+ * @see https://w3c.github.io/selection-api/#dom-selection-containsnode
  */
-Selection.prototype.containsNode = function(node, partlyContained) {};
+Selection.prototype.containsNode = function(node, allowPartialContainment) {};
 
 /**
- * @see https://developer.mozilla.org/en/DOM/Selection/deleteFromDocument
  * @return {undefined}
+ * @see https://w3c.github.io/selection-api/#dom-selection-deletefromdocument
  */
 Selection.prototype.deleteFromDocument = function() {};
 
 /**
  * @param {Node} parentNode
- * @param {number} offset
- * @see https://developer.mozilla.org/en/DOM/Selection/extend
+ * @param {number=} offset
  * @return {undefined}
+ * @see https://w3c.github.io/selection-api/#dom-selection-extend
  */
 Selection.prototype.extend = function(parentNode, offset) {};
 
 /**
- * @see https://developer.mozilla.org/en/DOM/Selection/removeAllRanges
  * @return {undefined}
+ * @see https://w3c.github.io/selection-api/#dom-selection-removeallranges
  */
 Selection.prototype.removeAllRanges = function() {};
 
 /**
  * @param {Range} range
- * @see https://developer.mozilla.org/en/DOM/Selection/removeRange
  * @return {undefined}
+ * @see https://w3c.github.io/selection-api/#dom-selection-removerange
  */
 Selection.prototype.removeRange = function(range) {};
 
 /**
  * @param {Node} parentNode
- * @see https://developer.mozilla.org/en/DOM/Selection/selectAllChildren
+ * @see http://w3c.github.io/selection-api/#dom-selection-selectallchildren
  */
 Selection.prototype.selectAllChildren;
 

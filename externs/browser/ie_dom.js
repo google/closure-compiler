@@ -1085,9 +1085,15 @@ Element.prototype.onmouseleave;
 
 /**
  * @type {?function(Event)}
- * @see http://msdn.microsoft.com/en-us/library/ms536969(VS.85).aspx
+ * @see https://w3c.github.io/selection-api/#dom-globaleventhandlers-onselectstart
  */
 Element.prototype.onselectstart;
+
+/**
+ * @type {?function(Event): void}
+ * @see https://w3c.github.io/selection-api/#dom-globaleventhandlers-onselectionchange
+ */
+Element.prototype.onselectionchange;
 
 /**
  * @type {string}

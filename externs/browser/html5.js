@@ -1145,8 +1145,8 @@ Document.prototype.head;
 
 /**
  * @return {?Selection}
- * @see https://developer.mozilla.org/en-US/docs/Web/API/DocumentOrShadowRoot/getSelection
  * @nosideeffects
+ * @see https://w3c.github.io/selection-api/#dom-document-getselection
  */
 Document.prototype.getSelection = function() {};
 
