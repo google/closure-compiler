@@ -596,7 +596,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node js) {
-      new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, true).process(externs, js);
+      new ProcessClosurePrimitives(compiler, null).process(externs, js);
       namespace = new GlobalNamespace(compiler, externs, js);
       new ProcessDefines.Builder(compiler)
           .putReplacements(overrides)

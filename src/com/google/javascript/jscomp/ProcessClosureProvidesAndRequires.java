@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSUR
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -36,7 +35,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -59,7 +57,7 @@ import javax.annotation.Nullable;
  *
  * @author chrisn@google.com (Chris Nokleberg)
  */
-class ProcessClosureProvidesAndRequires {
+class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
 
   // The root Closure namespace
   private static final String GOOG = "goog";
@@ -91,6 +89,19 @@ class ProcessClosureProvidesAndRequires {
     this.moduleGraph = compiler.getModuleGraph();
     this.requiresLevel = requiresLevel;
     this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
+  }
+
+  /** When invoked as compiler pass, we rewrite all provides and requires. */
+  @Override
+  public void process(Node externs, Node root) {
+    rewriteProvidesAndRequires(externs, root);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    // TODO(bashir): Implement a real hot-swap version instead and make it fully
+    // consistent with the full version.
+    this.compiler.process(this);
   }
 
   /** Collects all goog.provides in the given namespace and warns on invalid code */
@@ -502,23 +513,13 @@ class ProcessClosureProvidesAndRequires {
     return true;
   }
 
-  /** Process a goog.forwardDeclare() call and record the specified forward declaration. */
+  /** Marks a goog.forwardDeclare call for removal. */
   private void processForwardDeclare(Node n, Node parent) {
     CodingConvention convention = compiler.getCodingConvention();
 
-    String typeDeclaration = null;
-    try {
-      typeDeclaration = Iterables.getOnlyElement(convention.identifyTypeDeclarationCall(n));
-    } catch (NullPointerException | NoSuchElementException | IllegalArgumentException e) {
-      compiler.report(
-          JSError.make(
-              n,
-              ProcessClosurePrimitives.INVALID_FORWARD_DECLARE,
-              "A single type could not identified for the goog.forwardDeclare statement"));
-    }
+    List<String> typeDeclarations = convention.identifyTypeDeclarationCall(n);
 
-    if (typeDeclaration != null) {
-      compiler.forwardDeclareType(typeDeclaration);
+    if (typeDeclarations != null && typeDeclarations.size() == 1) {
       // Forward declaration was recorded and we can remove the call.
       Node toRemove = parent.isExprResult() ? parent : parent.getParent();
       forwardDeclaresToRemove.add(toRemove);

@@ -349,6 +349,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.add(closurePrimitives);
+      checks.add(closureProvidesRequires);
     }
 
     // It's important that the PolymerPass run *after* the ClosurePrimitives and ChromePass rewrites
@@ -1280,10 +1281,7 @@ public final class DefaultPassConfig extends PassConfig {
           preprocessorSymbolTableFactory.maybeInitialize(compiler);
           final ProcessClosurePrimitives pass =
               new ProcessClosurePrimitives(
-                  compiler,
-                  preprocessorSymbolTableFactory.getInstanceOrNull(),
-                  options.brokenClosureRequiresLevel,
-                  options.shouldPreservesGoogProvidesAndRequires());
+                  compiler, preprocessorSymbolTableFactory.getInstanceOrNull());
 
           return new HotSwapCompilerPass() {
             @Override
@@ -1297,6 +1295,25 @@ public final class DefaultPassConfig extends PassConfig {
               pass.hotSwapScript(scriptRoot, originalRoot);
             }
           };
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES_NEXT;
+        }
+      };
+
+  /** Closure provide/require rewriting pass. */
+  private final HotSwapPassFactory closureProvidesRequires =
+      new HotSwapPassFactory("closureProvidesRequires") {
+        @Override
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          preprocessorSymbolTableFactory.maybeInitialize(compiler);
+          return new ProcessClosureProvidesAndRequires(
+              compiler,
+              preprocessorSymbolTableFactory.getInstanceOrNull(),
+              options.brokenClosureRequiresLevel,
+              options.shouldPreservesGoogProvidesAndRequires());
         }
 
         @Override

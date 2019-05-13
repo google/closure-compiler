@@ -36,9 +36,9 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Replaces goog.provide calls, removes goog.{require,requireType} calls, verifies that each
- * goog.{require,requireType} has a corresponding goog.provide, and performs some Closure-pecific
- * simplifications.
+ * Performs some Closure-specific simplifications including rewriting goog.base, goog.addDependency.
+ *
+ * <p>Adds forwardDeclared and goog.defined names to the compiler.
  *
  * @author chrisn@google.com (Chris Nokleberg)
  */
@@ -166,19 +166,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   private final Set<String> knownClosureSubclasses = new HashSet<>();
 
   private final Set<String> exportedVariables = new HashSet<>();
-  private final CheckLevel requiresLevel;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
   private final List<Node> defineCalls = new ArrayList<>();
-  private final boolean preserveGoogProvidesAndRequires;
 
-  ProcessClosurePrimitives(AbstractCompiler compiler,
-      @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
-      CheckLevel requiresLevel,
-      boolean preserveGoogProvidesAndRequires) {
+  ProcessClosurePrimitives(
+      AbstractCompiler compiler, @Nullable PreprocessorSymbolTable preprocessorSymbolTable) {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
-    this.requiresLevel = requiresLevel;
-    this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
   }
 
   Set<String> getExportedVariableNames() {
@@ -187,13 +181,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
 
   @Override
   public void process(Node externs, Node root) {
-    // Replace goog.provide and goog.require
-    ProcessClosureProvidesAndRequires processor =
-        new ProcessClosureProvidesAndRequires(
-            compiler, preprocessorSymbolTable, requiresLevel, preserveGoogProvidesAndRequires);
-
-    processor.rewriteProvidesAndRequires(externs, root);
-
     // Replace and validate other Closure primitives
     NodeTraversal.traverseRoots(compiler, this, externs, root);
 
@@ -284,6 +271,15 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
                 break;
               case "setCssNameMapping":
                 processSetCssNameMapping(n, parent);
+                break;
+              case "forwardDeclare":
+                if (validatePrimitiveCallWithMessage(
+                    t,
+                    n,
+                    methodName,
+                    ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR)) {
+                  processForwardDeclare(n);
+                }
                 break;
               default: // fall out
             }
@@ -823,31 +819,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /**
-   * Verifies that a provide method call has exactly one argument, and that it's a string literal
-   * and that the contents of the string are valid JS tokens. Reports a compile error if it doesn't.
-   *
-   * @return Whether the argument checked out okay
-   */
-  private boolean verifyProvide(Node methodName, Node arg) {
-    if (!verifyLastArgumentIsString(methodName, arg)) {
-      return false;
-    }
-
-    if (!NodeUtil.isValidQualifiedName(
-        compiler.getOptions().getLanguageIn().toFeatureSet(), arg.getString())) {
-      compiler.report(
-          JSError.make(
-              arg,
-              INVALID_PROVIDE_ERROR,
-              arg.getString(),
-              compiler.getOptions().getLanguageIn().toString()));
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
    * Verifies that a goog.define method call has exactly two arguments, with the first a string
    * literal whose contents is a valid JS qualified name. Reports a compile error if it doesn't.
    *
@@ -924,7 +895,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /** Process a goog.forwardDeclare() call and record the specified forward declaration. */
-  private void processForwardDeclare(Node n, Node parent) {
+  private void processForwardDeclare(Node n) {
     CodingConvention convention = compiler.getCodingConvention();
 
     String typeDeclaration = null;
@@ -941,22 +912,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
 
     if (typeDeclaration != null) {
       compiler.forwardDeclareType(typeDeclaration);
-      // Forward declaration was recorded and we can remove the call.
-      Node toRemove = parent.isExprResult() ? parent : parent.getParent();
-      NodeUtil.deleteNode(toRemove, compiler);
     }
-  }
-
-  /**
-   * Verifies that a method call has exactly one argument, and that it's a string literal. Reports a
-   * compile error if it doesn't.
-   *
-   * @return Whether the argument checked out okay
-   */
-  private boolean verifyLastArgumentIsString(Node methodName, Node arg) {
-    return verifyNotNull(methodName, arg)
-        && verifyOfType(methodName, arg, Token.STRING)
-        && verifyIsLast(methodName, arg);
   }
 
   /** @return Whether the argument checked out okay */

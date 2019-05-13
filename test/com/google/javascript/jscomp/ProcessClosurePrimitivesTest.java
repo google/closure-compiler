@@ -69,8 +69,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new ProcessClosurePrimitives(
-        compiler, null, CheckLevel.ERROR, /* preserveGoogProvidesAndRequires= */ true);
+    return new ProcessClosurePrimitives(compiler, /* preprocessorSymbolTable= */ null);
   }
 
   @Test
@@ -142,6 +141,30 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
     testError("goog.setCssNameMapping({foo:undefined});",
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
+  }
+
+  @Test
+  public void testForwardDeclarations() {
+    testSame("goog.forwardDeclare('A.B')");
+
+    Compiler compiler = getLastCompiler();
+    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("A.B")).isTrue();
+    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("C.D")).isFalse();
+  }
+
+  @Test
+  public void testInvalidForwardDeclarations() {
+    testError(
+        "const B = goog.forwardDeclare('A.B');",
+        ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
+    testError("goog.forwardDeclare();", ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
+
+    testError(
+        "goog.forwardDeclare('A.B', 'C.D');", ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
+
+    testError("goog.forwardDeclare(`template`);", ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
+    testError(
+        "goog.forwardDeclare(`${template}Sub`);", ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
   }
 
   @Test

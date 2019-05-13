@@ -23620,7 +23620,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .isEqualTo(0);
 
     // For processing goog.addDependency for forward typedefs.
-    new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false).process(externs, jsRoot);
+    new ProcessClosurePrimitives(compiler, null).process(externs, jsRoot);
+    new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
+        .process(externs, jsRoot);
 
     new TypeCheck(
             compiler,

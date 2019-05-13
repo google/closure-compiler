@@ -553,20 +553,8 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   public void testForwardDeclarations() {
     test("goog.forwardDeclare('A.B')", "");
 
-    Compiler compiler = getLastCompiler();
-    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("A.B")).isTrue();
-    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("C.D")).isFalse();
-
-    testError("goog.forwardDeclare();",
-        ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
-
-    testError("goog.forwardDeclare('A.B', 'C.D');",
-        ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
-
-    testError("goog.forwardDeclare(`template`);",
-        ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
-    testError("goog.forwardDeclare(`${template}Sub`);",
-        ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
+    testNoWarning("goog.forwardDeclare();"); // This pass isn't responsible for invalid declares
+    testNoWarning("goog.forwardDeclare('C', 'D');");
   }
 
   @Test

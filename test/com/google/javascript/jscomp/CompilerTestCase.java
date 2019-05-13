@@ -1517,7 +1517,8 @@ public abstract class CompilerTestCase {
         // Only run process closure primitives once, if asked.
         if (closurePassEnabled && i == 0) {
           recentChange.reset();
-          new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false)
+          new ProcessClosurePrimitives(compiler, null).process(externsRoot, mainRoot);
+          new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
               .process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
@@ -1906,7 +1907,8 @@ public abstract class CompilerTestCase {
     }
 
     if (closurePassEnabled && closurePassEnabledForExpected && !compiler.hasErrors()) {
-      new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false)
+      new ProcessClosurePrimitives(compiler, null).process(externsRoot, mainRoot);
+      new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
           .process(externsRoot, mainRoot);
     }
 
