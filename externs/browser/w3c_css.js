@@ -2045,6 +2045,20 @@ CSSProperties.prototype.willChange;
  */
 CSSProperties.prototype.userSelect;
 
+// CSS 3 Images
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css3-images/#the-object-fit
+ */
+CSSProperties.prototype.objectFit;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css3-images/#object-position
+ */
+CSSProperties.prototype.objectPosition;
+
 /**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
  * Externs for the CSSOM View Module.
