@@ -76,6 +76,12 @@ var isSecureContext;
 var visualViewport;
 
 /**
+ * @type {!Window}
+ * @see https://developer.mozilla.org/en/DOM/window
+ */
+var window;
+
+/**
  * @param {*} message
  * @see https://developer.mozilla.org/en/DOM/window.alert
  * @return {undefined}
