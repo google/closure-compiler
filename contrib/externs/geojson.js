@@ -20,8 +20,8 @@
  * @see http://geojson.org/
  * @see https://tools.ietf.org/html/rfc7946
  *
- * To use the externs, add a dependency on either the generated js_lib or the
- * implicit file target:
+ * To use the externs, add a dependency on either the generated js_library or
+ * the implicit file target:
  *
  *   //third_party/java_src/jscomp/contrib/externs:geojson
  *   //third_party/java_src/jscomp/contrib/externs:geojson.js
