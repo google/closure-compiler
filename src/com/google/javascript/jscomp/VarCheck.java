@@ -20,12 +20,14 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.Es6SyntacticScopeCreator.RedeclarationHandler;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -90,6 +92,10 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
   // scope, but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
 
+  private static final Node exports = IR.name("exports");
+  private static final Node googLoadModule = IR.getprop(IR.name("goog"), "loadModule");
+  private static final Node googProvide = IR.getprop(IR.name("goog"), "provide");
+
   // Vars that still need to be declared in externs. These will be declared
   // at the end of the pass, or when we see the equivalent var declared
   // in the normal code.
@@ -105,6 +111,13 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
 
   private RedeclarationCheckHandler dupHandler;
 
+  // All roots of goog.provided namespaces, e.g. 'a' given goog.provide('a.b.c');
+  private Set<String> googProvidedRoots = new HashSet<>();
+
+  private final boolean closurePass;
+
+  private boolean inGoogModule; // Whether the NodeTraversal is currently within a goog.module.
+
   VarCheck(AbstractCompiler compiler) {
     this(compiler, false);
   }
@@ -114,6 +127,7 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
     this.strictExternCheck = compiler.getErrorLevel(
         JSError.make("", 0, 0, UNDEFINED_EXTERN_VAR_ERROR)) == CheckLevel.ERROR;
     this.validityCheck = validityCheck;
+    this.closurePass = compiler.getOptions() != null && compiler.getOptions().closurePass;
   }
 
   /**
@@ -132,6 +146,11 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     ScopeCreator scopeCreator = createScopeCreator();
+
+    if (closurePass) {
+      gatherImplicitVars(compiler.getRoot());
+    }
+
     // Don't run externs-checking in sanity check mode. Normalization will
     // remove duplicate VAR declarations, which will make
     // externs look like they have assigns.
@@ -156,6 +175,12 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     checkState(scriptRoot.isScript());
+
+    if (closurePass) {
+      // Only run over the new script.
+      gatherImplicitVars(compiler.getRoot());
+    }
+
     Es6SyntacticScopeCreator scopeCreator = createScopeCreator();
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
     // Note we use the global scope to prevent wrong "undefined-var errors" on
@@ -167,108 +192,185 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (n.isModuleBody()) {
+      inGoogModule = n.getParent().getBooleanProp(Node.GOOG_MODULE);
+    }
     return true;
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isName()) {
-      String varName = n.getString();
+    if (n.isModuleBody()) {
+      inGoogModule = false;
+    } else if (n.isName()) {
+      checkName(t, n, parent);
+    }
+  }
 
-      // Only a function can have an empty name.
-      if (varName.isEmpty()) {
-        // Name is optional for function expressions
-        // x = function() {...}
-        // Arrow functions are also expressions and cannot have a name
-        // x = () => {...}
-        // Member functions have an empty NAME node string, because the actual name is stored on the
-        // MEMBER_FUNCTION_DEF object that contains the FUNCTION.
-        // class C { foo() {...} }
-        // x = { foo() {...} }
-        checkState(
-            NodeUtil.isFunctionExpression(parent) || NodeUtil.isMethodDeclaration(parent));
-        return;
-      }
+  /** Validates that a NAME node does not refer to an undefined name. */
+  private void checkName(NodeTraversal t, Node n, Node parent) {
+    String varName = n.getString();
 
-      Scope scope = t.getScope();
-      Var var = scope.getVar(varName);
-      Scope varScope = var != null ? var.getScope() : null;
+    // Only a function can have an empty name.
+    if (varName.isEmpty()) {
+      // Name is optional for function expressions
+      // x = function() {...}
+      // Arrow functions are also expressions and cannot have a name
+      // x = () => {...}
+      // Member functions have an empty NAME node string, because the actual name is stored on the
+      // MEMBER_FUNCTION_DEF object that contains the FUNCTION.
+      // class C { foo() {...} }
+      // x = { foo() {...} }
+      checkState(NodeUtil.isFunctionExpression(parent) || NodeUtil.isMethodDeclaration(parent));
+      return;
+    }
 
-      // Check if this variable is reference in the externs, if so mark it as a duplicate.
-      if (varScope != null
-          && varScope.isGlobal()
-          && (parent.isVar() || NodeUtil.isFunctionDeclaration(parent))
-          && varsToDeclareInExterns.contains(varName)) {
-        createSynthesizedExternVar(varName);
+    Scope scope = t.getScope();
+    Var var = scope.getVar(varName);
+    Scope varScope = var != null ? var.getScope() : null;
 
-        JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
-        builder.addSuppression("duplicate");
-        n.setJSDocInfo(builder.build());
-      }
+    // Check if this variable is reference in the externs, if so mark it as a duplicate.
+    if (varScope != null
+        && varScope.isGlobal()
+        && (parent.isVar() || NodeUtil.isFunctionDeclaration(parent))
+        && varsToDeclareInExterns.contains(varName)) {
+      createSynthesizedExternVar(varName);
 
-      // Check that the var has been declared.
-      if (var == null) {
-        if ((NodeUtil.isFunctionExpression(parent) || NodeUtil.isClassExpression(parent))
-            && n == parent.getFirstChild()) {
-          // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
-          // current scope.
-        } else if (NodeUtil.isNonlocalModuleExportName(n)) {
-          // e.g. "export {a as b}" or "import {b as a} from './foo.js'
-          // where b is defined in a module's export entries but not in any module scope.
-        } else {
-          boolean isTypeOf = parent.isTypeOf();
-          // The extern checks are stricter, don't report a second error.
-          if (!isTypeOf && !(strictExternCheck && t.getInput().isExtern())) {
-            t.report(n, UNDEFINED_VAR_ERROR, varName);
-          }
+      JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
+      builder.addSuppression("duplicate");
+      n.setJSDocInfo(builder.build());
+    }
 
-          if (validityCheck) {
-            // When the code is initially traversed, any undeclared variables are treated as
-            // externs. During this sanity check, we ensure that all variables have either been
-            // declared or marked as an extern. A failure at this point means that we have created
-            // some variable/generated some code with an undefined reference.
-            throw new IllegalStateException("Unexpected variable " + varName);
-          } else {
-            createSynthesizedExternVar(varName);
-            scope.getGlobalScope().declare(varName, n, compiler.getSynthesizedExternsInput());
-          }
+    // Check that the var has been declared.
+    if (var == null) {
+      if ((NodeUtil.isFunctionExpression(parent) || NodeUtil.isClassExpression(parent))
+          && n == parent.getFirstChild()) {
+        // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
+        // current scope.
+      } else if (NodeUtil.isNonlocalModuleExportName(n)) {
+        // e.g. "export {a as b}" or "import {b as a} from './foo.js'
+        // where b is defined in a module's export entries but not in any module scope.
+      } else if (isGoogModuleExports(n)) {
+        // Ignore 'exports' if inside a goog.module.
+      } else if (googProvidedRoots.contains(n.getString())) {
+        // Ignore names that have been defined by a goog.provide.
+      } else {
+        boolean isTypeOf = parent.isTypeOf();
+        // The extern checks are stricter, don't report a second error.
+        if (!isTypeOf && !(strictExternCheck && t.getInput().isExtern())) {
+          t.report(n, UNDEFINED_VAR_ERROR, varName);
         }
-        return;
-      }
 
-      CompilerInput currInput = t.getInput();
-      CompilerInput varInput = var.input;
-      if (currInput == varInput || currInput == null || varInput == null) {
-        // The variable was defined in the same file. This is fine.
-        return;
-      }
-
-      // Check module dependencies.
-      JSModule currModule = currInput.getModule();
-      JSModule varModule = varInput.getModule();
-      JSModuleGraph moduleGraph = compiler.getModuleGraph();
-      if (!validityCheck && varModule != currModule && varModule != null && currModule != null) {
-        if (moduleGraph.dependsOn(currModule, varModule)) {
-          // The module dependency was properly declared.
+        if (validityCheck) {
+          // When the code is initially traversed, any undeclared variables are treated as
+          // externs. During this sanity check, we ensure that all variables have either been
+          // declared or marked as an extern. A failure at this point means that we have created
+          // some variable/generated some code with an undefined reference.
+          throw new IllegalStateException("Unexpected variable " + varName);
         } else {
-          if (scope.isGlobal()) {
-            if (moduleGraph.dependsOn(varModule, currModule)) {
-              // The variable reference violates a declared module dependency.
-              t.report(n, VIOLATED_MODULE_DEP_ERROR,
-                       currModule.getName(), varModule.getName(), varName);
-            } else {
-              // The variable reference is between two modules that have no
-              // dependency relationship. This should probably be considered an
-              // error, but just issue a warning for now.
-              t.report(n, MISSING_MODULE_DEP_ERROR,
-                       currModule.getName(), varModule.getName(), varName);
-            }
-          } else {
-            t.report(n, STRICT_MODULE_DEP_ERROR,
-                     currModule.getName(), varModule.getName(), varName);
-          }
+          createSynthesizedExternVar(varName);
+          scope.getGlobalScope().declare(varName, n, compiler.getSynthesizedExternsInput());
         }
       }
+      return;
+    }
+
+    CompilerInput currInput = t.getInput();
+    CompilerInput varInput = var.input;
+    if (currInput == varInput || currInput == null || varInput == null) {
+      // The variable was defined in the same file. This is fine.
+      return;
+    }
+
+    // Check module dependencies.
+    JSModule currModule = currInput.getModule();
+    JSModule varModule = varInput.getModule();
+    JSModuleGraph moduleGraph = compiler.getModuleGraph();
+    if (!validityCheck && varModule != currModule && varModule != null && currModule != null) {
+      if (moduleGraph.dependsOn(currModule, varModule)) {
+        // The module dependency was properly declared.
+      } else {
+        if (scope.isGlobal()) {
+          if (moduleGraph.dependsOn(varModule, currModule)) {
+            // The variable reference violates a declared module dependency.
+            t.report(
+                n, VIOLATED_MODULE_DEP_ERROR, currModule.getName(), varModule.getName(), varName);
+          } else {
+            // The variable reference is between two modules that have no dependency relationship.
+            // This should probably be considered an error, but just issue a warning for now.
+            t.report(
+                n, MISSING_MODULE_DEP_ERROR, currModule.getName(), varModule.getName(), varName);
+          }
+        } else {
+          t.report(n, STRICT_MODULE_DEP_ERROR, currModule.getName(), varModule.getName(), varName);
+        }
+      }
+    }
+  }
+
+  /** Variables that we shouldn't warn if undefined, and should not be added to externs. */
+  private boolean isGoogModuleExports(Node n) {
+    return inGoogModule && n.matchesQualifiedName(exports);
+  }
+
+  private void gatherImplicitVars(Node root) {
+    GatherImplicitClosureGlobals closureGlobals = new GatherImplicitClosureGlobals();
+    NodeTraversal.traverse(compiler, root, closureGlobals);
+    googProvidedRoots = closureGlobals.roots.build();
+  }
+
+  /** Looks for goog.provided roots and legacy goog.modules (including in goog.loadModules). */
+  private static final class GatherImplicitClosureGlobals extends AbstractPreOrderCallback {
+    private final ImmutableSet.Builder<String> roots = ImmutableSet.builder();
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      // Don't traverse the entire AST. We just need to find goog.provides and legacy goog.modules.
+      switch (n.getToken()) {
+        case MODULE_BODY:
+          if (parent.getBooleanProp(Node.GOOG_MODULE)) {
+            addGoogModuleIfLegacy(n);
+          }
+          return false;
+        case EXPR_RESULT:
+          Node call = n.getOnlyChild();
+          if (!call.isCall()) {
+            return false;
+          }
+          Node target = call.getFirstChild();
+          Node arg = target.getNext();
+          if (arg == null) {
+            return false;
+          }
+          if (target.matchesQualifiedName(googProvide)) {
+            addRootNs(arg.getString());
+          } else if (target.matchesQualifiedName(googLoadModule) && arg.isFunction()) {
+            addGoogModuleIfLegacy(NodeUtil.getFunctionBody(arg));
+          }
+          return false;
+        case SCRIPT:
+        case ROOT:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    private void addGoogModuleIfLegacy(Node googModuleBody) {
+      Node googModuleCall = googModuleBody.getFirstChild();
+      if (googModuleCall == null || !NodeUtil.isExprCall(googModuleCall)) {
+        return; // This is bad code, but another pass reports the error.
+      }
+      Node legacyNamespace = googModuleCall.getNext();
+      if (legacyNamespace != null
+          && NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(legacyNamespace)) {
+        addRootNs(googModuleCall.getFirstChild().getSecondChild().getString());
+      }
+    }
+
+    private void addRootNs(String fullNs) {
+      int indexOfDot = fullNs.indexOf('.');
+      roots.add(indexOfDot == -1 ? fullNs : fullNs.substring(0, indexOfDot));
     }
   }
 
@@ -390,7 +492,9 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
               Scope scope = t.getScope();
               Var var = scope.getVar(n.getString());
               if (var == null) {
-                t.report(n, UNDEFINED_EXTERN_VAR_ERROR, n.getString());
+                if (!googProvidedRoots.contains(n.getString()) && !isGoogModuleExports(n)) {
+                  t.report(n, UNDEFINED_EXTERN_VAR_ERROR, n.getString());
+                }
                 varsToDeclareInExterns.add(n.getString());
               }
             }

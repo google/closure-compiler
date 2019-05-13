@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.VarCheck.BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR;
+import static com.google.javascript.jscomp.VarCheck.UNDEFINED_VAR_ERROR;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 
@@ -63,6 +64,7 @@ public final class VarCheckTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
+    options.setClosurePass(true);
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_DEP_CHECK,
         strictModuleDepErrorLevel);
@@ -915,6 +917,117 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testComputedPropertyWithNamedFunction() {
     testSame("({[0]: function f() {}})");
+  }
+
+  private static final String CLOSURE_DEFS =
+      lines(
+          "/** @const */ var goog = {};",
+          "goog.module = function(ns) {};",
+          "goog.provide = function(ns) {};");
+
+  @Test
+  public void testEsModule_withUndefinedExportsRef() {
+    testError("exports = function() {}; export {exports};", VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
+  @Test
+  public void testGoogModule_withDefaultExports() {
+    testSame(srcs(CLOSURE_DEFS, "goog.module('a.b'); exports = function() {};"));
+  }
+
+  @Test
+  public void testGoogModule_withExportsRefInFunction() {
+    testSame(
+        srcs(
+            // Referencing 'exports' inside a function is strange but allowed.
+            CLOSURE_DEFS, "goog.module('a.b'); exports.f = function() { exports.f(); };"));
+  }
+
+  @Test
+  public void testGoogModule_withNamedExports() {
+    testSame(srcs(CLOSURE_DEFS, "goog.module('a.b'); exports.f = function() {}; exports.x = 0;"));
+  }
+
+  @Test
+  public void testGoogProvide_simpleName() {
+    testSame(CLOSURE_DEFS + "goog.provide('A'); var A = class {};");
+    testSame(CLOSURE_DEFS + "goog.provide('A'); A = class {};");
+  }
+
+  @Test
+  public void testGoogProvide_simpleName_earlyReference() {
+    testSame(CLOSURE_DEFS + "A.B = class {}; goog.provide('A');");
+    testSame(CLOSURE_DEFS + "A.B = class {}; goog.provide('A'); var A = class {};");
+  }
+
+  @Test
+  public void testGoogProvide_multipleRootsInSameFile() {
+    testSame(
+        CLOSURE_DEFS + "goog.provide('A'); goog.provide('B'); var A = class {}; var B = class {};");
+    testSame(CLOSURE_DEFS + "goog.provide('A.a'); goog.provide('B.b'); A.a = 0; B.b = 1");
+  }
+
+  @Test
+  public void testGoogProvide_complexName() {
+    testSame(CLOSURE_DEFS + "goog.provide('foo.A'); foo.A = class {};");
+    testSame(CLOSURE_DEFS + "goog.provide('foo.bar.A'); foo.bar.A = class {};");
+  }
+
+  @Test
+  public void testGoogLegacyModule() {
+    testSame(
+        srcs(
+            CLOSURE_DEFS,
+            "goog.module('foo.A'); goog.module.declareLegacyNamespace(); exports = class {};",
+            "new foo.A();"));
+  }
+
+  @Test
+  public void testGoogNonLegacyModule() {
+    testError(srcs(CLOSURE_DEFS, "goog.module('foo.A');", "foo.A();"), error(UNDEFINED_VAR_ERROR));
+
+    testError(
+        srcs(CLOSURE_DEFS, "goog.module('foo.A'); exports = class {};", "new foo.A();"),
+        error(UNDEFINED_VAR_ERROR));
+  }
+
+  @Test
+  public void testGoogLegacyModule_inLoadModule() {
+    testSame(
+        new String[] {
+          CLOSURE_DEFS,
+          lines(
+              "goog.loadModule(function(exports) {", //
+              "  goog.module('foo.A');",
+              "  goog.module.declareLegacyNamespace();",
+              "  exports = class {};",
+              "  return exports;",
+              "});"),
+          "new foo.A();"
+        });
+  }
+
+  @Test
+  public void testGoogNonLegacyModule_inLoadModule() {
+    testError(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.loadModule(function(exports) {", //
+                "  goog.module('foo.A');",
+                "  exports = class {};",
+                "  return exports;",
+                "});"),
+            "new foo.A();"),
+        error(UNDEFINED_VAR_ERROR));
+  }
+
+  @Test
+  public void testGoogProvide_externs() {
+    checkSynthesizedExtern(
+        "var goog; goog.provide('a.b'); a.b.C = class {};",
+        "",
+        "var a;" + VAR_CHECK_EXTERNS + "var goog;goog.provide('a.b');a.b.C = class {};");
   }
 
   private static final class VariableTestCheck implements CompilerPass {

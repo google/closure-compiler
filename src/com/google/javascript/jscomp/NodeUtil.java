@@ -74,6 +74,9 @@ public final class NodeUtil {
   private static final ImmutableSet<String> CONSTRUCTORS_WITHOUT_SIDE_EFFECTS =
       ImmutableSet.of("Array", "Date", "Error", "Object", "RegExp", "XMLHttpRequest");
 
+  private static final Node googModuleDeclareLegacyNamespace =
+      IR.getprop(IR.getprop(IR.name("goog"), "module"), "declareLegacyNamespace");
+
   // Utility class; do not instantiate.
   private NodeUtil() {}
 
@@ -5738,7 +5741,7 @@ public final class NodeUtil {
   static boolean isGoogModuleDeclareLegacyNamespaceCall(Node n) {
     if (isExprCall(n)) {
       Node target = n.getFirstFirstChild();
-      return (target.matchesQualifiedName("goog.module.declareLegacyNamespace"));
+      return (target.matchesQualifiedName(googModuleDeclareLegacyNamespace));
     }
     return false;
   }
