@@ -2762,3 +2762,192 @@ DOMException.NAMESPACE_ERR;
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
 DOMException.INVALID_ACCESS_ERR;
+
+/**
+ * @type {boolean}
+ * @see https://developer.mozilla.org/en/DOM/window.closed
+ */
+Window.prototype.closed;
+
+/**
+ * @type {HTMLObjectElement|HTMLIFrameElement|null}
+ * @see https://developer.mozilla.org/en/DOM/window.frameElement
+ */
+Window.prototype.frameElement;
+
+/**
+ * Allows lookup of frames by index or by name.
+ * @type {!Window}
+ * @see https://developer.mozilla.org/en/DOM/window.frames
+ */
+Window.prototype.frames;
+
+/**
+ * @type {!History}
+ * @suppress {duplicate}
+ * @see https://developer.mozilla.org/en/DOM/window.history
+ */
+var history;
+
+/**
+ * @type {!History}
+ * @see https://developer.mozilla.org/en/DOM/window.history
+ */
+Window.prototype.history;
+
+/**
+ * Returns the number of frames (either frame or iframe elements) in the
+ * window.
+ *
+ * @type {number}
+ * @see https://developer.mozilla.org/en/DOM/window.length
+ */
+Window.prototype.length;
+
+/**
+ * Location has an exception in the DeclaredGlobalExternsOnWindow pass
+ * so we have to manually include it:
+ * https://github.com/google/closure-compiler/blob/master/src/com/google/javascript/jscomp/DeclaredGlobalExternsOnWindow.java#L116
+ *
+ * @type {!Location}
+ * @implicitCast
+ * @see https://developer.mozilla.org/en/DOM/window.location
+ */
+Window.prototype.location;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.locationbar
+ */
+Window.prototype.locationbar;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.menubar
+ */
+Window.prototype.menubar;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en/DOM/window.name
+ */
+Window.prototype.name;
+
+/**
+ * @type {Navigator}
+ * @see https://developer.mozilla.org/en/DOM/window.navigator
+ */
+Window.prototype.navigator;
+
+/**
+ * @type {?Window}
+ * @see https://developer.mozilla.org/en/DOM/window.opener
+ */
+Window.prototype.opener;
+
+/**
+ * @type {!Window}
+ * @see https://developer.mozilla.org/en/DOM/window.parent
+ */
+Window.prototype.parent;
+
+/** @see https://developer.mozilla.org/en/DOM/window.personalbar */
+Window.prototype.personalbar;
+
+/**
+ * @type {!Window}
+ * @see https://developer.mozilla.org/en/DOM/window.self
+ */
+Window.prototype.self;
+
+/**
+ * @type {?string}
+ * @see https://developer.mozilla.org/en/DOM/window.status
+ */
+Window.prototype.status;
+
+/** @see https://developer.mozilla.org/en/DOM/window.statusbar */
+Window.prototype.statusbar;
+
+/** @see https://developer.mozilla.org/en/DOM/window.toolbar */
+Window.prototype.toolbar;
+
+/**
+ * @type {!Window}
+ * @see https://developer.mozilla.org/en/DOM/window.self
+ */
+Window.prototype.top;
+
+/**
+ * @type {!Window}
+ * @see https://developer.mozilla.org/en/DOM/window.self
+ */
+Window.prototype.window;
+
+/**
+ * @param {*} message
+ * @see https://developer.mozilla.org/en/DOM/window.alert
+ * @return {undefined}
+ */
+Window.prototype.alert = function(message) {};
+
+/**
+ * @param {*} message
+ * @return {boolean}
+ * @see https://developer.mozilla.org/en/DOM/window.confirm
+ */
+Window.prototype.confirm = function(message) {};
+
+/**
+ * @param {string} message
+ * @param {string=} value
+ * @return {?string}
+ * @see https://developer.mozilla.org/en/DOM/window.prompt
+ */
+Window.prototype.prompt = function(message, value) {};
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.blur
+ * @return {undefined}
+ */
+Window.prototype.blur = function() {};
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.close
+ * @return {undefined}
+ */
+Window.prototype.close = function() {};
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.focus
+ * @return {undefined}
+ */
+Window.prototype.focus = function() {};
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/print
+ * @return {undefined}
+ */
+Window.prototype.print = function() {};
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/stop
+ * @return {undefined}
+ */
+Window.prototype.stop = function() {};
+
+/**
+ * @param {*=} url
+ * @param {string=} windowName
+ * @param {string=} windowFeatures
+ * @param {boolean=} replace
+ * @return {Window}
+ * @see http://msdn.microsoft.com/en-us/library/ms536651(VS.85).aspx
+ */
+Window.prototype.open = function(url, windowName, windowFeatures, replace) {};
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML
+ * @implicitCast
+ */
+Element.prototype.innerHTML;
+

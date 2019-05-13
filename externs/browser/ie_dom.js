@@ -390,10 +390,6 @@ Window.prototype.detachEvent;
  */
 Window.prototype.execScript;
 
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536425(VS.85).aspx
- */
-Window.prototype.focus;
 
 /**
  * @param {number} x
@@ -415,23 +411,6 @@ Window.prototype.moveTo = function(x, y) {};
  * @see http://msdn.microsoft.com/en-us/library/ms536638(VS.85).aspx
  */
 Window.prototype.navigate;
-
-/**
- * @param {*=} opt_url
- * @param {string=} opt_windowName
- * @param {string=} opt_windowFeatures
- * @param {boolean=} opt_replace
- * @return {Window}
- * @see http://msdn.microsoft.com/en-us/library/ms536651(VS.85).aspx
- */
-Window.prototype.open = function(opt_url, opt_windowName, opt_windowFeatures,
-                                 opt_replace) {};
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536672(VS.85).aspx
- * @return {undefined}
- */
-Window.prototype.print = function() {};
 
 /**
  * @param {number} width

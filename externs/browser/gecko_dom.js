@@ -47,12 +47,6 @@ Window.prototype.Components;
  */
 Window.prototype.content;
 
-/**
- * @type {boolean}
- * @see https://developer.mozilla.org/en/DOM/window.closed
- */
-Window.prototype.closed;
-
 /** @see https://developer.mozilla.org/en/DOM/window.controllers */
 Window.prototype.controllers;
 
@@ -73,19 +67,6 @@ Window.prototype.dialogArguments;
 Window.prototype.directories;
 
 /**
- * @type {HTMLObjectElement|HTMLIFrameElement|null}
- * @see https://developer.mozilla.org/en/DOM/window.frameElement
- */
-Window.prototype.frameElement;
-
-/**
- * Allows lookup of frames by index or by name.
- * @type {!Window}
- * @see https://developer.mozilla.org/en/DOM/window.frames
- */
-Window.prototype.frames;
-
-/**
  * @type {boolean}
  * @see https://developer.mozilla.org/en/DOM/window.fullScreen
  */
@@ -95,70 +76,6 @@ Window.prototype.fullScreen;
  * @see https://developer.mozilla.org/en/DOM/Storage#globalStorage
  */
 Window.prototype.globalStorage;
-
-/**
- * @type {!History}
- * @suppress {duplicate}
- * @see https://developer.mozilla.org/en/DOM/window.history
- */
-var history;
-
-/**
- * Returns the number of frames (either frame or iframe elements) in the
- * window.
- *
- * @type {number}
- * @see https://developer.mozilla.org/en/DOM/window.length
- */
-Window.prototype.length;
-
-/**
- * Location has an exception in the DeclaredGlobalExternsOnWindow pass
- * so we have to manually include it:
- * https://github.com/google/closure-compiler/blob/master/src/com/google/javascript/jscomp/DeclaredGlobalExternsOnWindow.java#L116
- *
- * @type {!Location}
- * @implicitCast
- * @see https://developer.mozilla.org/en/DOM/window.location
- */
-Window.prototype.location;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.locationbar
- */
-Window.prototype.locationbar;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.menubar
- */
-Window.prototype.menubar;
-
-/**
- * @type {string}
- * @see https://developer.mozilla.org/en/DOM/window.name
- */
-Window.prototype.name;
-
-/**
- * @type {Navigator}
- * @see https://developer.mozilla.org/en/DOM/window.navigator
- */
-Window.prototype.navigator;
-
-/**
- * @type {?Window}
- * @see https://developer.mozilla.org/en/DOM/window.opener
- */
-Window.prototype.opener;
-
-/**
- * @type {!Window}
- * @see https://developer.mozilla.org/en/DOM/window.parent
- */
-Window.prototype.parent;
-
-/** @see https://developer.mozilla.org/en/DOM/window.personalbar */
-Window.prototype.personalbar;
 
 /** @see https://developer.mozilla.org/en/DOM/window.pkcs11 */
 Window.prototype.pkcs11;
@@ -181,48 +98,11 @@ Window.prototype.scrollMaxX;
  */
 Window.prototype.scrollMaxY;
 
-/**
- * @type {!Window}
- * @see https://developer.mozilla.org/en/DOM/window.self
- */
-Window.prototype.self;
-
 /** @see https://developer.mozilla.org/en/DOM/Storage#sessionStorage */
 Window.prototype.sessionStorage;
 
 /** @see https://developer.mozilla.org/en/DOM/window.sidebar */
 Window.prototype.sidebar;
-
-/**
- * @type {?string}
- * @see https://developer.mozilla.org/en/DOM/window.status
- */
-Window.prototype.status;
-
-/** @see https://developer.mozilla.org/en/DOM/window.statusbar */
-Window.prototype.statusbar;
-
-/** @see https://developer.mozilla.org/en/DOM/window.toolbar */
-Window.prototype.toolbar;
-
-/**
- * @type {!Window}
- * @see https://developer.mozilla.org/en/DOM/window.self
- */
-Window.prototype.top;
-
-/**
- * @type {!Window}
- * @see https://developer.mozilla.org/en/DOM/window.self
- */
-Window.prototype.window;
-
-/**
- * @param {*} message
- * @see https://developer.mozilla.org/en/DOM/window.alert
- * @return {undefined}
- */
-Window.prototype.alert = function(message) {};
 
 /**
  * Decodes a string of data which has been encoded using base-64 encoding.
@@ -241,12 +121,6 @@ function atob(encodedData) {}
 Window.prototype.back = function() {};
 
 /**
- * @see https://developer.mozilla.org/en/DOM/window.blur
- * @return {undefined}
- */
-Window.prototype.blur = function() {};
-
-/**
  * @param {string} stringToEncode
  * @return {string}
  * @see https://developer.mozilla.org/en/DOM/window.btoa
@@ -257,20 +131,8 @@ function btoa(stringToEncode) {}
 /** @deprecated */
 Window.prototype.captureEvents;
 
-/**
- * @see https://developer.mozilla.org/en/DOM/window.close
- * @return {undefined}
- */
-Window.prototype.close = function() {};
-
 /**@see https://developer.mozilla.org/en/DOM/window.find */
 Window.prototype.find;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.focus
- * @return {undefined}
- */
-Window.prototype.focus = function() {};
 
 /**
  * @see https://developer.mozilla.org/en/DOM/window.forward
@@ -311,12 +173,6 @@ Window.prototype.scrollByPages;
 Window.prototype.showModalDialog;
 
 Window.prototype.sizeToContent;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536769(VS.85).aspx
- * @return {undefined}
- */
-Window.prototype.stop = function() {};
 
 Window.prototype.updateCommands;
 
@@ -748,13 +604,6 @@ Element.prototype.firebugIgnore;
  * @implicitCast
  */
 Element.prototype.id;
-
-/**
- * @type {string}
- * @see http://www.w3.org/TR/DOM-Parsing/#widl-Element-innerHTML
- * @implicitCast
- */
-Element.prototype.innerHTML;
 
 /**
  * Note: According to the spec, name is defined on specific types of
