@@ -1180,7 +1180,7 @@ ApplicationCache.prototype.dispatchEvent = function(evt) {};
  * is no manifest file.
  * @const {number}
  */
-ApplicationCache.prototype.UNCACHED = 0;
+ApplicationCache.prototype.UNCACHED;
 
 /**
  * The object isn't associated with an application cache. This can occur if the
@@ -1188,69 +1188,69 @@ ApplicationCache.prototype.UNCACHED = 0;
  * is no manifest file.
  * @const {number}
  */
-ApplicationCache.UNCACHED = 0;
+ApplicationCache.UNCACHED;
 
 /**
  * The cache is idle.
  * @const {number}
  */
-ApplicationCache.prototype.IDLE = 1;
+ApplicationCache.prototype.IDLE;
 
 /**
  * The cache is idle.
  * @const {number}
  */
-ApplicationCache.IDLE = 1;
+ApplicationCache.IDLE;
 
 /**
  * The update has started but the resources are not downloaded yet - for
  * example, this can happen when the manifest file is fetched.
  * @const {number}
  */
-ApplicationCache.prototype.CHECKING = 2;
+ApplicationCache.prototype.CHECKING;
 
 /**
  * The update has started but the resources are not downloaded yet - for
  * example, this can happen when the manifest file is fetched.
  * @const {number}
  */
-ApplicationCache.CHECKING = 2;
+ApplicationCache.CHECKING;
 
 /**
  * The resources are being downloaded into the cache.
  * @const {number}
  */
-ApplicationCache.prototype.DOWNLOADING = 3;
+ApplicationCache.prototype.DOWNLOADING;
 
 /**
  * The resources are being downloaded into the cache.
  * @const {number}
  */
-ApplicationCache.DOWNLOADING = 3;
+ApplicationCache.DOWNLOADING;
 
 /**
  * Resources have finished downloading and the new cache is ready to be used.
  * @const {number}
  */
-ApplicationCache.prototype.UPDATEREADY = 4;
+ApplicationCache.prototype.UPDATEREADY;
 
 /**
  * Resources have finished downloading and the new cache is ready to be used.
  * @const {number}
  */
-ApplicationCache.UPDATEREADY = 4;
+ApplicationCache.UPDATEREADY;
 
 /**
  * The cache is obsolete.
  * @const {number}
  */
-ApplicationCache.prototype.OBSOLETE = 5;
+ApplicationCache.prototype.OBSOLETE;
 
 /**
  * The cache is obsolete.
  * @const {number}
  */
-ApplicationCache.OBSOLETE = 5;
+ApplicationCache.OBSOLETE;
 
 /**
  * The current status of the application cache.
