@@ -176,6 +176,14 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testCheckUntranspilable() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setChecksOnly(true);
+    testNoWarnings(options, "var r = /xx/s;");
+  }
+
+  @Test
   public void testIssue2822() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

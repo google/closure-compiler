@@ -244,7 +244,10 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.needsTranspilationFrom(TYPESCRIPT)) {
       checks.add(convertEs6TypedToEs6);
     }
-    checks.add(markUntranspilableFeaturesAsRemoved);
+
+    if (!options.checksOnly) {
+      checks.add(markUntranspilableFeaturesAsRemoved);
+    }
 
     checks.add(gatherGettersAndSetters);
 
