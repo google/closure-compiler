@@ -43,11 +43,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           "JSC_INDEX_OUT_OF_BOUNDS_ERROR",
           "Array index out of bounds: {0}");
 
-  static final DiagnosticType NEGATING_A_NON_NUMBER_ERROR =
-      DiagnosticType.warning(
-          "JSC_NEGATING_A_NON_NUMBER_ERROR",
-          "Can''t negate non-numeric value: {0}");
-
   static final DiagnosticType FRACTIONAL_BITWISE_OPERAND =
       DiagnosticType.warning(
           "JSC_FRACTIONAL_BITWISE_OPERAND",
@@ -406,7 +401,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return n;
 
       case BITNOT:
-        try {
+        if (left.isNumber()) {
           double val = left.getDouble();
           if (Math.floor(val) == val) {
             int intVal = jsConvertDoubleToBits(val);
@@ -418,12 +413,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             report(FRACTIONAL_BITWISE_OPERAND, left);
             return n;
           }
-        } catch (UnsupportedOperationException ex) {
-          // left is not a number node, so do not replace, but warn the
-          // user because they can't be doing anything good
-          report(NEGATING_A_NON_NUMBER_ERROR, left);
+        } else {
           return n;
         }
+
         default:
           return n;
     }
