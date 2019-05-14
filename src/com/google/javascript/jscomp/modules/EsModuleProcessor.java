@@ -121,6 +121,12 @@ public final class EsModuleProcessor implements Callback, ModuleProcessor {
           "Namespace imports ('goog:some.Namespace') cannot use import * as. "
               + "Did you mean to import {0} from ''{1}'';?");
 
+  public static final DiagnosticType CANNOT_PATH_IMPORT_CLOSURE_FILE =
+      DiagnosticType.error(
+          "JSC_CANNOT_PATH_IMPORT_CLOSURE_FILE",
+          "Cannot import Closure files by path. Use either import 'goog:namespace' or"
+              + " goog.require('namespace')");
+
   /**
    * Marks all exports that are mutated in an inner scope as mutable.
    *
@@ -399,6 +405,18 @@ public final class EsModuleProcessor implements Callback, ModuleProcessor {
         boolean importStar = i.importName().equals("*");
         if (importStar
             || (i.importName().equals(Export.DEFAULT) && !requested.metadata().isEs6Module())) {
+          if (!GoogEsImports.isGoogImportSpecifier(i.moduleRequest())
+              && (requested.metadata().isGoogModule() || requested.metadata().isGoogProvide())) {
+            compiler.report(
+                JSError.make(
+                    path.toString(),
+                    i.importNode().getLineno(),
+                    i.importNode().getCharno(),
+                    CANNOT_PATH_IMPORT_CLOSURE_FILE,
+                    i.localName(),
+                    i.moduleRequest()));
+            return ResolveExportResult.ERROR;
+          }
           if (importStar && GoogEsImports.isGoogImportSpecifier(i.moduleRequest())) {
             compiler.report(
                 JSError.make(
