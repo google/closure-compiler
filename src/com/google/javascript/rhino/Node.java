@@ -48,6 +48,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
@@ -62,6 +63,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Function;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
@@ -1951,39 +1953,8 @@ public class Node implements Serializable {
       return false;
     }
 
-    if (token == Token.INC || token == Token.DEC) {
-      int post1 = this.getIntProp(Prop.INCRDECR);
-      int post2 = node.getIntProp(Prop.INCRDECR);
-      if (post1 != post2) {
-        return false;
-      }
-    } else if (token == Token.STRING || token == Token.STRING_KEY) {
-      if (token == Token.STRING_KEY) {
-        int quoted1 = this.getIntProp(Prop.QUOTED);
-        int quoted2 = node.getIntProp(Prop.QUOTED);
-        if (quoted1 != quoted2) {
-          return false;
-        }
-      }
-
-      int slashV1 = this.getIntProp(Prop.SLASH_V);
-      int slashV2 = node.getIntProp(Prop.SLASH_V);
-      if (slashV1 != slashV2) {
-        return false;
-      }
-    } else if (token == Token.CALL) {
-      if (this.getBooleanProp(Prop.FREE_CALL) != node.getBooleanProp(Prop.FREE_CALL)) {
-        return false;
-      }
-    } else if (token == Token.FUNCTION) {
-      // Must be the same kind of function to be equivalent
-      if (this.isArrowFunction() != node.isArrowFunction()) {
-        return false;
-      }
-      if (this.isGeneratorFunction() != node.isGeneratorFunction()) {
-        return false;
-      }
-      if (this.isAsyncFunction() != node.isAsyncFunction()) {
+    for (Function<Node, Object> getter : PROP_GETTERS_FOR_EQUALITY) {
+      if (!Objects.equal(getter.apply(this), getter.apply(node))) {
         return false;
       }
     }
@@ -2010,6 +1981,33 @@ public class Node implements Serializable {
 
     return true;
   }
+
+  /**
+   * Accessors for {@link Node} properties that should also be compared when comparing nodes for
+   * equality.
+   *
+   * <p>We'd prefer to list the props that should be ignored rather than the ones that should be
+   * checked, but that was too difficult initially. In general these properties are ones that show
+   * up as keywords / symbols which don't have their own nodes.
+   *
+   * <p>Accessor functions are used rather than {@link Prop}s to encode the correct way of reading
+   * the prop.
+   */
+  private static final ImmutableList<Function<Node, Object>> PROP_GETTERS_FOR_EQUALITY =
+      ImmutableList.of(
+          Node::isArrowFunction,
+          Node::isAsyncFunction,
+          Node::isAsyncGeneratorFunction,
+          Node::isGeneratorFunction,
+          Node::isStaticMember,
+          Node::isYieldAll,
+          (n) -> n.getIntProp(Prop.SLASH_V),
+          (n) -> n.getIntProp(Prop.INCRDECR),
+          (n) -> n.getIntProp(Prop.QUOTED),
+          (n) -> n.getBooleanProp(Prop.FREE_CALL),
+          (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_METHOD),
+          (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_GETTER),
+          (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_SETTER));
 
   /**
    * This function takes a set of GETPROP nodes and produces a string that is each property

@@ -1313,14 +1313,14 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testTwoUnrelatedClasses_withStaticMemberFns_ambiguatede() {
+  public void testTwoUnrelatedClasses_withStaticMemberFns_ambiguated() {
     test(
         lines(
             "class Foo { static methodFoo() {} }", //
             "class Bar { static methodBar() {} }"),
         lines(
-            "class Foo { a() {} }", //
-            "class Bar { a() {} }"));
+            "class Foo { static a() {} }", //
+            "class Bar { static a() {} }"));
   }
 
   @Test

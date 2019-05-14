@@ -209,9 +209,12 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
       } else {
         Node val = propdef.removeFirstChild();
         JSType valueType = val.getJSType();
+        Token token = propdef.isQuotedString() ? Token.GETELEM : Token.GETPROP;
+
         propdef.setToken(Token.STRING);
         propdef.setJSType(stringType);
-        Token token = propdef.isQuotedString() ? Token.GETELEM : Token.GETPROP;
+        propdef.putBooleanProp(Node.QUOTED_PROP, false);
+
         Node access =
             withType(new Node(token, withType(IR.name(objName), objectType), propdef), valueType);
         result =

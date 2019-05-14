@@ -427,11 +427,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
           newRHS = defaultValueHook(getprop, defaultValue);
         }
         if (propsToDeleteForRest != null) {
-          Node propName = astFactory.createString(child.getString());
-          if (child.isQuotedString()) {
-            propName.setQuotedString();
-          }
-          propsToDeleteForRest.add(propName);
+          propsToDeleteForRest.add(child);
         }
       } else if (child.isComputedProp()) {
         // const {[propExpr]: newLHS = defaultValue} = newRHS;
@@ -562,11 +558,25 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   }
 
   private Node deletionNodeForRestProperty(Node restTempVarNameNode, Node property) {
-    boolean useSquareBrackets = !property.isString() || property.isQuotedString();
-    Node get =
-        useSquareBrackets
-            ? astFactory.createGetElem(restTempVarNameNode, property)
-            : astFactory.createGetProp(restTempVarNameNode, property.getString());
+    final Node get;
+    switch (property.getToken()) {
+      case STRING_KEY:
+        get =
+            property.isQuotedString()
+                ? astFactory.createGetElem(
+                    restTempVarNameNode, astFactory.createString(property.getString()))
+                : astFactory.createGetProp(restTempVarNameNode, property.getString());
+        break;
+
+      case NAME:
+        get = astFactory.createGetElem(restTempVarNameNode, property);
+        break;
+
+      default:
+        throw new IllegalStateException(
+            "Unexpected property to delete node: " + property.toStringTree());
+    }
+
     return astFactory.createDelProp(get);
   }
 

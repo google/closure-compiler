@@ -3000,10 +3000,10 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "Bar.method();"),
         lines(
             "class Foo {",
-            "  _typeof_Foo_$method() {}",
+            "  static _typeof_Foo_$method() {}",
             "}",
             "class Bar {",
-            "  _typeof_Bar_$method() {}",
+            "  static _typeof_Bar_$method() {}",
             "}",
             "Foo._typeof_Foo_$method();",
             "Bar._typeof_Bar_$method();"));
@@ -3027,13 +3027,13 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "Bar.method();"),
         lines(
             "class Foo {",
-            "  _typeof_Foo_$method() {}",
+            "  static _typeof_Foo_$method() {}",
             "}",
             "class SubFoo extends Foo {",
             "  static _typeof_Foo_$method() {}",
             "}",
             "class Bar {",
-            "  _typeof_Bar_$method() {}",
+            "  static _typeof_Bar_$method() {}",
             "}",
             "Foo._typeof_Foo_$method();",
             "SubFoo._typeof_Foo_$method();",
