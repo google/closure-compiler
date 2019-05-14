@@ -641,9 +641,8 @@ Array.prototype.shift = function() {};
 /**
  * Extracts a section of an array and returns a new array.
  *
- * @param {*=} opt_begin Zero-based index at which to begin extraction.  A
- *     non-number type will be auto-cast by the browser to a number.
- * @param {*=} opt_end Zero-based index at which to end extraction.  slice
+ * @param {?number=} begin Zero-based index at which to begin extraction.
+ * @param {?number=} end Zero-based index at which to end extraction.  slice
  *     extracts up to but not including end.
  * @return {!Array<T>}
  * @this {IArrayLike<T>|string}
@@ -651,7 +650,7 @@ Array.prototype.shift = function() {};
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
  */
-Array.prototype.slice = function(opt_begin, opt_end) {};
+Array.prototype.slice = function(begin, end) {};
 
 /**
  * Sorts the elements of an array in place.
@@ -670,11 +669,10 @@ Array.prototype.sort = function(opt_compareFn) {};
  * Changes the content of an array, adding new elements while removing old
  * elements.
  *
- * @param {*=} opt_index Index at which to start changing the array. If negative,
- *     will begin that many elements from the end.  A non-number type will be
- *     auto-cast by the browser to a number.
- * @param {*=} opt_howMany An integer indicating the number of old array elements
- *     to remove.
+ * @param {?number=} index Index at which to start changing the array. If
+ *     negative, will begin that many elements from the end.
+ * @param {?number=} howMany An integer indicating the number of old array
+ *     elements to remove.
  * @param {...T} var_args
  * @return {!Array<T>}
  * @this {IArrayLike<T>}
@@ -682,7 +680,7 @@ Array.prototype.sort = function(opt_compareFn) {};
  * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
  */
-Array.prototype.splice = function(opt_index, opt_howMany, var_args) {};
+Array.prototype.splice = function(index, howMany, var_args) {};
 
 /**
  * @return {string}
