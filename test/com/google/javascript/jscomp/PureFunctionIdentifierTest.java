@@ -242,7 +242,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
           noSideEffectCalls.add(n.getFirstChild());
         }
       } else if (NodeUtil.isInvocation(n)) {
-        if (!NodeUtil.functionCallHasSideEffects(n, compiler)) {
+        if (!compiler.getAstAnalyzer().functionCallHasSideEffects(n)) {
           noSideEffectCalls.add(n.getFirstChild());
         }
         if (NodeUtil.callHasLocalResult(n)) {

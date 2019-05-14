@@ -80,6 +80,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   private static final String PROP_NAME_PREFIX = ".";
 
   private final AbstractCompiler compiler;
+  private final AstAnalyzer astAnalyzer;
 
   /**
    * Map of function names to the summary of the functions with that name.
@@ -146,6 +147,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
   public PureFunctionIdentifier(AbstractCompiler compiler) {
     this.compiler = checkNotNull(compiler);
+    this.astAnalyzer = compiler.getAstAnalyzer();
   }
 
   @Override
@@ -524,7 +526,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       // Handle special cases (Math, RegExp)
       if (isCallOrTaggedTemplateLit(callNode)) {
-        if (!NodeUtil.functionCallHasSideEffects(callNode, compiler)) {
+        if (!astAnalyzer.functionCallHasSideEffects(callNode)) {
           flags.clearSideEffectFlags();
         }
       } else if (callNode.isNew()) {
@@ -966,7 +968,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     private void visitCall(AmbiguatedFunctionSummary callerInfo, Node invocation) {
       // Handle special cases (Math, RegExp)
       // TODO: This logic can probably be replaced with @nosideeffects annotations in externs.
-      if (invocation.isCall() && !NodeUtil.functionCallHasSideEffects(invocation, compiler)) {
+      if (invocation.isCall() && !astAnalyzer.functionCallHasSideEffects(invocation)) {
         return;
       }
 

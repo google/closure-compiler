@@ -542,7 +542,7 @@ public class AstAnalyzerTest {
       // Parens force interpretation as an expression.
       Node newXDotMethodCall = helper.parseFirst(CALL, "(new x().method());");
       AstAnalyzer astAnalyzer = helper.getAstAnalyzer();
-      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isTrue();
+      assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isTrue();
 
       Node newExpr = newXDotMethodCall.getFirstFirstChild();
       checkState(newExpr.isNew());
@@ -555,7 +555,7 @@ public class AstAnalyzerTest {
       newXDotMethodCall.setSideEffectFlags(flags);
 
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
-      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
+      assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isFalse();
 
       // Modifies this, local result
@@ -566,7 +566,7 @@ public class AstAnalyzerTest {
       newXDotMethodCall.setSideEffectFlags(flags);
 
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
-      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
+      assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isFalse();
 
       // Modifies this, non-local result
@@ -578,7 +578,7 @@ public class AstAnalyzerTest {
       newXDotMethodCall.setSideEffectFlags(flags);
 
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
-      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
+      assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isFalse();
 
       // No modifications, non-local result
@@ -589,7 +589,7 @@ public class AstAnalyzerTest {
       newXDotMethodCall.setSideEffectFlags(flags);
 
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
-      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
+      assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isFalse();
 
       // The new modifies global state, no side-effect call, non-local result
@@ -601,7 +601,7 @@ public class AstAnalyzerTest {
       newXDotMethodCall.setSideEffectFlags(flags);
 
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
-      assertThat(NodeUtil.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
+      assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isTrue();
     }
   }

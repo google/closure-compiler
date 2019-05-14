@@ -63,8 +63,19 @@ public class AstAnalyzer {
    * "safe" assumptions when the compiler object is not provided (RegExp have side-effects, etc).
    */
   public boolean mayHaveSideEffects(Node n) {
-    // TODO(b/131178806): Move implementation here when it is possible to
-    //     remove the mayHaveSideEffects(n) version
+    // TODO(b/131178806): Move implementation here when possible
     return NodeUtil.mayHaveSideEffects(n, compiler);
+  }
+
+  /**
+   * Returns true if this function call may have side effects.
+   *
+   * <p>This method is guaranteed to return true all calls that have side-effects, but may also
+   * return true for calls that have none.
+   *
+   * @param callNode - function call node
+   */
+  boolean functionCallHasSideEffects(Node callNode) {
+    return NodeUtil.functionCallHasSideEffects(callNode, compiler);
   }
 }
