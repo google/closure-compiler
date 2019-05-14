@@ -82,83 +82,37 @@ public final class NodeUtil {
 
   /**
    * Gets the boolean value of a node that represents an expression, or {@code TernaryValue.UNKNOWN}
-   * if no such value can be determined.
-   *
-   * <p>This method expands on {@link #getLiteralBooleanValue(Node)}, by evaluating expressions
-   * consisting of literals when possible. Use that method instead if you only want to find literal
-   * values.
+   * if no such value can be determined by static analysis.
    *
    * <p>This method does not consider whether the node may have side-effects.
    */
-  static TernaryValue getImpureBooleanValue(Node n) {
+  static TernaryValue getBooleanValue(Node n) {
     // This switch consists of cases that are not supported by getLiteralBooleanValue(),
     // which we will call if none of these match.
     switch (n.getToken()) {
-      case ASSIGN:
-      case COMMA:
-        // For ASSIGN and COMMA the value is the value of the RHS.
-        return getImpureBooleanValue(n.getLastChild());
-      case NOT:
-        TernaryValue value = getImpureBooleanValue(n.getLastChild());
-        return value.not();
-      case AND: {
-        TernaryValue lhs = getImpureBooleanValue(n.getFirstChild());
-        TernaryValue rhs = getImpureBooleanValue(n.getLastChild());
-        return lhs.and(rhs);
-      }
-      case OR:  {
-        TernaryValue lhs = getImpureBooleanValue(n.getFirstChild());
-        TernaryValue rhs = getImpureBooleanValue(n.getLastChild());
-        return lhs.or(rhs);
-      }
-      case HOOK:  {
-        TernaryValue trueValue = getImpureBooleanValue(
-            n.getSecondChild());
-        TernaryValue falseValue = getImpureBooleanValue(n.getLastChild());
-        if (trueValue.equals(falseValue)) {
-          return trueValue;
+      case NULL:
+      case FALSE:
+      case VOID:
+        return TernaryValue.FALSE;
+
+      case TRUE:
+      case REGEXP:
+      case FUNCTION:
+      case CLASS:
+      case NEW:
+      case ARRAYLIT:
+      case OBJECTLIT:
+        return TernaryValue.TRUE;
+
+      case TEMPLATELIT:
+        if (n.hasOneChild()) {
+          Node templateLitString = n.getOnlyChild();
+          checkState(templateLitString.isTemplateLitString(), templateLitString);
+          String cookedString = templateLitString.getCookedString();
+          return TernaryValue.forBoolean(cookedString != null && !cookedString.isEmpty());
         } else {
           return TernaryValue.UNKNOWN;
         }
-      }
-
-      default:
-        return getLiteralBooleanValue(n);
-    }
-  }
-
-  /**
-   * If {@code n} represents a literal value that can be interpreted statically as a known boolean
-   * value, this method returns the corresponding {@code TernaryValue}. Otherwise, it returns {@code
-   * TernaryValue.UNKNOWN}.
-   *
-   * <p>Note that we will consider these things to be boolean literals, even though they are
-   * technically expressions. <code><pre>
-   *   void anyExpressionHere
-   *   ! anyBooleanLiteralHere
-   *   new anyFunctionHere()
-   *   undefined
-   *   NaN
-   *   Infinity
-   * </pre></code>
-   *
-   * <p>This method does not consider whether the literal might have side-effects when evaluated.
-   * This can be true for object literals, for example.
-   *
-   * <p>Except for the cases listed above, this method also returns {@code TernaryValue.UNKNOWN} for
-   * boolean expressions even when it is possible to determine their value. If you want to evaluate
-   * such expressions, then you should use {@link #getImpureBooleanValue(Node)}.
-   */
-  static TernaryValue getLiteralBooleanValue(Node n) {
-    switch (n.getToken()) {
-      case TEMPLATELIT:
-        if (n.hasOneChild()) {
-          return getLiteralBooleanValue(n.getFirstChild());
-        }
-        break;
-      case TEMPLATELIT_STRING:
-        return TernaryValue.forBoolean(
-            null != n.getCookedString() && !n.getCookedString().isEmpty());
 
       case STRING:
         return TernaryValue.forBoolean(n.getString().length() > 0);
@@ -167,14 +121,7 @@ public final class NodeUtil {
         return TernaryValue.forBoolean(n.getDouble() != 0);
 
       case NOT:
-        return getLiteralBooleanValue(n.getLastChild()).not();
-
-      case NULL:
-      case FALSE:
-        return TernaryValue.FALSE;
-
-      case VOID:
-        return TernaryValue.FALSE;
+        return getBooleanValue(n.getLastChild()).not();
 
       case NAME:
         String name = n.getString();
@@ -184,24 +131,41 @@ public final class NodeUtil {
           return TernaryValue.FALSE;
         } else if ("Infinity".equals(name)) {
           return TernaryValue.TRUE;
+        } else {
+          return TernaryValue.UNKNOWN;
         }
-        break;
 
-      case TRUE:
-      case REGEXP:
-        return TernaryValue.TRUE;
+      case ASSIGN:
+      case COMMA:
+        // For ASSIGN and COMMA the value is the value of the RHS.
+        return getBooleanValue(n.getLastChild());
 
-      case FUNCTION:
-      case CLASS:
-      case NEW:
-      case ARRAYLIT:
-      case OBJECTLIT:
-        return TernaryValue.TRUE;
+      case AND:
+        {
+          TernaryValue lhs = getBooleanValue(n.getFirstChild());
+          TernaryValue rhs = getBooleanValue(n.getLastChild());
+          return lhs.and(rhs);
+        }
+      case OR:
+        {
+          TernaryValue lhs = getBooleanValue(n.getFirstChild());
+          TernaryValue rhs = getBooleanValue(n.getLastChild());
+          return lhs.or(rhs);
+        }
+      case HOOK:
+        {
+          TernaryValue trueValue = getBooleanValue(n.getSecondChild());
+          TernaryValue falseValue = getBooleanValue(n.getLastChild());
+          if (trueValue.equals(falseValue)) {
+            return trueValue;
+          } else {
+            return TernaryValue.UNKNOWN;
+          }
+        }
+
       default:
-        break;
+        return TernaryValue.UNKNOWN;
     }
-
-    return TernaryValue.UNKNOWN;
   }
 
   /**
@@ -263,7 +227,7 @@ public final class NodeUtil {
         return "undefined";
 
       case NOT:
-        TernaryValue child = getLiteralBooleanValue(n.getFirstChild());
+        TernaryValue child = getBooleanValue(n.getFirstChild());
         if (child != TernaryValue.UNKNOWN) {
           return child.toBoolean(true) ? "false" : "true"; // reversed.
         }
@@ -356,7 +320,7 @@ public final class NodeUtil {
         return null;
 
       case NOT:
-        TernaryValue child = getLiteralBooleanValue(n.getFirstChild());
+        TernaryValue child = getBooleanValue(n.getFirstChild());
         if (child != TernaryValue.UNKNOWN) {
           return child.toBoolean(true) ? 0.0 : 1.0; // reversed.
         }

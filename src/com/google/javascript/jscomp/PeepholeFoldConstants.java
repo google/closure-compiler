@@ -575,7 +575,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     Token type = n.getToken();
 
-    TernaryValue leftVal = NodeUtil.getImpureBooleanValue(left);
+    TernaryValue leftVal = NodeUtil.getBooleanValue(left);
 
     if (leftVal != TernaryValue.UNKNOWN) {
       boolean lval = leftVal.toBoolean(true);
@@ -601,7 +601,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         dropped = null;
       }
     } else if (parent.getToken() == type && n == parent.getFirstChild()) {
-      TernaryValue rightValue = NodeUtil.getImpureBooleanValue(right);
+      TernaryValue rightValue = NodeUtil.getBooleanValue(right);
       if (!mayHaveSideEffects(right)) {
         if ((rightValue == TernaryValue.FALSE && type == Token.OR)
             || (rightValue == TernaryValue.TRUE && type == Token.AND)) {

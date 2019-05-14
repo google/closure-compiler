@@ -257,7 +257,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     // (2) it propagates our unique amalgam of syntax-based and type-based checks to work when more
     // deeply nested (i.e. recursively).  These differences rely on assumptions that are very
     // specific to this use case, so it does not make sense to upstream them.
-    TernaryValue literalValue = NodeUtil.getLiteralBooleanValue(n);
+    TernaryValue literalValue = NodeUtil.getBooleanValue(n);
     if (literalValue != TernaryValue.UNKNOWN || n.isName()) {
       // If the truthiness is determinstic from the syntax then return that immediately.
       // Alternatively, NAME nodes also get a pass since we don't trust the type information.

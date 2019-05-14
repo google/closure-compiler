@@ -138,7 +138,7 @@ abstract class AbstractPeepholeOptimization {
    * statically determined.
    */
   protected TernaryValue getSideEffectFreeBooleanValue(Node n) {
-    TernaryValue value = NodeUtil.getLiteralBooleanValue(n);
+    TernaryValue value = NodeUtil.getBooleanValue(n);
     // Calculating the boolean value, if any, is likely to be faster than calculating side effects,
     // and there are only a very few cases where we can compute a boolean value, but there could
     // also be side effects. e.g. `void doSomething()` has value `false`, regardless of the

@@ -198,97 +198,86 @@ public final class NodeUtilTest {
     @Parameter(0)
     public String jsExpression;
 
-    /** Expected result of NodeUtil.getLiteralBooleanValue() */
+    /** Expected result of NodeUtil.getBooleanValue() */
     @Parameter(1)
-    public TernaryValue expectedLiteralResult;
+    public TernaryValue expectedResult;
 
-    /** Expected result of NodeUtil.getImpureBooleanValue() */
-    @Parameter(2)
-    public TernaryValue expectedImpureResult;
-
-    @Parameters(name = "\"{0}\" is literal ({1}) impure ({2})")
+    @Parameters(name = "getBooleanValue(\"{0}\") => {1}")
     public static Iterable<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
             // truly literal, side-effect free values are always known
-            {"true", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"10", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"'0'", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"/a/", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"{}", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"[]", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"false", TernaryValue.FALSE, TernaryValue.FALSE},
-            {"null", TernaryValue.FALSE, TernaryValue.FALSE},
-            {"0", TernaryValue.FALSE, TernaryValue.FALSE},
-            {"''", TernaryValue.FALSE, TernaryValue.FALSE},
-            {"undefined", TernaryValue.FALSE, TernaryValue.FALSE},
+            {"true", TernaryValue.TRUE},
+            {"10", TernaryValue.TRUE},
+            {"'0'", TernaryValue.TRUE},
+            {"/a/", TernaryValue.TRUE},
+            {"{}", TernaryValue.TRUE},
+            {"[]", TernaryValue.TRUE},
+            {"false", TernaryValue.FALSE},
+            {"null", TernaryValue.FALSE},
+            {"0", TernaryValue.FALSE},
+            {"''", TernaryValue.FALSE},
+            {"undefined", TernaryValue.FALSE},
 
             // literals that have side-effects aren't pure
-            {"{a:foo()}", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"[foo()]", TernaryValue.TRUE, TernaryValue.TRUE},
+            {"{a:foo()}", TernaryValue.TRUE},
+            {"[foo()]", TernaryValue.TRUE},
 
             // not really literals, but we pretend they are for our purposes
-            {"void 0", TernaryValue.FALSE, TernaryValue.FALSE},
+            {"void 0", TernaryValue.FALSE},
             // side-effect keeps this one from being pure
-            {"void foo()", TernaryValue.FALSE, TernaryValue.FALSE},
-            {"!true", TernaryValue.FALSE, TernaryValue.FALSE},
-            {"!false", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"!''", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"class Klass {}", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"new Date()", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"b", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
-            {"-'0.0'", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+            {"void foo()", TernaryValue.FALSE},
+            {"!true", TernaryValue.FALSE},
+            {"!false", TernaryValue.TRUE},
+            {"!''", TernaryValue.TRUE},
+            {"class Klass {}", TernaryValue.TRUE},
+            {"new Date()", TernaryValue.TRUE},
+            {"b", TernaryValue.UNKNOWN},
+            {"-'0.0'", TernaryValue.UNKNOWN},
 
             // template literals
-            {"``", TernaryValue.FALSE, TernaryValue.FALSE},
-            {"`definiteLength`", TernaryValue.TRUE, TernaryValue.TRUE},
-            {"`${some}str`", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+            {"``", TernaryValue.FALSE},
+            {"`definiteLength`", TernaryValue.TRUE},
+            {"`${some}str`", TernaryValue.UNKNOWN},
 
             // non-literal expressions
-            {"a=true", TernaryValue.UNKNOWN, TernaryValue.TRUE},
-            {"a=false", TernaryValue.UNKNOWN, TernaryValue.FALSE},
-            {"a=(false,true)", TernaryValue.UNKNOWN, TernaryValue.TRUE},
-            {"a=(true,false)", TernaryValue.UNKNOWN, TernaryValue.FALSE},
-            {"a=(false || true)", TernaryValue.UNKNOWN, TernaryValue.TRUE},
-            {"a=(true && false)", TernaryValue.UNKNOWN, TernaryValue.FALSE},
-            {"a=!(true && false)", TernaryValue.UNKNOWN, TernaryValue.TRUE},
-            {"a,true", TernaryValue.UNKNOWN, TernaryValue.TRUE},
-            {"a,false", TernaryValue.UNKNOWN, TernaryValue.FALSE},
-            {"true||false", TernaryValue.UNKNOWN, TernaryValue.TRUE},
-            {"false||false", TernaryValue.UNKNOWN, TernaryValue.FALSE},
-            {"true&&true", TernaryValue.UNKNOWN, TernaryValue.TRUE},
-            {"true&&false", TernaryValue.UNKNOWN, TernaryValue.FALSE},
+            {"a=true", TernaryValue.TRUE},
+            {"a=false", TernaryValue.FALSE},
+            {"a=(false,true)", TernaryValue.TRUE},
+            {"a=(true,false)", TernaryValue.FALSE},
+            {"a=(false || true)", TernaryValue.TRUE},
+            {"a=(true && false)", TernaryValue.FALSE},
+            {"a=!(true && false)", TernaryValue.TRUE},
+            {"a,true", TernaryValue.TRUE},
+            {"a,false", TernaryValue.FALSE},
+            {"true||false", TernaryValue.TRUE},
+            {"false||false", TernaryValue.FALSE},
+            {"true&&true", TernaryValue.TRUE},
+            {"true&&false", TernaryValue.FALSE},
 
             // Assignment ops other than ASSIGN are unknown.
-            {"a *= 2", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+            {"a *= 2", TernaryValue.UNKNOWN},
 
             // Complex expressions that contain anything other then "=", ",", or "!" are
             // unknown.
-            {"2 + 2", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+            {"2 + 2", TernaryValue.UNKNOWN},
 
             // assignment values are the RHS
-            {"a=1", TernaryValue.UNKNOWN, TernaryValue.TRUE},
-            {"a=/a/", TernaryValue.UNKNOWN, TernaryValue.TRUE},
-            {"a={}", TernaryValue.UNKNOWN, TernaryValue.TRUE},
+            {"a=1", TernaryValue.TRUE},
+            {"a=/a/", TernaryValue.TRUE},
+            {"a={}", TernaryValue.TRUE},
 
             // hooks have impure boolean value if both cases have same impure boolean value
-            {"a?true:true", TernaryValue.UNKNOWN, TernaryValue.TRUE},
-            {"a?false:false", TernaryValue.UNKNOWN, TernaryValue.FALSE},
-            {"a?true:false", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
-            {"a?true:foo()", TernaryValue.UNKNOWN, TernaryValue.UNKNOWN},
+            {"a?true:true", TernaryValue.TRUE},
+            {"a?false:false", TernaryValue.FALSE},
+            {"a?true:false", TernaryValue.UNKNOWN},
+            {"a?true:foo()", TernaryValue.UNKNOWN},
           });
     }
 
     @Test
-    public void getLiteralBooleanValue() {
-      assertThat(NodeUtil.getLiteralBooleanValue(parseExpr(jsExpression)))
-          .isEqualTo(expectedLiteralResult);
-    }
-
-    @Test
-    public void getImpureBooleanValue() {
-      assertThat(NodeUtil.getImpureBooleanValue(parseExpr(jsExpression)))
-          .isEqualTo(expectedImpureResult);
+    public void getBooleanValue() {
+      assertThat(NodeUtil.getBooleanValue(parseExpr(jsExpression))).isEqualTo(expectedResult);
     }
   }
 

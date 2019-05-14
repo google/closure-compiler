@@ -826,7 +826,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       if (lhsAssign.isName() && condition.isName()
           && lhsAssign.getString().equals(condition.getString())) {
         Node rhsAssign = getSimpleAssignmentValue(n);
-        TernaryValue value = NodeUtil.getImpureBooleanValue(rhsAssign);
+        TernaryValue value = NodeUtil.getBooleanValue(rhsAssign);
         if (value != TernaryValue.UNKNOWN) {
           Node replacementConditionNode =
               NodeUtil.booleanNode(value.toBoolean(true));
@@ -964,7 +964,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
 
     // Try transforms that apply to both IF and HOOK.
-    TernaryValue condValue = NodeUtil.getImpureBooleanValue(cond);
+    TernaryValue condValue = NodeUtil.getBooleanValue(cond);
     if (condValue == TernaryValue.UNKNOWN) {
       return n;  // We can't remove branches otherwise!
     }
@@ -1032,7 +1032,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node thenBody = cond.getNext();
     Node elseBody = thenBody.getNext();
 
-    TernaryValue condValue = NodeUtil.getImpureBooleanValue(cond);
+    TernaryValue condValue = NodeUtil.getBooleanValue(cond);
     if (condValue == TernaryValue.UNKNOWN) {
       // If the result nodes are equivalent, then one of the nodes can be
       // removed and it doesn't matter which.
@@ -1101,7 +1101,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (NodeUtil.getImpureBooleanValue(cond) != TernaryValue.FALSE) {
+    if (NodeUtil.getBooleanValue(cond) != TernaryValue.FALSE) {
       return n;
     }
 
@@ -1133,7 +1133,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     checkArgument(n.isDo());
 
     Node cond = NodeUtil.getConditionExpression(n);
-    if (NodeUtil.getImpureBooleanValue(cond) != TernaryValue.FALSE) {
+    if (NodeUtil.getBooleanValue(cond) != TernaryValue.FALSE) {
       return n;
     }
 

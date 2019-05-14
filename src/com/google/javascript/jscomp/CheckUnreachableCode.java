@@ -96,7 +96,7 @@ class CheckUnreachableCode extends AbstractPreOrderCallback implements ScopedCal
           // TODO(user): Handle more complicated expression like true == true,
           // etc....
           if (condition != null) {
-            TernaryValue val = NodeUtil.getImpureBooleanValue(condition);
+            TernaryValue val = NodeUtil.getBooleanValue(condition);
             if (val != TernaryValue.UNKNOWN) {
               return val.toBoolean(true) == (branch == Branch.ON_TRUE);
             }

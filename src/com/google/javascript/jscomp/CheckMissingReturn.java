@@ -60,30 +60,29 @@ class CheckMissingReturn implements ScopedCallback {
   /* Skips all exception edges and impossible edges. */
   private static final Predicate<DiGraphEdge<Node, ControlFlowGraph.Branch>>
       GOES_THROUGH_TRUE_CONDITION_PREDICATE =
-        new Predicate<DiGraphEdge<Node, ControlFlowGraph.Branch>>() {
-    @Override
-    public boolean apply(DiGraphEdge<Node, ControlFlowGraph.Branch> input) {
-      // First skill all exceptions.
-      Branch branch = input.getValue();
-      if (branch == Branch.ON_EX) {
-        return false;
-      } else if (branch.isConditional()) {
-        Node condition = NodeUtil.getConditionExpression(
-            input.getSource().getValue());
-        // TODO(user): We CAN make this bit smarter just looking at
-        // constants. We DO have a full blown ReverseAbstractInterupter and
-        // type system that can evaluate some impressions' boolean value but
-        // for now we will keep this pass lightweight.
-        if (condition != null) {
-          TernaryValue val = NodeUtil.getImpureBooleanValue(condition);
-          if (val != TernaryValue.UNKNOWN) {
-            return val.toBoolean(true) == (Branch.ON_TRUE == branch);
-          }
-        }
-      }
-      return true;
-    }
-  };
+          new Predicate<DiGraphEdge<Node, ControlFlowGraph.Branch>>() {
+            @Override
+            public boolean apply(DiGraphEdge<Node, ControlFlowGraph.Branch> input) {
+              // First skill all exceptions.
+              Branch branch = input.getValue();
+              if (branch == Branch.ON_EX) {
+                return false;
+              } else if (branch.isConditional()) {
+                Node condition = NodeUtil.getConditionExpression(input.getSource().getValue());
+                // TODO(user): We CAN make this bit smarter just looking at
+                // constants. We DO have a full blown ReverseAbstractInterupter and
+                // type system that can evaluate some impressions' boolean value but
+                // for now we will keep this pass lightweight.
+                if (condition != null) {
+                  TernaryValue val = NodeUtil.getBooleanValue(condition);
+                  if (val != TernaryValue.UNKNOWN) {
+                    return val.toBoolean(true) == (Branch.ON_TRUE == branch);
+                  }
+                }
+              }
+              return true;
+            }
+          };
 
   CheckMissingReturn(AbstractCompiler compiler) {
     this.compiler = compiler;
