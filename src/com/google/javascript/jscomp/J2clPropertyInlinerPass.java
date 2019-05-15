@@ -381,8 +381,10 @@ public class J2clPropertyInlinerPass implements CompilerPass {
           J2clProperty prop = propertiesByName.get(accessName);
           if (prop != null && prop.isSafeToInline) {
             FunctionInjector injector =
-                new FunctionInjector(
-                    compiler, compiler.getUniqueNameIdSupplier(), true, true, true);
+                new FunctionInjector.Builder(compiler)
+                    .assumeStrictThis(true)
+                    .assumeMinimumCapture(true)
+                    .build();
             Node inlinedCall =
                 injector.inline(
                     new Reference(n, t.getScope(), t.getModule(), InliningMode.DIRECT),
@@ -400,8 +402,10 @@ public class J2clPropertyInlinerPass implements CompilerPass {
             J2clProperty prop = propertiesByName.get(accessName);
             if (prop != null && prop.isSafeToInline) {
               FunctionInjector injector =
-                  new FunctionInjector(
-                      compiler, compiler.getUniqueNameIdSupplier(), true, true, true);
+                  new FunctionInjector.Builder(compiler)
+                      .assumeStrictThis(true)
+                      .assumeMinimumCapture(true)
+                      .build();
               assignmentValue.detach();
               Node functionCall = IR.call(IR.empty(), assignmentValue);
               parent.replaceChild(n, functionCall);
