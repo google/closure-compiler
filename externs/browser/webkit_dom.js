@@ -95,11 +95,15 @@ Selection.prototype.extentNode;
 /** @type {number} */
 Selection.prototype.extentOffset;
 
-/** @type {string} */
+/**
+ * @type {string}
+ * @see https://w3c.github.io/selection-api/#dom-selection-type
+ */
 Selection.prototype.type;
 
 /**
  * @return {undefined}
+ * @see https://w3c.github.io/selection-api/#dom-selection-empty
  */
 Selection.prototype.empty = function() {};
 
@@ -109,6 +113,7 @@ Selection.prototype.empty = function() {};
  * @param {Node} extentNode
  * @param {number} extentOffset
  * @return {undefined}
+ * @see https://w3c.github.io/selection-api/#dom-selection-setbaseandextent
  */
 Selection.prototype.setBaseAndExtent =
  function(baseNode, baseOffset, extentNode, extentOffset) {};
