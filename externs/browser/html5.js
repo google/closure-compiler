@@ -4214,31 +4214,6 @@ ShadowRoot.prototype.getElementById = function(id) {};
 
 
 /**
- * @param {string} className
- * @return {!NodeList<!Element>}
- * @nosideeffects
- */
-ShadowRoot.prototype.getElementsByClassName = function(className) {};
-
-
-/**
- * @param {string} tagName
- * @return {!NodeList<!Element>}
- * @nosideeffects
- */
-ShadowRoot.prototype.getElementsByTagName = function(tagName) {};
-
-
-/**
- * @param {string} namespace
- * @param {string} localName
- * @return {!NodeList<!Element>}
- * @nosideeffects
- */
-ShadowRoot.prototype.getElementsByTagNameNS = function(namespace, localName) {};
-
-
-/**
  * @return {Selection}
  * @nosideeffects
  */
@@ -4264,25 +4239,20 @@ ShadowRoot.prototype.elementsFromPoint = function(x, y) {};
 
 
 /**
- * @type {boolean}
- */
-ShadowRoot.prototype.applyAuthorStyles;
-
-
-/**
- * @type {boolean}
- */
-ShadowRoot.prototype.resetStyleInheritance;
-
-
-/**
- * @type {Element}
+ * @type {?Element}
  */
 ShadowRoot.prototype.activeElement;
 
 
 /**
+ * @type {string}
+ */
+ShadowRoot.prototype.mode;
+
+
+/**
  * @type {?ShadowRoot}
+ * @deprecated
  */
 ShadowRoot.prototype.olderShadowRoot;
 
