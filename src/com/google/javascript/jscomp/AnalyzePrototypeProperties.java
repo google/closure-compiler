@@ -528,8 +528,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
         return;
       }
 
-      String className = NodeUtil.getName(n.getGrandparent());
-      Var var = className == null ? null : t.getScope().getVar(className);
+      Node classNameNode = NodeUtil.getNameNode(n.getGrandparent());
+      Var var =
+          (classNameNode != null && classNameNode.isName())
+              ? t.getScope().getVar(classNameNode.getString())
+              : null;
       getNameInfoForName(name, PROPERTY)
           .getDeclarations()
           .add(new ClassMemberFunction(n, var, t.getModule()));
