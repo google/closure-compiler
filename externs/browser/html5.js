@@ -1331,6 +1331,24 @@ Window.prototype.applicationCache;
 Window.prototype.importScripts = function(var_args) {};
 
 /**
+ * Decodes a string of data which has been encoded using base-64 encoding.
+ *
+ * @param {string} encodedData
+ * @return {string}
+ * @nosideeffects
+ * @see https://html.spec.whatwg.org/multipage/webappapis.html#dom-atob
+ */
+function atob(encodedData) {}
+
+/**
+ * @param {string} stringToEncode
+ * @return {string}
+ * @nosideeffects
+ * @see https://html.spec.whatwg.org/multipage/webappapis.html#dom-btoa
+ */
+function btoa(stringToEncode) {}
+
+/**
  * @see https://developer.mozilla.org/En/DOM/Worker/Functions_available_to_workers
  * @param {...!TrustedScriptURL|string} var_args
  * @return {undefined}
