@@ -1057,7 +1057,7 @@ Element.prototype.onmouseenter;
 Element.prototype.onmouseleave;
 
 /**
- * @type {?function(Event)}
+ * @type {?function(!Event): void}
  * @see https://w3c.github.io/selection-api/#dom-globaleventhandlers-onselectstart
  */
 Element.prototype.onselectstart;
