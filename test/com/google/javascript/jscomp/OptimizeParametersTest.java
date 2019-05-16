@@ -982,6 +982,15 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMutableValuesDoNotMoveSuper() {
+    testSame(
+        lines(
+            "var A;",
+            "function fn(p1) {}",
+            "class B extends A { constructor() { fn(super.x); } }"));
+  }
+
+  @Test
   public void testShadows() {
     testSame("function foo(a) {}" +
              "var x;" +

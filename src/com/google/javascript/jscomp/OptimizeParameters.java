@@ -749,6 +749,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     // values.
     switch (n.getToken()) {
       case THIS:
+      case SUPER:
         return false;
       case FUNCTION:
         // Don't move function closures.
