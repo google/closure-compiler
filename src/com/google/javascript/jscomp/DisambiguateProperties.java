@@ -45,7 +45,6 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1009,19 +1008,8 @@ class DisambiguateProperties implements CompilerPass {
     // this appears.  This will make references to overridden properties look
     // like references to the initial property, so they are renamed alike.
     ObjectType objType = type.toMaybeObjectType();
-    if (objType != null && objType.getConstructor() != null
-        && objType.getConstructor().isInterface()) {
-      ObjectType topInterface = objType.getTopDefiningInterface(field);
-      if (topInterface != null && topInterface.getConstructor() != null) {
-        foundType = topInterface.getImplicitPrototype();
-      }
-    } else {
-      while (objType != null && !Objects.equals(objType.getImplicitPrototype(), objType)) {
-        if (objType.hasOwnProperty(field)) {
-          foundType = objType;
-        }
-        objType = objType.getImplicitPrototype();
-      }
+    if (objType != null) {
+      foundType = objType.getTopMostDefiningType(field);
     }
 
     // If the property does not exist on the referenced type but the original

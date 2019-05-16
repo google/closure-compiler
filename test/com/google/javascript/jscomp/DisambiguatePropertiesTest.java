@@ -1339,7 +1339,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "/** @type {I} */",
             "var f = new Foo;",
             "var x = f.a;"),
-        "{a=[[Foo.prototype, I.prototype]]}");
+        "{a=[[Foo.prototype, I]]}");
   }
 
   @Test
@@ -3463,7 +3463,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             // "prop". See b/128355893#comment3
             "const {.../** !Bar */ bar} = new Foo();",
             "alert(bar.prop);"),
-        "{prop=[[Bar.prototype], [Foo]]}",
+        "{prop=[[Bar], [Foo]]}",
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
@@ -3498,7 +3498,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  const {.../** !Bar */ bar} = f;",
             "  alert(bar.prop);",
             "}"),
-        "{prop=[[Bar.prototype], [Foo.prototype]], uniqueProp=[[Foo.prototype]]}",
+        "{prop=[[Bar], [Foo]], uniqueProp=[[Foo]]}",
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
@@ -3550,7 +3550,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             // "prop". See b/128355893#comment3
             "const /** !Bar */ bar = {...new Foo()};",
             "alert(bar.prop);"),
-        "{prop=[[Bar.prototype], [Foo]]}",
+        "{prop=[[Bar], [Foo]]}",
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
@@ -3585,7 +3585,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  const /** !Bar */ bar = {...f};",
             "  alert(bar.prop);",
             "}"),
-        "{prop=[[Bar.prototype], [Foo.prototype]], uniqueProp=[[Foo.prototype]]}",
+        "{prop=[[Bar], [Foo]], uniqueProp=[[Foo]]}",
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 

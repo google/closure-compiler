@@ -51,6 +51,26 @@ import java.util.Objects;
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class Property implements Serializable, StaticTypedSlot, StaticTypedRef {
+
+  /** A property instance associated with particular owner type. */
+  public static final class OwnedProperty {
+    private final ObjectType owner;
+    private final Property value;
+
+    public OwnedProperty(ObjectType owner, Property value) {
+      this.owner = owner;
+      this.value = value;
+    }
+
+    public ObjectType getOwner() {
+      return owner;
+    }
+
+    public Property getValue() {
+      return value;
+    }
+  }
+
   private static final long serialVersionUID = 1L;
 
   /**

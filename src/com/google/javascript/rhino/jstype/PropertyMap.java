@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.google.javascript.rhino.jstype.Property.OwnedProperty;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Map;
@@ -106,27 +107,58 @@ class PropertyMap implements Serializable {
     return parentSource.getCtorExtendedInterfaces();
   }
 
-  Property getSlot(String name) {
-    Property prop = properties.get(name);
-    if (prop != null) {
-      return prop;
-    }
-    PropertyMap primaryParent = getPrimaryParent();
-    if (primaryParent != null) {
-      prop = primaryParent.getSlot(name);
+  OwnedProperty findTopMost(String name) {
+    // Check primary parents which always has precendence over secondary.
+    OwnedProperty found = null;
+    for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {
+      Property prop = map.properties.get(name);
       if (prop != null) {
-        return prop;
+        found = new OwnedProperty(map.parentSource, prop);
       }
     }
-    for (ObjectType o : getSecondaryParentObjects()) {
-      PropertyMap p = o.getPropertyMap();
-      if (p != null) {
-        prop = p.getSlot(name);
-        if (prop != null) {
-          return prop;
+    if (found != null) {
+      return found;
+    }
+
+    // Recurse into secondary parents. Note that there is no single top most definition with
+    // interfaces so we simple return the first result.
+    for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {
+      for (ObjectType o : map.getSecondaryParentObjects()) {
+        PropertyMap parent = o.getPropertyMap();
+        if (parent != null) {
+          OwnedProperty e = parent.findTopMost(name);
+          if (e != null) {
+            return e;
+          }
         }
       }
     }
+
+    return null;
+  }
+
+  OwnedProperty findClosest(String name) {
+    // Check primary parents which always has precendence over secondary.
+    for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {
+      Property prop = map.properties.get(name);
+      if (prop != null) {
+        return new OwnedProperty(map.parentSource, prop);
+      }
+    }
+
+    // Recurse into secondary parents.
+    for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {
+      for (ObjectType o : map.getSecondaryParentObjects()) {
+        PropertyMap parent = o.getPropertyMap();
+        if (parent != null) {
+          OwnedProperty e = parent.findClosest(name);
+          if (e != null) {
+            return e;
+          }
+        }
+      }
+    }
+
     return null;
   }
 

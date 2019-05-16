@@ -52,8 +52,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.Property.OwnedProperty;
 import java.io.Serializable;
-import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -113,7 +113,8 @@ public abstract class ObjectType extends JSType implements Serializable {
    * for lazily-resolved prototypes.
    */
   public Property getSlot(String name) {
-    return getPropertyMap().getSlot(name);
+    OwnedProperty property = getPropertyMap().findClosest(name);
+    return property == null ? null : property.getValue();
   }
 
   public final Property getOwnSlot(String name) {
@@ -304,51 +305,21 @@ public abstract class ObjectType extends JSType implements Serializable {
     return iproto == null ? null : iproto.getConstructor();
   }
 
-  public final ObjectType getTopDefiningInterface(String propertyName) {
-    for (ObjectType interfaceType : getCtorExtendedInterfaces()) {
-      ObjectType foundType = interfaceType.getTopDefiningInterface(propertyName);
-      if (foundType != null) {
-        return foundType;
-      }
-    }
-
-    ObjectType implicitPrototype = getImplicitPrototype();
-    if (hasOwnProperty(propertyName)
-        || (implicitPrototype != null && implicitPrototype.hasOwnProperty(propertyName))) {
-      return this;
-    }
-
-    // Note that even if this is an interface and doesn't extend anything, we need to inherit
-    // properties expected in all objects like 'toString'. We should arguably return Object in that
-    // case (b/131192047) but we are returning 'this' to preserve the backward compatibility of the
-    // method.
-    ObjectType nativeType = registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
-    if (nativeType.hasProperty(propertyName)) {
-      return this;
-    }
-
-    return null;
+  /**
+   * Returns the top most type that defines the property.
+   *
+   * <p>Note: if you are doing type validation, you are probably looking for the closest definition
+   * of the property which could be resolved by {@link #getClosestDefiningType}.
+   */
+  public final ObjectType getTopMostDefiningType(String propertyName) {
+    OwnedProperty property = getPropertyMap().findTopMost(propertyName);
+    return property == null ? null : property.getOwner();
   }
 
   /** Returns the closest ancestor that defines the property including this type itself. */
   public final ObjectType getClosestDefiningType(String propertyName) {
-    ArrayDeque<ObjectType> parentsToSeek = new ArrayDeque<>();
-    parentsToSeek.add(this);
-
-    // Make a bread-first search to find the closest ancestor with the property.
-    while (!parentsToSeek.isEmpty()) {
-      ObjectType parent = parentsToSeek.pollFirst();
-      if (parent.hasOwnProperty(propertyName)) {
-        return parent;
-      }
-
-      if (parent.getImplicitPrototype() != null) {
-        parentsToSeek.add(parent.getImplicitPrototype());
-      }
-      Iterables.addAll(parentsToSeek, parent.getCtorExtendedInterfaces());
-    }
-
-    return null;
+    OwnedProperty property = getPropertyMap().findClosest(propertyName);
+    return property == null ? null : property.getOwner();
   }
 
   /**
