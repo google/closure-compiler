@@ -64,6 +64,12 @@ var screen;
 var self;
 
 /**
+ * @type {!Window}
+ * @see https://developer.mozilla.org/en/DOM/window
+ */
+var window;
+
+/**
  * @const {boolean}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/isSecureContext
  */

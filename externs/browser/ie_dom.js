@@ -307,12 +307,6 @@ ClipboardData.prototype.setData = function(type, data) {};
 ClipboardData.prototype.getData = function(type) { };
 
 /**
- * @type {!Window}
- * @see https://developer.mozilla.org/en/DOM/window
- */
-var window;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms535220(VS.85).aspx
  * @type {ClipboardData}
  */
