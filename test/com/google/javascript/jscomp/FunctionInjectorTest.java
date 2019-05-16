@@ -51,11 +51,13 @@ public final class FunctionInjectorTest {
   private boolean assumeStrictThis = false;
   private final boolean assumeMinimumCapture = false;
   private boolean allowDecomposition;
+  private boolean allowMethodCallDecomposition;
 
   @Before
   public void setUp() throws Exception {
     assumeStrictThis = false;
     allowDecomposition = false;
+    allowMethodCallDecomposition = false;
   }
 
   @Test
@@ -557,6 +559,19 @@ public final class FunctionInjectorTest {
     helperCanInlineReferenceToFunction(
         CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; function x() { if (foo(1)) throw 'test'; }",
+        "foo",
+        INLINE_BLOCK);
+  }
+
+  @Test
+  public void cannotInlineReferenceToFunctionInMethodCall() {
+    // Call within a method call that must be decomposed in order to inline.
+    // Ensure that inlining will not happen if method call decomposition is disabled.
+    allowDecomposition = true;
+    allowMethodCallDecomposition = false;
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; function x() { if (obj.method(foo(1))) throw 'test'; }",
         "foo",
         INLINE_BLOCK);
   }
@@ -1789,15 +1804,21 @@ public final class FunctionInjectorTest {
       final InliningMode mode) {
     final Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
-    final FunctionInjector injector = new FunctionInjector(
-        compiler, compiler.getUniqueNameIdSupplier(), allowDecomposition,
-        assumeStrictThis,
-        assumeMinimumCapture);
+    final FunctionArgumentInjector functionArgumentInjector =
+        new FunctionArgumentInjector(compiler.getAstAnalyzer());
+    final FunctionInjector injector =
+        new FunctionInjector.Builder(compiler)
+            .allowDecomposition(allowDecomposition)
+            .allowMethodCallDecomposing(allowMethodCallDecomposition)
+            .assumeStrictThis(assumeStrictThis)
+            .assumeMinimumCapture(assumeMinimumCapture)
+            .functionArgumentInjector(functionArgumentInjector)
+            .build();
     final Node tree = parse(compiler, code);
 
     final Node fnNode = findFunction(tree, fnName);
     final ImmutableSet<String> unsafe =
-        ImmutableSet.copyOf(FunctionArgumentInjector.findModifiedParameters(fnNode));
+        ImmutableSet.copyOf(functionArgumentInjector.findModifiedParameters(fnNode));
 
     // can-inline tester
     Method tester =
@@ -1846,13 +1867,16 @@ public final class FunctionInjectorTest {
     compiler.init(externsInputs, ImmutableList.of(
         SourceFile.fromCode("code", code)), options);
 
+    final FunctionArgumentInjector functionArgumentInjector =
+        new FunctionArgumentInjector(compiler.getAstAnalyzer());
     final FunctionInjector injector =
-        new FunctionInjector(
-            compiler,
-            compiler.getUniqueNameIdSupplier(),
-            allowDecomposition,
-            assumeStrictThis,
-            assumeMinimumCapture);
+        new FunctionInjector.Builder(compiler)
+            .allowDecomposition(allowDecomposition)
+            .allowMethodCallDecomposing(allowMethodCallDecomposition)
+            .assumeStrictThis(assumeStrictThis)
+            .assumeMinimumCapture(assumeMinimumCapture)
+            .functionArgumentInjector(functionArgumentInjector)
+            .build();
 
     Node parseRoot = compiler.parseInputs();
     Node externsRoot = parseRoot.getFirstChild();
@@ -1873,7 +1897,7 @@ public final class FunctionInjectorTest {
     final Node fnNode = findFunction(tree, fnName);
     assertThat(fnNode).isNotNull();
     final ImmutableSet<String> unsafe =
-        ImmutableSet.copyOf(FunctionArgumentInjector.findModifiedParameters(fnNode));
+        ImmutableSet.copyOf(functionArgumentInjector.findModifiedParameters(fnNode));
     assertThat(fnNode).isNotNull();
 
     // inline tester
@@ -1935,12 +1959,12 @@ public final class FunctionInjectorTest {
     final Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
     final FunctionInjector injector =
-        new FunctionInjector(
-            compiler,
-            compiler.getUniqueNameIdSupplier(),
-            allowDecomposition,
-            assumeStrictThis,
-            assumeMinimumCapture);
+        new FunctionInjector.Builder(compiler)
+            .allowDecomposition(allowDecomposition)
+            .allowMethodCallDecomposing(allowMethodCallDecomposition)
+            .assumeStrictThis(assumeStrictThis)
+            .assumeMinimumCapture(assumeMinimumCapture)
+            .build();
     final Node tree = parse(compiler, code);
 
     final Node fnNode = findFunction(tree, fnName);

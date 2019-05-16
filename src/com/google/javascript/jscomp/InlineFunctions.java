@@ -68,6 +68,7 @@ class InlineFunctions implements CompilerPass {
   private final AbstractCompiler compiler;
 
   private final FunctionInjector injector;
+  private final FunctionArgumentInjector functionArgumentInjector;
 
   private final Reach reach;
   private final boolean assumeMinimumCapture;
@@ -101,13 +102,15 @@ class InlineFunctions implements CompilerPass {
     // the function itself is removed.  The function inliner need to be made
     // aware of these new calls in order to enble it.
 
+    this.functionArgumentInjector = new FunctionArgumentInjector(compiler.getAstAnalyzer());
     this.injector =
-        new FunctionInjector(
-            compiler,
-            safeNameIdSupplier,
-            FunctionInjector.Decomposition.ENABLED_WITHOUT_METHOD_CALL_DECOMPOSING,
-            assumeStrictThis,
-            assumeMinimumCapture);
+        new FunctionInjector.Builder(compiler)
+            .safeNameIdSupplier(safeNameIdSupplier)
+            .assumeStrictThis(assumeStrictThis)
+            .assumeMinimumCapture(assumeMinimumCapture)
+            .allowMethodCallDecomposing(false)
+            .functionArgumentInjector(this.functionArgumentInjector)
+            .build();
   }
 
   FunctionState getOrCreateFunctionState(String fnName) {
@@ -311,7 +314,7 @@ class InlineFunctions implements CompilerPass {
       if (functionState.canInline()) {
         functionState.setModule(module);
 
-        Set<String> namesToAlias = FunctionArgumentInjector.findModifiedParameters(fnNode);
+        Set<String> namesToAlias = functionArgumentInjector.findModifiedParameters(fnNode);
         if (!namesToAlias.isEmpty()) {
           functionState.inlineDirectly(false);
           functionState.setNamesToAlias(namesToAlias);

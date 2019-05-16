@@ -1349,15 +1349,6 @@ public final class NodeUtil {
   /**
    * Returns true if calls to this function have side effects.
    *
-   * @param callNode - function call node
-   */
-  static boolean functionCallHasSideEffects(Node callNode) {
-    return functionCallHasSideEffects(callNode, null);
-  }
-
-  /**
-   * Returns true if calls to this function have side effects.
-   *
    * @param callNode The call node to inspected.
    * @param compiler A compiler object to provide program state changing
    *     context information. Can be null.

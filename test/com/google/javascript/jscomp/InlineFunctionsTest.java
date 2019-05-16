@@ -30,12 +30,10 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class InlineFunctionsTest extends CompilerTestCase {
-  Reach inliningReach;
-  final boolean allowExpressionDecomposition = true;
-  final boolean allowFunctionExpressionInlining = true;
-  boolean assumeStrictThis;
-  boolean assumeMinimumCapture;
-  int maxSizeAfterInlining;
+  private Reach inliningReach;
+  private boolean assumeStrictThis;
+  private boolean assumeMinimumCapture;
+  private int maxSizeAfterInlining;
 
   static final String EXTERNS = "/** @nosideeffects */ function nochg(){}\nfunction chg(){}\n";
 
@@ -3676,6 +3674,18 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "JSCompiler_temp_const$jscomp$1(",
             "  ...JSCompiler_temp_const$jscomp$0,",
             "  JSCompiler_inline_result$jscomp$2);"));
+  }
+
+  @Test
+  public void methodCallCannotBeDecomposed() {
+    testSame(
+        lines(
+            "function foo(x) {", //
+            "  qux();", // Something with a side-effect.
+            "  return x;",
+            "}",
+            "",
+            "bar.method(foo(arg));"));
   }
 
   @Test

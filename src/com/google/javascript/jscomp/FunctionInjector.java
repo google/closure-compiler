@@ -57,51 +57,96 @@ class FunctionInjector {
       return String.valueOf(nextId++);
     }
   };
+  private final FunctionArgumentInjector functionArgumentInjector;
 
-  public enum Decomposition {
-    DISABLED,
-    ENABLED,
-    // TODD(b/124253050): consider removing this option.
-    ENABLED_WITHOUT_METHOD_CALL_DECOMPOSING;
+  private FunctionInjector(Builder builder) {
+    this.compiler = checkNotNull(builder.compiler);
+    this.safeNameIdSupplier = checkNotNull(builder.safeNameIdSupplier);
+    this.assumeStrictThis = builder.assumeStrictThis;
+    this.assumeMinimumCapture = builder.assumeMinimumCapture;
+    this.allowDecomposition = builder.allowDecomposition;
+    this.allowMethodCallDecomposing = builder.allowMethodCallDecomposing;
+    this.functionArgumentInjector = checkNotNull(builder.functionArgumentInjector);
+    checkState(
+        !this.allowMethodCallDecomposing || this.allowDecomposition,
+        "Cannot allow method call decomposition when decomposition in general is not allowed.");
   }
 
-  /**
-   * @param decomposition Whether an effort should be made to break down expressions into simpler
-   *     expressions to allow functions to be injected where they would otherwise be disallowed.
-   */
-  public FunctionInjector(
-      AbstractCompiler compiler,
-      Supplier<String> safeNameIdSupplier,
-      Decomposition decomposition,
-      boolean assumeStrictThis,
-      boolean assumeMinimumCapture) {
-    checkNotNull(compiler);
-    checkNotNull(safeNameIdSupplier);
-    this.compiler = compiler;
-    this.safeNameIdSupplier = safeNameIdSupplier;
-    this.assumeStrictThis = assumeStrictThis;
-    this.assumeMinimumCapture = assumeMinimumCapture;
-    this.allowDecomposition = !decomposition.equals(Decomposition.DISABLED);
-    this.allowMethodCallDecomposing = decomposition.equals(Decomposition.ENABLED);
-  }
+  static class Builder {
 
-  /**
-   * @param allowDecomposition Whether an effort should be made to break down expressions into
-   *     simpler expressions to allow functions to be injected where they would otherwise be
-   *     disallowed.
-   */
-  public FunctionInjector(
-      AbstractCompiler compiler,
-      Supplier<String> safeNameIdSupplier,
-      boolean allowDecomposition,
-      boolean assumeStrictThis,
-      boolean assumeMinimumCapture) {
-    this(
-        compiler,
-        safeNameIdSupplier,
-        allowDecomposition ? Decomposition.ENABLED : Decomposition.DISABLED,
-        assumeStrictThis,
-        assumeMinimumCapture);
+    private final AbstractCompiler compiler;
+    private Supplier<String> safeNameIdSupplier = null;
+    private boolean assumeStrictThis = true;
+    private boolean assumeMinimumCapture = true;
+    private boolean allowDecomposition = true;
+    private boolean allowMethodCallDecomposing = true;
+    private FunctionArgumentInjector functionArgumentInjector = null;
+
+    Builder(AbstractCompiler compiler) {
+      this.compiler = checkNotNull(compiler);
+    }
+
+    /**
+     * Provide the name supplier to use for injection.
+     *
+     * <p>If this method is not called, {@code compiler.getUniqueNameIdSupplier()} will be used.
+     */
+    Builder safeNameIdSupplier(Supplier<String> safeNameIdSupplier) {
+      this.safeNameIdSupplier = checkNotNull(safeNameIdSupplier);
+      return this;
+    }
+
+    /**
+     * Allow decomposition of expressions.
+     *
+     * <p>Default is {@code true}.
+     */
+    Builder allowDecomposition(boolean allowDecomposition) {
+      this.allowDecomposition = allowDecomposition;
+      return this;
+    }
+
+    /**
+     * Allow decomposition of method calls.
+     *
+     * <p>Default is {@code true}. May be disabled independently of decomposition in general. It's
+     * invalid to enable this when allowDecomposition is disabled.
+     */
+    Builder allowMethodCallDecomposing(boolean allowMethodCallDecomposing) {
+      this.allowMethodCallDecomposing = allowMethodCallDecomposing;
+      return this;
+    }
+
+    Builder assumeStrictThis(boolean assumeStrictThis) {
+      this.assumeStrictThis = assumeStrictThis;
+      return this;
+    }
+
+    Builder assumeMinimumCapture(boolean assumeMinimumCapture) {
+      this.assumeMinimumCapture = assumeMinimumCapture;
+      return this;
+    }
+
+    /**
+     * Specify the {@code FunctionArgumentInjector} to be used.
+     *
+     * <p>Default is for the builder to create this. This method exists for testing purposes.
+     */
+    public Builder functionArgumentInjector(FunctionArgumentInjector functionArgumentInjector) {
+      this.functionArgumentInjector = checkNotNull(functionArgumentInjector);
+      return this;
+    }
+
+    public FunctionInjector build() {
+      if (safeNameIdSupplier == null) {
+        safeNameIdSupplier = compiler.getUniqueNameIdSupplier();
+      }
+      if (functionArgumentInjector == null) {
+        functionArgumentInjector =
+            new FunctionArgumentInjector(checkNotNull(compiler.getAstAnalyzer()));
+      }
+      return new FunctionInjector(this);
+    }
   }
 
   /** The type of inlining to perform. */
@@ -336,7 +381,7 @@ class FunctionInjector {
 
     // Create an argName -> expression map, checking for side effects.
     Map<String, Node> argMap =
-        FunctionArgumentInjector.getFunctionCallParameterMap(
+        functionArgumentInjector.getFunctionCallParameterMap(
             fnNode, callNode, this.safeNameIdSupplier);
 
     Node newExpression;
@@ -349,8 +394,7 @@ class FunctionInjector {
 
       // Clone the return node first.
       Node safeReturnNode = returnNode.cloneTree();
-      Node inlineResult = FunctionArgumentInjector.inject(
-          null, safeReturnNode, null, argMap);
+      Node inlineResult = functionArgumentInjector.inject(null, safeReturnNode, null, argMap);
       checkArgument(safeReturnNode == inlineResult);
       newExpression = safeReturnNode.removeFirstChild();
       NodeUtil.markNewScopesChanged(newExpression, compiler);
@@ -757,13 +801,13 @@ class FunctionInjector {
     // additional VAR declarations because aliasing is needed.
     if (forbidTemps) {
       ImmutableMap<String, Node> args =
-          FunctionArgumentInjector.getFunctionCallParameterMap(
+          functionArgumentInjector.getFunctionCallParameterMap(
               fnNode, ref.callNode, this.safeNameIdSupplier);
       boolean hasArgs = !args.isEmpty();
       if (hasArgs) {
         // Limit the inlining
         Set<String> allNamesToAlias = new HashSet<>(namesToAlias);
-        FunctionArgumentInjector.maybeAddTempsForCallArguments(
+        functionArgumentInjector.maybeAddTempsForCallArguments(
             compiler, fnNode, args, allNamesToAlias, compiler.getCodingConvention());
         if (!allNamesToAlias.isEmpty()) {
           return false;
@@ -813,13 +857,13 @@ class FunctionInjector {
     }
 
     ImmutableMap<String, Node> args =
-        FunctionArgumentInjector.getFunctionCallParameterMap(
+        functionArgumentInjector.getFunctionCallParameterMap(
             fnNode, callNode, this.throwawayNameSupplier);
     boolean hasArgs = !args.isEmpty();
     if (hasArgs) {
       // Limit the inlining
       Set<String> allNamesToAlias = new HashSet<>(namesToAlias);
-      FunctionArgumentInjector.maybeAddTempsForCallArguments(
+      functionArgumentInjector.maybeAddTempsForCallArguments(
           compiler, fnNode, args, allNamesToAlias, compiler.getCodingConvention());
       if (!allNamesToAlias.isEmpty()) {
         return CanInlineResult.NO;
