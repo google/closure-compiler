@@ -2059,6 +2059,14 @@ CSSProperties.prototype.objectFit;
  */
 CSSProperties.prototype.objectPosition;
 
+// CSS Containment
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-contain-1/
+ */
+CSSProperties.prototype.contain;
+
 /**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
  * Externs for the CSSOM View Module.
