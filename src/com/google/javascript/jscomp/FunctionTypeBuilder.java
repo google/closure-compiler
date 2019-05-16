@@ -87,6 +87,7 @@ final class FunctionTypeBuilder {
   private boolean isClass = false;
   private boolean isConstructor = false;
   private boolean makesStructs = false;
+  private boolean makesUnrestricted = false;
   private boolean makesDicts = false;
   private boolean isInterface = false;
   private boolean isRecord = false;
@@ -379,6 +380,7 @@ final class FunctionTypeBuilder {
         isInterface = info.isInterface();
         isRecord = info.usesImplicitMatch();
         makesStructs = info.makesStructs();
+        makesUnrestricted = info.makesUnrestricted();
         makesDicts = info.makesDicts();
       }
       isAbstract = info.isAbstract();
@@ -973,6 +975,8 @@ final class FunctionTypeBuilder {
       fnType.setStruct();
     } else if (makesDicts) {
       fnType.setDict();
+    } else if (makesUnrestricted) {
+      fnType.setExplicitUnrestricted();
     }
 
     // There are two cases where this type already exists in the current scope:

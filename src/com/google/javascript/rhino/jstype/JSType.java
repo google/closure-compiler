@@ -324,12 +324,6 @@ public abstract class JSType implements Serializable {
   public boolean isStruct() {
     if (isObject()) {
       ObjectType objType = toObjectType();
-      ObjectType iproto = objType.getImplicitPrototype();
-      // For the case when a @struct constructor is assigned to a function's
-      // prototype property
-      if (iproto != null && iproto.isStruct()) {
-        return true;
-      }
       FunctionType ctor = objType.getConstructor();
       // This test is true for object literals
       if (ctor == null) {
@@ -349,12 +343,6 @@ public abstract class JSType implements Serializable {
   public boolean isDict() {
     if (isObject()) {
       ObjectType objType = toObjectType();
-      ObjectType iproto = objType.getImplicitPrototype();
-      // For the case when a @dict constructor is assigned to a function's
-      // prototype property
-      if (iproto != null && iproto.isDict()) {
-        return true;
-      }
       FunctionType ctor = objType.getConstructor();
       // This test is true for object literals
       if (ctor == null) {

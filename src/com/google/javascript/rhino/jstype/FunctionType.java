@@ -85,8 +85,13 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
   // relevant only for constructors
   private enum PropAccess {
+    // An implicit any behavior (default of ES5 classes)
     ANY,
+    // An explicit @unrestricted tag
+    ANY_EXPLICIT,
+    // An explicit @struct or the implicit behavior of ES6 classes
     STRUCT,
+    // An explicit @dict or the implicit behavior of ES5 classes
     DICT
   }
 
@@ -234,7 +239,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
   /**
    * When a class B inherits from A and A is annotated as a struct, then B automatically gets the
-   * annotation, even if B's constructor is not explicitly annotated.
+   * annotation, if B's constructor is not explicitly annotated.
    */
   public final boolean makesStructs() {
     if (!hasInstanceType()) {
@@ -242,6 +247,10 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     }
     if (propAccess == PropAccess.STRUCT) {
       return true;
+    }
+    if (propAccess == PropAccess.ANY_EXPLICIT) {
+      // For anything EXPLICITLY marked as @unresticted do not look to the super type.
+      return false;
     }
     FunctionType superc = getSuperClassConstructor();
     if (superc != null && superc.makesStructs()) {
@@ -253,7 +262,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
   /**
    * When a class B inherits from A and A is annotated as a dict, then B automatically gets the
-   * annotation, even if B's constructor is not explicitly annotated.
+   * annotation, if B's constructor is not explicitly annotated.
    */
   public final boolean makesDicts() {
     if (!isConstructor()) {
@@ -261,6 +270,10 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     }
     if (propAccess == PropAccess.DICT) {
       return true;
+    }
+    if (propAccess == PropAccess.ANY_EXPLICIT) {
+      // For anything EXPLICITLY marked as @unresticted do not look to the super type.
+      return false;
     }
     FunctionType superc = getSuperClassConstructor();
     if (superc != null && superc.makesDicts()) {
@@ -276,6 +289,10 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
   public final void setDict() {
     propAccess = PropAccess.DICT;
+  }
+
+  public final void setExplicitUnrestricted() {
+    propAccess = PropAccess.ANY_EXPLICIT;
   }
 
   @Override

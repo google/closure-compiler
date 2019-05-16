@@ -6510,15 +6510,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testGetpropDict6() {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @dict\n" +
-              " */\n" +
-              "function Foo() {}\n" +
-              "function Bar() {}\n" +
-              "Bar.prototype = new Foo();\n" +
-              "Bar.prototype.someprop = 123;\n",
-              "Cannot do '.' access on a dict");
+    testTypes(
+        "/**\n"
+            + " * @constructor\n"
+            + " * @dict\n"
+            + " */\n"
+            + "function Foo() {}\n"
+            + "function Bar() {}\n"
+            + "Bar.prototype = new Foo();\n"
+            + "Bar.prototype.someprop = 123;\n");
   }
 
   @Test
@@ -6621,16 +6621,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testGetelemStruct7() {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @struct\n" +
-              " */\n" +
-              "function Foo() {}\n" +
-              "/** @constructor */\n" +
-              "function Bar() {}\n" +
-              "Bar.prototype = new Foo();\n" +
-              "Bar.prototype['someprop'] = 123;\n",
-              "Cannot do '[]' access on a struct");
+    testTypes(
+        "/**\n"
+            + " * @constructor\n"
+            + " * @struct\n"
+            + " */\n"
+            + "function Foo() {}\n"
+            + "/** @constructor */\n"
+            + "function Bar() {}\n"
+            + "Bar.prototype = new Foo();\n"
+            + "Bar.prototype['someprop'] = 123;\n");
   }
 
   @Test
