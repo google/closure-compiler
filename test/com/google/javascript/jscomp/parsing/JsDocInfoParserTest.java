@@ -5159,61 +5159,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testParseDisposes1() {
-    assertThat(parse("@param {?} x \n * @disposes x */").isDisposes()).isTrue();
-  }
-
-  @Test
-  public void testParseDisposes2() {
-    parse(
-        "@param {?} x \n * @disposes */",
-        true,
-        "Bad type annotation. @disposes tag missing parameter name." + BAD_TYPE_WIKI_LINK);
-  }
-
-  @Test
-  public void testParseDisposes3() {
-    assertThat(parse("@param {?} x \n @param {?} y\n * @disposes x, y */").isDisposes()).isTrue();
-  }
-
-  @Test
-  public void testParseDisposesUnknown() {
-    parse(
-        "@param {?} x \n * @disposes x,y */",
-        true,
-        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times."
-            + BAD_TYPE_WIKI_LINK);
-  }
-
-  @Test
-  public void testParseDisposesMultiple() {
-    parse(
-        "@param {?} x \n * @disposes x,x */",
-        true,
-        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times."
-            + BAD_TYPE_WIKI_LINK);
-  }
-
-  @Test
-  public void testParseDisposesAll1() {
-    assertThat(parse("@param {?} x \n * @disposes * */").isDisposes()).isTrue();
-  }
-
-  @Test
-  public void testParseDisposesAll2() {
-    assertThat(parse("@param {?} x \n * @disposes x,* */").isDisposes()).isTrue();
-  }
-
-  @Test
-  public void testParseDisposesAll3() {
-    parse(
-        "@param {?} x \n * @disposes *, * */",
-        true,
-        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times."
-            + BAD_TYPE_WIKI_LINK);
-  }
-
-  @Test
   public void testTextExtents() {
     parse(
         "@return {@code foo} bar \n *    baz. */",

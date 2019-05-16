@@ -1037,23 +1037,6 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
-        case DISPOSES:
-          {
-          ExtractionInfo templateInfo = extractSingleLineBlock();
-          List<String> names = Splitter.on(',')
-              .trimResults()
-              .splitToList(templateInfo.string);
-
-          if (names.isEmpty() || names.get(0).isEmpty()) {
-            addTypeWarning("msg.jsdoc.disposeparameter.missing");
-          } else if (!jsdocBuilder.recordDisposesParameter(names)) {
-            addTypeWarning("msg.jsdoc.disposeparameter.error");
-          }
-
-          token = templateInfo.token;
-          return token;
-        }
-
         case VERSION:
           ExtractionInfo versionInfo = extractSingleLineBlock();
           String version = versionInfo.string;
