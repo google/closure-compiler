@@ -465,6 +465,7 @@ FormData.prototype.append = function(name, value, filename) {};
 
 /**
  * @param {string} name
+ * @return {undefined}
  */
 FormData.prototype.delete = function(name) {};
 
@@ -490,6 +491,7 @@ FormData.prototype.has = function(name) {};
  * @param {string} name
  * @param {!Blob|string} value
  * @param {string=} filename
+ * @return {undefined}
  */
 FormData.prototype.set = function(name, value, filename) {};
 
