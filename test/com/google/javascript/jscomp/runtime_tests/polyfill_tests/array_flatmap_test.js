@@ -38,7 +38,7 @@ testSuite({
     });
     assertObjectEquals([10, 20, 21, 30, 31, 32, 40, 41, 42, 43], repeated);
 
-    let summed = arr.flatMap((element, index) => element + index);
+    let summed = arr.flatMap((element, index) => [element + index]);
     assertObjectEquals([1, 3, 5, 7], summed);
 
     let nested =
@@ -48,18 +48,20 @@ testSuite({
   },
 
   testFlatMap_onEmptyArray() {
-    let result = [].flatMap(() => 1);
+    let result = [].flatMap(() => [1]);
     assertObjectEquals([], result);
   },
 
   testFlatMap_thisArg() {
     let result = [1].flatMap(function() {
-      return this.x;
+      return [this.x];
     }, {x: 0});
     assertObjectEquals([0], result);
   },
 
   testFlatMap_mixedCallbackReturnTypes() {
+    // Confirm that flatMap() handles array and non-array returns from the
+    // callback as required by the spec.
     let mixedArray = [
       0, 'string1', false, null, undefined, {key: 2}, [],
       [3, 'string4', false, null, undefined, {key: 5}, [6]]

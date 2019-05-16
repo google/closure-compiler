@@ -25,7 +25,7 @@ $jscomp.polyfill('Array.prototype.flatMap', function(orig) {
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap
    *
-   * @param {function(this: THIS, T, number, !IArrayLike<T>): S|!Array<S>} callback
+   * @param {function(this: THIS, T, number, !IArrayLike<T>): !Array<S>} callback
    * @param {THIS=} thisArg
    * @return {!Array<S>}
    * @this {!IArrayLike<T>}
@@ -39,6 +39,12 @@ $jscomp.polyfill('Array.prototype.flatMap', function(orig) {
       if (Array.isArray(result)) {
         mapped.push.apply(mapped, result);
       } else {
+        // NOTE: The specification says the callback can return a non-Array.
+        // We intentionally don't include that in the type information on
+        // this function or the corresponding extern in order to encourage
+        // more readable code and avoid complex TTL in the type annotations,
+        // but we still want to behave correctly if the callback gives us a
+        // non-Array.
         mapped.push(result);
       }
     }

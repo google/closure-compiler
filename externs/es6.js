@@ -1379,7 +1379,23 @@ Array.prototype.copyWithin = function(target, start, opt_end) {};
 Array.prototype.includes = function(searchElement, opt_fromIndex) {};
 
 /**
- * @param {function(this: THIS, T, number, !IArrayLike<T>): S|!Array<S>}
+ * Generates an array by passing every element of this array to a callback that
+ * returns an array of zero or more elements to be added to the result.
+ *
+ * NOTE: The specified behavior of the method is that the callback can return
+ * either an Array, which will be flattened into the result, or a non-array,
+ * which will simply be included.
+ *
+ * However, while defining that in the type information here is possible it's
+ * very hard to understand both for humans and automated tools other than
+ * closure-compiler that process these files. Also, we think it's best to
+ * encourage writing callbacks that just always return an Array for the sake
+ * of readability.
+ *
+ * The polyfill for this method provided by closure-compiler does behave as
+ * defined in the specification, though.
+ *
+ * @param {function(this: THIS, T, number, !IArrayLike<T>): !Array<S>}
  *     callback
  * @param {THIS=} thisArg
  * @return {!Array<S>}
