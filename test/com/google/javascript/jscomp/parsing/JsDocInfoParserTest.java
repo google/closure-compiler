@@ -3645,21 +3645,20 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testStableIdGenerator() {
-    JSDocInfo info = parse("/**\n"
-        + " * @stableIdGenerator\n"
-        + " */\n"
-        + "function getId() {}");
+    JSDocInfo info =
+        parse("/**\n" + " * @idGenerator {stable}\n" + " */\n" + "function getId() {}");
     assertThat(info.isStableIdGenerator()).isTrue();
   }
 
   @Test
   public void testStableIdGeneratorConflict() {
-    parse("/**\n"
-        + " * @stableIdGenerator\n"
-        + " * @stableIdGenerator\n"
-        + " */\n"
-        + "function getId() {}",
-        "extra @stableIdGenerator tag");
+    parse(
+        "/**\n"
+            + " * @idGenerator {stable}\n"
+            + " * @idGenerator {stable}\n"
+            + " */\n"
+            + "function getId() {}",
+        "extra @idGenerator tag");
   }
 
   @Test

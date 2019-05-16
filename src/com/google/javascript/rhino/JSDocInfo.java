@@ -825,7 +825,7 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * @return whether the {@code @consistentIdGenerator} is present on
+   * @return whether the {@code @idGenerator {consistent}} is present on
    * this {@link JSDocInfo}
    */
   public boolean isConsistentIdGenerator() {
@@ -833,7 +833,7 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * @return whether the {@code @stableIdGenerator} is present on this {@link JSDocInfo}.
+   * @return whether the {@code @idGenerator {stable}} is present on this {@link JSDocInfo}.
    */
   public boolean isStableIdGenerator() {
     return getFlag(MASK_STABLEIDGEN);

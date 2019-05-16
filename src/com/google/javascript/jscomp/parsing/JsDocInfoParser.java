@@ -426,12 +426,6 @@ public final class JsDocInfoParser {
           }
           return token;
 
-        case CONSISTENTIDGENERATOR:
-          if (!jsdocBuilder.recordConsistentIdGenerator()) {
-            addParserWarning("msg.jsdoc.consistidgen");
-          }
-          return eatUntilEOLIfNotAnnotation();
-
         case UNRESTRICTED:
           if (!jsdocBuilder.recordUnrestricted()) {
             addTypeWarning("msg.jsdoc.incompat.type");
@@ -930,12 +924,6 @@ public final class JsDocInfoParser {
             token = eatUntilEOLIfNotAnnotation();
           }
           return token;
-
-        case STABLEIDGENERATOR:
-          if (!jsdocBuilder.recordStableIdGenerator()) {
-            addParserWarning("msg.jsdoc.stableidgen");
-          }
-          return eatUntilEOLIfNotAnnotation();
 
         case SUPPRESS:
           token = parseSuppressTag(next());

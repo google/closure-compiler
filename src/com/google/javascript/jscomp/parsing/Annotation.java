@@ -28,7 +28,6 @@ enum Annotation {
   ABSTRACT,
   AUTHOR,
   CLOSURE_PRIMITIVE,
-  CONSISTENTIDGENERATOR,
   CONSTANT,
   CONSTRUCTOR,
   CUSTOM_ELEMENT,
@@ -73,7 +72,6 @@ enum Annotation {
   PUBLIC,
   RETURN,
   SEE,
-  STABLEIDGENERATOR,
   STRUCT,
   SUPPRESS,
   TEMPLATE,
@@ -93,7 +91,6 @@ enum Annotation {
           .put("argument", Annotation.PARAM)
           .put("author", Annotation.AUTHOR)
           .put("closurePrimitive", Annotation.CLOSURE_PRIMITIVE)
-          .put("consistentIdGenerator", Annotation.CONSISTENTIDGENERATOR)
           .put("const", Annotation.CONSTANT)
           .put("constant", Annotation.CONSTANT)
           .put("constructor", Annotation.CONSTRUCTOR)
@@ -141,7 +138,7 @@ enum Annotation {
           .put("return", Annotation.RETURN)
           .put("returns", Annotation.RETURN)
           .put("see", Annotation.SEE)
-          .put("stableIdGenerator", Annotation.STABLEIDGENERATOR)
+
           .put("struct", Annotation.STRUCT)
           .put("suppress", Annotation.SUPPRESS)
           .put("template", Annotation.TEMPLATE)
