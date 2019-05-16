@@ -2057,7 +2057,7 @@ public class Parser {
   // 12.6.3 The for Statement
   private ParseTree parseForStatement(SourcePosition start, ParseTree initializer) {
     if (initializer == null) {
-      initializer = new NullTree(getTreeLocation(getTreeStartLocation()));
+      initializer = new NullTree(new SourceRange(getTreeEndLocation(), getTreeStartLocation()));
     }
     eat(TokenType.SEMI_COLON);
 
@@ -2065,7 +2065,7 @@ public class Parser {
     if (!peek(TokenType.SEMI_COLON)) {
       condition = parseExpression();
     } else {
-      condition = new NullTree(getTreeLocation(getTreeStartLocation()));
+      condition = new NullTree(new SourceRange(getTreeEndLocation(), getTreeStartLocation()));
     }
     eat(TokenType.SEMI_COLON);
 
@@ -2073,7 +2073,7 @@ public class Parser {
     if (!peek(TokenType.CLOSE_PAREN)) {
       increment = parseExpression();
     } else {
-      increment = new NullTree(getTreeLocation(getTreeStartLocation()));
+      increment = new NullTree(new SourceRange(getTreeEndLocation(), getTreeStartLocation()));
     }
     eat(TokenType.CLOSE_PAREN);
     ParseTree body = parseStatement();
@@ -2234,7 +2234,8 @@ public class Parser {
     CatchTree catchBlock;
     eat(TokenType.CATCH);
 
-    ParseTree exception = new EmptyStatementTree(getTreeLocation(getTreeStartLocation()));
+    ParseTree exception =
+        new EmptyStatementTree(new SourceRange(getTreeEndLocation(), getTreeStartLocation()));
 
     if (peekToken().type == TokenType.OPEN_PAREN) {
       eat(TokenType.OPEN_PAREN);

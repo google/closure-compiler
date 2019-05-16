@@ -123,6 +123,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testOptionalCatchBindingSourceInfo() {
+    mode = LanguageMode.UNSUPPORTED;
+
+    expectFeatures(Feature.OPTIONAL_CATCH_BINDING);
+
+    Node result = parse("try {} catch     {}");
+    Node catchNode = result.getFirstFirstChild().getNext().getFirstChild();
+    assertNode(catchNode).hasToken(Token.CATCH);
+    Node emptyNode = catchNode.getFirstChild();
+    assertNode(emptyNode).hasToken(Token.EMPTY).hasLength(5); // The length matches the whitespace.
+  }
+
+  @Test
   public void testExponentOperator() {
     mode = LanguageMode.ECMASCRIPT7;
     strictMode = STRICT;
@@ -5209,8 +5222,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
       node = deque.remove();
 
       assertWithMessage("Source information must be present on %s", node)
-          .that(node.getLineno() >= 0)
-          .isTrue();
+          .that(node.getLineno())
+          .isAtLeast(0);
+
+      assertWithMessage("Source length must be nonnegative on %s", node)
+          .that(node.getLength())
+          .isAtLeast(0);
 
       for (Node child : node.children()) {
         deque.add(child);
