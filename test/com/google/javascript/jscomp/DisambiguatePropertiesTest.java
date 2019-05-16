@@ -2987,7 +2987,32 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDisambiguateEs6ClassStaticMethods() {
+  public void testDisambiguateEs5StaticMethods_declaredOutsideBody() {
+    test(
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.method = function() { };",
+            "",
+            "class Bar {}",
+            "Bar.method = function() { };",
+            "",
+            "Foo.method();",
+            "Bar.method();"),
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo._typeof_Foo_$method = function() {}",
+            "",
+            "class Bar {}",
+            "Bar._typeof_Bar_$method = function() {}",
+            "",
+            "Foo._typeof_Foo_$method();",
+            "Bar._typeof_Bar_$method();"));
+  }
+
+  @Test
+  public void testDisambiguateEs6ClassStaticMethods_declaredInsideBody() {
     test(
         lines(
             "class Foo {",
