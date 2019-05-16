@@ -108,15 +108,15 @@ Selection.prototype.type;
 Selection.prototype.empty = function() {};
 
 /**
- * @param {Node} baseNode
- * @param {number} baseOffset
- * @param {Node} extentNode
- * @param {number} extentOffset
+ * @param {!Node} anchorNode
+ * @param {number} anchorOffset
+ * @param {!Node} focusNode
+ * @param {number} focusOffset
  * @return {undefined}
  * @see https://w3c.github.io/selection-api/#dom-selection-setbaseandextent
  */
 Selection.prototype.setBaseAndExtent =
- function(baseNode, baseOffset, extentNode, extentOffset) {};
+ function(anchorNode, anchorOffset, focusNode, focusOffset) {};
 
 /**
  * @param {string} alter

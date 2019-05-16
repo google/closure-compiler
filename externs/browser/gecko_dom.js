@@ -506,7 +506,7 @@ Selection.prototype.isCollapsed;
 Selection.prototype.rangeCount;
 
 /**
- * @param {Range} range
+ * @param {!Range} range
  * @return {undefined}
  * @see https://w3c.github.io/selection-api/#dom-selection-addrange
  */
@@ -514,7 +514,7 @@ Selection.prototype.addRange = function(range) {};
 
 /**
  * @param {number} index
- * @return {Range}
+ * @return {!Range}
  * @nosideeffects
  * @see https://w3c.github.io/selection-api/#dom-selection-getrangeat
  */
@@ -549,7 +549,7 @@ Selection.prototype.collapseToEnd = function() {};
 Selection.prototype.collapseToStart = function() {};
 
 /**
- * @param {Node} node
+ * @param {!Node} node
  * @param {boolean=} allowPartialContainment
  * @return {boolean}
  * @nosideeffects
@@ -564,7 +564,7 @@ Selection.prototype.containsNode = function(node, allowPartialContainment) {};
 Selection.prototype.deleteFromDocument = function() {};
 
 /**
- * @param {Node} parentNode
+ * @param {!Node} parentNode
  * @param {number=} offset
  * @return {undefined}
  * @see https://w3c.github.io/selection-api/#dom-selection-extend
@@ -578,14 +578,14 @@ Selection.prototype.extend = function(parentNode, offset) {};
 Selection.prototype.removeAllRanges = function() {};
 
 /**
- * @param {Range} range
+ * @param {!Range} range
  * @return {undefined}
  * @see https://w3c.github.io/selection-api/#dom-selection-removerange
  */
 Selection.prototype.removeRange = function(range) {};
 
 /**
- * @param {Node} parentNode
+ * @param {!Node} parentNode
  * @see http://w3c.github.io/selection-api/#dom-selection-selectallchildren
  */
 Selection.prototype.selectAllChildren;
