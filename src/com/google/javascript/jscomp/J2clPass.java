@@ -108,12 +108,7 @@ public class J2clPass implements CompilerPass {
       this.fnNamesToInline = fnNamesToInline;
       this.inliningMode = inliningMode;
 
-      this.injector =
-          new FunctionInjector.Builder(compiler)
-              .safeNameIdSupplier(safeNameIdSupplier)
-              .assumeStrictThis(true)
-              .assumeMinimumCapture(true)
-              .build();
+      this.injector = new FunctionInjector(compiler, safeNameIdSupplier, true, true, true);
       this.injector.setKnownConstants(fnNamesToInline);
     }
 
