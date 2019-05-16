@@ -251,6 +251,16 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
+  public void testMessageExport_shortHand() {
+    extractMessagesSafely("exports = {MSG_FOO};");
+  }
+
+  @Test
+  public void testMessageExport_longHand() {
+    extractMessagesSafely("exports = {MSG_FOO: MSG_FOO};");
+  }
+
+  @Test
   public void testJsMessageAlias_fromObjectDestrucuturing_longhand() {
     extractMessagesSafely("({MSG_MENU_MARK_AS_UNREAD: MSG_MENU_MARK_AS_UNREAD} = x);");
   }
