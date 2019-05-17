@@ -105,28 +105,10 @@ Window.prototype.sessionStorage;
 Window.prototype.sidebar;
 
 /**
- * Decodes a string of data which has been encoded using base-64 encoding.
- *
- * @param {string} encodedData
- * @return {string}
- * @see https://developer.mozilla.org/en/DOM/window.atob
- * @nosideeffects
- */
-function atob(encodedData) {}
-
-/**
  * @see https://developer.mozilla.org/en/DOM/window.back
  * @return {undefined}
  */
 Window.prototype.back = function() {};
-
-/**
- * @param {string} stringToEncode
- * @return {string}
- * @see https://developer.mozilla.org/en/DOM/window.btoa
- * @nosideeffects
- */
-function btoa(stringToEncode) {}
 
 /** @deprecated */
 Window.prototype.captureEvents;
