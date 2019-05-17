@@ -2762,7 +2762,6 @@ DOMException.NAMESPACE_ERR;
  * @see http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-258A00AF
  */
 DOMException.INVALID_ACCESS_ERR;
-
 /**
  * @type {boolean}
  * @see https://developer.mozilla.org/en/DOM/window.closed
@@ -2816,16 +2815,7 @@ Window.prototype.length;
 Window.prototype.location;
 
 /**
- * @see https://developer.mozilla.org/en/DOM/window.locationbar
- */
-Window.prototype.locationbar;
 
-/**
- * @see https://developer.mozilla.org/en/DOM/window.menubar
- */
-Window.prototype.menubar;
-
-/**
  * @type {string}
  * @see https://developer.mozilla.org/en/DOM/window.name
  */
@@ -2849,9 +2839,6 @@ Window.prototype.opener;
  */
 Window.prototype.parent;
 
-/** @see https://developer.mozilla.org/en/DOM/window.personalbar */
-Window.prototype.personalbar;
-
 /**
  * @type {!Window}
  * @see https://developer.mozilla.org/en/DOM/window.self
@@ -2864,10 +2851,50 @@ Window.prototype.self;
  */
 Window.prototype.status;
 
-/** @see https://developer.mozilla.org/en/DOM/window.statusbar */
+/**
+ * @interface
+ * @see https://html.spec.whatwg.org/multipage/window-object.html#the-status-bar-barprop-object
+ */
+function BarProp() {}
+
+/** @const {boolean} */
+BarProp.prototype.visible;
+
+/**
+ * @type {!BarProp}
+ * @see https://developer.mozilla.org/en/DOM/window.locationbar
+ */
+Window.prototype.locationbar;
+
+/**
+ * @type {!BarProp}
+ * @see https://developer.mozilla.org/en/DOM/window.menubar
+ */
+Window.prototype.menubar;
+
+/**
+ * @type {!BarProp}
+ * @see https://developer.mozilla.org/en/DOM/window.personalbar
+ */
+Window.prototype.personalbar;
+
+
+/**
+ * @type {!BarProp}
+ * @see https://developer.mozilla.org/en/DOM/window.scrollbars
+ */
+Window.prototype.scrollbars;
+
+/**
+ * @type {!BarProp}
+ * @see https://developer.mozilla.org/en/DOM/window.statusbar
+ */
 Window.prototype.statusbar;
 
-/** @see https://developer.mozilla.org/en/DOM/window.toolbar */
+/**
+ * @type {!BarProp}
+ * @see https://developer.mozilla.org/en/DOM/window.toolbar
+ */
 Window.prototype.toolbar;
 
 /**
@@ -2950,4 +2977,5 @@ Window.prototype.open = function(url, windowName, windowFeatures, replace) {};
  * @implicitCast
  */
 Element.prototype.innerHTML;
+
 

@@ -83,9 +83,6 @@ Window.prototype.pkcs11;
 /** @see https://developer.mozilla.org/en/DOM/window */
 Window.prototype.returnValue;
 
-/** @see https://developer.mozilla.org/en/DOM/window.scrollbars */
-Window.prototype.scrollbars;
-
 /**
  * @type {number}
  * @see https://developer.mozilla.org/En/DOM/window.scrollMaxX
