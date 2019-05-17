@@ -40,7 +40,13 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
         "/** @type {function(this: string, ...*): string} */ String.prototype.substr;",
         "/** @type {function(this: string, ...*): string} */ String.prototype.slice;",
         "/** @type {function(this: string, ...*): string} */ String.prototype.charAt;",
-        "/** @type {function(this: Array, ...*): !Array} */ Array.prototype.slice;"));
+        "/** @type {function(this: Array, ...*): !Array} */ Array.prototype.slice;",
+        "/** @type {function(this: Array, ...*): !Array<?>} */ Array.prototype.concat;",
+        "/** @type {function(this: Array, ...*): !Array<?>} */ function returnArrayType() {}",
+        "/** @type {function(this: Array, ...*): !Array<?>|string} */ function returnUnionType(){}",
+        "/** @constructor */ function Foo(){}",
+        "/** @type {function(this: Foo, ...*): !Foo} */ Foo.prototype.concat",
+        "var obj = new Foo();"));
   }
 
   @Override
@@ -607,6 +613,21 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSameStringTyped("a.substring(0, 1)");
     foldSameStringTyped("a.substr(0, 1)");
     foldSameStringTyped("''.substring(i, i + 1)");
+  }
+  
+  @Test
+  public void testFoldArrayConcat() {
+    enableNormalize();
+    enableTypeCheck();
+
+    fold("[].concat([1,2,3],1)", "[1,2,3].concat(1)");
+    fold("[].concat(returnArrayType(),1)", "returnArrayType().concat(1)");
+    foldSame("[].concat(1,[1,2,3])");
+    foldSame("[1,2,3].concat(returnArrayType())");
+    foldSame("[].concat(returnUnionType())");
+    foldSame("returnArrayType().concat([1,2,3])");
+    // Call method with the same name as Array.prototype.concat
+    foldSame("obj.concat([1,2,3])");
   }
 
   private void foldSame(String js) {

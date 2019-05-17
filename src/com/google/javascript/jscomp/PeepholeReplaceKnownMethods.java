@@ -24,6 +24,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -59,16 +60,17 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
   private Node tryFoldKnownMethods(Node subtree) {
     // For now we only support string methods .join(),
     // .indexOf(), .substring() and .substr()
+    // array method concat()
     // and numeric methods parseInt() and parseFloat().
 
+    checkArgument(subtree.isCall(), subtree);
     subtree = tryFoldArrayJoin(subtree);
-
+    // tryFoldArrayJoin may return a string literal instead of a CALL node
     if (subtree.isCall()) {
-      Node callTarget = subtree.getFirstChild();
-      if (callTarget == null) {
-        return subtree;
-      }
-
+      subtree = tryToFoldArrayConcat(subtree);
+      checkState(subtree.isCall(), subtree);
+      Node callTarget = checkNotNull(subtree.getFirstChild());
+      
       if (NodeUtil.isGet(callTarget)) {
         if (isASTNormalized() && callTarget.getFirstChild().isQualifiedName()) {
           switch (callTarget.getFirstChild().getQualifiedName()) {
@@ -955,5 +957,84 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     parent.replaceChild(n, arrayOfStrings);
     reportChangeToEnclosingScope(parent);
     return arrayOfStrings;
+  }
+
+  private Node tryToFoldArrayConcat(Node n) {
+    checkArgument(n.isCall(), n);
+
+    if (!isASTNormalized() || !useTypes) {
+      return n;
+    }
+    if (isSafeToRemoveArrayLiteralFromFrontOfConcat(n)) {
+      return removeArrayLiteralFromFrontOfConcat(n);
+    }
+    return n;
+  }
+
+  /**
+   * Simply replace empty array literal from the front of concatenation by the first argument of
+   * concat function call [].concat(arr,1) -> arr.concat(1)
+   */
+  private Node removeArrayLiteralFromFrontOfConcat(Node n) {
+    checkArgument(isSafeToRemoveArrayLiteralFromFrontOfConcat(n), n);
+    
+    Node firstArg = n.getSecondChild();
+    n.removeChild(firstArg);
+    Node curentTarget = n.getFirstChild();
+    Node emptyArrayLiteral = curentTarget.getFirstChild();
+    curentTarget.replaceChild(emptyArrayLiteral, firstArg);
+    reportChangeToEnclosingScope(n);
+    return n;
+  }
+
+  /**
+   * Check if we have this code pattern [].concat(exactlyArrayArgument,...*) so
+   * removeArrayLiteralFromFrontOfConcat can be performed
+   */
+  private boolean isSafeToRemoveArrayLiteralFromFrontOfConcat(Node n) {
+    checkArgument(n.isCall(), n);
+    
+    if (!isConcatFunctionCall(n)) {
+      return false;
+    }
+    Node arrayLiteralToRemove = n.getFirstFirstChild();
+    if (!arrayLiteralToRemove.isArrayLit() || arrayLiteralToRemove.getChildCount() != 0) {
+      return false;
+    }
+    Node firstArg = n.getSecondChild();
+    return containsExactlyArray(firstArg);
+  }
+
+  /**
+   * Check if this call node is Array.prototype.concat
+   */
+  private boolean isConcatFunctionCall(Node n) {
+    checkArgument(n.isCall(), n);
+    
+    Node callTarget = checkNotNull(n.getFirstChild());
+    if (!callTarget.isGetProp()) {
+      return false;
+    }
+    Node functionName = callTarget.getSecondChild();
+    if (functionName == null || !functionName.getString().equals("concat")) {
+      return false;
+    }
+    Node maybeArray = callTarget.getFirstChild();
+    return containsExactlyArray(maybeArray);
+  }
+
+  /**
+   * Check if a node contains an array type or function call that returns only an array
+   */
+  private boolean containsExactlyArray(Node n) {
+    if (n == null || n.getJSType() == null) {
+      return false;
+    }
+    JSType nodeType = n.getJSType();
+    if (nodeType.isArrayType() || (nodeType.isTemplatizedType()
+        && nodeType.toMaybeTemplatizedType().getReferencedType().isArrayType())) {
+      return true;
+    }
+    return false;
   }
 }
