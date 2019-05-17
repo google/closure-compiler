@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.collect.ImmutableList;
@@ -24,6 +25,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -37,9 +39,11 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * Rewrites prototyped methods calls as static calls that take "this" as their first argument. This
- * transformation simplifies the call graph so smart name removal, cross module code motion and
- * other passes can do more.
+ * Rewrites prototype and static methods as global, free functions that take the receiver as their
+ * first argument.
+ *
+ * <p>This transformation simplifies the call graph so smart name removal, cross module code motion
+ * and other passes can do more.
  *
  * <p>To work effectively, this pass depends on {@link DisambiguateProperties} running first to do a
  * lot of heavy-lifting. It assumes that different methods will have unique names which in general
@@ -49,9 +53,9 @@ import javax.annotation.Nullable;
  * on. Resulting code may also benefit from `--collapse_anonymous_functions` and
  * `--collapse_variable_declarations`
  *
- * <p>This pass only rewrites functions that are part of an object's prototype, as well as a host of
- * other preconditions. Functions that access the "arguments" variable arguments object are not
- * eligible for this optimization.
+ * <p>This pass only rewrites functions that are part of a type's prototype or are statics on a
+ * ctor/interface function. A host of other preconditions must also be met. Functions that access
+ * the "arguments" variable arguments object are not eligible for this optimization, for example.
  *
  * <p>For example:
  *
@@ -71,9 +75,23 @@ import javax.annotation.Nullable;
  *     var total = accumulate(a, 2)
  * </pre>
  *
+ * <p>A similar transformation occurs for:
+ *
+ * <pre>
+ *     /** @constructor *\/
+ *     function A() { }
+ *
+ *     A.accumulate = function(value) {
+ *       this.total += value; return this.total
+ *     }
+ *     var total = a.accumulate(2)
+ * </pre>
+ *
  */
+// TODO(nickreid): Change the name to something reflecting that statics are also devirtualized now.
 class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPass {
   private final AbstractCompiler compiler;
+  private ReferenceMap refMap;
 
   DevirtualizePrototypeMethods(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -81,6 +99,10 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
 
   @Override
   public void process(Node externs, Node root, ReferenceMap refMap) {
+    checkState(this.refMap == null, "`process` should only be called once.");
+
+    this.refMap = refMap;
+
     for (Map.Entry<String, ArrayList<Node>> referenceGroup : refMap.getPropReferences()) {
       processReferenceList(referenceGroup.getKey(), referenceGroup.getValue());
     }
@@ -130,10 +152,7 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
     rewriteDefinition(canonicalDefinitionSite, devirtualizedName);
   }
 
-  /**
-   * Determines if the current node is a function prototype definition.
-   */
-  private static boolean isPrototypeMethodDefinition(Node node) {
+  private boolean isPrototypeOrStaticMethodDefinition(Node node) {
     Node parent = node.getParent();
     Node grandparent = node.getGrandparent();
     if (parent == null || grandparent == null) {
@@ -151,21 +170,21 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
       case GETPROP:
         {
           // Case: `Foo.prototype.bar = function() { };
-          if (parent.getFirstChild() != node) {
+          if (!node.isFirstChildOf(parent)
+              || !NodeUtil.isExprAssign(grandparent)
+              || !parent.getLastChild().isFunction()) {
             return false;
           }
 
-          if (!NodeUtil.isExprAssign(grandparent)) {
-            return false;
+          if (NodeUtil.isPrototypeProperty(node)) {
+            return true;
           }
 
-          Node functionNode = parent.getLastChild();
-          if ((functionNode == null) || !functionNode.isFunction()) {
-            return false;
+          if (isDefinitelyCtorOrInterface(node.getFirstChild())) {
+            return true;
           }
 
-          Node nameNode = node.getFirstChild();
-          return nameNode.isGetProp() && nameNode.getLastChild().getString().equals("prototype");
+          return false;
         }
 
       case STRING_KEY:
@@ -175,31 +194,45 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
           //        }`
           checkArgument(parent.isObjectLit(), parent);
 
-          if (!grandparent.isAssign()) {
+          if (!parent.isSecondChildOf(grandparent)
+              || !NodeUtil.isPrototypeAssignment(grandparent.getFirstChild())
+              || !node.getFirstChild().isFunction()) {
             return false;
           }
 
-          if (grandparent.getLastChild() != parent) {
-            return false;
-          }
-
-          Node greatgrandparent = grandparent.getParent();
-          if (greatgrandparent == null || !greatgrandparent.isExprResult()) {
-            return false;
-          }
-
-          Node functionNode = node.getFirstChild();
-          if ((functionNode == null) || !functionNode.isFunction()) {
-            return false;
-          }
-
-          Node target = grandparent.getFirstChild();
-          return target.isGetProp() && target.getLastChild().getString().equals("prototype");
+          return true;
         }
 
       default:
         return false;
     }
+  }
+
+  private boolean isDefinitelyCtorOrInterface(Node receiver) {
+    String qname = receiver.getQualifiedName();
+    if (qname == null) {
+      return false;
+    }
+
+    // It's safe to rely on the global scope because normalization has made all names unique. No
+    // local will shadow a global name, and we're ok with missing some statics.
+    Var var = refMap.getGlobalScope().getVar(qname);
+    if (var == null) {
+      return false;
+    }
+
+    if (var.isClass()) {
+      return true;
+    }
+
+    JSDocInfo jsdoc = var.getJSDocInfo();
+    if (jsdoc == null) {
+      return false;
+    } else if (jsdoc.isConstructorOrInterface() || jsdoc.usesImplicitMatch()) {
+      return true; // Case: `@constructor`, `@interface`, `@record`.
+    }
+
+    return false;
   }
 
   /**
@@ -230,7 +263,7 @@ class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPas
       return false;
     }
 
-    if (!isPrototypeMethodDefinition(definitionSite)) {
+    if (!isPrototypeOrStaticMethodDefinition(definitionSite)) {
       return false;
     }
 

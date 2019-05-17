@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -934,6 +935,57 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRewrite_definedUsingAssignment_staticMethod_onClass() {
+    test(
+        srcs(
+            lines(
+                "class Foo { }", //
+                "Foo.bar = function() { return 5; }",
+                "",
+                // We need at least one normal call to trigger rewriting.
+                "x.bar();")),
+        expected(
+            lines(
+                "class Foo { }", //
+                "",
+                "var JSCompiler_StaticMethods_bar = function(JSCompiler_StaticMethods_bar$self) {",
+                "  return 5;",
+                "};",
+                "",
+                "JSCompiler_StaticMethods_bar(x);")));
+  }
+
+  @Test
+  public void testRewrite_definedUsingAssignment_staticMethod_onFunction() {
+    for (String annotation :
+        ImmutableList.of("/** @constructor */", "/** @interface */", "/** @record*/")) {
+      testRewrite_definedUsingAssignment_staticMethod_onFunction(annotation);
+    }
+  }
+
+  private void testRewrite_definedUsingAssignment_staticMethod_onFunction(String annotation) {
+    test(
+        srcs(
+            lines(
+                annotation,
+                "function Foo() { }", //
+                "Foo.bar = function() { return 5; }",
+                "",
+                // We need at least one normal call to trigger rewriting.
+                "x.bar();")),
+        expected(
+            lines(
+                annotation,
+                "function Foo() { }", //
+                "",
+                "var JSCompiler_StaticMethods_bar = function(JSCompiler_StaticMethods_bar$self) {",
+                "  return 5;",
+                "};",
+                "",
+                "JSCompiler_StaticMethods_bar(x);")));
+  }
+
+  @Test
   public void testRewrite_definedUsingClassMember_staticMethod_usingThis() {
     test(
         srcs(
@@ -1007,6 +1059,16 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
                 "",
                 // We need at least one normal call to trigger rewriting.
                 "x.bar();")));
+  }
+
+  @Test
+  public void testPropDefinition_notOnQualifiedName_doesNotCrash() {
+    testSame(
+        srcs(
+            lines(
+                "class Qux { }", //
+                "",
+                "new Qux().prop = function() { }")));
   }
 
   @Test
