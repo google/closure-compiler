@@ -109,7 +109,9 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
 
     if (includeLevel) {
       boldLine.append(getLevelName(warning ? CheckLevel.WARNING : CheckLevel.ERROR));
-      boldLine.append(" - ");
+      boldLine.append(" - [");
+      boldLine.append(error.getType().key);
+      boldLine.append("] ");
     }
 
     boldLine.append(error.description);

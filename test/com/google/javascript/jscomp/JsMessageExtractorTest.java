@@ -68,7 +68,7 @@ public final class JsMessageExtractorTest {
       assertWithMessage("Expected exception").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
-      assertThat(e).hasMessageThat().contains("testcode:1: ERROR - Parse error");
+      assertThat(e).hasMessageThat().contains("testcode:1: ERROR - [JSC_PARSE_ERROR] Parse error");
       assertThat(e).hasMessageThat().contains("if (true) {}}\n");
     }
   }
@@ -80,7 +80,7 @@ public final class JsMessageExtractorTest {
       assertWithMessage("Expected exception").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
-      assertThat(e).hasMessageThat().contains("testcode:2: ERROR - Parse error");
+      assertThat(e).hasMessageThat().contains("testcode:2: ERROR - [JSC_PARSE_ERROR] Parse error");
       assertThat(e).hasMessageThat().contains("if (true) {}}\n");
     }
   }

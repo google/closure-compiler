@@ -88,7 +88,7 @@ public final class LightweightMessageFormatterTest {
     LightweightMessageFormatter formatter = formatter("    if (foobar) {");
     assertThat(formatter.formatError(error))
         .isEqualTo(
-            "javascript/complex.js:5: ERROR - error description here\n"
+            "javascript/complex.js:5: ERROR - [TEST_FOO] error description here\n"
                 + "    if (foobar) {\n"
                 + "        ^^^^^^\n");
   }
@@ -102,7 +102,7 @@ public final class LightweightMessageFormatterTest {
     LightweightMessageFormatter formatter = formatter("\t\tif (foobar) {");
     assertThat(formatter.formatError(error))
         .isEqualTo(
-            "javascript/complex.js:5: ERROR - error description here\n"
+            "javascript/complex.js:5: ERROR - [TEST_FOO] error description here\n"
                 + "\t\tif (foobar) {\n"
                 + "\t\t    ^^^^^^\n");
   }
@@ -114,7 +114,7 @@ public final class LightweightMessageFormatterTest {
     LightweightMessageFormatter formatter = formatter("assert (1;");
     assertThat(formatter.formatError(error))
         .isEqualTo(
-            "javascript/complex.js:1: ERROR - error description here\n"
+            "javascript/complex.js:1: ERROR - [TEST_FOO] error description here\n"
                 + "assert (1;\n"
                 + "          ^\n");
   }
@@ -126,7 +126,7 @@ public final class LightweightMessageFormatterTest {
     LightweightMessageFormatter formatter = formatter("if (foo");
     assertThat(formatter.formatError(error))
         .isEqualTo(
-            "javascript/complex.js:6: ERROR - error description here\n"
+            "javascript/complex.js:6: ERROR - [TEST_FOO] error description here\n"
                 + "if (foo\n"
                 + "       ^\n");
   }
@@ -143,7 +143,7 @@ public final class LightweightMessageFormatterTest {
         .isEqualTo(
             "javascript/complex.js:5: \n"
                 + "Originally at:\n"
-                + "original/source.html:3: ERROR - error description here\n"
+                + "original/source.html:3: ERROR - [TEST_FOO] error description here\n"
                 + "<div ng-show='(foo'>\n"
                 + "               ^^^^^\n");
   }
