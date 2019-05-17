@@ -2746,15 +2746,10 @@ BroadcastChannel.prototype.name;
 /**
  * HTML5 DataTransfer class.
  *
- * We say that this extends ClipboardData, because Event.prototype.clipboardData
- * is a DataTransfer on WebKit but a ClipboardData on IE. The interfaces are so
- * similar that it's easier to merge them.
- *
  * @see http://www.w3.org/TR/2011/WD-html5-20110113/dnd.html
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html
  * @see http://developers.whatwg.org/dnd.html#datatransferitem
  * @constructor
- * @extends {ClipboardData}
  */
 function DataTransfer() {}
 
@@ -2772,7 +2767,6 @@ DataTransfer.prototype.files;
 
 /**
  * @param {string=} opt_format Format for which to remove data.
- * @override
  * @return {undefined}
  */
 DataTransfer.prototype.clearData = function(opt_format) {};
@@ -2780,7 +2774,6 @@ DataTransfer.prototype.clearData = function(opt_format) {};
 /**
  * @param {string} format Format for which to set data.
  * @param {string} data Data to add.
- * @override
  * @return {boolean}
  */
 DataTransfer.prototype.setData = function(format, data) {};
@@ -2788,7 +2781,6 @@ DataTransfer.prototype.setData = function(format, data) {};
 /**
  * @param {string} format Format for which to set data.
  * @return {string} Data for the given format.
- * @override
  */
 DataTransfer.prototype.getData = function(format) { return ''; };
 
