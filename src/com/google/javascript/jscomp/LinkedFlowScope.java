@@ -101,7 +101,7 @@ class LinkedFlowScope implements FlowScope {
 
   @Override
   public LinkedFlowScope inferSlotType(String symbol, JSType type) {
-    OverlayScope scope = getOverlayScopeForVar(symbol, true);
+    OverlayScope scope = getOverlayScopeForName(symbol, true);
     OverlayScope newScope = scope.infer(symbol, type);
     // Aggressively remove empty scopes to maintain a reasonable equivalence.
     PMap<TypedScope, OverlayScope> newScopes =
@@ -129,10 +129,10 @@ class LinkedFlowScope implements FlowScope {
       // nested block scope that is ignored when branches are joined; functionScope
       // is also wrong because it could lead to ambiguity if the same root name is
       // declared in multiple different blocks.  Instead, the qualified name is declared
-      // on the scope that owns the root, when possible.
+      // on the scope that owns the root, when possible. When the root is undeclared, the qualified
+      // name is declared in the global scope, as only global variables can be undeclared.
       TypedVar rootVar = syntacticScope.getVar(getRootOfQualifiedName(symbol));
-      TypedScope rootScope =
-          rootVar != null ? rootVar.getScope() : syntacticScope.getClosestHoistScope();
+      TypedScope rootScope = rootVar != null ? rootVar.getScope() : syntacticScope.getGlobalScope();
       v = rootScope.declare(symbol, node, bottomType, null, !declared);
     }
 
@@ -174,8 +174,13 @@ class LinkedFlowScope implements FlowScope {
   /** Get the slot for the given symbol. */
   @Override
   public StaticTypedSlot getSlot(String name) {
-    OverlayScope scope = getOverlayScopeForVar(name, false);
-    return scope != null ? scope.getSlot(name) : syntacticScope.getSlot(name);
+    TypedVar var = syntacticScope.getVar(name);
+    OverlayScope scope =
+        var == null
+            ? getOverlayScopeForName(name, false)
+            : getOverlayScopeForScope(var.getScope(), false);
+
+    return scope != null ? scope.getSlot(name) : var;
   }
 
   private static String getRootOfQualifiedName(String name) {
@@ -183,14 +188,28 @@ class LinkedFlowScope implements FlowScope {
     return index < 0 ? name : name.substring(0, index);
   }
 
-  private OverlayScope getOverlayScopeForVar(String name, boolean create) {
-    TypedVar v = syntacticScope.getVar(name);
-    TypedScope scope = v != null ? v.getScope() : null;
-    if (scope == null) {
-      TypedVar rootVar = syntacticScope.getVar(getRootOfQualifiedName(name));
-      scope = rootVar != null ? rootVar.getScope() : null;
-      scope = scope != null ? scope : functionScope;
-    }
+  /**
+   * Returns the overlay scope corresponding to this qualified name
+   *
+   * @param create whether to create a new OverlayScope if one does not already exist.
+   */
+  private OverlayScope getOverlayScopeForName(String name, boolean create) {
+    TypedVar rootVar = syntacticScope.getVar(getRootOfQualifiedName(name));
+    TypedScope scope = rootVar != null ? rootVar.getScope() : null;
+    scope = scope != null ? scope : functionScope;
+    return getOverlayScopeForScope(scope, create);
+  }
+
+  /**
+   * Returns the overlay scope corresponding to this syntactic scope.
+   *
+   * <p>Use instead of {@link #getOverlayScopeForName(String, boolean)} if you already know the
+   * correct scope in order to avoid a variable lookup.
+   *
+   * @param scope the syntactic scope
+   * @param create whether to create a new OverlayScope if one does not already exist.
+   */
+  private OverlayScope getOverlayScopeForScope(TypedScope scope, boolean create) {
     OverlayScope overlay = scopes.get(scope);
     if (overlay == null && create) {
       overlay = new OverlayScope(scope);

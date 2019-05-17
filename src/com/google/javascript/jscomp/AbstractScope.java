@@ -198,8 +198,9 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
 
   /**
    * Returns the variable, may be null
+   *
+   * <p>Non-final for {@link TypedScope} which needs to handle qualified names.
    */
-  // Non-final for jsdev tests
   public V getVar(String name) {
     for (AbstractScope<S, V> scope = thisScope(); scope != null; scope = scope.getParent()) {
       @Nullable V var = scope.getOwnSlot(name);
@@ -429,6 +430,18 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
   boolean hasSameContainerScope(S other) {
     // Do identity check first as a shortcut.
     return this == other || getClosestContainerScope() == other.getClosestContainerScope();
+  }
+
+  /**
+   * Returns the closest scope upon which `this` is defined, which is either the global scope or a
+   * non-arrow-function scope.
+   */
+  final S getScopeOfThis() {
+    S scope = getClosestContainerScope();
+    while (!scope.isGlobal() && !NodeUtil.isNonArrowFunction(scope.getRootNode())) {
+      scope = scope.getParent().getClosestContainerScope();
+    }
+    return scope;
   }
 
   /**

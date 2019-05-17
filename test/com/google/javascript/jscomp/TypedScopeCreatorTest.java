@@ -523,6 +523,42 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassInstancePropertyInArrowFunction() {
+    testSame(
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    (() => {",
+            "      /** @type {number} */",
+            "      this.size = 0;",
+            "    })();",
+            "    CTOR: 0;",
+            "  }",
+            "}"));
+
+    // Declare `this.size` in the enclosing constructor's scope.
+    assertScope(getLabeledStatement("CTOR").enclosingScope.getParent())
+        .declares("this.size")
+        .directly();
+  }
+
+  @Test
+  public void testObjectLiteralShadowingFnExpressionName() {
+    testSame(
+        lines(
+            "var obj = {",
+            "  key: function f() {",
+            "    var f = {x: 0};",
+            "    FN: 0; ",
+            "  }",
+            "};"));
+
+    // Test that we declare 'f.x' on the function block scope, not the enclosing function scope,
+    // which also contains `f`.
+    assertScope(getLabeledStatement("FN").enclosingScope).declares("f.x").directly();
+  }
+
+  @Test
   public void testForOfWithObjectPatConstDeclarationShadowedInLoop() {
     testSame(
         lines(
@@ -3078,6 +3114,19 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(fooAliasPrototype).isNotNull();
     assertType(fooAliasPrototype.getType())
         .isEqualTo(globalScope.getSlot("Foo.prototype").getType());
+  }
+
+  @Test
+  public void testNoConstructorAlias_namespaceIsShadowedInParameter() {
+    testWarning(
+        lines(
+            "const a = {};",
+            "a.B = class {};",
+            "function f(a) {",
+            "  const B = a.B;", // This does /not/ create a constructor alias as `a` is shadowed.
+            "  var /** !B */ b;",
+            "}"),
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
   }
 
   @Test

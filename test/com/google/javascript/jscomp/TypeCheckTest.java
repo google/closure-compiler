@@ -22541,6 +22541,136 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testPropertyReferenceOnShadowingParameter() {
+    testTypes(
+        lines(
+            "/** @const */",
+            "var ns = {};",
+            "ns.fn = function(/** number */ a){};",
+            "class Namespace {",
+            "  fn(/** string */ a){}",
+            "}",
+            "function test(/** !Namespace */ ns) {", // The parameter 'ns' shadows the global 'ns'.
+            // Verify that ns.fn resolves to Namespace.prototype.fn, not the global ns.fn.
+            "  ns.fn(0);",
+            "}"),
+        lines(
+            "actual parameter 1 of Namespace.prototype.fn does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testPropertyReferenceOnShadowingParameter_whenGlobalVariableIsUndeclared() {
+    // Unlike the above case, this case never explicitly declares `ns` in the global scope.
+    testTypesWithExtraExterns(
+        "ns.fn = function(/** number */ a){};",
+        lines(
+            "class Namespace {",
+            "  fn(/** string */ a){}",
+            "}",
+            "function test(/** !Namespace */ ns) {", // The parameter 'ns' shadows the global 'ns'.
+            // Verify that ns.fn resolves to Namespace.prototype.fn, not the global ns.fn.
+            "  ns.fn(0);",
+            "}"),
+        lines(
+            "actual parameter 1 of Namespace.prototype.fn does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testPropertyReferenceOnShadowingVariable() {
+    testTypes(
+        lines(
+            "/** @const */",
+            "var ns = {};",
+            "ns.fn = function(/** number */ a){};",
+            "class Namespace {",
+            "  fn(/** string */ a){}",
+            "}",
+            "function test() {",
+            // The local 'ns' shadows the global 'ns'.
+            "  const /** !Namespace */ ns = /** @type {!Namespace} */ (unknown);",
+            // Verify that ns.fn resolves to Namespace.prototype.fn, not the global ns.fn.
+            "  ns.fn(0);",
+            "}"),
+        lines(
+            "actual parameter 1 of Namespace.prototype.fn does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testPropertyReferenceOnShadowingVariable_inferredLocalSlotOverridesGlobal() {
+    testTypes(
+        lines(
+            "/** @const */",
+            "var ns = {};",
+            "ns.fn = function(/** number */ a){};",
+            "/** @unrestricted */",
+            "class Namespace {}",
+            "function test(/** !Namespace */ ns) {", // The parameter 'ns' shadows the global 'ns'.
+            "  ns.fn = function(/** string */ a) {};",
+            // Verify that ns.fn resolves to the locally assigned ns.fn, not the global ns.fn.
+            "  ns.fn(0);",
+            "}"),
+        lines(
+            "actual parameter 1 of Namespace.fn does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testReassigningPropertyOnClassTypeInFunction_localSlotOverridesPrototype() {
+    testTypes(
+        lines(
+            "/** @unrestricted */",
+            "class Namespace {",
+            "  fn(/** string */ a) {}",
+            "}",
+            "function test(/** !Namespace */ ns) {",
+            // Assign ns.fn to a narrow type than Namespace.prototype.fn.
+            "  ns.fn = function(/** string|number */ a) {};",
+            // Verify that ns.fn resolves to the narrower local type, which can accept `number`.
+            "  ns.fn(0);",
+            "}"));
+  }
+
+  @Test
+  public void testPropertyReferenceOnShadowingThisProperty() {
+    testTypes(
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    /** @type {?number} */",
+            "    this.size = null;",
+            "  }",
+            "  method() {",
+            // TODO(b/132283774): Redeclaring 'this.size' should cause an error.
+            "    /** @type {number} */",
+            "    this.size = unknown;",
+            "    const /** number */ num = this.size;",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testThisReferenceTighteningInInnerScope() {
+    testTypes(
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    /** @type {?number} */",
+            "    this.size = 0;",
+            // Verify that the inferred type of `this.size`, which is `number`, propagates into
+            // block scopes.
+            "    { const /** number */ n = this.size; }",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testShadowedForwardReferenceHoisted() {
     testTypes(
         lines(

@@ -503,6 +503,7 @@ public final class TypeInferenceTest {
   @Test
   public void testAssert6() {
     JSType startType = createNullableType(OBJECT_TYPE);
+    assuming("x", getNativeType(UNKNOWN_TYPE)); // Only global qname roots can be undeclared
     assuming("x.y", startType);
     inFunction("out1 = x.y; goog.asserts.assert(x.y); out2 = x.y;");
     verify("out1", startType);
@@ -732,6 +733,7 @@ public final class TypeInferenceTest {
   public void testAssertObject_narrowsQualifiedNameArgument() {
     JSType startType = createNullableType(OBJECT_TYPE);
     includeGoogAssertionFn("assertObject", getNativeType(OBJECT_TYPE));
+    assuming("x", getNativeType(UNKNOWN_TYPE)); // Only global qname roots can be undeclared
     assuming("x.y", startType);
 
     // test a property "x.y" instead of a simple name

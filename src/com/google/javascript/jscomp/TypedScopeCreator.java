@@ -1904,6 +1904,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return this;
       }
 
+      /**
+       * Sets the scope in which the variable should be declared.
+       *
+       * <p>If the given name is a qualified name, this scope should be the scope in which the root
+       * of the name is (or will later be) declared.
+       */
       SlotDefiner inScope(TypedScope scope) {
         this.scope = checkNotNull(scope);
         return this;
@@ -1937,32 +1943,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         boolean isGlobalVar = declarationNode.isName() && scopeToDeclareIn.isGlobal();
         boolean shouldDeclareOnGlobalThis = isGlobalVar && (parent.isVar() || parent.isFunction());
-        // If n is a property, then we should really declare it in the
-        // scope where the root object appears. This helps out people
-        // who declare "global" names in an anonymous namespace.
-        TypedScope ownerScope = null;
-        if (declarationNode.isGetProp()) {
-          ownerScope = scopeToDeclareIn;
-        } else if (variableName.contains(".")) {
-          TypedVar rootVar =
-              currentScope.getVar(variableName.substring(0, variableName.indexOf('.')));
-          if (rootVar != null) {
-            ownerScope = rootVar.getScope();
-          }
-        }
-        // The owner scope could be any of the following:
-        //   1. in the same CFG as scopeToDeclareIn
-        //   2. in an outer CFG, which this scope closes over
-        //   3. null, if this isn't a qualified name
-        // In case 1, we need to clobber the declaration in ownerScope.
-        // In case 2, we only declare in the outer scope if the qname is not already declared,
-        // since qualified names are declare lazily.
-        if (ownerScope != null
-            && scopeToDeclareIn != ownerScope
-            && (!ownerScope.hasOwnSlot(variableName)
-                || ownerScope.hasSameContainerScope(scopeToDeclareIn))) {
-          scopeToDeclareIn = ownerScope;
-        }
 
         // TODO(sdh): Remove this special case.  It is required to reproduce the original
         // non-block-scoped behavior, which is depended on in several places including
@@ -2129,8 +2109,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               }
           }
         } else if (root.isThis() || root.isSuper()) {
-          // TODO(sdh): return currentHoistScope.getScopeOfThis(): b/77159344
-          return currentHoistScope;
+          // We want the enclosing function scope, or the global scope if not in a function.
+          return currentHoistScope.getScopeOfThis();
         }
       }
       return currentHoistScope.getGlobalScope();
