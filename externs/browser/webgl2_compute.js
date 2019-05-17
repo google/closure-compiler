@@ -30,6 +30,7 @@
 /**
  * @constructor
  * @extends {WebGL2RenderingContext}
+ * @see https://www.khronos.org/registry/webgl/specs/latest/2.0-compute/#webgl2-compute-context
  */
 function WebGL2ComputeRenderingContext() {}
 
