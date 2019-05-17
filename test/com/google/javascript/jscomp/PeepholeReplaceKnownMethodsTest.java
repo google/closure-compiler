@@ -628,6 +628,32 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("returnArrayType().concat([1,2,3])");
     // Call method with the same name as Array.prototype.concat
     foldSame("obj.concat([1,2,3])");
+
+    fold(
+      "[1,2].concat(1).concat(2,['abc']).concat('abc')",
+      "[1,2].concat(1,2,['abc'],'abc')");
+    // because function returnArrayType() or returnUnionType()
+    // possibly can produce a side effects
+    // we can't fold all concatenation chaining
+    fold(
+      "returnArrayType().concat(returnArrayType()).concat(1).concat(2)",
+      "returnArrayType().concat(returnArrayType(),1,2)");
+    fold(
+      "returnArrayType().concat(returnUnionType()).concat(1).concat(2)",
+      "returnArrayType().concat(returnUnionType(),1,2)");
+    fold(
+      "[1,2,1].concat(1).concat(returnArrayType()).concat(2)",
+      "[1,2,1].concat(1).concat(returnArrayType(),2)");
+    fold(
+      "[1].concat(1).concat(2).concat(returnArrayType())",
+      "[1].concat(1,2).concat(returnArrayType())");
+    foldSame("[].concat(1).concat(returnArrayType())");
+    // Call method with the same name as Array.prototype.concat
+    foldSame("obj.concat([1,2]).concat(1)");
+ 
+    fold(
+      "[].concat(['abc']).concat(1).concat([2,3])",
+      "['abc'].concat(1,[2,3])");
   }
 
   private void foldSame(String js) {

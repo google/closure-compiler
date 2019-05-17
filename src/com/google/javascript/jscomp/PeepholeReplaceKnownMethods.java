@@ -968,6 +968,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     if (isSafeToRemoveArrayLiteralFromFrontOfConcat(n)) {
       return removeArrayLiteralFromFrontOfConcat(n);
     }
+    if (isSafeToFoldConcatChaining(n)) {
+      return foldConcatChaining(n);
+    }
     return n;
   }
 
@@ -986,7 +989,26 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     reportChangeToEnclosingScope(n);
     return n;
   }
+  
+  /**
+   * perform folding of chained concat functions, so
+   * arr.concat(a).concat(b) will be fold into arr.concat(a,b);
+   */
+  private Node foldConcatChaining(Node n) {
+    checkArgument(isSafeToFoldConcatChaining(n), n);
 
+    Node previousConcatCall = n.getFirstFirstChild();
+    Node arg = n.getSecondChild();
+    while (arg != null) {
+      Node curentArg = arg;
+      arg = arg.getNext();
+      previousConcatCall.addChildToBack(curentArg.detach());
+    }
+    n.replaceWith(previousConcatCall.detach());
+    reportChangeToEnclosingScope(previousConcatCall);
+    return previousConcatCall;
+  }
+  
   /**
    * Check if we have this code pattern [].concat(exactlyArrayArgument,...*) so
    * removeArrayLiteralFromFrontOfConcat can be performed
@@ -1006,11 +1028,41 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
   }
 
   /**
+   * Check if we have this code pattern
+   * array.concat(...*).concat(sideEffectFreeArguments)
+   * so foldConcatChaining can be performed
+   */
+  private boolean isSafeToFoldConcatChaining(Node n) {
+    checkArgument(n.isCall(), n);
+    
+    if (!isConcatFunctionCall(n)) {
+      return false;
+    }
+    Node previousFunctionCall = n.getFirstFirstChild();
+    if (!previousFunctionCall.isCall() || !isConcatFunctionCall(previousFunctionCall)) {
+      return false;
+    }
+    // make sure that arguments in second concat function call can't change the array
+    // so we can fold chained concat functions
+    // to clarify, consider this code
+    // here we can't fold concatenation
+    // var a = [];
+    // a.concat(1).concat(a.push(1)); -> [1,1]
+    // a.concat(1,a.push(1)); -> [1,1,1]
+    for (Node arg = n.getSecondChild(); arg != null; arg = arg.getNext()) {
+      if (mayHaveSideEffects(arg)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Check if this call node is Array.prototype.concat
    */
   private boolean isConcatFunctionCall(Node n) {
     checkArgument(n.isCall(), n);
-    
+
     Node callTarget = checkNotNull(n.getFirstChild());
     if (!callTarget.isGetProp()) {
       return false;
