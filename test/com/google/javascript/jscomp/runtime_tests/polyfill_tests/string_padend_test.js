@@ -67,6 +67,10 @@ testSuite({
 
   /** @suppress {checkTypes} */
   testPadStart_errors() {
-    assertFails(RangeError, () => 'a'.padEnd(Infinity));
+    if (userAgent.EDGE) {
+      assertFails(Error, () => 'a'.padEnd(Infinity)); // Out of Memory
+    } else {
+      assertFails(RangeError, () => 'a'.padEnd(Infinity));
+    }
   },
 });
