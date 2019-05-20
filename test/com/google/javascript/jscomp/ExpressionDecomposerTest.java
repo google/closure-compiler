@@ -390,11 +390,9 @@ public final class ExpressionDecomposerTest {
 
     helperCanExposeExpression(DecompositionType.MOVABLE, "({a, b = goo()} = foo());", "foo");
 
-    // TODO(b/73902507): We probably want to treat this as UNDECOMPOSABLE, since it's a lot of work
-    // to handle default values correctly. See also testMoveExpression15.
-    helperCanExposeExpression(DecompositionType.DECOMPOSABLE,
-        "[{ [foo()]: a } = goo()] = arr;",
-        "foo");
+    // Default value expressions are conditional, which would make the expressions complex.
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "[{ [foo()]: a } = goo()] = arr;", "foo");
   }
 
   @Test
@@ -410,6 +408,18 @@ public final class ExpressionDecomposerTest {
 
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "const result = `${foo()} ${goo()}`;", "goo");
+  }
+
+  @Test
+  public void testCannotExpose_defaultValueInParamList() {
+    helperCanExposeExpression(DecompositionType.UNDECOMPOSABLE, "function fn(a = g()) {}", "g");
+  }
+
+  @Test
+  public void testCannotExpose_defaultValueInDestructuring() {
+    helperCanExposeExpression(DecompositionType.UNDECOMPOSABLE, "let {x = fn()} = y;", "fn");
+
+    helperCanExposeExpression(DecompositionType.UNDECOMPOSABLE, "let [x = fn()] = y;", "fn");
   }
 
   @Test
@@ -524,20 +534,6 @@ public final class ExpressionDecomposerTest {
         "({a, b} = foo());",
         "foo",
         "var result$jscomp$0 = foo(); ({a, b} = result$jscomp$0);");
-  }
-
-  @Test
-  public void testMoveExpression15() {
-    // TODO(b/73902507): fix this test. we can't just unilaterally call foo() before the
-    // the destructuring, since foo() is conditionally evaluated.
-    // We could do something like what happens in transpilation to correctly decompose this
-    // expression. However, that would be a lot of work for probably little gain, and we
-    // should just treat foo() as undecomposable for now.
-    shouldTestTypes = false;
-    helperMoveExpression(
-        "const [a = foo()] = arr;",
-        "foo",
-        "var result$jscomp$0 = foo(); const [a = result$jscomp$0] = arr;");
   }
 
   /* Decomposition tests. */

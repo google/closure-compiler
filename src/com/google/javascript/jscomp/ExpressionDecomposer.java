@@ -793,6 +793,7 @@ class ExpressionDecomposer {
         case LABEL:
         case CASE:
         case DEFAULT_CASE:
+        case DEFAULT_VALUE:
         case PARAM_LIST:
           return null;
 
