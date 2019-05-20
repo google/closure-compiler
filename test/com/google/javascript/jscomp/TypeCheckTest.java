@@ -22687,20 +22687,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeDeclarationsShadowOneAnotherWithFunctionScoping() {
-    // TODO(b/110538992): Accuracy of shadowing is unclear here. b/110741413 may be confusing the
-    // issue.
-
     // `C` at (2) should refer to `C` at (3) and not `C` at (1). Otherwise the assignment at (4)
     // would be invalid.
+    // NOTE: This test passes only because of b/110741413, which causes the C at (1) and (3) to be
+    // considered 'equal'.
     testTypes(
         lines(
             "/** @constructor */",
-            "var A = function() { };",
-            "",
-            "/**",
-            " * @constructor",
-            " * @extends {A}",
-            " */",
             "var C = function() { };", // (1)
             "",
             "var fn = function() {",
@@ -22711,6 +22704,49 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "",
             "  innerC = new C();", // (4)
             "}"));
+  }
+
+  @Test
+  public void testTypeDeclarationsShadowOneAnotherWithModuleScoping_withTemplate() {
+    // TODO(b/79432091): This case should pass typechecking.
+    // `C` at (2) should refer to `C` at (3) and not `C` at (1). Otherwise the assignment at (4)
+    // would be invalid.
+    testTypesWithExtraExterns(
+        "class C {}", // (1)
+        lines(
+            "/** @type {!C} */ let innerC;", // (2)
+            "",
+            // NB: without the @template this test would pass due to b/110741413.
+            "/** @template T */",
+            "class C {};", // (3)
+            "",
+            "innerC = new C();", // (4)
+            "export {}"), // Make this an ES module.
+        lines(
+            "assignment", //
+            "found   : C",
+            "required: C"));
+  }
+
+  @Test
+  public void testTypeDeclarationsShadowOneAnotherWithModuleScoping_withSuperclass() {
+    // TODO(b/79432091): This case should pass typechecking.
+    // `C` at (2) should refer to `C` at (3) and not `C` at (1). Otherwise the assignment at (4)
+    // would be invalid.
+    testTypesWithExtraExterns(
+        "class C {}", // (1)
+        lines(
+            "/** @type {!C} */ let innerC;", // (2)
+            "",
+            "class Parent {}",
+            "class C extends Parent {};", // (3)
+            "",
+            "/** @type {!Parent} */ const p = innerC;", // (4)
+            "export {}"), // Make this an ES module.
+        lines(
+            "initializing variable", //
+            "found   : C",
+            "required: Parent"));
   }
 
   @Test

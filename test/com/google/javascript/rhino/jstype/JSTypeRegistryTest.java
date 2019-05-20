@@ -59,8 +59,14 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_VALUE_OR_OB
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static com.google.javascript.rhino.testing.TypeSubject.types;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.testing.AbstractStaticScope;
+import com.google.javascript.rhino.testing.MapBasedScope;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -209,6 +215,106 @@ public class JSTypeRegistryTest {
             getReadableTypeNameHelper(
                 registry, union(registry, NUMBER_TYPE, STRING_TYPE, NULL_TYPE), true))
         .isEqualTo("(Number|String)");
+  }
+
+  @Test
+  public void testCreateTypeFromCommentNode_createsNamedTypeIfNameIsUndefined() {
+    // Create an empty global scope.
+    JSTypeRegistry registry = new JSTypeRegistry(null);
+    StaticTypedScope globalScope = new MapBasedScope(ImmutableMap.of());
+
+    JSType type =
+        registry.createTypeFromCommentNode(
+            new Node(Token.BANG, IR.string("a.b.c")), "srcfile.js", globalScope);
+
+    // The type registry assumes that 'a.b.c' will be defined later.
+    assertThat(type).isInstanceOf(NamedType.class);
+  }
+
+  @Test
+  public void testCreateTypeFromCommentNode_multipleLookupsInSameScope() {
+    // Create an empty global scope.
+    JSTypeRegistry registry = new JSTypeRegistry(null);
+    StaticTypedScope globalScope = new MapBasedScope(ImmutableMap.of());
+
+    JSType typeOne =
+        registry.createTypeFromCommentNode(
+            new Node(Token.BANG, IR.string("Foo")), "srcfile.js", globalScope);
+    JSType typeTwo =
+        registry.createTypeFromCommentNode(
+            new Node(Token.BANG, IR.string("Foo")), "srcfile.js", globalScope);
+
+    // Different lookups of Foo create equivalent instances of NamedType.
+    assertThat(typeOne).isInstanceOf(NamedType.class);
+    assertThat(typeTwo).isInstanceOf(NamedType.class);
+    assertType(typeOne).isEqualTo(typeTwo);
+  }
+
+  @Test
+  public void testCreateTypeFromCommentNode_usesGlobalTypeIfExists() {
+    // Create a global scope and a global type 'Foo'.
+    JSTypeRegistry registry = new JSTypeRegistry(null);
+    StaticTypedScope globalScope = createStaticTypedScope(IR.root(), null, ImmutableMap.of());
+    registry.declareType(globalScope, "Foo", registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+
+    // Create an empty child scope.
+    StaticTypedScope emptyLocalScope =
+        createStaticTypedScope(IR.block(), globalScope, ImmutableMap.of());
+
+    // Looking up 'Foo' in the child scope resolves to the global type `Foo`, not a NamedType.
+    JSType type =
+        registry.createTypeFromCommentNode(
+            new Node(Token.BANG, IR.string("Foo")), "srcfile.js", emptyLocalScope);
+    assertThat(type).isNotInstanceOf(NamedType.class);
+  }
+
+  @Test
+  public void testCreateTypeFromCommentNode_createsNamedTypeIfLocalShadowsGlobalType() {
+    // Create a global scope and a global type 'Foo'.
+    JSTypeRegistry registry = new JSTypeRegistry(null);
+    JSType unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    StaticTypedScope globalScope = createStaticTypedScope(IR.root(), null, ImmutableMap.of());
+    registry.declareType(globalScope, "Foo", unknownType);
+
+    // Create a child scope containing a slot for 'Foo'.
+    Map<String, StaticTypedSlot> slots = new HashMap<>();
+    StaticTypedScope localScopeWithFoo = createStaticTypedScope(IR.block(), globalScope, slots);
+    slots.put(
+        "Foo",
+        new SimpleSlot("Foo", unknownType, /* inferred= */ true) {
+          @Override
+          public StaticTypedScope getScope() {
+            return localScopeWithFoo;
+          }
+        });
+
+    // Looking up 'Foo' in the local scope creates a NamedType; even though `Foo` is not in the
+    // JSTypeRegistry in the local scope, the registry assumes it will be defined later.
+    JSType type =
+        registry.createTypeFromCommentNode(
+            new Node(Token.BANG, IR.string("Foo")), "srcfile.js", localScopeWithFoo);
+    assertThat(type).isInstanceOf(NamedType.class);
+  }
+
+  /** Returns a scope that overrides a few methods from {@link AbstractStaticScope} */
+  private StaticTypedScope createStaticTypedScope(
+      Node root, StaticTypedScope parentScope, Map<String, StaticTypedSlot> slots) {
+    return new AbstractStaticScope() {
+      @Override
+      public Node getRootNode() {
+        return root;
+      }
+
+      @Override
+      public StaticTypedScope getParentScope() {
+        return parentScope;
+      }
+
+      @Override
+      public StaticTypedSlot getSlot(String name) {
+        return slots.get(name);
+      }
+    };
   }
 
   private JSType union(JSTypeRegistry registry, JSTypeNative... types) {
