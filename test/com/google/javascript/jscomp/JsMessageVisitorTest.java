@@ -251,6 +251,28 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
+  public void testMessageExport_shortHand() {
+    extractMessagesSafely("exports = {MSG_FOO};");
+    assertThat(messages).isEmpty();
+  }
+
+  @Test
+  public void testMessageExport_longHand() {
+    extractMessagesSafely("exports = {MSG_FOO: MSG_FOO};");
+    assertThat(messages).isEmpty();
+  }
+
+  @Test
+  public void testMessageDefinedInExportsIsNotOrphaned() {
+    extractMessagesSafely(""
+        + "exports = {"
+        + "  /** @desc Description. */"
+        + "  MSG_FOO: goog.getMsg('Foo'),"
+        + "};");
+    assertThat(compiler.getWarnings()).isEmpty();
+  }
+
+  @Test
   public void testJsMessageAlias_fromObjectDestrucuturing_longhand() {
     extractMessagesSafely("({MSG_MENU_MARK_AS_UNREAD: MSG_MENU_MARK_AS_UNREAD} = x);");
   }
