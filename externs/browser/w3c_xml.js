@@ -460,29 +460,35 @@ function FormData(form) {}
  * @param {?Blob|string} value
  * @param {string=} filename
  * @return {undefined}
+ * @see https://xhr.spec.whatwg.org/#dom-formdata-append
  */
 FormData.prototype.append = function(name, value, filename) {};
 
 /**
  * @param {string} name
+ * @return {undefined}
+ * @see https://xhr.spec.whatwg.org/#dom-formdata-delete
  */
 FormData.prototype.delete = function(name) {};
 
 /**
  * @param {string} name
  * @return {?FormDataEntryValue}
+ * @see https://xhr.spec.whatwg.org/#dom-formdata-get
  */
 FormData.prototype.get = function(name) {};
 
 /**
  * @param {string} name
  * @return {!Array<!FormDataEntryValue>}
+ * @see https://xhr.spec.whatwg.org/#dom-formdata-getall
  */
 FormData.prototype.getAll = function(name) {};
 
 /**
  * @param {string} name
  * @return {boolean}
+ * @see https://xhr.spec.whatwg.org/#dom-formdata-has
  */
 FormData.prototype.has = function(name) {};
 
@@ -490,6 +496,8 @@ FormData.prototype.has = function(name) {};
  * @param {string} name
  * @param {!Blob|string} value
  * @param {string=} filename
+ * @return {undefined}
+ * @see https://xhr.spec.whatwg.org/#dom-formdata-set
  */
 FormData.prototype.set = function(name, value, filename) {};
 
