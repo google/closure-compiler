@@ -5001,65 +5001,54 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether the result of the expression node is known to be a primitive value
-   * or an object that has not yet escaped.
-   */
-  static boolean evaluatesToLocalValue(Node value) {
-    return evaluatesToLocalValue(value, Predicates.alwaysFalse());
-  }
-
-  /**
-   * @param locals A predicate to apply to unknown local values.
-   * @return Whether the result of the expression node is known to be a primitive value
-   * or an object that has not yet escaped.  This guarantee is different
-   * than that provided by isLiteralValue (where literal values are immune to side-effects
-   * if unescaped) or isImmutableValue (which can be safely aliased).
+   * Whether the result of the expression node is known to be a primitive value or an object that
+   * has not yet escaped.
    *
-   * The concept of "local values" allow for the containment of side-effect operations. For
+   * <p>This guarantee is different than that provided by isLiteralValue (where literal values are
+   * immune to side-effects if unescaped) or isImmutableValue (which can be safely aliased).
+   *
+   * <p>The concept of "local values" allow for the containment of side-effect operations. For
    * example, setting a property on a local value does not produce a global side-effect.
    *
-   * Note that the concept of "local value" is not deep, it does not say anything
-   * about the properties of the "local value" (all class instances have "constructor" properties
-   * that are not local values for instance).
+   * <p>Note that the concept of "local value" is not deep, it does not say anything about the
+   * properties of the "local value" (all class instances have "constructor" properties that are not
+   * local values for instance).
    *
-   * Note that this method only provides the starting state of the expression result,
-   * it does not guarantee that the value is forever a local value.  If the containing
-   * method has any non-local side-effect, "local values" may escape.
+   * <p>Note that this method only provides the starting state of the expression result, it does not
+   * guarantee that the value is forever a local value. If the containing method has any non-local
+   * side-effect, "local values" may escape.
    */
-  static boolean evaluatesToLocalValue(Node value, Predicate<Node> locals) {
+  static boolean evaluatesToLocalValue(Node value) {
     switch (value.getToken()) {
       case ASSIGN:
         // A result that is aliased by a non-local name, is the effectively the
         // same as returning a non-local name, but this doesn't matter if the
         // value is immutable.
-        return NodeUtil.isImmutableValue(value.getLastChild())
-            || (locals.apply(value) && evaluatesToLocalValue(value.getLastChild(), locals));
+        return NodeUtil.isImmutableValue(value.getLastChild());
       case COMMA:
-        return evaluatesToLocalValue(value.getLastChild(), locals);
+        return evaluatesToLocalValue(value.getLastChild());
       case AND:
       case OR:
-        return evaluatesToLocalValue(value.getFirstChild(), locals)
-            && evaluatesToLocalValue(value.getLastChild(), locals);
+        return evaluatesToLocalValue(value.getFirstChild())
+            && evaluatesToLocalValue(value.getLastChild());
       case HOOK:
-        return evaluatesToLocalValue(value.getSecondChild(), locals)
-            && evaluatesToLocalValue(value.getLastChild(), locals);
+        return evaluatesToLocalValue(value.getSecondChild())
+            && evaluatesToLocalValue(value.getLastChild());
       case THIS:
       case SUPER:
-        return locals.apply(value);
+        return false;
       case NAME:
-        return isImmutableValue(value) || locals.apply(value);
+        return isImmutableValue(value);
       case GETELEM:
       case GETPROP:
         // There is no information about the locality of object properties.
-        return locals.apply(value);
+        return false;
       case CALL:
-        return callHasLocalResult(value)
-            || isToStringMethodCall(value)
-            || locals.apply(value);
+        return callHasLocalResult(value) || isToStringMethodCall(value);
       case TAGGED_TEMPLATELIT:
-        return callHasLocalResult(value) || locals.apply(value);
+        return callHasLocalResult(value);
       case NEW:
-        return newHasLocalResult(value) || locals.apply(value);
+        return newHasLocalResult(value);
       case DELPROP:
       case INC:
       case DEC:
@@ -5072,8 +5061,9 @@ public final class NodeUtil {
       case TEMPLATELIT:
         return true;
       case CAST:
-        return evaluatesToLocalValue(value.getFirstChild(), locals);
+        return evaluatesToLocalValue(value.getFirstChild());
       case SPREAD:
+        // TODO(johnlenz): remove this case.
       case YIELD:
       case AWAIT:
         // TODO(johnlenz): we can do better for await if we use type information.  That is,
