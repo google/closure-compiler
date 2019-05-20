@@ -25,6 +25,7 @@ import static com.google.javascript.rhino.Token.COMPUTED_PROP;
 import static com.google.javascript.rhino.Token.FOR_AWAIT_OF;
 import static com.google.javascript.rhino.Token.GETTER_DEF;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
+import static com.google.javascript.rhino.Token.NEW;
 import static com.google.javascript.rhino.Token.REST;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.THROW;
@@ -603,6 +604,85 @@ public class AstAnalyzerTest {
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
       assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isTrue();
+    }
+  }
+
+  @RunWith(JUnit4.class)
+  public static class ConstructorCallHasSideEffects {
+    @Test
+    public void byDefaultAConstructorCallHasSideEffects() {
+      ParseHelper parseHelper = new ParseHelper();
+      Node newNode = parseHelper.parseFirst(NEW, "new SomeClass();");
+      AstAnalyzer astAnalyzer = parseHelper.getAstAnalyzer();
+      // we know nothing about the class being instantiated, so assume side effects occur.
+      assertThat(astAnalyzer.constructorCallHasSideEffects(newNode)).isTrue();
+    }
+
+    @Test
+    public void constructorCallMarkedAsNoSideEffectsHasNone() {
+      ParseHelper parseHelper = new ParseHelper();
+      Node newNode = parseHelper.parseFirst(NEW, "new SomeClass();");
+      AstAnalyzer astAnalyzer = parseHelper.getAstAnalyzer();
+      // simulate PureFunctionIdentifier marking the call as having no side effects.
+      Node.SideEffectFlags flags = new Node.SideEffectFlags();
+      flags.clearAllFlags();
+      newNode.setSideEffectFlags(flags);
+
+      assertThat(astAnalyzer.constructorCallHasSideEffects(newNode)).isFalse();
+    }
+
+    @Test
+    public void modifyingALocalArgumentIsNotASideEffect() {
+      ParseHelper parseHelper = new ParseHelper();
+      // object literal is considered a local value. Modifying it isn't a side effect, since
+      // nothing else looks at it.
+      Node newNode = parseHelper.parseFirst(NEW, "new SomeClass({});");
+      AstAnalyzer astAnalyzer = parseHelper.getAstAnalyzer();
+      // simulate PureFunctionIdentifier marking the call as only modifying its arguments
+      Node.SideEffectFlags flags = new Node.SideEffectFlags();
+      flags.clearAllFlags();
+      flags.setMutatesArguments();
+      newNode.setSideEffectFlags(flags);
+
+      assertThat(astAnalyzer.constructorCallHasSideEffects(newNode)).isFalse();
+    }
+
+    @Test
+    public void modifyingANonLocalArgumentIsASideEffect() {
+      ParseHelper parseHelper = new ParseHelper();
+      // variable name is a non-local value. Modifying it is a side effect.
+      Node newNode = parseHelper.parseFirst(NEW, "new SomeClass(x);");
+      AstAnalyzer astAnalyzer = parseHelper.getAstAnalyzer();
+      // simulate PureFunctionIdentifier marking the call as only modifying its arguments
+      Node.SideEffectFlags flags = new Node.SideEffectFlags();
+      flags.clearAllFlags();
+      flags.setMutatesArguments();
+      newNode.setSideEffectFlags(flags);
+
+      assertThat(astAnalyzer.constructorCallHasSideEffects(newNode)).isTrue();
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class ConstructorsKnownToHaveNoSideEffects {
+    @Parameter(0)
+    public String constructorName;
+
+    @Parameters(name = "{0}")
+    public static final Iterable<Object[]> cases() {
+      return ImmutableList.copyOf(
+          new Object[][] {
+            {"Array"}, {"Date"}, {"Error"}, {"Object"}, {"RegExp"}, {"XMLHttpRequest"}
+          });
+    }
+
+    @Test
+    public void noSideEffectsForKnownConstructor() {
+      ParseHelper parseHelper = new ParseHelper();
+      Node newNode = parseHelper.parseFirst(NEW, SimpleFormat.format("new %s();", constructorName));
+      AstAnalyzer astAnalyzer = parseHelper.getAstAnalyzer();
+      // we know nothing about the class being instantiated, so assume side effects occur.
+      assertThat(astAnalyzer.constructorCallHasSideEffects(newNode)).isFalse();
     }
   }
 }

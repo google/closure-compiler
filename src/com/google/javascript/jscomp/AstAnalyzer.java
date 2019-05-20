@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -41,6 +43,14 @@ import com.google.javascript.rhino.Node;
  * should go in {@link AstFactory}.
  */
 public class AstAnalyzer {
+  /**
+   * The set of builtin constructors that don't have side effects.
+   *
+   * <p>TODO(bradfordcsmith): If all of these are annotated {@code sideefectfree}, can we drop this
+   * list?
+   */
+  private static final ImmutableSet<String> CONSTRUCTORS_WITHOUT_SIDE_EFFECTS =
+      ImmutableSet.of("Array", "Date", "Error", "Object", "RegExp", "XMLHttpRequest");
 
   private final AbstractCompiler compiler;
 
@@ -77,5 +87,30 @@ public class AstAnalyzer {
    */
   boolean functionCallHasSideEffects(Node callNode) {
     return NodeUtil.functionCallHasSideEffects(callNode, compiler);
+  }
+
+  /**
+   * Do calls to this constructor have side effects?
+   *
+   * @param newNode - constructor call node
+   */
+  boolean constructorCallHasSideEffects(Node newNode) {
+    checkArgument(newNode.isNew(), "Expected NEW node, got %s", newNode.getToken());
+
+    if (newNode.isNoSideEffectsCall()) {
+      return false;
+    }
+
+    // allArgsUnescapedLocal() is actually confirming that all of the arguments are literals or
+    // values created at the point they are passed in to the call and are not saved anywhere in the
+    // calling scope.
+    // TODO(bradfordcsmith): It would be good to rename allArgsUnescapedLocal() to something
+    // that makes this clearer.
+    if (newNode.isOnlyModifiesArgumentsCall() && NodeUtil.allArgsUnescapedLocal(newNode)) {
+      return false;
+    }
+
+    Node nameNode = newNode.getFirstChild();
+    return !nameNode.isName() || !CONSTRUCTORS_WITHOUT_SIDE_EFFECTS.contains(nameNode.getString());
   }
 }

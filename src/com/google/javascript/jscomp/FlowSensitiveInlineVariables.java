@@ -110,14 +110,15 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         return !isTopLevelAssignTarget(n);
       }
 
+      AstAnalyzer astAnalyzer = compiler.getAstAnalyzer();
       // TODO(user): We only care about calls to functions that
       // passes one of the dependent variable to a non-side-effect free
       // function.
-      if (n.isCall() && compiler.getAstAnalyzer().functionCallHasSideEffects(n)) {
+      if (n.isCall() && astAnalyzer.functionCallHasSideEffects(n)) {
         return true;
       }
 
-      if (n.isNew() && NodeUtil.constructorCallHasSideEffects(n)) {
+      if (n.isNew() && astAnalyzer.constructorCallHasSideEffects(n)) {
         return true;
       }
 

@@ -238,7 +238,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isNew()) {
-        if (!NodeUtil.constructorCallHasSideEffects(n)) {
+        if (!compiler.getAstAnalyzer().constructorCallHasSideEffects(n)) {
           noSideEffectCalls.add(n.getFirstChild());
         }
       } else if (NodeUtil.isInvocation(n)) {

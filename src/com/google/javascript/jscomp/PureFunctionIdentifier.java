@@ -531,7 +531,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         }
       } else if (callNode.isNew()) {
         // Handle known cases now (Object, Date, RegExp, etc)
-        if (!NodeUtil.constructorCallHasSideEffects(callNode)) {
+        if (!astAnalyzer.constructorCallHasSideEffects(callNode)) {
           flags.clearSideEffectFlags();
         }
       }
@@ -973,7 +973,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       }
 
       // Handle known cases now (Object, Date, RegExp, etc)
-      if (invocation.isNew() && !NodeUtil.constructorCallHasSideEffects(invocation)) {
+      if (invocation.isNew() && !astAnalyzer.constructorCallHasSideEffects(invocation)) {
         return;
       }
 

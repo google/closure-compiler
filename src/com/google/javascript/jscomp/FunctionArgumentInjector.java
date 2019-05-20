@@ -524,7 +524,7 @@ class FunctionArgumentInjector {
       } else if (type == Token.CALL) {
         sideEffect = astAnalyzer.functionCallHasSideEffects(n);
       } else if (type == Token.NEW) {
-        sideEffect = NodeUtil.constructorCallHasSideEffects(n);
+        sideEffect = astAnalyzer.constructorCallHasSideEffects(n);
       } else if (type == Token.DELPROP) {
         sideEffect = true;
       }
