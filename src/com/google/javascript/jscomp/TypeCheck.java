@@ -192,6 +192,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning(
           "JSC_ES5_CLASS_EXTENDING_ES6_CLASS", "ES5 class {0} cannot extend ES6 class {1}");
 
+  static final DiagnosticType ES6_CLASS_EXTENDING_CLASS_WITH_GOOG_INHERITS =
+      DiagnosticType.warning(
+          "JSC_ES6_CLASS_EXTENDING_CLASS_WITH_GOOG_INHERITS",
+          "Do not use goog.inherits with ES6 classes. Use the ES6 `extends` keyword to inherit"
+              + " instead.");
+
   static final DiagnosticType INTERFACE_EXTENDS_LOOP =
       DiagnosticType.warning("JSC_INTERFACE_EXTENDS_LOOP", "extends loop involving {0}, loop: {1}");
 
@@ -2514,18 +2520,23 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         compiler.getCodingConvention().getClassesDefinedByCall(n);
     TypedScope scope = t.getTypedScope();
     if (relationship != null) {
-      ObjectType superClass =
-          TypeValidator.getInstanceOfCtor(
-              scope.lookupQualifiedName(QualifiedName.of(relationship.superclassName)));
-      ObjectType subClass =
-          TypeValidator.getInstanceOfCtor(
-              scope.lookupQualifiedName(QualifiedName.of(relationship.subclassName)));
+      JSType superClass = scope.lookupQualifiedName(QualifiedName.of(relationship.superclassName));
+      ObjectType superClassInstanceType = TypeValidator.getInstanceOfCtor(superClass);
+      JSType subClass = scope.lookupQualifiedName(QualifiedName.of(relationship.subclassName));
+      ObjectType subClassInstance = TypeValidator.getInstanceOfCtor(subClass);
       if (relationship.type == SubclassType.INHERITS
-          && superClass != null
-          && !superClass.isEmptyType()
-          && subClass != null
-          && !subClass.isEmptyType()) {
-        validator.expectSuperType(n, superClass, subClass);
+          && superClassInstanceType != null
+          && !superClassInstanceType.isEmptyType()
+          && subClassInstance != null
+          && !subClassInstance.isEmptyType()) {
+        if (n.getFirstChild().isQualifiedName()
+            && n.getFirstChild().matchesQualifiedName("goog.inherits")
+            && subClass.toMaybeFunctionType() != null
+            && subClass.toMaybeFunctionType().getSource() != null
+            && subClass.toMaybeFunctionType().getSource().isEs6Class()) {
+          compiler.report(JSError.make(n, ES6_CLASS_EXTENDING_CLASS_WITH_GOOG_INHERITS));
+        }
+        validator.expectSuperType(n, superClassInstanceType, subClassInstance);
       }
     }
   }

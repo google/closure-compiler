@@ -23734,6 +23734,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: enum{X}"));
   }
 
+  @Test
+  public void testEs6ExtendCannotUseGoogInherits() {
+    testClosureTypes(
+        CLOSURE_DEFS
+            + lines(
+                "class Super {}", //
+                "/** @extends {Super} */",
+                "class Sub {}",
+                "goog.inherits(Sub, Super);"),
+        "Do not use goog.inherits with ES6 classes. Use the ES6 `extends` keyword to inherit"
+            + " instead.");
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
