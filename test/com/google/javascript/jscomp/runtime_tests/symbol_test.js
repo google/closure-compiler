@@ -20,6 +20,7 @@
 goog.module('jscomp.runtime_tests.symbol_test');
 
 const testSuite = goog.require('goog.testing.testSuite');
+const userAgent = goog.require('goog.userAgent');
 
 const s1 = Symbol('example');
 const s2 = Symbol('example');
@@ -59,10 +60,18 @@ testSuite({
   },
 
   testDescrption() {
-    assertEquals('example', s1.description);
-    assertEquals('example', s2.description);
-    assertEquals(undefined, s3.description);
-    assertEquals('Symbol.iterator', Symbol.iterator.description);
+    // There is no support for "upgrading" the native implementation
+    if (userAgent.EDGE && Symbol.toString().includes("[native code]")) {
+      assertEquals(undefined, s1.description);
+      assertEquals(undefined, s2.description);
+      assertEquals(undefined, s3.description);
+      assertEquals(undefined, Symbol.iterator.description);
+    } else {
+      assertEquals('example', s1.description);
+      assertEquals('example', s2.description);
+      assertEquals(undefined, s3.description);
+      assertEquals('Symbol.iterator', Symbol.iterator.description);
+    }
   },
 
   testCannotNew() {
