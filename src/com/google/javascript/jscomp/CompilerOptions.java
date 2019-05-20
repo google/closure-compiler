@@ -144,6 +144,18 @@ public class CompilerOptions implements Serializable {
     return instrumentForCoverageOnly;
   }
 
+  @Nullable private OutputStream typedAstOutputFile = null;
+
+  /** Sets file to output in-progress TypedAST format to. DO NOT USE! */
+  void setTypedAstOutputFile(@Nullable OutputStream file) {
+    this.typedAstOutputFile = file;
+  }
+
+  @Nullable
+  OutputStream getTypedAstOutputFile() {
+    return this.typedAstOutputFile;
+  }
+
   @Deprecated
   public void setSkipTranspilationAndCrash(boolean value) {}
 

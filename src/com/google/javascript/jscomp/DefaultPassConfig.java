@@ -497,6 +497,8 @@ public final class DefaultPassConfig extends PassConfig {
     assertAllOneTimePasses(checks);
     assertValidOrderForChecks(checks);
 
+    checks.add(createEmptyPass(PassNames.BEFORE_SERIALIZATION));
+
     return checks;
   }
 
