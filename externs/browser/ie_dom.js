@@ -745,12 +745,6 @@ Document.prototype.loadXML;
 // http://msdn.microsoft.com/en-us/library/ms531073(VS.85).aspx
 
 /**
- * @type {!Element}
- * @see http://msdn.microsoft.com/en-us/library/ms533065(VS.85).aspx
- */
-Document.prototype.activeElement;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms533553(VS.85).aspx
  */
 Document.prototype.charset;
@@ -868,12 +862,6 @@ Document.prototype.detachEvent;
  * @see http://msdn.microsoft.com/en-us/library/ms536425(VS.85).aspx
  */
 Document.prototype.focus;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536447(VS.85).aspx
- * @return {boolean}
- */
-Document.prototype.hasFocus = function() {};
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536614(VS.85).aspx
