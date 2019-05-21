@@ -23,7 +23,13 @@
  */
 
 /**
- * @param {function(number): undefined} callback
+ * @typedef {function(number): undefined}
+ * @see https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#framerequestcallback
+ */
+var FrameRequestCallback;
+
+/**
+ * @param {!FrameRequestCallback} callback
  * @param {Element=} opt_element In early versions of this API, the callback
  *     was invoked only if the element was visible.
  * @return {number}
@@ -43,7 +49,7 @@ function cancelRequestAnimationFrame(handle) {};
 function cancelAnimationFrame(handle) {};
 
 /**
- * @param {function(number)} callback
+ * @param {!FrameRequestCallback} callback
  * @param {Element=} opt_element
  * @return {number}
  */
@@ -62,7 +68,7 @@ function webkitCancelRequestAnimationFrame(handle) {};
 function webkitCancelAnimationFrame(handle) {};
 
 /**
- * @param {?function(number)} callback It's legitimate to pass a null
+ * @param {?FrameRequestCallback} callback It's legitimate to pass a null
  *     callback and listen on the MozBeforePaint event instead.
  * @param {Element=} opt_element
  * @return {number}
@@ -82,7 +88,7 @@ function mozCancelRequestAnimationFrame(handle) {};
 function mozCancelAnimationFrame(handle) {};
 
 /**
- * @param {function(number)} callback
+ * @param {!FrameRequestCallback} callback
  * @param {Element=} opt_element
  * @return {number}
  */
@@ -101,7 +107,7 @@ function msCancelRequestAnimationFrame(handle) {};
 function msCancelAnimationFrame(handle) {};
 
 /**
- * @param {function(number)} callback
+ * @param {!FrameRequestCallback} callback
  * @param {Element=} opt_element
  * @return {number}
  */
