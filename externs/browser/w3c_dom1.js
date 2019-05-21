@@ -423,6 +423,32 @@ Document.prototype.createTextNode = function(data) {};
 Document.prototype.getElementsByTagName = function(tagname) {};
 
 /**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/open
+ * @see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-open
+ */
+Document.prototype.open;
+
+/**
+ * @return {undefined}
+ * @see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-close
+ */
+Document.prototype.close = function() {};
+
+/**
+ * @param {!TrustedHTML|string} text
+ * @return {undefined}
+ * @see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
+ */
+Document.prototype.write = function(text) {};
+
+/**
+ * @param {!TrustedHTML|string} text
+ * @return {undefined}
+ * @see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
+ */
+Document.prototype.writeln = function(text) {};
+
+/**
  * @constructor
  * @implements {IArrayLike<T>}
  * @implements {Iterable<T>}

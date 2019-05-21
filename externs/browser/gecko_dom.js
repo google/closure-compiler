@@ -302,11 +302,6 @@ Document.prototype.vlinkColor;
 Document.prototype.clear = function() {};
 
 /**
- * @see https://developer.mozilla.org/en/DOM/document.close
- */
-Document.prototype.close;
-
-/**
  * @param {string} type
  * @return {Event}
  */
@@ -331,11 +326,6 @@ Document.prototype.execCommand;
  */
 Document.prototype.load = function(uri) {};
 Document.prototype.loadOverlay;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/document.open
- */
-Document.prototype.open;
 
 /**
  * @see https://developer.mozilla.org/en/Midas
@@ -368,20 +358,6 @@ Document.prototype.queryCommandSupported;
  * @see http://msdn.microsoft.com/en-us/library/ms536683(VS.85).aspx
  */
 Document.prototype.queryCommandValue;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/document.write
- * @param {!TrustedHTML|string} text
- * @return {undefined}
- */
-Document.prototype.write = function(text) {};
-
-/**
- * @see https://developer.mozilla.org/en/DOM/document.writeln
- * @param {!TrustedHTML|string} text
- * @return {undefined}
- */
-Document.prototype.writeln = function(text) {};
 
 Document.prototype.ononline;
 Document.prototype.onoffline;
