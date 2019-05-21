@@ -2129,6 +2129,21 @@ Window.prototype.pageYOffset;
 var ScrollToOptions;
 
 /**
+ * @record
+ * @see https://www.w3.org/TR/cssom-view/#dictdef-scrollintoviewoptions
+ */
+function ScrollIntoViewOptions () {}
+
+/** @type {string|undefined} */
+ScrollIntoViewOptions.prototype.behavior;
+
+/** @type {string|undefined} */
+ScrollIntoViewOptions.prototype.block;
+
+/** @type {string|undefined} */
+ScrollIntoViewOptions.prototype.inline;
+
+/**
  * @param {number|!ScrollToOptions} scrollToOptionsOrX
  * @param {number=} opt_y
  * @see http://www.w3.org/TR/cssom-view/#dom-window-scroll
@@ -2335,11 +2350,11 @@ Element.prototype.getClientRects = function() {};
 Element.prototype.getBoundingClientRect = function() {};
 
 /**
- * @param {(boolean|{behavior: string, block: string})=} opt_top
+ * @param {(boolean|ScrollIntoViewOptions)=} top
  * @see http://www.w3.org/TR/cssom-view/#dom-element-scrollintoview
  * @return {undefined}
  */
-Element.prototype.scrollIntoView = function(opt_top) {};
+Element.prototype.scrollIntoView = function(top) {};
 
 /**
  * @param {number|!ScrollToOptions} scrollToOptionsOrX
