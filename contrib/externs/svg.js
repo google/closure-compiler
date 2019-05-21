@@ -8823,13 +8823,6 @@ SVGElementInstanceList.prototype.item = function(opt_index){};
  */
 function SVGElement(){}
 
-
-/**
- * @type {string}
- */
-SVGElement.prototype.id;
-
-
 /**
  * @type {string}
  */

@@ -592,6 +592,13 @@ Attr.prototype.value;
 function Element() {}
 
 /**
+ * @type {string}
+ * @implicitCast
+ * @see https://dom.spec.whatwg.org/index.html#dom-element-id
+ */
+Element.prototype.id;
+
+/**
  * An Element always contains a non-null NamedNodeMap containing the attributes
  * of this node.
  * @type {!NamedNodeMap<!Attr>}

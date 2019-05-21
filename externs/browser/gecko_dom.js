@@ -587,15 +587,6 @@ Element.prototype.children;
 Element.prototype.firebugIgnore;
 
 /**
- * Note: According to the spec, id is actually defined on HTMLElement and
- * SVGElement, rather than Element. Deliberately ignore this so that saying
- * Element.id is allowed.
- * @type {string}
- * @implicitCast
- */
-Element.prototype.id;
-
-/**
  * Note: According to the spec, name is defined on specific types of
  * HTMLElements, rather than on Node, Element, or HTMLElement directly.
  * Ignore this.
