@@ -127,16 +127,6 @@ Selection.prototype.setBaseAndExtent =
 Selection.prototype.modify = function(alter, direction, granularity) {};
 
 /**
- * @param {Element} element
- * @param {string} pseudoElement
- * @param {boolean=} opt_authorOnly
- * @return {CSSRuleList}
- * @nosideeffects
- */
-ViewCSS.prototype.getMatchedCSSRules =
-    function(element, pseudoElement, opt_authorOnly) {};
-
-/**
  * @param {string} contextId
  * @param {string} name
  * @param {number} width
