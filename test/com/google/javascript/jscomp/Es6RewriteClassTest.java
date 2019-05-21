@@ -826,9 +826,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let D = function() {};",
             "/** @constructor @struct",
             " * @extends {D}",
-            " * @param {...?} var_args",
             " */",
-            "let C = function(var_args) {};"));
+            "let C = function() {};"));
   }
 
   @Test

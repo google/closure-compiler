@@ -1977,7 +1977,11 @@ public abstract class CompilerTestCase {
           externs.hasOneChild(), "Compare as tree only works when output has a single script.");
       externs = externs.getFirstChild();
 
-      assertNode(externs).usingSerializer(compiler::toSource).isEqualIncludingJsDocTo(externs);
+      Node expectedRoot = parseExpectedJs(expectedExtern);
+      expectedRoot.detach();
+      expectedRoot = expectedRoot.getFirstChild();
+
+      assertNode(externs).usingSerializer(compiler::toSource).isEqualIncludingJsDocTo(expectedRoot);
     } else {
       String externsCode = compiler.toSource(externs);
       String expectedCode = compiler.toSource(expected);

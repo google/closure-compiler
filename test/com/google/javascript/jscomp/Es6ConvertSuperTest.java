@@ -1145,8 +1145,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
             "}",
             "",
             "class B extends A {",
-            "  /** @param {...?} var_args */",
-            "  constructor(var_args) { }",
+            "  constructor() { }",
             "}"));
     // TODO(bradfordcsmith): Test addition of types in externs.
     // Currently testExternChanges() doesn't set things up correctly for getting the last compiler
