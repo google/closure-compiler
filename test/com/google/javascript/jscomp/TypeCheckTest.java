@@ -2022,12 +2022,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "/** @interface */ class I {", //
             "  foo() {}", //
+            "  bar() {}", // Not overridden by abstract class
             "}", //
             "/** @abstract @implements {I} */ class A {", //
             "  /** @abstract @override */ foo() {}", //
             "}", //
             "class B extends A {}"),
-        "property foo on abstract class A is not implemented by type B");
+        ImmutableList.of(
+            "property bar on interface I is not implemented by type B",
+            "property foo on abstract class A is not implemented by type B"));
   }
 
   @Test
@@ -8324,6 +8327,48 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "property it overrides from superclass Foo\n" +
         "original: function(this:Foo): string\n" +
         "override: function(this:SubFoo): number");
+  }
+
+  @Test
+  public void testOverriddenReturnOnAbstractClass() {
+    testTypes(
+        lines(
+            "/** @interface */ function IFoo() {}",
+            "/** @return {*} */ IFoo.prototype.foo = function() {}",
+            "/** @constructor */ function Foo() {}",
+            "/** @return {string} */ Foo.prototype.foo = function() {}",
+            "/** @constructor @extends {Foo} */ function Bar() {}",
+            "/**",
+            " * @constructor @abstract",
+            " * @extends {Bar} @implements {IFoo}",
+            " */",
+            "function Baz() {}",
+            // Even there is a closer definition in IFoo, Foo should be still the source of truth.
+            "/** @return {string} */",
+            "function test() { return (/** @type {Baz} */ (null)).foo(); }"));
+  }
+
+  @Test
+  public void testOverriddenReturnDoesntMatchOnAbstractClass() {
+    testTypes(
+        lines(
+            "/** @interface */ function IFoo() {}",
+            "/** @return {number} */ IFoo.prototype.foo = function() {}",
+            "/** @constructor */ function Foo() {}",
+            "/** @return {string} */ Foo.prototype.foo = function() {}",
+            "/** @constructor @extends {Foo} */ function Bar() {}",
+            "/**",
+            " * @constructor @abstract",
+            " * @extends {Bar} @implements {IFoo}",
+            " */",
+            "function Baz() {}",
+            "/** @return {string} */",
+            "function test() { return (/** @type {Baz} */ (null)).foo(); }"),
+        lines(
+            "mismatch of the foo property on type Baz and the type of the property it overrides"
+                + " from interface IFoo",
+            "original: function(this:IFoo): number",
+            "override: function(this:Foo): string"));
   }
 
   @Test
@@ -17119,6 +17164,59 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         + "Int1.prototype.foo;"
         + "/** @interface \n * @extends {Int0} \n * @extends {Int1} */"
         + "function Int2() {};");
+  }
+
+  @Test
+  public void testImplementedInterfacePropertiesShouldFailOnConflict() {
+    // TODO(b/132718172): Provide a better error message.
+    testTypes(
+        lines(
+            "/** @interface */function Int0() {};",
+            "/** @interface */function Int1() {};",
+            "/** @type {number} */",
+            "Int0.prototype.foo;",
+            "/** @type {string} */",
+            "Int1.prototype.foo;",
+            "/** @constructor @implements {Int0} @implements {Int1} */",
+            "function Foo() {};",
+            "Foo.prototype.foo;"),
+        lines(
+            "mismatch of the foo property on type Foo and the type of the property it"
+                + " overrides from interface Int1",
+            "original: string",
+            "override: number"));
+  }
+
+  @Test
+  public void testImplementedInterfacePropertiesShouldFailOnConflictForAbstractClasses() {
+    // TODO(b/132718172): Provide an error message.
+    testTypes(
+        lines(
+            "/** @interface */function Int0() {};",
+            "/** @interface */function Int1() {};",
+            "/** @type {number} */",
+            "Int0.prototype.foo;",
+            "/** @type {string} */",
+            "Int1.prototype.foo;",
+            "/** @constructor @abstract @implements {Int0} @implements {Int1} */",
+            "function Foo() {};"));
+  }
+
+  @Test
+  public void testImplementedInterfacePropertiesShouldFailOnConflictForAbstractClasses2() {
+    // TODO(b/132718172): Provide an error message.
+    testTypes(
+        lines(
+            "/** @interface */function Int0() {};",
+            "/** @interface */function Int1() {};",
+            "/** @type {number} */",
+            "Int0.prototype.foo;",
+            "/** @type {string} */",
+            "Int1.prototype.foo;",
+            "/** @constructor @abstract @implements {Int0} */",
+            "function Foo() {};",
+            "/** @constructor @abstract @extends {Foo} @implements {Int1} */",
+            "function Zoo() {};"));
   }
 
   @Test

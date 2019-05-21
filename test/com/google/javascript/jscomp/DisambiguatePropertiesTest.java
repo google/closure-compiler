@@ -2364,6 +2364,30 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(js, output, "{iterator=[[MyAbstractCollection.prototype, MyIterable.prototype]]}");
   }
 
+  @Test
+  public void testPropInParentInterfaceOverAbstractClass() {
+    String js =
+        lines(
+            "/** @interface */",
+            "function MyIterable() {}",
+            "MyIterable.prototype.iterator = function() {};",
+            "/**",
+            " * @constructor",
+            " * @abstract",
+            " * @implements {MyIterable}",
+            " */",
+            "function MyAbstractIterable() {}",
+            "/**",
+            " * @constructor",
+            " * @extends {MyAbstractIterable}",
+            " */",
+            "function MyCollection() {}",
+            "/** @override */",
+            "MyCollection.prototype.iterator = function() {};");
+
+    testSets(js, "{iterator=[[MyCollection.prototype, MyIterable.prototype]]}");
+  }
+
   // In function subtyping, the type of THIS should be contravariant, like the argument types.
   // But when overriding a method, it's covariant, and on top of that, we allow methods redefining
   // it with @this.

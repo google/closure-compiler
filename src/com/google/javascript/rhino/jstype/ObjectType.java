@@ -322,6 +322,11 @@ public abstract class ObjectType extends JSType implements Serializable {
     return property == null ? null : property.getOwner();
   }
 
+  /** Returns the closest definition of the property including this type itself. */
+  public final OwnedProperty findClosestDefinition(String propertyName) {
+    return getPropertyMap().findClosest(propertyName);
+  }
+
   /**
    * Gets the implicit prototype (a.k.a. the {@code [[Prototype]]} property).
    */

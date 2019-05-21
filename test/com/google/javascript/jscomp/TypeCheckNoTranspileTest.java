@@ -2967,6 +2967,30 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassImplementsInterfaceViaParent() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class IFoo { /** @return {*} */ foo() {} }",
+            "class Foo { /** @return {number} */ foo() {} }",
+            "/** @implements {IFoo} */",
+            "class Zoo extends Foo {}"));
+  }
+
+  @Test
+  public void testClassExtendsAbstractClassesThatImplementsInterface() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class IFoo { foo() {} }",
+            "/** @abstract @implements {IFoo} */",
+            "class Foo { /** @override */ foo() {} }",
+            "/** @abstract @implements {IFoo} */",
+            "class Bar extends Foo {}",
+            "class Zoo extends Bar {}"));
+  }
+
+  @Test
   public void testClassMissingInterfaceMethod() {
     testTypes(
         lines(
@@ -2978,15 +3002,31 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassCannotImplementInterfaceWithAPrototypeAssignment() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "function MyInterface() {}",
+            "/** @type {string} */",
+            "MyInterface.prototype.foo;",
+            "/** @constructor @implements {MyInterface} */",
+            "function MyClass() {}",
+            "MyClass.prototype = MyInterface.prototype;"),
+        "property foo on interface MyInterface is not implemented by type MyClass");
+  }
+
+  @Test
   public void testClassAbstractClassNeedNotExplicitlyOverrideUnimplementedInterfaceMethods() {
     testTypes(
         lines(
             "/** @interface */",
             "class Foo { foo() {} }",
             "/** @abstract @implements {Foo} */",
-            "class Bar {}"),
-        // TODO(sdh): allow this without error, provided we can get the error on the concrete class
-        "property foo on interface Foo is not implemented by type Bar");
+            "class Bar {",
+            // Also make sure that we can call the interface method that is not re-declared within
+            // the abstract class itself.
+            "    bar() { this.foo(); }",
+            "}"));
   }
 
   @Test
@@ -2996,6 +3036,19 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "/** @interface */",
             "class Foo { foo() {} }",
             "/** @implements {Foo} */",
+            "class Bar {",
+            "  foo() {}",
+            "}"),
+        "property foo already defined on interface Foo; use @override to override it");
+  }
+
+  @Test
+  public void testAbstractClassMissingOverrideAnnotationForInterfaceMethod() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo { foo() {} }",
+            "/** @abstract @implements {Foo} */",
             "class Bar {",
             "  foo() {}",
             "}"),
@@ -3033,6 +3086,47 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @return {number} */ foo() {}",
             "}",
             "/** @implements {Foo} */",
+            "class Bar {",
+            "  /** @override @return {number|string} */",
+            "  foo() {}",
+            "}"),
+        lines(
+            "mismatch of the foo property on type Bar and the type of the property it overrides "
+                + "from interface Foo",
+            "original: function(this:Foo): number",
+            "override: function(this:Bar): (number|string)"));
+  }
+
+  @Test
+  public void testClassIncompatibleInterfaceMethodImplementationInheritedOverAbstractClass() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo {",
+            "  /** @return {number} */ foo() {}",
+            "}",
+            "/** @abstract @implements {Foo} */",
+            "class Bar {}",
+            "class Zoo extends Bar {",
+            "  /** @override @return {number|string} */",
+            "  foo() {}",
+            "}"),
+        lines(
+            "mismatch of the foo property on type Zoo and the type of the property it overrides "
+                + "from interface Foo",
+            "original: function(this:Foo): number",
+            "override: function(this:Zoo): (number|string)"));
+  }
+
+  @Test
+  public void testAbstractClassIncompatibleInterfaceMethodImplementation() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo {",
+            "  /** @return {number} */ foo() {}",
+            "}",
+            "/** @abstract @implements {Foo} */",
             "class Bar {",
             "  /** @override @return {number|string} */",
             "  foo() {}",

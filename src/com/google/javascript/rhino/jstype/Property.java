@@ -69,6 +69,12 @@ public final class Property implements Serializable, StaticTypedSlot, StaticType
     public Property getValue() {
       return value;
     }
+
+    public boolean isOwnedByInterface() {
+      return owner.isFunctionPrototypeType()
+          ? owner.getOwnerFunction().isInterface()
+          : owner.isInterface();
+    }
   }
 
   private static final long serialVersionUID = 1L;

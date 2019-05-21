@@ -54,6 +54,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry.PropDefinitionKind;
 import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
+import com.google.javascript.rhino.jstype.Property.OwnedProperty;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
@@ -1540,11 +1541,19 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return;
     }
 
-    FunctionType superClass = ctorType.getSuperClassConstructor();
-    boolean superClassHasProperty =
-        superClass != null && superClass.getInstanceType().hasProperty(propertyName);
-    boolean superClassHasDeclaredProperty =
-        superClass != null && superClass.getInstanceType().isPropertyTypeDeclared(propertyName);
+    FunctionType superCtor = ctorType.getSuperClassConstructor();
+
+    ObjectType superClass = null;
+    boolean superClassHasProperty = false;
+    boolean superClassHasDeclaredProperty = false;
+    if (superCtor != null) {
+      OwnedProperty propSlot = superCtor.getInstanceType().findClosestDefinition(propertyName);
+      superClassHasProperty = propSlot != null && !propSlot.isOwnedByInterface();
+      if (superClassHasProperty) {
+        superClass = propSlot.getOwner();
+        superClassHasDeclaredProperty = !propSlot.getValue().isTypeInferred();
+      }
+    }
 
     // For interface
     boolean superInterfaceHasProperty = false;
@@ -1557,6 +1566,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             superInterfaceHasDeclaredProperty || interfaceType.isPropertyTypeDeclared(propertyName);
       }
     }
+
     boolean declaredOverride = declaresOverride(info);
 
     boolean foundInterfaceProperty = false;
@@ -1609,15 +1619,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
               n,
               HIDDEN_SUPERCLASS_PROPERTY,
               propertyName,
-              TypeValidator.getClosestDefiningTypeName(
-                  superClass.getInstanceType(), propertyName)));
+              TypeValidator.getClosestDefiningTypeName(superClass, propertyName)));
     }
 
     // @override is present and we have to check that it is ok
     if (superClassHasDeclaredProperty) {
       // there is a superclass implementation
-      JSType superClassPropType =
-          superClass.getInstanceType().getPropertyType(propertyName);
+      JSType superClassPropType = superClass.getPropertyType(propertyName);
       TemplateTypeMap ctorTypeMap =
           ctorType.getTypeOfThis().getTemplateTypeMap();
       if (!ctorTypeMap.isEmpty()) {
@@ -1631,8 +1639,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                 n,
                 HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
                 propertyName,
-                TypeValidator.getClosestDefiningTypeName(
-                    superClass.getInstanceType(), propertyName),
+                TypeValidator.getClosestDefiningTypeName(superClass, propertyName),
                 superClassPropType.toString(),
                 propertyType.toString()));
       }

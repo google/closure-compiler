@@ -97,12 +97,15 @@ class PropertyMap implements Serializable {
   }
 
   /**
-   * Returns the secondary parents of this property map, for interfaces that
-   * need multiple inheritance.
+   * Returns the secondary parents of this property map, for interfaces that need multiple
+   * inheritance or for interfaces of abstract classes.
    */
   private Iterable<ObjectType> getSecondaryParentObjects() {
     if (parentSource == null) {
       return ImmutableList.of();
+    }
+    if (parentSource.getConstructor() != null && parentSource.getConstructor().isAbstract()) {
+      return parentSource.getConstructor().getOwnImplementedInterfaces();
     }
     return parentSource.getCtorExtendedInterfaces();
   }

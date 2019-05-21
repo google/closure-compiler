@@ -48,7 +48,8 @@ import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.StaticTypedSlot;
+import com.google.javascript.rhino.jstype.Property;
+import com.google.javascript.rhino.jstype.Property.OwnedProperty;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.UnknownType;
@@ -894,9 +895,13 @@ class TypeValidator implements Serializable {
    * typed.
    */
   private void expectInterfaceProperty(
-      Node n, ObjectType instance, ObjectType implementedInterface, String prop) {
-    StaticTypedSlot propSlot = instance.getSlot(prop);
-    if (propSlot == null) {
+      Node n, ObjectType instance, ObjectType implementedInterface, String propName) {
+    OwnedProperty propSlot = instance.findClosestDefinition(propName);
+    if (propSlot == null || propSlot.isOwnedByInterface()) {
+      if (instance.getConstructor().isAbstract()) {
+        // Abstract classes are not required to implement interface properties.
+        return;
+      }
       registerMismatch(
           instance,
           implementedInterface,
@@ -904,21 +909,21 @@ class TypeValidator implements Serializable {
               JSError.make(
                   n,
                   INTERFACE_METHOD_NOT_IMPLEMENTED,
-                  prop,
+                  propName,
                   implementedInterface.toString(),
                   instance.toString())));
     } else {
-      Node propNode =
-          propSlot.getDeclaration() == null ? null : propSlot.getDeclaration().getNode();
+      Property prop = propSlot.getValue();
+      Node propNode = prop.getDeclaration() == null ? null : prop.getDeclaration().getNode();
 
       // Fall back on the constructor node if we can't find a node for the
       // property.
       propNode = propNode == null ? n : propNode;
 
-      JSType found = propSlot.getType();
+      JSType found = prop.getType();
       found = found.restrictByNotNullOrUndefined();
 
-      JSType required = implementedInterface.getPropertyType(prop);
+      JSType required = implementedInterface.getPropertyType(propName);
       TemplateTypeMap typeMap = implementedInterface.getTemplateTypeMap();
       if (!typeMap.isEmpty()) {
         TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(
@@ -933,9 +938,9 @@ class TypeValidator implements Serializable {
             JSError.make(
                 propNode,
                 HIDDEN_INTERFACE_PROPERTY_MISMATCH,
-                prop,
+                propName,
                 instance.toString(),
-                getClosestDefiningTypeName(implementedInterface, prop),
+                getClosestDefiningTypeName(implementedInterface, propName),
                 required.toString(),
                 found.toString());
         registerMismatch(found, required, err);
