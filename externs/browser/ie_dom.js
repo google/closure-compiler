@@ -1069,13 +1069,6 @@ Element.prototype.onselectstart;
 Element.prototype.onselectionchange;
 
 /**
- * @type {string}
- * @implicitCast
- * @see http://msdn.microsoft.com/en-us/library/aa752326(VS.85).aspx
- */
-Element.prototype.outerHTML;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms536689(VS.85).aspx
  * @return {undefined}
  */
