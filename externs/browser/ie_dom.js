@@ -392,41 +392,9 @@ Window.prototype.execScript;
 
 
 /**
- * @param {number} x
- * @param {number} y
- * @see http://msdn.microsoft.com/en-us/library/ms536618(VS.85).aspx
- * @return {undefined}
- */
-Window.prototype.moveBy = function(x, y) {};
-
-/**
- * @param {number} x
- * @param {number} y
- * @see http://msdn.microsoft.com/en-us/library/ms536626(VS.85).aspx
- * @return {undefined}
- */
-Window.prototype.moveTo = function(x, y) {};
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms536638(VS.85).aspx
  */
 Window.prototype.navigate;
-
-/**
- * @param {number} width
- * @param {number} height
- * @see http://msdn.microsoft.com/en-us/library/ms536722(VS.85).aspx
- * @return {undefined}
- */
-Window.prototype.resizeBy = function(width, height) {};
-
-/**
- * @param {number} width
- * @param {number} height
- * @see http://msdn.microsoft.com/en-us/library/ms536723(VS.85).aspx
- * @return {undefined}
- */
-Window.prototype.resizeTo = function(width, height) {};
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536738(VS.85).aspx

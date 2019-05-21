@@ -2177,6 +2177,44 @@ Window.prototype.outerWidth;
 Window.prototype.outerHeight;
 
 /**
+ * @type {number}
+ * @see https://www.w3.org/TR/cssom-view/#dom-window-devicepixelratio
+ */
+Window.prototype.devicePixelRatio;
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ * @see https://www.w3.org/TR/cssom-view/#dom-window-moveto
+ */
+Window.prototype.moveTo = function(x, y) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ * @see https://www.w3.org/TR/cssom-view/#dom-window-moveby
+ */
+Window.prototype.moveBy = function(x, y) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ * @see https://www.w3.org/TR/cssom-view/#dom-window-resizeto
+ */
+Window.prototype.resizeTo = function(x, y) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ * @see https://www.w3.org/TR/cssom-view/#dom-window-resizeby
+ */
+Window.prototype.resizeBy = function(x, y) {};
+
+/**
  * @constructor
  * @implements {EventTarget}
  * @see http://www.w3.org/TR/cssom-view/#mediaquerylist
