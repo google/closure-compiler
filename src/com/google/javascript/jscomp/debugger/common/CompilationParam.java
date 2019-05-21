@@ -44,7 +44,7 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       if (value) {
-        for (DiagnosticGroup group : new DiagnosticGroups().getRegisteredGroups().values()) {
+        for (DiagnosticGroup group : DiagnosticGroups.getRegisteredGroups().values()) {
           options.setWarningLevel(group, CheckLevel.WARNING);
         }
       }
@@ -634,6 +634,18 @@ public enum CompilationParam {
     @Override
     public boolean isApplied(CompilerOptions options) {
       return options.optimizeCalls;
+    }
+  },
+
+  OPTIMIZE_ARGUMENTS_ARRAY(ParamGroup.OPTIMIZATION) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setOptimizeArgumentsArray(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.optimizeArgumentsArray;
     }
   },
 
