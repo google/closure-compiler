@@ -6954,6 +6954,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testTypeCheckingEsModule_importStar() {
+    testTypes("import * as mod from './input0';");
+  }
+
+  @Test
   public void testExplicitUnrestrictedOverridesSuperImplicitStruct() {
     disableStrictMissingPropertyChecks();
     testTypes(
