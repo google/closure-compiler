@@ -63,13 +63,82 @@ Symbol.keyFor = function(sym) {};
 
 // Well known symbols
 
-/** @const {symbol} */
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/asyncIterator
+ * @const {symbol}
+ */
+Symbol.asyncIterator;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance
+ * @const {symbol}
+ */
+Symbol.hasInstance;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/isConcatSpreadable
+ * @const {symbol}
+ */
+Symbol.isConcatSpreadable;
+
+/**
+ * @const {symbol}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/iterator
+ */
 Symbol.iterator;
 
-/** @const {symbol} */
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/match
+ * @const {symbol}
+ */
+Symbol.match;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/matchAll
+ * @const {symbol}
+ */
+Symbol.matchAll;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/replace
+ * @const {symbol}
+ */
+Symbol.replace;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/search
+ * @const {symbol}
+ */
+Symbol.search;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species
+ * @const {symbol}
+ */
+Symbol.species;
+
+// /**
+//  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/split
+//  * @const {symbol}
+//  */
+// Symbol.split;
+
+/**
+ * @const {symbol}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toPrimitive
+ */
+Symbol.toPrimitive;
+
+/**
+ * @const {symbol}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toStringTag
+ */
 Symbol.toStringTag;
 
-/** @const {symbol} */
+/**
+ * @const {symbol}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/unscopables
+ */
 Symbol.unscopables;
 
 
