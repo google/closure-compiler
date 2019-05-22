@@ -427,13 +427,6 @@ TreeWalker.prototype.currentNode;
 function HTMLElement() {}
 
 /**
- * @implicitCast
- * @type {string}
- * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-63534901
- */
-HTMLElement.prototype.id;
-
-/**
  * @type {string}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-78276800
  */
