@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -83,6 +82,11 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
               + " dictionary in its last statement. "
               + CR_DEFINE_COMMON_EXPLANATION);
 
+  static final DiagnosticType CR_DEFINE_PROPERTY_TOO_FEW_ARGUMENTS =
+      DiagnosticType.error(
+          "JSC_CR_DEFINE_PROPERTY_TOO_FEW_ARGUMENTS",
+          "cr.defineProperty() requires at least 2 arguments.");
+
   static final DiagnosticType CR_DEFINE_PROPERTY_INVALID_PROPERTY_KIND =
       DiagnosticType.error(
           "JSC_CR_DEFINE_PROPERTY_INVALID_PROPERTY_KIND",
@@ -117,17 +121,30 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
 
   private void visitPropertyDefinition(Node call, Node parent) {
     Node callee = call.getFirstChild();
+    boolean isCrDefinePropertyCall = callee.matchesQualifiedName(CR_DEFINE_PROPERTY);
+
+    if (isCrDefinePropertyCall) {
+      if (call.getChildCount() < 3) {
+        compiler.report(JSError.make(call, CR_DEFINE_PROPERTY_TOO_FEW_ARGUMENTS));
+        return;
+      }
+    } else if (call.getChildCount() < 4) {
+      // Note: Object.defineProperty() with less than 3 args throws at runtime.
+      // We could also report some type of error here, but it seems odd to do this from the
+      // ChromePass as there's nothing particularly Chrome-specific about Object.defineProperty()
+      // with too few args.
+      return;
+    }
+
     String target = call.getSecondChild().getQualifiedName();
-    if (callee.matchesQualifiedName(CR_DEFINE_PROPERTY) && !target.endsWith(".prototype")) {
+    if (isCrDefinePropertyCall && !target.endsWith(".prototype")) {
       target += ".prototype";
     }
 
     Node property = call.getChildAtIndex(2);
-
     Node getPropNode =
         NodeUtil.newQName(compiler, target + "." + property.getString()).srcrefTree(call);
 
-    boolean isCrDefinePropertyCall = callee.matchesQualifiedName(CR_DEFINE_PROPERTY);
     if (isCrDefinePropertyCall) {
       // The 3rd argument (PropertyKind) is actually used at runtime, so it takes precedence.
       Node propertyType = getTypeByCrPropertyKind(call.getChildAtIndex(3));

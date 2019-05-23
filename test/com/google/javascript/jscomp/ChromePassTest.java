@@ -362,10 +362,23 @@ public class ChromePassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjectDefinePropertyWithoutArgsDoesntThrow() {
+    test("Object.defineProperty();", "Object.defineProperty();");
+    test("Object.defineProperty(a);", "Object.defineProperty(a);");
+    test("Object.defineProperty(a, 'b');", "Object.defineProperty(a, 'b');");
+  }
+
+  @Test
   public void testObjectDefinePropertyDefinesUnquotedProperty() {
     test(
         "Object.defineProperty(a.b, 'c', {});",
         "Object.defineProperty(a.b, 'c', {});\n" + "/** @type {?} */\n" + "a.b.c;");
+  }
+
+  @Test
+  public void testCrDefinePropertyTooFewArguments() {
+    testError("cr.defineProperty();\n", ChromePass.CR_DEFINE_PROPERTY_TOO_FEW_ARGUMENTS);
+    testError("cr.defineProperty(a.prototype);\n", ChromePass.CR_DEFINE_PROPERTY_TOO_FEW_ARGUMENTS);
   }
 
   @Test
