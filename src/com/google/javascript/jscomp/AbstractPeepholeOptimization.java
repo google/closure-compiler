@@ -156,8 +156,7 @@ abstract class AbstractPeepholeOptimization {
    * the current node's type is one of the reason's why a subtree has side effects.
    */
   protected boolean nodeTypeMayHaveSideEffects(Node n) {
-    checkNotNull(compiler);
-    return NodeUtil.nodeTypeMayHaveSideEffects(n, compiler);
+    return astAnalyzer.nodeTypeMayHaveSideEffects(n);
   }
 
   /**

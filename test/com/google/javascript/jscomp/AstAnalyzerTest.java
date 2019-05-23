@@ -19,15 +19,30 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
+import static com.google.javascript.rhino.Token.ADD;
+import static com.google.javascript.rhino.Token.ASSIGN;
+import static com.google.javascript.rhino.Token.ASSIGN_ADD;
 import static com.google.javascript.rhino.Token.AWAIT;
+import static com.google.javascript.rhino.Token.BITOR;
 import static com.google.javascript.rhino.Token.CALL;
+import static com.google.javascript.rhino.Token.CLASS;
 import static com.google.javascript.rhino.Token.COMPUTED_PROP;
+import static com.google.javascript.rhino.Token.DEC;
+import static com.google.javascript.rhino.Token.DELPROP;
 import static com.google.javascript.rhino.Token.FOR_AWAIT_OF;
+import static com.google.javascript.rhino.Token.FOR_IN;
+import static com.google.javascript.rhino.Token.FOR_OF;
+import static com.google.javascript.rhino.Token.FUNCTION;
 import static com.google.javascript.rhino.Token.GETTER_DEF;
+import static com.google.javascript.rhino.Token.INC;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
+import static com.google.javascript.rhino.Token.NAME;
 import static com.google.javascript.rhino.Token.NEW;
+import static com.google.javascript.rhino.Token.OR;
 import static com.google.javascript.rhino.Token.REST;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
+import static com.google.javascript.rhino.Token.SPREAD;
+import static com.google.javascript.rhino.Token.TAGGED_TEMPLATELIT;
 import static com.google.javascript.rhino.Token.THROW;
 import static com.google.javascript.rhino.Token.YIELD;
 
@@ -531,6 +546,81 @@ public class AstAnalyzerTest {
 
       assertSideEffect(true, "'a'.replace(/a/, function (s) {alert(s)})", false);
       assertSideEffect(false, "'a'.replace(/a/, 'x')", false);
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static final class NodeTypeMayHaveSideEffects {
+    @Parameter(0)
+    public String js;
+
+    @Parameter(1)
+    public Token token;
+
+    @Parameter(2)
+    public Boolean expectedResult;
+
+    @Parameters(name = "{1} node in \"{0}\" side-effects: {2}")
+    public static Iterable<Object[]> cases() {
+      return ImmutableList.copyOf(
+          new Object[][] {
+            {"x = y", ASSIGN, true},
+            {"x += y", ASSIGN_ADD, true},
+            {"delete x.y", DELPROP, true},
+            {"x++", INC, true},
+            {"x--", DEC, true},
+            {"for (prop in obj) {}", FOR_IN, true},
+            {"for (item of iterable) {}", FOR_OF, true},
+            // name declaration has a side effect when a value is actually assigned
+            {"var x = 1;", NAME, true},
+            {"let x = 1;", NAME, true},
+            {"const x = 1;", NAME, true},
+            // don't consider name declaration to have a side effect if there's no assignment
+            {"var x;", NAME, false},
+            {"let x;", NAME, false},
+
+            // NOTE: CALL and NEW nodes are delegated to functionCallHasSideEffects() and
+            // constructorCallHasSideEffects(), respectively. The cases below are just a few
+            // representative examples that are convenient to test here.
+            //
+            // in general function and constructor calls are assumed to have side effects
+            {"foo();", CALL, true},
+            {"new Foo();", NEW, true},
+            // Object() is known not to have side-effects, though
+            {"Object();", CALL, false},
+            {"new Object();", NEW, false},
+            // TAGGED_TEMPLATELIT is just a special syntax for a CALL.
+            {"foo`template`;", TAGGED_TEMPLATELIT, true},
+
+            // NOTE: REST and SPREAD are delegated to NodeUtil.iteratesImpureIterable()
+            // Test cases here are just easy to test representative examples.
+            {"[...[1, 2, 3]]", SPREAD, false},
+            {"[...someIterable]", SPREAD, true}, // unknown, so assume side-effects
+            // we just assume the rhs of an array pattern may have iteration side-effects
+            // without looking too closely.
+            {"let [...rest] = [1, 2, 3];", REST, true},
+            // REST in parameter list does not trigger iteration at the function definition, so
+            // it has no side effects.
+            {"function foo(...rest) {}", REST, false},
+
+            // defining a class or a function is not considered to be a side-effect
+            {"function foo() {}", FUNCTION, false},
+            {"class Foo {}", CLASS, false},
+
+            // arithmetic, logic, and bitwise operations do not have side-effects
+            {"x + y", ADD, false},
+            {"x || y", OR, false},
+            {"x | y", BITOR, false},
+          });
+    }
+
+    @Test
+    public void test() {
+      ParseHelper helper = new ParseHelper();
+
+      Node n = helper.parseFirst(token, js);
+      AstAnalyzer astAnalyzer = helper.getAstAnalyzer();
+      assertThat(astAnalyzer.nodeTypeMayHaveSideEffects(n)).isEqualTo(expectedResult);
     }
   }
 

@@ -279,7 +279,7 @@ class NodeIterators {
       //   var a = b;
       //   var b = 3;
       //   alert(a);
-      if ((NodeUtil.nodeTypeMayHaveSideEffects(nextNode, compiler) && type != Token.NAME)
+      if ((compiler.getAstAnalyzer().nodeTypeMayHaveSideEffects(nextNode) && type != Token.NAME)
           || (type == Token.NAME && nextParent.isCatch())) {
         lookAhead = null;
         return;

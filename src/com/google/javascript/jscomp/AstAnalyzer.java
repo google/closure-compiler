@@ -113,4 +113,14 @@ public class AstAnalyzer {
     Node nameNode = newNode.getFirstChild();
     return !nameNode.isName() || !CONSTRUCTORS_WITHOUT_SIDE_EFFECTS.contains(nameNode.getString());
   }
+
+  /**
+   * Returns true if the current node's type implies side effects.
+   *
+   * <p>This is a non-recursive version of the may have side effects check; used to check wherever
+   * the current node's type is one of the reasons why a subtree has side effects.
+   */
+  boolean nodeTypeMayHaveSideEffects(Node n) {
+    return NodeUtil.nodeTypeMayHaveSideEffects(n, compiler);
+  }
 }

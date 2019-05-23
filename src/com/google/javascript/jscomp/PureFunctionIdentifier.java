@@ -664,7 +664,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
-      if (!NodeUtil.nodeTypeMayHaveSideEffects(node, compiler) && !node.isReturn()) {
+      if (!compiler.getAstAnalyzer().nodeTypeMayHaveSideEffects(node) && !node.isReturn()) {
         return;
       }
 
