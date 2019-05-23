@@ -1684,15 +1684,6 @@ HTMLElement.prototype.draggable;
  */
 HTMLElement.prototype.dropzone;
 
-/**
- * @see http://www.w3.org/TR/html5/dom.html#dom-getelementsbyclassname
- * @param {string} classNames
- * @return {!NodeList<!Element>}
- * @nosideeffects
- */
-HTMLElement.prototype.getElementsByClassName = function(classNames) {};
-// NOTE: Document.prototype.getElementsByClassName is in gecko_dom.js
-
 /** @type {boolean} */
 HTMLElement.prototype.hidden;
 

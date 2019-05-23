@@ -232,3 +232,19 @@ Element.prototype.toggleAttribute = function(name, force) {};
  * @see http://msdn.microsoft.com/en-us/library/ms534327(VS.85).aspx
  */
 Node.prototype.parentElement;
+
+/**
+ * @param {string} name
+ * @return {!HTMLCollection<!Element>}
+ * @nosideeffects
+ * @see https://dom.spec.whatwg.org/#dom-document-getelementsbyclassname-classnames-classnames
+ */
+Document.prototype.getElementsByClassName = function(name) {};
+
+/**
+ * @param {string} classNames
+ * @return {!HTMLCollection<!Element>}
+ * @nosideeffects
+ * @see https://dom.spec.whatwg.org/#dom-element-getelementsbyclassname-classnames-classnames
+ */
+Element.prototype.getElementsByClassName = function(classNames) {};

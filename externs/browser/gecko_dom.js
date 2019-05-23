@@ -326,14 +326,6 @@ Document.prototype.evaluate;
 Document.prototype.execCommand;
 
 /**
- * @param {string} name
- * @return {!NodeList<!Element>}
- * @nosideeffects
- * @see https://developer.mozilla.org/en/DOM/document.getElementsByClassName
- */
-Document.prototype.getElementsByClassName = function(name) {};
-
-/**
  * @param {string} uri
  * @return {undefined}
  */
