@@ -117,10 +117,17 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   private static class JavascriptClass {
     // All static members to the class including get set properties.
     private final Set<Node> staticMembers = new LinkedHashSet<>();
+    // Keep updated the set of static member names to avoid O(n^2) searches.
+    private final Set<String> staticMemberNames = new HashSet<>();
     // Collect all the static field accesses to the class.
     private final Set<Node> staticFieldAccess = new LinkedHashSet<>();
     // Collect all get set properties as defined by Object.defineProperties(...)
     private final Set<String> definedProperties = new LinkedHashSet<>();
+
+    void addStaticMember(Node node) {
+      staticMembers.add(node);
+      staticMemberNames.add(node.getFirstChild().getLastChild().getString());
+    }
   }
 
   private final AbstractCompiler compiler;
@@ -260,18 +267,15 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
       compiler.reportChangeToEnclosingScope(inheritsExpressionResult);
 
       // Add the static member to the subclass so that subclasses also copy this member.
-      subClass.staticMembers.add(assign);
+      subClass.addStaticMember(assign);
     }
   }
 
   private boolean isOverriden(JavascriptClass subClass, String memberName) {
-    for (Node subclassMember : subClass.staticMembers) {
-      checkState(subclassMember.isAssign(), subclassMember);
-      if (subclassMember.getFirstChild().getLastChild().getString().equals(memberName)) {
-        // This subclass overrides the static method, so there is no need to copy the
-        // method from the base class.
-        return true;
-      }
+    if (subClass.staticMemberNames.contains(memberName)) {
+      // This subclass overrides the static method, so there is no need to copy the
+      // method from the base class.
+      return true;
     }
     if (subClass.definedProperties.contains(memberName)) {
       return true;
@@ -379,7 +383,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
         Node getProp = n.getFirstChild();
         Node classNode = getProp.getFirstChild();
         if (isReferenceToClass(t, classNode)) {
-          classByAlias.get(classNode.getQualifiedName()).staticMembers.add(n);
+          classByAlias.get(classNode.getQualifiedName()).addStaticMember(n);
           nodeOrder.put(n, nodeOrder.size());
         }
       }
