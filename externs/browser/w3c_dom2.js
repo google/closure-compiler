@@ -2971,4 +2971,10 @@ Window.prototype.open = function(url, windowName, windowFeatures, replace) {};
  */
 Element.prototype.innerHTML;
 
+/**
+ * @type {string}
+ * @implicitCast
+ * @see https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface
+ */
+Element.prototype.outerHTML;
 
