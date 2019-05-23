@@ -278,6 +278,8 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
         case VAR:
         case LET:
         case CONST:
+        case EXPORT:
+        case IMPORT:
         case RETURN:
         case THROW:
           return false;

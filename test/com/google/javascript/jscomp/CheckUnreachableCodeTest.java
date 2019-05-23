@@ -447,6 +447,27 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
+  public void testCorrectEsModuleExports() {
+    ignoreWarnings(DiagnosticGroups.MODULE_LOAD);
+    testSame("export var x");
+    testSame("export var x = 1");
+    testSame("export function f() {}");
+    testSame("export class C {};");
+    testSame("export default 0;");
+    testSame("const x = 0; export {x};");
+    testSame("export {x as y} from './mod'");
+  }
+
+  @Test
+  public void testCorrectEsModuleImports() {
+    ignoreWarnings(DiagnosticGroups.MODULE_LOAD);
+    testSame("import * as mod from './mod';");
+    testSame("import def from './mod';");
+    testSame("import {x, y} from './mod';");
+    testSame("import {x as y} from './mod';");
+  }
+
   private void assertUnreachable(String js) {
     test(js, js, warning(CheckUnreachableCode.UNREACHABLE_CODE));
   }

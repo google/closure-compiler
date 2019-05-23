@@ -1464,6 +1464,22 @@ public final class ControlFlowAnalysisTest {
   }
 
   @Test
+  public void testSimpleExportDeclarationsInEsModule() {
+    assertNodeOrder(
+        createCfg("export let a = 0; export default a; export {b} from './mod';"),
+        ImmutableList.of(
+            Token.SCRIPT, Token.MODULE_BODY, Token.EXPORT, Token.EXPORT, Token.EXPORT));
+  }
+
+  @Test
+  public void testSimpleImportDeclarationsInEsModule() {
+    assertNodeOrder(
+        createCfg("import x from './mod'; import {y} from './mod'; import * as z from './mod';"),
+        ImmutableList.of(
+            Token.SCRIPT, Token.MODULE_BODY, Token.IMPORT, Token.IMPORT, Token.IMPORT));
+  }
+
+  @Test
   public void testLocalFunctionOrder() throws IOException {
     ControlFlowGraph<Node> cfg =
         createCfg("function f() { while (x) { x++; } } var x = 3;");
