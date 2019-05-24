@@ -1241,6 +1241,8 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   private JSType getTypeOfThis(Node scopeRoot) {
     if (scopeRoot.isRoot() || scopeRoot.isScript()) {
       return castToObject(scopeRoot.getJSType());
+    } else if (scopeRoot.isModuleBody()) {
+      return null;
     }
 
     checkArgument(scopeRoot.isFunction(), scopeRoot);

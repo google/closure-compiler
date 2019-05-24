@@ -51,6 +51,14 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class CheckAccessControlsTest extends CompilerTestCase {
 
+  private static final String CLOSURE_PRIMITIVES =
+      lines(
+          "/** @const */",
+          "var goog = {};",
+          "goog.module = function(ns) {};",
+          "/** @return {?} */",
+          "goog.require = function(ns) {};");
+
   public CheckAccessControlsTest() {
     super(CompilerTypeTestCase.DEFAULT_EXTERNS);
   }
@@ -63,6 +71,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     enableParseTypeInfo();
     enableClosurePass();
     enableRewriteClosureCode();
+    enableCreateModuleMap();
   }
 
   @Override
@@ -94,6 +103,14 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   @Test
   public void testDeprecatedFunctionNoReason() {
     testError("/** @deprecated */ function f() {} function g() { f(); }", DEPRECATED_NAME);
+  }
+
+  @Test
+  public void testDeprecatedFunctionNoReason_googModule() {
+    disableRewriteClosureCode(); // Remove this line once closure rewriting is after typechecking
+    testError(
+        "goog.module('m'); /** @deprecated */ function f() {} function g() { f(); }",
+        DEPRECATED_NAME);
   }
 
   @Test
@@ -140,6 +157,23 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     testDepName(
         "/** @deprecated Some global scope */ function f() {} f();",
         "Variable f has been deprecated: Some global scope");
+  }
+
+  @Test
+  public void testWarningInGoogModuleScopeForCall() {
+    disableRewriteClosureCode(); // Remove this line once Closure rewriting is after typechecking.
+    testDepName(
+        "goog.module('m'); /** @deprecated Some module scope */ function f() {} f();",
+        "Variable f has been deprecated: Some module scope");
+  }
+
+  @Test
+  public void testNoWarningInGoogModuleScopeWithFileoverviewForCall() {
+    disableRewriteClosureCode(); // Remove this line once Closure rewriting is after typechecking.
+    testDepName(
+        "/** @deprecated @fileoverview */ goog.module('m'); /** @deprecated Some module scope */"
+            + " function f() {} f();",
+        "Variable f has been deprecated: Some module scope");
   }
 
   @Test
@@ -1271,6 +1305,41 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testPackagePrivateAccessForNames_googModule() {
+    // TODO(b/133450410): This should be a visibility violation.
+    disableRewriteClosureCode();
+    testNoWarning(
+        ImmutableList.of(
+            SourceFile.fromCode("goog.js", CLOSURE_PRIMITIVES),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "goog.module('Foo');",
+                    "/** @package */",
+                    "var name = 'foo';",
+                    "exports = name;")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"),
+                "goog.module('client'); const name = goog.require('Foo'); name;")));
+  }
+
+  @Test
+  public void testPackagePrivateAccessForNames_esModule() {
+    // TODO(b/133450410): This should be a visibility violation.
+    testNoWarning(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/** @package */", //
+                    "var name = 'foo';",
+                    "export {name};")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"),
+                "import {name} from '/foo/bar.js'; name;")));
+  }
+
+  @Test
   public void testPackagePrivateAccessForProperties1() {
     testSame("/** @constructor */ function Foo() {}"
         + "/** @package */ Foo.prototype.bar = function() {};"
@@ -1518,6 +1587,48 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
+  public void
+      testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_GoogModule() {
+    testError(
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @package",
+            " */",
+            "goog.module('mod')",
+            "/** @struct @constructor */",
+            "Foo = function() {};",
+            "/** @private */",
+            "Foo.prototype.privateMethod_ = function() {};",
+            "/** @struct @constructor @extends {Foo} */",
+            "Bar = function() {};",
+            "/** @override */",
+            "Bar.prototype.privateMethod_ = function() {};"),
+        BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
+  }
+
+  @Test
+  public void
+      testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_esModule() {
+    testError(
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @package",
+            " */",
+            "/** @struct @constructor */",
+            "var Foo = function() {};",
+            "/** @private */",
+            "Foo.prototype.privateMethod_ = function() {};",
+            "/** @struct @constructor @extends {Foo} */",
+            "var Bar = function() {};",
+            "/** @override */",
+            "Bar.prototype.privateMethod_ = function() {};",
+            "export {Foo, Bar};"),
+        BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
+  }
+
+  @Test
   public void testNamespacedFunctionDoesNotNeedVisibilityRedeclInFileWithFileOverviewVisibility() {
     testSame("/**\n"
         + " * @fileoverview\n"
@@ -1648,6 +1759,49 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 + "var Foo = function() {};\n"),
             SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")),
         BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  @Test
+  public void testPackageFileOverviewVisibilityAppliesToNameWithoutExplicitVisibility_googModule() {
+    // TODO(b/133450410): Requiring 'Foo' should be a visibility violation.
+    disableRewriteClosureCode();
+    testNoWarning(
+        ImmutableList.of(
+            SourceFile.fromCode("goog.js", CLOSURE_PRIMITIVES),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/**",
+                    " * @fileoverview",
+                    " * @package",
+                    " */",
+                    "goog.module('Foo');",
+                    "/** @constructor */",
+                    "var Foo = function() {};",
+                    "exports = Foo;")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"),
+                "goog.module('client'); const Foo = goog.require('Foo'); new Foo();")));
+  }
+
+  @Test
+  public void testPackageFileOverviewVisibilityAppliesToNameWithoutExplicitVisibility_esModule() {
+    // TODO(b/133450410): Importing 'Foo' should be a visibility violation.
+    testNoWarning(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/**",
+                    " * @fileoverview",
+                    " * @package",
+                    " */",
+                    "/** @constructor */",
+                    "var Foo = function() {};",
+                    "export {Foo};")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"),
+                "import {Foo} from '/foo/bar.js'; new Foo();")));
   }
 
   @Test
@@ -2108,6 +2262,31 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         + "/** @constructor */ function B() {"
         + "/** @const */ this.bar = 3;this.bar += 4;}",
         CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  @Test
+  public void testConstantPropertyReassigned_crossModuleWithCollidingNames() {
+    // TODO(b/133447431): This code should not cause a warning, but the compiler incorrectly treats
+    // both 'A' instances as the same type.
+    disableRewriteClosureCode();
+    test(
+        srcs(
+            "var goog = {}; goog.module = function(ns) {};",
+            lines(
+                "goog.module('mod1');",
+                "/** @constructor */",
+                "function A() {",
+                "  /** @const */",
+                "  this.bar = 3;",
+                "}"),
+            lines(
+                "goog.module('mod2');",
+                "/** @constructor */",
+                "function A() {",
+                "  /** @const */",
+                "  this.bar = 3;",
+                "}")),
+        error(CONST_PROPERTY_REASSIGNED_VALUE));
   }
 
   @Test

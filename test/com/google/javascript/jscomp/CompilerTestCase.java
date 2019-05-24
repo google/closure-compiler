@@ -37,6 +37,7 @@ import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.jscomp.AbstractCompiler.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -125,6 +126,9 @@ public abstract class CompilerTestCase {
    * pass.
    */
   private boolean verifyGetterAndSetterUpdates;
+
+  /** Whether to run {@link ModuleMapCreator} after parsing. */
+  private boolean createModuleMap = false;
 
   /**
    * Whether to verify that no new getters / setters were added. This is looser than
@@ -826,6 +830,11 @@ public abstract class CompilerTestCase {
     typeCheckEnabled = false;
   }
 
+  protected final void enableCreateModuleMap() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.createModuleMap = true;
+  }
+
   /**
    * When comparing expected to actual, ignore nodes created through compiler.ensureLibraryInjected
    *
@@ -1474,14 +1483,22 @@ public abstract class CompilerTestCase {
     } else {
       assertThat(compiler.getWarningCount()).isGreaterThan(0);
     }
+    Node externsRoot = root.getFirstChild();
+    Node mainRoot = root.getLastChild();
+
+    if (createModuleMap) {
+      new GatherModuleMetadata(
+              compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER)
+          .process(externsRoot, mainRoot);
+      new ModuleMapCreator(compiler, compiler.getModuleMetadataMap())
+          .process(externsRoot, mainRoot);
+    }
 
     if (astValidationEnabled) {
       // NOTE: We do not enable type validation here, because type information never exists
       // immediately after parsing.
       (new AstValidator(compiler, scriptFeatureValidationEnabled)).validateRoot(root);
     }
-    Node externsRoot = root.getFirstChild();
-    Node mainRoot = root.getLastChild();
 
     // Save the tree for later comparison.
     Node rootClone = root.cloneTree();
