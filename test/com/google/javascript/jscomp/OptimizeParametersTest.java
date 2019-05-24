@@ -732,10 +732,28 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFunctionWithReferenceToArgumentsShouldNotBeOptimize() {
+  public void testFunctionWithReferenceToArgumentsShouldNotBeOptimized() {
     testSame("function foo(a,b,c) { return arguments.size; }; foo(1);");
     testSame("var foo = function(a,b,c) { return arguments.size }; foo(1);");
     testSame("var foo = function bar(a,b,c) { return arguments.size }; foo(2); bar(2);");
+  }
+
+  @Test
+  public void testClassMemberWithReferenceToArgumentsShouldNotBeOptimize() {
+    testSame(
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "  }",
+            "  setValue(value) {",
+            "    if (!arguments.length) {",
+            "      return 0;",
+            "    }",
+            "    return value;",
+            "  }",
+            "}",
+            "var c = new C();",
+            "alert(c.setValue(42));"));
   }
 
   @Test

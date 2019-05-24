@@ -384,7 +384,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       return false;
     }
 
-    boolean seenCandidateDefiniton = false;
+    boolean seenCandidateDefinition = false;
     boolean seenCandidateUse = false;
     for (Node n : refs) {
       // TODO(johnlenz): Determine what to do about ".constructor" references.
@@ -398,7 +398,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
         // TODO(johnlenz): filter .apply when we support it
         seenCandidateUse = true;
       } else if (isCandidateDefinition(n)) {
-        seenCandidateDefiniton = true;
+        seenCandidateDefinition = true;
       } else {
         // If this isn't an non-aliasing reference (typeof, instanceof, etc)
         // then there is nothing that can be done.
@@ -409,7 +409,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       }
     }
 
-    return seenCandidateDefiniton && seenCandidateUse;
+    return seenCandidateDefinition && seenCandidateUse;
   }
 
   private boolean isCandidateDefinition(Node n) {
@@ -425,7 +425,9 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
         return true;
       }
     } else if (isClassMemberDefinition(n)) {
-      return true;
+      if (!NodeUtil.doesFunctionReferenceOwnArgumentsObject(n.getFirstChild())) {
+        return true;
+      }
     }
 
     return false;
