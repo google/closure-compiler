@@ -906,7 +906,7 @@ Counter.prototype.listStyle;
 Counter.prototype.separator;
 
 /**
- * @constructor
+ * @interface
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-ViewCSS
  */
 function ViewCSS() {}
