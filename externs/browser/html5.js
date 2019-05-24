@@ -5141,7 +5141,7 @@ function CustomElementRegistry() {}
 
 /**
  * @param {string} tagName
- * @param {!function(new:HTMLElement)} klass
+ * @param {function(new:HTMLElement)} klass
  * @param {{extends: string}=} options
  * @return {undefined}
  */
@@ -5149,7 +5149,7 @@ CustomElementRegistry.prototype.define = function (tagName, klass, options) {};
 
 /**
  * @param {string} tagName
- * @return {!function(new:HTMLElement)|undefined}
+ * @return {function(new:HTMLElement)|undefined}
  */
 CustomElementRegistry.prototype.get = function(tagName) {};
 
