@@ -339,10 +339,12 @@ public class CommandLineRunner extends
         + "3 (always print summary). The default level is 1")
     private int summaryDetailLevel = 1;
 
-    @Option(name = "--isolation_mode",
-        usage = "If set to IIFE the compiler output will follow the form:\n"
-        + "  (function(){%output%)).call(this);\n"
-        + "Options: NONE, IIFE")
+    @Option(
+        name = "--isolation_mode",
+        usage =
+            "If set to IIFE the compiler output will follow the form:\n"
+                + "  (function(){%output%}).call(this);\n"
+                + "Options: NONE, IIFE")
     private IsolationMode isolationMode = IsolationMode.NONE;
 
     @Option(
