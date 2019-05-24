@@ -20,6 +20,8 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 
 /**
  * Checks for certain uses of the {@code this} keyword that are considered
@@ -97,6 +99,14 @@ final class CheckGlobalThis implements Callback {
            jsDoc.hasThisType() ||
            jsDoc.isOverride())) {
         return false;
+      }
+
+      if (n.getJSType() instanceof FunctionType) {
+        FunctionType functionType = (FunctionType)n.getJSType();
+        if (functionType.getTypeOfThis() != compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE))
+        {
+          return false;
+        }
       }
 
       // Don't traverse functions unless they would normally
