@@ -5134,14 +5134,14 @@ Plugin.prototype.length;
 Plugin.prototype.name;
 
 /**
- * @see https://html.spec.whatwg.org/multipage/scripting.html#custom-elements
+ * @see https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry
  * @constructor
  */
 function CustomElementRegistry() {}
 
 /**
  * @param {string} tagName
- * @param {function(new:HTMLElement)} klass
+ * @param {!function(new:HTMLElement)} klass
  * @param {{extends: string}=} options
  * @return {undefined}
  */
@@ -5149,13 +5149,13 @@ CustomElementRegistry.prototype.define = function (tagName, klass, options) {};
 
 /**
  * @param {string} tagName
- * @return {?function(new:HTMLElement)}
+ * @return {!function(new:HTMLElement)|undefined}
  */
 CustomElementRegistry.prototype.get = function(tagName) {};
 
 /**
  * @param {string} tagName
- * @return {Promise<function(new:HTMLElement)>}
+ * @return {!Promise<undefined>}
  */
 CustomElementRegistry.prototype.whenDefined = function(tagName) {};
 
