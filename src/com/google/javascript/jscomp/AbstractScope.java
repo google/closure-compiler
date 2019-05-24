@@ -153,7 +153,7 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
   }
 
   /** Returns true iff this scope implies a slot with the given name. */
-  private final boolean hasOwnImplicitSlot(@Nullable ImplicitVar name) {
+  protected boolean hasOwnImplicitSlot(@Nullable ImplicitVar name) {
     return name != null && name.isMadeByScope(this);
   }
 
@@ -450,6 +450,7 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
    */
   enum ImplicitVar {
     ARGUMENTS("arguments"),
+    EXPORTS("exports"),
     SUPER("super"),
     // TODO(sdh): Expand THIS.isMadeByScope to check super.isMadeByScope(scope) || scope.isGlobal()
     // Currently this causes a number of problems (see b/74980936), but could eventually lead to
@@ -467,6 +468,10 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
 
     /** Whether this kind of implicit variable is created/owned by the given scope. */
     boolean isMadeByScope(AbstractScope<?, ?> scope) {
+      if (this.equals(EXPORTS)) {
+        return scope.isModuleScope()
+            && scope.getRootNode().getParent().getBooleanProp(Node.GOOG_MODULE);
+      }
       return NodeUtil.isNonArrowFunction(scope.getRootNode());
     }
 
@@ -478,6 +483,8 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
           return SUPER;
         case "this":
           return THIS;
+        case "exports":
+          return EXPORTS;
         default:
           return null;
       }

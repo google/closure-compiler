@@ -198,6 +198,10 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return Var.ARGUMENTS.equals(name) && scope.isFunctionScope();
   }
 
+  final boolean isGoogModuleExports() {
+    return scope.isModuleScope() && "exports".equals(name) && isImplicit();
+  }
+
   public final boolean isThis() {
     return "this".equals(name) && scope.isFunctionScope();
   }

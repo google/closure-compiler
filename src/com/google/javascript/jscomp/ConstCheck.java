@@ -97,6 +97,9 @@ class ConstCheck extends AbstractPostOrderCallback
             Var var = t.getScope().getVar(name);
             if (var.isConst() || (isConstant(var) && !initializedConstants.add(var))) {
               reportError(n, var, name);
+            } else if (var.isGoogModuleExports() && !initializedConstants.add(var)) {
+              compiler.report(
+                  JSError.make(n, CONST_REASSIGNED_VALUE_ERROR, "exports", n.getSourceFileName()));
             }
           }
           break;

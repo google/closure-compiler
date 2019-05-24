@@ -26,6 +26,7 @@ import com.google.javascript.rhino.StaticSlot;
 public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRef {
 
   static final String ARGUMENTS = "arguments";
+  static final String EXPORTS = "exports";
 
   Var(String name, Node nameNode, Scope scope, int index, CompilerInput input) {
     super(name, nameNode, scope, index, input);

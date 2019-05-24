@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,13 +34,16 @@ public final class ConstCheckTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    enableNormalize();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ConstCheck(compiler);
+    return (Node externs, Node root) -> {
+      new Normalize.PropagateConstantAnnotationsOverVars(compiler, /* forbidChanges= */ false)
+          .process(externs, root);
+      new ConstCheck(compiler).process(externs, root);
+    };
   }
 
   private void testWarning(String js){
@@ -253,6 +257,7 @@ public final class ConstCheckTest extends CompilerTestCase {
   // JSDoc with the suppression will be on the new node.
   @Test
   public void testConstSuppressionOnVar() {
+    enableNormalize();
     String before = "/** @const */ var xyz = 1;\n/** @suppress {const} */ var xyz = 3;";
     String after = "/** @const */ var xyz = 1;\n/** @suppress {const} */ xyz = 3;";
     test(before, after);
@@ -278,6 +283,16 @@ public final class ConstCheckTest extends CompilerTestCase {
     String externs = "/** @const */ var FOO;";
     String js = "FOO = 1;";
     testWarning(externs, js, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+  }
+
+  @Test
+  public void testGoogModuleExportsShadowingGlobal() {
+    testSame(srcs("/** @const */ var exports = {};", "goog.module('m'); exports = class {};"));
+  }
+
+  @Test
+  public void testGoogModuleExportsReassigned() {
+    testWarning("goog.module('m'); exports = class {}; exports = class {};");
   }
 
   private void testError(String js) {

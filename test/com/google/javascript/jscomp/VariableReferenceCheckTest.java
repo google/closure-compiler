@@ -1426,6 +1426,14 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     testSame("import {y as x} from 'whatever'; function f() { let x = 0; }");
   }
 
+  @Test
+  public void testOkExportsRefInGoogModule() {
+    testSame("goog.module('m');");
+    testSame("goog.module('m'); exports.Foo = 0;");
+    testSame("goog.module('m'); exports = 0;");
+    testSame("goog.module('m'); function f() { exports = 0; }"); // Bad style but warn elsewhere
+  }
+
   /**
    * Expects the JS to generate one bad-read error.
    */

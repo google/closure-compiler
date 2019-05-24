@@ -1258,4 +1258,28 @@ public final class Es6SyntacticScopeCreatorTest {
     Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
     assertScope(moduleScope).declares("x").directly();
   }
+
+  @Test
+  public void testGoogModuleDeclaresImplicitExports() {
+    Node root = getRoot("goog.module('example');");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertScope(globalScope).doesNotDeclare("exports");
+
+    Node moduleBody = root.getFirstChild();
+    checkState(moduleBody.isModuleBody(), moduleBody);
+    Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
+    assertScope(moduleScope).declares("exports").directly();
+  }
+
+  @Test
+  public void testGoogModuleCanOverrideImplicitExports() {
+    Node root = getRoot("goog.module('example'); var exports = {};");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertScope(globalScope).doesNotDeclare("exports");
+
+    Node moduleBody = root.getFirstChild();
+    checkState(moduleBody.isModuleBody(), moduleBody);
+    Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
+    assertScope(moduleScope).declares("exports").directly();
+  }
 }

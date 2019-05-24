@@ -26,6 +26,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
+import javax.annotation.Nullable;
 
 /**
  * TypedScope contains information about variables and their types. Scopes can be nested, a scope
@@ -142,8 +143,17 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
       // TODO(sdh): This is incorrect for 'global this', but since that's currently not handled
       // by this code, it's okay to bail out now until we find the root cause.  See b/74980936.
       return null;
+    } else if (var.equals(ImplicitVar.EXPORTS)) {
+      // Instead of using the implicit 'exports' var, we want to pretend that the var is actually
+      // declared.
+      return null;
     }
     return new TypedVar(false, var.name, null, getImplicitVarType(var), this, -1, null);
+  }
+
+  @Override
+  protected boolean hasOwnImplicitSlot(@Nullable ImplicitVar name) {
+    return name != null && !name.equals(ImplicitVar.EXPORTS) && name.isMadeByScope(this);
   }
 
   private JSType getImplicitVarType(ImplicitVar var) {
@@ -171,6 +181,9 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
         } else {
           return receiverType.getImplicitPrototype();
         }
+
+      case EXPORTS:
+        throw new AssertionError("TypedScopes should not contain an implicit 'exports'");
     }
 
     throw new AssertionError();

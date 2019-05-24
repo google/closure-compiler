@@ -234,6 +234,11 @@ public final class InferConstsTest extends CompilerTestCase {
         "x");
   }
 
+  @Test
+  public void testGoogModuleExports() {
+    testConsts("goog.module('m'); exports = {};");
+  }
+
   private void testConsts(String js, String... constants) {
     testInferConstsHelper(true, js, constants);
   }

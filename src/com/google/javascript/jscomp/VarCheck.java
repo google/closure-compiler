@@ -92,7 +92,6 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
   // scope, but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
 
-  private static final Node exports = IR.name("exports");
   private static final Node googLoadModule = IR.getprop(IR.name("goog"), "loadModule");
   private static final Node googProvide = IR.getprop(IR.name("goog"), "provide");
 
@@ -115,8 +114,6 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
   private Set<String> googProvidedRoots = new HashSet<>();
 
   private final boolean closurePass;
-
-  private boolean inGoogModule; // Whether the NodeTraversal is currently within a goog.module.
 
   VarCheck(AbstractCompiler compiler) {
     this(compiler, false);
@@ -192,17 +189,12 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    if (n.isModuleBody()) {
-      inGoogModule = n.getParent().getBooleanProp(Node.GOOG_MODULE);
-    }
     return true;
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isModuleBody()) {
-      inGoogModule = false;
-    } else if (n.isName()) {
+    if (n.isName()) {
       checkName(t, n, parent);
     }
   }
@@ -250,8 +242,6 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
       } else if (NodeUtil.isNonlocalModuleExportName(n)) {
         // e.g. "export {a as b}" or "import {b as a} from './foo.js'
         // where b is defined in a module's export entries but not in any module scope.
-      } else if (isGoogModuleExports(n)) {
-        // Ignore 'exports' if inside a goog.module.
       } else if (googProvidedRoots.contains(n.getString())) {
         // Ignore names that have been defined by a goog.provide.
       } else {
@@ -306,11 +296,6 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
         }
       }
     }
-  }
-
-  /** Variables that we shouldn't warn if undefined, and should not be added to externs. */
-  private boolean isGoogModuleExports(Node n) {
-    return inGoogModule && n.matchesQualifiedName(exports);
   }
 
   private void gatherImplicitVars(Node root) {
@@ -492,7 +477,7 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
               Scope scope = t.getScope();
               Var var = scope.getVar(n.getString());
               if (var == null) {
-                if (!googProvidedRoots.contains(n.getString()) && !isGoogModuleExports(n)) {
+                if (!googProvidedRoots.contains(n.getString())) {
                   t.report(n, UNDEFINED_EXTERN_VAR_ERROR, n.getString());
                 }
                 varsToDeclareInExterns.add(n.getString());
