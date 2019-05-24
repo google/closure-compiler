@@ -227,7 +227,7 @@ public final class PhaseOptimizerTest {
     assertPasses();
 
     assertThat(compiler.getWarnings())
-        .comparingElementsUsing(new DiagnosticCorrespondence())
+        .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
         .containsExactly(FEATURES_NOT_SUPPORTED_BY_PASS);
   }
 
@@ -239,7 +239,7 @@ public final class PhaseOptimizerTest {
     assertPasses("testPassFactory");
 
     assertThat(compiler.getErrors())
-        .comparingElementsUsing(new DiagnosticCorrespondence())
+        .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
         .containsExactly(FEATURES_NOT_SUPPORTED_BY_PASS);
   }
 
@@ -304,15 +304,7 @@ public final class PhaseOptimizerTest {
     };
   }
 
-  private static class DiagnosticCorrespondence extends Correspondence<JSError, DiagnosticType> {
-    @Override
-    public boolean compare(JSError actual, DiagnosticType expected) {
-      return actual.getType().equals(expected);
-    }
-
-    @Override
-    public String toString() {
-      return "has diagnostic";
-    }
-  }
+  private static final Correspondence<JSError, DiagnosticType> DIAGNOSTIC_CORRESPONDENCE =
+      Correspondence.from(
+          (actual, expected) -> actual.getType().equals(expected), "has diagnostic");
 }

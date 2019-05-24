@@ -179,15 +179,7 @@ public class RecoverableJsAstTest {
   }
 
   private static final Correspondence<JSError, String> DESCRIPTION_EQUALITY =
-      new Correspondence<JSError, String>() {
-        @Override
-        public boolean compare(JSError error, String description) {
-          return Objects.equals(error.description, description);
-        }
-
-        @Override
-        public String toString() {
-          return "has description equal to";
-        }
-      };
+      Correspondence.from(
+          (error, description) -> Objects.equals(error.description, description),
+          "has description equal to");
 }

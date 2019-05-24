@@ -69,6 +69,7 @@ import org.junit.Before;
  *
  */
 public abstract class CompilerTestCase {
+
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   /** Externs for the test */
@@ -1471,7 +1472,7 @@ public abstract class CompilerTestCase {
       // Might be an expected parse error.
       assertWithMessage("parse errors")
           .that(compiler.getErrors())
-          .comparingElementsUsing(new DiagnosticCorrespondence())
+          .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
           .containsExactlyElementsIn(expectedErrors);
       for (Postcondition postcondition : postconditions) {
         postcondition.verify(compiler);
@@ -1724,7 +1725,7 @@ public abstract class CompilerTestCase {
         for (int i = 0; i < numRepetitions; i++) {
           assertWithMessage("compile warnings from repetition " + (i + 1))
               .that(errorManagers[i].getWarnings())
-              .comparingElementsUsing(new DiagnosticCorrespondence())
+              .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
               .containsExactlyElementsIn(expectedWarnings);
           for (JSError warning : errorManagers[i].getWarnings()) {
             validateSourceLocation(warning);
@@ -1822,7 +1823,7 @@ public abstract class CompilerTestCase {
     } else {
       assertWithMessage("compile errors")
           .that(compiler.getErrors())
-          .comparingElementsUsing(new DiagnosticCorrespondence())
+          .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
           .containsExactlyElementsIn(expectedErrors);
       for (JSError error : compiler.getErrors()) {
         validateSourceLocation(error);
@@ -2470,22 +2471,11 @@ public abstract class CompilerTestCase {
     }
   }
 
-  private static class DiagnosticCorrespondence extends Correspondence<JSError, Diagnostic> {
-    @Override
-    public boolean compare(JSError actual, Diagnostic expected) {
-      return expected.matches(actual);
-    }
-
-    @Override
-    public String formatDiff(JSError actual, Diagnostic expected) {
-      return expected.formatDiff(actual);
-    }
-
-    @Override
-    public String toString() {
-      return "is a JSError matching";
-    }
-  }
+  private static final Correspondence<JSError, Diagnostic> DIAGNOSTIC_CORRESPONDENCE =
+      Correspondence.from(
+              (JSError actual, Diagnostic expected) -> expected.matches(actual),
+              "is a JSError matching")
+          .formattingDiffsUsing((actual, expected) -> expected.formatDiff(actual));
 
   private static class NamedPredicate<T> implements Predicate<T> {
     final Predicate<T> delegate;

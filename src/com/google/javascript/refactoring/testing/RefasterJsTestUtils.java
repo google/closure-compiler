@@ -32,9 +32,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-/**
- * Utilities for testing RefasterJs templates.
- */
+/** Utilities for testing RefasterJs templates. */
 public final class RefasterJsTestUtils {
 
   /**
@@ -89,7 +87,7 @@ public final class RefasterJsTestUtils {
             .map(m -> m.get(originalFilePath))
             .collect(ImmutableList.toImmutableList());
     assertThat(newCode)
-        .comparingElementsUsing(new IgnoringWhitespaceCorrespondence())
+        .comparingElementsUsing(IGNORING_WHITESPACE_CORRESPONDENCE)
         .containsExactlyElementsIn(expectedCode);
   }
 
@@ -99,20 +97,13 @@ public final class RefasterJsTestUtils {
 
   private RefasterJsTestUtils() {}
 
-  private static class IgnoringWhitespaceCorrespondence extends Correspondence<String, String> {
+  private static final Correspondence<String, String> IGNORING_WHITESPACE_CORRESPONDENCE =
+      Correspondence.transforming(
+          RefasterJsTestUtils::replaceTrailingWhitespace,
+          RefasterJsTestUtils::replaceTrailingWhitespace,
+          "equals (except for whitespace)");
 
-    @Override
-    public boolean compare(String actual, String expected) {
-      return replaceTrailingWhitespace(actual).equals(replaceTrailingWhitespace(expected));
-    }
-
-    private String replaceTrailingWhitespace(String contents) {
-      return contents.replaceAll("[ \t]*\n", "\n");
-    }
-
-    @Override
-    public String toString() {
-      return "equals (except for whitespace)";
-    }
+  private static String replaceTrailingWhitespace(String contents) {
+    return contents.replaceAll("[ \t]*\n", "\n");
   }
 }

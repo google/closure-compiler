@@ -48,34 +48,15 @@ public final class JSCompCorrespondences {
   // tests.
   public static final <A, E> Correspondence<A, E> transforming(
       Function<? super A, ? extends E> transformation, String description) {
-    return new Correspondence<A, E>() {
-      @Override
-      public boolean compare(A actual, E expected) {
-        return transformation.apply(actual).equals(expected);
-      }
-
-      @Override
-      public String toString() {
-        return description;
-      }
-    };
+    return Correspondence.from(
+        (actual, expected) -> transformation.apply(actual).equals(expected), description);
   }
 
   // TODO(nickreid): Delete this when `Correspondence::from` is available in our Maven
   // tests.
   public static final <A, E> Correspondence<A, E> from(
       BiPredicate<? super A, ? super E> predicate, String description) {
-    return new Correspondence<A, E>() {
-      @Override
-      public boolean compare(A actual, E expected) {
-        return predicate.test(actual, expected);
-      }
-
-      @Override
-      public String toString() {
-        return description;
-      }
-    };
+    return Correspondence.from((actual, expected) -> predicate.test(actual, expected), description);
   }
 
   /** A compiler for parsing snippets of code into AST as leniently as possible. */

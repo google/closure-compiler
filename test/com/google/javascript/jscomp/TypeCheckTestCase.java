@@ -353,15 +353,6 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   }
 
   private static final Correspondence<JSError, DiagnosticType> DIAGNOSTIC_TYPE_EQUALITY =
-      new Correspondence<JSError, DiagnosticType>() {
-        @Override
-        public boolean compare(JSError error, DiagnosticType type) {
-          return Objects.equals(error.getType(), type);
-        }
-
-        @Override
-        public String toString() {
-          return "has diagnostic type equal to";
-        }
-      };
+      Correspondence.from(
+          (error, type) -> Objects.equals(error.getType(), type), "has diagnostic type equal to");
 }
