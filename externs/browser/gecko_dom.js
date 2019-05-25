@@ -485,7 +485,7 @@ Selection.prototype.addRange = function(range) {};
 
 /**
  * @param {number} index
- * @return {Range}
+ * @return {!Range}
  * @nosideeffects
  * @see https://w3c.github.io/selection-api/#dom-selection-getrangeat
  */
@@ -520,7 +520,7 @@ Selection.prototype.collapseToEnd = function() {};
 Selection.prototype.collapseToStart = function() {};
 
 /**
- * @param {Node} node
+ * @param {!Node} node
  * @param {boolean=} allowPartialContainment
  * @return {boolean}
  * @nosideeffects
@@ -549,7 +549,7 @@ Selection.prototype.extend = function(parentNode, offset) {};
 Selection.prototype.removeAllRanges = function() {};
 
 /**
- * @param {Range} range
+ * @param {!Range} range
  * @return {undefined}
  * @see https://w3c.github.io/selection-api/#dom-selection-removerange
  */
