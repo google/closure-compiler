@@ -507,15 +507,15 @@ public enum CompilationParam {
     }
   },
 
-  DEVIRTUALIZE_PROTOTYPE_METHODS(ParamGroup.OPTIMIZATION) {
+  DEVIRTUALIZE_METHODS(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setDevirtualizePrototypeMethods(value);
+      options.setDevirtualizeMethods(value);
     }
 
     @Override
     public boolean isApplied(CompilerOptions options) {
-      return options.devirtualizePrototypeMethods;
+      return options.devirtualizeMethods;
     }
   },
 

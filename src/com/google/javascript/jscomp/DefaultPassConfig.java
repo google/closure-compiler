@@ -685,8 +685,8 @@ public final class DefaultPassConfig extends PassConfig {
     // optimizations based on global names (like cross module code motion
     // and inline functions).  Smart Name Removal does better if run before
     // this pass.
-    if (options.devirtualizePrototypeMethods) {
-      passes.add(devirtualizePrototypeMethods);
+    if (options.devirtualizeMethods) {
+      passes.add(devirtualizeMethods);
     }
 
     if (options.customPasses != null) {
@@ -2500,14 +2500,14 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   /** Rewrite instance methods as static methods, to make them easier to inline. */
-  private final PassFactory devirtualizePrototypeMethods =
-      new PassFactory(PassNames.DEVIRTUALIZE_PROTOTYPE_METHODS, true) {
+  private final PassFactory devirtualizeMethods =
+      new PassFactory(PassNames.DEVIRTUALIZE_METHODS, true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return OptimizeCalls.builder()
               .setCompiler(compiler)
               .setConsiderExterns(false)
-              .addPass(new DevirtualizePrototypeMethods(compiler))
+              .addPass(new DevirtualizeMethods(compiler))
               .build();
         }
 

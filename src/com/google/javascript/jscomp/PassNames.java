@@ -49,7 +49,7 @@ public final class PassNames {
   public static final String DEAD_ASSIGNMENT_ELIMINATION = "deadAssignmentsElimination";
   public static final String DECLARED_GLOBAL_EXTERNS_ON_WINDOW = "declaredGlobalExternsOnWindow";
   public static final String DESERIALIZE_COMPILER_STATE = "deserializeCompilerState";
-  public static final String DEVIRTUALIZE_PROTOTYPE_METHODS = "devirtualizePrototypeMethods";
+  public static final String DEVIRTUALIZE_METHODS = "devirtualizeMethods";
   public static final String DISAMBIGUATE_PRIVATE_PROPERTIES = "disambiguatePrivateProperties";
   public static final String DISAMBIGUATE_PROPERTIES = "disambiguateProperties";
   public static final String ES6_EXTRACT_CLASSES = "Es6ExtractClasses";

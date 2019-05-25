@@ -30,15 +30,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link DevirtualizePrototypeMethods}
+ * Tests for {@link DevirtualizeMethods}
  *
  */
 @RunWith(JUnit4.class)
-public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
+public final class DevirtualizeMethodsTest extends CompilerTestCase {
   private static final String EXTERNAL_SYMBOLS =
       DEFAULT_EXTERNS + "var extern;extern.externalMethod";
 
-  public DevirtualizePrototypeMethodsTest() {
+  public DevirtualizeMethodsTest() {
     super(EXTERNAL_SYMBOLS);
   }
 
@@ -1257,7 +1257,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     return OptimizeCalls.builder()
         .setCompiler(compiler)
         .setConsiderExterns(false)
-        .addPass(new DevirtualizePrototypeMethods(compiler))
+        .addPass(new DevirtualizeMethods(compiler))
         .build();
   }
 }

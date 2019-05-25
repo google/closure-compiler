@@ -203,7 +203,7 @@ public enum CompilationLevel {
     options.setCrossChunkMethodMotion(true);
 
     // Call optimizations
-    options.setDevirtualizePrototypeMethods(true);
+    options.setDevirtualizeMethods(true);
     options.setOptimizeCalls(true);
   }
 

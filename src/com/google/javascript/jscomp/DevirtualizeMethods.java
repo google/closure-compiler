@@ -88,12 +88,11 @@ import javax.annotation.Nullable;
  * </pre>
  *
  */
-// TODO(nickreid): Change the name to something reflecting that statics are also devirtualized now.
-class DevirtualizePrototypeMethods implements OptimizeCalls.CallGraphCompilerPass {
+class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
   private final AbstractCompiler compiler;
   private ReferenceMap refMap;
 
-  DevirtualizePrototypeMethods(AbstractCompiler compiler) {
+  DevirtualizeMethods(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 

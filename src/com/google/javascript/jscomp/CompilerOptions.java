@@ -654,10 +654,10 @@ public class CompilerOptions implements Serializable {
   }
 
   /**
-   * Devirtualize prototype method by rewriting them to be static calls that
-   * take the this pointer as their first argument
+   * Devirtualize prototype method by rewriting them to be static calls that take the this pointer
+   * as their first argument
    */
-  public boolean devirtualizePrototypeMethods;
+  public boolean devirtualizeMethods;
 
   /**
    * Use @nosideeffects annotations, function bodies and name graph
@@ -1276,7 +1276,7 @@ public class CompilerOptions implements Serializable {
     renamePrefix = null;
     collapsePropertiesLevel = PropertyCollapseLevel.NONE;
     collapseObjectLiterals = false;
-    devirtualizePrototypeMethods = false;
+    devirtualizeMethods = false;
     disambiguateProperties = false;
     ambiguateProperties = false;
     anonymousFunctionNaming = AnonymousFunctionNamingPolicy.OFF;
@@ -2343,8 +2343,8 @@ public class CompilerOptions implements Serializable {
         fullyCollapse ? PropertyCollapseLevel.ALL : PropertyCollapseLevel.NONE;
   }
 
-  public void setDevirtualizePrototypeMethods(boolean devirtualizePrototypeMethods) {
-    this.devirtualizePrototypeMethods = devirtualizePrototypeMethods;
+  public void setDevirtualizeMethods(boolean devirtualizeMethods) {
+    this.devirtualizeMethods = devirtualizeMethods;
   }
 
   public void setComputeFunctionSideEffects(boolean computeFunctionSideEffects) {
@@ -2890,7 +2890,7 @@ public class CompilerOptions implements Serializable {
             .add("declaredGlobalExternsOnWindow", declaredGlobalExternsOnWindow)
             .add("defineReplacements", getDefineReplacements())
             .add("dependencyOptions", getDependencyOptions())
-            .add("devirtualizePrototypeMethods", devirtualizePrototypeMethods)
+            .add("devirtualizeMethods", devirtualizeMethods)
             .add("devMode", devMode)
             .add("disambiguatePrivateProperties", disambiguatePrivateProperties)
             .add("disambiguateProperties", disambiguateProperties)

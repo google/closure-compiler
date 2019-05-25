@@ -2457,9 +2457,9 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testDevirtualizePrototypeMethods() {
+  public void testDevirtualizeMethods() {
     CompilerOptions options = createCompilerOptions();
-    options.setDevirtualizePrototypeMethods(true);
+    options.setDevirtualizeMethods(true);
     test(
         options,
         "/** @constructor */ var Foo = function() {}; "
@@ -3477,7 +3477,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testDevirtualizationAndExtractPrototypeMemberDeclarations() {
     CompilerOptions options = createCompilerOptions();
-    options.setDevirtualizePrototypeMethods(true);
+    options.setDevirtualizeMethods(true);
     options.setCollapseAnonymousFunctions(true);
     options.setExtractPrototypeMemberDeclarations(true);
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
@@ -6603,7 +6603,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = createCompilerOptions();
     options.checkTypes = true;
-    options.devirtualizePrototypeMethods = true;
+    options.devirtualizeMethods = true;
 
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);

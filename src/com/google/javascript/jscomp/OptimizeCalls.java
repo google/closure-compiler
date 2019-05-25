@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
  * <ul>
  *   <li>{@link OptimizeParameters} (remove unused and inline constant parameters)
  *   <li>{@link OptimizeReturns} (remove unused)
- *   <li>{@link DevirtualizePrototypeMethods}
+ *   <li>{@link DevirtualizeMethods}
  * </ul>
  *
  * @author johnlenz@google.com (John Lenz)
