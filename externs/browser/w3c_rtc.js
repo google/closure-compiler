@@ -534,13 +534,6 @@ MediaStream.prototype.onremovetrack;
 MediaStream.prototype.stop = function() {};
 
 /**
- * @type {function(new: MediaStream,
- *                 (!MediaStream|!Array<!MediaStreamTrack>)=)}
- */
-var webkitMediaStream;
-
-
-/**
  * @typedef {{tone: string}}
  * @see https://www.w3.org/TR/webrtc/#dom-rtcdtmftonechangeeventinit
  */
@@ -1097,19 +1090,6 @@ NavigatorUserMediaError.prototype.message;
  * Read only.
  */
 NavigatorUserMediaError.prototype.constraintName;
-
-/**
- * @param {MediaStreamConstraints} constraints A MediaStreamConstraints object.
- * @param {function(!MediaStream)} successCallback
- *     A NavigatorUserMediaSuccessCallback function.
- * @param {function(!NavigatorUserMediaError)=} errorCallback A
- *     NavigatorUserMediaErrorCallback function.
- * @see http://dev.w3.org/2011/webrtc/editor/getusermedia.html
- * @see https://www.w3.org/TR/mediacapture-streams/
- * @return {undefined}
- */
-Navigator.prototype.webkitGetUserMedia =
-  function(constraints, successCallback, errorCallback) {};
 
 /**
  * @param {string} type
@@ -2262,8 +2242,3 @@ RTCPeerConnection.prototype.oniceconnectionstatechange;
  * @type {?function(!RTCDataChannelEvent)}
  */
 RTCPeerConnection.prototype.ondatachannel;
-
-/**
- * @const
- */
-var webkitRTCPeerConnection = RTCPeerConnection;
