@@ -434,8 +434,6 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
             break;
 
           case AWAIT:
-            checkState(
-                n.hasOneChild(), "await should have 1 operand, but has %s", n.getChildCount());
             // Awaits become yields in the converted async function's inner generator function.
             n.getParent()
                 .replaceChild(n, astFactory.createYield(n.getJSType(), n.removeFirstChild()));

@@ -194,7 +194,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         return true;
       }
     } else if (requireCall.isCall()
-        && requireCall.getChildCount() == 3
+        && requireCall.hasXChildren(3)
         && resolutionMode == ModuleLoader.ResolutionMode.WEBPACK
         && requireCall.getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE + ".bind")
         && requireCall.getSecondChild().isNull()
@@ -729,7 +729,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      * <p>require.ensure(['module1', ...], function(require) {})
      */
     private void visitRequireEnsureCall(NodeTraversal t, Node call) {
-      if (call.getChildCount() != 3) {
+      if (!call.hasXChildren(3)) {
         compiler.report(
             JSError.make(
                 call,
@@ -761,7 +761,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       }
       Node callback = dependencies.getNext();
       if (!(callback.isFunction()
-          && callback.getSecondChild().getChildCount() == 1
+          && callback.getSecondChild().hasOneChild()
           && callback.getSecondChild().getFirstChild().isName()
           && "require".equals(callback.getSecondChild().getFirstChild().getString()))) {
         compiler.report(
@@ -1050,8 +1050,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
 
         // Remove redundant block node. Not strictly necessary, but makes tests more legible.
-        if (umdPattern.activeBranch.isBlock()
-            && umdPattern.activeBranch.getChildCount() == 1) {
+        if (umdPattern.activeBranch.isBlock() && umdPattern.activeBranch.hasOneChild()) {
           newNode = umdPattern.activeBranch.removeFirstChild();
         } else {
           newNode.detach();

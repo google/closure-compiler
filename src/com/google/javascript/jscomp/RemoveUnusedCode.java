@@ -1295,7 +1295,7 @@ class RemoveUnusedCode implements CompilerPass {
    * no need to treat CATCH blocks differently like we do functions.
    */
   private void traverseFunction(Node function, Scope parentScope) {
-    checkState(function.getChildCount() == 3, function);
+    checkState(function.hasXChildren(3), function);
     checkState(function.isFunction(), function);
 
     final Node paramlist = NodeUtil.getFunctionParameters(function);

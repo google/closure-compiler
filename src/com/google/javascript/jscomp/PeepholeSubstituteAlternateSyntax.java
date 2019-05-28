@@ -640,7 +640,7 @@ class PeepholeSubstituteAlternateSyntax
       return n;
     }
 
-    String[] strings = new String[n.getChildCount()];
+    String[] strings = new String[numElements];
     int idx = 0;
     for (Node cur = n.getFirstChild(); cur != null; cur = cur.getNext()) {
       strings[idx++] = cur.getString();

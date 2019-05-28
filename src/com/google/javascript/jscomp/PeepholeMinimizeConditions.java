@@ -121,7 +121,7 @@ class PeepholeMinimizeConditions
           && !maybeBreak.hasChildren()) {
 
         // Preserve the IF ELSE expression is there is one.
-        if (maybeIf.getChildCount() == 3) {
+        if (maybeIf.hasXChildren(3)) {
           block.replaceChild(maybeIf,
               maybeIf.getLastChild().detach());
         } else {

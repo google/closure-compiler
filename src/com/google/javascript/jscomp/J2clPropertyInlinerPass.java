@@ -202,7 +202,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
         return false;
       }
       Node multiExpression = setBlock.getFirstFirstChild();
-      if (multiExpression.getChildCount() != 2 || !multiExpression.getSecondChild().isAssign()) {
+      if (!multiExpression.hasXChildren(2) || !multiExpression.getSecondChild().isAssign()) {
         return false;
       }
       Node clinitFunction = multiExpression.getFirstFirstChild();

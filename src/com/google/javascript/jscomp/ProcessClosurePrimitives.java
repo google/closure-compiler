@@ -680,7 +680,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
    * Processes the goog.inherits call.
    */
   private void processInheritsCall(Node n) {
-    if (n.getChildCount() == 3) {
+    if (n.hasXChildren(3)) {
       Node subClass = n.getSecondChild();
       Node superClass = subClass.getNext();
       if (subClass.isUnscopedQualifiedName() && superClass.isUnscopedQualifiedName()) {

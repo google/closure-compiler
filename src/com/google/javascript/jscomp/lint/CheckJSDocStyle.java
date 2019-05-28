@@ -306,7 +306,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       checkInlineParams(t, function);
     } else {
       Node paramList = NodeUtil.getFunctionParameters(function);
-      if (paramsFromJsDoc.size() != paramList.getChildCount()) {
+      if (!paramList.hasXChildren(paramsFromJsDoc.size())) {
         t.report(paramList, WRONG_NUMBER_OF_PARAMS);
         return;
       }

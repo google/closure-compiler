@@ -347,7 +347,7 @@ public final class TemplateAstMatcher {
     } else if (template.isCall()) {
       // Loosely match CALL nodes. isEquivalentToShallow checks free calls against non-free calls,
       // but the template should ignore that distinction.
-      if (ast == null || !ast.isCall() || ast.getChildCount() != template.getChildCount()) {
+      if (ast == null || !ast.isCall() || !ast.hasXChildren(template.getChildCount())) {
         return false;
       }
       // But check any children.

@@ -839,9 +839,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   private void visitFallbackFunctionCall(NodeTraversal t, Node call) {
     // Check to make sure the function call looks like:
     // goog.getMsgWithFallback(MSG_1, MSG_2);
-    if (call.getChildCount() != 3
-        || !call.getSecondChild().isName()
-        || !call.getLastChild().isName()) {
+    if (!call.hasXChildren(3) || !call.getSecondChild().isName() || !call.getLastChild().isName()) {
       compiler.report(JSError.make(call, BAD_FALLBACK_SYNTAX));
       return;
     }

@@ -216,8 +216,7 @@ class CheckMissingReturn implements ScopedCallback {
    *     with an empty body
    */
   private static boolean isEmptyFunction(Node function) {
-    return function.getChildCount() == 3
-           && !function.getSecondChild().getNext().hasChildren();
+    return function.hasXChildren(3) && !function.getSecondChild().getNext().hasChildren();
   }
 
   /**

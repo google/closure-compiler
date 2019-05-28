@@ -1267,7 +1267,7 @@ public final class AstValidator implements CompilerPass {
     validateChildCountIn(n, 2, 3);
     validateExpression(n.getFirstChild());
     validateBlock(n.getSecondChild());
-    if (n.getChildCount() == 3) {
+    if (n.hasXChildren(3)) {
       validateBlock(n.getLastChild());
     }
   }
@@ -1325,7 +1325,7 @@ public final class AstValidator implements CompilerPass {
     }
 
     // Validate finally
-    if (n.getChildCount() == 3) {
+    if (n.hasXChildren(3)) {
       validateBlock(n.getLastChild());
       seenCatchOrFinally = true;
     }

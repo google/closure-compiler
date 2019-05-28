@@ -403,8 +403,8 @@ public final class CodingConventions {
     public SubclassRelationship getClassesDefinedByCall(Node callNode) {
       Node callName = callNode.getFirstChild();
       if ((callName.matchesQualifiedName("$jscomp.inherits")
-          || callName.matchesQualifiedName("$jscomp$inherits"))
-          && callNode.getChildCount() == 3) {
+              || callName.matchesQualifiedName("$jscomp$inherits"))
+          && callNode.hasXChildren(3)) {
         Node subclass = callName.getNext();
         Node superclass = subclass.getNext();
         // The StripCode pass may create $jscomp.inherits calls with NULL arguments.
