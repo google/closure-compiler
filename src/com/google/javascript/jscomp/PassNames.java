@@ -81,9 +81,6 @@ public final class PassNames {
   public static final String REWRITE_COMMON_JS_MODULES = "rewriteCommonJsModules";
   public static final String REWRITE_SCRIPTS_TO_ES6_MODULES = "rewriteScriptsToEs6Modules";
   public static final String REMOVE_UNREACHABLE_CODE = "removeUnreachableCode";
-  public static final String REMOVE_UNUSED_CLASS_PROPERTIES = "removeUnusedClassProperties";
-  public static final String REMOVE_UNUSED_PROTOTYPE_PROPERTIES =
-      "removeUnusedPrototypeProperties";
   public static final String REMOVE_UNUSED_CODE = "removeUnusedCode";
   public static final String REPLACE_ID_GENERATORS = "replaceIdGenerators";
   public static final String REPLACE_MESSAGES = "replaceMessages";
