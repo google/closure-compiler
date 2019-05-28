@@ -23,7 +23,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
-import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import org.junit.Before;
@@ -74,7 +73,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   }
 
   private static final Correspondence<Reference, Boolean> IS_DECLARATION =
-      JSCompCorrespondences.transforming(Reference::isDeclaration, "isDeclaration() is");
+      Correspondence.transforming(Reference::isDeclaration, "isDeclaration() is");
 
   @Test
   public void testIterableRest_declaration() {

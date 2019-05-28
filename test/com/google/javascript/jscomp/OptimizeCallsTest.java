@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.truth.Correspondence;
-import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.rhino.Node;
 import java.util.Map;
 import org.junit.Before;
@@ -176,5 +175,5 @@ public final class OptimizeCallsTest extends CompilerTestCase {
   }
 
   private static final Correspondence<Map.Entry<String, Node>, String> KEY_EQUALITY =
-      JSCompCorrespondences.transforming(Map.Entry::getKey, "has key");
+      Correspondence.transforming(Map.Entry::getKey, "has key");
 }
