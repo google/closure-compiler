@@ -191,8 +191,9 @@ public final class Matchers {
    */
   public static Matcher functionCallWithNumArgs(final int numArgs) {
     return new Matcher() {
-      @Override public boolean matches(Node node, NodeMetadata metadata) {
-        return node.isCall() && (node.getChildCount() - 1) == numArgs;
+      @Override
+      public boolean matches(Node node, NodeMetadata metadata) {
+        return node.isCall() && node.hasXChildren(numArgs + 1);
       }
     };
   }
