@@ -1532,10 +1532,10 @@ class TypeInference
     checkArgument(n.isCall() || n.isTaggedTemplateLit(), n);
     scope = traverseChildren(n, scope);
 
-    // Resolve goog.require, goog.requireType, and goog.forwardDeclare calls separately, as they
-    // are not normal functions.
+    // Resolve goog.{require,requireType,forwardDeclare,module.get} calls separately, as they are
+    // not normal functions.
     if (n.isCall()
-        && (n.getParent().isName() || n.getParent().isDestructuringLhs())
+        && !n.getParent().isExprResult() // Don't bother typing calls if the result is unused.
         && ModuleImportResolver.isGoogModuleDependencyCall(n)) {
       ScopedName name = moduleImportResolver.getClosureNamespaceTypeFromCall(n);
       if (name != null) {

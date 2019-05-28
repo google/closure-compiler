@@ -6924,6 +6924,27 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testGoogModuleGet_hasTypeInferredInNestedExpression() {
+    testTypes(
+        lines(
+            CLOSURE_DEFS,
+            "function takesString(/** string */ s) {}",
+            "goog.loadModule(function(exports) {",
+            "  goog.module('a');",
+            "  exports.NUM = 0;",
+            "  return exports;",
+            "});",
+            "",
+            "(function() {", //
+            "  takesString(goog.module.get('a').NUM);",
+            "})();"),
+        lines(
+            "actual parameter 1 of takesString does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
   public void testTypeCheckingEsModule_exportSpecs() {
     testTypes("const x = 0; export {x};");
   }

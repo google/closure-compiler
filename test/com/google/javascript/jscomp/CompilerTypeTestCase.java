@@ -71,7 +71,11 @@ abstract class CompilerTypeTestCase {
           "goog.array.filter = function(arr, f, obj){ return []; };",
           "goog.asserts = {};",
           "/** @return {*} */ goog.asserts.assert = function(x) { return x; };",
-          "goog.module = function(ns) {};");
+          "goog.module = function(ns) {};",
+          "goog.module.get = function(ns) {};",
+          "/** @return {?} */",
+          "goog.require = function(ns) {};",
+          "goog.loadModule = function(mod) {};");
 
   /**
    * A default set of externs for testing.

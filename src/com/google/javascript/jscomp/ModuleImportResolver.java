@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -47,8 +48,9 @@ final class ModuleImportResolver {
   private final JSTypeRegistry registry;
 
   private static final String GOOG = "goog";
-  private static final ImmutableSet<String> googDependencyCalls =
+  private static final ImmutableSet<String> GOOG_DEPENDENCY_CALLS =
       ImmutableSet.of("require", "requireType", "forwardDeclare");
+  private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
 
   ModuleImportResolver(
       ModuleMap moduleMap, Function<Node, TypedScope> nodeToScopeMapper, JSTypeRegistry registry) {
@@ -57,7 +59,14 @@ final class ModuleImportResolver {
     this.registry = registry;
   }
 
-  /** Returns whether this is a CALL node for goog.require(Type) or goog.forwardDeclare */
+  /**
+   * Returns whether this is a CALL node for goog.require(Type), goog.forwardDeclare, or
+   * goog.module.get.
+   *
+   * <p>This method does not verify that the call is actually in a valid location. For example, this
+   * method does not verify that goog.require calls are at the top-level. That is left to the
+   * caller.
+   */
   static boolean isGoogModuleDependencyCall(Node value) {
     if (value == null || !value.isCall()) {
       return false;
@@ -68,9 +77,10 @@ final class ModuleImportResolver {
     }
     Node owner = callee.getFirstChild();
     Node property = callee.getSecondChild();
-    return owner.isName()
-        && owner.getString().equals(GOOG)
-        && googDependencyCalls.contains(property.getString());
+    return (owner.isName()
+            && owner.getString().equals(GOOG)
+            && GOOG_DEPENDENCY_CALLS.contains(property.getString()))
+        || GOOG_MODULE_GET.matches(callee);
   }
 
   /**

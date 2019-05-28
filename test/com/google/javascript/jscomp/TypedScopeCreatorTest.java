@@ -4983,6 +4983,65 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogModuleGet_nameDeclarationCreatesTypeAlias() {
+    testSame(
+        srcs(
+            lines(
+                "(function() {",
+                "  const B = goog.module.get('a.B');",
+                "  var /** !B */ b;",
+                "  B: b;",
+                "})();"),
+            lines(
+                "goog.module('a.B');", //
+                "class B {}",
+                "exports = B;")));
+
+    assertType(getLabeledStatement("B").statementNode.getOnlyChild().getJSType())
+        .toStringIsEqualTo("B");
+  }
+
+  @Test
+  public void testGoogModuleGet_destructruringCreatesTypeAlias() {
+    testSame(
+        srcs(
+            lines(
+                "(function() {",
+                "  const {B} = goog.module.get('a');",
+                "  var /** !B */ b;",
+                "  B: b;",
+                "})();"),
+            lines(
+                "goog.module('a');", //
+                "/** @typedef {number} */ let B;",
+                "exports.B = B;")));
+
+    assertType(getLabeledStatement("B").statementNode.getOnlyChild().getJSType()).isNumber();
+  }
+
+  @Test
+  public void testGoogModuleGet_getpropDoesNotCreateTypeAlias() {
+    // This test covers a pattern that works when the compiler rewrites goog.module.get before
+    // typechecking, but is not supported in native module typechecking. It's a rare pattern and
+    // would be more work to support in TypedScopeCreator.
+    testWarning(
+        srcs(
+            lines(
+                "(function() {",
+                "  const B = goog.module.get('a').B;",
+                "  var /** !B */ b;",
+                "  B: b;",
+                "})();"),
+            lines(
+                "goog.module('a');", //
+                "/** @typedef {number} */ let B;",
+                "exports.B = B;")),
+        warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
+
+    assertType(getLabeledStatement("B").statementNode.getOnlyChild().getJSType()).isUnknown();
+  }
+
+  @Test
   public void testRequire_requireLoadModule_defaultExportOfLocalClass() {
     testSame(
         srcs(
