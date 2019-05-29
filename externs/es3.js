@@ -47,7 +47,7 @@ Symbol.prototype.description;
 
 /**
  * @param {string} sym
- * @return {symbol|undefined}
+ * @return {symbol}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/for
  */
 Symbol.for = function(sym) {};
