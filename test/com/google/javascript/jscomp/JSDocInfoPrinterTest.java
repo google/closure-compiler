@@ -490,6 +490,11 @@ public final class JSDocInfoPrinterTest {
     testSame("/** @closurePrimitive {testPrimitive} */ ");
   }
 
+  @Test
+  public void testNgInect() {
+    testSame("/** @ngInject */ ");
+  }
+
   private void testSame(String jsdoc) {
     test(jsdoc, jsdoc);
   }

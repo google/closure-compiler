@@ -274,6 +274,10 @@ public final class JSDocInfoPrinter {
       parts.add("@closurePrimitive {" + info.getClosurePrimitiveId() + "}");
     }
 
+    if (info.isNgInject()) {
+      parts.add("@ngInject");
+    }
+
     if (printDesc && info.getBlockDescription() != null) {
       String cleaned = info.getBlockDescription().replaceAll("\n\\s*\\*\\s*", "\n");
       if (!cleaned.isEmpty()) {
