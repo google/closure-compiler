@@ -618,7 +618,20 @@ public class JSDocInfo implements Serializable {
     other.originalCommentPosition = this.originalCommentPosition;
     other.setConstructor(false);
     other.setStruct(false);
-    if (!isInterface() && other.info != null) {
+    if (isInterface() && other.info != null) {
+      other.info.baseType = info.baseType;
+    } else if (info != null
+        && info.baseType != null
+        && info.baseType.getRoot().getFirstFirstChild() != null
+        && info.baseType.getRoot().getFirstFirstChild().isBlock()) {
+      // Keep generic super class annotations.
+      // Tree will look like:
+      //   BANG
+      //     superName.Qualifed
+      //       BLOCK
+      //         template.Argument
+      other.info.baseType = info.baseType;
+    } else if (info != null) {
       other.info.baseType = null;
     }
     return other;
