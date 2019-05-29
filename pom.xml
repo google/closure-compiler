@@ -20,7 +20,7 @@
   <packaging>pom</packaging>
 
   <name>Closure Compiler Parent</name>
-  <version>v20190528</version>
+  <version>1.0-SNAPSHOT</version>
 
   <url>https://github.com/google/closure-compiler/</url>
   <description>
