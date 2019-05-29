@@ -163,7 +163,7 @@ public final class JSModuleGraphTest {
     } catch (IllegalStateException e) {
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("A weak module already exists but weak sources were found in other modules.");
+          .contains("Found these weak sources in other modules:\n  a (in module moduleA)");
     }
   }
 
@@ -188,7 +188,7 @@ public final class JSModuleGraphTest {
     } catch (IllegalStateException e) {
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("A weak module already exists but strong sources were found in it.");
+          .contains("Found these strong sources in the weak module:\n  a");
     }
   }
 

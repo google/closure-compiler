@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -194,18 +195,31 @@ public final class JSModuleGraph implements Serializable {
     }
     if (hasWeakModule) {
       // All weak files (and only weak files) should be in the weak module.
+      List<String> misplacedWeakFiles = new ArrayList<>();
+      List<String> misplacedStrongFiles = new ArrayList<>();
       for (JSModule module : modulesInDepOrder) {
+        boolean isWeakModule = module.getName().equals(JSModule.WEAK_MODULE_NAME);
         for (CompilerInput input : module.getInputs()) {
-          if (module.getName().equals(JSModule.WEAK_MODULE_NAME)) {
-            checkState(
-                input.getSourceFile().isWeak(),
-                "A weak module already exists but strong sources were found in it.");
-          } else {
-            checkState(
-                !input.getSourceFile().isWeak(),
-                "A weak module already exists but weak sources were found in other modules.");
+          if (isWeakModule && !input.getSourceFile().isWeak()) {
+            misplacedStrongFiles.add(input.getSourceFile().getName());
+          } else if (!isWeakModule && input.getSourceFile().isWeak()) {
+            misplacedWeakFiles.add(
+                input.getSourceFile().getName() + " (in module " + module.getName() + ")");
           }
         }
+      }
+      if (!(misplacedStrongFiles.isEmpty() && misplacedWeakFiles.isEmpty())) {
+        StringBuilder sb =
+            new StringBuilder("A weak module exists but some sources are misplaced.");
+        if (!misplacedStrongFiles.isEmpty()) {
+          sb.append("\nFound these strong sources in the weak module:\n  ")
+              .append(Joiner.on("\n  ").join(misplacedStrongFiles));
+        }
+        if (!misplacedWeakFiles.isEmpty()) {
+          sb.append("\nFound these weak sources in other modules:\n  ")
+              .append(Joiner.on("\n  ").join(misplacedWeakFiles));
+        }
+        throw new IllegalStateException(sb.toString());
       }
     } else {
       JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);

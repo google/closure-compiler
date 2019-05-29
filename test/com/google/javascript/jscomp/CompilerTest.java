@@ -2373,7 +2373,8 @@ public final class CompilerTest {
     } catch (RuntimeException e) {
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("A weak module already exists but strong sources were found in it.");
+          .contains(
+              "Found these strong sources in the weak module:\n  weak_but_actually_strong.js");
     }
   }
 
@@ -2394,10 +2395,11 @@ public final class CompilerTest {
       compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options);
       fail();
     } catch (RuntimeException e) {
-
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("A weak module already exists but weak sources were found in other modules.");
+          .contains(
+              "Found these weak sources in other modules:\n"
+                  + "  strong_but_actually_weak.js (in module m)");
     }
   }
 
