@@ -70,6 +70,10 @@ public final class Property implements Serializable, StaticTypedSlot, StaticType
       return value;
     }
 
+    public ObjectType getOwnerInstanceType() {
+      return owner.isFunctionPrototypeType() ? owner.getOwnerFunction().getInstanceType() : owner;
+    }
+
     public boolean isOwnedByInterface() {
       return owner.isFunctionPrototypeType()
           ? owner.getOwnerFunction().isInterface()

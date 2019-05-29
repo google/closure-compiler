@@ -910,7 +910,7 @@ class TypeValidator implements Serializable {
                   n,
                   INTERFACE_METHOD_NOT_IMPLEMENTED,
                   propName,
-                  implementedInterface.toString(),
+                  implementedInterface.getReferenceName(),
                   instance.toString())));
     } else {
       Property prop = propSlot.getValue();
@@ -940,7 +940,7 @@ class TypeValidator implements Serializable {
                 HIDDEN_INTERFACE_PROPERTY_MISMATCH,
                 propName,
                 instance.toString(),
-                getClosestDefiningTypeName(implementedInterface, propName),
+                implementedInterface.getReferenceName(),
                 required.toString(),
                 found.toString());
         registerMismatch(found, required, err);
@@ -1109,13 +1109,5 @@ class TypeValidator implements Serializable {
     CheckLevel originalDeclLevel =
         compiler.getErrorLevel(JSError.make(decl, DUP_VAR_DECLARATION, "dummy", "dummy"));
     return originalDeclLevel == CheckLevel.OFF;
-  }
-
-  /** Given an instance type and a property, finds the closest type that defines the property. */
-  static String getClosestDefiningTypeName(ObjectType instanceType, String propertyName) {
-    ObjectType type = instanceType.getClosestDefiningType(propertyName);
-    return type.isFunctionPrototypeType()
-        ? type.getOwnerFunction().getReferenceName()
-        : type.getReferenceName();
   }
 }
