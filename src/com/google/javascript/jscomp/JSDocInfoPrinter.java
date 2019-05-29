@@ -58,33 +58,6 @@ public final class JSDocInfoPrinter {
 
     List<String> parts = new ArrayList<>();
 
-    // order:
-    //   externs|typeSummary
-    //   export|public|private|package|protected
-    //   abstract
-    //   lends
-    //   const
-    //   final
-    //   desc
-    //   dict|struct|unrestricted
-    //   constructor|interface|record
-    //   extends
-    //   implements
-    //   this
-    //   param
-    //   return
-    //   throws
-    //   template
-    //   override
-    //   type|define|typedef|enum
-    //   implicitCast
-    //   nocollapse
-    //   suppress
-    //   deprecated
-    //   polymer
-    //   polymerBehavior
-    //   mixinFunction
-    //   closurePrimitive
     parts.add("/**");
 
     if (info.isExterns()) {
@@ -120,6 +93,70 @@ public final class JSDocInfoPrinter {
     if (description != null) {
       multiline = true;
       parts.add("@desc " + description);
+    }
+
+    if (info.isWizaction()) {
+      parts.add("@wizaction");
+    }
+
+    if (info.isPolymerBehavior()) {
+      parts.add("@polymerBehavior");
+    }
+
+    if (info.isPolymer()) {
+      parts.add("@polymer");
+    }
+
+    if (info.isCustomElement()) {
+      parts.add("@customElement");
+    }
+
+    if (info.isMixinClass()) {
+      parts.add("@mixinClass");
+    }
+
+    if (info.isMixinFunction()) {
+      parts.add("@mixinFunction");
+    }
+
+    if (info.isDisposes()) {
+      parts.add("@disposes");
+    }
+
+    if (info.isExpose()) {
+      parts.add("@expose");
+    }
+
+    if (info.isNoSideEffects()) {
+      parts.add("@nosideeffects");
+    }
+
+    if (info.isNoCompile()) {
+      parts.add("@nocompile");
+    }
+
+    if (info.isNoInline()) {
+      parts.add("@noinline");
+    }
+
+    if (info.isIdGenerator()) {
+      parts.add("@idGenerator {unique}");
+    }
+
+    if (info.isConsistentIdGenerator()) {
+      parts.add("@idGenerator {consistent}");
+    }
+
+    if (info.isStableIdGenerator()) {
+      parts.add("@idGenerator {stable}");
+    }
+
+    if (info.isXidGenerator()) {
+      parts.add("@idGenerator {xid}");
+    }
+
+    if (info.isMappedIdGenerator()) {
+      parts.add("@idGenerator {mapped}");
     }
 
     if (info.makesDicts()) {
