@@ -170,7 +170,20 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoRemoveParamWithDefault() {
+  public void testInlineParamWithDefault_referencingOutsideVariable() {
+    test(
+        "var x = 0; function f(a = x) {} f(1);", //
+        "var x = 0; function f() { var a = 1; } f();");
+    test(
+        "var x = 0; function f(a = x + x) {} f(1);", //
+        "var x = 0; function f() { var a = 1; } f();");
+    test(
+        "function g(x) { return x; } function f(a = g(0)) {} f(1);", //
+        "function g() { var x = 0; return x; } function f() { var a = 1; } f();");
+  }
+
+  @Test
+  public void testNoRemoveParamWithDefault_whenArgPossiblyUndefined() {
     // different scopes
     testSame(
         "function f(p = 1){} function _g(x) { f(x); f(x); }");
@@ -179,6 +192,40 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     // so that this can be inlined into the function body
     testSame(
         "function f(a = 2){} f(alert);");
+
+    testSame("function f(a = 2){} f(void 0);");
+
+    // Make sure `sideEffects()` is always evaluated before `x`;
+    testSame("var x = 0; function f(a = sideEffects(), b = x) {}; f(void 0, something);");
+  }
+
+  @Test
+  public void testNoRemoveParam_beingUsedInSubsequentDefault() {
+    testSame("function f(a, b = a) { return b; }; f(x);");
+
+    testSame("function f(a, b = foo(a)) { return b; }; f(x);");
+
+    testSame("function f(a, b = (c) => a) { return b; }; f(x);");
+
+    testSame("function f({a}, {b: [{c = a}]}) { return c; }; f(x);");
+  }
+
+  @Test
+  public void testNoRemoveParam_beingUsedInSubsequentDefault_fromSingleFormal() {
+    testSame("function f([a, b = a]) { return b; }; f(x);");
+
+    testSame("function f({a, [a]: b}) { return b; }; f(x);");
+  }
+
+  @Test
+  public void testNoInlineParam_beingUsedInSubsequentDefault() {
+    testSame("function f(a, b = a) { return a + b; }; f(1, x);");
+
+    testSame("function f(a, b = (a = 9)) { return a + b; }; f(1, x);");
+
+    // These would actually be fine to inline, but it's hard to detect that in general.
+    testSame("function f(a, b = a) { return a + b; }; f(1, 1);");
+    testSame("function f(a, b = a) { return a + b; }; f(1);");
   }
 
   @Test

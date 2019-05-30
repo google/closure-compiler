@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -30,6 +31,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
 import javax.annotation.Nullable;
@@ -414,23 +416,21 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
   private boolean isCandidateDefinition(Node n) {
     Node parent = n.getParent();
+
+    final Node functionExpr;
     if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
-      return allDefinitionsAreCandidateFunctions(parent);
+      functionExpr = parent;
     } else if (ReferenceMap.isSimpleAssignmentTarget(n)) {
-      if (allDefinitionsAreCandidateFunctions(parent.getLastChild())) {
-        return true;
-      }
+      functionExpr = parent.getLastChild();
     } else if (n.isName() && n.hasChildren()) {
-      if (allDefinitionsAreCandidateFunctions(n.getFirstChild())) {
-        return true;
-      }
+      functionExpr = n.getFirstChild();
     } else if (isClassMemberDefinition(n)) {
-      if (!NodeUtil.doesFunctionReferenceOwnArgumentsObject(n.getFirstChild())) {
-        return true;
-      }
+      functionExpr = n.getFirstChild();
+    } else {
+      return false; // Couldn't find a function.
     }
 
-    return false;
+    return allDefinitionsAreCandidateFunctions(functionExpr);
   }
 
   private boolean isClassMemberDefinition(Node n) {
@@ -441,10 +441,11 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     switch (n.getToken()) {
       case FUNCTION:
         // Named function expression can refer to themselves,
-        // "arguments" can refer to all parameters or their count,
-        // so they are not candidates.
         return !NodeUtil.isNamedFunctionExpression(n)
-            && !NodeUtil.doesFunctionReferenceOwnArgumentsObject(n);
+            // "arguments" can refer to all parameters or their count.
+            && !NodeUtil.doesFunctionReferenceOwnArgumentsObject(n)
+            // In `function f(a, b = a) { ... }` it's very difficult to determine if `a` is movable.
+            && !mayReferenceParamBeforeBody(n);
       case CAST:
       case COMMA:
         return allDefinitionsAreCandidateFunctions(n.getLastChild());
@@ -458,6 +459,45 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       default:
         return false;
     }
+  }
+
+  /**
+   * Does the function use one of its parameters in code before the body?
+   *
+   * <p>Having that property is risky for inlining. Example `function f(a, b = a) { ... }`. We can't
+   * trivially inline `a` in this case because the inlined var can't precede `b = a`.
+   *
+   * <p>This case is very rare so for now we just back-off completely. If it becomes more common, we
+   * can tighten the detection of problematic cases, or back-off only for the dangerous params.
+   */
+  private static boolean mayReferenceParamBeforeBody(Node function) {
+    Node paramList = function.getSecondChild();
+    if (!paramList.hasChildren()) {
+      return false; // Fast path; there can't possibly be back-refs.
+    }
+
+    ArrayListMultimap<String, Node> namesByNames = ArrayListMultimap.create();
+    NodeUtil.visitPostOrder(
+        paramList,
+        (n) -> {
+          if (n.isName()) {
+            namesByNames.put(n.getString(), n);
+          }
+        });
+
+    for (Collection<Node> names : namesByNames.asMap().values()) {
+      if (names.size() == 1) {
+        continue; // There can't be back-refs if there's only one ref.
+      }
+
+      for (Node name : names) {
+        if (NodeUtil.isLValue(name)) {
+          return true; // One ref is a definition, so the rest of might be back-refs.
+        }
+      }
+    }
+
+    return false;
   }
 
   /**
