@@ -18742,17 +18742,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "f(new Foo, new Bar)"));
   }
 
-  private static final String EXTERNS_WITH_IOBJECT_DECLS = lines(
-      "/**",
-      " * @constructor",
-      " * @implements IObject<(string|number), number>",
-      " */",
-      "function Object2() {}",
-      "/**",
-      " * @constructor",
-      " * @implements IObject<number, number>",
-      " */",
-      "function Object3() {}");
+  private static final String EXTERNS_WITH_IOBJECT_DECLS =
+      lines(
+          "/**",
+          " * @constructor",
+          " * @implements IObject<(string|number), number>",
+          " */",
+          "function Object2() {}",
+          "/**",
+          " * @constructor @struct",
+          " * @implements IObject<number, number>",
+          " */",
+          "function Object3() {}");
 
   @Test
   public void testIObject1() {
