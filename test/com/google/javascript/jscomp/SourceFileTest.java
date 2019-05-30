@@ -22,9 +22,13 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.collect.Iterables;
 import com.google.common.io.MoreFiles;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -246,7 +250,7 @@ public final class SourceFileTest {
 
     newFile.clearCachedSource();
 
-    assertThat(newFile.getCodeNoCache()).isNull();
+    assertThat(newFile.hasSourceInMemory()).isFalse();
     actualContent = newFile.getLine(1);
     assertThat(actualContent).isEqualTo(expectedContent);
   }
@@ -266,7 +270,7 @@ public final class SourceFileTest {
   }
 
   @Test
-  public void testGeneratedFile() {
+  public void testGeneratedFile() throws IOException {
     String expectedContent = "var a;";
     CodeGeneratorHelper myGenerator = new CodeGeneratorHelper();
     SourceFile newFile = SourceFile.fromGenerator("file.js", myGenerator);
@@ -277,10 +281,24 @@ public final class SourceFileTest {
     assertThat(myGenerator.numberOfReads()).isEqualTo(1);
 
     newFile.clearCachedSource();
-    assertThat(newFile.getCodeNoCache()).isNull();
+    assertThat(newFile.hasSourceInMemory()).isFalse();
 
     actualContent = newFile.getLine(1);
     assertThat(actualContent).isEqualTo(expectedContent);
     assertThat(myGenerator.numberOfReads()).isEqualTo(2);
+  }
+
+  @Test
+  public void testFromCodeSerialization() throws IOException, ClassNotFoundException {
+    SourceFile sourceFile = SourceFile.fromCode("file.js", "var i = 0;");
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(baos);
+    oos.writeObject(sourceFile);
+    oos.close();
+
+    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+    SourceFile afterSerialization = (SourceFile) ois.readObject();
+    ois.close();
+    assertThat(afterSerialization.getCode()).isEqualTo(sourceFile.getCode());
   }
 }

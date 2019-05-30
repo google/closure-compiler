@@ -22,10 +22,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharStreams;
 import com.google.javascript.rhino.StaticSourceFile;
-import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -63,7 +61,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
    * be cached so that the source text stays consistent throughout a single
    * compile. */
   public interface Generator {
-    public String getCode();
+    String getCode();
   }
 
   /**
@@ -161,11 +159,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
   @GwtIncompatible("java.io.Reader")
   public Reader getCodeReader() throws IOException {
     return new StringReader(getCode());
-  }
-
-  @VisibleForTesting
-  String getCodeNoCache() {
-    return code;
   }
 
   void setCode(String sourceCode) {
@@ -394,7 +387,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
       Charset inputCharset,
       SourceKind kind)
       throws MalformedURLException {
-    // No longer throws MalformedURLException but we are keeping it for backward compatbility.
+    // No longer throws MalformedURLException but we are keeping it for backward compatibility.
     return builder()
         .withKind(kind)
         .withCharset(inputCharset)
@@ -544,12 +537,24 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
   /** A source file where the code has been preloaded. */
   private static class Preloaded extends SourceFile {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     Preloaded(String fileName, String originalPath, String code, SourceKind kind) {
       super(fileName, kind);
       super.setOriginalPath(originalPath);
       super.setCode(code);
+    }
+
+    @GwtIncompatible("ObjectOutputStream")
+    private void writeObject(java.io.ObjectOutputStream os) throws Exception {
+      os.defaultWriteObject();
+      os.writeObject(getCode());
+    }
+
+    @GwtIncompatible("ObjectInputStream")
+    private void readObject(java.io.ObjectInputStream in) throws Exception {
+      in.defaultReadObject();
+      super.setCode((String) in.readObject());
     }
   }
 
