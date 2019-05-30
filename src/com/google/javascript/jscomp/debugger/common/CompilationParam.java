@@ -60,7 +60,7 @@ public enum CompilationParam {
   TRANSPILE(ParamGroup.TRANSPILATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
+      options.setLanguageIn(CompilerOptions.LanguageMode.STABLE);
       options.setLanguageOut(
           value
               ? CompilerOptions.LanguageMode.ECMASCRIPT5
