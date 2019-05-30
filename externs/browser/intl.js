@@ -201,3 +201,44 @@ Intl.PluralRules.prototype.resolvedOptions = function() {};
  * @return {string}
  */
 Intl.PluralRules.prototype.select = function(number) {};
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RelativeTimeFormat#Syntax
+ * @param {string|Array<string>=} opt_locales
+ * @param {{localeMatcher: (string|undefined),
+ *    numeric: (string|undefined),
+ *    style: (string|undefined)}=}
+ *        opt_options
+ */
+Intl.RelativeTimeFormat = function(opt_locales, opt_options) {};
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RelativeTimeFormat/supportedLocalesOf#Syntax
+ * @param {Array<string>} locales
+ * @param {{localeMatcher: string}=} opt_options
+ * @return {Array<string>}
+ */
+Intl.RelativeTimeFormat.supportedLocalesOf = function(locales, opt_options) {};
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RelativeTimeFormat/format#Syntax
+ * @param {number} value
+ * @param {string} unit
+ * @return {string}
+ */
+Intl.RelativeTimeFormat.format = function(value, unit) {};
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RelativeTimeFormat/formatToParts#Syntax
+ * @param {number} value
+ * @param {string} unit
+ * @return {Array<string>}
+ */
+Intl.RelativeTimeFormat.formatToParts = function(value, unit) {};
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RelativeTimeFormat/resolvedOptions#Syntax
+ * @return {{locale: string, pluralCategories: Array<string>, type: string}}
+ */
+Intl.RelativeTimeFormat.prototype.resolvedOptions = function() {};
