@@ -142,7 +142,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
         return ResolveExportResult.of(
             Binding.from(
                 requested.metadata(),
-                requested.metadata().rootNode(),
+                importRecord.nameNode(),
                 importRecord.moduleRequest(),
                 require.createdBy()));
 

@@ -180,6 +180,7 @@ final class ModuleImportResolver {
       ScopedName export = getScopedNameFromEsBinding(binding);
       TypedScope modScope = nodeToScopeMapper.apply(export.getScopeRoot());
       if (modScope == null) {
+        checkState(binding.sourceNode().getString().equals(localName), binding.sourceNode());
         missingNames.put(binding.sourceNode(), export);
         continue;
       }

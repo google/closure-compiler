@@ -5847,6 +5847,29 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEsModuleImportCycle_aliasingNamedExports() {
+    testSame(
+        srcs(
+            lines(
+                "import {Bar as BarLocal} from './input1';", //
+                "var /** !BarLocal */ b;",
+                "BAR: b;",
+                "export class Foo {}"),
+            lines(
+                "import {Foo as FooLocal} from './input0';", //
+                "var /** !FooLocal */ f;",
+                "FOO: f;",
+                "export class Bar {}")));
+
+    assertNode(getLabeledStatement("FOO").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Foo");
+    assertNode(getLabeledStatement("BAR").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Bar");
+  }
+
+  @Test
   public void testEsModuleImportCycle_importStarPlusNamedExport() {
     testSame(
         srcs(

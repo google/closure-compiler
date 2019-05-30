@@ -897,7 +897,7 @@ public final class EsModuleProcessor implements Callback, ModuleProcessor {
               .localName(localName)
               .modulePath(t.getInput().getPath())
               .importNode(importNode)
-              .nameNode(child.getFirstChild())
+              .nameNode(child.getSecondChild())
               .build());
     }
   }
