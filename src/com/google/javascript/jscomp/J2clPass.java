@@ -209,6 +209,9 @@ public class J2clPass implements CompilerPass {
         Node inlinedCall =
             injector.unsafeInline(
                 new Reference(n, t.getScope(), t.getModule(), inliningMode), fnName, fnImpl);
+        // Avoid overridding original source information with the helper classes source information.
+        // For example; we want a cast to point related Java statement instead of the Casts utility.
+        inlinedCall.useSourceInfoFromForTree(n);
         t.getCompiler().reportChangeToEnclosingScope(inlinedCall);
       }
     }
