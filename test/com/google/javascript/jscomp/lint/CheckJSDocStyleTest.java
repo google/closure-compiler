@@ -846,6 +846,46 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoPrivateWarningsWithSuppressions() {
+    testNoWarning(
+        lines(
+            "goog.module('mod');",
+            "class Foo {",
+            "  constructor() {",
+            "    /** @private {number} */",
+            "    this.n_;",
+            "    /** @private {number} */",
+            "    this.m_;",
+            "  }",
+            "  setUp() {",
+            "    /** @suppress {checkTypes} */",
+            "    this.n_ = ' not a number ';",
+            "    this.m_ = 1;",
+            "  }",
+            "  testSomething() {",
+            "    alert(this.n_ + this.m_);",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testPrivateWarningAtPropertyDeclaration() {
+    testWarning(
+        lines(
+            "class Foo {",
+            "/** @constructor */",
+            "  constructor(foo) {",
+            "   /**",
+            "   * @const {number}",
+            "   * @suppress {missingProperties} suppress a warning for `bar` access on `foo`.",
+            "   */",
+            "   this.n_ = foo.bar;",
+            "  }",
+            "}"),
+        MUST_BE_PRIVATE);
+  }
+
+  @Test
   public void testMissingPrivate_class_withES6Modules01() {
     testWarning(
         "export class Example { /** @return {number} */ foo_() { return 0; } }",
