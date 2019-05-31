@@ -464,6 +464,50 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBannedDepRegexNoValue() {
+    allowSourcelessWarnings();
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_DEPENDENCY_REGEX\n"
+            + "  error_message: 'testcode is not allowed'\n"
+            + "}";
+
+    testError(
+        "anything;",
+        CheckConformance.INVALID_REQUIREMENT_SPEC,
+        "Invalid requirement. Reason: missing value (no banned dependency regexps)\n"
+            + "Requirement spec:\n"
+            + "error_message: \"testcode is not allowed\"\n"
+            + "type: BANNED_DEPENDENCY_REGEX\n");
+  }
+
+  @Test
+  public void testBannedDepRegex() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_DEPENDENCY_REGEX\n"
+            + "  error_message: 'testcode is not allowed'\n"
+            + "  value: '.*test.*'\n"
+            + "}";
+
+    testWarning(
+        "anything;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: testcode is not allowed");
+  }
+
+  @Test
+  public void testBannedDepRegexWithWhitelist() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_DEPENDENCY_REGEX\n"
+            + "  error_message: 'testcode is not allowed'\n"
+            + "  value: '.*test.*'\n"
+            + "  whitelist_regexp: 'testcode'\n"
+            + "}";
+
+    testNoWarning("anything;");
+  }
+
+  @Test
   public void testReportLooseTypeViolations() {
     configuration =
         lines(

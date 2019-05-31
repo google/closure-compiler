@@ -80,6 +80,9 @@ message Requirement {
     // A forbidden source file
     BANNED_DEPENDENCY = 2;
 
+    // Forbidden dependency (source or generated files) expressed via regexp.
+    BANNED_DEPENDENCY_REGEX = 14;
+
     // A forbidden fully distinguished name. For example:
     //  - A global name like "eval" or "goog"
     //  - A namespaced value or type:  namespace.Banned

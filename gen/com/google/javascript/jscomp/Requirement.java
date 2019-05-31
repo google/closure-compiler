@@ -249,13 +249,25 @@ public  final class Requirement extends
      */
     BANNED_DEPENDENCY(2),
     /**
+     *
+     *
+     * <pre>
+     * Forbidden dependency (source or generated files) expressed via regexp.
+     * </pre>
+     *
+     * <code>BANNED_DEPENDENCY_REGEX = 14;</code>
+     */
+    BANNED_DEPENDENCY_REGEX(14),
+    /**
+     *
+     *
      * <pre>
      * A forbidden fully distinguished name. For example:
      *  - A global name like "eval" or "goog"
      *  - A namespaced value or type:  namespace.Banned
      *  - A 'static' property:  "namespace.Foo.banned"
      * TODO(b/112325992): If namespace.Banned is a goog.module that does not
-     * call goog.module.declareNamespace, the rule will not match.
+     * call goog.declareModuleId, the rule will not match.
      * </pre>
      *
      * <code>BANNED_NAME = 3;</code>
@@ -385,13 +397,25 @@ public  final class Requirement extends
      */
     public static final int BANNED_DEPENDENCY_VALUE = 2;
     /**
+     *
+     *
+     * <pre>
+     * Forbidden dependency (source or generated files) expressed via regexp.
+     * </pre>
+     *
+     * <code>BANNED_DEPENDENCY_REGEX = 14;</code>
+     */
+    public static final int BANNED_DEPENDENCY_REGEX_VALUE = 14;
+    /**
+     *
+     *
      * <pre>
      * A forbidden fully distinguished name. For example:
      *  - A global name like "eval" or "goog"
      *  - A namespaced value or type:  namespace.Banned
      *  - A 'static' property:  "namespace.Foo.banned"
      * TODO(b/112325992): If namespace.Banned is a goog.module that does not
-     * call goog.module.declareNamespace, the rule will not match.
+     * call goog.declareModuleId, the rule will not match.
      * </pre>
      *
      * <code>BANNED_NAME = 3;</code>
@@ -520,6 +544,8 @@ public  final class Requirement extends
       switch (value) {
         case 1: return CUSTOM;
         case 2: return BANNED_DEPENDENCY;
+        case 14:
+          return BANNED_DEPENDENCY_REGEX;
         case 3: return BANNED_NAME;
         case 4: return BANNED_PROPERTY;
         case 5: return BANNED_PROPERTY_READ;

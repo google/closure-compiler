@@ -117,6 +117,31 @@ public final class ConformanceRules {
     VIOLATION,
   }
 
+  @Nullable
+  private static Pattern buildPattern(List<String> reqPatterns) throws InvalidRequirementSpec {
+    if (reqPatterns == null || reqPatterns.isEmpty()) {
+      return null;
+    }
+
+    // validate the patterns
+    for (String reqPattern : reqPatterns) {
+      try {
+        Pattern.compile(reqPattern);
+      } catch (PatternSyntaxException e) {
+        throw new InvalidRequirementSpec("invalid regex pattern", e);
+      }
+    }
+
+    Pattern pattern = null;
+    try {
+      String jointRegExp = "(" + Joiner.on("|").join(reqPatterns) + ")";
+      pattern = Pattern.compile(jointRegExp);
+    } catch (PatternSyntaxException e) {
+      throw new RuntimeException("bad joined regexp", e);
+    }
+    return pattern;
+  }
+
   private static class Whitelist {
     @Nullable final ImmutableList<String> prefixes;
     @Nullable final Pattern regexp;
@@ -147,31 +172,6 @@ public final class ConformanceRules {
       }
 
       return regexp != null && regexp.matcher(path).find();
-    }
-
-    @Nullable
-    private static Pattern buildPattern(List<String> reqPatterns) throws InvalidRequirementSpec {
-      if (reqPatterns == null || reqPatterns.isEmpty()) {
-        return null;
-      }
-
-      // validate the patterns
-      for (String reqPattern : reqPatterns) {
-        try {
-          Pattern.compile(reqPattern);
-        } catch (PatternSyntaxException e) {
-          throw new InvalidRequirementSpec("invalid regex pattern", e);
-        }
-      }
-
-      Pattern pattern = null;
-      try {
-        String jointRegExp = "(" + Joiner.on("|").join(reqPatterns) + ")";
-        pattern = Pattern.compile(jointRegExp);
-      } catch (PatternSyntaxException e) {
-        throw new RuntimeException("bad joined regexp", e);
-      }
-      return pattern;
     }
   }
 
@@ -477,6 +477,32 @@ public final class ConformanceRules {
           if (srcFile.startsWith(path)) {
             return ConformanceResult.VIOLATION;
           }
+        }
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+  }
+
+  /** Banned dependency via regex rule */
+  static class BannedDependencyRegex extends AbstractRule {
+    @Nullable private final Pattern pathRegexp;
+
+    BannedDependencyRegex(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      List<String> pathRegexpList = requirement.getValueList();
+      if (pathRegexpList.isEmpty()) {
+        throw new InvalidRequirementSpec("missing value (no banned dependency regexps)");
+      }
+      pathRegexp = buildPattern(pathRegexpList);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (n.isScript()) {
+        String srcFile = n.getSourceFileName();
+        if (pathRegexp != null && pathRegexp.matcher(srcFile).find()) {
+          return ConformanceResult.VIOLATION;
         }
       }
       return ConformanceResult.CONFORMANCE;
