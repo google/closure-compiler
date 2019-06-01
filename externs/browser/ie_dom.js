@@ -670,24 +670,6 @@ TextRange.prototype.select = function() {};
 TextRange.prototype.setEndPoint;
 
 /**
- * @return {undefined}
- * @see http://msdn.microsoft.com/en-us/library/ms536418(VS.85).aspx
- */
-Selection.prototype.clear = function() {};
-
-/**
- * @return {TextRange|ControlRange}
- * @see http://msdn.microsoft.com/en-us/library/ms536394(VS.85).aspx
- */
-Selection.prototype.createRange = function() {};
-
-/**
- * @return {Array<TextRange>}
- * @see http://msdn.microsoft.com/en-us/library/ms536396(VS.85).aspx
- */
-Selection.prototype.createRangeCollection = function() {};
-
-/**
  * @constructor
  * @see http://msdn.microsoft.com/en-us/library/ms537447(VS.85).aspx
  */
@@ -766,12 +748,6 @@ Document.prototype.protocol;
  * @see http://msdn.microsoft.com/en-us/library/ms534359(VS.85).aspx
  */
 HTMLDocument.prototype.readyState;
-
-/**
- * @type {Selection}
- * @see http://msdn.microsoft.com/en-us/library/ms535869(VS.85).aspx
- */
-Document.prototype.selection;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms534704(VS.85).aspx
@@ -1010,18 +986,6 @@ Element.prototype.onmouseenter;
  * @see http://msdn.microsoft.com/en-us/library/ms536946(VS.85).aspx
  */
 Element.prototype.onmouseleave;
-
-/**
- * @type {?function(Event)}
- * @see https://w3c.github.io/selection-api/#dom-globaleventhandlers-onselectstart
- */
-Element.prototype.onselectstart;
-
-/**
- * @type {?function(!Event): void}
- * @see https://w3c.github.io/selection-api/#dom-globaleventhandlers-onselectionchange
- */
-Element.prototype.onselectionchange;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536689(VS.85).aspx
