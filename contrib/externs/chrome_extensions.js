@@ -10085,6 +10085,126 @@ chrome.networkingPrivate.onDeviceStateListChanged;
 /** @type {!ChromeStringStringEvent} */
 chrome.networkingPrivate.onPortalDetectionCompleted;
 
+/**
+ * safeBrowsingPrivate is a Private API for observing events and retrieving a
+ * referrer chain.
+ * @see https://cs.chromium.org/chromium/src/chrome/common/extensions/api/safe_browsing_private.idl
+ */
+chrome.safeBrowsingPrivate = {};
+
+/**
+ * @enum {string}
+ */
+chrome.safeBrowsingPrivate.URLType = {
+  EVENT_URL: '',
+  LANDING_PAGE: '',
+  LANDING_REFERRER: '',
+  CLIENT_REDIRECT: '',
+  RECENT_NAVIGATION: '',
+  REFERRER: '',
+};
+
+/**
+ * @enum {string}
+ */
+chrome.safeBrowsingPrivate.NavigationInitiation = {
+  BROWSER_INITIATED: '',
+  RENDERER_INITIATED_WITHOUT_USER_GESTURE: '',
+  RENDERER_INITIATED_WITH_USER_GESTURE: '',
+};
+
+/**
+ * @typedef {{
+ *   url: string,
+ *   userName: string,
+ *   isPhishingUrl: boolean
+ * }}
+ */
+chrome.safeBrowsingPrivate.PolicySpecifiedPasswordReuse;
+
+/**
+ * @typedef {{
+ *   url: string,
+ *   fileName: string,
+ *   downloadDigestSha256: string,
+ *   userName: string
+ * }}
+ */
+chrome.safeBrowsingPrivate.DangerousDownloadInfo;
+
+/**
+ * @typedef {{
+ *   url: string,
+ *   reason: string,
+ *   netErrorCode: (string|undefined),
+ *   userName: string
+ * }}
+ */
+chrome.safeBrowsingPrivate.InterstitialInfo;
+
+/**
+ * @typedef {{
+ *   url: (string|undefined)
+ * }}
+ */
+chrome.safeBrowsingPrivate.ServerRedirect;
+
+/**
+ * @typedef {{
+ *   url: string,
+ *   mainFrameUrl: (string|undefined),
+ *   urlType: !chrome.safeBrowsingPrivate.URLType,
+ *   ipAddresses: (!Array<string>|undefined),
+ *   referrerUrl: (string|undefined),
+ *   referrerMainFrameUrl: (string|undefined),
+ *   isRetargeting: (boolean|undefined),
+ *   navigationTimeMs: (number|undefined),
+ *   serverRedirectChain:
+ * (!Array<!chrome.safeBrowsingPrivate.ServerRedirect>|undefined),
+ *   navigationInitiation:
+ * (!chrome.safeBrowsingPrivate.NavigationInitiation|undefined),
+ *   maybeLaunchedByExternalApp: (boolean|undefined)
+ * }}
+ */
+chrome.safeBrowsingPrivate.ReferrerChainEntry;
+
+/**
+ * Gets referrer chain for the specified tab.
+ * @param {number} tabId Id of the tab from which to retrieve the referrer.
+ * @param {function(!Array<!chrome.safeBrowsingPrivate.ReferrerChainEntry>):void}
+ *     callback Called with the list of referrer chain entries.
+ */
+chrome.safeBrowsingPrivate.getReferrerChain = function(tabId, callback) {};
+
+/**
+ * Fired when Chrome detects a reuse of a policy specified password.
+ * @type {!ChromeObjectEvent}
+ */
+chrome.safeBrowsingPrivate.onPolicySpecifiedPasswordReuseDetected;
+
+/**
+ * Fired when the user changed their policy specified password.
+ * @type {!ChromeStringEvent}
+ */
+chrome.safeBrowsingPrivate.onPolicySpecifiedPasswordChanged;
+
+/**
+ * Fired when the user opened a dangerous download.
+ * @type {!ChromeObjectEvent}
+ */
+chrome.safeBrowsingPrivate.onDangerousDownloadOpened;
+
+/**
+ * Fired when a security interstitial is shown to the user.
+ * @type {!ChromeObjectEvent}
+ */
+chrome.safeBrowsingPrivate.onSecurityInterstitialShown;
+
+/**
+ * Fired when the user clicked-through a security interstitial.
+ * @type {!ChromeObjectEvent}
+ */
+chrome.safeBrowsingPrivate.onSecurityInterstitialProceeded;
 
 /**
  * WARNING(2014/08/14): This API is still under active initial development and
