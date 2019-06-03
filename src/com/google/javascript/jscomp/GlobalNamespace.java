@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Streams.stream;
-import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -29,12 +28,11 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticRef;
+import com.google.javascript.rhino.StaticScope;
+import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.StaticTypedRef;
-import com.google.javascript.rhino.jstype.StaticTypedScope;
-import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,13 +45,16 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Builds a global namespace of all the objects and their properties in the global scope. Also
- * builds an index of all the references to those names.
+ * Builds a namespace of all qualified names whose root is in the global scope, plus an index of all
+ * references to those global names.
+ *
+ * <p>The namespace can be updated as the AST is changed. Removing names or references should be
+ * done by the methods on Name. Adding new names should be done with {@link #scanNewNodes}.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
 class GlobalNamespace
-    implements StaticTypedScope, StaticSymbolTable<GlobalNamespace.Name, GlobalNamespace.Ref> {
+    implements StaticScope, StaticSymbolTable<GlobalNamespace.Name, GlobalNamespace.Ref> {
 
   private final AbstractCompiler compiler;
   private final Node root;
@@ -126,7 +127,7 @@ class GlobalNamespace
   }
 
   @Override
-  public StaticTypedScope getParentScope() {
+  public StaticScope getParentScope() {
     return null;
   }
 
@@ -142,18 +143,13 @@ class GlobalNamespace
   }
 
   @Override
-  public JSType getTypeOfThis() {
-    return compiler.getTypeRegistry().getNativeObjectType(GLOBAL_THIS);
-  }
-
-  @Override
   public Iterable<Ref> getReferences(Name slot) {
     ensureGenerated();
     return Collections.unmodifiableCollection(slot.getRefs());
   }
 
   @Override
-  public StaticTypedScope getScope(Name slot) {
+  public StaticScope getScope(Name slot) {
     return this;
   }
 
@@ -1022,7 +1018,7 @@ class GlobalNamespace
    * traversal proceeds, we'll discover that some names correspond to JavaScript objects whose
    * properties we should consider collapsing.
    */
-  static final class Name implements StaticTypedSlot {
+  static final class Name implements StaticSlot {
     private enum Type {
       CLASS, // class C {}
       OBJECTLIT, // var x = {};
@@ -1125,16 +1121,6 @@ class GlobalNamespace
       return declaration;
     }
 
-    @Override
-    public boolean isTypeInferred() {
-      return false;
-    }
-
-    @Override
-    public JSType getType() {
-      return null;
-    }
-
     boolean isFunction() {
       return this.type == Type.FUNCTION;
     }
@@ -1180,7 +1166,7 @@ class GlobalNamespace
     }
 
     @Override
-    public StaticTypedScope getScope() {
+    public StaticScope getScope() {
       throw new UnsupportedOperationException();
     }
 
@@ -1991,7 +1977,7 @@ class GlobalNamespace
    * A global name reference. Contains references to the relevant parse tree node and its ancestors
    * that may be affected.
    */
-  static class Ref implements StaticTypedRef {
+  static class Ref implements StaticRef {
 
     // Note: we are more aggressive about collapsing @enum and @constructor
     // declarations than implied here, see Name#canCollapse
@@ -2075,7 +2061,7 @@ class GlobalNamespace
     }
 
     @Override
-    public StaticTypedSlot getSymbol() {
+    public StaticSlot getSymbol() {
       return name;
     }
 
