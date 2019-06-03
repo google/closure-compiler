@@ -3808,6 +3808,24 @@ HTMLInputElement.prototype.labels;
 /** @type {string} */
 HTMLInputElement.prototype.validationMessage;
 
+/** @type {number} */
+HTMLInputElement.prototype.selectionStart;
+
+/** @type {number} */
+HTMLInputElement.prototype.selectionEnd;
+
+/** @type {string} */
+HTMLInputElement.prototype.selectionDirection;
+
+/**
+ * @param {number} start
+ * @param {number} end
+ * @param {string=} opt_direction
+ * @see https://html.spec.whatwg.org/#dom-textarea/input-setselectionrange
+ * @return {undefined}
+ */
+HTMLInputElement.prototype.setSelectionRange = function(start, end, opt_direction) {};
+
 /**
  * @const {ValidityState}
  */

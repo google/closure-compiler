@@ -616,21 +616,6 @@ Element.prototype.click = function() {};
 Element.prototype.focus = function(focusOption) {};
 
 /** @type {number} */
-HTMLInputElement.prototype.selectionStart;
-
-/** @type {number} */
-HTMLInputElement.prototype.selectionEnd;
-
-/**
- * @param {number} selectionStart
- * @param {number} selectionEnd
- * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/editing.html#dom-textarea/input-setselectionrange
- * @return {undefined}
- */
-HTMLInputElement.prototype.setSelectionRange =
-    function(selectionStart, selectionEnd) {};
-
-/** @type {number} */
 HTMLTextAreaElement.prototype.selectionStart;
 
 /** @type {number} */
