@@ -18,6 +18,7 @@ goog.module('jscomp.runtime_tests.polyfill_tests.object_assign_test');
 goog.setTestOnly();
 
 const testSuite = goog.require('goog.testing.testSuite');
+const {PROPERTY_CONFIGS_SUPPORTED} = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
 testSuite({
   testAssign_simple() {
@@ -37,12 +38,13 @@ testSuite({
   },
 
   testAssign_skipsNonEnumerableProperties() {
-    const from = {'b': 23};
-    try {
-      Object.defineProperty(from, 'a', {enumerable: false, value: 42});
-    } catch (err) {
-      return; // Object.defineProperty in IE8 test harness exists, always fails
+    if (!PROPERTY_CONFIGS_SUPPORTED) {
+      return;
     }
+
+    const from = {'b': 23};
+    Object.defineProperty(from, 'a', {enumerable: false, value: 42});
+
     assertObjectEquals({'b': 23}, Object.assign({}, from));
     assertObjectEquals({'a': 1, 'b': 23}, Object.assign({'a': 1}, from));
   },

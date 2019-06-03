@@ -24,6 +24,28 @@ var userAgent = goog.require('goog.userAgent');
 /** @const {boolean} */
 var IE8 = userAgent.IE && !userAgent.isVersionOrHigher(9);
 
+/**
+ * Does this VM have support for property configuration? (e.g. getter, setter,
+ * enumerable, writable).
+ *
+ * Many polyfills require native support for `Object.defineProperty` beacuse
+ * property configuration can't really be polyfilled. Anything built on such a
+ * polyfill is "best effort".
+ *
+ * @const {boolean}
+ */
+exports.PROPERTY_CONFIGS_SUPPORTED = (function() {
+  try {
+    // Check that configuration works on any arbitrary object. IE8 supports it,
+    // but only on DOM objects.
+    Object.defineProperty({}, 'test', {value: 0, enumerable: false});
+  } catch (e) {
+    return false;
+  }
+
+  // In case a polyfill has already been installed.
+  return Object.defineProperty.toString().indexOf('[native code]') >= 0;
+})();
 
 /** @const {function(?Object): !Object} Version of Object.create for IE8. */
 exports.objectCreate =

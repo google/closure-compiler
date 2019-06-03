@@ -18,13 +18,13 @@ goog.module('jscomp.runtime_tests.polyfill_tests.reflect_preventextensions_test'
 goog.setTestOnly();
 
 const testSuite = goog.require('goog.testing.testSuite');
-
-const LEGACY = typeof Object.defineProperties !== 'function';
-const MODERN = typeof Object.defineProperties === 'function';
+const {PROPERTY_CONFIGS_SUPPORTED} = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
 testSuite({
   testPreventExtensions_modern() {
-    if (LEGACY) return;
+    if (!PROPERTY_CONFIGS_SUPPORTED) {
+      return;
+    }
 
     let obj = {'a': 21};
     assertTrue(Reflect.preventExtensions(obj));
@@ -37,12 +37,16 @@ testSuite({
     try {
       // TODO(sdh): why does this not *always* throw, since goog.module?
       obj['b'] = 12;
-    } catch (ok) { /* note: will only throw in strict mode */ }
+    } catch (ok) { /* note: will only throw in strict mode */
+    }
     assertFalse('b' in obj);
   },
 
   testPreventExtensions_legacy() {
-    if (MODERN) return;
+    if (!!PROPERTY_CONFIGS_SUPPORTED) {
+      return;
+    }
+
     assertFalse(Reflect.preventExtensions({}));
   },
 });
