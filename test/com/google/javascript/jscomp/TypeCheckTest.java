@@ -22807,7 +22807,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeDeclarationsShadowOneAnotherWithModuleScoping_withTemplate() {
-    // TODO(b/79432091): This case should pass typechecking.
     // `C` at (2) should refer to `C` at (3) and not `C` at (1). Otherwise the assignment at (4)
     // would be invalid.
     testTypesWithExtraExterns(
@@ -22820,16 +22819,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "class C {};", // (3)
             "",
             "innerC = new C();", // (4)
-            "export {}"), // Make this an ES module.
-        lines(
-            "assignment", //
-            "found   : C",
-            "required: C"));
+            "export {}")); // Make this an ES module.
   }
 
   @Test
   public void testTypeDeclarationsShadowOneAnotherWithModuleScoping_withSuperclass() {
-    // TODO(b/79432091): This case should pass typechecking.
     // `C` at (2) should refer to `C` at (3) and not `C` at (1). Otherwise the assignment at (4)
     // would be invalid.
     testTypesWithExtraExterns(
@@ -22841,11 +22835,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "class C extends Parent {};", // (3)
             "",
             "/** @type {!Parent} */ const p = innerC;", // (4)
-            "export {}"), // Make this an ES module.
-        lines(
-            "initializing variable", //
-            "found   : C",
-            "required: Parent"));
+            "export {}")); // Make this an ES module.
   }
 
   @Test

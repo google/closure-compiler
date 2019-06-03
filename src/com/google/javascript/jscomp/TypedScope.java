@@ -21,21 +21,28 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
+import java.util.HashSet;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * TypedScope contains information about variables and their types. Scopes can be nested, a scope
+ * TypedScope contains information about variables and their types. Scopes can be nested; a scope
  * points back to its parent scope.
  *
  * <p>TypedScope is also used as a lattice element for flow-sensitive type inference. As a lattice
  * element, a scope is viewed as a map from names to types. A name not in the map is considered to
  * have the bottom type. The join of two maps m1 and m2 is the map of the union of names with {@link
  * JSType#getLeastSupertype} to meet the m1 type and m2 type.
+ *
+ * <p>TypedScopes also have a concept of a set of 'reserved' names. These are names that will be
+ * declared as actual TypedVars later in the compilation. Looking up any of these reserved names
+ * will always return null, even if the name is available in a parent scope.
  *
  * @see NodeTraversal
  * @see DataFlowAnalysis
@@ -51,22 +58,36 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
   /** Whether this is a bottom scope for the purposes of type inference. */
   private final boolean isBottom;
 
+  private final Set<String> reservedNames; // Not immutable; will shrink over time.
+
   // Scope.java contains an arguments field.
   // We haven't added it here because it's unused by the passes that need typed scopes.
 
   TypedScope(TypedScope parent, Node rootNode) {
+    this(parent, rootNode, new HashSet<>());
+  }
+
+  /**
+   * Creates a new global or local TypedScope.
+   *
+   * @param parent The containing scope, unless this is the global scope.
+   * @param rootNode Can be any node that creates a scope.
+   * @param reservedNames set of simple names that will eventually be declared in this scope.
+   */
+  TypedScope(TypedScope parent, Node rootNode, Set<String> reservedNames) {
     super(rootNode);
     checkChildScope(parent);
     this.parent = parent;
     this.depth = parent.depth + 1;
     this.isBottom = false;
+    this.reservedNames = reservedNames;
   }
 
   /**
    * Creates a empty Scope (bottom of the lattice).
-   * @param rootNode Typically a FUNCTION node or the global BLOCK node.
-   * @param isBottom Whether this is the bottom of a lattice. Otherwise,
-   *     it must be a global scope.
+   *
+   * @param rootNode Typically a FUNCTION node or the global ROOT.
+   * @param isBottom Whether this is the bottom of a lattice. Otherwise, it must be a global scope.
    */
   private TypedScope(Node rootNode, boolean isBottom) {
     super(rootNode);
@@ -74,6 +95,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     this.parent = null;
     this.depth = 0;
     this.isBottom = isBottom;
+    this.reservedNames = new HashSet<>();
   }
 
   static TypedScope createGlobalScope(Node rootNode) {
@@ -87,6 +109,15 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
   @Override
   public TypedScope typed() {
     return this;
+  }
+
+  /** Asserts that all reserved names in the scope have been actually declared. */
+  void validateCompletelyBuilt() {
+    checkState(
+        reservedNames.isEmpty(),
+        "Expected %s to have no reserved names, found: %s",
+        this,
+        reservedNames);
   }
 
   /** Whether this is the bottom of the lattice. */
@@ -132,6 +163,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
   TypedVar declare(String name, Node nameNode,
       JSType type, CompilerInput input, boolean inferred) {
     checkState(name != null && !name.isEmpty());
+    reservedNames.remove(name);
     TypedVar var = new TypedVar(inferred, name, nameNode, type, this, getVarCount(), input);
     declareInternal(name, var);
     return var;
@@ -262,6 +294,18 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
       // Qualified names 'a.b.c' are declared in the same scope as 'a', never a child scope, which
       // is why calling `getOwnSlot` is sufficient.
       return rootVar.getScope().getOwnSlot(name);
+    }
+  }
+
+  @Override
+  public StaticScope getTopmostScopeOfEventualDeclaration(String name) {
+    if (getOwnSlot(name) != null || reservedNames.contains(name)) {
+      return this;
+    } else if (this.getParent() == null) {
+      return null;
+    } else {
+      // Recurse on the parent because it, too, may be incomplete.
+      return this.getParent().getTopmostScopeOfEventualDeclaration(name);
     }
   }
 }

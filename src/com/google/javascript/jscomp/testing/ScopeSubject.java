@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Fact.fact;
 import static com.google.common.truth.Fact.simpleFact;
 import static com.google.common.truth.Truth.assertAbout;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Joiner;
@@ -92,6 +93,7 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
           fact("did declare", Joiner.on(", ").join(names)),
           fact("scope was", actual));
     }
+    assertThat(actual.getTopmostScopeOfEventualDeclaration(name)).isEqualTo(var.getScope());
     return new DeclarationSubject(var);
   }
 

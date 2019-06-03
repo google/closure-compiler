@@ -67,4 +67,23 @@ public interface StaticScope {
 
   /** Like {@code getSlot} but does not recurse into parent scopes. */
   StaticSlot getOwnSlot(String name);
+
+  /**
+   * Returns the topmost slot containing this name, or null if no slots do. May return true in cases
+   * where {@link #getSlot} returns null, though. Do not rely on this method if you need an actual
+   * slot.
+   *
+   * <p>This method is intended for use while scopes are still being built, hence the name
+   * 'eventual' declaration. Once scope building is complete, the scope returned from this method
+   * must be equivalent to "getSlot(name).getScope()" or null
+   */
+  default StaticScope getTopmostScopeOfEventualDeclaration(String name) {
+    StaticSlot slot = getOwnSlot(name);
+    if (slot != null) {
+      return slot.getScope();
+    }
+    return getParentScope() != null
+        ? getParentScope().getTopmostScopeOfEventualDeclaration(name)
+        : null;
+  }
 }

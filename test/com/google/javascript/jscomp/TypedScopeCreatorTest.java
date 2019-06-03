@@ -3130,6 +3130,49 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoTypeResolution_namespaceShadowedAfterReference() {
+    testWarning(
+        lines(
+            "const a = {};",
+            "a.B = class {};",
+            "function f() {",
+            "  var /** !a.B */ b;", // Treat 'a' as coming from 'let a;' below.
+            "  let a;",
+            "}"),
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+  }
+
+  @Test
+  public void testNoTypeResolution_namespaceShadowedOutsideScopeAfterReference() {
+    testWarning(
+        lines(
+            "const a = {};",
+            "a.B = class {};",
+            "function f() {",
+            "  { var /** !a.B */ b; }", // Treat 'a' as coming from 'let a;' below.
+            "  let a;",
+            "}"),
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+  }
+
+  @Test
+  public void testNoTypeResolution_namespaceShadowedAfterTemplateScopeReference() {
+    testWarning(
+        lines(
+            "const a = {};",
+            "a.B = class {};",
+            "function f() {",
+            "  /**",
+            "   * @param {(!a.B|T)} b", // Treat 'a' as coming from 'let a;' below.
+            "   * @template T",
+            "   */",
+            "  function f(b) {}",
+            "  let a;",
+            "}"),
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+  }
+
+  @Test
   public void testTemplateType1() {
     testSame(
         "/**\n" +

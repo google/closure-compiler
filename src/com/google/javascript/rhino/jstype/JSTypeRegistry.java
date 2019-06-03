@@ -68,7 +68,6 @@ import com.google.javascript.rhino.PMap;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticScope;
-import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -762,10 +761,6 @@ public class JSTypeRegistry implements Serializable {
     registerGlobalType(getNativeType(JSTypeNative.GLOBAL_THIS), "Global");
   }
 
-  private static boolean isCompoundName(String name) {
-    return name.indexOf('.') != -1;
-  }
-
   private static String getRootElementOfName(String name) {
     int index = name.indexOf('.');
     if (index != -1) {
@@ -783,28 +778,7 @@ public class JSTypeRegistry implements Serializable {
    */
   private static StaticScope getLookupScope(StaticScope scope, String name) {
     if (scope != null && scope.getParentScope() != null) {
-      StaticSlot slot = scope.getSlot(getRootElementOfName(name));
-      return slot != null ? slot.getScope() : null;
-    }
-    return scope;
-  }
-
-  // TODO(johnlenz): Remove the use of this.  Instead the callers should provide the correct scope.
-  // This method isn't valid if the scope is under construction.  The type registry does not
-  // have enough context to select the correct scope if the symbol isn't already present.
-  // Specifically, a "var" declaration in a block belongs in an outer scope.
-  /**
-   * @return Which scope in the provided scope chain the provided name is declared in, or else
-   * the provide scope if it is not declared.  The assumption is that provided scopes is the
-   * correct scope for new names.
-   */
-  private static StaticScope getCreationScope(StaticScope scope, String name) {
-    if (scope != null && scope.getParentScope() != null) {
-      String rootName = getRootElementOfName(name);
-      StaticSlot slot = scope.getSlot(rootName);
-      checkState(
-          slot != null || !isCompoundName(name) || rootName.equals("this"), "missing %s", name);
-      return slot != null ? slot.getScope() : scope;
+      return scope.getTopmostScopeOfEventualDeclaration(getRootElementOfName(name));
     }
     return scope;
   }
@@ -855,7 +829,7 @@ public class JSTypeRegistry implements Serializable {
 
   private void register(StaticScope scope, JSType type, String name) {
     checkTypeName(name);
-    registerForScope(getCreationScope(scope, name), type, name);
+    registerForScope(getLookupScope(scope, name), type, name);
   }
 
   private void registerForScope(StaticScope scope, JSType type, String name) {
@@ -1138,7 +1112,7 @@ public class JSTypeRegistry implements Serializable {
    */
   public boolean declareType(StaticScope scope, String name, JSType type) {
     checkState(!name.isEmpty());
-    if (getTypeForScopeInternal(getCreationScope(scope, name), name) != null) {
+    if (getTypeForScopeInternal(getLookupScope(scope, name), name) != null) {
       return false;
     }
 
@@ -2312,6 +2286,14 @@ public class JSTypeRegistry implements Serializable {
     @Nullable
     TemplateType getTemplateType(String name) {
       return types.get(name);
+    }
+
+    @Override
+    public StaticScope getTopmostScopeOfEventualDeclaration(String name) {
+      if (types.get(name) != null) {
+        return this;
+      }
+      return delegate.getTopmostScopeOfEventualDeclaration(name);
     }
   }
 

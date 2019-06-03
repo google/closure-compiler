@@ -60,13 +60,17 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.MapBasedScope;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -254,12 +258,13 @@ public class JSTypeRegistryTest {
   public void testCreateTypeFromCommentNode_usesGlobalTypeIfExists() {
     // Create a global scope and a global type 'Foo'.
     JSTypeRegistry registry = new JSTypeRegistry(null);
-    StaticTypedScope globalScope = createStaticTypedScope(IR.root(), null, ImmutableMap.of());
+    StaticTypedScope globalScope =
+        createStaticTypedScope(IR.root(), null, ImmutableMap.of(), new HashSet<>());
     registry.declareType(globalScope, "Foo", registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
 
     // Create an empty child scope.
     StaticTypedScope emptyLocalScope =
-        createStaticTypedScope(IR.block(), globalScope, ImmutableMap.of());
+        createStaticTypedScope(IR.block(), globalScope, ImmutableMap.of(), new HashSet<>());
 
     // Looking up 'Foo' in the child scope resolves to the global type `Foo`, not a NamedType.
     JSType type =
@@ -273,12 +278,14 @@ public class JSTypeRegistryTest {
     // Create a global scope and a global type 'Foo'.
     JSTypeRegistry registry = new JSTypeRegistry(null);
     JSType unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    StaticTypedScope globalScope = createStaticTypedScope(IR.root(), null, ImmutableMap.of());
+    StaticTypedScope globalScope =
+        createStaticTypedScope(IR.root(), null, ImmutableMap.of(), ImmutableSet.of());
     registry.declareType(globalScope, "Foo", unknownType);
 
     // Create a child scope containing a slot for 'Foo'.
     Map<String, StaticTypedSlot> slots = new HashMap<>();
-    StaticTypedScope localScopeWithFoo = createStaticTypedScope(IR.block(), globalScope, slots);
+    StaticTypedScope localScopeWithFoo =
+        createStaticTypedScope(IR.block(), globalScope, slots, ImmutableSet.of());
     slots.put(
         "Foo",
         new SimpleSlot("Foo", unknownType, /* inferred= */ true) {
@@ -296,9 +303,32 @@ public class JSTypeRegistryTest {
     assertThat(type).isInstanceOf(NamedType.class);
   }
 
+  @Test
+  public void testCreateTypeFromCommentNode_usesTopMostScopeOfName() {
+    // Create a global scope and a global type 'Foo'.
+    JSTypeRegistry registry = new JSTypeRegistry(null);
+    StaticTypedScope globalScope =
+        createStaticTypedScope(IR.root(), null, ImmutableMap.of(), new HashSet<>());
+    registry.declareType(globalScope, "Foo", registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+
+    // Create a child scope with no actual variables, but that returns the child scope when asked
+    // for the eventual scope of the name "Foo".
+    StaticTypedScope emptyLocalScope =
+        createStaticTypedScope(IR.block(), globalScope, ImmutableMap.of(), ImmutableSet.of("Foo"));
+
+    // Looking up 'Foo' in the child scope resolves to a NamedType.
+    JSType type =
+        registry.createTypeFromCommentNode(
+            new Node(Token.BANG, IR.string("Foo")), "srcfile.js", emptyLocalScope);
+    assertThat(type).isInstanceOf(NamedType.class);
+  }
+
   /** Returns a scope that overrides a few methods from {@link AbstractStaticScope} */
   private StaticTypedScope createStaticTypedScope(
-      Node root, StaticTypedScope parentScope, Map<String, StaticTypedSlot> slots) {
+      Node root,
+      StaticTypedScope parentScope,
+      Map<String, StaticTypedSlot> slots,
+      Set<String> reservedNames) {
     return new AbstractStaticScope() {
       @Override
       public Node getRootNode() {
@@ -313,6 +343,14 @@ public class JSTypeRegistryTest {
       @Override
       public StaticTypedSlot getSlot(String name) {
         return slots.get(name);
+      }
+
+      @Override
+      public StaticScope getTopmostScopeOfEventualDeclaration(String name) {
+        if (slots.containsKey(name) || reservedNames.contains(name)) {
+          return this;
+        }
+        return parentScope != null ? parentScope.getTopmostScopeOfEventualDeclaration(name) : null;
       }
     };
   }

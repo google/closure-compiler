@@ -196,6 +196,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   private final List<FunctionType> delegateProxyCtors = new ArrayList<>();
   private final Map<String, String> delegateCallingConventions = new HashMap<>();
   private final Map<Node, TypedScope> memoized = new LinkedHashMap<>();
+  // Untyped scopes which contain unqualified names. Populated by FirstOrderFunctionAnalyzer to
+  // reserve names before the TypedScope is populated.
+  private final Map<Node, Scope> untypedScopes = new HashMap<>();
 
   // Set of functions with non-empty returns, for passing to FunctionTypeBuilder.
   private final Set<Node> functionsWithNonEmptyReturns = new HashSet<>();
@@ -387,6 +390,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     TypedScope newScope = null;
 
     AbstractScopeBuilder scopeBuilder = null;
+
+    Module module = moduleImportResolver.getModuleFromScopeRoot(root);
     if (typedParent == null) {
       checkState(root.isRoot(), root);
       Node externsRoot = root.getFirstChild();
@@ -407,10 +412,26 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // Find all the classes in the global scope.
       newScope = createInitialScope(root);
     } else {
-      newScope = new TypedScope(typedParent, root);
-    }
+      // Because JSTypeRegistry#getType looks up the scope in which a root of a qualified name is
+      // declared, pre-populate this TypedScope with all qualified name roots. This prevents
+      // type resolution from accidentally returning a type from an outer scope that is shadowed.
+      Scope untypedScope = untypedScopes.get(root);
+      Set<String> reservedNames = new HashSet<>();
+      for (Var symbol : untypedScope.getAllSymbols()) {
+        reservedNames.add(symbol.getName());
+      }
+      if (module != null && module.metadata().isGoogModule()) {
+        // TypedScopeCreator treats default export assignments, like `exports = class {};`, as
+        // declarations. However, the untyped scope only contains an implicit slot for `exports`.
+        reservedNames.add("exports");
+      } else if (root.isFunction() && NodeUtil.isBundledGoogModuleCall(root.getParent())) {
+        // Pretend that 'exports' is declared in the block of goog.loadModule
+        // functions, not the function scope. See the above comment for why.
+        reservedNames.remove("exports");
+      }
 
-    Module module = moduleImportResolver.getModuleFromScopeRoot(root);
+      newScope = new TypedScope(typedParent, root, reservedNames);
+    }
     if (module != null) {
       initializeModuleScope(root, module, newScope);
     }
@@ -675,6 +696,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       for (TypedVar var : scope.getVarIterable()) {
         var.resolveType(typeParsingErrorReporter);
       }
+      scope.validateCompletelyBuilt();
     }
 
     // Tell the type registry that any remaining types are unknown.
@@ -3013,28 +3035,20 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     /** Handle bleeding functions and function parameters. */
     void handleFunctionInputs() {
-      // Handle bleeding functions.
+      // Handle bleeding functions. These are defined as function expressions which have a non-empty
+      // name, which we declare in the FUNCTION scope. Function declarations are hoisted and are
+      // already declared in the containing scope; ignore those.
       Node fnNode = currentScope.getRootNode();
       Node fnNameNode = fnNode.getFirstChild();
       String fnName = fnNameNode.getString();
-      if (!fnName.isEmpty()) {
-        TypedVar fnVar = currentScope.getVar(fnName);
-        if (fnVar == null
-            // Make sure we're not touching a native function. Native
-            // functions aren't bleeding, but may not have a declaration
-            // node.
-            || (fnVar.getNameNode() != null
-                // Make sure that the function is actually bleeding by checking
-                // if has already been declared.
-                && fnVar.getInitialValue() != fnNode)) {
-          new SlotDefiner()
-              .forDeclarationNode(fnNameNode)
-              .forVariableName(fnName)
-              .inScope(currentScope)
-              .withType(fnNode.getJSType())
-              .allowLaterTypeInference(false)
-              .defineSlot();
-        }
+      if (!fnName.isEmpty() && NodeUtil.isFunctionExpression(fnNode)) {
+        new SlotDefiner()
+            .forDeclarationNode(fnNameNode)
+            .forVariableName(fnName)
+            .inScope(currentScope)
+            .withType(fnNode.getJSType())
+            .allowLaterTypeInference(false)
+            .defineSlot();
       }
 
       declareParameters(fnNode);
@@ -3354,6 +3368,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   /**
    * Does a first-order function analysis that just looks at simple things like what variables are
    * escaped, and whether 'this' is used.
+   *
+   * <p>The syntactic scopes created in this traversal are also stored for later use.
    */
   private class FirstOrderFunctionAnalyzer extends AbstractScopedCallback {
 
@@ -3365,7 +3381,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
-    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+    @Override
+    public void enterScope(NodeTraversal t) {
+      Scope scope = t.getScope();
+      Node root = scope.getRootNode();
+      untypedScopes.put(root, scope);
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
       if (t.inGlobalScope()) {
         // The first-order function analyzer looks at two types of variables:
         //
