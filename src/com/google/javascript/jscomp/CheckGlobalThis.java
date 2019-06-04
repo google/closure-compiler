@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -101,11 +102,16 @@ final class CheckGlobalThis implements Callback {
         return false;
       }
 
-      if (n.getJSType() instanceof FunctionType) {
-        FunctionType functionType = (FunctionType)n.getJSType();
-        if (functionType.getTypeOfThis() != compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE))
-        {
-          return false;
+      if (jsDoc != null) {
+        JSTypeExpression functionType = jsDoc.getType();
+        if (functionType != null) {
+          Node functionNode = functionType.getRoot();
+          if (functionNode != null && functionNode.isFunction()) {
+            Node thisNode = functionNode.getFirstChild();
+            if (thisNode != null && thisNode.isThis()) {
+              return false;
+            }
+          }
         }
       }
 
