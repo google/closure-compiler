@@ -27,6 +27,7 @@ import javax.annotation.CheckReturnValue;
 
 /**
  * A Truth Subject for FeatureSet. Usage:
+ *
  * <pre>
  *   import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
  *   ...
@@ -34,7 +35,7 @@ import javax.annotation.CheckReturnValue;
  *   assertFS(features).containsNoneOf(otherFeatures);
  * </pre>
  */
-public class FeatureSetSubject extends Subject<FeatureSetSubject, FeatureSet> {
+public class FeatureSetSubject extends Subject {
   @CheckReturnValue
   public static FeatureSetSubject assertFS(FeatureSet fs) {
     return assertAbout(FeatureSetSubject::new).that(fs);

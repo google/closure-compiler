@@ -25,14 +25,16 @@ import javax.annotation.CheckReturnValue;
 
 /**
  * A Truth Subject for the JSError class. Usage:
+ *
  * <pre>
  *   import static com.google.javascript.jscomp.testing.JSErrorSubject.assertNode;
  *   ...
  *   assertError(error).hasType(TypeValidator.TYPE_MISMATCH);
  * </pre>
+ *
  * TODO(tbreisacher): Add assertions on the message text, line number, etc.
  */
-public final class JSErrorSubject extends Subject<JSErrorSubject, JSError> {
+public final class JSErrorSubject extends Subject {
   @CheckReturnValue
   public static JSErrorSubject assertError(JSError error) {
     return assertAbout(JSErrorSubject::new).that(error);

@@ -68,7 +68,7 @@ import javax.annotation.Nullable;
  *   assertNode(node1).hasType(Token.FUNCTION);
  * </pre>
  */
-public final class NodeSubject extends Subject<NodeSubject, Node> {
+public final class NodeSubject extends Subject {
 
   private final Node actual;
   private Function<Node, String> serializer;

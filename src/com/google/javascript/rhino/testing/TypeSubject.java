@@ -64,7 +64,7 @@ import javax.annotation.Nullable;
  *   assertType(type2).isObjectTypeWithProperty("propName").withTypeOfProp("propName").isNumber();
  * </pre>
  */
-public final class TypeSubject extends Subject<TypeSubject, JSType> {
+public final class TypeSubject extends Subject {
   @CheckReturnValue
   public static TypeSubject assertType(JSType type) {
     return assertAbout(types()).that(type);

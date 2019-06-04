@@ -34,7 +34,7 @@ import javax.annotation.CheckReturnValue;
  * </pre>
  */
 @CheckReturnValue
-public final class TypedVarSubject extends Subject<TypedVarSubject, TypedVar> {
+public final class TypedVarSubject extends Subject {
   public static TypedVarSubject assertThat(TypedVar var) {
     // NB: Eclipse's Java compiler bails on just passing TypedVarSubject::new below, so wrap it in a
     // Closure.

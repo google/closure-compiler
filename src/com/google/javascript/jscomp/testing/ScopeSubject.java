@@ -47,7 +47,7 @@ import javax.annotation.Nullable;
  *   assertScope(scope).declares("yetAnotherVar").onClosestContainerScope();
  * </pre>
  */
-public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?>> {
+public final class ScopeSubject extends Subject {
   @CheckReturnValue
   public static ScopeSubject assertScope(AbstractScope<?, ?> scope) {
     // NB: Eclipse's Java compiler bails on just passing ScopeSubject::new below, so wrap it in a
