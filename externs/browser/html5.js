@@ -5291,3 +5291,35 @@ StorageManager.prototype.estimate = function() {};
  * }}
  */
 var StorageEstimate;
+
+/*
+ * Focus Management APIs
+ *
+ * See https://html.spec.whatwg.org/multipage/interaction.html#focus-management-apis
+ */
+
+/**
+ * TODO(blickly): This should be nullable as per spec
+ * @type {!Element}
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#dom-document-activeelement
+ */
+Document.prototype.activeElement;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#dom-document-hasfocus
+ * @return {boolean}
+ */
+Document.prototype.hasFocus = function() {};
+
+/**
+ * @param {{preventScroll: boolean}=} options
+ * @return {undefined}
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#dom-focus
+ */
+Element.prototype.focus = function(options) {};
+
+/**
+ * @return {undefined}
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#dom-blur
+ */
+Element.prototype.blur = function() {};
