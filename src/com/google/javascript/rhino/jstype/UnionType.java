@@ -593,6 +593,10 @@ public class UnionType extends JSType {
     }
     // Ensure the union is in a normalized state.
     rebuildAlternates();
+
+    if (alternates.size() == 1) {
+      return alternates.get(0);
+    }
     return this;
   }
 
