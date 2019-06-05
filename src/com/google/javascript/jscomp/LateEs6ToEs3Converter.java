@@ -230,8 +230,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     result.useSourceInfoIfMissingFromForTree(obj);
     obj.replaceWith(result);
 
-    JSType simpleObjectType = createType(
-        addTypes, registry, JSTypeNative.EMPTY_OBJECT_LITERAL_TYPE);
+    JSType simpleObjectType = null;
     Node var = IR.var(withType(IR.name(objName), objectType), withType(obj, simpleObjectType));
     var.useSourceInfoIfMissingFromForTree(statement);
     statement.getParent().addChildBefore(var, statement);
