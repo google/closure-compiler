@@ -26,6 +26,12 @@
  */
 $jscomp.FORCE_POLYFILL_PROMISE = false;
 
+/**
+ * Should we try to polyfill native Promise implementations that are flawed?
+ * @define {boolean}
+ */
+$jscomp.POLYFILL_INCOMPLETE_PROMISE = false;
+
 
 $jscomp.polyfill('Promise',
     /**
@@ -39,7 +45,18 @@ $jscomp.polyfill('Promise',
   //     that fails to reject attempts to fulfill it with itself, but that
   //     isn't reasonably testable here.
   if (NativePromise && !$jscomp.FORCE_POLYFILL_PROMISE) {
-    return NativePromise;
+    if (!$jscomp.POLYFILL_INCOMPLETE_PROMISE) {
+      return NativePromise;
+    }
+    try {
+      new NativePromise(function(resolve) {
+        resolve();
+      });
+      return NativePromise;
+    } catch () {
+      // The Promise wasn't able to be handle the resolve function, so use the
+      // polyfill.
+    }
   }
 
   /**
