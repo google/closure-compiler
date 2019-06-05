@@ -606,7 +606,7 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
 
   private Node createVar(FlowScope[] scope, String name, JSType type) {
     Node n = Node.newString(Token.NAME, name);
-    functionScope.declare(name, n, null, null);
+    functionScope.declare(name, n, null, null, true);
     scope[0] = scope[0].inferSlotType(name, type);
     n.setJSType(type);
     return n;

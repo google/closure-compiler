@@ -156,10 +156,6 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     }
   }
 
-  TypedVar declare(String name, Node nameNode, JSType type, CompilerInput input) {
-    return declare(name, nameNode, type, input, true);
-  }
-
   TypedVar declare(String name, Node nameNode,
       JSType type, CompilerInput input, boolean inferred) {
     checkState(name != null && !name.isEmpty());
