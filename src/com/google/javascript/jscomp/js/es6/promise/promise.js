@@ -35,7 +35,7 @@ $jscomp.POLYFILL_INCOMPLETE_PROMISE = false;
 
 $jscomp.polyfill('Promise',
     /**
-     * @param {function(new:*, *)} NativePromise
+     * @param {function(new:*, *)|null} NativePromise
      * @return {*}
      * @suppress {reportUnknownTypes}
      */
