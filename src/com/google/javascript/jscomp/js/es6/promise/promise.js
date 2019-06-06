@@ -49,8 +49,8 @@ $jscomp.polyfill('Promise',
       return NativePromise;
     }
     try {
-      new /** @type {function(new: Promise, function())} */(NativePromise)(
-        function(resolve) {
+      new /** @type {function(new: Promise, function(function()))} */(
+        NativePromise)(function(resolve) {
           resolve();
         });
       return NativePromise;
