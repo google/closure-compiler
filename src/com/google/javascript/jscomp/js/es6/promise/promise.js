@@ -53,7 +53,7 @@ $jscomp.polyfill('Promise',
         resolve();
       });
       return NativePromise;
-    } catch () {
+    } catch (e) {
       // The Promise wasn't able to be handle the resolve function, so use the
       // polyfill.
     }
