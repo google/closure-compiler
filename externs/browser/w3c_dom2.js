@@ -251,29 +251,6 @@ HTMLDocument.prototype.cookie;
 HTMLDocument.prototype.open = function(opt_mimeType, opt_replace) {};
 
 /**
- * @return {undefined}
- * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-98948567
- * @override
- */
-HTMLDocument.prototype.close = function() {};
-
-/**
- * @param {!TrustedHTML|string} text
- * @return {undefined}
- * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-75233634
- * @override
- */
-HTMLDocument.prototype.write = function(text) {};
-
-/**
- * @param {!TrustedHTML|string} text
- * @return {undefined}
- * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-35318390
- * @override
- */
-HTMLDocument.prototype.writeln = function(text) {};
-
-/**
  * @param {string} elementName
  * @return {!NodeList<!Element>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-71555259
