@@ -49,6 +49,7 @@ $jscomp.polyfill('Promise',
       return NativePromise;
     }
     try {
+      /** @suppress {checkTypes} */
       new NativePromise(function(resolve) {
         resolve();
       });
