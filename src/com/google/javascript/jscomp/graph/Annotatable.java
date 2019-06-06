@@ -31,8 +31,8 @@ public interface Annotatable {
   /**
    * Retrieves a piece of information that has been annotated.
    *
-   * @return The annotation or <code>null</code> if the object has not
-   *     been annotated.
+   * @return The annotation or <code>null</code> if the object has not been annotated.
    */
+  @SuppressWarnings("unchecked")
   <A extends Annotation> A getAnnotation();
 }

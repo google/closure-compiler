@@ -38,6 +38,7 @@ public final class CachingTranspiler implements Transpiler {
   private final LoadingCache<Key, TranspileResult> cache;
   private final Supplier<String> runtime;
 
+  @SuppressWarnings("unchecked")
   public CachingTranspiler(
       final Transpiler delegate, CacheBuilder<Object, ? super TranspileResult> builder) {
     checkNotNull(delegate);

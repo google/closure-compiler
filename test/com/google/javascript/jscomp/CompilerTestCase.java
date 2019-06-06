@@ -1650,7 +1650,7 @@ public abstract class CompilerTestCase {
               .that(externsDifference.entriesDiffering())
               .isEmpty();
 
-          MapDifference sourceDifference =
+          MapDifference<String, PropertyAccessKind> sourceDifference =
               Maps.difference(
                   compiler.getSourceGetterAndSetterProperties(),
                   GatherGettersAndSetterProperties.gather(compiler, mainRoot));
