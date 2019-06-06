@@ -765,16 +765,20 @@ public abstract class ObjectType extends JSType implements Serializable {
     return false;
   }
 
-  private static ObjectType deeplyUnwrap(ObjectType current) {
+  static ObjectType deeplyUnwrap(ObjectType original) {
+    ObjectType current = original;
     while (current instanceof ProxyObjectType) {
       if (current.isTemplatizedType()) {
         current = current.toMaybeTemplatizedType().getReferencedType();
-      }
-      if (current.isNamedType()) {
+      } else if (current.isNamedType()) {
         if (!current.isSuccessfullyResolved()) {
           break;
         }
         current = current.toMaybeNamedType().getReferencedObjTypeInternal();
+      } else {
+        // TODO(lharker): remove this case and instead fail. Only the Rhino unit tests are
+        // triggering this by creating new ProxyObjectTypes.
+        current = ((ProxyObjectType) current).getReferencedObjTypeInternal();
       }
     }
     return current;

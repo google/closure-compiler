@@ -18505,6 +18505,103 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testIterableCovariant() {
+    testTypesWithCommonExterns(
+        lines(
+            "function f(/** !Iterable<(number|string)>*/ x){};",
+            "function g(/** !Iterable<number> */ arr) {",
+            "    f(arr);",
+            "}"));
+  }
+
+  @Test
+  public void testLocalShadowOfIterableNotCovariant() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @template T */",
+            "class Iterable {}",
+            "function f(/** !Iterable<(number|string)>*/ x) {};",
+            "function g(/** !Iterable<number> */ arr) {",
+            "    f(arr);",
+            "}",
+            "export {};"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Iterable<number>",
+            "required: Iterable<(number|string)>"));
+  }
+
+  @Test
+  public void testIterableNotContravariant() {
+    testTypesWithCommonExterns(
+        lines(
+            "function f(/** !Iterable<number>*/ x){};",
+            "function g(/** !Iterable<(number|string)> */ arr) {",
+            "    f(arr);",
+            "}"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Iterable<(number|string)>",
+            "required: Iterable<number>"));
+  }
+
+  @Test
+  public void testIterableCovariantWhenComparingToSubtype() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @constructor",
+            " * @implements {Iterable<T>}",
+            " * @template T",
+            " */",
+            "function Set() {}"),
+        lines(
+            "function f(/** !Iterable<(number|string)>*/ x){};",
+            "function g(/** !Set<number> */ arr) {",
+            "    f(arr);",
+            "}"));
+  }
+
+  @Test
+  public void testIteratorCovariant() {
+    testTypesWithCommonExterns(
+        lines(
+            "function f(/** !Iterator<(string|number)>*/ x){};",
+            "function g(/** !Iterator<number> */ arr) {",
+            "    f(arr);",
+            "}"));
+  }
+
+  @Test
+  public void testGeneratorCovariant() {
+    testTypesWithCommonExterns(
+        lines(
+            "function f(/** !Generator<(string|number)>*/ x){};",
+            "function g(/** !Generator<number> */ arr) {",
+            "    f(arr);",
+            "}"));
+  }
+
+  @Test
+  public void testIterableImplementorInvariant() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @constructor",
+            " * @implements {Iterable<T>}",
+            " * @template T",
+            " */",
+            "function Set() {}"),
+        lines(
+            "function f(/** !Set<(string|number)>*/ x){};",
+            "function g(/** !Set<number> */ arr) {",
+            "    f(arr);",
+            "}"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Set<number>",
+            "required: Set<(number|string)>"));
+  }
+
+  @Test
   public void testIArrayLikeCovariant1() {
     testTypesWithCommonExterns(
         lines(
@@ -18520,6 +18617,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "function f(/** !IArrayLike<(string|number)>*/ x){};",
             "function g(/** !Array<number> */ arr) {",
+            "    f(arr);",
+            "}"));
+  }
+
+  @Test
+  public void testIArrayLikeBivaraint() {
+    testTypesWithCommonExterns(
+        lines(
+            "function f(/** !IArrayLike<number>*/ x){};",
+            "function g(/** !IArrayLike<(string|number)> */ arr) {",
             "    f(arr);",
             "}"));
   }
@@ -22637,6 +22744,21 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "assignment", //
             "found   : C<string>",
             "required: IThenable<string>"));
+  }
+
+  @Test
+  public void testCovariantIThenableNonNativeSubclass() {
+    testTypes(
+        lines(
+            "/**",
+            " * @implements {IThenable<T>}",
+            " * @template T",
+            " */",
+            "class CustomPromise {}",
+            "/** @type {!CustomPromise<(number|string)>} */ var x;",
+            "function fn(/** !CustomPromise<string> */ a ) {",
+            "  x = a;",
+            "}"));
   }
 
   @Test

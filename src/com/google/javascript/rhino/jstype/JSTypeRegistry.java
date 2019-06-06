@@ -259,15 +259,6 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * @return The template variable corresponding to the
-   * property key type of the built-in Javascript object.
-   */
-  public TemplateType getThenableValueKey() {
-    checkNotNull(iThenableTemplateKey);
-    return iThenableTemplateKey;
-  }
-
-  /**
    * @return The template variable for the Iterable interface.
    */
   public TemplateType getIterableTemplate() {
@@ -353,6 +344,7 @@ public class JSTypeRegistry implements Serializable {
     iObjectIndexTemplateKey = new TemplateType(this, "IObject#KEY1");
     iObjectElementTemplateKey = new TemplateType(this, I_OBJECT_ELEMENT_TEMPLATE);
     // These should match the template type name in externs files.
+    TemplateType iArrayLikeTemplate = new TemplateType(this, "VALUE2");
     arrayElementTemplateKey = new TemplateType(this, "T");
     iteratorTemplate = new TemplateType(this, "VALUE");
     iiterableResultTemplate = new TemplateType(this, "VALUE");
@@ -430,6 +422,13 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(JSTypeNative.I_ITERABLE_RESULT_FUNCTION_TYPE, iiterableResultFunctionType);
     ObjectType iiterableResultType = iiterableResultFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.I_ITERABLE_RESULT_TYPE, iiterableResultType);
+
+    // IArrayLike.
+    // TODO(lharker): Should the native Array implement IArrayLike?
+    FunctionType iArrayLikeFunctionType = nativeRecord("IArrayLike", iArrayLikeTemplate);
+    registerNativeType(JSTypeNative.I_ARRAY_LIKE_FUNCTION_TYPE, iArrayLikeFunctionType);
+    ObjectType iArrayLikeType = iArrayLikeFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.I_ARRAY_LIKE_TYPE, iArrayLikeType);
 
     // Array
     FunctionType arrayFunctionType =
@@ -734,6 +733,7 @@ public class JSTypeRegistry implements Serializable {
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_GENERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.I_ARRAY_LIKE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ITERABLE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ITERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.GENERATOR_TYPE));
@@ -2336,5 +2336,11 @@ public class JSTypeRegistry implements Serializable {
       builder.withTemplateKeys(templateKeys);
     }
     return builder.build();
+  }
+
+  private FunctionType nativeRecord(String name, TemplateType... templateKeys) {
+    FunctionType type = nativeInterface(name, templateKeys);
+    type.setImplicitMatch(true);
+    return type;
   }
 }

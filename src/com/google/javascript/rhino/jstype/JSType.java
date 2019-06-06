@@ -90,6 +90,10 @@ public abstract class JSType implements Serializable {
   private static final ImmutableSet<String> BIVARIANT_TYPES =
       ImmutableSet.of("Object", "IArrayLike", "Array");
 
+  // NB: IThenable and all subtypes are also covariant; however, they are handled differently.
+  private static final ImmutableSet<String> COVARIANT_TYPES =
+      ImmutableSet.of("Iterable", "Iterator", "Generator", "AsyncIterator", "AsyncIterable");
+
   final JSTypeRegistry registry;
 
   JSType(JSTypeRegistry registry) {
@@ -1574,19 +1578,17 @@ public abstract class JSType implements Serializable {
 
       templateMatch = thisElement.isSubtype(thatElement, implicitImplCache, subtypingMode)
           || thatElement.isSubtype(thisElement, implicitImplCache, subtypingMode);
-    } else if (isIThenableSubtype(thatType)) {
-      // NOTE: special case IThenable subclass (Promise, etc).  These classes are expected to be
-      // covariant.
-      // Also note that this ignores any additional template type arguments that might be defined
-      // on subtypes.  If we expand this to other types, a more correct solution will be needed.
-      TemplateType key = thisType.registry.getThenableValueKey();
-      JSType thisElement = thisTypeParams.getResolvedTemplateType(key);
-      JSType thatElement = thatTypeParams.getResolvedTemplateType(key);
-
-      templateMatch = thisElement.isSubtype(thatElement, implicitImplCache, subtypingMode);
     } else {
-      templateMatch = thisTypeParams.checkEquivalenceHelper(
-          thatTypeParams, EquivalenceMethod.INVARIANT, subtypingMode);
+      TemplateType covariantKey = getTemplateKeyIfCovariantType(thatType);
+      if (covariantKey != null) {
+        JSType thisElement = thisTypeParams.getResolvedTemplateType(covariantKey);
+        JSType thatElement = thatTypeParams.getResolvedTemplateType(covariantKey);
+        templateMatch = thisElement.isSubtype(thatElement, implicitImplCache, subtypingMode);
+      } else {
+        templateMatch =
+            thisTypeParams.checkEquivalenceHelper(
+                thatTypeParams, EquivalenceMethod.INVARIANT, subtypingMode);
+      }
     }
     if (!templateMatch) {
       return false;
@@ -1620,26 +1622,43 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Determines if the supplied type should be checked as a bivariant
-   * templatized type rather the standard invariant templatized type
-   * rules.
+   * Determines if the supplied type should be checked as a bivariant templatized type rather the
+   * standard invariant templatized type rules.
    */
   static boolean isBivariantType(JSType type) {
-    ObjectType objType = type.toObjectType();
-    return objType != null
-        // && objType.isNativeObjectType()
-        && BIVARIANT_TYPES.contains(objType.getReferenceName());
+    ObjectType unwrapped = getObjectTypeIfNative(type);
+    return unwrapped != null && BIVARIANT_TYPES.contains(unwrapped.getReferenceName());
   }
 
   /**
-   * Determines if the specified type is exempt from standard invariant templatized typing rules.
+   * Determines if the specified type should be checked as covariant rather than the standard
+   * invariant type. If so, returns the template type to check covariantly.
    */
-  static boolean isIThenableSubtype(JSType type) {
+  @Nullable
+  static TemplateType getTemplateKeyIfCovariantType(JSType type) {
     if (type.isTemplatizedType()) {
+      // Unlike other covariant/bivariant types, even non-native subtypes of IThenable are
+      // covariant, so IThenable is special-cased here.
       TemplatizedType ttype = type.toMaybeTemplatizedType();
-      return ttype.getTemplateTypeMap().hasTemplateKey(ttype.registry.getThenableValueKey());
+      if (ttype.getTemplateTypeMap().hasTemplateKey(ttype.registry.getIThenableTemplate())) {
+        return ttype.registry.getIThenableTemplate();
+      }
     }
-    return false;
+    ObjectType unwrapped = getObjectTypeIfNative(type);
+    if (unwrapped != null && COVARIANT_TYPES.contains(unwrapped.getReferenceName())) {
+      // Note: this code only works because the currently covariant types only have a single
+      // @template. A different solution would be needed to generalize variance for arbitrary types.
+      return Iterables.getOnlyElement(
+          unwrapped.getConstructor().getTemplateTypeMap().getTemplateKeys());
+    }
+    return null;
+  }
+
+  @Nullable
+  private static ObjectType getObjectTypeIfNative(JSType type) {
+    ObjectType objType = type.toObjectType();
+    ObjectType unwrapped = ObjectType.deeplyUnwrap(objType);
+    return unwrapped != null && unwrapped.isNativeObjectType() ? unwrapped : null;
   }
 
   /**
