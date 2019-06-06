@@ -35,7 +35,7 @@ $jscomp.POLYFILL_INCOMPLETE_PROMISE = false;
 
 $jscomp.polyfill('Promise',
     /**
-     * @param {function(new:*, *)|null} NativePromise
+     * @param {*} NativePromise
      * @return {*}
      * @suppress {reportUnknownTypes}
      */
@@ -49,9 +49,10 @@ $jscomp.polyfill('Promise',
       return NativePromise;
     }
     try {
-      new NativePromise(function(resolve) {
-        resolve();
-      });
+      new /** @type {function(new: Promise, function())} */(NativePromise)(
+        function(resolve) {
+          resolve();
+        });
       return NativePromise;
     } catch (e) {
       // The Promise wasn't able to be handle the resolve function, so use the
