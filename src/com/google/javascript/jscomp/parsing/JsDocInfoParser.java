@@ -974,6 +974,16 @@ public final class JsDocInfoParser {
             }
           }
 
+          String leftCurly = "{";
+          String rightCurly = "}";
+          int leftCurlyIndex = templateNames.indexOf(leftCurly);
+          int rightCurlyIndex = templateNames.indexOf(rightCurly);
+          if (leftCurlyIndex >= 0 && rightCurlyIndex > leftCurlyIndex)
+          {
+            templateNames = templateNames.substring(
+              rightCurlyIndex + rightCurly.length()).trim();
+          }
+
           // Obtain the template type names
           List<String> names = Splitter.on(',')
               .trimResults()
