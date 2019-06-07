@@ -45,6 +45,11 @@ public class SourceMapObjectParserJs {
     return o[key];
   }-*/;
 
+  @JsMethod
+  public static native <T> T jsCast(Object o) /*-{
+    return o;
+  }-*/;
+
   @JsType
   private static class JsonMap {
     int version;
@@ -81,7 +86,7 @@ public class SourceMapObjectParserJs {
       throw new SourceMapParseException("JSON parse exception: " + ex);
     }
 
-    JsonMap sourceMap = (JsonMap) jsonInstance;
+    JsonMap sourceMap = jsCast(jsonInstance);
 
     builder.setVersion(sourceMap.version);
     builder.setFile(sourceMap.file);
