@@ -1404,7 +1404,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           new FunctionTypeBuilder(name, compiler, clazz, currentScope)
               .usingClassSyntax()
               .setContents(new AstFunctionContents(clazz))
-              .setDeclarationScope(lvalueNode != null ? getLValueRootScope(lvalueNode) : null)
+              .setDeclarationScope(
+                  lvalueNode != null ? getLValueRootScope(lvalueNode) : currentScope)
               .inferKind(info)
               .inferTemplateTypeName(info, null);
 
@@ -1687,7 +1688,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       FunctionTypeBuilder builder =
           new FunctionTypeBuilder(name, compiler, errorRoot, currentScope)
               .setContents(contents)
-              .setDeclarationScope(lvalueNode != null ? getLValueRootScope(lvalueNode) : null)
+              .setDeclarationScope(
+                  lvalueNode != null ? getLValueRootScope(lvalueNode) : currentScope)
               .inferFromOverriddenFunction(overriddenType, parametersNode)
               .inferKind(info)
               .inferClosurePrimitive(info)

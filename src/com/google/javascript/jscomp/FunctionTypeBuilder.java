@@ -984,9 +984,9 @@ final class FunctionTypeBuilder {
     //  externs.
     //   2. Cases like "class C {} C = class {}"
     // See https://github.com/google/closure-compiler/issues/2928 for some related bugs.
-    // We use "getTypeForScope" to specifically check if this was defined for getScopeDeclaredIn()
+    // We use "getTypeForScope" to specifically check if this was defined for declarationScope
     // so we don't pick up types that are going to be shadowed.
-    JSType existingType = typeRegistry.getTypeForScope(getScopeDeclaredIn(), fnName);
+    JSType existingType = typeRegistry.getTypeForScope(declarationScope, fnName);
     if (existingType != null) {
       boolean isInstanceObject = existingType.isInstanceType();
       if (isInstanceObject || fnName.equals("Function")) {
@@ -1025,7 +1025,7 @@ final class FunctionTypeBuilder {
     //   this.Foo = ...
     //
     if (!fnName.isEmpty() && !fnName.startsWith("this.")) {
-      typeRegistry.declareTypeForExactScope(getScopeDeclaredIn(), fnName, fnType.getInstanceType());
+      typeRegistry.declareTypeForExactScope(declarationScope, fnName, fnType.getInstanceType());
     }
     return fnType;
   }
@@ -1033,7 +1033,7 @@ final class FunctionTypeBuilder {
   private FunctionType getOrCreateInterface() {
     FunctionType fnType = null;
 
-    JSType type = typeRegistry.getType(getScopeDeclaredIn(), fnName);
+    JSType type = typeRegistry.getType(declarationScope, fnName);
     if (type != null && type.isInstanceType()) {
       FunctionType ctor = type.toMaybeObjectType().getConstructor();
       if (ctor.isInterface()) {
@@ -1047,8 +1047,7 @@ final class FunctionTypeBuilder {
           typeRegistry.createInterfaceType(
               fnName, contents.getSourceNode(), templateTypeNames, makesStructs);
       if (!fnName.isEmpty()) {
-        typeRegistry.declareTypeForExactScope(
-            getScopeDeclaredIn(), fnName, fnType.getInstanceType());
+        typeRegistry.declareTypeForExactScope(declarationScope, fnName, fnType.getInstanceType());
       }
       maybeSetBaseType(fnType);
     }
@@ -1073,27 +1072,6 @@ final class FunctionTypeBuilder {
         || info.isConstructor()
         || info.isInterface()
         || info.isAbstract();
-  }
-
-  /**
-   * The scope that we should declare this function in, if it needs
-   * to be declared in a scope. Notice that TypedScopeCreator takes
-   * care of most scope-declaring.
-   */
-  private TypedScope getScopeDeclaredIn() {
-    if (declarationScope != null) {
-      return declarationScope;
-    }
-
-    int dotIndex = fnName.indexOf('.');
-    if (dotIndex != -1) {
-      String rootVarName = fnName.substring(0, dotIndex);
-      TypedVar rootVar = enclosingScope.getVar(rootVarName);
-      if (rootVar != null) {
-        return rootVar.getScope();
-      }
-    }
-    return enclosingScope;
   }
 
   /**
