@@ -363,7 +363,7 @@ class TypeInference
     TypedScope syntacticBlockScope = scopeCreator.createScope(root);
     if (module != null && module.metadata().isEs6Module()) {
       moduleImportResolver.declareEsModuleImports(
-          module, syntacticBlockScope, compiler.getInput(n.getInputId()));
+          module, syntacticBlockScope, compiler.getInput(NodeUtil.getInputId(n)));
     }
 
     // This logic is not specific to ES modules.

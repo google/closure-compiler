@@ -245,7 +245,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           moduleLocalNode.getString(),
           moduleLocalNode,
           requiredVar != null ? requiredVar.getType() : unknownType,
-          compiler.getInput(moduleLocalNode.getInputId()),
+          compiler.getInput(NodeUtil.getInputId(moduleLocalNode)),
           requiredVar == null || requiredVar.isTypeInferred());
       if (requiredVar != null && requiredVar.getNameNode().getTypedefTypeProp() != null) {
         // Propagate the 'typedef type' from the module export to this variable. Otherwise
@@ -461,7 +461,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           Export.NAMESPACE,
           root, // Use the given MODULE_BODY as the 'declaration node' for lack of a better option.
           namespace,
-          compiler.getInput(root.getInputId()),
+          compiler.getInput(NodeUtil.getInputId(root)),
           /* inferred= */ false);
 
       moduleImportResolver.updateEsModuleNamespaceType(namespace, module, newScope);
@@ -481,7 +481,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       Map<Node, ScopedName> unresolvedImports =
           moduleImportResolver.declareEsModuleImports(
-              module, moduleScope, compiler.getInput(moduleBody.getInputId()));
+              module, moduleScope, compiler.getInput(NodeUtil.getInputId(moduleBody)));
       weakImports.addAll(
           unresolvedImports.entrySet().stream()
               .map(entry -> new WeakModuleImport(entry.getKey(), entry.getValue(), moduleScope))
@@ -504,7 +504,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           "exports",
           googModule.metadata().rootNode(),
           typeRegistry.createAnonymousObjectType(null),
-          compiler.getInput(moduleBody.getInputId()),
+          compiler.getInput(NodeUtil.getInputId(moduleBody)),
           /* inferred= */ false);
     }
   }
@@ -839,6 +839,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     @Override
     public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       inputId = t.getInputId();
+
       if (n.isFunction() || n.isScript() || (parent == null && inputId != null)) {
         checkNotNull(inputId);
         sourceName = NodeUtil.getSourceName(n);
@@ -3004,7 +3005,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                 Export.DEFAULT_EXPORT_NAME,
                 n,
                 declaredType,
-                compiler.getInput(n.getInputId()),
+                compiler.getInput(NodeUtil.getInputId(n)),
                 /* inferred= */ declaredType == null);
           }
           break;
