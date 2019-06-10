@@ -27,9 +27,8 @@ import org.junit.runners.JUnit4;
  *
  * @author nicholas.j.santos@gmail.com (Nick Santos)
  */
-
 @RunWith(JUnit4.class)
-public final class CommonJSIntegrationTest extends IntegrationTestCase {
+public final class ModuleRewriteIntegrationTest extends IntegrationTestCase {
   @Test
   public void testCrossModuleCtorCall() {
     test(
@@ -262,11 +261,127 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         });
   }
 
+  @Test
+  public void testCommonJSImportsESModule() {
+    test(
+        createCompilerOptions(),
+        new String[] {
+          LINE_JOINER.join(
+              "/** @constructor */ export default function Hello() {};", "export const foo = 1;"),
+          LINE_JOINER.join(
+              "var i0 = require('./i0');",
+              "var util = {inherits: function (x, y){}};",
+              "/**",
+              " * @constructor",
+              " * @extends {./i0.default}",
+              " */",
+              "function SubHello() { i0.default.call(this); }",
+              "util.inherits(SubHello, i0.default);",
+              "const {foo} = i0;")
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "function Hello$$module$i0() {}",
+              "var foo$$module$i0 = 1;",
+              "var module$i0 = {};",
+              "module$i0.default = Hello$$module$i0;",
+              "module$i0.foo = foo$$module$i0;"),
+          LINE_JOINER.join(
+              "var i0 = module$i0;",
+              "var util = {inherits:function(x,y){}};",
+              "function SubHello(){ module$i0.default.call(this); }",
+              "util.inherits(SubHello, module$i0.default);",
+              "var $jscomp$destructuring$var0 = module$i0;",
+              "var foo = $jscomp$destructuring$var0.foo;")
+        });
+  }
+
+  @Test
+  public void testESModuleImportsCommonJS1() {
+    test(
+        createCompilerOptions(),
+        new String[] {
+          "/** @constructor */ function Hello() {} module.exports = Hello;",
+          LINE_JOINER.join(
+              "import Hello from './i0';",
+              "var util = {inherits: function (x, y){}};",
+              "/**",
+              " * @constructor",
+              " * @extends {Hello}",
+              " */",
+              "function SubHello() { Hello.call(this); }",
+              "util.inherits(SubHello, Hello);")
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "/** @const */ var module$i0 = {};",
+              "/** @const */ module$i0.default = /** @constructor */ function (){};"),
+          LINE_JOINER.join(
+              "var util$$module$i1 = {inherits:function(x,y){}};",
+              "/**",
+              " * @constructor",
+              " * @extends {module$i0.default}",
+              " */",
+              "function SubHello$$module$i1(){ module$i0.default.call(this); }",
+              "util$$module$i1.inherits(SubHello, module$i0.default);",
+              "var module$i1 = {};")
+        });
+  }
+
+  @Test
+  public void testESModuleImportsCommonJS2() {
+    test(
+        createCompilerOptions(),
+        new String[] {
+          "/** @constructor */ function Hello() {} module.exports = Hello;",
+          LINE_JOINER.join(
+              "import * as i0 from './i0';",
+              "var util = {inherits: function (x, y){}};",
+              "/**",
+              " * @constructor",
+              " * @extends {i0.default}",
+              " */",
+              "function SubHello() { i0.default.call(this); }",
+              "util.inherits(SubHello, i0.default);")
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "/** @const */ var module$i0 = {};",
+              "/** @const */ module$i0.default = /** @constructor */ function (){};"),
+          LINE_JOINER.join(
+              "var util$$module$i1 = {inherits:function(x,y){}};",
+              "function SubHello$$module$i1(){ module$i0.default.call(this); }",
+              "util$$module$i1.inherits(SubHello$$module$i1, module$i0.default);",
+              "var module$i1 = {};")
+        });
+  }
+
+  @Test
+  public void testESModuleImportsCommonJS3() {
+    test(
+        createCompilerOptions(),
+        new String[] {
+          "module.exports = {foo: 1, bar: function() { return 'bar'; }};",
+          LINE_JOINER.join("import i0 from './i0';", "const {foo} = i0;", "const b = i0.bar();")
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "/** @const */ var module$i0 = {/** @const */ default: {}};",
+              "module$i0.default.foo = 1;",
+              "module$i0.default.bar = function() { return 'bar'; };"),
+          LINE_JOINER.join(
+              "var $jscomp$destructuring$var0 = module$i0.default;",
+              "var foo$$module$i1 = $jscomp$destructuring$var0.foo;",
+              "var b$$module$i1 = module$i0.bar();",
+              "var module$i1 = {};")
+        });
+  }
+
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCodingConvention(new GoogleCodingConvention());
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     options.setProcessCommonJSModules(true);

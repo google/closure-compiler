@@ -3578,13 +3578,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  /** Returns the module type for the provided namespace. */
-  @Override
-  @Nullable
-  CompilerInput.ModuleType getModuleTypeByName(String moduleName) {
-    return moduleTypesByName.get(moduleName);
-  }
-
   private ModuleMetadataMap moduleMetadataMap;
 
   @Override

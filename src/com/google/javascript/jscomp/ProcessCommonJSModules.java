@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
+import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -160,8 +161,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
   }
 
   public String getBasePropertyImport(String moduleName) {
-    CompilerInput.ModuleType moduleType = compiler.getModuleTypeByName(moduleName);
-    if (moduleType != null && moduleType != CompilerInput.ModuleType.COMMONJS) {
+    Module module = compiler.getModuleMap().getModule(moduleName);
+    if (module != null && !module.metadata().isCommonJs()) {
       return moduleName;
     }
 
