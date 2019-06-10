@@ -108,7 +108,7 @@ class TypeInference
       TypedScope syntacticScope,
       TypedScopeCreator scopeCreator,
       AssertionFunctionLookup assertionFunctionLookup) {
-    super(cfg, new LinkedFlowScope.FlowScopeJoinOp());
+    super(cfg, new LinkedFlowScope.FlowScopeJoinOp(compiler));
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
     this.reverseInterpreter = reverseInterpreter;
@@ -124,13 +124,13 @@ class TypeInference
 
     FlowScope entryScope =
         inferDeclarativelyUnboundVarsWithoutTypes(
-            LinkedFlowScope.createEntryLattice(syntacticScope));
+            LinkedFlowScope.createEntryLattice(compiler, syntacticScope));
 
     this.functionScope = inferParameters(entryScope);
 
     this.bottomScope =
         LinkedFlowScope.createEntryLattice(
-            TypedScope.createLatticeBottom(syntacticScope.getRootNode()));
+            compiler, TypedScope.createLatticeBottom(syntacticScope.getRootNode()));
   }
 
   @CheckReturnValue

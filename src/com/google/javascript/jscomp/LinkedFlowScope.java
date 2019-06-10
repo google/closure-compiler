@@ -36,6 +36,8 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
  */
 class LinkedFlowScope implements FlowScope {
 
+  private final CompilerInputProvider inputProvider;
+
   // Map from TypedScope to OverlayScope.
   private final PMap<TypedScope, OverlayScope> scopes;
 
@@ -50,9 +52,11 @@ class LinkedFlowScope implements FlowScope {
    * scope with more than one direct parent. The parent is non-null only in the second case.
    */
   private LinkedFlowScope(
+      CompilerInputProvider inputProvider,
       PMap<TypedScope, OverlayScope> scopes,
       TypedScope syntacticScope,
       TypedScope functionScope) {
+    this.inputProvider = inputProvider;
     this.scopes = scopes;
     this.syntacticScope = syntacticScope;
     this.functionScope = functionScope;
@@ -92,11 +96,11 @@ class LinkedFlowScope implements FlowScope {
     return functionScope.isBottom();
   }
 
-  /**
-   * Creates an entry lattice for the flow.
-   */
-  public static LinkedFlowScope createEntryLattice(TypedScope scope) {
-    return new LinkedFlowScope(HamtPMap.<TypedScope, OverlayScope>empty(), scope, scope);
+  /** Creates an entry lattice for the flow. */
+  public static LinkedFlowScope createEntryLattice(
+      CompilerInputProvider inputProvider, TypedScope scope) {
+    return new LinkedFlowScope(
+        inputProvider, HamtPMap.<TypedScope, OverlayScope>empty(), scope, scope);
   }
 
   @Override
@@ -107,7 +111,7 @@ class LinkedFlowScope implements FlowScope {
     PMap<TypedScope, OverlayScope> newScopes =
         !newScope.slots.isEmpty() ? scopes.plus(scope.scope, newScope) : scopes.minus(scope.scope);
     return newScopes != scopes
-        ? new LinkedFlowScope(newScopes, syntacticScope, functionScope)
+        ? new LinkedFlowScope(inputProvider, newScopes, syntacticScope, functionScope)
         : this;
   }
 
@@ -133,7 +137,13 @@ class LinkedFlowScope implements FlowScope {
       // name is declared in the global scope, as only global variables can be undeclared.
       TypedVar rootVar = syntacticScope.getVar(getRootOfQualifiedName(symbol));
       TypedScope rootScope = rootVar != null ? rootVar.getScope() : syntacticScope.getGlobalScope();
-      v = rootScope.declare(symbol, node, bottomType, null, !declared);
+      v =
+          rootScope.declare(
+              symbol,
+              node,
+              bottomType,
+              inputProvider.getInput(NodeUtil.getInputId(node)),
+              !declared);
     }
 
     JSType declaredType = v != null ? v.getType() : null;
@@ -226,7 +236,7 @@ class LinkedFlowScope implements FlowScope {
   public FlowScope withSyntacticScope(StaticTypedScope scope) {
     TypedScope typedScope = (TypedScope) scope;
     return scope != syntacticScope
-        ? new LinkedFlowScope(trimScopes(typedScope), typedScope, functionScope)
+        ? new LinkedFlowScope(inputProvider, trimScopes(typedScope), typedScope, functionScope)
         : this;
   }
 
@@ -237,6 +247,12 @@ class LinkedFlowScope implements FlowScope {
 
   /** Join the two FlowScopes. */
   static class FlowScopeJoinOp extends JoinOp.BinaryJoinOp<FlowScope> {
+    final CompilerInputProvider inputProvider;
+
+    FlowScopeJoinOp(CompilerInputProvider inputProvider) {
+      this.inputProvider = inputProvider;
+    }
+
     // NOTE(sdh): When joining flow scopes with different syntactic scopes,
     // we do not attempt to recover the correct syntactic scope.  This is
     // okay because joins only occur in two situations: (1) performed by
@@ -273,6 +289,7 @@ class LinkedFlowScope implements FlowScope {
       // adding irrelevant block-local variables to the joined scope unnecessarily.
       TypedScope common = getCommonParentDeclarationScope(linkedA, linkedB);
       return new LinkedFlowScope(
+          inputProvider,
           join(linkedA, linkedB, common),
           common,
           linkedA.flowsFromBottom() ? linkedB.functionScope : linkedA.functionScope);

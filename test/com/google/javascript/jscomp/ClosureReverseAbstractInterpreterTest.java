@@ -368,7 +368,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
 
     Node root = IR.root(IR.root(), IR.root(n));
     TypedScope scope = new TypedScopeCreator(compiler).createScope(root, null);
-    FlowScope flowScope = LinkedFlowScope.createEntryLattice(scope);
+    FlowScope flowScope = LinkedFlowScope.createEntryLattice(compiler, scope);
 
     assertThat(call.getToken()).isEqualTo(Token.CALL);
     assertThat(name.getToken()).isEqualTo(Token.NAME);

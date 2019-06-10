@@ -515,6 +515,42 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBug133902968() {
+    test(
+        externs(
+            lines(
+                "/** @interface */", //
+                "function CSSProperties() {}",
+                "/** @type {string} */",
+                "CSSProperties.prototype.fontStyle;",
+                "",
+                "/** @struct @interface @extends {CSSProperties} */",
+                "function CSSStyleDeclaration() {}",
+                "",
+                "function alert(s) {}")),
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("apackage", "afile.js"),
+                lines(
+                    "/**", //
+                    " * @fileoverview",
+                    " * @package",
+                    " */",
+                    "",
+                    "/** @param {!CSSStyleDeclaration} style */",
+                    "function f(style) {",
+                    "  style.fontStyle = 'normal';",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("anotherpackage", "anotherfile.js"),
+                lines(
+                    "/** @param {!CSSStyleDeclaration} style */", //
+                    "function g(style) {",
+                    "  alert(style.fontStyle);",
+                    "}"))));
+  }
+
+  @Test
   public void testPrivatePropAccess_inSameFile_throughDestructuring() {
     test(
         srcs(

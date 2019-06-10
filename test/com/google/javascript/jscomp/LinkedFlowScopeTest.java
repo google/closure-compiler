@@ -61,8 +61,8 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
     localScope.declare("localA", null, null, null, true);
     localScope.declare("localB", null, null, null, true);
 
-    globalEntry = LinkedFlowScope.createEntryLattice(globalScope);
-    localEntry = LinkedFlowScope.createEntryLattice(localScope);
+    globalEntry = LinkedFlowScope.createEntryLattice(compiler, globalScope);
+    localEntry = LinkedFlowScope.createEntryLattice(compiler, localScope);
   }
 
   @Test
@@ -227,7 +227,6 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
   @SuppressWarnings("unchecked")
   private FlowScope join(FlowScope a, FlowScope b) {
-    return (new LinkedFlowScope.FlowScopeJoinOp()).apply(
-        ImmutableList.of(a, b));
+    return new LinkedFlowScope.FlowScopeJoinOp(compiler).apply(ImmutableList.of(a, b));
   }
 }

@@ -41,14 +41,13 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * An abstract compiler, to help remove the circular dependency of
- * passes on JSCompiler.
+ * An abstract compiler, to help remove the circular dependency of passes on JSCompiler.
  *
- * This is an abstract class, so that we can make the methods package-private.
+ * <p>This is an abstract class, so that we can make the methods package-private.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public abstract class AbstractCompiler implements SourceExcerptProvider {
+public abstract class AbstractCompiler implements SourceExcerptProvider, CompilerInputProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(
       "JSC_READ_ERROR", "Cannot read file {0}: {1}");
 
