@@ -3687,12 +3687,6 @@ SVGFECompositeElement.prototype.result;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGFECompositeElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -3720,12 +3714,6 @@ SVGDescElement.prototype.xmllang;
  * @type {string}
  */
 SVGDescElement.prototype.xmlspace;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGDescElement.prototype.className;
 
 
 /**
@@ -3866,12 +3854,6 @@ SVGEllipseElement.prototype.hasExtension = function(opt_extension){};
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGEllipseElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -3940,12 +3922,6 @@ SVGFESpecularLightingElement.prototype.height;
  * @type {!SVGAnimatedString}
  */
 SVGFESpecularLightingElement.prototype.result;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGFESpecularLightingElement.prototype.className;
 
 
 /**
@@ -4084,12 +4060,6 @@ SVGFEColorMatrixElement.prototype.result;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGFEColorMatrixElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -4137,12 +4107,6 @@ SVGSymbolElement.prototype.xmllang;
  * @type {string}
  */
 SVGSymbolElement.prototype.xmlspace;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGSymbolElement.prototype.className;
 
 
 /**
@@ -4321,12 +4285,6 @@ SVGFEConvolveMatrixElement.prototype.result;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGFEConvolveMatrixElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -4374,12 +4332,6 @@ SVGFEFloodElement.prototype.result;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGFEFloodElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -4400,12 +4352,6 @@ function SVGStopElement(){}
  * @type {!SVGAnimatedNumber}
  */
 SVGStopElement.prototype.offset;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGStopElement.prototype.className;
 
 
 /**
@@ -4506,12 +4452,6 @@ SVGFEOffsetElement.prototype.result;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGFEOffsetElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -4600,12 +4540,6 @@ SVGFilterElement.prototype.href;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGFilterElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -4688,12 +4622,6 @@ SVGFEGaussianBlurElement.prototype.height;
  * @type {!SVGAnimatedString}
  */
 SVGFEGaussianBlurElement.prototype.result;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGFEGaussianBlurElement.prototype.className;
 
 
 /**
@@ -4877,12 +4805,6 @@ SVGTitleElement.prototype.xmlspace;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGTitleElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -5046,12 +4968,6 @@ SVGGradientElement.prototype.externalResourcesRequired;
  * @type {!SVGAnimatedString}
  */
 SVGGradientElement.prototype.href;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGGradientElement.prototype.className;
 
 
 /**
@@ -5242,12 +5158,6 @@ SVGMarkerElement.prototype.xmlspace;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGMarkerElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -5333,12 +5243,6 @@ SVGMaskElement.prototype.systemLanguage;
  * @override
  */
 SVGMaskElement.prototype.hasExtension = function(opt_extension){};
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGMaskElement.prototype.className;
 
 
 /**
@@ -5535,12 +5439,6 @@ SVGFEImageElement.prototype.href;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGFEImageElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -5655,12 +5553,6 @@ SVGFEDiffuseLightingElement.prototype.height;
  * @type {!SVGAnimatedString}
  */
 SVGFEDiffuseLightingElement.prototype.result;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGFEDiffuseLightingElement.prototype.className;
 
 
 /**
@@ -5785,12 +5677,6 @@ SVGFEMorphologyElement.prototype.result;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGFEMorphologyElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -5848,12 +5734,6 @@ SVGGlyphRefElement.prototype.dy;
  * @type {!SVGAnimatedString}
  */
 SVGGlyphRefElement.prototype.href;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGGlyphRefElement.prototype.className;
 
 
 /**
@@ -6023,12 +5903,6 @@ SVGTextContentElement.prototype.systemLanguage;
  * @override
  */
 SVGTextContentElement.prototype.hasExtension = function(opt_extension){};
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGTextContentElement.prototype.className;
 
 
 /**
@@ -6219,12 +6093,6 @@ SVGFEDropShadowElement.prototype.result;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGFEDropShadowElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -6275,12 +6143,6 @@ SVGFETileElement.prototype.height;
  * @type {!SVGAnimatedString}
  */
 SVGFETileElement.prototype.result;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGFETileElement.prototype.className;
 
 
 /**
@@ -6441,12 +6303,6 @@ SVGFEBlendElement.prototype.result;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGFEBlendElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -6570,12 +6426,6 @@ SVGPatternElement.prototype.systemLanguage;
  * @override
  */
 SVGPatternElement.prototype.hasExtension = function(opt_extension){};
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGPatternElement.prototype.className;
 
 
 /**
@@ -7059,12 +6909,6 @@ SVGSVGElement.prototype.hasExtension = function(opt_extension){};
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGSVGElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -7191,12 +7035,6 @@ SVGDefsElement.prototype.hasExtension = function(opt_extension){};
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGDefsElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -7318,12 +7156,6 @@ SVGPolygonElement.prototype.systemLanguage;
  * @override
  */
 SVGPolygonElement.prototype.hasExtension = function(opt_extension){};
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGPolygonElement.prototype.className;
 
 
 /**
@@ -7661,12 +7493,6 @@ SVGPathElement.prototype.hasExtension = function(opt_extension){};
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGPathElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -7794,12 +7620,6 @@ SVGCircleElement.prototype.systemLanguage;
  * @override
  */
 SVGCircleElement.prototype.hasExtension = function(opt_extension){};
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGCircleElement.prototype.className;
 
 
 /**
@@ -7958,12 +7778,6 @@ SVGUseElement.prototype.hasExtension = function(opt_extension){};
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGUseElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -8088,12 +7902,6 @@ SVGPolylineElement.prototype.hasExtension = function(opt_extension){};
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGPolylineElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -8206,12 +8014,6 @@ SVGGElement.prototype.hasExtension = function(opt_extension){};
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGGElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -8321,12 +8123,6 @@ SVGSwitchElement.prototype.systemLanguage;
  * @override
  */
 SVGSwitchElement.prototype.hasExtension = function(opt_extension){};
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGSwitchElement.prototype.className;
 
 
 /**
@@ -8479,12 +8275,6 @@ SVGImageElement.prototype.hasExtension = function(opt_extension){};
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGImageElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -8633,12 +8423,6 @@ SVGRectElement.prototype.hasExtension = function(opt_extension){};
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGRectElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -8764,12 +8548,6 @@ SVGAElement.prototype.hasExtension = function(opt_extension){};
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGAElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -8839,6 +8617,12 @@ SVGElement.prototype.ownerSVGElement;
  * @type {!SVGElement}
  */
 SVGElement.prototype.viewportElement;
+
+
+/**
+ * @type {!SVGAnimatedString}
+ */
+SVGElement.prototype.className;
 
 
 
@@ -8998,12 +8782,6 @@ SVGFETurbulenceElement.prototype.height;
  * @type {!SVGAnimatedString}
  */
 SVGFETurbulenceElement.prototype.result;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGFETurbulenceElement.prototype.className;
 
 
 /**
@@ -9236,12 +9014,6 @@ SVGClipPathElement.prototype.systemLanguage;
  * @override
  */
 SVGClipPathElement.prototype.hasExtension = function(opt_extension){};
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGClipPathElement.prototype.className;
 
 
 /**
@@ -9731,12 +9503,6 @@ SVGLineElement.prototype.hasExtension = function(opt_extension){};
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGLineElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -9787,12 +9553,6 @@ SVGFEComponentTransferElement.prototype.height;
  * @type {!SVGAnimatedString}
  */
 SVGFEComponentTransferElement.prototype.result;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGFEComponentTransferElement.prototype.className;
 
 
 /**
@@ -9943,12 +9703,6 @@ SVGFEDisplacementMapElement.prototype.result;
 
 
 /**
- * @type {!SVGAnimatedString}
- */
-SVGFEDisplacementMapElement.prototype.className;
-
-
-/**
  * @param {string=} opt_name
  * @return {!CSSValue}
  * @override
@@ -10012,12 +9766,6 @@ SVGFEMergeElement.prototype.height;
  * @type {!SVGAnimatedString}
  */
 SVGFEMergeElement.prototype.result;
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGFEMergeElement.prototype.className;
 
 
 /**
@@ -10154,12 +9902,6 @@ SVGForeignObjectElement.prototype.systemLanguage;
  * @override
  */
 SVGForeignObjectElement.prototype.hasExtension = function(opt_extension){};
-
-
-/**
- * @type {!SVGAnimatedString}
- */
-SVGForeignObjectElement.prototype.className;
 
 
 /**
