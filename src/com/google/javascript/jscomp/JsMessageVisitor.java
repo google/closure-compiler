@@ -361,14 +361,27 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       return true;
     }
 
-    if (msgNode.getGrandparent().isObjectPattern() && msgNode.isName()) {
+    if (!msgNode.isName()) {
+      return false;
+    }
+
+    // In modules, the NAME node will be rewritten with a module-qualified name (e.g.
+    // `var {MSG_HELLO: goog$module$my$module_MSG_HELLO} = x;`).
+    String aliasName =
+        (msgNode.getOriginalName() != null) ? msgNode.getOriginalName() : msgNode.getString();
+
+    if (msgNode.getGrandparent().isObjectPattern()) {
       // Case: `var {MSG_HELLO} = x;
       //
-      // It's a destructuring import. Ignore it if the name is the same. We compare against the
-      // original name if possible because in modules, the NAME node will be rewritten with a
-      // module-qualified name (e.g. `var {MSG_HELLO: goog$module$my$module_MSG_HELLO} = x;`).
-      String aliasName =
-          (msgNode.getOriginalName() != null) ? msgNode.getOriginalName() : msgNode.getString();
+      // It's a destructuring import. Ignore it if the name is the same.
+      if (aliasName.equals(msgKey)) {
+        return true;
+      }
+    }
+
+    if (msgNode.getParent().isAssign() && msgNode.getPrevious().isGetProp()) {
+      // Case: `exports = {MSG_FOO}` or 'exports = {MSG_FOO: MSG_FOO}' when used with
+      // declareLegacyNamespace.
       if (aliasName.equals(msgKey)) {
         return true;
       }

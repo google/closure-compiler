@@ -251,6 +251,18 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
+  public void testMessageAliasedToObject() {
+    extractMessagesSafely("a.b.MSG_FOO = MSG_FOO;");
+    assertThat(messages).isEmpty();
+  }
+
+  @Test
+  public void testMessageAliasedToObject_mismatchedName() {
+    extractMessages("a.b.MSG_FOO_BAR = MSG_FOO;");
+    assertThat(compiler.getErrors()).hasSize(1);
+  }
+
+  @Test
   public void testMessageExport_shortHand() {
     extractMessagesSafely("exports = {MSG_FOO};");
     assertThat(messages).isEmpty();
