@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import jsinterop.annotations.JsMethod;
+import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsType;
 
 /**
@@ -45,12 +46,7 @@ public class SourceMapObjectParserJs {
     return o[key];
   }-*/;
 
-  @JsMethod
-  public static native <T> T jsCast(Object o) /*-{
-    return o;
-  }-*/;
-
-  @JsType
+  @JsType(isNative = true, name = "Object", namespace = JsPackage.GLOBAL)
   private static class JsonMap {
     int version;
     String file;
@@ -61,14 +57,14 @@ public class SourceMapObjectParserJs {
     String[] names;
   }
 
-  @JsType
+  @JsType(isNative = true, name = "Object", namespace = JsPackage.GLOBAL)
   private static class Section {
     Offset offset;
     String url;
     String map;
   }
 
-  @JsType
+  @JsType(isNative = true, name = "Object", namespace = JsPackage.GLOBAL)
   private static class Offset {
     int line;
     int column;
@@ -86,7 +82,7 @@ public class SourceMapObjectParserJs {
       throw new SourceMapParseException("JSON parse exception: " + ex);
     }
 
-    JsonMap sourceMap = jsCast(jsonInstance);
+    JsonMap sourceMap = (JsonMap) jsonInstance;
 
     builder.setVersion(sourceMap.version);
     builder.setFile(sourceMap.file);

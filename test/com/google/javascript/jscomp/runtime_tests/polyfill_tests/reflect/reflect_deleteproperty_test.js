@@ -18,28 +18,28 @@ goog.module('jscomp.runtime_tests.polyfill_tests.reflect_deleteproperty_test');
 goog.setTestOnly();
 
 const testSuite = goog.require('goog.testing.testSuite');
-const {PROPERTY_CONFIGS_SUPPORTED} = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
+
+const LEGACY = typeof Object.defineProperties !== 'function';
+const MODERN = typeof Object.defineProperties === 'function';
 
 testSuite({
   testDeleteProperty() {
     const obj = {'x': 23, 'y': 42};
-    if (PROPERTY_CONFIGS_SUPPORTED) {
-      Object.defineProperty(obj, 'z', {value: 281});
-    } else {
+    if (LEGACY) {
       obj['z'] = 281;
+    } else {
+      Object.defineProperty(obj, 'z', {value: 281});
     }
 
     assertTrue(Reflect.deleteProperty(obj, 'x'));
     assertFalse('x' in obj);
-    assertEquals(!PROPERTY_CONFIGS_SUPPORTED, Reflect.deleteProperty(obj, 'z'));
-    assertEquals(PROPERTY_CONFIGS_SUPPORTED, 'z' in obj);
+    assertEquals(LEGACY, Reflect.deleteProperty(obj, 'z'));
+    assertEquals(MODERN, 'z' in obj);
     assertEquals(42, obj['y']);
   },
 
   testDeleteProperty_notConfigurable() {
-    if (!PROPERTY_CONFIGS_SUPPORTED) {
-      return;
-    }
+    if (LEGACY) return;
 
     const obj = Object.create(null, {'x': {writable: true, value: 12}});
     assertFalse(Reflect.deleteProperty(obj, 'x'));
@@ -51,9 +51,7 @@ testSuite({
   },
 
   testDeleteProperty_sealed() {
-    if (!PROPERTY_CONFIGS_SUPPORTED) {
-      return;
-    }
+    if (LEGACY) return;
 
     const obj = {'x': 12, 'y': 15};
     Object.preventExtensions(obj);

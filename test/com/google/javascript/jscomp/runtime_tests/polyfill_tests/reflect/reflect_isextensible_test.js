@@ -18,16 +18,15 @@ goog.module('jscomp.runtime_tests.polyfill_tests.reflect_isextensible_test');
 goog.setTestOnly();
 
 const testSuite = goog.require('goog.testing.testSuite');
-const {PROPERTY_CONFIGS_SUPPORTED} = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
+
+const LEGACY = typeof Object.defineProperties !== 'function';
 
 testSuite({
   testIsExtensible() {
     let obj = {};
     assertTrue(Reflect.isExtensible(obj));
 
-    if (!PROPERTY_CONFIGS_SUPPORTED) {
-      return;  // Legacy browsers can go no farther.
-    }
+    if (LEGACY) return; // Legacy browsers can go no farther.
 
     Object.preventExtensions(obj);
     assertFalse(Reflect.isExtensible(obj));
