@@ -188,22 +188,6 @@ public class JSDocInfo implements Serializable {
       return other;
     }
 
-    protected LazilyInitializedInfo cloneClassDoc() {
-      LazilyInitializedInfo other = clone(/* cloneTypeNodes= */ false);
-      other.parameters = null;
-      other.suppressions = null;
-      other.setBit(Property.NG_INJECT, false);
-      return other;
-    }
-
-    protected LazilyInitializedInfo cloneConstructorDoc() {
-      LazilyInitializedInfo other = new LazilyInitializedInfo();
-      other.parameters = cloneTypeMap(parameters, /* cloneTypeExpressionNodes= */ false);
-      other.suppressions = suppressions == null ? null : ImmutableSet.copyOf(suppressions);
-      other.setBit(Property.NG_INJECT, isBitSet(Property.NG_INJECT));
-      return other;
-    }
-
     protected ArrayList<JSTypeExpression> cloneTypeList(
         ArrayList<JSTypeExpression> list, boolean cloneTypeExpressionNodes) {
       ArrayList<JSTypeExpression> newlist = null;
@@ -264,14 +248,6 @@ public class JSDocInfo implements Serializable {
 
     private List<String> authors;
     private List<String> sees;
-
-    LazilyInitializedDocumentation cloneConstructorDoc() {
-      LazilyInitializedDocumentation other = new LazilyInitializedDocumentation();
-      if (parameters != null) {
-        other.parameters = new LinkedHashMap<>(parameters);
-      }
-      return other;
-    }
 
     @Override
     public String toString() {
@@ -599,53 +575,6 @@ public class JSDocInfo implements Serializable {
     other.thisType = cloneType(this.thisType, cloneTypeNodes);
     other.includeDocumentation = this.includeDocumentation;
     other.originalCommentPosition = this.originalCommentPosition;
-    return other;
-  }
-
-  /**
-   * This is used to get all nodes + the description, excluding the param nodes. Used to help in an
-   * ES5 to ES6 class converter only.
-   */
-  public JSDocInfo cloneClassDoc() {
-    JSDocInfo other = new JSDocInfo();
-    other.info = this.info == null ? null : this.info.cloneClassDoc();
-    other.documentation = this.documentation;
-    other.visibility = this.visibility;
-    other.bitset = this.bitset;
-    other.type = cloneType(this.type, false);
-    other.thisType = cloneType(this.thisType, false);
-    other.includeDocumentation = this.includeDocumentation;
-    other.originalCommentPosition = this.originalCommentPosition;
-    other.setConstructor(false);
-    other.setStruct(false);
-    if (isInterface() && other.info != null) {
-      other.info.baseType = info.baseType;
-    } else if (info != null
-        && info.baseType != null
-        && info.baseType.getRoot().getFirstFirstChild() != null
-        && info.baseType.getRoot().getFirstFirstChild().isBlock()) {
-      // Keep generic super class annotations.
-      // Tree will look like:
-      //   BANG
-      //     superName.Qualifed
-      //       BLOCK
-      //         template.Argument
-      other.info.baseType = info.baseType;
-    } else if (info != null) {
-      other.info.baseType = null;
-    }
-    return other;
-  }
-
-  /**
-   * This is used to get only the parameter nodes. Used to help in an ES5 to ES6 converter class
-   * only.
-   */
-  public JSDocInfo cloneConstructorDoc() {
-    JSDocInfo other = new JSDocInfo();
-    other.info = this.info == null ? null : this.info.cloneConstructorDoc();
-    other.documentation =
-        this.documentation == null ? null : this.documentation.cloneConstructorDoc();
     return other;
   }
 
