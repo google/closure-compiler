@@ -41,7 +41,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Checks all goog.requries, goog.module.gets, goog.forwardDeclares, and goog.requireTypes in all
+ * Checks all goog.requires, goog.module.gets, goog.forwardDeclares, and goog.requireTypes in all
  * files. This pass is a guard to {@link RewriteClosureImports}.
  */
 final class CheckClosureImports implements HotSwapCompilerPass {
@@ -211,7 +211,7 @@ final class CheckClosureImports implements HotSwapCompilerPass {
       return;
     }
 
-    NodeTraversal.traverse(compiler, scriptRoot, checker);
+    NodeTraversal.traverse(compiler, scriptRoot.getParent(), checker);
   }
 
   @Override
@@ -287,7 +287,7 @@ final class CheckClosureImports implements HotSwapCompilerPass {
       }
 
       Node declarationNameNode = var.getNameNode();
-      if (!NodeUtil.isDeclarationLValue(declarationNameNode)) {
+      if (declarationNameNode == null || !NodeUtil.isDeclarationLValue(declarationNameNode)) {
         return;
       }
 
@@ -405,7 +405,7 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         Node parent,
         ModuleMetadata currentModule,
         ClosureImport importType) {
-      boolean atTopLevelScope = t.inGlobalScope() || t.inModuleScope();
+      boolean atTopLevelScope = t.inGlobalHoistScope() || t.inModuleScope();
       boolean isNonModule = currentModule.isGoogProvide() || currentModule.isScript();
       boolean validAssignment = !isNonModule || parent.isExprResult();
 

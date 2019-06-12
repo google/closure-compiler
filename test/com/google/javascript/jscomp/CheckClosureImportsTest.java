@@ -228,8 +228,26 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   }
 
   @Test
-  public void importInBlockScopeIsError() {
-    testCommonCase("{ <import>('symbol'); }", INVALID_CLOSURE_CALL_SCOPE_ERROR);
+  public void importInBlockScopeInGlobalHoistScopeIsOk() {
+    testCommonCase("{ <import>('symbol'); }");
+  }
+
+  @Test
+  public void importInBlockScopeInModuleHoistScopeIsError() {
+    moduleType = ModuleType.GOOG_MODULE;
+    testCommonCase(
+        lines(
+            "goog.module('test');", //
+            "{ <import>('symbol'); }"),
+        INVALID_CLOSURE_CALL_SCOPE_ERROR);
+
+    moduleType = ModuleType.ES6_MODULE;
+
+    testCommonCase(
+        lines(
+            "{ <import>('symbol'); }", //
+            "export {};"),
+        INVALID_CLOSURE_CALL_SCOPE_ERROR);
   }
 
   @Test
@@ -693,5 +711,19 @@ public class CheckClosureImportsTest extends CompilerTestCase {
                     "const {Type} = goog.require('es.module');", //
                     "export {};"))),
         warning(Es6RewriteModules.SHOULD_IMPORT_ES6_MODULE));
+  }
+
+  @Test
+  public void testIgnoreArguments() {
+    moduleType = ModuleType.GOOG_MODULE;
+    test(
+        srcs(
+            PROVIDES_SYMBOL_SRC,
+            makeTestFile(
+                lines(
+                    "goog.module('test');", //
+                    "function fn() {",
+                    "  return arguments;",
+                    "}"))));
   }
 }
