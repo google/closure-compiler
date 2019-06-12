@@ -3150,7 +3150,7 @@ function History() {}
  *
  * @return {undefined}
  */
-History.prototype.back = function(opt_distance) {};
+History.prototype.back = function() {};
 
 /**
  * Goes forward one step in the joint session history.
