@@ -21,6 +21,7 @@ import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.TextResource;
 import com.google.javascript.jscomp.ConformanceConfig;
 import jsinterop.annotations.JsMethod;
+import jsinterop.annotations.JsPackage;
 
 /**
  * GWT compatible replacement for {@code ResourceLoader}.
@@ -69,9 +70,9 @@ public final class ResourceLoader {
     return obj[key];
   }-*/;
 
-  @JsMethod(namespace = "JSON")
+  @JsMethod(namespace = JsPackage.GLOBAL, name = "JSON.parse")
   private static native JsObject parse(String json);
 
-  @JsMethod(namespace = "Object")
+  @JsMethod(namespace = JsPackage.GLOBAL, name = "Object.keys")
   private static native String[] keys(JsObject obj);
 }

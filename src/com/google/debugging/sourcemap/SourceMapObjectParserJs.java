@@ -32,11 +32,11 @@ import jsinterop.annotations.JsType;
 public class SourceMapObjectParserJs {
 
   // TODO(dankurka): Use elemental2 here once available
-  @JsMethod(name = "parse", namespace = "JSON")
+  @JsMethod(namespace = JsPackage.GLOBAL, name = "JSON.parse")
   private static native Object parseJson(String json);
 
   // TODO(dankurka): Use elemental2 here once available
-  @JsMethod(name = "keys", namespace = "Object")
+  @JsMethod(namespace = JsPackage.GLOBAL, name = "Object.keys")
   private static native String[] keys(Object o);
 
   // TODO(dankurka): Switch to our general util once available
