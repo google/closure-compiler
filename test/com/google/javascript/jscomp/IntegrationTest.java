@@ -5861,6 +5861,13 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testGenerateIjsWithES2018() {
+    CompilerOptions options = createCompilerOptions();
+    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.GENERATE_IJS);
+    testNoWarnings(options, "const r = /hello/s;");
+  }
+
+  @Test
   public void testTypeSummaryReferencesToGoogModuleTypesAreRewritten() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);

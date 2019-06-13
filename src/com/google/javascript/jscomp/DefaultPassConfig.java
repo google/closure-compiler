@@ -241,6 +241,14 @@ public final class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = new ArrayList<>();
 
+    if (options.shouldGenerateTypedExterns()) {
+      checks.add(closureGoogScopeAliases);
+      checks.add(closureRewriteClass);
+      checks.add(generateIjs);
+      checks.add(whitespaceWrapGoogModules);
+      return checks;
+    }
+
     if (options.needsTranspilationFrom(TYPESCRIPT)) {
       checks.add(convertEs6TypedToEs6);
     }
@@ -250,14 +258,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(gatherGettersAndSetters);
-
-    if (options.shouldGenerateTypedExterns()) {
-      checks.add(closureGoogScopeAliases);
-      checks.add(closureRewriteClass);
-      checks.add(generateIjs);
-      checks.add(whitespaceWrapGoogModules);
-      return checks;
-    }
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
