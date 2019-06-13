@@ -260,11 +260,11 @@ class TypedCodeGenerator extends CodeGenerator {
   }
 
   private String getClassAnnotation(JSType classType) {
-    checkState(classType.isFunctionType(), classType);
-
     if (classType == null || classType.isUnknownType()) {
       return "";
     }
+
+    checkState(classType.isFunctionType(), classType);
 
     FunctionType funType = classType.toMaybeFunctionType();
     StringBuilder sb = new StringBuilder();
