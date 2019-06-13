@@ -205,10 +205,8 @@ class DisambiguateProperties implements CompilerPass {
       } else {
         getTypes().union(top, relatedType);
       }
-      FunctionType constructor = getConstructor(type);
-      if (constructor != null && recordInterfacesCache.add(type)) {
-        recordInterfaces(constructor, top, this);
-      }
+
+      recordInterfaces(type, top);
     }
 
     /** Records the given type as one to skip for this property. */
@@ -344,6 +342,38 @@ class DisambiguateProperties implements CompilerPass {
         }
         this.addType(type, relatedType);
         return topType;
+      }
+    }
+
+    /**
+     * Records that this property could be referenced from any interface that this type inherits
+     * from.
+     *
+     * <p>If the property p is defined only on a subtype of constructor, then this method has no
+     * effect. But we tried modifying getTypeWithProperty to tell us when the returned type is a
+     * subtype, and then skip those calls to recordInterface, and there was no speed-up. And it made
+     * the code harder to understand, so we don't do it.
+     */
+    private void recordInterfaces(JSType type, JSType relatedType) {
+      @Nullable FunctionType constructor = getConstructor(type);
+      if (constructor == null || !recordInterfacesCache.add(type)) {
+        return;
+      }
+
+      Iterable<ObjectType> interfaces = ancestorInterfaces.get(constructor);
+      if (interfaces == null) {
+        interfaces = constructor.getAncestorInterfaces();
+        ancestorInterfaces.put(constructor, interfaces);
+      }
+      for (ObjectType itype : interfaces) {
+        JSType top = getTypeWithProperty(name, itype);
+        if (top != null) {
+          addType(itype, relatedType);
+        }
+        // If this interface invalidated this property, return now.
+        if (skipRenaming) {
+          return;
+        }
       }
     }
   }
@@ -1069,44 +1099,25 @@ class DisambiguateProperties implements CompilerPass {
   }
 
   /**
-   * Records that this property could be referenced from any interface that this type inherits from.
-   *
-   * <p>If the property p is defined only on a subtype of constructor, then this method has no
-   * effect. But we tried modifying getTypeWithProperty to tell us when the returned type is a
-   * subtype, and then skip those calls to recordInterface, and there was no speed-up. And it made
-   * the code harder to understand, so we don't do it.
+   * Return the constructor type of {@code type}, which holds {@code type}'s implemented interfaces.
    */
-  private void recordInterfaces(FunctionType constructor, JSType relatedType, Property p) {
-    Iterable<ObjectType> interfaces = ancestorInterfaces.get(constructor);
-    if (interfaces == null) {
-      interfaces = constructor.getAncestorInterfaces();
-      ancestorInterfaces.put(constructor, interfaces);
-    }
-    for (ObjectType itype : interfaces) {
-      JSType top = getTypeWithProperty(p.name, itype);
-      if (top != null) {
-        p.addType(itype, relatedType);
-      }
-      // If this interface invalidated this property, return now.
-      if (p.skipRenaming) {
-        return;
-      }
-    }
-  }
-
   private FunctionType getConstructor(JSType type) {
     ObjectType objType = type.toMaybeObjectType();
     if (objType == null) {
       return null;
     }
-    FunctionType constructor = null;
+
     if (objType.isFunctionType()) {
-      constructor = objType.toMaybeFunctionType();
+      // Recall that the constructor of a constructor `A`, is not `A` itself, but rather `Function`.
+      // If `Function` implemented some interface, that interface would be conflated with all other
+      // ctors, however that currently isn't the case, and would be correct.
+      return (FunctionType) registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE);
     } else if (objType.isFunctionPrototypeType()) {
-      constructor = objType.getOwnerFunction();
+      // For the purposes of disambiguation, pretend that prototypes implement the interfaces of
+      // their instance type.
+      return objType.getOwnerFunction();
     } else {
-      constructor = objType.getConstructor();
+      return objType.getConstructor();
     }
-    return constructor;
   }
 }

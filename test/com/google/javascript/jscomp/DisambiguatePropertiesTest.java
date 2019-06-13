@@ -3166,6 +3166,53 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCtors_areNotConflatedWithOtherTypes_viaTheirInstanceInterfaces() {
+    testSets(
+        lines(
+            // The property isn't on the interface; the interface just creates edges in the type
+            // lattice.
+            "/** @interface */",
+            "class Iface {}",
+            "",
+            "/** @implements {Iface} */",
+            "class InstanceFoo {",
+            "  method() {}",
+            "}",
+            "/** @implements {Iface} */",
+            "class StaticFoo {",
+            "  static method() {}",
+            "}",
+            "",
+            "new InstanceFoo().method();",
+            "StaticFoo.method();"),
+        "{method=[[(typeof StaticFoo)], [InstanceFoo.prototype]]}");
+
+    testSets(
+        lines(
+            // But also try it when the interface does include the property, just to be sure.
+            "/** @interface */",
+            "class Iface {",
+            "  method() { }",
+            "}",
+            "",
+            "/** @implements {Iface} */",
+            "class InstanceFoo {",
+            "  method() {}",
+            "}",
+            "/** @implements {Iface} */",
+            "class StaticFoo {",
+            "  static method() {}",
+            "",
+            "  method() {}", // For typechecking.
+            "}",
+            "",
+            "new InstanceFoo().method();",
+            "StaticFoo.method();"),
+        "{method=[[(typeof StaticFoo)], [Iface.prototype, InstanceFoo.prototype,"
+            + " StaticFoo.prototype]]}");
+  }
+
+  @Test
   public void testDoNotDisambiguateEs6ClassConstructor() {
     testSets("class Foo { constructor() {} } class Bar { constructor() {} }", "{}");
   }
