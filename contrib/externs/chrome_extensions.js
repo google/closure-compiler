@@ -4208,6 +4208,43 @@ TtsEvent.prototype.charIndex;
 TtsEvent.prototype.errorMessage;
 
 
+/**
+ * The speech options for the TTS engine.
+ * @record
+ * @see https://developer.chrome.com/apps/tts#type-TtsOptions
+ */
+function TtsOptions() {}
+
+/** @type {boolean|undefined} */
+TtsOptions.prototype.enqueue;
+
+/** @type {string|undefined} */
+TtsOptions.prototype.voiceName;
+
+/** @type {string|undefined} */
+TtsOptions.prototype.extensionId;
+
+/** @type {string|undefined} */
+TtsOptions.prototype.lang;
+
+/** @type {number|undefined} */
+TtsOptions.prototype.rate;
+
+/** @type {number|undefined} */
+TtsOptions.prototype.pitch;
+
+/** @type {number|undefined} */
+TtsOptions.prototype.volume;
+
+/** @type {!Array<string>|undefined} */
+TtsOptions.prototype.requiredEventTypes;
+
+/** @type {!Array<string>|undefined} */
+TtsOptions.prototype.desiredEventTypes;
+
+/** @type {!function(!TtsEvent)|undefined} */
+TtsOptions.prototype.onEvent;
+
 
 /**
  * A description of a voice available for speech synthesis.
@@ -4259,11 +4296,11 @@ chrome.tts.isSpeaking = function(opt_callback) {};
  *     well-formed SSML document. Speech engines that do not support SSML will
  *     strip away the tags and speak the text. The maximum length of the text is
  *     32,768 characters.
- * @param {Object=} opt_options The speech options.
- * @param {function()=} opt_callback Called right away, before speech finishes.
+ * @param {TtsOptions=} options The speech options.
+ * @param {function()=} callback Called right away, before speech finishes.
  * @return {undefined}
  */
-chrome.tts.speak = function(utterance, opt_options, opt_callback) {};
+chrome.tts.speak = function(utterance, options, callback) {};
 
 
 /**
