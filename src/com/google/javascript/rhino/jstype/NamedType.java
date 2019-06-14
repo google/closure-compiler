@@ -101,10 +101,8 @@ public final class NamedType extends ProxyObjectType {
    */
   private transient Predicate<JSType> validator;
 
-  /**
-   * Property-defining continuations.
-   */
-  private List<PropertyContinuation> propertyContinuations = null;
+  /** Property-defining continuations. */
+  private transient List<PropertyContinuation> propertyContinuations = null;
 
   /**
    * Template types defined on a named, not yet resolved type, or {@code null} if none. These are
