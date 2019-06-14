@@ -118,9 +118,38 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       case CONST:
       case LET:
         return tryOptimizeNameDeclaration(subtree);
+      case DEFAULT_VALUE:
+        return tryRemoveDefaultValue(subtree);
       default:
           return subtree;
     }
+  }
+
+  private Node tryRemoveDefaultValue(Node defaultValue) {
+    checkArgument(defaultValue.isDefaultValue(), defaultValue);
+
+    Node lValue = defaultValue.getFirstChild();
+    Node val = defaultValue.getSecondChild();
+    boolean removeVal = false;
+
+    // If the default is `undefined` always remove the value
+    if (val.isName() && val.getString().equals("undefined")) {
+      removeVal = true;
+    }
+
+    // If the `void` application is pure, remove the value
+    if (val.isVoid()) {
+      Node voidArg = val.getFirstChild();
+      removeVal = !mayHaveSideEffects(voidArg);
+    }
+
+    if (removeVal) {
+      defaultValue.replaceWith(lValue.detach());
+      reportChangeToEnclosingScope(lValue);
+      return lValue;
+    }
+
+    return defaultValue;
   }
 
   private Node tryFoldLabel(Node n) {

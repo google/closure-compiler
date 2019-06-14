@@ -1356,4 +1356,73 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     testSame("const {f: {}, ...g} = foo()");
     testSame("const {f: [], ...g} = foo()");
   }
+
+  @Test
+  public void testUndefinedDefaultParameterRemoved() {
+    test(
+        "function f(x=undefined,y) {  }", //
+        "function f(x,y)             {  }");
+    test(
+        "function f(x,y=undefined,z) {  }", //
+        "function f(x,y          ,z) {  }");
+    test(
+        "function f(x=undefined,y=undefined,z=undefined) {  }", //
+        "function f(x,          y,          z)           {  }");
+  }
+
+  @Test
+  public void testPureVoidDefaultParameterRemoved() {
+    test(
+        "function f(x = void 0) {  }", //
+        "function f(x         ) {  }");
+    test(
+        "function f(x = void \"XD\") {  }", //
+        "function f(x              ) {  }");
+    test(
+        "function f(x = void f()) {  }", //
+        "function f(x)            {  }");
+  }
+
+  @Test
+  public void testNoDefaultParameterNotRemoved() {
+    testSame("function f(x,y) {  }");
+    testSame("function f(x) {  }");
+    testSame("function f() {  }");
+  }
+
+  @Test
+  public void testEffectfulDefaultParameterNotRemoved() {
+    testSame("function f(x = void console.log(1)) {  }");
+    testSame("function f(x = void f()) { alert(x); }");
+  }
+
+  @Test
+  public void testDestructuringUndefinedDefaultParameter() {
+    test(
+        "function f({a=undefined,b=1,c}) {  }", //
+        "function f({a          ,b=1,c}) {  }");
+    test(
+        "function f({a={},b=0}=undefined) {  }", //
+        "function f({a={},b=0}) {  }");
+    test(
+        "function f({a=undefined,b=0}) {  }", //
+        "function f({a,b=0}) {  }");
+    test(
+        " function f({a: {b = undefined}}) {  }", //
+        " function f({a: {b}}) {  }");
+    testSame("function f({a,b}) {  }");
+    testSame("function f({a=0, b=1}) {  }");
+    testSame("function f({a=0,b=0}={}) {  }");
+    testSame("function f({a={},b=0}={}) {  }");
+  }
+
+  @Test
+  public void testUndefinedDefaultObjectPatterns() {
+    test(
+        "const {a = undefined} = obj;", //
+        "const {a} = obj;");
+    test(
+        "const {a = void 0} = obj;", //
+        "const {a} = obj;");
+  }
 }
