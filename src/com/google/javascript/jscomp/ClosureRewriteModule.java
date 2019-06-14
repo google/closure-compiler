@@ -779,7 +779,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private static boolean isNamedExportsLiteral(Node objLit) {
+  static boolean isNamedExportsLiteral(Node objLit) {
     if (!objLit.isObjectLit() || !objLit.hasChildren()) {
       return false;
     }

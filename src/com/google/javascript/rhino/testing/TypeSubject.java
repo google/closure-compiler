@@ -114,6 +114,10 @@ public final class TypeSubject extends Subject {
     check("isBooleanValueType()").that(actualNonNull().isBooleanValueType()).isTrue();
   }
 
+  public void isVoid() {
+    check("isVoidType()").that(actualNonNull().isVoidType()).isTrue();
+  }
+
   public void isNoType() {
     check("isNoType()").that(actualNonNull().isNoType()).isTrue();
   }
