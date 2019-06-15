@@ -46,6 +46,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -938,6 +939,13 @@ public class CompilerOptions implements Serializable {
 
   /** The string to use as the separator for printInputDelimiter */
   public String inputDelimiter = "// Input %num%";
+
+  /**
+   * A directory into which human readable debug log files can be written.
+   *
+   * <p>{@code null} indicates that no such files should be written.
+   */
+  @Nullable private Path debugLogDirectory;
 
   /** Whether to write keyword properties as foo['class'] instead of foo.class; needed for IE8. */
   private boolean quoteKeywordProperties;
@@ -2553,6 +2561,15 @@ public class CompilerOptions implements Serializable {
     this.inputDelimiter = inputDelimiter;
   }
 
+  public void setDebugLogDirectory(@Nullable Path dir) {
+    this.debugLogDirectory = dir;
+  }
+
+  @Nullable
+  public Path getDebugLogDirectory() {
+    return debugLogDirectory;
+  }
+
   public void setQuoteKeywordProperties(boolean quoteKeywordProperties) {
     this.quoteKeywordProperties = quoteKeywordProperties;
   }
@@ -2887,6 +2904,7 @@ public class CompilerOptions implements Serializable {
             .add("customPasses", customPasses)
             .add("dartPass", dartPass)
             .add("deadAssignmentElimination", deadAssignmentElimination)
+            .add("debugLogDirectory", debugLogDirectory)
             .add("declaredGlobalExternsOnWindow", declaredGlobalExternsOnWindow)
             .add("defineReplacements", getDefineReplacements())
             .add("dependencyOptions", getDependencyOptions())

@@ -22,7 +22,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
+import com.google.errorprone.annotations.MustBeClosed;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
@@ -34,6 +36,8 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -729,4 +733,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public abstract ModuleMap getModuleMap();
 
   public abstract void setModuleMap(ModuleMap moduleMap);
+
+  @MustBeClosed
+  public LogFile createOrReopenLog(Class<?> owner, String name) {
+    @Nullable Path dir = getOptions().getDebugLogDirectory();
+    if (dir == null) {
+      return LogFile.createNoOp();
+    }
+
+    Path file = Paths.get(dir.toString(), owner.getSimpleName(), name);
+    return LogFile.createOrReopen(file);
+  }
 }
