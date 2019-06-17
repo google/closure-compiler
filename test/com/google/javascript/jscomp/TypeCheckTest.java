@@ -23994,6 +23994,28 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             + " instead.");
   }
 
+  @Test
+  public void testParameterShadowsNamespace() {
+    // NOTE: This is a pattern used to work around the fact that @ngInjected constructors very
+    // frequently (and unavoidably) shadow global namespaces (i.e. angular.modules) with constructor
+    // parameters.
+    testTypes(
+        lines(
+            "/** @constructor @param {!service.Service} service */",
+            "var Controller = function(service) {",
+            "  /** @private {!service.Service} */",
+            "  this.service = service;",
+            "};",
+            "/** @const */",
+            "var service = {};",
+            "/** @constructor */",
+            "service.Service = function() {};"),
+        lines(
+            "Bad type annotation. Unknown type service.Service",
+            "It's possible that a local variable called 'service' is shadowing "
+                + "the intended global namespace."));
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));

@@ -136,6 +136,7 @@ class RhinoErrorReporter {
           .put(Pattern.compile("Missing type declaration\\."), JSDOC_MISSING_TYPE_WARNING)
           // Unresolved types that aren't forward declared.
           .put(Pattern.compile(".*Unknown type.*"), UNRECOGNIZED_TYPE_ERROR)
+          .put(Pattern.compile(".*Unknown type.*\n.*"), UNRECOGNIZED_TYPE_ERROR)
           // Import annotation errors.
           .put(
               Pattern.compile("^Bad type annotation. Import in typedef.*"),

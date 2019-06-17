@@ -46,6 +46,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
+import com.google.javascript.rhino.StaticSlot;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -377,14 +379,20 @@ public final class NamedType extends ProxyObjectType {
     }
   }
 
-  // Warns about this type being unresolved iff it's not a forward-declared
-  // type name.
+  /** Warns about this type being unresolved iff it's not a forward-declared type name */
   private void handleUnresolvedType(
       ErrorReporter reporter, boolean ignoreForwardReferencedTypes) {
     boolean isForwardDeclared =
         ignoreForwardReferencedTypes && registry.isForwardDeclaredType(reference);
     if (!isForwardDeclared) {
       String msg = "Bad type annotation. Unknown type " + reference;
+      // Look for a local variable that shadows a global namespace to give a clearer message.
+      String root =
+          reference.contains(".") ? reference.substring(0, reference.indexOf(".")) : reference;
+      if (localVariableShadowsGlobalNamespace(root)) {
+        msg += "\nIt's possible that a local variable called '" + root
+            + "' is shadowing the intended global namespace.";
+      }
       warning(reporter, msg);
     } else {
       setReferencedType(new NoResolvedType(registry, getReferenceName(), getTemplateTypes()));
@@ -394,6 +402,22 @@ public final class NamedType extends ProxyObjectType {
     }
 
     setResolvedTypeInternal(getReferencedType());
+  }
+
+  /**
+   * Check for an obscure but very confusing error condition where a local variable shadows a
+   * global namespace.
+   */
+  private boolean localVariableShadowsGlobalNamespace(String root) {
+    StaticSlot rootVar = resolutionScope.getSlot(root);
+    if (rootVar != null) {
+      StaticScope parent = rootVar.getScope().getParentScope();
+      if (parent != null) {
+        StaticSlot globalVar = parent.getSlot(root);
+        return globalVar != null;
+      }
+    }
+    return false;
   }
 
   @Override
