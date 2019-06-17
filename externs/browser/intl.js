@@ -227,7 +227,7 @@ Intl.RelativeTimeFormat.supportedLocalesOf = function(locales, opt_options) {};
  * @param {string} unit
  * @return {string}
  */
-Intl.RelativeTimeFormat.format = function(value, unit) {};
+Intl.RelativeTimeFormat.prototype.format = function(value, unit) {};
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RelativeTimeFormat/formatToParts#Syntax
@@ -235,7 +235,7 @@ Intl.RelativeTimeFormat.format = function(value, unit) {};
  * @param {string} unit
  * @return {Array<string>}
  */
-Intl.RelativeTimeFormat.formatToParts = function(value, unit) {};
+Intl.RelativeTimeFormat.prototype.formatToParts = function(value, unit) {};
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RelativeTimeFormat/resolvedOptions#Syntax
