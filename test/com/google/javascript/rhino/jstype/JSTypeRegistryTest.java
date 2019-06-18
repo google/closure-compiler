@@ -304,6 +304,23 @@ public class JSTypeRegistryTest {
   }
 
   @Test
+  public void testNativeTypesAreUnique() {
+    JSTypeRegistry registry = new JSTypeRegistry(null);
+
+    for (JSTypeNative n1 : JSTypeNative.values()) {
+      for (JSTypeNative n2 : JSTypeNative.values()) {
+        JSType t1 = registry.getNativeType(n1);
+        JSType t2 = registry.getNativeType(n2);
+        if (!t1.equals(t2)) {
+          continue;
+        }
+        assertThat(t1).isSameInstanceAs(t2);
+        assertThat(n1).isEqualTo(n2);
+      }
+    }
+  }
+
+  @Test
   public void testCreateTypeFromCommentNode_usesTopMostScopeOfName() {
     // Create a global scope and a global type 'Foo'.
     JSTypeRegistry registry = new JSTypeRegistry(null);

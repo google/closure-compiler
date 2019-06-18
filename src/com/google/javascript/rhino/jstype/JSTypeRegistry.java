@@ -357,12 +357,10 @@ public class JSTypeRegistry implements Serializable {
     promiseTemplateKey = new TemplateType(this, "TYPE");
 
     // Top Level Prototype (the One)
-    // The initializations of TOP_LEVEL_PROTOTYPE and OBJECT_FUNCTION_TYPE
+    // The initializations of OBJECT_PROTOTYPE and OBJECT_FUNCTION_TYPE
     // use each other's results, so at least one of them will get null
     // instead of an actual type; however, this seems to be benign.
-    PrototypeObjectType topLevelPrototype =
-        new PrototypeObjectType(this, null, null, true, null);
-    registerNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE, topLevelPrototype);
+    PrototypeObjectType topLevelPrototype = new PrototypeObjectType(this, null, null, true, null);
 
     // IObject
     FunctionType iObjectFunctionType =
@@ -702,7 +700,6 @@ public class JSTypeRegistry implements Serializable {
     functionFunctionType.setInstanceType(u2uConstructorType);
     u2uConstructorType.setImplicitPrototype(functionPrototype);
     registerNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE, u2uConstructorType);
-    registerNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE, u2uConstructorType);
 
     // least function type, i.e. (All...) -> NoType
     FunctionType leastFunctionType = createNativeFunctionTypeWithVarArgs(noType, allType);
@@ -757,7 +754,7 @@ public class JSTypeRegistry implements Serializable {
     registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE), "Undefined");
     registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE), "void");
-    registerGlobalType(getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE), "Function");
+    registerGlobalType(getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE), "Function");
     registerGlobalType(getNativeType(JSTypeNative.GLOBAL_THIS), "Global");
   }
 

@@ -2589,7 +2589,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   /** Tests the behavior of the instance of Function. */
   @Test
   public void testFunctionInstanceType() {
-    FunctionType functionInst = FUNCTION_INSTANCE_TYPE;
+    FunctionType functionInst = U2U_CONSTRUCTOR_TYPE;
 
     // isXxx
     assertThat(functionInst.isObject()).isTrue();
@@ -5000,25 +5000,27 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testConstructorSubtypeChain() throws Exception {
-    List<JSType> typeChain = ImmutableList.of(
-        registry.getNativeType(JSTypeNative.ALL_TYPE),
-        registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
-        registry.getNativeType(JSTypeNative.OBJECT_TYPE),
-        registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
-        registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
-        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
-        registry.getNativeType(JSTypeNative.NO_TYPE));
+    List<JSType> typeChain =
+        ImmutableList.of(
+            registry.getNativeType(JSTypeNative.ALL_TYPE),
+            registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
+            registry.getNativeType(JSTypeNative.OBJECT_TYPE),
+            registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
+            registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
+            registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
+            registry.getNativeType(JSTypeNative.NO_TYPE));
     verifySubtypeChain(typeChain);
   }
 
   @Test
   public void testGoogBarSubtypeChain() throws Exception {
-    List<JSType> typeChain = ImmutableList.of(
-        registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
-        googBar,
-        googSubBar,
-        googSubSubBar,
-        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE));
+    List<JSType> typeChain =
+        ImmutableList.of(
+            registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
+            googBar,
+            googSubBar,
+            googSubSubBar,
+            registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE));
     verifySubtypeChain(typeChain, false);
   }
 
@@ -5031,11 +5033,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createConstructorType(
             "subBarArg", null, registry.createParameters(googSubBar), null, null, false);
 
-    List<JSType> typeChain = ImmutableList.of(
-        registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
-        googBarArgConstructor,
-        googSubBarArgConstructor,
-        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE));
+    List<JSType> typeChain =
+        ImmutableList.of(
+            registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
+            googBarArgConstructor,
+            googSubBarArgConstructor,
+            registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE));
     verifySubtypeChain(typeChain, false);
   }
 

@@ -79,7 +79,6 @@ public abstract class BaseJSTypeTestCase {
   protected JSType DATE_FUNCTION_TYPE;
   protected ObjectType DATE_TYPE;
   protected FunctionType FUNCTION_FUNCTION_TYPE;
-  protected FunctionType FUNCTION_INSTANCE_TYPE;
   protected ObjectType FUNCTION_PROTOTYPE;
   protected JSType GREATEST_FUNCTION_TYPE;
   protected JSType LEAST_FUNCTION_TYPE;
@@ -131,7 +130,6 @@ public abstract class BaseJSTypeTestCase {
     DATE_FUNCTION_TYPE = registry.getNativeType(JSTypeNative.DATE_FUNCTION_TYPE);
     DATE_TYPE = registry.getNativeObjectType(JSTypeNative.DATE_TYPE);
     FUNCTION_FUNCTION_TYPE = registry.getNativeFunctionType(JSTypeNative.FUNCTION_FUNCTION_TYPE);
-    FUNCTION_INSTANCE_TYPE = registry.getNativeFunctionType(JSTypeNative.FUNCTION_INSTANCE_TYPE);
     FUNCTION_PROTOTYPE = registry.getNativeObjectType(JSTypeNative.FUNCTION_PROTOTYPE);
     GREATEST_FUNCTION_TYPE = registry.getNativeType(JSTypeNative.GREATEST_FUNCTION_TYPE);
     LEAST_FUNCTION_TYPE = registry.getNativeType(JSTypeNative.LEAST_FUNCTION_TYPE);

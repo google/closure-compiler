@@ -175,7 +175,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     super(
         builder.registry,
         builder.name,
-        builder.registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
+        builder.registry.getNativeObjectType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
         builder.isNativeType(),
         builder.templateTypeMap);
     setPrettyPrint(true);
@@ -822,7 +822,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     // The function instance type is a special case
     // that lives above the rest of the lattice.
-    JSType functionInstance = registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE);
+    JSType functionInstance = registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE);
     if (functionInstance.isEquivalentTo(that)) {
       return leastSuper ? that : this;
     } else if (functionInstance.isEquivalentTo(this)) {
@@ -944,7 +944,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    */
   @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    if (!isPrettyPrint() || this == registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE)) {
+    if (!isPrettyPrint() || this == registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE)) {
       return sb.append(forAnnotations ? "!Function" : "Function");
     }
 
@@ -1275,7 +1275,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
   @Override
   public final String toDebugHashCodeString() {
-    if (this == registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE)) {
+    if (this == registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE)) {
       return super.toDebugHashCodeString();
     }
 
