@@ -3148,6 +3148,10 @@ function History() {}
  * Goes back one step in the joint session history.
  * If there is no previous page, does nothing.
  *
+ * @see https://html.spec.whatwg.org/multipage/history.html#dom-history-back
+ * @param {number=} opt_distance the number of entries to go back
+ *     (Mozilla doesn't support distance -- use #go instead)
+ *
  * @return {undefined}
  */
 History.prototype.back = function(opt_distance) {};
