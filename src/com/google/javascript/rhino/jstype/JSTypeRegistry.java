@@ -78,7 +78,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -158,20 +157,22 @@ public class JSTypeRegistry implements Serializable {
   // when serializing and deserializing compiler state for multistage builds.
   private final Node nameTableGlobalRoot = new Node(Token.ROOT);
 
-  // NOTE(nicksantos): This is a terrible terrible hack. When type expressions
-  // are evaluated, we need to be able to decide whether that type name
-  // resolves to a nullable type or a non-nullable type. Object types are
-  // nullable, but enum types are not.
+  // NOTE(nicksantos): This is a terrible terrible hack. When type expressions are evaluated, we
+  // need to be able to decide whether that type name resolves to a nullable type or a non-nullable
+  // type. Object types are nullable, but enum types and typedefs are not.
   //
-  // Notice that it's not good enough to just declare enum types sooner.
+  // Notice that it's not good enough to just declare enum types and typedefs sooner.
   // For example, if we have
-  // /** @enum {MyObject} */ var MyEnum = ...;
-  // we won't be to declare "MyEnum" without evaluating the expression
-  // {MyObject}, and following those dependencies starts to lead us into
-  // undecidable territory. Instead, we "pre-declare" enum types and typedefs,
-  // so that the expression resolver can decide whether a given name is
+  //   /** @enum {MyObject} */ var MyEnum = ...;
+  // we won't be to declare "MyEnum" without evaluating the expression {MyObject}, and following
+  // those dependencies starts to lead us into undecidable territory. Instead, we "pre-declare" enum
+  // types and typedefs, so that the expression resolver can decide whether a given name is
   // nullable or not.
-  private final Set<String> nonNullableTypeNames = new LinkedHashSet<>();
+  // Also, note that this solution is buggy and the type resolution still gets default nullability
+  // wrong in some cases. See b/116853368. Probably NamedType should be responsible for
+  // applying nullability to forward references instead of the type expression evaluation.
+  private final Multimap<Node, String> nonNullableTypeNames =
+      MultimapBuilder.hashKeys().hashSetValues().build();
 
   // Types that have been "forward-declared."
   // If these types are not declared anywhere in the binary, we shouldn't
@@ -490,7 +491,7 @@ public class JSTypeRegistry implements Serializable {
 
     // Thenable is an @typedef
     JSType thenableType = createRecordType(ImmutableMap.of("then", unknownType));
-    identifyNonNullableName("Thenable");
+    identifyNonNullableName(null, "Thenable");
     registerNativeType(JSTypeNative.THENABLE_TYPE, thenableType);
 
     // Create built-in Promise type, whose constructor takes one parameter.
@@ -1900,20 +1901,18 @@ public class JSTypeRegistry implements Serializable {
     return new NamedType(scope, this, reference, sourceName, lineno, charno);
   }
 
-  /**
-   * Identifies the name of a typedef or enum before we actually declare it.
-   */
-  public void identifyNonNullableName(String name) {
+  /** Identifies the name of a typedef or enum before we actually declare it. */
+  public void identifyNonNullableName(StaticScope scope, String name) {
     checkNotNull(name);
-    nonNullableTypeNames.add(name);
+    StaticScope lookupScope = getLookupScope(scope, name);
+    nonNullableTypeNames.put(getRootNodeForScope(lookupScope), name);
   }
 
-  /**
-   * Identifies the name of a typedef or enum before we actually declare it.
-   */
-  public boolean isNonNullableName(String name) {
+  /** Identifies the name of a typedef or enum before we actually declare it. */
+  public boolean isNonNullableName(StaticScope scope, String name) {
     checkNotNull(name);
-    return nonNullableTypeNames.contains(name);
+    scope = getLookupScope(scope, name);
+    return nonNullableTypeNames.containsEntry(getRootNodeForScope(scope), name);
   }
 
   public JSType evaluateTypeExpression(JSTypeExpression expr, StaticTypedScope scope) {
@@ -2019,7 +2018,7 @@ public class JSTypeRegistry implements Serializable {
                 n.getLineno(),
                 n.getCharno(),
                 recordUnresolvedTypes);
-        if (namedType instanceof ObjectType && !nonNullableTypeNames.contains(n.getString())) {
+        if (namedType instanceof ObjectType && !isNonNullableName(scope, n.getString())) {
           Node typeList = n.getFirstChild();
           boolean isForwardDeclared = namedType instanceof NamedType;
           if ((!namedType.isUnknownType() || isForwardDeclared) && typeList != null) {

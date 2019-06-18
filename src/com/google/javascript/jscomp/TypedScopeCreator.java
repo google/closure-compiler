@@ -61,8 +61,8 @@ import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
-import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.jscomp.ProcessClosureProvidesAndRequires.ProvidedName;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
@@ -413,9 +413,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       externsRoot.setJSType(globalThis);
       jsRoot.setJSType(globalThis);
 
-      // Run a first-order analysis over the syntax tree.
-      new FirstOrderFunctionAnalyzer().process(root.getFirstChild(), root.getLastChild());
-
       // Find all the classes in the global scope.
       newScope = createInitialScope(root);
     } else {
@@ -615,7 +612,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     assignedVarNames.removeIf(var -> inScript.test(var.getScopeRoot()));
     functionsWithNonEmptyReturns.removeIf(inScript);
 
-    new FirstOrderFunctionAnalyzer().process(null, scriptRoot);
+    NodeTraversal.traverse(compiler, scriptRoot, new FirstOrderFunctionAnalyzer());
 
     // TODO(bashir): Variable declaration is not the only side effect of last
     // global scope generation but here we only wipe that part off.
@@ -657,10 +654,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   TypedScope createInitialScope(Node root) {
     checkArgument(root.isRoot(), root);
 
-    NodeTraversal.traverse(
-        compiler,
-        root,
-        new IdentifyGlobalEnumsAndTypedefsAsNonNullable(typeRegistry, codingConvention));
+    // Gather global information used in typed scope creation. Use a memoized scope creator because
+    // scope-building takes a nontrivial amount of time.
+    MemoizedScopeCreator scopeCreator =
+        new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
+
+    new NodeTraversal(compiler, new FirstOrderFunctionAnalyzer(), scopeCreator)
+        .traverseRoots(root.getFirstChild(), root.getLastChild());
+
+    new NodeTraversal(
+            compiler,
+            new IdentifyEnumsAndTypedefsAsNonNullable(typeRegistry, codingConvention),
+            scopeCreator)
+        .traverse(root);
 
     TypedScope s = TypedScope.createGlobalScope(root);
     declareNativeFunctionType(s, ARRAY_FUNCTION_TYPE);
@@ -733,17 +739,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     typeRegistry.resolveTypes();
   }
 
-  /**
-   * Adds all globally-defined enums and typedefs to the registry's list of non-nullable types.
-   *
-   * <p>TODO(b/123710194): We should also make locally-defined enums and typedefs non-nullable.
-   */
-  private static class IdentifyGlobalEnumsAndTypedefsAsNonNullable
-      extends AbstractShallowStatementCallback {
+  /** Adds all enums and typedefs to the registry's list of non-nullable types. */
+  private static class IdentifyEnumsAndTypedefsAsNonNullable extends AbstractPostOrderCallback {
     private final JSTypeRegistry registry;
     private final CodingConvention codingConvention;
 
-    IdentifyGlobalEnumsAndTypedefsAsNonNullable(
+    IdentifyEnumsAndTypedefsAsNonNullable(
         JSTypeRegistry registry, CodingConvention codingConvention) {
       this.registry = registry;
       this.codingConvention = codingConvention;
@@ -755,29 +756,22 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         case LET:
         case CONST:
         case VAR:
-          // Note that this class expects to be invoked on the root node and does not traverse into
-          // functions.
-          Scope scope = t.getScope();
-          if (!(scope.isGlobal() || scope.getClosestHoistScope().isGlobal())) {
-            return;
-          }
-          if (node.isVar() || scope.isGlobal()) {
             for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
-              // TODO(b/116853368): make this work for destructuring aliases as well.
-              identifyEnumOrTypedefDeclaration(
-                  child, child.getFirstChild(), NodeUtil.getBestJSDocInfo(child));
+            // TODO(b/116853368): make this work for destructuring aliases as well.
+            identifyEnumOrTypedefDeclaration(
+                t, child, child.getFirstChild(), NodeUtil.getBestJSDocInfo(child));
             }
-          }
+
           break;
         case EXPR_RESULT:
           Node firstChild = node.getFirstChild();
           if (firstChild.isAssign()) {
             Node assign = firstChild;
             identifyEnumOrTypedefDeclaration(
-                assign.getFirstChild(), assign.getSecondChild(), assign.getJSDocInfo());
-          } else {
+                t, assign.getFirstChild(), assign.getSecondChild(), assign.getJSDocInfo());
+          } else if (firstChild.isGetProp()) {
             identifyEnumOrTypedefDeclaration(
-                firstChild, /* rvalue= */ null, firstChild.getJSDocInfo());
+                t, firstChild, /* rvalue= */ null, firstChild.getJSDocInfo());
           }
           break;
         default:
@@ -786,19 +780,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     private void identifyEnumOrTypedefDeclaration(
-        Node nameNode, @Nullable Node rvalue, JSDocInfo info) {
+        NodeTraversal t, Node nameNode, @Nullable Node rvalue, JSDocInfo info) {
       if (!nameNode.isQualifiedName()) {
         return;
       }
       if (info != null && info.hasEnumParameterType()) {
-        registry.identifyNonNullableName(nameNode.getQualifiedName());
+        registry.identifyNonNullableName(t.getScope(), nameNode.getQualifiedName());
       } else if (info != null && info.hasTypedefType()) {
-        registry.identifyNonNullableName(nameNode.getQualifiedName());
+        registry.identifyNonNullableName(t.getScope(), nameNode.getQualifiedName());
       } else if (rvalue != null
           && rvalue.isQualifiedName()
-          && registry.isNonNullableName(rvalue.getQualifiedName())
+          && registry.isNonNullableName(t.getScope(), rvalue.getQualifiedName())
           && NodeUtil.isConstantDeclaration(codingConvention, info, nameNode)) {
-        registry.identifyNonNullableName(nameNode.getQualifiedName());
+        registry.identifyNonNullableName(t.getScope(), nameNode.getQualifiedName());
       }
     }
   }
@@ -2335,7 +2329,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // Propagate typedef type to typedef aliases.
           actualLvalueNode.setTypedefTypeProp(typedefType);
           if (lValueName != null) {
-            typeRegistry.identifyNonNullableName(lValueName);
+            typeRegistry.identifyNonNullableName(aliasDeclarationScope, lValueName);
             typeRegistry.declareType(aliasDeclarationScope, lValueName, typedefType);
           }
           return;
@@ -2363,10 +2357,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         // Look for cases where the rValue is an Enum namespace
         typeRegistry.declareType(
             aliasDeclarationScope, lValueName, rValueType.toMaybeEnumType().getElementsType());
-        if (isLValueRootedInGlobalScope(actualLvalueNode)) {
-          // TODO(b/123710194): Also make local aliases non-nullable
-          typeRegistry.identifyNonNullableName(lValueName);
-        }
+        typeRegistry.identifyNonNullableName(aliasDeclarationScope, lValueName);
       }
     }
 
@@ -3433,15 +3424,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
    * <p>The syntactic scopes created in this traversal are also stored for later use.
    */
   private class FirstOrderFunctionAnalyzer extends AbstractScopedCallback {
-
-    void process(Node externs, Node root) {
-      if (externs == null) {
-        NodeTraversal.traverse(compiler, root, this);
-      } else {
-        NodeTraversal.traverseRoots(compiler, this, externs, root);
-      }
-    }
-
     @Override
     public void enterScope(NodeTraversal t) {
       Scope scope = t.getScope();

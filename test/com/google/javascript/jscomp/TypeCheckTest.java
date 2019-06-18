@@ -77,9 +77,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testInitialTypingScope() {
-    TypedScope s = new TypedScopeCreator(compiler,
-        CodingConventions.getDefault()).createInitialScope(
-            new Node(Token.ROOT));
+    TypedScope s =
+        new TypedScopeCreator(compiler, CodingConventions.getDefault())
+            .createInitialScope(new Node(Token.ROOT, new Node(Token.ROOT), new Node(Token.ROOT)));
 
     assertTypeEquals(getNativeArrayConstructorType(), s.getVar("Array").getType());
     assertTypeEquals(getNativeBooleanObjectConstructorType(), s.getVar("Boolean").getType());

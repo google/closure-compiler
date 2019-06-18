@@ -1027,7 +1027,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testLocalEnumWithLet() {
-    // TODO(bradfordcsmith): Local enum types should be non-nullable just like the global ones.
     testTypes(
         lines(
             "{",
@@ -1039,16 +1038,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "   * @return {number}",
             "   */",
             "  function f(x) {return x}",
-            "}"),
-        lines(
-            "inconsistent return type",
-            "found   : (E<number>|null)",
-            "required: number"));
+            "}"));
   }
 
   @Test
   public void testLocalEnumWithConst() {
-    // TODO(bradfordcsmith): Local enum types should be non-nullable just like the global ones.
     testTypes(
         lines(
             "{",
@@ -1060,11 +1054,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "   * @return {number}",
             "   */",
             "  function f(x) {return x}",
-            "}"),
-        lines(
-            "inconsistent return type",
-            "found   : (E<number>|null)",
-            "required: number"));
+            "}"));
   }
 
   @Test
@@ -6157,18 +6147,25 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testGlobalEnumDoesNotInfluenceLocalDefaultNullablity() {
-    // TODO(b/123710194): the local Foo should be nullable and this should not warn
     testTypes(
         lines(
             "/** @enum {number} */ const Foo = {A: 1};",
             "function f() {",
             "  class Foo {};",
             "  /** @type {Foo} */ let x = null;",
-            "}"),
+            "}"));
+  }
+
+  @Test
+  public void testLocalEnumAliasDoesNotInfluenceGlobalDefaultNullablity() {
+    testTypes(
         lines(
-            "initializing variable", //
-            "found   : null",
-            "required: Foo"));
+            "class Foo {};",
+            "/** @enum {number} */ const Bar = {A: 1};",
+            "function f() {",
+            "  const Foo = Bar;",
+            "}",
+            "/** @type {Foo} */ let x = null;"));
   }
 
   @Test

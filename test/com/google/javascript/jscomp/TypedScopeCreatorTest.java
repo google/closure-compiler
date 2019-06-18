@@ -4826,6 +4826,43 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testModuleTypedef_isNonnullableWithinModule() {
+    testSame(
+        lines(
+            "goog.module('a.b'); var /** strType */ earlyRef; ",
+            "/** @typedef {string} */ let strType; ",
+            "var /** strType */ normalRef; MODULE: mod;"));
+
+    TypedScope moduleScope = getLabeledStatement("MODULE").enclosingScope;
+    assertThat(moduleScope.getSlot("earlyRef")).hasJSTypeThat().isString();
+    assertThat(moduleScope.getSlot("normalRef")).hasJSTypeThat().isString();
+  }
+
+  @Test
+  public void testModuleTypedef_isNonnullableWhenRequired() {
+
+    testSame(
+        srcs(
+            lines(
+                "goog.module('root');",
+                "/** @typedef {string} */ let strType; ",
+                "exports.strType = strType;"),
+            lines(
+                "goog.module('a.b'); const {strType} = goog.require('root');",
+                "/** @param {strType} earlyRef */ function f(earlyRef) { EARLY_REF: earlyRef; }",
+                "var /** strType */ normalRef; NORMAL_REF: normalRef;")));
+
+    assertNode(getLabeledStatement("EARLY_REF").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        // TODO(b/116853368): This should just be 'string', but the function declaration is
+        // hoisted so it hits bugs in nullability of forward references to types.
+        .toStringIsEqualTo("(null|string)");
+    assertNode(getLabeledStatement("NORMAL_REF").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .isString();
+  }
+
+  @Test
   public void testGoogRequire_namedExportImportedAsNamespace() {
     testSame(
         srcs(
