@@ -691,9 +691,9 @@ Element.prototype.removeAttributeNode = function(oldAttr) {};
 
 /**
  * @param {string} name
- * @param {string|number|boolean} value Values are converted to strings with
- *     ToString, so we accept number and boolean since both convert easily to
- *     strings.
+ * @param {string|number|boolean|!TrustedHTML|!TrustedScriptURL|!TrustedURL}
+ *     value Values are converted to strings with ToString, so we accept number
+ *     and boolean since both convert easily to strings.
  * @return {undefined}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-setAttribute
  */
