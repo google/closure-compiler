@@ -146,16 +146,31 @@ public final class NodeSubject extends Subject {
               facts.add(fact("Expected", serializeNode(expected)));
 
               Node misActual = mismatch.actual;
-              facts.add(fact("Actual mismatch", serializeNode(misActual)));
-              if (checkJsdoc) {
-                facts.add(fact("Actual JSDoc", jsdocToStringNullsafe(misActual.getJSDocInfo())));
+              Node misExpected = mismatch.expected;
+              String misActualStr = serializeNode(misActual);
+              String misExpectedStr = serializeNode(misExpected);
+
+              facts.add(fact("Actual mismatch", misActualStr));
+              if (misActualStr.equals(misExpectedStr)) {
+                String misActualTreeStr = misActual.toStringTree();
+                if (!misActualTreeStr.equals(misActualStr)) {
+                  facts.add(fact("Actual mismatch AST", misActualTreeStr));
+                }
+                if (checkJsdoc) {
+                  facts.add(fact("Actual JSDoc", jsdocToStringNullsafe(misActual.getJSDocInfo())));
+                }
               }
 
-              Node misExpected = mismatch.expected;
-              facts.add(fact("Expected mismatch", serializeNode(misExpected)));
-              if (checkJsdoc) {
-                facts.add(
-                    fact("Expected JSDoc", jsdocToStringNullsafe(misExpected.getJSDocInfo())));
+              facts.add(fact("Expected mismatch", misExpectedStr));
+              if (misActualStr.equals(misExpectedStr)) {
+                String misExpectedTreeStr = misExpected.toStringTree();
+                if (!misExpectedTreeStr.equals(misExpectedStr)) {
+                  facts.add(fact("Expected mismatch AST", misExpectedTreeStr));
+                }
+                if (checkJsdoc) {
+                  facts.add(
+                      fact("Expected JSDoc", jsdocToStringNullsafe(misExpected.getJSDocInfo())));
+                }
               }
 
               failWithoutActual(simpleFact("Node tree inequality"), facts.toArray(new Fact[0]));
