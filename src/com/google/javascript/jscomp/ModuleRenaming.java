@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
@@ -62,7 +63,7 @@ final class ModuleRenaming {
         return ClosureRewriteModule.getBinaryModuleNamespace(googNamespace);
       case GOOG_PROVIDE:
       case LEGACY_GOOG_MODULE:
-        return googNamespace;
+        return checkNotNull(googNamespace);
       case ES6_MODULE:
       case COMMON_JS:
         return moduleMetadata.path().toModuleName();
