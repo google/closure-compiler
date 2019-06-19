@@ -32,7 +32,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-import com.google.javascript.jscomp.AbstractCompiler.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
@@ -407,7 +406,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.warningsGuard =
         new ComposeWarningsGuard(
             new J2clSuppressWarningsGuard(),
-            new SuppressDocWarningsGuard(this, getDiagnosticGroups().getRegisteredGroups()),
+            new SuppressDocWarningsGuard(this, DiagnosticGroups.getRegisteredGroups()),
             warningsGuard);
   }
 

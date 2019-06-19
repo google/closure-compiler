@@ -3393,7 +3393,7 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   private final PassFactory checkConformance =
-      new PassFactory("checkConformance", true) {
+      new PassFactory(PassNames.CHECK_CONFORMANCE, true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new CheckConformance(

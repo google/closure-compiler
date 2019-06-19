@@ -31,6 +31,7 @@ public final class PassNames {
   public static final String BEFORE_TYPE_CHECKING = "beforeTypeChecking";
   public static final String BEFORE_PRE_TYPECHECK_TRANSPILATION = "beforePreTypeCheckTranspilation";
   public static final String BEFORE_SERIALIZATION = "beforeSerialization";
+  public static final String CHECK_CONFORMANCE = "checkConformance";
   public static final String CHECK_CONST_PARAMS = "checkConstParams";
   public static final String CHECK_REG_EXP = "checkRegExp";
   public static final String CHECK_TYPES = "checkTypes";
