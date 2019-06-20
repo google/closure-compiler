@@ -24016,52 +24016,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "the intended global namespace."));
   }
 
-  @Test
-  public void testBangOperatorOnForwardReferencedType() {
-    testTypes(
-        lines(
-            "/** @typedef {?number} */",
-            "var Foo;",
-            "/** @return {!Foo} */",
-            "function f() {}",
-            "/** @const {!Foo} */",
-            "var x = f();"));
-  }
-
-  @Test
-  public void testBangOperatorOnForwardReferencedType_mismatch() {
-    testTypes(
-        lines(
-            "/** @type {!Foo} */",
-            "var x;",
-            "/** @typedef {?number} */",
-            "var Foo;",
-            "/** @type {?Foo} */",
-            "var y;",
-            "x = y;"),
-        lines("assignment", "found   : (null|number)", "required: number"));
-  }
-
-  @Test
-  public void testBangOperatorOnTypedefForShadowedNamespace() {
-    // NOTE: This is a pattern used to work around the fact that @ngInjected constructors very
-    // frequently (and unavoidably) shadow global namespaces (i.e. angular.modules) with constructor
-    // parameters.
-    testTypes(
-        lines(
-            "/** @typedef {!service.Service} */",
-            "var serviceService;",
-            "/** @constructor @param {!service.Service} service */",
-            "var Controller = function(service) {",
-            "  /** @private {!serviceService} */",
-            "  this.service = service;",
-            "};",
-            "/** @const */",
-            "var service = {};",
-            "/** @constructor */",
-            "service.Service = function() {};"));
-  }
-
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));

@@ -1305,6 +1305,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // TODO(johnlenz): It would be nice if there were some way to preserve
     // typedefs but currently they are resolved into the basic types in the
     // type registry.
+    // NOTE(sdh): The type inferrence does not correctly remove null
     assertTypeAnnotations(
         LINE_JOINER.join(
             "/** @const */ var goog = {};",
@@ -1317,7 +1318,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "/** @const */ goog.java = {};",
             "goog.java.Long;",
             "/**",
-            " * @param {!Array<number>} a",
+            " * @param {(Array<number>|null)} a",
             " * @return {undefined}",
             " */",
             "function f(a) {\n}\n"));

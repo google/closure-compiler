@@ -97,7 +97,6 @@ public final class NamedType extends ProxyObjectType {
   private final String sourceName;
   private final int lineno;
   private final int charno;
-  private final boolean nonNull;
 
   /**
    * Validates the type resolution.
@@ -136,22 +135,13 @@ public final class NamedType extends ProxyObjectType {
       int charno,
       ImmutableList<JSType> templateTypes) {
     super(registry, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
-    this.nonNull = reference.startsWith("!");
+    checkNotNull(reference);
     this.resolutionScope = scope;
-    this.reference = nonNull ? reference.substring(1) : reference;
+    this.reference = reference;
     this.sourceName = sourceName;
     this.lineno = lineno;
     this.charno = charno;
     this.templateTypes = templateTypes;
-  }
-
-  /** Returns a new non-null version of this type. */
-  NamedType getBangType() {
-    if (nonNull) {
-      return this;
-    }
-    return new NamedType(
-        resolutionScope, registry, "!" + reference, sourceName, lineno, charno, templateTypes);
   }
 
   @Override
@@ -358,9 +348,6 @@ public final class NamedType extends ProxyObjectType {
 
   private void setReferencedAndResolvedType(
       JSType type, ErrorReporter reporter) {
-    if (nonNull) {
-      type = type.restrictByNotNullOrUndefined();
-    }
     if (validator != null) {
       validator.apply(type);
     }
