@@ -99,7 +99,7 @@ public class NoType extends NoObjectType {
 
   @Override
   public final BooleanLiteralSet getPossibleToBooleanOutcomes() {
-    return BooleanLiteralSet.EMPTY;
+    return BooleanLiteralSet.BOTH;
   }
 
   @Override

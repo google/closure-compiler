@@ -691,6 +691,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(
         nullable, nullable.getGreatestSubtype(NULL_TYPE));
     assertTypeEquals(NO_RESOLVED_TYPE, nullable.getRestrictedUnion(NULL_TYPE));
+
+    UnionType testIsVoidable = (UnionType) registry.createUnionType(NO_RESOLVED_TYPE, VOID_TYPE);
+    assertThat(testIsVoidable.getPossibleToBooleanOutcomes()).isEqualTo(BooleanLiteralSet.BOTH);
   }
 
   /** Tests the behavior of the Array type. */
