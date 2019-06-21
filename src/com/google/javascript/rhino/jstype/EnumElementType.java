@@ -39,7 +39,6 @@
 
 package com.google.javascript.rhino.jstype;
 
-
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 
