@@ -784,19 +784,42 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testStringAdd() {
-    fold("x = 'a' + \"bc\"", "x = \"abc\"");
-    fold("x = 'a' + 5", "x = \"a5\"");
-    fold("x = 5 + 'a'", "x = \"5a\"");
-    fold("x = 'a' + ''", "x = \"a\"");
-    fold("x = \"a\" + foo()", "x = \"a\"+foo()");
-    fold("x = foo() + 'a' + 'b'", "x = foo()+\"ab\"");
-    fold("x = (foo() + 'a') + 'b'", "x = foo()+\"ab\"");  // believe it!
-    fold("x = foo() + 'a' + 'b' + 'cd' + bar()", "x = foo()+\"abcd\"+bar()");
-    fold("x = foo() + 2 + 'b'", "x = foo()+2+\"b\"");  // don't fold!
+    fold("x = 'a' + 'bc'", "x = 'abc'");
+    fold("x = 'a' + 5", "x = 'a5'");
+    fold("x = 5 + 'a'", "x = '5a'");
+    fold("x = 'a' + ''", "x = 'a'");
+    fold("x = 'a' + foo()", "x = 'a'+foo()");
+    fold("x = foo() + 'a' + 'b'", "x = foo()+'ab'");
+    fold("x = (foo() + 'a') + 'b'", "x = foo()+'ab'"); // believe it!
+    fold("x = foo() + 'a' + 'b' + 'cd' + bar()", "x = foo()+'abcd'+bar()");
+    fold("x = foo() + 2 + 'b'", "x = foo()+2+\"b\""); // don't fold!
     fold("x = foo() + 'a' + 2", "x = foo()+\"a2\"");
-    fold("x = '' + null", "x = \"null\"");
-    fold("x = true + '' + false", "x = \"truefalse\"");
-    fold("x = '' + []", "x = ''");      // cannot fold (but nice if we can)
+    fold("x = '' + null", "x = 'null'");
+    fold("x = true + '' + false", "x = 'truefalse'");
+    fold("x = '' + []", "x = ''");
+    fold("x = foo() + 'a' + 1 + 1", "x = foo() + 'a11'");
+    fold("x = 1 + 1 + 'a'", "x = '2a'");
+    fold("x = 1 + 1 + 'a'", "x = '2a'");
+    fold("x = 'a' + (1 + 1)", "x = 'a2'");
+    fold("x = '_' + p1 + '_' + ('' + p2)", "x = '_' + p1 + '_' + p2");
+    fold("x = 'a' + ('_' + 1 + 1)", "x = 'a_11'");
+    fold("x = 'a' + ('_' + 1) + 1", "x = 'a_11'");
+    fold("x = 1 + (p1 + '_') + ('' + p2)", "x = 1 + (p1 + '_') + p2");
+    fold("x = 1 + p1 + '_' + ('' + p2)", "x = 1 + p1 + '_' + p2");
+    fold("x = 1 + 'a' + p1", "x = '1a' + p1");
+    fold("x = (p1 + (p2 + 'a')) + 'b'", "x = (p1 + (p2 + 'ab'))");
+    fold("'a' + ('b' + p1) + 1", "'ab' + p1 + 1");
+    fold("x = 'a' + ('b' + p1 + 'c')", "x = 'ab' + (p1 + 'c')");
+    foldSame("x = 'a' + (4 + p1 + 'a')");
+    foldSame("x = p1 / 3 + 4");
+    foldSame("foo() + 3 + 'a' + foo()");
+    foldSame("x = 'a' + ('b' + p1 + p2)");
+    foldSame("x = 1 + ('a' + p1)");
+    foldSame("x = p1 + '' + p2");
+    foldSame("x = 'a' + (1 + p1)");
+    foldSame("x = (p2 + 'a') + (1 + p1)");
+    foldSame("x = (p2 + 'a') + (1 + p1 + p2)");
+    foldSame("x = (p2 + 'a') + (1 + (p1 + p2))");
   }
 
   @Test

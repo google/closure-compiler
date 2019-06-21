@@ -629,75 +629,77 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Expressions such as [foo() + 'a' + 'b'] generate parse trees
-   * where no node has two const children ((foo() + 'a') + 'b'), so
-   * tryFoldAdd() won't fold it -- tryFoldLeftChildAdd() will (for Strings).
-   * Specifically, it folds Add expressions where:
-   *  - The left child is also and add expression
-   *  - The right child is a constant value
-   *  - The left child's right child is a STRING constant.
+   * Takes a subtree representing an expression of chained addition between expressions and folds
+   * adjacent string addition when possible and safe.
+   *
+   * @param n root node of ADD expression to be optimized
+   * @param left left child of n being added
+   * @param right right child of n being added
+   * @return AST subtree starting from n that has been optimized to collapse the rightmost left
+   *     child leaf node which must be a string literal and the leftmost right child leaf node if
+   *     possible to do so in a type safe way.
    */
-  private Node tryFoldChildAddString(Node n, Node left, Node right) {
-
-    if (NodeUtil.isLiteralValue(right, false) &&
-        left.isAdd()) {
-
-      Node ll = left.getFirstChild();
-      Node lr = ll.getNext();
-
-      // Left's right child MUST be a string. We would not want to fold
-      // foo() + 2 + 'a' because we don't know what foo() will return, and
-      // therefore we don't know if left is a string concat, or a numeric add.
-      if (lr.isString()) {
-        String leftString = lr.getString();
-        // Note that we don't have to call getSideEffectFreeStringValue() here because
-        // the enclosing logic guarantees that `right` is a literal value.
-        String rightString = NodeUtil.getStringValue(right);
-        if (leftString != null && rightString != null) {
-          left.removeChild(ll);
-          String result = leftString + rightString;
-          n.replaceChild(left, ll);
-          n.replaceChild(right, IR.string(result));
-          reportChangeToEnclosingScope(n);
-          return n;
+  private Node tryFoldAdjacentLiteralLeaves(Node n, Node left, Node right) {
+    // Find left child's rightmost leaf
+    Node leftParent = n;
+    Node rightParent = n;
+    while (left.isAdd()) {
+      // This had better be in a chain of '+' operations
+      leftParent = left;
+      left = left.getSecondChild();
+    }
+    // Find right child's leftmost leaf
+    while (right.isAdd()) {
+      // This had better be in a chain of '+' operations
+      rightParent = right;
+      right = right.getFirstChild();
+    }
+    // Try to fold if of the form:
+    // ... + <STRINGLITERAL> + <LITERAL>
+    // ... + <STRINGLITERAL> + (<LITERAL> + ...)
+    // aka. when the literal might be collapsible into the string
+    if (leftParent.isAdd()
+        && left.isString()
+        && rightParent.isAdd()
+        && NodeUtil.isLiteralValue(right, /* includeFunctions= */ false)) {
+      Node rightGrandparent = rightParent.getParent();
+      // `rr` is righthand side term that `right` is being added to and is null if right is still
+      // the second child of `n` being added to `left` and non-null if it is in a nested add expr
+      Node rr = right.getNext();
+      boolean foldIsTypeSafe =
+          // If right.getNext() is already a string, folding won't disturb any typecasting
+          (rr != null && NodeUtil.isStringResult(rr))
+              || (rr != null
+                  // If right.getNext() isn't a string result, right must be a string to be folded
+                  && right.isString()
+                  // Access the right grandparent safely...
+                  && rightGrandparent != null
+                  && rightGrandparent.isAdd()
+                  // The second child of `rightGrandparent` is what `right + rr` is being added to.
+                  // If it exists, `right` can only be safely removed if `rr` is still treated as a
+                  // string in the resulting addition.
+                  && NodeUtil.isStringResult(rightGrandparent.getSecondChild()))
+              // Dangling literal term has no typecasting side effects; fold it!
+              || (rr == null);
+      if (foldIsTypeSafe) {
+        String result = left.getString() + NodeUtil.getStringValue(right);
+        // If the right parent is the root, shift the left parent up so as not to overwrite the tree
+        // Otherwise, shift the right parent up
+        if (rightParent.getSecondChild().equals(right)) {
+          left.replaceWith(IR.string(result));
+          replace(rightParent, rightParent.getFirstChild().cloneTree(true));
+        } else {
+          left.replaceWith(IR.string(result));
+          replace(rightParent, rightParent.getSecondChild().cloneTree(true));
         }
       }
     }
-
-    if (NodeUtil.isLiteralValue(left, false) &&
-        right.isAdd()) {
-
-      Node rl = right.getFirstChild();
-      Node rr = right.getLastChild();
-
-      // Left's right child MUST be a string. We would not want to fold
-      // foo() + 2 + 'a' because we don't know what foo() will return, and
-      // therefore we don't know if left is a string concat, or a numeric add.
-      if (rl.isString()) {
-        // Note that we don't have to call getSideEffectFreeStringValue() here because
-        // the enclosing logic guarantees that `left` is a literal value.
-        String leftString = NodeUtil.getStringValue(left);
-        String rightString = rl.getString();
-        if (leftString != null && rightString != null) {
-          right.removeChild(rr);
-          String result = leftString + rightString;
-          n.replaceChild(right, rr);
-          n.replaceChild(left, IR.string(result));
-          reportChangeToEnclosingScope(n);
-          return n;
-        }
-      }
-    }
-
     return n;
   }
 
-  /**
-   * Try to fold an ADD node with constant operands
-   */
+  /** Try to fold an ADD node with constant operands */
   private Node tryFoldAddConstantString(Node n, Node left, Node right) {
-    if (left.isString() || right.isString()
-        || left.isArrayLit() || right.isArrayLit()) {
+    if (left.isString() || right.isString() || left.isArrayLit() || right.isArrayLit()) {
       // Add strings.
       String leftString = getSideEffectFreeStringValue(left);
       String rightString = getSideEffectFreeStringValue(right);
@@ -925,7 +927,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           return replace(node, left.cloneTree(true));
         }
         // a + 7 or 6 + a
-        return tryFoldChildAddString(node, left, right);
+        return tryFoldAdjacentLiteralLeaves(node, left, right);
       }
     } else {
       // Try arithmetic add
