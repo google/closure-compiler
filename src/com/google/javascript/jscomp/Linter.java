@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE;
+import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_ALL_COMMENTS;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
@@ -53,7 +53,7 @@ public final class Linter {
     private Builder() {
       options = new CompilerOptions();
       options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
-      options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
+      options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
       options.setPreserveDetailedSourceInfo(true);
 
       // These are necessary to make sure that suggested fixes are printed correctly.
@@ -62,7 +62,7 @@ public final class Linter {
       options.setPreferSingleQuotes(true);
       options.setEmitUseStrict(false);
 
-      options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
+      options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
       options.setCodingConvention(new GoogleCodingConvention());
 
       // Even though we're not running the typechecker, enable the checkTypes DiagnosticGroup, since

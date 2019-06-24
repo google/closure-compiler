@@ -99,14 +99,15 @@ public abstract class Config {
   public enum JsDocParsing {
     TYPES_ONLY,
     INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
-    INCLUDE_DESCRIPTIONS_WITH_WHITESPACE;
+    INCLUDE_DESCRIPTIONS_WITH_WHITESPACE,
+    INCLUDE_ALL_COMMENTS;
 
     boolean shouldParseDescriptions() {
       return this != TYPES_ONLY;
     }
 
     boolean shouldPreserveWhitespace() {
-      return this == INCLUDE_DESCRIPTIONS_WITH_WHITESPACE;
+      return this == INCLUDE_DESCRIPTIONS_WITH_WHITESPACE || this == INCLUDE_ALL_COMMENTS;
     }
   }
 

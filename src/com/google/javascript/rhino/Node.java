@@ -77,6 +77,8 @@ public class Node implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private enum Prop {
+    // Contains non-JSDoc comment
+    NON_JSDOC_COMMENT,
     // Contains a JSDocInfo object
     JSDOC_INFO,
     // The name node is a variable length argument placeholder.
@@ -206,6 +208,24 @@ public class Node implements Serializable {
     TYPEDEF_TYPE,
     // Original name of a goog.define call.
     DEFINE_NAME,
+  }
+
+  /**
+   * Get the NonJSDoc comment attached to this node.
+   *
+   * @return the information or empty string if no nonJSDoc is attached to this node
+   */
+  public final String getNonJSDocCommentString() {
+    if (getProp(Prop.NON_JSDOC_COMMENT) == null) {
+      return "";
+    }
+    return (String) getProp(Prop.NON_JSDOC_COMMENT);
+  }
+
+  /** Sets the NonJSDoc comment attached to this node. */
+  public final Node setNonJSDocComment(String comment) {
+    putProp(Prop.NON_JSDOC_COMMENT, comment);
+    return this;
   }
 
   // TODO(sdh): Get rid of these by using accessor methods instead.

@@ -27,6 +27,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -80,6 +81,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private static final String SEMICOLON_EXPECTED = "Semi-colon expected";
 
   private Config.LanguageMode mode;
+  private Config.JsDocParsing parsingMode;
   private Config.StrictMode strictMode;
   private boolean isIdeMode = false;
   private FeatureSet expectedFeatures;
@@ -89,6 +91,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void setUp() throws Exception {
     super.setUp();
     mode = LanguageMode.ES_NEXT;
+    parsingMode = JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
     strictMode = SLOPPY;
     isIdeMode = false;
     expectedFeatures = FeatureSet.BARE_MINIMUM;
@@ -2670,6 +2673,54 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testBlockCommentParsed() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse("/* Hi mom! */ \n function Foo() {}");
+    assertNode(n.getFirstChild()).hasType(Token.FUNCTION);
+    assertThat(n.getFirstChild().getNonJSDocCommentString()).isEqualTo("/* Hi mom! */");
+  }
+
+  @Test
+  public void testLineCommentParsed() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse("// Hi mom! \n function Foo() {}");
+    assertNode(n.getFirstChild()).hasType(Token.FUNCTION);
+    assertThat(n.getFirstChild().getNonJSDocCommentString()).isEqualTo("// Hi mom!");
+  }
+
+  @Test
+  public void testManyIndividualCommentsGetAttached() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse("// Hi Mom! \n function Foo() {} \n // Hi Dad! \n  function Bar() {}");
+    assertNode(n.getFirstChild()).hasType(Token.FUNCTION);
+    assertThat(n.getFirstChild().getNonJSDocCommentString()).isEqualTo("// Hi Mom!");
+    assertNode(n.getSecondChild()).hasType(Token.FUNCTION);
+    assertThat(n.getSecondChild().getNonJSDocCommentString()).isEqualTo("// Hi Dad!");
+  }
+
+  @Test
+  public void testMultipleLinedCommentsAttachedToSameNode() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse("// Hi Mom! \n // And Dad! \n  function Foo() {} ");
+    assertNode(n.getFirstChild()).hasType(Token.FUNCTION);
+    assertThat(n.getFirstChild().getNonJSDocCommentString()).isEqualTo("// Hi Mom!\n// And Dad!");
+  }
+
+  @Test
+  public void testEmptyLinesBetweenCommentsIsPreserved() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse("/* Hi Mom!*/ \n\n\n // And Dad! \n  function Foo() {} ");
+    assertNode(n.getFirstChild()).hasType(Token.FUNCTION);
+    assertThat(n.getFirstChild().getNonJSDocCommentString())
+        .isEqualTo("/* Hi Mom!*/\n\n\n// And Dad!");
+  }
+
+  @Test
   public void testObjectLiteralDoc1() {
     Node n = parse("var x = {/** @type {number} */ 1: 2};");
 
@@ -5246,12 +5297,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private Config createConfig() {
     if (isIdeMode) {
       return ParserRunner.createConfig(
-          mode,
-          Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
-          Config.RunMode.KEEP_GOING,
-          null,
-          true,
-          strictMode);
+          mode, parsingMode, Config.RunMode.KEEP_GOING, null, true, strictMode);
     } else {
       return ParserRunner.createConfig(mode, null, strictMode);
     }

@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
+import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -157,6 +158,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.dtoa.DToA;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -257,8 +259,10 @@ class IRFactory {
   private final Node templateNode;
 
   private final UnmodifiableIterator<Comment> nextCommentIter;
+  private final UnmodifiableIterator<Comment> nextNonJSDocCommentIter;
 
   private Comment currentComment;
+  private Comment currentNonJSDocComment;
 
   private boolean currentFileIsExterns = false;
   private boolean hasJsDocTypeAnnotations = false;
@@ -273,7 +277,9 @@ class IRFactory {
                     ImmutableList<Comment> comments) {
     this.sourceString = sourceString;
     this.nextCommentIter = comments.iterator();
+    this.nextNonJSDocCommentIter = comments.iterator();
     this.currentComment = skipNonJsDoc(nextCommentIter);
+    this.currentNonJSDocComment = skipJsDocComments(nextNonJSDocCommentIter);
     this.sourceFile = sourceFile;
     // The template node properties are applied to all nodes in this transform.
     this.templateNode = createTemplateNode();
@@ -692,6 +698,56 @@ class IRFactory {
     }
   }
 
+  private static String combineCommentsIntoSingleString(ArrayList<Comment> comments) {
+    String result = "";
+    Iterator<Comment> itr = comments.iterator();
+    int prevCommentEndLine = Integer.MAX_VALUE;
+    while (itr.hasNext()) {
+      Comment currComment = itr.next();
+      while (prevCommentEndLine < currComment.location.start.line) {
+        result += "\n";
+        prevCommentEndLine++;
+      }
+      result += currComment.value;
+      if (itr.hasNext()) {
+        prevCommentEndLine = currComment.location.end.line;
+      }
+    }
+    return result;
+  }
+
+  private static Comment skipJsDocComments(UnmodifiableIterator<Comment> comments) {
+    while (comments.hasNext()) {
+      Comment comment = comments.next();
+      if (comment.type == Comment.Type.LINE || comment.type == Comment.Type.BLOCK) {
+        return comment;
+      }
+    }
+    return null;
+  }
+
+  private boolean hasPendingNonJSDocCommentBefore(SourceRange location) {
+    return currentNonJSDocComment != null
+        && currentNonJSDocComment.location.end.offset <= location.start.offset;
+  }
+
+  private ArrayList<Comment> getNonJsDocComments(SourceRange location) {
+    ArrayList<Comment> previousComments = new ArrayList<>();
+    while (hasPendingNonJSDocCommentBefore(location)) {
+      previousComments.add(currentNonJSDocComment);
+      currentNonJSDocComment = skipJsDocComments(nextNonJSDocCommentIter);
+    }
+    return previousComments;
+  }
+
+  private ArrayList<Comment> getNonJsDocComment(ParseTree tree) {
+    return getNonJsDocComments(tree.location);
+  }
+
+  private ArrayList<Comment> handleNonJSDocComment(ParseTree node) {
+    return getNonJsDocComment(node);
+  }
+
   private static ParseTree findNearestNode(ParseTree tree) {
     while (true) {
       switch (tree.type) {
@@ -724,11 +780,19 @@ class IRFactory {
 
   Node transform(ParseTree tree) {
     JSDocInfo info = handleJsDoc(tree);
+    ArrayList<Comment> associatedComments = handleNonJSDocComment(tree);
     Node node = transformDispatcher.process(tree);
     if (info != null) {
       node = maybeInjectCastNode(tree, info, node);
       node.setJSDocInfo(info);
     }
+    if (this.config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
+      if (!associatedComments.isEmpty()) {
+        String completeComment = combineCommentsIntoSingleString(associatedComments);
+        node.setNonJSDocComment(completeComment);
+      }
+    }
+
     setSourceInfo(node, tree);
     return node;
   }
