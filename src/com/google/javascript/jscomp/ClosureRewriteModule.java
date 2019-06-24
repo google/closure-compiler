@@ -530,45 +530,58 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             return;
           }
           // A type name that might be simple like "Foo" or qualified like "foo.Bar".
-          String typeName = typeRefNode.getString();
+          final String typeName = typeRefNode.getString();
+          int dot = typeName.indexOf('.');
+          String rootOfType = dot == -1 ? typeName : typeName.substring(0, dot);
 
-          // Tries to rename progressively shorter type prefixes like "foo.Bar.Baz", "foo.Bar",
-          // "foo".
-          String prefixTypeName = typeName;
-          String suffix = "";
-          do {
-            // If the name is an alias for an imported namespace rewrite from
-            // "{Foo}" to
-            // "{module$exports$bar$Foo}" or
-            // "{bar.Foo}"
-            boolean nameIsAnAlias =
-                currentScript.namesToInlineByAlias.containsKey(prefixTypeName);
-            if (nameIsAnAlias) {
-              if (preprocessorSymbolTable != null) {
-                // Jsdoc type node is a single STRING node that spans the whole type. For example
-                // STRING node "bar.Foo". When rewriting modules potentially replace only "module"
-                // part of the type: "bar.Foo" => "module$exports$bar$Foo". So we need to remember
-                // that "bar" as alias. To do that we clone type node and make "bar" node from it.
-                Node moduleOnlyNode = typeRefNode.cloneNode();
-                safeSetString(moduleOnlyNode, prefixTypeName);
-                moduleOnlyNode.setLength(prefixTypeName.length());
-                maybeAddAliasToSymbolTable(moduleOnlyNode, currentScript.legacyNamespace);
-              }
+          // Rewrite the type node if any of the following hold, in priority order:
+          //  - the root of the type name is in our set of aliases to inline
+          //  - the root of the type name is a name defined in the module scope
+          //  - a prefix of the type name matches a Closure namespace
+          // TODO(b/135536377): skip rewriting if the root name is from an inner scope in the module
 
-              String aliasedNamespace = currentScript.namesToInlineByAlias.get(prefixTypeName);
-              safeSetString(typeRefNode, aliasedNamespace + suffix);
-              return;
+          // If the name is an alias for an imported namespace rewrite from
+          // "{Foo}" to
+          // "{module$exports$bar$Foo}" or
+          // "{bar.Foo}"
+          if (currentScript.namesToInlineByAlias.containsKey(rootOfType)) {
+            if (preprocessorSymbolTable != null) {
+              // Jsdoc type node is a single STRING node that spans the whole type. For example
+              // STRING node "bar.Foo". When rewriting modules potentially replace only "module"
+              // part of the type: "bar.Foo" => "module$exports$bar$Foo". So we need to remember
+              // that "bar" as alias. To do that we clone type node and make "bar" node from it.
+              Node moduleOnlyNode = typeRefNode.cloneNode();
+              safeSetString(moduleOnlyNode, rootOfType);
+              moduleOnlyNode.setLength(rootOfType.length());
+              maybeAddAliasToSymbolTable(moduleOnlyNode, currentScript.legacyNamespace);
             }
 
+            String aliasedNamespace = currentScript.namesToInlineByAlias.get(rootOfType);
+            String remainder = dot == -1 ? "" : typeName.substring(dot);
+            safeSetString(typeRefNode, aliasedNamespace + remainder);
+          } else if (currentScript.isModule && currentScript.topLevelNames.contains(rootOfType)) {
             // If this is a module and the type name is the name of a top level var/function/class
             // defined in this script then that var will have been previously renamed from Foo to
             // module$contents$Foo_Foo. Update the JsDoc reference to match.
-            if (currentScript.isModule && currentScript.topLevelNames.contains(prefixTypeName)) {
-              safeSetString(typeRefNode, currentScript.contentsPrefix + typeName);
-              return;
-            }
+            safeSetString(typeRefNode, currentScript.contentsPrefix + typeName);
+          } else {
+            rewriteIfClosureNamespaceRef(typeName, typeRefNode);
+          }
+        }
 
+        /**
+         * Tries to match the longest possible prefix of this type to a Closure namespace
+         *
+         * <p>If the longest prefix match is a legacy module or provide, this is a no-op. If the
+         * longest prefix match is a non-legacy module, this method rewrites the type node.
+         */
+        private void rewriteIfClosureNamespaceRef(String typeName, Node typeRefNode) {
+          // Tries to rename progressively shorter type prefixes like "foo.Bar.Baz", then "foo.Bar",
+          // then "foo".
+          String prefixTypeName = typeName;
+          String suffix = "";
 
+          while (true) {
             String binaryNamespaceIfModule = rewriteState.getBinaryNamespace(prefixTypeName);
             if (legacyScriptNamespacesAndPrefixes.contains(prefixTypeName)
                 && binaryNamespaceIfModule == null) {
@@ -580,6 +593,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             // If the typeName is a reference to a fully qualified legacy namespace like
             // "foo.bar.Baz" of something that is actually a module then rewrite the JsDoc reference
             // to "module$exports$Bar".
+            // Note: we may want to ban this pattern in the future. See b/133501660.
             if (binaryNamespaceIfModule != null) {
               safeSetString(typeRefNode, binaryNamespaceIfModule + suffix);
               return;
@@ -587,11 +601,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
             if (prefixTypeName.contains(".")) {
               prefixTypeName = prefixTypeName.substring(0, prefixTypeName.lastIndexOf('.'));
-              suffix = typeName.substring(prefixTypeName.length(), typeName.length());
+              suffix = typeName.substring(prefixTypeName.length());
             } else {
-              return;
+              break;
             }
-          } while (true);
+          }
         }
       };
 

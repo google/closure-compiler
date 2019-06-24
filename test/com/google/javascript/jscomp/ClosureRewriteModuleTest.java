@@ -1352,27 +1352,28 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void testAliasedGoogModuleGet4() {
     test(
         new String[] {
-            lines(
-                "goog.module('x.y.z');",
-                "/** @constructor */ function Z() {}",
-                "exports = Z"),
-            lines(
+          lines(
+              "goog.module('x.y.z');", //
+              "/** @constructor */ function Z() {}",
+              "exports = Z"),
+          lines(
               "goog.module('a');",
               "/** @type {x.y.z} */ var c;",
               "var x = goog.forwardDeclare('x.y.z');",
               "function f() {",
               "  x = goog.module.get('x.y.z');",
               "  c = new x;",
-              "}")},
-
+              "}")
+        },
         new String[] {
-            "/** @constructor */ function module$exports$x$y$z() {}",
-            lines(
-                "/** @const */ var module$exports$a = {};",
-                "/** @type {module$exports$x$y$z} */ var module$contents$a_c;",
-                "function module$contents$a_f() {",
-                "  module$contents$a_c = new module$exports$x$y$z;",
-                "}")});
+          "/** @constructor */ function module$exports$x$y$z() {}",
+          lines(
+              "/** @const */ var module$exports$a = {};",
+              "/** @type {module$contents$a_x.y.z} */ var module$contents$a_c;",
+              "function module$contents$a_f() {",
+              "  module$contents$a_c = new module$exports$x$y$z;",
+              "}")
+        });
   }
 
   @Test
@@ -2521,6 +2522,66 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "/** @constructor @const */ module$exports$base.Foo = function() {};"),
             "/** @const */ var module$exports$FooWrapper = module$exports$base.Foo;",
         });
+  }
+
+  @Test
+  public void testRewriteGoogModuleTypes_localShadowsModuleScopeVar() {
+    test(
+        lines(
+            "goog.module('client');", //
+            "class Foo {}",
+            "{",
+            "  class Foo {}",
+            "  let /** !Foo */ x;",
+            "}"),
+        lines(
+            "/** @const */ var module$exports$client = {};", //
+            "class module$contents$client_Foo {}",
+            "{",
+            "  class Foo {}",
+            // TODO(b/135536377): this should remain `Foo`.
+            "  let /** !module$contents$client_Foo */ x;",
+            "}"));
+  }
+
+  @Test
+  public void testRewriteGoogModuleTypes_localShadowsProvide() {
+    test(
+        srcs(
+            "goog.provide('Foo.Child');",
+            "goog.module('Bar'); exports.Child = class {};",
+            lines(
+                "goog.module('client');", //
+                "const Foo = goog.require('Bar');",
+                "let /** !Foo.Child */ myStr;")), // Foo.Child refers to the local, not the provide.
+        expected(
+            "goog.provide('Foo.Child');",
+            lines(
+                "/** @const */ var module$exports$Bar = {};", //
+                "/** @const */ module$exports$Bar.Child = class {};"),
+            lines(
+                "/** @const */ var module$exports$client = {};", //
+                "let /** !module$exports$Bar.Child */ module$contents$client_myStr;")));
+  }
+
+  @Test
+  public void testRewriteGoogModuleTypes_localShadowsModule() {
+    test(
+        srcs(
+            "goog.module('Foo.Child');",
+            "goog.module('Bar'); exports.Child = class {};",
+            lines(
+                "goog.module('client');", //
+                "const Foo = goog.require('Bar');",
+                "let /** !Foo.Child */ myStr;")), // Foo.Child refers to the local, not the module.
+        expected(
+            "/** @const */ var module$exports$Foo$Child = {}",
+            lines(
+                "/** @const */ var module$exports$Bar = {};", //
+                "/** @const */ module$exports$Bar.Child = class {};"),
+            lines(
+                "/** @const */ var module$exports$client = {};", //
+                "let /** !module$exports$Bar.Child */ module$contents$client_myStr;")));
   }
 
   @Test
