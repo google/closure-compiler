@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.gwt.client;
 
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -190,29 +189,19 @@ public class JsfileParser {
       JsRegExp.Match match;
       List<CommentAnnotation> out = new ArrayList<>();
       while ((match = re.exec(comment)) != null) {
-        boolean modName = match.get(OTHER_ANNOTATION_GROUP) == null;
-        String name = modName ? "@modName" : match.get(OTHER_ANNOTATION_GROUP);
-        String value =
-            Strings.nullToEmpty(match.get(modName ? MODNAME_VALUE_GROUP : OTHER_VALUE_GROUP));
+        String name = match.get(ANNOTATION_NAME_GROUP);
+        String value = Strings.nullToEmpty(match.get(ANNOTATION_VALUE_GROUP));
         out.add(new CommentAnnotation(name, value));
       }
       return out;
     }
 
+    // Regex for a JSDoc annotation with an `@name` and an optional brace-delimited `{value}`.
+    // The `@` should not match the middle of a word.
     private static final String ANNOTATION_RE =
-        Joiner.on("").join(
-            // Don't match "@" in the middle of a word
-            "(?:[^a-zA-Z0-9_$]|^)",
-            "(?:",
-            // Case 1: @modName with a single identifier and no braces
-            "@modName[\\t\\v\\f ]*([^{\\t\\n\\v\\f\\r ][^\\t\\n\\v\\f\\r ]*)",
-            "|",
-            // Case 2: Everything else, with an optional brace-delimited argument
-            "(@[a-zA-Z]+)(?:\\s*\\{\\s*([^}\\t\\n\\v\\f\\r ]+)\\s*\\})?",
-            ")");
-    private static final int MODNAME_VALUE_GROUP = 1;
-    private static final int OTHER_ANNOTATION_GROUP = 2;
-    private static final int OTHER_VALUE_GROUP = 3;
+        "(?:[^a-zA-Z0-9_$]|^)(@[a-zA-Z]+)(?:\\s*\\{\\s*([^}\\t\\n\\v\\f\\r ]+)\\s*\\})?";
+    private static final int ANNOTATION_NAME_GROUP = 1;
+    private static final int ANNOTATION_VALUE_GROUP = 2;
   }
 
   /** Method exported to JS to parse a file for dependencies and annotations. */
