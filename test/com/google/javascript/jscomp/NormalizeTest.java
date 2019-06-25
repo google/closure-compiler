@@ -857,7 +857,10 @@ public final class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).isEmpty();
+    assertThat(constantNodes).hasSize(2);
+    for (Node hasProp : constantNodes) {
+      assertThat(hasProp.getString()).isEqualTo("CONST");
+    }
   }
 
   @Test
@@ -868,7 +871,10 @@ public final class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).isEmpty();
+    assertThat(constantNodes).hasSize(4);
+    for (Node hasProp : constantNodes) {
+      assertThat(hasProp.getString()).isEqualTo("CONST");
+    }
   }
 
   @Test
@@ -877,7 +883,10 @@ public final class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).isEmpty();
+    assertThat(constantNodes).hasSize(3);
+    for (Node hasProp : constantNodes) {
+      assertThat(hasProp.getString()).isEqualTo("CONST");
+    }
   }
 
   @Test
@@ -886,7 +895,10 @@ public final class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).isEmpty();
+    assertThat(constantNodes).hasSize(2);
+    for (Node hasProp : constantNodes) {
+      assertThat(hasProp.getString()).isEqualTo("CONST");
+    }
   }
 
   @Test
@@ -895,7 +907,10 @@ public final class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).isEmpty();
+    assertThat(constantNodes).hasSize(2);
+    for (Node hasProp : constantNodes) {
+      assertThat(hasProp.getString()).isEqualTo("CONST");
+    }
   }
 
   @Test
@@ -904,7 +919,10 @@ public final class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).isEmpty();
+    assertThat(constantNodes).hasSize(2);
+    for (Node hasProp : constantNodes) {
+      assertThat(hasProp.getString()).isEqualTo("CONST");
+    }
   }
 
   @Test
@@ -914,7 +932,10 @@ public final class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).isEmpty();
+    assertThat(constantNodes).hasSize(2);
+    for (Node hasProp : constantNodes) {
+      assertThat(hasProp.getString()).isEqualTo("CONST");
+    }
   }
 
   @Test

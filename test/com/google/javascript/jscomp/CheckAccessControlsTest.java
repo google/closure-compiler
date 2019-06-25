@@ -2329,9 +2329,9 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   public void testConstantProperty1b() {
     testError(
         "/** @constructor */ function A() {"
-            + "/** @const */ this.BAR = 3;}"
-            + "/** @constructor */ function B() {"
-            + "/** @const */ this.BAR = 3;this.BAR += 4;}",
+        + "this.BAR = 3;}"
+        + "/** @constructor */ function B() {"
+        + "this.BAR = 3;this.BAR += 4;}",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
@@ -2349,9 +2349,9 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   public void testConstantProperty2b() {
     testError(
         "/** @constructor */ function Foo() {}"
-            + "/** @const */ Foo.prototype.PROP = 2;"
-            + "var foo = new Foo();"
-            + "foo.PROP = 3;",
+        + "Foo.prototype.PROP = 2;"
+        + "var foo = new Foo();"
+        + "foo.PROP = 3;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
@@ -2428,8 +2428,8 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   public void testConstantProperty4b() {
     testError(
         "/** @constructor */ function cat(name) {}"
-            + "/** @const */ cat.TEST = 1;"
-            + "cat.TEST *= 2;",
+        + "cat.TEST = 1;"
+        + "cat.TEST *= 2;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
@@ -2558,25 +2558,24 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   @Test
   public void testConstantProperty15a() {
-    // TODO(b/135708421): This should emit a CONST_PROPERTY_REASSIGNED_VALUE warning but fails to
-    // because of the /** @type {number} */ annotation above `foo.CONST = 0;`.
-    testSame(
-        "/** @constructor */ function Foo() { /** @const */ this.CONST = 100; };\n"
-            + "/** @type {Foo} */\n"
-            + "var foo = new Foo();\n"
-            + "/** @type {number} */\n"
-            + "foo.CONST = 0;");
+    testError(
+        "/** @constructor */ function Foo() { this.CONST = 100; };\n"
+        + "/** @type {Foo} */\n"
+        + "var foo = new Foo();\n"
+        + "/** @type {number} */\n"
+        + "foo.CONST = 0;",
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantProperty15b() {
     testError(
         "/** @constructor */ function Foo() {};\n"
-            + "/** @const */ Foo.prototype.CONST = 100;\n"
-            + "/** @type {Foo} */\n"
-            + "var foo = new Foo();\n"
-            + "/** @type {number} */\n"
-            + "foo.CONST = 0;",
+        + "Foo.prototype.CONST = 100;\n"
+        + "/** @type {Foo} */\n"
+        + "var foo = new Foo();\n"
+        + "/** @type {number} */\n"
+        + "foo.CONST = 0;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
@@ -2584,12 +2583,12 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   public void testConstantProperty15c() {
     testError(
         ""
-            + "/** @constructor */ function Bar() {/** @const */ this.CONST = 100;};\n"
-            + "/** @constructor \n @extends {Bar} */ function Foo() {};\n"
-            + "/** @type {Foo} */\n"
-            + "var foo = new Foo();\n"
-            + "/** @type {number} */\n"
-            + "foo.CONST = 0;",
+        + "/** @constructor */ function Bar() {this.CONST = 100;};\n"
+        + "/** @constructor \n @extends {Bar} */ function Foo() {};\n"
+        + "/** @type {Foo} */\n"
+        + "var foo = new Foo();\n"
+        + "/** @type {number} */\n"
+        + "foo.CONST = 0;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
