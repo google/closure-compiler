@@ -1943,9 +1943,19 @@ public class JSTypeRegistry implements Serializable {
             n.getFirstChild(), sourceName, scope);
 
       case BANG: // Not nullable
-        return createFromTypeNodesInternal(
-            n.getFirstChild(), sourceName, scope, recordUnresolvedTypes)
-            .restrictByNotNullOrUndefined();
+        {
+          JSType child =
+              createFromTypeNodesInternal(
+                  n.getFirstChild(), sourceName, scope, recordUnresolvedTypes);
+          if (child instanceof NamedType) {
+            JSType type = ((NamedType) child).getBangType();
+            if (type instanceof NamedType && recordUnresolvedTypes && type != child) {
+              unresolvedNamedTypes.add((NamedType) type);
+            }
+            return type;
+          }
+          return child.restrictByNotNullOrUndefined();
+        }
 
       case QMARK: // Nullable or unknown
         Node firstChild = n.getFirstChild();

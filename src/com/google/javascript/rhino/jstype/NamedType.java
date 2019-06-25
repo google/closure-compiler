@@ -97,6 +97,7 @@ public final class NamedType extends ProxyObjectType {
   private final String sourceName;
   private final int lineno;
   private final int charno;
+  private final boolean nonNull;
 
   /**
    * Validates the type resolution.
@@ -135,13 +136,25 @@ public final class NamedType extends ProxyObjectType {
       int charno,
       ImmutableList<JSType> templateTypes) {
     super(registry, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
-    checkNotNull(reference);
+    this.nonNull = reference.startsWith("!");
     this.resolutionScope = scope;
-    this.reference = reference;
+    this.reference = nonNull ? reference.substring(1) : reference;
     this.sourceName = sourceName;
     this.lineno = lineno;
     this.charno = charno;
     this.templateTypes = templateTypes;
+  }
+
+  /** Returns a new non-null version of this type. */
+  JSType getBangType() {
+    if (nonNull) {
+      return this;
+    } else if (resolutionScope == null) {
+      // Already resolved, just restrict.
+      return getReferencedType().restrictByNotNullOrUndefined();
+    }
+    return new NamedType(
+        resolutionScope, registry, "!" + reference, sourceName, lineno, charno, templateTypes);
   }
 
   @Override
@@ -291,7 +304,9 @@ public final class NamedType extends ProxyObjectType {
       return;
     }
 
-    StaticTypedSlot slot = resolutionScope.getSlot(componentNames[0]);
+    StaticTypedSlot slot =
+        checkNotNull(resolutionScope, "resolutionScope")
+            .getSlot(checkNotNull(componentNames, "componentNames")[0]);
     if (slot == null) {
       handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
       return;
@@ -348,6 +363,9 @@ public final class NamedType extends ProxyObjectType {
 
   private void setReferencedAndResolvedType(
       JSType type, ErrorReporter reporter) {
+    if (nonNull) {
+      type = type.restrictByNotNullOrUndefined();
+    }
     if (validator != null) {
       validator.apply(type);
     }
@@ -405,8 +423,8 @@ public final class NamedType extends ProxyObjectType {
   }
 
   /**
-   * Check for an obscure but very confusing error condition where a local variable shadows a
-   * global namespace.
+   * Check for an obscure but very confusing error condition where a local variable shadows a global
+   * namespace.
    */
   private boolean localVariableShadowsGlobalNamespace(String root) {
     StaticSlot rootVar = resolutionScope.getSlot(root);
