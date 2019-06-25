@@ -618,6 +618,20 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void attachesInlineJsDocToParam() {
+    assertNoChanges(
+        " class C {\n" + "  inlineJSDocWithDefault(/** boolean= */ isSomething) {}\n" + "}\n");
+  }
+
+  @Test
+  public void attachesInlineJsDocToDefaultParam() {
+    assertNoChanges(
+        " class C {\n"
+            + "  inlineJSDocWithDefault(/** boolean= */ isSomething = true) {}\n"
+            + "}\n");
+  }
+
+  @Test
   public void testFixRequires_standaloneAliasedBySamePrimitive() {
     assertChanges(
         fileWithImports("const a = goog.require('a');", "goog.require('a');", useInCode("a")),

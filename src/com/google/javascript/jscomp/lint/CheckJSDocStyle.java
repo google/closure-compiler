@@ -383,13 +383,24 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     return false;
   }
 
+  private static boolean isDefaultAssignedParamWithInlineJsDoc(Node param) {
+    if (param.isDefaultValue()) {
+      if (param.hasChildren() && param.getFirstChild().isName()) {
+        if (param.getFirstChild().getJSDocInfo() != null) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   private boolean hasAnyInlineJsDoc(Node function) {
     if (function.getFirstChild().getJSDocInfo() != null) {
       // Inline return annotation.
       return true;
     }
     for (Node param : NodeUtil.getFunctionParameters(function).children()) {
-      if (param.getJSDocInfo() != null) {
+      if (param.getJSDocInfo() != null || isDefaultAssignedParamWithInlineJsDoc(param)) {
         return true;
       }
     }
