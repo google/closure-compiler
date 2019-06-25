@@ -176,10 +176,11 @@ public final class ConstParamCheckTest extends CompilerTestCase {
 
   @Test
   public void testStringLiteralConstantArgumentOrder() {
-    testSame(CLOSURE_DEFS
-        + "var myFun = function() { goog.string.Const.from(FOO); };"
-        + "var FOO = 'asdf';"
-        + "myFun();");
+    testSame(
+        CLOSURE_DEFS
+            + "var myFun = function() { goog.string.Const.from(FOO); };"
+            + "/** @const */ var FOO = 'asdf';"
+            + "myFun();");
   }
 
   @Test
@@ -295,9 +296,10 @@ public final class ConstParamCheckTest extends CompilerTestCase {
 
   @Test
   public void testLetStringLiteralConstantArgumentOrder() {
-    testSame(CLOSURE_DEFS
+    testSame(
+        CLOSURE_DEFS
             + "var myFun = function() { goog.string.Const.from(FOO); };"
-            + "let FOO = 'asdf';"
+            + "/** @const */ let FOO = 'asdf';"
             + "myFun();");
   }
 

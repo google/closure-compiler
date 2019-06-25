@@ -2922,13 +2922,13 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
             lines(
                 "class A {",
                 "  constructor() {",
-                "    this.BAR = 3;",
+                "    /** @const */ this.BAR = 3;",
                 "  }",
                 "}",
                 "",
                 "class B {",
                 "  constructor() {",
-                "    this.BAR = 3;",
+                "    /** @const */ this.BAR = 3;",
                 "",
                 "    this.BAR += 4;",
                 "  }",
@@ -2958,7 +2958,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
             lines(
                 "class  Foo {}",
                 "",
-                "Foo.prototype.PROP = 2;",
+                "/** @const */ Foo.prototype.PROP = 2;",
                 "",
                 "var foo = new Foo();",
                 "foo.PROP = 3;")),
@@ -2985,7 +2985,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
         srcs(
             lines(
                 "class Cat { }", //
-                "",
+                "/** @const */",
                 "Cat.TEST = 1;",
                 "Cat.TEST *= 2;")),
         error(CONST_PROPERTY_REASSIGNED_VALUE));
@@ -3195,11 +3195,14 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
 
   @Test
   public void testConstantProperty15a() {
-    test(
+    // TODO(b/135708421): This should emit a CONST_PROPERTY_REASSIGNED_VALUE warning but fails to
+    // because of the /** @type {number} */ annotation above `foo.CONST = 0;`.
+    testSame(
         srcs(
             lines(
                 "class Foo {",
                 "  constructor() {",
+                "    /** @const */",
                 "    this.CONST = 100;",
                 "  }",
                 "}",
@@ -3208,8 +3211,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "var foo = new Foo();",
                 "",
                 "/** @type {number} */",
-                "foo.CONST = 0;")),
-        error(CONST_PROPERTY_REASSIGNED_VALUE));
+                "foo.CONST = 0;")));
   }
 
   @Test
@@ -3219,6 +3221,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
             lines(
                 "class Foo {}",
                 "",
+                "/** @const */",
                 "Foo.prototype.CONST = 100;",
                 "",
                 "/** @type {Foo} */",
@@ -3236,6 +3239,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
             lines(
                 "class Bar {",
                 "  constructor() {",
+                "    /** @const */",
                 "    this.CONST = 100;",
                 "  }",
                 "}",

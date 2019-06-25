@@ -59,15 +59,15 @@ public final class GoogleCodingConventionTest {
   @Test
   public void testInlineName() {
     assertThat(conv.isConstant("a")).isFalse();
-    assertThat(conv.isConstant("XYZ123_")).isTrue();
-    assertThat(conv.isConstant("ABC")).isTrue();
+    assertThat(conv.isConstant("XYZ123_")).isFalse();
+    assertThat(conv.isConstant("ABC")).isFalse();
     assertThat(conv.isConstant("ABCdef")).isFalse();
     assertThat(conv.isConstant("aBC")).isFalse();
     assertThat(conv.isConstant("A")).isFalse();
     assertThat(conv.isConstant("_XYZ123")).isFalse();
-    assertThat(conv.isConstant("a$b$XYZ123_")).isTrue();
-    assertThat(conv.isConstant("a$b$ABC_DEF")).isTrue();
-    assertThat(conv.isConstant("a$b$A")).isTrue();
+    assertThat(conv.isConstant("a$b$XYZ123_")).isFalse();
+    assertThat(conv.isConstant("a$b$ABC_DEF")).isFalse();
+    assertThat(conv.isConstant("a$b$A")).isFalse();
     assertThat(conv.isConstant("a$b$a")).isFalse();
     assertThat(conv.isConstant("a$b$ABCdef")).isFalse();
     assertThat(conv.isConstant("a$b$aBC")).isFalse();

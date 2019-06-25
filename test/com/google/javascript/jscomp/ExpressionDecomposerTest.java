@@ -940,14 +940,11 @@ public final class ExpressionDecomposerTest {
     helperExposeExpression(
         "/** @const */ var XX = {}; XX.a += foo() + 1",
         "foo",
-        "var XX = {}; var temp_const$jscomp$0 = XX.a;"
-            + "XX.a = temp_const$jscomp$0 + (foo() + 1);");
-
-    helperExposeExpression(
-        "var XX = {}; y = (XX.a += foo()) + XX.a",
-        "foo",
-        "var XX = {}; var temp_const$jscomp$0 = XX.a;"
-            + "y = (XX.a = temp_const$jscomp$0 + foo()) + XX.a");
+        lines(
+            "var XX = {};",
+            "var temp_const$jscomp$0 = XX;",
+            "var temp_const$jscomp$1 = temp_const$jscomp$0.a;",
+            "temp_const$jscomp$0.a = temp_const$jscomp$1 + (foo() + 1);"));
   }
 
   // Function all on LHS of assignment-op.

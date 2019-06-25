@@ -58,53 +58,6 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
   /**
    * {@inheritDoc}
    *
-   * <p>This enforces the Google const name convention, that the first character
-   * after the last $ must be an upper-case letter and all subsequent letters
-   * must be upper case. The name must be at least 2 characters long.
-   *
-   * <p>Examples:
-   * <pre>
-   *      aaa          Not constant - lower-case letters in the name
-   *      A            Not constant - too short
-   *      goog$A       Constant - letters after the $ are upper-case.
-   *      AA17         Constant - digits can appear after the first letter
-   *      goog$7A      Not constant - first character after the $ must be
-   *                   upper case.
-   *      $A           Constant - doesn't have to be anything in front of the $
-   * </pre>
-   */
-  @Override
-  public boolean isConstant(String name) {
-    if (name.length() <= 1) {
-      return false;
-    }
-
-    // In compiled code, '$' is often a namespace delimiter. To allow inlining
-    // of namespaced constants, we strip off any namespaces here.
-    int pos = name.lastIndexOf('$');
-    if (pos >= 0) {
-      name = name.substring(pos + 1);
-      if (name.isEmpty()) {
-        return false;
-      }
-    }
-
-    return isConstantKey(name);
-  }
-
-  @Override
-  public boolean isConstantKey(String name) {
-    if (name.isEmpty() || !Character.isUpperCase(name.charAt(0))) {
-      return false;
-    }
-
-    // hack way of checking that there aren't any lower-case letters
-    return name.toUpperCase().equals(name);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * <p>This enforces Google's convention about enum key names. They must match
    * the regular expression {@code [A-Z0-9][A-Z0-9_]*}.
    *

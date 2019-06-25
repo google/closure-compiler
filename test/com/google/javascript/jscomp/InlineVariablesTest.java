@@ -639,8 +639,9 @@ public final class InlineVariablesTest extends CompilerTestCase {
   // written before they're read.
   @Test
   public void testInlineConstants() {
-    test("function foo() { return XXX; } var XXX = true;",
-         "function foo() { return true; }");
+    test(
+        "function foo() { return XXX; } /** @const */ var XXX = true;",
+        "function foo() { return true; }");
   }
 
   @Test

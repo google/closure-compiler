@@ -833,7 +833,8 @@ public final class IntegrationTest extends IntegrationTestCase {
                 "function Element() {}",
                 "",
                 "/**",
-                " * @see https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry",
+                " * @see"
+                    + " https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry",
                 " * @constructor",
                 " */",
                 "function CustomElementRegistry() {}",
@@ -2475,7 +2476,10 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testCheckConsts() {
     CompilerOptions options = createCompilerOptions();
     options.setInlineConstantVars(true);
-    test(options, "var FOO = true; FOO = false", ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+    test(
+        options,
+        "/** @const */ var FOO = true; FOO = false",
+        ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
   @Test

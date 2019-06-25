@@ -323,16 +323,16 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testThrowConstStringError() {
     testDebugStrings(
-        "var AA = 'uvw', AB = AA + 'xyz'; throw Error(AB);",
-        "var AA = 'uvw', AB = AA + 'xyz'; throw Error('a');",
+        "/** @const */ var AA = 'uvw'; /** @const */ var AB = AA + 'xyz'; throw Error(AB);",
+        "/** @const */ var AA = 'uvw'; /** @const */ var AB = AA + 'xyz'; throw Error('a');",
         (new String[] {"a", "uvwxyz"}));
   }
 
   @Test
   public void testThrowConstStringError_templateLiteral() {
     testDebugStrings(
-        "var AA = 'uvw', AB = `${AA}xyz`; throw Error(AB);",
-        "var AA = 'uvw', AB = `${AA}xyz`; throw Error('a');",
+        "/** @const */ var AA = 'uvw'; /** @const */ var AB = `${AA}xyz`; throw Error(AB);",
+        "/** @const */ var AA = 'uvw'; /** @const */ var AB = `${AA}xyz`; throw Error('a');",
         (new String[] {"a", "uvwxyz"}));
   }
 
@@ -515,8 +515,8 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testRepeatedErrorString3() {
     testDebugStrings(
-        "var AB = 'b'; throw Error(AB); throw Error(AB);",
-        "var AB = 'b'; throw Error('a'); throw Error('a');",
+        "/** @const */ var AB = 'b'; throw Error(AB); throw Error(AB);",
+        "/** @const */ var AB = 'b'; throw Error('a'); throw Error('a');",
         (new String[] {"a", "b"}));
   }
 

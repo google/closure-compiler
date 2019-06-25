@@ -1623,7 +1623,7 @@ public final class FunctionInjectorTest {
     // Call in within a call
     allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(){return _g;}; function x(){var CONSTANT_RESULT = foo(); }",
+        "function foo(){return _g;}; function x(){/** @const */ var CONSTANT_RESULT = foo(); }",
         "function foo(){return _g;}; "
             + "function x() {"
             + "  var JSCompiler_inline_result$jscomp$0;"
