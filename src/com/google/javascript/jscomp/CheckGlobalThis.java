@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -97,6 +98,23 @@ final class CheckGlobalThis implements Callback {
            jsDoc.hasThisType() ||
            jsDoc.isOverride())) {
         return false;
+      }
+
+      if (jsDoc != null) {
+        JSTypeExpression functionType = jsDoc.getType();
+        if (functionType != null) {
+          Node functionNode = functionType.getRoot();
+          if (functionNode != null && functionNode.isFunction()) {
+            // function(this: ThisType, ...)
+            // `this:` is only allowed as the very first child of the
+            // FUNCTION node.
+            Node thisNode = functionNode.getFirstChild();
+            if (thisNode != null && thisNode.isThis()) {
+              // Type of `this` is specified, so no need to check further.
+              return false;
+            }
+          }
+        }
       }
 
       // Don't traverse functions unless they would normally
