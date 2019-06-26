@@ -4661,6 +4661,38 @@ chrome.input = {};
 chrome.input.ime = {};
 
 
+/**
+ * @typedef {?{
+ *   left: number,
+ *   top: number,
+ *   width: number,
+ *   height: number
+ * }}
+ * @see https://developer.chrome.com/extensions/input_ime#type-CreateWindowOptions
+ */
+chrome.input.ime.Bounds;
+
+
+/**
+ * @typedef {?{
+ *   windowType: chrome.input.ime.WindowType,
+ *   url: (string|undefined),
+ *   bounds: (chrome.input.ime.Bounds|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/input_ime#type-CreateWindowOptions
+ */
+chrome.input.ime.CreateWindowOptions;
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/system.display#type-MirrorMode
+ */
+chrome.input.ime.WindowType = {
+  NORMAL: '',
+  FOLLOW_CURSOR: '',
+};
+
 
 /**
  * The OnKeyEvent event takes an extra argument.
@@ -4706,6 +4738,13 @@ ChromeInputImeOnKeyEventEvent.prototype.hasListeners = function() {};
 
 
 /**
+ * @param {function(boolean): void} callback Callback function.
+ * @return {undefined}
+ */
+chrome.input.ime.activate = function(callback) {};
+
+
+/**
  * @param {!Object<string,number>} parameters An object with a
  *     'contextID' (number) key.
  * @param {function(boolean): void} callback Callback function.
@@ -4724,12 +4763,51 @@ chrome.input.ime.commitText = function(parameters, opt_callback) {};
 
 
 /**
+ * @param {!chrome.input.ime.CreateWindowOptions} options Options of the created
+ *     IME window.
+ * @param {function(boolean): void=} callback Callback function.
+ * @return {undefined}
+ */
+chrome.input.ime.createWindow = function(options, callback) {};
+
+
+/**
+ * @param {function(boolean): void} callback Callback function.
+ * @return {undefined}
+ */
+chrome.input.ime.deactivate = function(callback) {};
+
+
+/**
  * @param {!Object<string,(string|number)>} parameters An object with
  *     'contextID' (number) and 'text' (string) keys.
  * @param {function(boolean): void=} opt_callback Callback function.
  * @return {undefined}
  */
 chrome.input.ime.deleteSurroundingText = function(parameters, opt_callback) {};
+
+
+/**
+ * @return {undefined}
+ */
+chrome.input.ime.hideInputView = function() {};
+
+
+/**
+ * @param {function(boolean): void=} callback Callback function.
+ * @return {undefined}
+ */
+chrome.input.ime.hideWindow = function(callback) {};
+
+
+/**
+ * @param {!Object<number,Array<KeyboardEvent>>}
+ *     parameters An object with 'contextID' (number) and 'keyData'
+ *     (Array<KeyboardEvent>) keys.
+ * @param {function(boolean): void=} callback Callback function.
+ * @return {undefined}
+ */
+chrome.input.ime.sendKeyEvents = function(parameters, callback) {};
 
 
 /**
@@ -4781,6 +4859,13 @@ chrome.input.ime.setCursorPosition = function(parameters, opt_callback) {};
  * @return {undefined}
  */
 chrome.input.ime.setMenuItems = function(parameters, opt_callback) {};
+
+
+/**
+ * @param {function(boolean): void=} callback Callback function.
+ * @return {undefined}
+ */
+chrome.input.ime.showWindow = function(callback) {};
 
 
 /**
