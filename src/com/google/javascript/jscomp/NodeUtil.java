@@ -4378,7 +4378,7 @@ public final class NodeUtil {
     }
 
     Var var = scope.getVar(node.getString());
-    return var != null && (var.isInferredConst() || var.isConst());
+    return var != null && (var.isDeclaredOrInferredConst() || var.isConst());
   }
 
   /**

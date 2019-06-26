@@ -53,7 +53,7 @@ class InlineVariables implements CompilerPass {
 
   enum Mode {
     // Only inline things explicitly marked as constant.
-    CONSTANTS_ONLY(Var::isInferredConst),
+    CONSTANTS_ONLY(Var::isDeclaredOrInferredConst),
     // Locals only
     LOCALS_ONLY(Var::isLocal),
     ALL(Predicates.alwaysTrue());

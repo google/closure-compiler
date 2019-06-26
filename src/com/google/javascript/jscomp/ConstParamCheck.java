@@ -125,7 +125,7 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
     } else if (argument.isName()) {
       String name = argument.getString();
       Var var = scope.getVar(name);
-      if (var == null || !var.isInferredConst()) {
+      if (var == null || !var.isDeclaredOrInferredConst()) {
         return false;
       }
       Node initialValue = var.getInitialValue();

@@ -414,7 +414,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
       case NAME:
         // If the referenced variable is a constant, use its value.
         Var var = t.getScope().getVar(expr.getString());
-        if (var != null && (var.isInferredConst() || var.isConst())) {
+        if (var != null && (var.isDeclaredOrInferredConst() || var.isConst())) {
           Node initialValue = var.getInitialValue();
           if (initialValue != null) {
             Node newKeyNode = IR.string("");

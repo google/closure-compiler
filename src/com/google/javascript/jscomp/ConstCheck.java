@@ -128,7 +128,7 @@ class ConstCheck extends AbstractPostOrderCallback
    * the point where it is declared.
    */
   private static boolean isConstant(Var var) {
-    return var != null && var.isInferredConst();
+    return var != null && var.isDeclaredOrInferredConst();
   }
 
   /** Reports a reassigned constant error. */
