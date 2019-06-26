@@ -136,7 +136,7 @@ public class J2clConstantHoisterPass implements CompilerPass {
       declarationInClass.replaceChild(declarationAssignedValue, clinitAssignedValue);
       compiler.reportChangeToEnclosingScope(topLevelDeclaration);
     }
-    declarationInClass.putBooleanProp(Node.IS_CONSTANT_VAR, true);
+    declarationInClass.setDeclaredConstantVar(true);
   }
 
   /**

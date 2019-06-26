@@ -99,6 +99,7 @@ public class Node implements Serializable {
     // Function or constructor call side effect flags.
     SIDE_EFFECT_FLAGS,
     // The variable or property is constant.
+    // TODO(lukes): either document the differences or otherwise reconcile with CONSTANT_VAR_FLAGS
     IS_CONSTANT_NAME,
     // The variable creates a namespace.
     IS_NAMESPACE,
@@ -135,8 +136,10 @@ public class Node implements Serializable {
     EXPORT_DEFAULT,
     // Set if an export is a "*"
     EXPORT_ALL_FROM,
-    // A lexical variable is inferred const
-    IS_CONSTANT_VAR,
+    // A variable is inferred or declared as const meaning it is only ever assigned once at its
+    // declaration site.
+    // This is an int prop that holds a bitset of {@link ConstantVarFlags} values.
+    CONSTANT_VAR_FLAGS,
     // Used by the ES6-to-ES3 translator.
     IS_GENERATOR_MARKER,
     // Used by the ES6-to-ES3 translator.
@@ -246,7 +249,6 @@ public class Node implements Serializable {
   public static final Prop YIELD_ALL = Prop.YIELD_ALL;
   public static final Prop EXPORT_DEFAULT = Prop.EXPORT_DEFAULT;
   public static final Prop EXPORT_ALL_FROM = Prop.EXPORT_ALL_FROM;
-  public static final Prop IS_CONSTANT_VAR = Prop.IS_CONSTANT_VAR;
   public static final Prop COMPUTED_PROP_METHOD = Prop.COMPUTED_PROP_METHOD;
   public static final Prop COMPUTED_PROP_GETTER = Prop.COMPUTED_PROP_GETTER;
   public static final Prop COMPUTED_PROP_SETTER = Prop.COMPUTED_PROP_SETTER;
@@ -2990,6 +2992,97 @@ public class Node implements Serializable {
   /** Returns true iff any the bit set in {@code mask} is also set in {@code value}. */
   private static boolean anyBitSet(int value, int mask) {
     return (value & mask) != 0;
+  }
+
+  /**
+   * Constants for the {@link Prop#CONSTANT_VAR_FLAGS} bit set property.
+   *
+   * <ul>
+   *   <li>{@link ConstantVarFlags#DECLARED} means the name was declared using annotation or syntax
+   *       indicating it must be constant
+   *   <li>{@link ConstantVarFlags#INFERRED} means the compiler can see that it is assigned exactly
+   *       once, whether or not it was declared to be constant.
+   * </ul>
+   *
+   * <p>Either, both, or neither may be set for any name.
+   */
+  private static final class ConstantVarFlags {
+    // each constant should be a distinct power of 2.
+
+    static final int DECLARED = 1;
+    static final int INFERRED = 2;
+
+    private ConstantVarFlags() {}
+  }
+
+  private final int getConstantVarFlags() {
+    return getIntProp(Prop.CONSTANT_VAR_FLAGS);
+  }
+
+  private final void setConstantVarFlag(int flag, boolean value) {
+    int flags = getConstantVarFlags();
+    if (value) {
+      flags = flags | flag;
+    } else {
+      flags = flags & ~flag;
+    }
+    putIntProp(Prop.CONSTANT_VAR_FLAGS, flags);
+  }
+
+  /**
+   * Returns whether this variable is declared as a constant.
+   *
+   * <p>The compiler considers a variable to be declared if:
+   *
+   * <ul>
+   *   <li>it is declared with the {@code const} keyword, or
+   *   <li>It is declared with a jsdoc {@code @const} annotation, or
+   *   <li>The current coding convention considers it to be a constant.
+   * </ul>
+   *
+   * <p>Only valid to call on a {@linkplain #isName name} node.
+   */
+  public final boolean isDeclaredConstantVar() {
+    checkState(isName(), "Should only be called on name nodes.");
+    return anyBitSet(getConstantVarFlags(), ConstantVarFlags.DECLARED);
+  }
+
+  /**
+   * Sets this variable to be a declared constant.
+   *
+   * <p>See {@link #isDeclaredConstantVar} for the rules.
+   */
+  public final void setDeclaredConstantVar(boolean value) {
+    checkState(isName(), "Should only be called on name nodes.");
+    setConstantVarFlag(ConstantVarFlags.DECLARED, value);
+  }
+
+  /**
+   * Returns whether this variable is inferred to be constant.
+   *
+   * <p>The compiler infers a variable to be a constant if:
+   *
+   * <ul>
+   *   <li>It is assigned at its declaration site, and
+   *   <li>It is never reassigned during its lifetime, and
+   *   <li>It is not defined by an extern.
+   * </ul>
+   *
+   * <p>Only valid to call on a {@linkplain #isName name} node.
+   */
+  public final boolean isInferredConstantVar() {
+    checkState(isName(), "Should only be called on name nodes.");
+    return anyBitSet(getConstantVarFlags(), ConstantVarFlags.INFERRED);
+  }
+
+  /**
+   * Sets this variable to be an inferred constant. *
+   *
+   * <p>See {@link #isInferredConstantVar} for the rules.
+   */
+  public final void setInferredConstantVar(boolean value) {
+    checkState(isName(), "Should only be called on name nodes.");
+    setConstantVarFlag(ConstantVarFlags.INFERRED, value);
   }
 
   /**

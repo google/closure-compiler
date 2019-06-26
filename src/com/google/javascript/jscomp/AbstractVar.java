@@ -129,7 +129,8 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
       return false;
     }
 
-    return nameNode.getBooleanProp(Node.IS_CONSTANT_VAR)
+    return nameNode.isDeclaredConstantVar()
+        || nameNode.isInferredConstantVar()
         || nameNode.getBooleanProp(Node.IS_CONSTANT_NAME);
   }
 

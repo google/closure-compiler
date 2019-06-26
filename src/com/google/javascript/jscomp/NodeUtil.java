@@ -4433,7 +4433,8 @@ public final class NodeUtil {
       return true;
     }
 
-    if (node.getBooleanProp(Node.IS_CONSTANT_VAR)) {
+    // TODO(lukes): does this actually care about things inferred to be constants?
+    if (node.isName() && (node.isDeclaredConstantVar() || node.isInferredConstantVar())) {
       return true;
     }
 

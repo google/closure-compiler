@@ -64,18 +64,19 @@ class InferConsts implements CompilerPass {
     Node nameNode = v.getNameNode();
     JSDocInfo docInfo = v.getJSDocInfo();
     if (docInfo != null && docInfo.isConstant()) {
-      nameNode.putBooleanProp(Node.IS_CONSTANT_VAR, true);
+      nameNode.setDeclaredConstantVar(true);
     } else if (nameNode != null && nameNode.getParent().isConst()) {
-      nameNode.putBooleanProp(Node.IS_CONSTANT_VAR, true);
+      nameNode.setDeclaredConstantVar(true);
     } else if (nameNode != null
         && compiler.getCodingConvention().isConstant(nameNode.getString())) {
-      nameNode.putBooleanProp(Node.IS_CONSTANT_VAR, true);
-    } else if (nameNode != null
+      nameNode.setDeclaredConstantVar(true);
+    }
+    if (nameNode != null
         && refCollection != null
         && refCollection.isWellDefined()
         && refCollection.isAssignedOnceInLifetime()
         && refCollection.firstReferenceIsAssigningDeclaration()) {
-      nameNode.putBooleanProp(Node.IS_CONSTANT_VAR, true);
+      nameNode.setInferredConstantVar(true);
     }
   }
 }

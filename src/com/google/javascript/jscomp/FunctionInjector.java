@@ -680,8 +680,8 @@ class FunctionInjector {
       return;
     }
 
-    if (nameNode.getBooleanProp(Node.IS_CONSTANT_VAR)) {
-      nameNode.removeProp(Node.IS_CONSTANT_VAR);
+    if (nameNode.isDeclaredConstantVar()) {
+      nameNode.setDeclaredConstantVar(false);
     }
   }
 
