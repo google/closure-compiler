@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.MapBasedScope.emptyScope;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.testing.EqualsTester;
@@ -182,6 +183,65 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     activeXObject.resolve(null);
     assertThat(activeXObject.toString()).isEqualTo("NoObject");
     assertTypeEquals(NO_OBJECT_TYPE, activeXObject.getReferencedType());
+  }
+
+  @Test
+  public void testResolveToGoogModule() {
+    registry.registerClosureModule("mod.Foo", null, fooCtorType);
+    MapBasedScope scope = new MapBasedScope(ImmutableMap.of());
+    NamedType modDotFoo = new NamedTypeBuilder().setScope(scope).setName("mod.Foo").build();
+
+    modDotFoo.resolve(ErrorReporter.NULL_INSTANCE);
+    assertTypeEquals(fooType, modDotFoo.getReferencedType());
+  }
+
+  @Test
+  public void testResolveToPropertyOnGoogModule() {
+    JSType exportsType = registry.createRecordType(ImmutableMap.of("Foo", fooCtorType));
+    registry.registerClosureModule("mod.Bar", null, exportsType);
+    MapBasedScope scope = new MapBasedScope(ImmutableMap.of());
+    NamedType modBarFoo = new NamedTypeBuilder().setScope(scope).setName("mod.Bar.Foo").build();
+
+    modBarFoo.resolve(ErrorReporter.NULL_INSTANCE);
+    assertTypeEquals(fooType, modBarFoo.getReferencedType());
+  }
+
+  @Test
+  public void testResolveToGoogModule_failsIfLegacyNamespaceIsLongerPrefix() {
+    JSType exportsType = registry.createRecordType(ImmutableMap.of("Foo", fooCtorType));
+    registry.registerClosureModule("mod.Bar", null, exportsType);
+    MapBasedScope scope = new MapBasedScope(ImmutableMap.of());
+    NamedType modDotFoo = new NamedTypeBuilder().setScope(scope).setName("mod.Bar.Foo").build();
+    registry.registerLegacyClosureModule("mod.Bar.Foo");
+
+    modDotFoo.resolve(ErrorReporter.NULL_INSTANCE);
+    assertType(modDotFoo.getReferencedType()).isUnknown();
+  }
+
+  @Test
+  public void testResolveToGoogModule_usesLongestModulePrefix() {
+    ObjectType barType = createNominalType("Bar");
+    registry.registerClosureModule(
+        "mod.Foo", null, registry.createRecordType(ImmutableMap.of("Bar", fooCtorType)));
+    registry.registerClosureModule("mod.Foo.Bar", null, barType.getConstructor());
+    MapBasedScope scope = new MapBasedScope(ImmutableMap.of());
+    NamedType modDotFoo = new NamedTypeBuilder().setScope(scope).setName("mod.Foo.Bar").build();
+
+    modDotFoo.resolve(ErrorReporter.NULL_INSTANCE);
+    assertTypeEquals(barType, modDotFoo.getReferencedType());
+  }
+
+  @Test
+  public void testReferenceGoogModuleByType_resolvesToModuleRatherThanRegistryType() {
+    // Note: this logic was put in place to mimic the semantics of type resolution when
+    // modules are rewritten before typechecking.
+    registry.registerClosureModule("mod.Foo", null, fooCtorType);
+    MapBasedScope scope = new MapBasedScope(ImmutableMap.of());
+    NamedType modDotFoo = new NamedTypeBuilder().setScope(scope).setName("mod.Foo").build();
+    registry.declareType(scope, "mod.Foo", createNominalType("other.mod.Foo"));
+
+    modDotFoo.resolve(ErrorReporter.NULL_INSTANCE);
+    assertTypeEquals(fooType, modDotFoo.getReferencedType());
   }
 
   private static NamedType forceResolutionWith(JSType type, NamedType proxy) {

@@ -587,6 +587,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         // once leaving the module.
         providedNamesFromCall.put(name.getFirstProvideCall(), name);
       }
+
+      if (metadata != null && metadata.isGoogProvide()) {
+        typeRegistry.registerLegacyClosureModule(name.getNamespace());
+      }
     }
   }
 
@@ -845,12 +849,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     private void finishDeclaringGoogModule() {
-      if (module == null || !module.metadata().isLegacyGoogModule()) {
-        // TODO(b/134523248): consider supporting referring to non-legacy modules in types.
+      if (module == null || !module.metadata().isGoogModule()) {
         return;
       }
       TypedVar exportsVar = checkNotNull(currentScope.getSlot("exports"));
+
       if (module.metadata().isLegacyGoogModule()) {
+        typeRegistry.registerLegacyClosureModule(module.closureNamespace());
         QualifiedName moduleNamespace = QualifiedName.of(module.closureNamespace());
         currentScope
             .getGlobalScope()
@@ -870,7 +875,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                     moduleNamespace.getComponent(), exportsVar.getType(), exportsVar.getNameNode());
           }
         }
-        // All goog.modules are accessible by their namespace as types, but not as values.
         declareAliasTypeIfRvalueIsAliasable(
             module.closureNamespace(),
             exportsVar.getNameNode(), // Pretend that 'exports = '... is the lvalue node.
@@ -878,6 +882,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             exportsVar.getType(),
             currentScope,
             currentScope.getGlobalScope());
+      } else {
+        typeRegistry.registerClosureModule(
+            module.closureNamespace(), exportsVar.getNameNode(), exportsVar.getType());
       }
     }
 

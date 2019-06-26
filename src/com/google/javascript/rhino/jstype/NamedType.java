@@ -43,11 +43,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
+import com.google.javascript.rhino.jstype.JSTypeRegistry.ModuleSlot;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -244,9 +246,14 @@ public final class NamedType extends ProxyObjectType {
 
     // TODO(user): Investigate whether it is really necessary to keep two
     // different mechanisms for resolving named types, and if so, which order
-    // makes more sense. Now, resolution via registry is first in order to
-    // avoid triggering the warnings built into the resolution via properties.
-    boolean resolved = resolveViaRegistry(reporter);
+    // makes more sense.
+    // The `resolveViaClosureNamespace` mechanism can probably be deleted (or reworked) once the
+    // compiler supports type annotations via path. The `resolveViaProperties` and
+    // `resolveViaRegistry` are, unfortunately, both needed now with no migration plan.
+    boolean resolved = resolveViaClosureNamespace(reporter);
+    if (!resolved) {
+      resolved = resolveViaRegistry(reporter);
+    }
     if (!resolved) {
       resolveViaProperties(reporter);
     }
@@ -298,46 +305,65 @@ public final class NamedType extends ProxyObjectType {
    * as properties. The scope must have been fully parsed and a symbol table constructed.
    */
   private void resolveViaProperties(ErrorReporter reporter) {
-    String[] componentNames = reference.split("\\.", -1);
-    if (componentNames[0].length() == 0) {
+    List<String> componentNames = Splitter.on('.').splitToList(reference);
+    if (componentNames.get(0).isEmpty()) {
       handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
       return;
     }
 
     StaticTypedSlot slot =
         checkNotNull(resolutionScope, "resolutionScope")
-            .getSlot(checkNotNull(componentNames, "componentNames")[0]);
+            .getSlot(checkNotNull(componentNames, "componentNames").get(0));
     if (slot == null) {
       handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
+      return;
+    }
+    Node definitionNode = slot.getDeclaration() != null ? slot.getDeclaration().getNode() : null;
+    resolveViaPropertyGivenSlot(
+        slot.getType(), definitionNode, componentNames, reporter, /* componentIndex= */ 1);
+  }
+
+  /**
+   * Resolve a type using a given StaticTypedSlot and list of properties on that type.
+   *
+   * @param slotType the JSType of teh slot, possibly null
+   * @param definitionNode If known, the Node representing the type definition.
+   * @param componentIndex the index into {@code componentNames} at which to start resolving
+   */
+  private void resolveViaPropertyGivenSlot(
+      JSType slotType,
+      Node definitionNode,
+      List<String> componentNames,
+      ErrorReporter reporter,
+      int componentIndex) {
+    if (resolveTypeFromNodeIfTypedef(definitionNode, reporter)) {
       return;
     }
 
     // If the first component has a type of 'Unknown', then any type
     // names using it should be regarded as silently 'Unknown' rather than be
     // noisy about it.
-    JSType slotType = slot.getType();
     if (slotType == null || slotType.isAllType() || slotType.isNoType()) {
       handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
       return;
     }
 
     // resolving component by component
-    for (int i = 1; i < componentNames.length; i++) {
+    for (int i = componentIndex; i < componentNames.size(); i++) {
+      String component = componentNames.get(i);
       ObjectType parentObj = ObjectType.cast(slotType);
-      if (parentObj == null || componentNames[i].length() == 0) {
+      if (parentObj == null || component.length() == 0) {
         handleUnresolvedType(reporter, /* ignoreForwardReferencedTypes= */ true);
         return;
       }
-      if (i == componentNames.length - 1) {
+      if (i == componentNames.size() - 1) {
         // Look for a typedefTypeProp on the definition node of the last component.
-        Node def = parentObj.getPropertyDefSite(componentNames[i]);
-        JSType typedefType = def != null ? def.getTypedefTypeProp() : null;
-        if (typedefType != null) {
-          setReferencedAndResolvedType(typedefType, reporter);
+        Node def = parentObj.getPropertyDefSite(component);
+        if (resolveTypeFromNodeIfTypedef(def, reporter)) {
           return;
         }
       }
-      slotType = parentObj.getPropertyType(componentNames[i]);
+      slotType = parentObj.getPropertyType(component);
     }
 
     // Translate "constructor" types to "instance" types.
@@ -359,6 +385,72 @@ public final class NamedType extends ProxyObjectType {
       // then don't respect the forward declaration.
       handleUnresolvedType(reporter, slotType.isUnknownType());
     }
+  }
+
+  /**
+   * Resolves a named type by checking for the longest prefix that matches some Closure namespace,
+   * if any, then attempting to resolve via properties based on the type of the `exports` object in
+   * that namespace.
+   */
+  private boolean resolveViaClosureNamespace(ErrorReporter reporter) {
+    List<String> componentNames = Splitter.on('.').splitToList(reference);
+    if (componentNames.get(0).isEmpty()) {
+      return false;
+    }
+
+    StaticTypedSlot slot = resolutionScope.getSlot(componentNames.get(0));
+    // Skip types whose root component is defined in a local scope (not a global scope). Those will
+    // follow the normal resolution scheme. (For legacy compatibility reasons we don't check for
+    // global names that are the same as the module root).
+    if (slot != null && slot.getScope() != null && slot.getScope().getParentScope() != null) {
+      return false;
+    }
+
+    // Find the `exports` type of the longest prefix match of this namespace, if any. Then resolve
+    // it via property.
+    String prefix = reference;
+
+    for (int remainingComponentIndex = componentNames.size();
+        remainingComponentIndex > 0;
+        remainingComponentIndex--) {
+      ModuleSlot module = registry.getModuleSlot(prefix);
+      if (module == null) {
+        int lastDot = prefix.lastIndexOf(".");
+        if (lastDot >= 0) {
+          prefix = prefix.substring(0, lastDot);
+        }
+        continue;
+      }
+
+      if (module.isLegacyModule()) {
+        // Try to resolve this name via registry or properties.
+        return false;
+      } else {
+        // Always stop resolution here whether successful or not, instead of continuing with
+        // resolution via registry or via properties, to match legacy behavior.
+        resolveViaPropertyGivenSlot(
+            module.type(),
+            module.definitionNode(),
+            componentNames,
+            reporter,
+            remainingComponentIndex);
+        return true;
+      }
+    }
+    return false; // Keep trying to resolve this name.
+  }
+
+  /** Checks the given Node for a typedef annotation, resolving to that type if existent. */
+  private boolean resolveTypeFromNodeIfTypedef(Node node, ErrorReporter reporter) {
+    if (node == null) {
+      return false;
+    }
+    JSType typedefType = node.getTypedefTypeProp();
+    if (typedefType == null) {
+      return false;
+    }
+    setReferencedAndResolvedType(typedefType, reporter);
+    return true;
   }
 
   private void setReferencedAndResolvedType(

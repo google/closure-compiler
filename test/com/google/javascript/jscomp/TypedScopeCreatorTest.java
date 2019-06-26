@@ -4781,21 +4781,60 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testReferenceGoogModulesByType() {
-    // TODO(b/133501660): consider supporting referring to non-legacy modules in types, so that the
-    // following code would not emit an error. This is consistent with non-native module checks.
-    testWarning(
+    testSame(
         srcs(
             lines(
                 "goog.module('mod.A');", //
                 "class A {}",
                 "exports = A;"),
+            "var /** !mod.A */ a;"));
+
+    assertThat(globalScope.getVar("a")).hasJSTypeThat().toStringIsEqualTo("A");
+  }
+
+  @Test
+  public void testCannotReferenceGoogDeclareModuleIdByType() {
+    testWarning(
+        srcs(
+            lines(
+                "goog.declareModuleId('mod');", //
+                "export class A {}"),
             "var /** !mod.A */ a;"),
         warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
   }
 
   @Test
   public void testReferenceGoogModuleNestedClassByType() {
-    // TODO(b/133501660): consider supporting referring to non-legacy modules in types.
+    testSame(
+        srcs(
+            lines(
+                "goog.module('mod.A');", //
+                "class A {}",
+                "A.B = class {};",
+                "A.B.C = class {};",
+                "exports = A;"),
+            "var /** !mod.A.B.C */ a;"));
+
+    assertThat(globalScope.getVar("a")).hasJSTypeThat().toStringIsEqualTo("A.B.C");
+  }
+
+  @Test
+  public void testReferenceGoogModuleNestedClassByType_exportDefaultTypedef() {
+    // Verify that the unusal resolution of @typedefs via Node annotation works correctly.
+    testSame(
+        srcs(
+            lines(
+                "goog.module('mod.A');", //
+                "/** @typedef {string} */",
+                "let MyTypedef;",
+                "exports = MyTypedef;"),
+            "var /** !mod.A */ a;"));
+
+    assertThat(globalScope.getVar("a")).hasJSTypeThat().isString();
+  }
+
+  @Test
+  public void testReferenceGoogModuleByType_shadowingLocalCausingResolutionFailure() {
     testWarning(
         srcs(
             lines(
@@ -4804,7 +4843,27 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "A.B = class {};",
                 "A.B.C = class {};",
                 "exports = A;"),
-            "var /** !mod.A.B.C */ a;"),
+            lines(
+                "goog.module('mod.B');", //
+                "const mod = {};",
+                "var /** !mod.A.B.C */ a;")), // Resolves relative to the local `mod`.
+        warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
+  }
+
+  @Test
+  public void testReferenceGoogModuleByType_googProvideExtensionCausesResolutionFailure() {
+    processClosurePrimitives = true;
+    testWarning(
+        srcs(
+            lines(
+                "goog.module('mod.A');", //
+                "class A {}",
+                "A.B = class {};",
+                "A.B.C = class {};",
+                "exports = A;"),
+            lines(
+                "goog.provide('mod.A.B');", //
+                "var /** !mod.A.B.C */ a;")), // Assumes this refers to the goog.provide
         warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
   }
 

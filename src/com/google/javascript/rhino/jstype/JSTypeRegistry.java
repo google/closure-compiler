@@ -47,6 +47,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -152,6 +153,9 @@ public class JSTypeRegistry implements Serializable {
   private final JSType[] nativeTypes;
 
   private final Table<Node, String, JSType> scopedNameTable = HashBasedTable.create();
+
+  // Only needed for type resolution at the moment
+  private final transient Map<String, ModuleSlot> moduleToSlotMap = new HashMap<>();
 
   // NOTE: This would normally be "static final" but that causes unit test failures
   // when serializing and deserializing compiler state for multistage builds.
@@ -2348,5 +2352,44 @@ public class JSTypeRegistry implements Serializable {
     FunctionType type = nativeInterface(name, templateKeys);
     type.setImplicitMatch(true);
     return type;
+  }
+
+  /** Ensures that a type annotation pointing to a Closure modules is correctly resolved. */
+  public void registerClosureModule(String moduleName, Node definitionNode, JSType type) {
+    moduleToSlotMap.put(moduleName, ModuleSlot.create(/* isLegacy= */ false, definitionNode, type));
+  }
+
+  /**
+   * Ensures that a type annotation pointing to a Closure modules is correctly resolved.
+   *
+   * <p>Currently this is useful because module rewriting will prevent type resolution given a
+   */
+  public void registerLegacyClosureModule(String moduleName) {
+    moduleToSlotMap.put(moduleName, ModuleSlot.create(/* isLegacy= */ true, null, null));
+  }
+
+  /**
+   * Returns the associated slot, if any, for the given module namespace.
+   *
+   * <p>Returns null if the given name is not a Closure namespace from a goog.provide or goog.module
+   */
+  ModuleSlot getModuleSlot(String moduleName) {
+    return moduleToSlotMap.get(moduleName);
+  }
+
+  /** Stores information about a Closure namespace. */
+  @AutoValue
+  abstract static class ModuleSlot {
+    abstract boolean isLegacyModule();
+
+    @Nullable
+    abstract Node definitionNode();
+
+    @Nullable
+    abstract JSType type();
+
+    static ModuleSlot create(boolean isLegacy, Node definitionNode, JSType type) {
+      return new AutoValue_JSTypeRegistry_ModuleSlot(isLegacy, definitionNode, type);
+    }
   }
 }
