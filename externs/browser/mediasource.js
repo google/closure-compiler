@@ -147,3 +147,9 @@ SourceBuffer.prototype.abort = function() {};
  * @return {undefined}
  */
 SourceBuffer.prototype.remove = function(start, end) {};
+
+/**
+ * @param {string} type
+ * @return {undefined}
+ */
+SourceBuffer.prototype.changeType = function(type) {};
