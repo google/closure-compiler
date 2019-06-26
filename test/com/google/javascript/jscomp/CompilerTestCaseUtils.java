@@ -47,4 +47,8 @@ public class CompilerTestCaseUtils {
     }
     return compiler;
   }
+
+  @GwtIncompatible
+  public static void setDebugLogDirectoryOn(CompilerOptions options) {
+  }
 }

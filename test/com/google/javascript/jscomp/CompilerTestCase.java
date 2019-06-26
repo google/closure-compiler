@@ -688,6 +688,7 @@ public abstract class CompilerTestCase {
     }
     options.setCodingConvention(getCodingConvention());
     options.setPolymerVersion(1);
+    CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
     return options;
   }
 
