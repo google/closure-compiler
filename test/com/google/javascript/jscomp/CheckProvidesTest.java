@@ -80,6 +80,21 @@ public final class CheckProvidesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMissingProvideEs6Class_NoWarningInModule() {
+    testSame(
+        lines(
+            "goog.module('m');", //
+            "goog.require('Y');",
+            "class X {}"));
+
+    testSame(
+        lines(
+            "goog.require('Y');", //
+            "class X {}",
+            "export {}"));
+  }
+
+  @Test
   public void testNoProvideInnerClass() {
     testSame(
         "goog.provide('X');\n" +
