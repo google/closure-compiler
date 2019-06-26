@@ -78,7 +78,12 @@ final class PolymerPassStaticUtils {
                 && heritage.getLastChild().getString().equals("PolymerElement")));
   }
 
-  /** Switches all "this.$.foo" to "this.$['foo']". */
+  /**
+   * The "$" member in a Polymer element is a map of statically created nodes in its local DOM. This
+   * method is used to rewrite usage of this map from "this.$.foo" to "this.$['foo']" to avoid
+   * JSC_POSSIBLE_INEXISTENT_PROPERTY errors. Excludes function calls like "bar.$.foo()" since some
+   * libraries place methods under a "$" member.
+   */
   static void switchDollarSignPropsToBrackets(Node def, final AbstractCompiler compiler) {
     checkState(def.isObjectLit() || def.isClassMembers());
     for (Node keyNode : def.children()) {
@@ -93,6 +98,13 @@ final class PolymerPassStaticUtils {
                     && n.getString().equals("$")
                     && n.getParent().isGetProp()
                     && n.getGrandparent().isGetProp()) {
+
+                  // Some libraries like Mojo JS Bindings and jQuery place methods in a "$" member
+                  // e.g. "foo.$.closePipe()". Avoid converting to brackets for these cases.
+                  if (n.getAncestor(3).isCall() && n.getAncestor(3).hasOneChild()) {
+                    return;
+                  }
+
                   Node dollarChildProp = n.getGrandparent();
                   dollarChildProp.setToken(Token.GETELEM);
                   compiler.reportChangeToEnclosingScope(dollarChildProp);

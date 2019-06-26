@@ -1597,6 +1597,69 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
+  public void testDollarSignMethodCallInShorthandFunctionNotConvertedToBrackets() {
+    test(
+        lines(
+            "class ReceiverHelper {",
+            "  constructor() {}",
+            "  foo() {}",
+            "};",
+            "class Receiver {",
+            "  constructor() {",
+            "    this.$ = new ReceiverHelper();",
+            "  }",
+            "  toggle(el) {",
+            "    el.toggle();",
+            "  }",
+            "};",
+            "var ES6Test = Polymer({",
+            "  is: 'x-element',",
+            "  sayHi() {",
+            "    const receiver = new Receiver();",
+            "    receiver.$.foo();",
+            "    toggle(this.$.checkbox);",
+            "    receiver.toggle(this.$.checkbox);",
+            "  },",
+            "  toggle(el) {",
+            "    el.toggle();",
+            "  },",
+            "});"),
+        lines(
+            "class ReceiverHelper {",
+            "  constructor() {}",
+            "  foo() {}",
+            "};",
+            "class Receiver {",
+            "  constructor() {",
+            "    this.$ = new ReceiverHelper();",
+            "  }",
+            "  toggle(el) {",
+            "    el.toggle();",
+            "  }",
+            "};",
+            "/** ",
+            " * @constructor @extends {PolymerElement} ",
+            " * @implements {PolymerES6TestInterface} ",
+            " */",
+            "var ES6Test = function() {};",
+            "",
+            "ES6Test = Polymer(/** @lends {ES6Test.prototype} */ {",
+            "  is: 'x-element',",
+            "  /** @this {ES6Test} */",
+            "  sayHi() {",
+            "    const receiver = new Receiver();",
+            "    receiver.$.foo();",
+            "    toggle(this.$['checkbox']);",
+            "    receiver.toggle(this.$['checkbox']);",
+            "  },",
+            "  /** @this {ES6Test} */",
+            "  toggle(el) {",
+            "    el.toggle();",
+            "  },",
+            "});"));
+  }
+
   /**
    * Test that behavior property types are copied correctly to multiple elements. See b/21929103.
    */
