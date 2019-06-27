@@ -244,6 +244,10 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
       StringBuilder sb = new StringBuilder();
 
       for (Node node : nodes()) {
+        String comment = node.getNonJSDocCommentString();
+        if (!comment.isEmpty()) {
+          sb.append(node.getNonJSDocCommentString()).append("\n");
+        }
         JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(node);
         if (jsDoc != null) {
           sb.append(jsDoc.getOriginalCommentString()).append("\n");

@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
 import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
+import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_ALL_COMMENTS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -481,6 +482,226 @@ public class ErrorToFixMapperTest {
             "goog.requireType('a');",
             useInCode("a", "d", "f"),
             useInType("b", "c", "e")));
+  }
+
+  @Test
+  public void testLineCommentDoesNotGetDeleted() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "goog.require('d');", //
+            "// dummy", //
+            "goog.require('b');", //
+            useInCode("d", "b")), //
+        fileWithImports(
+            "// dummy", //
+            "goog.require('b');", //
+            "goog.require('d');", //
+            useInCode("d", "b")));
+  }
+
+  @Test
+  public void testBlockCommentDoesNotGetDeleted() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "goog.require('d');", //
+            "/* dummy */", //
+            "goog.require('b');", //
+            useInCode("d", "b")),
+        fileWithImports(
+            "/* dummy */", //
+            "goog.require('b');", //
+            "goog.require('d');", //
+            useInCode("d", "b")));
+  }
+
+  @Test
+  public void testFirstBlockCommentDoesNotGetDeleted() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "/* dummy */", //
+            "goog.require('d');", //
+            "goog.require('b');", //
+            useInCode("d", "b")),
+        fileWithImports(
+            "goog.require('b');", //
+            "/* dummy */", //
+            "goog.require('d');", //
+            useInCode("d", "b")));
+  }
+
+  @Test
+  public void testIndividualCommentsMoveCorrectly() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "// dummy 1", //
+            "goog.require('d');", //
+            "// dummy 2", //
+            "goog.require('b');", //
+            useInCode("d", "b")),
+        fileWithImports(
+            "// dummy 2", //
+            "goog.require('b');", //
+            "// dummy 1", //
+            "goog.require('d');", //
+            useInCode("d", "b")));
+  }
+
+  @Test
+  public void testIndividualCommentsMoveCorrectly2() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "// dummy 1", //
+            "goog.require('d');", //
+            "// dummy 2", //
+            "goog.require('b');", //
+            "// dummy 3",
+            "goog.require('a');",
+            useInCode("d", "b", "a")),
+        fileWithImports(
+            "// dummy 3", //
+            "goog.require('a');",
+            "// dummy 2", //
+            "goog.require('b');", //
+            "// dummy 1", //
+            "goog.require('d');", //
+            useInCode("d", "b", "a")));
+  }
+
+  @Test
+  public void testIndividualCommentsMoveCorrectly3() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "// dummy 1", //
+            "goog.require('d');", //
+            "// dummy 2", //
+            "goog.require('b');", //
+            "goog.require('a');",
+            useInCode("d", "b", "a")),
+        fileWithImports(
+            "goog.require('a');",
+            "// dummy 2", //
+            "goog.require('b');", //
+            "// dummy 1", //
+            "goog.require('d');", //
+            useInCode("d", "b", "a")));
+  }
+
+  @Test
+  public void testIndividualCommentsMoveCorrectly4() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "// dummy 1", //
+            "goog.require('d');", //
+            "goog.require('b');", //
+            "goog.require('a');",
+            useInCode("d", "b", "a")),
+        fileWithImports(
+            "goog.require('a');",
+            "goog.require('b');", //
+            "// dummy 1", //
+            "goog.require('d');", //
+            useInCode("d", "b", "a")));
+  }
+
+  @Test
+  public void testMultipleCommentsMoveCorrectly() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "// dummy 1", //
+            "// dummy 2", //
+            "goog.require('d');", //
+            "goog.require('b');", //
+            "goog.require('a');",
+            useInCode("d", "b", "a")),
+        fileWithImports(
+            "goog.require('a');",
+            "goog.require('b');", //
+            "// dummy 1", //
+            "// dummy 2", //
+            "goog.require('d');", //
+            useInCode("d", "b", "a")));
+  }
+
+  @Test
+  public void testMultipleCommentsMoveCorrectly2() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "// dummy 1", //
+            "\n", //
+            "// dummy 2", //
+            "goog.require('d');", //
+            "goog.require('b');", //
+            "goog.require('a');",
+            useInCode("d", "b", "a")),
+        fileWithImports(
+            "goog.require('a');",
+            "goog.require('b');", //
+            "// dummy 1", //
+            "\n", //
+            "// dummy 2", //
+            "goog.require('d');", //
+            useInCode("d", "b", "a")));
+  }
+
+  @Test
+  public void testFirstLineCommentDoesNotGetDeleted() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "// dummy",
+            "goog.require('d');", //
+            "goog.require('b');", //
+            useInCode("d", "b")),
+        fileWithImports(
+            "goog.require('b');", //
+            "// dummy", //
+            "goog.require('d');", //
+            useInCode("d", "b")));
+  }
+
+  @Test
+  public void testBothJSDocAndNonJSDocCommentsTogether() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "/** JSDoc gets preserved*/",
+            "// dummy",
+            "goog.require('d');", //
+            "goog.require('b');", //
+            useInCode("d", "b")),
+        fileWithImports(
+            "goog.require('b');", //
+            "// dummy",
+            "/** JSDoc gets preserved*/",
+            "goog.require('d');", //
+            useInCode("d", "b")));
+  }
+
+  @Test
+  public void testBothJSDocAndNonJSDocCommentsTogether2() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        fileWithImports(
+            "// dummy",
+            "/** JSDoc gets preserved*/",
+            "goog.require('d');", //
+            "goog.require('b');", //
+            useInCode("d", "b")),
+        fileWithImports(
+            "goog.require('b');", //
+            "// dummy",
+            "/** JSDoc gets preserved*/",
+            "goog.require('d');", //
+            useInCode("d", "b")));
   }
 
   @Test

@@ -395,10 +395,21 @@ public final class SuggestedFix {
 
       int start;
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(first);
+      String associatedNonJSDocComment = first.getNonJSDocCommentString();
       if (jsdoc == null) {
         start = first.getSourceOffset();
+        if (!"".equals(associatedNonJSDocComment)) {
+          start = start - associatedNonJSDocComment.length() - 1;
+        }
       } else {
         start = jsdoc.getOriginalCommentPosition();
+        if (!"".equals(associatedNonJSDocComment)) {
+          if (start + jsdoc.getOriginalCommentString().length()
+              > first.getSourceOffset() - associatedNonJSDocComment.length()) {
+            // nonJSDoc comment is placed before the JSDoc comment. Update start position.
+            start = start - associatedNonJSDocComment.length() - 1;
+          }
+        }
       }
 
       int end = last.getSourceOffset() + last.getLength();
