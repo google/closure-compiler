@@ -579,6 +579,10 @@ chrome.runtime.sendMessage = function(
     opt_callback) {};
 
 
+/** @type {!ChromeEvent} */
+chrome.runtime.onMessage;
+
+
 /**
  * Returns an object representing current load times. Note that the properties
  * on the object do not change and the function must be called again to get
