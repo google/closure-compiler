@@ -55,7 +55,7 @@ class DisambiguatePrivateProperties
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
     // We may have renamed some getter / setter properties
-    GatherGettersAndSetterProperties.update(compiler, externs, root);
+    GatherGetterAndSetterProperties.update(compiler, externs, root);
   }
 
   @Override

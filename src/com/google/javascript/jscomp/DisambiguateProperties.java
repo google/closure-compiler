@@ -412,7 +412,7 @@ class DisambiguateProperties implements CompilerPass {
     // Do the actual renaming.
     renameProperties();
     // Update any getters and setters we renamed.
-    GatherGettersAndSetterProperties.update(compiler, externs, root);
+    GatherGetterAndSetterProperties.update(compiler, externs, root);
   }
 
   /** Returns the property for the given name, creating it if necessary. */

@@ -3491,7 +3491,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory(PassNames.GATHER_GETTERS_AND_SETTERS, /* isOneTimePass= */ true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new GatherGettersAndSetterProperties(compiler);
+          return new GatherGetterAndSetterProperties(compiler);
         }
 
         @Override

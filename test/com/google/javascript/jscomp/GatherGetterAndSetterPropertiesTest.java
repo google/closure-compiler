@@ -22,13 +22,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link GatherGettersAndSetterProperties}. */
+/** Tests for {@link GatherGetterAndSetterProperties}. */
 @RunWith(JUnit4.class)
 public class GatherGetterAndSetterPropertiesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new GatherGettersAndSetterProperties(compiler);
+    return new GatherGetterAndSetterProperties(compiler);
   }
 
   @Test

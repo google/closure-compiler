@@ -1610,7 +1610,7 @@ public abstract class CompilerTestCase {
         }
 
         if ((verifyGetterAndSetterUpdates || verifyNoNewGettersOrSetters) && i == 0) {
-          GatherGettersAndSetterProperties.update(compiler, externsRoot, mainRoot);
+          GatherGetterAndSetterProperties.update(compiler, externsRoot, mainRoot);
         }
 
         recentChange.reset();
@@ -1633,17 +1633,17 @@ public abstract class CompilerTestCase {
         if (verifyGetterAndSetterUpdates) {
           assertWithMessage("Pass did not update extern getters / setters")
               .that(compiler.getExternGetterAndSetterProperties())
-              .isEqualTo(GatherGettersAndSetterProperties.gather(compiler, externsRoot));
+              .isEqualTo(GatherGetterAndSetterProperties.gather(compiler, externsRoot));
           assertWithMessage("Pass did not update source getters / setters")
               .that(compiler.getSourceGetterAndSetterProperties())
-              .isEqualTo(GatherGettersAndSetterProperties.gather(compiler, mainRoot));
+              .isEqualTo(GatherGetterAndSetterProperties.gather(compiler, mainRoot));
         }
 
         if (verifyNoNewGettersOrSetters) {
           MapDifference<String, PropertyAccessKind> externsDifference =
               Maps.difference(
                   compiler.getExternGetterAndSetterProperties(),
-                  GatherGettersAndSetterProperties.gather(compiler, externsRoot));
+                  GatherGetterAndSetterProperties.gather(compiler, externsRoot));
           assertWithMessage("Pass did not update new extern getters / setters")
               .that(externsDifference.entriesOnlyOnRight())
               .isEmpty();
@@ -1654,7 +1654,7 @@ public abstract class CompilerTestCase {
           MapDifference<String, PropertyAccessKind> sourceDifference =
               Maps.difference(
                   compiler.getSourceGetterAndSetterProperties(),
-                  GatherGettersAndSetterProperties.gather(compiler, mainRoot));
+                  GatherGetterAndSetterProperties.gather(compiler, mainRoot));
           assertWithMessage("Pass did not update new source getters / setters")
               .that(sourceDifference.entriesOnlyOnRight())
               .isEmpty();

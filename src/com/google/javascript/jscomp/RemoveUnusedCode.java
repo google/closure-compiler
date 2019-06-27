@@ -249,7 +249,7 @@ class RemoveUnusedCode implements CompilerPass {
     }
     traverseAndRemoveUnusedReferences(root);
     // This pass may remove definitions of getter or setter properties.
-    GatherGettersAndSetterProperties.update(compiler, externs, root);
+    GatherGetterAndSetterProperties.update(compiler, externs, root);
   }
 
   /**

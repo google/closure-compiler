@@ -255,7 +255,7 @@ class RenameProperties implements CompilerPass {
 
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED_OBFUSCATED);
     // This pass may rename getter or setter properties
-    GatherGettersAndSetterProperties.update(compiler, externs, root);
+    GatherGetterAndSetterProperties.update(compiler, externs, root);
   }
 
   /**

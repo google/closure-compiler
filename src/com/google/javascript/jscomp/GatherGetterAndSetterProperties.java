@@ -28,11 +28,11 @@ import java.util.LinkedHashMap;
  *
  * <p>Used to back off certain optimizations, e.g. code removal.
  */
-final class GatherGettersAndSetterProperties implements CompilerPass {
+final class GatherGetterAndSetterProperties implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  GatherGettersAndSetterProperties(AbstractCompiler compiler) {
+  GatherGetterAndSetterProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
