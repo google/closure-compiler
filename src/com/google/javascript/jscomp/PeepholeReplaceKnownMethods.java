@@ -28,6 +28,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import javax.annotation.Nullable;
 
 /**
  * Just to fold known methods when they are called with constants.
@@ -965,82 +966,60 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     if (!isASTNormalized() || !useTypes) {
       return n;
     }
-    if (isSafeToRemoveArrayLiteralFromFrontOfConcat(n)) {
-      return removeArrayLiteralFromFrontOfConcat(n);
+    ConcatFunctionCall concatFunctionCall = createConcatFunctionCallForNode(n);
+    if (concatFunctionCall == null) {
+      return n;
     }
-    if (isSafeToFoldConcatChaining(n)) {
-      return foldConcatChaining(n);
-    }
-    return n;
+    concatFunctionCall = tryToRemoveArrayLiteralFromFrontOfConcat(concatFunctionCall);
+    checkNotNull(concatFunctionCall);
+    return tryToFoldConcatChaining(concatFunctionCall);
   }
 
   /**
-   * Simply replace empty array literal from the front of concatenation by the first argument of
-   * concat function call [].concat(arr,1) -> arr.concat(1)
+   * Check if we have this code pattern `[].concat(exactlyArrayArgument,...*)` and if yes replace
+   * empty array literal from the front of concatenation by the first argument of concat function
+   * call `[].concat(arr,1)` -> `arr.concat(1)`.
    */
-  private Node removeArrayLiteralFromFrontOfConcat(Node n) {
-    checkArgument(isSafeToRemoveArrayLiteralFromFrontOfConcat(n), n);
-    
-    Node firstArg = n.getSecondChild();
-    n.removeChild(firstArg);
-    Node curentTarget = n.getFirstChild();
-    Node emptyArrayLiteral = curentTarget.getFirstChild();
-    curentTarget.replaceChild(emptyArrayLiteral, firstArg);
-    reportChangeToEnclosingScope(n);
-    return n;
-  }
-  
-  /**
-   * perform folding of chained concat functions, so
-   * arr.concat(a).concat(b) will be fold into arr.concat(a,b);
-   */
-  private Node foldConcatChaining(Node n) {
-    checkArgument(isSafeToFoldConcatChaining(n), n);
+  private ConcatFunctionCall tryToRemoveArrayLiteralFromFrontOfConcat(
+      ConcatFunctionCall concatFunctionCall) {
+    checkNotNull(concatFunctionCall);
 
-    Node previousConcatCall = n.getFirstFirstChild();
-    Node arg = n.getSecondChild();
-    while (arg != null) {
-      Node curentArg = arg;
-      arg = arg.getNext();
-      previousConcatCall.addChildToBack(curentArg.detach());
-    }
-    n.replaceWith(previousConcatCall.detach());
-    reportChangeToEnclosingScope(previousConcatCall);
-    return previousConcatCall;
-  }
-  
-  /**
-   * Check if we have this code pattern [].concat(exactlyArrayArgument,...*) so
-   * removeArrayLiteralFromFrontOfConcat can be performed
-   */
-  private boolean isSafeToRemoveArrayLiteralFromFrontOfConcat(Node n) {
-    checkArgument(n.isCall(), n);
-    
-    if (!isConcatFunctionCall(n)) {
-      return false;
-    }
-    Node arrayLiteralToRemove = n.getFirstFirstChild();
+    Node callNode = concatFunctionCall.callNode;
+    Node arrayLiteralToRemove = concatFunctionCall.calleeNode;
     if (!arrayLiteralToRemove.isArrayLit() || arrayLiteralToRemove.getChildCount() != 0) {
-      return false;
+      return concatFunctionCall;
     }
-    Node firstArg = n.getSecondChild();
-    return containsExactlyArray(firstArg);
+    Node firstArg = concatFunctionCall.firstArgumentNode;
+    if (!containsExactlyArray(firstArg)) {
+      return concatFunctionCall;
+    }
+
+    callNode.removeChild(firstArg);
+    Node curentTarget = callNode.getFirstChild();
+    curentTarget.replaceChild(arrayLiteralToRemove, firstArg);
+
+    reportChangeToEnclosingScope(callNode);
+    return createConcatFunctionCallForNode(callNode);
   }
 
   /**
-   * Check if we have this code pattern
-   * array.concat(...*).concat(sideEffectFreeArguments)
-   * so foldConcatChaining can be performed
+   * Check if we have this code pattern `array.concat(...*).concat(sideEffectFreeArguments)` and if
+   * yes fold chained concat functions, so `arr.concat(a).concat(b)` will be fold into
+   * `arr.concat(a,b)`.
    */
-  private boolean isSafeToFoldConcatChaining(Node n) {
-    checkArgument(n.isCall(), n);
-    
-    if (!isConcatFunctionCall(n)) {
-      return false;
+  private Node tryToFoldConcatChaining(ConcatFunctionCall concatFunctionCall) {
+    checkNotNull(concatFunctionCall);
+
+    Node concatCallNode = concatFunctionCall.callNode;
+
+    Node maybeFunctionCall = concatFunctionCall.calleeNode;
+    if (!maybeFunctionCall.isCall()) {
+      return concatCallNode;
     }
-    Node previousFunctionCall = n.getFirstFirstChild();
-    if (!previousFunctionCall.isCall() || !isConcatFunctionCall(previousFunctionCall)) {
-      return false;
+    ConcatFunctionCall previousConcatFunctionCall =
+        createConcatFunctionCallForNode(maybeFunctionCall);
+    if (previousConcatFunctionCall == null) {
+      return concatCallNode;
     }
     // make sure that arguments in second concat function call can't change the array
     // so we can fold chained concat functions
@@ -1049,44 +1028,70 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     // var a = [];
     // a.concat(1).concat(a.push(1)); -> [1,1]
     // a.concat(1,a.push(1)); -> [1,1,1]
-    for (Node arg = n.getSecondChild(); arg != null; arg = arg.getNext()) {
+    for (Node arg = concatFunctionCall.firstArgumentNode; arg != null; arg = arg.getNext()) {
       if (mayHaveSideEffects(arg)) {
-        return false;
+        return concatCallNode;
       }
     }
-    return true;
+
+    // perform folding
+    Node previousConcatCallNode = previousConcatFunctionCall.callNode;
+    Node arg = concatFunctionCall.firstArgumentNode;
+    while (arg != null) {
+      Node curentArg = arg;
+      arg = arg.getNext();
+      previousConcatCallNode.addChildToBack(curentArg.detach());
+    }
+    concatCallNode.replaceWith(previousConcatCallNode.detach());
+    reportChangeToEnclosingScope(previousConcatCallNode);
+    return previousConcatCallNode;
+  }
+
+  private abstract static class ConcatFunctionCall {
+    private final Node callNode;
+    private final Node calleeNode;
+    @Nullable
+    private final Node firstArgumentNode;
+
+    ConcatFunctionCall(Node callNode, Node calleeNode, Node firstArgumentNode) {
+      this.callNode = checkNotNull(callNode);
+      this.calleeNode = checkNotNull(calleeNode);
+      this.firstArgumentNode = firstArgumentNode;
+    }
   }
 
   /**
-   * Check if this call node is Array.prototype.concat
+   * If the argument node is a call to `Array.prototype.concat`, then return a `ConcatFunctionCall`
+   * object for it, otherwise return `null`.
    */
-  private boolean isConcatFunctionCall(Node n) {
+  @Nullable
+  private ConcatFunctionCall createConcatFunctionCallForNode(Node n) {
     checkArgument(n.isCall(), n);
-
     Node callTarget = checkNotNull(n.getFirstChild());
     if (!callTarget.isGetProp()) {
-      return false;
+      return null;
     }
     Node functionName = callTarget.getSecondChild();
     if (functionName == null || !functionName.getString().equals("concat")) {
-      return false;
+      return null;
     }
-    Node maybeArray = callTarget.getFirstChild();
-    return containsExactlyArray(maybeArray);
+    Node calleNode = callTarget.getFirstChild();
+    if (!containsExactlyArray(calleNode)) {
+      return null;
+    }
+    Node firstArgumentNode = n.getSecondChild();
+    return new ConcatFunctionCall(n, calleNode, firstArgumentNode) {};
   }
 
   /**
-   * Check if a node contains an array type or function call that returns only an array
+   * Check if a node contains an array type or function call that returns only an array.
    */
   private boolean containsExactlyArray(Node n) {
     if (n == null || n.getJSType() == null) {
       return false;
     }
     JSType nodeType = n.getJSType();
-    if (nodeType.isArrayType() || (nodeType.isTemplatizedType()
-        && nodeType.toMaybeTemplatizedType().getReferencedType().isArrayType())) {
-      return true;
-    }
-    return false;
+    return (nodeType.isArrayType() || (nodeType.isTemplatizedType()
+        && nodeType.toMaybeTemplatizedType().getReferencedType().isArrayType()));
   }
 }
