@@ -4223,6 +4223,22 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testClass_semicolonsInBodyAreIgnored() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    Node tree =
+        parse(
+            LINE_JOINER.join(
+                "class C {", //
+                "  foo() {};;;;;;",
+                "}"));
+
+    Node members = tree.getFirstChild().getChildAtIndex(2);
+    assertThat(members.isClassMembers()).isTrue();
+    assertThat(members.getChildCount()).isEqualTo(1);
+  }
+
+  @Test
   public void testClass_constructorMember_legalModifiers() {
     mode = LanguageMode.ECMASCRIPT_2018;
     final String errorMsg = "Class constructor may not be getter, setter, async, or generator.";

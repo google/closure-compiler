@@ -815,26 +815,30 @@ public class Parser {
   private ImmutableList<ParseTree> parseClassElements(boolean isAmbient) {
     ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
 
-    while (peekClassElement()) {
+    while (true) {
+      Token token = peekToken();
+      switch (token.type) {
+        case SEMI_COLON:
+          // Ignore extraneous semicolons in class bodies.
+          eat(TokenType.SEMI_COLON);
+          continue;
+
+        case IDENTIFIER:
+        case NUMBER:
+        case STAR:
+        case STATIC:
+        case STRING:
+        case OPEN_SQUARE:
+          break;
+
+        default:
+          if (Keywords.isKeyword(token.type)) {
+            break;
+          } else {
+            return result.build();
+          }
+      }
       result.add(parseClassElement(isAmbient));
-    }
-
-    return result.build();
-  }
-
-  private boolean peekClassElement() {
-    Token token = peekToken();
-    switch (token.type) {
-      case IDENTIFIER:
-      case NUMBER:
-      case STAR:
-      case STATIC:
-      case STRING:
-      case OPEN_SQUARE:
-      case SEMI_COLON:
-        return true;
-      default:
-        return Keywords.isKeyword(token.type);
     }
   }
 
