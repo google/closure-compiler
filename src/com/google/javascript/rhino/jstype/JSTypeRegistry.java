@@ -69,6 +69,7 @@ import com.google.javascript.rhino.PMap;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticScope;
+import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -1408,6 +1409,11 @@ public class JSTypeRegistry implements Serializable {
     unresolvedNamedTypes.clear();
   }
 
+  /** Records a named type that needs to be resolved later. */
+  void addUnresolvedNamedType(NamedType type) {
+    unresolvedNamedTypes.add(type);
+  }
+
   /** Resolve all the unresolved types in the given scope. */
   public void resolveTypes() {
     for (NamedType type : unresolvedNamedTypes) {
@@ -2002,14 +2008,19 @@ public class JSTypeRegistry implements Serializable {
         {
           String name = n.getFirstChild().getString();
           // TODO(sdh): require var to be const?
-          JSType type = scope.lookupQualifiedName(QualifiedName.of(name));
-          if (type == null || type.isUnknownType()) {
-            reporter.warning(
-                "Missing type for `typeof` value. The value must be declared and const.",
+          QualifiedName qname = QualifiedName.of(name);
+          String root = qname.getRoot();
+          StaticScope declarationScope = scope.getTopmostScopeOfEventualDeclaration(root);
+          StaticSlot rootSlot = scope.getSlot(root);
+          JSType type = scope.lookupQualifiedName(qname);
+          if (type == null || type.isUnknownType() || rootSlot.getScope() != declarationScope) {
+            // Create a NamedType via getType so that it will be added to the list of types to
+            // eventually resolve if necessary.
+            return getType(scope, "typeof " + n.getFirstChild().getString(),
                 sourceName,
                 n.getLineno(),
-                n.getCharno());
-            return getNativeType(UNKNOWN_TYPE);
+                n.getCharno(),
+                recordUnresolvedTypes);
           }
           if (type.isLiteralObject()) {
             JSType scopeType = type;

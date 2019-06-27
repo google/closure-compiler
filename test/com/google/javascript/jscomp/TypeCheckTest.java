@@ -23211,9 +23211,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeofType_withGlobalDeclaredVariableWithHoistedFunction() {
-    // TODO(sdh): fix this.  This is another form of problems with partially constructed scopes.
-    // "x" is in scope but because "g" is hoisted its type is created before "x" is introduced
-    // to the scope.
     testTypes(
         lines(
             "/** @type {string|number} */",
@@ -23222,7 +23219,27 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "x = 'str';",
             "g(null);"),
         lines(
-            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
+            "actual parameter 1 of g does not match formal parameter",
+            "found   : null",
+            "required: (number|string)"));
+  }
+
+  @Test
+  public void testTypeofType_typeofForwardReferencedShadowingLocal() {
+    testTypes(
+        lines(
+            "/** @const {string} */",
+            "var x = 'x';",
+            "function f() {",
+            "  function g(/** typeof x */ a) {}",
+            "  /** @const {number} */",
+            "  var x = 1;",
+            "  g(null);",
+            "}"),
+        lines(
+            "actual parameter 1 of g does not match formal parameter",
+            "found   : null",
+            "required: number"));
   }
 
   @Test
@@ -23254,9 +23271,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeofType_withLocalInferredVariableInHoistedFunction() {
-    // TODO(sdh): fix this.  This is another form of problems with partially constructed scopes.
-    // "x" is in scope but because "g" is hoisted its type is created before "x" is introduced
-    // to the scope.
     testTypes(
         lines(
             "function f() {",
@@ -23271,9 +23285,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeofType_withLocalDeclaredVariableWithHoistedFunction() {
-    // TODO(sdh): fix this.  This is another form of problems with partially constructed scopes.
-    // "x" is in scope but because "g" is hoisted its type is created before "x" is introduced
-    // to the scope.
     testTypes(
         lines(
             "function f() {",
@@ -23284,7 +23295,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  g(null);",
             "}"),
         lines(
-            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
+            "actual parameter 1 of g does not match formal parameter",
+            "found   : null",
+            "required: (number|string)"));
   }
 
   @Test

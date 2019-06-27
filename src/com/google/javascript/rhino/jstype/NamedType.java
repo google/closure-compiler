@@ -47,6 +47,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.jstype.JSTypeRegistry.ModuleSlot;
@@ -244,16 +245,22 @@ public final class NamedType extends ProxyObjectType {
       return super.resolveInternal(reporter);
     }
 
+    boolean resolved = false;
+    if (reference.startsWith("typeof ")) {
+      resolveTypeof(reporter);
+      resolved = true;
+    }
+
     // TODO(user): Investigate whether it is really necessary to keep two
     // different mechanisms for resolving named types, and if so, which order
     // makes more sense.
     // The `resolveViaClosureNamespace` mechanism can probably be deleted (or reworked) once the
     // compiler supports type annotations via path. The `resolveViaProperties` and
     // `resolveViaRegistry` are, unfortunately, both needed now with no migration plan.
-    boolean resolved = resolveViaClosureNamespace(reporter);
-    if (!resolved) {
-      resolved = resolveViaRegistry(reporter);
-    }
+    resolved =
+        resolved
+            || resolveViaClosureNamespace(reporter)
+            || resolveViaRegistry(reporter);
     if (!resolved) {
       resolveViaProperties(reporter);
     }
@@ -387,6 +394,25 @@ public final class NamedType extends ProxyObjectType {
     }
   }
 
+  private void resolveTypeof(ErrorReporter reporter) {
+    String name = reference.substring("typeof ".length());
+    // TODO(sdh): require var to be const?
+    JSType type = resolutionScope.lookupQualifiedName(QualifiedName.of(name));
+    if (type == null || type.isUnknownType()) {
+      warning(reporter, "Missing type for `typeof` value. The value must be declared and const.");
+      setReferencedAndResolvedType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE), reporter);
+    } else {
+      if (type.isLiteralObject()) {
+        // Create an extra layer of wrapping so that the "typeof" name is preserved for namespaces.
+        // This is depended on by Clutz to prevent infinite loops in self-referential typeof types.
+        JSType objlit = type;
+        type = registry.createNamedType(resolutionScope, reference, sourceName, lineno, charno);
+        ((NamedType) type).setReferencedType(objlit);
+      }
+      setReferencedAndResolvedType(type, reporter);
+    }
+  }
+
   /**
    * Resolves a named type by checking for the longest prefix that matches some Closure namespace,
    * if any, then attempting to resolve via properties based on the type of the `exports` object in
@@ -515,8 +541,8 @@ public final class NamedType extends ProxyObjectType {
   }
 
   /**
-   * Check for an obscure but very confusing error condition where a local variable shadows a global
-   * namespace.
+   * Check for an obscure but very confusing error condition where a local variable shadows a
+   * global namespace.
    */
   private boolean localVariableShadowsGlobalNamespace(String root) {
     StaticSlot rootVar = resolutionScope.getSlot(root);

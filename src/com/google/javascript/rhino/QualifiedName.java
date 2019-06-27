@@ -94,6 +94,15 @@ public abstract class QualifiedName {
   /** Checks whether the given node matches this name. */
   public abstract boolean matches(Node n);
 
+  /** Returns the root of this name, e.g. "foo" from "foo.bar.baz". */
+  public String getRoot() {
+    QualifiedName name = this;
+    while (!name.isSimple()) {
+      name = name.getOwner();
+    }
+    return name.getComponent();
+  }
+
   /**
    * Returns the components of this name as an iterable of strings, starting at the root. For the
    * qualified name foo.bar.baz, this returns ["foo", "bar", "baz"].
