@@ -1412,25 +1412,27 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       //     an associated scope yet.
       TypedScope exportScope =
           exportedName.getScopeRoot() != null ? memoized.get(exportedName.getScopeRoot()) : null;
+      // The scope is null for modules that were not visited yet.
       if (exportScope != null) {
         JSType type = exportScope.lookupQualifiedName(QualifiedName.of(exportedName.getName()));
+
+        // The type is null if either the name is inferred or this is an early ref.
         if (type != null) {
           declareAliasTypeIfRvalueIsAliasable(
               localNameNode, QualifiedName.of(exportedName.getName()), type, exportScope);
-        }
 
-        new SlotDefiner()
-            .forDeclarationNode(localNameNode)
-            .forVariableName(localNameNode.getString())
-            .inScope(currentScope)
-            .withType(type)
-            .allowLaterTypeInference(type == null)
-            .defineSlot();
-      } else {
-        // exportScope was null.
-        // Defer defining this name until after we have created the actual module scope.
-        weakImports.add(new WeakModuleImport(localNameNode, exportedName, currentScope));
+          new SlotDefiner()
+              .forDeclarationNode(localNameNode)
+              .forVariableName(localNameNode.getString())
+              .inScope(currentScope)
+              .withType(type)
+              .allowLaterTypeInference(type == null)
+              .defineSlot();
+          return;
+        }
       }
+      // Defer defining this name until after we have visited the entire AST.
+      weakImports.add(new WeakModuleImport(localNameNode, exportedName, currentScope));
     }
 
     /**

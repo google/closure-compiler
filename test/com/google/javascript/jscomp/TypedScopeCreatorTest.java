@@ -4650,6 +4650,91 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogRequireType_namedExportOfClass() {
+    processClosurePrimitives = true;
+    testSame(
+        srcs(
+            lines(
+                "goog.module('b');",
+                "const x = goog.requireType('a.x');",
+                "function inner() { var /** !x.Y */ y; Y: y; }"),
+            lines(
+                "goog.module('a.x');", //
+                "exports.Y = class {};")));
+
+    Node xNode = getLabeledStatement("Y").statementNode.getOnlyChild();
+    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("exports.Y");
+  }
+
+  @Test
+  public void testGoogForwardDeclare_providedClass() {
+    processClosurePrimitives = true;
+    testSame(
+        srcs(
+            lines(
+                "goog.module('b');",
+                "const X = goog.forwardDeclare('a.X');",
+                "function inner() { var /** !X */ x; X: x; }"),
+            lines(
+                "goog.provide('a.X');", //
+                "a.X = class {};")));
+
+    Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
+    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("a.X");
+  }
+
+  @Test
+  public void testGoogRequireType_providedClass() {
+    processClosurePrimitives = true;
+    testSame(
+        srcs(
+            lines(
+                "goog.module('b');",
+                "const X = goog.requireType('a.X');",
+                "function inner() { var /** !X */ x; X: x; }"),
+            lines(
+                "goog.provide('a.X');", //
+                "a.X = class {};")));
+
+    Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
+    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("a.X");
+  }
+
+  @Test
+  public void testGoogRequireType_classOnProvidedNamespace() {
+    processClosurePrimitives = true;
+    testSame(
+        srcs(
+            lines(
+                "goog.module('b');",
+                "const x = goog.requireType('a.x');",
+                "function inner() { var /** !x.Y */ y; Y: y; }"),
+            lines(
+                "goog.provide('a.x');", //
+                "a.x.Y = class {};")));
+
+    Node xNode = getLabeledStatement("Y").statementNode.getOnlyChild();
+    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("a.x.Y");
+  }
+
+  @Test
+  public void testGoogRequireType_destructuring_classOnProvidedNamespace() {
+    processClosurePrimitives = true;
+    testSame(
+        srcs(
+            lines(
+                "goog.module('b');",
+                "const {Y} = goog.requireType('a.x');",
+                "function inner() { var /** !Y */ y; Y: y; }"),
+            lines(
+                "goog.provide('a.x');", //
+                "a.x.Y = class {};")));
+
+    Node xNode = getLabeledStatement("Y").statementNode.getOnlyChild();
+    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("a.x.Y");
+  }
+
+  @Test
   public void testGoogRequire_defaultExportOfConstructor() {
     testSame(
         srcs(
