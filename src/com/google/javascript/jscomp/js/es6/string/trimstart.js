@@ -20,6 +20,21 @@
  */
 'require util/polyfill';
 
+// Most browsers implemented trimLeft around ES5-time-frame, but it wasn't
+// officially part of the language specification until ES_2019, so we have
+// to provide a polyfill for it.
+// IE11 doesn't have it, of course...
+$jscomp.polyfill('String.prototype.trimLeft', function(orig) {
+  /**
+   * @this {string}
+   * @return {string}
+   */
+  function polyfill() {
+    return this.replace(/^[\s\xa0]+/, '');
+  }
+  return orig || polyfill;
+}, 'es_2019', 'es3');
+
 $jscomp.polyfill('String.prototype.trimStart', function(orig) {
   return orig || String.prototype.trimLeft;
 }, 'es_2019', 'es3');

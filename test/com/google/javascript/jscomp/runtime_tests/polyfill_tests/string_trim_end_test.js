@@ -22,15 +22,23 @@ const testSuite = goog.require('goog.testing.testSuite');
 testSuite({
   testTrimEnd_noChange() {
     assertEquals('a', 'a'.trimEnd());
+    assertEquals('a', 'a'.trimRight());
     assertEquals('ab', 'ab'.trimEnd());
+    assertEquals('ab', 'ab'.trimRight());
     assertEquals('a b', 'a b'.trimEnd());
+    assertEquals('a b', 'a b'.trimRight());
     assertEquals(' <-', ' <-'.trimEnd());
+    assertEquals(' <-', ' <-'.trimRight());
     assertEquals('\t<-', '\t<-'.trimEnd());
+    assertEquals('\t<-', '\t<-'.trimRight());
   },
 
   testTrimEnd_change() {
-    assertTrue('->', '-> '.trimEnd());
-    assertTrue('->', '->         '.trimEnd());
-    assertTrue('->', '->\t'.trimEnd());
+    assertEquals('->', '-> '.trimEnd());
+    assertEquals('->', '-> '.trimRight());
+    assertEquals('->', '->         '.trimEnd());
+    assertEquals('->', '->         '.trimRight());
+    assertEquals('->', '->\t'.trimEnd());
+    assertEquals('->', '->\t'.trimRight());
   },
 });

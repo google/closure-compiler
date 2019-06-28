@@ -72,6 +72,8 @@ String.prototype.padStart es8 es3 es6/string/padstart
 String.prototype.repeat es6 es3 es6/string/repeat
 String.prototype.startsWith es6 es3 es6/string/startswith
 String.prototype.trimEnd es_2019 es3 es6/string/trimend
+String.prototype.trimLeft es_2019 es3 es6/string/trimstart
+String.prototype.trimRight es_2019 es3 es6/string/trimend
 String.prototype.trimStart es_2019 es3 es6/string/trimstart
 String.raw es6 es6
 WeakMap es6 es3 es6/weakmap
