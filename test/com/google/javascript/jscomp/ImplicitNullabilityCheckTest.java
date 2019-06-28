@@ -26,7 +26,8 @@ import org.junit.runners.JUnit4;
 public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
 
   @Override
-  protected CompilerOptions getOptions(CompilerOptions options) {
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.WARNING);
     return options;
   }

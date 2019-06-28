@@ -40,10 +40,11 @@ public final class ExtraRequireTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions(CompilerOptions options) {
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.ERROR);
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
-    return super.getOptions(options);
+    return options;
   }
 
   @Override

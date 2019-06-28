@@ -42,8 +42,8 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions(CompilerOptions options) {
-    options = super.getOptions(options);
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
     if (!entryPoints.isEmpty()) {
       options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
     }

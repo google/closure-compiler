@@ -34,6 +34,7 @@ import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.google.common.truth.Correspondence;
 import com.google.errorprone.annotations.ForOverride;
+import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
 import com.google.javascript.jscomp.AbstractCompiler.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -657,18 +658,13 @@ public abstract class CompilerTestCase {
   protected abstract CompilerPass getProcessor(Compiler compiler);
 
   /**
-   * Gets the compiler options to use for this test. Use getProcessor to
-   * determine what passes should be run.
+   * Gets the compiler options to use for this test. Use getProcessor to determine what passes
+   * should be run.
    */
+  @OverridingMethodsMustInvokeSuper
   protected CompilerOptions getOptions() {
-    return getOptions(new CompilerOptions());
-  }
+    CompilerOptions options = new CompilerOptions();
 
-  /**
-   * Gets the compiler options to use for this test. Use getProcessor to
-   * determine what passes should be run.
-   */
-  protected CompilerOptions getOptions(CompilerOptions options) {
     options.setLanguageIn(acceptedLanguage);
     options.setEmitUseStrict(false);
     options.setLanguageOut(languageOut);
@@ -689,6 +685,7 @@ public abstract class CompilerTestCase {
     options.setCodingConvention(getCodingConvention());
     options.setPolymerVersion(1);
     CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
+
     return options;
   }
 
