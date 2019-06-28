@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_ALL_COMMENTS;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.Compiler;
@@ -30,6 +31,7 @@ import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.Collection;
+import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -65,6 +67,58 @@ public class ErrorToFixMapperTest {
     options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_CHECKS, WARNING);
   }
 
+  @AutoValue
+  abstract static class ExpectedFix {
+    /** Optional string describing the fix. */
+    @Nullable
+    abstract String description();
+    /** What the code should look like after applying the fix. */
+    abstract String fixedCode();
+
+    static Builder builder() {
+      return new AutoValue_ErrorToFixMapperTest_ExpectedFix.Builder();
+    }
+
+    @AutoValue.Builder
+    abstract static class Builder {
+      abstract Builder description(@Nullable String description);
+
+      abstract Builder fixedCode(String fixedCode);
+
+      abstract ExpectedFix build();
+    }
+  }
+
+  @Test
+  public void testInvalidSuperCall() {
+    assertExpectedFixes(
+        lines(
+            "class C {", //
+            "  method() {}",
+            "}",
+            "class D extends C {",
+            "  method() {",
+            "    return super();", // super() constructor call invalid here
+            "  }",
+            "}",
+            ""),
+        ExpectedFix.builder()
+            .description("Call 'super.method' instead")
+            .fixedCode(
+                lines(
+                    "class C {", //
+                    "  method() {}",
+                    "}",
+                    "class D extends C {",
+                    "  method() {",
+                    "    return super.method();",
+                    "  }",
+                    "}",
+                    ""))
+            .build());
+  }
+
+
   @Test
   public void testDebugger() {
     String code =
@@ -77,22 +131,39 @@ public class ErrorToFixMapperTest {
             "function f() {", //
             "  ",
             "}");
-    assertChanges(code, expectedCode);
+    assertExpectedFixes(
+        code,
+        ExpectedFix.builder()
+            .description("Remove debugger statement")
+            .fixedCode(expectedCode)
+            .build());
   }
 
   @Test
   public void testEmptyStatement1() {
-    assertChanges("var x;;", "var x;");
+    assertExpectedFixes(
+        "var x;;",
+        ExpectedFix.builder().description("Remove empty statement").fixedCode("var x;").build());
   }
 
   @Test
   public void testEmptyStatement2() {
-    assertChanges("var x;;\nvar y;", "var x;\nvar y;");
+    assertExpectedFixes(
+        "var x;;\nvar y;",
+        ExpectedFix.builder()
+            .description("Remove empty statement")
+            .fixedCode("var x;\nvar y;")
+            .build());
   }
 
   @Test
   public void testEmptyStatement3() {
-    assertChanges("function f() {};\nf();", "function f() {}\nf();");
+    assertExpectedFixes(
+        "function f() {};\nf();",
+        ExpectedFix.builder()
+            .description("Remove empty statement")
+            .fixedCode("function f() {}\nf();")
+            .build());
   }
 
   @Test
@@ -222,7 +293,12 @@ public class ErrorToFixMapperTest {
   public void testRedeclaration() {
     String code = "function f() { var x; var x; }";
     String expectedCode = "function f() { var x; }";
-    assertChanges(code, expectedCode);
+    assertExpectedFixes(
+        code,
+        ExpectedFix.builder()
+            .description("Remove redundant declaration")
+            .fixedCode(expectedCode)
+            .build());
   }
 
   @Test
@@ -334,7 +410,12 @@ public class ErrorToFixMapperTest {
 
   @Test
   public void testRedeclarationOfParam() {
-    assertChanges("function f(x) { var x = 3; }", "function f(x) { x = 3; }");
+    assertExpectedFixes(
+        "function f(x) { var x = 3; }",
+        ExpectedFix.builder()
+            .description("Convert redundant declaration to assignment")
+            .fixedCode("function f(x) { x = 3; }")
+            .build());
   }
 
   @Test
@@ -346,14 +427,24 @@ public class ErrorToFixMapperTest {
   public void testEarlyReference() {
     String code = "if (x < 0) alert(1);\nvar x;";
     String expectedCode = "var x;\n" + code;
-    assertChanges(code, expectedCode);
+    assertExpectedFixes(
+        code,
+        ExpectedFix.builder()
+            .description("Insert var declaration statement")
+            .fixedCode(expectedCode)
+            .build());
   }
 
   @Test
   public void testEarlyReferenceInFunction() {
     String code = "function f() {\n  if (x < 0) alert(1);\nvar x;\n}";
     String expectedCode = "function f() {\n  var x;\nif (x < 0) alert(1);\nvar x;\n}";
-    assertChanges(code, expectedCode);
+    assertExpectedFixes(
+        code,
+        ExpectedFix.builder()
+            .description("Insert var declaration statement")
+            .fixedCode(expectedCode)
+            .build());
   }
 
   @Test
@@ -1621,13 +1712,20 @@ public class ErrorToFixMapperTest {
 
   @Test
   public void testExtraRequire() {
-    assertChanges(
+    assertExpectedFixes(
         lines(
             "goog.require('goog.object');",
             "goog.require('goog.string');",
             "",
             "alert(goog.string.parseInt('7'));"),
-        lines("goog.require('goog.string');", "", "alert(goog.string.parseInt('7'));"));
+        ExpectedFix.builder()
+            .description("Delete extra require")
+            .fixedCode(
+                lines(
+                    "goog.require('goog.string');", //
+                    "",
+                    "alert(goog.string.parseInt('7'));"))
+            .build());
   }
 
   @Test
@@ -1756,19 +1854,23 @@ public class ErrorToFixMapperTest {
 
   @Test
   public void testExtraRequire_destructuring_unusedShortnameMember() {
-    assertChanges(
+    assertExpectedFixes(
         lines(
             "goog.module('x');",
             "",
-            "const {foo: googUtilFoo, bar} = goog.require('goog.util');",
+            "const {bar, foo: googUtilFoo} = goog.require('goog.util');",
             "",
             "alert(bar(7));"),
-        lines(
-            "goog.module('x');",
-            "",
-            "const {bar} = goog.require('goog.util');",
-            "",
-            "alert(bar(7));"));
+        ExpectedFix.builder()
+            .description("Delete unused symbol")
+            .fixedCode(
+                lines(
+                    "goog.module('x');",
+                    "",
+                    "const {bar} = goog.require('goog.util');",
+                    "",
+                    "alert(bar(7));"))
+            .build());
   }
 
   @Test
@@ -1887,7 +1989,7 @@ public class ErrorToFixMapperTest {
     return sb.toString();
   }
 
-  private void assertChanges(String originalCode, String expectedCode) {
+  private void compileExpectingAtLeastOneWarningOrError(String originalCode) {
     compiler.compile(
         ImmutableList.<SourceFile>of(), // Externs
         ImmutableList.of(SourceFile.fromCode("test", originalCode)),
@@ -1898,6 +2000,12 @@ public class ErrorToFixMapperTest {
             .addAll(compiler.getErrors())
             .build();
     assertWithMessage("warnings/errors").that(warningsAndErrors).isNotEmpty();
+  }
+
+  /** @deprecated Use assertExpectedFixes() for new cases or when amending existing ones */
+  @Deprecated
+  private void assertChanges(String originalCode, String expectedCode) {
+    compileExpectingAtLeastOneWarningOrError(originalCode);
     Collection<SuggestedFix> fixes = errorManager.getAllFixes();
     assertWithMessage("fixes").that(fixes).isNotEmpty();
     String newCode =
@@ -1906,17 +2014,10 @@ public class ErrorToFixMapperTest {
     assertThat(newCode).isEqualTo(expectedCode);
   }
 
+  /** @deprecated Use assertExpectedFixes() for new cases or when amending existing ones */
+  @Deprecated
   private void assertChanges(String originalCode, String... expectedFixes) {
-    compiler.compile(
-        ImmutableList.<SourceFile>of(), // Externs
-        ImmutableList.of(SourceFile.fromCode("test", originalCode)),
-        options);
-    ImmutableList<JSError> warningsAndErrors =
-        ImmutableList.<JSError>builder()
-            .addAll(compiler.getWarnings())
-            .addAll(compiler.getErrors())
-            .build();
-    assertWithMessage("warnings/errors").that(warningsAndErrors).isNotEmpty();
+    compileExpectingAtLeastOneWarningOrError(originalCode);
     SuggestedFix[] fixes = errorManager.getAllFixes().toArray(new SuggestedFix[0]);
     assertWithMessage("fixes").that(fixes).hasLength(expectedFixes.length);
     for (int i = 0; i < fixes.length; i++) {
@@ -1925,6 +2026,24 @@ public class ErrorToFixMapperTest {
                   ImmutableList.of(fixes[i]), ImmutableMap.of("test", originalCode))
               .get("test");
       assertThat(newCode).isEqualTo(expectedFixes[i]);
+    }
+  }
+
+  private void assertExpectedFixes(String originalCode, ExpectedFix... expectedFixes) {
+    compileExpectingAtLeastOneWarningOrError(originalCode);
+    SuggestedFix[] fixes = errorManager.getAllFixes().toArray(new SuggestedFix[0]);
+    assertWithMessage("Unexpected number of fixes").that(fixes).hasLength(expectedFixes.length);
+    for (int i = 0; i < fixes.length; i++) {
+      ExpectedFix expectedFix = expectedFixes[i];
+      SuggestedFix actualFix = fixes[i];
+      assertWithMessage("Actual fix[" + i + "]: " + actualFix)
+          .that(actualFix.getDescription())
+          .isEqualTo(expectedFix.description());
+      String newCode =
+          ApplySuggestedFixes.applySuggestedFixesToCode(
+                  ImmutableList.of(fixes[i]), ImmutableMap.of("test", originalCode))
+              .get("test");
+      assertThat(newCode).isEqualTo(expectedFix.fixedCode());
     }
   }
 

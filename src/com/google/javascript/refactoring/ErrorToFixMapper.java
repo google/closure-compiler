@@ -15,6 +15,7 @@
  */
 package com.google.javascript.refactoring;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.refactoring.SuggestedFix.getShortNameForRequire;
 
@@ -84,10 +85,15 @@ public final class ErrorToFixMapper {
       case "JSC_PROVIDES_NOT_SORTED":
         return getFixForUnsortedProvides(error, compiler);
       case "JSC_DEBUGGER_STATEMENT_PRESENT":
-        return removeNode(error, compiler);
+        return new SuggestedFix.Builder()
+            .attachMatchedNodeInfo(error.node, compiler)
+            .setDescription("Remove debugger statement")
+            .delete(error.node)
+            .build();
       case "JSC_USELESS_EMPTY_STATEMENT":
         return removeEmptyStatement(error, compiler);
-      case "JSC_INEXISTENT_PROPERTY":
+      case "JSC_INEXISTENT_PROPERTY_WITH_SUGGESTION":
+      case "JSC_STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION":
         return getFixForInexistentProperty(error, compiler);
       case "JSC_MISSING_CALL_TO_SUPER":
         return getFixForMissingSuper(error, compiler);
@@ -122,8 +128,10 @@ public final class ErrorToFixMapper {
 
     if (!name.hasChildren()) {
       Node nodeToDelete = parent.hasOneChild() ? parent : error.node;
-      return fix.delete(nodeToDelete).build();
+      return fix.setDescription("Remove redundant declaration").delete(nodeToDelete).build();
     }
+
+    fix.setDescription("Convert redundant declaration to assignment");
 
     Node assign = IR.exprResult(
         IR.assign(name.cloneNode(), name.getFirstChild().cloneTree()));
@@ -186,6 +194,7 @@ public final class ErrorToFixMapper {
       Node stmt = NodeUtil.getEnclosingStatement(error.node);
       return new SuggestedFix.Builder()
           .attachMatchedNodeInfo(error.node, compiler)
+          .setDescription("Insert var declaration statement")
           .insertBefore(stmt, "var " + name + ";\n")
           .build();
     }
@@ -255,16 +264,10 @@ public final class ErrorToFixMapper {
     }
   }
 
-  private static SuggestedFix removeNode(JSError error, AbstractCompiler compiler) {
-    return new SuggestedFix.Builder()
-        .attachMatchedNodeInfo(error.node, compiler)
-        .delete(error.node)
-        .build();
-  }
-
   private static SuggestedFix removeEmptyStatement(JSError error, AbstractCompiler compiler) {
     return new SuggestedFix.Builder()
         .attachMatchedNodeInfo(error.node, compiler)
+        .setDescription("Remove empty statement")
         .deleteWithoutRemovingWhitespace(error.node)
         .build();
   }
@@ -287,9 +290,11 @@ public final class ErrorToFixMapper {
   private static SuggestedFix getFixForInvalidSuper(JSError error, AbstractCompiler compiler) {
     Matcher m = DID_YOU_MEAN.matcher(error.description);
     if (m.matches()) {
+      String superDotSuggestion = checkNotNull(m.group(1));
       return new SuggestedFix.Builder()
           .attachMatchedNodeInfo(error.node, compiler)
-          .replace(error.node, NodeUtil.newQName(compiler, m.group(1)), compiler)
+          .setDescription("Call '" + superDotSuggestion + "' instead")
+          .replace(error.node, NodeUtil.newQName(compiler, superDotSuggestion), compiler)
           .build();
     }
     return null;
@@ -302,6 +307,7 @@ public final class ErrorToFixMapper {
       String suggestedPropName = m.group(1);
       return new SuggestedFix.Builder()
           .attachMatchedNodeInfo(error.node, compiler)
+          .setDescription("Change property name to '" + suggestedPropName + "'")
           .rename(error.node, suggestedPropName)
           .build();
     }
@@ -341,6 +347,7 @@ public final class ErrorToFixMapper {
         new SuggestedFix.Builder().attachMatchedNodeInfo(error.node, compiler);
     boolean destructuring = NodeUtil.getEnclosingType(error.node, Token.OBJECT_PATTERN) != null;
     if (destructuring) {
+      fix.setDescription("Delete unused symbol");
       if (error.node.isStringKey()) {
         fix.delete(error.node);
       } else {
@@ -348,6 +355,7 @@ public final class ErrorToFixMapper {
         fix.delete(error.node.getParent());
       }
     } else {
+      fix.setDescription("Delete extra require");
       fix.deleteWithoutRemovingWhitespaceBefore(NodeUtil.getEnclosingStatement(error.node));
     }
     return fix.build();
