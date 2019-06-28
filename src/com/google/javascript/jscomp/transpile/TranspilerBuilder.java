@@ -65,7 +65,7 @@ public final class TranspilerBuilder {
    * that the builder itself is not changed.
    */
   @CheckReturnValue
-  public TranspilerBuilder caching(CacheBuilder builder) {
+  public TranspilerBuilder caching(CacheBuilder<Object, ? super TranspileResult> builder) {
     return new TranspilerBuilder(new CachingTranspiler(transpiler, builder));
   }
 

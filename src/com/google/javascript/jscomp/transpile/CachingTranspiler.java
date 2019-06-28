@@ -38,16 +38,17 @@ public final class CachingTranspiler implements Transpiler {
   private final LoadingCache<Key, TranspileResult> cache;
   private final Supplier<String> runtime;
 
-  @SuppressWarnings("unchecked")
   public CachingTranspiler(
       final Transpiler delegate, CacheBuilder<Object, ? super TranspileResult> builder) {
     checkNotNull(delegate);
-    this.cache = builder.build(new CacheLoader<Key, TranspileResult>() {
-      @Override
-      public TranspileResult load(Key key) {
-        return delegate.transpile(key.path, key.code);
-      }
-    });
+    this.cache =
+        builder.<Key, TranspileResult>build(
+            new CacheLoader<Key, TranspileResult>() {
+              @Override
+              public TranspileResult load(Key key) {
+                return delegate.transpile(key.path, key.code);
+              }
+            });
     this.runtime = Suppliers.memoize(delegate::runtime);
   }
 
@@ -80,11 +81,13 @@ public final class CachingTranspiler implements Transpiler {
       this.path = checkNotNull(path);
       this.code = checkNotNull(code);
     }
+
     @Override
     public boolean equals(Object other) {
       return other instanceof Key
           && ((Key) other).path.equals(path) && ((Key) other).code.equals(code);
     }
+
     @Override
     public int hashCode() {
       return Objects.hash(path, code);

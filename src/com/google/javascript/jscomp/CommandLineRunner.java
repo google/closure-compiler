@@ -82,7 +82,6 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.NamedOptionDef;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.OptionDef;
-import org.kohsuke.args4j.OptionHandlerFilter;
 import org.kohsuke.args4j.spi.FieldSetter;
 import org.kohsuke.args4j.spi.IntOptionHandler;
 import org.kohsuke.args4j.spi.OptionHandler;
@@ -1063,18 +1062,13 @@ public class CommandLineRunner extends
             parser.printUsage(
                 stringWriter,
                 null,
-                new OptionHandlerFilter() {
-                  @Override
-                  public boolean select(OptionHandler optionHandler) {
-                    if (optionHandler.option instanceof NamedOptionDef) {
-                      return !optionHandler.option.hidden()
-                          && optionName.equals(
-                              ((NamedOptionDef) optionHandler.option)
-                                  .name()
-                                  .replaceFirst("^--", ""));
-                    }
-                    return false;
+                (optionHandler) -> {
+                  if (optionHandler.option instanceof NamedOptionDef) {
+                    return !optionHandler.option.hidden()
+                        && optionName.equals(
+                            ((NamedOptionDef) optionHandler.option).name().replaceFirst("^--", ""));
                   }
+                  return false;
                 });
             stringWriter.flush();
             String rawOptionUsage = stringWriter.toString();
@@ -1108,16 +1102,13 @@ public class CommandLineRunner extends
           parser.printUsage(
               outputStream,
               null,
-              new OptionHandlerFilter() {
-                @Override
-                public boolean select(OptionHandler optionHandler) {
-                  if (optionHandler.option instanceof NamedOptionDef) {
-                    return !optionHandler.option.hidden()
-                        && options.contains(
-                            ((NamedOptionDef) optionHandler.option).name().replaceFirst("^--", ""));
-                  }
-                  return false;
+              (optionHandler) -> {
+                if (optionHandler.option instanceof NamedOptionDef) {
+                  return !optionHandler.option.hidden()
+                      && options.contains(
+                          ((NamedOptionDef) optionHandler.option).name().replaceFirst("^--", ""));
                 }
+                return false;
               });
         }
 

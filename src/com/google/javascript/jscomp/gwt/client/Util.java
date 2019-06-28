@@ -125,7 +125,7 @@ public class Util {
 
     @JsOverlay
     public final List<T> asList() {
-      return new JsArrayList(this);
+      return new JsArrayList<>(this);
     }
 
     @JsOverlay
