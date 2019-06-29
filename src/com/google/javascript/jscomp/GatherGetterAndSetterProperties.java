@@ -43,11 +43,18 @@ final class GatherGetterAndSetterProperties implements CompilerPass {
 
   /** Gathers all getters and setters in the AST. */
   static void update(AbstractCompiler compiler, Node externs, Node root) {
+    if (compiler.getOptions().getAssumeGettersAndSettersAreSideEffectFree()) {
+      return;
+    }
+
+    // TODO(nickreid): We probably don't need to re-gather from the externs. They don't change so
+    // the first collection should be good forever.
     compiler.setExternGetterAndSetterProperties(gather(compiler, externs));
     compiler.setSourceGetterAndSetterProperties(gather(compiler, root));
   }
 
   static ImmutableMap<String, PropertyAccessKind> gather(AbstractCompiler compiler, Node root) {
+
     GatherCallback gatherCallback = new GatherCallback();
     NodeTraversal.traverse(compiler, root, gatherCallback);
     return ImmutableMap.copyOf(gatherCallback.properties);

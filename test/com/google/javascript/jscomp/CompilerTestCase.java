@@ -30,12 +30,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.MapDifference;
-import com.google.common.collect.Maps;
 import com.google.common.truth.Correspondence;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
-import com.google.javascript.jscomp.AbstractCompiler.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -670,6 +667,7 @@ public abstract class CompilerTestCase {
     options.setLanguageOut(languageOut);
     options.setModuleResolutionMode(moduleResolutionMode);
     options.setPreserveTypeAnnotations(true);
+    options.setAssumeGettersAndSettersAreSideEffectFree(false); // Default to the complex case.
 
     // This doesn't affect whether checkSymbols is run--it just affects
     // whether variable warnings are filtered.
@@ -1627,38 +1625,7 @@ public abstract class CompilerTestCase {
           changeVerifier.checkRecordedChanges(mainRoot);
         }
 
-        if (verifyGetterAndSetterUpdates) {
-          assertWithMessage("Pass did not update extern getters / setters")
-              .that(compiler.getExternGetterAndSetterProperties())
-              .isEqualTo(GatherGetterAndSetterProperties.gather(compiler, externsRoot));
-          assertWithMessage("Pass did not update source getters / setters")
-              .that(compiler.getSourceGetterAndSetterProperties())
-              .isEqualTo(GatherGetterAndSetterProperties.gather(compiler, mainRoot));
-        }
-
-        if (verifyNoNewGettersOrSetters) {
-          MapDifference<String, PropertyAccessKind> externsDifference =
-              Maps.difference(
-                  compiler.getExternGetterAndSetterProperties(),
-                  GatherGetterAndSetterProperties.gather(compiler, externsRoot));
-          assertWithMessage("Pass did not update new extern getters / setters")
-              .that(externsDifference.entriesOnlyOnRight())
-              .isEmpty();
-          assertWithMessage("Pass did not update new extern getters / setters")
-              .that(externsDifference.entriesDiffering())
-              .isEmpty();
-
-          MapDifference<String, PropertyAccessKind> sourceDifference =
-              Maps.difference(
-                  compiler.getSourceGetterAndSetterProperties(),
-                  GatherGetterAndSetterProperties.gather(compiler, mainRoot));
-          assertWithMessage("Pass did not update new source getters / setters")
-              .that(sourceDifference.entriesOnlyOnRight())
-              .isEmpty();
-          assertWithMessage("Pass did not update new source getters / setters")
-              .that(sourceDifference.entriesDiffering())
-              .isEmpty();
-        }
+        verifyGetterAndSetterCollection(compiler, externsRoot, mainRoot);
 
         if (astValidationEnabled) {
           new AstValidator(compiler, scriptFeatureValidationEnabled)
@@ -1895,6 +1862,35 @@ public abstract class CompilerTestCase {
   private static void normalizeActualCode(Compiler compiler, Node externsRoot, Node mainRoot) {
     Normalize normalize = new Normalize(compiler, false);
     normalize.process(externsRoot, mainRoot);
+  }
+
+  private void verifyGetterAndSetterCollection(Compiler compiler, Node externsRoot, Node mainRoot) {
+    if (compiler.getOptions().getAssumeGettersAndSettersAreSideEffectFree()) {
+      assertWithMessage("Should not be validated when getter / setters are side-effect free")
+          .that(verifyGetterAndSetterUpdates)
+          .isFalse();
+      assertWithMessage("Should not be validated when getter / setters are side-effect free")
+          .that(verifyNoNewGettersOrSetters)
+          .isFalse();
+
+      assertThat(compiler.getExternGetterAndSetterProperties()).isEmpty();
+      assertThat(compiler.getSourceGetterAndSetterProperties()).isEmpty();
+    } else if (verifyGetterAndSetterUpdates) {
+      assertWithMessage("Pass did not update extern getters / setters")
+          .that(compiler.getExternGetterAndSetterProperties())
+          .containsExactlyEntriesIn(GatherGetterAndSetterProperties.gather(compiler, externsRoot));
+      assertWithMessage("Pass did not update source getters / setters")
+          .that(compiler.getSourceGetterAndSetterProperties())
+          .containsExactlyEntriesIn(GatherGetterAndSetterProperties.gather(compiler, mainRoot));
+    } else if (verifyNoNewGettersOrSetters) {
+      // If the above assertions hold then these two must also hold.
+      assertWithMessage("Pass did not update new extern getters / setters")
+          .that(compiler.getExternGetterAndSetterProperties())
+          .containsAtLeastEntriesIn(GatherGetterAndSetterProperties.gather(compiler, externsRoot));
+      assertWithMessage("Pass did not update new source getters / setters")
+          .that(compiler.getSourceGetterAndSetterProperties())
+          .containsAtLeastEntriesIn(GatherGetterAndSetterProperties.gather(compiler, mainRoot));
+    }
   }
 
   protected Node parseExpectedJs(String expected) {
