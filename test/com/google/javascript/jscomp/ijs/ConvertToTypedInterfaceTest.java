@@ -1945,4 +1945,102 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "/** @const @type {UnusableType} */ var Foo;",
             "/** @const @type {UnusableType} */ var Bar"));
   }
+
+  @Test
+  public void testPolymerBehavior() {
+    test(
+        lines(
+            "/** @polymerBehavior */",
+            "export const MyBehavior = {",
+            "  properties: {",
+            "    foo: String,",
+            "    /** @type {string|number} */",
+            "    bar: Number,",
+            "    /** @type {string|number} */",
+            "    baz: {",
+            "      type: String,",
+            "      value: function() {",
+            "        return \"foo\";",
+            "      },",
+            "      reflectToAttribute: true,",
+            "      observer: \"bazChanged\"",
+            "    }",
+            "  },",
+            "  observers: [",
+            "    \"abc(foo)\",",
+            "  ],",
+            "  /** @return {boolean} */",
+            "  abc() { return true; },",
+            "  /** @return {boolean} */",
+            "  xyz: function() { return false; }",
+            "};",
+            "/** @polymerBehavior */",
+            "export const MyBehaviorAlias = MyBehavior;",
+            "/** @polymerBehavior */",
+            "export const MyBehaviorArray = [MyBehavior];",
+            "/** @polymerBehavior */",
+            "exports.MyBehaviorAlias = MyBehavior;",
+            "/** @polymerBehavior */",
+            "exports.MyBehaviorArray = [MyBehavior];",
+            "/** @polymerBehavior */",
+            "export let InvalidBehavior1 = \"foo\";",
+            "/** @polymerBehavior */",
+            "exports.InvalidBehavior2 = function() { return \"foo\" };",
+            "export const NotABehavior = {",
+            "  properties: {",
+            "    foo: String",
+            "  }",
+            "};"),
+        lines(
+            // The @polymerBehavior annotation matters.
+            "/** @polymerBehavior */",
+            "export const MyBehavior = {",
+            // The "properties" configuration matters.
+            "  properties: {",
+            "    foo: String,",
+            // @type annotations on the properties matter.
+            "    /** @type {string|number} */",
+            "    bar: Number,",
+            "    /** @type {string|number} */",
+            "    baz: {",
+            // If the property definition is an object, only the "type" sub-property matters.
+            "      type: String",
+            "    }",
+            "  },",
+            // The "observers" configuration doesn't matter.
+            "  /** @const @type {UnusableType} */",
+            "  observers: 0,",
+            // Methods matter, but only their signatures.
+            "  /** @return {boolean} */",
+            "  abc() {},",
+            "  /** @return {boolean} */",
+            "  xyz: function() {}",
+            "};",
+
+            // Behaviors can also be aliased or combined into arrays, and the RHS values matter.
+            "/** @polymerBehavior */",
+            "export const MyBehaviorAlias = MyBehavior;",
+            "/** @polymerBehavior */",
+            "export const MyBehaviorArray = [MyBehavior];",
+            "/** @polymerBehavior */",
+            "exports.MyBehaviorAlias = MyBehavior;",
+            "/** @polymerBehavior */",
+            "exports.MyBehaviorArray = [MyBehavior];",
+
+            // Not valid behavior types, can be simplified.
+            "/**",
+            " * @const",
+            " * @polymerBehavior",
+            " * @type {UnusableType}",
+            " */",
+            "export var InvalidBehavior1",
+            "/** @polymerBehavior */",
+            "exports.InvalidBehavior2 = function() {};",
+
+            // There's no @polymerBehavior annotation here, so don't preserve "properties".
+            "export const NotABehavior = {",
+            "  /** @const @type {UnusableType} */",
+            "  properties: 0",
+            "};"));
+  }
 }

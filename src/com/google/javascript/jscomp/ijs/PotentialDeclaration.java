@@ -72,6 +72,12 @@ abstract class PotentialDeclaration {
     checkArgument(stringKeyNode.isStringKey());
     checkArgument(stringKeyNode.getParent().isObjectLit());
     String name = "this." + stringKeyNode.getString();
+    if (stringKeyNode.getString().equals("properties")) {
+      JSDocInfo objLitJsDoc = NodeUtil.getBestJSDocInfo(stringKeyNode.getParent());
+      if (objLitJsDoc != null && objLitJsDoc.isPolymerBehavior()) {
+        return new PolymerBehaviorPropertiesDeclaration(name, stringKeyNode);
+      }
+    }
     return new StringKeyDeclaration(name, stringKeyNode);
   }
 
@@ -225,7 +231,31 @@ abstract class PotentialDeclaration {
               && rhs.isObjectLit()
               && !rhs.hasChildren()
               && (jsdoc == null || !JsdocUtil.hasAnnotatedType(jsdoc)))
-          || (rhs != null && NodeUtil.isCallTo(rhs, "Polymer"));
+          || (rhs != null && NodeUtil.isCallTo(rhs, "Polymer"))
+          || isPolymerBehaviorAliasOrArray();
+    }
+
+    /**
+     * Polymer Behaviors can take 3 forms:
+     *
+     * <pre>{@code
+     * 1) /** @polymerBehavior *\/ export const MyBehavior = { ... };
+     * 2) /** @polymerBehavior *\/ export const MyBehaviorAlias = MyBehavior;
+     * 3) /** @polymerBehavior *\/ export const MyBehaviorArray = [Behavior1, Behavior2];
+     * }</pre>
+     *
+     * Form #1 will be simplified by PolymerBehaviorPropertiesDeclaration. Forms #2 and #3 need to
+     * be preserved here as-is so that the PolymerPass can follow the name references. Other forms
+     * annotated with @polymerBehavior are invalid and can be simplified or removed like any other
+     * variable.
+     */
+    boolean isPolymerBehaviorAliasOrArray() {
+      JSDocInfo jsdoc = getJsDoc();
+      Node rhs = getRhs();
+      return jsdoc != null
+          && jsdoc.isPolymerBehavior()
+          && rhs != null
+          && (rhs.isName() || rhs.isArrayLit());
     }
   }
 
@@ -386,6 +416,73 @@ abstract class PotentialDeclaration {
       return getLhs();
     }
 
+  }
+
+  /**
+   * Polymer Behaviors are mixin-like objects used in Polymer 1 for multiple inheritance. They are
+   * also supported by Polymer 2 and 3 for backwards-compatibility, though their use is discouraged
+   * in favor of regular JavaScript mixins.
+   *
+   * <p>Example:
+   *
+   * <pre>{@code
+   * \/** @polymerBehavior *\/
+   * export const MyBehavior = {
+   *   properties: {
+   *     foo: String,
+   *     bar: {
+   *       type: Number,
+   *       value: 123
+   *     }
+   *   },
+   *   baz: function() {}
+   * };
+   * }</pre>
+   *
+   * <p>For incremental compilation, it is important that the "properties" object is preserved,
+   * because the PolymerPass injects the properties declared there onto the prototypes of the
+   * Polymer elements that apply that behavior. Note that method signatures are already preserved so
+   * don't need additional handling here.
+   */
+  private static class PolymerBehaviorPropertiesDeclaration extends PotentialDeclaration {
+    PolymerBehaviorPropertiesDeclaration(String name, Node stringKeyNode) {
+      super(name, stringKeyNode, stringKeyNode.getLastChild());
+    }
+
+    @Override
+    void simplify(AbstractCompiler compiler) {
+      if (isDetached()) {
+        return;
+      }
+      Node propertiesObject = getRhs();
+      if (!propertiesObject.isObjectLit() || !propertiesObject.hasChildren()) {
+        return;
+      }
+      for (Node propKey : propertiesObject.children()) {
+        Node propDef = propKey.getOnlyChild();
+        // A property definition is either a function reference (e.g. String, Number), or another
+        // object literal. If it's an object literal, only the "type" sub-property matters for type
+        // checking, so we can delete everything else (which may include e.g. a "value" sub-property
+        // with a function expression).
+        if (propDef.isObjectLit()) {
+          for (Node subProp : propDef.children()) {
+            if (!subProp.getString().equals("type")) {
+              NodeUtil.deleteNode(subProp, compiler);
+            }
+          }
+        }
+      }
+    }
+
+    @Override
+    boolean shouldPreserve() {
+      return true;
+    }
+
+    @Override
+    Node getRemovableNode() {
+      return getLhs();
+    }
   }
 
   private static class AliasDeclaration extends PotentialDeclaration {
