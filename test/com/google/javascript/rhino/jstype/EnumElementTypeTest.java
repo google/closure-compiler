@@ -85,4 +85,22 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
     assertThat(numbersOfA.toString()).isEqualTo("typeA<number>");
     assertThat(numbersOfA.isSubtypeOf(typeA)).isTrue();
   }
+
+  @Test
+  public void testMeetTwoEnumElementTypes() {
+    EnumElementType typeA = registry.createEnumType(
+        "typeA", null, NUMBER_TYPE).getElementsType();
+    EnumElementType typeB = registry.createEnumType(
+        "typeB", null, NUMBER_TYPE).getElementsType();
+
+    JSType meet = typeA.meet(typeB);
+    assertThat(meet.isSubtypeOf(typeA)).isTrue();
+    assertThat(meet.isSubtypeOf(typeB)).isTrue();
+
+    // TODO(b/136298690): it's wrong for typeA to be a subtype of meet but not typeB.
+    // typeA <= meet, and meet <= typeB, but typeA !<= typeB.
+    assertThat(typeA.isSubtypeOf(meet)).isTrue();
+    assertThat(typeA.isSubtypeOf(typeB)).isFalse();
+
+  }
 }
