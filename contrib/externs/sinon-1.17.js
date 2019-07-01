@@ -812,6 +812,11 @@ SinonFakeServer.prototype.respond = function() {};
 SinonFakeServer.prototype.restore = function() {};
 
 /**
+ * @type {!SinonFakeXmlHttpRequest}
+ */
+SinonFakeServer.prototype.xhr;
+
+/**
  * Note: incomplete definition because it is tricky.
  * @param {...*} var_args
  */
@@ -827,6 +832,13 @@ sinon.useFakeXMLHttpRequest = function() {};
  * @extends {XMLHttpRequest}
  */
 var SinonFakeXmlHttpRequest = function() {};
+
+/**
+ * https://sinonjs.org/releases/latest/fake-xhr-and-server/#filtered-requests
+ *
+ * @type {boolean}
+ */
+SinonFakeXmlHttpRequest.prototype.useFilters;
 
 /**
  * @type {?string}
@@ -847,6 +859,13 @@ SinonFakeXmlHttpRequest.prototype.method;
  * @type {?string}
  */
 SinonFakeXmlHttpRequest.prototype.url;
+
+/**
+ * https://sinonjs.org/releases/latest/fake-xhr-and-server/#filtered-requests
+ *
+ * @param {function(string, string, boolean, string, string): boolean} fn
+ */
+SinonFakeXmlHttpRequest.prototype.addFilter = function(fn) {};
 
 /**
  * @param {?number} status
