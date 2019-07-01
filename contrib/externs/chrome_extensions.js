@@ -4738,7 +4738,7 @@ ChromeInputImeOnKeyEventEvent.prototype.hasListeners = function() {};
 
 
 /**
- * @param {function(boolean): void} callback Callback function.
+ * @param {function(boolean): void=} callback Callback function.
  * @return {undefined}
  */
 chrome.input.ime.activate = function(callback) {};
@@ -4747,7 +4747,7 @@ chrome.input.ime.activate = function(callback) {};
 /**
  * @param {!Object<string,number>} parameters An object with a
  *     'contextID' (number) key.
- * @param {function(boolean): void} callback Callback function.
+ * @param {function(boolean): void=} callback Callback function.
  * @return {undefined}
  */
 chrome.input.ime.clearComposition = function(parameters, callback) {};
@@ -4765,7 +4765,7 @@ chrome.input.ime.commitText = function(parameters, opt_callback) {};
 /**
  * @param {!chrome.input.ime.CreateWindowOptions} options Options of the created
  *     IME window.
- * @param {function(boolean): void=} callback Callback function.
+ * @param {function(Window): void=} callback Callback function.
  * @return {undefined}
  */
 chrome.input.ime.createWindow = function(options, callback) {};
