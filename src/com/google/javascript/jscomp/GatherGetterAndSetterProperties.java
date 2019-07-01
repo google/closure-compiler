@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.AbstractCompiler.PropertyAccessKind;
+import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
@@ -49,12 +49,13 @@ final class GatherGetterAndSetterProperties implements CompilerPass {
 
     // TODO(nickreid): We probably don't need to re-gather from the externs. They don't change so
     // the first collection should be good forever.
-    compiler.setExternGetterAndSetterProperties(gather(compiler, externs));
-    compiler.setSourceGetterAndSetterProperties(gather(compiler, root));
+    // For now we traverse both trees every time because there's no reason we have to treat them
+    // differently.
+    checkState(externs.getParent() == root.getParent());
+    compiler.setAccessorSummary(AccessorSummary.create(gather(compiler, externs.getParent())));
   }
 
   static ImmutableMap<String, PropertyAccessKind> gather(AbstractCompiler compiler, Node root) {
-
     GatherCallback gatherCallback = new GatherCallback();
     NodeTraversal.traverse(compiler, root, gatherCallback);
     return ImmutableMap.copyOf(gatherCallback.properties);

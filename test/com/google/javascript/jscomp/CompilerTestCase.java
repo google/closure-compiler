@@ -1873,23 +1873,18 @@ public abstract class CompilerTestCase {
           .that(verifyNoNewGettersOrSetters)
           .isFalse();
 
-      assertThat(compiler.getExternGetterAndSetterProperties()).isEmpty();
-      assertThat(compiler.getSourceGetterAndSetterProperties()).isEmpty();
+      assertThat(compiler.getAccessorSummary().getAccessors()).isEmpty();
     } else if (verifyGetterAndSetterUpdates) {
-      assertWithMessage("Pass did not update extern getters / setters")
-          .that(compiler.getExternGetterAndSetterProperties())
-          .containsExactlyEntriesIn(GatherGetterAndSetterProperties.gather(compiler, externsRoot));
-      assertWithMessage("Pass did not update source getters / setters")
-          .that(compiler.getSourceGetterAndSetterProperties())
-          .containsExactlyEntriesIn(GatherGetterAndSetterProperties.gather(compiler, mainRoot));
+      assertWithMessage("Pass did not update getters / setters")
+          .that(compiler.getAccessorSummary().getAccessors())
+          .containsExactlyEntriesIn(
+              GatherGetterAndSetterProperties.gather(compiler, mainRoot.getParent()));
     } else if (verifyNoNewGettersOrSetters) {
       // If the above assertions hold then these two must also hold.
-      assertWithMessage("Pass did not update new extern getters / setters")
-          .that(compiler.getExternGetterAndSetterProperties())
-          .containsAtLeastEntriesIn(GatherGetterAndSetterProperties.gather(compiler, externsRoot));
-      assertWithMessage("Pass did not update new source getters / setters")
-          .that(compiler.getSourceGetterAndSetterProperties())
-          .containsAtLeastEntriesIn(GatherGetterAndSetterProperties.gather(compiler, mainRoot));
+      assertWithMessage("Pass did not update new getters / setters")
+          .that(compiler.getAccessorSummary().getAccessors())
+          .containsAtLeastEntriesIn(
+              GatherGetterAndSetterProperties.gather(compiler, mainRoot.getParent()));
     }
   }
 
