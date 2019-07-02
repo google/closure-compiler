@@ -27,18 +27,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class GatherGetterAndSetterPropertiesTest extends CompilerTestCase {
 
-  private boolean assumeGettersAndSettersAreSideEffectFree = false;
-
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new GatherGetterAndSetterProperties(compiler);
-  }
-
-  @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    options.setAssumeGettersAndSettersAreSideEffectFree(assumeGettersAndSettersAreSideEffectFree);
-    return options;
   }
 
   @Test
@@ -334,16 +325,6 @@ public class GatherGetterAndSetterPropertiesTest extends CompilerTestCase {
             "});"));
 
     assertThat(getLastAccessorSummary().getKind("prop")).isEqualTo(PropertyAccessKind.NORMAL);
-  }
-
-  @Test
-  public void gatheringIsSkipped_ifGetterAndSettersAreAssumedSideEffectFree() {
-    assumeGettersAndSettersAreSideEffectFree = true;
-    disableGetterAndSetterUpdateValidation();
-
-    testSame(externs("({get x() {}, set y(v) {}})"), srcs("({get a() {}, set b(v) {}})"));
-
-    assertThat(getLastCompiler().getAccessorSummary().getAccessors()).isEmpty();
   }
 
   private AccessorSummary getLastAccessorSummary() {
