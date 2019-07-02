@@ -71,6 +71,8 @@ import org.junit.runners.JUnit4;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 
 /**
  * Tests for NodeUtil.
@@ -3545,6 +3547,42 @@ public final class NodeUtilTest {
       IR.script(exprResult); // Call this for its side effect of modifying `exprResult`.
       assertThat(NodeUtil.isBundledGoogModuleCall(callNode)).isTrue();
     }
+
+    @Test
+    public void testVisitPreOrder() {
+      Node parent = new Node(Token.GENERIC_TYPE);
+      Node child1 = new Node(Token.GENERIC_TYPE);
+      Node child2 = new Node(Token.GENERIC_TYPE);
+      parent.addChildToBack(child1);
+      parent.addChildToBack(child2);
+
+      NodeUtil.Visitor visitor = Mockito.mock(NodeUtil.Visitor.class);
+
+      NodeUtil.visitPreOrder(parent, visitor);
+
+      InOrder visitOrder = Mockito.inOrder(visitor);
+      visitOrder.verify(visitor).visit(parent);
+      visitOrder.verify(visitor).visit(child1);
+      visitOrder.verify(visitor).visit(child2);
+    }
+  }
+
+  @Test
+  public void testVisitPostOrder() {
+    Node parent = new Node(Token.GENERIC_TYPE);
+    Node child1 = new Node(Token.GENERIC_TYPE);
+    Node child2 = new Node(Token.GENERIC_TYPE);
+    parent.addChildToBack(child1);
+    parent.addChildToBack(child2);
+
+    NodeUtil.Visitor visitor = Mockito.mock(NodeUtil.Visitor.class);
+
+    NodeUtil.visitPostOrder(parent, visitor);
+
+    InOrder visitOrder = Mockito.inOrder(visitor);
+    visitOrder.verify(visitor).visit(child1);
+    visitOrder.verify(visitor).visit(child2);
+    visitOrder.verify(visitor).visit(parent);
   }
 
   @RunWith(Parameterized.class)
