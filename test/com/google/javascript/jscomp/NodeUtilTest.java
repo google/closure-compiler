@@ -3565,24 +3565,24 @@ public final class NodeUtilTest {
       visitOrder.verify(visitor).visit(child1);
       visitOrder.verify(visitor).visit(child2);
     }
-  }
 
-  @Test
-  public void testVisitPostOrder() {
-    Node parent = new Node(Token.GENERIC_TYPE);
-    Node child1 = new Node(Token.GENERIC_TYPE);
-    Node child2 = new Node(Token.GENERIC_TYPE);
-    parent.addChildToBack(child1);
-    parent.addChildToBack(child2);
+    @Test
+    public void testVisitPostOrder() {
+      Node parent = new Node(Token.GENERIC_TYPE);
+      Node child1 = new Node(Token.GENERIC_TYPE);
+      Node child2 = new Node(Token.GENERIC_TYPE);
+      parent.addChildToBack(child1);
+      parent.addChildToBack(child2);
 
-    NodeUtil.Visitor visitor = Mockito.mock(NodeUtil.Visitor.class);
+      NodeUtil.Visitor visitor = Mockito.mock(NodeUtil.Visitor.class);
 
-    NodeUtil.visitPostOrder(parent, visitor);
+      NodeUtil.visitPostOrder(parent, visitor);
 
-    InOrder visitOrder = Mockito.inOrder(visitor);
-    visitOrder.verify(visitor).visit(child1);
-    visitOrder.verify(visitor).visit(child2);
-    visitOrder.verify(visitor).visit(parent);
+      InOrder visitOrder = Mockito.inOrder(visitor);
+      visitOrder.verify(visitor).visit(child1);
+      visitOrder.verify(visitor).visit(child2);
+      visitOrder.verify(visitor).visit(parent);
+    }
   }
 
   @RunWith(Parameterized.class)
