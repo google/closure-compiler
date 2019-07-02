@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -67,9 +68,11 @@ public class AstAnalyzer {
       ImmutableSet.of("match", "replace", "search", "split");
 
   private final AbstractCompiler compiler;
+  private final boolean assumeGettersAndSettersAreSideEffectFree;
 
-  AstAnalyzer(AbstractCompiler compiler) {
+  AstAnalyzer(AbstractCompiler compiler, boolean assumeGettersAndSettersAreSideEffectFree) {
     this.compiler = checkNotNull(compiler);
+    this.assumeGettersAndSettersAreSideEffectFree = assumeGettersAndSettersAreSideEffectFree;
   }
 
   /**
@@ -229,6 +232,7 @@ public class AstAnalyzer {
    * literals) change state. Otherwise, we assume that they have no side effects.
    */
   private boolean checkForStateChangeHelper(Node n, boolean checkForNewObjects) {
+    Node parent = n.getParent();
     // Rather than id which ops may have side effects, id the ones
     // that we know to be safe
     switch (n.getToken()) {
@@ -259,7 +263,10 @@ public class AstAnalyzer {
 
       case REST:
       case SPREAD:
-        if (NodeUtil.iteratesImpureIterable(n)) {
+        if (parent.isObjectPattern() || parent.isObjectLit()) {
+          // Object-rest and object-spread may trigger a getter.
+          return !assumeGettersAndSettersAreSideEffectFree;
+        } else if (NodeUtil.iteratesImpureIterable(n)) {
           return true;
         }
         break;
@@ -342,14 +349,36 @@ public class AstAnalyzer {
       case FALSE:
       case NULL:
       case STRING:
-      case STRING_KEY:
       case SWITCH:
       case TEMPLATELIT_SUB:
       case TRY:
       case EMPTY:
       case TEMPLATELIT:
       case TEMPLATELIT_STRING:
-      case COMPUTED_PROP:
+      case COMPUTED_PROP: // Assume that COMPUTED_PROP keys in OBJECT_PATTERN never trigger getters.
+        break;
+
+      case STRING_KEY:
+        if (parent.isObjectPattern()) {
+          // This STRING_KEY names a property being read from.
+          // Assumption: GETELEM (via a COMPUTED_PROP) never triggers a getter or setter.
+          if (getPropertyKind(n.getString()).hasGetter()) {
+            return true;
+          }
+        }
+        break;
+
+      case GETELEM:
+        // Since we can't see what property is accessed we cannot tell whether obj[someProp] will
+        // trigger a getter or setter, and thus could have side effects.
+        // We will assume it does not. This introduces some risk of code breakage, but the code
+        // size cost of assuming all GETELEM nodes have side effects is completely unacceptable.
+        break;
+      case GETPROP:
+        if (getPropertyKind(n.getLastChild().getString()).hasGetterOrSetter()) {
+          // TODO(b/135640150): Use the parent nodes to determine whether this is a get or set.
+          return true;
+        }
         break;
 
       default:
@@ -471,11 +500,31 @@ public class AstAnalyzer {
         return n.hasChildren();
       case REST:
       case SPREAD:
-        return NodeUtil.iteratesImpureIterable(n);
+        if (n.getParent().isObjectPattern() || n.getParent().isObjectLit()) {
+          // Object-rest and object-spread may trigger a getter.
+          return !assumeGettersAndSettersAreSideEffectFree;
+        } else if (NodeUtil.iteratesImpureIterable(n)) {
+          return true;
+        }
+        break;
+      case STRING_KEY:
+        if (n.getParent().isObjectPattern()) {
+          return getPropertyKind(n.getString()).hasGetter();
+        }
+        break;
+      case GETPROP:
+        return getPropertyKind(n.getLastChild().getString()).hasGetterOrSetter();
+
       default:
         break;
     }
 
     return false;
+  }
+
+  private PropertyAccessKind getPropertyKind(String name) {
+    return assumeGettersAndSettersAreSideEffectFree
+        ? PropertyAccessKind.NORMAL
+        : compiler.getAccessorSummary().getKind(name);
   }
 }

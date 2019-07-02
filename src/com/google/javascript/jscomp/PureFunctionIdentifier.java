@@ -29,6 +29,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.errorprone.annotations.DoNotCall;
+import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.Cache;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -143,10 +144,14 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   private final AmbiguatedFunctionSummary unknownFunctionSummary =
       AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<unknown>").setAllFlags();
 
+  private final boolean assumeGettersAndSettersAreSideEffectFree;
+
   private boolean hasProcessed = false;
 
-  public PureFunctionIdentifier(AbstractCompiler compiler) {
+  public PureFunctionIdentifier(
+      AbstractCompiler compiler, boolean assumeGettersAndSettersAreSideEffectFree) {
     this.compiler = checkNotNull(compiler);
+    this.assumeGettersAndSettersAreSideEffectFree = assumeGettersAndSettersAreSideEffectFree;
     this.astAnalyzer = compiler.getAstAnalyzer();
   }
 
@@ -342,7 +347,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     return builder.build();
   }
 
-  private List<AmbiguatedFunctionSummary> getSummariesForCallee(Node invocation) {
+  private ImmutableList<AmbiguatedFunctionSummary> getSummariesForCallee(Node invocation) {
     checkArgument(NodeUtil.isInvocation(invocation), invocation);
 
     Cache cacheCall = compiler.getCodingConvention().describeCachingCall(invocation);
@@ -360,7 +365,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       return ImmutableList.of(unknownFunctionSummary);
     }
 
-    List<AmbiguatedFunctionSummary> results = new ArrayList<>();
+    ImmutableList.Builder<AmbiguatedFunctionSummary> results = ImmutableList.builder();
     for (Node callee : callees) {
       if (callee.isFunction()) {
         checkState(callee.isFunction(), callee);
@@ -375,7 +380,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         results.add(summariesByName.getOrDefault(calleeName, unknownFunctionSummary));
       }
     }
-    return results;
+    return results.build();
   }
 
   /**
@@ -689,7 +694,13 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       }
     }
 
-    public void updateSideEffectsForNode(
+    /**
+     * Updates the side effects of a given node.
+     *
+     * <p>This node should be known to (possibly have) side effects. This method does not check if
+     * the node (possibly) has side effects.
+     */
+    private void updateSideEffectsForNode(
         AmbiguatedFunctionSummary encloserSummary,
         NodeTraversal traversal,
         Node node,
@@ -721,15 +732,12 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           break;
 
         case FOR_AWAIT_OF:
-          setSideEffectsForControlLoss(encloserSummary); // Control is lost while awaiting.
+          deprecatedSetSideEffectsForControlLoss(encloserSummary); // Control is lost during await.
           // Fall through.
         case FOR_OF:
           // e.g.
           // for (const {prop1, prop2} of iterable) {...}
           // for ({prop1: x.p1, prop2: x.p2} of iterable) {...}
-          //
-          // TODO(bradfordcsmith): Possibly we should try to determine whether the iteration itself
-          //     could have side effects.
           visitLhsNodes(
               encloserSummary,
               traversal.getScope(),
@@ -789,17 +797,41 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         case YIELD:
           checkIteratesImpureIterable(node, encloserSummary); // `yield*` triggers iteration.
           // 'yield' throws if the caller calls `.throw` on the generator object.
-          setSideEffectsForControlLoss(encloserSummary);
+          deprecatedSetSideEffectsForControlLoss(encloserSummary);
           break;
 
         case AWAIT:
           // 'await' throws if the promise it's waiting on is rejected.
-          setSideEffectsForControlLoss(encloserSummary);
+          deprecatedSetSideEffectsForControlLoss(encloserSummary);
           break;
 
         case REST:
         case SPREAD:
-          checkIteratesImpureIterable(node, encloserSummary);
+          if (node.getParent().isObjectPattern() || node.getParent().isObjectLit()) {
+            if (!assumeGettersAndSettersAreSideEffectFree) {
+              // Object-rest and object-spread may trigger a getter.
+              setSideEffectsForUnknownCall(encloserSummary);
+            }
+          } else {
+            checkIteratesImpureIterable(node, encloserSummary);
+          }
+          break;
+
+        case STRING_KEY:
+          if (node.getParent().isObjectPattern()) {
+            // This is an l-value STRING_KEY.
+            // Assumption: GETELEM (via a COMPUTED_PROP) is never side-effectful.
+            if (getPropertyKind(node.getString()).hasGetter()) {
+              setSideEffectsForUnknownCall(encloserSummary);
+            }
+          }
+          break;
+
+        case GETPROP:
+          // Assumption: GETELEM is never side-effectful.
+          if (getPropertyKind(node.getLastChild().getString()).hasGetterOrSetter()) {
+            setSideEffectsForUnknownCall(encloserSummary);
+          }
           break;
 
         default:
@@ -829,22 +861,31 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       if (!NodeUtil.iteratesImpureIterable(node)) {
         return;
       }
-
-      // Treat the (possibly implicit) call to `iterator.next()` as having the same effects as any
-      // other unknown function call.
-      encloserSummary.setFunctionThrows();
-      encloserSummary.setMutatesGlobalState();
-
-      // The iterable may be stateful and a param.
-      encloserSummary.setMutatesArguments();
+      setSideEffectsForUnknownCall(encloserSummary);
     }
 
     /**
      * Assigns the set of side-effects associated with an arbitrary loss of control flow to {@code
      * encloserSummary}.
+     *
+     * <p>This function is kept to retain behaviour but marks places where the analysis is
+     * inaccurate.
+     *
+     * @see b/135475880
      */
-    private void setSideEffectsForControlLoss(AmbiguatedFunctionSummary encloserSummary) {
+    private void deprecatedSetSideEffectsForControlLoss(AmbiguatedFunctionSummary encloserSummary) {
       encloserSummary.setFunctionThrows();
+    }
+
+    /**
+     * Assigns the set of side-effects associated with an unknown function to {@code
+     * encloserSummary}.
+     */
+    private void setSideEffectsForUnknownCall(AmbiguatedFunctionSummary encloserSummary) {
+      encloserSummary.setFunctionThrows();
+      encloserSummary.setMutatesGlobalState();
+      encloserSummary.setMutatesArguments();
+      encloserSummary.setMutatesThis();
     }
 
     @Override
@@ -1018,6 +1059,12 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       default:
         throw new IllegalStateException("Unexpected name reference: " + nameRef.toStringTree());
     }
+  }
+
+  private PropertyAccessKind getPropertyKind(String name) {
+    return assumeGettersAndSettersAreSideEffectFree
+        ? PropertyAccessKind.NORMAL
+        : compiler.getAccessorSummary().getKind(name);
   }
 
   /**
@@ -1302,7 +1349,9 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       OptimizeCalls.builder()
           .setCompiler(compiler)
           .setConsiderExterns(true)
-          .addPass(new PureFunctionIdentifier(compiler))
+          .addPass(
+              new PureFunctionIdentifier(
+                  compiler, compiler.getOptions().getAssumeGettersAndSettersAreSideEffectFree()))
           .build()
           .process(externs, root);
     }

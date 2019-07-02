@@ -644,14 +644,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
         : AstFactory.createFactoryWithoutTypes();
   }
 
-  private final AstAnalyzer astAnalyzer = new AstAnalyzer(this);
-
   /**
    * Returns a new AstAnalyzer configured correctly to answer questions about Nodes in the AST
    * currently being compiled.
    */
   public AstAnalyzer getAstAnalyzer() {
-    return astAnalyzer;
+    return new AstAnalyzer(this, getOptions().getAssumeGettersAndSettersAreSideEffectFree());
   }
 
   public abstract ModuleMetadataMap getModuleMetadataMap();

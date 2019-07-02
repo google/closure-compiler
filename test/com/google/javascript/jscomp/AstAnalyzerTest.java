@@ -20,12 +20,14 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
 import static com.google.javascript.rhino.Token.ADD;
+import static com.google.javascript.rhino.Token.ARRAYLIT;
 import static com.google.javascript.rhino.Token.ASSIGN;
 import static com.google.javascript.rhino.Token.ASSIGN_ADD;
 import static com.google.javascript.rhino.Token.AWAIT;
 import static com.google.javascript.rhino.Token.BITOR;
 import static com.google.javascript.rhino.Token.CALL;
 import static com.google.javascript.rhino.Token.CLASS;
+import static com.google.javascript.rhino.Token.COMMA;
 import static com.google.javascript.rhino.Token.COMPUTED_PROP;
 import static com.google.javascript.rhino.Token.DEC;
 import static com.google.javascript.rhino.Token.DELPROP;
@@ -33,20 +35,34 @@ import static com.google.javascript.rhino.Token.FOR_AWAIT_OF;
 import static com.google.javascript.rhino.Token.FOR_IN;
 import static com.google.javascript.rhino.Token.FOR_OF;
 import static com.google.javascript.rhino.Token.FUNCTION;
+import static com.google.javascript.rhino.Token.GETELEM;
+import static com.google.javascript.rhino.Token.GETPROP;
 import static com.google.javascript.rhino.Token.GETTER_DEF;
+import static com.google.javascript.rhino.Token.HOOK;
+import static com.google.javascript.rhino.Token.IF;
 import static com.google.javascript.rhino.Token.INC;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.NAME;
 import static com.google.javascript.rhino.Token.NEW;
+import static com.google.javascript.rhino.Token.NUMBER;
+import static com.google.javascript.rhino.Token.OBJECTLIT;
 import static com.google.javascript.rhino.Token.OR;
+import static com.google.javascript.rhino.Token.REGEXP;
 import static com.google.javascript.rhino.Token.REST;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.SPREAD;
+import static com.google.javascript.rhino.Token.STRING;
+import static com.google.javascript.rhino.Token.STRING_KEY;
+import static com.google.javascript.rhino.Token.SUB;
 import static com.google.javascript.rhino.Token.TAGGED_TEMPLATELIT;
 import static com.google.javascript.rhino.Token.THROW;
+import static com.google.javascript.rhino.Token.VOID;
+import static com.google.javascript.rhino.Token.WHILE;
 import static com.google.javascript.rhino.Token.YIELD;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
@@ -101,6 +117,18 @@ public class AstAnalyzerTest {
       compiler.setHasRegExpGlobalReferences(hasRegExpGlobalReferences);
     }
 
+    ParseHelper regiserFakeGetterAndSetter() {
+      if (compiler == null) {
+        throw new RuntimeException("must call parse() first");
+      }
+      compiler.setAccessorSummary(
+          AccessorSummary.create(
+              ImmutableMap.of(
+                  "getter", PropertyAccessKind.GETTER_ONLY, //
+                  "setter", PropertyAccessKind.SETTER_ONLY)));
+      return this;
+    }
+
     /**
      * Parse a string of JavaScript and return the first node found with the given token in a
      * preorder DFS.
@@ -129,7 +157,7 @@ public class AstAnalyzerTest {
     }
 
     private AstAnalyzer getAstAnalyzer() {
-      return compiler.getAstAnalyzer();
+      return new AstAnalyzer(compiler, false);
     }
   }
 
@@ -159,71 +187,88 @@ public class AstAnalyzerTest {
     public String jsExpression;
 
     @Parameter(1)
+    public Token token;
+
+    @Parameter(2)
     public Boolean expectedResult;
 
-    @Parameters(name = "({0}) -> {1}")
+    @Parameters(name = "{1} node in ({0}) -> {2}")
     public static Iterable<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
-            {"i++", true},
-            {"[b, [a, i++]]", true},
-            {"i=3", true},
-            {"[0, i=3]", true},
-            {"b()", true},
-            {"void b()", true},
-            {"[1, b()]", true},
-            {"b.b=4", true},
-            {"b.b--", true},
-            {"i--", true},
-            {"a[0][i=4]", true},
-            {"a += 3", true},
-            {"a, b, z += 4", true},
-            {"a ? c : d++", true},
-            {"a + c++", true},
-            {"a + c - d()", true},
-            {"a + c - d()", true},
-            {"function foo() {}", true},
-            {"while(true);", true},
-            {"if(true){a()}", true},
-            {"if(true){a}", false},
-            {"(function() { })", true},
-            {"(function() { i++ })", true},
-            {"[function a(){}]", true},
-            {"a", false},
-            {"[b, c [d, [e]]]", true},
-            {"({a: x, b: y, c: z})", true},
+            {"i++", INC, true},
+            {"[b, [a, i++]]", ARRAYLIT, true},
+            {"i=3", ASSIGN, true},
+            {"[0, i=3]", ARRAYLIT, true},
+            {"b()", CALL, true},
+            {"void b()", VOID, true},
+            {"[1, b()]", ARRAYLIT, true},
+            {"b.b=4", ASSIGN, true},
+            {"b.b--", DEC, true},
+            {"i--", DEC, true},
+            {"a[0][i=4]", GETELEM, true},
+            {"a += 3", ASSIGN_ADD, true},
+            {"a, b, z += 4", COMMA, true},
+            {"a ? c : d++", HOOK, true},
+            {"a + c++", ADD, true},
+            {"a + c - d()", SUB, true},
+            {"function foo() {}", FUNCTION, true},
+            {"while(true);", WHILE, true},
+            {"if(true){a()}", IF, true},
+            {"if(true){a}", IF, false},
+            {"(function() { })", FUNCTION, true},
+            {"(function() { i++ })", FUNCTION, true},
+            {"[function a(){}]", ARRAYLIT, true},
+            {"a", NAME, false},
+            {"[b, c [d, [e]]]", ARRAYLIT, true},
+            {"({a: x, b: y, c: z})", OBJECTLIT, true},
             // Note: RegExp objects are not immutable, for instance, the exec
             // method maintains state for "global" searches.
-            {"/abc/gi", true},
-            {"'a'", false},
-            {"0", false},
-            {"a + c", false},
-            {"'c' + a[0]", false},
-            {"a[0][1]", false},
-            {"'a' + c", false},
-            {"'a' + a.name", false},
-            {"1, 2, 3", false},
-            {"a, b, 3", false},
-            {"(function(a, b) {  })", true},
-            {"a ? c : d", false},
-            {"'1' + navigator.userAgent", false},
-            {"new RegExp('foobar', 'i')", true},
-            {"new RegExp(SomethingWacky(), 'i')", true},
-            {"new Array()", true},
-            {"new Array", true},
-            {"new Array(4)", true},
-            {"new Array('a', 'b', 'c')", true},
-            {"new SomeClassINeverHeardOf()", true},
+            {"/abc/gi", REGEXP, true},
+            {"'a'", STRING, false},
+            {"0", NUMBER, false},
+            {"a + c", ADD, false},
+            {"'c' + a[0]", ADD, false},
+            {"a[0][1]", GETELEM, false},
+            {"'a' + c", ADD, false},
+            {"'a' + a.name", ADD, false},
+            {"1, 2, 3", COMMA, false},
+            {"a, b, 3", COMMA, false},
+            {"(function(a, b) {  })", FUNCTION, true},
+            {"a ? c : d", HOOK, false},
+            {"'1' + navigator.userAgent", ADD, false},
+            {"new RegExp('foobar', 'i')", NEW, true},
+            {"new RegExp(SomethingWacky(), 'i')", NEW, true},
+            {"new Array()", NEW, true},
+            {"new Array", NEW, true},
+            {"new Array(4)", NEW, true},
+            {"new Array('a', 'b', 'c')", NEW, true},
+            {"new SomeClassINeverHeardOf()", NEW, true},
+
+            // Getters and setters.
+            {"({...x});", SPREAD, true},
+            {"const {...x} = y;", REST, true},
+            {"x.getter;", GETPROP, true},
+            // Overapproximation to avoid inspecting the parent.
+            {"x.setter;", GETPROP, true},
+            {"x.normal;", GETPROP, false},
+            {"const {getter} = x;", STRING_KEY, true},
+            // Overapproximation to avoid inspecting the parent.
+            {"const {setter} = x;", STRING_KEY, false},
+            {"const {normal} = x;", STRING_KEY, false},
+            {"x.getter = 0;", GETPROP, true},
+            {"x.setter = 0;", GETPROP, true},
+            {"x.normal = 0;", GETPROP, false},
           });
     }
 
     @Test
     public void mayEffectMutableState() {
       ParseHelper helper = new ParseHelper();
-      // we want the first child of the script, not the script itself.
-      Node statementNode = helper.parse(jsExpression).getFirstChild();
+      Node node = helper.parseFirst(token, jsExpression);
+      helper.regiserFakeGetterAndSetter();
       AstAnalyzer analyzer = helper.getAstAnalyzer();
-      assertThat(analyzer.mayEffectMutableState(statementNode)).isEqualTo(expectedResult);
+      assertThat(analyzer.mayEffectMutableState(node)).isEqualTo(expectedResult);
     }
   }
 
@@ -235,6 +280,7 @@ public class AstAnalyzerTest {
       ParseHelper helper = new ParseHelper();
 
       Node n = helper.parse(js);
+      helper.regiserFakeGetterAndSetter();
       assertThat(helper.getAstAnalyzer().mayHaveSideEffects(n.getFirstChild())).isEqualTo(se);
     }
 
@@ -242,6 +288,7 @@ public class AstAnalyzerTest {
       ParseHelper helper = new ParseHelper();
 
       Node node = helper.parseFirst(token, js);
+      helper.regiserFakeGetterAndSetter();
       assertThat(helper.getAstAnalyzer().mayHaveSideEffects(node)).isEqualTo(se);
     }
 
@@ -250,6 +297,7 @@ public class AstAnalyzerTest {
 
       Node n = helper.parse(js);
       helper.setHasRegExpGlobalReferences(globalRegExp);
+      helper.regiserFakeGetterAndSetter();
       assertThat(helper.getAstAnalyzer().mayHaveSideEffects(n.getFirstChild())).isEqualTo(se);
     }
 
@@ -406,9 +454,10 @@ public class AstAnalyzerTest {
     @Test
     public void testMayHaveSideEffects_objectSpread() {
       // OBJECT-SPREAD
-      assertSideEffect(false, "({...x})");
-      assertSideEffect(false, "({...{}})");
-      assertSideEffect(false, "({...{a:1}})");
+      // These could all invoke getters.
+      assertSideEffect(true, "({...x})");
+      assertSideEffect(true, "({...{}})");
+      assertSideEffect(true, "({...{a:1}})");
       assertSideEffect(true, "({...{a:i++}})");
       assertSideEffect(true, "({...{a:f()}})");
       assertSideEffect(true, "({...f()})");
@@ -417,7 +466,9 @@ public class AstAnalyzerTest {
     @Test
     public void testMayHaveSideEffects_rest() {
       // REST
-      assertNodeHasSideEffect(false, REST, "({...x} = something)");
+
+      // This could all invoke getters.
+      assertNodeHasSideEffect(true, REST, "({...x} = something)");
       // We currently assume all iterable-rests are side-effectful.
       assertNodeHasSideEffect(true, REST, "([...x] = 'safe')");
       assertNodeHasSideEffect(false, REST, "(function(...x) { })");
@@ -470,15 +521,34 @@ public class AstAnalyzerTest {
     }
 
     @Test
-    public void testMayHaveSideEffects_getter() {
+    public void testMayHaveSideEffects_getterDef() {
       assertNodeHasSideEffect(false, GETTER_DEF, "({ get a() {} })");
       assertNodeHasSideEffect(false, GETTER_DEF, "class C { get a() {} }");
     }
 
     @Test
-    public void testMayHaveSideEffects_setter() {
+    public void testMayHaveSideEffects_getterUse() {
+      assertNodeHasSideEffect(true, GETPROP, "x.getter;");
+      // Overapproximation because to avoid inspecting the parent.
+      assertNodeHasSideEffect(true, GETPROP, "x.setter;");
+      assertNodeHasSideEffect(false, GETPROP, "x.normal;");
+      assertNodeHasSideEffect(true, STRING_KEY, "({getter} = foo());");
+      assertNodeHasSideEffect(false, STRING_KEY, "({setter} = foo());");
+      assertNodeHasSideEffect(false, STRING_KEY, "({normal} = foo());");
+    }
+
+    @Test
+    public void testMayHaveSideEffects_setterDef() {
       assertNodeHasSideEffect(false, SETTER_DEF, "({ set a(x) {} })");
       assertNodeHasSideEffect(false, SETTER_DEF, "class C { set a(x) {} }");
+    }
+
+    @Test
+    public void testMayHaveSideEffects_setterUse() {
+      // Overapproximation because to avoid inspecting the parent.
+      assertNodeHasSideEffect(true, GETPROP, "x.getter = 0;");
+      assertNodeHasSideEffect(true, GETPROP, "x.setter = 0;");
+      assertNodeHasSideEffect(false, GETPROP, "x.normal = 0;");
     }
 
     @Test
@@ -611,6 +681,19 @@ public class AstAnalyzerTest {
             {"x + y", ADD, false},
             {"x || y", OR, false},
             {"x | y", BITOR, false},
+
+            // Getters and setters
+            {"({...x});", SPREAD, true},
+            {"const {...x} = y;", REST, true},
+            {"y.getter;", GETPROP, true},
+            {"y.setter;", GETPROP, true},
+            {"y.normal;", GETPROP, false},
+            {"const {getter} = y;", STRING_KEY, true},
+            {"const {setter} = y;", STRING_KEY, false},
+            {"const {normal} = y;", STRING_KEY, false},
+            {"y.getter = 0;", GETPROP, true},
+            {"y.setter = 0;", GETPROP, true},
+            {"y.normal = 0;", GETPROP, false},
           });
     }
 
@@ -619,6 +702,7 @@ public class AstAnalyzerTest {
       ParseHelper helper = new ParseHelper();
 
       Node n = helper.parseFirst(token, js);
+      helper.regiserFakeGetterAndSetter();
       AstAnalyzer astAnalyzer = helper.getAstAnalyzer();
       assertThat(astAnalyzer.nodeTypeMayHaveSideEffects(n)).isEqualTo(expectedResult);
     }

@@ -2719,29 +2719,51 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
-  public void testObjectSpread_leavesFunctionPure() {
-    // We assume that getters are pure, so getters on `a` aren't an issue.
-    //
-    // Spreading doesn't have any _direct_ side-effects; only using members of the extracted
-    // properties would.
-    assertPureCallsMarked(
+  public void testObjectSpread_hasSideEffects() {
+    // Object-spread may trigger a getter.
+    assertNoPureCalls(
         lines(
             "function foo(a) { ({...a}); }", //
-            "foo(x);"),
-        ImmutableList.of("foo"));
+            "foo(x);"));
   }
 
   @Test
-  public void testObjectRest_leavesFunctionPure() {
-    // We assume that getters are pure, so getters on `a` aren't an issue.
-    //
-    // Resting doesn't have any _direct_ side-effects; only using members of the extracted
-    // properties would.
-    assertPureCallsMarked(
+  public void testObjectRest_hasSideEffects() {
+    // Object-rest may trigger a getter.
+    assertNoPureCalls(
         lines(
             "function foo(a, b) { ({...b} = a); }", //
-            "foo(x, y);"),
-        ImmutableList.of("foo"));
+            "foo(x, y);"));
+    assertNoPureCalls(
+        lines(
+            "function foo({...b}) { }", //
+            "foo(x);"));
+  }
+
+  @Test
+  public void testGetterAccess_hasSideEffects() {
+    assertNoPureCalls(
+        lines(
+            "class Foo { get getter() { } }",
+            "",
+            "function foo(a) { a.getter; }", //
+            "foo(x);"));
+    assertNoPureCalls(
+        lines(
+            "class Foo { get getter() { } }",
+            "",
+            "function foo(a) { const {getter} = a; }", //
+            "foo(x);"));
+  }
+
+  @Test
+  public void testSetterAccess_hasSideEffects() {
+    assertNoPureCalls(
+        lines(
+            "class Foo { set setter(x) { } }",
+            "",
+            "function foo(a) { a.setter = 0; }", //
+            "foo(x);"));
   }
 
   @Test

@@ -833,7 +833,8 @@ public final class IntegrationTest extends IntegrationTestCase {
                 "function Element() {}",
                 "",
                 "/**",
-                " * @see https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry",
+                " * @see"
+                    + " https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry",
                 " * @constructor",
                 " */",
                 "function CustomElementRegistry() {}",
@@ -2838,22 +2839,11 @@ public final class IntegrationTest extends IntegrationTestCase {
     String code =
         "class Foo { get xx() {}; set yy(v) {}; static get init() {}; static set prop(v) {} }";
 
-    // TODO(radokirov): The compiler should be removing statics too, but in this case they are
-    // kept. A similar unittest in RemoveUnusedCodeClassPropertiesTest removes everything.
-    // Investigate why are they kept when ran together with other passes.
-    String expected =
-        LINE_JOINER.join(
-            "('undefined'!=typeof window&&window===this?this:'undefined'!=typeof ",
-            "global&&null!=global?global:this).",
-            "Object.defineProperties(function() {},",
-            "{a:{configurable:!0,enumerable:!0,get:function(){}},", // renamed from init
-            "b:{configurable:!0,enumerable:!0,set:function(){}}})"); // renamed from prop
-
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setExtraSmartNameRemoval(false);
-    test(options, code, expected);
+    test(options, code, "");
   }
 
   @Test
@@ -2864,16 +2854,11 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     test(
         options,
         "class C { /** @export @return {string} */ get exportedName() {} }; (new C).exportedName;",
-        EMPTY_JOINER.join(
-            "function a(){}('undefined'!=typeof window&&",
-            "window===this?this:'undefined'!=typeof global&&",
-            "null!=global?global:this).Object.defineProperties(",
-            "a.prototype,{exportedName:{configurable:!0,enumerable:!0,get:function(){}}});",
-            "(new a).exportedName"));
+        "class a {get exportedName(){}} (new a).exportedName;");
   }
 
   @Test
@@ -2884,16 +2869,11 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     test(
         options,
         "class C { /** @export @return {string} */ set exportedName(x) {} }; (new C).exportedName;",
-        EMPTY_JOINER.join(
-            "function a(){}('undefined'!=typeof window&&",
-            "window===this?this:'undefined'!=typeof global&&",
-            "null!=global?global:this).Object.defineProperties(",
-            "a.prototype,{exportedName:{configurable:!0,enumerable:!0,set:function(){}}});",
-            "(new a).exportedName"));
+        "class a {set exportedName(b){}} (new a).exportedName;");
   }
 
   @Test
@@ -2904,7 +2884,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     test(
         options,
         LINE_JOINER.join(
@@ -2916,13 +2896,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  /** @export @return {string} */ static get exportedName() {}",
             "};",
             "alert(C.exportedName);"),
-        EMPTY_JOINER.join(
-            // TODO(tbreisacher): Find out why C is renamed to a despite the @export annotation.
-            "function a(){}('undefined'!=typeof window&&window===this?",
-            "this:'undefined'!=typeof global&&null!=global?",
-            "global:this).Object.defineProperties(a,",
-            "{exportedName:{configurable:!0,enumerable:!0,get:function(){}}});",
-            "alert(a.exportedName)"));
+        // TODO(tbreisacher): Find out why C is renamed to a despite the @export annotation.
+        "class a {static get exportedName(){}} alert(a.exportedName)");
   }
 
   @Test
@@ -2946,18 +2921,15 @@ public final class IntegrationTest extends IntegrationTestCase {
             "};",
             "C.exportedName = 0;"),
         EMPTY_JOINER.join(
-            "function a(){}", // class C
-            "(",
-            "'undefined'!=typeof window&&window===this?",
-            "this:'undefined'!=typeof global&&null!=global?global:this",
-            ")", // inlined $jscomp.global
-            ".Object.defineProperties(",
-            "a,",
-            "{",
-            "exportedName:{configurable:!0,enumerable:!0,set:function(){}}",
-            "}",
-            ");",
-            "a.exportedName=0"));
+            // TODO(tbreisacher): Find out why C is renamed to a despite the @export annotation.
+            "var a = 'undefined' != typeof window&& window === this ? this",
+            "           : 'undefined' != typeof global && null != global ? global : this;",
+            "function b() {}",
+            "b.exportedName;",
+            "a.Object.defineProperties(b, {",
+            "  exportedName : {configurable : !0, enumerable : !0, set : function(){}}",
+            "});",
+            "b.exportedName = 0"));
   }
 
   @Test
@@ -6597,6 +6569,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossChunkNames(true);
+    options.setAssumeGettersAndSettersAreSideEffectFree(false);
     options.setWarningLevel(DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS, CheckLevel.OFF);
     return options;
   }

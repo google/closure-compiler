@@ -451,7 +451,18 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private static Node asDetachedExpression(Node expr) {
     switch (expr.getToken()) {
       case SPREAD:
-        expr = IR.arraylit(expr.detach()).srcref(expr);
+        switch (expr.getParent().getToken()) {
+          case ARRAYLIT:
+          case NEW:
+          case CALL:
+            expr = IR.arraylit(expr.detach()).srcref(expr);
+            break;
+          case OBJECTLIT:
+            expr = IR.objectlit(expr.detach()).srcref(expr);
+            break;
+          default:
+            throw new IllegalStateException(expr.toStringTree());
+        }
         break;
       default:
         break;
@@ -483,9 +494,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       case OR:
         return true;
       case ARRAYLIT:
-        // Make a special allowance for SPREADs so they remain in a legal context. Iterable SPREADs
-        // with other parent types are not fixed-point because ARRAYLIT is the tersest legal parent
-        // and is known to be side-effect free.
+      case OBJECTLIT:
+        // Make a special allowance for SPREADs so they remain in a legal context. Parent types
+        // other than ARRAYLIT and OBJECTLIT are not fixed-point because they are the tersest legal
+        // parents and are known to be side-effect free.
         return expr.isSpread();
       default:
         // Statments are always fixed-point parents. All other expressions are not.

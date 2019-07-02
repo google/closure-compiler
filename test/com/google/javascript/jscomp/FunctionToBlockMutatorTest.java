@@ -277,6 +277,7 @@ public final class FunctionToBlockMutatorTest {
 
   public void helperMutate(String code, String expectedResult, String fnName, String resultName) {
     final Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
     final FunctionToBlockMutator mutator = new FunctionToBlockMutator(
         compiler, compiler.getUniqueNameIdSupplier());
     Node expectedRoot = parse(compiler, expectedResult);

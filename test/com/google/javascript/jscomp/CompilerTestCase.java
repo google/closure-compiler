@@ -1593,6 +1593,10 @@ public abstract class CompilerTestCase {
           new InferConsts(compiler).process(externsRoot, mainRoot);
         }
 
+        if ((verifyGetterAndSetterUpdates || verifyNoNewGettersOrSetters) && i == 0) {
+          GatherGetterAndSetterProperties.update(compiler, externsRoot, mainRoot);
+        }
+
         if (computeSideEffects && i == 0) {
           recentChange.reset();
           PureFunctionIdentifier.Driver mark = new PureFunctionIdentifier.Driver(compiler);
@@ -1602,10 +1606,6 @@ public abstract class CompilerTestCase {
 
         if (gatherExternPropertiesEnabled && i == 0) {
           (new GatherExternProperties(compiler)).process(externsRoot, mainRoot);
-        }
-
-        if ((verifyGetterAndSetterUpdates || verifyNoNewGettersOrSetters) && i == 0) {
-          GatherGetterAndSetterProperties.update(compiler, externsRoot, mainRoot);
         }
 
         recentChange.reset();

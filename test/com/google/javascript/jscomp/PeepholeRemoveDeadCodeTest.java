@@ -46,8 +46,6 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        new PureFunctionIdentifier.Driver(compiler).process(externs, root);
-
         PeepholeOptimizationsPass peepholePass =
             new PeepholeOptimizationsPass(compiler, getName(), new PeepholeRemoveDeadCode());
         peepholePass.process(externs, root);
@@ -1258,8 +1256,9 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test("({a:1})", "");
     test("({a:foo()})", "foo()");
     test("({'a':foo()})", "foo()");
-    test("({...a})", "");
-    test("({...foo()})", "foo()");
+    // Object-spread may tigger getters.
+    testSame("({...a})");
+    testSame("({...foo()})");
   }
 
   @Test
@@ -1424,5 +1423,128 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test(
         "const {a = void 0} = obj;", //
         "const {a} = obj;");
+  }
+
+  @Test
+  public void testDoNotRemoveGetterOnlyAccess() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  get property() {}",
+            "};",
+            "a.property;"));
+
+    testSame(
+        lines(
+            "var a = {};", //
+            "Object.defineProperty(a, 'property', {",
+            "  get() {}",
+            "});",
+            "a.property;"));
+  }
+
+  @Test
+  public void testDoNotRemoveNestedGetterOnlyAccess() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  b: { get property() {} }",
+            "};",
+            "a.b.property;"));
+  }
+
+  @Test
+  public void testRemoveAfterNestedGetterOnlyAccess() {
+    test(
+        lines(
+            "var a = {", //
+            "  b: { get property() {} }",
+            "};",
+            "a.b.property.d.e;"),
+        lines(
+            "var a = {", //
+            "  b: { get property() {} }",
+            "};",
+            "a.b.property;"));
+  }
+
+  @Test
+  public void testRetainSetterOnlyAccess() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  set property(v) {}",
+            "};",
+            "a.property;"));
+  }
+
+  @Test
+  public void testDoNotRemoveGetterSetterAccess() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  get property() {},",
+            "  set property(x) {}",
+            "};",
+            "a.property;"));
+  }
+
+  @Test
+  public void testDoNotRemoveSetSetterToGetter() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  get property() {},",
+            "  set property(x) {}",
+            "};",
+            "a.property = a.property;"));
+  }
+
+  @Test
+  public void testDoNotRemoveAccessIfOtherPropertyIsGetter() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  get property() {}",
+            "};",
+            "var b = {",
+            "  property: 0,",
+            "};",
+            // This pass should be conservative and not remove this since it sees a getter for
+            // "property"
+            "b.property;"));
+
+    testSame(
+        lines(
+            "var a = {};", //
+            "Object.defineProperty(a, 'property', {",
+            "  get() {}",
+            "});",
+            "var b = {",
+            "  property: 0,",
+            "};",
+            "b.property;"));
+  }
+
+  @Test
+  public void testFunctionCallReferencesGetterIsNotRemoved() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  get property() {}",
+            "};",
+            "function foo() { a.property; }",
+            "foo();"));
+  }
+
+  @Test
+  public void testFunctionCallReferencesSetterIsNotRemoved() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  set property(v) {}",
+            "};",
+            "function foo() { a.property = 0; }",
+            "foo();"));
   }
 }
