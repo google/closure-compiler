@@ -38,6 +38,7 @@ import static com.google.javascript.rhino.Token.YIELD;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
+import static org.mockito.Mockito.verify;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
@@ -70,7 +71,7 @@ import org.junit.runners.JUnit4;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-import org.mockito.InOrder;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 /**
@@ -3541,43 +3542,69 @@ public final class NodeUtilTest {
       IR.script(exprResult); // Call this for its side effect of modifying `exprResult`.
       assertThat(NodeUtil.isBundledGoogModuleCall(callNode)).isTrue();
     }
+  }
+
+  @RunWith(JUnit4.class)
+  public static class NodeTraversalTests {
 
     @Test
     public void testVisitPreOrder() {
-      Node parent = new Node(Token.GENERIC_TYPE);
-      Node child1 = new Node(Token.GENERIC_TYPE);
-      Node child2 = new Node(Token.GENERIC_TYPE);
-      parent.addChildToBack(child1);
-      parent.addChildToBack(child2);
-
       NodeUtil.Visitor visitor = Mockito.mock(NodeUtil.Visitor.class);
-
-      NodeUtil.visitPreOrder(parent, visitor);
-
-      InOrder visitOrder = Mockito.inOrder(visitor);
-      visitOrder.verify(visitor).visit(parent);
-      visitOrder.verify(visitor).visit(child1);
-      visitOrder.verify(visitor).visit(child2);
+      NodeUtil.visitPreOrder(buildTestTree(), visitor);
+      assertThat(getNodeStringsFromMockVisitor(visitor))
+          .containsExactly("A", "B", "C", "D", "E", "F", "G")
+          .inOrder();
     }
 
     @Test
     public void testVisitPostOrder() {
-      Node parent = new Node(Token.GENERIC_TYPE);
-      Node child1 = new Node(Token.GENERIC_TYPE);
-      Node child2 = new Node(Token.GENERIC_TYPE);
-      parent.addChildToBack(child1);
-      parent.addChildToBack(child2);
-
       NodeUtil.Visitor visitor = Mockito.mock(NodeUtil.Visitor.class);
+      NodeUtil.visitPostOrder(buildTestTree(), visitor);
+      assertThat(getNodeStringsFromMockVisitor(visitor))
+          .containsExactly("C", "D", "B", "F", "G", "E", "A")
+          .inOrder();
+    }
 
-      NodeUtil.visitPostOrder(parent, visitor);
+    /**
+     * Builds a node tree of string {@link com.google.javascript.rhino.Node} with string labels that
+     * can be used to verify order in tests.
+     *
+     * <p>The resultant tree looks like this.
+     *
+     * <pre>
+     *      A
+     *    ↙   ↘
+     *   B     E
+     *  ↙ ↘    ↙ ↘
+     * C   D  F   G
+     * </pre>
+     */
+    private static Node buildTestTree() {
+      Node a = Node.newString("A");
 
-      InOrder visitOrder = Mockito.inOrder(visitor);
-      visitOrder.verify(visitor).visit(child1);
-      visitOrder.verify(visitor).visit(child2);
-      visitOrder.verify(visitor).visit(parent);
+      Node b = Node.newString("B");
+      b.addChildToBack(Node.newString("C"));
+      b.addChildToBack(Node.newString("D"));
+      a.addChildToBack(b);
+
+      Node e = Node.newString("E");
+      e.addChildToBack(Node.newString("F"));
+      e.addChildToBack(Node.newString("G"));
+      a.addChildToBack(e);
+
+      return a;
+    }
+
+    private static ImmutableList<String> getNodeStringsFromMockVisitor(
+        NodeUtil.Visitor mockVisitor) {
+      ArgumentCaptor<Node> captor = ArgumentCaptor.forClass(Node.class);
+      verify(mockVisitor, Mockito.atLeastOnce()).visit(captor.capture());
+      return captor.getAllValues().stream()
+          .map(n -> n.getString())
+          .collect(ImmutableList.toImmutableList());
     }
   }
+
 
   @RunWith(Parameterized.class)
   public static final class ReferencesThisTest {
