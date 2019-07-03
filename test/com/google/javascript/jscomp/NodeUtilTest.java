@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -101,11 +100,6 @@ public final class NodeUtilTest {
       Node n = compiler.parseTestCode(js);
       assertThat(compiler.getErrors()).isEmpty();
       return n;
-    }
-
-    private Compiler getCompiler() {
-      checkNotNull(compiler, "no parse method called yet");
-      return compiler;
     }
 
     private Node parseFirst(Token token, String js) {
