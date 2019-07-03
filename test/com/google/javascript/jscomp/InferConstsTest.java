@@ -71,11 +71,24 @@ public final class InferConstsTest extends CompilerTestCase {
   @Test
   public void testSimpleLetConst() {
     assertConsts("let x = 3, y", inferred("x"));
+    assertConsts("let x;", notInferred("x"));
+    assertConsts("let x; x = 0;", notInferred("x"));
     assertConsts("let x = 3; let y = 4;", inferred("x", "y"));
     assertConsts("let x = 3, y = 4; x++;", inferred("y"));
     assertConsts("let x = 3;  function f(){let x = 4;}", inferred("x"));
     assertConsts("/** @const */ let x;", declared("x"), notInferred("x"));
     assertConsts("const x = 1;", declared("x"), inferred("x"));
+  }
+
+  @Test
+  public void testPossibleEarlyRefInFunction() {
+    assertConsts("function f() { x; } var x = 0;", notInferred("x"));
+    assertConsts("function f() { x; } let x = 0;", inferred("x"));
+    assertConsts("function f() { x; } let [x] = [];", inferred("x"));
+    assertConsts("function f() { x; } const x = 0;", declared("x"), inferred("x"));
+    assertConsts("function f() { Foo; } class Foo {}", inferred("Foo"));
+    assertConsts("function f() { g; } function g() {}", inferred("g"));
+    assertConsts("function f([y = () => x], x) {}", inferred("x"));
   }
 
   @Test
@@ -229,6 +242,14 @@ public final class InferConstsTest extends CompilerTestCase {
     assertConsts("goog.module('m'); exports = {};");
   }
 
+  @Test
+  public void testEsModuleImports() {
+    ignoreWarnings(DiagnosticGroups.MODULE_LOAD);
+    assertConsts("import x from './mod';", notInferred("x"));
+    assertConsts("import {x as y, z} from './mod';", notInferred("y", "z"));
+    assertConsts("import * as x from './mod';", notInferred("x"));
+  }
+
   private void assertNotConsts(String js, String... names) {
     assertConsts(js, notDeclared(names), notInferred(names));
   }
@@ -296,15 +317,12 @@ public final class InferConstsTest extends CompilerTestCase {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       for (String name : names) {
-        if ((n.matchesQualifiedName(name)
-            || ((n.isStringKey() || n.isMemberFunctionDef()) && n.getString().equals(name)))) {
-          if (n.isName()) {
-            if (n.isDeclaredConstantVar()) {
-              declaredNodes.add(name);
-            }
-            if (n.isInferredConstantVar()) {
-              inferredNodes.add(name);
-            }
+        if (n.isName() && n.matchesQualifiedName(name)) {
+          if (n.isDeclaredConstantVar()) {
+            declaredNodes.add(name);
+          }
+          if (n.isInferredConstantVar()) {
+            inferredNodes.add(name);
           }
         }
       }

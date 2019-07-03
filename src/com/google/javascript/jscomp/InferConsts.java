@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 /**
  * Attaches the CONST_VAR annotation to any variable that's
@@ -71,12 +72,39 @@ class InferConsts implements CompilerPass {
         && compiler.getCodingConvention().isConstant(nameNode.getString())) {
       nameNode.setDeclaredConstantVar(true);
     }
-    if (nameNode != null
-        && refCollection != null
-        && refCollection.isWellDefined()
-        && refCollection.isAssignedOnceInLifetime()
-        && refCollection.firstReferenceIsAssigningDeclaration()) {
+    if (isInferredConst(v, refCollection)) {
       nameNode.setInferredConstantVar(true);
+    }
+  }
+
+  private static boolean isInferredConst(Var v, ReferenceCollection refCollection) {
+    Node nameNode = v.getNameNode();
+    if (nameNode == null || refCollection == null || !refCollection.isAssignedOnceInLifetime()) {
+      return false;
+    }
+    Token declarationType = v.declarationType();
+
+    switch (declarationType) {
+      case LET:
+        // Check that non-destructuring let names are actually assigned at declaration.
+        return !nameNode.getParent().isLet() || nameNode.hasChildren();
+      case CONST:
+      case CATCH:
+      case CLASS:
+      case PARAM_LIST: // Parameters cannot be referenced before declaration.
+      case FUNCTION: // Function hoisting means no references before declaration.
+        return true;
+      case IMPORT:
+        // ES module exports are mutable.
+        // TODO(lharker): make this check smarter if we start optimizing unrewritten modules.
+        return false;
+      case VAR:
+        // var hoisting requires this extra work to make sure the 'declaration' is also the first
+        // reference.
+        return refCollection.firstReferenceIsAssigningDeclaration()
+            && refCollection.isWellDefined();
+      default:
+        throw new IllegalStateException("Unrecognized declaration type " + declarationType);
     }
   }
 }

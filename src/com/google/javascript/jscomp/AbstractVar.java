@@ -219,7 +219,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
       Token.IMPORT,
       Token.PARAM_LIST);
 
-  protected Token declarationType() {
+  final Token declarationType() {
     for (Node current = nameNode; current != null;
          current = current.getParent()) {
       if (DECLARATION_TYPES.contains(current.getToken())) {
