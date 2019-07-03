@@ -4276,7 +4276,10 @@ public final class NodeUtil {
     visitPreOrder(node, visitor, Predicates.alwaysTrue());
   }
 
-  /** A pre-order traversal, calling Visitor.visit for each child matching the predicate. */
+  /**
+   * A pre-order traversal, calling Visitor.visit for each node in the tree. Children of nodes that
+   * do not match the predicate will not be visited.
+   */
   public static void visitPreOrder(
       Node node, Visitor visitor, Predicate<Node> traverseChildrenPred) {
     visitor.visit(node);
@@ -4293,7 +4296,10 @@ public final class NodeUtil {
     visitPostOrder(node, visitor, Predicates.alwaysTrue());
   }
 
-  /** A post-order traversal, calling Visitor.visit for each descendant matching the predicate. */
+  /**
+   * A post-order traversal, calling Visitor.visit for each node in the tree. Children of nodes that
+   * do not match the predicate will not be visited.
+   */
   public static void visitPostOrder(
       Node node, Visitor visitor, Predicate<Node> traverseChildrenPred) {
     if (traverseChildrenPred.apply(node)) {
