@@ -41,9 +41,11 @@ import static java.lang.Boolean.TRUE;
 import static org.mockito.Mockito.verify;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -63,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -3563,6 +3566,27 @@ public final class NodeUtilTest {
       assertThat(getNodeStringsFromMockVisitor(visitor))
           .containsExactly("C", "D", "B", "F", "G", "E", "A")
           .inOrder();
+    }
+
+    @Test
+    public void testIteratePreOrder() {
+      List<String> nodeNames =
+          Streams.stream(NodeUtil.preOrderIterable(buildTestTree()))
+              .map(n -> n.getString())
+              .collect(Collectors.toList());
+
+      assertThat(nodeNames).containsExactly("A", "B", "C", "D", "E", "F", "G").inOrder();
+    }
+
+    @Test
+    public void testIteratePreOrderWithPredicate() {
+      Predicate<Node> isNotE = n -> !n.getString().equals("E");
+      List<String> nodeNames =
+          Streams.stream(NodeUtil.preOrderIterable(buildTestTree(), isNotE))
+              .map(n -> n.getString())
+              .collect(Collectors.toList());
+
+      assertThat(nodeNames).containsExactly("A", "B", "C", "D", "E").inOrder();
     }
 
     /**

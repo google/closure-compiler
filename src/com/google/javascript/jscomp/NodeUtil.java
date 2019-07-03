@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -27,6 +28,7 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -52,6 +54,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -4312,8 +4315,90 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether an EXPORT node has a from clause.
+   * Create an {@link Iterable} over the given node and all descendents. Nodes are given in
+   * depth-first pre-order (<a
+   * href="https://www.w3.org/TR/DOM-Level-2-Traversal-Range/glossary.html#dt-documentorder">
+   * document source order</a>).
+   *
+   * <p>This has the benefit over the visitor patten that it is iterative and can be used with Java
+   * 8 Stream API for searching, filtering, transforms, and other functional processing.
+   *
+   * <p>The given predicate determines whether a node's children will be iterated over. If a node
+   * does not match the predicate, none of its children will be visited.
+   *
+   * @see java.util.stream.Stream
+   * @see Streams#stream(Iterable)
+   * @param root Root of the tree.
+   * @param travserseNodePredicate Matches nodes in the tree whose children should be traversed.
    */
+  public static Iterable<Node> preOrderIterable(Node root, Predicate<Node> travserseNodePredicate) {
+    return () -> new PreOrderIterator(root, travserseNodePredicate);
+  }
+
+  /**
+   * Same as {@link #preOrderIterable(Node, Predicate)} but iterates over all nodes in the tree
+   * without exception.
+   */
+  public static Iterable<Node> preOrderIterable(Node root) {
+    return preOrderIterable(
+        root,
+        // Traverse all nodes.
+        Predicates.alwaysTrue());
+  }
+
+  /**
+   * Utility class for {@see #preOrderIterable}. Iterates over nodes in tree in depth-first
+   * pre-order.
+   */
+  private static final class PreOrderIterator extends AbstractIterator<Node> {
+
+    private final Predicate<Node> traverseNodePredicate;
+    private Optional<Node> current;
+
+    public PreOrderIterator(Node root, Predicate<Node> traverseNodePredicate) {
+      this.traverseNodePredicate = traverseNodePredicate;
+      this.current = Optional.of(root);
+    }
+
+    @Override
+    protected Node computeNext() {
+      if (!current.isPresent()) {
+        return endOfData();
+      }
+
+      Node returnValue = current.get();
+      current = calculateNextNode(returnValue);
+      return returnValue;
+    }
+
+    private Optional<Node> calculateNextNode(Node currentNode) {
+      Preconditions.checkNotNull(currentNode);
+
+      // If node does not match the predicate, do not descend into it.
+      if (traverseNodePredicate.apply(currentNode)) {
+
+        // In prefix order, the next node is the leftmost child.
+        if (currentNode.hasChildren()) {
+          return Optional.of(currentNode.getFirstChild());
+        }
+      }
+
+      // If currentNode doesn't have children, it is a leaf node.
+
+      // To find the next node, walk up the ancestry chain (including current node) and return the
+      // first sibling we see.
+      // If we don't find one, we're done.
+      final Iterable<Node> currentNodeAndAncestors =
+          Iterables.concat(ImmutableList.of(currentNode), currentNode.getAncestors());
+
+      return Streams.stream(currentNodeAndAncestors)
+          .map(node -> node.getNext())
+          .filter(Predicates.notNull())
+          .findFirst();
+    }
+  }
+
+  /** @return Whether an EXPORT node has a from clause. */
   static boolean isExportFrom(Node n) {
     checkArgument(n.isExport());
     return n.hasTwoChildren();
