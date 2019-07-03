@@ -1792,7 +1792,7 @@ public class Node implements Serializable {
    * Iterates all of the node's ancestors excluding itself.
    */
   public final AncestorIterable getAncestors() {
-    return new AncestorIterable(checkNotNull(this.getParent()));
+    return new AncestorIterable(this.getParent());
   }
 
   /**
@@ -1801,10 +1801,8 @@ public class Node implements Serializable {
   public static final class AncestorIterable implements Iterable<Node> {
     @Nullable private Node cur;
 
-    /**
-     * @param cur The node to start.
-     */
-    AncestorIterable(Node cur) {
+    /** @param cur The node to start. */
+    AncestorIterable(@Nullable Node cur) {
       this.cur = cur;
     }
 
