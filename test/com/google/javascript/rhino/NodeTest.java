@@ -591,6 +591,18 @@ public class NodeTest {
     assertThat(left.getNext()).isEqualTo(right);
   }
 
+  @Test
+  public void testGetAncestors() {
+    Node grandparent = new Node(Token.ROOT);
+    Node parent = new Node(Token.PLACEHOLDER1);
+    Node node = new Node(Token.PLACEHOLDER2);
+
+    grandparent.addChildToFront(parent);
+    parent.addChildToFront(node);
+
+    assertThat(node.getAncestors()).containsExactly(parent, grandparent);
+  }
+
   private static Node getVarRef(String name) {
     return Node.newString(Token.NAME, name);
   }
