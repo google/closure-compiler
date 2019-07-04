@@ -2607,7 +2607,7 @@ MessageEvent.prototype.source;
 /**
  * The Array of MessagePorts sent with the message, for cross-document
  * messaging and channel messaging.
- * @type {Array<MessagePort>}
+ * @type {!Array<MessagePort>}
  */
 MessageEvent.prototype.ports;
 
