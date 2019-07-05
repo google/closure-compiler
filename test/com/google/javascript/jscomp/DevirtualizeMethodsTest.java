@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -1151,6 +1152,33 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
                 "class Foo { }",
                 "",
                 "JSCompiler_StaticMethods_bar(x);")));
+  }
+
+  @Test
+  public void testExistenceOfAGetter_preventsDevirtualization() {
+    declareAccessor("foo", PropertyAccessKind.GETTER_ONLY);
+
+    // Imagine the getter returned a function.
+    testSame(
+        lines(
+            "class Foo {", //
+            "  foo() {}",
+            "}",
+            "x.foo();"));
+  }
+
+  @Test
+  public void testExistenceOfASetter_preventsDevirtualization() {
+    declareAccessor("foo", PropertyAccessKind.SETTER_ONLY);
+
+    // This doesn't actually seem like a risk but it's hard to say, and other optimizations that use
+    // optimize calls would be dangerous on setters.
+    testSame(
+        lines(
+            "class Foo {", //
+            "  foo() {}",
+            "}",
+            "x.foo();"));
   }
 
   private static class ModuleTestInput {

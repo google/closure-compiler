@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.rhino.Node;
@@ -227,6 +228,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     public void process(Node externs, Node root) {
       noSideEffectCalls = new ArrayList<>();
       localResultCalls = new ArrayList<>();
+      // TODO(nickreid): Move these into 'getOptions' and 'getCompiler' overrides.
       compiler.setHasRegExpGlobalReferences(regExpHaveSideEffects);
       compiler.getOptions().setUseTypesForLocalOptimization(true);
 
@@ -2773,6 +2775,33 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             // We use an array-literal so that it's not just the iteration that's impure.
             "function foo() { for await (const t of []) { } }", //
             "foo();"));
+  }
+
+  @Test
+  public void testExistenceOfAGetter_makesPropertyNameImpure() {
+    declareAccessor("foo", PropertyAccessKind.GETTER_ONLY);
+
+    // Imagine the getter returned a function.
+    assertNoPureCalls(
+        lines(
+            "class Foo {", //
+            "  foo() {}",
+            "}",
+            "x.foo();"));
+  }
+
+  @Test
+  public void testExistenceOfASetter_makesPropertyNameImpure() {
+    declareAccessor("foo", PropertyAccessKind.SETTER_ONLY);
+
+    // This doesn't actually seem like a risk but it's hard to say, and other optimizations that use
+    // optimize calls would be dangerous on setters.
+    assertNoPureCalls(
+        lines(
+            "class Foo {", //
+            "  foo() {}",
+            "}",
+            "x.foo();"));
   }
 
   @Test

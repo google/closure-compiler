@@ -465,4 +465,42 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
             "for (var i in x) { x[i].call(x); }",
             "window['Foo'] = Foo;"));
   }
+
+  @Test
+  public void testExistenceOfAGetter_preventsParamOptimization() {
+    testSame(
+        lines(
+            "class Bar {",
+            // TODO(nickreid): Use `declareAccessor rather than specifying in snippet. We can't do
+            // that currently because `RemoveUnusedCode` unilaterally runs another collection.
+            "  get foo() {",
+            "    return (x) => x;",
+            "  }",
+            "}",
+            "",
+            "class Foo {", //
+            "  foo() {}",
+            "}",
+            "",
+            "new (Foo || Bar)().foo('onlyUsedByGetter');"));
+  }
+
+  @Test
+  public void testExistenceOfASetter_preventsParamOptimization() {
+    testSame(
+        lines(
+            "class Bar {",
+            // TODO(nickreid): Use `declareAccessor rather than specifying in snippet. We can't do
+            // that currently because `RemoveUnusedCode` unilaterally runs another collection.
+            "  set foo(f) {",
+            "    this.bar = f;",
+            "  }",
+            "}",
+            "",
+            // This is a defnition for `.bar`. It would be dangerous to optimize it as if it were a
+            // definition of `.foo`
+            "var x = new Bar();",
+            "x.foo = function(param) { return param; };",
+            "x.foo();"));
+  }
 }

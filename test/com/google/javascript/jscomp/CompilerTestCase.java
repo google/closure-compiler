@@ -33,6 +33,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.truth.Correspondence;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
+import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -53,6 +54,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -171,6 +173,13 @@ public abstract class CompilerTestCase {
    * Whether the PureFunctionIdentifier pass runs before the pass being tested
    */
   private boolean computeSideEffects;
+
+  /**
+   * The set of accessors declared to exist "somewhere" in the test program.
+   *
+   * <p>When this field is populated, automatic getter and setter collection is disabled.
+   */
+  private LinkedHashMap<String, PropertyAccessKind> declaredAccessors;
 
   /** The most recently used Compiler instance. */
   private Compiler lastCompiler;
@@ -947,6 +956,24 @@ public abstract class CompilerTestCase {
   }
 
   /**
+   * Declare an accessor as being present "somewhere" in a the test program.
+   *
+   * <p>Calling this method also disabled automatic getter / setter collection.
+   *
+   * @see GatherGetterAndSetterProperties
+   */
+  protected final void declareAccessor(String name, PropertyAccessKind kind) {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    checkState(kind.hasGetterOrSetter(), "Kind should be a getter and/or setter.");
+
+    if (declaredAccessors == null) {
+      declaredAccessors = new LinkedHashMap<>();
+      disableGetterAndSetterUpdateValidation();
+    }
+    declaredAccessors.merge(name, kind, PropertyAccessKind::unionWith);
+  }
+
+  /**
    * Scan externs for properties that should not be renamed.
    */
   protected final void enableGatherExternProperties() {
@@ -1593,8 +1620,18 @@ public abstract class CompilerTestCase {
           new InferConsts(compiler).process(externsRoot, mainRoot);
         }
 
-        if ((verifyGetterAndSetterUpdates || verifyNoNewGettersOrSetters) && i == 0) {
-          GatherGetterAndSetterProperties.update(compiler, externsRoot, mainRoot);
+        if (i == 0) {
+          if (verifyGetterAndSetterUpdates || verifyNoNewGettersOrSetters) {
+            // These 2 options both require that we actually gather getter and setter properties
+            // from the test source code.
+            checkState(declaredAccessors == null);
+            GatherGetterAndSetterProperties.update(compiler, externsRoot, mainRoot);
+          } else if (declaredAccessors != null) {
+            // The test case explicitly specified which property names should be considered to have
+            // getters and/or setters. Use those rather than attempting to gather getters and
+            // setters from the tested source code.
+            compiler.setAccessorSummary(AccessorSummary.create(declaredAccessors));
+          }
         }
 
         if (computeSideEffects && i == 0) {
