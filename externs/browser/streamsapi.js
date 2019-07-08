@@ -31,7 +31,7 @@ var IteratorResult;
 /**
  * @typedef {!CountQueuingStrategy|!ByteLengthQueuingStrategy|{
  *     size: (undefined|function(*): number),
- *     highWaterMark: number
+ *     highWaterMark: (number|undefined),
  * }}
  */
 var QueuingStrategy;
