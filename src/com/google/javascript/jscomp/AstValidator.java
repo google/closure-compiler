@@ -771,6 +771,7 @@ public final class AstValidator implements CompilerPass {
       case SETTER_DEF:
         validateFeature(Feature.CLASS_GETTER_SETTER, n);
         validateObjectLiteralKeyName(n);
+        validateObjectLitKey(n);
         validateChildCount(n);
         validateMemberFunction(n, isAmbient);
         break;
@@ -1615,6 +1616,43 @@ public final class AstValidator implements CompilerPass {
     } else {
       validateChildCount(n, 2);
       validateFunctionExpression(n.getLastChild());
+      if (n.getBooleanProp(Node.COMPUTED_PROP_GETTER)) {
+        validateObjectLitComputedPropGetKey(n);
+      } else if (n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
+        validateObjectLitComputedPropSetKey(n);
+      }
+    }
+  }
+
+  private void validateObjectLitComputedPropGetKey(Node n) {
+    validateFeature(Feature.COMPUTED_PROPERTIES, n);
+    validateNodeType(Token.COMPUTED_PROP, n);
+    validateChildCount(n);
+    Node function = n.getLastChild();
+    validateFunctionExpression(function);
+    // objlit get functions must be nameless, and must have zero parameters.
+    if (!function.getFirstChild().getString().isEmpty()) {
+      violation("Expected unnamed function expression.", n);
+    }
+    Node functionParams = function.getSecondChild();
+    if (functionParams.hasChildren()) {
+      violation("get methods must not have parameters.", n);
+    }
+  }
+
+  private void validateObjectLitComputedPropSetKey(Node n) {
+    validateFeature(Feature.COMPUTED_PROPERTIES, n);
+    validateNodeType(Token.COMPUTED_PROP, n);
+    validateChildCount(n);
+    Node function = n.getLastChild();
+    validateFunctionExpression(function);
+    // objlit set functions must be nameless, and must have 1 parameter.
+    if (!function.getFirstChild().getString().isEmpty()) {
+      violation("Expected unnamed function expression.", n);
+    }
+    Node functionParams = function.getSecondChild();
+    if (!functionParams.hasOneChild()) {
+      violation("set methods must have exactly one parameter.", n);
     }
   }
 

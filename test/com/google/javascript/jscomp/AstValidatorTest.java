@@ -438,6 +438,112 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.EXPRESSION);
   }
 
+  @Test
+  public void testGetter() {
+    valid(
+        lines(
+            "class C {", //
+            "  get m1() {return 1}",
+            "  get ['m2']() {return 2}",
+            "}"));
+
+    Node c = new Node(Token.CLASS, IR.name("C"), IR.empty());
+    Node members = new Node(Token.CLASS_MEMBERS);
+    c.addChildToBack(members);
+    expectValid(c, Check.STATEMENT);
+
+    // Invalid getter with parameters
+    Node getter1 = Node.newString(Token.GETTER_DEF, "prop");
+    getter1.addChildToBack(IR.function(IR.name(""), IR.paramList(IR.name("foo")), IR.block()));
+    members.addChildToBack(getter1);
+    expectInvalid(c, Check.STATEMENT);
+
+    members.detachChildren();
+
+    // Invalid getter with function name
+    Node getter2 = Node.newString(Token.GETTER_DEF, "prop");
+    getter2.addChildToBack(IR.function(IR.name("foo"), IR.paramList(), IR.block()));
+    members.addChildToBack(getter2);
+    expectInvalid(c, Check.STATEMENT);
+
+    members.detachChildren();
+
+    // Invalid computed property style getter with parameters
+    Node getter3 =
+        new Node(
+            Token.COMPUTED_PROP,
+            IR.string("prop"),
+            IR.function(IR.name(""), IR.paramList(IR.name("foo")), IR.block()));
+    getter3.putBooleanProp(Node.COMPUTED_PROP_GETTER, true);
+    members.addChildToBack(getter3);
+    expectInvalid(c, Check.STATEMENT);
+
+    members.detachChildren();
+
+    // Invalid computed property style getter with function name
+    Node getter4 =
+        new Node(
+            Token.COMPUTED_PROP,
+            IR.string("prop"),
+            IR.function(IR.name("foo"), IR.paramList(), IR.block()));
+    getter4.putBooleanProp(Node.COMPUTED_PROP_GETTER, true);
+    members.addChildToBack(getter4);
+    expectInvalid(c, Check.STATEMENT);
+  }
+
+  @Test
+  public void testSetter() {
+    valid(
+        lines(
+            "class C {", //
+            "  set m1(value) {}",
+            "  set ['m2'](value) {}",
+            "}"));
+
+    Node c = new Node(Token.CLASS, IR.name("C"), IR.empty());
+    Node members = new Node(Token.CLASS_MEMBERS);
+    c.addChildToBack(members);
+    expectValid(c, Check.STATEMENT);
+
+    // Invalid setter with no parameters
+    Node setter1 = Node.newString(Token.SETTER_DEF, "prop");
+    setter1.addChildToBack(IR.function(IR.name(""), IR.paramList(), IR.block()));
+    members.addChildToBack(setter1);
+    expectInvalid(c, Check.STATEMENT);
+
+    members.detachChildren();
+
+    // Invalid setter with function name
+    Node setter2 = Node.newString(Token.SETTER_DEF, "prop");
+    setter2.addChildToBack(IR.function(IR.name("foo"), IR.paramList(IR.name("value")), IR.block()));
+    members.addChildToBack(setter2);
+    expectInvalid(c, Check.STATEMENT);
+
+    members.detachChildren();
+
+    // Invalid computed property style setter with parameters
+    Node setter3 =
+        new Node(
+            Token.COMPUTED_PROP,
+            IR.string("prop"),
+            IR.function(IR.name(""), IR.paramList(), IR.block()));
+    setter3.putBooleanProp(Node.COMPUTED_PROP_SETTER, true);
+    members.addChildToBack(setter3);
+    expectInvalid(c, Check.STATEMENT);
+
+    members.detachChildren();
+
+    // Invalid computed property style setter with function name
+    Node setter4 =
+        new Node(
+            Token.COMPUTED_PROP,
+            IR.string("prop"),
+            IR.function(IR.name("foo"), IR.paramList(IR.name("value")), IR.block()));
+    setter4.putBooleanProp(Node.COMPUTED_PROP_SETTER, true);
+    members.addChildToBack(setter4);
+    expectInvalid(c, Check.STATEMENT);
+  }
+
   /** Tests checking that AstValidator validates one particular Feature in the AST. */
   @Test
   public void testFeatureValidation_getter() {
