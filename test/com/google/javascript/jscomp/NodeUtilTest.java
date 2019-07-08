@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.NodeUtil.GoogRequire;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
@@ -3236,6 +3237,25 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testGetGoogRequireInfo_returnsNullForShadowedRequires() {
+      String src = "goog.module('a.b.c'); const Foo = goog.require('d.Foo'); { const Foo = 0; }";
+
+      ParseHelper parser = new ParseHelper();
+      Node first = parser.parse(src);
+      // Build the three layers of scopes: global scope, module scope, and block scope.
+      Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(parser.compiler);
+      Scope globalScope = scopeCreator.createScope(first, null);
+      Node module = getNode(first, Token.MODULE_BODY);
+      Scope moduleScope = scopeCreator.createScope(module, globalScope);
+      Node block = getNode(first, Token.BLOCK);
+      Scope blockScope = scopeCreator.createScope(block, moduleScope);
+
+      assertThat(NodeUtil.getGoogRequireInfo("Foo", moduleScope))
+          .isEqualTo(GoogRequire.fromNamespace("d.Foo"));
+      assertThat(NodeUtil.getGoogRequireInfo("Foo", blockScope)).isNull();
+    }
+
+    @Test
     public void testIsConstructor() {
       assertThat(
               NodeUtil.isConstructor(parseFirst(FUNCTION, "/** @constructor */ function Foo() {}")))
@@ -3629,6 +3649,71 @@ public final class NodeUtilTest {
     }
   }
 
+  @RunWith(Parameterized.class)
+  public static final class GoogRequireInfoTest {
+
+    @Parameters(name = "src={0}, name={1}, GoogRequire={2}")
+    public static Iterable<Object[]> cases() {
+      return ImmutableList.copyOf(
+          new Object[][] {
+            {
+              "goog.module('a.b.c'); const {Bar} = goog.require('d.Foo');",
+              "Bar",
+              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar")
+            },
+            {"goog.module('a.b.c'); const {Bar} = goog.require('d.Foo');", "Foo", null},
+            {
+              "goog.module('a.b.c'); const {Bar: BarLocal} = goog.require('d.Foo');",
+              "BarLocal",
+              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar")
+            },
+            {
+              "goog.module('a.b.c'); const {Bar: BarLocal} =" + " goog.require('d.Foo');",
+              "Bar",
+              null
+            },
+            {
+              "goog.module('a.b.c'); const Foo = goog.require('d.Foo');",
+              "Foo",
+              GoogRequire.fromNamespace("d.Foo")
+            },
+            {
+              "goog.module('a.b.c'); const dFoo = goog.require('d.Foo');",
+              "dFoo",
+              GoogRequire.fromNamespace("d.Foo")
+            },
+            // Test that non-requires just return null.
+            {"goog.module('a.b.c'); const Foo = goog.requireType('d.Foo');", "Foo", null},
+            {"goog.module('a.b.c'); const {Bar} = goog.requireType('d.Foo');", "Bar", null},
+            {"goog.module('a.b.c'); let Foo;", "Foo", null},
+            {"goog.module('a.b.c'); let [Foo] = arr;", "Foo", null},
+            {"goog.module('a.b.c'); let {Bar: {Foo}} = obj;", "Foo", null},
+            {"goog.module('a.b.c'); const Foo = 0;", "Foo", null},
+            {"const Foo = goog.require('d.Foo');", "Foo", null} // NB: Foo will be null here.
+          });
+    }
+
+    @Parameter(0)
+    public String src;
+
+    @Parameter(1)
+    public String name;
+
+    @Parameter(2)
+    public GoogRequire require;
+
+    @Test
+    public void test() {
+      ParseHelper parser = new ParseHelper();
+      Node first = parser.parse(src);
+      Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(parser.compiler);
+      Scope globalScope = scopeCreator.createScope(first, null);
+      Node module = getNodeOrNull(first, Token.MODULE_BODY);
+      Scope localScope =
+          module != null ? scopeCreator.createScope(module, globalScope) : globalScope;
+      assertThat(NodeUtil.getGoogRequireInfo(name, localScope)).isEqualTo(require);
+    }
+  }
 
   @RunWith(Parameterized.class)
   public static final class ReferencesThisTest {

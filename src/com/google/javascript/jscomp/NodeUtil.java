@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -39,6 +40,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
@@ -72,8 +74,10 @@ public final class NodeUtil {
 
   static final char LARGEST_BASIC_LATIN = 0x7f;
 
-  private static final Node googModuleDeclareLegacyNamespace =
-      IR.getprop(IR.getprop(IR.name("goog"), "module"), "declareLegacyNamespace");
+  private static final QualifiedName GOOG_MODULE_DECLARE_LEGACY_NAMESPACE =
+      QualifiedName.of("goog.module.declareLegacyNamespace");
+
+  private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
 
   // Utility class; do not instantiate.
   private NodeUtil() {}
@@ -5315,6 +5319,14 @@ public final class NodeUtil {
     return false;
   }
 
+  static boolean isGoogRequireCall(Node call) {
+    if (call.isCall()) {
+      Node target = call.getFirstChild();
+      return GOOG_REQUIRE.matches(target);
+    }
+    return false;
+  }
+
   static boolean isModuleScopeRoot(Node n) {
     return n.isModuleBody() || isBundledGoogModuleScopeRoot(n);
   }
@@ -5354,7 +5366,7 @@ public final class NodeUtil {
   static boolean isGoogModuleDeclareLegacyNamespaceCall(Node n) {
     if (isExprCall(n)) {
       Node target = n.getFirstFirstChild();
-      return (target.matchesQualifiedName(googModuleDeclareLegacyNamespace));
+      return GOOG_MODULE_DECLARE_LEGACY_NAMESPACE.matches(target);
     }
     return false;
   }
@@ -5645,5 +5657,49 @@ public final class NodeUtil {
             ? currentFeatures.with(feature)
             : FeatureSet.BARE_MINIMUM.with(feature);
     scriptNode.putProp(Node.FEATURE_SET, newFeatures);
+  }
+
+  /** Represents a goog.require'd namespace and property inside a module. */
+  @AutoValue
+  abstract static class GoogRequire {
+    abstract String namespace(); // The Closure namespace inside the require call
+
+    @Nullable
+    abstract String property(); // Non-null for destructuring requires.
+
+    static GoogRequire fromNamespace(String namespace) {
+      return new AutoValue_NodeUtil_GoogRequire(namespace, /* property= */ null);
+    }
+
+    static GoogRequire fromNamespaceAndProperty(String namespace, String property) {
+      return new AutoValue_NodeUtil_GoogRequire(namespace, property);
+    }
+  }
+
+  @Nullable
+  static GoogRequire getGoogRequireInfo(String name, Scope scope) {
+    Var var = scope.getVar(name);
+    if (var == null || !var.getScopeRoot().isModuleBody() || var.getNameNode() == null) {
+      return null;
+    }
+    Node nameNode = var.getNameNode();
+
+    if (NodeUtil.isNameDeclaration(nameNode.getParent())) {
+      Node requireCall = nameNode.getFirstChild();
+      if (requireCall == null || !isGoogRequireCall(requireCall)) {
+        return null;
+      }
+      String namespace = requireCall.getSecondChild().getString();
+      return GoogRequire.fromNamespace(namespace);
+    } else if (nameNode.getParent().isStringKey() && nameNode.getGrandparent().isObjectPattern()) {
+      Node requireCall = nameNode.getGrandparent().getNext();
+      if (requireCall == null || !isGoogRequireCall(requireCall)) {
+        return null;
+      }
+      String property = nameNode.getParent().getString();
+      String namespace = requireCall.getSecondChild().getString();
+      return GoogRequire.fromNamespaceAndProperty(namespace, property);
+    }
+    return null;
   }
 }
