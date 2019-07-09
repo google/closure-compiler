@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -100,7 +99,6 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     super.setUp();
     enableNormalize();
     enableGatherExternProperties();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     disableTypeCheck();
   }
 
@@ -200,6 +198,15 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     test("--this.a, alert()", "alert()");
     test("let x = (--this.a, alert())", "let x = alert()");
     testSame("let x = (alert(), --this.a)");
+  }
+
+  @Test
+  public void testDestructuringRest() {
+    testSame(
+        lines(
+            "function Foo() {}", //
+            "Foo.a = function() {};",
+            "({ ...Foo.a.b } = 0);"));
   }
 
   @Test

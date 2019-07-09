@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +81,6 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableNormalize();
     enableGatherExternProperties();
     keepLocals = true;
@@ -800,7 +798,19 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "const { a : { b : { c : d = '' }}} = new Foo();"));
+  }
 
+  @Test
+  public void testDestructuringRest() {
+    // Makes the cases below shorter because we don't have to add references
+    // to globals to keep them around and just test prototype property removal.
+    keepGlobals = true;
+
+    testSame(
+        lines(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "({ ...new Foo().a.b } = 0);"));
   }
 
   @Test

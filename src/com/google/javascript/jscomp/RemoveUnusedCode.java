@@ -1075,6 +1075,8 @@ class RemoveUnusedCode implements CompilerPass {
           traverseObjectPatternStringKey(propertyNode, scope);
           break;
         case REST:
+          // Recall that the rest target can be any l-value expression
+          traverseChildren(propertyNode, scope);
           break;
         default:
           throw new IllegalStateException(
