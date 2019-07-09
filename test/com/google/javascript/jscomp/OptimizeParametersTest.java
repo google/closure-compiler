@@ -70,6 +70,21 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame("function f(p1) {} f(...x);");
     testSame("function f(...p1) {} f(...x);");
     test("function f(p1, ...p2) {} f(1, ...x);", "function f(...p2) {var p1 = 1;} f(...x);");
+    test(
+        "function f(p1, p2) {} f(1, ...x); f(1, 2);",
+        "function f(p2) {var p1 = 1;} f(...x); f(2);");
+    testSame("function f(p1, p2) {} f(1, ...x); f(2, ...y);");
+    // Test spread argument with side effects
+    testSame(
+        lines(
+            "function foo(x) {sideEffect(); return x;}",
+            "function f(p1, p2) {}",
+            "f(foo(0), ...[foo(1)]);",
+            "f(foo(0), 1);"));
+    // Test should not remove arguments following spread
+    test(
+        "function f(p1, p2, p3) {} f(1, ...[2], 3); f(1, 2, 3);",
+        "function f(p2, p3) {var p1 = 1;} f(...[2], 3); f(2, 3);");
   }
 
   @Test

@@ -742,7 +742,10 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
           }
         }
       }
-
+      // Back off optimizing arguments following spread
+      if (cur.isSpread()) {
+        break;
+      }
       cur = cur.getNext();
       index++;
     }
@@ -760,15 +763,16 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
   private boolean buildInitialParameterList(List<Parameter> parameters, Node cur) {
     boolean anyMovable = false;
     while (cur != null) {
-      if (cur.isSpread()) {
-        break;
-      }
       boolean movable = isMovableValue(cur, globalScope);
       Parameter p = new Parameter(cur, movable);
       setParameterSideEffectInfo(p, cur);
       parameters.add(p);
       if (movable) {
         anyMovable = true;
+      }
+      // Back off optimizing arguments following spread
+      if (cur.isSpread()) {
+        break;
       }
       cur = cur.getNext();
     }
@@ -778,7 +782,9 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
   private void setParameterSideEffectInfo(Parameter p, Node value) {
     p.setHasSideEffects(astAnalyzer.mayHaveSideEffects(value));
     p.setCanBeSideEffected(NodeUtil.canBeSideEffected(value));
-    p.setMayBeUndefined(NodeUtil.mayBeUndefined(value));
+    if (!value.isSpread()) {
+      p.setMayBeUndefined(NodeUtil.mayBeUndefined(value));
+    }
   }
 
   /**
@@ -792,6 +798,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     switch (n.getToken()) {
       case THIS:
       case SUPER:
+      case SPREAD:
         return false;
       case FUNCTION:
         // Don't move function closures.
