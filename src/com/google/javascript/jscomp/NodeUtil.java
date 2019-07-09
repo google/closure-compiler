@@ -4392,13 +4392,17 @@ public final class NodeUtil {
       // To find the next node, walk up the ancestry chain (including current node) and return the
       // first sibling we see.
       // If we don't find one, we're done.
-      final Iterable<Node> currentNodeAndAncestors =
-          Iterables.concat(ImmutableList.of(currentNode), currentNode.getAncestors());
 
-      return Streams.stream(currentNodeAndAncestors)
-          .map(node -> node.getNext())
-          .filter(Predicates.notNull())
-          .findFirst();
+      while (currentNode != null) {
+        Node next = currentNode.getNext();
+        if (next != null) {
+          return Optional.of(next);
+        }
+
+        currentNode = currentNode.getParent();
+      }
+
+      return Optional.empty();
     }
   }
 
