@@ -517,18 +517,9 @@ class TypeValidator implements Serializable {
 
   /** Expect that the type of a switch condition matches the type of its case condition. */
   void expectSwitchMatchesCase(Node n, JSType switchType, JSType caseType) {
-    // ECMA-262, page 68, step 3 of evaluation of CaseBlock,
-    // but allowing extra autoboxing.
-    // TODO(user): remove extra conditions when type annotations
-    // in the code base have adapted to the change in the compiler.
-    if (!switchType.canTestForShallowEqualityWith(caseType)
-        && (caseType.autoboxesTo() == null || !caseType.autoboxesTo().isSubtypeOf(switchType))) {
+    // ECMA-262, page 68, step 3 of evaluation of CaseBlock
+    if (!switchType.canTestForShallowEqualityWith(caseType)) {
       mismatch(n.getFirstChild(), "case expression doesn't match switch", caseType, switchType);
-    } else if (!switchType.canTestForShallowEqualityWith(caseType)
-        && (caseType.autoboxesTo() == null
-            || !caseType.autoboxesTo().isSubtypeWithoutStructuralTyping(switchType))) {
-      TypeMismatch.recordImplicitInterfaceUses(this.implicitInterfaceUses, n, caseType, switchType);
-      TypeMismatch.recordImplicitUseOfNativeObject(this.mismatches, n, caseType, switchType);
     }
   }
 

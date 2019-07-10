@@ -8992,31 +8992,47 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testSwitchCase3() {
-    testTypes("/** @type {String} */" +
-        "var a = new String('foo');" +
-        "switch (a) { case 'A': }");
+  public void testSwitchCase_primitiveDoesNotAutobox() {
+    testTypes(
+        lines(
+            "/** @type {!String} */", //
+            "var a = new String('foo');",
+            "switch (a) { case 'A': }"),
+        lines(
+            "case expression doesn't match switch", //
+            "found   : string",
+            "required: String"));
   }
 
   @Test
-  public void testSwitchCase4() {
-    testTypes("/** @type {(string|Null)} */" +
-        "var a = unknown;" +
-        "switch (a) { case 'A':break; case null:break; }");
+  public void testSwitchCase_unknownSwitchExprMatchesAnyCase() {
+    testTypes(lines("var a = unknown;", "switch (a) { case 'A':break; case null:break; }"));
   }
 
   @Test
-  public void testSwitchCase5() {
-    testTypes("/** @type {(String|Null)} */" +
-        "var a = unknown;" +
-        "switch (a) { case 'A':break; case null:break; }");
+  public void testSwitchCase_doesNotAutoboxStringToMatchNullableUnion() {
+    testTypes(
+        lines(
+            "/** @type {?String} */",
+            "var a = unknown;",
+            "switch (a) { case 'A':break; case null:break; }"),
+        lines(
+            "case expression doesn't match switch", //
+            "found   : string",
+            "required: (String|null)"));
   }
 
   @Test
-  public void testSwitchCase6() {
-    testTypes("/** @type {(Number|Null)} */" +
-        "var a = unknown;" +
-        "switch (a) { case 5:break; case null:break; }");
+  public void testSwitchCase_doesNotAutoboxNumberToMatchNullableUnion() {
+    testTypes(
+        lines(
+            "/** @type {?Number} */",
+            "var a = unknown;",
+            "switch (a) { case 5:break; case null:break; }"),
+        lines(
+            "case expression doesn't match switch", //
+            "found   : number",
+            "required: (Number|null)"));
   }
 
   @Test
@@ -9055,6 +9071,38 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "actual parameter 1 of g does not match formal parameter\n" +
         "found   : string\n" +
         "required: number");
+  }
+
+  @Test
+  public void testSwitchCase_allowsStructuralMatching() {
+    testTypes(
+        lines(
+            "/** @record */",
+            "class R {",
+            "  constructor() {",
+            "    /** @type {string} */",
+            "    this.str;",
+            "  }",
+            "}",
+            "/** @record */",
+            "class S {",
+            "  constructor() {",
+            "    /** @type {string} */",
+            "    this.str;",
+            "    /** @type {number} */",
+            "    this.num;",
+            "  }",
+            "}",
+            " /**",
+            " * @param {!R} r",
+            " * @param {!S} s",
+            " */",
+            "function f(r, s) {",
+            "  switch (r) {",
+            "    case s:",
+            "      return true;",
+            "  }",
+            "}"));
   }
 
   @Test
