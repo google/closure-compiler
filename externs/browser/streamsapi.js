@@ -170,6 +170,13 @@ ReadableStreamSource.prototype.type;
 /** @type {(undefined|number)} */
 ReadableStreamSource.prototype.autoAllocateChunkSize;
 
+/**
+ * @record
+ */
+function ReadableStreamIteratorOptions() {};
+
+/** @type {undefined|boolean} */
+ReadableStreamIteratorOptions.prototype.preventCancel;
 
 /**
  * @param {!ReadableStreamSource=} opt_underlyingSource
@@ -191,6 +198,13 @@ ReadableStream.prototype.locked;
  * @see https://streams.spec.whatwg.org/#rs-cancel
  */
 ReadableStream.prototype.cancel = function(reason) {};
+
+/**
+ * @param {!ReadableStreamIteratorOptions=} options
+ * @return {!AsyncIterator}
+ * @see https://streams.spec.whatwg.org/#rs-get-iterator
+ */
+ReadableStream.prototype.getIterator = function(options) {};
 
 /**
  * @param {{ mode:(undefined|string) }=} opt_options
@@ -221,6 +235,12 @@ ReadableStream.prototype.pipeTo = function(dest, opt_options) {};
  */
 ReadableStream.prototype.tee = function() {};
 
+/**
+ * @param {!ReadableStreamIteratorOptions=} options
+ * @return {!AsyncIterator}
+ * @see https://streams.spec.whatwg.org/#rs-asynciterator
+ */
+ReadableStream.prototype[Symbol.asyncIterator] = function(options) {};
 
 /**
  * The ReadableStreamDefaultReader constructor is generally not meant to be used directly;
