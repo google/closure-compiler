@@ -5195,11 +5195,20 @@ var customElements;
  */
 function HTMLSlotElement() {}
 
+/** @typedef {{flatten: boolean}} */
+var AssignedNodesOptions;
+
 /**
- * @param {!{flatten: boolean}=} options
+ * @param {!AssignedNodesOptions=} options
  * @return {!Array<!Node>}
  */
 HTMLSlotElement.prototype.assignedNodes = function(options) {};
+
+/**
+ * @param {!AssignedNodesOptions=} options
+ * @return {!Array<!HTMLElement>}
+ */
+HTMLSlotElement.prototype.assignedElements = function(options) {};
 
 /** @type {boolean} */
 Event.prototype.composed;
