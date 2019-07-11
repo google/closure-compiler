@@ -640,10 +640,10 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "[this.x        ] = [1, 2]", // preserve newline
             "var p = this.x;"));
 
-    // Test rest destructuring removal
+    // Test rest destructuring, `this` property
     test(
         "[this.x, ...this.z] = [1, 2, 3]", // preserve newline
-        "[                 ] = [1, 2, 3]");
+        "[      , ...this.z] = [1, 2, 3]");
 
     // Test rest destructuring with normal variable
     test(

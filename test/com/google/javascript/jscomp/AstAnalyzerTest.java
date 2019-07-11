@@ -30,6 +30,7 @@ import static com.google.javascript.rhino.Token.CLASS;
 import static com.google.javascript.rhino.Token.COMMA;
 import static com.google.javascript.rhino.Token.COMPUTED_PROP;
 import static com.google.javascript.rhino.Token.DEC;
+import static com.google.javascript.rhino.Token.DEFAULT_VALUE;
 import static com.google.javascript.rhino.Token.DELPROP;
 import static com.google.javascript.rhino.Token.FOR_AWAIT_OF;
 import static com.google.javascript.rhino.Token.FOR_IN;
@@ -259,6 +260,11 @@ public class AstAnalyzerTest {
             {"x.getter = 0;", GETPROP, true},
             {"x.setter = 0;", GETPROP, true},
             {"x.normal = 0;", GETPROP, false},
+
+            // Default values delegates to children.
+            {"({x = 0} = y);", DEFAULT_VALUE, false},
+            {"([x = 0] = y);", DEFAULT_VALUE, false},
+            {"function f(x = 0) { };", DEFAULT_VALUE, false},
           });
     }
 

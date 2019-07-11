@@ -342,6 +342,9 @@ public class AstAnalyzer {
       case HOOK:
       case IF:
       case PARAM_LIST:
+      case DEFAULT_VALUE:
+        // Any context that supports DEFAULT_VALUE is already an assignment. The possiblity of a
+        // default doesn't itself create a side-effect. Therefore, we prefer to defer the decision.
       case NUMBER:
       case OR:
       case THIS:

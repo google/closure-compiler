@@ -671,12 +671,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testRestPattern() {
-    test(
-        "var x; [...x] = externVar;", // preserve alignment
-        "       [    ] = externVar;");
-    test(
-        "var [...x] = externVar;", // preserve alignment
-        "var [    ] = externVar;");
+    testSame("var x; [...x] = externVar;");
+    testSame("var [...x] = externVar;");
     testSame("var x; [...x] = externVar; use(x);");
     testSame("var [...x] = externVar; use(x);");
     testSame("var x; [...x.y] = externVar;");
@@ -701,13 +697,9 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "}",
           "alert(countArgs(1, 1, 1, 1, 1));"));
 
-    test(
-        " function foo([...rest]) {/**rest unused*/}; foo();",
-        " function foo(         ) {/**rest unused*/}; foo();");
+    testSame("function foo([...rest]) {/**rest unused*/}; foo();");
 
-    test(
-        "function foo([x, ...rest]) { x; }; foo();", // preserve alignment
-        "function foo([x         ]) { x; }; foo();");
+    testSame("function foo([x, ...rest]) { x; }; foo();");
   }
 
   @Test
@@ -1727,7 +1719,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     test("function f([a]) {} f();", "function f() {} f();");
     test("function f(...a) {} f();", "function f() {} f();");
     test("function f(...[a]) {} f();", "function f() {} f();");
-    test("function f(...[...a]) {} f();", "function f() {} f();");
+    testSame("function f(...[...a]) {} f();");
     test("function f(...{length:a}) {} f();", "function f() {} f();");
 
     test("function f(a) {} f();", "function f() {} f();");
@@ -1748,17 +1740,17 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     test("function f([a]) {} f();", "function f() {} f();");
     test("function f([a], b) {} f();", "function f() {} f();");
     test("function f([a], ...b) {} f();", "function f() {} f();");
-    test("function f([...a]) {} f();", "function f() {} f();");
+    testSame("function f([...a]) {} f();");
     test("function f([[]]) {} f();", "function f([[]]) {} f();");
-    test("function f([[],...a]) {} f();", "function f([[]]) {} f();");
+    testSame("function f([[],...a]) {} f();");
 
     test("var [a] = [];", "var [] = [];");
-    test("var [...a] = [];", "var [] = [];");
-    test("var [...[...a]] = [];", "var [...[]] = [];");
+    testSame("var [...a] = [];");
+    testSame("var [...[...a]] = [];");
 
     test("var [a, b] = [];", "var [] = [];");
-    test("var [a, ...b] = [];", "var [] = [];");
-    test("var [a, ...[...b]] = [];", "var [,...[]] = [];");
+    test("var [a, ...b] = [];", "var [ , ...b] = [];");
+    test("var [a, ...[...b]] = [];", "var [ ,...[...b]] = [];");
 
     test("var [a, b, c] = []; use(a, b);", "var [a,b  ] = []; use(a, b);");
     test("var [a, b, c] = []; use(a, c);", "var [a, ,c] = []; use(a, c);");
@@ -1779,9 +1771,9 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     test("var a, b, c; [[a, b, c]] = []; use(b);", "var b; [[ ,b]] = []; use(b);");
     test("var a, b, c; [[a, b, c]] = []; use(c);", "var c; [[ , ,c]] = []; use(c);");
 
-    test("var a, b, c; [a, b, ...c] = []; use(a);", "var a; [a] = []; use(a);");
-    test("var a, b, c; [a, b, ...c] = []; use(b);", "var b; [ ,b, ] = []; use(b);");
-    test("var a, b, c; [a, b, ...c] = []; use(c);", "var c; [ , ,...c] = []; use(c);");
+    test("var a, b, c; [a, b, ...c] = []; use(a);", "var a, c; [a,  , ...c] = []; use(a);");
+    test("var a, b, c; [a, b, ...c] = []; use(b);", "var b, c; [ , b, ...c] = []; use(b);");
+    test("var a, b, c; [a, b, ...c] = []; use(c);", "var c;    [ ,  , ...c] = []; use(c);");
 
     test("var a, b, c; [a=1, b=2, c=3] = []; use(a);", "var a; [a=1] = []; use(a);");
     test("var a, b, c; [a=1, b=2, c=3] = []; use(b);", "var b; [   ,b=2, ] = []; use(b);");

@@ -1077,7 +1077,7 @@ public final class NodeUtil {
           case PARAM_LIST: // Rest arguments are flat at the call-site.
             return false;
           case ARRAY_PATTERN:
-            return true; // We assume the r-value to be an impure iterable.
+            return true; // TODO(b/127862986): We assume the r-value to be an impure iterable.
           default:
             throw new IllegalStateException("Unexpected parent of REST: " + parent.toStringTree());
         }
@@ -1095,6 +1095,7 @@ public final class NodeUtil {
    * side-effects during iteration, {@code false} otherwise.
    */
   private static boolean isPureIterable(Node node) {
+    // TODO(b/127862986): The type of the iterable should also allow us to say it's pure.
     switch (node.getToken()) {
       case ARRAYLIT:
       case STRING:
