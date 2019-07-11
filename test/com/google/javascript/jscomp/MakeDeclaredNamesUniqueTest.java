@@ -579,6 +579,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstRemovingRenameAlsoRemovesAnnotation() {
+    removeConst = true;
+    test(
+        "/** @const */ var c = 3; var b = c;",
+        "/** blank */ var c$jscomp$unique_0 = 3; var b$jscomp$unique_1 = c$jscomp$unique_0;");
+  }
+
+  @Test
   public void testRestParamWithoutContext() {
     test(
         "function f(...x) { x; }",
