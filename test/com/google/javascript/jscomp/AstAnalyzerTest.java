@@ -88,9 +88,25 @@ public class AstAnalyzerTest {
 
   /** Provides methods for parsing and accessing the compiler used for the parsing. */
   private static class ParseHelper {
+    private boolean hasRegExpGlobalReferences = false;
+    private boolean hasFakeGetterAndSetter = false;
     private Compiler compiler = null;
 
-    private Node parse(String js) {
+    /**
+     * Tell the compiler to behave as if it has (or has not) seen any references to the RegExp
+     * global properties, which are modified when matches are performed.
+     */
+    ParseHelper setHasRegExpGlobalReferences(boolean hasRegExpGlobalReferences) {
+      this.hasRegExpGlobalReferences = hasRegExpGlobalReferences;
+      return this;
+    }
+
+    ParseHelper registerFakeGetterAndSetter() {
+      this.hasFakeGetterAndSetter = true;
+      return this;
+    }
+
+    private void createNewCompiler() {
       CompilerOptions options = new CompilerOptions();
       options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
 
@@ -100,41 +116,30 @@ public class AstAnalyzerTest {
 
       compiler = new Compiler();
       compiler.initOptions(options);
+
+      compiler.setHasRegExpGlobalReferences(hasRegExpGlobalReferences);
+      if (hasFakeGetterAndSetter) {
+        compiler.setAccessorSummary(
+            AccessorSummary.create(
+                ImmutableMap.of(
+                    "getter", PropertyAccessKind.GETTER_ONLY, //
+                    "setter", PropertyAccessKind.SETTER_ONLY)));
+      }
+    }
+
+    Node parse(String js) {
+      createNewCompiler();
+
       Node n = compiler.parseTestCode(js);
       assertThat(compiler.getErrors()).isEmpty();
       return n;
     }
 
     /**
-     * Tell the compiler to behave as if it has (or has not) seen any references to the RegExp
-     * global properties, which are modified when matches are performed.
-     *
-     * @param hasRegExpGlobalReferences
-     */
-    void setHasRegExpGlobalReferences(boolean hasRegExpGlobalReferences) {
-      if (compiler == null) {
-        throw new RuntimeException("must call parse() first");
-      }
-      compiler.setHasRegExpGlobalReferences(hasRegExpGlobalReferences);
-    }
-
-    ParseHelper regiserFakeGetterAndSetter() {
-      if (compiler == null) {
-        throw new RuntimeException("must call parse() first");
-      }
-      compiler.setAccessorSummary(
-          AccessorSummary.create(
-              ImmutableMap.of(
-                  "getter", PropertyAccessKind.GETTER_ONLY, //
-                  "setter", PropertyAccessKind.SETTER_ONLY)));
-      return this;
-    }
-
-    /**
      * Parse a string of JavaScript and return the first node found with the given token in a
      * preorder DFS.
      */
-    private Node parseFirst(Token token, String js) {
+    Node parseFirst(Token token, String js) {
       Node rootNode = this.parse(js);
       checkState(rootNode.isScript(), rootNode);
       Node firstNodeWithToken = getFirstNode(rootNode, token);
@@ -150,7 +155,7 @@ public class AstAnalyzerTest {
      *
      * <p>Presumes that the given JavaScript is an expression.
      */
-    private Node parseExpr(String js) {
+    Node parseExpr(String js) {
       Node script = parse("(" + js + ");"); // Parens force interpretation as an expression.
       return script
           .getFirstChild() // EXPR_RESULT
@@ -193,7 +198,8 @@ public class AstAnalyzerTest {
     @Parameter(2)
     public Boolean expectedResult;
 
-    @Parameters(name = "{1} node in ({0}) -> {2}")
+    // Always include the index. If two cases have the same name, only one will be executed.
+    @Parameters(name = "#{index} {1} node in ({0}) -> {2}")
     public static Iterable<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
@@ -270,358 +276,337 @@ public class AstAnalyzerTest {
 
     @Test
     public void mayEffectMutableState() {
-      ParseHelper helper = new ParseHelper();
+      ParseHelper helper = new ParseHelper().registerFakeGetterAndSetter();
       Node node = helper.parseFirst(token, jsExpression);
-      helper.regiserFakeGetterAndSetter();
       AstAnalyzer analyzer = helper.getAstAnalyzer();
       assertThat(analyzer.mayEffectMutableState(node)).isEqualTo(expectedResult);
     }
   }
 
-  // TODO(bradfordcsmith): It would be nice to implemenent this with Parameterized.
-  // These test cases were copied from NodeUtilTest with minimal changes.
-  @RunWith(JUnit4.class)
+  @RunWith(Parameterized.class)
   public static final class MayHaveSideEffects {
-    private void assertSideEffect(boolean se, String js) {
-      ParseHelper helper = new ParseHelper();
 
-      Node n = helper.parse(js);
-      helper.regiserFakeGetterAndSetter();
-      assertThat(helper.getAstAnalyzer().mayHaveSideEffects(n.getFirstChild())).isEqualTo(se);
-    }
-
-    private void assertNodeHasSideEffect(boolean se, Token token, String js) {
-      ParseHelper helper = new ParseHelper();
-
-      Node node = helper.parseFirst(token, js);
-      helper.regiserFakeGetterAndSetter();
-      assertThat(helper.getAstAnalyzer().mayHaveSideEffects(node)).isEqualTo(se);
-    }
-
-    private void assertSideEffect(boolean se, String js, boolean globalRegExp) {
-      ParseHelper helper = new ParseHelper();
-
-      Node n = helper.parse(js);
-      helper.setHasRegExpGlobalReferences(globalRegExp);
-      helper.regiserFakeGetterAndSetter();
-      assertThat(helper.getAstAnalyzer().mayHaveSideEffects(n.getFirstChild())).isEqualTo(se);
-    }
+    @Parameter public SideEffectsCase kase;
 
     @Test
-    public void testMayHaveSideEffects_undifferentiatedCases() {
-      assertSideEffect(false, "[1]");
-      assertSideEffect(false, "[1, 2]");
-      assertSideEffect(true, "i++");
-      assertSideEffect(true, "[b, [a, i++]]");
-      assertSideEffect(true, "i=3");
-      assertSideEffect(true, "[0, i=3]");
-      assertSideEffect(true, "b()");
-      assertSideEffect(true, "[1, b()]");
-      assertSideEffect(true, "b.b=4");
-      assertSideEffect(true, "b.b--");
-      assertSideEffect(true, "i--");
-      assertSideEffect(true, "a[0][i=4]");
-      assertSideEffect(true, "a += 3");
-      assertSideEffect(true, "a, b, z += 4");
-      assertSideEffect(true, "a ? c : d++");
-      assertSideEffect(true, "a + c++");
-      assertSideEffect(true, "a + c - d()");
-      assertSideEffect(true, "a + c - d()");
+    public void test() {
+      ParseHelper helper =
+          new ParseHelper()
+              .registerFakeGetterAndSetter()
+              .setHasRegExpGlobalReferences(kase.globalRegExp);
 
-      assertSideEffect(true, "function foo() {}");
-      assertSideEffect(true, "class Foo {}");
-      assertSideEffect(true, "while(true);");
-      assertSideEffect(true, "if(true){a()}");
+      Node node;
+      if (kase.token == null) {
+        node = helper.parse(kase.js).getFirstChild();
+      } else {
+        node = helper.parseFirst(kase.token, kase.js);
+      }
 
-      assertSideEffect(false, "if(true){a}");
-      assertSideEffect(false, "(function() { })");
-      assertSideEffect(false, "(function() { i++ })");
-      assertSideEffect(false, "[function a(){}]");
-      assertSideEffect(false, "(class { })");
-      assertSideEffect(false, "(class { method() { i++ } })");
-      assertSideEffect(true, "(class { [computedName()]() {} })");
-      assertSideEffect(false, "(class { [computedName]() {} })");
-      assertSideEffect(false, "(class Foo extends Bar { })");
-      assertSideEffect(true, "(class extends foo() { })");
-
-      assertSideEffect(false, "a");
-      assertSideEffect(false, "a.b");
-      assertSideEffect(false, "a.b.c");
-      assertSideEffect(false, "[b, c [d, [e]]]");
-      assertSideEffect(false, "({a: x, b: y, c: z})");
-      assertSideEffect(false, "({a, b, c})");
-      assertSideEffect(false, "/abc/gi");
-      assertSideEffect(false, "'a'");
-      assertSideEffect(false, "0");
-      assertSideEffect(false, "a + c");
-      assertSideEffect(false, "'c' + a[0]");
-      assertSideEffect(false, "a[0][1]");
-      assertSideEffect(false, "'a' + c");
-      assertSideEffect(false, "'a' + a.name");
-      assertSideEffect(false, "1, 2, 3");
-      assertSideEffect(false, "a, b, 3");
-      assertSideEffect(false, "(function(a, b) {  })");
-      assertSideEffect(false, "a ? c : d");
-      assertSideEffect(false, "'1' + navigator.userAgent");
-
-      assertSideEffect(false, "`template`");
-      assertSideEffect(false, "`template${name}`");
-      assertSideEffect(false, "`${name}template`");
-      assertSideEffect(true, "`${naming()}template`");
-      assertSideEffect(true, "templateFunction`template`");
-      assertSideEffect(true, "st = `${name}template`");
-      assertSideEffect(true, "tempFunc = templateFunction`template`");
-
-      assertSideEffect(false, "new RegExp('foobar', 'i')");
-      assertSideEffect(true, "new RegExp(SomethingWacky(), 'i')");
-      assertSideEffect(false, "new Array()");
-      assertSideEffect(false, "new Array");
-      assertSideEffect(false, "new Array(4)");
-      assertSideEffect(false, "new Array('a', 'b', 'c')");
-      assertSideEffect(true, "new SomeClassINeverHeardOf()");
-      assertSideEffect(true, "new SomeClassINeverHeardOf()");
-
-      assertSideEffect(false, "({}).foo = 4");
-      assertSideEffect(false, "([]).foo = 4");
-      assertSideEffect(false, "(function() {}).foo = 4");
-
-      assertSideEffect(true, "this.foo = 4");
-      assertSideEffect(true, "a.foo = 4");
-      assertSideEffect(true, "(function() { return n; })().foo = 4");
-      assertSideEffect(true, "([]).foo = bar()");
-
-      assertSideEffect(false, "undefined");
-      assertSideEffect(false, "void 0");
-      assertSideEffect(true, "void foo()");
-      assertSideEffect(false, "-Infinity");
-      assertSideEffect(false, "Infinity");
-      assertSideEffect(false, "NaN");
-
-      assertSideEffect(false, "({}||[]).foo = 2;");
-      assertSideEffect(false, "(true ? {} : []).foo = 2;");
-      assertSideEffect(false, "({},[]).foo = 2;");
-
-      assertSideEffect(true, "delete a.b");
-
-      assertSideEffect(false, "Math.random();");
-      assertSideEffect(true, "Math.random(seed);");
-      assertSideEffect(false, "[1, 1].foo;");
-
-      assertSideEffect(true, "export var x = 0;");
-      assertSideEffect(true, "export let x = 0;");
-      assertSideEffect(true, "export const x = 0;");
-      assertSideEffect(true, "export class X {};");
-      assertSideEffect(true, "export function x() {};");
-      assertSideEffect(true, "export {x};");
+      assertThat(helper.getAstAnalyzer().mayHaveSideEffects(node)).isEqualTo(kase.expect);
     }
 
-    @Test
-    public void testMayHaveSideEffects_iterableSpread() {
-      // ARRAYLIT-SPREAD
-      assertSideEffect(false, "[...[]]");
-      assertSideEffect(false, "[...[1]]");
-      assertSideEffect(true, "[...[i++]]");
-      assertSideEffect(false, "[...'string']");
-      assertSideEffect(false, "[...`templatelit`]");
-      assertSideEffect(false, "[...`templatelit ${safe}`]");
-      assertSideEffect(true, "[...`templatelit ${unsafe()}`]");
-      assertSideEffect(true, "[...f()]");
-      assertSideEffect(true, "[...5]");
-      assertSideEffect(true, "[...null]");
-      assertSideEffect(true, "[...true]");
+    private static final class SideEffectsCase {
+      boolean expect;
+      String js;
+      Token token;
+      boolean globalRegExp;
 
-      // CALL-SPREAD
-      assertSideEffect(false, "Math.sin(...[])");
-      assertSideEffect(false, "Math.sin(...[1])");
-      assertSideEffect(true, "Math.sin(...[i++])");
-      assertSideEffect(false, "Math.sin(...'string')");
-      assertSideEffect(false, "Math.sin(...`templatelit`)");
-      assertSideEffect(false, "Math.sin(...`templatelit ${safe}`)");
-      assertSideEffect(true, "Math.sin(...`templatelit ${unsafe()}`)");
-      assertSideEffect(true, "Math.sin(...f())");
-      assertSideEffect(true, "Math.sin(...5)");
-      assertSideEffect(true, "Math.sin(...null)");
-      assertSideEffect(true, "Math.sin(...true)");
+      SideEffectsCase expect(boolean b) {
+        this.expect = b;
+        return this;
+      }
 
-      // NEW-SPREAD
-      assertSideEffect(false, "new Object(...[])");
-      assertSideEffect(false, "new Object(...[1])");
-      assertSideEffect(true, "new Object(...[i++])");
-      assertSideEffect(false, "new Object(...'string')");
-      assertSideEffect(false, "new Object(...`templatelit`)");
-      assertSideEffect(false, "new Object(...`templatelit ${safe}`)");
-      assertSideEffect(true, "new Object(...`templatelit ${unsafe()}`)");
-      assertSideEffect(true, "new Object(...f())");
-      assertSideEffect(true, "new Object(...5)");
-      assertSideEffect(true, "new Object(...null)");
-      assertSideEffect(true, "new Object(...true)");
+      SideEffectsCase js(String s) {
+        this.js = s;
+        return this;
+      }
+
+      SideEffectsCase token(Token t) {
+        this.token = t;
+        return this;
+      }
+
+      SideEffectsCase globalRegExp(boolean b) {
+        this.globalRegExp = b;
+        return this;
+      }
+
+      @Override
+      public String toString() {
+        return SimpleFormat.format("%s node in `%s` -> %s", token, js, expect);
+      }
     }
 
-    @Test
-    public void testMayHaveSideEffects_objectSpread() {
-      // OBJECT-SPREAD
-      // These could all invoke getters.
-      assertSideEffect(true, "({...x})");
-      assertSideEffect(true, "({...{}})");
-      assertSideEffect(true, "({...{a:1}})");
-      assertSideEffect(true, "({...{a:i++}})");
-      assertSideEffect(true, "({...{a:f()}})");
-      assertSideEffect(true, "({...f()})");
+    private static SideEffectsCase kase() {
+      return new SideEffectsCase();
     }
 
-    @Test
-    public void testMayHaveSideEffects_rest() {
-      // REST
+    // Always include the index. If two cases have the same name, only one will be executed.
+    @Parameters(name = "#{index} {0}")
+    public static Iterable<SideEffectsCase> cases() {
+      return ImmutableList.of(
+          // Cases in need of differentiation.
+          kase().expect(false).js("[1]"),
+          kase().expect(false).js("[1, 2]"),
+          kase().expect(true).js("i++"),
+          kase().expect(true).js("[b, [a, i++]]"),
+          kase().expect(true).js("i=3"),
+          kase().expect(true).js("[0, i=3]"),
+          kase().expect(true).js("b()"),
+          kase().expect(true).js("[1, b()]"),
+          kase().expect(true).js("b.b=4"),
+          kase().expect(true).js("b.b--"),
+          kase().expect(true).js("i--"),
+          kase().expect(true).js("a[0][i=4]"),
+          kase().expect(true).js("a += 3"),
+          kase().expect(true).js("a, b, z += 4"),
+          kase().expect(true).js("a ? c : d++"),
+          kase().expect(true).js("a + c++"),
+          kase().expect(true).js("a + c - d()"),
+          kase().expect(true).js("a + c - d()"),
+          kase().expect(true).js("function foo() {}"),
+          kase().expect(true).js("class Foo {}"),
+          kase().expect(true).js("while(true);"),
+          kase().expect(true).js("if(true){a()}"),
+          kase().expect(false).js("if(true){a}"),
+          kase().expect(false).js("(function() { })"),
+          kase().expect(false).js("(function() { i++ })"),
+          kase().expect(false).js("[function a(){}]"),
+          kase().expect(false).js("(class { })"),
+          kase().expect(false).js("(class { method() { i++ } })"),
+          kase().expect(true).js("(class { [computedName()]() {} })"),
+          kase().expect(false).js("(class { [computedName]() {} })"),
+          kase().expect(false).js("(class Foo extends Bar { })"),
+          kase().expect(true).js("(class extends foo() { })"),
+          kase().expect(false).js("a"),
+          kase().expect(false).js("a.b"),
+          kase().expect(false).js("a.b.c"),
+          kase().expect(false).js("[b, c [d, [e]]]"),
+          kase().expect(false).js("({a: x, b: y, c: z})"),
+          kase().expect(false).js("({a, b, c})"),
+          kase().expect(false).js("/abc/gi"),
+          kase().expect(false).js("'a'"),
+          kase().expect(false).js("0"),
+          kase().expect(false).js("a + c"),
+          kase().expect(false).js("'c' + a[0]"),
+          kase().expect(false).js("a[0][1]"),
+          kase().expect(false).js("'a' + c"),
+          kase().expect(false).js("'a' + a.name"),
+          kase().expect(false).js("1, 2, 3"),
+          kase().expect(false).js("a, b, 3"),
+          kase().expect(false).js("(function(a, b) {  })"),
+          kase().expect(false).js("a ? c : d"),
+          kase().expect(false).js("'1' + navigator.userAgent"),
+          kase().expect(false).js("`template`"),
+          kase().expect(false).js("`template${name}`"),
+          kase().expect(false).js("`${name}template`"),
+          kase().expect(true).js("`${naming()}template`"),
+          kase().expect(true).js("templateFunction`template`"),
+          kase().expect(true).js("st = `${name}template`"),
+          kase().expect(true).js("tempFunc = templateFunction`template`"),
+          kase().expect(false).js("new RegExp('foobar', 'i')"),
+          kase().expect(true).js("new RegExp(SomethingWacky(), 'i')"),
+          kase().expect(false).js("new Array()"),
+          kase().expect(false).js("new Array"),
+          kase().expect(false).js("new Array(4)"),
+          kase().expect(false).js("new Array('a', 'b', 'c')"),
+          kase().expect(true).js("new SomeClassINeverHeardOf()"),
+          kase().expect(true).js("new SomeClassINeverHeardOf()"),
+          kase().expect(false).js("({}).foo = 4"),
+          kase().expect(false).js("([]).foo = 4"),
+          kase().expect(false).js("(function() {}).foo = 4"),
+          kase().expect(true).js("this.foo = 4"),
+          kase().expect(true).js("a.foo = 4"),
+          kase().expect(true).js("(function() { return n; })().foo = 4"),
+          kase().expect(true).js("([]).foo = bar()"),
+          kase().expect(false).js("undefined"),
+          kase().expect(false).js("void 0"),
+          kase().expect(true).js("void foo()"),
+          kase().expect(false).js("-Infinity"),
+          kase().expect(false).js("Infinity"),
+          kase().expect(false).js("NaN"),
+          kase().expect(false).js("({}||[]).foo = 2;"),
+          kase().expect(false).js("(true ? {} : []).foo = 2;"),
+          kase().expect(false).js("({},[]).foo = 2;"),
+          kase().expect(true).js("delete a.b"),
+          kase().expect(false).js("Math.random();"),
+          kase().expect(true).js("Math.random(seed);"),
+          kase().expect(false).js("[1, 1].foo;"),
+          kase().expect(true).js("export var x = 0;"),
+          kase().expect(true).js("export let x = 0;"),
+          kase().expect(true).js("export const x = 0;"),
+          kase().expect(true).js("export class X {};"),
+          kase().expect(true).js("export function x() {};"),
+          kase().expect(true).js("export {x};"),
 
-      // This could all invoke getters.
-      assertNodeHasSideEffect(true, REST, "({...x} = something)");
-      // We currently assume all iterable-rests are side-effectful.
-      assertNodeHasSideEffect(true, REST, "([...x] = 'safe')");
-      assertNodeHasSideEffect(false, REST, "(function(...x) { })");
-    }
+          // ARRAYLIT-SPREAD
+          kase().expect(false).js("[...[]]"),
+          kase().expect(false).js("[...[1]]"),
+          kase().expect(true).js("[...[i++]]"),
+          kase().expect(false).js("[...'string']"),
+          kase().expect(false).js("[...`templatelit`]"),
+          kase().expect(false).js("[...`templatelit ${safe}`]"),
+          kase().expect(true).js("[...`templatelit ${unsafe()}`]"),
+          kase().expect(true).js("[...f()]"),
+          kase().expect(true).js("[...5]"),
+          kase().expect(true).js("[...null]"),
+          kase().expect(true).js("[...true]"),
 
-    @Test
-    public void testMayHaveSideEffects_contextSwitch() {
-      assertNodeHasSideEffect(true, AWAIT, "async function f() { await 0; }");
-      assertNodeHasSideEffect(true, FOR_AWAIT_OF, "(async()=>{ for await (let x of []) {} })");
-      assertNodeHasSideEffect(true, THROW, "function f() { throw 'something'; }");
-      assertNodeHasSideEffect(true, YIELD, "function* f() { yield 'something'; }");
-      assertNodeHasSideEffect(true, YIELD, "function* f() { yield* 'something'; }");
-    }
+          // CALL-SPREAD
+          kase().expect(false).js("Math.sin(...[])"),
+          kase().expect(false).js("Math.sin(...[1])"),
+          kase().expect(true).js("Math.sin(...[i++])"),
+          kase().expect(false).js("Math.sin(...'string')"),
+          kase().expect(false).js("Math.sin(...`templatelit`)"),
+          kase().expect(false).js("Math.sin(...`templatelit ${safe}`)"),
+          kase().expect(true).js("Math.sin(...`templatelit ${unsafe()}`)"),
+          kase().expect(true).js("Math.sin(...f())"),
+          kase().expect(true).js("Math.sin(...5)"),
+          kase().expect(true).js("Math.sin(...null)"),
+          kase().expect(true).js("Math.sin(...true)"),
 
-    @Test
-    public void testMayHaveSideEffects_enhancedForLoop() {
-      // These edge cases are actually side-effect free. We include them to confirm we just give up
-      // on enhanced for loops.
-      assertSideEffect(true, "for (const x in []) { }");
-      assertSideEffect(true, "for (const x of []) { }");
-    }
+          // NEW-SPREAD
+          kase().expect(false).js("new Object(...[])"),
+          kase().expect(false).js("new Object(...[1])"),
+          kase().expect(true).js("new Object(...[i++])"),
+          kase().expect(false).js("new Object(...'string')"),
+          kase().expect(false).js("new Object(...`templatelit`)"),
+          kase().expect(false).js("new Object(...`templatelit ${safe}`)"),
+          kase().expect(true).js("new Object(...`templatelit ${unsafe()}`)"),
+          kase().expect(true).js("new Object(...f())"),
+          kase().expect(true).js("new Object(...5)"),
+          kase().expect(true).js("new Object(...null)"),
+          kase().expect(true).js("new Object(...true)"),
 
-    @Test
-    public void testMayHaveSideEffects_computedProp() {
-      assertNodeHasSideEffect(false, COMPUTED_PROP, "({[a]: x})");
-      assertNodeHasSideEffect(true, COMPUTED_PROP, "({[a()]: x})");
-      assertNodeHasSideEffect(true, COMPUTED_PROP, "({[a]: x()})");
+          // OBJECT-SPREAD
+          // These could all invoke getters.
+          kase().expect(true).js("({...x})"),
+          kase().expect(true).js("({...{}})"),
+          kase().expect(true).js("({...{a:1}})"),
+          kase().expect(true).js("({...{a:i++}})"),
+          kase().expect(true).js("({...{a:f()}})"),
+          kase().expect(true).js("({...f()})"),
 
-      // computed property getters and setters are modeled as COMPUTED_PROP with an
-      // annotation to indicate getter or setter.
-      assertNodeHasSideEffect(false, COMPUTED_PROP, "({ get [a]() {} })");
-      assertNodeHasSideEffect(true, COMPUTED_PROP, "({ get [a()]() {} })");
+          // REST
+          // This could invoke getters.
+          kase().expect(true).token(REST).js("({...x} = something)"),
+          // We currently assume all iterable-rests are side-effectful.
+          kase().expect(true).token(REST).js("([...x] = 'safe')"),
+          kase().expect(false).token(REST).js("(function(...x) { })"),
 
-      assertNodeHasSideEffect(false, COMPUTED_PROP, "({ set [a](x) {} })");
-      assertNodeHasSideEffect(true, COMPUTED_PROP, "({ set [a()](x) {} })");
-    }
+          // Context switch
+          kase().expect(true).token(AWAIT).js("async function f() { await 0; }"),
+          kase().expect(true).token(FOR_AWAIT_OF).js("(async()=>{ for await (let x of []) {} })"),
+          kase().expect(true).token(THROW).js("function f() { throw 'something'; }"),
+          kase().expect(true).token(YIELD).js("function* f() { yield 'something'; }"),
+          kase().expect(true).token(YIELD).js("function* f() { yield* 'something'; }"),
 
-    @Test
-    public void testMayHaveSideEffects_classComputedProp() {
-      assertNodeHasSideEffect(false, COMPUTED_PROP, "class C { [a]() {} }");
-      assertNodeHasSideEffect(true, COMPUTED_PROP, "class C { [a()]() {} }");
+          // Enhanced for loop
+          // These edge cases are actually side-effect free. We include them to confirm we just give
+          // up
+          // on enhanced for loops.
+          kase().expect(true).js("for (const x in []) { }"),
+          kase().expect(true).js("for (const x of []) { }"),
 
-      // computed property getters and setters are modeled as COMPUTED_PROP with an
-      // annotation to indicate getter or setter.
-      assertNodeHasSideEffect(false, COMPUTED_PROP, "class C { get [a]() {} }");
-      assertNodeHasSideEffect(true, COMPUTED_PROP, "class C { get [a()]() {} }");
+          // COMPUTED_PROP - OBJECTLIT
+          kase().expect(false).token(COMPUTED_PROP).js("({[a]: x})"),
+          kase().expect(true).token(COMPUTED_PROP).js("({[a()]: x})"),
+          kase().expect(true).token(COMPUTED_PROP).js("({[a]: x()})"),
 
-      assertNodeHasSideEffect(false, COMPUTED_PROP, "class C { set [a](x) {} }");
-      assertNodeHasSideEffect(true, COMPUTED_PROP, "class C { set [a()](x) {} }");
-    }
+          // computed property getters and setters are modeled as COMPUTED_PROP with an
+          // annotation to indicate getter or setter.
+          kase().expect(false).token(COMPUTED_PROP).js("({ get [a]() {} })"),
+          kase().expect(true).token(COMPUTED_PROP).js("({ get [a()]() {} })"),
+          kase().expect(false).token(COMPUTED_PROP).js("({ set [a](x) {} })"),
+          kase().expect(true).token(COMPUTED_PROP).js("({ set [a()](x) {} })"),
 
-    @Test
-    public void testMayHaveSideEffects_getterDef() {
-      assertNodeHasSideEffect(false, GETTER_DEF, "({ get a() {} })");
-      assertNodeHasSideEffect(false, GETTER_DEF, "class C { get a() {} }");
-    }
+          // COMPUTED_PROP - CLASS
+          kase().expect(false).token(COMPUTED_PROP).js("class C { [a]() {} }"),
+          kase().expect(true).token(COMPUTED_PROP).js("class C { [a()]() {} }"),
 
-    @Test
-    public void testMayHaveSideEffects_getterUse() {
-      assertNodeHasSideEffect(true, GETPROP, "x.getter;");
-      // Overapproximation because to avoid inspecting the parent.
-      assertNodeHasSideEffect(true, GETPROP, "x.setter;");
-      assertNodeHasSideEffect(false, GETPROP, "x.normal;");
-      assertNodeHasSideEffect(true, STRING_KEY, "({getter} = foo());");
-      assertNodeHasSideEffect(false, STRING_KEY, "({setter} = foo());");
-      assertNodeHasSideEffect(false, STRING_KEY, "({normal} = foo());");
-    }
+          // computed property getters and setters are modeled as COMPUTED_PROP with an
+          // annotation to indicate getter or setter.
+          kase().expect(false).token(COMPUTED_PROP).js("class C { get [a]() {} }"),
+          kase().expect(true).token(COMPUTED_PROP).js("class C { get [a()]() {} }"),
+          kase().expect(false).token(COMPUTED_PROP).js("class C { set [a](x) {} }"),
+          kase().expect(true).token(COMPUTED_PROP).js("class C { set [a()](x) {} }"),
 
-    @Test
-    public void testMayHaveSideEffects_setterDef() {
-      assertNodeHasSideEffect(false, SETTER_DEF, "({ set a(x) {} })");
-      assertNodeHasSideEffect(false, SETTER_DEF, "class C { set a(x) {} }");
-    }
+          // GETTER_DEF
+          kase().expect(false).token(GETTER_DEF).js("({ get a() {} })"),
+          kase().expect(false).token(GETTER_DEF).js("class C { get a() {} }"),
 
-    @Test
-    public void testMayHaveSideEffects_setterUse() {
-      // Overapproximation because to avoid inspecting the parent.
-      assertNodeHasSideEffect(true, GETPROP, "x.getter = 0;");
-      assertNodeHasSideEffect(true, GETPROP, "x.setter = 0;");
-      assertNodeHasSideEffect(false, GETPROP, "x.normal = 0;");
-    }
+          // Getter use
+          kase().expect(true).token(GETPROP).js("x.getter;"),
+          // Overapproximation because to avoid inspecting the parent.
+          kase().expect(true).token(GETPROP).js("x.setter;"),
+          kase().expect(false).token(GETPROP).js("x.normal;"),
+          kase().expect(true).token(STRING_KEY).js("({getter} = foo());"),
+          kase().expect(false).token(STRING_KEY).js("({setter} = foo());"),
+          kase().expect(false).token(STRING_KEY).js("({normal} = foo());"),
 
-    @Test
-    public void testMayHaveSideEffects_method() {
-      assertNodeHasSideEffect(false, MEMBER_FUNCTION_DEF, "({ a(x) {} })");
-      assertNodeHasSideEffect(false, MEMBER_FUNCTION_DEF, "class C { a(x) {} }");
-    }
+          // SETTER_DEF
+          kase().expect(false).token(SETTER_DEF).js("({ set a(x) {} })"),
+          kase().expect(false).token(SETTER_DEF).js("class C { set a(x) {} }"),
 
-    @Test
-    public void testMayHaveSideEffects_objectMethod() {
-      // "toString" and "valueOf" are assumed to be side-effect free
-      assertSideEffect(false, "o.toString()");
-      assertSideEffect(false, "o.valueOf()");
+          // SETTER_USE
+          // Overapproximation because to avoid inspecting the parent.
+          kase().expect(true).token(GETPROP).js("x.getter = 0;"),
+          kase().expect(true).token(GETPROP).js("x.setter = 0;"),
+          kase().expect(false).token(GETPROP).js("x.normal = 0;"),
 
-      // other methods depend on the extern definitions
-      assertSideEffect(true, "o.watch()");
-    }
+          // MEMBER_FUNCTION_DEF
+          kase().expect(false).token(MEMBER_FUNCTION_DEF).js("({ a(x) {} })"),
+          kase().expect(false).token(MEMBER_FUNCTION_DEF).js("class C { a(x) {} }"),
 
-    @Test
-    public void testMayHaveSideEffects_regExp() {
-      // A RegExp Object by itself doesn't have any side-effects
-      assertSideEffect(false, "/abc/gi", true);
-      assertSideEffect(false, "/abc/gi", false);
+          // IObject methods
+          // "toString" and "valueOf" are assumed to be side-effect free
+          kase().expect(false).js("o.toString()"),
+          kase().expect(false).js("o.valueOf()"),
+          // other methods depend on the extern definitions
+          kase().expect(true).js("o.watch()"),
 
-      // RegExp instance methods have global side-effects, so whether they are
-      // considered side-effect free depends on whether the global properties
-      // are referenced.
-      assertSideEffect(true, "(/abc/gi).test('')", true);
-      assertSideEffect(false, "(/abc/gi).test('')", false);
-      assertSideEffect(true, "(/abc/gi).test(a)", true);
-      assertSideEffect(false, "(/abc/gi).test(b)", false);
+          // A RegExp Object by itself doesn't have any side-effects
+          kase().expect(false).js("/abc/gi").globalRegExp(true),
+          kase().expect(false).js("/abc/gi").globalRegExp(false),
 
-      assertSideEffect(true, "(/abc/gi).exec('')", true);
-      assertSideEffect(false, "(/abc/gi).exec('')", false);
+          // RegExp instance methods have global side-effects, so whether they are
+          // considered side-effect free depends on whether the global properties
+          // are referenced.
+          kase().expect(true).js("(/abc/gi).test('')").globalRegExp(true),
+          kase().expect(false).js("(/abc/gi).test('')").globalRegExp(false),
+          kase().expect(true).js("(/abc/gi).test(a)").globalRegExp(true),
+          kase().expect(false).js("(/abc/gi).test(b)").globalRegExp(false),
+          kase().expect(true).js("(/abc/gi).exec('')").globalRegExp(true),
+          kase().expect(false).js("(/abc/gi).exec('')").globalRegExp(false),
 
-      // Some RegExp object method that may have side-effects.
-      assertSideEffect(true, "(/abc/gi).foo('')", true);
-      assertSideEffect(true, "(/abc/gi).foo('')", false);
+          // Some RegExp object method that may have side-effects.
+          kase().expect(true).js("(/abc/gi).foo('')").globalRegExp(true),
+          kase().expect(true).js("(/abc/gi).foo('')").globalRegExp(false),
 
-      // Try the string RegExp ops.
-      assertSideEffect(true, "''.match('a')", true);
-      assertSideEffect(false, "''.match('a')", false);
-      assertSideEffect(true, "''.match(/(a)/)", true);
-      assertSideEffect(false, "''.match(/(a)/)", false);
+          // Try the string RegExp ops.
+          kase().expect(true).js("''.match('a')").globalRegExp(true),
+          kase().expect(false).js("''.match('a')").globalRegExp(false),
+          kase().expect(true).js("''.match(/(a)/)").globalRegExp(true),
+          kase().expect(false).js("''.match(/(a)/)").globalRegExp(false),
+          kase().expect(true).js("''.replace('a')").globalRegExp(true),
+          kase().expect(false).js("''.replace('a')").globalRegExp(false),
+          kase().expect(true).js("''.search('a')").globalRegExp(true),
+          kase().expect(false).js("''.search('a')").globalRegExp(false),
+          kase().expect(true).js("''.split('a')").globalRegExp(true),
+          kase().expect(false).js("''.split('a')").globalRegExp(false),
 
-      assertSideEffect(true, "''.replace('a')", true);
-      assertSideEffect(false, "''.replace('a')", false);
+          // Some non-RegExp string op that may have side-effects.
+          kase().expect(true).js("''.foo('a')").globalRegExp(true),
+          kase().expect(true).js("''.foo('a')").globalRegExp(false),
 
-      assertSideEffect(true, "''.search('a')", true);
-      assertSideEffect(false, "''.search('a')", false);
-
-      assertSideEffect(true, "''.split('a')", true);
-      assertSideEffect(false, "''.split('a')", false);
-
-      // Some non-RegExp string op that may have side-effects.
-      assertSideEffect(true, "''.foo('a')", true);
-      assertSideEffect(true, "''.foo('a')", false);
-
-      // 'a' might be a RegExp object with the 'g' flag, in which case
-      // the state might change by running any of the string ops.
-      // Specifically, using these methods resets the "lastIndex" if used
-      // in combination with a RegExp instance "exec" method.
-      assertSideEffect(true, "''.match(a)", true);
-      assertSideEffect(true, "''.match(a)", false);
-
-      assertSideEffect(true, "'a'.replace(/a/, function (s) {alert(s)})", false);
-      assertSideEffect(false, "'a'.replace(/a/, 'x')", false);
+          // 'a' might be a RegExp object with the 'g' flag, in which case
+          // the state might change by running any of the string ops.
+          // Specifically, using these methods resets the "lastIndex" if used
+          // in combination with a RegExp instance "exec" method.
+          kase().expect(true).js("''.match(a)").globalRegExp(true),
+          kase().expect(true).js("''.match(a)").globalRegExp(false),
+          kase().expect(true).js("'a'.replace(/a/, function (s) {alert(s)})").globalRegExp(false),
+          kase().expect(false).js("'a'.replace(/a/, 'x')").globalRegExp(false));
     }
   }
 
@@ -636,7 +621,8 @@ public class AstAnalyzerTest {
     @Parameter(2)
     public Boolean expectedResult;
 
-    @Parameters(name = "{1} node in \"{0}\" side-effects: {2}")
+    // Always include the index. If two cases have the same name, only one will be executed.
+    @Parameters(name = "#{index} {1} node in \"{0}\" side-effects: {2}")
     public static Iterable<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
@@ -705,10 +691,9 @@ public class AstAnalyzerTest {
 
     @Test
     public void test() {
-      ParseHelper helper = new ParseHelper();
+      ParseHelper helper = new ParseHelper().registerFakeGetterAndSetter();
 
       Node n = helper.parseFirst(token, js);
-      helper.regiserFakeGetterAndSetter();
       AstAnalyzer astAnalyzer = helper.getAstAnalyzer();
       assertThat(astAnalyzer.nodeTypeMayHaveSideEffects(n)).isEqualTo(expectedResult);
     }
@@ -848,7 +833,8 @@ public class AstAnalyzerTest {
     @Parameter(0)
     public String constructorName;
 
-    @Parameters(name = "{0}")
+    // Always include the index. If two cases have the same name, only one will be executed.
+    @Parameters(name = "#{index} {0}")
     public static final Iterable<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
