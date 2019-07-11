@@ -33,14 +33,26 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   private boolean useTypes = true;
 
   public PeepholeReplaceKnownMethodsTest() {
-    super(MINIMAL_EXTERNS + lines(
-        // NOTE: these are defined as variadic to avoid wrong-argument-count warnings in NTI,
-        // which enables testing that the pass does not touch calls with wrong argument count.
-        "/** @type {function(this: string, ...*): string} */ String.prototype.substring;",
-        "/** @type {function(this: string, ...*): string} */ String.prototype.substr;",
-        "/** @type {function(this: string, ...*): string} */ String.prototype.slice;",
-        "/** @type {function(this: string, ...*): string} */ String.prototype.charAt;",
-        "/** @type {function(this: Array, ...*): !Array} */ Array.prototype.slice;"));
+    super(
+        MINIMAL_EXTERNS
+            + lines(
+                // NOTE: these are defined as variadic to avoid wrong-argument-count warnings in
+                // NTI,
+                // which enables testing that the pass does not touch calls with wrong argument
+                // count.
+                "/** @type {function(this: string, ...*): string} */ String.prototype.substring;",
+                "/** @type {function(this: string, ...*): string} */ String.prototype.substr;",
+                "/** @type {function(this: string, ...*): string} */ String.prototype.slice;",
+                "/** @type {function(this: string, ...*): string} */ String.prototype.charAt;",
+                "/** @type {function(this: Array, ...*): !Array} */ Array.prototype.slice;",
+                "/** @type {function(this: Array, ...*): !Array<?>} */ Array.prototype.concat;",
+                "/** @type {function(this: Array, ...*): !Array<?>} */ function returnArrayType()"
+                    + " {}",
+                "/** @type {function(this: Array, ...*): !Array<?>|string} */ function"
+                    + " returnUnionType(){}",
+                "/** @constructor */ function Foo(){}",
+                "/** @type {function(this: Foo, ...*): !Foo} */ Foo.prototype.concat",
+                "var obj = new Foo();"));
   }
 
   @Override
@@ -607,6 +619,57 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSameStringTyped("a.substring(0, 1)");
     foldSameStringTyped("a.substr(0, 1)");
     foldSameStringTyped("''.substring(i, i + 1)");
+  }
+
+  @Test
+  public void testFoldConcatChaining() {
+    enableNormalize();
+    enableTypeCheck();
+
+    fold("[1,2].concat(1).concat(2,['abc']).concat('abc')", "[1,2].concat(1,2,['abc'],'abc')");
+    fold("[].concat(['abc']).concat(1).concat([2,3])", "['abc'].concat(1,[2,3])");
+
+    // because function returnArrayType() or returnUnionType()
+    // possibly can produce a side effects
+    // we can't fold all concatenation chaining
+    fold(
+        "returnArrayType().concat(returnArrayType()).concat(1).concat(2)",
+        "returnArrayType().concat(returnArrayType(),1,2)");
+    fold(
+        "returnArrayType().concat(returnUnionType()).concat(1).concat(2)",
+        "returnArrayType().concat(returnUnionType(),1,2)");
+    fold(
+        "[1,2,1].concat(1).concat(returnArrayType()).concat(2)",
+        "[1,2,1].concat(1).concat(returnArrayType(),2)");
+    fold(
+        "[1].concat(1).concat(2).concat(returnArrayType())",
+        "[1].concat(1,2).concat(returnArrayType())");
+    foldSame("[].concat(1).concat(returnArrayType())");
+    foldSame("obj.concat([1,2]).concat(1)");
+  }
+
+  @Test
+  public void testRemoveArrayLiteralFromFrontOfConcat() {
+    enableNormalize();
+    enableTypeCheck();
+
+    fold("[].concat([1,2,3],1)", "[1,2,3].concat(1)");
+    fold("[].concat(returnArrayType(),1)", "returnArrayType().concat(1)");
+
+    foldSame("[1,2,3].concat(returnArrayType())");
+    foldSame("returnArrayType().concat([1,2,3])");
+    // Call method with the same name as Array.prototype.concat
+    foldSame("obj.concat([1,2,3])");
+
+    foldSame("[].concat(1,[1,2,3])");
+    foldSame("[].concat(returnUnionType())");
+    foldSame("[].concat(1)");
+    fold("[].concat([1])", "[1].concat()");
+    fold("[].concat(returnArrayType())", "returnArrayType().concat()");
+
+    // Chained folding of empty array lit
+    fold("[].concat([], [1,2,3], [4])", "[1,2,3].concat([4])");
+    fold("[].concat([]).concat([1]).concat([2,3])", "[1].concat([2,3])");
   }
 
   private void foldSame(String js) {
