@@ -43,6 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.rhino.ErrorReporter;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
@@ -231,5 +232,27 @@ public final class TemplatizedType extends ProxyObjectType {
   private void readObject(java.io.ObjectInputStream in) throws Exception {
     in.defaultReadObject();
     replacer = new TemplateTypeMapReplacer(registry, templateTypeMap);
+  }
+
+  @SuppressWarnings("ReferenceEquality")
+  @Override
+  JSType resolveInternal(ErrorReporter reporter) {
+    JSType baseTypeBefore = getReferencedType();
+    setResolvedTypeInternal(this); // for circularly defined types.
+    super.resolveInternal(reporter);
+
+    boolean rebuild = baseTypeBefore != getReferencedType();
+    ImmutableList.Builder<JSType> builder = ImmutableList.builder();
+    for (JSType type : templateTypes) {
+      JSType resolved = type.resolve(reporter);
+      rebuild |= resolved != type;
+      builder.add(resolved);
+    }
+
+    if (rebuild) {
+      return new TemplatizedType(registry, getReferencedType(), builder.build());
+    } else {
+      return this;
+    }
   }
 }
