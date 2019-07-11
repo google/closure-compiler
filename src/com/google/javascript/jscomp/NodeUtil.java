@@ -56,7 +56,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -4357,33 +4356,35 @@ public final class NodeUtil {
   private static final class PreOrderIterator extends AbstractIterator<Node> {
 
     private final Predicate<Node> traverseNodePredicate;
-    private Optional<Node> current;
+
+    @Nullable private Node current;
 
     public PreOrderIterator(Node root, Predicate<Node> traverseNodePredicate) {
+      Preconditions.checkNotNull(root);
       this.traverseNodePredicate = traverseNodePredicate;
-      this.current = Optional.of(root);
+      this.current = root;
     }
 
     @Override
     protected Node computeNext() {
-      if (!current.isPresent()) {
+      if (current == null) {
         return endOfData();
       }
 
-      Node returnValue = current.get();
+      Node returnValue = current;
       current = calculateNextNode(returnValue);
       return returnValue;
     }
 
-    private Optional<Node> calculateNextNode(Node currentNode) {
+    @Nullable
+    private Node calculateNextNode(Node currentNode) {
       Preconditions.checkNotNull(currentNode);
 
       // If node does not match the predicate, do not descend into it.
       if (traverseNodePredicate.apply(currentNode)) {
-
         // In prefix order, the next node is the leftmost child.
         if (currentNode.hasChildren()) {
-          return Optional.of(currentNode.getFirstChild());
+          return currentNode.getFirstChild();
         }
       }
 
@@ -4396,13 +4397,13 @@ public final class NodeUtil {
       while (currentNode != null) {
         Node next = currentNode.getNext();
         if (next != null) {
-          return Optional.of(next);
+          return next;
         }
 
         currentNode = currentNode.getParent();
       }
 
-      return Optional.empty();
+      return null;
     }
   }
 
