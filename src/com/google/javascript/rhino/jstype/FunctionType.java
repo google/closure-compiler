@@ -166,6 +166,9 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   /** The primitive id associated with this FunctionType, or null if none. */
   private final ClosurePrimitive closurePrimitive;
 
+  /** If non-null, the original canonical variant of this function; only used for constructors. */
+  private final FunctionType canonicalRepresentation;
+
   /**
    * Creates an instance for a function that might be a constructor.
    *
@@ -209,6 +212,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     this.closurePrimitive = builder.primitiveId;
     this.isStructuralInterface = false;
     this.isAbstract = builder.isAbstract();
+    FunctionType canonicalRepresentation = builder.canonicalRepresentation;
+    checkArgument(
+        canonicalRepresentation == null || kind == Kind.CONSTRUCTOR,
+        "Only constructors should have canonical representations");
+    this.canonicalRepresentation = canonicalRepresentation;
   }
 
   @Override
@@ -1462,6 +1470,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
             .withSourceNode(source)
             .withTypeOfThis(getInstanceType())
             .withKind(kind)
+            .withCanonicalRepresentation(this)
             .build();
     result.setPrototypeBasedOn(getInstanceType());
     return result;
@@ -1579,6 +1588,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     private Kind kind = Kind.ORDINARY;
     private int properties = 0;
     private ClosurePrimitive primitiveId = null;
+    private FunctionType canonicalRepresentation = null;
 
     private Builder(JSTypeRegistry registry) {
       this.registry = registry;
@@ -1727,6 +1737,12 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       return this;
     }
 
+    /** Sets the canonical representation of a constructor, if any */
+    private Builder withCanonicalRepresentation(FunctionType representation) {
+      this.canonicalRepresentation = representation;
+      return this;
+    }
+
     /** Returns a new {@link ArrowType} instance each time with the given param/return types */
     private ArrowType buildArrowType() {
       boolean inferredReturnType = (properties & INFERRED_RETURN_TYPE) != 0;
@@ -1778,5 +1794,12 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       }
       return ft;
     }
+  }
+
+  @Override
+  JSType simplifyForOptimizations() {
+    return canonicalRepresentation != null
+        ? canonicalRepresentation
+        : super.simplifyForOptimizations();
   }
 }
