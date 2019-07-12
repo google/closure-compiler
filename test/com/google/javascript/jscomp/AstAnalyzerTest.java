@@ -68,6 +68,8 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayDeque;
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
@@ -84,29 +86,49 @@ import org.junit.runners.Parameterized.Parameters;
  * runner.
  */
 @RunWith(Enclosed.class)
-public class AstAnalyzerTest {
+public final class AstAnalyzerTest {
+
+  private static final class AnalysisCase {
+    boolean expect;
+    String js;
+    Token token;
+    boolean globalRegExp;
+
+    AnalysisCase expect(boolean b) {
+      this.expect = b;
+      return this;
+    }
+
+    AnalysisCase js(String s) {
+      this.js = s;
+      return this;
+    }
+
+    AnalysisCase token(Token t) {
+      this.token = t;
+      return this;
+    }
+
+    AnalysisCase globalRegExp(boolean b) {
+      this.globalRegExp = b;
+      return this;
+    }
+
+    @Override
+    public String toString() {
+      return SimpleFormat.format("%s node in `%s` -> %s", token, js, expect);
+    }
+  }
+
+  private static AnalysisCase kase() {
+    return new AnalysisCase();
+  }
 
   /** Provides methods for parsing and accessing the compiler used for the parsing. */
-  private static class ParseHelper {
-    private boolean hasRegExpGlobalReferences = false;
-    private boolean hasFakeGetterAndSetter = false;
+  private static final class ParseHelper {
     private Compiler compiler = null;
 
-    /**
-     * Tell the compiler to behave as if it has (or has not) seen any references to the RegExp
-     * global properties, which are modified when matches are performed.
-     */
-    ParseHelper setHasRegExpGlobalReferences(boolean hasRegExpGlobalReferences) {
-      this.hasRegExpGlobalReferences = hasRegExpGlobalReferences;
-      return this;
-    }
-
-    ParseHelper registerFakeGetterAndSetter() {
-      this.hasFakeGetterAndSetter = true;
-      return this;
-    }
-
-    private void createNewCompiler() {
+    private void resetCompiler() {
       CompilerOptions options = new CompilerOptions();
       options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
 
@@ -117,19 +139,14 @@ public class AstAnalyzerTest {
       compiler = new Compiler();
       compiler.initOptions(options);
 
-      compiler.setHasRegExpGlobalReferences(hasRegExpGlobalReferences);
-      if (hasFakeGetterAndSetter) {
-        compiler.setAccessorSummary(
-            AccessorSummary.create(
-                ImmutableMap.of(
-                    "getter", PropertyAccessKind.GETTER_ONLY, //
-                    "setter", PropertyAccessKind.SETTER_ONLY)));
-      }
+      compiler.setAccessorSummary(
+          AccessorSummary.create(
+              ImmutableMap.of(
+                  "getter", PropertyAccessKind.GETTER_ONLY, //
+                  "setter", PropertyAccessKind.SETTER_ONLY)));
     }
 
-    Node parse(String js) {
-      createNewCompiler();
-
+    private Node parseInternal(String js) {
       Node n = compiler.parseTestCode(js);
       assertThat(compiler.getErrors()).isEmpty();
       return n;
@@ -140,210 +157,149 @@ public class AstAnalyzerTest {
      * preorder DFS.
      */
     Node parseFirst(Token token, String js) {
-      Node rootNode = this.parse(js);
-      checkState(rootNode.isScript(), rootNode);
-      Node firstNodeWithToken = getFirstNode(rootNode, token);
-      if (firstNodeWithToken == null) {
-        throw new AssertionError(SimpleFormat.format("No %s node found in:\n %s", token, js));
+      resetCompiler();
+
+      return findFirst(token, parseInternal(js)).get();
+    }
+
+    Node parseCase(AnalysisCase kase) {
+      resetCompiler();
+      compiler.setHasRegExpGlobalReferences(kase.globalRegExp);
+
+      Node root = parseInternal(kase.js);
+      if (kase.token == null) {
+        return root.getFirstChild();
       } else {
-        return firstNodeWithToken;
+        return findFirst(kase.token, root).get();
       }
     }
 
-    /**
-     * Returns the parsed expression (e.g. returns a NAME given 'a').
-     *
-     * <p>Presumes that the given JavaScript is an expression.
-     */
-    Node parseExpr(String js) {
-      Node script = parse("(" + js + ");"); // Parens force interpretation as an expression.
-      return script
-          .getFirstChild() // EXPR_RESULT
-          .getFirstChild(); // expr
-    }
-
-    private AstAnalyzer getAstAnalyzer() {
+    AstAnalyzer getAstAnalyzer() {
       return new AstAnalyzer(compiler, false);
     }
   }
 
-  /**
-   * Does a preorder DFS, returning the first node found that has the given token.
-   *
-   * @return the first matching node
-   * @throws AssertionError if no matching node was found.
-   */
-  private static Node getFirstNode(Node root, Token token) {
-    if (root.getToken() == token) {
-      return root;
-    } else {
-      for (Node child = root.getFirstChild(); child != null; child = child.getNext()) {
-        Node matchingNode = getFirstNode(child, token);
-        if (matchingNode != null) {
-          return matchingNode;
-        }
+  /** Does a preorder DFS, returning the first node found that has the given token. */
+  private static Optional<Node> findFirst(Token token, Node root) {
+    ArrayDeque<Node> stack = new ArrayDeque<>();
+    stack.push(root);
+
+    while (!stack.isEmpty()) {
+      Node cur = stack.pop();
+      if (cur.getToken() == token) {
+        return Optional.of(cur);
+      }
+
+      for (Node child = cur.getLastChild(); child != null; child = child.getPrevious()) {
+        stack.push(child);
       }
     }
-    return null;
+
+    return Optional.empty();
   }
 
   @RunWith(Parameterized.class)
   public static final class MayEffectMutableStateTest {
-    @Parameter(0)
-    public String jsExpression;
-
-    @Parameter(1)
-    public Token token;
-
-    @Parameter(2)
-    public Boolean expectedResult;
+    @Parameter public AnalysisCase kase;
 
     // Always include the index. If two cases have the same name, only one will be executed.
-    @Parameters(name = "#{index} {1} node in ({0}) -> {2}")
-    public static Iterable<Object[]> cases() {
-      return ImmutableList.copyOf(
-          new Object[][] {
-            {"i++", INC, true},
-            {"[b, [a, i++]]", ARRAYLIT, true},
-            {"i=3", ASSIGN, true},
-            {"[0, i=3]", ARRAYLIT, true},
-            {"b()", CALL, true},
-            {"void b()", VOID, true},
-            {"[1, b()]", ARRAYLIT, true},
-            {"b.b=4", ASSIGN, true},
-            {"b.b--", DEC, true},
-            {"i--", DEC, true},
-            {"a[0][i=4]", GETELEM, true},
-            {"a += 3", ASSIGN_ADD, true},
-            {"a, b, z += 4", COMMA, true},
-            {"a ? c : d++", HOOK, true},
-            {"a + c++", ADD, true},
-            {"a + c - d()", SUB, true},
-            {"function foo() {}", FUNCTION, true},
-            {"while(true);", WHILE, true},
-            {"if(true){a()}", IF, true},
-            {"if(true){a}", IF, false},
-            {"(function() { })", FUNCTION, true},
-            {"(function() { i++ })", FUNCTION, true},
-            {"[function a(){}]", ARRAYLIT, true},
-            {"a", NAME, false},
-            {"[b, c [d, [e]]]", ARRAYLIT, true},
-            {"({a: x, b: y, c: z})", OBJECTLIT, true},
-            // Note: RegExp objects are not immutable, for instance, the exec
-            // method maintains state for "global" searches.
-            {"/abc/gi", REGEXP, true},
-            {"'a'", STRING, false},
-            {"0", NUMBER, false},
-            {"a + c", ADD, false},
-            {"'c' + a[0]", ADD, false},
-            {"a[0][1]", GETELEM, false},
-            {"'a' + c", ADD, false},
-            {"'a' + a.name", ADD, false},
-            {"1, 2, 3", COMMA, false},
-            {"a, b, 3", COMMA, false},
-            {"(function(a, b) {  })", FUNCTION, true},
-            {"a ? c : d", HOOK, false},
-            {"'1' + navigator.userAgent", ADD, false},
-            {"new RegExp('foobar', 'i')", NEW, true},
-            {"new RegExp(SomethingWacky(), 'i')", NEW, true},
-            {"new Array()", NEW, true},
-            {"new Array", NEW, true},
-            {"new Array(4)", NEW, true},
-            {"new Array('a', 'b', 'c')", NEW, true},
-            {"new SomeClassINeverHeardOf()", NEW, true},
+    @Parameters(name = "#{index} {1}")
+    public static Iterable<AnalysisCase> cases() {
+      return ImmutableList.of(
+          kase().js("i++").token(INC).expect(true),
+          kase().js("[b, [a, i++]]").token(ARRAYLIT).expect(true),
+          kase().js("i=3").token(ASSIGN).expect(true),
+          kase().js("[0, i=3]").token(ARRAYLIT).expect(true),
+          kase().js("b()").token(CALL).expect(true),
+          kase().js("void b()").token(VOID).expect(true),
+          kase().js("[1, b()]").token(ARRAYLIT).expect(true),
+          kase().js("b.b=4").token(ASSIGN).expect(true),
+          kase().js("b.b--").token(DEC).expect(true),
+          kase().js("i--").token(DEC).expect(true),
+          kase().js("a[0][i=4]").token(GETELEM).expect(true),
+          kase().js("a += 3").token(ASSIGN_ADD).expect(true),
+          kase().js("a, b, z += 4").token(COMMA).expect(true),
+          kase().js("a ? c : d++").token(HOOK).expect(true),
+          kase().js("a + c++").token(ADD).expect(true),
+          kase().js("a + c - d()").token(SUB).expect(true),
+          kase().js("function foo() {}").token(FUNCTION).expect(true),
+          kase().js("while(true);").token(WHILE).expect(true),
+          kase().js("if(true){a()}").token(IF).expect(true),
+          kase().js("if(true){a}").token(IF).expect(false),
+          kase().js("(function() { })").token(FUNCTION).expect(true),
+          kase().js("(function() { i++ })").token(FUNCTION).expect(true),
+          kase().js("[function a(){}]").token(ARRAYLIT).expect(true),
+          kase().js("a").token(NAME).expect(false),
+          kase().js("[b, c [d, [e]]]").token(ARRAYLIT).expect(true),
+          kase().js("({a: x, b: y, c: z})").token(OBJECTLIT).expect(true),
+          // Note: RegExp objects are not immutable, for instance, the exec
+          // method maintains state for "global" searches.
+          kase().js("/abc/gi").token(REGEXP).expect(true),
+          kase().js("'a'").token(STRING).expect(false),
+          kase().js("0").token(NUMBER).expect(false),
+          kase().js("a + c").token(ADD).expect(false),
+          kase().js("'c' + a[0]").token(ADD).expect(false),
+          kase().js("a[0][1]").token(GETELEM).expect(false),
+          kase().js("'a' + c").token(ADD).expect(false),
+          kase().js("'a' + a.name").token(ADD).expect(false),
+          kase().js("1, 2, 3").token(COMMA).expect(false),
+          kase().js("a, b, 3").token(COMMA).expect(false),
+          kase().js("(function(a, b) {  })").token(FUNCTION).expect(true),
+          kase().js("a ? c : d").token(HOOK).expect(false),
+          kase().js("'1' + navigator.userAgent").token(ADD).expect(false),
+          kase().js("new RegExp('foobar', 'i')").token(NEW).expect(true),
+          kase().js("new RegExp(SomethingWacky(), 'i')").token(NEW).expect(true),
+          kase().js("new Array()").token(NEW).expect(true),
+          kase().js("new Array").token(NEW).expect(true),
+          kase().js("new Array(4)").token(NEW).expect(true),
+          kase().js("new Array('a', 'b', 'c')").token(NEW).expect(true),
+          kase().js("new SomeClassINeverHeardOf()").token(NEW).expect(true),
 
-            // Getters and setters.
-            {"({...x});", SPREAD, true},
-            {"const {...x} = y;", REST, true},
-            {"x.getter;", GETPROP, true},
-            // Overapproximation to avoid inspecting the parent.
-            {"x.setter;", GETPROP, true},
-            {"x.normal;", GETPROP, false},
-            {"const {getter} = x;", STRING_KEY, true},
-            // Overapproximation to avoid inspecting the parent.
-            {"const {setter} = x;", STRING_KEY, false},
-            {"const {normal} = x;", STRING_KEY, false},
-            {"x.getter = 0;", GETPROP, true},
-            {"x.setter = 0;", GETPROP, true},
-            {"x.normal = 0;", GETPROP, false},
+          // Getters and setters.
+          kase().js("({...x});").token(SPREAD).expect(true),
+          kase().js("const {...x} = y;").token(REST).expect(true),
+          kase().js("x.getter;").token(GETPROP).expect(true),
+          // Overapproximation to avoid inspecting the parent.
+          kase().js("x.setter;").token(GETPROP).expect(true),
+          kase().js("x.normal;").token(GETPROP).expect(false),
+          kase().js("const {getter} = x;").token(STRING_KEY).expect(true),
+          // Overapproximation to avoid inspecting the parent.
+          kase().js("const {setter} = x;").token(STRING_KEY).expect(false),
+          kase().js("const {normal} = x;").token(STRING_KEY).expect(false),
+          kase().js("x.getter = 0;").token(GETPROP).expect(true),
+          kase().js("x.setter = 0;").token(GETPROP).expect(true),
+          kase().js("x.normal = 0;").token(GETPROP).expect(false),
 
-            // Default values delegates to children.
-            {"({x = 0} = y);", DEFAULT_VALUE, false},
-            {"([x = 0] = y);", DEFAULT_VALUE, false},
-            {"function f(x = 0) { };", DEFAULT_VALUE, false},
-          });
+          // Default values delegates to children.
+          kase().js("({x = 0} = y);").token(DEFAULT_VALUE).expect(false),
+          kase().js("([x = 0] = y);").token(DEFAULT_VALUE).expect(false),
+          kase().js("function f(x = 0) { };").token(DEFAULT_VALUE).expect(false));
     }
 
     @Test
     public void mayEffectMutableState() {
-      ParseHelper helper = new ParseHelper().registerFakeGetterAndSetter();
-      Node node = helper.parseFirst(token, jsExpression);
+      ParseHelper helper = new ParseHelper();
+      Node node = helper.parseCase(kase);
       AstAnalyzer analyzer = helper.getAstAnalyzer();
-      assertThat(analyzer.mayEffectMutableState(node)).isEqualTo(expectedResult);
+      assertThat(analyzer.mayEffectMutableState(node)).isEqualTo(kase.expect);
     }
   }
 
   @RunWith(Parameterized.class)
   public static final class MayHaveSideEffects {
 
-    @Parameter public SideEffectsCase kase;
+    @Parameter public AnalysisCase kase;
 
     @Test
     public void test() {
-      ParseHelper helper =
-          new ParseHelper()
-              .registerFakeGetterAndSetter()
-              .setHasRegExpGlobalReferences(kase.globalRegExp);
-
-      Node node;
-      if (kase.token == null) {
-        node = helper.parse(kase.js).getFirstChild();
-      } else {
-        node = helper.parseFirst(kase.token, kase.js);
-      }
-
+      ParseHelper helper = new ParseHelper();
+      Node node = helper.parseCase(kase);
       assertThat(helper.getAstAnalyzer().mayHaveSideEffects(node)).isEqualTo(kase.expect);
-    }
-
-    private static final class SideEffectsCase {
-      boolean expect;
-      String js;
-      Token token;
-      boolean globalRegExp;
-
-      SideEffectsCase expect(boolean b) {
-        this.expect = b;
-        return this;
-      }
-
-      SideEffectsCase js(String s) {
-        this.js = s;
-        return this;
-      }
-
-      SideEffectsCase token(Token t) {
-        this.token = t;
-        return this;
-      }
-
-      SideEffectsCase globalRegExp(boolean b) {
-        this.globalRegExp = b;
-        return this;
-      }
-
-      @Override
-      public String toString() {
-        return SimpleFormat.format("%s node in `%s` -> %s", token, js, expect);
-      }
-    }
-
-    private static SideEffectsCase kase() {
-      return new SideEffectsCase();
     }
 
     // Always include the index. If two cases have the same name, only one will be executed.
     @Parameters(name = "#{index} {0}")
-    public static Iterable<SideEffectsCase> cases() {
+    public static Iterable<AnalysisCase> cases() {
       return ImmutableList.of(
           // Cases in need of differentiation.
           kase().expect(false).js("[1]"),
@@ -612,90 +568,80 @@ public class AstAnalyzerTest {
 
   @RunWith(Parameterized.class)
   public static final class NodeTypeMayHaveSideEffects {
-    @Parameter(0)
-    public String js;
-
-    @Parameter(1)
-    public Token token;
-
-    @Parameter(2)
-    public Boolean expectedResult;
+    @Parameter public AnalysisCase kase;
 
     // Always include the index. If two cases have the same name, only one will be executed.
-    @Parameters(name = "#{index} {1} node in \"{0}\" side-effects: {2}")
-    public static Iterable<Object[]> cases() {
-      return ImmutableList.copyOf(
-          new Object[][] {
-            {"x = y", ASSIGN, true},
-            {"x += y", ASSIGN_ADD, true},
-            {"delete x.y", DELPROP, true},
-            {"x++", INC, true},
-            {"x--", DEC, true},
-            {"for (prop in obj) {}", FOR_IN, true},
-            {"for (item of iterable) {}", FOR_OF, true},
-            // name declaration has a side effect when a value is actually assigned
-            {"var x = 1;", NAME, true},
-            {"let x = 1;", NAME, true},
-            {"const x = 1;", NAME, true},
-            // don't consider name declaration to have a side effect if there's no assignment
-            {"var x;", NAME, false},
-            {"let x;", NAME, false},
+    @Parameters(name = "#{index} {1}")
+    public static Iterable<AnalysisCase> cases() {
+      return ImmutableList.of(
+          kase().js("x = y").token(ASSIGN).expect(true),
+          kase().js("x += y").token(ASSIGN_ADD).expect(true),
+          kase().js("delete x.y").token(DELPROP).expect(true),
+          kase().js("x++").token(INC).expect(true),
+          kase().js("x--").token(DEC).expect(true),
+          kase().js("for (prop in obj) {}").token(FOR_IN).expect(true),
+          kase().js("for (item of iterable) {}").token(FOR_OF).expect(true),
+          // name declaration has a side effect when a value is actually assigned
+          kase().js("var x = 1;").token(NAME).expect(true),
+          kase().js("let x = 1;").token(NAME).expect(true),
+          kase().js("const x = 1;").token(NAME).expect(true),
+          // don't consider name declaration to have a side effect if there's no assignment
+          kase().js("var x;").token(NAME).expect(false),
+          kase().js("let x;").token(NAME).expect(false),
 
-            // NOTE: CALL and NEW nodes are delegated to functionCallHasSideEffects() and
-            // constructorCallHasSideEffects(), respectively. The cases below are just a few
-            // representative examples that are convenient to test here.
-            //
-            // in general function and constructor calls are assumed to have side effects
-            {"foo();", CALL, true},
-            {"new Foo();", NEW, true},
-            // Object() is known not to have side-effects, though
-            {"Object();", CALL, false},
-            {"new Object();", NEW, false},
-            // TAGGED_TEMPLATELIT is just a special syntax for a CALL.
-            {"foo`template`;", TAGGED_TEMPLATELIT, true},
+          // NOTE: CALL and NEW nodes are delegated to functionCallHasSideEffects() and
+          // constructorCallHasSideEffects(), respectively. The cases below are just a few
+          // representative examples that are convenient to test here.
+          //
+          // in general function and constructor calls are assumed to have side effects
+          kase().js("foo();").token(CALL).expect(true),
+          kase().js("new Foo();").token(NEW).expect(true),
+          // Object() is known not to have side-effects, though
+          kase().js("Object();").token(CALL).expect(false),
+          kase().js("new Object();").token(NEW).expect(false),
+          // TAGGED_TEMPLATELIT is just a special syntax for a CALL.
+          kase().js("foo`template`;").token(TAGGED_TEMPLATELIT).expect(true),
 
-            // NOTE: REST and SPREAD are delegated to NodeUtil.iteratesImpureIterable()
-            // Test cases here are just easy to test representative examples.
-            {"[...[1, 2, 3]]", SPREAD, false},
-            {"[...someIterable]", SPREAD, true}, // unknown, so assume side-effects
-            // we just assume the rhs of an array pattern may have iteration side-effects
-            // without looking too closely.
-            {"let [...rest] = [1, 2, 3];", REST, true},
-            // REST in parameter list does not trigger iteration at the function definition, so
-            // it has no side effects.
-            {"function foo(...rest) {}", REST, false},
+          // NOTE: REST and SPREAD are delegated to NodeUtil.iteratesImpureIterable()
+          // Test cases here are just easy to test representative examples.
+          kase().js("[...[1, 2, 3]]").token(SPREAD).expect(false),
+          // unknown iterable, so assume side-effects
+          kase().js("[...someIterable]").token(SPREAD).expect(true),
+          // we just assume the rhs of an array pattern may have iteration side-effects
+          // without looking too closely.
+          kase().js("let [...rest] = [1, 2, 3];").token(REST).expect(true),
+          // REST in parameter list does not trigger iteration at the function definition, so
+          // it has no side effects.
+          kase().js("function foo(...rest) {}").token(REST).expect(false),
 
-            // defining a class or a function is not considered to be a side-effect
-            {"function foo() {}", FUNCTION, false},
-            {"class Foo {}", CLASS, false},
+          // defining a class or a function is not considered to be a side-effect
+          kase().js("function foo() {}").token(FUNCTION).expect(false),
+          kase().js("class Foo {}").token(CLASS).expect(false),
 
-            // arithmetic, logic, and bitwise operations do not have side-effects
-            {"x + y", ADD, false},
-            {"x || y", OR, false},
-            {"x | y", BITOR, false},
+          // arithmetic, logic, and bitwise operations do not have side-effects
+          kase().js("x + y").token(ADD).expect(false),
+          kase().js("x || y").token(OR).expect(false),
+          kase().js("x | y").token(BITOR).expect(false),
 
-            // Getters and setters
-            {"({...x});", SPREAD, true},
-            {"const {...x} = y;", REST, true},
-            {"y.getter;", GETPROP, true},
-            {"y.setter;", GETPROP, true},
-            {"y.normal;", GETPROP, false},
-            {"const {getter} = y;", STRING_KEY, true},
-            {"const {setter} = y;", STRING_KEY, false},
-            {"const {normal} = y;", STRING_KEY, false},
-            {"y.getter = 0;", GETPROP, true},
-            {"y.setter = 0;", GETPROP, true},
-            {"y.normal = 0;", GETPROP, false},
-          });
+          // Getters and setters
+          kase().js("({...x});").token(SPREAD).expect(true),
+          kase().js("const {...x} = y;").token(REST).expect(true),
+          kase().js("y.getter;").token(GETPROP).expect(true),
+          kase().js("y.setter;").token(GETPROP).expect(true),
+          kase().js("y.normal;").token(GETPROP).expect(false),
+          kase().js("const {getter} = y;").token(STRING_KEY).expect(true),
+          kase().js("const {setter} = y;").token(STRING_KEY).expect(false),
+          kase().js("const {normal} = y;").token(STRING_KEY).expect(false),
+          kase().js("y.getter = 0;").token(GETPROP).expect(true),
+          kase().js("y.setter = 0;").token(GETPROP).expect(true),
+          kase().js("y.normal = 0;").token(GETPROP).expect(false));
     }
 
     @Test
     public void test() {
-      ParseHelper helper = new ParseHelper().registerFakeGetterAndSetter();
-
-      Node n = helper.parseFirst(token, js);
-      AstAnalyzer astAnalyzer = helper.getAstAnalyzer();
-      assertThat(astAnalyzer.nodeTypeMayHaveSideEffects(n)).isEqualTo(expectedResult);
+      ParseHelper helper = new ParseHelper();
+      Node node = helper.parseCase(kase);
+      assertThat(helper.getAstAnalyzer().nodeTypeMayHaveSideEffects(node)).isEqualTo(kase.expect);
     }
   }
 
