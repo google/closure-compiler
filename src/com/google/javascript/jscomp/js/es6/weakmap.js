@@ -150,17 +150,20 @@ $jscomp.polyfill('WeakMap',
 
   /** @override */
   PolyfillWeakMap.prototype.get = function(key) {
-    return $jscomp.owns(key, prop) ? key[prop][this.id_] : undefined;
+    return typeof key === 'object' && $jscomp.owns(key, prop) ?
+        key[prop][this.id_] :
+        undefined;
   };
 
   /** @override */
   PolyfillWeakMap.prototype.has = function(key) {
-    return $jscomp.owns(key, prop) && $jscomp.owns(key[prop], this.id_);
+    return typeof key === 'object' && $jscomp.owns(key, prop) &&
+        $jscomp.owns(key[prop], this.id_);
   };
 
   /** @override */
   PolyfillWeakMap.prototype.delete = function(key) {
-    if (!$jscomp.owns(key, prop) ||
+    if (typeof key !== 'object' || !$jscomp.owns(key, prop) ||
         !$jscomp.owns(key[prop], this.id_)) {
       return false;
     }

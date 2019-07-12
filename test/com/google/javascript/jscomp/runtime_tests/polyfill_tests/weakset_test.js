@@ -115,4 +115,19 @@ testSuite({
     assertTrue(set.has(b));
     assertFalse(set.has({}));
   },
+
+  testAdd_nonObject() {
+    const set = new WeakSet();
+    assertThrows(() => set.add(1));
+  },
+
+  testHas_nonObject() {
+    const set = new WeakSet();
+    assertFalse(set.has(1));
+  },
+
+  testDelete_nonObject() {
+    const set = new WeakSet();
+    assertFalse(set.delete(1));
+  },
 });
