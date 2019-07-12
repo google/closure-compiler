@@ -284,7 +284,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
     }
 
     Scope moduleScope =
-        new Es6SyntacticScopeCreator(compiler)
+        new SyntacticScopeCreator(compiler)
             .createScope(scriptRoot.getFirstChild(), Scope.createGlobalScope(scriptRoot));
     Var googVar = moduleScope.getVar("goog");
 

@@ -526,9 +526,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
    * referenced outside of the code that we are analyzing. A variable is escaped if any of the
    * following is true:
    *
-   *   1. Exported variables as they can be needed after the script terminates.
-   *   2. Names of named functions because in JavaScript, function foo(){} does not kill
-   *       foo in the dataflow.
+   * <p>1. Exported variables as they can be needed after the script terminates. 2. Names of named
+   * functions because in JavaScript, function foo(){} does not kill foo in the dataflow.
    *
    * @param jsScope Must be a function scope
    */
@@ -536,7 +535,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       final Scope jsScope,
       final Set<Var> escaped,
       AbstractCompiler compiler,
-      Es6SyntacticScopeCreator scopeCreator) {
+      SyntacticScopeCreator scopeCreator) {
 
     checkArgument(jsScope.isFunctionScope());
 

@@ -782,16 +782,14 @@ class Normalize implements CompilerPass {
   private void removeDuplicateDeclarations(Node externs, Node root) {
     Callback tickler = new ScopeTicklingCallback();
     ScopeCreator scopeCreator =
-        new Es6SyntacticScopeCreator(compiler, new DuplicateDeclarationHandler());
+        new SyntacticScopeCreator(compiler, new DuplicateDeclarationHandler());
     NodeTraversal t = new NodeTraversal(compiler, tickler, scopeCreator);
     t.traverseRoots(externs, root);
   }
 
-  /**
-   * ScopeCreator duplicate declaration handler.
-   */
-  private final class DuplicateDeclarationHandler implements
-      Es6SyntacticScopeCreator.RedeclarationHandler {
+  /** ScopeCreator duplicate declaration handler. */
+  private final class DuplicateDeclarationHandler
+      implements SyntacticScopeCreator.RedeclarationHandler {
 
     private final Set<Var> hasOkDuplicateDeclaration = new HashSet<>();
 

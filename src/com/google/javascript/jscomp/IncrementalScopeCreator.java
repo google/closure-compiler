@@ -23,7 +23,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.Es6SyntacticScopeCreator.ScopeScanner;
+import com.google.javascript.jscomp.SyntacticScopeCreator.ScopeScanner;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,15 +34,14 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A reusable scope creator which invalidates scopes based on reported
- * AST changes to SCRIPT and FUNCTION codes (aka "change scopes").  This
- * class stores an instance of itself on the compiler object which is accessible via
- * the "getInstance" static method. To ensure that consumers see a consistent state,
- * they must call "freeze"/"thaw" before and after use (typically for the duration
+ * A reusable scope creator which invalidates scopes based on reported AST changes to SCRIPT and
+ * FUNCTION codes (aka "change scopes"). This class stores an instance of itself on the compiler
+ * object which is accessible via the "getInstance" static method. To ensure that consumers see a
+ * consistent state, they must call "freeze"/"thaw" before and after use (typically for the duration
  * of a NodeTraveral).
  *
- * This class delegates to the Es6SyntacticScopeCreator and requires a consistent
- * definition of global Scope (the global scope root must include both externs and code).
+ * <p>This class delegates to the SyntacticScopeCreator and requires a consistent definition of
+ * global Scope (the global scope root must include both externs and code).
  */
 class IncrementalScopeCreator implements ScopeCreator {
 
@@ -50,7 +49,7 @@ class IncrementalScopeCreator implements ScopeCreator {
   // TODO(johnlenz): This leaks scope object for scopes removed from the AST.
   // Soon we will track removed function nodes use that to remove scopes.
   private final Map<Node, PersistentScope> scopesByScopeRoot = new HashMap<>();
-  private final Es6SyntacticScopeCreator delegate;
+  private final SyntacticScopeCreator delegate;
 
   private final PersistentScopeFactory factory = new PersistentScopeFactory();
 
@@ -388,13 +387,12 @@ class IncrementalScopeCreator implements ScopeCreator {
     }
   }
 
-  Es6SyntacticScopeCreator createInternalScopeCreator(AbstractCompiler compiler) {
-    return new Es6SyntacticScopeCreator(compiler, factory, factory);
+  SyntacticScopeCreator createInternalScopeCreator(AbstractCompiler compiler) {
+    return new SyntacticScopeCreator(compiler, factory, factory);
   }
 
   private static class PersistentScopeFactory
-      implements Es6SyntacticScopeCreator.ScopeFactory,
-          Es6SyntacticScopeCreator.RedeclarationHandler {
+      implements SyntacticScopeCreator.ScopeFactory, SyntacticScopeCreator.RedeclarationHandler {
     @Override
     public PersistentScope create(Scope parent, Node n) {
       return PersistentScope.create((PersistentScope) parent, n);

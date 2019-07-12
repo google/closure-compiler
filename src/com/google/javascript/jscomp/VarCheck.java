@@ -19,10 +19,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.Es6SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
@@ -131,12 +131,12 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
    * Creates the scope creator used by this pass. If not in validity check mode, use a {@link
    * RedeclarationCheckHandler} to check var redeclarations.
    */
-  private Es6SyntacticScopeCreator createScopeCreator() {
+  private SyntacticScopeCreator createScopeCreator() {
     if (validityCheck) {
-      return new Es6SyntacticScopeCreator(compiler);
+      return new SyntacticScopeCreator(compiler);
     } else {
       dupHandler = new RedeclarationCheckHandler();
-      return new Es6SyntacticScopeCreator(compiler, dupHandler);
+      return new SyntacticScopeCreator(compiler, dupHandler);
     }
   }
 
@@ -178,7 +178,7 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
       gatherImplicitVars(compiler.getRoot());
     }
 
-    Es6SyntacticScopeCreator scopeCreator = createScopeCreator();
+    SyntacticScopeCreator scopeCreator = createScopeCreator();
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
     // Note we use the global scope to prevent wrong "undefined-var errors" on
     // variables that are defined in other JS files.

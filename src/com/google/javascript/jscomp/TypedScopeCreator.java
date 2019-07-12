@@ -661,7 +661,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     // Gather global information used in typed scope creation. Use a memoized scope creator because
     // scope-building takes a nontrivial amount of time.
     MemoizedScopeCreator scopeCreator =
-        new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
+        new MemoizedScopeCreator(new SyntacticScopeCreator(compiler));
 
     new NodeTraversal(compiler, new FirstOrderFunctionAnalyzer(), scopeCreator)
         .traverseRoots(root.getFirstChild(), root.getLastChild());

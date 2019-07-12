@@ -140,7 +140,7 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private final Multimap<String, PolyfillInfo> polyfills = HashMultimap.create();
 
-  private final Es6SyntacticScopeCreator scopeCreator;
+  private final SyntacticScopeCreator scopeCreator;
 
   private final boolean removeUnusedPrototypeProperties;
   private final boolean allowRemovalOfExternProperties;
@@ -163,7 +163,7 @@ class RemoveUnusedCode implements CompilerPass {
     this.removeUnusedObjectDefinePropertiesDefinitions =
         builder.removeUnusedObjectDefinePropertiesDefinitions;
     this.removeUnusedPolyfills = builder.removeUnusedPolyfills;
-    this.scopeCreator = new Es6SyntacticScopeCreator(builder.compiler);
+    this.scopeCreator = new SyntacticScopeCreator(builder.compiler);
 
     // All Vars that are completely unremovable will share this VarInfo instance.
     canonicalUnremovableVarInfo = new VarInfo();

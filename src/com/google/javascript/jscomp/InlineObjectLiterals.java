@@ -61,8 +61,9 @@ class InlineObjectLiterals implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    ReferenceCollectingCallback callback = new ReferenceCollectingCallback(
-        compiler, new InliningBehavior(), new Es6SyntacticScopeCreator(compiler));
+    ReferenceCollectingCallback callback =
+        new ReferenceCollectingCallback(
+            compiler, new InliningBehavior(), new SyntacticScopeCreator(compiler));
     callback.process(externs, root);
   }
 

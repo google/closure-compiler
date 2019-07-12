@@ -95,7 +95,7 @@ class CrossChunkCodeMotion implements CompilerPass {
     // If there are <2 chunks, then we will never move anything, so we're done
     if (graph.getModuleCount() > 1) {
       CrossChunkReferenceCollector referenceCollector =
-          new CrossChunkReferenceCollector(compiler, new Es6SyntacticScopeCreator(compiler));
+          new CrossChunkReferenceCollector(compiler, new SyntacticScopeCreator(compiler));
       referenceCollector.process(root);
       Collection<GlobalSymbol> globalSymbols =
           new GlobalSymbolCollector().collectGlobalSymbols(referenceCollector);

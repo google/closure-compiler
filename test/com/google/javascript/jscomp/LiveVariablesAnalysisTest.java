@@ -593,7 +593,7 @@ public final class LiveVariablesAnalysisTest {
     assertThat(compiler.getErrors()).isEmpty();
 
     // Create scopes
-    Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
     Scope scope = scopeCreator.createScope(n, Scope.createGlobalScope(script));
     Scope childScope = scopeCreator.createScope(NodeUtil.getFunctionBody(n), scope);
 
@@ -605,7 +605,7 @@ public final class LiveVariablesAnalysisTest {
     // Compute liveness of variables
     LiveVariablesAnalysis analysis =
         new LiveVariablesAnalysis(
-            cfg, scope, childScope, compiler, new Es6SyntacticScopeCreator(compiler));
+            cfg, scope, childScope, compiler, new SyntacticScopeCreator(compiler));
     analysis.analyze();
     return analysis;
   }

@@ -47,15 +47,14 @@ class InferConsts implements CompilerPass {
         new ReferenceCollectingCallback(
             compiler,
             ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
-            new Es6SyntacticScopeCreator(compiler));
+            new SyntacticScopeCreator(compiler));
     collector.process(js);
 
     for (Var v : collector.getAllSymbols()) {
       considerVar(v, collector.getReferences(v));
     }
 
-    Scope globalExternsScope =
-        new Es6SyntacticScopeCreator(compiler).createScope(externs, null);
+    Scope globalExternsScope = new SyntacticScopeCreator(compiler).createScope(externs, null);
     for (Var v : globalExternsScope.getAllSymbols()) {
       considerVar(v, null);
     }

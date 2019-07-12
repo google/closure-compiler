@@ -27,7 +27,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.Es6SyntacticScopeCreator.RedeclarationHandler;
+import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import org.junit.Before;
@@ -36,15 +36,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link Es6SyntacticScopeCreator}.
+ * Tests for {@link SyntacticScopeCreator}.
  *
  * @author moz@google.com (Michael Zhou)
  */
 @RunWith(JUnit4.class)
-public final class Es6SyntacticScopeCreatorTest {
+public final class SyntacticScopeCreatorTest {
 
   private Compiler compiler;
-  private Es6SyntacticScopeCreator scopeCreator;
+  private SyntacticScopeCreator scopeCreator;
   private Multiset<String> redeclarations;
 
   private class RecordingRedeclarationHandler implements RedeclarationHandler {
@@ -75,7 +75,7 @@ public final class Es6SyntacticScopeCreatorTest {
     compiler.initOptions(options);
     redeclarations = HashMultiset.create();
     RedeclarationHandler handler = new RecordingRedeclarationHandler();
-    scopeCreator = new Es6SyntacticScopeCreator(compiler, handler);
+    scopeCreator = new SyntacticScopeCreator(compiler, handler);
   }
 
   @Test

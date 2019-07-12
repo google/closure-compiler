@@ -24,15 +24,15 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * <p>The syntactic scope creator scans the parse tree to create a Scope object
- * containing all the variable declarations in that scope. This class adds support
- * for block-level scopes introduced in ECMAScript 6.</p>
+ * The syntactic scope creator scans the parse tree to create a Scope object containing all the
+ * variable declarations in that scope. This class adds support for block-level scopes introduced in
+ * ECMAScript 6.
  *
- * <p>This implementation is not thread-safe.</p>
+ * <p>This implementation is not thread-safe.
  *
  * @author moz@google.com (Michael Zhou)
  */
-public class Es6SyntacticScopeCreator implements ScopeCreator {
+public class SyntacticScopeCreator implements ScopeCreator {
   private final AbstractCompiler compiler;
   private final RedeclarationHandler redeclarationHandler;
   private final ScopeFactory scopeFactory;
@@ -44,22 +44,21 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
   public static final RedeclarationHandler DEFAULT_REDECLARATION_HANDLER =
       new DefaultRedeclarationHandler();
 
-
-  public Es6SyntacticScopeCreator(AbstractCompiler compiler) {
+  public SyntacticScopeCreator(AbstractCompiler compiler) {
     this(compiler, DEFAULT_REDECLARATION_HANDLER);
   }
 
-  public Es6SyntacticScopeCreator(AbstractCompiler compiler, ScopeFactory scopeFactory) {
+  public SyntacticScopeCreator(AbstractCompiler compiler, ScopeFactory scopeFactory) {
     this(compiler, DEFAULT_REDECLARATION_HANDLER, scopeFactory);
   }
 
-  Es6SyntacticScopeCreator(
-      AbstractCompiler compiler, RedeclarationHandler redeclarationHandler) {
+  SyntacticScopeCreator(AbstractCompiler compiler, RedeclarationHandler redeclarationHandler) {
     this(compiler, redeclarationHandler, new DefaultScopeFactory());
   }
 
-  Es6SyntacticScopeCreator(
-      AbstractCompiler compiler, RedeclarationHandler redeclarationHandler,
+  SyntacticScopeCreator(
+      AbstractCompiler compiler,
+      RedeclarationHandler redeclarationHandler,
       ScopeFactory scopeFactory) {
     this.compiler = compiler;
     this.redeclarationHandler = redeclarationHandler;

@@ -55,7 +55,7 @@ final class MustBeReachingVariableDef extends
       ControlFlowGraph<Node> cfg,
       Scope jsScope,
       AbstractCompiler compiler,
-      Es6SyntacticScopeCreator scopeCreator) {
+      SyntacticScopeCreator scopeCreator) {
     super(cfg, new MustDefJoin());
     this.compiler = compiler;
     this.escaped = new HashSet<>();

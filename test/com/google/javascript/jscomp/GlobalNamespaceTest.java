@@ -462,7 +462,7 @@ public final class GlobalNamespaceTest {
 
   private AstChange createGlobalAstChangeForNode(Node jsRoot, Node n) {
     // This only creates a global scope, so don't use this with local nodes
-    Scope globalScope = new Es6SyntacticScopeCreator(lastCompiler).createScope(jsRoot, null);
+    Scope globalScope = new SyntacticScopeCreator(lastCompiler).createScope(jsRoot, null);
     // I don't know if lastCompiler.getModules() is correct but it works
     return new AstChange(Iterables.getFirst(lastCompiler.getModules(), null), globalScope, n);
   }

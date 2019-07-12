@@ -3243,7 +3243,7 @@ public final class NodeUtilTest {
       ParseHelper parser = new ParseHelper();
       Node first = parser.parse(src);
       // Build the three layers of scopes: global scope, module scope, and block scope.
-      Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(parser.compiler);
+      SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(parser.compiler);
       Scope globalScope = scopeCreator.createScope(first, null);
       Node module = getNode(first, Token.MODULE_BODY);
       Scope moduleScope = scopeCreator.createScope(module, globalScope);
@@ -3395,7 +3395,7 @@ public final class NodeUtilTest {
       String fnString = "var h; function g(x, y) {var z; h = 2; {let a; const b = 1} let c}";
       Compiler compiler = new Compiler();
       compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
-      Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+      SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
 
       Node ast = parse(fnString);
       Node functionNode = parseFirst(FUNCTION, fnString);
@@ -3423,7 +3423,7 @@ public final class NodeUtilTest {
 
       Compiler compiler = new Compiler();
       compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
-      Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+      SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
 
       Node ast = parse(fnString);
       Node functionNode = parseFirst(FUNCTION, fnString);
@@ -3706,7 +3706,7 @@ public final class NodeUtilTest {
     public void test() {
       ParseHelper parser = new ParseHelper();
       Node first = parser.parse(src);
-      Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(parser.compiler);
+      SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(parser.compiler);
       Scope globalScope = scopeCreator.createScope(first, null);
       Node module = getNodeOrNull(first, Token.MODULE_BODY);
       Scope localScope =

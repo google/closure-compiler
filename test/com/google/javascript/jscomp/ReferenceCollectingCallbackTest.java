@@ -53,7 +53,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    ScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
     return new ReferenceCollectingCallback(
         compiler,
         this.behavior,
@@ -436,7 +436,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
     // Tests the case where the scope we pass in is not really a basic block, but we create a new
     // basic block anyway because ReferenceCollectingCallback expects all nodes to be in a block.
     Compiler compiler = createCompiler();
-    Es6SyntacticScopeCreator es6SyntacticScopeCreator = new Es6SyntacticScopeCreator(compiler);
+    SyntacticScopeCreator syntacticScopeCreator = new SyntacticScopeCreator(compiler);
     ReferenceCollectingCallback referenceCollectingCallback =
         new ReferenceCollectingCallback(
             compiler,
@@ -455,14 +455,14 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
                 assertNode(secondBasicBlock.getRoot().getParent()).hasType(Token.IF);
               }
             },
-            es6SyntacticScopeCreator);
+            syntacticScopeCreator);
 
     String js = "let x = 5; { let y = x + 1; if (true) { { use(y); } } }";
     Node root = compiler.parseTestCode(js);
     Node block = root.getSecondChild();
 
-    Scope globalScope = es6SyntacticScopeCreator.createScope(root, null);
-    Scope blockScope = es6SyntacticScopeCreator.createScope(block, globalScope);
+    Scope globalScope = syntacticScopeCreator.createScope(root, null);
+    Scope blockScope = syntacticScopeCreator.createScope(block, globalScope);
     referenceCollectingCallback.processScope(blockScope);
   }
 }

@@ -59,7 +59,7 @@ public final class NodeTraversalTest {
     });
     compiler.initCompilerOptionsIfTesting();
 
-    NodeTraversal t = new NodeTraversal(compiler, null, new Es6SyntacticScopeCreator(compiler));
+    NodeTraversal t = new NodeTraversal(compiler, null, new SyntacticScopeCreator(compiler));
     DiagnosticType dt = DiagnosticType.warning("FOO", "{0}, {1} - {2}");
 
     t.report(new Node(Token.EMPTY), dt, "Foo", "Bar", "Hello");
@@ -352,7 +352,7 @@ public final class NodeTraversalTest {
   @Test
   public void testGetCurrentNode() {
     Compiler compiler = new Compiler();
-    ScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    ScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
     NodeTraversal t = new NodeTraversal(compiler, callback, creator);
 
@@ -390,7 +390,7 @@ public final class NodeTraversalTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     compiler.initOptions(options);
-    Es6SyntacticScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
     NodeTraversal t = new NodeTraversal(compiler, callback, creator);
 
@@ -422,7 +422,7 @@ public final class NodeTraversalTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compiler.initOptions(options);
-    Es6SyntacticScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
     NodeTraversal t = new NodeTraversal(compiler, callback, creator);
 
@@ -459,7 +459,7 @@ public final class NodeTraversalTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compiler.initOptions(options);
-    Es6SyntacticScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
     NodeTraversal t = new NodeTraversal(compiler, callback, creator);
 
@@ -495,7 +495,7 @@ public final class NodeTraversalTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     compiler.initOptions(options);
-    Es6SyntacticScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
     NodeTraversal t = new NodeTraversal(compiler, callback, creator);
 
@@ -522,7 +522,7 @@ public final class NodeTraversalTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compiler.initOptions(options);
-    Es6SyntacticScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     AccessibleCallback callback = new AccessibleCallback();
     NodeTraversal t = new NodeTraversal(compiler, callback, creator);
 

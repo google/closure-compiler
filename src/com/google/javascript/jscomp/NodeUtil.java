@@ -5462,7 +5462,7 @@ public final class NodeUtil {
         new ReferenceCollectingCallback(
             compiler,
             ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
-            new Es6SyntacticScopeCreator(compiler));
+            new SyntacticScopeCreator(compiler));
     externsRefs.process(externs);
     ImmutableSet.Builder<String> externsNames = ImmutableSet.builder();
     for (Var v : externsRefs.getAllSymbols()) {

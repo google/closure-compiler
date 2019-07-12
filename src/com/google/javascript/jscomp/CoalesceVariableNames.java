@@ -135,8 +135,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
 
     liveness =
-        new LiveVariablesAnalysis(
-            cfg, scope, null, compiler, new Es6SyntacticScopeCreator(compiler));
+        new LiveVariablesAnalysis(cfg, scope, null, compiler, new SyntacticScopeCreator(compiler));
 
     if (FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet())) {
       // If the function has exactly 2 params, mark them as escaped. This is a work-around for a

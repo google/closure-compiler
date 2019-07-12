@@ -236,7 +236,7 @@ public final class MustBeReachingVariableDefTest {
     compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), options);
     compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     compiler.getOptions().setLanguageOut(LanguageMode.ECMASCRIPT_2017);
-    Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
     src = "function _FUNCTION(param1, param2){" + src + "}";
     Node script = compiler.parseTestCode(src);
     Node root = script.getFirstChild();

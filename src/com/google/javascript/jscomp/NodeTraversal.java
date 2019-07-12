@@ -375,9 +375,9 @@ public class NodeTraversal {
     }
   }
 
-  /** Traverses using the ES6SyntacticScopeCreator */
+  /** Traverses using the SyntacticScopeCreator */
   public static void traverse(AbstractCompiler compiler, Node root, Callback cb) {
-    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
+    NodeTraversal t = new NodeTraversal(compiler, cb, new SyntacticScopeCreator(compiler));
     t.traverse(root);
   }
 
@@ -408,7 +408,7 @@ public class NodeTraversal {
 
   public static void traverseRoots(
       AbstractCompiler compiler, Callback cb, Node externs, Node root) {
-    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
+    NodeTraversal t = new NodeTraversal(compiler, cb, new SyntacticScopeCreator(compiler));
     t.traverseRoots(externs, root);
   }
 
@@ -592,7 +592,7 @@ public class NodeTraversal {
       NodeTraversal.traverse(compiler, root, cb);
     } else {
       MemoizedScopeCreator scopeCreator =
-          new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
+          new MemoizedScopeCreator(new SyntacticScopeCreator(compiler));
 
       for (final Node scopeNode : scopeNodes) {
         traverseSingleScopeRoot(

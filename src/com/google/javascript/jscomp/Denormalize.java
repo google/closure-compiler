@@ -57,7 +57,7 @@ class Denormalize implements CompilerPass, Callback, Behavior {
     NodeTraversal.traverse(compiler, root, this);
     // Don't inline the VAR declaration if this compilation involves old-style ctemplates.
     if (compiler.getOptions().syntheticBlockStartMarker == null) {
-      (new ReferenceCollectingCallback(compiler, this, new Es6SyntacticScopeCreator(compiler)))
+      (new ReferenceCollectingCallback(compiler, this, new SyntacticScopeCreator(compiler)))
           .process(root);
     }
   }

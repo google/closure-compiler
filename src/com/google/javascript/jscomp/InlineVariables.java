@@ -86,7 +86,7 @@ class InlineVariables implements CompilerPass {
         new ReferenceCollectingCallback(
             compiler,
             new InliningBehavior(),
-            new Es6SyntacticScopeCreator(compiler),
+            new SyntacticScopeCreator(compiler),
             mode.varPredicate);
     callback.process(externs, root);
   }

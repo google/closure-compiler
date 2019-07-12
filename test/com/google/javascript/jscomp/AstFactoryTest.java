@@ -22,7 +22,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.Es6SyntacticScopeCreator.RedeclarationHandler;
+import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -101,11 +101,10 @@ public class AstFactoryTest {
   }
 
   private Scope getScope(Node root) {
-    // Normal passes use Es6SyntacticScopeCreator, so that's what we use here.
+    // Normal passes use SyntacticScopeCreator, so that's what we use here.
     RedeclarationHandler redeclarationHandler =
         (Scope s, String name, Node n, CompilerInput input) -> {};
-    Es6SyntacticScopeCreator scopeCreator =
-        new Es6SyntacticScopeCreator(compiler, redeclarationHandler);
+    SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler, redeclarationHandler);
     return scopeCreator.createScope(root, null);
   }
 

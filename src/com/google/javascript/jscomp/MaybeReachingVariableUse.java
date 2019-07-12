@@ -56,7 +56,7 @@ class MaybeReachingVariableUse extends
       ControlFlowGraph<Node> cfg,
       Scope jsScope,
       AbstractCompiler compiler,
-      Es6SyntacticScopeCreator scopeCreator) {
+      SyntacticScopeCreator scopeCreator) {
     super(cfg, new ReachingUsesJoinOp());
     this.escaped = new HashSet<>();
     this.allVarsInFn = new HashMap<>();

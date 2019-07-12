@@ -54,7 +54,7 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    ScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
     testedCollector = new CrossChunkReferenceCollector(compiler, scopeCreator);
     return testedCollector;
   }

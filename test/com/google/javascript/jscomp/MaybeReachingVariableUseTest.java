@@ -205,7 +205,7 @@ public final class MaybeReachingVariableUseTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
     compiler.initOptions(options);
-    Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
     src = (async ? "async " : "") + "function _FUNCTION(param1, param2){" + src + "}";
     Node script = compiler.parseTestCode(src);
     Node root = script.getFirstChild();

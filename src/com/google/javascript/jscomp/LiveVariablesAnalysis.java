@@ -142,7 +142,7 @@ class LiveVariablesAnalysis
       Scope jsScope,
       @Nullable Scope jsScopeChild,
       AbstractCompiler compiler,
-      Es6SyntacticScopeCreator scopeCreator) {
+      SyntacticScopeCreator scopeCreator) {
     super(cfg, new LiveVariableJoinOp());
     checkState(jsScope.isFunctionScope(), jsScope);
 
