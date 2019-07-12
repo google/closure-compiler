@@ -249,4 +249,9 @@ public class EnumElementType extends ObjectType {
     primitiveObjectType = ObjectType.cast(primitiveType);
     return this;
   }
+
+  @Override
+  JSType simplifyForOptimizations() {
+    return primitiveType.simplifyForOptimizations();
+  }
 }

@@ -59,17 +59,20 @@ public class EnumType extends PrototypeObjectType {
   private EnumElementType elementsType;
   // the elements' names (they all have the same type)
   private final Set<String> elements = new HashSet<>();
+  // the node representing rhs of the enum
+  private final Node source;
 
   /**
    * Creates an enum type.
    *
    * @param name the enum's name
+   * @param source the object literal that creates the enum, a reference to another enum, or null.
    * @param elementsType the base type of the individual elements
    */
-  EnumType(JSTypeRegistry registry, String name, Node source,
-      JSType elementsType) {
-    super(registry, "enum{" + name + "}", null);
+  EnumType(JSTypeRegistry registry, String name, Node source, JSType elementsType) {
+    super(registry, "enum{" + name + "}", /* implicitPrototype= */ null);
     this.elementsType = new EnumElementType(registry, elementsType, name, this);
+    this.source = source;
   }
 
   @Override
