@@ -93,6 +93,7 @@ public final class AstAnalyzerTest {
     String js;
     Token token;
     boolean globalRegExp;
+    boolean assumeGettersAndSettersAreSideEffectFree;
 
     AnalysisCase expect(boolean b) {
       this.expect = b;
@@ -111,6 +112,11 @@ public final class AstAnalyzerTest {
 
     AnalysisCase globalRegExp(boolean b) {
       this.globalRegExp = b;
+      return this;
+    }
+
+    AnalysisCase assumeGettersAndSettersAreSideEffectFree(boolean b) {
+      this.assumeGettersAndSettersAreSideEffectFree = b;
       return this;
     }
 
@@ -165,6 +171,10 @@ public final class AstAnalyzerTest {
     Node parseCase(AnalysisCase kase) {
       resetCompiler();
       compiler.setHasRegExpGlobalReferences(kase.globalRegExp);
+      compiler
+          .getOptions()
+          .setAssumeGettersAndSettersAreSideEffectFree(
+              kase.assumeGettersAndSettersAreSideEffectFree);
 
       Node root = parseInternal(kase.js);
       if (kase.token == null) {
@@ -175,7 +185,7 @@ public final class AstAnalyzerTest {
     }
 
     AstAnalyzer getAstAnalyzer() {
-      return new AstAnalyzer(compiler, false);
+      return compiler.getAstAnalyzer();
     }
   }
 
@@ -203,7 +213,7 @@ public final class AstAnalyzerTest {
     @Parameter public AnalysisCase kase;
 
     // Always include the index. If two cases have the same name, only one will be executed.
-    @Parameters(name = "#{index} {1}")
+    @Parameters(name = "#{index} {0}")
     public static Iterable<AnalysisCase> cases() {
       return ImmutableList.of(
           kase().js("i++").token(INC).expect(true),
@@ -255,9 +265,39 @@ public final class AstAnalyzerTest {
           kase().js("new Array('a', 'b', 'c')").token(NEW).expect(true),
           kase().js("new SomeClassINeverHeardOf()").token(NEW).expect(true),
 
-          // Getters and setters.
-          kase().js("({...x});").token(SPREAD).expect(true),
-          kase().js("const {...x} = y;").token(REST).expect(true),
+          // Getters and setters - object rest and spread
+          kase()
+              .js("({...x});")
+              .token(SPREAD)
+              .assumeGettersAndSettersAreSideEffectFree(false)
+              .expect(true),
+          kase()
+              .js("const {...x} = y;")
+              .token(REST)
+              .assumeGettersAndSettersAreSideEffectFree(false)
+              .expect(true),
+          kase()
+              .js("({...x});")
+              .token(SPREAD)
+              .assumeGettersAndSettersAreSideEffectFree(true)
+              .expect(false),
+          kase()
+              .js("const {...x} = y;")
+              .token(REST)
+              .assumeGettersAndSettersAreSideEffectFree(true)
+              .expect(false),
+          kase()
+              .js("({...f().x});")
+              .token(SPREAD)
+              .assumeGettersAndSettersAreSideEffectFree(true)
+              .expect(true),
+          kase()
+              .js("({...f().x} = y);")
+              .token(REST)
+              .assumeGettersAndSettersAreSideEffectFree(true)
+              .expect(true),
+
+          // Getters and setters
           kase().js("x.getter;").token(GETPROP).expect(true),
           // Overapproximation to avoid inspecting the parent.
           kase().js("x.setter;").token(GETPROP).expect(true),
@@ -571,7 +611,7 @@ public final class AstAnalyzerTest {
     @Parameter public AnalysisCase kase;
 
     // Always include the index. If two cases have the same name, only one will be executed.
-    @Parameters(name = "#{index} {1}")
+    @Parameters(name = "#{index} {0}")
     public static Iterable<AnalysisCase> cases() {
       return ImmutableList.of(
           kase().js("x = y").token(ASSIGN).expect(true),

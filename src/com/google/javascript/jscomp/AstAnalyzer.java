@@ -265,7 +265,10 @@ public class AstAnalyzer {
       case SPREAD:
         if (parent.isObjectPattern() || parent.isObjectLit()) {
           // Object-rest and object-spread may trigger a getter.
-          return !assumeGettersAndSettersAreSideEffectFree;
+          if (assumeGettersAndSettersAreSideEffectFree) {
+            break; // We still need to inspect the children.
+          }
+          return true;
         } else if (NodeUtil.iteratesImpureIterable(n)) {
           return true;
         }
