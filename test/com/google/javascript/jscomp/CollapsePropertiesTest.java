@@ -3236,4 +3236,59 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     test(inputs, expected);
   }
+
+  @Test
+  public void testOrExpression() {
+    // left branch, read declared prop
+    testSame("var a = {b: 1} || x; var t = a.b;");
+
+    // left branch, read undeclared prop
+    testSame("var a = {b: 1} || x; var t = a.c;");
+
+    // left branch, write to declared prop
+    testSame("var a = {b: 1} || x; a.b = 2;");
+
+    // left branch, write to undeclared prop
+    // TODO(tjgq): Consider also collapsing a.c in this case.
+    testSame("var a = {b: 1} || x; a.c = 2;");
+
+    // right branch, read declared prop
+    testSame("var a = x || {b: 1}; var t = a.b;");
+
+    // right branch, read undeclared prop
+    testSame("var a = x || {b: 1}; var t = a.c;");
+
+    // right branch, write to declared prop
+    testSame("var a = x || {b: 1}; a.b = 2;");
+
+    // right branch, write to undeclared prop
+    test("var a = x || {b: 1}; a.c = 2;", "var a = x || {b: 1}; var a$c = 2;");
+  }
+
+  @Test
+  public void testTernaryExpression() {
+    // left branch, read declared prop
+    testSame("var a = p ? {b: 1} : x; var t = a.b;");
+
+    // left branch, read undeclared prop
+    testSame("var a = p ? {b: 1} : x; var t = a.c;");
+
+    // left branch, write to declared prop
+    testSame("var a = p ? {b: 1} : x; a.b = 2;");
+
+    // left branch, write to undeclared prop
+    test("var a = p ? {b: 1} : x; a.c = 2;", "var a = p ? {b: 1} : x; var a$c = 2;");
+
+    // right branch, read declared prop
+    testSame("var a = p ? x : {b: 1}; var t = a.b;");
+
+    // right branch, read undeclared prop
+    testSame("var a = p ? x : {b: 1}; var t = a.c;");
+
+    // right branch, write to declared prop
+    testSame("var a = p ? x : {b: 1}; a.b = 2;");
+
+    // right branch, write to undeclared prop
+    test("var a = p ? x : {b: 1}; a.c = 2;", "var a = p ? x : {b: 1}; var a$c = 2;");
+  }
 }

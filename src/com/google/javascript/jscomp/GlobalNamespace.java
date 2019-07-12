@@ -33,6 +33,7 @@ import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1659,11 +1660,17 @@ class GlobalNamespace
 
       if (getDeclaration() != null) {
         Node declaration = getDeclaration().getNode();
-        if (declaration.getParent().isObjectLit()
-            && stream(declaration.siblings()).anyMatch(Node::isSpread)) {
-          // Case: `var x = {a: 0, ...b, c: 2}` where declaration is `a` but not `c`.
-          // Following spreads may overwrite the declaration.
-          return Inlinability.DO_NOT_INLINE;
+        if (declaration.getParent().isObjectLit()) {
+          if (stream(declaration.siblings()).anyMatch(Node::isSpread)) {
+            // Case: `var x = {a: 0, ...b, c: 2}` where declaration is `a` but not `c`.
+            // Following spreads may overwrite the declaration.
+            return Inlinability.DO_NOT_INLINE;
+          }
+          Token gp = declaration.getGrandparent().getToken();
+          if (gp == Token.OR || gp == Token.HOOK) {
+            // Case: `var x = y || {a: b}` or `var x = cond ? y : {a: b}`.
+            return Inlinability.DO_NOT_INLINE;
+          }
         }
       }
 
