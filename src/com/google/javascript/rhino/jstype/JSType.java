@@ -2117,4 +2117,12 @@ public abstract class JSType implements Serializable {
         Iterables.getOnlyElement(supertype.getTemplateTypeMap().getTemplateKeys());
     return getTemplateTypeMap().getResolvedTemplateType(templateType);
   }
+
+  /**
+   * Returns a JSType representation of this type suitable for running optimizations.
+   * This may have certain features that are only useful at check-time omitted.
+   */
+  JSType simplifyForOptimizations() {
+    return this;
+  }
 }
