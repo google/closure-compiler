@@ -61,8 +61,16 @@ public final class Base64VLQ {
    */
   private static int fromVLQSigned(int value) {
     boolean negate = (value & 1) == 1;
-    value = value >> 1;
-    return negate ? -value : value;
+    value = value >>> 1;
+    if (!negate) {
+      return value;
+    }
+    // We need to OR 0x80000000 here to ensure the 32nd bit (the sign bit) is
+    // always set for negative numbers. If `value` were 1, (meaning `negate` is
+    // true and all other bits were zeros), `value` would now be 0. -0 is just
+    // 0, and doesn't flip the 32nd bit as intended. All positive numbers will
+    // successfully flip the 32nd bit without issue, so it's a noop for them.
+    return -value | 0x80000000;
   }
 
   /**

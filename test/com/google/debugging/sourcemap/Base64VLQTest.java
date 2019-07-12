@@ -65,6 +65,17 @@ public final class Base64VLQTest {
     }
   }
 
+  @Test
+  public void testBase64VLQSelectedSignedValues3() {
+    testValue(Integer.MAX_VALUE);
+    testValue(Integer.MAX_VALUE - 1);
+    testValue(Integer.MAX_VALUE - 2);
+    testValue(0x70000000);
+    testValue(Integer.MIN_VALUE);
+    testValue(Integer.MIN_VALUE + 1);
+    testValue(Integer.MIN_VALUE + 2);
+  }
+
   static class CharIteratorImpl implements Base64VLQ.CharIterator {
     private int current;
     private int length;
