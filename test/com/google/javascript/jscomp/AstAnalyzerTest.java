@@ -93,7 +93,7 @@ public final class AstAnalyzerTest {
     String js;
     Token token;
     boolean globalRegExp;
-    boolean assumeGettersAndSettersAreSideEffectFree;
+    boolean assumeGettersArePure;
 
     AnalysisCase expect(boolean b) {
       this.expect = b;
@@ -115,8 +115,8 @@ public final class AstAnalyzerTest {
       return this;
     }
 
-    AnalysisCase assumeGettersAndSettersAreSideEffectFree(boolean b) {
-      this.assumeGettersAndSettersAreSideEffectFree = b;
+    AnalysisCase assumeGettersArePure(boolean b) {
+      this.assumeGettersArePure = b;
       return this;
     }
 
@@ -171,10 +171,7 @@ public final class AstAnalyzerTest {
     Node parseCase(AnalysisCase kase) {
       resetCompiler();
       compiler.setHasRegExpGlobalReferences(kase.globalRegExp);
-      compiler
-          .getOptions()
-          .setAssumeGettersAndSettersAreSideEffectFree(
-              kase.assumeGettersAndSettersAreSideEffectFree);
+      compiler.getOptions().setAssumeGettersArePure(kase.assumeGettersArePure);
 
       Node root = parseInternal(kase.js);
       if (kase.token == null) {
@@ -266,36 +263,12 @@ public final class AstAnalyzerTest {
           kase().js("new SomeClassINeverHeardOf()").token(NEW).expect(true),
 
           // Getters and setters - object rest and spread
-          kase()
-              .js("({...x});")
-              .token(SPREAD)
-              .assumeGettersAndSettersAreSideEffectFree(false)
-              .expect(true),
-          kase()
-              .js("const {...x} = y;")
-              .token(REST)
-              .assumeGettersAndSettersAreSideEffectFree(false)
-              .expect(true),
-          kase()
-              .js("({...x});")
-              .token(SPREAD)
-              .assumeGettersAndSettersAreSideEffectFree(true)
-              .expect(false),
-          kase()
-              .js("const {...x} = y;")
-              .token(REST)
-              .assumeGettersAndSettersAreSideEffectFree(true)
-              .expect(false),
-          kase()
-              .js("({...f().x});")
-              .token(SPREAD)
-              .assumeGettersAndSettersAreSideEffectFree(true)
-              .expect(true),
-          kase()
-              .js("({...f().x} = y);")
-              .token(REST)
-              .assumeGettersAndSettersAreSideEffectFree(true)
-              .expect(true),
+          kase().js("({...x});").token(SPREAD).assumeGettersArePure(false).expect(true),
+          kase().js("const {...x} = y;").token(REST).assumeGettersArePure(false).expect(true),
+          kase().js("({...x});").token(SPREAD).assumeGettersArePure(true).expect(false),
+          kase().js("const {...x} = y;").token(REST).assumeGettersArePure(true).expect(false),
+          kase().js("({...f().x});").token(SPREAD).assumeGettersArePure(true).expect(true),
+          kase().js("({...f().x} = y);").token(REST).assumeGettersArePure(true).expect(true),
 
           // Getters and setters
           kase().js("x.getter;").token(GETPROP).expect(true),

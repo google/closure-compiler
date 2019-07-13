@@ -1129,24 +1129,24 @@ public class CompilerOptions implements Serializable {
   }
 
   /**
-   * Ignore the possibility of side-effects from getter and setter invocations.
+   * Ignore the possibility that getter invocations (gets) can have side-effects and that the
+   * results of gets can be side-effected by local state mutations.
    *
-   * <p>When {@code true}, it doesn't necessarily mean that all gets/sets are considered
-   * side-effectful. Gets/sets that can be proven to be side-effect free may still be considered as
-   * such.
+   * <p>When {@code true}, it doesn't necessarily mean that all gets are considered side-effectful
+   * or side-effected. Gets that can be proven to be pure may still be considered as such.
    *
    * <p>Recall that object-spread is capable of triggering getters. Since the syntax doesn't
    * explicitly specifiy a property, it is essentailly impossible to prove it has no side-effects
    * without this assumption.
    */
-  private boolean assumeGettersAndSettersAreSideEffectFree = true;
+  private boolean assumeGettersArePure = true;
 
-  public void setAssumeGettersAndSettersAreSideEffectFree(boolean x) {
-    this.assumeGettersAndSettersAreSideEffectFree = x;
+  public void setAssumeGettersArePure(boolean x) {
+    this.assumeGettersArePure = x;
   }
 
-  public boolean getAssumeGettersAndSettersAreSideEffectFree() {
-    return assumeGettersAndSettersAreSideEffectFree;
+  public boolean getAssumeGettersArePure() {
+    return assumeGettersArePure;
   }
 
   /**
@@ -2892,9 +2892,7 @@ public class CompilerOptions implements Serializable {
             .add("angularPass", angularPass)
             .add("anonymousFunctionNaming", anonymousFunctionNaming)
             .add("assumeClosuresOnlyCaptureReferences", assumeClosuresOnlyCaptureReferences)
-            .add(
-                "assumeGettersAndSettersAreSideEffectFree",
-                assumeGettersAndSettersAreSideEffectFree)
+            .add("assumeGettersArePure", assumeGettersArePure)
             .add("assumeStrictThis", assumeStrictThis())
             .add("browserResolverPrefixReplacements", browserResolverPrefixReplacements)
             .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)

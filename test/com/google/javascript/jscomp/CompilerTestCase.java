@@ -676,7 +676,7 @@ public abstract class CompilerTestCase {
     options.setLanguageOut(languageOut);
     options.setModuleResolutionMode(moduleResolutionMode);
     options.setPreserveTypeAnnotations(true);
-    options.setAssumeGettersAndSettersAreSideEffectFree(false); // Default to the complex case.
+    options.setAssumeGettersArePure(false); // Default to the complex case.
 
     // This doesn't affect whether checkSymbols is run--it just affects
     // whether variable warnings are filtered.
@@ -1902,7 +1902,7 @@ public abstract class CompilerTestCase {
   }
 
   private void verifyGetterAndSetterCollection(Compiler compiler, Node externsRoot, Node mainRoot) {
-    if (compiler.getOptions().getAssumeGettersAndSettersAreSideEffectFree()) {
+    if (compiler.getOptions().getAssumeGettersArePure()) {
       assertWithMessage("Should not be validated when getter / setters are side-effect free")
           .that(verifyGetterAndSetterUpdates)
           .isFalse();

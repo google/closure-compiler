@@ -144,14 +144,13 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   private final AmbiguatedFunctionSummary unknownFunctionSummary =
       AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<unknown>").setAllFlags();
 
-  private final boolean assumeGettersAndSettersAreSideEffectFree;
+  private final boolean assumeGettersArePure;
 
   private boolean hasProcessed = false;
 
-  public PureFunctionIdentifier(
-      AbstractCompiler compiler, boolean assumeGettersAndSettersAreSideEffectFree) {
+  public PureFunctionIdentifier(AbstractCompiler compiler, boolean assumeGettersArePure) {
     this.compiler = checkNotNull(compiler);
-    this.assumeGettersAndSettersAreSideEffectFree = assumeGettersAndSettersAreSideEffectFree;
+    this.assumeGettersArePure = assumeGettersArePure;
     this.astAnalyzer = compiler.getAstAnalyzer();
   }
 
@@ -808,7 +807,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         case REST:
         case SPREAD:
           if (node.getParent().isObjectPattern() || node.getParent().isObjectLit()) {
-            if (!assumeGettersAndSettersAreSideEffectFree) {
+            if (!assumeGettersArePure) {
               // Object-rest and object-spread may trigger a getter.
               setSideEffectsForUnknownCall(encloserSummary);
             }
@@ -1062,7 +1061,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   }
 
   private PropertyAccessKind getPropertyKind(String name) {
-    return assumeGettersAndSettersAreSideEffectFree
+    return assumeGettersArePure
         ? PropertyAccessKind.NORMAL
         : compiler.getAccessorSummary().getKind(name);
   }
@@ -1350,8 +1349,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           .setCompiler(compiler)
           .setConsiderExterns(true)
           .addPass(
-              new PureFunctionIdentifier(
-                  compiler, compiler.getOptions().getAssumeGettersAndSettersAreSideEffectFree()))
+              new PureFunctionIdentifier(compiler, compiler.getOptions().getAssumeGettersArePure()))
           .build()
           .process(externs, root);
     }

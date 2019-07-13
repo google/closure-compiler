@@ -68,7 +68,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
     options.setEmitUseStrict(false);
     // renaming doesn't matter for these tests, and just makes them harder to read
     options.setRenamingPolicy(VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
-    options.setAssumeGettersAndSettersAreSideEffectFree(false);
+    options.setAssumeGettersArePure(false);
     return options;
   }
 

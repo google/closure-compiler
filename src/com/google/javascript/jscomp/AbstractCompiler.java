@@ -649,7 +649,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * currently being compiled.
    */
   public AstAnalyzer getAstAnalyzer() {
-    return new AstAnalyzer(this, getOptions().getAssumeGettersAndSettersAreSideEffectFree());
+    return new AstAnalyzer(this, getOptions().getAssumeGettersArePure());
   }
 
   public abstract ModuleMetadataMap getModuleMetadataMap();

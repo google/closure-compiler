@@ -68,11 +68,11 @@ public class AstAnalyzer {
       ImmutableSet.of("match", "replace", "search", "split");
 
   private final AbstractCompiler compiler;
-  private final boolean assumeGettersAndSettersAreSideEffectFree;
+  private final boolean assumeGettersArePure;
 
-  AstAnalyzer(AbstractCompiler compiler, boolean assumeGettersAndSettersAreSideEffectFree) {
+  AstAnalyzer(AbstractCompiler compiler, boolean assumeGettersArePure) {
     this.compiler = checkNotNull(compiler);
-    this.assumeGettersAndSettersAreSideEffectFree = assumeGettersAndSettersAreSideEffectFree;
+    this.assumeGettersArePure = assumeGettersArePure;
   }
 
   /**
@@ -265,7 +265,7 @@ public class AstAnalyzer {
       case SPREAD:
         if (parent.isObjectPattern() || parent.isObjectLit()) {
           // Object-rest and object-spread may trigger a getter.
-          if (assumeGettersAndSettersAreSideEffectFree) {
+          if (assumeGettersArePure) {
             break; // We still need to inspect the children.
           }
           return true;
@@ -508,7 +508,7 @@ public class AstAnalyzer {
       case SPREAD:
         if (n.getParent().isObjectPattern() || n.getParent().isObjectLit()) {
           // Object-rest and object-spread may trigger a getter.
-          return !assumeGettersAndSettersAreSideEffectFree;
+          return !assumeGettersArePure;
         } else if (NodeUtil.iteratesImpureIterable(n)) {
           return true;
         }
@@ -529,7 +529,7 @@ public class AstAnalyzer {
   }
 
   private PropertyAccessKind getPropertyKind(String name) {
-    return assumeGettersAndSettersAreSideEffectFree
+    return assumeGettersArePure
         ? PropertyAccessKind.NORMAL
         : compiler.getAccessorSummary().getKind(name);
   }
