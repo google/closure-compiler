@@ -2421,15 +2421,16 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"alert(\\\"foo\\\");\\n\","
-                + "\"path\":\"./foo/bar/baz.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
-                + "\\n\\\"file\\\":\\\"./foo/bar/baz.js\\\",\\n\\\"lineCount\\\":1,"
-                + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
-                + "\\n\\\"sources\\\":[\\\"foo.js\\\"],\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"},"
-                + "{\"src\":\"\\n\",\"path\":\"./$weak$.js\",\"source_map\":"
-                + "\"{\\n\\\"version\\\":3,\\n\\\"file\\\":\\\"./$weak$.js\\\","
-                + "\\n\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\";\\\",\\n\\\"sources\\\":[],"
-                + "\\n\\\"names\\\":[]\\n}\\n\"}]");
+            "[{\"src\":\"alert(\\\"foo\\\");\\n"
+                + "\",\"path\":\"./foo/bar/baz.js\",\"source_map\":\"{\\n"
+                + "\\\"version\\\":3,\\n"
+                + "\\\"file\\\":\\\"./foo/bar/baz.js\\\",\\n"
+                + "\\\"lineCount\\\":1,\\n"
+                + "\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\",\\n"
+                + "\\\"sources\\\":[\\\"foo.js\\\"],\\n"
+                + "\\\"names\\\":[\\\"alert\\\"]\\n"
+                + "}\\n"
+                + "\"}]");
   }
 
   @Test
@@ -2455,15 +2456,16 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"alert(\\\"foo\\\");\\n\","
-                + "\"path\":\"./foo--bar.baz.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
-                + "\\n\\\"file\\\":\\\"./foo--bar.baz.js\\\",\\n\\\"lineCount\\\":1,"
-                + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
-                + "\\n\\\"sources\\\":[\\\"foo.js\\\"],\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"},"
-                + "{\"src\":\"\\n\",\"path\":\"./$weak$.js\","
-                + "\"source_map\":\"{\\n\\\"version\\\":3,\\n\\\"file\\\":\\\"./$weak$.js\\\","
-                + "\\n\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\";\\\",\\n\\\"sources\\\":[],"
-                + "\\n\\\"names\\\":[]\\n}\\n\"}]");
+            "[{\"src\":\"alert(\\\"foo\\\");\\n"
+                + "\",\"path\":\"./foo--bar.baz.js\",\"source_map\":\"{\\n"
+                + "\\\"version\\\":3,\\n"
+                + "\\\"file\\\":\\\"./foo--bar.baz.js\\\",\\n"
+                + "\\\"lineCount\\\":1,\\n"
+                + "\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\",\\n"
+                + "\\\"sources\\\":[\\\"foo.js\\\"],\\n"
+                + "\\\"names\\\":[\\\"alert\\\"]\\n"
+                + "}\\n"
+                + "\"}]");
   }
 
   @Test
@@ -2622,15 +2624,6 @@ public final class CommandLineRunnerTest {
                 + "\\\"sourcesContent\\\":[\\\"alert('foo');\\\"],\\n"
                 + "\\\"names\\\":[\\\"alert\\\"]\\n"
                 + "}\\n"
-                + "\"},{\"src\":\"\\n"
-                + "\",\"path\":\"./$weak$.js\",\"source_map\":\"{\\n"
-                + "\\\"version\\\":3,\\n"
-                + "\\\"file\\\":\\\"./$weak$.js\\\",\\n"
-                + "\\\"lineCount\\\":1,\\n"
-                + "\\\"mappings\\\":\\\";\\\",\\n"
-                + "\\\"sources\\\":[],\\n"
-                + "\\\"names\\\":[]\\n"
-                + "}\\n"
                 + "\"}]");
   }
 
@@ -2638,6 +2631,49 @@ public final class CommandLineRunnerTest {
   public void testOptionalCatch() {
     args.add("--language_in=ECMASCRIPT_2019");
     test("try { x(); } catch {}", "try{x()}catch(a){}");
+  }
+
+  @Test
+  public void testChunkOutputFiles() throws IOException {
+    File inDir = Files.createTempDir();
+    File outDir = Files.createTempDir();
+
+    File inputFile1 = new File(inDir, "input1.js");
+    String inputSource1 = "var x=1;\n";
+    Files.asCharSink(inputFile1, UTF_8).write(inputSource1);
+
+    File inputFile2 = new File(inDir, "input2.js");
+    String inputSource2 = "var y=2;\n";
+    Files.asCharSink(inputFile2, UTF_8).write(inputSource2);
+
+    File outputFile1 = new File(outDir, "a.js");
+    File outputFile2 = new File(outDir, "b.js");
+    File weakFile = new File(outDir, JSModule.WEAK_MODULE_NAME + ".js");
+
+    args.add("--chunk_output_path_prefix");
+    args.add(outDir.toString() + "/");
+    args.add("--chunk=a:1");
+    args.add("--chunk=b:1");
+    args.add("--js");
+    args.add(inputFile1.toString());
+    args.add("--js");
+    args.add(inputFile2.toString());
+
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            args.toArray(new String[] {}), new PrintStream(outReader), new PrintStream(errReader));
+
+    lastCompiler = runner.getCompiler();
+    try {
+      runner.doRun();
+    } catch (IOException e) {
+      e.printStackTrace();
+      assertWithMessage("Unexpected exception " + e).fail();
+    }
+
+    assertThat(Files.asCharSource(outputFile1, UTF_8).read()).isEqualTo(inputSource1);
+    assertThat(Files.asCharSource(outputFile2, UTF_8).read()).isEqualTo(inputSource2);
+    assertThat(weakFile.exists()).isFalse();
   }
 
   /* Helper functions */

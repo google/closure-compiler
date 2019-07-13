@@ -1554,6 +1554,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     for (JSModule m : modules) {
+      if (m.getName().equals(JSModule.WEAK_MODULE_NAME)) {
+        // Skip the weak module, which is always empty.
+        continue;
+      }
       if (isOutputInJson()) {
         this.filesToStreamOut.add(createJsonFileFromModule(m));
       } else {
