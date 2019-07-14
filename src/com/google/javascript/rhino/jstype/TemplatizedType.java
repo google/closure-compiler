@@ -46,6 +46,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * An object type with declared template types, such as
@@ -59,6 +61,8 @@ public final class TemplatizedType extends ProxyObjectType {
   private final ImmutableList<JSType> templateTypes;
   /** Whether all type parameter values for this specialization are `?`. */
   private final boolean isSpecializedOnlyWithUnknown;
+  /** A set of visited template types to avoid infinite recursion error. */
+  private Set visitedTemplateTypes;
 
   private transient TemplateTypeMapReplacer replacer;
 
@@ -80,6 +84,7 @@ public final class TemplatizedType extends ProxyObjectType {
     }
     this.templateTypes = builder.build();
     this.isSpecializedOnlyWithUnknown = maybeIsSpecializedOnlyWithUnknown;
+    this.visitedTemplateTypes = new HashSet();
 
     this.replacer = new TemplateTypeMapReplacer(registry, getTemplateTypeMap());
   }
@@ -114,13 +119,25 @@ public final class TemplatizedType extends ProxyObjectType {
       sb.append("<");
       int lastIndex = this.templateTypes.size() - 1;
       for (int i = 0; i < lastIndex; i++) {
-        this.templateTypes.get(i).appendTo(sb, forAnnotations);
-        sb.append(",");
+        if (this.appendTemplateType(this.templateTypes.get(i), sb, forAnnotations)) {
+          sb.append(",");
+        }
       }
-      this.templateTypes.get(lastIndex).appendTo(sb, forAnnotations);
-      sb.append(">");
+      if (this.appendTemplateType(this.templateTypes.get(lastIndex), sb, forAnnotations)) {
+        sb.append(">");
+      }
     }
     return sb;
+  }
+
+  boolean appendTemplateType(JSType templateType, StringBuilder sb, boolean forAnnotations) {
+    boolean notExist = !this.visitedTemplateTypes.contains(templateType);
+    if (notExist) {
+      this.visitedTemplateTypes.add(templateType);
+      templateType.appendTo(sb, forAnnotations);
+      this.visitedTemplateTypes.remove(templateType);
+    }
+    return notExist;
   }
 
   @Override
