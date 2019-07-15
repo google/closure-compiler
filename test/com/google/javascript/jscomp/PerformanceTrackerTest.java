@@ -44,7 +44,7 @@ public final class PerformanceTrackerTest {
   @Test
   public void testStatsCalculation() {
     PerformanceTracker tracker =
-        new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL, null);
+        new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL);
     CodeChangeHandler handler = tracker.getCodeChangeHandler();
 
     // It's sufficient for this test to assume that a single run of any pass
@@ -111,8 +111,8 @@ public final class PerformanceTrackerTest {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     try (PrintStream outstream = new PrintStream(output)) {
       PerformanceTracker tracker =
-          new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL, outstream);
-      tracker.outputTracerReport();
+          new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL);
+      tracker.outputTracerReport(outstream);
     }
     Pattern p = Pattern.compile(Joiner.on("\n").join(
         ".*TOTAL:",

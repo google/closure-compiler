@@ -841,7 +841,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     setProgress(1.0, "recordFunctionInformation");
 
     if (tracker != null) {
-      tracker.outputTracerReport();
+      PrintStream tracerOutput =
+          options.getTracerOutput() == null ? this.outStream : options.getTracerOutput();
+      tracker.outputTracerReport(tracerOutput);
     }
   }
 
@@ -1558,12 +1560,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   public void maybeSetTracker() {
-    if (options.getTracerMode().isOn()) {
-      PrintStream tracerOutput =
-          options.getTracerOutput() == null ? this.outStream : options.getTracerOutput();
-      tracker = new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode(), tracerOutput);
-      addChangeHandler(tracker.getCodeChangeHandler());
+    if (!options.getTracerMode().isOn()) {
+      return;
     }
+
+    tracker = new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode());
+    addChangeHandler(tracker.getCodeChangeHandler());
   }
 
   //------------------------------------------------------------------------

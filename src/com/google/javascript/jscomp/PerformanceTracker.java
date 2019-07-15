@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -31,8 +30,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -45,8 +42,6 @@ import java.util.Map.Entry;
  */
 public final class PerformanceTracker {
   private static final int DEFAULT_WHEN_SIZE_UNTRACKED = -1;
-
-  private final PrintStream output;
 
   private final Node externsRoot;
 
@@ -95,12 +90,11 @@ public final class PerformanceTracker {
   /** Stats a single run of a compiler pass. */
   private final List<Stats> log = new ArrayList<>();
 
-  PerformanceTracker(Node externsRoot, Node jsRoot, TracerMode mode, PrintStream printStream) {
+  PerformanceTracker(Node externsRoot, Node jsRoot, TracerMode mode) {
     checkArgument(mode != TracerMode.OFF, "PerformanceTracker can't work without tracer data.");
     this.startTime = System.currentTimeMillis();
     this.externsRoot = externsRoot;
     this.jsRoot = jsRoot;
-    this.output = printStream == null ? System.out : printStream;
     this.mode = mode;
   }
 
@@ -348,74 +342,95 @@ public final class PerformanceTracker {
   }
 
   /**
-   * Prints a summary, which contains aggregate stats for all runs of each pass
-   * and a log, which contains stats for each individual run.
+   * Prints a summary, which contains aggregate stats for all runs of each pass and a log, which
+   * contains stats for each individual run.
    */
-  public void outputTracerReport() {
-    JvmMetrics.maybeWriteJvmMetrics(this.output, "verbose:pretty:all");
+  public void outputTracerReport(PrintStream output) {
+    JvmMetrics.maybeWriteJvmMetrics(output, "verbose:pretty:all");
     calcTotalStats();
 
-    ArrayList<Entry<String, Stats>> statEntries = new ArrayList<>();
-    statEntries.addAll(this.summary.entrySet());
-    Collections.sort(
-        statEntries,
-        new Comparator<Entry<String, Stats>>() {
-          @Override
-          public int compare(Entry<String, Stats> e1, Entry<String, Stats> e2) {
-            return Long.compare(e1.getValue().runtime, e2.getValue().runtime);
-          }
-        });
+    output.println(
+        lines(
+            "",
+            "TOTAL:",
+            "Start time(ms): " + this.startTime,
+            "End time(ms): " + this.endTime,
+            "Wall time(ms): " + (this.endTime - this.startTime),
+            "Passes runtime(ms): " + this.passesRuntime,
+            "Max mem usage (measured after each pass)(MB): " + this.maxMem,
+            "#Runs: " + this.runs,
+            "#Changing runs: " + this.changes,
+            "#Loopable runs: " + this.loopRuns,
+            "#Changing loopable runs: " + this.loopChanges,
+            "Estimated AST reduction(#nodes): " + this.astDiff,
+            "Estimated Reduction(bytes): " + this.diff,
+            "Estimated GzReduction(bytes): " + this.gzDiff,
+            "Estimated AST size(#nodes): " + this.astSize,
+            "Estimated Size(bytes): " + this.codeSize,
+            "Estimated GzSize(bytes): " + this.gzCodeSize));
 
-    this.output.print(Joiner.on("\n").join(
-        "\nTOTAL:",
-        "Start time(ms): " + this.startTime,
-        "End time(ms): " + this.endTime,
-        "Wall time(ms): " + (this.endTime - this.startTime),
-        "Passes runtime(ms): " + this.passesRuntime,
-        "Max mem usage (measured after each pass)(MB): " + this.maxMem,
-        "#Runs: " + this.runs,
-        "#Changing runs: " + this.changes,
-        "#Loopable runs: " + this.loopRuns,
-        "#Changing loopable runs: " + this.loopChanges,
-        "Estimated AST reduction(#nodes): " + this.astDiff,
-        "Estimated Reduction(bytes): " + this.diff,
-        "Estimated GzReduction(bytes): " + this.gzDiff,
-        "Estimated AST size(#nodes): " + this.astSize,
-        "Estimated Size(bytes): " + this.codeSize,
-        "Estimated GzSize(bytes): " + this.gzCodeSize));
+    output.println(
+        lines(
+            "",
+            "Inputs:",
+            "JS lines:   " + this.jsLines,
+            "JS sources: " + this.jsSources,
+            "Extern lines:   " + this.externLines,
+            "Extern sources: " + this.externSources));
 
-    this.output.print(Joiner.on("\n").join(
-        "\n\nInputs:",
-        "JS lines:   " + this.jsLines,
-        "JS sources: " + this.jsSources,
-        "Extern lines:   " + this.externLines,
-        "Extern sources: " + this.externSources + "\n\n"));
+    output.println(
+        lines(
+            "",
+            "Summary:",
+            "pass,runtime,allocMem,runs,changingRuns,astReduction,reduction,gzReduction"));
+    this.summary.entrySet().stream()
+        .sorted((e1, e2) -> Long.compare(e1.getValue().runtime, e2.getValue().runtime))
+        .forEach(
+            (entry) -> {
+              String key = entry.getKey();
+              Stats stats = entry.getValue();
+              output.print(
+                  SimpleFormat.format(
+                      "%s,%d,%d,%d,%d,%d,%d,%d\n",
+                      key,
+                      stats.runtime,
+                      stats.allocMem,
+                      stats.runs,
+                      stats.changes,
+                      stats.astDiff,
+                      stats.diff,
+                      stats.gzDiff));
+            });
 
-    this.output.print("Summary:\n"
-        + "pass,runtime,allocMem,runs,changingRuns,astReduction,reduction,gzReduction\n");
-    for (Entry<String, Stats> entry : statEntries) {
-      String key = entry.getKey();
-      Stats stats = entry.getValue();
-      this.output.print(SimpleFormat.format("%s,%d,%d,%d,%d,%d,%d,%d\n", key, stats.runtime,
-            stats.allocMem, stats.runs, stats.changes, stats.astDiff, stats.diff, stats.gzDiff));
-    }
-    this.output.print("\n");
-
-    this.output.print(Joiner.on("\n").join(
-        "Log:",
-        "pass,runtime,allocMem,codeChanged,astReduction,reduction,gzReduction,astSize,size,gzSize\n"));
+    output.println(
+        lines(
+            "",
+            "Log:",
+            "pass,runtime,allocMem,codeChanged,astReduction,reduction,gzReduction,astSize,size,gzSize"));
     for (Stats stats : this.log) {
-      this.output.print(SimpleFormat.format("%s,%d,%d,%b,%d,%d,%d,%d,%d,%d\n",
-          stats.pass, stats.runtime, stats.allocMem, stats.changes == 1,
-          stats.astDiff, stats.diff, stats.gzDiff, stats.astSize, stats.size, stats.gzSize));
+      output.print(
+          SimpleFormat.format(
+              "%s,%d,%d,%b,%d,%d,%d,%d,%d,%d\n",
+              stats.pass,
+              stats.runtime,
+              stats.allocMem,
+              stats.changes == 1,
+              stats.astDiff,
+              stats.diff,
+              stats.gzDiff,
+              stats.astSize,
+              stats.size,
+              stats.gzSize));
     }
-    this.output.print("\n");
+
+    output.println();
+
     // this.output can be System.out, so don't close it to not lose subsequent
     // error messages. Flush to ensure that you will see the tracer report.
     try {
       // TODO(johnlenz): Remove this cast and try/catch.
       // This is here to workaround GWT http://b/30943295
-      ((FilterOutputStream) this.output).flush();
+      ((FilterOutputStream) output).flush();
     } catch (IOException e) {
       throw new RuntimeException("Unreachable.");
     }
@@ -442,5 +457,9 @@ public final class PerformanceTracker {
     public int gzSize = 0;
     public int astDiff = 0;
     public int astSize = 0;
+  }
+
+  private static String lines(String... lines) {
+    return String.join("\n", lines);
   }
 }
