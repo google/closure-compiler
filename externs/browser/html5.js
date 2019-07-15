@@ -102,6 +102,7 @@ HTMLCanvasElement.prototype.toBlob = function(callback, opt_type, var_args) {};
 HTMLCanvasElement.prototype.toDataURL = function(opt_type, var_args) {};
 
 /**
+ * @modifies {this}
  * @param {string} contextId
  * @param {Object=} opt_args
  * @return {Object}
@@ -129,6 +130,7 @@ HTMLCanvasElement.prototype.transferControlToOffscreen = function() {};
  * @implements {Transferable}
  * @param {number} width
  * @param {number} height
+ * @nosideeffects
  * @constructor
  */
 function OffscreenCanvas(width, height) {}
@@ -153,6 +155,7 @@ OffscreenCanvas.prototype.height;
 /**
  * @param {string} contextId
  * @param {!Object=} opt_options
+ * @modifies {this}
  * @return {!Object}
  */
 OffscreenCanvas.prototype.getContext = function(contextId, opt_options) {};
@@ -383,46 +386,48 @@ CanvasDrawingStyles.prototype.textAlign;
 /** @type {string} */
 CanvasDrawingStyles.prototype.textBaseline;
 
+// TODO(dramaix): replace this with @record.
 /**
  * @constructor
+ * @abstract
  * @implements {CanvasDrawingStyles}
  * @implements {CanvasPathMethods}
  * @see http://www.w3.org/TR/2dcontext/#canvasrenderingcontext2d
  */
-function CanvasRenderingContext2D() {}
+function BaseRenderingContext2D() {}
 
-/** @const {!HTMLCanvasElement} */
-CanvasRenderingContext2D.prototype.canvas;
-
-/**
- * @return {undefined}
- */
-CanvasRenderingContext2D.prototype.save = function() {};
+/** @const {!HTMLCanvasElement|!OffscreenCanvas} */
+BaseRenderingContext2D.prototype.canvas;
 
 /**
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.restore = function() {};
+BaseRenderingContext2D.prototype.save = function() {};
+
+/**
+ * @return {undefined}
+ */
+BaseRenderingContext2D.prototype.restore = function() {};
 
 /**
  * @param {number} x
  * @param {number} y
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.scale = function(x, y) {};
+BaseRenderingContext2D.prototype.scale = function(x, y) {};
 
 /**
  * @param {number} angle
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.rotate = function(angle) {};
+BaseRenderingContext2D.prototype.rotate = function(angle) {};
 
 /**
  * @param {number} x
  * @param {number} y
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.translate = function(x, y) {};
+BaseRenderingContext2D.prototype.translate = function(x, y) {};
 
 /**
  * @param {number} m11
@@ -433,7 +438,7 @@ CanvasRenderingContext2D.prototype.translate = function(x, y) {};
  * @param {number} dy
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.transform = function(
+BaseRenderingContext2D.prototype.transform = function(
     m11, m12, m21, m22, dx, dy) {};
 
 /**
@@ -445,7 +450,7 @@ CanvasRenderingContext2D.prototype.transform = function(
  * @param {number} dy
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.setTransform = function(
+BaseRenderingContext2D.prototype.setTransform = function(
     m11, m12, m21, m22, dx, dy) {};
 
 /**
@@ -456,7 +461,7 @@ CanvasRenderingContext2D.prototype.setTransform = function(
  * @return {!CanvasGradient}
  * @throws {Error}
  */
-CanvasRenderingContext2D.prototype.createLinearGradient = function(
+BaseRenderingContext2D.prototype.createLinearGradient = function(
     x0, y0, x1, y1) {};
 
 /**
@@ -469,7 +474,7 @@ CanvasRenderingContext2D.prototype.createLinearGradient = function(
  * @return {!CanvasGradient}
  * @throws {Error}
  */
-CanvasRenderingContext2D.prototype.createRadialGradient = function(
+BaseRenderingContext2D.prototype.createRadialGradient = function(
     x0, y0, r0, x1, y1, r1) {};
 
 /**
@@ -479,7 +484,7 @@ CanvasRenderingContext2D.prototype.createRadialGradient = function(
  * @throws {Error}
  * @see https://html.spec.whatwg.org/multipage/scripting.html#dom-context-2d-createpattern
  */
-CanvasRenderingContext2D.prototype.createPattern = function(
+BaseRenderingContext2D.prototype.createPattern = function(
     image, repetition) {};
 
 /**
@@ -489,7 +494,7 @@ CanvasRenderingContext2D.prototype.createPattern = function(
  * @param {number} h
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.clearRect = function(x, y, w, h) {};
+BaseRenderingContext2D.prototype.clearRect = function(x, y, w, h) {};
 
 /**
  * @param {number} x
@@ -498,7 +503,7 @@ CanvasRenderingContext2D.prototype.clearRect = function(x, y, w, h) {};
  * @param {number} h
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.fillRect = function(x, y, w, h) {};
+BaseRenderingContext2D.prototype.fillRect = function(x, y, w, h) {};
 
 /**
  * @param {number} x
@@ -507,18 +512,18 @@ CanvasRenderingContext2D.prototype.fillRect = function(x, y, w, h) {};
  * @param {number} h
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.strokeRect = function(x, y, w, h) {};
+BaseRenderingContext2D.prototype.strokeRect = function(x, y, w, h) {};
 
 /**
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.beginPath = function() {};
+BaseRenderingContext2D.prototype.beginPath = function() {};
 
 /**
  * @return {undefined}
  * @override
  */
-CanvasRenderingContext2D.prototype.closePath = function() {};
+BaseRenderingContext2D.prototype.closePath = function() {};
 
 /**
  * @param {number} x
@@ -526,7 +531,7 @@ CanvasRenderingContext2D.prototype.closePath = function() {};
  * @return {undefined}
  * @override
  */
-CanvasRenderingContext2D.prototype.moveTo = function(x, y) {};
+BaseRenderingContext2D.prototype.moveTo = function(x, y) {};
 
 /**
  * @param {number} x
@@ -534,7 +539,7 @@ CanvasRenderingContext2D.prototype.moveTo = function(x, y) {};
  * @return {undefined}
  * @override
  */
-CanvasRenderingContext2D.prototype.lineTo = function(x, y) {};
+BaseRenderingContext2D.prototype.lineTo = function(x, y) {};
 
 /**
  * @param {number} cpx
@@ -544,7 +549,7 @@ CanvasRenderingContext2D.prototype.lineTo = function(x, y) {};
  * @return {undefined}
  * @override
  */
-CanvasRenderingContext2D.prototype.quadraticCurveTo = function(
+BaseRenderingContext2D.prototype.quadraticCurveTo = function(
     cpx, cpy, x, y) {};
 
 /**
@@ -557,7 +562,7 @@ CanvasRenderingContext2D.prototype.quadraticCurveTo = function(
  * @return {undefined}
  * @override
  */
-CanvasRenderingContext2D.prototype.bezierCurveTo = function(
+BaseRenderingContext2D.prototype.bezierCurveTo = function(
     cp1x, cp1y, cp2x, cp2y, x, y) {};
 
 /**
@@ -569,7 +574,7 @@ CanvasRenderingContext2D.prototype.bezierCurveTo = function(
  * @return {undefined}
  * @override
  */
-CanvasRenderingContext2D.prototype.arcTo = function(x1, y1, x2, y2, radius) {};
+BaseRenderingContext2D.prototype.arcTo = function(x1, y1, x2, y2, radius) {};
 
 /**
  * @param {number} x
@@ -579,7 +584,7 @@ CanvasRenderingContext2D.prototype.arcTo = function(x1, y1, x2, y2, radius) {};
  * @return {undefined}
  * @override
  */
-CanvasRenderingContext2D.prototype.rect = function(x, y, w, h) {};
+BaseRenderingContext2D.prototype.rect = function(x, y, w, h) {};
 
 /**
  * @param {number} x
@@ -591,7 +596,7 @@ CanvasRenderingContext2D.prototype.rect = function(x, y, w, h) {};
  * @return {undefined}
  * @override
  */
-CanvasRenderingContext2D.prototype.arc = function(
+BaseRenderingContext2D.prototype.arc = function(
     x, y, radius, startAngle, endAngle, opt_anticlockwise) {};
 
 /**
@@ -606,7 +611,7 @@ CanvasRenderingContext2D.prototype.arc = function(
  * @return {undefined}
  * @see http://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D/ellipse
  */
-CanvasRenderingContext2D.prototype.ellipse = function(
+BaseRenderingContext2D.prototype.ellipse = function(
     x, y, radiusX, radiusY, rotation, startAngle, endAngle, opt_anticlockwise) {
 };
 
@@ -615,26 +620,26 @@ CanvasRenderingContext2D.prototype.ellipse = function(
  * @param {string=} optFillRule
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.fill = function(optFillRuleOrPath, optFillRule) {};
+BaseRenderingContext2D.prototype.fill = function(optFillRuleOrPath, optFillRule) {};
 
 /**
  * @param {Path2D=} optStroke
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.stroke = function(optStroke) {};
+BaseRenderingContext2D.prototype.stroke = function(optStroke) {};
 
 /**
  * @param {Element} element
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.drawFocusIfNeeded = function(element) {};
+BaseRenderingContext2D.prototype.drawFocusIfNeeded = function(element) {};
 
 /**
  * @param {Path2D|string=} optFillRuleOrPath
  * @param {string=} optFillRule
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.clip = function(optFillRuleOrPath, optFillRule) {};
+BaseRenderingContext2D.prototype.clip = function(optFillRuleOrPath, optFillRule) {};
 
 /**
  * @param {number} x
@@ -643,7 +648,7 @@ CanvasRenderingContext2D.prototype.clip = function(optFillRuleOrPath, optFillRul
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/isPointInStroke
  */
-CanvasRenderingContext2D.prototype.isPointInStroke = function(x, y) {};
+BaseRenderingContext2D.prototype.isPointInStroke = function(x, y) {};
 
 /**
  * @param {number} x
@@ -652,7 +657,7 @@ CanvasRenderingContext2D.prototype.isPointInStroke = function(x, y) {};
  * @return {boolean}
  * @nosideeffects
  */
-CanvasRenderingContext2D.prototype.isPointInPath = function(
+BaseRenderingContext2D.prototype.isPointInPath = function(
     x, y, opt_fillRule) {};
 
 /**
@@ -662,7 +667,7 @@ CanvasRenderingContext2D.prototype.isPointInPath = function(
  * @param {number=} opt_maxWidth
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.fillText = function(
+BaseRenderingContext2D.prototype.fillText = function(
     text, x, y, opt_maxWidth) {};
 
 /**
@@ -672,7 +677,7 @@ CanvasRenderingContext2D.prototype.fillText = function(
  * @param {number=} opt_maxWidth
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.strokeText = function(
+BaseRenderingContext2D.prototype.strokeText = function(
     text, x, y, opt_maxWidth) {};
 
 /**
@@ -680,7 +685,7 @@ CanvasRenderingContext2D.prototype.strokeText = function(
  * @return {!TextMetrics}
  * @nosideeffects
  */
-CanvasRenderingContext2D.prototype.measureText = function(text) {};
+BaseRenderingContext2D.prototype.measureText = function(text) {};
 
 /**
  * @param {CanvasImageSource} image
@@ -699,7 +704,7 @@ CanvasRenderingContext2D.prototype.measureText = function(text) {};
  *     the source image to draw.  Defaults to the full image height.
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.drawImage = function(
+BaseRenderingContext2D.prototype.drawImage = function(
     image, dx, dy, opt_dw, opt_dh, opt_sx, opt_sy, opt_sw, opt_sh) {};
 
 /**
@@ -709,7 +714,7 @@ CanvasRenderingContext2D.prototype.drawImage = function(
  * @throws {Error}
  * @nosideeffects
  */
-CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {};
+BaseRenderingContext2D.prototype.createImageData = function(sw, sh) {};
 
 /**
  * @param {number} sx
@@ -719,7 +724,7 @@ CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {};
  * @return {!ImageData}
  * @throws {Error}
  */
-CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
+BaseRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
 
 /**
  * @param {ImageData} imagedata
@@ -731,7 +736,7 @@ CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
  * @param {number=} opt_dirtyHeight
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.putImageData = function(imagedata, dx, dy,
+BaseRenderingContext2D.prototype.putImageData = function(imagedata, dx, dy,
     opt_dirtyX, opt_dirtyY, opt_dirtyWidth, opt_dirtyHeight) {};
 
 /**
@@ -745,7 +750,7 @@ CanvasRenderingContext2D.prototype.putImageData = function(imagedata, dx, dy,
  * @return {undefined}
  * @deprecated
  */
-CanvasRenderingContext2D.prototype.setFillColor = function(
+BaseRenderingContext2D.prototype.setFillColor = function(
     opt_a, opt_b, opt_c, opt_d, opt_e) {};
 
 /**
@@ -759,86 +764,106 @@ CanvasRenderingContext2D.prototype.setFillColor = function(
  * @return {undefined}
  * @deprecated
  */
-CanvasRenderingContext2D.prototype.setStrokeColor = function(
+BaseRenderingContext2D.prototype.setStrokeColor = function(
     opt_a, opt_b, opt_c, opt_d, opt_e) {};
 
 /**
  * @return {!Array<number>}
  * @override
  */
-CanvasRenderingContext2D.prototype.getLineDash = function() {};
+BaseRenderingContext2D.prototype.getLineDash = function() {};
 
 /**
  * @param {Array<number>} segments
  * @return {undefined}
  * @override
  */
-CanvasRenderingContext2D.prototype.setLineDash = function(segments) {};
+BaseRenderingContext2D.prototype.setLineDash = function(segments) {};
 
 /** @type {string} */
-CanvasRenderingContext2D.prototype.fillColor;
+BaseRenderingContext2D.prototype.fillColor;
 
 /**
  * @type {string|!CanvasGradient|!CanvasPattern}
  * @see https://html.spec.whatwg.org/multipage/scripting.html#fill-and-stroke-styles:dom-context-2d-fillstyle
  * @implicitCast
  */
-CanvasRenderingContext2D.prototype.fillStyle;
+BaseRenderingContext2D.prototype.fillStyle;
 
 /** @type {string} */
-CanvasRenderingContext2D.prototype.font;
+BaseRenderingContext2D.prototype.font;
 
 /** @type {number} */
-CanvasRenderingContext2D.prototype.globalAlpha;
+BaseRenderingContext2D.prototype.globalAlpha;
 
 /** @type {string} */
-CanvasRenderingContext2D.prototype.globalCompositeOperation;
+BaseRenderingContext2D.prototype.globalCompositeOperation;
 
 /** @type {number} */
-CanvasRenderingContext2D.prototype.lineWidth;
+BaseRenderingContext2D.prototype.lineWidth;
 
 /** @type {string} */
-CanvasRenderingContext2D.prototype.lineCap;
+BaseRenderingContext2D.prototype.lineCap;
 
 /** @type {string} */
-CanvasRenderingContext2D.prototype.lineJoin;
+BaseRenderingContext2D.prototype.lineJoin;
 
 /** @type {number} */
-CanvasRenderingContext2D.prototype.miterLimit;
+BaseRenderingContext2D.prototype.miterLimit;
 
 /** @type {number} */
-CanvasRenderingContext2D.prototype.shadowBlur;
+BaseRenderingContext2D.prototype.shadowBlur;
 
 /** @type {string} */
-CanvasRenderingContext2D.prototype.shadowColor;
+BaseRenderingContext2D.prototype.shadowColor;
 
 /** @type {number} */
-CanvasRenderingContext2D.prototype.shadowOffsetX;
+BaseRenderingContext2D.prototype.shadowOffsetX;
 
 /** @type {number} */
-CanvasRenderingContext2D.prototype.shadowOffsetY;
+BaseRenderingContext2D.prototype.shadowOffsetY;
 
 /** @type {boolean} */
-CanvasRenderingContext2D.prototype.imageSmoothingEnabled;
+BaseRenderingContext2D.prototype.imageSmoothingEnabled;
 
 /**
  * @type {string|!CanvasGradient|!CanvasPattern}
  * @see https://html.spec.whatwg.org/multipage/scripting.html#fill-and-stroke-styles:dom-context-2d-strokestyle
  * @implicitCast
  */
-CanvasRenderingContext2D.prototype.strokeStyle;
+BaseRenderingContext2D.prototype.strokeStyle;
 
 /** @type {string} */
-CanvasRenderingContext2D.prototype.strokeColor;
+BaseRenderingContext2D.prototype.strokeColor;
 
 /** @type {string} */
-CanvasRenderingContext2D.prototype.textAlign;
+BaseRenderingContext2D.prototype.textAlign;
 
 /** @type {string} */
-CanvasRenderingContext2D.prototype.textBaseline;
+BaseRenderingContext2D.prototype.textBaseline;
 
 /** @type {number} */
-CanvasRenderingContext2D.prototype.lineDashOffset;
+BaseRenderingContext2D.prototype.lineDashOffset;
+
+/**
+ * @constructor
+ * @extends {BaseRenderingContext2D}
+ * @see http://www.w3.org/TR/2dcontext/#canvasrenderingcontext2d
+ */
+function CanvasRenderingContext2D() {}
+
+/** @const {!HTMLCanvasElement} */
+CanvasRenderingContext2D.prototype.canvas;
+
+/**
+ * @constructor
+ * @extends {BaseRenderingContext2D}
+ * @see http://www.w3.org/TR/2dcontext/#canvasrenderingcontext2d
+ */
+function OffscreenCanvasRenderingContext2D() {}
+
+/** @const {!OffscreenCanvas} */
+OffscreenCanvasRenderingContext2D.prototype.canvas;
 
 /**
  * @constructor
