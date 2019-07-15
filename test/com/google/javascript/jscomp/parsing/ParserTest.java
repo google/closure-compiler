@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -5177,6 +5178,55 @@ public final class ParserTest extends BaseJSTypeTestCase {
     for (String importUseSource : awaitDynamicImportUses) {
       parse(importUseSource);
     }
+  }
+
+  @Test
+  public void testImportMeta() {
+    mode = LanguageMode.UNSUPPORTED;
+    expectFeatures(Feature.MODULES, Feature.IMPORT_META);
+
+    Node tree = parse("import.meta");
+    assertNode(tree.getFirstFirstChild()).isEqualTo(IR.exprResult(IR.importMeta()));
+  }
+
+  @Test
+  public void testImportMeta_es5() {
+    mode = LanguageMode.ECMASCRIPT5;
+    expectFeatures(Feature.MODULES, Feature.IMPORT_META);
+
+    parseWarning(
+        "import.meta",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT6, Feature.MODULES),
+        unsupportedFeatureMessage(Feature.IMPORT_META));
+  }
+
+  @Test
+  public void testImportMeta_es6() {
+    mode = LanguageMode.ECMASCRIPT6;
+    expectFeatures(Feature.MODULES, Feature.IMPORT_META);
+
+    parseWarning("import.meta", unsupportedFeatureMessage(Feature.IMPORT_META));
+  }
+
+  @Test
+  public void testImportMeta_inExpression() {
+    mode = LanguageMode.UNSUPPORTED;
+    expectFeatures(Feature.MODULES, Feature.IMPORT_META);
+
+    Node propTree = parse("import.meta.url");
+    assertNode(propTree.getFirstFirstChild())
+        .isEqualTo(IR.exprResult(IR.getprop(IR.importMeta(), "url")));
+
+    Node callTree = parse("f(import.meta.url)");
+    assertNode(callTree.getFirstFirstChild())
+        .isEqualTo(IR.exprResult(IR.call(IR.name("f"), IR.getprop(IR.importMeta(), "url"))));
+  }
+
+  @Test
+  public void testImportMeta_asDotProperty() {
+    Node tree = parse("x.import.meta");
+    assertNode(tree.getFirstChild())
+        .isEqualTo(IR.exprResult(IR.getprop(IR.name("x"), "import", "meta")));
   }
 
   private void assertNodeHasJSDocInfoWithJSType(Node node, JSType jsType) {

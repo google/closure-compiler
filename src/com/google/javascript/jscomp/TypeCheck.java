@@ -657,6 +657,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case SUPER:
       case NEW_TARGET:
+      case IMPORT_META:
       case AWAIT:
         ensureTyped(n);
         break;

@@ -193,6 +193,7 @@ public enum Token {
 
   DEFAULT_VALUE, // Formal parameter or destructuring element with a default value
   NEW_TARGET, // new.target
+  IMPORT_META, // import.meta
 
   // Used by type declaration ASTs
   STRING_TYPE,

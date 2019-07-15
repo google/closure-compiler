@@ -70,6 +70,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ImportMetaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IndexSignatureTree;
 import com.google.javascript.jscomp.parsing.parser.trees.InterfaceDeclarationTree;
@@ -392,9 +393,12 @@ public class Parser {
     return parseAmbientDeclarationHelper();
   }
 
-  // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-imports
   private boolean peekImportDeclaration() {
-    return peek(TokenType.IMPORT) && !peek(1, TokenType.OPEN_PAREN);
+    return peek(TokenType.IMPORT)
+        && (peekIdOrKeyword(1)
+            || peek(1, TokenType.STRING)
+            || peek(1, TokenType.OPEN_CURLY)
+            || peek(1, TokenType.STAR));
   }
 
   private ParseTree parseImportDeclaration() {
@@ -2933,7 +2937,7 @@ public class Parser {
       case YIELD:
         return true;
       case IMPORT:
-        return peekImportCall();
+        return peekImportCall() || peekImportDot();
       default:
         return false;
     }
@@ -3515,6 +3519,10 @@ public class Parser {
     return peek(TokenType.IMPORT) && peek(1, TokenType.OPEN_PAREN);
   }
 
+  private boolean peekImportDot() {
+    return peek(TokenType.IMPORT) && peek(1, TokenType.PERIOD);
+  }
+
   // 11.2 Left hand side expression
   //
   // Also inlines the call expression productions
@@ -3571,7 +3579,9 @@ public class Parser {
   private ParseTree parseMemberExpressionNoNew() {
     SourcePosition start = getTreeStartLocation();
     ParseTree operand;
-    if (peekAsyncFunctionStart()) {
+    if (peekImportDot()) {
+      operand = parseImportDotMeta();
+    } else if (peekAsyncFunctionStart()) {
       operand = parseAsyncFunctionExpression();
     } else if (peekFunction()) {
       operand = parseFunctionExpression();
@@ -3633,6 +3643,14 @@ public class Parser {
     eat(TokenType.PERIOD);
     eatPredefinedString("target");
     return new NewTargetExpressionTree(getTreeLocation(start));
+  }
+
+  private ParseTree parseImportDotMeta() {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.IMPORT);
+    eat(TokenType.PERIOD);
+    eatPredefinedString("meta");
+    return new ImportMetaExpressionTree(getTreeLocation(start));
   }
 
   private ArgumentListTree parseArguments() {
@@ -4016,7 +4034,11 @@ public class Parser {
   }
 
   private boolean peekIdOrKeyword() {
-    TokenType type = peekType();
+    return peekIdOrKeyword(0);
+  }
+
+  private boolean peekIdOrKeyword(int index) {
+    TokenType type = peekType(index);
     return TokenType.IDENTIFIER == type || Keywords.isKeyword(type);
   }
 

@@ -277,6 +277,10 @@ public final class AstValidator implements CompilerPass {
         validateFeature(Feature.NEW_TARGET, n);
         validateChildless(n);
         return;
+      case IMPORT_META:
+        validateFeature(Feature.IMPORT_META, n);
+        validateChildless(n);
+        return;
       case SUPER:
         validateFeature(Feature.SUPER, n);
         validateChildless(n);

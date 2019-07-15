@@ -1256,6 +1256,7 @@ public final class NodeUtil {
       case GETELEM:
       case GETPROP:
       case NEW_TARGET:
+      case IMPORT_META:
         // Data values
       case ARRAYLIT:
       case ARRAY_PATTERN:
