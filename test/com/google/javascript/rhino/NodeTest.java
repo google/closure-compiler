@@ -251,7 +251,18 @@ public class NodeTest {
     assertThat(qname("this.b").matchesQualifiedName("a.b")).isFalse();
     assertThat(qname("this.b").matchesQualifiedName(".b")).isFalse();
     assertThat(qname("this.b").matchesQualifiedName("a.")).isFalse();
+    assertThat(qname("this.b").matchesQualifiedName("super.b")).isFalse();
     assertThat(qname("this.b").matchesQualifiedName("this.b")).isTrue();
+
+    assertThat(qname("super").matchesQualifiedName("super")).isTrue();
+    assertThat(qname("super").matchesQualifiedName("superx")).isFalse();
+
+    assertThat(qname("super.b").matchesQualifiedName("a")).isFalse();
+    assertThat(qname("super.b").matchesQualifiedName("a.b")).isFalse();
+    assertThat(qname("super.b").matchesQualifiedName(".b")).isFalse();
+    assertThat(qname("super.b").matchesQualifiedName("a.")).isFalse();
+    assertThat(qname("super.b").matchesQualifiedName("this.b")).isFalse();
+    assertThat(qname("super.b").matchesQualifiedName("super.b")).isTrue();
 
     assertThat(qname("a.b.c").matchesQualifiedName("a.b.c")).isTrue();
     assertThat(qname("a.b.c").matchesQualifiedName("a.b.c")).isTrue();
@@ -293,7 +304,13 @@ public class NodeTest {
 
     assertThat(qname("this.b").matchesQualifiedName(qname("a"))).isFalse();
     assertThat(qname("this.b").matchesQualifiedName(qname("a.b"))).isFalse();
+    assertThat(qname("this.b").matchesQualifiedName(qname("super.b"))).isFalse();
     assertThat(qname("this.b").matchesQualifiedName(qname("this.b"))).isTrue();
+
+    assertThat(qname("super.b").matchesQualifiedName(qname("a"))).isFalse();
+    assertThat(qname("super.b").matchesQualifiedName(qname("a.b"))).isFalse();
+    assertThat(qname("super.b").matchesQualifiedName(qname("this.b"))).isFalse();
+    assertThat(qname("super.b").matchesQualifiedName(qname("super.b"))).isTrue();
 
     assertThat(qname("a.b.c").matchesQualifiedName(qname("a.b.c"))).isTrue();
     assertThat(qname("a.b.c").matchesQualifiedName(qname("a.b.c"))).isTrue();
@@ -324,6 +341,28 @@ public class NodeTest {
     assertThat(new Node(Token.INC, IR.name("x")).matchesQualifiedName(qname("x"))).isFalse();
   }
 
+  @Test
+  public void testMatchesName() {
+    // Empty string are treat as unique.
+    assertThat(IR.name("").matchesName("")).isFalse();
+
+    assertThat(IR.name("a").matchesName("a")).isTrue();
+    assertThat(IR.name("a").matchesName("a.b")).isFalse();
+    assertThat(IR.name("a").matchesName("")).isFalse();
+
+    assertThat(IR.thisNode().matchesName("this")).isFalse();
+    assertThat(IR.superNode().matchesName("super")).isFalse();
+  }
+
+  @Test
+  public void testMatchesNameNodes() {
+    assertThat(IR.name("a").matchesName(qname("a"))).isTrue();
+    assertThat(IR.name("a").matchesName(qname("a.b"))).isFalse();
+
+    assertThat(IR.thisNode().matchesName(qname("this"))).isFalse();
+    assertThat(IR.superNode().matchesName(qname("super"))).isFalse();
+  }
+
   public static Node qname(String name) {
     int endPos = name.indexOf('.');
     if (endPos == -1) {
@@ -333,6 +372,8 @@ public class NodeTest {
     String nodeName = name.substring(0, endPos);
     if ("this".equals(nodeName)) {
       node = IR.thisNode();
+    } else if ("super".equals(nodeName)) {
+      node = IR.superNode();
     } else {
       node = IR.name(nodeName);
     }
@@ -504,8 +545,11 @@ public class NodeTest {
   public void testQualifiedName() {
     assertThat(IR.name("").getQualifiedName()).isNull();
     assertThat(IR.name("a").getQualifiedName()).isEqualTo("a");
+    assertThat(IR.thisNode().getQualifiedName()).isEqualTo("this");
+    assertThat(IR.superNode().getQualifiedName()).isEqualTo("super");
     assertThat(IR.getprop(IR.name("a"), IR.string("b")).getQualifiedName()).isEqualTo("a.b");
     assertThat(IR.getprop(IR.thisNode(), IR.string("b")).getQualifiedName()).isEqualTo("this.b");
+    assertThat(IR.getprop(IR.superNode(), IR.string("b")).getQualifiedName()).isEqualTo("super.b");
     assertThat(IR.getprop(IR.call(IR.name("a")), IR.string("b")).getQualifiedName()).isNull();
   }
 
