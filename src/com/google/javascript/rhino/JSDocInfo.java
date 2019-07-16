@@ -115,7 +115,7 @@ public class JSDocInfo implements Serializable {
     private ArrayList<JSTypeExpression> implementedInterfaces;
     private LinkedHashMap<String, JSTypeExpression> parameters;
     private ArrayList<JSTypeExpression> thrownTypes;
-    private ArrayList<String> templateTypeNames;
+    private LinkedHashMap<String, JSTypeExpression> templateTypeNames;
     private Set<String> disposedParameters;
     private LinkedHashMap<String, Node> typeTransformations;
 
@@ -169,7 +169,7 @@ public class JSDocInfo implements Serializable {
       other.parameters = cloneTypeMap(parameters, cloneTypeNodes);
       other.thrownTypes = cloneTypeList(thrownTypes, cloneTypeNodes);
       other.templateTypeNames = templateTypeNames == null ? null
-          : new ArrayList<>(templateTypeNames);
+          : new LinkedHashMap<>(templateTypeNames);
       other.disposedParameters = disposedParameters == null ? null
           : new HashSet<>(disposedParameters);
       other.typeTransformations = typeTransformations == null ? null
@@ -1338,24 +1338,36 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Declares a template type name. Template type names are described using the
-   * {@code @template} annotation.
+   * Declares a template type name. Template type names are described using the {@code @template}
+   * annotation.
    *
    * @param newTemplateTypeName the template type name.
    */
   boolean declareTemplateTypeName(String newTemplateTypeName) {
     lazyInitInfo();
 
+    return declareTemplateTypeName(newTemplateTypeName, null);
+  }
+
+  boolean declareTemplateTypeName(
+      String newTemplateTypeName, JSTypeExpression newTemplateTypeBound) {
+    lazyInitInfo();
+
+    newTemplateTypeBound =
+        newTemplateTypeBound == null
+            ? new JSTypeExpression(new Node(Token.QMARK), "")
+            : newTemplateTypeBound;
+
     if (isTypeTransformationName(newTemplateTypeName) || hasTypedefType()) {
       return false;
     }
-    if (info.templateTypeNames == null){
-      info.templateTypeNames = new ArrayList<>();
-    } else if (info.templateTypeNames.contains(newTemplateTypeName)) {
+    if (info.templateTypeNames == null) {
+      info.templateTypeNames = new LinkedHashMap<>();
+    } else if (info.templateTypeNames.containsKey(newTemplateTypeName)) {
       return false;
     }
 
-    info.templateTypeNames.add(newTemplateTypeName);
+    info.templateTypeNames.put(newTemplateTypeName, newTemplateTypeBound);
     return true;
   }
 
@@ -1363,7 +1375,7 @@ public class JSDocInfo implements Serializable {
     if (info.templateTypeNames == null) {
       return false;
     }
-    return info.templateTypeNames.contains(name);
+    return info.templateTypeNames.containsKey(name);
   }
 
   private boolean isTypeTransformationName(String name) {
@@ -2082,7 +2094,14 @@ public class JSDocInfo implements Serializable {
     if (info == null || info.templateTypeNames == null) {
       return ImmutableList.of();
     }
-    return ImmutableList.copyOf(info.templateTypeNames);
+    return ImmutableList.copyOf(info.templateTypeNames.keySet());
+  }
+
+  public ImmutableMap<String, JSTypeExpression> getTemplateTypes() {
+    if (info == null || info.templateTypeNames == null) {
+      return ImmutableMap.of();
+    }
+    return ImmutableMap.copyOf(info.templateTypeNames);
   }
 
   /** Gets the type transformations. */

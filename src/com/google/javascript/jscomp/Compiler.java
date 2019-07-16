@@ -461,6 +461,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (options.brokenClosureRequiresLevel == CheckLevel.OFF) {
       options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.OFF);
     }
+
+    if (options.isEnableBoundedGenerics()
+        || options.enables(DiagnosticGroups.BOUNDED_GENERIC_TYPES)) {
+      options.setWarningLevel(DiagnosticGroups.BOUNDED_GENERIC_TYPES, CheckLevel.OFF);
+    }
   }
 
   /** Initializes the instance state needed for a compile job. */

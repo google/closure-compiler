@@ -719,9 +719,23 @@ public class CompilerOptions implements Serializable {
     this.nameGenerator = nameGenerator;
   }
 
-  //--------------------------------
+  // --------------------------------
   // Special-purpose alterations
-  //--------------------------------
+  // --------------------------------
+
+  /**
+   * Enable usage of bounded generic template types. Currently, bounded generic type semantics are
+   * in development and undefined.
+   */
+  private boolean enableBoundedGenerics = false;
+
+  void setEnableBoundedGenerics(boolean on) {
+    this.enableBoundedGenerics = on;
+  }
+
+  boolean isEnableBoundedGenerics() {
+    return this.enableBoundedGenerics;
+  }
 
   /**
    * Replace UI strings with chrome.i18n.getMessage calls.
