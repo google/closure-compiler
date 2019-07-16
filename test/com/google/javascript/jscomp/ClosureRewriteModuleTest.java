@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_MODULE;
@@ -1534,7 +1533,8 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Test
   public void testInvalidGoogModuleGet2() {
-    testError("goog.module.get('a');", INVALID_GET_CALL_SCOPE);
+    // This is checked earlier, in CheckClosureImports, not in the rewriting pass.
+    testNoWarning(srcs("goog.module('a');", "goog.module.get('a');"));
   }
 
   @Test

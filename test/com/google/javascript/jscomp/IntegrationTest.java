@@ -5262,6 +5262,24 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testGoogModuleGet_notAllowedInGlobalScope() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+
+    // Test in a regular script
+    test(
+        options,
+        new String[] {"goog.module('a.b');", "goog.module.get('a.b');"},
+        ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE);
+
+    // Test in a file with a goog.provide
+    test(
+        options,
+        new String[] {"goog.module('a.b');", "goog.provide('c'); goog.module.get('a.b');"},
+        ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE);
+  }
+
+  @Test
   public void testUnboundedArrayLiteralInfiniteLoop() {
     CompilerOptions options = createCompilerOptions();
     options.setIdeMode(true);
