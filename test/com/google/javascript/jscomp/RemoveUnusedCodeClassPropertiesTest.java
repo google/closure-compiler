@@ -451,19 +451,14 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   }
 
   @Test
-  public void testObjectDefineProperties_used_setter_removed() {
-    // TODO(bradfordcsmith): Either remove, fix this, or document it as a limitation of advanced
-    // mode optimizations.
+  public void testObjectDefineProperties_usedSetter_notRemoved() {
     enableTypeCheck();
 
-    test(
+    testSame(
         lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {prop:{set:function (a) {alert(2)}}});",
-            "C.prop = 2;"),
-        lines(
-            "/** @constructor */ function C() {}",
-            "Object.defineProperties(C, {                                  });"));
+            "C.prop = 2;"));
   }
 
   @Test
@@ -544,7 +539,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "/** @constructor @struct */",
             "var C = function() {};",
             "/** @type {?} */",
-            "C.prototype.value;",
+            "C.prototype.value = 0;",
             "$jscomp.global.Object.defineProperties(C.prototype, {",
             "  value: {",
             "    configurable: true,",
@@ -756,6 +751,19 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     test(
         "({['a']:0}); this.a = 1;", // preserve newline
         "({['a']:0});            ");
+  }
+
+  @Test
+  public void testDestrucuturing_assginmentToProperty_consideredUse() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    this.x = 0;",
+            "  }",
+            "}",
+            "",
+            "({a: new Foo().x} = {a: 0});"));
   }
 
   @Test

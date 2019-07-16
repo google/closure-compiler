@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -119,7 +120,7 @@ class RemoveUnusedCode implements CompilerPass {
 
   private final Map<Var, VarInfo> varInfoMap = new HashMap<>();
 
-  private final Set<String> referencedPropertyNames = new HashSet<>(IMPLICITLY_USED_PROPERTIES);
+  private final Set<String> pinnedPropertyNames = new HashSet<>(IMPLICITLY_USED_PROPERTIES);
 
   /** Stores Removable objects for each property name that is currently considered removable. */
   private final Multimap<String, Removable> removablesForPropertyNames = HashMultimap.create();
@@ -148,11 +149,14 @@ class RemoveUnusedCode implements CompilerPass {
   private final boolean removeUnusedStaticProperties;
   private final boolean removeUnusedObjectDefinePropertiesDefinitions;
   private final boolean removeUnusedPolyfills;
+  private final boolean assumeGettersArePure;
 
   RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;
     this.astAnalyzer = compiler.getAstAnalyzer();
     this.codingConvention = builder.compiler.getCodingConvention();
+    this.scopeCreator = new SyntacticScopeCreator(builder.compiler);
+
     this.removeLocalVars = builder.removeLocalVars;
     this.removeGlobals = builder.removeGlobals;
     this.preserveFunctionExpressionNames = builder.preserveFunctionExpressionNames;
@@ -163,7 +167,7 @@ class RemoveUnusedCode implements CompilerPass {
     this.removeUnusedObjectDefinePropertiesDefinitions =
         builder.removeUnusedObjectDefinePropertiesDefinitions;
     this.removeUnusedPolyfills = builder.removeUnusedPolyfills;
-    this.scopeCreator = new SyntacticScopeCreator(builder.compiler);
+    this.assumeGettersArePure = builder.assumeGettersArePure;
 
     // All Vars that are completely unremovable will share this VarInfo instance.
     canonicalUnremovableVarInfo = new VarInfo();
@@ -182,6 +186,7 @@ class RemoveUnusedCode implements CompilerPass {
     private boolean removeUnusedStaticProperties = false;
     private boolean removeUnusedObjectDefinePropertiesDefinitions = false;
     private boolean removeUnusedPolyfills = false;
+    private boolean assumeGettersArePure = false;
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -232,6 +237,11 @@ class RemoveUnusedCode implements CompilerPass {
       return this;
     }
 
+    Builder assumeGettersArePure(boolean value) {
+      this.assumeGettersArePure = value;
+      return this;
+    }
+
     RemoveUnusedCode build() {
       return new RemoveUnusedCode(this);
     }
@@ -245,7 +255,7 @@ class RemoveUnusedCode implements CompilerPass {
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized());
     if (!allowRemovalOfExternProperties) {
-      referencedPropertyNames.addAll(compiler.getExternProperties());
+      pinnedPropertyNames.addAll(compiler.getExternProperties());
     }
     traverseAndRemoveUnusedReferences(root);
     // This pass may remove definitions of getter or setter properties.
@@ -458,9 +468,10 @@ class RemoveUnusedCode implements CompilerPass {
       }
     }
 
-    if (NodeUtil.isExpressionResultUsed(getProp)) {
+    if (NodeUtil.isExpressionResultUsed(getProp)
+        || considerForAccessorSideEffects(getProp, PropertyAccessKind.GETTER_ONLY)) {
       // must record as reference to the property and continue traversal.
-      markPropertyNameReferenced(propertyName);
+      markPropertyNameAsPinned(propertyName);
       traverseNode(objectNode, scope);
     } else if (objectNode.isThis()) {
       // this.propName;
@@ -485,11 +496,12 @@ class RemoveUnusedCode implements CompilerPass {
       }
     } else {
       // TODO(bradfordcsmith): add removal of `varName.propName;`
-      markPropertyNameReferenced(propertyName);
+      markPropertyNameAsPinned(propertyName);
       traverseNode(objectNode, scope);
     }
   }
 
+  // TODO(b/137380742): Combine with `traverseCompoundAssign`.
   private void traverseIncrementOrDecrementOp(Node incOrDecOp, Scope scope) {
     checkArgument(incOrDecOp.isInc() || incOrDecOp.isDec(), incOrDecOp);
     Node arg = incOrDecOp.getOnlyChild();
@@ -499,10 +511,13 @@ class RemoveUnusedCode implements CompilerPass {
     } else if (arg.isGetProp()) {
       Node getPropObj = arg.getFirstChild();
       Node propertyNameNode = arg.getLastChild();
-      if (getPropObj.isThis()) {
+
+      if (considerForAccessorSideEffects(arg, PropertyAccessKind.GETTER_AND_SETTER)) {
+        traverseNode(getPropObj, scope); // Don't re-traverse the GETPROP as a read.
+      } else if (getPropObj.isThis()) {
         // this.propName++
         RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
-        considerForIndependentRemoval(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode));
+        considerForIndependentRemoval(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode, null));
       } else if (isDotPrototype(getPropObj)) {
         // someExpression.prototype.propName++
         Node exprObj = getPropObj.getFirstChild();
@@ -510,15 +525,18 @@ class RemoveUnusedCode implements CompilerPass {
         if (exprObj.isName()) {
           // varName.prototype.propName++
           VarInfo varInfo = traverseNameNode(exprObj, scope);
-          varInfo.addRemovable(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode));
+          varInfo.addRemovable(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode, null));
         } else {
           // (someExpression).prototype.propName++
+          Node toPreserve = null;
           if (astAnalyzer.mayHaveSideEffects(exprObj)) {
+            toPreserve = exprObj;
             traverseNode(exprObj, scope);
           } else {
             builder.addContinuation(new Continuation(exprObj, scope));
           }
-          considerForIndependentRemoval(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode));
+          considerForIndependentRemoval(
+              builder.buildIncOrDepOp(incOrDecOp, propertyNameNode, toPreserve));
         }
       } else {
         // someExpression.propName++ is not removable except in the cases covered above
@@ -530,19 +548,28 @@ class RemoveUnusedCode implements CompilerPass {
     }
   }
 
+  // TODO(b/137380742): Combine with `traverseIncrementOrDecrement`.
   private void traverseCompoundAssign(Node compoundAssignNode, Scope scope) {
-    // We'll allow removal of compound assignment to a this property as long as the result of the
+    // We'll allow removal of compound assignment to a `this` property as long as the result of the
     // assignment is unused.
     // e.g. `this.x += 3;`
+    // TODO(nickreid): Why do we treat `this` properties specially? It it because `this` is const?
     Node targetNode = compoundAssignNode.getFirstChild();
     Node valueNode = compoundAssignNode.getLastChild();
-    if (targetNode.isGetProp()
-        && targetNode.getFirstChild().isThis()
-        && !NodeUtil.isExpressionResultUsed(compoundAssignNode)) {
+    if (targetNode.isGetProp()) {
+      if (considerForAccessorSideEffects(targetNode, PropertyAccessKind.GETTER_AND_SETTER)) {
+        traverseNode(targetNode.getFirstChild(), scope); // Don't re-traverse the GETPROP as a read.
+        traverseNode(valueNode, scope);
+      } else if (targetNode.getFirstChild().isThis()
+          && !NodeUtil.isExpressionResultUsed(compoundAssignNode)) {
       RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
       traverseRemovableAssignValue(valueNode, builder, scope);
       considerForIndependentRemoval(
           builder.buildNamedPropertyAssign(compoundAssignNode, targetNode.getLastChild()));
+      } else {
+        traverseNode(targetNode, scope);
+        traverseNode(valueNode, scope);
+      }
     } else {
       traverseNode(targetNode, scope);
       traverseNode(valueNode, scope);
@@ -566,7 +593,7 @@ class RemoveUnusedCode implements CompilerPass {
         && codingConvention.isPropertyRenameFunction(callee.getOriginalQualifiedName())) {
       Node propertyNameNode = checkNotNull(callee.getNext());
       if (propertyNameNode.isString()) {
-        markPropertyNameReferenced(propertyNameNode.getString());
+        markPropertyNameAsPinned(propertyNameNode.getString());
       }
       traverseChildren(callNode, scope);
     } else if (NodeUtil.isObjectDefinePropertiesDefinition(callNode)) {
@@ -680,7 +707,7 @@ class RemoveUnusedCode implements CompilerPass {
         property = property.getNext()) {
       if (property.isQuotedString()) {
         // Quoted property name counts as a reference to the property and protects it from removal.
-        markPropertyNameReferenced(property.getString());
+        markPropertyNameAsPinned(property.getString());
         traverseNode(property.getOnlyChild(), scope);
       } else if (property.isStringKey()) {
         Node definition = property.getOnlyChild();
@@ -732,7 +759,7 @@ class RemoveUnusedCode implements CompilerPass {
         // because of some reflection patterns.
         // Note that we are intentionally treating both quoted and unquoted keys as
         // references.
-        markPropertyNameReferenced(propertyNode.getString());
+        markPropertyNameAsPinned(propertyNode.getString());
         traverseNode(propertyNode.getFirstChild(), scope);
       } else {
         traverseNode(propertyNode, scope);
@@ -938,7 +965,13 @@ class RemoveUnusedCode implements CompilerPass {
       Node getPropLhs = lhs.getFirstChild();
       Node propNameNode = lhs.getLastChild();
 
-      if (getPropLhs.isName()) {
+      if (considerForAccessorSideEffects(lhs, PropertyAccessKind.SETTER_ONLY)) {
+        // And the possible side-effects mean we can't do any removal. We don't use the
+        // `AstAnalyzer` because we only want to consider side-effect from the assignment, not the
+        // entire l-value subtree.
+        traverseNode(getPropLhs, scope); // Don't re-traverse the GETPROP as a read.
+        traverseNode(valueNode, scope);
+      } else if (getPropLhs.isName()) {
         // varName.propertyName = someValue
         VarInfo varInfo = traverseNameNode(getPropLhs, scope);
         RemovableBuilder builder = new RemovableBuilder();
@@ -1006,7 +1039,7 @@ class RemoveUnusedCode implements CompilerPass {
 
         case STRING_KEY:
           if (!elem.isQuotedString()) {
-            markPropertyNameReferenced(elem.getString());
+            markPropertyNameAsPinned(elem.getString());
           }
           traverseIndirectAssignment(elem, elem.getOnlyChild(), scope);
           break;
@@ -1067,6 +1100,10 @@ class RemoveUnusedCode implements CompilerPass {
     // Flatten out the case where the target is a default value. We always have to consider it.
     if (target.isDefaultValue()) {
       target = target.getFirstChild();
+    }
+
+    if (target.isGetProp()) {
+      considerForAccessorSideEffects(target, PropertyAccessKind.SETTER_ONLY);
     }
 
     RemovableBuilder builder =
@@ -1275,8 +1312,8 @@ class RemoveUnusedCode implements CompilerPass {
     markUnusedParameters(argList, fparamScope);
   }
 
-  private void markPropertyNameReferenced(String propertyName) {
-    if (referencedPropertyNames.add(propertyName)) {
+  private void markPropertyNameAsPinned(String propertyName) {
+    if (pinnedPropertyNames.add(propertyName)) {
       // Continue traversal of all of the property name's values and no longer consider them for
       // removal.
       for (Removable removable : removablesForPropertyNames.removeAll(propertyName)) {
@@ -1289,8 +1326,7 @@ class RemoveUnusedCode implements CompilerPass {
     if (removable.isNamedProperty()) {
       String propertyName = removable.getPropertyName();
 
-      if (referencedPropertyNames.contains(propertyName)
-          || codingConvention.isExported(propertyName)) {
+      if (pinnedPropertyNames.contains(propertyName) || codingConvention.isExported(propertyName)) {
         // Referenced or exported, so not removable.
         removable.applyContinuations();
       } else if (isIndependentlyRemovable(removable)) {
@@ -1300,11 +1336,26 @@ class RemoveUnusedCode implements CompilerPass {
         removable.applyContinuations();
         // This assignment counts as a reference, since we won't be removing it.
         // This is necessary in order to preserve getters and setters for the property.
-        markPropertyNameReferenced(propertyName);
+        markPropertyNameAsPinned(propertyName);
       }
     } else {
       removable.applyContinuations();
     }
+  }
+
+  /** @return Whether or not accessor side-effect are a possibility. */
+  private boolean considerForAccessorSideEffects(Node getprop, PropertyAccessKind usage) {
+    checkState(getprop.isGetProp(), getprop); // Other node types may make sense in the future.
+
+    String propName = getprop.getSecondChild().getString();
+    PropertyAccessKind recorded = compiler.getAccessorSummary().getKind(propName);
+    if ((recorded.hasGetter() && usage.hasGetter() && !assumeGettersArePure)
+        || (recorded.hasSetter() && usage.hasSetter())) {
+      markPropertyNameAsPinned(propName);
+      return true;
+    }
+
+    return false;
   }
 
   private boolean isIndependentlyRemovable(Removable removable) {
@@ -1754,9 +1805,9 @@ class RemoveUnusedCode implements CompilerPass {
       return new AnonymousPrototypeNamedPropertyAssign(this, assignNode);
     }
 
-    IncOrDecOp buildIncOrDepOp(Node incOrDecOp, Node propertyNode) {
+    IncOrDecOp buildIncOrDepOp(Node incOrDecOp, Node propertyNode, @Nullable Node toPreseve) {
       this.propertyName = propertyNode.getString();
-      return new IncOrDecOp(this, incOrDecOp);
+      return new IncOrDecOp(this, incOrDecOp, toPreseve);
     }
 
     UnusedReadReference buildUnusedReadReference(Node referenceNode, Node propertyNode) {
@@ -1850,34 +1901,33 @@ class RemoveUnusedCode implements CompilerPass {
   /** Represents an increment or decrement operation that could be removed. */
   private class IncOrDecOp extends Removable {
     final Node incOrDecNode;
+    @Nullable final Node toPreserve;
 
-    IncOrDecOp(RemovableBuilder builder, Node incOrDecNode) {
+    IncOrDecOp(RemovableBuilder builder, Node incOrDecNode, @Nullable Node toPreserve) {
       super(builder);
       checkArgument(incOrDecNode.isInc() || incOrDecNode.isDec(), incOrDecNode);
+
       Node arg = incOrDecNode.getOnlyChild();
       // TODO(bradfordcsmith): handle `name;` and `name.property;` references
       checkState(isThisDotProperty(arg) || isDotPrototypeDotProperty(arg), arg);
+
       this.incOrDecNode = incOrDecNode;
+      this.toPreserve = toPreserve;
     }
 
     @Override
     void removeInternal(AbstractCompiler compiler) {
-      if (!alreadyRemoved(incOrDecNode)) {
-        Node arg = incOrDecNode.getOnlyChild();
-        checkState(arg.isGetProp(), arg);
+      if (alreadyRemoved(incOrDecNode)) {
+        return;
+      }
 
-        if (isThisDotProperty(arg)) {
-          removeExpressionCompletely(incOrDecNode);
-        } else {
-          checkState(isDotPrototypeDotProperty(arg), arg);
-          // objExpression.prototype.propertyName
-          Node objExpression = arg.getFirstFirstChild();
-          if (astAnalyzer.mayHaveSideEffects(objExpression)) {
-            replaceNodeWith(incOrDecNode, objExpression.detach());
-          } else {
-            removeExpressionCompletely(incOrDecNode);
-          }
-        }
+      Node arg = incOrDecNode.getOnlyChild();
+      checkState(arg.isGetProp(), arg);
+
+      if (this.toPreserve == null) {
+        removeExpressionCompletely(incOrDecNode);
+      } else {
+        replaceNodeWith(incOrDecNode, toPreserve.detach());
       }
     }
 

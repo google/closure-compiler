@@ -2704,6 +2704,7 @@ public final class DefaultPassConfig extends PassConfig {
             .removeUnusedObjectDefinePropertiesDefinitions(options.isRemoveUnusedClassProperties())
             .removeUnusedConstructorProperties(options.isRemoveUnusedConstructorProperties())
             .removeUnusedPolyfills(options.rewritePolyfills)
+            .assumeGettersArePure(options.getAssumeGettersArePure())
             .build();
       }
 
