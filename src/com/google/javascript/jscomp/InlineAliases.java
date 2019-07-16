@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -132,19 +133,21 @@ final class InlineAliases implements CompilerPass {
         case NAME:
         case GETPROP:
           if (n.isQualifiedName() && aliases.containsKey(n.getQualifiedName())) {
-            String leftmostName = NodeUtil.getRootOfQualifiedName(n).getString();
-            Var v = t.getScope().getVar(leftmostName);
-            if (v != null && v.isLocal()) {
-              // Shadow of alias. Don't rewrite
+            if (isLeftmostNameLocal(t, n)) {
+              // The alias is shadowed by a local variable. Don't rewrite.
               return;
             }
             if (NodeUtil.isNameDeclOrSimpleAssignLhs(n, parent)) {
-              // Alias definition. Don't rewrite
+              // The node defines an alias. Don't rewrite.
               return;
             }
 
             Node newNode =
                 astFactory.createQName(t.getScope(), resolveAlias(n.getQualifiedName(), n));
+            if (isLeftmostNameLocal(t, newNode)) {
+              // The aliased name is shadowed by a local variable. Don't rewrite.
+              return;
+            }
 
             // If n is get_prop like "obj.foo" then newNode should use only location of foo, not
             // obj.foo.
@@ -161,6 +164,13 @@ final class InlineAliases implements CompilerPass {
         default:
           break;
       }
+    }
+
+    private boolean isLeftmostNameLocal(NodeTraversal t, Node n) {
+      Preconditions.checkState(n.isQualifiedName());
+      String leftmostName = NodeUtil.getRootOfQualifiedName(n).getString();
+      Var v = t.getScope().getVar(leftmostName);
+      return v != null && v.isLocal();
     }
 
     /**

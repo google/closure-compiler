@@ -618,4 +618,38 @@ public class InlineAliasesTest extends CompilerTestCase {
                 "use(Foobar);",
                 "alert(Foobar.foo);")));
   }
+
+  @Test
+  public void testForwardedExport() {
+    testSame(
+        lines(
+            "const proto = {};",
+            "/** @const */",
+            "proto.google = {};",
+            "/** @const */",
+            "proto.google.type = {};",
+            "proto.google.type.Date = class {};",
+            "const alias = proto;",
+            "function f() {",
+            "  const d = new alias.google.type.Date();",
+            "  const proto = 0;",
+            "}"));
+  }
+
+  @Test
+  public void testForwardedExportNested() {
+    testSame(
+        lines(
+            "const proto = {};",
+            "/** @const */",
+            "proto.google = {};",
+            "/** @const */",
+            "proto.google.type = {};",
+            "proto.google.type.Date = class {};",
+            "const alias = proto.google;",
+            "function f() {",
+            "  const d = new alias.type.Date();",
+            "  const proto = 0;",
+            "}"));
+  }
 }
