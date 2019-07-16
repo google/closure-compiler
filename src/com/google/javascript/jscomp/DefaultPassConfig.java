@@ -1574,7 +1574,9 @@ public final class DefaultPassConfig extends PassConfig {
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           // TODO(johnplaisted): Expand the Set of modules to check.
           return new CheckClosureImports(
-              compiler, compiler.getModuleMetadataMap(), ImmutableSet.of(ModuleType.GOOG_PROVIDE));
+              compiler,
+              compiler.getModuleMetadataMap(),
+              ImmutableSet.of(ModuleType.SCRIPT, ModuleType.GOOG_PROVIDE));
         }
 
         @Override

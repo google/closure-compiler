@@ -1295,8 +1295,10 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testClosurePassOn() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
-    test(options, "var goog = {}; goog.require = function(x) {}; goog.require('foo');",
-        ProcessClosurePrimitives.MISSING_PROVIDE_ERROR);
+    test(
+        options,
+        "var goog = {}; goog.require = function(x) {}; goog.require('foo');",
+        ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE);
     test(
         options,
         "/** @define {boolean} */ var COMPILED = false;" +
