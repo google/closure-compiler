@@ -2033,14 +2033,14 @@ public class JSDocInfo implements Serializable {
   /**
    * Returns the list of authors or null if none.
    */
-  public Collection<String> getAuthors() {
+  public List<String> getAuthors() {
     return documentation == null ? null : documentation.authors;
   }
 
   /**
    * Returns the list of references or null if none.
    */
-  public Collection<String> getReferences() {
+  public List<String> getReferences() {
     return documentation == null ? null : documentation.sees;
   }
 
