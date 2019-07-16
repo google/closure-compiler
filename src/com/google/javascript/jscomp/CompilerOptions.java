@@ -43,7 +43,6 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -1023,13 +1022,13 @@ public class CompilerOptions implements Serializable {
     this.tracer = mode;
   }
 
-  private PrintStream tracerOutput;
+  private Path tracerOutput;
 
-  PrintStream getTracerOutput() {
+  Path getTracerOutput() {
     return tracerOutput;
   }
 
-  public void setTracerOutput(PrintStream out) {
+  public void setTracerOutput(Path out) {
     tracerOutput = out;
   }
 

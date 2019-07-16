@@ -70,6 +70,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -846,9 +847,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     setProgress(1.0, "recordFunctionInformation");
 
     if (tracker != null) {
-      PrintStream tracerOutput =
-          options.getTracerOutput() == null ? this.outStream : options.getTracerOutput();
-      tracker.outputTracerReport(tracerOutput);
+      if (options.getTracerOutput() == null) {
+        tracker.outputTracerReport(this.outStream);
+      } else {
+        try (PrintStream out = new PrintStream(Files.newOutputStream(options.getTracerOutput()))) {
+          tracker.outputTracerReport(out);
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
     }
   }
 
