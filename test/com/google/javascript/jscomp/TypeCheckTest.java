@@ -23981,24 +23981,37 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testCyclicUnionTypedefs() {
-    // TODO(b/112964849): This case should not throw anything.
-    assertThrows(
-        StackOverflowError.class,
-        () -> {
-          testTypes(
-              lines(
-                  "/** @typedef {Foo|string} */",
-                  "var Bar;",
-                  "/** @typedef {Bar|number} */",
-                  "var Foo;",
-                  "var /** Foo */ foo;",
-                  "var /** null */ x = foo;",
-                  ""),
-              lines(
-                  "initializing variable", //
-                  "found   : (number|string)",
-                  "required: null"));
-        });
+    testTypes(
+      lines(
+          "/** @typedef {Foo|string} */",
+          "var Bar;",
+          "/** @typedef {Bar|number} */",
+          "var Foo;",
+          "var /** Foo */ foo;",
+          "var /** null */ x = foo;",
+          ""),
+      lines(
+          "initializing variable", //
+          "found   : (number|string)",
+          "required: null"));
+  }
+
+  @Test 
+  public void testRecursiveTemplatizedTypedefs() {
+    testTypes(
+      lines(
+        "/** @typedef {string|number} */",
+        "var Bar;",
+        "/** @typedef {Bar|BarArray} */",
+        "var Foo;",
+        "/** @typedef {Array<Foo>} */",
+        "var BarArray;",
+        "/**",
+        "* @param {Foo} foo",
+        "*/",
+        "function testFoo(foo) { }",
+        "var /** Array<Array<Array<Bar>>> */ x = [];",
+        "testFoo(x);"));
   }
 
   @Test

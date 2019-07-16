@@ -1886,13 +1886,19 @@ class TypeInference
       // example: @param {Array.<T>|NodeList|Arguments|{length:number}}
       UnionType unionType = paramType.toMaybeUnionType();
       for (JSType alternate : unionType.getAlternates()) {
-        maybeResolveTemplatedType(alternate, argType, resolvedTypes, seenTypes);
+        if (seenTypes.add(alternate)) {
+          maybeResolveTemplatedType(alternate, argType, resolvedTypes, seenTypes);
+          seenTypes.remove(alternate);
+        }
       }
       return;
     } else if (argType.isUnionType()) {
       UnionType unionType = argType.toMaybeUnionType();
       for (JSType alternate : unionType.getAlternates()) {
-        maybeResolveTemplatedType(paramType, alternate, resolvedTypes, seenTypes);
+        if (seenTypes.add(alternate)) {
+          maybeResolveTemplatedType(paramType, alternate, resolvedTypes, seenTypes);
+          seenTypes.remove(alternate);
+        } 
       }
       return;
     }

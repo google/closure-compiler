@@ -195,11 +195,14 @@ public class ModificationVisitor implements Visitor<JSType> {
 
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
     for (JSType beforeTemplateType : type.getTemplateTypes()) {
-      JSType afterTemplateType = beforeTemplateType.visit(this);
-      if (beforeTemplateType != afterTemplateType) {
-        changed = true;
+      if (this.seenTypes.add(beforeTemplateType)) {
+        JSType afterTemplateType = beforeTemplateType.visit(this);
+        if (beforeTemplateType != afterTemplateType) {
+          changed = true;
+        }
+        builder.add(afterTemplateType);
+        this.seenTypes.remove(beforeTemplateType);
       }
-      builder.add(afterTemplateType);
     }
 
     if (changed) {

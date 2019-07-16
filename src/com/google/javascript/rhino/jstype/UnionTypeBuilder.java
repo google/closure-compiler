@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -159,9 +160,17 @@ public final class UnionTypeBuilder implements Serializable {
 
   // A specific override that avoid creating an iterator.  This version is currently used when
   // adding a union as an alternate.
-  public UnionTypeBuilder addAlternates(ImmutableList<JSType> list) {
+  public UnionTypeBuilder addAlternates(ImmutableList<JSType> list, Set<JSType> seenTypes) {
     for (int i = 0; i < list.size(); i++) {
-      addAlternate(list.get(i));
+      addAlternate(list.get(i), seenTypes);
+    }
+    return this;
+  }
+
+  public UnionTypeBuilder addAlternate(JSType alternate, Set<JSType> seenTypes) {
+    if (seenTypes.add(alternate)) {
+      addAlternate(alternate);
+      seenTypes.remove(alternate);
     }
     return this;
   }

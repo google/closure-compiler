@@ -43,6 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -61,8 +62,8 @@ public final class TemplatizedType extends ProxyObjectType {
   private final ImmutableList<JSType> templateTypes;
   /** Whether all type parameter values for this specialization are `?`. */
   private final boolean isSpecializedOnlyWithUnknown;
-  /** A set of visited template types to avoid infinite recursion error. */
-  private Set visitedTemplateTypes;
+  
+  private final Set<JSType> seenTypes = Sets.newIdentityHashSet();
 
   private transient TemplateTypeMapReplacer replacer;
 
@@ -84,7 +85,6 @@ public final class TemplatizedType extends ProxyObjectType {
     }
     this.templateTypes = builder.build();
     this.isSpecializedOnlyWithUnknown = maybeIsSpecializedOnlyWithUnknown;
-    this.visitedTemplateTypes = new HashSet();
 
     this.replacer = new TemplateTypeMapReplacer(registry, getTemplateTypeMap());
   }
@@ -131,13 +131,12 @@ public final class TemplatizedType extends ProxyObjectType {
   }
 
   boolean appendTemplateType(JSType templateType, StringBuilder sb, boolean forAnnotations) {
-    boolean notExist = !this.visitedTemplateTypes.contains(templateType);
-    if (notExist) {
-      this.visitedTemplateTypes.add(templateType);
+    if (this.seenTypes.add(templateType)) {
       templateType.appendTo(sb, forAnnotations);
-      this.visitedTemplateTypes.remove(templateType);
+      this.seenTypes.remove(templateType);
+      return true;
     }
-    return notExist;
+    return false;
   }
 
   @Override

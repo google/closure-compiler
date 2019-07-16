@@ -44,9 +44,11 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -78,6 +80,8 @@ public class UnionType extends JSType {
   // TODO(nickreid): Find a less complex way to prevent this conflation.
   private ImmutableList<JSType> alternates;
 
+  private final Set<JSType> seenTypes = Sets.newIdentityHashSet();
+
   /**
    * Creates a union type.
    *
@@ -106,7 +110,7 @@ public class UnionType extends JSType {
    */
   private void rebuildAlternates() {
     UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
-    builder.addAlternates(alternates);
+    builder.addAlternates(alternates, seenTypes);
     alternates = builder.getAlternates();
   }
 
@@ -457,7 +461,10 @@ public class UnionType extends JSType {
     // This is important for deterministic behavior for testing.
     SortedSet<String> sortedTypeNames = new TreeSet<>();
     for (JSType jsType : alternates) {
-      sortedTypeNames.add(jsType.appendTo(new StringBuilder(), forAnnotations).toString());
+      if (this.seenTypes.add(jsType)) {
+        sortedTypeNames.add(jsType.appendTo(new StringBuilder(), forAnnotations).toString());
+        this.seenTypes.remove(jsType);
+      }
     }
     Joiner.on('|').appendTo(sb, sortedTypeNames);
     return sb.append(")");
