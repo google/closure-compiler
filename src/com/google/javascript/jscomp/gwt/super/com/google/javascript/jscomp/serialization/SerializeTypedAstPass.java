@@ -19,12 +19,12 @@ package com.google.javascript.jscomp.serialization;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.rhino.Node;
-import java.io.OutputStream;
+import java.nio.file.Path;
 
 /** Fail-fast replacement */
 public final class SerializeTypedAstPass implements CompilerPass {
 
-  public SerializeTypedAstPass(AbstractCompiler compiler, OutputStream out) {
+  public SerializeTypedAstPass(AbstractCompiler compiler, Path out) {
     throw new RuntimeException("Serialization not yet supported in JS version of compiler");
   }
 
