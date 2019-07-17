@@ -74,52 +74,6 @@ DOMStringList.prototype.item = function(index) {};
 
 /**
  * @constructor
- * @implements {IArrayLike<string>}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList
- */
-function NameList() {}
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList-length
- */
-NameList.prototype.length;
-
-/**
- * @param {string} str
- * @return {boolean}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList-contains
- * @nosideeffects
- */
-NameList.prototype.contains = function(str) {};
-
-/**
- * @param {?string} namespaceURI
- * @param {string} name
- * @return {boolean}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList-containsNS
- * @nosideeffects
- */
-NameList.prototype.containsNS = function(namespaceURI, name) {};
-
-/**
- * @param {number} index
- * @return {string}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList-getName
- * @nosideeffects
- */
-NameList.prototype.getName = function(index) {};
-
-/**
- * @param {number} index
- * @return {string}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList-getNamespaceURI
- * @nosideeffects
- */
-NameList.prototype.getNamespaceURI = function(index) {};
-
-/**
- * @constructor
  * @implements {IArrayLike<!DOMImplementation>}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMImplementationList
  */
@@ -832,21 +786,3 @@ DocumentType.prototype.publicId;
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-Core-DocType-systemId
  */
 DocumentType.prototype.systemId;
-
-/**
- * @type {string}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Entity3-inputEncoding
- */
-Entity.prototype.inputEncoding;
-
-/**
- * @type {string}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Entity3-encoding
- */
-Entity.prototype.xmlEncoding;
-
-/**
- * @type {string}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Entity3-version
- */
-Entity.prototype.xmlVersion;
