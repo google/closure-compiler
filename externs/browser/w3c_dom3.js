@@ -204,12 +204,6 @@ Document.prototype.adoptNode = function(externalNode) {};
 Document.prototype.documentURI;
 
 /**
- * @type {DOMConfiguration}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-domConfig
- */
-Document.prototype.domConfig;
-
-/**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-inputEncoding
  */
@@ -657,42 +651,6 @@ DOMLocator.prototype.uri;
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMLocator-utf16Offset
  */
 DOMLocator.prototype.utf16Offset;
-
-/**
- * @constructor
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMConfiguration
- */
-function DOMConfiguration() {}
-
-/**
- * @type {DOMStringList}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMConfiguration-parameterNames
- */
-DOMConfiguration.prototype.parameterNames;
-
-/**
- * @param {string} name
- * @return {boolean}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMConfiguration-canSetParameter
- * @nosideeffects
- */
-DOMConfiguration.prototype.canSetParameter = function(name) {};
-
-/**
- * @param {string} name
- * @return {*}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMConfiguration-getParameter
- * @nosideeffects
- */
-DOMConfiguration.prototype.getParameter = function(name) {};
-
-/**
- * @param {string} name
- * @param {*} value
- * @return {*}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMConfiguration-property
- */
-DOMConfiguration.prototype.setParameter = function(name, value) {};
 
 /**
  * @type {string}
