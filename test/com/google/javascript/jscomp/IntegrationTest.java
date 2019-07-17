@@ -767,7 +767,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testConstPolymerElementNotAllowed() {
+  public void testConstPolymerElementAllowed() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
@@ -775,10 +775,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
-    test(
-        options,
-        "const Foo = Polymer({ is: 'x-foo' });",
-        PolymerPassErrors.POLYMER_INVALID_DECLARATION);
+    testNoWarnings(options, "const Foo = Polymer({ is: 'x-foo' });");
   }
 
   private void addPolymer2Externs() {

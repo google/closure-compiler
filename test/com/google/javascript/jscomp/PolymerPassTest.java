@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.PolymerClassRewriter.POLYMER_ELEMENT_
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_CLASS_PROPERTIES_INVALID;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_CLASS_PROPERTIES_NOT_STATIC;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_DESCRIPTOR_NOT_VALID;
-import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_DECLARATION;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXTENDS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_PROPERTY;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISSING_IS;
@@ -257,11 +256,15 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testConstTarget() {
-    testError(
+    test(
+        lines("const X = Polymer({", "  is: 'x-element',", "});"),
         lines(
-            "const X = Polymer({",
-            "  is: 'x-element',",
-            "});"), POLYMER_INVALID_DECLARATION);
+            "/**\n",
+            "* @constructor\n",
+            "* @extends {PolymerElement}\n",
+            "* @implements {PolymerXInterface}\n",
+            "*/\n",
+            "var X=function(){};X=Polymer(/** @lends {X.prototype} */ {is:\"x-element\"})"));
 
     test(
         lines(
