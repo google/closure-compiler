@@ -3249,7 +3249,7 @@ public class CompilerOptions implements Serializable {
     TIMING_ONLY, // Collect timing metrics only.
     OFF;  // Collect no timing and size metrics.
 
-    boolean isOn() {
+    public boolean isOn() {
       return this != OFF;
     }
   }
