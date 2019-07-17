@@ -153,4 +153,28 @@ testSuite({
     const a = {};
     assertEquals(a, deepFreeze(a));
   },
+
+  testSet_nonObject() {
+    const map = new WeakMap();
+    assertThrows(() => map.set(null, 2));
+    assertThrows(() => map.set(1, 2));
+  },
+
+  testGet_nonObject() {
+    const map = new WeakMap();
+    assertUndefined(map.get(null));
+    assertUndefined(map.get(1));
+  },
+
+  testHas_nonObject() {
+    const map = new WeakMap();
+    assertFalse(map.has(null));
+    assertFalse(map.has(1));
+  },
+
+  testDelete_nonObject() {
+    const map = new WeakMap();
+    assertFalse(map.delete(null));
+    assertFalse(map.delete(1));
+  },
 });
