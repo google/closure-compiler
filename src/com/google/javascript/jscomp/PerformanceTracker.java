@@ -21,10 +21,12 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultiset;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.Token;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -85,7 +87,9 @@ public final class PerformanceTracker {
   private final Deque<Stats> currentPass = new ArrayDeque<>();
 
   /** Cumulative stats for each compiler pass. */
-  private ImmutableMap<String, Stats> summary;
+  private ImmutableMap<String, Stats> passSummary;
+
+  private ImmutableMultiset<Token> astManifest;
 
   /** Stats a single run of a compiler pass. */
   private final List<Stats> log = new ArrayList<>();
@@ -162,6 +166,9 @@ public final class PerformanceTracker {
   }
 
   private void recordParsingStop(Stats logStats) {
+    if (tracksAstManifest()) {
+      populateAstManifest();
+    }
     recordInputCount();
     if (!tracksAstSize()) {
       return;
@@ -239,6 +246,10 @@ public final class PerformanceTracker {
     return this.mode != TracerMode.TIMING_ONLY;
   }
 
+  public boolean tracksAstManifest() {
+    return this.mode.isOn();
+  }
+
   public int getRuntime() {
     calcTotalStats();
     return this.passesRuntime;
@@ -285,19 +296,19 @@ public final class PerformanceTracker {
 
   public ImmutableMap<String, Stats> getStats() {
     calcTotalStats();
-    return this.summary;
+    return this.passSummary;
   }
 
   private void calcTotalStats() {
     // This method only does work the first time it is called
-    if (this.summary != null) {
+    if (this.passSummary != null) {
       return;
     }
     this.endTime = System.currentTimeMillis();
 
-    populateSummary();
+    populatePassSummary();
 
-    for (Entry<String, Stats> entry : this.summary.entrySet()) {
+    for (Entry<String, Stats> entry : this.passSummary.entrySet()) {
       Stats stats = entry.getValue();
       this.passesRuntime += stats.runtime;
       this.maxMem = Math.max(this.maxMem, stats.allocMem);
@@ -316,15 +327,15 @@ public final class PerformanceTracker {
     checkState(!tracksGzSize() || this.initGzCodeSize == this.gzDiff + this.gzCodeSize);
   }
 
-  private void populateSummary() {
-    HashMap<String, Stats> tmpSummary = new HashMap<>();
+  private void populatePassSummary() {
+    HashMap<String, Stats> tmpPassSummary = new HashMap<>();
 
     for (Stats logStat : this.log) {
       String passName = logStat.pass;
-      Stats entry = tmpSummary.get(passName);
+      Stats entry = tmpPassSummary.get(passName);
       if (entry == null) {
         entry = new Stats(passName, logStat.isOneTime);
-        tmpSummary.put(passName, entry);
+        tmpPassSummary.put(passName, entry);
       }
       entry.runtime += logStat.runtime;
       entry.allocMem = Math.max(entry.allocMem, logStat.allocMem);
@@ -333,12 +344,22 @@ public final class PerformanceTracker {
       entry.astDiff += logStat.astDiff;
       entry.diff += logStat.diff;
       entry.gzDiff += logStat.gzDiff;
-      // We don't populate the size fields in the summary stats.
+      // We don't populate the size fields in the passSummary stats.
       // We used to put the size after the last time a pass was run, but that is
       // a pretty meaningless thing to measure.
     }
 
-    this.summary = ImmutableMap.copyOf(tmpSummary);
+    this.passSummary = ImmutableMap.copyOf(tmpPassSummary);
+  }
+
+  private void populateAstManifest() {
+    if (this.astManifest != null) {
+      return;
+    }
+
+    ImmutableMultiset.Builder<Token> builder = ImmutableMultiset.builder();
+    NodeUtil.visitPreOrder(this.jsRoot, (n) -> builder.add(n.getToken()));
+    this.astManifest = builder.build();
   }
 
   /**
@@ -383,24 +404,24 @@ public final class PerformanceTracker {
             "",
             "Summary:",
             "pass,runtime,allocMem,runs,changingRuns,astReduction,reduction,gzReduction"));
-    this.summary.entrySet().stream()
+    this.passSummary.entrySet().stream()
         .sorted((e1, e2) -> Long.compare(e1.getValue().runtime, e2.getValue().runtime))
-        .forEach(
+        .map(
             (entry) -> {
               String key = entry.getKey();
               Stats stats = entry.getValue();
-              output.print(
-                  SimpleFormat.format(
-                      "%s,%d,%d,%d,%d,%d,%d,%d\n",
-                      key,
-                      stats.runtime,
-                      stats.allocMem,
-                      stats.runs,
-                      stats.changes,
-                      stats.astDiff,
-                      stats.diff,
-                      stats.gzDiff));
-            });
+              return SimpleFormat.format(
+                  "%s,%d,%d,%d,%d,%d,%d,%d",
+                  key,
+                  stats.runtime,
+                  stats.allocMem,
+                  stats.runs,
+                  stats.changes,
+                  stats.astDiff,
+                  stats.diff,
+                  stats.gzDiff);
+            })
+        .forEach(output::println);
 
     output.println(
         lines(
@@ -421,6 +442,18 @@ public final class PerformanceTracker {
               stats.astSize,
               stats.size,
               stats.gzSize));
+    }
+
+    if (this.astManifest != null) {
+      output.println(
+          lines(
+              "", //
+              "Input AST Manifest:",
+              "token,count"));
+      this.astManifest.entrySet().stream()
+          .map((e) -> SimpleFormat.format("%s,%d", e.getElement(), e.getCount()))
+          .sorted()
+          .forEach(output::println);
     }
 
     output.println();
