@@ -247,6 +247,11 @@ public final class NodeSubject extends Subject {
     return this;
   }
 
+  public NodeSubject matchesName(String qname) {
+    check("matchesName(%s)", qname).that(actual.matchesName(qname)).isTrue();
+    return this;
+  }
+
   public NodeSubject matchesQualifiedName(String qname) {
     check("matchesQualifiedName(%s)", qname).that(actual.matchesQualifiedName(qname)).isTrue();
     return this;

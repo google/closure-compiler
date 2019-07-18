@@ -423,7 +423,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
             if (t.getScope().isFunctionBlockScope()
-                && t.getScopeRoot().getParent().getFirstChild().matchesQualifiedName("m")) {
+                && t.getScopeRoot().getParent().getFirstChild().matchesName("m")) {
               ReferenceCollection self = rm.getReferences(t.getScope().getVar("self"));
               assertThat(self.isEscaped()).isFalse();
             }

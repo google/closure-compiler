@@ -233,8 +233,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       return null;
     }
 
-    if (NodeUtil.isNullOrUndefined(superClass)
-        || superClass.matchesQualifiedName("Object")) {
+    if (NodeUtil.isNullOrUndefined(superClass) || superClass.matchesName("Object")) {
       superClass = null;
     }
 

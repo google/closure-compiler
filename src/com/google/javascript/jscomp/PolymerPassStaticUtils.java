@@ -49,7 +49,7 @@ final class PolymerPassStaticUtils {
     // When imported from an ES module, the rewriting should set the original name.
     // When imported from an goog module (TS), we'll have a GETPROP like
     // `module$polymer$polymer_legacy.Polymer`.
-    return name.matchesQualifiedName("Polymer")
+    return name.matchesName("Polymer")
         || "Polymer".equals(name.getOriginalQualifiedName())
         || (name.isGetProp() && name.getLastChild().getString().equals("Polymer"));
   }
@@ -72,7 +72,7 @@ final class PolymerPassStaticUtils {
     // `module$polymer$polymer_element.PolymerElement`.
     return !heritage.isEmpty()
         && (heritage.matchesQualifiedName("Polymer.Element")
-            || heritage.matchesQualifiedName("PolymerElement")
+            || heritage.matchesName("PolymerElement")
             || "PolymerElement".equals(heritage.getOriginalQualifiedName())
             || (heritage.isGetProp()
                 && heritage.getLastChild().getString().equals("PolymerElement")));

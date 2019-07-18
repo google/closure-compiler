@@ -429,7 +429,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   }
 
   private boolean isSpreadOfArguments(Node n) {
-    return n.isSpread() && n.getOnlyChild().matchesQualifiedName("arguments");
+    return n.isSpread() && n.getOnlyChild().matchesName("arguments");
   }
 
   /**

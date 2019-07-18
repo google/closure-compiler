@@ -622,7 +622,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     // A
     Node superReplacement = superGetelemReplacement.getFirstChild();
     assertNode(superReplacement)
-        .matchesQualifiedName("A")
+        .matchesName("A")
         .hasLineno(5) // position and length of `super`
         .hasCharno(19)
         .hasLength(5)

@@ -149,7 +149,7 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
 
   /** @return Whether {@code n} is a reference to the global "Symbol" function. */
   private boolean isGlobalSymbol(NodeTraversal t, Node n) {
-    if (!n.matchesQualifiedName("Symbol")) {
+    if (!n.matchesName("Symbol")) {
       return false;
     }
     Var var = t.getScope().getVar("Symbol");

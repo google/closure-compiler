@@ -5358,7 +5358,7 @@ public final class NodeUtil {
     if (function == null
         || !function.isFunction()
         || !getFunctionParameters(function).hasOneChild()
-        || !getFunctionParameters(function).getFirstChild().matchesQualifiedName("exports")) {
+        || !getFunctionParameters(function).getFirstChild().matchesName("exports")) {
       return false;
     }
     Node call = function.getParent();

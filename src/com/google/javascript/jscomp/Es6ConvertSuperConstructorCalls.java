@@ -281,7 +281,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
               if (!foundNonEmptyReturn) {
                 if (n.isReturn()
                     && n.hasChildren()
-                    && !n.getFirstChild().matchesQualifiedName("undefined")) {
+                    && !n.getFirstChild().matchesName("undefined")) {
                   foundNonEmptyReturn = true;
                 }
               }

@@ -186,7 +186,7 @@ abstract class PotentialDeclaration {
         simplifyNamespace(compiler);
         return;
       }
-      if (nameNode.matchesQualifiedName("exports")) {
+      if (nameNode.matchesName("exports")) {
         // Replace the RHS of a default goog.module export with Unknown
         replaceRhsWithUnknown(getRhs());
         compiler.reportChangeToEnclosingScope(nameNode);
@@ -584,8 +584,8 @@ abstract class PotentialDeclaration {
   }
 
   private static boolean isExportLhs(Node lhs) {
-    return (lhs.isName() && lhs.matchesQualifiedName("exports"))
-        || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"))
+    return (lhs.isName() && lhs.matchesName("exports"))
+        || (lhs.isGetProp() && lhs.getFirstChild().matchesName("exports"))
         || lhs.matchesQualifiedName("module.exports");
   }
 
@@ -597,7 +597,7 @@ abstract class PotentialDeclaration {
     return callee.matchesQualifiedName("goog.require")
         || callee.matchesQualifiedName("goog.requireType")
         || callee.matchesQualifiedName("goog.forwardDeclare")
-        || callee.matchesQualifiedName("require");
+        || callee.matchesName("require");
   }
 
   static boolean isAliasDeclaration(Node lhs, @Nullable Node rhs) {

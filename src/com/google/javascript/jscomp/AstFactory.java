@@ -1016,7 +1016,7 @@ final class AstFactory {
     // TODO(bradfordcsmith): Special case $jscomp.global until we annotate its type correctly.
     if (getpropType.isUnknownType()
         && propertyName.equals("global")
-        && receiver.matchesQualifiedName("$jscomp")) {
+        && receiver.matchesName("$jscomp")) {
       getpropType = getNativeType(JSTypeNative.GLOBAL_THIS);
     }
     return getpropType;

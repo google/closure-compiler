@@ -64,10 +64,10 @@ final class ClosureOptimizePrimitives implements CompilerPass {
             .getCodingConvention()
             .isPropertyRenameFunction(fn.getOriginalQualifiedName())) {
           processRenamePropertyCall(n);
-        } else if (fn.matchesQualifiedName("goog$object$create")
+        } else if (fn.matchesName("goog$object$create")
             || fn.matchesQualifiedName("goog.object.create")) {
           processObjectCreateCall(n);
-        } else if (fn.matchesQualifiedName("goog$object$createSet")
+        } else if (fn.matchesName("goog$object$createSet")
             || fn.matchesQualifiedName("goog.object.createSet")) {
           processObjectCreateSetCall(n);
         }
