@@ -1256,6 +1256,7 @@ public final class NodeUtil {
       case GETELEM:
       case GETPROP:
       case NEW_TARGET:
+      case IMPORT_META:
         // Data values
       case ARRAYLIT:
       case ARRAY_PATTERN:
@@ -5357,7 +5358,7 @@ public final class NodeUtil {
     if (function == null
         || !function.isFunction()
         || !getFunctionParameters(function).hasOneChild()
-        || !getFunctionParameters(function).getFirstChild().matchesQualifiedName("exports")) {
+        || !getFunctionParameters(function).getFirstChild().matchesName("exports")) {
       return false;
     }
     Node call = function.getParent();

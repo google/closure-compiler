@@ -403,7 +403,7 @@ public final class CodingConventions {
     public SubclassRelationship getClassesDefinedByCall(Node callNode) {
       Node callName = callNode.getFirstChild();
       if ((callName.matchesQualifiedName("$jscomp.inherits")
-              || callName.matchesQualifiedName("$jscomp$inherits"))
+              || callName.matchesName("$jscomp$inherits"))
           && callNode.hasXChildren(3)) {
         Node subclass = callName.getNext();
         Node superclass = subclass.getNext();

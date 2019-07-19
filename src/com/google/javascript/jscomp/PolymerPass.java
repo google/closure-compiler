@@ -18,13 +18,13 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_DECLARATION;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXTENDS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISSING_EXTERNS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -130,8 +130,12 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
   private void rewritePolymer1ClassDefinition(Node node, Node parent, NodeTraversal traversal) {
     Node grandparent = parent.getParent();
     if (grandparent.isConst()) {
-      compiler.report(JSError.make(node, POLYMER_INVALID_DECLARATION));
-      return;
+      grandparent.setToken(Token.LET);
+      Node scriptNode = traversal.getCurrentScript();
+      if (scriptNode != null) {
+        NodeUtil.addFeatureToScript(scriptNode, Feature.LET_DECLARATIONS);
+      }
+      traversal.reportCodeChange();
     }
     PolymerClassDefinition def = PolymerClassDefinition.extractFromCallNode(
         node, compiler, globalNames);

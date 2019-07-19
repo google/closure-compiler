@@ -93,6 +93,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ImportMetaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IndexSignatureTree;
 import com.google.javascript.jscomp.parsing.parser.trees.InterfaceDeclarationTree;
@@ -2642,6 +2643,12 @@ class IRFactory {
       return newNode(Token.DYNAMIC_IMPORT, argument);
     }
 
+    Node processImportMeta(ImportMetaExpressionTree tree) {
+      maybeWarnForFeature(tree, Feature.MODULES);
+      maybeWarnForFeature(tree, Feature.IMPORT_META);
+      return newNode(Token.IMPORT_META);
+    }
+
     Node processTypeName(TypeNameTree tree) {
       Node typeNode;
       if (tree.segments.size() == 1) {
@@ -3153,6 +3160,8 @@ class IRFactory {
           return processImportSpec(node.asImportSpecifier());
         case DYNAMIC_IMPORT_EXPRESSION:
           return processDynamicImport(node.asDynamicImportExpression());
+        case IMPORT_META_EXPRESSION:
+          return processImportMeta(node.asImportMetaExpression());
 
         case ARRAY_PATTERN:
           return processArrayPattern(node.asArrayPattern());

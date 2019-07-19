@@ -752,6 +752,11 @@ class TypeInference
         }
         break;
 
+      case IMPORT_META:
+        // TODO(b/137797083): Set an appropriate type.
+        n.setJSType(unknownType);
+        break;
+
       case ROOT:
       case SCRIPT:
       case MODULE_BODY:

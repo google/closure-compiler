@@ -332,7 +332,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       return true;
     }
 
-    if (!t.inGlobalHoistScope()) {
+    if (!t.inGlobalHoistScope() && !t.inModuleScope()) {
       compiler.report(JSError.make(n, INVALID_CLOSURE_CALL_SCOPE_ERROR));
       return false;
     } else if (!n.getParent().isExprResult() && !"goog.define".equals(methodName)) {
@@ -828,7 +828,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     // Calls to goog.define must be in the global hoist scope.  This is copied from
     // validate(Un)aliasablePrimitiveCall.
     // TODO(sdh): loosen this restriction if the results are assigned?
-    if (!compiler.getOptions().shouldPreserveGoogModule() && !t.inGlobalHoistScope()) {
+    if (!compiler.getOptions().shouldPreserveGoogModule()
+        && !t.inGlobalHoistScope()
+        && !t.inModuleScope()) {
       compiler.report(JSError.make(methodName.getParent(), INVALID_CLOSURE_CALL_SCOPE_ERROR));
       return false;
     }

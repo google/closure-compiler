@@ -59,7 +59,7 @@ public final class PhaseOptimizerTest {
     dummyRoot = IR.root(dummyScript);
     compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
-    tracker = new PerformanceTracker(dummyExternsRoot, dummyRoot, TracerMode.TIMING_ONLY, null);
+    tracker = new PerformanceTracker(dummyExternsRoot, dummyRoot, TracerMode.TIMING_ONLY);
     optimizer = new PhaseOptimizer(compiler, tracker);
     compiler.setPhaseOptimizer(optimizer);
   }

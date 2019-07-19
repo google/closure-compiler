@@ -238,6 +238,13 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testImportMetaIsValidExpression() {
+    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
+    Node n = new Node(Token.IMPORT_META);
+    expectValid(n, Check.EXPRESSION);
+  }
+
+  @Test
   public void testCastOnLeftSideOfAssign() {
     JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);
     jsdoc.recordType(new JSTypeExpression(IR.string("number"), "<AstValidatorTest>"));

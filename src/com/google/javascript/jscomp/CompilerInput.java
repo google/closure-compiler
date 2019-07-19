@@ -383,7 +383,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
         case CALL:
           if (n.hasTwoChildren()
               && n.getFirstChild().isGetProp()
-              && n.getFirstFirstChild().matchesQualifiedName("goog")) {
+              && n.getFirstFirstChild().matchesName("goog")) {
 
             if (!requires.contains(Require.BASE)) {
               requires.add(Require.BASE);
@@ -454,7 +454,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
           return;
 
         case VAR:
-          if (n.getFirstChild().matchesQualifiedName("goog")
+          if (n.getFirstChild().matchesName("goog")
               && NodeUtil.isNamespaceDecl(n.getFirstChild())) {
             provides.add("goog");
           }

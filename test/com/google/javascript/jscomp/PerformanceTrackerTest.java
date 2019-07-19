@@ -18,10 +18,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PerformanceTracker.Stats;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.io.ByteArrayOutputStream;
@@ -44,7 +44,7 @@ public final class PerformanceTrackerTest {
   @Test
   public void testStatsCalculation() {
     PerformanceTracker tracker =
-        new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL, null);
+        new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL);
     CodeChangeHandler handler = tracker.getCodeChangeHandler();
 
     // It's sufficient for this test to assume that a single run of any pass
@@ -107,46 +107,94 @@ public final class PerformanceTrackerTest {
   }
 
   @Test
+  public void testAstSummaryAndFormat() {
+    // Given
+    Node main =
+        IR.root(
+            IR.script(
+                IR.block(
+                    IR.block(
+                        IR.exprResult( //
+                            IR.hook(IR.string("a"), IR.string("b"), IR.string("c")))),
+                    IR.function(IR.name("name"), IR.paramList(), IR.block()))));
+    PerformanceTracker tracker =
+        new PerformanceTracker(emptyExternRoot, main, TracerMode.TIMING_ONLY);
+
+    // When
+    tracker.recordPassStart(PassNames.PARSE_INPUTS, true);
+    tracker.recordPassStop(PassNames.PARSE_INPUTS, 0); // This is what triggers the counting.
+    String report = extractReport(tracker);
+
+    // Then
+    assertThat(report)
+        .containsMatch(
+            Pattern.compile(
+                lines(
+                    "Input AST Manifest:",
+                    "token,count",
+                    "BLOCK,3",
+                    "EXPR_RESULT,1",
+                    "FUNCTION,1",
+                    "HOOK,1",
+                    "NAME,1",
+                    "PARAM_LIST,1",
+                    "ROOT,1",
+                    "SCRIPT,1",
+                    "STRING,3"),
+                Pattern.DOTALL));
+  }
+
+  @Test
   public void testOutputFormat() {
+    PerformanceTracker tracker =
+        new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL);
+    String report = extractReport(tracker);
+    Pattern p =
+        Pattern.compile(
+            lines(
+                ".*TOTAL:",
+                "Start time\\(ms\\): [0-9]+",
+                "End time\\(ms\\): [0-9]+",
+                "Wall time\\(ms\\): [0-9]+",
+                "Passes runtime\\(ms\\): [0-9]+",
+                "Max mem usage \\(measured after each pass\\)\\(MB\\): -?[0-9]+",
+                "#Runs: [0-9]+",
+                "#Changing runs: [0-9]+",
+                "#Loopable runs: [0-9]+",
+                "#Changing loopable runs: [0-9]+",
+                "Estimated AST reduction\\(#nodes\\): [0-9]+",
+                "Estimated Reduction\\(bytes\\): [0-9]+",
+                "Estimated GzReduction\\(bytes\\): [0-9]+",
+                "Estimated AST size\\(#nodes\\): -?[0-9]+",
+                "Estimated Size\\(bytes\\): -?[0-9]+",
+                "Estimated GzSize\\(bytes\\): -?[0-9]+",
+                "",
+                "Inputs:",
+                "JS lines:   [0-9]+",
+                "JS sources: [0-9]+",
+                "Extern lines:   [0-9]+",
+                "Extern sources: [0-9]+",
+                "",
+                "Summary:",
+                "pass,runtime,allocMem,runs,changingRuns,astReduction,reduction,gzReduction",
+                "",
+                "Log:",
+                "pass,runtime,allocMem,codeChanged,astReduction,reduction,gzReduction,astSize,size,gzSize",
+                ".*"),
+            Pattern.DOTALL);
+
+    assertThat(report).matches(p);
+  }
+
+  private static final String extractReport(PerformanceTracker tracker) {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     try (PrintStream outstream = new PrintStream(output)) {
-      PerformanceTracker tracker =
-          new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL, outstream);
-      tracker.outputTracerReport();
+      tracker.outputTracerReport(outstream);
     }
-    Pattern p = Pattern.compile(Joiner.on("\n").join(
-        ".*TOTAL:",
-        "Start time\\(ms\\): [0-9]+",
-        "End time\\(ms\\): [0-9]+",
-        "Wall time\\(ms\\): [0-9]+",
-        "Passes runtime\\(ms\\): [0-9]+",
-        "Max mem usage \\(measured after each pass\\)\\(MB\\): -?[0-9]+",
-        "#Runs: [0-9]+",
-        "#Changing runs: [0-9]+",
-        "#Loopable runs: [0-9]+",
-        "#Changing loopable runs: [0-9]+",
-        "Estimated AST reduction\\(#nodes\\): [0-9]+",
-        "Estimated Reduction\\(bytes\\): [0-9]+",
-        "Estimated GzReduction\\(bytes\\): [0-9]+",
-        "Estimated AST size\\(#nodes\\): -?[0-9]+",
-        "Estimated Size\\(bytes\\): -?[0-9]+",
-        "Estimated GzSize\\(bytes\\): -?[0-9]+",
-        "",
-        "Inputs:",
-        "JS lines:   [0-9]+",
-        "JS sources: [0-9]+",
-        "Extern lines:   [0-9]+",
-        "Extern sources: [0-9]+",
-        "",
-        "Summary:",
-        "pass,runtime,allocMem,runs,changingRuns,astReduction,reduction,gzReduction",
-        "",
-        "Log:",
-        "pass,runtime,allocMem,codeChanged,astReduction,reduction,gzReduction,astSize,size,gzSize",
-        "",
-        ".*"),
-        Pattern.DOTALL);
-    String outputString = output.toString();
-    assertThat(outputString).matches(p);
+    return output.toString();
+  }
+
+  private static String lines(String... lines) {
+    return String.join("\n", lines);
   }
 }

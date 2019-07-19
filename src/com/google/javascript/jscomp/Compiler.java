@@ -70,6 +70,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -414,6 +415,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.checkTypes = true;
     } else if (options.disables(DiagnosticGroups.CHECK_TYPES)) {
       options.checkTypes = false;
+      options.setEnableBoundedGenerics(true);
     } else if (!options.checkTypes) {
       // If DiagnosticGroups did not override the plain checkTypes
       // option, and checkTypes is disabled, then turn off the
@@ -460,6 +462,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     if (options.brokenClosureRequiresLevel == CheckLevel.OFF) {
       options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.OFF);
+    }
+
+    if (options.isEnableBoundedGenerics()
+        || options.enables(DiagnosticGroups.BOUNDED_GENERIC_TYPES)) {
+      options.setWarningLevel(DiagnosticGroups.BOUNDED_GENERIC_TYPES, CheckLevel.OFF);
     }
   }
 
@@ -841,7 +848,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     setProgress(1.0, "recordFunctionInformation");
 
     if (tracker != null) {
-      tracker.outputTracerReport();
+      if (options.getTracerOutput() == null) {
+        tracker.outputTracerReport(this.outStream);
+      } else {
+        try (PrintStream out = new PrintStream(Files.newOutputStream(options.getTracerOutput()))) {
+          tracker.outputTracerReport(out);
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
     }
   }
 
@@ -1558,12 +1573,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   public void maybeSetTracker() {
-    if (options.getTracerMode().isOn()) {
-      PrintStream tracerOutput =
-          options.getTracerOutput() == null ? this.outStream : options.getTracerOutput();
-      tracker = new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode(), tracerOutput);
-      addChangeHandler(tracker.getCodeChangeHandler());
+    if (!options.getTracerMode().isOn()) {
+      return;
     }
+
+    tracker = new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode());
+    addChangeHandler(tracker.getCodeChangeHandler());
   }
 
   //------------------------------------------------------------------------

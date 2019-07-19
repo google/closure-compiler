@@ -515,6 +515,14 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testValidDefine() {
+    testNoWarning("goog.module('a'); /** @define {boolean} */\n goog.define('goog.DEBUG', true);");
+    testNoWarning("goog.provide('b'); /** @define {boolean} */\n goog.define('goog.DEBUG', true);");
+    testNoWarning("goog.module('c'); goog.forwardDeclare('A.b');");
+    testNoWarning("goog.module('d'); goog.addDependency('C.D');");
+  }
+
+  @Test
   public void testDefineValues() {
     testSame("var CLOSURE_DEFINES = {'FOO': 'string'};");
     testSame("var CLOSURE_DEFINES = {'FOO': true};");

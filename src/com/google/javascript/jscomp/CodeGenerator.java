@@ -487,6 +487,10 @@ public class CodeGenerator {
         add(")");
         break;
 
+      case IMPORT_META:
+        add("import.meta");
+        break;
+
         // CLASS -> NAME,EXPR|EMPTY,BLOCK
       case CLASS:
         {

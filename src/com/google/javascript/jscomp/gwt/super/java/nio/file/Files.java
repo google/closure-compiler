@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.serialization;
+package java.nio.file;
 
-import com.google.javascript.jscomp.AbstractCompiler;
-import com.google.javascript.jscomp.CompilerPass;
-import com.google.javascript.rhino.Node;
-import java.nio.file.Path;
+import java.io.OutputStream;
 
-/** Fail-fast replacement */
-public final class SerializeTypedAstPass implements CompilerPass {
+/** A stub implementation against which J2CL can compile. */
+public final class Files {
 
-  public SerializeTypedAstPass(AbstractCompiler compiler, Path out) {
-    throw new RuntimeException("Serialization not yet supported in JS version of compiler");
+  public static OutputStream newOutputStream(Path path) {
+    throw new UnsupportedOperationException("Operation not available in JavaScript.");
   }
 
-  @Override
-  public void process(Node externs, Node root) {}
+  private Files() {}
 }

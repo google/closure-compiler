@@ -2747,6 +2747,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testImportMeta() {
+    useUnsupportedFeatures = true;
+    assertPrintSame("import.meta");
+    assertPrintSame("import.meta.url");
+    assertPrintSame("console.log(import.meta.url)");
+  }
+
+  @Test
   public void testGeneratorYield() {
     assertPrintSame("function*f(){yield 1}");
     assertPrintSame("function*f(){yield}");

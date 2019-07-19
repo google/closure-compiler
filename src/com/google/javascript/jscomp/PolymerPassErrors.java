@@ -26,11 +26,6 @@ final class PolymerPassErrors {
           "The argument to Polymer() is not an obj lit or the Polymer 2 class does not have a"
               + " static getter named 'config'. Ignoring this definition.");
 
-  // Disallow 'const Foo = Polymer(...)' because the code the PolymerPass outputs will reassign
-  // Foo which is not allowed for 'const' variables.
-  static final DiagnosticType POLYMER_INVALID_DECLARATION = DiagnosticType.error(
-      "JSC_POLYMER_INVALID_DECLARATION", "A Polymer() declaration cannot use ''const''.");
-
   static final DiagnosticType POLYMER_INVALID_BEHAVIOR = DiagnosticType.error(
       "JSC_POLYMER_INVALID_BEHAVIOR", "A Polymer behavior may not include an ''is'' property.");
 

@@ -409,15 +409,6 @@ Node.prototype.lookupPrefix = function(namespaceURI) {};
 Node.prototype.normalize = function() {};
 
 /**
- * @param {Object} key
- * @param {Object} data
- * @param {UserDataHandler} handler
- * @return {Object}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-setUserData'
- */
-Node.prototype.setUserData = function(key, data, handler) {};
-
-/**
  * @param {string} query
  * @return {?Element}
  * @see http://www.w3.org/TR/selectors-api/#queryselector
@@ -545,54 +536,6 @@ Element.prototype.setIdAttributeNS = function(namespaceURI, localName, isId) {};
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Text3-wholeText
  */
 Text.prototype.wholeText;
-
-/**
- * @constructor
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#UserDataHandler
- */
-function UserDataHandler() {}
-
-/**
- * @const {number}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#UserDataHandler-CLONED
- */
-UserDataHandler.prototype.NODE_CLONED;
-
-/**
- * @const {number}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#UserDataHandler-IMPORTED
- */
-UserDataHandler.prototype.NODE_IMPORTED;
-
-/**
- * @const {number}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#UserDataHandler-DELETED
- */
-UserDataHandler.prototype.NODE_DELETED;
-
-/**
- * @const {number}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#UserDataHandler-RENAMED
- */
-UserDataHandler.prototype.NODE_RENAMED;
-
-/**
- * @const {number}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#UserDataHandler-ADOPTED
- */
-UserDataHandler.prototype.NODE_ADOPTED;
-
-/**
- * @param {number} operation
- * @param {string} key
- * @param {*=} opt_data
- * @param {?Node=} opt_src
- * @param {?Node=} opt_dst
- * @return {undefined}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-handleUserDataEvent
- */
-UserDataHandler.prototype.handle = function(operation, key, opt_data,
-  opt_src, opt_dst) {};
 
 /**
  * @constructor

@@ -43,7 +43,6 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -145,15 +144,15 @@ public class CompilerOptions implements Serializable {
     return instrumentForCoverageOnly;
   }
 
-  @Nullable private OutputStream typedAstOutputFile = null;
+  @Nullable private Path typedAstOutputFile = null;
 
   /** Sets file to output in-progress TypedAST format to. DO NOT USE! */
-  void setTypedAstOutputFile(@Nullable OutputStream file) {
+  void setTypedAstOutputFile(@Nullable Path file) {
     this.typedAstOutputFile = file;
   }
 
   @Nullable
-  OutputStream getTypedAstOutputFile() {
+  Path getTypedAstOutputFile() {
     return this.typedAstOutputFile;
   }
 
@@ -719,9 +718,23 @@ public class CompilerOptions implements Serializable {
     this.nameGenerator = nameGenerator;
   }
 
-  //--------------------------------
+  // --------------------------------
   // Special-purpose alterations
-  //--------------------------------
+  // --------------------------------
+
+  /**
+   * Enable usage of bounded generic template types. Currently, bounded generic type semantics are
+   * in development and undefined.
+   */
+  private boolean enableBoundedGenerics = false;
+
+  void setEnableBoundedGenerics(boolean on) {
+    this.enableBoundedGenerics = on;
+  }
+
+  boolean isEnableBoundedGenerics() {
+    return this.enableBoundedGenerics;
+  }
 
   /**
    * Replace UI strings with chrome.i18n.getMessage calls.
@@ -1009,13 +1022,13 @@ public class CompilerOptions implements Serializable {
     this.tracer = mode;
   }
 
-  private PrintStream tracerOutput;
+  private Path tracerOutput;
 
-  PrintStream getTracerOutput() {
+  Path getTracerOutput() {
     return tracerOutput;
   }
 
-  public void setTracerOutput(PrintStream out) {
+  public void setTracerOutput(Path out) {
     tracerOutput = out;
   }
 
@@ -3236,7 +3249,7 @@ public class CompilerOptions implements Serializable {
     TIMING_ONLY, // Collect timing metrics only.
     OFF;  // Collect no timing and size metrics.
 
-    boolean isOn() {
+    public boolean isOn() {
       return this != OFF;
     }
   }

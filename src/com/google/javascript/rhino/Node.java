@@ -2149,6 +2149,35 @@ public class Node implements Serializable {
   }
 
   /**
+   * Returns whether a node matches a simple name, such as
+   * <code>x</code>, returns false if this is not a NAME node.
+   */
+  public final boolean matchesName(String name) {
+    if (token != token.NAME) {
+      return false;
+    }
+    String internalString = getString();
+    return !internalString.isEmpty() && name.equals(internalString);
+  }
+
+  /**
+   * Check that if two NAME node match, returns false if either node is
+   * not a NAME node. As a empty string is not considered a
+   * valid Name (it is an AST placeholder), empty strings are never
+   * considered to be matches.
+   */
+  @SuppressWarnings("ReferenceEquality")
+  public final boolean matchesName(Node n) {
+    if (token != token.NAME || n.token != Token.NAME) {
+      return false;
+    }
+
+    // ==, rather than equal as it is intern'd in setString
+    String internalString = getString();
+    return internalString != "" && internalString == n.getString();
+  }
+
+  /**
    * Returns whether a node matches a simple or a qualified name, such as
    * <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
    */
@@ -2197,7 +2226,8 @@ public class Node implements Serializable {
     switch (token) {
       case NAME:
         // ==, rather than equal as it is intern'd in setString
-        return !getString().isEmpty() && getString() == n.getString();
+        String internalString = getString();
+        return internalString != "" && internalString == n.getString();
       case THIS:
       case SUPER:
         return true;
@@ -2218,10 +2248,12 @@ public class Node implements Serializable {
    * a "this" reference, such as <code>a.b.c</code>, but not <code>this.a</code>
    * .
    */
+  @SuppressWarnings("ReferenceEquality")
   public final boolean isUnscopedQualifiedName() {
     switch (this.getToken()) {
       case NAME:
-        return !getString().isEmpty();
+        // Both string are intern'd.
+        return getString() != "";
       case GETPROP:
         return getFirstChild().isUnscopedQualifiedName();
       default:

@@ -368,8 +368,8 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     if (!lhs.isQualifiedName()) {
       return false;
     }
-    return lhs.matchesQualifiedName("exports")
-        || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"));
+    return lhs.matchesName("exports")
+        || (lhs.isGetProp() && lhs.getFirstChild().matchesName("exports"));
   }
 
   private void checkModuleExport(NodeTraversal t, Node n, Node parent) {
@@ -386,7 +386,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     Node defaultExportNode = currentModuleInfo.exportNodesByName.get("exports");
     // If we have never seen an `exports =` default export assignment, or this is the
     // default export, then treat this assignment as an export and do the checks it is well formed.
-    if (defaultExportNode == null || lhs.matchesQualifiedName("exports")) {
+    if (defaultExportNode == null || lhs.matchesName("exports")) {
       currentModuleInfo.exportNodesByName.put(lhs.getQualifiedName(), lhs);
       if (!t.inModuleScope()) {
         t.report(n, EXPORT_NOT_AT_MODULE_SCOPE);

@@ -336,6 +336,18 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoWarningForModuleDep_onUnknownOriginNamespace() {
+    testSame(
+        createModuleStar(
+            // root module, e.g. a legacy namespace goog.module.
+            "const ns = {}; class C { static m() {} }; ns.C = C;",
+            // leaf 1, uses ns.C.
+            "alert(ns.C.m);",
+            // leaf 2, a mod.
+            "ns.C.m = function() { return 0; };"));
+  }
+
+  @Test
   public void testBadModuleDep1() {
     testSame(createModuleChain(
         "var c = a.b;",

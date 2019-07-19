@@ -568,10 +568,9 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         // Property assignments are valid, if at the root of an expression.
         case ASSIGN: {
           Node lvalue = n.getFirstChild();
-          valid = n.getParent().isExprResult()
-              && (lvalue.isGetProp()
-                  || lvalue.isGetElem()
-                  || lvalue.matchesQualifiedName("exports"));
+            valid =
+                n.getParent().isExprResult()
+                    && (lvalue.isGetProp() || lvalue.isGetElem() || lvalue.matchesName("exports"));
           break;
         }
         case GETPROP:

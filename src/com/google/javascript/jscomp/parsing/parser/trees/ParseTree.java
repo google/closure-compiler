@@ -105,6 +105,10 @@ public class ParseTree {
     return (DynamicImportTree) this;
   }
 
+  public ImportMetaExpressionTree asImportMetaExpression() {
+    return (ImportMetaExpressionTree) this;
+  }
+
   public LabelledStatementTree asLabelledStatement() { return (LabelledStatementTree) this; }
   public LiteralExpressionTree asLiteralExpression() { return (LiteralExpressionTree) this; }
   public MemberExpressionTree asMemberExpression() { return (MemberExpressionTree) this; }

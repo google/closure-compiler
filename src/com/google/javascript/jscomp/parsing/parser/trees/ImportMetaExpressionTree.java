@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.serialization;
+package com.google.javascript.jscomp.parsing.parser.trees;
 
-import com.google.javascript.jscomp.AbstractCompiler;
-import com.google.javascript.jscomp.CompilerPass;
-import com.google.javascript.rhino.Node;
-import java.nio.file.Path;
+import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-/** Fail-fast replacement */
-public final class SerializeTypedAstPass implements CompilerPass {
-
-  public SerializeTypedAstPass(AbstractCompiler compiler, Path out) {
-    throw new RuntimeException("Serialization not yet supported in JS version of compiler");
+/** Represents 'new.target'. */
+public class ImportMetaExpressionTree extends ParseTree {
+  public ImportMetaExpressionTree(SourceRange location) {
+    super(ParseTreeType.IMPORT_META_EXPRESSION, location);
   }
-
-  @Override
-  public void process(Node externs, Node root) {}
 }

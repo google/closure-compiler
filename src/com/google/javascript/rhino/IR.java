@@ -676,6 +676,10 @@ public class IR {
     return unaryOp(Token.TYPEOF, expr);
   }
 
+  public static Node importMeta() {
+    return new Node(Token.IMPORT_META);
+  }
+
   // helper methods
 
   private static Node binaryOp(Token token, Node expr1, Node expr2) {
@@ -795,6 +799,7 @@ public class IR {
       case GETELEM:
       case GT:
       case HOOK:
+      case IMPORT_META:
       case IN:
       case INC:
       case INSTANCEOF:

@@ -2758,4 +2758,316 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     testSame("function doNothing() {} try { throw 0; } catch { doNothing(); }");
     testSame("function doNothing() {} try { doNothing(); } catch { console.log('stuff'); }");
   }
+
+  @Test
+  public void testDoNotRemoveSetterAssignmentObject() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  set property(x) {}",
+            "};",
+            "a.property = 1;"));
+  }
+
+  @Test
+  public void testDoNotRemoveSetterAssignmentClass() {
+    testSame(
+        lines(
+            "class Class {", //
+            "  set property(x) {}",
+            "}",
+            "const a = new Class();",
+            "a.property = 1;"));
+
+    testSame(
+        lines(
+            "class Class {", //
+            "  set property(x) {}",
+            "}",
+            "new Class().property = 1;"));
+
+    test(
+        lines(
+            "class Class {", //
+            "  set property(x) {}",
+            "}",
+            "function foo() {}",
+            "foo().property = 1;"),
+        lines(
+            "function foo() {}", //
+            "foo().property = 1;"));
+
+    test(
+        lines(
+            "class Class {", //
+            "  set property(x) {}",
+            "}",
+            "var obj;",
+            "obj.property = 1;"),
+        lines(
+            "var obj;", //
+            "obj.property = 1;"));
+  }
+
+  @Test
+  public void testDoNotRemoveStaticSetterAssignment() {
+    testSame(
+        lines(
+            "class Class {", //
+            "  static set property(x) {}",
+            "}",
+            "Class.property = 1;"));
+
+    test(
+        lines(
+            "class Class {", //
+            "  static set property(x) {}",
+            "}",
+            "function foo() {}",
+            "foo().property = 1;"),
+        lines(
+            "function foo() {}", //
+            "foo().property = 1;"));
+
+    test(
+        lines(
+            "class Class {", //
+            "  static set property(x) {}",
+            "}",
+            "var obj;",
+            "obj.property = 1;"),
+        lines(
+            "var obj;", //
+            "obj.property = 1;"));
+  }
+
+  @Test
+  public void testMethodCallingSetterHasSideEffects() {
+    testSame(
+        lines(
+            "class Class {", //
+            "  set property(x) {}",
+            "}",
+            "function foo() { new Class().property = 1; }",
+            "foo();"));
+
+    testSame(
+        lines(
+            "class Class {", //
+            "  static set property(x) {}",
+            "}",
+            "function foo() { Class.property = 1; }",
+            "foo();"));
+
+    testSame(
+        lines(
+            "class Class {", //
+            "  setProperty(v) { this.property = v; }",
+            "  set property(x) {}",
+            "}",
+            "new Class().setProperty(0);"));
+
+    testSame(
+        lines(
+            "class Class {", //
+            "  static setProperty(v) { this.property = v; }",
+            "  static set property(x) {}",
+            "}",
+            "Class.setProperty(0);"));
+
+    testSame(
+        lines(
+            "class Class {", //
+            "  setProperty(v) { Class.property = v; }",
+            "  static set property(x) {}",
+            "}",
+            "Class.setProperty(0);"));
+  }
+
+  @Test
+  public void testDoNotRemoveSetter_fromObjectLiteral_inCompoundAssignment_onName() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  set property(x) {}",
+            "};",
+            "a.property += 1;"));
+  }
+
+  @Test
+  public void testDoNotRemoveSetter_fromObjectLiteral_inCompoundAssignment_onThis() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  set property(x) {},",
+            "",
+            "  method() {",
+            "    this.property += 1;",
+            " },",
+            "};",
+            "a.method();"));
+  }
+
+  @Test
+  public void testDoNotRemoveSetterCompoundAssignmentClass() {
+    testSame(
+        lines(
+            "class Class {", //
+            "  set property(x) {}",
+            "}",
+            "const a = new Class();",
+            "a.property += 1;"));
+  }
+
+  @Test
+  public void testDoNotRemoveSetter_fromObjectLiteral_inUnaryOp_onName() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  set property(x) {}",
+            "};",
+            "a.property++;"));
+  }
+
+  @Test
+  public void testDoNotRemoveSetter_fromObjectLiteral_inUnaryOp_onThis() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  set property(x) {},",
+            "",
+            "  method() {",
+            "    this.property++;",
+            "  },",
+            "};",
+            "a.method();"));
+  }
+
+  @Test
+  public void testDoNotRemoveSetterUnaryOperatorClass() {
+    testSame(
+        lines(
+            "class Class {", //
+            "  set property(x) {}",
+            "}",
+            "const a = new Class();",
+            "a.property++;"));
+  }
+
+  @Test
+  public void testDoNotRemoveAssignmentIfOtherPropertyIsSetterObject() {
+    test(
+        lines(
+            "var a = {", //
+            "  set property(x) {}",
+            "};",
+            "var b = {",
+            "  property: 0",
+            "};",
+            "b.property = 1;"),
+        lines(
+            "var b = {", //
+            "  property: 0",
+            "};",
+            "b.property = 1;"));
+
+    // Test that this gets cleaned up on a second pass...
+    test(
+        lines(
+            "var b = {", //
+            "  property: 0",
+            "};",
+            "b.property = 1;"),
+        "");
+  }
+
+  @Test
+  public void testDoNotRemoveAssignmentIfOtherPropertyIsSetterClass() {
+    test(
+        lines(
+            "class Class {", //
+            "  set property(x) {}",
+            "}",
+            "var b = {",
+            "  property: 0",
+            "};",
+            "b.property = 1;"),
+        lines(
+            "var b = {", //
+            "  property: 0",
+            "};",
+            "b.property = 1;"));
+
+    // Test that this gets cleaned up on a second pass...
+    test(
+        lines(
+            "var b = {", //
+            "  property: 0",
+            "};",
+            "b.property = 1;"),
+        "");
+  }
+
+  @Test
+  public void testRemovePropertyUnrelatedFromSetterObject() {
+    test(
+        lines(
+            "var a = {", //
+            "  set property(x) {},",
+            "  aUnrelated: 0",
+            "};",
+            "var b = {",
+            "  unrelated: 0",
+            "};",
+            "a.property = 1;",
+            "a.aUnrelated = 1;",
+            "b.unrelated = 1;"),
+        lines(
+            "var a = {", //
+            "  set property(x) {},",
+            "  aUnrelated: 0",
+            "};",
+            "a.property = 1;",
+            "a.aUnrelated = 1;"));
+  }
+
+  @Test
+  public void testFunctionCallReferencesGetterIsNotRemoved() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  get property() {}",
+            "};",
+            "function foo() { a.property; }",
+            "foo();"));
+  }
+
+  @Test
+  public void testFunctionCallReferencesSetterIsNotRemoved() {
+    testSame(
+        lines(
+            "var a = {", //
+            "  set property(v) {}",
+            "};",
+            "function foo() { a.property = 0; }",
+            "foo();"));
+  }
+
+  @Test
+  public void testRemoveUnusedGettersAndSetters() {
+    testSame(
+        lines(
+            "class C {", //
+            "  get usedProperty() {}",
+            "  set usedProperty(v) {}",
+            "  get unUsedProperty() {}",
+            "  set unUsedProperty(v) {}",
+            "};",
+            "function foo() {",
+            "  const c = new C();",
+            "  c.usedProperty = 0;",
+            "  return c.usedProperty;",
+            "}",
+            "foo();"));
+  }
 }

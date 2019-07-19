@@ -930,102 +930,143 @@ public final class JsDocInfoParser {
           return token;
 
         case TEMPLATE: {
-          int templateLineno = stream.getLineno();
-          int templateCharno = stream.getCharno();
-          // Always use TRIM for template TTL expressions.
-          ExtractionInfo templateInfo =
-              extractMultilineTextualBlock(token, WhitespaceOption.TRIM, false);
-          String templateString = templateInfo.string;
-          // TTL stands for type transformation language
-          // TODO(lpino): This delimiter needs to be further discussed
-          String ttlStartDelimiter = ":=";
-          String ttlEndDelimiter = "=:";
-          String templateNames;
-          String typeTransformationExpr = "";
-          boolean isTypeTransformation = false;
-          boolean validTypeTransformation = true;
-          // Detect if there is a type transformation
-          if (!templateString.contains(ttlStartDelimiter)) {
-            // If there is no type transformation take the first line
-            if (templateString.contains("\n")) {
-              templateNames =
-                  templateString.substring(0, templateString.indexOf('\n'));
-            } else {
-              templateNames = templateString;
-            }
-          } else {
-            // Split the part with the template type names
-            int ttlStartIndex = templateString.indexOf(ttlStartDelimiter);
-            templateNames = templateString.substring(0, ttlStartIndex);
-            // Check if the type transformation expression ends correctly
-            if (!templateString.contains(ttlEndDelimiter)) {
-              validTypeTransformation = false;
-              addTypeWarning(
-                    "msg.jsdoc.typetransformation.missing.delimiter",
-                    templateLineno,
-                    templateCharno);
+            int templateLineno = stream.getLineno();
+            int templateCharno = stream.getCharno();
+
+            // Always use TRIM for template TTL expressions.
+            ExtractionInfo templateInfo =
+                extractMultilineTextualBlock(token, WhitespaceOption.TRIM, false);
+            String templateString = templateInfo.string;
+            // TTL stands for type transformation language
+            // TODO(lpino): This delimiter needs to be further discussed
+            String ttlStartDelimiter = ":=";
+            String ttlEndDelimiter = "=:";
+            String templateNames;
+            String typeTransformationExpr = "";
+            boolean isTypeTransformation = false;
+            boolean validTypeTransformation = true;
+
+            if (templateString.isEmpty() || templateString.charAt(0) != '{') {
+              // This is NOT a bounded generic declaration
+              // Detect if there is a type transformation
+              if (!templateString.contains(ttlStartDelimiter)) {
+                // If there is no type transformation take the first line
+                if (templateString.contains("\n")) {
+                  templateNames = templateString.substring(0, templateString.indexOf('\n'));
+                } else {
+                  templateNames = templateString;
+                }
               } else {
-              isTypeTransformation = true;
-              // Split the part of the type transformation
-              int ttlEndIndex = templateString.indexOf(ttlEndDelimiter);
-              typeTransformationExpr = templateString.substring(
-                  ttlStartIndex + ttlStartDelimiter.length(),
-                  ttlEndIndex).trim();
-            }
-          }
-
-          // Obtain the template type names
-          List<String> names = Splitter.on(',')
-              .trimResults()
-              .splitToList(templateNames);
-
-          if (names.size() == 1 && names.get(0).isEmpty()) {
-            addTypeWarning("msg.jsdoc.templatemissing", templateLineno, templateCharno);
-          } else {
-            for (String typeName : names) {
-              if (!validTemplateTypeName(typeName)) {
-                addTypeWarning(
-                    "msg.jsdoc.template.invalid.type.name", templateLineno, templateCharno);
-              } else if (!isTypeTransformation) {
-                if (!jsdocBuilder.recordTemplateTypeName(typeName)) {
+                // Split the part with the template type names
+                int ttlStartIndex = templateString.indexOf(ttlStartDelimiter);
+                templateNames = templateString.substring(0, ttlStartIndex);
+                // Check if the type transformation expression ends correctly
+                if (!templateString.contains(ttlEndDelimiter)) {
+                  validTypeTransformation = false;
                   addTypeWarning(
-                      "msg.jsdoc.template.name.declared.twice", templateLineno, templateCharno);
+                      "msg.jsdoc.typetransformation.missing.delimiter",
+                      templateLineno,
+                      templateCharno);
+                } else {
+                  isTypeTransformation = true;
+                  // Split the part of the type transformation
+                  int ttlEndIndex = templateString.indexOf(ttlEndDelimiter);
+                  typeTransformationExpr =
+                      templateString
+                          .substring(ttlStartIndex + ttlStartDelimiter.length(), ttlEndIndex)
+                          .trim();
                 }
               }
-            }
-          }
 
-          if (isTypeTransformation) {
-            // A type transformation must be associated to a single type name
-            if (names.size() > 1) {
+              // Obtain the template type names
+              List<String> names = Splitter.on(',').trimResults().splitToList(templateNames);
+
+              if (names.size() == 1 && names.get(0).isEmpty()) {
+                addTypeWarning("msg.jsdoc.templatemissing", templateLineno, templateCharno);
+              } else {
+                for (String typeName : names) {
+                  if (!validTemplateTypeName(typeName)) {
+                    addTypeWarning(
+                        "msg.jsdoc.template.invalid.type.name", templateLineno, templateCharno);
+                  } else if (!isTypeTransformation) {
+                    if (!jsdocBuilder.recordTemplateTypeName(typeName)) {
+                      addTypeWarning(
+                          "msg.jsdoc.template.name.declared.twice", templateLineno, templateCharno);
+                    }
+                  }
+                }
+              }
+
+              if (isTypeTransformation) {
+                // A type transformation must be associated to a single type name
+                if (names.size() > 1) {
+                  addTypeWarning(
+                      "msg.jsdoc.typetransformation.with.multiple.names",
+                      templateLineno,
+                      templateCharno);
+                }
+                if (typeTransformationExpr.isEmpty()) {
+                  validTypeTransformation = false;
+                  addTypeWarning(
+                      "msg.jsdoc.typetransformation.expression.missing",
+                      templateLineno,
+                      templateCharno);
+                }
+                // Build the AST for the type transformation
+                if (validTypeTransformation) {
+                  TypeTransformationParser ttlParser =
+                      new TypeTransformationParser(
+                          typeTransformationExpr,
+                          getSourceFile(),
+                          errorReporter,
+                          templateLineno,
+                          templateCharno);
+                  // If the parsing was successful store the type transformation
+                  if (ttlParser.parseTypeTransformation()
+                      && !jsdocBuilder.recordTypeTransformation(
+                          names.get(0), ttlParser.getTypeTransformationAst())) {
+                    addTypeWarning(
+                        "msg.jsdoc.template.name.declared.twice", templateLineno, templateCharno);
+                  }
+                }
+              }
+              token = templateInfo.token;
+            } else {
+              List<String> genericDecl = Splitter.on("}").trimResults().splitToList(templateString);
+              addParserWarning("msg.jsdoc.template.boundedgenerics");
+
+              if (templateString.contains(",")) {
+                addParserWarning("msg.jsdoc.template.multipletemplates");
+              }
+
+              if (genericDecl.size() != 2) {
                 addTypeWarning(
-                    "msg.jsdoc.typetransformation.with.multiple.names",
-                    templateLineno, templateCharno);
-            }
-            if (typeTransformationExpr.isEmpty()) {
-              validTypeTransformation = false;
-              addTypeWarning(
-                  "msg.jsdoc.typetransformation.expression.missing",
-                  templateLineno,
-                  templateCharno);
-            }
-            // Build the AST for the type transformation
-            if (validTypeTransformation) {
-              TypeTransformationParser ttlParser =
-                  new TypeTransformationParser(typeTransformationExpr,
-                      getSourceFile(), errorReporter, templateLineno, templateCharno);
-              // If the parsing was successful store the type transformation
-              if (ttlParser.parseTypeTransformation()
-                  && !jsdocBuilder.recordTypeTransformation(
-                      names.get(0), ttlParser.getTypeTransformationAst())) {
+                    "msg.jsdoc.template.invalid.type.name", templateLineno, templateCharno);
+                return templateInfo.token;
+              }
+
+              String genericBound = genericDecl.get(0).substring(1);
+              String genericName = genericDecl.get(1);
+
+              Node typeNode = parseTypeString(genericBound);
+              if (typeNode == null) {
+                addTypeWarning("msg.jsdoc.template.boundtypeexpr", templateLineno, templateCharno);
+                return templateInfo.token;
+              }
+              JSTypeExpression typeExpr = createJSTypeExpression(typeNode);
+
+              if (!validTemplateTypeName(genericName)) {
+                addTypeWarning(
+                    "msg.jsdoc.template.invalid.type.name", templateLineno, templateCharno);
+              }
+              if (!jsdocBuilder.recordTemplateTypeName(genericName, typeExpr)) {
                 addTypeWarning(
                     "msg.jsdoc.template.name.declared.twice", templateLineno, templateCharno);
               }
+              token = templateInfo.token;
             }
+            return token;
           }
-          token = templateInfo.token;
-          return token;
-        }
 
         case IDGENERATOR:
           token = parseIdGeneratorTag(next());

@@ -150,7 +150,7 @@ public class AstFactoryTest {
     AstFactory astFactory = createTestAstFactory();
 
     Node argumentsNode = astFactory.createArgumentsReference();
-    assertNode(argumentsNode).matchesQualifiedName("arguments");
+    assertNode(argumentsNode).matchesName("arguments");
     assertType(argumentsNode.getJSType()).isEqualTo(getRegistry().getGlobalType("Arguments"));
   }
 
@@ -409,7 +409,7 @@ public class AstFactoryTest {
                 "/** @type {T} */ Bar.prototype.property;",
                 "var /** !Bar<number> */ b;"));
     Node bName = root.getFirstChild().getLastChild().getOnlyChild();
-    assertNode(bName).matchesQualifiedName("b");
+    assertNode(bName).matchesName("b");
     JSType barOfNumber = bName.getJSType();
 
     Node barName = astFactory.createName("bar", barOfNumber);

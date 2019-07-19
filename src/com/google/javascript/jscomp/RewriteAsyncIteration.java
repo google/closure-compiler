@@ -330,7 +330,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
         }
         break;
       case NAME:
-        if (ctx.mustReplaceThisSuperArgs() && n.matchesQualifiedName("arguments")) {
+        if (ctx.mustReplaceThisSuperArgs() && n.matchesName("arguments")) {
           replaceArguments(t, ctx, n);
         }
         break;

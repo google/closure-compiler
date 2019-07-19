@@ -767,7 +767,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testConstPolymerElementNotAllowed() {
+  public void testConstPolymerElementAllowed() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
@@ -775,10 +775,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
-    test(
-        options,
-        "const Foo = Polymer({ is: 'x-foo' });",
-        PolymerPassErrors.POLYMER_INVALID_DECLARATION);
+    testNoWarnings(options, "const Foo = Polymer({ is: 'x-foo' });");
   }
 
   private void addPolymer2Externs() {
@@ -1295,8 +1292,10 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testClosurePassOn() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
-    test(options, "var goog = {}; goog.require = function(x) {}; goog.require('foo');",
-        ProcessClosurePrimitives.MISSING_PROVIDE_ERROR);
+    test(
+        options,
+        "var goog = {}; goog.require = function(x) {}; goog.require('foo');",
+        ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE);
     test(
         options,
         "/** @define {boolean} */ var COMPILED = false;" +
@@ -5257,6 +5256,24 @@ public final class IntegrationTest extends IntegrationTestCase {
               "foo.ns.ExportedName = module$contents$foo$ns_ClassName;",
               "goog.exportSymbol('foo.ns.ExportedName', foo.ns.ExportedName);"),
         });
+  }
+
+  @Test
+  public void testGoogModuleGet_notAllowedInGlobalScope() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+
+    // Test in a regular script
+    test(
+        options,
+        new String[] {"goog.module('a.b');", "goog.module.get('a.b');"},
+        ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE);
+
+    // Test in a file with a goog.provide
+    test(
+        options,
+        new String[] {"goog.module('a.b');", "goog.provide('c'); goog.module.get('a.b');"},
+        ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE);
   }
 
   @Test
