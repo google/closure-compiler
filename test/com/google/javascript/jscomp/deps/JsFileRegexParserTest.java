@@ -32,14 +32,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link JsFileParser}.
+ * Tests for {@link JsFileRegexParser}.
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
 @RunWith(JUnit4.class)
-public final class JsFileParserTest {
+public final class JsFileRegexParserTest {
 
-  JsFileParser parser;
+  JsFileRegexParser parser;
   private ErrorManager errorManager;
 
   private static final String SRC_PATH = "a";
@@ -48,7 +48,7 @@ public final class JsFileParserTest {
   @Before
   public void setUp() {
     errorManager = new PrintStreamErrorManager(System.err);
-    parser = new JsFileParser(errorManager);
+    parser = new JsFileRegexParser(errorManager);
     parser.setShortcutMode(true);
   }
 

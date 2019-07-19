@@ -36,15 +36,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A parser that can extract dependency information from a .js file, including
- * goog.require, goog.provide, goog.module, import statements, and export statements.
+ * A parser that can extract dependency information from a .js file, including goog.require,
+ * goog.provide, goog.module, import statements, and export statements.
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
 @GwtIncompatible("java.util.regex")
-public final class JsFileParser extends JsFileLineParser {
+public final class JsFileRegexParser extends JsFileLineParser {
 
-  private static final Logger logger = Logger.getLogger(JsFileParser.class.getName());
+  private static final Logger logger = Logger.getLogger(JsFileRegexParser.class.getName());
 
   /** Pattern for matching goog.provide(*) and goog.require(*). */
   private static final Pattern GOOG_PROVIDE_REQUIRE_PATTERN =
@@ -133,36 +133,33 @@ public final class JsFileParser extends JsFileLineParser {
    *
    * @param errorManager Handles parse errors.
    */
-  public JsFileParser(ErrorManager errorManager) {
+  public JsFileRegexParser(ErrorManager errorManager) {
     super(errorManager);
   }
 
   /**
-   * Sets whether we should create implicit provides and requires of the
-   * root namespace.
+   * Sets whether we should create implicit provides and requires of the root namespace.
    *
-   * When generating deps files, you do not want this behavior. Deps files
-   * need base.js to run anyway, so they don't need information about it.
+   * <p>When generating deps files, you do not want this behavior. Deps files need base.js to run
+   * anyway, so they don't need information about it.
    *
-   * When generating abstract build graphs, you probably do want this behavior.
-   * It will create an implicit dependency of all files with provides/requires
-   * on base.js.
+   * <p>When generating abstract build graphs, you probably do want this behavior. It will create an
+   * implicit dependency of all files with provides/requires on base.js.
    *
    * @return this for easy chaining.
    */
-  public JsFileParser setIncludeGoogBase(boolean include) {
-    checkState(JsFileParser.isSupported());
+  public JsFileRegexParser setIncludeGoogBase(boolean include) {
+    checkState(JsFileRegexParser.isSupported());
     includeGoogBase = include;
     return this;
   }
 
   /**
-   * Sets a list of "module root" URIs, which allow relativizing filenames
-   * for modules.
+   * Sets a list of "module root" URIs, which allow relativizing filenames for modules.
    *
    * @return this for easy chaining.
    */
-  public JsFileParser setModuleLoader(ModuleLoader loader) {
+  public JsFileRegexParser setModuleLoader(ModuleLoader loader) {
     this.loader = loader;
     return this;
   }

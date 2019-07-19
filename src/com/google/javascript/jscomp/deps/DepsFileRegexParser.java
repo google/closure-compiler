@@ -42,13 +42,13 @@ import java.util.regex.Pattern;
 /**
  * A parser that can extract dependency information from existing deps.js files.
  *
- * <p>See //javascript/closure/deps.js for an example file.</p>
+ * <p>See //javascript/closure/deps.js for an example file.
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
 @GwtIncompatible("java.util.regex")
-public final class DepsFileParser extends JsFileLineParser {
-  private static final Logger logger = Logger.getLogger(DepsFileParser.class.getName());
+public final class DepsFileRegexParser extends JsFileLineParser {
+  private static final Logger logger = Logger.getLogger(DepsFileRegexParser.class.getName());
 
   /**
    * Pattern for matching JavaScript string literals. The group is:
@@ -80,7 +80,7 @@ public final class DepsFileParser extends JsFileLineParser {
    *
    * @param errorManager Handles parse errors.
    */
-  public DepsFileParser(ErrorManager errorManager) {
+  public DepsFileRegexParser(ErrorManager errorManager) {
     this(Functions.identity(), errorManager);
   }
 
@@ -88,8 +88,7 @@ public final class DepsFileParser extends JsFileLineParser {
    * @param pathTranslator Translates paths in different build systems.
    * @param errorManager Handles parse errors.
    */
-  public DepsFileParser(Function<String, String> pathTranslator,
-      ErrorManager errorManager) {
+  public DepsFileRegexParser(Function<String, String> pathTranslator, ErrorManager errorManager) {
     super(errorManager);
     this.pathTranslator = pathTranslator;
   }

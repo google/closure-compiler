@@ -37,7 +37,8 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class RewriteGoogJsImportsTest extends CompilerTestCase {
-  // JsFileParser determines if this file is base.js by looking at the first comment of the file.
+  // JsFileRegexParser determines if this file is base.js by looking at the first comment of the
+  // file.
   private static final SourceFile BASE =
       SourceFile.fromCode("/closure/base.js", "/** @provideGoog */");
 

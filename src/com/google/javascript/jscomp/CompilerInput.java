@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.deps.DependencyInfo;
-import com.google.javascript.jscomp.deps.JsFileParser;
+import com.google.javascript.jscomp.deps.JsFileRegexParser;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
@@ -301,8 +301,8 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
         compiler.getErrorManager(), "Expected compiler to call an error manager: %s", this);
 
     // If the code is a JsAst, then it was originally JS code, and is compatible with the
-    // regex-based parsing of JsFileParser.
-    if (ast instanceof JsAst && JsFileParser.isSupported()) {
+    // regex-based parsing of JsFileRegexParser.
+    if (ast instanceof JsAst && JsFileRegexParser.isSupported()) {
       // Look at the source code.
       // Note: it's OK to use getName() instead of
       // getPathRelativeToClosureBase() here because we're not using
@@ -310,7 +310,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
       // symbol dependencies.)
       try {
         DependencyInfo info =
-            new JsFileParser(compiler.getErrorManager())
+            new JsFileRegexParser(compiler.getErrorManager())
                 .setModuleLoader(compiler.getModuleLoader())
                 .setIncludeGoogBase(true)
                 .parseFile(getName(), getName(), getCode());
@@ -483,7 +483,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
       checkArgument(n.isString());
       checkArgument(parent.isExport() || parent.isImport());
 
-      // TODO(blickly): Move this (and the duplicated logic in JsFileParser/Es6RewriteModules)
+      // TODO(blickly): Move this (and the duplicated logic in JsFileRegexParser/Es6RewriteModules)
       // into ModuleLoader.
       String moduleName = n.getString();
       if (moduleName.startsWith("goog:")) {

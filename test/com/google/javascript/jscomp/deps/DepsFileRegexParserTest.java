@@ -30,21 +30,21 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link DepsFileParser}.
+ * Tests for {@link DepsFileRegexParser}.
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
 @RunWith(JUnit4.class)
-public final class DepsFileParserTest {
+public final class DepsFileRegexParserTest {
 
-  private DepsFileParser parser;
+  private DepsFileRegexParser parser;
   private ErrorManager errorManager;
   private static final String SRC_PATH = "/path/1.js";
 
   @Before
   public void setUp() {
     errorManager = new PrintStreamErrorManager(System.err);
-    parser = new DepsFileParser(errorManager);
+    parser = new DepsFileRegexParser(errorManager);
     parser.setShortcutMode(true);
   }
 

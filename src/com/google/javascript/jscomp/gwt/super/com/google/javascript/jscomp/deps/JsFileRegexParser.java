@@ -18,22 +18,21 @@ package com.google.javascript.jscomp.deps;
 
 import com.google.javascript.jscomp.ErrorManager;
 
-/** GWT compatible no-op replacement for {@code JsFileParser} */
-public final class JsFileParser {
-  public JsFileParser(ErrorManager errorManager) {
+/** GWT compatible no-op replacement for {@code JsFileRegexParser} */
+public final class JsFileRegexParser {
+  public JsFileRegexParser(ErrorManager errorManager) {}
+
+  public JsFileRegexParser setModuleLoader(ModuleLoader loader) {
+    throw new UnsupportedOperationException("JsFileRegexParser.setModuleLoader not implemented");
   }
 
-  public JsFileParser setModuleLoader(ModuleLoader loader) {
-    throw new UnsupportedOperationException("JsFileParser.setModuleLoader not implemented");
-  }
-
-  public JsFileParser setIncludeGoogBase(boolean include) {
-    throw new UnsupportedOperationException("JsFileParser.setIncludeGoogBase not implemented");
+  public JsFileRegexParser setIncludeGoogBase(boolean include) {
+    throw new UnsupportedOperationException("JsFileRegexParser.setIncludeGoogBase not implemented");
   }
 
   public DependencyInfo parseFile(String filePath, String closureRelativePath,
       String fileContents) {
-    throw new UnsupportedOperationException("JsFileParser.parseFile not implemented");
+    throw new UnsupportedOperationException("JsFileRegexParser.parseFile not implemented");
   }
 
   public static boolean isSupported() {

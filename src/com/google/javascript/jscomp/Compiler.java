@@ -38,7 +38,7 @@ import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
 import com.google.javascript.jscomp.deps.BrowserModuleResolver;
 import com.google.javascript.jscomp.deps.BrowserWithTransformedPrefixesModuleResolver;
-import com.google.javascript.jscomp.deps.JsFileParser;
+import com.google.javascript.jscomp.deps.JsFileRegexParser;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
 import com.google.javascript.jscomp.deps.NodeModuleResolver;
@@ -2025,7 +2025,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     for (CompilerInput input : inputsToProcess) {
       // Only process files that are detected as ES6 modules
       if (!options.getDependencyOptions().shouldPrune()
-          || !JsFileParser.isSupported()
+          || !JsFileRegexParser.isSupported()
           || "es6".equals(input.getLoadFlags().get("module"))) {
         filteredInputs.add(input);
       }

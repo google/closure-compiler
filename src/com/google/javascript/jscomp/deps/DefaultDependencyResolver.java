@@ -141,7 +141,7 @@ public final class DefaultDependencyResolver implements DependencyResolver  {
   /** Parses a block of code for goog.require statements and extracts the required symbols. */
   private static Collection<String> parseRequires(String code, boolean addClosureBase) {
     ErrorManager errorManager = new LoggerErrorManager(logger);
-    JsFileParser parser = new JsFileParser(errorManager);
+    JsFileRegexParser parser = new JsFileRegexParser(errorManager);
     DependencyInfo deps =
         parser.parseFile("<unknown path>", "<unknown path>", code);
     List<String> requires = new ArrayList<>();
