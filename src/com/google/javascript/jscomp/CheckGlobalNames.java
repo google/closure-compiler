@@ -227,6 +227,12 @@ class CheckGlobalNames implements CompilerPass {
    * </ul>
    */
   private boolean checkForBadModuleReference(Name name, Ref ref) {
+    if (!(name.getParent().isObjectLiteral()
+        || name.getParent().isClass()
+        || name.getParent().isFunction())) {
+      // We don't know the source of non-literal names, so don't warn for property accesses.
+      return false;
+    }
     JSModuleGraph moduleGraph = compiler.getModuleGraph();
     if (name.getGlobalSets() == 0 || ref.type == Ref.Type.SET_FROM_GLOBAL) {
       // Back off if either 1) this name was never set, or 2) this reference /is/ a set.
