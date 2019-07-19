@@ -249,28 +249,3 @@ function DocumentRange() {}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-DocumentRange-method-createRange
  */
 DocumentRange.prototype.createRange = function() {};
-
-// Introduced in DOM Level 2:
-/**
- * @constructor
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#RangeException
- */
-function RangeException() {}
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#RangeExceptionCode
- */
-RangeException.prototype.code;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#RangeExceptionCode
- */
-RangeException.prototype.BAD_BOUNDARYPOINTS_ERR;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#RangeExceptionCode
- */
-RangeException.prototype.INVALID_NODE_TYPE_ERR;
