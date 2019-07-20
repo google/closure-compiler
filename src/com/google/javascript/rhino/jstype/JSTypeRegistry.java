@@ -954,7 +954,7 @@ public class JSTypeRegistry implements Serializable {
     if (typesIndexedByProperty.containsKey(propertyName)) {
       Collection<JSType> typesWithProp = typesIndexedByProperty.get(propertyName);
       JSType built =
-          UnionTypeBuilder.createForPropertyChecking(this).addAlternates(typesWithProp).build();
+          UnionType.builderForPropertyChecking(this).addAlternates(typesWithProp).build();
       greatestSubtypeByProperty.put(propertyName, built);
       return built.getGreatestSubtype(type);
     }
@@ -1490,15 +1490,11 @@ public class JSTypeRegistry implements Serializable {
    * Creates a union type whose variants are the arguments.
    */
   public JSType createUnionType(JSType... variants) {
-    UnionTypeBuilder builder = UnionTypeBuilder.create(this);
-    for (JSType type : variants) {
-      builder.addAlternate(type);
-    }
-    return builder.build();
+    return createUnionType(ImmutableList.copyOf(variants));
   }
 
   public JSType createUnionType(List<? extends JSType> variants) {
-    return createUnionType(variants.toArray(new JSType[0]));
+    return UnionType.builder(this).addAlternates(variants).build();
   }
 
   /**
@@ -1506,9 +1502,9 @@ public class JSTypeRegistry implements Serializable {
    * by the arguments.
    */
   public JSType createUnionType(JSTypeNative... variants) {
-    UnionTypeBuilder builder = UnionTypeBuilder.create(this);
-    for (JSTypeNative typeId : variants) {
-      builder.addAlternate(getNativeType(typeId));
+    UnionType.Builder builder = UnionType.builder(this);
+    for (JSTypeNative type : variants) {
+      builder.addAlternate(getNativeType(type));
     }
     return builder.build();
   }
@@ -1990,13 +1986,11 @@ public class JSTypeRegistry implements Serializable {
         return getNativeType(ALL_TYPE);
 
       case PIPE: // Union type
-        UnionTypeBuilder builder = UnionTypeBuilder.create(this);
-        for (Node child = n.getFirstChild(); child != null;
-             child = child.getNext()) {
-          builder.addAlternate(
-              createFromTypeNodesInternal(child, sourceName, scope, recordUnresolvedTypes));
+        ImmutableList.Builder<JSType> builder = ImmutableList.builder();
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          builder.add(createFromTypeNodesInternal(child, sourceName, scope, recordUnresolvedTypes));
         }
-        return builder.build();
+        return createUnionType(builder.build());
 
       case EMPTY: // When the return value of a function is not specified
         return getNativeType(UNKNOWN_TYPE);

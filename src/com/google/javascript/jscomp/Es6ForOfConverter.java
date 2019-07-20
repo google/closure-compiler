@@ -29,7 +29,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.UnionTypeBuilder;
+import com.google.javascript.rhino.jstype.UnionType;
 
 /**
  * Converts ES6 "for of" loops to ES5.
@@ -45,6 +45,7 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
   private final JSType unknownType;
   private final JSType stringType;
   private final JSType booleanType;
+  private final JSType makeIteratorTypeArg;
   private final DefaultNameGenerator namer;
 
   private static final String ITER_BASE = "$jscomp$iter$";
@@ -59,7 +60,8 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
     this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
     this.stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
     this.booleanType = createType(addTypes, registry, JSTypeNative.BOOLEAN_TYPE);
-    namer = new DefaultNameGenerator();
+    this.makeIteratorTypeArg = createMakeIteratorTypeArg();
+    this.namer = new DefaultNameGenerator();
   }
 
   @Override
@@ -141,25 +143,9 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
 
     Node call = Es6ToEs3Util.makeIterator(compiler, iterable);
     if (addTypes) {
-      // Create the function type for $jscomp.makeIterator.
-      // Build "@param {string|!Iterable<T>|!Iterator<T>|!Arguments<T>}"
-      UnionTypeBuilder paramBuilder =
-          UnionTypeBuilder.create(registry)
-              .addAlternate(registry.getNativeType(JSTypeNative.STRING_TYPE))
-              .addAlternate(registry.getNativeType(JSTypeNative.ITERATOR_TYPE))
-              .addAlternate(registry.getNativeType(JSTypeNative.ITERABLE_TYPE));
-      JSType argumentsType = registry.getGlobalType("Arguments");
-      // If the user didn't provide externs for Arguments, let TypeCheck take care of issuing a
-      // warning.
-      if (argumentsType != null) {
-        paramBuilder.addAlternate(argumentsType);
-      }
-      FunctionType makeIteratorType =
-          registry.createFunctionType(iteratorType, paramBuilder.build());
-
       // Put types on the $jscomp.makeIterator getprop
       Node getProp = call.getFirstChild();
-      getProp.setJSType(makeIteratorType);
+      getProp.setJSType(registry.createFunctionType(iteratorType, makeIteratorTypeArg));
       // typing $jscomp as unknown since the $jscomp polyfill may not be injected before
       // typechecking. (See https://github.com/google/closure-compiler/issues/2908)
       getProp.getFirstChild().setJSType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
@@ -223,5 +209,27 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
 
   private Node withBooleanType(Node n) {
     return withType(n, booleanType);
+  }
+
+  /**
+   * Create the function type for $jscomp.makeIterator.
+   *
+   * <p>Build "{string|!Iterable<T>|!Iterator<T>|!Arguments<T>}"
+   */
+  private JSType createMakeIteratorTypeArg() {
+    UnionType.Builder builder =
+        UnionType.builder(registry)
+            .addAlternate(registry.getNativeType(JSTypeNative.STRING_TYPE))
+            .addAlternate(registry.getNativeType(JSTypeNative.ITERATOR_TYPE))
+            .addAlternate(registry.getNativeType(JSTypeNative.ITERABLE_TYPE));
+
+    // If the user didn't provide externs for Arguments, let TypeCheck take care of issuing a
+    // warning.
+    JSType argumentsType = registry.getGlobalType("Arguments");
+    if (argumentsType != null) {
+      builder.addAlternate(argumentsType);
+    }
+
+    return builder.build();
   }
 }

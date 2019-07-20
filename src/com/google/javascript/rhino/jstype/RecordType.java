@@ -170,12 +170,13 @@ public class RecordType extends PrototypeObjectType {
       // 2) Take the intersection of all of these unions.
       for (String propName : getOwnPropertyNames()) {
         JSType propType = getPropertyType(propName);
-        UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
-        for (ObjectType alt :
-          registry.getEachReferenceTypeWithProperty(propName)) {
+        UnionType.Builder builder = UnionType.builder(registry);
+        for (ObjectType alt : registry.getEachReferenceTypeWithProperty(propName)) {
           JSType altPropType = alt.getPropertyType(propName);
-          if (altPropType != null && !alt.isEquivalentTo(this)
-              && alt.isSubtypeOf(that) && altPropType.isSubtypeOf(propType)) {
+          if (altPropType != null
+              && !alt.isEquivalentTo(this)
+              && alt.isSubtypeOf(that)
+              && altPropType.isSubtypeOf(propType)) {
             builder.addAlternate(alt);
           }
         }

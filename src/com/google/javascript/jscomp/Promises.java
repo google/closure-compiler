@@ -24,7 +24,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
-import com.google.javascript.rhino.jstype.UnionTypeBuilder;
+import com.google.javascript.rhino.jstype.UnionType;
 
 /**
  * Models different Javascript Promise-related operations
@@ -73,7 +73,7 @@ final class Promises {
     }
 
     if (type.isUnionType()) {
-      UnionTypeBuilder unionTypeBuilder = UnionTypeBuilder.create(registry);
+      UnionType.Builder unionTypeBuilder = UnionType.builder(registry);
       for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
         unionTypeBuilder.addAlternate(getResolvedType(registry, alternate));
       }

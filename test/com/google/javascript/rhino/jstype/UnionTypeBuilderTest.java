@@ -39,6 +39,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
@@ -49,7 +50,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Test for {@link UnionTypeBuilder}.
+ * Test for {@link UnionType.Builder}.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
@@ -78,11 +79,45 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testAllType() {
+  public void testWildcardType_allType() {
     assertUnion("*", ALL_TYPE);
+    assertUnion("*", ALL_TYPE, ALL_TYPE);
     assertUnion("*", NUMBER_TYPE, ALL_TYPE);
     assertUnion("*", ALL_TYPE, NUMBER_TYPE);
     assertUnion("*", ALL_TYPE, NUMBER_TYPE, NO_TYPE);
+
+    assertUnion("(*|undefined)", ALL_TYPE, VOID_TYPE);
+
+    assertUnion("*", ALL_TYPE, UNKNOWN_TYPE); // TODO(b/137892871): Should be `?`.
+    assertUnion("*", ALL_TYPE, CHECKED_UNKNOWN_TYPE); // TODO(b/137892871): Should be `??`.
+  }
+
+  @Test
+  public void testWildcardType_unknownType() {
+    assertUnion("?", UNKNOWN_TYPE);
+    assertUnion("?", UNKNOWN_TYPE, UNKNOWN_TYPE);
+    assertUnion("?", NUMBER_TYPE, UNKNOWN_TYPE);
+    assertUnion("?", UNKNOWN_TYPE, NUMBER_TYPE);
+    assertUnion("?", UNKNOWN_TYPE, NUMBER_TYPE, NO_TYPE);
+
+    assertUnion("(?|undefined)", UNKNOWN_TYPE, VOID_TYPE);
+
+    assertUnion("*", ALL_TYPE, UNKNOWN_TYPE); // TODO(b/137892871): Should be `?`.
+    assertUnion("?", CHECKED_UNKNOWN_TYPE, UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void testWildcardType_checkedUnknownType() {
+    assertUnion("??", CHECKED_UNKNOWN_TYPE);
+    assertUnion("??", CHECKED_UNKNOWN_TYPE, CHECKED_UNKNOWN_TYPE);
+    assertUnion("??", NUMBER_TYPE, CHECKED_UNKNOWN_TYPE);
+    assertUnion("??", CHECKED_UNKNOWN_TYPE, NUMBER_TYPE);
+    assertUnion("??", CHECKED_UNKNOWN_TYPE, NUMBER_TYPE, NO_TYPE);
+
+    assertUnion("(??|undefined)", CHECKED_UNKNOWN_TYPE, VOID_TYPE);
+
+    assertUnion("*", ALL_TYPE, CHECKED_UNKNOWN_TYPE); // TODO(b/137892871): Should be `??`.
+    assertUnion("?", UNKNOWN_TYPE, CHECKED_UNKNOWN_TYPE);
   }
 
   @Test
@@ -160,12 +195,22 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
 
   @Test
   public void testRemovalOfDuplicateRecordTypes1() {
-    UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
+    UnionType.Builder builder = UnionType.builder(registry);
 
     addRecordType(builder, false);
     addRecordType(builder, false);
 
-    assertThat(builder.getAlternatesCount()).isEqualTo(1);
+    assertThat(builder.build().toMaybeUnionType()).isNull();
+  }
+
+  @Test
+  public void testRemovalOfDuplicateRecordTypes2() {
+    UnionType.Builder builder = UnionType.builder(registry);
+
+    addRecordType(builder, true);
+    addRecordType(builder, true);
+
+    assertThat(builder.build().toMaybeUnionType()).isNull();
   }
 
   @Test
@@ -175,8 +220,8 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     JSType arrayOfNumber = registry.createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE);
     JSType arrayOfUnknown = registry.createTemplatizedType(ARRAY_TYPE, UNKNOWN_TYPE);
 
-    UnionTypeBuilder builder =
-        UnionTypeBuilder.create(registry).addAlternate(arrayOfString).addAlternate(arrayOfNumber);
+    UnionType.Builder builder =
+        UnionType.builder(registry).addAlternate(arrayOfString).addAlternate(arrayOfNumber);
 
     // When
     JSType result = builder.build();
@@ -187,31 +232,39 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testRemovalOfDuplicateRecordTypes2() {
-    UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
+  public void testAfterBuild_cannotRebuild() {
+    UnionType.Builder builder = UnionType.builder(registry);
 
-    addRecordType(builder, true);
-    addRecordType(builder, true);
+    builder.build();
 
-    assertThat(builder.getAlternatesCount()).isEqualTo(1);
+    assertThrows(Exception.class, builder::build);
   }
 
-  private void addRecordType(UnionTypeBuilder builder, boolean inferred) {
+  @Test
+  public void testAfterBuild_cannotAdd() {
+    UnionType.Builder builder = UnionType.builder(registry);
+
+    builder.build();
+
+    assertThrows(Exception.class, () -> builder.addAlternate(NUMBER_TYPE));
+  }
+
+  private void addRecordType(UnionType.Builder builder, boolean inferred) {
     RecordTypeBuilder recBuilder = new RecordTypeBuilder(registry);
     recBuilder.setSynthesized(inferred);
     recBuilder.addProperty("prop", NUMBER_TYPE, null);
     builder.addAlternate(recBuilder.build());
   }
 
-  public void assertUnion(String expected, JSType ... types) {
-    UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
+  private void assertUnion(String expected, JSType... types) {
+    UnionType.Builder builder = UnionType.builder(registry);
     for (JSType type : types) {
       builder.addAlternate(type);
     }
     assertThat(builder.build().toString()).isEqualTo(expected);
   }
 
-  public FunctionType createFunctionWithReturn(JSType type) {
+  private FunctionType createFunctionWithReturn(JSType type) {
     return FunctionType.builder(registry)
         .withParamsNode(registry.createParameters())
         .withReturnType(type)

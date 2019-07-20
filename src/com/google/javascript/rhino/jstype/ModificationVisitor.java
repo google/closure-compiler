@@ -251,11 +251,7 @@ public class ModificationVisitor implements Visitor<JSType> {
     }
 
     if (changed) {
-      UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
-      for (JSType alternate : results) {
-        builder.addAlternate(alternate);
-      }
-      return builder.build();  // maybe not a union
+      return registry.createUnionType(results); // maybe not a union
     }
 
     return type;

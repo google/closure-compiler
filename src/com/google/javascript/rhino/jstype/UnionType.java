@@ -39,16 +39,27 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /**
  * The {@code UnionType} implements a common JavaScript idiom in which the
@@ -68,6 +79,22 @@ import java.util.TreeSet;
 public class UnionType extends JSType {
   private static final long serialVersionUID = 2L;
 
+  /**
+   * Generally, if the best we can do is say "this object is one of thirty things", then we should
+   * just give up and admit that we have no clue.
+   */
+  private static final int DEFAULT_MAX_UNION_SIZE = 30;
+
+  /**
+   * A special case maximum size for use in the type registry.
+   *
+   * <p>The registry uses a union type to track all the types that have a given property. In this
+   * scenario, there can be <em>many</em> alternates but it's still valuable to differentiate them.
+   *
+   * <p>This value was semi-reandomly selected based on the Google+ FE project.
+   */
+  private static final int PROPERTY_CHECKING_MAX_UNION_SIZE = 3000;
+
   // NOTE: to avoid allocating iterators, all the loops below iterate over alternates by index
   // instead of using the for-each loop idiom.
 
@@ -79,14 +106,27 @@ public class UnionType extends JSType {
   private ImmutableList<JSType> alternates;
 
   /**
-   * Creates a union type.
+   * Creates a union.
    *
-   * @param alternates the alternates of the union without structural typing subtype
+   * <p>This ctor is private because all instances are created using a {@link Builder}. The builder
+   * is also responsible for setting the alternates, which is why they aren't passed as a parameter.
    */
-  UnionType(JSTypeRegistry registry, ImmutableList<JSType> alternates) {
+  private UnionType(JSTypeRegistry registry) {
     super(registry);
+  }
 
-    this.alternates = alternates;
+  /** Creates a {@link Builder} for a new {@link UnionType}. */
+  public static Builder builder(JSTypeRegistry registry) {
+    return new Builder(registry, DEFAULT_MAX_UNION_SIZE);
+  }
+
+  /**
+   * Creates a {@link Builder} for a new {@link UnionType}.
+   *
+   * <p>This is only supposed to be used within `JSTypeRegistry`.
+   */
+  static Builder builderForPropertyChecking(JSTypeRegistry registry) {
+    return new Builder(registry, PROPERTY_CHECKING_MAX_UNION_SIZE);
   }
 
   /**
@@ -101,13 +141,16 @@ public class UnionType extends JSType {
     return alternates;
   }
 
-  /**
-   * Use UnionTypeBuilder to rebuild the list of alternates and hashcode of the current UnionType.
-   */
+  /** Use a {@link Builder} to rebuild the list of alternates. */
   private void rebuildAlternates() {
-    UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
-    builder.addAlternates(alternates);
-    alternates = builder.getAlternates();
+    setAlternates(
+        new Builder(this, DEFAULT_MAX_UNION_SIZE).addAlternates(this.alternates).buildInternal());
+  }
+
+  private UnionType setAlternates(ImmutableList<JSType> alternates) {
+    checkState(!alternates.isEmpty());
+    this.alternates = alternates;
+    return this;
   }
 
   /**
@@ -204,31 +247,17 @@ public class UnionType extends JSType {
 
   @Override
   public JSType autobox() {
-    UnionTypeBuilder restricted = UnionTypeBuilder.create(registry);
-    for (int i = 0; i < alternates.size(); i++) {
-      JSType t = alternates.get(i);
-      restricted.addAlternate(t.autobox());
-    }
-    return restricted.build();
+    return map(JSType::autobox);
   }
 
   @Override
   public JSType restrictByNotNullOrUndefined() {
-    UnionTypeBuilder restricted = UnionTypeBuilder.create(registry);
-    for (int i = 0; i < alternates.size(); i++) {
-      JSType t = alternates.get(i);
-      restricted.addAlternate(t.restrictByNotNullOrUndefined());
-    }
-    return restricted.build();
+    return map(JSType::restrictByNotNullOrUndefined);
   }
 
   @Override
   public JSType restrictByNotUndefined() {
-    UnionTypeBuilder restricted = UnionTypeBuilder.create(registry);
-    for (JSType t : alternates) {
-      restricted.addAlternate(t.restrictByNotUndefined());
-    }
-    return restricted.build();
+    return map(JSType::restrictByNotUndefined);
   }
 
   @Override
@@ -303,7 +332,7 @@ public class UnionType extends JSType {
   }
 
   JSType meet(JSType that) {
-    UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
+    Builder builder = builder(registry);
     for (int i = 0; i < alternates.size(); i++) {
       JSType alternate = alternates.get(i);
       if (alternate.isSubtypeOf(that)) {
@@ -439,7 +468,7 @@ public class UnionType extends JSType {
    * @param type the supertype of the types to remove from this union type
    */
   public JSType getRestrictedUnion(JSType type) {
-    UnionTypeBuilder restricted = UnionTypeBuilder.create(registry);
+    Builder restricted = builder(registry);
     for (int i = 0; i < alternates.size(); i++) {
       JSType t = alternates.get(i);
       // Keep all unknown/unresolved types.
@@ -494,14 +523,7 @@ public class UnionType extends JSType {
 
   @Override
   public JSType getRestrictedTypeGivenToBooleanOutcome(boolean outcome) {
-    // gather elements after restriction
-    UnionTypeBuilder restricted = UnionTypeBuilder.create(registry);
-    for (int i = 0; i < alternates.size(); i++) {
-      JSType element = alternates.get(i);
-      restricted.addAlternate(
-          element.getRestrictedTypeGivenToBooleanOutcome(outcome));
-    }
-    return restricted.build();
+    return map((t) -> t.getRestrictedTypeGivenToBooleanOutcome(outcome));
   }
 
   @Override
@@ -519,8 +541,8 @@ public class UnionType extends JSType {
 
   @Override
   public TypePair getTypesUnderEquality(JSType that) {
-    UnionTypeBuilder thisRestricted = UnionTypeBuilder.create(registry);
-    UnionTypeBuilder thatRestricted = UnionTypeBuilder.create(registry);
+    Builder thisRestricted = builder(registry);
+    Builder thatRestricted = builder(registry);
     for (int i = 0; i < alternates.size(); i++) {
       JSType element = alternates.get(i);
       TypePair p = element.getTypesUnderEquality(that);
@@ -538,8 +560,8 @@ public class UnionType extends JSType {
 
   @Override
   public TypePair getTypesUnderInequality(JSType that) {
-    UnionTypeBuilder thisRestricted = UnionTypeBuilder.create(registry);
-    UnionTypeBuilder thatRestricted = UnionTypeBuilder.create(registry);
+    Builder thisRestricted = builder(registry);
+    Builder thatRestricted = builder(registry);
     for (int i = 0; i < alternates.size(); i++) {
       JSType element = alternates.get(i);
       TypePair p = element.getTypesUnderInequality(that);
@@ -557,8 +579,8 @@ public class UnionType extends JSType {
 
   @Override
   public TypePair getTypesUnderShallowInequality(JSType that) {
-    UnionTypeBuilder thisRestricted = UnionTypeBuilder.create(registry);
-    UnionTypeBuilder thatRestricted = UnionTypeBuilder.create(registry);
+    Builder thisRestricted = builder(registry);
+    Builder thatRestricted = builder(registry);
     for (int i = 0; i < alternates.size(); i++) {
       JSType element = alternates.get(i);
       TypePair p = element.getTypesUnderShallowInequality(that);
@@ -667,13 +689,12 @@ public class UnionType extends JSType {
    * Returns whether anything in {@code universe} matches {@code predicate}.
    *
    * <p>This method is designed to minimize allocations since it is expected to be called
-   * <em>very</em> often. That's why is doesn't:
+   * <em>very</em> often. That's why it doesn't:
    *
    * <ul>
    *   <li>instantiate {@link Iterator}s
    *   <li>instantiate {@link Stream}s
    *   <li>(un)box primitives
-   *   <li>expect closure generating lambdas
    * </ul>
    */
   private static boolean anyMatch(Predicate<JSType> predicate, ImmutableList<JSType> universe) {
@@ -689,13 +710,12 @@ public class UnionType extends JSType {
    * Returns whether everything in {@code universe} matches {@code predicate}.
    *
    * <p>This method is designed to minimize allocations since it is expected to be called
-   * <em>very</em> often. That's why is doesn't:
+   * <em>very</em> often. That's why it doesn't:
    *
    * <ul>
    *   <li>instantiate {@link Iterator}s
    *   <li>instantiate {@link Stream}s
    *   <li>(un)box primitives
-   *   <li>expect closure generating lambdas
    * </ul>
    */
   private static boolean allMatch(Predicate<JSType> predicate, ImmutableList<JSType> universe) {
@@ -705,5 +725,335 @@ public class UnionType extends JSType {
       }
     }
     return true;
+  }
+
+  /**
+   * Returns a union filled by mapping every alternate of this union with {@code mapper}.
+   *
+   * <p>This method is designed to minimize allocations since it is expected to be called
+   * <em>very</em> often. That's why it doesn't:
+   *
+   * <ul>
+   *   <li>instantiate {@link Iterator}s
+   *   <li>instantiate {@link Stream}s
+   *   <li>(un)box primitives
+   * </ul>
+   */
+  private JSType map(Function<JSType, JSType> mapper) {
+    Builder builder = builder(registry);
+    for (int i = 0; i < alternates.size(); i++) {
+      builder.addAlternate(mapper.apply(alternates.get(i)));
+    }
+    return builder.build();
+  }
+
+  /**
+   * Implements type unioning logic, since {@link UnionType}s only actually need to perform unioning
+   * operations when being (re)built.
+   *
+   * <p>{@link Builder}s exist in two forms. One for assembing a new union and one for updating an
+   * existing union. Only the former is exposed.
+   *
+   * <p>Most users of this class should prefer {@link JSTypeRegistry#createUnionType} instead.
+   */
+  public static final class Builder {
+    private final UnionType rebuildTarget;
+    private final JSTypeRegistry registry;
+    private final int maxUnionSize;
+
+    private final List<JSType> alternates = new ArrayList<>();
+    // If a union has ? or *, we do not care about any other types, except for undefined (for
+    // optional
+    // properties).
+    private boolean containsVoidType = false;
+    private boolean isAllType = false;
+    private boolean isNativeUnknownType = false;
+    private boolean areAllUnknownsChecked = true;
+
+    // Every UnionType may have at most one structural function in it.
+    //
+    // NOTE(nicksantos): I've read some literature that says that type-inferenced
+    // languages are fundamentally incompatible with union types. I refuse
+    // to believe this. But they do make the type lattice much more complicated.
+    //
+    // For this reason, when we deal with function types, we actually merge some
+    // nodes on the lattice, and treat them as fundamentally equivalent.
+    // For example, we treat
+    // function(): string | function(): number
+    // as equivalent to
+    // function(): (string|number)
+    // and normalize the first type into the second type.
+    //
+    // To perform this normalization, we've modified Builder to disallow
+    // multiple structural functions in a union. We always delegate to
+    // FunctionType::getLeastSupertype, which either merges the functions into
+    // one structural function, or just bails out and uses the top function type.
+    private int functionTypePosition = -1;
+
+    private boolean hasBuilt = false;
+
+    /** Creates a builder for a new union. */
+    private Builder(JSTypeRegistry registry, int maxUnionSize) {
+      this.rebuildTarget = null;
+      this.registry = registry;
+      this.maxUnionSize = maxUnionSize;
+    }
+
+    /** Creates a re-builder for an existing union. */
+    private Builder(UnionType rebuildTarget, int maxUnionSize) {
+      this.rebuildTarget = rebuildTarget;
+      this.registry = rebuildTarget.registry;
+      this.maxUnionSize = maxUnionSize;
+    }
+
+    private static boolean isSubtype(JSType rightType, JSType leftType) {
+      return rightType.isSubtypeWithoutStructuralTyping(leftType);
+    }
+
+    public Builder addAlternates(Collection<? extends JSType> c) {
+      for (JSType type : c) {
+        addAlternate(type);
+      }
+      return this;
+    }
+
+    // A specific override that avoid creating an iterator.  This version is currently used when
+    // adding a union as an alternate.
+    public Builder addAlternates(List<? extends JSType> list) {
+      for (int i = 0; i < list.size(); i++) {
+        addAlternate(list.get(i));
+      }
+      return this;
+    }
+
+    /**
+     * Adds an alternate to the union type under construction.
+     *
+     * <p>Returns this for easy chaining.
+     */
+    public Builder addAlternate(JSType alternate) {
+      checkHasNotBuilt();
+
+      // build() returns the bottom type by default, so we can
+      // just bail out early here.
+      if (alternate.isNoType()) {
+        return this;
+      }
+
+      isAllType = isAllType || alternate.isAllType();
+      containsVoidType = containsVoidType || alternate.isVoidType();
+
+      boolean isAlternateUnknown = alternate instanceof UnknownType;
+      isNativeUnknownType = isNativeUnknownType || isAlternateUnknown;
+      if (isAlternateUnknown) {
+        areAllUnknownsChecked = areAllUnknownsChecked && alternate.isCheckedUnknownType();
+      }
+      if (!isAllType && !isNativeUnknownType) {
+        if (alternate.isUnionType()) {
+          addAlternates(alternate.toMaybeUnionType().getAlternates());
+        } else {
+          if (alternates.size() > maxUnionSize) {
+            return this;
+          }
+
+          // Function types are special, because they have their
+          // own bizarre sub-lattice. See the comments on
+          // FunctionType#supAndInf helper and above at functionTypePosition.
+          if (alternate.isFunctionType() && functionTypePosition != -1) {
+            // See the comments on functionTypePosition above.
+            FunctionType other = alternates.get(functionTypePosition).toMaybeFunctionType();
+            FunctionType supremum = alternate.toMaybeFunctionType().supAndInfHelper(other, true);
+            alternates.set(functionTypePosition, supremum);
+            return this;
+          }
+
+          // Look through the alternates we've got so far,
+          // and check if any of them are duplicates of
+          // one another.
+          int currentIndex = 0;
+          Iterator<JSType> it = alternates.iterator();
+          while (it.hasNext()) {
+            boolean removeCurrent = false;
+            JSType current = it.next();
+
+            // Unknown and NoResolved types may just be names that haven't
+            // been resolved yet. So keep these in the union, and just use
+            // equality checking for simple de-duping.
+            if (alternate.isUnknownType()
+                || current.isUnknownType()
+                || alternate.isNoResolvedType()
+                || current.isNoResolvedType()
+                || alternate.hasAnyTemplateTypes()
+                || current.hasAnyTemplateTypes()) {
+              if (alternate.isEquivalentTo(current, false)) {
+                // Alternate is unnecessary.
+                return this;
+              }
+            } else {
+
+              // Because "Foo" and "Foo<?>" are roughly equivalent
+              // templatized types, special care is needed when building the
+              // union. For example:
+              //   Object is consider a subtype of Object<string>
+              // but we want to leave "Object" not "Object<string>" when
+              // building the subtype.
+              //
+
+              if (alternate.isTemplatizedType() || current.isTemplatizedType()) {
+                // Cases:
+                // 1) alternate:Array<string> and current:Object ==> Object
+                // 2) alternate:Array<string> and current:Array ==> Array
+                // 3) alternate:Object<string> and
+                //    current:Array ==> Array|Object<string>
+                // 4) alternate:Object and current:Array<string> ==> Object
+                // 5) alternate:Array and current:Array<string> ==> Array
+                // 6) alternate:Array and
+                //    current:Object<string> ==> Array|Object<string>
+                // 7) alternate:Array<string> and
+                //    current:Array<number> ==> Array<?>
+                // 8) alternate:Array<string> and
+                //    current:Array<string> ==> Array<string>
+                // 9) alternate:Array<string> and
+                //    current:Object<string> ==> Object<string>|Array<string>
+
+                if (!current.isTemplatizedType()) {
+                  if (isSubtype(alternate, current)) {
+                    // case 1, 2
+                    return this;
+                  }
+                  // case 3: leave current, add alternate
+                } else if (!alternate.isTemplatizedType()) {
+                  if (isSubtype(current, alternate)) {
+                    // case 4, 5
+                    removeCurrent = true;
+                  }
+                  // case 6: leave current, add alternate
+                } else {
+                  checkState(current.isTemplatizedType() && alternate.isTemplatizedType());
+                  TemplatizedType templatizedAlternate = alternate.toMaybeTemplatizedType();
+                  TemplatizedType templatizedCurrent = current.toMaybeTemplatizedType();
+
+                  if (templatizedCurrent.wrapsSameRawType(templatizedAlternate)) {
+                    if (alternate
+                        .getTemplateTypeMap()
+                        .checkEquivalenceHelper(
+                            current.getTemplateTypeMap(),
+                            EquivalenceMethod.IDENTITY,
+                            SubtypingMode.NORMAL)) {
+                      // case 8
+                      return this;
+                    } else {
+                      // case 7: replace with a merged alternate specialized on `?`.
+                      ObjectType rawType = templatizedCurrent.getReferencedObjTypeInternal();
+                      // Providing no type-parameter values specializes `rawType` on `?` by default.
+                      alternate = registry.createTemplatizedType(rawType, ImmutableList.of());
+                      removeCurrent = true;
+                    }
+                  }
+                  // case 9: leave current, add alternate
+                }
+                // Otherwise leave both templatized types.
+              } else if (isSubtype(alternate, current)) {
+                // Alternate is unnecessary.
+                mayRegisterDroppedProperties(alternate, current);
+                return this;
+              } else if (isSubtype(current, alternate)) {
+                // Alternate makes current obsolete
+                mayRegisterDroppedProperties(current, alternate);
+                removeCurrent = true;
+              }
+            }
+
+            if (removeCurrent) {
+              it.remove();
+
+              if (currentIndex == functionTypePosition) {
+                functionTypePosition = -1;
+              } else if (currentIndex < functionTypePosition) {
+                functionTypePosition--;
+                currentIndex--;
+              }
+            }
+            currentIndex++;
+          }
+
+          if (alternate.isFunctionType()) {
+            // See the comments on functionTypePosition above.
+            checkState(functionTypePosition == -1);
+            functionTypePosition = alternates.size();
+          }
+
+          alternates.add(alternate);
+        }
+      }
+      return this;
+    }
+
+    private void mayRegisterDroppedProperties(JSType subtype, JSType supertype) {
+      if (subtype.toMaybeRecordType() != null && supertype.toMaybeRecordType() != null) {
+        registry.registerDroppedPropertiesInUnion(
+            subtype.toMaybeRecordType(), supertype.toMaybeRecordType());
+      }
+    }
+
+    /**
+     * Returns a type, not necessarily a {@link UnionType}, that represents the union of the inputs.
+     *
+     * <p>The {@link Builder} cannot be used again once this method is called.
+     */
+    public JSType build() {
+      checkState(rebuildTarget == null);
+
+      ImmutableList<JSType> alternates = buildInternal();
+      if (alternates.size() == 1) {
+        return alternates.get(0);
+      } else {
+        return new UnionType(registry).setAlternates(alternates);
+      }
+    }
+
+    /** Create the final set of alternates for either a new union or a union being rebuilt. */
+    private ImmutableList<JSType> buildInternal() {
+      checkHasNotBuilt();
+      this.hasBuilt = true;
+
+      JSType wildcard = getNativeWildcardType();
+      if (wildcard != null) {
+        if (containsVoidType) {
+          return ImmutableList.of(wildcard, registry.getNativeType(VOID_TYPE));
+        } else {
+          return ImmutableList.of(wildcard);
+        }
+      }
+
+      if (alternates.isEmpty()) {
+        // To simplify the typesystem, empty union types are forbidden. Using a single `bottom`
+        // makes it essentially a proxy instead.
+        return ImmutableList.of(registry.getNativeType(NO_TYPE));
+      } else if (alternates.size() > maxUnionSize) {
+        return ImmutableList.of(registry.getNativeType(UNKNOWN_TYPE));
+      } else {
+        return ImmutableList.copyOf(alternates);
+      }
+    }
+
+    /** Returns ALL_TYPE, UNKNOWN_TYPE, CHECKED_UNKNOWN_TYPE, or null as specified by the flags. */
+    @Nullable
+    private JSType getNativeWildcardType() {
+      if (isAllType) {
+        return registry.getNativeType(ALL_TYPE);
+      } else if (isNativeUnknownType) {
+        if (areAllUnknownsChecked) {
+          return registry.getNativeType(CHECKED_UNKNOWN_TYPE);
+        } else {
+          return registry.getNativeType(UNKNOWN_TYPE);
+        }
+      }
+      return null;
+    }
+
+    private void checkHasNotBuilt() {
+      checkState(!this.hasBuilt, "Cannot reuse a `UnionType.Builder` that has already filled.");
+    }
   }
 }

@@ -176,7 +176,7 @@ public class JSTypeRegistryTest {
     // Given
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
 
-    // By default the UnionTypeBuilder will treat a union of more than 30
+    // By default the UnionType.Builder will treat a union of more than 30
     // types as an unknown type. We don't want that for property checking
     // so test that the limit is higher.
     for (int i = 0; i < 100; i++) {
