@@ -20,8 +20,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
 import com.google.common.collect.TreeMultiset;
 import com.google.javascript.jscomp.BasicErrorManager;
 import com.google.javascript.jscomp.CheckLevel;
@@ -45,6 +46,7 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import javax.annotation.Nullable;
@@ -106,8 +108,8 @@ public class JsfileParser {
     final Multiset<String> requiresCss = TreeMultiset.create();
     final Multiset<String> visibility = TreeMultiset.create();
 
-    final Set<JsArray<String>> customAnnotations = assoc();
-    final Set<JsArray<String>> loadFlags = assoc();
+    final Multimap<String, String> customAnnotations = TreeMultimap.create();
+    final Multimap<String, String> loadFlags = TreeMultimap.create();
 
     FileInfo(ErrorReporter reporter) {
       this.reporter = reporter;
@@ -255,7 +257,7 @@ public class JsfileParser {
     parsed.ast.setInputId(new InputId(filename));
     String version = parsed.features.version();
     if (!version.equals("es3")) {
-      info.loadFlags.add(JsArray.of("lang", version));
+      info.loadFlags.put("lang", version);
     }
 
     for (Comment comment : parsed.comments) {
@@ -272,9 +274,9 @@ public class JsfileParser {
         Iterables.getOnlyElement(
             compiler.getModuleMetadataMap().getModulesByPath().values());
     if (module.isEs6Module()) {
-      info.loadFlags.add(JsArray.of("module", "es6"));
+      info.loadFlags.put("module", "es6");
     } else if (module.isGoogModule()) {
-      info.loadFlags.add(JsArray.of("module", "goog"));
+      info.loadFlags.put("module", "goog");
     }
     info.goog = module.usesClosure();
     // If something doesn't have an external dependency on Closure, then it does not have any
@@ -342,19 +344,16 @@ public class JsfileParser {
           break;
         case "@enhanceable":
         case "@pintomodule":
-          info.customAnnotations.add(
-              JsArray.of(annotation.name.substring(1), annotation.value));
+          info.customAnnotations.put(annotation.name.substring(1), annotation.value);
           break;
         case "@enhance":
           if (!annotation.value.isEmpty()) {
-            info.customAnnotations.add(
-                JsArray.of(annotation.name.substring(1), annotation.value));
+            info.customAnnotations.put(annotation.name.substring(1), annotation.value);
           }
           break;
         default:
           if (fileOverview) {
-            info.customAnnotations.add(
-                JsArray.of(annotation.name.substring(1), annotation.value));
+            info.customAnnotations.put(annotation.name.substring(1), annotation.value);
           }
       }
     }
@@ -390,17 +389,26 @@ public class JsfileParser {
         boolean fatal, String message, String sourceName, int line, int lineOffset) {}
   };
 
-  /** Returns an associative multimap. */
-  private static Set<JsArray<String>> assoc() {
-    return new TreeSet<>(Ordering.<String>natural().lexicographical().onResultOf(JsArray::asList));
-  }
-
   /** Sparse object helper class: only adds non-trivial values. */
   private static class SparseObject {
     final JsObject<Object> object = new JsObject<>();
 
-    SparseObject set(String key, Iterable<?> iterable) {
-      JsArray<?> array = JsArray.copyOf(iterable);
+    SparseObject set(String key, Iterable<String> iterable) {
+      JsArray<String> array = JsArray.copyOf(iterable);
+      if (array.getLength() > 0) {
+        object.set(key, array);
+      }
+      return this;
+    }
+
+    SparseObject set(String key, Multimap<String, String> map) {
+      JsArray<JsArray<String>> array = new JsArray<>();
+      for (Map.Entry<String, String> entry : map.entries()) {
+        JsArray<String> pair = new JsArray<>();
+        pair.push(entry.getKey());
+        pair.push(entry.getValue());
+        array.push(pair);
+      }
       if (array.getLength() > 0) {
         object.set(key, array);
       }
