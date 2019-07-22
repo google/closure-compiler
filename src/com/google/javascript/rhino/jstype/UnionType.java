@@ -91,18 +91,14 @@ public class UnionType extends JSType {
    * <p>The registry uses a union type to track all the types that have a given property. In this
    * scenario, there can be <em>many</em> alternates but it's still valuable to differentiate them.
    *
-   * <p>This value was semi-reandomly selected based on the Google+ FE project.
+   * <p>This value was semi-randomly selected based on the Google+ FE project.
    */
   private static final int PROPERTY_CHECKING_MAX_UNION_SIZE = 3000;
 
   // NOTE: to avoid allocating iterators, all the loops below iterate over alternates by index
   // instead of using the for-each loop idiom.
 
-  // We currently avoid collapsing structural subtypes because `DisambiguateProperties` needs to
-  // keep track of exactly how types are conflated. If we forget that a nominal type and its
-  // strucutral subtype were members of the same union, we over-conflate and knee-cap that
-  // optimization.
-  // TODO(nickreid): Find a less complex way to prevent this conflation.
+
   private ImmutableList<JSType> alternates;
 
   /**
@@ -135,7 +131,7 @@ public class UnionType extends JSType {
    * @return The alternate types of this union type. The returned set is immutable.
    */
   public ImmutableList<JSType> getAlternates() {
-    if (anyMatch(JSType::isUnionType, alternates)) {
+    if (anyMatch(JSType::isUnionType)) {
       rebuildAlternates();
     }
     return alternates;
@@ -162,7 +158,7 @@ public class UnionType extends JSType {
   @Override
   public boolean matchesNumberContext() {
     // TODO(user): Reverse this logic to make it correct instead of generous.
-    return anyMatch(JSType::matchesNumberContext, alternates);
+    return anyMatch(JSType::matchesNumberContext);
   }
 
   /**
@@ -179,7 +175,7 @@ public class UnionType extends JSType {
   @Override
   public boolean matchesStringContext() {
     // TODO(user): Reverse this logic to make it correct instead of generous.
-    return anyMatch(JSType::matchesStringContext, alternates);
+    return anyMatch(JSType::matchesStringContext);
   }
 
   /**
@@ -190,7 +186,7 @@ public class UnionType extends JSType {
   @Override
   public boolean matchesSymbolContext() {
     // TODO(user): Reverse this logic to make it correct instead of generous.
-    return anyMatch(JSType::matchesSymbolContext, alternates);
+    return anyMatch(JSType::matchesSymbolContext);
   }
 
   /**
@@ -212,7 +208,7 @@ public class UnionType extends JSType {
   @Override
   public boolean matchesObjectContext() {
     // TODO(user): Reverse this logic to make it correct instead of generous.
-    return anyMatch(JSType::matchesObjectContext, alternates);
+    return anyMatch(JSType::matchesObjectContext);
   }
 
   @Override
@@ -242,7 +238,7 @@ public class UnionType extends JSType {
 
   @Override
   public boolean canBeCalled() {
-    return allMatch(JSType::canBeCalled, alternates);
+    return allMatch(JSType::canBeCalled);
   }
 
   @Override
@@ -285,7 +281,7 @@ public class UnionType extends JSType {
    */
   @Override
   public boolean isNullable() {
-    return anyMatch(JSType::isNullable, alternates);
+    return anyMatch(JSType::isNullable);
   }
 
   /**
@@ -293,28 +289,28 @@ public class UnionType extends JSType {
    */
   @Override
   public boolean isVoidable() {
-    return anyMatch(JSType::isVoidable, alternates);
+    return anyMatch(JSType::isVoidable);
   }
 
   /** Tests whether this type explicitly allows undefined (as opposed to ? or *). */
   @Override
   public boolean isExplicitlyVoidable() {
-    return anyMatch(JSType::isExplicitlyVoidable, alternates);
+    return anyMatch(JSType::isExplicitlyVoidable);
   }
 
   @Override
   public boolean isUnknownType() {
-    return anyMatch(JSType::isUnknownType, alternates);
+    return anyMatch(JSType::isUnknownType);
   }
 
   @Override
   public boolean isStruct() {
-    return anyMatch(JSType::isStruct, alternates);
+    return anyMatch(JSType::isStruct);
   }
 
   @Override
   public boolean isDict() {
-    return anyMatch(JSType::isDict, alternates);
+    return anyMatch(JSType::isDict);
   }
 
   @Override
@@ -438,7 +434,7 @@ public class UnionType extends JSType {
 
   @Override
   public boolean isObject() {
-    return allMatch(JSType::isObject, alternates);
+    return allMatch(JSType::isObject);
   }
 
   /**
@@ -450,7 +446,7 @@ public class UnionType extends JSType {
    * @return {@code true} if the alternate is in the union
    */
   public boolean contains(JSType type) {
-    return anyMatch(type::isEquivalentTo, alternates);
+    return anyMatch(type::isEquivalentTo);
   }
 
   /**
@@ -682,11 +678,11 @@ public class UnionType extends JSType {
 
   @Override
   public boolean hasAnyTemplateTypesInternal() {
-    return anyMatch(JSType::hasAnyTemplateTypes, alternates);
+    return anyMatch(JSType::hasAnyTemplateTypes);
   }
 
   /**
-   * Returns whether anything in {@code universe} matches {@code predicate}.
+   * Returns whether any {@link #alternates} matches {@code predicate}.
    *
    * <p>This method is designed to minimize allocations since it is expected to be called
    * <em>very</em> often. That's why it doesn't:
@@ -697,9 +693,9 @@ public class UnionType extends JSType {
    *   <li>(un)box primitives
    * </ul>
    */
-  private static boolean anyMatch(Predicate<JSType> predicate, ImmutableList<JSType> universe) {
-    for (int i = 0; i < universe.size(); i++) {
-      if (predicate.test(universe.get(i))) {
+  private boolean anyMatch(Predicate<JSType> predicate) {
+    for (int i = 0; i < alternates.size(); i++) {
+      if (predicate.test(alternates.get(i))) {
         return true;
       }
     }
@@ -707,7 +703,7 @@ public class UnionType extends JSType {
   }
 
   /**
-   * Returns whether everything in {@code universe} matches {@code predicate}.
+   * Returns whether every {@link #alternates} matches {@code predicate}.
    *
    * <p>This method is designed to minimize allocations since it is expected to be called
    * <em>very</em> often. That's why it doesn't:
@@ -718,9 +714,9 @@ public class UnionType extends JSType {
    *   <li>(un)box primitives
    * </ul>
    */
-  private static boolean allMatch(Predicate<JSType> predicate, ImmutableList<JSType> universe) {
-    for (int i = 0; i < universe.size(); i++) {
-      if (!predicate.test(universe.get(i))) {
+  private boolean allMatch(Predicate<JSType> predicate) {
+    for (int i = 0; i < alternates.size(); i++) {
+      if (!predicate.test(alternates.get(i))) {
         return false;
       }
     }
@@ -728,7 +724,7 @@ public class UnionType extends JSType {
   }
 
   /**
-   * Returns a union filled by mapping every alternate of this union with {@code mapper}.
+   * Returns a union filled by mapping every {@link #alternates} with {@code mapper}.
    *
    * <p>This method is designed to minimize allocations since it is expected to be called
    * <em>very</em> often. That's why it doesn't:
