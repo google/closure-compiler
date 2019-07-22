@@ -971,7 +971,7 @@ public class AstFactoryTest {
   }
 
   @Test
-  public void testCreateEmptyObjectLit() {
+  public void testCreateObjectLit_empty() {
     AstFactory astFactory = createTestAstFactory();
 
     // just a quick way to get a valid object literal type
@@ -982,12 +982,37 @@ public class AstFactoryTest {
             .getOnlyChild() // object literal
             .getJSType();
 
-    Node objectLit = astFactory.createEmptyObjectLit();
+    Node objectLit = astFactory.createObjectLit();
 
     assertType(objectLit.getJSType()).toStringIsEqualTo("{}");
     assertThat(objectLit.getJSType()).isInstanceOf(objectLitType.getClass());
     assertNode(objectLit).hasToken(Token.OBJECTLIT);
     assertNode(objectLit).hasChildren(false);
+  }
+
+  @Test
+  public void testCreateObjectLit_withElements() {
+    AstFactory astFactory = createTestAstFactory();
+
+    // just a quick way to get a valid object literal type
+    Node root = parseAndAddTypes("({})");
+    JSType objectLitType =
+        root.getFirstChild() // script
+            .getFirstChild() // expression result
+            .getOnlyChild() // object literal
+            .getJSType();
+
+    Node spread = IR.spread(IR.name("a"));
+    Node stringKey = IR.stringKey("b", IR.number(0));
+
+    Node objectLit = astFactory.createObjectLit(spread, stringKey);
+
+    assertType(objectLit.getJSType()).toStringIsEqualTo("{}");
+    assertThat(objectLit.getJSType()).isInstanceOf(objectLitType.getClass());
+    assertNode(objectLit).hasToken(Token.OBJECTLIT);
+
+    assertNode(objectLit.getFirstChild()).isSameInstanceAs(spread);
+    assertNode(objectLit.getSecondChild()).isSameInstanceAs(stringKey);
   }
 
   @Test

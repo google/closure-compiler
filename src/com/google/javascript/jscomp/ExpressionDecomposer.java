@@ -361,11 +361,12 @@ class ExpressionDecomposer {
       // need to extract the expression inside of it.
       n = n.getFirstChild();
     } else if (n.isSpread()) {
-      // Object spread is assumed pure. We just need to extract the expression being spread.
-      if (n.getParent().isObjectLit()) {
-        n = n.getFirstChild();
-      }
-      // Iterable spreads are not expressions, but they can still be extracted using temp variables.
+      // SPREADs aren't expression but they can still be extracted using temp variables.
+      //
+      // Because object-spread can trigger getters we assume all spreads have side-effects.
+      // TODO(nickreid): Use `assumeGettersArePure` here. It would have been a pain to pipe it down
+      // here and write all the tests. Since there are very few cases, and it doesn't affect code
+      // removal, we didn't bother initially. Everything always works one way.
     } else if (!IR.mayBeExpression(n)) {
       // If n is not an expression then it can't be extracted. For example if n is the destructuring
       // pattern on the left side of a VAR statement:
@@ -544,26 +545,27 @@ class ExpressionDecomposer {
       tempNameValue = expr.cloneTree();
     } else if (expr.isSpread()) {
       // We need to treat spreads differently because unlike other expressions, they can't be
-      // directly assigned to new variables. Instead we wrap them in an array-literal.
+      // directly assigned to new variables. Instead we wrap them in a literal.
       //
       // We make sure to do `var tmp = [...fn()];` rather than `var tmp = fn()` because the
-      // execution of a spread on an arbitrary iterable can both have side-effects and be
+      // execution of a spread on an arbitrary iterable/object can both have side-effects and be
       // side-effected. However, once done we are then sure that spreading `tmp` is isolated.
+
+      // Replace the expression with the spread for the temporary name.
+      Node spreadCopy = expr.cloneNode();
+      spreadCopy.addChildToBack(replacementValueNode);
+      expr.replaceWith(spreadCopy);
+
+      // Move the original node into a legal context.
       switch (parent.getToken()) {
         case ARRAYLIT:
         case CALL:
         case NEW:
-          // Replace the expression with the spread for the temporary name.
-          Node spreadCopy = expr.cloneNode();
-          spreadCopy.addChildToBack(replacementValueNode);
-          expr.replaceWith(spreadCopy);
-          // Move the original node into an array-literal so that it's in a legal context.
           tempNameValue = astFactory.createArraylit(expr).useSourceInfoFrom(expr.getOnlyChild());
           break;
         case OBJECTLIT:
-          // Object-spread is assumed to be side-effectless by the compiler. Therefore, it should
-          // never be processed here.
-          // Fall through.
+          tempNameValue = astFactory.createObjectLit(expr).useSourceInfoFrom(expr.getOnlyChild());
+          break;
         default:
           throw new IllegalStateException("Unexpected parent of SPREAD:" + parent.toStringTree());
       }
@@ -1050,25 +1052,11 @@ class ExpressionDecomposer {
   private boolean isExpressionTreeUnsafe(Node tree, boolean followingSideEffectsExist) {
     if (tree.isSpread()) {
       // Spread expressions would cause recursive rewriting if not special cased here.
-      switch (tree.getParent().getToken()) {
-        case OBJECTLIT:
-          // Spreading an object, rather than an iterable, is assumed to be pure. That assesment is
-          // based on the compiler assumption that getters are pure. This check say nothing of the
-          // expression being spread.
-          break;
-        case ARRAYLIT:
-        case CALL:
-        case NEW:
-          // When extracted, spreads can't be assigned to a single variable and instead are put into
-          // an array-literal. However, that literal must be spread again at the original site. This
-          // check is what prevents the original spread from triggering recursion.
-          if (isTempConstantValueName(tree.getOnlyChild())) {
-            return false;
-          }
-          break;
-        default:
-          throw new IllegalStateException(
-              "Unexpected parent of SPREAD: " + tree.getParent().toStringTree());
+      // When extracted, spreads can't be assigned to a single variable and instead are put into
+      // a literal. However, that literal must be spread again at the original site. This
+      // check is what prevents the original spread from triggering recursion.
+      if (isTempConstantValueName(tree.getOnlyChild())) {
+        return false;
       }
     }
 

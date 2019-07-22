@@ -1023,13 +1023,13 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void testMoveSpread_siblingOfCall_outOfObjectLiteral_usesNoTempObject() {
+  public void testMoveSpread_siblingOfCall_outOfObjectLiteral_usesTempObject() {
     shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
     helperExposeExpression(
         "({...x, y: foo()});",
         "foo",
         lines(
-            "var temp_const$jscomp$0 = x;", // This is a temp var, not a temp *object*.
+            "var temp_const$jscomp$0 = {...x};", //
             "({...temp_const$jscomp$0, y: foo()});"));
   }
 
@@ -1240,7 +1240,7 @@ public final class ExpressionDecomposerTest {
       decomposer.exposeExpression(expr);
     }
     validateSourceInfo(compiler, tree);
-    assertNode(tree).isEqualTo(expectedRoot);
+    assertNode(tree).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
 
     if (shouldTestTypes) {
       Node trueExpr = nodeFinder.apply(originalTree);
@@ -1290,7 +1290,7 @@ public final class ExpressionDecomposerTest {
       decomposer.moveExpression(expr);
     }
     validateSourceInfo(compiler, tree);
-    assertNode(tree).isEqualTo(expectedRoot);
+    assertNode(tree).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
 
     if (shouldTestTypes) {
       // find a basis for comparison:

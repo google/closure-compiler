@@ -481,7 +481,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         }
         // TODO(b/116532470): see if casting this to a more specific type fixes disambiguation
         Node assignCall = astFactory.createCall(astFactory.createQName(scope, "Object.assign"));
-        assignCall.addChildToBack(astFactory.createEmptyObjectLit());
+        assignCall.addChildToBack(astFactory.createObjectLit());
         assignCall.addChildToBack(astFactory.createName(tempVarName, tempVarType));
 
         Node restTempDecl = IR.var(astFactory.createName(restTempVarName, tempVarType), assignCall);

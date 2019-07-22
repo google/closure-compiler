@@ -93,7 +93,7 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwa
     // variables.
     Node result =
         astFactory.createObjectDotAssignCall(
-            t.getScope(), obj.getJSType(), astFactory.createEmptyObjectLit());
+            t.getScope(), obj.getJSType(), astFactory.createObjectLit());
 
     // An indicator whether the current last thing in the param list is an object literal to which
     // properties may be added.  Initialized to null since nothing should be added to the empty
@@ -111,7 +111,7 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwa
       } else {
         if (trailingObjectLiteral == null) {
           // Add a new object to which properties may be added.
-          trailingObjectLiteral = astFactory.createEmptyObjectLit();
+          trailingObjectLiteral = astFactory.createObjectLit();
           result.addChildToBack(trailingObjectLiteral);
         }
         // Add the property to the object literal.

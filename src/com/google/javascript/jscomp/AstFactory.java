@@ -663,15 +663,12 @@ final class AstFactory {
   }
 
   /**
-   * Creates an empty object literal, `{}`.
+   * Creates an object-literal with zero or more elements, `{}`.
    *
-   * <p>TODO(nickreid): Consider a single method {@code createObjectLit}, which accepts varargs.
-   * When this method was created it seemed valuable to explicitly distinguish these cases, which is
-   * why this method cannot be called with args. However, that differentiation might be frustrating
-   * to callers.
+   * <p>The type of the literal, if assigned, may be a supertype of the known properties.
    */
-  Node createEmptyObjectLit() {
-    Node result = IR.objectlit();
+  Node createObjectLit(Node... elements) {
+    Node result = IR.objectlit(elements);
     if (isAddingTypes()) {
       result.setJSType(registry.createAnonymousObjectType(null));
     }
