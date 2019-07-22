@@ -726,14 +726,14 @@ public class CompilerOptions implements Serializable {
    * Enable usage of bounded generic template types. Currently, bounded generic type semantics are
    * in development and undefined.
    */
-  private boolean enableBoundedGenerics = false;
+  private boolean warnUnsupportedBoundedGenerics = true;
 
-  void setEnableBoundedGenerics(boolean on) {
-    this.enableBoundedGenerics = on;
+  void setWarnUnsupportedBoundedGenerics(boolean on) {
+    this.warnUnsupportedBoundedGenerics = on;
   }
 
-  boolean isEnableBoundedGenerics() {
-    return this.enableBoundedGenerics;
+  boolean isWarnUnsupportedBoundedGenerics() {
+    return this.warnUnsupportedBoundedGenerics;
   }
 
   /**

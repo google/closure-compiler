@@ -137,6 +137,7 @@ abstract class CompilerTypeTestCase {
     compiler = new Compiler();
     compiler.initOptions(options);
     compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
+    compiler.getOptions().setWarnUnsupportedBoundedGenerics(true);
     registry = compiler.getTypeRegistry();
   }
 

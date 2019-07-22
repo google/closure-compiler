@@ -109,9 +109,9 @@ class RhinoErrorReporter {
       DiagnosticType.error(
           "JSC_MISPLACED_TYPE_SYNTAX", "Can only have JSDoc or inline type annotations, not both");
 
-  static final DiagnosticType BOUNDED_GENERIC_TYPES =
+  static final DiagnosticType UNSUPPORTED_BOUNDED_GENERIC_TYPES =
       DiagnosticType.error(
-          "JSC_BOUNDED_GENERIC_TYPES",
+          "JSC_UNSUPPORTED_BOUNDED_GENERIC_TYPES",
           "Bounded generic semantics are currently still in development");
 
   // A map of Rhino messages to their DiagnosticType.
@@ -163,7 +163,7 @@ class RhinoErrorReporter {
           .put(Pattern.compile("^Can only have JSDoc or inline type.*"), MISPLACED_TYPE_SYNTAX)
           .put(
               Pattern.compile("Bounded generic semantics are currently still in development"),
-              BOUNDED_GENERIC_TYPES)
+              UNSUPPORTED_BOUNDED_GENERIC_TYPES)
           .build();
 
   private final ErrorHandler internalReporter;

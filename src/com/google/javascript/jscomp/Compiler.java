@@ -415,7 +415,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.checkTypes = true;
     } else if (options.disables(DiagnosticGroups.CHECK_TYPES)) {
       options.checkTypes = false;
-      options.setEnableBoundedGenerics(true);
+      options.setWarnUnsupportedBoundedGenerics(false);
     } else if (!options.checkTypes) {
       // If DiagnosticGroups did not override the plain checkTypes
       // option, and checkTypes is disabled, then turn off the
@@ -464,9 +464,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.OFF);
     }
 
-    if (options.isEnableBoundedGenerics()
-        || options.enables(DiagnosticGroups.BOUNDED_GENERIC_TYPES)) {
-      options.setWarningLevel(DiagnosticGroups.BOUNDED_GENERIC_TYPES, CheckLevel.OFF);
+    if (!options.isWarnUnsupportedBoundedGenerics()
+        || !options.enables(DiagnosticGroups.UNSUPPORTED_BOUNDED_GENERIC_TYPES)) {
+      options.setWarningLevel(DiagnosticGroups.UNSUPPORTED_BOUNDED_GENERIC_TYPES, CheckLevel.OFF);
     }
   }
 
