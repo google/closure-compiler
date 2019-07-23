@@ -41,9 +41,9 @@ package com.google.javascript.rhino.testing;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
-import java.util.Arrays;
-import org.junit.Assert;
+import java.util.ArrayList;
 
 /**
  * <p>An error reporter for testing that verifies that messages reported to the
@@ -59,14 +59,14 @@ import org.junit.Assert;
  *
  */
 public final class TestErrorReporter implements ErrorReporter {
-  private String[] errors;
-  private String[] warnings;
-  private int errorsIndex = 0;
-  private int warningsIndex = 0;
+  private ImmutableList<String> expectedErrors;
+  private ImmutableList<String> expectedWarnings;
+  private final ArrayList<String> seenErrors = new ArrayList<>();
+  private final ArrayList<String> seenWarnings = new ArrayList<>();
 
   public TestErrorReporter(String[] errors, String[] warnings) {
-    this.errors = errors == null ? new String[] {} : errors;
-    this.warnings = warnings == null ? new String[] {} : warnings;
+    setErrors(errors);
+    setWarnings(warnings);
   }
 
   public static TestErrorReporter forNoExpectedReports() {
@@ -74,45 +74,52 @@ public final class TestErrorReporter implements ErrorReporter {
   }
 
   public void setErrors(String[] errors) {
-    this.errors = errors;
-    errorsIndex = 0;
+    this.expectedErrors = errors == null ? ImmutableList.of() : ImmutableList.copyOf(errors);
+    this.seenErrors.clear();
   }
 
   public void setWarnings(String[] warnings) {
-    this.warnings = warnings;
-    warningsIndex = 0;
+    this.expectedWarnings = warnings == null ? ImmutableList.of() : ImmutableList.copyOf(warnings);
+    this.seenWarnings.clear();
   }
 
   @Override
-  public void error(String message, String sourceName, int line,
-      int lineOffset) {
-    if (errorsIndex < errors.length) {
-      assertThat(message).isEqualTo(errors[errorsIndex++]);
+  public void error(String message, String sourceName, int line, int lineOffset) {
+    seenErrors.add(message);
+
+    final String expected;
+    if (seenErrors.size() > expectedErrors.size()) {
+      expected = null;
     } else {
-      Assert.fail("extra error: " + message);
+      expected = expectedErrors.get(seenErrors.size() - 1);
+    }
+
+    if (!message.equals(expected)) {
+      assertHasEncounteredAllErrors();
     }
   }
 
   @Override
   public void warning(String message, String sourceName, int line, int lineOffset) {
-    if (warningsIndex < warnings.length) {
-      assertThat(message).isEqualTo(warnings[warningsIndex++]);
+    seenWarnings.add(message);
+
+    final String expected;
+    if (seenWarnings.size() > expectedWarnings.size()) {
+      expected = null;
     } else {
-      Assert.fail("extra warning: " + message);
+      expected = expectedWarnings.get(seenWarnings.size() - 1);
+    }
+
+    if (!message.equals(expected)) {
+      assertHasEncounteredAllWarnings();
     }
   }
 
   public void assertHasEncounteredAllWarnings() {
-    if (warnings.length != warningsIndex) {
-      Assert.fail(
-          "missing warnings: " + Arrays.asList(warnings).subList(warningsIndex, warnings.length));
-    }
+    assertThat(seenWarnings).containsExactlyElementsIn(expectedWarnings).inOrder();
   }
 
   public void assertHasEncounteredAllErrors() {
-    if (errors.length != errorsIndex) {
-      Assert.fail(
-          "missing errors: " + Arrays.asList(errors).subList(errorsIndex, errors.length));
-    }
+    assertThat(seenErrors).containsExactlyElementsIn(expectedErrors).inOrder();
   }
 }
