@@ -16,13 +16,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
-/**
- * Finds the externs for the PolymerElement base class and all of its properties in the externs.
- */
-final class PolymerPassFindExterns extends AbstractPostOrderCallback {
+/** Finds the externs for the PolymerElement base class and all of its properties in the externs. */
+final class PolymerPassFindExterns implements NodeTraversal.Callback {
 
   private static final String POLYMER_ELEMENT_NAME = "PolymerElement";
 
@@ -31,6 +28,13 @@ final class PolymerPassFindExterns extends AbstractPostOrderCallback {
 
   PolymerPassFindExterns() {
     polymerElementProps = ImmutableList.builder();
+  }
+
+  @Override
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    // @typeSummary files are included in the externs AST but are not really externs; in particular
+    // they may be modules, while externs are always in the global scope.
+    return !(n.isScript() && NodeUtil.isFromTypeSummary(n));
   }
 
   @Override

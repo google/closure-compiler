@@ -98,6 +98,30 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFindsPolymerElementRoot_skipsTypeSummaryAtFront() {
+    testSame(externs(lines("/** @typeSummary */ let PolymerElement;"), EXTERNS), srcs(""));
+    Node polymerElementNode = findExternsCallback.getPolymerElementExterns();
+
+    assertThat(polymerElementNode).isNotNull();
+    assertThat(polymerElementNode.isVar()).isTrue();
+    assertThat(polymerElementNode.getFirstChild().matchesQualifiedName("PolymerElement")).isTrue();
+    assertThat(polymerElementNode.getParent().isScript()).isTrue();
+    assertThat(NodeUtil.isFromTypeSummary(polymerElementNode.getParent())).isFalse();
+  }
+
+  @Test
+  public void testFindsPolymerElementRoot_skipsTypeSummaryAtBack() {
+    testSame(externs(EXTERNS, lines("/** @typeSummary */ let PolymerElement;")), srcs(""));
+    Node polymerElementNode = findExternsCallback.getPolymerElementExterns();
+
+    assertThat(polymerElementNode).isNotNull();
+    assertThat(polymerElementNode.isVar()).isTrue();
+    assertThat(polymerElementNode.getFirstChild().matchesQualifiedName("PolymerElement")).isTrue();
+    assertThat(polymerElementNode.getParent().isScript()).isTrue();
+    assertThat(NodeUtil.isFromTypeSummary(polymerElementNode.getParent())).isFalse();
+  }
+
+  @Test
   public void testFindsPolymerElementProps() {
     testSame("");
     final ImmutableList<String> expectedProps = ImmutableList.of(
