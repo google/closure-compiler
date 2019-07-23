@@ -437,18 +437,6 @@ Attr.prototype.ownerElement;
 Attr.prototype.isId;
 
 /**
- * @type {TypeInfo}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Attr-schemaTypeInfo
- */
-Attr.prototype.schemaTypeInfo;
-
-/**
- * @type {TypeInfo}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Element-schemaTypeInfo
- */
-Element.prototype.schemaTypeInfo;
-
-/**
  * @param {?string} namespaceURI
  * @param {string} localName
  * @return {Attr}
@@ -548,58 +536,6 @@ Element.prototype.setIdAttributeNS = function(namespaceURI, localName, isId) {};
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Text3-wholeText
  */
 Text.prototype.wholeText;
-
-/**
- * @constructor
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo
- */
-function TypeInfo() {}
-
-/**
- * @const {number}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-DERIVATION_EXTENSION
- */
-TypeInfo.prototype.DERIVATION_EXTENSION;
-
-/**
- * @const {number}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-DERIVATION_LIST
- */
-TypeInfo.prototype.DERIVATION_LIST;
-
-/**
- * @const {number}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-DERIVATION_RESTRICTION
- */
-TypeInfo.prototype.DERIVATION_RESTRICTION;
-
-/**
- * @const {number}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-DERIVATION_UNION
- */
-TypeInfo.prototype.DERIVATION_UNION;
-
-/**
- * @type {string}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-typeName
- */
-TypeInfo.prototype.typeName;
-
-/**
- * @type {string}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-typeNamespace
- */
-TypeInfo.prototype.typeNamespace;
-
-/**
- * @param {string} typeNamespaceArg
- * @param {string} typeNameArg
- * @param {number} derivationMethod
- * @return {boolean}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-isDerivedFrom
- * @nosideeffects
- */
-TypeInfo.prototype.isDerivedFrom = function(typeNamespaceArg, typeNameArg, derivationMethod) {};
 
 /**
  * @constructor
