@@ -221,7 +221,7 @@ class OptimizeCalls implements CompilerPass {
      *
      * @see {@link #getFunctionNodes()}
      */
-    private static List<Node> definitionFunctionNodesFor(Node definitionSite) {
+    private static ImmutableList<Node> definitionFunctionNodesFor(Node definitionSite) {
       if (definitionSite.isGetterDef() || definitionSite.isSetterDef()) {
         // TODO(nickreid): Support getters and setters. Ignore them for now since they aren't
         // "called".
@@ -234,7 +234,7 @@ class OptimizeCalls implements CompilerPass {
         return ImmutableList.of();
       }
 
-      ArrayList<Node> fns = new ArrayList<>();
+      ImmutableList.Builder<Node> fns = ImmutableList.builder();
       switch (parent.getToken()) {
         case FUNCTION:
           fns.add(parent);
@@ -272,10 +272,10 @@ class OptimizeCalls implements CompilerPass {
         default:
           break;
       }
-      return fns;
+      return fns.build();
     }
 
-    private static void addValueFunctionNodes(ArrayList<Node> fns, Node n) {
+    private static void addValueFunctionNodes(ImmutableList.Builder<Node> fns, Node n) {
       // TODO(johnlenz): add member definitions
       switch (n.getToken()) {
         case FUNCTION:

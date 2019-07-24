@@ -74,7 +74,6 @@ final class FunctionTypeBuilder {
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
   private final Node errorRoot;
-  private final TypedScope enclosingScope;
 
   private FunctionContents contents = UnknownFunctionContents.get();
 
@@ -242,7 +241,6 @@ final class FunctionTypeBuilder {
     this.typeRegistry = compiler.getTypeRegistry();
     this.errorRoot = errorRoot;
     this.compiler = compiler;
-    this.enclosingScope = scope;
     this.templateScope = scope;
   }
 

@@ -501,7 +501,7 @@ class DisambiguateProperties implements CompilerPass {
       } else if (n.isObjectLit()) {
         handleObjectLit(n);
       } else if (n.isCall()) {
-        handleCall(t, n);
+        handleCall(n);
       } else if (n.isClass()) {
         handleClass(n);
       } else if (n.isObjectPattern()) {
@@ -598,7 +598,7 @@ class DisambiguateProperties implements CompilerPass {
     }
 
     /** Examines calls in case they are Object.defineProperties calls */
-    private void handleCall(NodeTraversal t, Node call) {
+    private void handleCall(Node call) {
       Node target = call.getFirstChild();
       if (!target.isQualifiedName()) {
         return;

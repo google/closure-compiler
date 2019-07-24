@@ -439,13 +439,12 @@ class GlobalNamespace
                   type = getValueType(n.getNext());
                 }
                 break;
-              case INC:
-              case DEC:
-                break;
               case GETPROP:
                 // This is nested in another getprop. Return and only create a Ref for the outermost
                 // getprop in the chain.
                 return;
+              case INC:
+              case DEC:
               case SPREAD:
               case ITER_SPREAD:
               case OBJECT_SPREAD:
@@ -752,12 +751,6 @@ class GlobalNamespace
           // This node is the superclass in an extends clause.
           type = Ref.Type.SUBCLASSING_GET;
           break;
-        case OBJECT_PATTERN: // Handle STRING_KEYS in object patterns.
-        case SPREAD:
-        case ITER_SPREAD:
-        case OBJECT_SPREAD:
-          type = Ref.Type.ALIASING_GET;
-          break;
         case DESTRUCTURING_LHS:
         case ASSIGN:
           Node lhs = n.getPrevious();
@@ -793,6 +786,10 @@ class GlobalNamespace
           }
 
           break;
+        case OBJECT_PATTERN: // Handle STRING_KEYS in object patterns.
+        case SPREAD:
+        case ITER_SPREAD:
+        case OBJECT_SPREAD:
         default:
           type = Ref.Type.ALIASING_GET;
           break;

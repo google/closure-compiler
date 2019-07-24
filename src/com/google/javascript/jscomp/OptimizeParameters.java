@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
@@ -58,7 +57,6 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
   }
 
   @Override
-  @VisibleForTesting
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
 
