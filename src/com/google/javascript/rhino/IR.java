@@ -546,7 +546,7 @@ public class IR {
         case MEMBER_FUNCTION_DEF:
         case GETTER_DEF:
         case SETTER_DEF:
-        case SPREAD:
+
         case OBJECT_SPREAD:
         case COMPUTED_PROP:
           break;
@@ -632,14 +632,30 @@ public class IR {
     return k;
   }
 
+  @Deprecated
   public static Node rest(Node target) {
     checkState(target.isValidAssignmentTarget(), target);
-    return new Node(Token.REST, target);
+    return new Node(Token.ITER_REST, target);
   }
 
-  public static Node spread(Node expr) {
+  public static Node iterRest(Node target) {
+    checkState(target.isValidAssignmentTarget(), target);
+    return new Node(Token.ITER_REST, target);
+  }
+
+  public static Node objectRest(Node target) {
+    checkState(target.isValidAssignmentTarget(), target);
+    return new Node(Token.OBJECT_REST, target);
+  }
+
+  public static Node iterSpread(Node expr) {
     checkState(mayBeExpression(expr));
-    return new Node(Token.SPREAD, expr);
+    return new Node(Token.ITER_SPREAD, expr);
+  }
+
+  public static Node objectSpread(Node expr) {
+    checkState(mayBeExpression(expr));
+    return new Node(Token.OBJECT_SPREAD, expr);
   }
 
   public static Node superNode() {

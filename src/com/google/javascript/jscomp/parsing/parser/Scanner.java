@@ -453,7 +453,7 @@ public class Scanner {
         if (peek('.') && peekChar(1) == '.') {
           nextChar();
           nextChar();
-          return createToken(TokenType.SPREAD, beginToken);
+          return createToken(TokenType.ELLIPSIS, beginToken);
         }
 
         return createToken(TokenType.PERIOD, beginToken);

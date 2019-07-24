@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.ArgumentListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayTypeTree;
-import com.google.javascript.jscomp.parsing.parser.trees.AssignmentRestElementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.AwaitExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
@@ -74,6 +73,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.ImportMetaExpressionTre
 import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IndexSignatureTree;
 import com.google.javascript.jscomp.parsing.parser.trees.InterfaceDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.IterRestTree;
+import com.google.javascript.jscomp.parsing.parser.trees.IterSpreadTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
@@ -87,6 +88,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.NewTargetExpressionTree
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectRestTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectSpreadTree;
 import com.google.javascript.jscomp.parsing.parser.trees.OptionalParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParameterizedTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
@@ -95,10 +98,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.ParseTreeType;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.RecordTypeTree;
-import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SpreadExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TemplateLiteralExpressionTree;
@@ -1342,7 +1343,7 @@ public class Parser {
   }
 
   private boolean peekParameter(ParamContext context) {
-    if (peekId() || peek(TokenType.SPREAD)) {
+    if (peekId() || peek(TokenType.ELLIPSIS)) {
       return true;
     }
     if (context != ParamContext.TYPE_EXPRESSION) {
@@ -1355,8 +1356,8 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     ParseTree parameter = null;
 
-    if (peek(TokenType.SPREAD)) {
-      parameter = parseRestParameter();
+    if (peek(TokenType.ELLIPSIS)) {
+      parameter = parseIterRest(PatternKind.INITIALIZER);
     } else if (peekId()) {
       parameter = parseIdentifierExpression();
       if (peek(TokenType.QUESTION)) {
@@ -1396,13 +1397,6 @@ public class Parser {
     }
 
     return parameter;
-  }
-
-  private ParseTree parseRestParameter() {
-    SourcePosition start = getTreeStartLocation();
-    eat(TokenType.SPREAD);
-    return new RestParameterTree(
-        getTreeLocation(start), parseRestAssignmentTarget(PatternKind.INITIALIZER));
   }
 
   private FormalParameterListTree parseFormalParameterList(ParamContext context) {
@@ -1626,11 +1620,11 @@ public class Parser {
     return result.build();
   }
 
-  private SpreadExpressionTree parseSpreadExpression() {
+  private IterSpreadTree parseIterSpread() {
     SourcePosition start = getTreeStartLocation();
-    eat(TokenType.SPREAD);
+    eat(TokenType.ELLIPSIS);
     ParseTree operand = parseAssignmentExpression();
-    return new SpreadExpressionTree(getTreeLocation(start), operand);
+    return new IterSpreadTree(getTreeLocation(start), operand);
   }
 
   // 12 Statements
@@ -2519,14 +2513,14 @@ public class Parser {
 
     eat(TokenType.OPEN_SQUARE);
     Token trailingCommaToken = null;
-    while (peek(TokenType.COMMA) || peek(TokenType.SPREAD) || peekAssignmentExpression()) {
+    while (peek(TokenType.COMMA) || peek(TokenType.ELLIPSIS) || peekAssignmentExpression()) {
       trailingCommaToken = null;
       if (peek(TokenType.COMMA)) {
         elements.add(new NullTree(getTreeLocation(getTreeStartLocation())));
       } else {
-        if (peek(TokenType.SPREAD)) {
+        if (peek(TokenType.ELLIPSIS)) {
           recordFeatureUsed(Feature.SPREAD_EXPRESSIONS);
-          elements.add(parseSpreadExpression());
+          elements.add(parseIterSpread());
         } else {
           elements.add(parseAssignmentExpression());
         }
@@ -2550,7 +2544,7 @@ public class Parser {
 
     eat(TokenType.OPEN_CURLY);
     Token commaToken = null;
-    while (peek(TokenType.SPREAD)
+    while (peek(TokenType.ELLIPSIS)
         || peekPropertyNameOrComputedProp(0)
         || peek(TokenType.STAR)
         || peekAccessibilityModifier()) {
@@ -2601,9 +2595,12 @@ public class Parser {
     TokenType type = peekType();
     if (type == TokenType.STAR) {
       return parsePropertyAssignmentGenerator();
-    } else if (peek(TokenType.SPREAD)) {
+    } else if (type == TokenType.ELLIPSIS) {
       recordFeatureUsed(Feature.OBJECT_LITERALS_WITH_SPREAD);
-      return parseSpreadExpression();
+      SourcePosition start = getTreeStartLocation();
+      eat(TokenType.ELLIPSIS);
+      ParseTree operand = parseAssignmentExpression();
+      return new ObjectSpreadTree(getTreeLocation(start), operand);
     } else if (type == TokenType.STRING
         || type == TokenType.NUMBER
         || type == TokenType.IDENTIFIER
@@ -2811,7 +2808,7 @@ public class Parser {
       }
     }
     // Case ( ... BindingIdentifier )
-    if (peek(TokenType.SPREAD)) {
+    if (peek(TokenType.ELLIPSIS)) {
       ImmutableList<ParseTree> params = ImmutableList.of(
           parseParameter(ParamContext.IMPLEMENTATION));
       eat(TokenType.CLOSE_PAREN);
@@ -2946,10 +2943,10 @@ public class Parser {
   private ParseTree parse(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     ParseTree result = parseAssignment(expressionIn);
-    if (peek(TokenType.COMMA) && !peek(1, TokenType.SPREAD)) {
+    if (peek(TokenType.COMMA) && !peek(1, TokenType.ELLIPSIS)) {
       ImmutableList.Builder<ParseTree> exprs = ImmutableList.builder();
       exprs.add(result);
-      while (peek(TokenType.COMMA) && !peek(1, TokenType.SPREAD)) {
+      while (peek(TokenType.COMMA) && !peek(1, TokenType.ELLIPSIS)) {
         eat(TokenType.COMMA);
         exprs.add(parseAssignment(expressionIn));
       }
@@ -3690,12 +3687,12 @@ public class Parser {
    * {@link #parseAssignmentOrSpread} might still fail when this returns true.
    */
   private boolean peekAssignmentOrSpread() {
-    return peek(TokenType.SPREAD) || peekAssignmentExpression();
+    return peek(TokenType.ELLIPSIS) || peekAssignmentExpression();
   }
 
   private ParseTree parseAssignmentOrSpread() {
-    if (peek(TokenType.SPREAD)) {
-      return parseSpreadExpression();
+    if (peek(TokenType.ELLIPSIS)) {
+      return parseIterSpread();
     }
     return parseAssignmentExpression();
   }
@@ -3730,11 +3727,11 @@ public class Parser {
     return peekExpression();
   }
 
-  private ParseTree parsePatternRest(PatternKind patternKind) {
+  private ParseTree parseIterRest(PatternKind patternKind) {
     SourcePosition start = getTreeStartLocation();
-    eat(TokenType.SPREAD);
+    eat(TokenType.ELLIPSIS);
     ParseTree patternAssignmentTarget = parseRestAssignmentTarget(patternKind);
-    return new AssignmentRestElementTree(getTreeLocation(start), patternAssignmentTarget);
+    return new IterRestTree(getTreeLocation(start), patternAssignmentTarget);
   }
 
   private ParseTree parseRestAssignmentTarget(PatternKind patternKind) {
@@ -3767,9 +3764,9 @@ public class Parser {
         }
       }
     }
-    if (peek(TokenType.SPREAD)) {
+    if (peek(TokenType.ELLIPSIS)) {
       recordFeatureUsed(Feature.ARRAY_PATTERN_REST);
-      elements.add(parsePatternRest(kind));
+      elements.add(parseIterRest(kind));
     }
     if (eat(TokenType.CLOSE_SQUARE) == null) {
       // If we get no closing bracket then return invalid tree to avoid compiler tripping
@@ -3796,9 +3793,12 @@ public class Parser {
         break;
       }
     }
-    if (peek(TokenType.SPREAD)) {
+    if (peek(TokenType.ELLIPSIS)) {
       recordFeatureUsed(Feature.OBJECT_PATTERN_REST);
-      fields.add(parsePatternRest(kind));
+      SourcePosition restStart = getTreeStartLocation();
+      eat(TokenType.ELLIPSIS);
+      ParseTree patternAssignmentTarget = parseRestAssignmentTarget(kind);
+      fields.add(new ObjectRestTree(getTreeLocation(restStart), patternAssignmentTarget));
     }
     eat(TokenType.CLOSE_CURLY);
     return new ObjectPatternTree(getTreeLocation(start), fields.build());

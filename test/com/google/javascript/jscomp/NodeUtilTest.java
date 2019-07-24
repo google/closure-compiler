@@ -29,11 +29,13 @@ import static com.google.javascript.rhino.Token.FOR_AWAIT_OF;
 import static com.google.javascript.rhino.Token.FOR_OF;
 import static com.google.javascript.rhino.Token.FUNCTION;
 import static com.google.javascript.rhino.Token.GETTER_DEF;
+import static com.google.javascript.rhino.Token.ITER_REST;
+import static com.google.javascript.rhino.Token.ITER_SPREAD;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
-import static com.google.javascript.rhino.Token.REST;
+import static com.google.javascript.rhino.Token.OBJECT_REST;
+import static com.google.javascript.rhino.Token.OBJECT_SPREAD;
 import static com.google.javascript.rhino.Token.SCRIPT;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
-import static com.google.javascript.rhino.Token.SPREAD;
 import static com.google.javascript.rhino.Token.YIELD;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.lang.Boolean.FALSE;
@@ -3833,55 +3835,55 @@ public final class NodeUtilTest {
     public static Iterable<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
-            // SPREAD < ARRAYLIT
-            {SPREAD, "[...[]]", false},
-            {SPREAD, "[...[danger()]]", false},
-            {SPREAD, "[...'lit']", false},
-            {SPREAD, "[...`template`]", false},
-            {SPREAD, "[...`template ${sub}`]", false},
-            {SPREAD, "[...`template ${danger()}`]", false},
-            {SPREAD, "[...danger]", true},
-            {SPREAD, "[...danger()]", true},
-            {SPREAD, "[...5]", true},
-            // SPREAD < CALL
-            {SPREAD, "foo(...[])", false},
-            {SPREAD, "foo(...[danger()])", false},
-            {SPREAD, "foo(...'lit')", false},
-            {SPREAD, "foo(...`template`)", false},
-            {SPREAD, "foo(...`template ${safe}`)", false},
-            {SPREAD, "foo(...`template ${danger()}`)", false},
-            {SPREAD, "foo(...danger)", true},
-            {SPREAD, "foo(...danger())", true},
-            {SPREAD, "foo(...5)", true},
-            // SPREAD < NEW
-            {SPREAD, "new foo(...[])", false},
-            {SPREAD, "new foo(...[danger()])", false},
-            {SPREAD, "new foo(...'lit')", false},
-            {SPREAD, "new foo(...`template`)", false},
-            {SPREAD, "new foo(...`template ${safe}`)", false},
-            {SPREAD, "new foo(...`template ${danger()}`)", false},
-            {SPREAD, "new foo(...danger)", true},
-            {SPREAD, "new foo(...danger())", true},
-            {SPREAD, "new foo(...5)", true},
-            // SPREAD < OBJECTLIT
-            {SPREAD, "({...danger()})", false},
-            // REST < ARRAY_PATTERN
-            {REST, "const [...rest] = []", true},
-            {REST, "const [...rest] = 'lit'", true},
-            {REST, "const [...rest] = `template`", true},
-            {REST, "const [...rest] = safe", true},
-            {REST, "function f([...rest]) { }", true},
-            {REST, "const [[...rest]] = safe", true},
-            {REST, "const {key: [...rest]} = safe", true},
-            // REST < PARAM_LIST
-            {REST, "function f(...x) { }", false},
-            {REST, "function f(a, ...x) { }", false},
-            {REST, "async function f(...x) { }", false},
-            {REST, "function* f(...x) { }", false},
-            {REST, "async function* f(...x) { }", false},
-            {REST, "((...x) => { })", false},
-            // REST < OBJECT_PATTERN
-            {REST, "const {...rest} = danger();", false},
+            // ITER_SPREAD < ARRAYLIT
+            {ITER_SPREAD, "[...[]]", false},
+            {ITER_SPREAD, "[...[danger()]]", false},
+            {ITER_SPREAD, "[...'lit']", false},
+            {ITER_SPREAD, "[...`template`]", false},
+            {ITER_SPREAD, "[...`template ${sub}`]", false},
+            {ITER_SPREAD, "[...`template ${danger()}`]", false},
+            {ITER_SPREAD, "[...danger]", true},
+            {ITER_SPREAD, "[...danger()]", true},
+            {ITER_SPREAD, "[...5]", true},
+            // ITER_SPREAD < CALL
+            {ITER_SPREAD, "foo(...[])", false},
+            {ITER_SPREAD, "foo(...[danger()])", false},
+            {ITER_SPREAD, "foo(...'lit')", false},
+            {ITER_SPREAD, "foo(...`template`)", false},
+            {ITER_SPREAD, "foo(...`template ${safe}`)", false},
+            {ITER_SPREAD, "foo(...`template ${danger()}`)", false},
+            {ITER_SPREAD, "foo(...danger)", true},
+            {ITER_SPREAD, "foo(...danger())", true},
+            {ITER_SPREAD, "foo(...5)", true},
+            // ITER_SPREAD < NEW
+            {ITER_SPREAD, "new foo(...[])", false},
+            {ITER_SPREAD, "new foo(...[danger()])", false},
+            {ITER_SPREAD, "new foo(...'lit')", false},
+            {ITER_SPREAD, "new foo(...`template`)", false},
+            {ITER_SPREAD, "new foo(...`template ${safe}`)", false},
+            {ITER_SPREAD, "new foo(...`template ${danger()}`)", false},
+            {ITER_SPREAD, "new foo(...danger)", true},
+            {ITER_SPREAD, "new foo(...danger())", true},
+            {ITER_SPREAD, "new foo(...5)", true},
+            // OBJECT_SPREAD
+            {OBJECT_SPREAD, "({...danger()})", false},
+            // ITER_REST < ARRAY_PATTERN
+            {ITER_REST, "const [...rest] = []", true},
+            {ITER_REST, "const [...rest] = 'lit'", true},
+            {ITER_REST, "const [...rest] = `template`", true},
+            {ITER_REST, "const [...rest] = safe", true},
+            {ITER_REST, "function f([...rest]) { }", true},
+            {ITER_REST, "const [[...rest]] = safe", true},
+            {ITER_REST, "const {key: [...rest]} = safe", true},
+            // ITER_REST < PARAM_LIST
+            {ITER_REST, "function f(...x) { }", false},
+            {ITER_REST, "function f(a, ...x) { }", false},
+            {ITER_REST, "async function f(...x) { }", false},
+            {ITER_REST, "function* f(...x) { }", false},
+            {ITER_REST, "async function* f(...x) { }", false},
+            {ITER_REST, "((...x) => { })", false},
+            // OBJECT_REST
+            {OBJECT_REST, "const {...rest} = danger();", false},
             // FOR_OF
             {FOR_OF, "for (let x of []) {}", false},
             {FOR_OF, "for (let x of [danger()]) {}", false},

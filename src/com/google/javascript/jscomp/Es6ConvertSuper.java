@@ -85,7 +85,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
                 astFactory.createConstructorCall(
                     classNode.getJSType(), // returned type is the subclass
                     IR.superNode().setJSType(superClass.getJSType()),
-                    IR.spread(astFactory.createArgumentsReference())));
+                    IR.iterSpread(astFactory.createArgumentsReference())));
         body.addChildToFront(exprResult);
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.SUPER);
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.SPREAD_EXPRESSIONS);

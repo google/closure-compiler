@@ -42,16 +42,18 @@ import static com.google.javascript.rhino.Token.GETTER_DEF;
 import static com.google.javascript.rhino.Token.HOOK;
 import static com.google.javascript.rhino.Token.IF;
 import static com.google.javascript.rhino.Token.INC;
+import static com.google.javascript.rhino.Token.ITER_REST;
+import static com.google.javascript.rhino.Token.ITER_SPREAD;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.NAME;
 import static com.google.javascript.rhino.Token.NEW;
 import static com.google.javascript.rhino.Token.NUMBER;
 import static com.google.javascript.rhino.Token.OBJECTLIT;
+import static com.google.javascript.rhino.Token.OBJECT_REST;
+import static com.google.javascript.rhino.Token.OBJECT_SPREAD;
 import static com.google.javascript.rhino.Token.OR;
 import static com.google.javascript.rhino.Token.REGEXP;
-import static com.google.javascript.rhino.Token.REST;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
-import static com.google.javascript.rhino.Token.SPREAD;
 import static com.google.javascript.rhino.Token.STRING;
 import static com.google.javascript.rhino.Token.STRING_KEY;
 import static com.google.javascript.rhino.Token.SUB;
@@ -263,12 +265,20 @@ public final class AstAnalyzerTest {
           kase().js("new SomeClassINeverHeardOf()").token(NEW).expect(true),
 
           // Getters and setters - object rest and spread
-          kase().js("({...x});").token(SPREAD).assumeGettersArePure(false).expect(true),
-          kase().js("const {...x} = y;").token(REST).assumeGettersArePure(false).expect(true),
-          kase().js("({...x});").token(SPREAD).assumeGettersArePure(true).expect(false),
-          kase().js("const {...x} = y;").token(REST).assumeGettersArePure(true).expect(false),
-          kase().js("({...f().x});").token(SPREAD).assumeGettersArePure(true).expect(true),
-          kase().js("({...f().x} = y);").token(REST).assumeGettersArePure(true).expect(true),
+          kase().js("({...x});").token(OBJECT_SPREAD).assumeGettersArePure(false).expect(true),
+          kase()
+              .js("const {...x} = y;")
+              .token(OBJECT_REST)
+              .assumeGettersArePure(false)
+              .expect(true),
+          kase().js("({...x});").token(OBJECT_SPREAD).assumeGettersArePure(true).expect(false),
+          kase()
+              .js("const {...x} = y;")
+              .token(OBJECT_REST)
+              .assumeGettersArePure(true)
+              .expect(false),
+          kase().js("({...f().x});").token(OBJECT_SPREAD).assumeGettersArePure(true).expect(true),
+          kase().js("({...f().x} = y);").token(OBJECT_REST).assumeGettersArePure(true).expect(true),
 
           // Getters and setters
           kase().js("x.getter;").token(GETPROP).expect(true),
@@ -408,7 +418,7 @@ public final class AstAnalyzerTest {
           kase().expect(true).js("export function x() {};"),
           kase().expect(true).js("export {x};"),
 
-          // ARRAYLIT-SPREAD
+          // ARRAYLIT-ITER_SPREAD
           kase().expect(false).js("[...[]]"),
           kase().expect(false).js("[...[1]]"),
           kase().expect(true).js("[...[i++]]"),
@@ -421,7 +431,7 @@ public final class AstAnalyzerTest {
           kase().expect(true).js("[...null]"),
           kase().expect(true).js("[...true]"),
 
-          // CALL-SPREAD
+          // CALL-ITER_SPREAD
           kase().expect(false).js("Math.sin(...[])"),
           kase().expect(false).js("Math.sin(...[1])"),
           kase().expect(true).js("Math.sin(...[i++])"),
@@ -434,7 +444,7 @@ public final class AstAnalyzerTest {
           kase().expect(true).js("Math.sin(...null)"),
           kase().expect(true).js("Math.sin(...true)"),
 
-          // NEW-SPREAD
+          // NEW-ITER_SPREAD
           kase().expect(false).js("new Object(...[])"),
           kase().expect(false).js("new Object(...[1])"),
           kase().expect(true).js("new Object(...[i++])"),
@@ -447,7 +457,7 @@ public final class AstAnalyzerTest {
           kase().expect(true).js("new Object(...null)"),
           kase().expect(true).js("new Object(...true)"),
 
-          // OBJECT-SPREAD
+          // OBJECT_SPREAD
           // These could all invoke getters.
           kase().expect(true).js("({...x})"),
           kase().expect(true).js("({...{}})"),
@@ -456,12 +466,14 @@ public final class AstAnalyzerTest {
           kase().expect(true).js("({...{a:f()}})"),
           kase().expect(true).js("({...f()})"),
 
-          // REST
+          // OBJECT_REST
           // This could invoke getters.
-          kase().expect(true).token(REST).js("({...x} = something)"),
+          kase().expect(true).token(OBJECT_REST).js("({...x} = something)"),
+
+          // ITER_REST
           // We currently assume all iterable-rests are side-effectful.
-          kase().expect(true).token(REST).js("([...x] = 'safe')"),
-          kase().expect(false).token(REST).js("(function(...x) { })"),
+          kase().expect(true).token(ITER_REST).js("([...x] = 'safe')"),
+          kase().expect(false).token(ITER_REST).js("(function(...x) { })"),
 
           // Context switch
           kase().expect(true).token(AWAIT).js("async function f() { await 0; }"),
@@ -615,17 +627,17 @@ public final class AstAnalyzerTest {
           // TAGGED_TEMPLATELIT is just a special syntax for a CALL.
           kase().js("foo`template`;").token(TAGGED_TEMPLATELIT).expect(true),
 
-          // NOTE: REST and SPREAD are delegated to NodeUtil.iteratesImpureIterable()
+          // NOTE: ITER_REST and ITER_SPREAD are delegated to NodeUtil.iteratesImpureIterable()
           // Test cases here are just easy to test representative examples.
-          kase().js("[...[1, 2, 3]]").token(SPREAD).expect(false),
+          kase().js("[...[1, 2, 3]]").token(ITER_SPREAD).expect(false),
           // unknown iterable, so assume side-effects
-          kase().js("[...someIterable]").token(SPREAD).expect(true),
+          kase().js("[...someIterable]").token(ITER_SPREAD).expect(true),
           // we just assume the rhs of an array pattern may have iteration side-effects
           // without looking too closely.
-          kase().js("let [...rest] = [1, 2, 3];").token(REST).expect(true),
-          // REST in parameter list does not trigger iteration at the function definition, so
+          kase().js("let [...rest] = [1, 2, 3];").token(ITER_REST).expect(true),
+          // ITER_REST in parameter list does not trigger iteration at the function definition, so
           // it has no side effects.
-          kase().js("function foo(...rest) {}").token(REST).expect(false),
+          kase().js("function foo(...rest) {}").token(ITER_REST).expect(false),
 
           // defining a class or a function is not considered to be a side-effect
           kase().js("function foo() {}").token(FUNCTION).expect(false),
@@ -637,8 +649,8 @@ public final class AstAnalyzerTest {
           kase().js("x | y").token(BITOR).expect(false),
 
           // Getters and setters
-          kase().js("({...x});").token(SPREAD).expect(true),
-          kase().js("const {...x} = y;").token(REST).expect(true),
+          kase().js("({...x});").token(OBJECT_SPREAD).expect(true),
+          kase().js("const {...x} = y;").token(OBJECT_REST).expect(true),
           kase().js("y.getter;").token(GETPROP).expect(true),
           kase().js("y.setter;").token(GETPROP).expect(true),
           kase().js("y.normal;").token(GETPROP).expect(false),

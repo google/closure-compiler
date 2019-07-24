@@ -18,11 +18,11 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-public class SpreadExpressionTree extends ParseTree {
+public class IterSpreadTree extends ParseTree {
   public final ParseTree expression;
 
-  public SpreadExpressionTree(SourceRange location, ParseTree expression) {
-    super(ParseTreeType.SPREAD_EXPRESSION, location);
+  public IterSpreadTree(SourceRange location, ParseTree expression) {
+    super(ParseTreeType.ITER_SPREAD, location);
     this.expression = expression;
   }
 }

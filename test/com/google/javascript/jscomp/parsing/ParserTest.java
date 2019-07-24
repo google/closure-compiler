@@ -2124,7 +2124,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning(
         "var o = {first: 1, ...spread};",
-        getRequiresEs6Message(Feature.SPREAD_EXPRESSIONS),
         getRequiresEs2018Message(Feature.OBJECT_LITERALS_WITH_SPREAD));
 
     mode = LanguageMode.ECMASCRIPT6;

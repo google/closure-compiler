@@ -1009,7 +1009,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
         break;
 
-      case SPREAD:
       case ITER_SPREAD:
       case OBJECT_SPREAD:
         checkSpread(n);

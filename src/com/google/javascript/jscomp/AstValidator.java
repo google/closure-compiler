@@ -1051,12 +1051,11 @@ public final class AstValidator implements CompilerPass {
         }
         validateFeature(Feature.SPREAD_EXPRESSIONS, n);
         break;
-      case OBJECTLIT:
-        validateFeature(Feature.OBJECT_LITERALS_WITH_SPREAD, n);
-        validateFeature(Feature.SPREAD_EXPRESSIONS, n);
-        break;
       case ARRAYLIT:
         validateFeature(Feature.SPREAD_EXPRESSIONS, n);
+        break;
+      case OBJECTLIT:
+        validateFeature(Feature.OBJECT_LITERALS_WITH_SPREAD, n);
         break;
       default:
         violation("SPREAD node should not be the child of a " + parent.getToken() + " node.", n);

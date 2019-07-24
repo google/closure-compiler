@@ -1002,7 +1002,7 @@ public class AstFactoryTest {
             .getOnlyChild() // object literal
             .getJSType();
 
-    Node spread = IR.spread(IR.name("a"));
+    Node spread = IR.objectSpread(IR.name("a"));
     Node stringKey = IR.stringKey("b", IR.number(0));
 
     Node objectLit = astFactory.createObjectLit(spread, stringKey);

@@ -18,11 +18,11 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-public class RestParameterTree extends ParseTree {
+public class IterRestTree extends ParseTree {
   public final ParseTree assignmentTarget;
 
-  public RestParameterTree(SourceRange location, ParseTree assignmentTarget) {
-    super(ParseTreeType.REST_PARAMETER, location);
+  public IterRestTree(SourceRange location, ParseTree assignmentTarget) {
+    super(ParseTreeType.ITER_REST, location);
     this.assignmentTarget = assignmentTarget;
   }
 }

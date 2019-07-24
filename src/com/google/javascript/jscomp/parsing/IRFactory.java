@@ -48,7 +48,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.AmbientDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayTypeTree;
-import com.google.javascript.jscomp.parsing.parser.trees.AssignmentRestElementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.AwaitExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
@@ -97,6 +96,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.ImportMetaExpressionTre
 import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IndexSignatureTree;
 import com.google.javascript.jscomp.parsing.parser.trees.InterfaceDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.IterRestTree;
+import com.google.javascript.jscomp.parsing.parser.trees.IterSpreadTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
@@ -110,6 +111,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.NewTargetExpressionTree
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectSpreadTree;
 import com.google.javascript.jscomp.parsing.parser.trees.OptionalParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParameterizedTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
@@ -118,10 +120,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.ParseTreeType;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.RecordTypeTree;
-import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SpreadExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TemplateLiteralExpressionTree;
@@ -806,22 +806,26 @@ class IRFactory {
   }
 
   /**
-   * Names and destructuring patterns, in parameters or variable declarations are special,
-   * because they can have inline type docs attached.
+   * Names and destructuring patterns, in parameters or variable declarations are special, because
+   * they can have inline type docs attached.
    *
-   * <pre>function f(/** string &#42;/ x) {}</pre> annotates 'x' as a string.
+   * <pre>function f(/** string &#42;/ x) {}</pre>
    *
-   * @see <a href="http://code.google.com/p/jsdoc-toolkit/wiki/InlineDocs">
-   *   Using Inline Doc Comments</a>
+   * annotates 'x' as a string.
+   *
+   * @see <a href="http://code.google.com/p/jsdoc-toolkit/wiki/InlineDocs">Using Inline Doc
+   *     Comments</a>
    */
-  Node transformNodeWithInlineJsDoc(ParseTree node) {
-    JSDocInfo info = handleInlineJsDoc(node);
-    Node irNode = transformDispatcher.process(node);
+  Node transformNodeWithInlineJsDoc(ParseTree tree) {
+    JSDocInfo info = handleInlineJsDoc(tree);
+    Node node = transformDispatcher.process(tree);
+
     if (info != null) {
-      irNode.setJSDocInfo(info);
+      node.setJSDocInfo(info);
     }
-    setSourceInfo(irNode, node);
-    return irNode;
+    setSourceInfo(node, tree);
+
+    return node;
   }
 
   JSDocInfo handleInlineJsDoc(ParseTree node) {
@@ -1080,12 +1084,19 @@ class IRFactory {
 
       Node node = newNode(Token.ARRAY_PATTERN);
       for (ParseTree child : tree.elements) {
-        Node elementNode;
-        if (child.type == ParseTreeType.DEFAULT_PARAMETER) {
-          // processDefaultParameter() knows how to find and apply inline JSDoc to the right node
-          elementNode = processDefaultParameter(child.asDefaultParameter());
-        } else {
-          elementNode = transformNodeWithInlineJsDoc(child);
+        final Node elementNode;
+        switch (child.type) {
+          case DEFAULT_PARAMETER:
+            // processDefaultParameter() knows how to find and apply inline JSDoc to the right node
+            elementNode = processDefaultParameter(child.asDefaultParameter());
+            break;
+          case ITER_REST:
+            maybeWarnForFeature(child, Feature.ARRAY_PATTERN_REST);
+            elementNode = transformNodeWithInlineJsDoc(child);
+            break;
+          default:
+            elementNode = transformNodeWithInlineJsDoc(child);
+            break;
         }
         node.addChildToBack(elementNode);
       }
@@ -1116,11 +1127,15 @@ class IRFactory {
           ComputedPropertyDefinitionTree computedPropertyDefinition =
               child.asComputedPropertyDefinition();
           return processObjectPatternComputedPropertyDefinition(computedPropertyDefinition);
-        default:
+        case OBJECT_REST:
           // let {...restObject} = someObject;
-          checkState(child.type == ParseTreeType.ASSIGNMENT_REST_ELEMENT, child);
           maybeWarnForFeature(child, Feature.OBJECT_PATTERN_REST);
-          return processAssignmentRestElement(child.asAssignmentRestElement());
+          Node target = transformNodeWithInlineJsDoc(child.asObjectRest().assignmentTarget);
+          Node rest = newNode(Token.OBJECT_REST, target);
+          setSourceInfo(rest, child);
+          return rest;
+        default:
+          throw new IllegalStateException("Unexpected object pattern element: " + child);
       }
     }
 
@@ -1216,13 +1231,6 @@ class IRFactory {
       Node computedPropertyNode = newNode(Token.COMPUTED_PROP, expressionNode, valueNode);
       setSourceInfo(computedPropertyNode, computedPropertyDefinition);
       return computedPropertyNode;
-    }
-
-    Node processAssignmentRestElement(AssignmentRestElementTree tree) {
-      maybeWarnForFeature(tree, Feature.ARRAY_PATTERN_REST);
-      Node restNode = newNode(Token.REST, transformNodeWithInlineJsDoc(tree.assignmentTarget));
-      setSourceInfo(restNode, tree);
-      return restNode;
     }
 
     Node processAstRoot(ProgramTree rootNode) {
@@ -1529,26 +1537,37 @@ class IRFactory {
 
     Node processFormalParameterList(FormalParameterListTree tree) {
       Node params = newNode(Token.PARAM_LIST);
-      if (checkParameters(tree.parameters)) {
-        for (ParseTree param : tree.parameters) {
-          Node paramNode;
-          if (param.type == ParseTreeType.DEFAULT_PARAMETER) {
+      if (!checkParameters(tree.parameters)) {
+        return params;
+      }
+
+      for (ParseTree param : tree.parameters) {
+        final Node paramNode;
+        switch (param.type) {
+          case DEFAULT_PARAMETER:
             // processDefaultParameter() knows how to find and apply inline JSDoc to the right node
             paramNode = processDefaultParameter(param.asDefaultParameter());
-          } else {
+            break;
+          case ITER_REST:
+            maybeWarnForFeature(param, Feature.REST_PARAMETERS);
             paramNode = transformNodeWithInlineJsDoc(param);
-          }
-          // Children must be simple names, default parameters, rest
-          // parameters, or destructuring patterns.
-          checkState(
-              paramNode.isName()
-                  || paramNode.isRest()
-                  || paramNode.isArrayPattern()
-                  || paramNode.isObjectPattern()
-                  || paramNode.isDefaultValue());
-          params.addChildToBack(paramNode);
+            break;
+          default:
+            paramNode = transformNodeWithInlineJsDoc(param);
+            break;
         }
+
+        // Children must be simple names, default parameters, rest
+        // parameters, or destructuring patterns.
+        checkState(
+            paramNode.isName()
+                || paramNode.isRest()
+                || paramNode.isArrayPattern()
+                || paramNode.isObjectPattern()
+                || paramNode.isDefaultValue());
+        params.addChildToBack(paramNode);
       }
+
       return params;
     }
 
@@ -1573,22 +1592,21 @@ class IRFactory {
       return defaultValueNode;
     }
 
-    Node processRestParameter(RestParameterTree tree) {
-      maybeWarnForFeature(tree, Feature.REST_PARAMETERS);
-
-      Node assignmentTarget = transformNodeWithInlineJsDoc(tree.assignmentTarget);
-      if (assignmentTarget.isObjectPattern()) {
-        maybeWarnForFeature(tree.assignmentTarget, Feature.OBJECT_DESTRUCTURING);
-      } else if (assignmentTarget.isArrayPattern()) {
-        maybeWarnForFeature(tree.assignmentTarget, Feature.ARRAY_DESTRUCTURING);
-      }
-      return newNode(Token.REST, assignmentTarget);
+    Node processIterRest(IterRestTree tree) {
+      Node target = transformNodeWithInlineJsDoc(tree.assignmentTarget);
+      return newNode(Token.ITER_REST, target);
     }
 
-    Node processSpreadExpression(SpreadExpressionTree tree) {
+    Node processIterSpread(IterSpreadTree tree) {
       maybeWarnForFeature(tree, Feature.SPREAD_EXPRESSIONS);
 
-      return newNode(Token.SPREAD, transform(tree.expression));
+      return newNode(Token.ITER_SPREAD, transform(tree.expression));
+    }
+
+    Node processObjectSpread(ObjectSpreadTree tree) {
+      maybeWarnForFeature(tree, Feature.OBJECT_LITERALS_WITH_SPREAD);
+
+      return newNode(Token.OBJECT_SPREAD, transform(tree.expression));
     }
 
     Node processIfStatement(IfStatementTree statementNode) {
@@ -1834,9 +1852,6 @@ class IRFactory {
             && !currentFileIsExterns) {
           maybeWarnKeywordProperty(key);
         }
-        if (key.isSpread()) {
-          maybeWarnForFeature(el, Feature.OBJECT_LITERALS_WITH_SPREAD);
-        }
         if (key.isShorthandProperty()) {
           maybeWarn = true;
         }
@@ -1967,7 +1982,7 @@ class IRFactory {
       if (exprNode.expression.type == ParseTreeType.COMMA_EXPRESSION) {
         List<ParseTree> commaNodes = exprNode.expression.asCommaExpression().expressions;
         ParseTree lastChild = Iterables.getLast(commaNodes);
-        if (lastChild.type == ParseTreeType.REST_PARAMETER) {
+        if (lastChild.type == ParseTreeType.ITER_REST) {
           errorReporter.error(
               "A rest parameter must be in a parameter list.",
               sourceName,
@@ -2846,7 +2861,7 @@ class IRFactory {
           case OPTIONAL_PARAMETER:
             seenOptional = true;
             break;
-          case REST_PARAMETER:
+          case ITER_REST:
             if (i != params.size() - 1) {
               errorReporter.error(
                   "A rest parameter must be last in a parameter list.",
@@ -2896,12 +2911,12 @@ class IRFactory {
                       .identifierToken.value,
                   type);
               break;
-            case REST_PARAMETER:
+            case ITER_REST:
               // TypeScript doesn't allow destructuring parameters, so the assignment target must
               // be an identifier.
               restName =
                   param
-                      .asRestParameter()
+                      .asIterRest()
                       .assignmentTarget
                       .asIdentifierExpression()
                       .identifierToken
@@ -3167,8 +3182,6 @@ class IRFactory {
           return processArrayPattern(node.asArrayPattern());
         case OBJECT_PATTERN:
           return processObjectPattern(node.asObjectPattern());
-        case ASSIGNMENT_REST_ELEMENT:
-          return processAssignmentRestElement(node.asAssignmentRestElement());
 
         case COMPREHENSION:
           return processComprehension(node.asComprehension());
@@ -3179,10 +3192,16 @@ class IRFactory {
 
         case DEFAULT_PARAMETER:
           return processDefaultParameter(node.asDefaultParameter());
-        case REST_PARAMETER:
-          return processRestParameter(node.asRestParameter());
-        case SPREAD_EXPRESSION:
-          return processSpreadExpression(node.asSpreadExpression());
+        case ITER_REST:
+          return processIterRest(node.asIterRest());
+        case ITER_SPREAD:
+          return processIterSpread(node.asIterSpread());
+
+          // ES2019
+        case OBJECT_REST:
+          return processObjectPatternElement(node.asObjectRest());
+        case OBJECT_SPREAD:
+          return processObjectSpread(node.asObjectSpread());
 
         // ES6 Typed
         case TYPE_NAME:

@@ -39,8 +39,7 @@ public final class GoogleCodingConventionTest {
     Node optArgs = IR.paramList(
         IR.name("opt_a"),
         IR.name("opt_b"));
-    Node rest = IR.paramList(
-        IR.rest(IR.name("more")));
+    Node rest = IR.paramList(IR.iterRest(IR.name("more")));
 
     assertThat(conv.isVarArgsParameter(args.getFirstChild())).isFalse();
     assertThat(conv.isVarArgsParameter(args.getLastChild())).isFalse();

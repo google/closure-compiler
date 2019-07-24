@@ -317,11 +317,11 @@ public enum Token {
       case NEG:
       case NOT:
       case POS:
-      case REST:
+
       case ITER_REST:
       case OBJECT_REST:
       case SETTER_DEF:
-      case SPREAD:
+
       case ITER_SPREAD:
       case OBJECT_SPREAD:
       case TEMPLATELIT_SUB:

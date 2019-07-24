@@ -320,12 +320,13 @@ public final class AstValidatorTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
     // [...x = 1] = [];
-    Node n = IR.assign(
-        new Node(Token.ARRAY_PATTERN,
-            new Node(Token.REST,
-                new Node(Token.DEFAULT_VALUE,
-                    IR.name("x"), IR.arraylit()))),
-        IR.arraylit());
+    Node n =
+        IR.assign(
+            new Node(
+                Token.ARRAY_PATTERN,
+                new Node(
+                    Token.ITER_REST, new Node(Token.DEFAULT_VALUE, IR.name("x"), IR.arraylit()))),
+            IR.arraylit());
     expectInvalid(n, Check.EXPRESSION);
   }
 
@@ -406,7 +407,7 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testInvalidObjectRestForLanguageLevel() {
-    Node n = IR.assign(IR.objectPattern(IR.rest(IR.name("x"))), IR.objectlit());
+    Node n = IR.assign(IR.objectPattern(IR.objectRest(IR.name("x"))), IR.objectlit());
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     expectInvalid(n, Check.EXPRESSION);
@@ -417,7 +418,7 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testInvalidArrayRestForLanguageLevel() {
-    Node n = IR.assign(IR.arrayPattern(IR.rest(IR.name("x"))), IR.arraylit());
+    Node n = IR.assign(IR.arrayPattern(IR.iterRest(IR.name("x"))), IR.arraylit());
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     expectInvalid(n, Check.EXPRESSION);
@@ -665,7 +666,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testFeatureValidation_spreadExpressions() {
     testFeatureValidation("f(...arr);", Feature.SPREAD_EXPRESSIONS);
     testFeatureValidation("var arr = [...something];", Feature.SPREAD_EXPRESSIONS);
-    testFeatureValidation("var obj = {...something};", Feature.SPREAD_EXPRESSIONS);
+    testFeatureValidation("var obj = {...something};", Feature.OBJECT_LITERALS_WITH_SPREAD);
   }
 
   @Test

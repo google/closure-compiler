@@ -54,8 +54,6 @@ public class ParseTree {
   public ArrayLiteralExpressionTree asArrayLiteralExpression() {
     return (ArrayLiteralExpressionTree) this; }
   public ArrayPatternTree asArrayPattern() { return (ArrayPatternTree) this; }
-  public AssignmentRestElementTree asAssignmentRestElement() {
-    return (AssignmentRestElementTree) this; }
   public BinaryOperatorTree asBinaryOperator() { return (BinaryOperatorTree) this; }
   public BlockTree asBlock() { return (BlockTree) this; }
   public BreakStatementTree asBreakStatement() { return (BreakStatementTree) this; }
@@ -126,10 +124,26 @@ public class ParseTree {
   public ProgramTree asProgram() { return (ProgramTree) this; }
   public PropertyNameAssignmentTree asPropertyNameAssignment() {
     return (PropertyNameAssignmentTree) this; }
-  public RestParameterTree asRestParameter() { return (RestParameterTree) this; }
+
+  public IterRestTree asIterRest() {
+    return (IterRestTree) this;
+  }
+
+  public ObjectRestTree asObjectRest() {
+    return (ObjectRestTree) this;
+  }
+
   public ReturnStatementTree asReturnStatement() { return (ReturnStatementTree) this; }
   public SetAccessorTree asSetAccessor() { return (SetAccessorTree) this; }
-  public SpreadExpressionTree asSpreadExpression() { return (SpreadExpressionTree) this; }
+
+  public IterSpreadTree asIterSpread() {
+    return (IterSpreadTree) this;
+  }
+
+  public ObjectSpreadTree asObjectSpread() {
+    return (ObjectSpreadTree) this;
+  }
+
   public SuperExpressionTree asSuperExpression() { return (SuperExpressionTree) this; }
   public SwitchStatementTree asSwitchStatement() { return (SwitchStatementTree) this; }
   public TemplateLiteralExpressionTree asTemplateLiteralExpression() {
@@ -221,12 +235,8 @@ public class ParseTree {
     }
   }
 
-  public boolean isAssignmentRestElement() {
-    return this.type == ParseTreeType.ASSIGNMENT_REST_ELEMENT;
-  }
-
   public boolean isRestParameter() {
-    return this.type == ParseTreeType.REST_PARAMETER;
+    return this.type == ParseTreeType.ITER_REST;
   }
 
   @Override

@@ -136,7 +136,7 @@ public enum TokenType {
   REGULAR_EXPRESSION("regular expression literal"),
 
   // Harmony extensions
-  SPREAD("..."),
+  ELLIPSIS("..."),
   // 12.2.9 Template Literals
   // Template literal tokens corresponding to different parts of the literal
   // Eg: `hello` is scanned as a single NO_SUBSTITUTION_TEMPLATE: hello
