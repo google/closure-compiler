@@ -886,7 +886,7 @@ public abstract class JSType implements Serializable {
     }
 
     TemplateTypeMap typeMap = getTemplateTypeMap();
-    TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
+    TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
     return propertyType.visit(replacer);
   }
 

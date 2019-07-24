@@ -33,7 +33,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
-import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
+import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import javax.annotation.Nullable;
 
 /**
@@ -807,7 +807,7 @@ final class AstFactory {
           registry.createTemplateTypeMap(
               makeIteratorType.getTemplateTypeMap().getTemplateKeys(),
               ImmutableList.of(iterableType));
-      TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
+      TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
       makeIteratorName.setJSType(makeIteratorType.visit(replacer));
     }
     return createCall(makeIteratorName, iterable);
@@ -836,7 +836,7 @@ final class AstFactory {
           registry.createTemplateTypeMap(
               makeIteratorType.getTemplateTypeMap().getTemplateKeys(),
               ImmutableList.of(iterableType));
-      TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
+      TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
       makeIteratorName.setJSType(makeIteratorType.visit(replacer));
     }
     return createCall(makeIteratorName, iterator);
@@ -876,7 +876,7 @@ final class AstFactory {
           registry.createTemplateTypeMap(
               makeAsyncIteratorType.getTemplateTypeMap().getTemplateKeys(),
               ImmutableList.of(asyncIterableType));
-      TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
+      TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
       makeIteratorAsyncName.setJSType(makeAsyncIteratorType.visit(replacer));
     }
     return createCall(makeIteratorAsyncName, iterable);
@@ -887,7 +887,7 @@ final class AstFactory {
         registry.createTemplateTypeMap(
             templatedType.getTemplateTypeMap().getTemplateKeys(),
             ImmutableList.copyOf(templateTypes));
-    TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, typeMap);
+    TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
     return templatedType.visit(replacer);
   }
 

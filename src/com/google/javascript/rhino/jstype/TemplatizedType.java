@@ -60,7 +60,7 @@ public final class TemplatizedType extends ProxyObjectType {
   /** Whether all type parameter values for this specialization are `?`. */
   private final boolean isSpecializedOnlyWithUnknown;
 
-  private transient TemplateTypeMapReplacer replacer;
+  private transient TemplateTypeReplacer replacer;
 
   TemplatizedType(
       JSTypeRegistry registry, ObjectType objectType,
@@ -81,7 +81,7 @@ public final class TemplatizedType extends ProxyObjectType {
     this.templateTypes = builder.build();
     this.isSpecializedOnlyWithUnknown = maybeIsSpecializedOnlyWithUnknown;
 
-    this.replacer = new TemplateTypeMapReplacer(registry, getTemplateTypeMap());
+    this.replacer = TemplateTypeReplacer.forPartialReplacement(registry, getTemplateTypeMap());
   }
 
   // NOTE(dimvar): If getCtorImplementedInterfaces is implemented here, this is the
@@ -231,7 +231,7 @@ public final class TemplatizedType extends ProxyObjectType {
   @GwtIncompatible("ObjectInputStream")
   private void readObject(java.io.ObjectInputStream in) throws Exception {
     in.defaultReadObject();
-    replacer = new TemplateTypeMapReplacer(registry, templateTypeMap);
+    replacer = TemplateTypeReplacer.forPartialReplacement(registry, templateTypeMap);
   }
 
   @SuppressWarnings("ReferenceEquality")

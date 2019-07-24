@@ -56,7 +56,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
-import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
+import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.HashMap;
@@ -1622,7 +1622,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       TemplateTypeMap ctorTypeMap = ctorType.getTypeOfThis().getTemplateTypeMap();
       if (!ctorTypeMap.isEmpty()) {
         superClassPropType =
-            superClassPropType.visit(new TemplateTypeMapReplacer(typeRegistry, ctorTypeMap));
+            superClassPropType.visit(
+                TemplateTypeReplacer.forPartialReplacement(typeRegistry, ctorTypeMap));
       }
 
       if (!propertyType.isSubtype(superClassPropType, this.subtypingMode)) {

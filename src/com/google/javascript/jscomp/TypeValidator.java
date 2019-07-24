@@ -51,7 +51,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
-import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
+import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.UnknownType;
 import java.io.Serializable;
 import java.text.MessageFormat;
@@ -915,8 +915,8 @@ class TypeValidator implements Serializable {
       JSType required = implementedInterface.getPropertyType(propName);
       TemplateTypeMap typeMap = implementedInterface.getTemplateTypeMap();
       if (!typeMap.isEmpty()) {
-        TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(
-            typeRegistry, typeMap);
+        TemplateTypeReplacer replacer =
+            TemplateTypeReplacer.forPartialReplacement(typeRegistry, typeMap);
         required = required.visit(replacer);
       }
       required = required.restrictByNotNullOrUndefined();

@@ -40,27 +40,89 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
- * A visitor implementation that enables type substitutions.
+ * Specializes {@link TemplatizedType}s according to provided bindings.
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public class ModificationVisitor implements Visitor<JSType> {
+public final class TemplateTypeReplacer implements Visitor<JSType> {
 
-  final JSTypeRegistry registry;
+  private final JSTypeRegistry registry;
+  private final TemplateTypeMap bindings;
+
   private final boolean visitProperties;
+  // TODO(nickreid): We should only need `useUnknownForMissingBinding`. Keeping two separate bits
+  // was a quick fix for collapsing two different classes.
+  private final boolean useUnknownForMissingKeys;
+  private final boolean useUnknownForMissingValues;
+
+  private boolean hasMadeReplacement = false;
+  private TemplateType keyType;
+
   private final Set<JSType> seenTypes = Sets.newIdentityHashSet();
 
-  public ModificationVisitor(JSTypeRegistry registry, boolean visitProperties) {
+  /** Creates a replacer for use during {@code TypeInference}. */
+  public static TemplateTypeReplacer forInference(
+      JSTypeRegistry registry, Map<TemplateType, JSType> bindings) {
+    ImmutableList<TemplateType> keys = ImmutableList.copyOf(bindings.keySet());
+    ImmutableList<JSType> values =
+        keys.stream()
+            .map(bindings::get)
+            .map((v) -> (v != null) ? v : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE))
+            .collect(toImmutableList());
+    TemplateTypeMap map = new TemplateTypeMap(registry, keys, values);
+    return new TemplateTypeReplacer(registry, map, true, true, true);
+  }
+
+  /**
+   * Creates a replacer that will always totally eliminate {@link TemplateType}s from the
+   * definitions of the types it performs replacement on.
+   *
+   * <p>If a binding for a {@link TemplateType} is required but not provided, `?` will be used.
+   */
+  public static TemplateTypeReplacer forTotalReplacement(
+      JSTypeRegistry registry, TemplateTypeMap bindings) {
+    return new TemplateTypeReplacer(registry, bindings, false, false, true);
+  }
+
+  /**
+   * Creates a replacer that may not totally eliminate {@link TemplateType}s from the definitions of
+   * the types it performs replacement on.
+   *
+   * <p>If a binding for a {@link TemplateType} is required but not provided, uses of that type will
+   * not be replaced.
+   */
+  public static TemplateTypeReplacer forPartialReplacement(
+      JSTypeRegistry registry, TemplateTypeMap bindings) {
+    return new TemplateTypeReplacer(registry, bindings, false, false, false);
+  }
+
+  private TemplateTypeReplacer(
+      JSTypeRegistry registry,
+      TemplateTypeMap bindings,
+      boolean visitProperties,
+      boolean useUnknownForMissingKeys,
+      boolean useUnknownForMissingValues) {
     this.registry = registry;
+    this.bindings = bindings;
     this.visitProperties = visitProperties;
+    this.useUnknownForMissingKeys = useUnknownForMissingKeys;
+    this.useUnknownForMissingValues = useUnknownForMissingValues;
+  }
+
+  public boolean hasMadeReplacement() {
+    return this.hasMadeReplacement;
   }
 
   @Override
@@ -258,8 +320,37 @@ public class ModificationVisitor implements Visitor<JSType> {
   }
 
   @Override
+  @SuppressWarnings("ReferenceEquality")
   public JSType caseTemplateType(TemplateType type) {
-    return type;
+    this.hasMadeReplacement = true;
+
+    if (!bindings.hasTemplateKey(type)) {
+      return useUnknownForMissingKeys ? getNativeType(JSTypeNative.UNKNOWN_TYPE) : type;
+    }
+
+    if (seenTypes.contains(type)) {
+      // If we have already encountered this TemplateType during replacement
+      // (i.e. there is a reference loop) then return the TemplateType type itself.
+      return type;
+    } else if (!bindings.hasTemplateType(type)) {
+      // If there is no JSType substitution for the TemplateType, return either the
+      // UNKNOWN_TYPE or the TemplateType type itself, depending on configuration.
+      return useUnknownForMissingValues ? getNativeType(JSTypeNative.UNKNOWN_TYPE) : type;
+    } else {
+      JSType replacement = bindings.getUnresolvedOriginalTemplateType(type);
+      if (replacement == keyType || isRecursive(type, replacement)) {
+        // Recursive templated type definition (e.g. T resolved to Foo<T>).
+        return type;
+      }
+
+      seenTypes.add(type);
+      JSType visitedReplacement = replacement.visit(this);
+      seenTypes.remove(type);
+
+      Preconditions.checkState(
+          visitedReplacement != keyType, "Trying to replace key %s with the same value", keyType);
+      return visitedReplacement;
+    }
   }
 
   private JSType getNativeType(JSTypeNative nativeType) {
@@ -285,5 +376,37 @@ public class ModificationVisitor implements Visitor<JSType> {
       return replacement;
     }
     return type;
+  }
+
+  void setKeyType(TemplateType keyType) {
+    this.keyType = keyType;
+  }
+
+  /**
+   * Returns whether the replacement type is a templatized type which contains the current type.
+   * e.g. current type T is being replaced with Foo<T>
+   */
+  private boolean isRecursive(TemplateType currentType, JSType replacementType) {
+    TemplatizedType replacementTemplatizedType =
+        replacementType.restrictByNotNullOrUndefined().toMaybeTemplatizedType();
+    if (replacementTemplatizedType == null) {
+      return false;
+    }
+
+    Iterable<JSType> replacementTemplateTypes = replacementTemplatizedType.getTemplateTypes();
+    for (JSType replacementTemplateType : replacementTemplateTypes) {
+      if (replacementTemplateType.isTemplateType()
+          && isSameType(currentType, replacementTemplateType.toMaybeTemplateType())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  @SuppressWarnings("ReferenceEquality")
+  private boolean isSameType(TemplateType currentType, TemplateType replacementType) {
+    return currentType == replacementType
+        || currentType == bindings.getUnresolvedOriginalTemplateType(replacementType);
   }
 }

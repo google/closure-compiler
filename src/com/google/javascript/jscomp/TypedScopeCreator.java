@@ -88,7 +88,7 @@ import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
-import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
+import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -1872,7 +1872,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       if (result != null && typeMap != null && !typeMap.isEmpty()) {
-        result = result.visit(new TemplateTypeMapReplacer(typeRegistry, typeMap));
+        result = result.visit(TemplateTypeReplacer.forPartialReplacement(typeRegistry, typeMap));
       }
 
       return result;

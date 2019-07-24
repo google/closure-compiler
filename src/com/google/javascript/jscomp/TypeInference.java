@@ -52,11 +52,11 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ModificationVisitor;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
+import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
@@ -2015,26 +2015,6 @@ class TypeInference
     }
   }
 
-  private static class TemplateTypeReplacer extends ModificationVisitor {
-    private final Map<TemplateType, JSType> replacements;
-    private final JSTypeRegistry registry;
-    boolean madeChanges = false;
-
-    TemplateTypeReplacer(
-        JSTypeRegistry registry, Map<TemplateType, JSType> replacements) {
-      super(registry, true);
-      this.registry = registry;
-      this.replacements = replacements;
-    }
-
-    @Override
-    public JSType caseTemplateType(TemplateType type) {
-      madeChanges = true;
-      JSType replacement = replacements.get(type);
-      return replacement != null ? replacement : registry.getNativeType(UNKNOWN_TYPE);
-    }
-  }
-
   /**
    * Build the type environment where type transformations will be evaluated.
    * It only considers the template type variables that do not have a type
@@ -2114,7 +2094,7 @@ class TypeInference
 
     // Replace all template types. If we couldn't find a replacement, we
     // replace it with UNKNOWN.
-    TemplateTypeReplacer replacer = new TemplateTypeReplacer(registry, inferred);
+    TemplateTypeReplacer replacer = TemplateTypeReplacer.forInference(registry, inferred);
     Node callTarget = n.getFirstChild();
 
     FunctionType replacementFnType = fnType.visit(replacer).toMaybeFunctionType();
@@ -2122,7 +2102,7 @@ class TypeInference
     callTarget.setJSType(replacementFnType);
     n.setJSType(replacementFnType.getReturnType());
 
-    return replacer.madeChanges;
+    return replacer.hasMadeReplacement();
   }
 
   private FlowScope traverseNew(Node n, FlowScope scope) {

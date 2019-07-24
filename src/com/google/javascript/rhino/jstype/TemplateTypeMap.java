@@ -84,8 +84,7 @@ public class TemplateTypeMap implements Serializable {
 
     // Iteratively resolve any JSType values that refer to the TemplateType keys
     // of this TemplateTypeMap.
-    TemplateTypeMapReplacer replacer =
-        new TemplateTypeMapReplacer(registry, this, /* replaceMissingTypesWithUnknown */ true);
+    TemplateTypeReplacer replacer = TemplateTypeReplacer.forTotalReplacement(registry, this);
 
     int nValues = this.templateValues.size();
     int nKeys = this.templateKeys.size();
