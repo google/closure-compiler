@@ -805,7 +805,11 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           break;
 
         case REST:
+        case ITER_REST:
+        case OBJECT_REST:
         case SPREAD:
+        case ITER_SPREAD:
+        case OBJECT_SPREAD:
           if (node.getParent().isObjectPattern() || node.getParent().isObjectLit()) {
             if (!assumeGettersArePure) {
               // Object-rest and object-spread may trigger a getter.

@@ -570,7 +570,11 @@ class AmbiguateProperties implements CompilerPass {
             break;
 
           case REST:
+          case ITER_REST:
+          case OBJECT_REST:
           case SPREAD:
+          case ITER_SPREAD:
+          case OBJECT_SPREAD:
             break; // Nothing to do.
 
           default:

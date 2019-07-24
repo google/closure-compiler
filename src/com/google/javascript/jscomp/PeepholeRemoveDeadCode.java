@@ -451,6 +451,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private static Node asDetachedExpression(Node expr) {
     switch (expr.getToken()) {
       case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
         switch (expr.getParent().getToken()) {
           case ARRAYLIT:
           case NEW:

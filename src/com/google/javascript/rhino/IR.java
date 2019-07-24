@@ -547,6 +547,7 @@ public class IR {
         case GETTER_DEF:
         case SETTER_DEF:
         case SPREAD:
+        case OBJECT_SPREAD:
         case COMPUTED_PROP:
           break;
         default:

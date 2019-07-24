@@ -799,6 +799,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       case THIS:
       case SUPER:
       case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
         return false;
       case FUNCTION:
         // Don't move function closures.

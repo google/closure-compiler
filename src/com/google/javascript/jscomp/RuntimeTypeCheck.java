@@ -447,6 +447,8 @@ class RuntimeTypeCheck implements CompilerPass {
         break;
 
       case REST:
+      case OBJECT_REST:
+      case ITER_REST:
       case DEFAULT_VALUE:
         paramNamesOf(node.getFirstChild(), names);
         break;

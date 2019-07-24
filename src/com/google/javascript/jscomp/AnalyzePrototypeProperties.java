@@ -293,7 +293,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
             switch (propNode.getToken()) {
               case COMPUTED_PROP:
               case REST:
+              case ITER_REST:
+              case OBJECT_REST:
               case SPREAD:
+              case ITER_SPREAD:
+              case OBJECT_SPREAD:
                 break;
 
               case STRING_KEY:

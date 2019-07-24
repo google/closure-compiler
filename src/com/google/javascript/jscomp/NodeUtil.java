@@ -705,6 +705,7 @@ public final class NodeUtil {
               break;
 
             case SPREAD:
+            case OBJECT_SPREAD:
               if (!isLiteralValue(child.getOnlyChild(), includeFunctions)) {
                 return false;
               }
@@ -1045,6 +1046,8 @@ public final class NodeUtil {
     final Node iterable;
     switch (node.getToken()) {
       case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
         switch (parent.getToken()) {
           case OBJECTLIT:
             return false; // Object spread does not iterate.
@@ -1072,6 +1075,8 @@ public final class NodeUtil {
         break;
 
       case REST:
+      case ITER_REST:
+      case OBJECT_REST:
         switch (parent.getToken()) {
           case OBJECT_PATTERN: // Object rest does not iterate.
           case PARAM_LIST: // Rest arguments are flat at the call-site.
@@ -1274,7 +1279,11 @@ public final class NodeUtil {
       case OBJECT_PATTERN:
       case REGEXP:
       case REST:
+      case ITER_REST:
+      case OBJECT_REST:
       case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
       case STRING:
       case STRING_KEY:
       case MEMBER_VARIABLE_DEF:
@@ -2907,6 +2916,8 @@ public final class NodeUtil {
       case LET:
       case CONST:
       case REST:
+      case ITER_REST:
+      case OBJECT_REST:
       case PARAM_LIST:
       case IMPORT:
       case INC:
@@ -3193,7 +3204,9 @@ public final class NodeUtil {
 
     switch (parent.getToken()) {
       case ARRAY_PATTERN: // `b` in `var [b] = ...`
-      case REST: // `b` in `var [...b] = ...`
+      case REST:
+      case ITER_REST:
+      case OBJECT_REST: // `b` in `var [...b] = ...`
         return true;
 
       case COMPUTED_PROP:
@@ -3845,6 +3858,8 @@ public final class NodeUtil {
       case DEFAULT_VALUE:
       case CATCH:
       case REST:
+      case ITER_REST:
+      case OBJECT_REST:
       case CAST:
         getLhsNodesHelper(n.getFirstChild(), lhsNodes);
         return;
@@ -4742,6 +4757,8 @@ public final class NodeUtil {
       case CAST:
         return evaluatesToLocalValue(value.getFirstChild());
       case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
         // TODO(johnlenz): remove this case.
       case YIELD:
       case AWAIT:

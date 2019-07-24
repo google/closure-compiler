@@ -352,7 +352,9 @@ class RenameProperties implements CompilerPass {
             switch (key.getToken()) {
               case COMPUTED_PROP: // We don't want to rename computed properties
               case REST:
+              case OBJECT_REST:
               case SPREAD:
+              case OBJECT_SPREAD:
                 break;
 
               case GETTER_DEF:

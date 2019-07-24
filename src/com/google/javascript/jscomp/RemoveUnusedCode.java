@@ -1045,6 +1045,8 @@ class RemoveUnusedCode implements CompilerPass {
           break;
 
         case REST:
+        case ITER_REST:
+        case OBJECT_REST:
           // Recall that the rest target can be any l-value expression
           traverseIndirectAssignment(elem, elem.getOnlyChild(), scope);
           break;
@@ -1074,6 +1076,8 @@ class RemoveUnusedCode implements CompilerPass {
           break;
 
         case REST:
+        case ITER_REST:
+        case OBJECT_REST:
           traverseIndirectAssignment(elem, elem.getOnlyChild(), scope);
           break;
 
@@ -1479,6 +1483,7 @@ class RemoveUnusedCode implements CompilerPass {
       case DEFAULT_VALUE:
         return nameOfParam(param.getFirstChild());
       case REST:
+      case ITER_REST:
         return nameOfParam(param.getOnlyChild());
       case ARRAY_PATTERN:
       case OBJECT_PATTERN:

@@ -211,6 +211,8 @@ final class DestructuredTarget {
         break;
 
       case REST:
+      case ITER_REST:
+      case OBJECT_REST:
         // const [...x] = ...
         // const {...x} = ...
         builder.setNode(destructuringChild.getFirstChild());

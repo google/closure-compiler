@@ -3429,7 +3429,14 @@ public class Node implements Serializable {
   }
 
   public final boolean isRest() {
-    return this.token == Token.REST;
+    switch (this.token) {
+      case REST:
+      case ITER_REST:
+      case OBJECT_REST:
+        return true;
+      default:
+        return false;
+    }
   }
 
   public final boolean isReturn() {
@@ -3445,7 +3452,14 @@ public class Node implements Serializable {
   }
 
   public final boolean isSpread() {
-    return this.token == Token.SPREAD;
+    switch (this.token) {
+      case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
+        return true;
+      default:
+        return false;
+    }
   }
 
   public final boolean isString() {

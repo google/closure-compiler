@@ -160,6 +160,8 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         maybeVisitColonType(t, n, n);
         break;
       case REST:
+      case ITER_REST:
+      case OBJECT_REST:
         maybeVisitColonType(t, n, n.getOnlyChild());
         break;
       case FUNCTION:

@@ -213,9 +213,10 @@ abstract class MethodCompilerPass implements CompilerPass {
                 break;
               case COMPUTED_PROP: // complicated
               case SPREAD:
+              case OBJECT_SPREAD:
                 break;
               default:
-                throw new IllegalStateException("Unexpected OBJECTLIT key: " + key);
+                throw new IllegalStateException("Unexpected " + n.getToken() + " key: " + key);
             }
           }
           break;

@@ -405,12 +405,16 @@ public class CodeGenerator {
           break;
         }
       case REST:
+      case ITER_REST:
+      case OBJECT_REST:
         add("...");
         add(first);
         maybeAddTypeDecl(n);
         break;
 
       case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
         add("...");
         add(n.getFirstChild());
         break;

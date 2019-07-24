@@ -181,8 +181,12 @@ public enum Token {
   MODULE_BODY,
   DYNAMIC_IMPORT,
 
-  REST, // "..." in formal parameters, or an array pattern.
-  SPREAD, // "..." in a call expression, or an array literal.
+  REST, // TODO(b/128706030): Delete REST.
+  ITER_REST, // Rests that use the iterator protocol.
+  OBJECT_REST, // Rests that get object properties.
+  SPREAD, // TODO(b/128706030): Delete SPREAD.
+  ITER_SPREAD, // Spreads that use the iterator protocol.
+  OBJECT_SPREAD, // Spreads that get object properties.
 
   COMPUTED_PROP,
 
@@ -314,8 +318,12 @@ public enum Token {
       case NOT:
       case POS:
       case REST:
+      case ITER_REST:
+      case OBJECT_REST:
       case SETTER_DEF:
       case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
       case TEMPLATELIT_SUB:
       case THROW:
       case TYPEOF:

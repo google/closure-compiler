@@ -262,7 +262,11 @@ public class AstAnalyzer {
         break;
 
       case REST:
+      case ITER_REST:
+      case OBJECT_REST:
       case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
         if (parent.isObjectPattern() || parent.isObjectLit()) {
           // Object-rest and object-spread may trigger a getter.
           if (assumeGettersArePure) {
@@ -505,7 +509,11 @@ public class AstAnalyzer {
         // TODO(b/129564961): Consider EXPORT declarations.
         return n.hasChildren();
       case REST:
+      case ITER_REST:
+      case OBJECT_REST:
       case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
         if (n.getParent().isObjectPattern() || n.getParent().isObjectLit()) {
           // Object-rest and object-spread may trigger a getter.
           return !assumeGettersArePure;

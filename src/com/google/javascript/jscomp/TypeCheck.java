@@ -921,6 +921,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case FOR:
       case TEMPLATELIT_SUB:
       case REST:
+      case ITER_REST:
+      case OBJECT_REST:
       case DESTRUCTURING_LHS:
         typeable = false;
         break;
@@ -1008,6 +1010,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
         checkSpread(n);
         typeable = false;
         break;

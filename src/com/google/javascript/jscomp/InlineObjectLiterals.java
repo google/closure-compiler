@@ -238,6 +238,7 @@ class InlineObjectLiterals implements CompilerPass {
               // Spread can overwrite any preceding prop if there are matching keys.
               // TODO(b/126567617): Allow inlining props declared after the SPREAD.
             case SPREAD:
+            case OBJECT_SPREAD:
               return false;
 
             case MEMBER_FUNCTION_DEF:

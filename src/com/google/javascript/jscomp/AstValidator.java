@@ -983,6 +983,7 @@ public final class AstValidator implements CompilerPass {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
         case SPREAD:
+        case ITER_SPREAD:
           validateSpread(c);
           break;
         default:
@@ -1013,7 +1014,15 @@ public final class AstValidator implements CompilerPass {
    * @param n
    */
   private void validateRest(Token contextType, Node n) {
-    validateNodeType(Token.REST, n);
+    switch (n.getToken()) {
+      case REST:
+      case ITER_REST:
+      case OBJECT_REST:
+        break;
+      default:
+        violation("Unexpected node type.", n);
+        return;
+    }
     validateChildCount(n);
     validateLHS(contextType, n.getFirstChild());
     if (n.getNext() != null) {
@@ -1022,8 +1031,17 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateSpread(Node n) {
-    validateNodeType(Token.SPREAD, n);
+    switch (n.getToken()) {
+      case SPREAD:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
+        break;
+      default:
+        violation("Unexpected node type.", n);
+        return;
+    }
     validateChildCount(n);
+
     Node parent = n.getParent();
     switch (parent.getToken()) {
       case CALL:
@@ -1051,6 +1069,7 @@ public final class AstValidator implements CompilerPass {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
         case SPREAD:
+        case ITER_SPREAD:
           validateSpread(c);
           break;
         default:
@@ -1162,6 +1181,7 @@ public final class AstValidator implements CompilerPass {
           validateDefaultValue(type, c);
           break;
         case REST:
+        case ITER_REST:
           validateArrayPatternRest(type, c);
           break;
         case EMPTY:
@@ -1182,6 +1202,7 @@ public final class AstValidator implements CompilerPass {
           validateObjectPatternStringKey(type, c);
           break;
         case REST:
+        case OBJECT_REST:
           validateObjectPatternRest(type, c);
           break;
         case COMPUTED_PROP:
@@ -1486,6 +1507,7 @@ public final class AstValidator implements CompilerPass {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
         case SPREAD:
+        case ITER_SPREAD:
           validateSpread(c);
           break;
         default:
@@ -1524,6 +1546,7 @@ public final class AstValidator implements CompilerPass {
         validateObjectLitComputedPropKey(n);
         return;
       case SPREAD:
+      case OBJECT_SPREAD:
         validateSpread(n);
         return;
       default:

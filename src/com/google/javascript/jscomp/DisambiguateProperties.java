@@ -554,6 +554,7 @@ class DisambiguateProperties implements CompilerPass {
           case COMPUTED_PROP:
             // These won't be renamed due to our assumptions. Ignore them.
           case SPREAD:
+          case OBJECT_SPREAD:
             // Ignore properties added via spread. All properties accessed from object literals are
             // invalidated regardless, so we don't have to explicitly do that here. Additionally,
             // even if we invalidated all the properties known to be on the spread type, there may
