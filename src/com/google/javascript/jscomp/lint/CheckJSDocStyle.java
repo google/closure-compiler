@@ -334,7 +334,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     Node paramList = NodeUtil.getFunctionParameters(function);
 
     for (Node param : paramList.children()) {
-      JSDocInfo jsDoc = param.getJSDocInfo();
+      JSDocInfo jsDoc =
+          param.isDefaultValue() ? param.getFirstChild().getJSDocInfo() : param.getJSDocInfo();
       if (jsDoc == null) {
         t.report(param, MISSING_PARAMETER_JSDOC);
         return;

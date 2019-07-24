@@ -617,6 +617,63 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMissingParam_defaultValue() {
+    testWarning(
+        lines(
+            "/**",
+            " * @param {string} x",
+            // No @param for y.
+            " */",
+            "function f(x, y = 0) {}"),
+        WRONG_NUMBER_OF_PARAMS);
+
+    testWarning(
+        lines(
+            "/**",
+            " * @param {string} x",
+            " * @param {number} y",
+            " */",
+            "function f(x, y = 0) {}"),
+        OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
+
+    testNoWarning(
+        lines(
+            "/**",
+            " * @param {string} x",
+            " * @param {number=} y",
+            " */",
+            "function f(x, y = 0) {}"));
+
+    testWarning("function f(/** string */ x, y = 0) {}", MISSING_PARAMETER_JSDOC);
+    testWarning(
+        "function f(/** string */ x, /** number */ y = 0) {}", OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
+    testNoWarning("function f(/** string */ x, /** number= */ y = 0) {}");
+  }
+
+  @Test
+  public void testMissingParam_rest() {
+    testWarning(
+        lines(
+            "/**",
+            " * @param {string} x",
+            // No @param for y.
+            " */",
+            "function f(x, ...y) {}"),
+        WRONG_NUMBER_OF_PARAMS);
+
+    testNoWarning(
+        lines(
+            "/**",
+            " * @param {string} x",
+            " * @param {...number} y",
+            " */",
+            "function f(x, ...y) {}"));
+
+    testWarning("function f(/** string */ x, ...y) {}", MISSING_PARAMETER_JSDOC);
+    testNoWarning("function f(/** string */ x, /** ...number */ ...y) {}");
+  }
+
+  @Test
   public void testInvalidMissingParamWithDestructuringPattern_withES6Modules01() {
     testWarning(
         lines(
