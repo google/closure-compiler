@@ -21,7 +21,7 @@ import com.google.gwt.core.client.EntryPoint;
  * Entry point that exports just the JsfileParser.
  */
 final class JsfileParserMain implements EntryPoint {
-  private static final JsfileParser jsFileParser = new JsfileParser();
+  private static final JsfileParserGwt jsFileParser = new JsfileParserGwt();
 
   @Override
   public void onModuleLoad() {

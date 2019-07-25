@@ -32,8 +32,6 @@ import com.google.javascript.jscomp.GatherModuleMetadata;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
-import com.google.javascript.jscomp.gwt.client.Util.JsArray;
-import com.google.javascript.jscomp.gwt.client.Util.JsObject;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -47,47 +45,17 @@ import com.google.re2j.Pattern;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import javax.annotation.Nullable;
-import jsinterop.annotations.JsFunction;
-import jsinterop.annotations.JsMethod;
 
 /**
- * GWT module to parse files for dependency and
- * {@literal @}{@code fileoverview} annotation
- * information.
+ * A parser that extracts dependency information from a .js file, including goog.require,
+ * goog.provide, goog.module, import/export statements, and JSDoc annotations related to dependency
+ * management.
  */
 public class JsfileParser {
-
-  /**
-   * All the information parsed out of a single file.
-   * Exported as a JSON object:
-   * <pre> {@code {
-   *   "custom_annotations": {?Array<[string, string]>},  @.*
-   *   "goog": {?bool},  whether 'goog' is implicitly required
-   *   "has_soy_delcalls": {?Array<string>},  @fileoverview @hassoydelcall {.*}
-   *   "has_soy_deltemplates": {?Array<string>},  @fileoverview @hassoydeltemplate {.*}
-   *   "imported_modules": {?Array<string>},  import ... from .*
-   *   "is_config": {?bool},  @fileoverview @config
-   *   "is_externs": {?bool},  @fileoverview @externs
-   *   "load_flags": {?Array<[string, string]>},
-   *   "mod_name": {?Array<string>},  @fileoverview @modName .*, @modName {.*}
-   *   "mods": {?Array<string>},  @fileoverview @mods {.*}
-   *   "provide_goog": {?bool},  @fileoverview @provideGoog
-   *   "provides": {?Array<string>},
-   *   "requires": {?Array<string>},  note: look for goog.* for 'goog'
-   *   "requires_css": {?Array<string>},  @fileoverview @requirecss {.*}
-   *   "testonly": {?bool},  goog.setTestOnly
-   *   "type_requires": {?Array<string>},
-   *   "visibility: {?Array<string>},  @fileoverview @visibility {.*}
-   * }}</pre>
-   * Any trivial values are omitted.
-   */
   static final class FileInfo {
-    final ErrorReporter reporter;
-
     boolean goog = false;
     boolean isConfig = false;
     boolean isExterns = false;
@@ -111,55 +79,7 @@ public class JsfileParser {
 
     final Multimap<String, String> customAnnotations = TreeMultimap.create();
     final Multimap<String, String> loadFlags = TreeMultimap.create();
-
-    FileInfo(ErrorReporter reporter) {
-      this.reporter = reporter;
-    }
-
-    private void handleGoog() {
-      if (provideGoog) {
-        provides.add("goog");
-      } else if (goog) {
-        requires.add("goog");
-      }
-    }
-
-    /** Exports the file info as a JSON object. */
-    JsObject<Object> full() {
-      handleGoog();
-      return new SparseObject()
-          .set("custom_annotations", customAnnotations)
-          .set("goog", goog)
-          .set("has_soy_delcalls", hasSoyDelcalls)
-          .set("has_soy_deltemplates", hasSoyDeltemplates)
-          .set("imported_modules", importedModules)
-          .set("is_config", isConfig)
-          .set("is_externs", isExterns)
-          .set("load_flags", loadFlags)
-          .set("modName", modName)
-          .set("mods", mods)
-          .set("provide_goog", provideGoog)
-          .set("provides", provides)
-          .set("requires", requires)
-          .set("requiresCss", requiresCss)
-          .set("testonly", testonly)
-          .set("type_requires", typeRequires)
-          .set("visibility", visibility)
-          .object;
-    }
   }
-
-  /**
-   * Exports the {@link #compile} method via JSNI.
-   *
-   * <p>This will be placed on {@code module.exports.gjd} or the global {@code jscomp.gjd}.
-   */
-  public native void exportGjd() /*-{
-    var fn = $entry(@com.google.javascript.jscomp.gwt.client.JsfileParser::gjd(*));
-    if (typeof module !== 'undefined' && module.exports) {
-      module.exports.gjd = fn;
-    }
-  }-*/;
 
   /** Represents a single JSDoc annotation, with an optional argument. */
   private static class CommentAnnotation {
@@ -204,14 +124,8 @@ public class JsfileParser {
     private static final int ANNOTATION_VALUE_GROUP = 2;
   }
 
-  /** Method exported to JS to parse a file for dependencies and annotations. */
-  @JsMethod(namespace = "jscomp")
-  public static JsObject<Object> gjd(String code, String filename, @Nullable Reporter reporter) {
-    return parse(code, filename, reporter).full();
-  }
-
-  /** Internal implementation to produce the {@link FileInfo} object. */
-  private static FileInfo parse(String code, String filename, @Nullable Reporter reporter) {
+  /** Parses a JavaScript file for dependencies and annotations. */
+  public static FileInfo parse(String code, String filename, @Nullable Reporter reporter) {
     ErrorReporter errorReporter = new DelegatingReporter(reporter);
     Compiler compiler =
         new Compiler(
@@ -251,7 +165,7 @@ public class JsfileParser {
             /* extraAnnotationNames */ ImmutableSet.<String>of(),
             /* parseInlineSourceMaps */ true,
             Config.StrictMode.SLOPPY);
-    FileInfo info = new FileInfo(errorReporter);
+    FileInfo info = new FileInfo();
     ParserRunner.ParseResult parsed = ParserRunner.parse(source, code, config, errorReporter);
     parsed.ast.setInputId(new InputId(filename));
     String version = parsed.features.version();
@@ -358,8 +272,7 @@ public class JsfileParser {
     }
   }
 
-  /** JS function interface for reporting errors. */
-  @JsFunction
+  /** Interface for reporting errors. */
   public interface Reporter {
     void report(boolean fatal, String message, String sourceName, int line, int lineOffset);
   }
@@ -387,45 +300,4 @@ public class JsfileParser {
     public void report(
         boolean fatal, String message, String sourceName, int line, int lineOffset) {}
   };
-
-  /** Sparse object helper class: only adds non-trivial values. */
-  private static class SparseObject {
-    final JsObject<Object> object = new JsObject<>();
-
-    SparseObject set(String key, Iterable<String> iterable) {
-      JsArray<String> array = JsArray.copyOf(iterable);
-      if (array.getLength() > 0) {
-        object.set(key, array);
-      }
-      return this;
-    }
-
-    SparseObject set(String key, Multimap<String, String> map) {
-      JsArray<JsArray<String>> array = new JsArray<>();
-      for (Map.Entry<String, String> entry : map.entries()) {
-        JsArray<String> pair = new JsArray<>();
-        pair.push(entry.getKey());
-        pair.push(entry.getValue());
-        array.push(pair);
-      }
-      if (array.getLength() > 0) {
-        object.set(key, array);
-      }
-      return this;
-    }
-
-    SparseObject set(String key, String value) {
-      if (value != null && !value.isEmpty()) {
-        object.set(key, value);
-      }
-      return this;
-    }
-
-    SparseObject set(String key, boolean value) {
-      if (value) {
-        object.set(key, value);
-      }
-      return this;
-    }
-  }
 }
