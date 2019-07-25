@@ -145,7 +145,8 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
 
     // TODO(lharker): we should report this error in typechecking, not during transpilation, so
     // that it also occurs when natively typechecking ES6.
-    if (paramTypeAnnotation != null && paramTypeAnnotation.getRoot().getToken() != Token.ELLIPSIS) {
+    if (paramTypeAnnotation != null
+        && paramTypeAnnotation.getRoot().getToken() != Token.ITER_REST) {
       compiler.report(JSError.make(restParam, BAD_REST_PARAMETER_ANNOTATION));
     }
 

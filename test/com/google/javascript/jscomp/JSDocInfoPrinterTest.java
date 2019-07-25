@@ -142,13 +142,13 @@ public final class JSDocInfoPrinterTest {
     info = builder.buildAndReset();
     assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/**\n * @param {number=} foo\n */\n");
 
-    builder.recordParameter("foo",
-        new JSTypeExpression(new Node(Token.ELLIPSIS, IR.string("number")), "<testParam>"));
+    builder.recordParameter(
+        "foo", new JSTypeExpression(new Node(Token.ITER_REST, IR.string("number")), "<testParam>"));
     info = builder.buildAndReset();
     assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/**\n * @param {...number} foo\n */\n");
 
-    builder.recordParameter("foo",
-        new JSTypeExpression(new Node(Token.ELLIPSIS, IR.empty()), "<testParam>"));
+    builder.recordParameter(
+        "foo", new JSTypeExpression(new Node(Token.ITER_REST, IR.empty()), "<testParam>"));
     info = builder.buildAndReset();
     assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/**\n * @param {...} foo\n */\n");
 
@@ -200,8 +200,8 @@ public final class JSDocInfoPrinterTest {
     JSDocInfo info = builder.buildAndReset();
     assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/**\n * @return {(number|string)}\n */\n");
 
-    builder.recordParameter("foo",
-        new JSTypeExpression(new Node(Token.ELLIPSIS, IR.string("number")), "<testTypes>"));
+    builder.recordParameter(
+        "foo", new JSTypeExpression(new Node(Token.ITER_REST, IR.string("number")), "<testTypes>"));
     info = builder.buildAndReset();
     assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/**\n * @param {...number} foo\n */\n");
     builder.recordThrowType(new JSTypeExpression(new Node(Token.STAR), "<testTypes>"));

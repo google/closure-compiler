@@ -480,7 +480,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     Node type = n.getDeclaredTypeExpression();
     boolean hasColonType = type != null;
     if (n.isRest() && hasColonType) {
-      type = new Node(Token.ELLIPSIS, convertWithLocation(type.removeFirstChild()));
+      type = new Node(Token.ITER_REST, convertWithLocation(type.removeFirstChild()));
     } else if (n.isMemberVariableDef()) {
       if (type != null) {
         type = maybeProcessOptionalProperty(n, type);
@@ -702,10 +702,10 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
           Node paramType = param.getDeclaredTypeExpression();
           if (param.isRest()) {
             if (paramType == null) {
-              paramType = new Node(Token.ELLIPSIS, new Node(Token.QMARK));
+                paramType = new Node(Token.ITER_REST, new Node(Token.QMARK));
             } else {
-              paramType = new Node(Token.ELLIPSIS,
-                  convertWithLocation(paramType.getFirstChild()));
+                paramType =
+                    new Node(Token.ITER_REST, convertWithLocation(paramType.getFirstChild()));
             }
           } else {
             paramType = maybeProcessOptionalParameter(param,

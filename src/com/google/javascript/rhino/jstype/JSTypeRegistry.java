@@ -1978,7 +1978,7 @@ public class JSTypeRegistry implements Serializable {
             createFromTypeNodesInternal(
                 n.getFirstChild(), sourceName, scope, recordUnresolvedTypes));
 
-      case ELLIPSIS: // Var args
+      case ITER_REST: // Var args
         return createFromTypeNodesInternal(
             n.getFirstChild(), sourceName, scope, recordUnresolvedTypes);
 
@@ -2134,7 +2134,7 @@ public class JSTypeRegistry implements Serializable {
 
         if (current.getToken() == Token.PARAM_LIST) {
           for (Node arg = current.getFirstChild(); arg != null; arg = arg.getNext()) {
-            if (arg.getToken() == Token.ELLIPSIS) {
+            if (arg.getToken() == Token.ITER_REST) {
               if (!arg.hasChildren()) {
                 paramBuilder.addVarArgs(getNativeType(UNKNOWN_TYPE));
               } else {

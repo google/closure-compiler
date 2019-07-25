@@ -1628,7 +1628,7 @@ public final class JsDocInfoParser {
       case STAR:
         return "*";
 
-      case ELLIPSIS:
+      case ITER_REST:
         return "...";
 
       case EQUALS:
@@ -1984,12 +1984,12 @@ public final class JsDocInfoParser {
    */
   private Node parseParamTypeExpression(JsDocToken token) {
     boolean restArg = false;
-    if (token == JsDocToken.ELLIPSIS) {
+    if (token == JsDocToken.ITER_REST) {
       token = next();
       if (token == JsDocToken.RIGHT_CURLY) {
         restoreLookAhead(token);
         // EMPTY represents the UNKNOWN type in the Type AST.
-        return wrapNode(Token.ELLIPSIS, IR.empty());
+        return wrapNode(Token.ITER_REST, IR.empty());
       }
       restArg = true;
     }
@@ -1998,7 +1998,7 @@ public final class JsDocInfoParser {
     if (typeNode != null) {
       skipEOLs();
       if (restArg) {
-        typeNode = wrapNode(Token.ELLIPSIS, typeNode);
+        typeNode = wrapNode(Token.ITER_REST, typeNode);
       } else if (match(JsDocToken.EQUALS)) {
         next();
         skipEOLs();
@@ -2393,16 +2393,16 @@ public final class JsDocInfoParser {
           token = next();
         }
 
-        if (token == JsDocToken.ELLIPSIS) {
+        if (token == JsDocToken.ITER_REST) {
           // In the latest ES4 proposal, there are no type constraints allowed
           // on variable arguments. We support the old syntax for backwards
           // compatibility, but we should gradually tear it out.
           skipEOLs();
           if (match(JsDocToken.RIGHT_PAREN)) {
-            paramType = newNode(Token.ELLIPSIS);
+            paramType = newNode(Token.ITER_REST);
           } else {
             skipEOLs();
-            paramType = wrapNode(Token.ELLIPSIS, parseTypeExpression(next()));
+            paramType = wrapNode(Token.ITER_REST, parseTypeExpression(next()));
             skipEOLs();
           }
 

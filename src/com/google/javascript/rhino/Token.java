@@ -224,7 +224,6 @@ public enum Token {
   STAR,
   EOC,
   QMARK, // type is nullable or unknown
-  ELLIPSIS,
   BANG,
   EQUALS,
   LB, // left brackets
@@ -266,7 +265,6 @@ public enum Token {
       case CONST:
       case CONTINUE:
       case DEBUGGER:
-      case ELLIPSIS:
       case EOC:
       case EQUALS:
       case FOR:

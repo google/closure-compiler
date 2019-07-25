@@ -90,7 +90,7 @@ public final class JSTypeExpression implements Serializable {
    * @return Whether this expression denotes a rest args {@code @param}.
    */
   public boolean isVarArgs() {
-    return root.getToken() == Token.ELLIPSIS;
+    return root.getToken() == Token.ITER_REST;
   }
 
   /** Evaluates the type expression into a {@code JSType} object. */

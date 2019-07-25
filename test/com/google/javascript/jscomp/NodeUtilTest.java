@@ -3139,7 +3139,7 @@ public final class NodeUtilTest {
       Node ast = parse("/** @param {...number} x */ function f(...x) {}");
       Node x = getNameNode(ast, "x");
       JSTypeExpression typeExpr = NodeUtil.getDeclaredTypeExpression(x);
-      assertNode(typeExpr.getRoot()).hasType(Token.ELLIPSIS);
+      assertNode(typeExpr.getRoot()).hasType(Token.ITER_REST);
       assertThat(typeExpr.getRoot().getFirstChild().getString()).isEqualTo("number");
     }
 

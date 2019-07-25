@@ -37,13 +37,13 @@ enum JsDocToken {
   RIGHT_PAREN,
   COMMA,  // comma operator
   COLON,
+  ITER_REST,
   // JsDoc-only tokens
   ANNOTATION,
   PIPE,
   STAR,
   EOC,
   QMARK,
-  ELLIPSIS,
   BANG,
   EQUALS;
 }

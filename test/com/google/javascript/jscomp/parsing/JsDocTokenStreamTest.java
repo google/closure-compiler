@@ -21,11 +21,11 @@ import static com.google.javascript.jscomp.parsing.JsDocToken.ANNOTATION;
 import static com.google.javascript.jscomp.parsing.JsDocToken.BANG;
 import static com.google.javascript.jscomp.parsing.JsDocToken.COLON;
 import static com.google.javascript.jscomp.parsing.JsDocToken.COMMA;
-import static com.google.javascript.jscomp.parsing.JsDocToken.ELLIPSIS;
 import static com.google.javascript.jscomp.parsing.JsDocToken.EOC;
 import static com.google.javascript.jscomp.parsing.JsDocToken.EOF;
 import static com.google.javascript.jscomp.parsing.JsDocToken.EOL;
 import static com.google.javascript.jscomp.parsing.JsDocToken.EQUALS;
+import static com.google.javascript.jscomp.parsing.JsDocToken.ITER_REST;
 import static com.google.javascript.jscomp.parsing.JsDocToken.LEFT_ANGLE;
 import static com.google.javascript.jscomp.parsing.JsDocToken.LEFT_CURLY;
 import static com.google.javascript.jscomp.parsing.JsDocToken.LEFT_PAREN;
@@ -125,8 +125,8 @@ public final class JsDocTokenStreamTest {
 
   @Test
   public void testJsDocTokenization7() {
-    List<JsDocToken> tokens = ImmutableList.of(
-        ELLIPSIS, ELLIPSIS, ELLIPSIS, ELLIPSIS, ELLIPSIS, LEFT_ANGLE, EOC);
+    List<JsDocToken> tokens =
+        ImmutableList.of(ITER_REST, ITER_REST, ITER_REST, ITER_REST, ITER_REST, LEFT_ANGLE, EOC);
     List<String> strings = ImmutableList.of();
 
     testJSDocTokenStream("................<*/", tokens, strings);
@@ -188,7 +188,7 @@ public final class JsDocTokenStreamTest {
 
   @Test
   public void testJsDocTokenization12() {
-    List<JsDocToken> tokens = ImmutableList.of(STRING, ELLIPSIS, EOC);
+    List<JsDocToken> tokens = ImmutableList.of(STRING, ITER_REST, EOC);
     List<String> strings = ImmutableList.of("function");
 
     testJSDocTokenStream("function ...*/", tokens, strings);
@@ -196,7 +196,7 @@ public final class JsDocTokenStreamTest {
 
   @Test
   public void testJsDocTokenization13() {
-    List<JsDocToken> tokens = ImmutableList.of(ELLIPSIS, LEFT_SQUARE, STRING, RIGHT_SQUARE, EOC);
+    List<JsDocToken> tokens = ImmutableList.of(ITER_REST, LEFT_SQUARE, STRING, RIGHT_SQUARE, EOC);
     List<String> strings = ImmutableList.of("number");
 
     testJSDocTokenStream("...[number]*/", tokens, strings);
@@ -204,7 +204,7 @@ public final class JsDocTokenStreamTest {
 
   @Test
   public void testJsDocTokenization14() {
-    // Since ES4 type parsing only requires to parse an ellipsis when it is
+    // Since ES4 type parsing only requires to parse an ITER_REST when it is
     // followed by a comma (,) we are allowing this case to parse this way.
     // This is a simplification of the tokenizer, but the extra complexity is
     // never used.
@@ -216,8 +216,7 @@ public final class JsDocTokenStreamTest {
 
   @Test
   public void testJsDocTokenization15() {
-    List<JsDocToken> tokens = ImmutableList.of(
-        STRING, LEFT_SQUARE, STRING, COMMA, ELLIPSIS, EOC);
+    List<JsDocToken> tokens = ImmutableList.of(STRING, LEFT_SQUARE, STRING, COMMA, ITER_REST, EOC);
     List<String> strings = ImmutableList.of("foo", "bar");
 
     testJSDocTokenStream("foo[ bar,...*/", tokens, strings);
@@ -229,8 +228,8 @@ public final class JsDocTokenStreamTest {
 
   @Test
   public void testJsDocTokenization16() {
-    List<JsDocToken> tokens = ImmutableList.of(
-        STRING, COLON, COLON, COLON, ELLIPSIS, STRING, COLON, STRING, EOC);
+    List<JsDocToken> tokens =
+        ImmutableList.of(STRING, COLON, COLON, COLON, ITER_REST, STRING, COLON, STRING, EOC);
     List<String> strings = ImmutableList.of("foo", "bar", "bar2");
 
     testJSDocTokenStream("foo:::...bar:bar2*/", tokens, strings);

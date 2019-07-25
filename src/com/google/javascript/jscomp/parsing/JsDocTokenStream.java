@@ -145,7 +145,7 @@ public class JsDocTokenStream {
             if (c == '.') {
               c = getChar();
               if (c == '.') {
-                return JsDocToken.ELLIPSIS;
+                return JsDocToken.ITER_REST;
               } else {
                 addToString('.');
               }

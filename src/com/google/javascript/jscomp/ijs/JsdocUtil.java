@@ -134,7 +134,7 @@ final class JsdocUtil {
         }
         typeAst = typeRoot;
         break;
-      case ELLIPSIS:
+      case ITER_REST:
         {
           Node newType = new Node(Token.BANG);
           Node array = IR.string("Array");
