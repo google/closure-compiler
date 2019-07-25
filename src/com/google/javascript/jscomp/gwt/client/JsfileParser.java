@@ -34,7 +34,6 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.gwt.client.Util.JsArray;
 import com.google.javascript.jscomp.gwt.client.Util.JsObject;
-import com.google.javascript.jscomp.gwt.client.Util.JsRegExp;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -43,6 +42,8 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -184,14 +185,11 @@ public class JsfileParser {
       //   2. Support custom annotations (may already be done?)
       //   3. Fix up existing code so that all these annotations are in @fileoverview
       //   4. Change this code to simply inspect the script's JSDocInfo instead of re-parsing
-      JsRegExp re = new JsRegExp(
-          ANNOTATION_RE,
-          "g");
-      JsRegExp.Match match;
       List<CommentAnnotation> out = new ArrayList<>();
-      while ((match = re.exec(comment)) != null) {
-        String name = match.get(ANNOTATION_NAME_GROUP);
-        String value = Strings.nullToEmpty(match.get(ANNOTATION_VALUE_GROUP));
+      Matcher matcher = ANNOTATION_RE.matcher(comment);
+      while (matcher.find()) {
+        String name = matcher.group(ANNOTATION_NAME_GROUP);
+        String value = Strings.nullToEmpty(matcher.group(ANNOTATION_VALUE_GROUP));
         out.add(new CommentAnnotation(name, value));
       }
       return out;
@@ -199,8 +197,9 @@ public class JsfileParser {
 
     // Regex for a JSDoc annotation with an `@name` and an optional brace-delimited `{value}`.
     // The `@` should not match the middle of a word.
-    private static final String ANNOTATION_RE =
-        "(?:[^a-zA-Z0-9_$]|^)(@[a-zA-Z]+)(?:\\s*\\{\\s*([^}\\t\\n\\v\\f\\r ]+)\\s*\\})?";
+    private static final Pattern ANNOTATION_RE =
+        Pattern.compile(
+            "(?:[^a-zA-Z0-9_$]|^)(@[a-zA-Z]+)(?:\\s*\\{\\s*([^}\\t\\n\\v\\f\\r ]+)\\s*\\})?");
     private static final int ANNOTATION_NAME_GROUP = 1;
     private static final int ANNOTATION_VALUE_GROUP = 2;
   }

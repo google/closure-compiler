@@ -378,6 +378,35 @@ an encoding of structured data.</td>
   </tr>
 </table>
 
+### RE2/J
+
+<table>
+  <tr>
+    <td>URL</td>
+    <td>https://github.com/google/re2j</td>
+  </tr>
+
+  <tr>
+    <td>Version</td>
+    <td>1.3</td>
+  </tr>
+
+  <tr>
+    <td>License</td>
+    <td>New BSD License</td>
+  </tr>
+
+  <tr>
+    <td>Description</td>
+    <td>Linear time regular expression matching in Java.</td>
+  </tr>
+
+  <tr>
+    <td>Local Modifications</td>
+    <td>None</td>
+  </tr>
+</table>
+
 ### Truth
 
 <table>
