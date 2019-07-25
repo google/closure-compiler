@@ -24,9 +24,10 @@
 
 
 /**
- * @param {!Array<!Object>} frames
+ * @param {!Object} frames
  * @param {(number|KeyframeAnimationOptions)=} options
  * @return {!Animation}
+ * @see https://www.w3.org/TR/web-animations/#the-animatable-interface-mixin
  */
 Element.prototype.animate = function(frames, options) {};
 
@@ -181,10 +182,40 @@ AnimationEffectTimingProperties.prototype.direction;
 /** @type {string|undefined} */
 AnimationEffectTimingProperties.prototype.easing;
 
+/**
+ * @enum {string}
+ * @see https://www.w3.org/TR/web-animations/#the-iterationcompositeoperation-enumeration
+ */
+var IterationCompositeOperation  = {
+  REPLACE: '',
+  ACCUMULATE: '',
+};
+
+/**
+ * @enum {string}
+ * @see https://www.w3.org/TR/web-animations/#the-compositeoperation-enumeration
+ */
+var CompositeOperation  = {
+  REPLACE: '',
+  ADD: '',
+  ACCUMULATE: '',
+};
 
 /**
  * @record
  * @extends {AnimationEffectTimingProperties}
+ */
+var KeyframeEffectOptions = function() {};
+
+/** @type {!IterationCompositeOperation|undefined} */
+KeyframeEffectOptions.prototype.iterationComposite;
+
+/** @type {!CompositeOperation|undefined} */
+KeyframeEffectOptions.prototype.composite;
+
+/**
+ * @record
+ * @extends {KeyframeEffectOptions}
  */
 var KeyframeAnimationOptions = function() {};
 
