@@ -183,34 +183,21 @@ AnimationEffectTimingProperties.prototype.direction;
 AnimationEffectTimingProperties.prototype.easing;
 
 /**
- * @enum {string}
- * @see https://www.w3.org/TR/web-animations/#the-iterationcompositeoperation-enumeration
- */
-var IterationCompositeOperation  = {
-  REPLACE: '',
-  ACCUMULATE: '',
-};
-
-/**
- * @enum {string}
- * @see https://www.w3.org/TR/web-animations/#the-compositeoperation-enumeration
- */
-var CompositeOperation  = {
-  REPLACE: '',
-  ADD: '',
-  ACCUMULATE: '',
-};
-
-/**
  * @record
  * @extends {AnimationEffectTimingProperties}
  */
 var KeyframeEffectOptions = function() {};
 
-/** @type {!IterationCompositeOperation|undefined} */
+/**
+ * Possible values: 'replace', 'accumulate'
+ * @type {string|undefined}
+ */
 KeyframeEffectOptions.prototype.iterationComposite;
 
-/** @type {!CompositeOperation|undefined} */
+/**
+ * Possible values: 'replace', 'add', 'accumulate'
+ * @type {string|undefined}
+ */
 KeyframeEffectOptions.prototype.composite;
 
 /**
