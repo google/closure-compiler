@@ -982,7 +982,6 @@ public final class AstValidator implements CompilerPass {
     validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
-        case SPREAD:
         case ITER_SPREAD:
           validateSpread(c);
           break;
@@ -1015,7 +1014,6 @@ public final class AstValidator implements CompilerPass {
    */
   private void validateRest(Token contextType, Node n) {
     switch (n.getToken()) {
-      case REST:
       case ITER_REST:
       case OBJECT_REST:
         break;
@@ -1032,7 +1030,6 @@ public final class AstValidator implements CompilerPass {
 
   private void validateSpread(Node n) {
     switch (n.getToken()) {
-      case SPREAD:
       case ITER_SPREAD:
       case OBJECT_SPREAD:
         break;
@@ -1067,7 +1064,6 @@ public final class AstValidator implements CompilerPass {
     validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
-        case SPREAD:
         case ITER_SPREAD:
           validateSpread(c);
           break;
@@ -1179,7 +1175,6 @@ public final class AstValidator implements CompilerPass {
         case DEFAULT_VALUE:
           validateDefaultValue(type, c);
           break;
-        case REST:
         case ITER_REST:
           validateArrayPatternRest(type, c);
           break;
@@ -1200,7 +1195,6 @@ public final class AstValidator implements CompilerPass {
         case STRING_KEY:
           validateObjectPatternStringKey(type, c);
           break;
-        case REST:
         case OBJECT_REST:
           validateObjectPatternRest(type, c);
           break;
@@ -1505,7 +1499,6 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.ARRAYLIT, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
-        case SPREAD:
         case ITER_SPREAD:
           validateSpread(c);
           break;
@@ -1544,7 +1537,6 @@ public final class AstValidator implements CompilerPass {
       case COMPUTED_PROP:
         validateObjectLitComputedPropKey(n);
         return;
-      case SPREAD:
       case OBJECT_SPREAD:
         validateSpread(n);
         return;

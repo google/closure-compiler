@@ -1074,7 +1074,6 @@ class RemoveUnusedCode implements CompilerPass {
           traverseIndirectAssignment(elem, elem, scope);
           break;
 
-        case REST:
         case ITER_REST:
         case OBJECT_REST:
           traverseIndirectAssignment(elem, elem.getOnlyChild(), scope);
@@ -1481,7 +1480,6 @@ class RemoveUnusedCode implements CompilerPass {
         return param;
       case DEFAULT_VALUE:
         return nameOfParam(param.getFirstChild());
-      case REST:
       case ITER_REST:
         return nameOfParam(param.getOnlyChild());
       case ARRAY_PATTERN:

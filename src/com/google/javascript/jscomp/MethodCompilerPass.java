@@ -212,7 +212,6 @@ abstract class MethodCompilerPass implements CompilerPass {
                 nonMethodProperties.add(key.getString());
                 break;
               case COMPUTED_PROP: // complicated
-              case SPREAD:
               case OBJECT_SPREAD:
                 break;
               default:

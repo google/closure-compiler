@@ -100,7 +100,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   @Override
   public void visit(NodeTraversal traversal, Node current, Node parent) {
     switch (current.getToken()) {
-      case REST:
       case ITER_REST:
         visitRestParam(traversal, current, parent);
         break;

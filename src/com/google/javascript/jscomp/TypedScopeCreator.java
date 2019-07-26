@@ -2179,7 +2179,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             case CATCH:
               return currentScope;
 
-            case REST:
             case ITER_REST:
             case OBJECT_REST:
               // TODO(bradfordcsmith): Handle array destructuring REST
@@ -3220,7 +3219,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           declareSingleParameterName(isInferred, astParameter, paramType);
           break;
 
-        case REST:
         case ITER_REST: // function f(...x) {}
           // rest parameter is actually an array of the type specified in the JSDoc
           Node param = astParameter.getFirstChild();

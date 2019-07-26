@@ -89,17 +89,8 @@ public class IR {
     return func;
   }
 
-  public static Node paramList() {
-    return new Node(Token.PARAM_LIST);
-  }
-
-  public static Node paramList(Node param) {
-    checkState(param.isName() || param.isRest());
-    return new Node(Token.PARAM_LIST, param);
-  }
-
   public static Node paramList(Node... params) {
-    Node paramList = paramList();
+    Node paramList = new Node(Token.PARAM_LIST);
     for (Node param : params) {
       checkState(param.isName() || param.isRest());
       paramList.addChildToBack(param);
@@ -630,12 +621,6 @@ public class IR {
     Node k = stringKey(s, value);
     k.putBooleanProp(Node.QUOTED_PROP, true);
     return k;
-  }
-
-  @Deprecated
-  public static Node rest(Node target) {
-    checkState(target.isValidAssignmentTarget(), target);
-    return new Node(Token.ITER_REST, target);
   }
 
   public static Node iterRest(Node target) {
