@@ -493,16 +493,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     }
 
     // Find the IIFE call and function nodes
-    Node fnc;
-    if (call.getFirstChild().isFunction()) {
-      fnc = n.getFirstFirstChild();
-    } else if (call.getFirstChild().isGetProp()
-        && call.getFirstFirstChild().isFunction()
-        && call.getFirstFirstChild().getNext().matchesQualifiedName("call")) {
-      fnc = call.getFirstFirstChild();
-    } else {
+
+    Node callTarget = call.getFirstChild();
+    if (!callTarget.isFunction()) {
       return;
     }
+
+    Node fnc = callTarget;
 
     Node params = NodeUtil.getFunctionParameters(fnc);
     Node moduleParam = null;
@@ -526,12 +523,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       return;
     }
 
+    Node argCallTarget = arg.getFirstChild();
     if (arg.isCall()
-        && arg.getFirstChild().isCall()
-        && isCommonJsImport(arg.getFirstChild())
-        && arg.getSecondChild().isName()
-        && arg.getSecondChild().getString().equals(MODULE)) {
-      String importPath = getCommonJsImportPath(arg.getFirstChild());
+        && argCallTarget.isCall()
+        && isCommonJsImport(argCallTarget)
+        && argCallTarget.getNext().matchesName(MODULE)) {
+      String importPath = getCommonJsImportPath(argCallTarget);
 
       ModulePath modulePath =
           compiler
