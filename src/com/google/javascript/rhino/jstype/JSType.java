@@ -668,17 +668,6 @@ public abstract class JSType implements Serializable {
     return !checkEquivalenceHelper(that, EquivalenceMethod.DATA_FLOW, EqCache.create());
   }
 
-  /**
-   * An equivalence visitor.
-   */
-  @Deprecated
-  boolean checkEquivalenceHelper(final JSType that, EquivalenceMethod eqMethod) {
-    return checkEquivalenceHelper(
-        that,
-        eqMethod,
-        EqCache.create());
-  }
-
   boolean checkEquivalenceHelper(
       final @Nullable JSType that, EquivalenceMethod eqMethod, EqCache eqCache) {
     if (that == null) {
