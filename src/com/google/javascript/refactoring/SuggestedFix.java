@@ -393,25 +393,7 @@ public final class SuggestedFix {
     public Builder replaceRange(Node first, Node last, String newContent) {
       checkState(first.getParent() == last.getParent());
 
-      int start;
-      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(first);
-      String associatedNonJSDocComment = first.getNonJSDocCommentString();
-      if (jsdoc == null) {
-        start = first.getSourceOffset();
-        if (!"".equals(associatedNonJSDocComment)) {
-          start = start - associatedNonJSDocComment.length() - 1;
-        }
-      } else {
-        start = jsdoc.getOriginalCommentPosition();
-        if (!"".equals(associatedNonJSDocComment)) {
-          if (start + jsdoc.getOriginalCommentString().length()
-              > first.getSourceOffset() - associatedNonJSDocComment.length()) {
-            // nonJSDoc comment is placed before the JSDoc comment. Update start position.
-            start = start - associatedNonJSDocComment.length() - 1;
-          }
-        }
-      }
-
+      int start = getStartPositionForNodeConsideringComments(first);
       int end = last.getSourceOffset() + last.getLength();
       int length = end - start;
       replacements.put(
@@ -957,5 +939,31 @@ public final class SuggestedFix {
           && node.getFirstFirstChild() != null
           && Matchers.googRequire().matches(node.getFirstFirstChild(), metadata);
     }
+  }
+
+  /**
+   * Helper function to return the source offset of this node considering that JSDoc comments,
+   * non-JDDoc comments, or both may or may not be attached.
+   */
+  private static int getStartPositionForNodeConsideringComments(Node node) {
+    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(node);
+    String associatedNonJSDocComment = node.getNonJSDocCommentString();
+    int start;
+    if (jsdoc == null) {
+      start = node.getSourceOffset();
+      if (!"".equals(associatedNonJSDocComment)) {
+        start = start - associatedNonJSDocComment.length() - 1;
+      }
+    } else {
+      start = jsdoc.getOriginalCommentPosition();
+      if (!"".equals(associatedNonJSDocComment)) {
+        if (start + jsdoc.getOriginalCommentString().length()
+            > node.getSourceOffset() - associatedNonJSDocComment.length()) {
+          // nonJSDoc comment is placed before the JSDoc comment. Update start position.
+          start = start - associatedNonJSDocComment.length() - 1;
+        }
+      }
+    }
+    return start;
   }
 }
