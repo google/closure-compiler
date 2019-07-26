@@ -100,6 +100,11 @@ public final class ParserRunner {
     return reservedVars;
   }
 
+  public static Set<String> getSuppressionNames() {
+    initResourceConfig();
+    return suppressionNames;
+  }
+
   private static synchronized void initResourceConfig() {
     if (annotationNames != null) {
       return;
