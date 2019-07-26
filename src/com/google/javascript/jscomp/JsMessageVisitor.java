@@ -726,11 +726,11 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    *  |
    *  |-- string 'Hi {$userName}! Welcome to {$product}.'
    *  +-- objlit
-   *      |-- string 'userName'
-   *      |-- name 'someUserName'
-   *      |-- string 'product'
-   *      +-- call
-   *          +-- name 'getProductName'
+   *      |-- string_key 'userName'
+   *      |   +-- name 'someUserName'
+   *      +-- string_key 'product'
+   *          +-- call
+   *              +-- name 'getProductName'
    * </pre>
    *
    * @param builder the message builder
