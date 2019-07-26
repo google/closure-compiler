@@ -193,6 +193,18 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         break;
 
       case ASSIGN:
+      case ASSIGN_BITOR:
+      case ASSIGN_BITXOR:
+      case ASSIGN_BITAND:
+      case ASSIGN_LSH:
+      case ASSIGN_RSH:
+      case ASSIGN_URSH:
+      case ASSIGN_ADD:
+      case ASSIGN_SUB:
+      case ASSIGN_MUL:
+      case ASSIGN_DIV:
+      case ASSIGN_MOD:
+      case ASSIGN_EXPONENT:
       case GETPROP:
         if (n.getParent().isExprResult()) {
           return;

@@ -970,6 +970,11 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testWarning("/** @suppress {uselessCode} */ goog.require('unused.Class');", MISPLACED_SUPPRESS);
     testWarning("const {/** @suppress {duplicate} */ Foo} = foo();", MISPLACED_SUPPRESS);
     testWarning("foo(/** @suppress {duplicate} */ ns.x = 7);", MISPLACED_SUPPRESS);
+
+    testSame("/** @suppress {visibility} */ a.x_ = 0;");
+    testSame("/** @suppress {visibility} */ a.x_ += 0;");
+    testSame("/** @suppress {visibility} */ a.x_ *= 0;");
+    testSame("/** @suppress {visibility} */ a.x_ /= 0;");
   }
 
   @Test
