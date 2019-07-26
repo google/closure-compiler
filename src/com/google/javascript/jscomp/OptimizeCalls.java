@@ -421,9 +421,7 @@ class OptimizeCalls implements CompilerPass {
         case GETELEM:
           // Ignore quoted keys.
           // TODO(johnlenz): support symbols.
-        case REST:
         case OBJECT_REST:
-        case SPREAD:
         case OBJECT_SPREAD:
           // Don't worry about invisible accesses using these. To be invoked there would need to be
           // downstream references that use the actual name. We'd see those.

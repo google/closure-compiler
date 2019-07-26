@@ -351,9 +351,7 @@ class RenameProperties implements CompilerPass {
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             switch (key.getToken()) {
               case COMPUTED_PROP: // We don't want to rename computed properties
-              case REST:
               case OBJECT_REST:
-              case SPREAD:
               case OBJECT_SPREAD:
                 break;
 

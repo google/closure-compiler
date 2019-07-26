@@ -553,7 +553,6 @@ class DisambiguateProperties implements CompilerPass {
         switch (child.getToken()) {
           case COMPUTED_PROP:
             // These won't be renamed due to our assumptions. Ignore them.
-          case SPREAD:
           case OBJECT_SPREAD:
             // Ignore properties added via spread. All properties accessed from object literals are
             // invalidated regardless, so we don't have to explicitly do that here. Additionally,

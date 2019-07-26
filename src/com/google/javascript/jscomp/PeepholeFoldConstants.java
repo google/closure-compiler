@@ -1521,7 +1521,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node value = null;
     for (Node c = left.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
-        case SPREAD:
         case OBJECT_SPREAD:
           // Reset the search because spread could overwrite any previous result.
           key = null;

@@ -404,7 +404,6 @@ public class CodeGenerator {
           }
           break;
         }
-      case REST:
       case ITER_REST:
       case OBJECT_REST:
         add("...");
@@ -412,7 +411,6 @@ public class CodeGenerator {
         maybeAddTypeDecl(n);
         break;
 
-      case SPREAD:
       case ITER_SPREAD:
       case OBJECT_SPREAD:
         add("...");
