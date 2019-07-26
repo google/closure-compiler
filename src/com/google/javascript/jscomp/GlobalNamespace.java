@@ -405,6 +405,7 @@ class GlobalNamespace
             case ARRAY_PATTERN:
             case DEFAULT_VALUE:
             case COMPUTED_PROP:
+            case REST:
             case ITER_REST:
             case OBJECT_REST:
               // This may be a set.
@@ -413,6 +414,7 @@ class GlobalNamespace
                 type = Name.Type.OTHER;
               }
               break;
+            case SPREAD:
             case ITER_SPREAD:
             case OBJECT_SPREAD:
               break; // isSet = false, type = OTHER.
@@ -443,6 +445,7 @@ class GlobalNamespace
                 return;
               case INC:
               case DEC:
+              case SPREAD:
               case ITER_SPREAD:
               case OBJECT_SPREAD:
                 break; // isSet = false, type = OTHER.
@@ -784,6 +787,7 @@ class GlobalNamespace
 
           break;
         case OBJECT_PATTERN: // Handle STRING_KEYS in object patterns.
+        case SPREAD:
         case ITER_SPREAD:
         case OBJECT_SPREAD:
         default:

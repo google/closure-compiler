@@ -181,8 +181,10 @@ public enum Token {
   MODULE_BODY,
   DYNAMIC_IMPORT,
 
+  REST, // TODO(b/128706030): Delete REST.
   ITER_REST, // Rests that use the iterator protocol.
   OBJECT_REST, // Rests that get object properties.
+  SPREAD, // TODO(b/128706030): Delete SPREAD.
   ITER_SPREAD, // Spreads that use the iterator protocol.
   OBJECT_SPREAD, // Spreads that get object properties.
 

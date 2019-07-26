@@ -796,6 +796,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     switch (n.getToken()) {
       case THIS:
       case SUPER:
+      case SPREAD:
       case ITER_SPREAD:
       case OBJECT_SPREAD:
         return false;

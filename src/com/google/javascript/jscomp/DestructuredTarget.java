@@ -210,6 +210,7 @@ final class DestructuredTarget {
         builder.setDefaultValue(destructuringChild.getSecondChild());
         break;
 
+      case REST:
       case ITER_REST:
       case OBJECT_REST:
         // const [...x] = ...

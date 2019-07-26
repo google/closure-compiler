@@ -463,6 +463,7 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
           case CLASS:
           case PARAM_LIST:
           case DEFAULT_VALUE:
+          case REST:
           case ITER_REST:
           case OBJECT_REST:
           case ARRAY_PATTERN:

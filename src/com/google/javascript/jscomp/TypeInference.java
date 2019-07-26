@@ -725,6 +725,7 @@ class TypeInference
         traverseSuper(n);
         break;
 
+      case SPREAD:
       case ITER_SPREAD:
       case OBJECT_SPREAD:
         // The spread itself has no type, but the expression it contains does and may affect

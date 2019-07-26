@@ -292,8 +292,10 @@ class AnalyzePrototypeProperties implements CompilerPass {
           for (Node propNode = n.getFirstChild(); propNode != null; propNode = propNode.getNext()) {
             switch (propNode.getToken()) {
               case COMPUTED_PROP:
+              case REST:
               case ITER_REST:
               case OBJECT_REST:
+              case SPREAD:
               case ITER_SPREAD:
               case OBJECT_SPREAD:
                 break;

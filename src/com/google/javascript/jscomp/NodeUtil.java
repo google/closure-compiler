@@ -704,6 +704,7 @@ public final class NodeUtil {
               }
               break;
 
+            case SPREAD:
             case OBJECT_SPREAD:
               if (!isLiteralValue(child.getOnlyChild(), includeFunctions)) {
                 return false;
@@ -1044,6 +1045,7 @@ public final class NodeUtil {
 
     final Node iterable;
     switch (node.getToken()) {
+      case SPREAD:
       case ITER_SPREAD:
       case OBJECT_SPREAD:
         switch (parent.getToken()) {
@@ -1072,6 +1074,7 @@ public final class NodeUtil {
         iterable = node.getSecondChild();
         break;
 
+      case REST:
       case ITER_REST:
       case OBJECT_REST:
         switch (parent.getToken()) {
@@ -1275,8 +1278,10 @@ public final class NodeUtil {
       case OBJECTLIT:
       case OBJECT_PATTERN:
       case REGEXP:
+      case REST:
       case ITER_REST:
       case OBJECT_REST:
+      case SPREAD:
       case ITER_SPREAD:
       case OBJECT_SPREAD:
       case STRING:
@@ -2910,6 +2915,7 @@ public final class NodeUtil {
       case VAR:
       case LET:
       case CONST:
+      case REST:
       case ITER_REST:
       case OBJECT_REST:
       case PARAM_LIST:
@@ -3198,6 +3204,7 @@ public final class NodeUtil {
 
     switch (parent.getToken()) {
       case ARRAY_PATTERN: // `b` in `var [b] = ...`
+      case REST:
       case ITER_REST:
       case OBJECT_REST: // `b` in `var [...b] = ...`
         return true;
@@ -3850,6 +3857,7 @@ public final class NodeUtil {
       case DESTRUCTURING_LHS:
       case DEFAULT_VALUE:
       case CATCH:
+      case REST:
       case ITER_REST:
       case OBJECT_REST:
       case CAST:
@@ -4748,6 +4756,7 @@ public final class NodeUtil {
         return true;
       case CAST:
         return evaluatesToLocalValue(value.getFirstChild());
+      case SPREAD:
       case ITER_SPREAD:
       case OBJECT_SPREAD:
         // TODO(johnlenz): remove this case.

@@ -920,6 +920,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case WHILE:
       case FOR:
       case TEMPLATELIT_SUB:
+      case REST:
       case ITER_REST:
       case OBJECT_REST:
       case DESTRUCTURING_LHS:

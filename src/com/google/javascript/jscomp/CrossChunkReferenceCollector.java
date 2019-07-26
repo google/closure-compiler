@@ -384,6 +384,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
               break;
 
             case STRING_KEY:
+            case SPREAD:
             case OBJECT_SPREAD:
               if (!canMoveValue(scope, child.getOnlyChild())) {
                 return false;

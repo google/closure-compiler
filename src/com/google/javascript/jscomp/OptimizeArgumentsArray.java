@@ -285,6 +285,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
           builder.put(index, param.getString());
           break;
 
+        case REST:
         case ITER_REST:
           return builder.build();
 

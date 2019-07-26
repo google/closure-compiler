@@ -806,6 +806,7 @@ class CollapseProperties implements CompilerPass {
         case GETTER_DEF:
         case SETTER_DEF:
         case COMPUTED_PROP:
+        case SPREAD:
         case OBJECT_SPREAD:
           continue;
         case STRING_KEY:
