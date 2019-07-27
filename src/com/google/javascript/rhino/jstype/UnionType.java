@@ -844,144 +844,141 @@ public class UnionType extends JSType {
       if (isAlternateUnknown) {
         areAllUnknownsChecked = areAllUnknownsChecked && alternate.isCheckedUnknownType();
       }
-      if (!isAllType && !isNativeUnknownType) {
-        if (alternate.isUnionType()) {
-          addAlternates(alternate.toMaybeUnionType().getAlternates());
-        } else {
-          if (alternates.size() > maxUnionSize) {
+
+      if (isAllType || isNativeUnknownType) {
+        return this;
+      }
+      if (alternate.isUnionType()) {
+        addAlternates(alternate.toMaybeUnionType().getAlternates());
+        return this;
+      }
+      if (alternates.size() > maxUnionSize) {
+        return this;
+      }
+
+      // Function types are special, because they have their
+      // own bizarre sub-lattice. See the comments on
+      // FunctionType#supAndInf helper and above at functionTypePosition.
+      if (alternate.isFunctionType() && functionTypePosition != -1) {
+        // See the comments on functionTypePosition above.
+        FunctionType other = alternates.get(functionTypePosition).toMaybeFunctionType();
+        FunctionType supremum = alternate.toMaybeFunctionType().supAndInfHelper(other, true);
+        alternates.set(functionTypePosition, supremum);
+        return this;
+      }
+
+      // Look through the alternates we've got so far,
+      // and check if any of them are duplicates of
+      // one another.
+      for (int index = 0; index < alternates.size(); index++) {
+        boolean removeCurrent = false;
+        JSType current = alternates.get(index);
+
+        // Unknown and NoResolved types may just be names that haven't
+        // been resolved yet. So keep these in the union, and just use
+        // equality checking for simple de-duping.
+        if (alternate.isUnknownType()
+            || current.isUnknownType()
+            || alternate.isNoResolvedType()
+            || current.isNoResolvedType()
+            || alternate.hasAnyTemplateTypes()
+            || current.hasAnyTemplateTypes()) {
+          if (alternate.isEquivalentTo(current, false)) {
+            // Alternate is unnecessary.
             return this;
           }
+        } else if (alternate.isTemplatizedType() || current.isTemplatizedType()) {
+          // Because "Foo" and "Foo<?>" are roughly equivalent
+          // templatized types, special care is needed when building the
+          // union. For example:
+          //   Object is consider a subtype of Object<string>
+          // but we want to leave "Object" not "Object<string>" when
+          // building the subtype.
+          //
 
-          // Function types are special, because they have their
-          // own bizarre sub-lattice. See the comments on
-          // FunctionType#supAndInf helper and above at functionTypePosition.
-          if (alternate.isFunctionType() && functionTypePosition != -1) {
-            // See the comments on functionTypePosition above.
-            FunctionType other = alternates.get(functionTypePosition).toMaybeFunctionType();
-            FunctionType supremum = alternate.toMaybeFunctionType().supAndInfHelper(other, true);
-            alternates.set(functionTypePosition, supremum);
-            return this;
-          }
+          // Cases:
+          // 1) alternate:Array<string> and current:Object ==> Object
+          // 2) alternate:Array<string> and current:Array ==> Array
+          // 3) alternate:Object<string> and
+          //    current:Array ==> Array|Object<string>
+          // 4) alternate:Object and current:Array<string> ==> Object
+          // 5) alternate:Array and current:Array<string> ==> Array
+          // 6) alternate:Array and
+          //    current:Object<string> ==> Array|Object<string>
+          // 7) alternate:Array<string> and
+          //    current:Array<number> ==> Array<?>
+          // 8) alternate:Array<string> and
+          //    current:Array<string> ==> Array<string>
+          // 9) alternate:Array<string> and
+          //    current:Object<string> ==> Object<string>|Array<string>
 
-          // Look through the alternates we've got so far,
-          // and check if any of them are duplicates of
-          // one another.
-          int currentIndex = 0;
-          Iterator<JSType> it = alternates.iterator();
-          while (it.hasNext()) {
-            boolean removeCurrent = false;
-            JSType current = it.next();
-
-            // Unknown and NoResolved types may just be names that haven't
-            // been resolved yet. So keep these in the union, and just use
-            // equality checking for simple de-duping.
-            if (alternate.isUnknownType()
-                || current.isUnknownType()
-                || alternate.isNoResolvedType()
-                || current.isNoResolvedType()
-                || alternate.hasAnyTemplateTypes()
-                || current.hasAnyTemplateTypes()) {
-              if (alternate.isEquivalentTo(current, false)) {
-                // Alternate is unnecessary.
-                return this;
+          if (!current.isTemplatizedType()) {
+            if (isSubtype(alternate, current)) {
+              // case 1, 2
+              return this;
               }
-            } else {
+            // case 3: leave current, add alternate
+          } else if (!alternate.isTemplatizedType()) {
+            if (isSubtype(current, alternate)) {
+              // case 4, 5
+              removeCurrent = true;
+            }
+            // case 6: leave current, add alternate
+          } else {
+            checkState(current.isTemplatizedType() && alternate.isTemplatizedType());
+            TemplatizedType templatizedAlternate = alternate.toMaybeTemplatizedType();
+            TemplatizedType templatizedCurrent = current.toMaybeTemplatizedType();
 
-              // Because "Foo" and "Foo<?>" are roughly equivalent
-              // templatized types, special care is needed when building the
-              // union. For example:
-              //   Object is consider a subtype of Object<string>
-              // but we want to leave "Object" not "Object<string>" when
-              // building the subtype.
-              //
-
-              if (alternate.isTemplatizedType() || current.isTemplatizedType()) {
-                // Cases:
-                // 1) alternate:Array<string> and current:Object ==> Object
-                // 2) alternate:Array<string> and current:Array ==> Array
-                // 3) alternate:Object<string> and
-                //    current:Array ==> Array|Object<string>
-                // 4) alternate:Object and current:Array<string> ==> Object
-                // 5) alternate:Array and current:Array<string> ==> Array
-                // 6) alternate:Array and
-                //    current:Object<string> ==> Array|Object<string>
-                // 7) alternate:Array<string> and
-                //    current:Array<number> ==> Array<?>
-                // 8) alternate:Array<string> and
-                //    current:Array<string> ==> Array<string>
-                // 9) alternate:Array<string> and
-                //    current:Object<string> ==> Object<string>|Array<string>
-
-                if (!current.isTemplatizedType()) {
-                  if (isSubtype(alternate, current)) {
-                    // case 1, 2
-                    return this;
-                  }
-                  // case 3: leave current, add alternate
-                } else if (!alternate.isTemplatizedType()) {
-                  if (isSubtype(current, alternate)) {
-                    // case 4, 5
+            if (templatizedCurrent.wrapsSameRawType(templatizedAlternate)) {
+              if (alternate
+                  .getTemplateTypeMap()
+                  .checkEquivalenceHelper(
+                      current.getTemplateTypeMap(),
+                      EquivalenceMethod.IDENTITY,
+                      SubtypingMode.NORMAL)) {
+                // case 8
+                return this;
+              } else {
+                // case 7: replace with a merged alternate specialized on `?`.
+                ObjectType rawType = templatizedCurrent.getReferencedObjTypeInternal();
+                // Providing no type-parameter values specializes `rawType` on `?` by default.
+                alternate = registry.createTemplatizedType(rawType, ImmutableList.of());
                     removeCurrent = true;
                   }
-                  // case 6: leave current, add alternate
-                } else {
-                  checkState(current.isTemplatizedType() && alternate.isTemplatizedType());
-                  TemplatizedType templatizedAlternate = alternate.toMaybeTemplatizedType();
-                  TemplatizedType templatizedCurrent = current.toMaybeTemplatizedType();
-
-                  if (templatizedCurrent.wrapsSameRawType(templatizedAlternate)) {
-                    if (alternate
-                        .getTemplateTypeMap()
-                        .checkEquivalenceHelper(
-                            current.getTemplateTypeMap(),
-                            EquivalenceMethod.IDENTITY,
-                            SubtypingMode.NORMAL)) {
-                      // case 8
-                      return this;
-                    } else {
-                      // case 7: replace with a merged alternate specialized on `?`.
-                      ObjectType rawType = templatizedCurrent.getReferencedObjTypeInternal();
-                      // Providing no type-parameter values specializes `rawType` on `?` by default.
-                      alternate = registry.createTemplatizedType(rawType, ImmutableList.of());
-                      removeCurrent = true;
-                    }
-                  }
-                  // case 9: leave current, add alternate
-                }
-                // Otherwise leave both templatized types.
-              } else if (isSubtype(alternate, current)) {
-                // Alternate is unnecessary.
-                mayRegisterDroppedProperties(alternate, current);
-                return this;
-              } else if (isSubtype(current, alternate)) {
-                // Alternate makes current obsolete
-                mayRegisterDroppedProperties(current, alternate);
-                removeCurrent = true;
-              }
             }
+            // case 9: leave current, add alternate
+          }
+          // Otherwise leave both templatized types.
+        } else if (isSubtype(alternate, current)) {
+          // Alternate is unnecessary.
+          mayRegisterDroppedProperties(alternate, current);
+          return this;
+        } else if (isSubtype(current, alternate)) {
+          // Alternate makes current obsolete
+          mayRegisterDroppedProperties(current, alternate);
+          removeCurrent = true;
+        }
 
-            if (removeCurrent) {
-              it.remove();
+        if (removeCurrent) {
+          alternates.remove(index);
 
-              if (currentIndex == functionTypePosition) {
-                functionTypePosition = -1;
-              } else if (currentIndex < functionTypePosition) {
-                functionTypePosition--;
-                currentIndex--;
-              }
-            }
-            currentIndex++;
+          if (index == functionTypePosition) {
+            functionTypePosition = -1;
+          } else if (index < functionTypePosition) {
+            functionTypePosition--;
           }
 
-          if (alternate.isFunctionType()) {
-            // See the comments on functionTypePosition above.
-            checkState(functionTypePosition == -1);
-            functionTypePosition = alternates.size();
-          }
-
-          alternates.add(alternate);
+          index--;
         }
       }
+
+      if (alternate.isFunctionType()) {
+        // See the comments on functionTypePosition above.
+        checkState(functionTypePosition == -1);
+        functionTypePosition = alternates.size();
+      }
+
+      alternates.add(alternate);
       return this;
     }
 
