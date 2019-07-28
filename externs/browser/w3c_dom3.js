@@ -182,15 +182,6 @@ DOMImplementationSource.prototype.getDOMImplementation = function(features) {};
 DOMImplementationSource.prototype.getDOMImplementationList = function(features) {};
 
 /**
- * @param {string} feature
- * @param {string} version
- * @return {Object}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMImplementation3-getFeature
- * @nosideeffects
- */
-DOMImplementation.prototype.getFeature = function(feature, version) {};
-
-/**
  * @param {Node} externalNode
  * @return {Node}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-adoptNode
@@ -376,15 +367,6 @@ Node.prototype.isEqualNode = function(arg) {};
  * @nosideeffects
  */
 Node.prototype.isSameNode = function(other) {};
-
-/**
- * @param {string} feature
- * @param {string} version
- * @return {boolean}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Level-2-Core-Node-supports
- * @nosideeffects
- */
-Node.prototype.isSupported = function(feature, version) {};
 
 /**
  * @param {string} prefix
