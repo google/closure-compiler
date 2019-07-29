@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.gwt.client;
 
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.deps.JsFileFullParser;
 import com.google.javascript.jscomp.gwt.client.Util.JsArray;
 import com.google.javascript.jscomp.gwt.client.Util.JsObject;
 import java.util.Map;
@@ -70,7 +71,8 @@ public class JsfileParserGwt {
    */
   @JsMethod(namespace = "jscomp")
   public static JsObject<Object> gjd(String code, String filename, @Nullable Reporter reporter) {
-    JsfileParser.FileInfo info = JsfileParser.parse(code, filename, adaptReporter(reporter));
+    JsFileFullParser.FileInfo info =
+        JsFileFullParser.parse(code, filename, adaptReporter(reporter));
     if (info.provideGoog) {
       info.provides.add("goog");
     } else if (info.goog) {
@@ -103,7 +105,7 @@ public class JsfileParserGwt {
     void report(boolean fatal, String message, String sourceName, int line, int lineOffset);
   }
 
-  private static JsfileParser.Reporter adaptReporter(@Nullable Reporter r) {
+  private static JsFileFullParser.Reporter adaptReporter(@Nullable Reporter r) {
     if (r == null) {
       return null;
     }

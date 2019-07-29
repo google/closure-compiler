@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.gwt.client;
+package com.google.javascript.jscomp.deps;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -54,31 +54,32 @@ import javax.annotation.Nullable;
  * goog.provide, goog.module, import/export statements, and JSDoc annotations related to dependency
  * management.
  */
-public class JsfileParser {
-  static final class FileInfo {
-    boolean goog = false;
-    boolean isConfig = false;
-    boolean isExterns = false;
-    boolean provideGoog = false;
-    boolean testonly = false;
+public class JsFileFullParser {
+  /** The dependency information contained in a .js source file. */
+  public static final class FileInfo {
+    public boolean goog = false;
+    public boolean isConfig = false;
+    public boolean isExterns = false;
+    public boolean provideGoog = false;
+    public boolean testonly = false;
 
-    final Set<String> hasSoyDelcalls = new TreeSet<>();
-    final Set<String> hasSoyDeltemplates = new TreeSet<>();
+    public final Set<String> hasSoyDelcalls = new TreeSet<>();
+    public final Set<String> hasSoyDeltemplates = new TreeSet<>();
     // Use a LinkedHashSet as import order matters!
-    final Set<String> importedModules = new LinkedHashSet<>();
-    final List<String> modName = new ArrayList<>();
-    final List<String> mods = new ArrayList<>();
+    public final Set<String> importedModules = new LinkedHashSet<>();
+    public final List<String> modName = new ArrayList<>();
+    public final List<String> mods = new ArrayList<>();
 
     // Note: multiple copies doesn't make much sense, but we report
     // each copy so that calling code can choose how to handle it
-    final Multiset<String> provides = TreeMultiset.create();
-    final Multiset<String> requires = TreeMultiset.create();
-    final Multiset<String> typeRequires = TreeMultiset.create();
-    final Multiset<String> requiresCss = TreeMultiset.create();
-    final Multiset<String> visibility = TreeMultiset.create();
+    public final Multiset<String> provides = TreeMultiset.create();
+    public final Multiset<String> requires = TreeMultiset.create();
+    public final Multiset<String> typeRequires = TreeMultiset.create();
+    public final Multiset<String> requiresCss = TreeMultiset.create();
+    public final Multiset<String> visibility = TreeMultiset.create();
 
-    final Multimap<String, String> customAnnotations = TreeMultimap.create();
-    final Multimap<String, String> loadFlags = TreeMultimap.create();
+    public final Multimap<String, String> customAnnotations = TreeMultimap.create();
+    public final Multimap<String, String> loadFlags = TreeMultimap.create();
   }
 
   /** Represents a single JSDoc annotation, with an optional argument. */

@@ -167,6 +167,15 @@
       <version>1.0.0-beta-1</version>
     </dependency>
 
+    <!-- We need both the binary and the sources jar for RE2/J, since the source code and the GWT
+         configuration file are in the sources jar, but maven-compiler-plugin will also perform a
+         regular build depending on the binary jar. -->
+    <dependency>
+      <groupId>com.google.re2j</groupId>
+      <artifactId>re2j</artifactId>
+      <version>1.3</version>
+    </dependency>
+
     <dependency>
       <groupId>com.google.re2j</groupId>
       <artifactId>re2j</artifactId>
