@@ -1045,19 +1045,7 @@ public final class NodeUtil {
     final Node iterable;
     switch (node.getToken()) {
       case ITER_SPREAD:
-      case OBJECT_SPREAD:
-        switch (parent.getToken()) {
-          case OBJECTLIT:
-            return false; // Object spread does not iterate.
-          case NEW:
-          case ARRAYLIT:
-          case CALL:
-            iterable = node.getOnlyChild();
-            break;
-          default:
-            throw new IllegalStateException(
-                "Unexpected parent of SPREAD: " + parent.toStringTree());
-        }
+        iterable = node.getOnlyChild();
         break;
 
       case YIELD:
@@ -1073,15 +1061,14 @@ public final class NodeUtil {
         break;
 
       case ITER_REST:
-      case OBJECT_REST:
         switch (parent.getToken()) {
-          case OBJECT_PATTERN: // Object rest does not iterate.
           case PARAM_LIST: // Rest arguments are flat at the call-site.
             return false;
           case ARRAY_PATTERN:
             return true; // TODO(b/127862986): We assume the r-value to be an impure iterable.
           default:
-            throw new IllegalStateException("Unexpected parent of REST: " + parent.toStringTree());
+            throw new IllegalStateException(
+                "Unexpected parent of ITRE_REST: " + parent.toStringTree());
         }
 
       default:

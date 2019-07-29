@@ -32,8 +32,6 @@ import static com.google.javascript.rhino.Token.GETTER_DEF;
 import static com.google.javascript.rhino.Token.ITER_REST;
 import static com.google.javascript.rhino.Token.ITER_SPREAD;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
-import static com.google.javascript.rhino.Token.OBJECT_REST;
-import static com.google.javascript.rhino.Token.OBJECT_SPREAD;
 import static com.google.javascript.rhino.Token.SCRIPT;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.YIELD;
@@ -3865,8 +3863,6 @@ public final class NodeUtilTest {
             {ITER_SPREAD, "new foo(...danger)", true},
             {ITER_SPREAD, "new foo(...danger())", true},
             {ITER_SPREAD, "new foo(...5)", true},
-            // OBJECT_SPREAD
-            {OBJECT_SPREAD, "({...danger()})", false},
             // ITER_REST < ARRAY_PATTERN
             {ITER_REST, "const [...rest] = []", true},
             {ITER_REST, "const [...rest] = 'lit'", true},
@@ -3882,8 +3878,6 @@ public final class NodeUtilTest {
             {ITER_REST, "function* f(...x) { }", false},
             {ITER_REST, "async function* f(...x) { }", false},
             {ITER_REST, "((...x) => { })", false},
-            // OBJECT_REST
-            {OBJECT_REST, "const {...rest} = danger();", false},
             // FOR_OF
             {FOR_OF, "for (let x of []) {}", false},
             {FOR_OF, "for (let x of [danger()]) {}", false},

@@ -261,17 +261,17 @@ public class AstAnalyzer {
         }
         break;
 
-      case ITER_REST:
       case OBJECT_REST:
-      case ITER_SPREAD:
       case OBJECT_SPREAD:
-        if (parent.isObjectPattern() || parent.isObjectLit()) {
           // Object-rest and object-spread may trigger a getter.
           if (assumeGettersArePure) {
             break; // We still need to inspect the children.
           }
           return true;
-        } else if (NodeUtil.iteratesImpureIterable(n)) {
+
+      case ITER_REST:
+      case ITER_SPREAD:
+        if (NodeUtil.iteratesImpureIterable(n)) {
           return true;
         }
         break;
@@ -506,17 +506,13 @@ public class AstAnalyzer {
         // A variable definition.
         // TODO(b/129564961): Consider EXPORT declarations.
         return n.hasChildren();
-      case ITER_REST:
       case OBJECT_REST:
-      case ITER_SPREAD:
       case OBJECT_SPREAD:
-        if (n.getParent().isObjectPattern() || n.getParent().isObjectLit()) {
-          // Object-rest and object-spread may trigger a getter.
-          return !assumeGettersArePure;
-        } else if (NodeUtil.iteratesImpureIterable(n)) {
-          return true;
-        }
-        break;
+        // Object-rest and object-spread may trigger a getter.
+        return !assumeGettersArePure;
+      case ITER_REST:
+      case ITER_SPREAD:
+        return NodeUtil.iteratesImpureIterable(n);
       case STRING_KEY:
         if (n.getParent().isObjectPattern()) {
           return getPropertyKind(n.getString()).hasGetter();
