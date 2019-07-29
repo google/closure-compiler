@@ -60,6 +60,10 @@ message Requirement {
     optional string explanation = 4;
 
     repeated string comment = 5;
+
+    // If you build automation to remove unused entries, you can use this flag
+    // to enable/disable it.
+    optional bool automatically_prune = 6;
   }
 
   repeated WhitelistEntry whitelist_entry = 14;
