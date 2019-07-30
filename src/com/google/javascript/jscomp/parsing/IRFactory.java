@@ -711,7 +711,7 @@ class IRFactory {
     String result = "";
     Iterator<Comment> itr = comments.iterator();
     int prevCommentEndLine = Integer.MAX_VALUE;
-    int completeCommentBegin = 0;
+    int completeCommentBegin = Integer.MAX_VALUE;
     int completeCommentEnd = 0;
     while (itr.hasNext()) {
       Comment currComment = itr.next();

@@ -37,6 +37,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.NonJSDocComment;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.Collection;
@@ -947,22 +948,13 @@ public final class SuggestedFix {
    */
   private static int getStartPositionForNodeConsideringComments(Node node) {
     JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(node);
-    String associatedNonJSDocComment = node.getNonJSDocCommentString();
-    int start;
-    if (jsdoc == null) {
-      start = node.getSourceOffset();
-      if (!"".equals(associatedNonJSDocComment)) {
-        start = start - associatedNonJSDocComment.length() - 1;
-      }
-    } else {
+    NonJSDocComment associatedNonJSDocComment = node.getNonJSDocComment();
+    int start = node.getSourceOffset();
+    if (jsdoc != null) {
       start = jsdoc.getOriginalCommentPosition();
-      if (!"".equals(associatedNonJSDocComment)) {
-        if (start + jsdoc.getOriginalCommentString().length()
-            > node.getSourceOffset() - associatedNonJSDocComment.length()) {
-          // nonJSDoc comment is placed before the JSDoc comment. Update start position.
-          start = start - associatedNonJSDocComment.length() - 1;
-        }
-      }
+    }
+    if (associatedNonJSDocComment != null) {
+      start = Math.min(start, associatedNonJSDocComment.getBeginOffset());
     }
     return start;
   }

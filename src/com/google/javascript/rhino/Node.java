@@ -225,6 +225,10 @@ public class Node implements Serializable {
     return ((NonJSDocComment) getProp(Prop.NON_JSDOC_COMMENT)).getCommentString();
   }
 
+  public final NonJSDocComment getNonJSDocComment() {
+    return (NonJSDocComment) getProp(Prop.NON_JSDOC_COMMENT);
+  }
+
   /** Sets the NonJSDoc comment attached to this node. */
   public final Node setNonJSDocComment(NonJSDocComment comment) {
     putProp(Prop.NON_JSDOC_COMMENT, comment);
