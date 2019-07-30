@@ -154,6 +154,7 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.TypeDeclarationNode;
+import com.google.javascript.rhino.NonJSDocComment;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
@@ -699,12 +700,27 @@ class IRFactory {
     }
   }
 
-  private static String combineCommentsIntoSingleString(ArrayList<Comment> comments) {
+  /**
+   * Appends every comment associated with this node into one NonJSDocComment. It would be legal to
+   * replace all comments associated with this node with that one string.
+   *
+   * @param comments - list of line or block comments that are sequential in source code
+   * @return complete comment as NonJSDocComment
+   */
+  private static NonJSDocComment combineCommentsIntoSingleComment(ArrayList<Comment> comments) {
     String result = "";
     Iterator<Comment> itr = comments.iterator();
     int prevCommentEndLine = Integer.MAX_VALUE;
+    int completeCommentBegin = 0;
+    int completeCommentEnd = 0;
     while (itr.hasNext()) {
       Comment currComment = itr.next();
+      if (currComment.location.start.offset < completeCommentBegin) {
+        completeCommentBegin = currComment.location.start.offset;
+      }
+      if (currComment.location.end.offset > completeCommentEnd) {
+        completeCommentEnd = currComment.location.end.offset;
+      }
       while (prevCommentEndLine < currComment.location.start.line) {
         result += "\n";
         prevCommentEndLine++;
@@ -714,7 +730,10 @@ class IRFactory {
         prevCommentEndLine = currComment.location.end.line;
       }
     }
-    return result;
+
+    NonJSDocComment nonJSDocComment =
+        new NonJSDocComment(completeCommentBegin, completeCommentEnd, result);
+    return nonJSDocComment;
   }
 
   private static Comment skipJsDocComments(UnmodifiableIterator<Comment> comments) {
@@ -789,7 +808,7 @@ class IRFactory {
     }
     if (this.config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
       if (!associatedComments.isEmpty()) {
-        String completeComment = combineCommentsIntoSingleString(associatedComments);
+        NonJSDocComment completeComment = combineCommentsIntoSingleComment(associatedComments);
         node.setNonJSDocComment(completeComment);
       }
     }

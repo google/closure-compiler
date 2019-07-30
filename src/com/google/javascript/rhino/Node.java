@@ -214,7 +214,7 @@ public class Node implements Serializable {
   }
 
   /**
-   * Get the NonJSDoc comment attached to this node.
+   * Get the NonJSDoc comment string attached to this node.
    *
    * @return the information or empty string if no nonJSDoc is attached to this node
    */
@@ -222,11 +222,11 @@ public class Node implements Serializable {
     if (getProp(Prop.NON_JSDOC_COMMENT) == null) {
       return "";
     }
-    return (String) getProp(Prop.NON_JSDOC_COMMENT);
+    return ((NonJSDocComment) getProp(Prop.NON_JSDOC_COMMENT)).getCommentString();
   }
 
   /** Sets the NonJSDoc comment attached to this node. */
-  public final Node setNonJSDocComment(String comment) {
+  public final Node setNonJSDocComment(NonJSDocComment comment) {
     putProp(Prop.NON_JSDOC_COMMENT, comment);
     return this;
   }
