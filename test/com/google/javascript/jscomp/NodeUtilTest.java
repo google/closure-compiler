@@ -34,6 +34,7 @@ import static com.google.javascript.rhino.Token.ITER_SPREAD;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.SCRIPT;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
+import static com.google.javascript.rhino.Token.SUPER;
 import static com.google.javascript.rhino.Token.YIELD;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.lang.Boolean.FALSE;
@@ -3927,6 +3928,40 @@ public final class NodeUtilTest {
     public void test() {
       Node node = parseFirst(token, source);
       assertThat(NodeUtil.iteratesImpureIterable(node)).isEqualTo(expectation);
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static final class CanBeSideEffectedTest {
+
+    @Parameters(name = "{0} in \"{1}\"")
+    public static Iterable<Object[]> cases() {
+      return ImmutableList.copyOf(
+          new Object[][] {
+            // TODO: Expand test cases for more node types.
+
+            // SUPER
+            {SUPER, "super()", false},
+            {SUPER, "super.foo()", false},
+            {CALL, "super()", true},
+            {CALL, "super.foo()", true},
+          });
+    }
+
+    private final Token token;
+    private final String source;
+    private final boolean expectation;
+
+    public CanBeSideEffectedTest(Token token, String source, boolean expectation) {
+      this.token = token;
+      this.source = source;
+      this.expectation = expectation;
+    }
+
+    @Test
+    public void test() {
+      Node node = parseFirst(token, source);
+      assertThat(NodeUtil.canBeSideEffected(node)).isEqualTo(expectation);
     }
   }
 

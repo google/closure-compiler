@@ -57,6 +57,7 @@ import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.STRING;
 import static com.google.javascript.rhino.Token.STRING_KEY;
 import static com.google.javascript.rhino.Token.SUB;
+import static com.google.javascript.rhino.Token.SUPER;
 import static com.google.javascript.rhino.Token.TAGGED_TEMPLATELIT;
 import static com.google.javascript.rhino.Token.THROW;
 import static com.google.javascript.rhino.Token.VOID;
@@ -538,6 +539,10 @@ public final class AstAnalyzerTest {
           // MEMBER_FUNCTION_DEF
           kase().expect(false).token(MEMBER_FUNCTION_DEF).js("({ a(x) {} })"),
           kase().expect(false).token(MEMBER_FUNCTION_DEF).js("class C { a(x) {} }"),
+
+          // SUPER calls
+          kase().expect(false).token(SUPER).js("super()"),
+          kase().expect(false).token(SUPER).js("super.foo()"),
 
           // IObject methods
           // "toString" and "valueOf" are assumed to be side-effect free

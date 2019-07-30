@@ -253,6 +253,10 @@ public class AstAnalyzer {
         // Variable declarations are side-effects.
         return true;
 
+      case SUPER:
+        // The super keyword is a noop on its own.
+        return false;
+
       case OBJECTLIT:
       case ARRAYLIT:
       case REGEXP:

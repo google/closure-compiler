@@ -1159,6 +1159,50 @@ public final class ExpressionDecomposerTest {
         "foo");
   }
 
+  @Test
+  public void testMoveSuperCall() {
+    helperMoveExpression(
+        "class A { constructor() { super(foo()) } }",
+        "foo",
+        "class A{constructor(){var result$jscomp$0=foo();super(result$jscomp$0)}}");
+  }
+
+  @Test
+  public void testMoveSuperCall_noSideEffects() {
+    // String() is being used since it's known to not have side-effects.
+    helperMoveExpression(
+        "class A { constructor() { super(String()) } }",
+        "String",
+        "class A{constructor(){var result$jscomp$0=String();super(result$jscomp$0)}}");
+  }
+
+  @Test
+  public void testExposeSuperCall() {
+    times = 2;
+    helperExposeExpression(
+        "class A { constructor() { super(goo(), foo()) } }",
+        "foo",
+        lines(
+            "class A{ constructor(){", //
+            "   var temp_const$jscomp$0=goo();",
+            "   super(temp_const$jscomp$0, foo())",
+            "}}"));
+  }
+
+  @Test
+  public void testExposeSuperCall_noSideEffects() {
+    times = 2;
+    // String() is being used since it's known to not have side-effects.
+    helperExposeExpression(
+        "class A { constructor() { super(goo(), String()) } }",
+        "String",
+        lines(
+            "class A{ constructor(){", //
+            "   var temp_const$jscomp$0=goo();",
+            "   super(temp_const$jscomp$0, String())",
+            "}}"));
+  }
+
   /** Test case helpers. */
 
   private void helperCanExposeFunctionExpression(

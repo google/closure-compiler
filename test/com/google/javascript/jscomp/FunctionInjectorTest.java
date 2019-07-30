@@ -1619,6 +1619,69 @@ public final class FunctionInjectorTest {
   }
 
   @Test
+  public void testInlineWithinSuperCall() {
+    // Call in within a call
+    allowDecomposition = true;
+    helperInlineReferenceToFunction(
+        lines(
+            "class A { constructor(g) {} }", //
+            "class B extends A {",
+            "  constructor() { super(foo()); }",
+            "}",
+            "function foo() {",
+            "  return '';",
+            "}"),
+        lines(
+            "class A { constructor(g) {} }", //
+            "class B extends A {",
+            "  constructor() {",
+            "    var JSCompiler_inline_result$jscomp$0;",
+            "    {", //
+            "      JSCompiler_inline_result$jscomp$0 = '';",
+            "    }",
+            "    super(JSCompiler_inline_result$jscomp$0)",
+            "  }", //
+            "}", //
+            "function foo() {",
+            "  return '';",
+            "}"),
+        "foo",
+        INLINE_BLOCK);
+  }
+
+  @Test
+  public void testInlineWithinSuperCall_followingCall() {
+    // Call in within a call
+    allowDecomposition = true;
+    helperInlineReferenceToFunction(
+        lines(
+            "class A { constructor(g) {} }", //
+            "class B extends A {",
+            "  constructor() { super(goo(), foo()); }",
+            "}",
+            "function foo() {",
+            "  return '';",
+            "}"),
+        lines(
+            "class A { constructor(g) {} }", //
+            "class B extends A {",
+            "  constructor() {",
+            "    var JSCompiler_temp_const$jscomp$0=goo();",
+            "    var JSCompiler_inline_result$jscomp$1;",
+            "    {",
+            "      JSCompiler_inline_result$jscomp$1 = '';",
+            "    }",
+            "    super(JSCompiler_temp_const$jscomp$0, JSCompiler_inline_result$jscomp$1)",
+            "  }",
+            "}",
+            "function foo() {",
+            "  return '';",
+            "}"),
+        "foo",
+        INLINE_BLOCK);
+  }
+
+  @Test
   public void testInlineAssignmentToConstant() {
     // Call in within a call
     allowDecomposition = true;
