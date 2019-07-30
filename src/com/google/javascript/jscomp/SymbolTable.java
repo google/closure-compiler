@@ -1234,25 +1234,10 @@ public final class SymbolTable {
    * correspond to a symbol in original source code (before transpilation).
    */
   void removeGeneratedSymbols() {
-    IdentityHashMap<Node, Symbol> nodeToSymbol = null;
     // Need to iterate over copy of values list because removeSymbol() will change the map
     // and we'll get ConcurrentModificationException
     for (Symbol symbol : ImmutableList.copyOf(symbols.values())) {
-      if (symbol.getDeclaration() != null
-          && symbol.getDeclaration().getNode().getBooleanProp(Node.MODULE_EXPORT)) {
-
-        // Lazy initialize nodeToSymbol map as it's needed only when ES6 modules are used.
-        if (nodeToSymbol == null) {
-          nodeToSymbol = new IdentityHashMap<>();
-          for (Symbol s : symbols.values()) {
-            for (Node node : s.references.keySet()) {
-              nodeToSymbol.put(node, s);
-            }
-          }
-        }
-
-        inlineEs6ExportProperty(symbol, nodeToSymbol);
-      } else if (isSymbolAQuotedObjectKey(symbol)) {
+      if (isSymbolAQuotedObjectKey(symbol)) {
         // Quoted object keys are not considered symbols. Only unquoted keys and dot-access
         // properties are considered symbols. Remove the quoted key.
         boolean symbolAlreadyRemoved = !getScope(symbol).ownSymbols.containsKey(symbol.getName());
@@ -1262,59 +1247,6 @@ public final class SymbolTable {
       }
     }
     mergeExternSymbolsDuplicatedOnWindow();
-  }
-
-  /**
-   * Removes a layer of indirection introduced by ES6 module rewriting. Following example:
-   *
-   * <pre>
-   *   // a.js
-   *   export const foo = 1;
-   *
-   *   // b.js
-   *   import {foo} from './a';
-   *   console.log(foo);
-   * </pre>
-   *
-   * <p>Is rewritten to
-   *
-   * <pre>
-   *   // a.js
-   *   const foo = 1; module$a$exports = {}; module$a$exports.foo = foo;
-   *
-   *   // b.js
-   *   console.log(module$a$exports.foo);
-   * </pre>
-   *
-   * <p>So 'foo' in b.js now points to the generated property instead of original foo variable. This
-   * method removes module$a$exports.foo symbol and changes its references to point to foo.
-   */
-  private void inlineEs6ExportProperty(
-      Symbol exportPropertySymbol, IdentityHashMap<Node, Symbol> nodeToSymbol) {
-    // decl is module$a$exports.foo node from the example above.
-    Node decl = exportPropertySymbol.getDeclaration().getNode();
-    // originalSymbol is symbol declared by "const foo = 1";
-    Symbol originalSymbol = null;
-    if (decl.isGetProp() && decl.getParent().isAssign()) {
-      originalSymbol = nodeToSymbol.get(decl.getNext());
-    } else if (decl.isGetProp() && decl.getParent().isExprResult()) {
-      // Typedefs are special.
-      //
-      // /** @typedef {number} */ export Foo;
-      //
-      // is rewritten to
-      //
-      // Foo; module$a$exports = {}; module$a$exports.Foo;
-      //
-      // So we need to get type of module$a$exports.Foo in order to get hold of the original "foo"
-      // node.
-      Node originalTypedefNode = decl.getJSDocInfo().getTypedefType().getRoot();
-      originalSymbol = nodeToSymbol.get(originalTypedefNode);
-    }
-    if (originalSymbol == null) {
-      return;
-    }
-    mergeSymbol(exportPropertySymbol, originalSymbol);
   }
 
   /**
