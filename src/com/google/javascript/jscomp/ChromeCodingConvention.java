@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.Node;
@@ -64,15 +63,8 @@ public final class ChromeCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public ImmutableCollection<AssertionFunctionSpec> getAssertionFunctions() {
-    return ImmutableList.of(
-        AssertionFunctionSpec.forTruthy().setFunctionName("assert").build(),
-        AssertionFunctionSpec.forMatchesReturn().setFunctionName("cr.ui.decorate").build());
-  }
-
-  @Override
   public boolean isFunctionCallThatAlwaysThrows(Node n) {
-    return CodingConventions.defaultIsFunctionCallThatAlwaysThrows(
-        n, "assertNotReached");
+    // TODO(dbeam): does @closurePrimitive {asserts.fail} make it possible to remove this?
+    return CodingConventions.defaultIsFunctionCallThatAlwaysThrows(n, "assertNotReached");
   }
 }
