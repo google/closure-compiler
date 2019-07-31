@@ -16,15 +16,12 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 /**
  * <p>Compiler pass that removes Closure-specific code patterns.</p>
@@ -174,26 +171,17 @@ final class ClosureCodeRemoval implements CompilerPass {
    * Identifies all assertion calls.
    */
   private class FindAssertionCalls extends AbstractPostOrderCallback {
-    final Set<String> assertionNames;
+    final AssertionFunctionLookup assertionNames;
 
     FindAssertionCalls() {
-      // TODO(b/126254920): make this use ClosurePrimitive instead,
       assertionNames =
-          compiler.getCodingConvention().getAssertionFunctions().stream()
-              .map(AssertionFunctionSpec::getFunctionName)
-              // Filter out assertion functions with a null functionName, which are identified only
-              // by ClosurePrimitive id.
-              .filter(Objects::nonNull)
-              .collect(ImmutableSet.toImmutableSet());
+          AssertionFunctionLookup.of(compiler.getCodingConvention().getAssertionFunctions());
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isCall()) {
-        String fnName = n.getFirstChild().getQualifiedName();
-        if (assertionNames.contains(fnName)) {
-          assertionCalls.add(n);
-        }
+      if (n.isCall() && assertionNames.lookupByCallee(n.getFirstChild()) != null) {
+        assertionCalls.add(n);
       }
     }
   }

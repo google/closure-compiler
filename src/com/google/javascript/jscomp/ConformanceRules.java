@@ -33,7 +33,7 @@ import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CheckConformance.Rule;
-import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
@@ -55,7 +55,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -314,7 +313,7 @@ public final class ConformanceRules {
   abstract static class AbstractTypeRestrictionRule extends AbstractRule {
     private final JSType nativeObjectType;
     private final JSType whitelistedTypes;
-    private final ImmutableList<Node> assertionsFunctionNames;
+    private final AssertionFunctionLookup assertionFunctions;
 
     public AbstractTypeRestrictionRule(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -323,14 +322,8 @@ public final class ConformanceRules {
       List<String> whitelistedTypeNames = requirement.getValueList();
       whitelistedTypes = union(whitelistedTypeNames);
 
-      // TODO(b/126254920): make this use ClosurePrimitive instead
-      // so that we don't have to filter out the null functionNames.
-      assertionsFunctionNames =
-          compiler.getCodingConvention().getAssertionFunctions().stream()
-              .map(AssertionFunctionSpec::getFunctionName)
-              .filter(Objects::nonNull)
-              .map(name -> NodeUtil.newQName(compiler, name))
-              .collect(ImmutableList.toImmutableList());
+      assertionFunctions =
+          AssertionFunctionLookup.of(compiler.getCodingConvention().getAssertionFunctions());
     }
 
     protected boolean isWhitelistedType(Node n) {
@@ -394,11 +387,7 @@ public final class ConformanceRules {
     protected boolean isAssertionCall(Node n) {
       if (n.isCall() && n.getFirstChild().isQualifiedName()) {
         Node target = n.getFirstChild();
-        for (int i = 0; i < assertionsFunctionNames.size(); i++) {
-          if (target.matchesQualifiedName(assertionsFunctionNames.get(i))) {
-            return true;
-          }
-        }
+        return assertionFunctions.lookupByCallee(target) != null;
       }
       return false;
     }
