@@ -196,12 +196,12 @@ $jscomp.polyfill('Promise',
     var thisPromise = this;
     var alreadyCalled = false;
     /**
-     * @param {function(this:PolyfillPromise<TYPE>, T)} method
-     * @return {function(T)}
+     * @param {function(this:PolyfillPromise<TYPE>, T=)} method
+     * @return {function(T=)}
      * @template T
      */
     function firstCallWins(method) {
-      return function(x) {
+      return function(/** T= */ x) {
         if (!alreadyCalled) {
           alreadyCalled = true;
           method.call(thisPromise, x);
@@ -217,7 +217,7 @@ $jscomp.polyfill('Promise',
 
   /**
    * @private
-   * @param {*} value
+   * @param {*=} value
    */
   PolyfillPromise.prototype.resolveTo_ = function(value) {
     if (value === this) {
@@ -272,7 +272,7 @@ $jscomp.polyfill('Promise',
   /**
    * Reject this promise for the given reason.
    * @private
-   * @param {*} reason
+   * @param {*=} reason
    * @throws {!Error} if this promise is already fulfilled or rejected.
    */
   PolyfillPromise.prototype.reject_ = function(reason) {
