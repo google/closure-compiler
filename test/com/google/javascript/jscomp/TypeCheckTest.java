@@ -6785,10 +6785,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testArrayAccess2() {
-    testTypesWithCommonExterns("var a = []; var b = a[[1,2]];",
-        "restricted index type\n" +
-        "found   : Array\n" +
-        "required: number");
+    testTypesWithCommonExterns(
+        lines("var a = []; var b = a[[1,2]];"),
+        lines(
+            "restricted index type", //
+            "found   : Array<?>",
+            "required: number"));
   }
 
   @Test
@@ -11850,13 +11852,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     disableStrictMissingPropertyChecks();
 
     testTypes(
-        "for (var i = 0; i < 10; i++) {" +
-          "var x = /** @type {Object|number} */ ({foo: 3});" +
-          "/** @param {number} x */ function f(x) {}" +
-          "f(x.foo);" +
-          "f([].foo);" +
-        "}",
-        "Property foo never defined on Array");
+        lines(
+            "for (var i = 0; i < 10; i++) {",
+            "var x = /** @type {Object|number} */ ({foo: 3});",
+            "/** @param {number} x */ function f(x) {}",
+            "f(x.foo);",
+            "f([].foo);",
+            "}"),
+        "Property foo never defined on Array<?>");
   }
 
   @Test
@@ -11871,13 +11874,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testTypes(
         lines(
-          "for (var i = 0; i < 10; i++) {",
+            "for (var i = 0; i < 10; i++) {",
             "var x = /** @type {{foo:number}}|number} */ ({foo: 3});",
             "/** @param {number} x */ function f(x) {}",
             "f(x.foo);",
             "f([].foo);",
-          "}"),
-        "Property foo never defined on Array");
+            "}"),
+        "Property foo never defined on Array<?>");
   }
 
   @Test
@@ -16577,16 +16580,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTemplatedFunctionInUnion1() {
     testTypes(
-        "/**\n" +
-        "* @param {T} x\n" +
-        "* @param {function(this:T, ...)|{fn:Function}} z\n" +
-        "* @template T\n" +
-        "*/\n" +
-        "function f(x, z) {}\n" +
-        "f([], function() { /** @type {string} */ var x = this });",
-        "initializing variable\n" +
-        "found   : Array\n" +
-        "required: string");
+        lines(
+            "/**",
+            "* @param {T} x",
+            "* @param {function(this:T, ...)|{fn:Function}} z",
+            "* @template T",
+            "*/",
+            "function f(x, z) {}",
+            "f([], function() { /** @type {string} */ var x = this });"),
+        lines(
+            "initializing variable", //
+            "found   : Array<?>",
+            "required: string"));
   }
 
   @Test

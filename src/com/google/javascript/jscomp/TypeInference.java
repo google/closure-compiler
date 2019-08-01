@@ -1392,7 +1392,9 @@ class TypeInference
   /** Traverse each element of the array. */
   private FlowScope traverseArrayLiteral(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope);
-    n.setJSType(getNativeType(ARRAY_TYPE));
+    n.setJSType(
+        registry.createTemplatizedType(
+            registry.getNativeObjectType(ARRAY_TYPE), getNativeType(UNKNOWN_TYPE)));
     return scope;
   }
 

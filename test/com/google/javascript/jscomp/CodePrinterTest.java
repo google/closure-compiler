@@ -1417,7 +1417,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             " * @return {number}",
             " */",
             "a.Foo.prototype.foo = function(foo) {\n  return 3;\n};",
-            "/** @type {!Array} */",
+            "/** @type {!Array<?>} */",
             "a.Foo.prototype.bar = [];\n"));
   }
 

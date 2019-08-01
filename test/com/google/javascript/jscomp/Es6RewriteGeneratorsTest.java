@@ -1378,7 +1378,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node yieldedValue = callNode.getSecondChild(); // [1, 2]
 
     checkState(yieldedValue.isArrayLit(), yieldedValue);
-    assertThat(yieldedValue.getJSType().toString()).isEqualTo("Array"); // [1, 2]
+    assertThat(yieldedValue.getJSType().toString()).isEqualTo("Array<?>"); // [1, 2]
     assertThat(yieldedValue.getFirstChild().getJSType().toString()).isEqualTo("number"); // 1
     assertThat(yieldedValue.getSecondChild().getJSType().toString()).isEqualTo("number"); // 2
 

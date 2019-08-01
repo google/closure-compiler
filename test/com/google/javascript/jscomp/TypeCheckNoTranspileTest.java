@@ -1467,7 +1467,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "}"),
         lines(
             "Can only iterate over a (non-null) Iterable type",
-            "found   : (Array|number)",
+            "found   : (Array<?>|number)",
             "required: Iterable"));
   }
 
