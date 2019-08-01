@@ -22,7 +22,9 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -265,11 +267,11 @@ final class ReplaceMessages extends JsMessageVisitor {
    *  |
    *  |-- string 'Hi {$userName}! Welcome to {$product}.'
    *  +-- objlit
-   *      |-- string 'userName'
-   *      |-- name 'someUserName'
-   *      |-- string 'product'
-   *      +-- call
-   *          +-- name 'getProductName'
+   *      |-- string_key 'userName'
+   *      |   +-- name 'someUserName'
+   *      +-- string_key 'product'
+   *          +-- call
+   *              +-- name 'getProductName'
    * <pre>
    * <p>
    * For that example, we'd return:
@@ -293,37 +295,39 @@ final class ReplaceMessages extends JsMessageVisitor {
    * @throws MalformedException if the passed node's subtree structure is
    *   not as expected
    */
-  private Node replaceCallNode(JsMessage message, Node callNode)
-      throws MalformedException {
+  private Node replaceCallNode(JsMessage message, Node callNode) throws MalformedException {
     checkNode(callNode, Token.CALL);
     Node getPropNode = callNode.getFirstChild();
     checkNode(getPropNode, Token.GETPROP);
     Node stringExprNode = getPropNode.getNext();
     checkStringExprNode(stringExprNode);
     Node objLitNode = stringExprNode.getNext();
+    Map<String, Boolean> options = getOptions(objLitNode != null ? objLitNode.getNext() : null);
 
     // Build the replacement tree.
     Iterator<CharSequence> iterator = message.parts().iterator();
     return iterator.hasNext()
-        ? constructStringExprNode(iterator, objLitNode, callNode)
+        ? constructStringExprNode(iterator, objLitNode, options, callNode)
         : IR.string("");
   }
 
   /**
-   * Creates a parse tree corresponding to the remaining message parts in an
-   * iteration. The result consists of one or more STRING nodes, placeholder
-   * replacement value nodes (which can be arbitrary expressions), and ADD
-   * nodes.
+   * Creates a parse tree corresponding to the remaining message parts in an iteration. The result
+   * consists of one or more STRING nodes, placeholder replacement value nodes (which can be
+   * arbitrary expressions), and ADD nodes.
    *
-   * @param parts  an iterator over message parts
-   * @param objLitNode  an OBJLIT node mapping placeholder names to values
+   * @param parts an iterator over message parts
+   * @param objLitNode an OBJLIT node mapping placeholder names to values
    * @return the root of the constructed parse tree
-   *
-   * @throws MalformedException if {@code parts} contains a placeholder
-   *   reference that does not correspond to a valid placeholder name
+   * @throws MalformedException if {@code parts} contains a placeholder reference that does not
+   *     correspond to a valid placeholder name
    */
   private static Node constructStringExprNode(
-      Iterator<CharSequence> parts, Node objLitNode, Node refNode) throws MalformedException {
+      Iterator<CharSequence> parts,
+      @Nullable Node objLitNode,
+      Map<String, Boolean> options,
+      Node refNode)
+      throws MalformedException {
     checkNotNull(refNode);
 
     CharSequence part = parts.next();
@@ -353,15 +357,48 @@ final class ReplaceMessages extends JsMessageVisitor {
       }
     } else {
       // The part is just a string literal.
-      partNode = IR.string(part.toString());
+      String s = part.toString();
+      if (options.getOrDefault("html", false)) {
+        // Note that "&" is not replaced because the translation can contain HTML entities.
+        s = s.replace("<", "&lt;");
+      }
+      partNode = IR.string(s);
     }
 
     if (parts.hasNext()) {
-      return IR.add(partNode,
-          constructStringExprNode(parts, objLitNode, refNode));
+      return IR.add(partNode, constructStringExprNode(parts, objLitNode, options, refNode));
     } else {
       return partNode;
     }
+  }
+
+  private static Map<String, Boolean> getOptions(@Nullable Node optionsNode)
+      throws MalformedException {
+    Map<String, Boolean> options = new HashMap<>();
+    if (optionsNode == null) {
+      return options;
+    }
+    if (!optionsNode.isObjectLit()) {
+      throw new MalformedException("OBJLIT node expected", optionsNode);
+    }
+    for (Node aNode = optionsNode.getFirstChild(); aNode != null; aNode = aNode.getNext()) {
+      if (!aNode.isStringKey()) {
+        throw new MalformedException("STRING_KEY node expected as OBJLIT key", aNode);
+      }
+      String optName = aNode.getString();
+      Node value = aNode.getFirstChild();
+      if (!value.isTrue() && !value.isFalse()) {
+        throw new MalformedException("Literal true or false expected", value);
+      }
+      switch (optName) {
+        case "html":
+          options.put(optName, value.isTrue());
+          break;
+        default:
+          throw new MalformedException("Unexpected option", aNode);
+      }
+    }
+    return options;
   }
 
   /**

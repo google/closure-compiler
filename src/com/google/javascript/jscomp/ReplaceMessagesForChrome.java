@@ -69,8 +69,10 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
     Node newValueNode = getChromeI18nGetMessageNode(message.getId());
 
     if (!message.placeholders().isEmpty()) {
-      Node placeholderValues = origNode.getLastChild();
+      Node placeholderValues = origNode.getChildAtIndex(2);
       checkNode(placeholderValues, Token.OBJECTLIT);
+      // TODO(b/121116673): Pass {html: true} to chrome.i18n.getMessage after
+      // https://crrev.com/c/1728572.
 
       // Output the placeholders, sorted alphabetically by placeholder name,
       // regardless of what order they appear in the original message.

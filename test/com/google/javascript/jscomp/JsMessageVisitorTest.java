@@ -920,6 +920,17 @@ public final class JsMessageVisitorTest {
     assertThat(msg.getDesc()).isEqualTo("a");
   }
 
+  @Test
+  public void testGetMsgWithHtml() {
+    extractMessagesSafely("/** @desc Hello */ var MSG_HELLO = goog.getMsg('a', {}, {html: true})");
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+
+    JsMessage msg = messages.get(0);
+    assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
+    assertThat(msg.getDesc()).isEqualTo("Hello");
+  }
+
   private void assertNoErrors() {
     assertThat(compiler.getErrors()).isEmpty();
   }

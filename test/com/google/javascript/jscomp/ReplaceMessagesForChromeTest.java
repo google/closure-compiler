@@ -205,4 +205,15 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
             "'<div class=\"name\">'", // startDiv_2
             "]);"));
   }
+
+  @Test
+  public void testReplaceMessageWithHtml() {
+    test(
+        lines(
+            "/** @desc A message with one placeholder. */\n",
+            "var MSG_C = goog.getMsg('Hello, {$name}', {name: 'Tyler'}, {html: true});"),
+        lines(
+            "/** @desc A message with one placeholder. */\n",
+            "var MSG_C=chrome.i18n.getMessage('4985325380591528435', ['Tyler']);"));
+  }
 }

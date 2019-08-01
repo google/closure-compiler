@@ -525,6 +525,20 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
+  @Test
+  public void testReplaceHtmlMessageWithPlaceholder() {
+    registerMessage(
+        new JsMessage.Builder("MSG_A")
+            .appendStringPart("Hello <")
+            .appendPlaceholderReference("br")
+            .appendStringPart("&gt;")
+            .build());
+
+    test(
+        "/** @desc d */\n var MSG_A = goog.getMsg('{$br}', {'br': '<br>'}, {html: true});",
+        "/** @desc d */\n var MSG_A='Hello &lt;'+('<br>'+'&gt;')");
+  }
+
   private void registerMessage(JsMessage message) {
     messages.put(message.getKey(), message);
   }
