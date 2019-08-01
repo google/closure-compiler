@@ -38,9 +38,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 package com.google.javascript.rhino;
+import java.io.Serializable;
 
 /** Minimal class holding information about a nonJSDoc comment's source location and contents */
-public class NonJSDocComment {
+public class NonJSDocComment implements Serializable {
   private final int beginOffset;
   private final int endOffset;
   private final String contents;

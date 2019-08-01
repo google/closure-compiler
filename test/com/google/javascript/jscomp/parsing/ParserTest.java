@@ -36,6 +36,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.NonJSDocComment;
 import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
@@ -1087,6 +1088,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testInlineNonJSDocCommentAttachmentToVar() {
+    Node letNode = parse("let /* blah */ x = 'a';").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    NonJSDocComment nonJSDocComment = letNode.getFirstChild().getNonJSDocComment();
+    assertThat(nonJSDocComment).isNotNull();
+    assertThat(nonJSDocComment.getCommentString()).contains("/* blah */");
+  }
+
+  @Test
   public void testInlineJSDocAttachmentToObjPatNormalProp() {
     Node letNode =
         parse("let { normalProp: /** string */ normalPropTarget } = {};").getFirstChild();
@@ -1099,6 +1110,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(normalProp).hasType(Token.STRING_KEY);
     Node normalPropTarget = normalProp.getOnlyChild();
     assertNodeHasJSDocInfoWithJSType(normalPropTarget, STRING_TYPE);
+  }
+
+  @Test
+  public void testInlineNonJSDocCommentAttachmentToObjPatNormalProp() {
+    Node letNode = parse("let { normalProp: /* blah */ normalPropTarget } = {};").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node normalProp = objectPattern.getFirstChild();
+    assertNode(normalProp).hasType(Token.STRING_KEY);
+    Node normalPropTarget = normalProp.getOnlyChild();
+    assertThat(normalPropTarget.getNonJSDocCommentString()).contains("/* blah */");
   }
 
   @Test
@@ -1117,6 +1142,22 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testInlineNonJSDocCommentAttachmentToObjPatNormalPropKey() {
+    Node letNode = parse("let { /* blah */ normalProp: normalProp } = {};").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node normalProp = objectPattern.getFirstChild();
+    assertNode(normalProp).hasType(Token.STRING_KEY);
+    // TODO(b/138749905): Unlike inline JSDoc in the corresponding test above, inline nonJSDoc
+    // comment on key should be allowed, i.e. it should be attached to the string key and not the
+    // name value
+    assertThat(normalProp.getOnlyChild().getNonJSDocCommentString()).contains("/* blah */");
+  }
+
+  @Test
   public void testInlineJSDocAttachmentToObjPatShorthandProp() {
     Node letNode = parse("let { /** string */ shorthandProp } = {};").getFirstChild();
     assertNode(letNode).hasType(Token.LET);
@@ -1128,6 +1169,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(shorthandProp).hasType(Token.STRING_KEY);
     Node shorthandPropTarget = shorthandProp.getOnlyChild();
     assertNodeHasJSDocInfoWithJSType(shorthandPropTarget, STRING_TYPE);
+  }
+
+  @Test
+  public void testInlineNonJSDocAttachmentToObjPatShorthandProp() {
+    Node letNode = parse("let { /* blah */ shorthandProp } = {};").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node shorthandProp = objectPattern.getFirstChild();
+    assertNode(shorthandProp).hasType(Token.STRING_KEY);
+    Node shorthandPropTarget = shorthandProp.getOnlyChild();
+    assertThat(shorthandPropTarget.getNonJSDocCommentString()).contains("/* blah */");
   }
 
   @Test
@@ -1149,6 +1204,24 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testInlineNonJSDocCommentAttachmentToObjPatNormalPropWithDefault() {
+    Node letNode =
+        parse("let { normalPropWithDefault: /* blah */ normalPropWithDefault = 'hi' } = {};")
+            .getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node normalPropWithDefault = objectPattern.getFirstChild();
+    assertNode(normalPropWithDefault).hasType(Token.STRING_KEY);
+    Node normalPropDefaultValue = normalPropWithDefault.getOnlyChild();
+    assertNode(normalPropDefaultValue).hasType(Token.DEFAULT_VALUE);
+    Node normalPropWithDefaultTarget = normalPropDefaultValue.getFirstChild();
+    assertThat(normalPropWithDefaultTarget.getNonJSDocCommentString()).contains("/* blah */");
+  }
+
+  @Test
   public void testInlineJSDocAttachmentToObjPatShorthandWithDefault() {
     Node letNode =
         parse("let { /** string */ shorthandPropWithDefault = 'lo' } = {};").getFirstChild();
@@ -1163,6 +1236,23 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(shorthandPropDefaultValue).hasType(Token.DEFAULT_VALUE);
     Node shorthandPropWithDefaultTarget = shorthandPropDefaultValue.getFirstChild();
     assertNodeHasJSDocInfoWithJSType(shorthandPropWithDefaultTarget, STRING_TYPE);
+  }
+
+  @Test
+  public void testInlineNonJSDocCommentAttachmentToObjPatShorthandWithDefault() {
+    Node letNode =
+        parse("let { /* blah */ shorthandPropWithDefault = 'lo' } = {};").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node shorthandPropWithDefault = objectPattern.getFirstChild();
+    assertNode(shorthandPropWithDefault).hasType(Token.STRING_KEY);
+    Node shorthandPropDefaultValue = shorthandPropWithDefault.getOnlyChild();
+    assertNode(shorthandPropDefaultValue).hasType(Token.DEFAULT_VALUE);
+    Node shorthandPropWithDefaultTarget = shorthandPropDefaultValue.getFirstChild();
+    assertThat(shorthandPropWithDefaultTarget.getNonJSDocCommentString()).contains("/* blah */");
   }
 
   @Test
@@ -1403,6 +1493,79 @@ public final class ParserTest extends BaseJSTypeTestCase {
     JSDocInfo info = fn.getSecondChild().getFirstChild().getJSDocInfo();
     assertThat(info).isNotNull();
     assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
+  @Test
+  public void testInline_BlockCommentAttachment() {
+    Node fn = parse("function f(/* blah */ x) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+    Node xNode = fn.getSecondChild().getFirstChild();
+    assertThat(xNode.getNonJSDocCommentString()).contains("/* blah */");
+  }
+
+  @Test
+  public void testInline_LineCommentAttachment() {
+    Node fn = parse("function f( // blah\n x) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+    Node xNode = fn.getSecondChild().getFirstChild();
+    assertThat(xNode.getNonJSDocCommentString()).contains("// blah");
+  }
+
+  @Test
+  public void testMultipleInline_LineCommentsAttachment() {
+    Node fn = parse("function f( // blah1\n x, // blah2\n y) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node xNode = fn.getSecondChild().getFirstChild();
+    assertThat(xNode.getNonJSDocCommentString()).contains("// blah1");
+
+    Node yNode = fn.getSecondChild().getSecondChild();
+    assertThat(yNode.getNonJSDocCommentString()).contains("// blah2");
+  }
+
+  @Test
+  public void testMultipleInline_MixedCommentsAttachment() {
+    Node fn = parse("function f( /* blah1 */ x, // blah2\n y) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node xNode = fn.getSecondChild().getFirstChild();
+    assertThat(xNode.getNonJSDocCommentString()).contains("/* blah1 */");
+
+    Node yNode = fn.getSecondChild().getSecondChild();
+    assertThat(yNode.getNonJSDocCommentString()).contains("// blah2");
+  }
+
+  @Test
+  public void testMultipleInline_NonJSDocCommentsGetAttachedToSameNode() {
+    Node fn = parse("function f(/* blah1 */\n// blah\n x) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node xNode = fn.getSecondChild().getFirstChild();
+    assertThat(xNode.getNonJSDocCommentString()).contains("/* blah1 */\n// blah");
+  }
+
+  @Test
+  public void testBothJSDocAndNonJSDocCommentsGetAttached() {
+    Node fn = parse("function f(/** string */ // nonJSDoc\n x) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node xNode = fn.getSecondChild().getFirstChild();
+    JSDocInfo info = xNode.getJSDocInfo();
+    assertThat(info).isNotNull();
+    assertNodeHasJSDocInfoWithJSType(xNode, STRING_TYPE);
+    assertThat(xNode.getNonJSDocCommentString()).contains("// nonJSDoc");
+  }
+
+  @Test
+  public void testBothNonJSDocAndJSDocCommentsGetAttached() {
+    Node fn = parse("function f(// nonJSDoc\n /** string */ x) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node xNode = fn.getSecondChild().getFirstChild();
+    JSDocInfo info = xNode.getJSDocInfo();
+    assertThat(info).isNotNull();
+    assertNodeHasJSDocInfoWithJSType(xNode, STRING_TYPE);
+    assertThat(xNode.getNonJSDocCommentString()).contains("// nonJSDoc");
   }
 
   @Test
@@ -4048,6 +4211,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node aName = defaultValue.getFirstChild();
     assertNode(aName).hasType(Token.NAME);
     assertNodeHasJSDocInfoWithJSType(aName, NUMBER_TYPE);
+  }
+
+  @Test
+  public void testDefaultParameterInlineNonJSDocComment() {
+    expectFeatures(Feature.DEFAULT_PARAMETERS);
+    Node functionNode = parse("function f(/* number */ a = 0) {}").getFirstChild();
+    Node parameterList = functionNode.getSecondChild();
+    Node defaultValue = parameterList.getFirstChild();
+    assertNode(defaultValue).hasType(Token.DEFAULT_VALUE);
+
+    Node aName = defaultValue.getFirstChild();
+    assertNode(aName).hasType(Token.NAME);
+    assertThat(aName.getNonJSDocCommentString()).contains("/* number */");
   }
 
   @Test

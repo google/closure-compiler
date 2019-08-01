@@ -751,7 +751,7 @@ class IRFactory {
         && currentNonJSDocComment.location.end.offset <= location.start.offset;
   }
 
-  private ArrayList<Comment> getNonJsDocComments(SourceRange location) {
+  private ArrayList<Comment> getNonJSDocComments(SourceRange location) {
     ArrayList<Comment> previousComments = new ArrayList<>();
     while (hasPendingNonJSDocCommentBefore(location)) {
       previousComments.add(currentNonJSDocComment);
@@ -760,12 +760,13 @@ class IRFactory {
     return previousComments;
   }
 
-  private ArrayList<Comment> getNonJsDocComment(ParseTree tree) {
-    return getNonJsDocComments(tree.location);
+  private ArrayList<Comment> getNonJSDocComments(
+      com.google.javascript.jscomp.parsing.parser.Token token) {
+    return getNonJSDocComments(token.location);
   }
 
-  private ArrayList<Comment> handleNonJSDocComment(ParseTree node) {
-    return getNonJsDocComment(node);
+  private ArrayList<Comment> getNonJSDocComments(ParseTree tree) {
+    return getNonJSDocComments(tree.location);
   }
 
   private static ParseTree findNearestNode(ParseTree tree) {
@@ -800,7 +801,7 @@ class IRFactory {
 
   Node transform(ParseTree tree) {
     JSDocInfo info = handleJsDoc(tree);
-    ArrayList<Comment> associatedComments = handleNonJSDocComment(tree);
+    ArrayList<Comment> associatedComments = getNonJSDocComments(tree);
     Node node = transformDispatcher.process(tree);
     if (info != null) {
       node = maybeInjectCastNode(tree, info, node);
@@ -835,12 +836,20 @@ class IRFactory {
    * @see <a href="http://code.google.com/p/jsdoc-toolkit/wiki/InlineDocs">Using Inline Doc
    *     Comments</a>
    */
-  Node transformNodeWithInlineJsDoc(ParseTree tree) {
+  Node transformNodeWithInlineComments(ParseTree tree) {
     JSDocInfo info = handleInlineJsDoc(tree);
+    ArrayList<Comment> nonJSDocComments = getNonJSDocComments(tree);
+    NonJSDocComment associatedNonJSDocComment = null;
+    if (!nonJSDocComments.isEmpty()) {
+      associatedNonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
+    }
     Node node = transformDispatcher.process(tree);
 
     if (info != null) {
       node.setJSDocInfo(info);
+    }
+    if (associatedNonJSDocComment != null) {
+      node.setNonJSDocComment(associatedNonJSDocComment);
     }
     setSourceInfo(node, tree);
 
@@ -1111,10 +1120,10 @@ class IRFactory {
             break;
           case ITER_REST:
             maybeWarnForFeature(child, Feature.ARRAY_PATTERN_REST);
-            elementNode = transformNodeWithInlineJsDoc(child);
+            elementNode = transformNodeWithInlineComments(child);
             break;
           default:
-            elementNode = transformNodeWithInlineJsDoc(child);
+            elementNode = transformNodeWithInlineComments(child);
             break;
         }
         node.addChildToBack(elementNode);
@@ -1149,7 +1158,7 @@ class IRFactory {
         case OBJECT_REST:
           // let {...restObject} = someObject;
           maybeWarnForFeature(child, Feature.OBJECT_PATTERN_REST);
-          Node target = transformNodeWithInlineJsDoc(child.asObjectRest().assignmentTarget);
+          Node target = transformNodeWithInlineComments(child.asObjectRest().assignmentTarget);
           Node rest = newNode(Token.OBJECT_REST, target);
           setSourceInfo(rest, child);
           return rest;
@@ -1199,7 +1208,7 @@ class IRFactory {
       if (targetTree == null) {
         // `let { /** inlineType */ key } = something;`
         // The key is also the target name.
-        valueNode = processNameWithInlineJSDoc(propertyNameAssignment.name.asIdentifier());
+        valueNode = processNameWithInlineComments(propertyNameAssignment.name.asIdentifier());
         key.setShorthandProperty(true);
       } else {
         valueNode = processDestructuringElementTarget(targetTree);
@@ -1219,12 +1228,12 @@ class IRFactory {
         // let {key: /** inlineType */ name} = something
         // let [/** inlineType */ name] = something
         // Allow inline JSDoc on the name, since we may well be declaring it here.
-        valueNode = processNameWithInlineJSDoc(targetTree.asIdentifierExpression());
+        valueNode = processNameWithInlineComments(targetTree.asIdentifierExpression());
       } else {
         // ({prop: /** string */ ns.a.b} = someObject);
         // NOTE: CheckJSDoc will report an error for this case, since we want qualified names to be
         // declared with individual statements, like `/** @type {string} */ ns.a.b;`
-        valueNode = transformNodeWithInlineJsDoc(targetTree);
+        valueNode = transformNodeWithInlineComments(targetTree);
       }
       return valueNode;
     }
@@ -1491,7 +1500,7 @@ class IRFactory {
       IdentifierToken name = functionTree.name;
       Node newName;
       if (name != null) {
-        newName = processNameWithInlineJSDoc(name);
+        newName = processNameWithInlineComments(name);
       } else {
         if (isDeclaration || isMember) {
           errorReporter.error(
@@ -1569,10 +1578,10 @@ class IRFactory {
             break;
           case ITER_REST:
             maybeWarnForFeature(param, Feature.REST_PARAMETERS);
-            paramNode = transformNodeWithInlineJsDoc(param);
+            paramNode = transformNodeWithInlineComments(param);
             break;
           default:
-            paramNode = transformNodeWithInlineJsDoc(param);
+            paramNode = transformNodeWithInlineComments(param);
             break;
         }
 
@@ -1598,12 +1607,12 @@ class IRFactory {
         // allow inline JSDoc on an identifier
         // let { /** inlineType */ x = defaultValue } = someObject;
         // TODO(bradfordcsmith): Do we need to allow inline JSDoc for qualified names, too?
-        targetNode = processNameWithInlineJSDoc(targetTree.asIdentifierExpression());
+        targetNode = processNameWithInlineComments(targetTree.asIdentifierExpression());
       } else {
         // ({prop: /** string */ ns.a.b = 'foo'} = someObject);
         // NOTE: CheckJSDoc will report an error for this case, since we want qualified names to be
         // declared with individual statements, like `/** @type {string} */ ns.a.b;`
-        targetNode = transformNodeWithInlineJsDoc(targetTree);
+        targetNode = transformNodeWithInlineComments(targetTree);
       }
       Node defaultValueNode =
           newNode(Token.DEFAULT_VALUE, targetNode, transform(tree.defaultValue));
@@ -1612,7 +1621,7 @@ class IRFactory {
     }
 
     Node processIterRest(IterRestTree tree) {
-      Node target = transformNodeWithInlineJsDoc(tree.assignmentTarget);
+      Node target = transformNodeWithInlineComments(tree.assignmentTarget);
       return newNode(Token.ITER_REST, target);
     }
 
@@ -1783,16 +1792,24 @@ class IRFactory {
       return node;
     }
 
-    private Node processNameWithInlineJSDoc(IdentifierExpressionTree identifierExpression) {
-      return processNameWithInlineJSDoc(identifierExpression.identifierToken);
+    private Node processNameWithInlineComments(IdentifierExpressionTree identifierExpression) {
+      return processNameWithInlineComments(identifierExpression.identifierToken);
     }
 
-    Node processNameWithInlineJSDoc(IdentifierToken identifierToken) {
+    Node processNameWithInlineComments(IdentifierToken identifierToken) {
       JSDocInfo info = handleInlineJsDoc(identifierToken);
+      ArrayList<Comment> nonJSDocComments = getNonJSDocComments(identifierToken);
+      NonJSDocComment associatedNonJSDocComment = null;
+      if (!nonJSDocComments.isEmpty()) {
+        associatedNonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
+      }
       maybeWarnReservedKeyword(identifierToken);
       Node node = newStringNode(Token.NAME, identifierToken.value);
       if (info != null) {
         node.setJSDocInfo(info);
+      }
+      if (associatedNonJSDocComment != null) {
+        node.setNonJSDocComment(associatedNonJSDocComment);
       }
       setSourceInfo(node, identifierToken);
       return node;
@@ -2289,13 +2306,13 @@ class IRFactory {
 
       Node node = newNode(declType);
       for (VariableDeclarationTree child : decl.declarations) {
-        node.addChildToBack(transformNodeWithInlineJsDoc(child));
+        node.addChildToBack(transformNodeWithInlineComments(child));
       }
       return node;
     }
 
     Node processVariableDeclaration(VariableDeclarationTree decl) {
-      Node node = transformNodeWithInlineJsDoc(decl.lvalue);
+      Node node = transformNodeWithInlineComments(decl.lvalue);
       Node lhs = node.isDestructuringPattern() ? newNode(Token.DESTRUCTURING_LHS, node) : node;
       if (decl.initializer != null) {
         Node initializer = transform(decl.initializer);
