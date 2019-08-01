@@ -54,6 +54,13 @@ Element.prototype.setPointerCapture = function(pointerId) {};
  */
 Element.prototype.releasePointerCapture = function(pointerId) {};
 
+/**
+ * @param {number} pointerId
+ * @see https://www.w3.org/TR/pointerevents/#dom-element-haspointercapture
+ * @return {boolean}
+ */
+Element.prototype.hasPointerCapture = function(pointerId) {};
+
 
 /**
  * @record
