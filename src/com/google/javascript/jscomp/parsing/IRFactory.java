@@ -801,16 +801,21 @@ class IRFactory {
 
   Node transform(ParseTree tree) {
     JSDocInfo info = handleJsDoc(tree);
-    ArrayList<Comment> associatedComments = getNonJSDocComments(tree);
+    NonJSDocComment associatedNonJSDocComment = null;
+    if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
+      ArrayList<Comment> nonJSDocComments = getNonJSDocComments(tree);
+      if (!nonJSDocComments.isEmpty()) {
+        associatedNonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
+      }
+    }
     Node node = transformDispatcher.process(tree);
     if (info != null) {
       node = maybeInjectCastNode(tree, info, node);
       node.setJSDocInfo(info);
     }
     if (this.config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
-      if (!associatedComments.isEmpty()) {
-        NonJSDocComment completeComment = combineCommentsIntoSingleComment(associatedComments);
-        node.setNonJSDocComment(completeComment);
+      if (associatedNonJSDocComment != null) {
+        node.setNonJSDocComment(associatedNonJSDocComment);
       }
     }
 
@@ -838,21 +843,23 @@ class IRFactory {
    */
   Node transformNodeWithInlineComments(ParseTree tree) {
     JSDocInfo info = handleInlineJsDoc(tree);
-    ArrayList<Comment> nonJSDocComments = getNonJSDocComments(tree);
     NonJSDocComment associatedNonJSDocComment = null;
-    if (!nonJSDocComments.isEmpty()) {
-      associatedNonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
+    if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
+      ArrayList<Comment> nonJSDocComments = getNonJSDocComments(tree);
+      if (!nonJSDocComments.isEmpty()) {
+        associatedNonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
+      }
     }
     Node node = transformDispatcher.process(tree);
-
     if (info != null) {
       node.setJSDocInfo(info);
     }
-    if (associatedNonJSDocComment != null) {
-      node.setNonJSDocComment(associatedNonJSDocComment);
+    if (this.config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
+      if (associatedNonJSDocComment != null) {
+        node.setNonJSDocComment(associatedNonJSDocComment);
+      }
     }
     setSourceInfo(node, tree);
-
     return node;
   }
 
@@ -1798,18 +1805,22 @@ class IRFactory {
 
     Node processNameWithInlineComments(IdentifierToken identifierToken) {
       JSDocInfo info = handleInlineJsDoc(identifierToken);
-      ArrayList<Comment> nonJSDocComments = getNonJSDocComments(identifierToken);
       NonJSDocComment associatedNonJSDocComment = null;
-      if (!nonJSDocComments.isEmpty()) {
-        associatedNonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
+      if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
+        ArrayList<Comment> nonJSDocComments = getNonJSDocComments(identifierToken);
+        if (!nonJSDocComments.isEmpty()) {
+          associatedNonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
+        }
       }
       maybeWarnReservedKeyword(identifierToken);
       Node node = newStringNode(Token.NAME, identifierToken.value);
       if (info != null) {
         node.setJSDocInfo(info);
       }
-      if (associatedNonJSDocComment != null) {
-        node.setNonJSDocComment(associatedNonJSDocComment);
+      if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
+        if (associatedNonJSDocComment != null) {
+          node.setNonJSDocComment(associatedNonJSDocComment);
+        }
       }
       setSourceInfo(node, identifierToken);
       return node;
