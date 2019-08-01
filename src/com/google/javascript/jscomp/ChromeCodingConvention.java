@@ -61,10 +61,4 @@ public final class ChromeCodingConvention extends CodingConventions.Proxy {
   public ImmutableCollection<String> getIndirectlyDeclaredProperties() {
     return indirectlyDeclaredProperties;
   }
-
-  @Override
-  public boolean isFunctionCallThatAlwaysThrows(Node n) {
-    // TODO(dbeam): does @closurePrimitive {asserts.fail} make it possible to remove this?
-    return CodingConventions.defaultIsFunctionCallThatAlwaysThrows(n, "assertNotReached");
-  }
 }
