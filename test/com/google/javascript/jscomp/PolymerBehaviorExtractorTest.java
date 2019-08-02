@@ -87,6 +87,51 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   }
 
   @Test
+  public void testArrayBehavior_fromGoogProvide() {
+    parseAndInitializeExtractor(
+        lines(
+            "goog.provide('my.project.RadBehavior');",
+            "goog.provide('my.project.FunBehavior');",
+            "/** @polymerBehavior */",
+            "my.project.FunBehavior = {",
+            "  properties: {",
+            "    isFun: Boolean",
+            "  },",
+            "  /** @param {string} funAmount */",
+            "  doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },",
+            "  /** @override */",
+            "  created: function() {}",
+            "};",
+            "/** @polymerBehavior */",
+            "my.project.RadBehavior = {",
+            "  properties: {",
+            "    howRad: Number",
+            "  },",
+            "  /** @param {number} radAmount */",
+            "  doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },",
+            "  /** @override */",
+            "  ready: function() {}",
+            "};",
+            "/** @polymerBehavior */",
+            "var SuperCoolBehaviors = [my.project.FunBehavior, my.project.RadBehavior];",
+            "/** @polymerBehavior */",
+            "var BoringBehavior = {",
+            "  properties: {",
+            "    boringString: String",
+            "  },",
+            "  /** @param {boolean} boredYet */",
+            "  doSomething: function(boredYet) { alert(boredYet + ' ' + this.boringString); },",
+            "};",
+            "var A = Polymer({",
+            "  is: 'x-element',",
+            "  behaviors: [ SuperCoolBehaviors, BoringBehavior ],",
+            "});"));
+
+    ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray);
+    assertThat(defs).hasSize(3);
+  }
+
+  @Test
   public void testInlineLiteralBehavior() {
     parseAndInitializeExtractor(
         lines(

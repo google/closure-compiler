@@ -35,6 +35,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -753,6 +754,70 @@ public final class GlobalNamespaceTest {
 
     Name fooProp = namespace.getSlot("foo.prop");
     assertThat(fooProp.canCollapse()).isFalse();
+  }
+
+  @Test
+  public void testGoogProvideName() {
+    GlobalNamespace namespace = parse("goog.provide('a'); var a = {};");
+
+    Name a = namespace.getSlot("a");
+    assertThat(a).isNotNull();
+    assertThat(a.getGlobalSets()).isEqualTo(1);
+    // The VAR, not the goog.provide, is considered the 'declaration' of `a`.
+    assertNode(a.getDeclaration().getNode().getParent()).hasToken(Token.VAR);
+  }
+
+  @Test
+  public void testGoogProvideNamespace_noExplicitAssignment() {
+    GlobalNamespace namespace = parse("goog.provide('a.b');");
+
+    Name a = namespace.getSlot("a");
+    assertThat(a).isNotNull();
+    assertThat(a.getGlobalSets()).isEqualTo(0);
+    Name ab = namespace.getSlot("a.b");
+    assertThat(ab).isNotNull();
+    assertThat(ab.getGlobalSets()).isEqualTo(0);
+    assertThat(a.getDeclaration()).isNull();
+    assertThat(ab.getDeclaration()).isNull();
+    assertThat(ab.getParent()).isEqualTo(a);
+  }
+
+  @Test
+  public void testGoogProvideLongNamespace() {
+    GlobalNamespace namespace = parse("goog.provide('a.b.c.d');");
+
+    assertThat(namespace.getSlot("a.b.c.d")).isNotNull();
+  }
+
+  @Test
+  public void testGoogProvideNamespace_explicitAssignment() {
+    GlobalNamespace namespace = parse("goog.provide('a.b'); /** @const */ a.b = {};");
+
+    Name a = namespace.getSlot("a");
+    assertThat(a).isNotNull();
+    assertThat(a.getGlobalSets()).isEqualTo(0);
+    Name ab = namespace.getSlot("a.b");
+    assertThat(ab).isNotNull();
+    assertThat(ab.getGlobalSets()).isEqualTo(1);
+  }
+
+  @Test
+  public void testGoogProvideNamespace_assignmentToProperty() {
+    GlobalNamespace namespace = parse("goog.provide('a.b'); a.b.Class = class {};");
+
+    Name abClass = namespace.getSlot("a.b.Class");
+    assertThat(abClass).isNotNull();
+    assertThat(abClass.getGlobalSets()).isEqualTo(1);
+    assertThat(abClass.getParent()).isEqualTo(namespace.getSlot("a.b"));
+  }
+
+  @Test
+  public void testGoogProvideName_multipleProvidesForName() {
+    GlobalNamespace namespace = parse("goog.provide('a.b'); goog.provide('a.c');");
+
+    Name a = namespace.getSlot("a");
+    assertThat(a).isNotNull();
+    assertThat(a.getGlobalSets()).isEqualTo(0);
   }
 
   private GlobalNamespace parse(String js) {

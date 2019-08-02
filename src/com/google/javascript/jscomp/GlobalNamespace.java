@@ -28,6 +28,7 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
@@ -63,6 +64,7 @@ class GlobalNamespace
   private SourceKind sourceKind;
   private Scope externsScope;
   private boolean generated = false;
+  private static final QualifiedName GOOG_PROVIDE = QualifiedName.of("goog.provide");
 
   enum SourceKind {
     EXTERN,
@@ -303,7 +305,12 @@ class GlobalNamespace
     if (v == null && externsScope != null) {
       v = externsScope.getVar(name);
     }
-    return v != null && !v.isLocal();
+    if (v == null) {
+      Name providedName = nameMap.get(name);
+      return providedName != null && providedName.isProvided;
+    } else {
+      return !v.isLocal();
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -463,6 +470,14 @@ class GlobalNamespace
             String qname = n.getFirstFirstChild().getQualifiedName();
             Name globalName = getOrCreateName(qname);
             globalName.usedHasOwnProperty = true;
+          } else if (parent.isExprResult()
+              && GOOG_PROVIDE.matches(n.getFirstChild())
+              && n.getSecondChild().isString()) {
+            // goog.provide goes through a different code path than regular sets because it can
+            // create multiple names, e.g. `goog.provide('a.b.c');` creates the global names
+            // a, a.b, and a.b.c. Other sets only create a single global name.
+            createNamesFromProvide(n.getSecondChild().getString());
+            return;
           }
           return;
         default:
@@ -490,6 +505,22 @@ class GlobalNamespace
       } else {
         handleGet(module, scope, n, parent, name);
       }
+    }
+
+    private void createNamesFromProvide(String namespace) {
+      Name name;
+      int dot = 0;
+
+      while (dot >= 0) {
+        dot = namespace.indexOf('.', dot + 1);
+        String subNamespace = dot < 0 ? namespace : namespace.substring(0, dot);
+        checkState(!subNamespace.isEmpty());
+        name = getOrCreateName(subNamespace);
+        name.isProvided = true;
+      }
+
+      Name newName = getOrCreateName(namespace);
+      newName.isProvided = true;
     }
 
     /**
@@ -1051,6 +1082,7 @@ class GlobalNamespace
     private boolean declaredType = false;
     private boolean isDeclared = false;
     private boolean isModuleProp = false;
+    private boolean isProvided = false; // If this name was in any goog.provide() calls.
     private boolean usedHasOwnProperty = false;
     private int globalSets = 0;
     private int localSets = 0;
