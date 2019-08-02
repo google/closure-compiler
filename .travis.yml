@@ -1,3 +1,5 @@
+# Required to be able to use JDK 8.
+# See https://github.com/google/closure-compiler/issues/3448
 dist: trusty
 
 language: java
