@@ -108,11 +108,14 @@ class Normalize implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRoots(
-        compiler, new NormalizeStatements(compiler, assertOnChange), externs, root);
-    removeDuplicateDeclarations(externs, root);
     MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
     NodeTraversal.traverseRoots(compiler, renamer, externs, root);
+
+    NodeTraversal.traverseRoots(
+        compiler, new NormalizeStatements(compiler, assertOnChange), externs, root);
+
+    removeDuplicateDeclarations(externs, root);
+
     new PropagateConstantAnnotationsOverVars(compiler, assertOnChange)
         .process(externs, root);
 

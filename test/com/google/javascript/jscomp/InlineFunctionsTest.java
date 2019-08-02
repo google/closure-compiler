@@ -2611,9 +2611,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "})(jQuery)"),
         lines(
             "(function($){",
-            "  $.fn.multicheck=function(options$jscomp$1) {",
+            "  $.fn.multicheck=function(options) {",
             "    {",
-            "      options$jscomp$1.checkboxes=$(this).siblings(':checkbox');",
+            "      options.checkboxes=$(this).siblings(':checkbox');",
             "      {",
             "        $(this).data('checkboxes');",
             "      }",

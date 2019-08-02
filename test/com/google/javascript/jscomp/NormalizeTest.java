@@ -298,6 +298,15 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFunctionDeclInBlockScope() {
+    test("var x; { function g() {} }", "var x; { var g = function() {} }");
+    test("var g; { function g() {} }", "var g; { var g$jscomp$1 = function() {} }");
+
+    testInFunction("var x; { function g() {} }", "var x; { var g = function() {} }");
+    testInFunction("var g; { function g() {} }", "var g; { var g$jscomp$1 = function() {} }");
+  }
+
+  @Test
   public void testAssignShorthand() {
     test("x |= 1;", "x = x | 1;");
     test("x ^= 1;", "x = x ^ 1;");
@@ -649,21 +658,15 @@ public final class NormalizeTest extends CompilerTestCase {
         "f = 1; function f(){}");
     test("var f; function f(){}",
         "function f(){}");
-    test("if (a) { var f = 1; } else { function f(){} }",
-        "if (a) { var f = 1; } else { f = function (){} }");
 
     test("function f(){} var f = 1;",
         "function f(){} f = 1;");
     test("function f(){} var f;",
         "function f(){}");
-    test("if (a) { function f(){} } else { var f = 1; }",
-        "if (a) { var f = function (){} } else { f = 1; }");
 
     // TODO(johnlenz): Do we need to handle this differently for "third_party"
     // mode? Remove the previous function definitions?
     testSame("function f(){} function f(){}");
-    test("if (a) { function f(){} } else { function f(){} }",
-        "if (a) { var f = function (){} } else { f = function (){} }");
   }
 
   // It's important that we not remove this var completely. See
