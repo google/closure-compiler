@@ -2008,7 +2008,12 @@ class TypeInference
     JSType previous = map.get(template);
     if (!resolved.isUnknownType()) {
       if (previous == null) {
-        map.put(template, resolved);
+        if (template.getBound().isUnknownType()) {
+          map.put(template, resolved);
+        } else {
+          JSType meet = template.getBound().getGreatestSubtype(resolved);
+          map.put(template, meet);
+        }
       } else {
         JSType join = previous.getLeastSupertype(resolved);
         map.put(template, join);

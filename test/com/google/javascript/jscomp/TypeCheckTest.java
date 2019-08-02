@@ -5873,6 +5873,316 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testGenericBoundArgAppError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @template {number} T",
+            " */",
+            "function A(x) {}",
+            "var a = A('a');"),
+        lines(
+            "actual parameter 1 of A does not match formal parameter",
+            "found   : string",
+            "required: None")); // TODO(liuamanda): None is not a very informative error message
+  }
+
+  @Test
+  public void testGenericBoundArgApp() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @template {number} T",
+            " */",
+            "function A(x) {}",
+            "var a = A(3);"));
+  }
+
+  @Test
+  public void testGenericBoundReturnError() {
+    // NOTE: This signature is unsafe, but it's an effective minimal test case.
+    testTypes(
+        lines(
+            "/**",
+            " * @return {T}",
+            " * @template {number} T",
+            " */",
+            "function A(x) { return 'a'; }",
+            "var a = A(0);"),
+        lines(
+            "inconsistent return type", //
+            "found   : string", //
+            "required: T"));
+  }
+
+  @Test
+  public void testGenericBoundArgAppNullError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @template {number} T",
+            " */",
+            "function A(x) { return x; }",
+            "var a = A(null);"),
+        lines(
+            "actual parameter 1 of A does not match formal parameter",
+            "found   : null",
+            "required: None"));
+  }
+
+  @Test
+  public void testGenericBoundArgAppNullable() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @template {?number} T",
+            " */",
+            "function A(x) { return x; }",
+            "var a = A(null);"));
+  }
+
+  @Test
+  public void testGenericBoundArgInnerCallAppError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {string} x",
+            " */",
+            "function stringID(x) { return x; }",
+            "/**",
+            " * @param {T} x",
+            " * @template {number|boolean} T",
+            " */",
+            "function foo(x) {return stringID(x); }"),
+        lines(
+            "actual parameter 1 of stringID does not match formal parameter",
+            "found   : T",
+            "required: string"));
+  }
+
+  @Test
+  public void testGenericBoundArgInnerCallApp() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {number} x",
+            " */",
+            "function numID(x) { return x; }",
+            "/**",
+            " * @param {T} x",
+            " * @template {number} T",
+            " */",
+            "function foo(x) { return numID(x); }"));
+  }
+
+  @Test
+  public void testGenericBoundArgInnerCallAppSubtypeError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {number} x",
+            " */",
+            "function numID(x) { return x; }",
+            "/**",
+            " * @param {T} x",
+            " * @template {number|boolean|string} T",
+            " */",
+            "function foo(x) { return numID(x); }"),
+        lines(
+            "actual parameter 1 of numID does not match formal parameter",
+            "found   : T",
+            "required: number"));
+  }
+
+  @Test
+  public void testGenericBoundArgInnerAssignSubtype() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {number} x",
+            " * @param {T} y",
+            " * @template {number|string} T",
+            " */",
+            "function foo(x,y) { y=x; }"));
+  }
+
+  @Test
+  public void testGenericBoundArgInnerAssignSubtypeError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {number} x",
+            " * @param {T} y",
+            " * @template {number|string} T",
+            " */",
+            "function foo(x,y) { x=y; }"),
+        lines(
+            "assignment", //
+            "found   : T", //
+            "required: number"));
+  }
+
+  @Test
+  public void testDoubleGenericBoundArgInnerAssignSubtype() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @param {T} y",
+            " * @template {number|string} T",
+            " */",
+            "function foo(x,y) { x=y; }"));
+  }
+
+  @Test
+  public void testBoundedGenericForwardDeclaredParameterError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @template {number} T",
+            " */",
+            "class Foo {}",
+            "var /** !Foo<Str> */ a;",
+            "/** @typedef {string} */",
+            "let Str;"),
+        "Bounded generic type error. string assigned to template type T is not a subtype of bound"
+            + " number");
+  }
+
+  @Test
+  public void testBoundedGenericParametrizedTypeVarError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @template {number|boolean} T",
+            " */",
+            "function F() {}",
+            "var /** F<string> */ a;"),
+        "Bounded generic type error. string assigned to template type T is not a subtype of bound"
+            + " (boolean|number)");
+  }
+
+  @Test
+  public void testBoundedGenericParametrizedTypeVar() {
+    testTypes(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @param {T} x",
+            " * @template {number|boolean} T",
+            " */",
+            "function F(x) {}",
+            "var /** F<number> */ a;"));
+  }
+
+  @Test
+  // TODO(liuamanda): should not work
+  public void testDoubleGenericBoundArgInnerAssignSubtypeError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @param {U} y",
+            " * @template {number|string} T",
+            " * @template {number|string} U",
+            " */",
+            "function foo(x,y) { x=y; }"));
+  }
+
+  @Test
+  public void testBoundedGenericParametrizedTypeReturnError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function C(x) {}",
+            "/**",
+            " * @template {number|string} U",
+            " * @param {C<boolean>} x",
+            " * @return {C<U>}",
+            " */",
+            "function f(x) { return x; }"),
+        lines(
+            "inconsistent return type", //
+            "found   : (C<boolean>|null)", //
+            "required: (C<U>|null)"));
+  }
+
+  @Test
+  public void testBoundedGenericParametrizedTypeError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @param {T} x",
+            " * @template T",
+            " */",
+            "function C(x) {}",
+            "/**",
+            " * @template {number|string} U",
+            " * @param {C<U>} x",
+            " */",
+            "function f(x) {}",
+            "var /** C<boolean> */ c;",
+            "f(c);"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : (C<boolean>|null)",
+            "required: (C<None>|null)"));
+  }
+
+  @Test
+  public void testPartialNarrowingBoundedGenericParametrizedTypeError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @param {T} x",
+            " * @template T",
+            " */",
+            "function C(x) {}",
+            "/**",
+            " * @template {number|string} U",
+            " * @param {C<U>} x",
+            " * @param {U} y",
+            " */",
+            "function f(x,y) {}",
+            "var /** C<string> */ c;",
+            "f(c,false);"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : (C<string>|null)",
+            "required: (C<(boolean|string)>|null)"));
+  }
+
+  @Test
+  public void testPartialNarrowingBoundedGenericParametrizedType() {
+    testTypes(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @param {T} x",
+            " * @template T",
+            " */",
+            "function C(x) {}",
+            "/**",
+            " * @template {number|string} U",
+            " * @param {C<U>} x",
+            " * @param {U} y",
+            " */",
+            "function f(x,y) {}",
+            "var /** C<number|string> */ c;",
+            "f(c,0);"));
+  }
+
+  @Test
   public void testInterfaceExtends() {
     testTypes("/** @interface */function A() {}\n" +
         "/** @interface \n * @extends {A} */function B() {}\n" +

@@ -554,6 +554,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // To be explicitly set to false if the node is not typeable.
     boolean typeable = true;
 
+    validator.expectWellFormedTemplatizedType(n);
+
     switch (n.getToken()) {
       case CAST:
         Node expr = n.getFirstChild();

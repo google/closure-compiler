@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -749,22 +750,22 @@ final class FunctionTypeBuilder {
 
   private ImmutableList<TemplateType> buildTemplateTypesFromJSDocInfo(
       JSDocInfo info, boolean allowTypeTransformations) {
-    ImmutableList<String> infoTypeKeys = info.getTemplateTypeNames();
+    ImmutableMap<String, JSTypeExpression> infoTypeKeys = info.getTemplateTypes();
     ImmutableMap<String, Node> infoTypeTransformations = info.getTypeTransformations();
     if (infoTypeKeys.isEmpty() && infoTypeTransformations.isEmpty()) {
       return ImmutableList.of();
     }
     ImmutableList.Builder<TemplateType> templates = ImmutableList.builder();
-    for (String key : infoTypeKeys) {
-      templates.add(typeRegistry.createTemplateType(key));
+    for (Map.Entry<String, JSTypeExpression> entry : infoTypeKeys.entrySet()) {
+      JSType typeBound = typeRegistry.evaluateTypeExpression(entry.getValue(), templateScope);
+      templates.add(typeRegistry.createTemplateType(entry.getKey(), typeBound));
     }
-    for (String key : infoTypeTransformations.keySet()) {
+    for (Map.Entry<String, Node> entry : infoTypeTransformations.entrySet()) {
       if (allowTypeTransformations) {
         templates.add(
-            typeRegistry.createTemplateTypeWithTransformation(
-                key, infoTypeTransformations.get(key)));
+            typeRegistry.createTemplateTypeWithTransformation(entry.getKey(), entry.getValue()));
       } else {
-        reportWarning(TEMPLATE_TRANSFORMATION_ON_CLASS, key);
+        reportWarning(TEMPLATE_TRANSFORMATION_ON_CLASS, entry.getKey());
       }
     }
     return templates.build();

@@ -96,7 +96,7 @@ public class TemplateTypeMap implements Serializable {
         JSType templateValue = this.templateValues.get(i);
         resolvedValues[i] = templateValue.visit(replacer);
       } else {
-        resolvedValues[i] = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+        resolvedValues[i] = this.templateKeys.get(i).getBound();
       }
     }
     this.resolvedTemplateValues = resolvedValues;
@@ -195,12 +195,12 @@ public class TemplateTypeMap implements Serializable {
 
   /**
    * Returns the JSType value associated with the specified template key. If no
-   * JSType value is associated, returns UNKNOWN_TYPE.
+   * JSType value is associated, returns the upper bound for generic, UNKNOWN_TYPE if unspecified.
    */
   public JSType getResolvedTemplateType(TemplateType key) {
     int index = getTemplateTypeIndex(key);
     return (index == -1)
-        ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)
+        ? key.getBound()
         : resolvedTemplateValues[index];
   }
 

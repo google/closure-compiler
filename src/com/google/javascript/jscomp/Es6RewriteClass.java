@@ -350,8 +350,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
       newInfo.mergePropertyBitfieldFrom(ctorInfo);
 
-      for (String templateType : ctorInfo.getTemplateTypeNames()) {
-        newInfo.recordTemplateTypeName(templateType);
+      for (Map.Entry<String, JSTypeExpression> entry : ctorInfo.getTemplateTypes().entrySet()) {
+        newInfo.recordTemplateTypeName(entry.getKey(), entry.getValue());
       }
     }
   }

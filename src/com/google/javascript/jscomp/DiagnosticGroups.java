@@ -722,6 +722,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "unsupportedBoundedGenericTypes", RhinoErrorReporter.UNSUPPORTED_BOUNDED_GENERIC_TYPES);
 
+  static final DiagnosticGroup BOUNDED_GENERIC_TYPE_ERROR =
+      DiagnosticGroups.registerGroup(
+          "boundedGenericTypeError", RhinoErrorReporter.BOUNDED_GENERIC_TYPE_ERROR);
+
   // For internal use only, so there are no constants for these groups.
   static {
     DiagnosticGroups.registerGroup(

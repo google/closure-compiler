@@ -1810,7 +1810,14 @@ public class JSTypeRegistry implements Serializable {
   }
 
   public TemplateType createTemplateType(String name) {
-    return new TemplateType(this, name);
+    return new TemplateType(
+        this,
+        name,
+        getNativeType(UNKNOWN_TYPE));
+  }
+
+  public TemplateType createTemplateType(String name, JSType bound) {
+    return new TemplateType(this, name, bound);
   }
 
   public TemplateType createTemplateTypeWithTransformation(
@@ -1842,23 +1849,22 @@ public class JSTypeRegistry implements Serializable {
       for (TemplateType unused : obj.getTemplateTypeMap().getTemplateKeys()) {
         unknowns.add(getNativeType(UNKNOWN_TYPE));
       }
-      return createTemplatizedType(obj.toMaybeTemplatizedType().getRawType(), unknowns.build());
+      return createTemplatizedType(obj.toMaybeTemplatizedType().getRawType());
     }
     return obj;
   }
 
-  public JSType instantiateGenericType(
-      ObjectType genericType, ImmutableList<JSType> typeArgs) {
+  public JSType instantiateGenericType(ObjectType genericType, ImmutableList<JSType> typeArgs) {
     return createTemplatizedType(genericType, typeArgs);
   }
 
   /**
-   * Creates a templatized instance of the specified type.  Only ObjectTypes
-   * can currently be templatized; extend the logic in this function when
-   * more types can be templatized.
+   * Creates a templatized instance of the specified type. Only ObjectTypes can currently be
+   * templatized; extend the logic in this function when more types can be templatized.
+   *
    * @param baseType the type to be templatized.
-   * @param templatizedTypes a list of the template JSTypes. Will be matched by
-   *     list order to the template keys on the base type.
+   * @param templatizedTypes a list of the template JSTypes. Will be matched by list order to the
+   *     template keys on the base type.
    */
   public TemplatizedType createTemplatizedType(
       ObjectType baseType, ImmutableList<JSType> templatizedTypes) {
@@ -1868,33 +1874,35 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Creates a templatized instance of the specified type.  Only ObjectTypes
-   * can currently be templatized; extend the logic in this function when
-   * more types can be templatized.
+   * Creates a templatized instance of the specified type. Only ObjectTypes can currently be
+   * templatized; extend the logic in this function when more types can be templatized.
+   *
    * @param baseType the type to be templatized.
-   * @param templatizedTypes a map from TemplateType to corresponding JSType
-   *     value. Any unfilled TemplateTypes on the baseType that are *not*
-   *     contained in this map will have UNKNOWN_TYPE used as their value.
+   * @param templatizedTypes a map from TemplateType to corresponding JSType value. Any unfilled
+   *     TemplateTypes on the baseType that are *not* contained in this map will have UNKNOWN_TYPE
+   *     used as their value.
    */
   public TemplatizedType createTemplatizedType(
       ObjectType baseType, Map<TemplateType, JSType> templatizedTypes) {
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
     TemplateTypeMap baseTemplateTypeMap = baseType.getTemplateTypeMap();
     for (TemplateType key : baseTemplateTypeMap.getUnfilledTemplateKeys()) {
-      JSType templatizedType = templatizedTypes.containsKey(key) ?
-          templatizedTypes.get(key) : getNativeType(UNKNOWN_TYPE);
+      JSType templatizedType =
+          templatizedTypes.containsKey(key)
+              ? templatizedTypes.get(key)
+              : getNativeType(UNKNOWN_TYPE);
       builder.add(templatizedType);
     }
     return createTemplatizedType(baseType, builder.build());
   }
 
   /**
-   * Creates a templatized instance of the specified type.  Only ObjectTypes
-   * can currently be templatized; extend the logic in this function when
-   * more types can be templatized.
+   * Creates a templatized instance of the specified type. Only ObjectTypes can currently be
+   * templatized; extend the logic in this function when more types can be templatized.
+   *
    * @param baseType the type to be templatized.
-   * @param templatizedTypes a list of the template JSTypes. Will be matched by
-   *     list order to the template keys on the base type.
+   * @param templatizedTypes a list of the template JSTypes. Will be matched by list order to the
+   *     template keys on the base type.
    */
   public TemplatizedType createTemplatizedType(ObjectType baseType, JSType... templatizedTypes) {
     return createTemplatizedType(baseType, ImmutableList.copyOf(templatizedTypes));
@@ -2075,8 +2083,9 @@ public class JSTypeRegistry implements Serializable {
                     templateNode.getCharno());
                 break;
               }
-              templateTypes.add(
-                  createFromTypeNodesInternal(templateNode, sourceName, scope, recordTemplateArgs));
+              JSType newTemplateParameter =
+                  createFromTypeNodesInternal(templateNode, sourceName, scope, recordTemplateArgs);
+              templateTypes.add(newTemplateParameter);
             }
             if (isForwardDeclared) {
               namedType =
@@ -2089,7 +2098,8 @@ public class JSTypeRegistry implements Serializable {
                       n.getCharno(),
                       templateTypes.build());
             } else {
-              namedType = createTemplatizedType((ObjectType) namedType, templateTypes.build());
+              ImmutableList<JSType> builtTemplateTypes = templateTypes.build();
+              namedType = createTemplatizedType((ObjectType) namedType, builtTemplateTypes);
             }
             checkNotNull(namedType);
           }

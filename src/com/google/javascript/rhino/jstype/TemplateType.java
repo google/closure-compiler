@@ -53,15 +53,26 @@ public final class TemplateType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String name;
+  private final JSType bound;
   private final Node typeTransformation;
 
   TemplateType(JSTypeRegistry registry, String name) {
-    this(registry, name, null);
+    this(registry, name, null, null);
+  }
+
+  TemplateType(JSTypeRegistry registry, String name, JSType bound) {
+    this(registry, name, bound, null);
   }
 
   TemplateType(JSTypeRegistry registry, String name, Node typeTransformation) {
-    super(registry, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
+    this(registry, name, null, typeTransformation);
+  }
+
+  TemplateType(JSTypeRegistry registry, String name, JSType bound, Node typeTransformation) {
+    super(
+        registry, bound == null ? registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE) : bound);
     this.name = name;
+    this.bound = bound == null ? registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE) : bound;
     this.typeTransformation = typeTransformation;
   }
 
@@ -100,6 +111,10 @@ public final class TemplateType extends ProxyObjectType {
 
   public Node getTypeTransformation() {
     return typeTransformation;
+  }
+
+  public JSType getBound() {
+    return bound;
   }
 
   @Override

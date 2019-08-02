@@ -114,6 +114,12 @@ class RhinoErrorReporter {
           "JSC_UNSUPPORTED_BOUNDED_GENERIC_TYPES",
           "Bounded generic semantics are currently still in development");
 
+  static final DiagnosticType BOUNDED_GENERIC_TYPE_ERROR =
+      DiagnosticType.error(
+          "JSC_BOUNDED_GENERIC_TYPE_ERROR",
+          "Bounded generic type error. "
+              + "{0} assigned to template type {1} is not a subtype of bound {2}");
+
   // A map of Rhino messages to their DiagnosticType.
   private static final Map<Pattern, DiagnosticType> typeMap =
       ImmutableMap.<Pattern, DiagnosticType>builder()
@@ -164,6 +170,7 @@ class RhinoErrorReporter {
           .put(
               Pattern.compile("Bounded generic semantics are currently still in development"),
               UNSUPPORTED_BOUNDED_GENERIC_TYPES)
+          .put(Pattern.compile("^Bounded generic type error.*"), BOUNDED_GENERIC_TYPE_ERROR)
           .build();
 
   private final ErrorHandler internalReporter;

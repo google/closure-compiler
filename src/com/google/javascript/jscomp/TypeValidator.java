@@ -41,18 +41,26 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.JsIterables.MaybeBoxedIterableOrAsyncIterable;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSType.Nullability;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.NamedType;
+import com.google.javascript.rhino.jstype.NoType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
+import com.google.javascript.rhino.jstype.ProxyObjectType;
+import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
+import com.google.javascript.rhino.jstype.TemplatizedType;
+import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.UnknownType;
+import com.google.javascript.rhino.jstype.Visitor;
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -1128,5 +1136,140 @@ class TypeValidator implements Serializable {
     CheckLevel originalDeclLevel =
         compiler.getErrorLevel(JSError.make(decl, DUP_VAR_DECLARATION, "dummy", "dummy"));
     return originalDeclLevel == CheckLevel.OFF;
+  }
+
+  void expectWellFormedTemplatizedType(Node n) {
+    WellFormedTemplatizedTypeVerifier verifier = new WellFormedTemplatizedTypeVerifier(n);
+    if (n.getJSType() != null) {
+      n.getJSType().visit(verifier);
+    }
+  }
+
+  class WellFormedTemplatizedTypeVerifier implements Visitor<Boolean> {
+    Node node;
+
+    WellFormedTemplatizedTypeVerifier(Node node) {
+      this.node = node;
+    }
+
+    @Override
+    public Boolean caseNoType(NoType type) {
+      return true;
+    }
+
+    @Override
+    public Boolean caseEnumElementType(EnumElementType type) {
+      return type.getPrimitiveType() != null ? type.getPrimitiveType().visit(this) : true;
+    }
+
+    @Override
+    public Boolean caseFunctionType(FunctionType type) {
+      boolean result = true;
+      for (JSType param : type.getParameterTypes()) {
+        result &= param.visit(this);
+      }
+      result &= type.getReturnType().visit(this);
+      return result;
+    }
+
+    @Override
+    public Boolean caseNamedType(NamedType type) {
+      return type.getReferencedType().visit(this);
+    }
+
+    @Override
+    public Boolean caseProxyObjectType(ProxyObjectType type) {
+      return true;
+    }
+
+    @Override
+    public Boolean caseUnionType(UnionType type) {
+      boolean result = true;
+      for (JSType alt : type.getAlternates()) {
+        result &= alt.visit(this);
+      }
+      return result;
+    }
+
+    @Override
+    public Boolean caseTemplatizedType(TemplatizedType type) {
+      List<TemplateType> referencedTemplates =
+          type.getReferencedType().getTemplateTypeMap().getTemplateKeys();
+      for (int i = 0; i < type.getTemplateTypes().size(); i++) {
+        JSType assignedType = type.getTemplateTypes().get(i);
+        if (i < referencedTemplates.size()) {
+          TemplateType templateType = referencedTemplates.get(i);
+          if (!assignedType.isSubtype(templateType.getBound())) {
+            registerMismatch(
+                assignedType,
+                templateType.getBound(),
+                report(
+                    JSError.make(
+                        node,
+                        RhinoErrorReporter.BOUNDED_GENERIC_TYPE_ERROR,
+                        assignedType.toString(),
+                        templateType.getReferenceName(),
+                        templateType.getBound().toString())));
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    @Override
+    public Boolean caseTemplateType(TemplateType templateType) {
+      return templateType.getBound().visit(this);
+    }
+
+    @Override
+    public Boolean caseObjectType(ObjectType type) {
+      return true;
+    }
+
+    @Override
+    public Boolean caseAllType() {
+      return true;
+    }
+
+    @Override
+    public Boolean caseBooleanType() {
+      return true;
+    }
+
+    @Override
+    public Boolean caseNoObjectType() {
+      return true;
+    }
+
+    @Override
+    public Boolean caseUnknownType() {
+      return true;
+    }
+
+    @Override
+    public Boolean caseNullType() {
+      return true;
+    }
+
+    @Override
+    public Boolean caseNumberType() {
+      return true;
+    }
+
+    @Override
+    public Boolean caseStringType() {
+      return true;
+    }
+
+    @Override
+    public Boolean caseSymbolType() {
+      return true;
+    }
+
+    @Override
+    public Boolean caseVoidType() {
+      return true;
+    }
   }
 }

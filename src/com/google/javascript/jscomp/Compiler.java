@@ -467,6 +467,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (!options.isWarnUnsupportedBoundedGenerics()
         || !options.enables(DiagnosticGroups.UNSUPPORTED_BOUNDED_GENERIC_TYPES)) {
       options.setWarningLevel(DiagnosticGroups.UNSUPPORTED_BOUNDED_GENERIC_TYPES, CheckLevel.OFF);
+      options.setWarningLevel(DiagnosticGroups.BOUNDED_GENERIC_TYPE_ERROR, CheckLevel.WARNING);
     }
   }
 

@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.StaticRef;
@@ -1769,7 +1770,7 @@ public final class SymbolTable {
 
         for (Node typeAst : info.getTypeNodes()) {
           SymbolScope scope = scopes.get(t.getScopeRoot());
-          visitTypeNode(info.getTemplateTypeNames(), scope == null ? globalScope : scope, typeAst);
+          visitTypeNode(info.getTemplateTypes(), scope == null ? globalScope : scope, typeAst);
         }
       }
     }
@@ -1786,10 +1787,11 @@ public final class SymbolTable {
       }
     }
 
-    public void visitTypeNode(ImmutableList<String> templateTypeNames, SymbolScope scope, Node n) {
+    public void visitTypeNode(
+        ImmutableMap<String, JSTypeExpression> templateTypeNames, SymbolScope scope, Node n) {
       if (n.isString()
           && !isNativeSourcelessType(n.getString())
-          && !templateTypeNames.contains(n.getString())) {
+          && !templateTypeNames.containsKey(n.getString())) {
         Symbol symbol = lookupPossiblyDottedName(scope, n.getString());
         if (symbol != null) {
           Node ref = n;

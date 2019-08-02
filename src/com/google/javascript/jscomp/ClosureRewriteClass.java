@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -30,6 +31,7 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -680,11 +682,13 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
 
     // merge @template types if they exist
-    List<String> templateNames = new ArrayList<>();
-    templateNames.addAll(classInfo.getTemplateTypeNames());
-    templateNames.addAll(ctorInfo.getTemplateTypeNames());
-    for (String typeName : templateNames) {
-      mergedInfo.recordTemplateTypeName(typeName);
+    ImmutableMap<String, JSTypeExpression> classTemplates = classInfo.getTemplateTypes();
+    ImmutableMap<String, JSTypeExpression> ctorTemplates = ctorInfo.getTemplateTypes();
+    for (Map.Entry<String, JSTypeExpression> entry : classTemplates.entrySet()) {
+      mergedInfo.recordTemplateTypeName(entry.getKey(), entry.getValue());
+    }
+    for (Map.Entry<String, JSTypeExpression> entry : ctorTemplates.entrySet()) {
+      mergedInfo.recordTemplateTypeName(entry.getKey(), entry.getValue());
     }
     return mergedInfo.build();
   }

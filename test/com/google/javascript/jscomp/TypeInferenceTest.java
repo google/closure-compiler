@@ -1165,6 +1165,28 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testNew4() {
+    inFunction(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @param {!Array<T>} x",
+            " * @param {T} y",
+            " * @param {S} z",
+            " * @param {U} m",
+            " * @template T,S,U",
+            " */",
+            "function F(x,y,z,m) {}",
+            "var /** !Array<number> */ x = [];",
+            "var y = 'foo';",
+            "var z = true;",
+            "var m = 9;",
+            "var result = new F(x,y,z,m);"));
+
+    assertThat(getType("result").toString()).isEqualTo("F<(number|string),boolean,number>");
+  }
+
+  @Test
   public void testNewRest() {
     inFunction(
         lines(
