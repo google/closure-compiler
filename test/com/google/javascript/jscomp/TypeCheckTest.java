@@ -5455,24 +5455,25 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBadExtends5() {
-    testTypes(""
-        + "/** @interface */\n"
-        + "var MyInterface = function() {};\n"
-        + "MyInterface.prototype = {\n"
-        + "  /** @return {number} */\n"
-        + "  method: function() {}\n"
-        + "}\n"
-        + "/** @extends {MyInterface}\n * @interface */\n"
-        + "var MyOtherInterface = function() {};\n"
-        + "MyOtherInterface.prototype = {\n"
-        + "  /** @return {string} \n @override */\n"
-        + "  method: function() {}\n"
-        + "}",
-        ""
-        + "mismatch of the method property type and the type of the property "
-        + "it overrides from superclass MyInterface\n"
-        + "original: function(this:MyInterface): number\n"
-        + "override: function(this:MyOtherInterface): string");
+    testTypes(
+        lines(
+            "/** @interface */",
+            "var MyInterface = function() {};",
+            "MyInterface.prototype = {",
+            "  /** @return {number} */",
+            "  method: function() {}",
+            "}",
+            "/** @extends {MyInterface}\n * @interface */",
+            "var MyOtherInterface = function() {};",
+            "MyOtherInterface.prototype = {",
+            "  /** @return {string} \n @override */",
+            "  method: function() {}",
+            "}"),
+        lines(
+            "mismatch of the method property on type MyOtherInterface and the type of the property"
+                + " it overrides from interface MyInterface",
+            "original: function(this:MyInterface): number",
+            "override: function(this:MyOtherInterface): string"));
   }
 
   @Test
@@ -8511,7 +8512,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
               "mismatch of the data property on type SubFoo and the type "
                   + "of the property it overrides from interface Foo",
               "original: string",
-              "override: (Object|string)")
+              "override: (Object|null|string)")
         });
   }
 
@@ -13186,6 +13187,23 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testInterfacePropertyBadOverrideFails() {
+    testTypes(
+        lines(
+            "/** @interface */function Super() {};",
+            "/** @type {number} */",
+            "Super.prototype.foo;",
+            "/** @interface @extends {Super} */function Sub() {};",
+            "/** @type {string} */",
+            "Sub.prototype.foo;"),
+        lines(
+            "mismatch of the foo property on type Sub and the type of the property it "
+                + "overrides from interface Super",
+            "original: number",
+            "override: string"));
+  }
+
+  @Test
   public void testInterfaceInheritanceCheck1() {
     testTypes(
         "/** @interface */function Super() {};" +
@@ -16944,17 +16962,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testMultipleExtendsInterface6() {
     testTypes(
-        "/** @interface */function Super1() {};" +
-        "/** @interface */function Super2() {};" +
-        "/** @param {number} bar */Super2.prototype.foo = function(bar) {};" +
-        "/** @interface\n @extends {Super1}\n " +
-        "@extends {Super2} */function Sub() {};" +
-        "/** @override\n @param {string} bar */Sub.prototype.foo =\n" +
-        "function(bar) {};",
-        "mismatch of the foo property type and the type of the property it " +
-        "overrides from superclass Super2\n" +
-        "original: function(this:Super2, number): undefined\n" +
-        "override: function(this:Sub, string): undefined");
+        lines(
+            "/** @interface */function Super1() {};",
+            "/** @interface */function Super2() {};",
+            "/** @param {number} bar */Super2.prototype.foo = function(bar) {};",
+            "/** @interface @extends {Super1} @extends {Super2} */function Sub() {};",
+            "/** @override @param {string} bar */Sub.prototype.foo =",
+            "function(bar) {};"),
+        lines(
+            "mismatch of the foo property on type Sub and the type of the property it "
+                + "overrides from interface Super2",
+            "original: function(this:Super2, number): undefined",
+            "override: function(this:Sub, string): undefined"));
   }
 
   @Test
@@ -18194,17 +18213,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBadSuperclassInheritance2() {
-    testTypes(lines(
-        "/** @constructor */",
-        "function Foo() {}",
-        "/** @type {number} */",
-        "Foo.prototype.myprop = 2;",
-        "",
-        "/** @constructor @extends {Foo} */",
-        "function Bar() {}",
-        "/** @override @type {string} */",
-        "Bar.prototype.myprop = 'qwer';"),
-        TypeCheck.HIDDEN_SUPERCLASS_PROPERTY_MISMATCH);
+    testTypes(
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @type {number} */",
+            "Foo.prototype.myprop = 2;",
+            "",
+            "/** @constructor @extends {Foo} */",
+            "function Bar() {}",
+            "/** @override @type {string} */",
+            "Bar.prototype.myprop = 'qwer';"),
+        TypeValidator.HIDDEN_SUPERCLASS_PROPERTY_MISMATCH);
   }
 
   // If the property has no initializer, the HIDDEN_SUPERCLASS_PROPERTY_MISMATCH warning is missed.

@@ -144,10 +144,20 @@ class TypeValidator implements Serializable {
   static final DiagnosticType HIDDEN_INTERFACE_PROPERTY_MISMATCH =
       DiagnosticType.warning(
           "JSC_HIDDEN_INTERFACE_PROPERTY_MISMATCH",
-          "mismatch of the {0} property on type {1} and the type "
-              + "of the property it overrides from interface {2}\n"
-              + "original: {3}\n"
-              + "override: {4}");
+          "mismatch of the {0} property on type {4} and the type "
+              + "of the property it overrides from interface {1}\n"
+              + "original: {2}\n"
+              + "override: {3}");
+
+  // TODO(goktug): consider updating super class / interface property mismatch to follow the same
+  // pattern.
+  static final DiagnosticType HIDDEN_SUPERCLASS_PROPERTY_MISMATCH =
+      DiagnosticType.warning(
+          "JSC_HIDDEN_SUPERCLASS_PROPERTY_MISMATCH",
+          "mismatch of the {0} property type and the type "
+              + "of the property it overrides from superclass {1}\n"
+              + "original: {2}\n"
+              + "override: {3}");
 
   static final DiagnosticType ABSTRACT_METHOD_NOT_IMPLEMENTED =
       DiagnosticType.warning(
@@ -866,15 +876,23 @@ class TypeValidator implements Serializable {
   void expectAllInterfaceProperties(Node n, FunctionType type) {
     ObjectType instance = type.getInstanceType();
     for (ObjectType implemented : type.getAllImplementedInterfaces()) {
-      // Case: `/** @interface */ class Foo { constructor() { this.prop; } }`
-      for (String prop : implemented.getOwnPropertyNames()) {
-        expectInterfaceProperty(n, instance, implemented, prop);
-      }
-      if (implemented.getImplicitPrototype() != null) {
-        // Case: `/** @interface */ class Foo { prop() { } }`
-        for (String prop : implemented.getImplicitPrototype().getOwnPropertyNames()) {
-          expectInterfaceProperty(n, instance, implemented, prop);
-        }
+      expectInterfaceProperties(n, instance, implemented);
+    }
+    for (ObjectType extended : type.getExtendedInterfaces()) {
+      expectInterfaceProperties(n, instance, extended);
+    }
+  }
+
+  private void expectInterfaceProperties(
+      Node n, ObjectType instance, ObjectType ancestorInterface) {
+    // Case: `/** @interface */ class Foo { constructor() { this.prop; } }`
+    for (String prop : ancestorInterface.getOwnPropertyNames()) {
+      expectInterfaceProperty(n, instance, ancestorInterface, prop);
+    }
+    if (ancestorInterface.getImplicitPrototype() != null) {
+      // Case: `/** @interface */ class Foo { prop() { } }`
+      for (String prop : ancestorInterface.getImplicitPrototype().getOwnPropertyNames()) {
+        expectInterfaceProperty(n, instance, ancestorInterface, prop);
       }
     }
   }
@@ -886,9 +904,11 @@ class TypeValidator implements Serializable {
   private void expectInterfaceProperty(
       Node n, ObjectType instance, ObjectType implementedInterface, String propName) {
     OwnedProperty propSlot = instance.findClosestDefinition(propName);
-    if (propSlot == null || propSlot.isOwnedByInterface()) {
-      if (instance.getConstructor().isAbstract()) {
-        // Abstract classes are not required to implement interface properties.
+    if (propSlot == null
+        || (!instance.getConstructor().isInterface() && propSlot.isOwnedByInterface())) {
+
+      if (instance.getConstructor().isAbstract() || instance.getConstructor().isInterface()) {
+        // Abstract classes and interfaces are not required to implement interface properties.
         return;
       }
       registerMismatch(
@@ -902,40 +922,50 @@ class TypeValidator implements Serializable {
                   implementedInterface.getReferenceName(),
                   instance.toString())));
     } else {
+      boolean local = propSlot.getOwnerInstanceType().equals(instance);
+      if (!local && instance.getConstructor().isInterface()) {
+        // non-local interface mismatches already handled via interface property conflict checks.
+        return;
+      }
+
       Property prop = propSlot.getValue();
       Node propNode = prop.getDeclaration() == null ? null : prop.getDeclaration().getNode();
-
-      // Fall back on the constructor node if we can't find a node for the
-      // property.
+      // Fall back on the constructor node if we can't find a node for the property.
       propNode = propNode == null ? n : propNode;
 
-      JSType found = prop.getType();
-      found = found.restrictByNotNullOrUndefined();
-
-      JSType required = implementedInterface.getPropertyType(propName);
-      TemplateTypeMap typeMap = implementedInterface.getTemplateTypeMap();
-      if (!typeMap.isEmpty()) {
-        TemplateTypeReplacer replacer =
-            TemplateTypeReplacer.forPartialReplacement(typeRegistry, typeMap);
-        required = required.visit(replacer);
-      }
-      required = required.restrictByNotNullOrUndefined();
-
-      if (!found.isSubtype(required, this.subtypingMode)) {
-        // Implemented, but not correctly typed
-        JSError err =
-            JSError.make(
-                propNode,
-                HIDDEN_INTERFACE_PROPERTY_MISMATCH,
-                propName,
-                instance.toString(),
-                implementedInterface.getReferenceName(),
-                required.toString(),
-                found.toString());
-        registerMismatch(found, required, err);
-        report(err);
-      }
+      checkPropertyType(propNode, instance, implementedInterface, propName, prop.getType());
     }
+  }
+
+  /**
+   * Check the property is correctly typed (i.e. subtype of the parent property's type declaration).
+   */
+  void checkPropertyType(
+      Node n, JSType instance, ObjectType parent, String propertyName, JSType found) {
+    JSType required = parent.getPropertyType(propertyName);
+    TemplateTypeMap typeMap = instance.getTemplateTypeMap();
+    if (!typeMap.isEmpty() && required.hasAnyTemplateTypes()) {
+      required = required.visit(TemplateTypeReplacer.forPartialReplacement(typeRegistry, typeMap));
+    }
+
+    if (found.isSubtype(required, this.subtypingMode)) {
+      return;
+    }
+
+    // Implemented, but not correctly typed
+    JSError err =
+        JSError.make(
+            n,
+            parent.getConstructor().isInterface()
+                ? HIDDEN_INTERFACE_PROPERTY_MISMATCH
+                : HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
+            propertyName,
+            parent.getReferenceName(),
+            required.toString(),
+            found.toString(),
+            instance.toString());
+    registerMismatch(found, required, err);
+    report(err);
   }
 
   /**

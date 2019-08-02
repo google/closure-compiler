@@ -55,8 +55,6 @@ import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
-import com.google.javascript.rhino.jstype.TemplateTypeMap;
-import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.HashMap;
@@ -230,14 +228,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_HIDDEN_INTERFACE_PROPERTY",
           "property {0} already defined on interface {1}; use @override to override it");
 
-  static final DiagnosticType HIDDEN_SUPERCLASS_PROPERTY_MISMATCH =
-      DiagnosticType.warning(
-          "JSC_HIDDEN_SUPERCLASS_PROPERTY_MISMATCH",
-          "mismatch of the {0} property type and the type "
-              + "of the property it overrides from superclass {1}\n"
-              + "original: {2}\n"
-              + "override: {3}");
-
   static final DiagnosticType HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH =
       DiagnosticType.warning(
           "JSC_HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH",
@@ -341,7 +331,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           CONFLICTING_EXTENDED_TYPE,
           CONFLICTING_IMPLEMENTED_TYPE,
           BAD_IMPLEMENTED_TYPE,
-          HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
+          TypeValidator.HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
           HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH,
           UNKNOWN_OVERRIDE,
           UNKNOWN_PROTOTYPAL_OVERRIDE,
@@ -1535,54 +1525,55 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       String propertyName,
       @Nullable JSDocInfo info,
       JSType propertyType) {
+
+    // No need to check special properties; @override is not required for them, nor they are
+    // manually typed by the developers.
+    if ("__proto__".equals(propertyName) || "constructor".equals(propertyName)) {
+      return;
+    }
+
+    // Interfaces are checked elsewhere.
+    if (ctorType.isInterface()) {
+      return;
+    }
+
     // If the supertype doesn't resolve correctly, we've warned about this already.
     if (hasUnknownOrEmptySupertype(ctorType)) {
       return;
     }
 
-    FunctionType superCtor = ctorType.getSuperClassConstructor();
+    boolean foundProperty = false;
 
-    ObjectType superClass = null;
-    boolean superClassHasProperty = false;
-    boolean superClassHasDeclaredProperty = false;
+    FunctionType superCtor = ctorType.getSuperClassConstructor();
     if (superCtor != null) {
       OwnedProperty propSlot = superCtor.getInstanceType().findClosestDefinition(propertyName);
-      superClassHasProperty = propSlot != null && !propSlot.isOwnedByInterface();
+      boolean superClassHasProperty = propSlot != null && !propSlot.isOwnedByInterface();
+      foundProperty |= superClassHasProperty;
+
       if (superClassHasProperty) {
-        superClass = propSlot.getOwnerInstanceType();
-        superClassHasDeclaredProperty = !propSlot.getValue().isTypeInferred();
+        ObjectType superClass = propSlot.getOwnerInstanceType();
+        boolean superClassHasDeclaredProperty = !propSlot.getValue().isTypeInferred();
+        if (superClassHasDeclaredProperty) {
+          if (isDeclaredLocally(ctorType, propertyName) && !declaresOverride(info)) {
+            compiler.report(
+                JSError.make(
+                    n, HIDDEN_SUPERCLASS_PROPERTY, propertyName, superClass.getReferenceName()));
+          }
+          validator.checkPropertyType(
+              n, ctorType.getTypeOfThis(), superClass, propertyName, propertyType);
+        }
       }
     }
 
-    // For interface
-    boolean superInterfaceHasProperty = false;
-    boolean superInterfaceHasDeclaredProperty = false;
-    if (ctorType.isInterface()) {
-      for (ObjectType interfaceType : ctorType.getExtendedInterfaces()) {
-        superInterfaceHasProperty =
-            superInterfaceHasProperty || interfaceType.hasProperty(propertyName);
-        superInterfaceHasDeclaredProperty =
-            superInterfaceHasDeclaredProperty || interfaceType.isPropertyTypeDeclared(propertyName);
-      }
-    }
-
-    boolean declaredOverride = declaresOverride(info);
-
-    boolean foundInterfaceProperty = false;
     for (ObjectType implementedInterface : ctorType.getAllImplementedInterfaces()) {
       if (implementedInterface.isUnknownType() || implementedInterface.isEmptyType()) {
         continue;
       }
-      checkState(implementedInterface.isInstanceType(), implementedInterface);
-
       OwnedProperty propSlot = implementedInterface.findClosestDefinition(propertyName);
       boolean interfaceHasProperty = propSlot != null;
-      foundInterfaceProperty = foundInterfaceProperty || interfaceHasProperty;
-      if (!declaredOverride
-          && interfaceHasProperty
-          && !"__proto__".equals(propertyName)
-          && !"constructor".equals(propertyName)) {
-        // @override not present, but the property does override an interface property
+      foundProperty |= interfaceHasProperty;
+
+      if (interfaceHasProperty && !declaresOverride(info)) {
         compiler.report(
             JSError.make(
                 n,
@@ -1592,73 +1583,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
     }
 
-    if (!declaredOverride && !superClassHasProperty && !superInterfaceHasProperty) {
-      // nothing to do here, it's just a plain new property
-      return;
-    }
-
-    boolean declaredLocally =
-        ctorType.isConstructor()
-            && (ctorType.getPrototype().hasOwnProperty(propertyName)
-                || ctorType.getInstanceType().hasOwnProperty(propertyName));
-    if (!declaredOverride
-        && superClassHasDeclaredProperty
-        && declaredLocally
-        && !"__proto__".equals(propertyName)
-        // constructor always "overrides" the superclass "constructor" there is no
-        // value in marking it with "@override".
-        && !"constructor".equals(propertyName)) {
-      // @override not present, but the property does override a superclass
-      // property
-      compiler.report(
-          JSError.make(n, HIDDEN_SUPERCLASS_PROPERTY, propertyName, superClass.getReferenceName()));
-    }
-
-    // @override is present and we have to check that it is ok
-    if (superClassHasDeclaredProperty) {
-      // there is a superclass implementation
-      JSType superClassPropType = superClass.getPropertyType(propertyName);
-      TemplateTypeMap ctorTypeMap = ctorType.getTypeOfThis().getTemplateTypeMap();
-      if (!ctorTypeMap.isEmpty()) {
-        superClassPropType =
-            superClassPropType.visit(
-                TemplateTypeReplacer.forPartialReplacement(typeRegistry, ctorTypeMap));
-      }
-
-      if (!propertyType.isSubtype(superClassPropType, this.subtypingMode)) {
-        compiler.report(
-            JSError.make(
-                n,
-                HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
-                propertyName,
-                superClass.getReferenceName(),
-                superClassPropType.toString(),
-                propertyType.toString()));
-      }
-    } else if (superInterfaceHasDeclaredProperty) {
-      // there is an super interface property
-      for (ObjectType interfaceType : ctorType.getExtendedInterfaces()) {
-        OwnedProperty propSlot = interfaceType.findClosestDefinition(propertyName);
-        if (propSlot != null) {
-          JSType superPropertyType = propSlot.getValue().getType();
-          if (!propertyType.isSubtype(superPropertyType, this.subtypingMode)) {
-            compiler.report(
-                JSError.make(
-                    n,
-                    HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
-                    propertyName,
-                    propSlot.getOwnerInstanceType().getReferenceName(),
-                    superPropertyType.toString(),
-                    propertyType.toString()));
-          }
-        }
-      }
-    } else if (!foundInterfaceProperty && !superClassHasProperty && !superInterfaceHasProperty) {
-      // there is no superclass nor interface implementation
+    if (!foundProperty && declaresOverride(info)) {
       compiler.report(
           JSError.make(
               n, UNKNOWN_OVERRIDE, propertyName, ctorType.getInstanceType().getReferenceName()));
     }
+  }
+
+  private static boolean isDeclaredLocally(FunctionType ctorType, String propertyName) {
+    return ctorType.isConstructor()
+        && (ctorType.getPrototype().hasOwnProperty(propertyName)
+            || ctorType.getInstanceType().hasOwnProperty(propertyName));
   }
 
   /**
@@ -2500,6 +2435,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       compiler.report(
           JSError.make(n, INTERFACE_EXTENDS_LOOP, loopPath.get(0).getDisplayName(), strPath));
     }
+
+    validator.expectAllInterfaceProperties(n, functionType);
   }
 
   private String getBestFunctionName(Node n) {
