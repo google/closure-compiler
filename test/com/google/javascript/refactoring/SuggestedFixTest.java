@@ -62,6 +62,38 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testInsertBeforeWithNonJSDocBlockComment() {
+    String before = "var someRandomCode = {};";
+    String after = "/* some comment */\ngoog.foo();";
+    Compiler compiler = getCompiler(before + after);
+    Node root = compileToScriptRoot(compiler);
+    Node newNode =
+        IR.exprResult(
+            IR.call(IR.getprop(IR.name("goog2"), IR.string("get")), IR.string("service")));
+    SuggestedFix fix =
+        new SuggestedFix.Builder().insertBefore(root.getLastChild(), newNode, compiler).build();
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), 0, "goog2.get('service');\n");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testInsertBeforeWithNonJSDocLineComment() {
+    String before = "var someRandomCode = {};";
+    String after = "// some comment \ngoog.foo();";
+    Compiler compiler = getCompiler(before + after);
+    Node root = compileToScriptRoot(compiler);
+    Node newNode =
+        IR.exprResult(
+            IR.call(IR.getprop(IR.name("goog2"), IR.string("get")), IR.string("service")));
+    SuggestedFix fix =
+        new SuggestedFix.Builder().insertBefore(root.getLastChild(), newNode, compiler).build();
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), 0, "goog2.get('service');\n");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
   public void testReplaceText() {
     String input = "var foo = new Bar();";
     Compiler compiler = getCompiler(input);
@@ -94,6 +126,30 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .delete(root.getLastChild())
         .build();
+    CodeReplacement replacement = CodeReplacement.create(before.length(), after.length(), "");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testDelete_NonJSDocLineCommentBeforeNode() {
+    String before = "var foo = new Bar();";
+    String after = "// blah \n var baz = new Baz();";
+    String input = before + after;
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix = new SuggestedFix.Builder().delete(root.getLastChild()).build();
+    CodeReplacement replacement = CodeReplacement.create(before.length(), after.length(), "");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testDelete_NonJSDocBlockCommentBeforeNode() {
+    String before = "var foo = new Bar();";
+    String after = "/* blah */ var baz = new Baz();";
+    String input = before + after;
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix = new SuggestedFix.Builder().delete(root.getLastChild()).build();
     CodeReplacement replacement = CodeReplacement.create(before.length(), after.length(), "");
     assertReplacement(fix, replacement);
   }
@@ -142,6 +198,55 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testDelete_multipleVarDeclarationWithJSDocComments() {
+    String input = "var /** fooComment*/foo = 3, bar, baz;";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+
+    // Delete the 1st variable on the line. Make sure the deletion includes the assignment and the
+    // trailing comma.
+    SuggestedFix fix = new SuggestedFix.Builder().delete(root.getFirstFirstChild()).build();
+    CodeReplacement replacement =
+        CodeReplacement.create(4, "/** fooComment*/foo = 3, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the 2nd variable.
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getSecondChild()).build();
+    replacement = CodeReplacement.create(input.indexOf("bar, "), "bar, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the last variable. Make sure it removes the leading comma.
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getLastChild()).build();
+    replacement = CodeReplacement.create(input.indexOf(", baz"), ", baz".length(), "");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testDelete_multipleVarDeclarationWithNonJSDocComments() {
+    String input = "var /* fooComment*/ foo = 3, bar, baz;";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+
+    // Delete the 1st variable on the line. Make sure the deletion includes the assignment and the
+    // trailing comma.
+    SuggestedFix fix = new SuggestedFix.Builder().delete(root.getFirstFirstChild()).build();
+
+    CodeReplacement replacement =
+        CodeReplacement.create(4, "/* fooComment*/ foo = 3, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the 2nd variable.
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getSecondChild()).build();
+    replacement = CodeReplacement.create(input.indexOf("bar, "), "bar, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the last variable. Make sure it removes the leading comma.
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getLastChild()).build();
+    replacement = CodeReplacement.create(input.indexOf(", baz"), ", baz".length(), "");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
   public void testDelete_multipleLetDeclaration() {
     String input = "let foo = 3, bar, baz;";
     Compiler compiler = getCompiler(input);
@@ -171,6 +276,29 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testDelete_multipleLetDeclarationWithNonJSDocComment() {
+    String input = "let foo = 3, /* blah */ bar, baz;";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+
+    // Delete the 1st variable on the line. Make sure the deletion includes the assignment and the
+    // trailing comma.
+    SuggestedFix fix = new SuggestedFix.Builder().delete(root.getFirstFirstChild()).build();
+    CodeReplacement replacement = CodeReplacement.create(4, "foo = 3, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the 2nd variable.
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getSecondChild()).build();
+    replacement = CodeReplacement.create(13, "/* blah */ bar, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the last variable. Make sure it removes the leading comma.
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getLastChild()).build();
+    replacement = CodeReplacement.create(input.indexOf(", baz"), ", baz".length(), "");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
   public void testDelete_multipleConstDeclaration() {
     String input = "const foo = 3, bar = 4, baz = 5;";
     Compiler compiler = getCompiler(input);
@@ -188,14 +316,14 @@ public class SuggestedFixTest {
     fix = new SuggestedFix.Builder()
         .delete(root.getFirstChild().getSecondChild())
         .build();
-    replacement = CodeReplacement.create(15, "bar = 4, ".length(), "");
+    replacement = CodeReplacement.create(input.indexOf("bar = 4, "), "bar = 4, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the last variable. Make sure it removes the leading comma.
     fix = new SuggestedFix.Builder()
         .delete(root.getFirstChild().getLastChild())
         .build();
-    replacement = CodeReplacement.create(22, ", baz = 5".length(), "");
+    replacement = CodeReplacement.create(input.indexOf(", baz = 5"), ", baz = 5".length(), "");
     assertReplacement(fix, replacement);
   }
 
@@ -662,6 +790,32 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testDeleteArgumentFirstWithBlockComment() {
+    String originalCode = "f(/* blah */ a, b, c);";
+    String expectedCode = "f(b, c);";
+
+    Compiler compiler = getCompiler(originalCode);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 0).build();
+
+    assertChanges(fix, "", originalCode, expectedCode);
+  }
+
+  @Test
+  public void testDeleteArgumentFirstWithLineComment() {
+    String originalCode = "f(// blah \n a, b, c);";
+    String expectedCode = "f(b, c);";
+
+    Compiler compiler = getCompiler(originalCode);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 0).build();
+
+    assertChanges(fix, "", originalCode, expectedCode);
+  }
+
+  @Test
   public void testDeleteArgumentMiddle() {
     String originalCode = "f(a, b, c);";
     String expectedCode = "f(a, c);";
@@ -676,6 +830,32 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testDeleteArgumentMiddleWithBlockComment() {
+    String originalCode = "f(a, /* blah */ b, c);";
+    String expectedCode = "f(a, c);";
+
+    Compiler compiler = getCompiler(originalCode);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 1).build();
+
+    assertChanges(fix, "", originalCode, expectedCode);
+  }
+
+  @Test
+  public void testDeleteArgumentMiddleWithLineComment() {
+    String originalCode = "f(a, // blah \n b, c);";
+    String expectedCode = "f(a, c);";
+
+    Compiler compiler = getCompiler(originalCode);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 1).build();
+
+    assertChanges(fix, "", originalCode, expectedCode);
+  }
+
+  @Test
   public void testDeleteArgumentLast() {
     String originalCode = "f(a, b, c);";
     String expectedCode = "f(a, b);";
@@ -685,6 +865,32 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .deleteArgument(root.getFirstFirstChild(), 2)
         .build();
+
+    assertChanges(fix, "", originalCode, expectedCode);
+  }
+
+  @Test
+  public void testDeleteArgumentLastBlockComment() {
+    String originalCode = "f(a, b, /* blah */ c);";
+    String expectedCode = "f(a, b);";
+
+    Compiler compiler = getCompiler(originalCode);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 2).build();
+
+    assertChanges(fix, "", originalCode, expectedCode);
+  }
+
+  @Test
+  public void testDeleteArgumentLastLineComment() {
+    String originalCode = "f(a, b, // blah \n c);";
+    String expectedCode = "f(a, b);";
+
+    Compiler compiler = getCompiler(originalCode);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 2).build();
 
     assertChanges(fix, "", originalCode, expectedCode);
   }
@@ -992,11 +1198,11 @@ public class SuggestedFixTest {
     String googRequire = "goog.require('abc.def');\n";
     String input =
         before
-        + googRequire
-        + "goog.require('def');\n"
-        + "\n"
-        + "/** @private */\n"
-        + "function foo_() {};\n";
+            + googRequire
+            + "goog.require('def');\n"
+            + "\n"
+            + "/** @private */\n"
+            + "function foo_() {};\n";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));

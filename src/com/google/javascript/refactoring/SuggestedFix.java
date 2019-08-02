@@ -244,12 +244,7 @@ public final class SuggestedFix {
     }
 
     private Builder insertBefore(Node nodeToInsertBefore, String content, String sortKey) {
-      int startPosition = nodeToInsertBefore.getSourceOffset();
-      JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(nodeToInsertBefore);
-      // ClosureRewriteModule adds jsDOC everywhere.
-      if (jsDoc != null && jsDoc.getOriginalCommentString() != null) {
-        startPosition = jsDoc.getOriginalCommentPosition();
-      }
+      int startPosition = getStartPositionForNodeConsideringComments(nodeToInsertBefore);
       Preconditions.checkNotNull(nodeToInsertBefore.getSourceFileName(),
           "No source file name for node: %s", nodeToInsertBefore);
       replacements.put(
@@ -268,18 +263,16 @@ public final class SuggestedFix {
 
     /** Deletes a node and its contents from the source file. */
     private Builder delete(Node n, boolean deleteWhitespaceBefore) {
-      int startPosition = n.getSourceOffset();
-      int length;
-      if (n.getNext() != null && NodeUtil.getBestJSDocInfo(n.getNext()) == null) {
+      int startPosition = getStartPositionForNodeConsideringComments(n);
+      int startOffsetWithoutComments = n.getSourceOffset();
+      int length = (startOffsetWithoutComments - startPosition) + n.getLength();
+
+      if (n.getNext() != null
+          && NodeUtil.getBestJSDocInfo(n.getNext()) == null
+          && n.getNext().getNonJSDocComment() == null) {
         length = n.getNext().getSourceOffset() - startPosition;
-      } else {
-        length = n.getLength();
       }
-      JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
-      if (jsDoc != null) {
-        length += (startPosition - jsDoc.getOriginalCommentPosition());
-        startPosition = jsDoc.getOriginalCommentPosition();
-      }
+
       // Variable declarations and string keys require special handling since the node doesn't
       // contain enough if it has a child. The NAME node in a var/let/const declaration doesn't
       // include its child in its length, and the code needs to know how to delete the commas.
@@ -288,7 +281,7 @@ public final class SuggestedFix {
       // so that it can be reused in other methods.
       if ((n.isName() && NodeUtil.isNameDeclaration(n.getParent())) || n.isStringKey()) {
         if (n.getNext() != null) {
-          length = n.getNext().getSourceOffset() - startPosition;
+          length = getStartPositionForNodeConsideringComments(n.getNext()) - startPosition;
         } else if (n.hasChildren()) {
           Node child = n.getFirstChild();
           length = (child.getSourceOffset() + child.getLength()) - startPosition;
@@ -498,7 +491,7 @@ public final class SuggestedFix {
       JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
       if (jsDoc != null) {
         startPosition = jsDoc.getOriginalCommentPosition();
-        length = n.getSourceOffset() - jsDoc.getOriginalCommentPosition();
+        length = jsDoc.getOriginalCommentString().length();
       }
       replacements.put(
           n.getSourceFileName(), CodeReplacement.create(startPosition, length, newJsDoc));
@@ -569,13 +562,7 @@ public final class SuggestedFix {
             position == i, "The specified position must be less than the number of arguments.");
         startPosition = n.getSourceOffset() + n.getLength() - 1;
       } else {
-        JSDocInfo jsDoc = argument.getJSDocInfo();
-        if (jsDoc != null) {
-          // Remove any cast or associated JS Doc if it exists.
-          startPosition = jsDoc.getOriginalCommentPosition();
-        } else {
-          startPosition = argument.getSourceOffset();
-        }
+        startPosition = getStartPositionForNodeConsideringComments(argument);
       }
 
       String newContent = Joiner.on(", ").join(args);
@@ -624,18 +611,8 @@ public final class SuggestedFix {
           startOfArgumentToRemove = argument.getSourceOffset() + argument.getLength();
         } else if (i == position) {
           if (position == 0) {
-            startOfArgumentToRemove = argument.getSourceOffset();
-
-            // If we have a prefix jsdoc, back up further and remove that too.
-            JSDocInfo jsDoc = argument.getJSDocInfo();
-            if (jsDoc != null) {
-              int jsDocPosition = jsDoc.getOriginalCommentPosition();
-              if (jsDocPosition < startOfArgumentToRemove) {
-                startOfArgumentToRemove = jsDocPosition;
-              }
-            }
+            startOfArgumentToRemove = getStartPositionForNodeConsideringComments(argument);
           }
-
           endOfArgumentToRemove = argument.getSourceOffset() + argument.getLength();
         } else if (i > position) {
           if (position == 0) {
