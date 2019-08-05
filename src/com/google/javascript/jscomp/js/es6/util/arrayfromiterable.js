@@ -23,7 +23,7 @@
 
 /**
  * Copies the values from an Iterable into an Array.
- * @param {string|!Array<T>|!Iterable<T>|!Arguments<T>} iterable
+ * @param {string|!Array<T>|!Iterable<T>|!Arguments} iterable
  * @return {!Array<T>}
  * @template T
  */

@@ -23,7 +23,7 @@
  * Creates an iterator for the given iterable.  This iterator should never
  * be exposed to user code.
  *
- * @param {string|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable
+ * @param {string|!Iterable<T>|!Iterator<T>|!Arguments} iterable
  * @return {!Iterator<T>}
  * @template T
  * @suppress {reportUnknownTypes}

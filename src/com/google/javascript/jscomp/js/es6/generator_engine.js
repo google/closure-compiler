@@ -335,7 +335,7 @@ $jscomp.generator.Context.prototype.yield = function(value, resumeAddress) {
  * Causes the state machine program to yield all values from an iterator.
  *
  * @final
- * @param {string|!Iterator<VALUE>|!Iterable<VALUE>|!Arguments<VALUE>} iterable
+ * @param {string|!Iterator<VALUE>|!Iterable<VALUE>|!Arguments} iterable
  *     Iterator to yeild all values from.
  * @param {number} resumeAddress The address where the program should resume.
  * @return {void | {value: VALUE}}
