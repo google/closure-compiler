@@ -150,6 +150,12 @@ public final class LazyParsedDependencyInfoTest {
     assertThat(compiler.getErrorManager().getWarnings()).isEmpty();
     assertThat(info.getLoadFlags()).containsExactly("module", "es6", "lang", "es6");
     assertThat(compiler.getErrorManager().getWarnings())
-        .containsExactly(JSError.make(ModuleLoader.MODULE_CONFLICT, "my/js.js"));
+        .containsExactly(
+            JSError.make(
+                "my/js.js",
+                /* lineno= */ -1,
+                /* charno= */ -1,
+                ModuleLoader.MODULE_CONFLICT,
+                "my/js.js"));
   }
 }

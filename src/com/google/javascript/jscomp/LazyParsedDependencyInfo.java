@@ -52,7 +52,13 @@ public class LazyParsedDependencyInfo extends DependencyInfo.Base {
       if (features.has(Feature.MODULES)) {
         String previousModule = loadFlagsBuilder.get("module");
         if (previousModule != null && !previousModule.equals("es6")) {
-          compiler.report(JSError.make(ModuleLoader.MODULE_CONFLICT, getName()));
+          compiler.report(
+              JSError.make(
+                  getName(),
+                  /* lineno= */ -1,
+                  /* charno= */ -1,
+                  ModuleLoader.MODULE_CONFLICT,
+                  getName()));
         }
         loadFlagsBuilder.put("module", "es6");
       }

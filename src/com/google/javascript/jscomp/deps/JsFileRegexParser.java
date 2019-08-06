@@ -249,7 +249,14 @@ public final class JsFileRegexParser extends JsFileLineParser {
     if (provideGoogModuleConflict || provideEs6ModuleConflict || googEs6ModuleConflict) {
       // TODO(sdh): should this be an error?
       errorManager.report(
-          CheckLevel.WARNING, JSError.make(ModuleLoader.MODULE_CONFLICT, file.toString()));
+          CheckLevel.WARNING,
+          JSError.make(
+              file.toString(),
+              /* lineno= */ -1,
+              /* charno= */ -1,
+              ModuleLoader.MODULE_CONFLICT,
+              file.toString()));
+
       return false;
     }
 
