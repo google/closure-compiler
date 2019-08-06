@@ -861,11 +861,6 @@ public class CompilerOptions implements Serializable {
 
   public boolean generateExports;
 
-  // TODO(dimvar): generate-exports should always run after typechecking.
-  // If it runs before, it adds a bunch of properties to Object, which masks
-  // many type warnings. Cleanup all clients and remove this.
-  boolean generateExportsAfterTypeChecking;
-
   boolean exportLocalPropertyDefinitions;
 
   /** Map used in the renaming of CSS class names. */
@@ -1354,7 +1349,6 @@ public class CompilerOptions implements Serializable {
     checksOnly = false;
     outputJs = OutputJs.NORMAL;
     generateExports = false;
-    generateExportsAfterTypeChecking = true;
     exportLocalPropertyDefinitions = false;
     cssRenamingMap = null;
     cssRenamingWhitelist = null;
@@ -2964,7 +2958,6 @@ public class CompilerOptions implements Serializable {
             .add("foldConstants", foldConstants)
             .add("forceLibraryInjection", forceLibraryInjection)
             .add("gatherCssNames", gatherCssNames)
-            .add("generateExportsAfterTypeChecking", generateExportsAfterTypeChecking)
             .add("generateExports", generateExports)
             .add("generatePseudoNames", generatePseudoNames)
             .add("generateTypedExterns", shouldGenerateTypedExterns())

@@ -340,10 +340,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(angularPass);
     }
 
-    if (!options.generateExportsAfterTypeChecking && options.generateExports) {
-      checks.add(generateExports);
-    }
-
     if (options.exportTestFunctions) {
       checks.add(exportTestFunctions);
     }
@@ -468,9 +464,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(generateIjs);
     }
 
-    // When options.generateExportsAfterTypeChecking is true, run GenerateExports after
-    // both type checkers, not just after NTI.
-    if (options.generateExportsAfterTypeChecking && options.generateExports) {
+    if (options.generateExports) {
       checks.add(generateExports);
     }
 
