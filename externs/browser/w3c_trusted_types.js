@@ -65,13 +65,32 @@ TrustedTypePolicy.prototype.createURL = function(s) {};
 /** @constructor */
 function TrustedTypePolicyFactory() {}
 
+/** @record @private */
+function TrustedTypePolicyOptions() {};
+
+/**
+ *  @type {(function(string, ...*): string)|undefined},
+ */
+TrustedTypePolicyOptions.prototype.createHTML;
+
+/**
+ *  @type {(function(string, ...*): string)|undefined},
+ */
+TrustedTypePolicyOptions.prototype.createScript;
+
+/**
+ *  @type {(function(string, ...*): string)|undefined},
+ */
+TrustedTypePolicyOptions.prototype.createScriptURL;
+
+/**
+ *  @type {(function(string, ...*): string)|undefined},
+ */
+TrustedTypePolicyOptions.prototype.createURL;
+
 /**
  * @param {string} name
- * @param {{
- *     createHTML: function(string): string,
- *     createScript: function(string): string,
- *     createScriptURL: function(string): string,
- *     createURL: function(string): string}} policy
+ * @param {!TrustedTypePolicyOptions} policy
  * @param {boolean=} opt_expose
  * @return {!TrustedTypePolicy}
  */
@@ -81,12 +100,46 @@ TrustedTypePolicyFactory.prototype.createPolicy = function(
 /**
  * @param {string} name
  * @return {!TrustedTypePolicy}
+ * @deprecated
  */
 TrustedTypePolicyFactory.prototype.getExposedPolicy = function(name) {};
 
 /** @return {!Array<string>} */
 TrustedTypePolicyFactory.prototype.getPolicyNames = function() {};
 
+/**
+ * @param {*} obj
+ * @return {boolean}
+ */
+TrustedTypePolicyFactory.prototype.isHTML = function(obj) {};
+
+/**
+ * @param {*} obj
+ * @return {boolean}
+ */
+TrustedTypePolicyFactory.prototype.isScript = function(obj) {};
+
+/**
+ * @param {*} obj
+ * @return {boolean}
+ */
+TrustedTypePolicyFactory.prototype.isScriptURL = function(obj) {};
+
+/**
+ * @param {*} obj
+ * @return {boolean}
+ * @deprecated
+ */
+TrustedTypePolicyFactory.prototype.isURL = function(obj) {};
+
+/** @type {!TrustedHTML} */
+TrustedTypePolicyFactory.prototype.emptyHTML;
+
+/**
+ * @type {!TrustedTypePolicyFactory}
+ * @deprecated
+ */
+var TrustedTypes;
 
 /** @type {!TrustedTypePolicyFactory} */
-var TrustedTypes;
+var trustedTypes;
