@@ -1191,7 +1191,16 @@ public class CompilerOptions implements Serializable {
    * <p>You can use this to make absolute paths relative to the root of your source tree. This is
    * useful to work around CI and build systems that use absolute paths.
    */
-  Pattern conformanceRemoveRegexFromPath = Pattern.compile(".*?google3/");
+  private Optional<Pattern> conformanceRemoveRegexFromPath =
+      Optional.of(Pattern.compile("^((.*/)?google3/)?((^/)?(blaze|bazel)-out/[^/]+/bin/)?"));
+
+  public void setConformanceRemoveRegexFromPath(Optional<Pattern> pattern) {
+    conformanceRemoveRegexFromPath = pattern;
+  }
+
+  public Optional<Pattern> getConformanceRemoveRegexFromPath() {
+    return conformanceRemoveRegexFromPath;
+  }
 
   /** For use in {@link CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module. */
   boolean wrapGoogModulesForWhitespaceOnly = true;
