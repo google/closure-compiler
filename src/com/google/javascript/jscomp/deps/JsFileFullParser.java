@@ -100,7 +100,7 @@ public class JsFileFullParser {
 
     /** Returns all the annotations in a given comment string. */
     static List<CommentAnnotation> parse(String comment) {
-      // TODO(sdh): This is reinventing a large part of JSDocInfoParser.  We should
+      // TODO(b/139159612): This is reinventing a large part of JSDocInfoParser.  We should
       // try to consolidate as much as possible.  This requires several steps:
       //   1. Make all the annotations we look for first-class in JSDocInfo
       //   2. Support custom annotations (may already be done?)
