@@ -398,7 +398,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     AbstractScopeBuilder scopeBuilder = null;
 
-    Module module = moduleImportResolver.getModuleFromScopeRoot(root);
+    Module module = ModuleImportResolver.getModuleFromScopeRoot(moduleMap, compiler, root);
     if (typedParent == null) {
       checkState(root.isRoot(), root);
       Node externsRoot = root.getFirstChild();

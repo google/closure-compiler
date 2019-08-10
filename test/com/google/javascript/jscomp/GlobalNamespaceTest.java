@@ -31,6 +31,8 @@ import com.google.javascript.jscomp.GlobalNamespace.AstChange;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Name.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
+import com.google.javascript.jscomp.modules.ModuleMapCreator;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -70,6 +72,13 @@ public final class GlobalNamespaceTest {
     assertThat(n.getDeclaration()).isEqualTo(set2);
     assertThat(n.getGlobalSets()).isEqualTo(1);
     assertThat(n.getRefs()).containsExactly(set2);
+  }
+
+  @Test
+  public void testReferencesToUndefinedRootName() {
+    GlobalNamespace namespace = parse("a; a.b = 0; a.b;");
+    assertThat(namespace.getSlot("a")).isNull();
+    assertThat(namespace.getSlot("a.b")).isNull();
   }
 
   @Test
@@ -820,13 +829,177 @@ public final class GlobalNamespaceTest {
     assertThat(a.getGlobalSets()).isEqualTo(0);
   }
 
+  @Test
+  public void googModuleLevelNamesAreCaptured() {
+    GlobalNamespace namespace = parse("goog.module('m'); const x = 0;");
+    ModuleMetadata metadata =
+        lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");
+    Name x = namespace.getNameFromModule(metadata, "x");
+
+    assertThat(x).isNotNull();
+    assertThat(x.getDeclaration()).isNotNull();
+  }
+
+  @Test
+  public void googModuleLevelQualifiedNamesAreCaptured() {
+    GlobalNamespace namespace = parse("goog.module('m'); class Foo {} Foo.Bar = 0;");
+    ModuleMetadata metadata =
+        lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");
+    Name x = namespace.getNameFromModule(metadata, "Foo.Bar");
+
+    assertThat(x).isNotNull();
+    assertThat(x.getDeclaration()).isNotNull();
+  }
+
+  @Test
+  public void googModule_containsExports() {
+    GlobalNamespace namespace = parse("goog.module('m'); const x = 0;");
+    ModuleMetadata metadata =
+        lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");
+    Name exports = namespace.getNameFromModule(metadata, "exports");
+    assertThat(exports.getGlobalSets()).isEqualTo(0);
+  }
+
+  @Test
+  public void googLoadModule_containsExports() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "goog.loadModule(function(exports) {",
+                "  goog.module('m');",
+                "  const x = 0;",
+                "  return exports;",
+                "});"));
+    ModuleMetadata metadata =
+        lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");
+    Name exports = namespace.getNameFromModule(metadata, "exports");
+    assertThat(exports.getGlobalSets()).isEqualTo(0);
+  }
+
+  @Test
+  public void googLoadModule_capturesQualifiedNames() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "goog.loadModule(function(exports) {",
+                "  goog.module('m');",
+                "  class Foo {}",
+                "  Foo.Bar = class {};",
+                "  return exports;",
+                "});"));
+    ModuleMetadata metadata =
+        lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");
+    Name foo = namespace.getNameFromModule(metadata, "Foo");
+    Name fooBar = namespace.getNameFromModule(metadata, "Foo.Bar");
+    assertThat(fooBar.getParent()).isEqualTo(foo);
+  }
+
+  @Test
+  public void googLoadModule_containsExportsPropertyAssignments() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "goog.loadModule(function(exports) {",
+                "  goog.module('m');",
+                "  exports.Foo = class {};",
+                "  return exports;",
+                "});"));
+    ModuleMetadata metadata =
+        lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");
+    Name exportsFoo = namespace.getNameFromModule(metadata, "exports.Foo");
+    assertThat(exportsFoo.getGlobalSets()).isEqualTo(1);
+  }
+
+  @Test
+  public void googModule_containsExports_explicitAssign() {
+    GlobalNamespace namespace = parse("goog.module('m'); const x = 0; exports = {x};");
+    ModuleMetadata metadata =
+        lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");
+    Name exports = namespace.getNameFromModule(metadata, "exports");
+    assertThat(exports.getGlobalSets()).isEqualTo(1);
+    assertThat(namespace.getNameFromModule(metadata, "x").getGlobalSets()).isEqualTo(1);
+  }
+
+  @Test
+  public void assignToGlobalNameInLoadModule_doesNotCreateModuleName() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "class Foo {}",
+                "goog.loadModule(function(exports) {",
+                "  goog.module('m');",
+                "  Foo.Bar = 0",
+                "  return exports;",
+                "});"));
+
+    ModuleMetadata metadata =
+        lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");
+    assertThat(namespace.getNameFromModule(metadata, "Foo.Bar")).isNull();
+    assertThat(namespace.getSlot("Foo.Bar")).isNotNull();
+  }
+
+  @Test
+  public void moduleLevelNamesAreCaptured_esExportDecl() {
+    GlobalNamespace namespace = parse("export const x = 0;");
+    ModuleMetadata metadata = lastCompiler.getModuleMetadataMap().getModulesByPath().get("test.js");
+    Name x = namespace.getNameFromModule(metadata, "x");
+
+    assertThat(x).isNotNull();
+    assertNode(x.getDeclaration().getNode().getParent()).hasToken(Token.CONST);
+  }
+
+  @Test
+  public void moduleLevelNamesAreCaptured_esExportClassDecl() {
+    GlobalNamespace namespace = parse("export class Foo {}");
+    ModuleMetadata metadata = lastCompiler.getModuleMetadataMap().getModulesByPath().get("test.js");
+    Name x = namespace.getNameFromModule(metadata, "Foo");
+
+    assertThat(x).isNotNull();
+    assertNode(x.getDeclaration().getNode().getParent()).hasToken(Token.CLASS);
+  }
+
+  @Test
+  public void moduleLevelNamesAreCaptured_esExportFunctionDecl() {
+    GlobalNamespace namespace = parse("export function fn() {}");
+    ModuleMetadata metadata = lastCompiler.getModuleMetadataMap().getModulesByPath().get("test.js");
+    Name x = namespace.getNameFromModule(metadata, "fn");
+
+    assertThat(x).isNotNull();
+    assertNode(x.getDeclaration().getNode().getParent()).hasToken(Token.FUNCTION);
+  }
+
+  @Test
+  public void moduleLevelNamesAreCaptured_esExportDefaultFunctionDecl() {
+    GlobalNamespace namespace = parse("export default function fn() {}");
+    ModuleMetadata metadata = lastCompiler.getModuleMetadataMap().getModulesByPath().get("test.js");
+    Name x = namespace.getNameFromModule(metadata, "fn");
+
+    assertThat(x).isNotNull();
+    assertNode(x.getDeclaration().getNode().getParent()).hasToken(Token.FUNCTION);
+  }
+
+  @Test
+  public void esModuleLevelNamesAreCaptured() {
+    GlobalNamespace namespace = parse("class Foo {} Foo.Bar = 0; export {Foo};");
+    ModuleMetadata metadata = lastCompiler.getModuleMetadataMap().getModulesByPath().get("test.js");
+    Name x = namespace.getNameFromModule(metadata, "Foo.Bar");
+
+    assertThat(x).isNotNull();
+    assertThat(x.getDeclaration()).isNotNull();
+  }
+
   private GlobalNamespace parse(String js) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.setSkipNonTranspilationPasses(true);
+    options.setWrapGoogModulesForWhitespaceOnly(false);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     compiler.compile(SourceFile.fromCode("ex.js", ""), SourceFile.fromCode("test.js", js), options);
+    new GatherModuleMetadata(compiler, options.processCommonJSModules, options.moduleResolutionMode)
+        .process(compiler.getExternsRoot(), compiler.getJsRoot());
+    new ModuleMapCreator(compiler, compiler.getModuleMetadataMap())
+        .process(compiler.getExternsRoot(), compiler.getJsRoot());
     assertThat(compiler.getErrors()).isEmpty();
     this.lastCompiler = compiler;
 

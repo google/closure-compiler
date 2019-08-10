@@ -359,7 +359,8 @@ class TypeInference
     // Inferred types of ES module imports/exports aren't knowable until after TypeInference runs.
     // First update the type of all imports in the scope, then do flow-sensitive inference, then
     // update the implicit '*exports*' object.
-    Module module = moduleImportResolver.getModuleFromScopeRoot(root);
+    Module module =
+        ModuleImportResolver.getModuleFromScopeRoot(compiler.getModuleMap(), compiler, root);
     TypedScope syntacticBlockScope = scopeCreator.createScope(root);
     if (module != null && module.metadata().isEs6Module()) {
       moduleImportResolver.declareEsModuleImports(

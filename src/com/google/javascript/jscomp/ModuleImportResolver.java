@@ -16,11 +16,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.deps.ModuleNames;
 import com.google.javascript.jscomp.modules.Binding;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
@@ -285,33 +285,32 @@ final class ModuleImportResolver {
 
   /** Returns the {@link Module} corresponding to this scope root, or null if not a module root. */
   @Nullable
-  Module getModuleFromScopeRoot(Node moduleBody) {
-    if (moduleBody.isModuleBody()) {
-      Node scriptNode = moduleBody.getParent();
-      if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
-        Node googModuleCall = moduleBody.getFirstChild();
-        String namespace = googModuleCall.getFirstChild().getSecondChild().getString();
-        return moduleMap.getClosureModule(namespace);
-      } else {
-        String modulePath = ModuleNames.fileToModuleName(scriptNode.getSourceFileName());
-        Module module = moduleMap.getModule(modulePath);
-        // TODO(b/131418081): Also cover CommonJS modules.
-        checkState(
-            module.metadata().isEs6Module(),
-            "Typechecking of non-goog- and non-es-modules not supported");
-        return module;
-      }
-    } else if (isGoogLoadModuleBlock(moduleBody)) {
+  static Module getModuleFromScopeRoot(
+      ModuleMap moduleMap, CompilerInputProvider inputProvider, Node moduleBody) {
+    if (isGoogModuleBody(moduleBody)) {
       Node googModuleCall = moduleBody.getFirstChild();
       String namespace = googModuleCall.getFirstChild().getSecondChild().getString();
       return moduleMap.getClosureModule(namespace);
+    } else if (moduleBody.isModuleBody()) {
+      Node scriptNode = moduleBody.getParent();
+      CompilerInput input = checkNotNull(inputProvider.getInput(scriptNode.getInputId()));
+      Module module = moduleMap.getModule(input.getPath());
+      // TODO(b/131418081): Also cover CommonJS modules.
+      checkState(
+          module.metadata().isEs6Module(),
+          "Typechecking of non-goog- and non-es-modules not supported");
+      return module;
     }
     return null;
   }
 
-  private static boolean isGoogLoadModuleBlock(Node scopeRoot) {
-    return scopeRoot.isBlock()
-        && scopeRoot.getParent().isFunction()
-        && NodeUtil.isBundledGoogModuleCall(scopeRoot.getGrandparent());
+  private static boolean isGoogModuleBody(Node moduleBody) {
+    if (moduleBody.isModuleBody()) {
+      return moduleBody.getParent().getBooleanProp(Node.GOOG_MODULE);
+    } else if (moduleBody.isBlock()) {
+      return moduleBody.getParent().isFunction()
+          && NodeUtil.isBundledGoogModuleCall(moduleBody.getGrandparent());
+    }
+    return false;
   }
 }

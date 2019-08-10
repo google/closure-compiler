@@ -23,9 +23,14 @@ import static com.google.common.collect.Streams.stream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Table;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
+import com.google.javascript.jscomp.modules.ModuleMap;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
@@ -47,8 +52,14 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Builds a namespace of all qualified names whose root is in the global scope, plus an index of all
- * references to those global names.
+ * Builds a namespace of all qualified names whose root is in the global scope or a module, plus an
+ * index of all references to those global names.
+ *
+ * <p>When used as a StaticScope this class acts like a single parentless global scope. The module
+ * references are currently only accessible by {@link #getNameFromModule(ModuleMetadata, String)},
+ * as many use cases only care about global names. (This may change as module rewriting is moved
+ * later in compilation). Module tracking also only occurs when {@link
+ * com.google.javascript.jscomp.modules.ModuleMapCreator} has run.
  *
  * <p>The namespace can be updated as the AST is changed. Removing names or references should be
  * done by the methods on Name. Adding new names should be done with {@link #scanNewNodes}.
@@ -94,6 +105,9 @@ class GlobalNamespace
   /** Maps names (e.g. "a.b.c") to nodes in the global namespace tree */
   private final Map<String, Name> nameMap = new HashMap<>();
 
+  /** Maps names (e.g. "a.b.c") and MODULE_BODY nodes to Names in that module */
+  private final Table<ModuleMetadata, String, Name> nameMapByModule = HashBasedTable.create();
+
   /**
    * Creates an instance that may emit warnings when building the namespace.
    *
@@ -127,6 +141,26 @@ class GlobalNamespace
   @Override
   public Node getRootNode() {
     return root.getParent();
+  }
+
+  /**
+   * Returns the root node of the scope in which the root of a qualified name is declared, or null.
+   *
+   * @param name A variable name (e.g. "a")
+   * @param s The scope in which the name is referenced
+   * @return The root node of the scope in which this is defined, or null if this is undeclared.
+   */
+  private Node getRootNode(String name, Scope s) {
+    name = getTopVarName(name);
+    Var v = s.getVar(name);
+    if (v == null && externsScope != null) {
+      v = externsScope.getVar(name);
+    }
+    if (v == null) {
+      Name providedName = nameMap.get(name);
+      return providedName != null && providedName.isProvided ? globalRoot : null;
+    }
+    return v.isLocal() ? v.getScopeRoot() : globalRoot;
   }
 
   @Override
@@ -270,18 +304,6 @@ class GlobalNamespace
   }
 
   /**
-   * Determines whether a name reference in a particular scope is a global name reference.
-   *
-   * @param name A variable or property name (e.g. "a" or "a.b.c.d")
-   * @param s The scope in which the name is referenced
-   * @return Whether the name reference is a global name reference
-   */
-  private boolean isGlobalNameReference(String name, Scope s) {
-    String topVarName = getTopVarName(name);
-    return isGlobalVarReference(topVarName, s);
-  }
-
-  /**
    * Gets the top variable name from a possibly namespaced name.
    *
    * @param name A variable or qualified property name (e.g. "a" or "a.b.c.d")
@@ -292,31 +314,22 @@ class GlobalNamespace
     return firstDotIndex == -1 ? name : name.substring(0, firstDotIndex);
   }
 
-  /**
-   * Determines whether a variable name reference in a particular scope is a global variable
-   * reference.
-   *
-   * @param name A variable name (e.g. "a")
-   * @param s The scope in which the name is referenced
-   * @return Whether the name reference is a global variable reference
-   */
-  private boolean isGlobalVarReference(String name, Scope s) {
-    Var v = s.getVar(name);
-    if (v == null && externsScope != null) {
-      v = externsScope.getVar(name);
-    }
-    if (v == null) {
-      Name providedName = nameMap.get(name);
-      return providedName != null && providedName.isProvided;
-    } else {
-      return !v.isLocal();
-    }
+  private final Node globalRoot = IR.root();
+
+  @Nullable
+  Name getNameFromModule(ModuleMetadata moduleMetadata, String name) {
+    checkNotNull(moduleMetadata);
+    checkNotNull(name);
+    ensureGenerated();
+    return nameMapByModule.get(moduleMetadata, name);
   }
 
   // -------------------------------------------------------------------------
 
   /** Builds a tree representation of the global namespace. Omits prototypes. */
   private class BuildGlobalNamespace extends NodeTraversal.AbstractPreOrderCallback {
+    private Node curModuleRoot = null;
+    private ModuleMetadata curMetadata = null;
     /** Collect the references in pre-order. */
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -331,10 +344,37 @@ class GlobalNamespace
           sourceKind = SourceKind.fromScriptNode(n);
         }
       }
+      if (n.isModuleBody() || NodeUtil.isBundledGoogModuleScopeRoot(n)) {
+        setupModuleMetadata(n);
+      } else if (n.isScript() || NodeUtil.isBundledGoogModuleCall(n)) {
+        curModuleRoot = null;
+        curMetadata = null;
+      }
 
       collect(t.getModule(), t.getScope(), n);
 
       return true;
+    }
+
+    /**
+     * Initializes the {@link ModuleMetadata} for a goog;.module or ES module
+     *
+     * @param moduleRoot either a MODULE_BODY or a goog.loadModule BLOCK.
+     */
+    private void setupModuleMetadata(Node moduleRoot) {
+      ModuleMap moduleMap = compiler.getModuleMap();
+      if (moduleMap == null) {
+        return;
+      }
+      curModuleRoot = moduleRoot;
+
+      curMetadata =
+          checkNotNull(
+              ModuleImportResolver.getModuleFromScopeRoot(moduleMap, compiler, moduleRoot)
+                  .metadata());
+      if (curMetadata.isGoogModule()) {
+        getOrCreateName("exports", curMetadata);
+      }
     }
 
     private void collect(JSModule module, Scope scope, Node n) {
@@ -468,7 +508,7 @@ class GlobalNamespace
         case CALL:
           if (isObjectHasOwnPropertyCall(n)) {
             String qname = n.getFirstFirstChild().getQualifiedName();
-            Name globalName = getOrCreateName(qname);
+            Name globalName = getOrCreateName(qname, curMetadata);
             globalName.usedHasOwnProperty = true;
           } else if (parent.isExprResult()
               && GOOG_PROVIDE.matches(n.getFirstChild())
@@ -488,25 +528,29 @@ class GlobalNamespace
         return;
       }
 
-      // We are only interested in global names.
-      if (!isGlobalNameReference(name, scope)) {
+      Node root = getRootNode(name, scope);
+      // We are only interested in global and module names.
+      if (!isTopLevelScopeRoot(root)) {
         return;
       }
 
+      ModuleMetadata nameMetadata = root == globalRoot ? null : curMetadata;
       if (isSet) {
         // Use the closest hoist scope to select handleSetFromGlobal or handleSetFromLocal
         // because they use the term 'global' in an ES5, pre-block-scoping sense.
         Scope hoistScope = scope.getClosestHoistScope();
-        if (hoistScope.isGlobal()) {
-          handleSetFromGlobal(module, scope, n, parent, name, type);
+        // Consider a set to be 'global' if it is in the hoist scope in which the name is defined.
+        if (hoistScope.isGlobal() || hoistScope.getRootNode() == curModuleRoot) {
+          handleSetFromGlobal(module, scope, n, parent, name, type, nameMetadata);
         } else {
-          handleSetFromLocal(module, scope, n, parent, name);
+          handleSetFromLocal(module, scope, n, parent, name, nameMetadata);
         }
       } else {
-        handleGet(module, scope, n, parent, name);
+        handleGet(module, scope, n, parent, name, nameMetadata);
       }
     }
 
+    /** Declares all subnamespaces from `goog.provide('some.long.namespace')` globally. */
     private void createNamesFromProvide(String namespace) {
       Name name;
       int dot = 0;
@@ -515,12 +559,34 @@ class GlobalNamespace
         dot = namespace.indexOf('.', dot + 1);
         String subNamespace = dot < 0 ? namespace : namespace.substring(0, dot);
         checkState(!subNamespace.isEmpty());
-        name = getOrCreateName(subNamespace);
+        name = getOrCreateName(subNamespace, null);
         name.isProvided = true;
       }
 
-      Name newName = getOrCreateName(namespace);
+      Name newName = getOrCreateName(namespace, null);
       newName.isProvided = true;
+    }
+
+    /**
+     * Whether the given name root represents a global or module-level name
+     *
+     * <p>This method will return false for functions and blocks and true for module bodies and the
+     * {@code globalRoot}. The one exception is if the function or block is from a goog.loadModule
+     * argument, as those functions/blocks are treated as module roots.
+     */
+    private boolean isTopLevelScopeRoot(Node root) {
+      if (root == null) {
+        return false;
+      } else if (root == globalRoot) {
+        return true;
+      } else if (root == curModuleRoot) {
+        return true;
+      }
+      // Given
+      //   goog.loadModule(function(exports) {
+      // pretend that assignments to `exports` or `exports.x = ...` are scoped to the function body,
+      // although `exports` is really in the enclosing function parameter scope.
+      return curModuleRoot != null && curModuleRoot.isBlock() && root == curModuleRoot.getParent();
     }
 
     /**
@@ -604,12 +670,18 @@ class GlobalNamespace
      * @param type The type of the value that the name is being assigned
      */
     void handleSetFromGlobal(
-        JSModule module, Scope scope, Node n, Node parent, String name, Name.Type type) {
-      if (maybeHandlePrototypePrefix(module, scope, n, parent, name)) {
+        JSModule module,
+        Scope scope,
+        Node n,
+        Node parent,
+        String name,
+        Name.Type type,
+        ModuleMetadata metadata) {
+      if (maybeHandlePrototypePrefix(module, scope, n, parent, name, metadata)) {
         return;
       }
 
-      Name nameObj = getOrCreateName(name);
+      Name nameObj = getOrCreateName(name, metadata);
       if (!nameObj.isGetOrSetDefinition()) {
         // Don't change the type of a getter or setter. This is because given:
         //   var a = {set b(item) {}}; a.b = class {};
@@ -696,12 +768,13 @@ class GlobalNamespace
      * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
-    void handleSetFromLocal(JSModule module, Scope scope, Node n, Node parent, String name) {
-      if (maybeHandlePrototypePrefix(module, scope, n, parent, name)) {
+    void handleSetFromLocal(
+        JSModule module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
+      if (maybeHandlePrototypePrefix(module, scope, n, parent, name, metadata)) {
         return;
       }
 
-      Name nameObj = getOrCreateName(name);
+      Name nameObj = getOrCreateName(name, metadata);
       if (n.getBooleanProp(Node.MODULE_EXPORT)) {
         nameObj.isModuleProp = true;
       }
@@ -723,8 +796,9 @@ class GlobalNamespace
      * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
-    void handleGet(JSModule module, Scope scope, Node n, Node parent, String name) {
-      if (maybeHandlePrototypePrefix(module, scope, n, parent, name)) {
+    void handleGet(
+        JSModule module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
+      if (maybeHandlePrototypePrefix(module, scope, n, parent, name, metadata)) {
         return;
       }
 
@@ -822,7 +896,7 @@ class GlobalNamespace
           break;
       }
 
-      handleGet(module, scope, n, parent, name, type);
+      handleGet(module, scope, n, parent, name, type, metadata);
     }
 
     /**
@@ -835,8 +909,15 @@ class GlobalNamespace
      * @param name The global name (e.g. "a" or "a.b.c.d")
      * @param type The reference type
      */
-    void handleGet(JSModule module, Scope scope, Node n, Node parent, String name, Ref.Type type) {
-      Name nameObj = getOrCreateName(name);
+    void handleGet(
+        JSModule module,
+        Scope scope,
+        Node n,
+        Node parent,
+        String name,
+        Ref.Type type,
+        ModuleMetadata metadata) {
+      Name nameObj = getOrCreateName(name, metadata);
 
       // No need to look up additional ancestors, since they won't be used.
       addOrConfirmRef(nameObj, n, type, module, scope);
@@ -970,7 +1051,7 @@ class GlobalNamespace
      * @return Whether the name was handled
      */
     boolean maybeHandlePrototypePrefix(
-        JSModule module, Scope scope, Node n, Node parent, String name) {
+        JSModule module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
       // We use a string-based approach instead of inspecting the parse tree
       // to avoid complexities with object literals, possibly nested, beneath
       // assignments.
@@ -1005,7 +1086,7 @@ class GlobalNamespace
         n = n.getFirstChild();
       }
 
-      handleGet(module, scope, n, parent, prefix, Ref.Type.PROTOTYPE_GET);
+      handleGet(module, scope, n, parent, prefix, Ref.Type.PROTOTYPE_GET, metadata);
       return true;
     }
 
@@ -1026,19 +1107,28 @@ class GlobalNamespace
      * @param name A global name (e.g. "a", "a.b.c.d")
      * @return The {@link Name} instance for {@code name}
      */
-    Name getOrCreateName(String name) {
-      Name node = nameMap.get(name);
+    Name getOrCreateName(String name, ModuleMetadata metadata) {
+      Name node = metadata == null ? nameMap.get(name) : nameMapByModule.get(metadata, name);
       if (node == null) {
         int i = name.lastIndexOf('.');
         if (i >= 0) {
           String parentName = name.substring(0, i);
-          Name parent = getOrCreateName(parentName);
+          Name parent = getOrCreateName(parentName, metadata);
           node = parent.addProperty(name.substring(i + 1), sourceKind);
+          if (metadata == null) {
+            nameMap.put(name, node);
+          } else {
+            nameMapByModule.put(metadata, name, node);
+          }
         } else {
           node = new Name(name, null, sourceKind);
-          globalNames.add(node);
+          if (metadata == null) {
+            globalNames.add(node);
+            nameMap.put(name, node);
+          } else {
+            nameMapByModule.put(metadata, name, node);
+          }
         }
-        nameMap.put(name, node);
       }
       return node;
     }
@@ -2022,8 +2112,11 @@ class GlobalNamespace
     // Note: we are more aggressive about collapsing @enum and @constructor
     // declarations than implied here, see Name#canCollapse
     enum Type {
-      /** Set in the global scope: a.b.c = 0; */
-      SET_FROM_GLOBAL,
+      /**
+       * Set in the scope in which a name is declared, either the global scope or a module scope:
+       * `a.b.c = 0;` or `goog.module('mod'); exports.Foo = class {};`
+       */
+      SET_FROM_GLOBAL, // TODO(lharker): rename this to explain it includes modules
 
       /** Set in a local scope: function f() { a.b.c = 0; } */
       SET_FROM_LOCAL,
