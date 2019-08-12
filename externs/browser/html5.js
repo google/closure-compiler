@@ -4686,6 +4686,11 @@ HTMLFieldSetElement.prototype.willValidate;
  */
 function RadioNodeList() {}
 
+/**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/infrastructure.html#radionodelist
+ */
+RadioNodeList.prototype.value;
 
 
 /**
