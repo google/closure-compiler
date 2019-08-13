@@ -4628,6 +4628,12 @@ HTMLLinkElement.prototype.import;
  */
 HTMLLinkElement.prototype.as;
 
+/**
+ * @see https://html.spec.whatwg.org/#attr-link-crossorigin
+ * @type {string}
+ */
+HTMLLinkElement.prototype.crossOrigin;
+
 
 /**
  * @return {boolean}
