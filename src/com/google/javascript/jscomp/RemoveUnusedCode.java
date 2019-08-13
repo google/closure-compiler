@@ -146,7 +146,6 @@ class RemoveUnusedCode implements CompilerPass {
   private final boolean removeUnusedPrototypeProperties;
   private final boolean allowRemovalOfExternProperties;
   private final boolean removeUnusedThisProperties;
-  private final boolean removeUnusedStaticProperties;
   private final boolean removeUnusedObjectDefinePropertiesDefinitions;
   private final boolean removeUnusedPolyfills;
   private final boolean assumeGettersArePure;
@@ -163,7 +162,6 @@ class RemoveUnusedCode implements CompilerPass {
     this.removeUnusedPrototypeProperties = builder.removeUnusedPrototypeProperties;
     this.allowRemovalOfExternProperties = builder.allowRemovalOfExternProperties;
     this.removeUnusedThisProperties = builder.removeUnusedThisProperties;
-    this.removeUnusedStaticProperties = builder.removeUnusedStaticProperties;
     this.removeUnusedObjectDefinePropertiesDefinitions =
         builder.removeUnusedObjectDefinePropertiesDefinitions;
     this.removeUnusedPolyfills = builder.removeUnusedPolyfills;
@@ -183,7 +181,6 @@ class RemoveUnusedCode implements CompilerPass {
     private boolean removeUnusedPrototypeProperties = false;
     private boolean allowRemovalOfExternProperties = false;
     private boolean removeUnusedThisProperties = false;
-    private boolean removeUnusedStaticProperties = false;
     private boolean removeUnusedObjectDefinePropertiesDefinitions = false;
     private boolean removeUnusedPolyfills = false;
     private boolean assumeGettersArePure = false;
@@ -219,11 +216,6 @@ class RemoveUnusedCode implements CompilerPass {
 
     Builder removeUnusedThisProperties(boolean value) {
       this.removeUnusedThisProperties = value;
-      return this;
-    }
-
-    Builder removeUnusedConstructorProperties(boolean value) {
-      this.removeUnusedStaticProperties = value;
       return this;
     }
 
@@ -1362,10 +1354,12 @@ class RemoveUnusedCode implements CompilerPass {
 
   private boolean isIndependentlyRemovable(Removable removable) {
     return (removeUnusedPrototypeProperties && removable.isPrototypeProperty())
-        || (removeUnusedThisProperties && removable.isThisDotPropertyReference())
+        // TODO(b/139319709): Combine these with "removeUnusedPrototypeProperties". The fact that
+        // only these two property type are conflated is arbitrary.
+        || (removeUnusedThisProperties
+            && (removable.isThisDotPropertyReference() || removable.isStaticProperty()))
         || (removeUnusedObjectDefinePropertiesDefinitions
-            && removable.isObjectDefinePropertiesDefinition())
-        || (removeUnusedStaticProperties && removable.isStaticProperty());
+            && removable.isObjectDefinePropertiesDefinition());
   }
 
   /**
@@ -1695,6 +1689,7 @@ class RemoveUnusedCode implements CompilerPass {
       return false;
     }
 
+    // TODO(b/134610338): Combine this method with `isPrototypeProperty`.
     public boolean isStaticProperty() {
       return false;
     }

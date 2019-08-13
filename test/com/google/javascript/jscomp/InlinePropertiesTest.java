@@ -68,7 +68,6 @@ public final class InlinePropertiesTest extends CompilerTestCase {
               .allowRemovalOfExternProperties(false)
               .removeUnusedThisProperties(true)
               .removeUnusedObjectDefinePropertiesDefinitions(true)
-              .removeUnusedConstructorProperties(true)
               .build();
       return new CompilerPass(){
 

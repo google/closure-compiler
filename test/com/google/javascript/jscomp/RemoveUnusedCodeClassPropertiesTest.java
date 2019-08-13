@@ -88,7 +88,6 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     return new RemoveUnusedCode.Builder(compiler)
         .removeUnusedPrototypeProperties(true)
         .removeUnusedThisProperties(true)
-        .removeUnusedConstructorProperties(true)
         .removeUnusedObjectDefinePropertiesDefinitions(true)
         .build();
   }

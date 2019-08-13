@@ -1300,7 +1300,6 @@ public class CompilerOptions implements Serializable {
     removeUnusedPrototypeProperties = false;
     removeUnusedPrototypePropertiesInExterns = false;
     removeUnusedClassProperties = false;
-    removeUnusedConstructorProperties = false;
     removeUnusedVars = false;
     removeUnusedLocalVars = false;
     collapseVariableDeclarations = false;
@@ -1402,21 +1401,6 @@ public class CompilerOptions implements Serializable {
    */
   public void setRemoveUnusedClassProperties(boolean removeUnusedClassProperties) {
     this.removeUnusedClassProperties = removeUnusedClassProperties;
-  }
-
-  /**
-   * @return Whether to attempt to remove unused constructor properties
-   */
-  public boolean isRemoveUnusedConstructorProperties() {
-    return removeUnusedConstructorProperties;
-  }
-
-  /**
-   * @param removeUnused Whether to attempt to remove
-   *      unused constructor properties
-   */
-  public void setRemoveUnusedConstructorProperties(boolean removeUnused) {
-    this.removeUnusedConstructorProperties = removeUnused;
   }
 
   /**
@@ -3040,9 +3024,6 @@ public class CompilerOptions implements Serializable {
             .add("removeUnusedClassProperties", removeUnusedClassProperties)
             .add("removeUnusedConstructorProperties", removeUnusedConstructorProperties)
             .add("removeUnusedLocalVars", removeUnusedLocalVars)
-            .add(
-                "removeUnusedPrototypePropertiesInExterns",
-                removeUnusedPrototypePropertiesInExterns)
             .add("removeUnusedPrototypeProperties", removeUnusedPrototypeProperties)
             .add("removeUnusedVars", removeUnusedVars)
             .add(

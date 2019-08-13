@@ -90,7 +90,6 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
               .removeLocalVars(true)
               .removeUnusedPrototypeProperties(true)
               .removeUnusedThisProperties(true)
-              .removeUnusedConstructorProperties(true)
               .removeUnusedObjectDefinePropertiesDefinitions(true)
               // Removal of function expression names isn't what these tests are about.
               // It just adds noise to the tests when we can't use testSame() because of it.

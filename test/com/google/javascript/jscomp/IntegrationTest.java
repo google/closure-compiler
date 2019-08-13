@@ -1122,7 +1122,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRemoveUnusedPrototypeProperties(true);
     options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveDeadCode(true);
-    options.setRemoveUnusedConstructorProperties(true);
     options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
@@ -4470,17 +4469,22 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testAddFunctionProperties4() {
     String source =
-        "/** @constructor */" +
-        "var Foo = function() {};" +
-        "var goog = {};" +
-        "goog.addSingletonGetter = function(o) {" +
-        "  o.f = function() {" +
-        "    o.i = new o;" +
-        "  };" +
-        "};" +
-        "goog.addSingletonGetter(Foo);" +
-        "alert(Foo.f());";
-    String expected = "function Foo(){} Foo.f=function(){Foo.i=new Foo}; alert(Foo.f());";
+        lines(
+            "/** @constructor */",
+            "var Foo = function() {};",
+            "var goog = {};",
+            "goog.addSingletonGetter = function(o) {",
+            "  o.f = function() {",
+            "    return o.i || (o.i = new o);",
+            "  };",
+            "};",
+            "goog.addSingletonGetter(Foo);",
+            "alert(Foo.f());");
+    String expected =
+        lines(
+            "function Foo(){}",
+            "Foo.f = function() { return Foo.i || (Foo.i = new Foo()); };",
+            "alert(Foo.f());");
 
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

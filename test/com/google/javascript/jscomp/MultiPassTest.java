@@ -134,7 +134,7 @@ public final class MultiPassTest extends CompilerTestCase {
     addRemoveUnusedClassProperties();
     test(
         "/** @constructor */ function Foo() { this.a = 1; } Foo.baz = function() {};",
-        "/** @constructor */ function Foo() {             } Foo.baz = function() {};");
+        "/** @constructor */ function Foo() {             }");
   }
 
   @Test

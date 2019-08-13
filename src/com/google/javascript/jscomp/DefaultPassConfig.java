@@ -940,7 +940,6 @@ public final class DefaultPassConfig extends PassConfig {
         || options.removeUnusedLocalVars
         || options.removeUnusedPrototypeProperties
         || options.isRemoveUnusedClassProperties()
-        || options.isRemoveUnusedConstructorProperties()
         || options.rewritePolyfills;
   }
 
@@ -2696,7 +2695,6 @@ public final class DefaultPassConfig extends PassConfig {
             .allowRemovalOfExternProperties(options.removeUnusedPrototypePropertiesInExterns)
             .removeUnusedThisProperties(options.isRemoveUnusedClassProperties())
             .removeUnusedObjectDefinePropertiesDefinitions(options.isRemoveUnusedClassProperties())
-            .removeUnusedConstructorProperties(options.isRemoveUnusedConstructorProperties())
             .removeUnusedPolyfills(options.rewritePolyfills)
             .assumeGettersArePure(options.getAssumeGettersArePure())
             .build();

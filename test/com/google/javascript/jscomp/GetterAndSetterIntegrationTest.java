@@ -400,14 +400,9 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             ""),
         lines(
             "class C {",
-            // TODO(b/115853720): unused property setter and getter should be removed.
-            "  /** @type {number} */",
-            "  static get unusedProp() { return this.unusedProp_; }",
-            "  static set unusedProp(value) { this.unusedProp_ = value; }",
             "  /** @type {number} */",
             "  static get usedProp() { return this.usedProp_; }",
             "  static set usedProp(value) { this.usedProp_ = value; }",
-            "",
             "}",
             // TODO(b/130682799): Properties used inside getters and setters should not be removed
             "C.usedProp = 2;",
