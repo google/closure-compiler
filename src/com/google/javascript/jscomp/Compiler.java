@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Streams;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -90,6 +91,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -2090,10 +2092,31 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return parseCodeHelper(SourceFile.fromCode("[testcode]", js));
   }
 
+  @Override
+  @VisibleForTesting
+  Node parseTestCode(ImmutableList<String> code) {
+    initCompilerOptionsIfTesting();
+    initBasedOnOptions();
+    return parseCodeHelper(
+        Streams.mapWithIndex(
+                code.stream(), (value, index) -> SourceFile.fromCode("testcode" + index, value))
+            .collect(Collectors.toList()));
+  }
+
   private Node parseCodeHelper(SourceFile src) {
     CompilerInput input = new CompilerInput(src);
     putCompilerInput(input.getInputId(), input);
     return checkNotNull(input.getAstRoot(this));
+  }
+
+  private Node parseCodeHelper(List<SourceFile> srcs) {
+    Node root = IR.root();
+    for (SourceFile src : srcs) {
+      CompilerInput input = new CompilerInput(src);
+      putCompilerInput(input.getInputId(), input);
+      root.addChildToBack(checkNotNull(input.getAstRoot(this)));
+    }
+    return root;
   }
 
   @Override

@@ -255,4 +255,8 @@ public final class ModuleMetadataMap {
   public ImmutableSet<ModuleMetadata> getAllModuleMetadata() {
     return moduleMetadata;
   }
+
+  public static ModuleMetadataMap emptyForTesting() {
+    return new ModuleMetadataMap(ImmutableMap.of(), ImmutableMap.of());
+  }
 }

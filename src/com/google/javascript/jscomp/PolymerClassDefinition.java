@@ -22,6 +22,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -99,8 +100,12 @@ final class PolymerClassDefinition {
    * Validates the class definition and if valid, destructively extracts the class definition from
    * the AST.
    */
-  @Nullable static PolymerClassDefinition extractFromCallNode(
-      Node callNode, AbstractCompiler compiler, GlobalNamespace globalNames) {
+  @Nullable
+  static PolymerClassDefinition extractFromCallNode(
+      Node callNode,
+      AbstractCompiler compiler,
+      ModuleMetadata moduleMetadata,
+      PolymerBehaviorExtractor behaviorExtractor) {
     Node descriptor = NodeUtil.getArgumentForCallOrNew(callNode, 0);
     if (descriptor == null || !descriptor.isObjectLit()) {
       // report bad class definition
@@ -151,9 +156,8 @@ final class PolymerClassDefinition {
     String nativeBaseElement = baseClass == null ? null : baseClass.getString();
 
     Node behaviorArray = NodeUtil.getFirstPropMatchingKey(descriptor, "behaviors");
-    PolymerBehaviorExtractor behaviorExtractor =
-        new PolymerBehaviorExtractor(compiler, globalNames);
-    ImmutableList<BehaviorDefinition> behaviors = behaviorExtractor.extractBehaviors(behaviorArray);
+    ImmutableList<BehaviorDefinition> behaviors =
+        behaviorExtractor.extractBehaviors(behaviorArray, moduleMetadata);
     List<MemberDefinition> allProperties = new ArrayList<>();
     for (BehaviorDefinition behavior : behaviors) {
       overwriteMembersIfPresent(allProperties, behavior.props);

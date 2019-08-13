@@ -15,17 +15,25 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Table;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
+import com.google.javascript.jscomp.modules.Module;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -38,22 +46,35 @@ final class PolymerBehaviorExtractor {
         "created", "attached", "detached", "attributeChanged", "configure", "ready",
         "properties", "listeners", "observers", "hostAttributes");
 
+  private static final String GOOG_MODULE_EXPORTS = "exports";
+
   private final AbstractCompiler compiler;
   private final GlobalNamespace globalNames;
+  private final ModuleMetadataMap moduleMetadataMap;
 
-  PolymerBehaviorExtractor(AbstractCompiler compiler, GlobalNamespace globalNames) {
+  private final Table<String, ModuleMetadata, ResolveBehaviorNameResult> resolveMemoized =
+      HashBasedTable.create();
+  private final Map<String, ResolveBehaviorNameResult> globalResolveMemoized = new HashMap<>();
+
+  PolymerBehaviorExtractor(
+      AbstractCompiler compiler, GlobalNamespace globalNames, ModuleMetadataMap moduleMetadataMap) {
     this.compiler = compiler;
     this.globalNames = globalNames;
+    this.moduleMetadataMap = moduleMetadataMap;
   }
 
   /**
-   * Extracts all Behaviors from an array literal, recursively. Entries in the array can be
-   * object literals or array literals (of other behaviors). Behavior names must be
-   * global, fully qualified names.
+   * Extracts all Behaviors from an array literal, recursively. Entries in the array can be object
+   * literals or array literals (of other behaviors). Behavior names must be global, fully qualified
+   * names.
+   *
    * @see https://github.com/Polymer/polymer/blob/0.8-preview/PRIMER.md#behaviors
+   * @param moduleMetadata The module in which these behaviors are being resolved, or null if not in
+   *     a module.
    * @return A list of all {@code BehaviorDefinitions} in the array.
    */
-  ImmutableList<BehaviorDefinition> extractBehaviors(Node behaviorArray) {
+  ImmutableList<BehaviorDefinition> extractBehaviors(
+      Node behaviorArray, @Nullable ModuleMetadata moduleMetadata) {
     if (behaviorArray == null) {
       return ImmutableList.of();
     }
@@ -78,8 +99,7 @@ final class PolymerBehaviorExtractor {
                     behaviorName,
                     PolymerClassDefinition.DefinitionType.ObjectLiteral,
                     compiler,
-                    /** constructor= */
-                    null),
+                    /* constructor= */ null),
                 getBehaviorFunctionsToCopy(behaviorName),
                 getNonPropertyMembersToCopy(behaviorName),
                 !NodeUtil.isInFunction(behaviorName),
@@ -87,8 +107,9 @@ final class PolymerBehaviorExtractor {
         continue;
       }
 
-      ResolveBehaviorNameResult resolveResult = resolveBehaviorName(behaviorName);
-      if (resolveResult == null) {
+      ResolveBehaviorNameResult resolveResult =
+          resolveBehaviorName(getQualifiedNameThroughCast(behaviorName), moduleMetadata);
+      if (resolveResult.equals(FAILED_RESOLVE_RESULT)) {
         compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));
         continue;
       }
@@ -96,7 +117,7 @@ final class PolymerBehaviorExtractor {
 
       if (behaviorValue.isArrayLit()) {
         // Individual behaviors can also be arrays of behaviors. Parse them recursively.
-        behaviors.addAll(extractBehaviors(behaviorValue));
+        behaviors.addAll(extractBehaviors(behaviorValue, resolveResult.moduleMetadata));
       } else if (behaviorValue.isObjectLit()) {
         PolymerPassStaticUtils.switchDollarSignPropsToBrackets(behaviorValue, compiler);
         PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(behaviorValue, compiler);
@@ -109,8 +130,7 @@ final class PolymerBehaviorExtractor {
                     behaviorValue,
                     PolymerClassDefinition.DefinitionType.ObjectLiteral,
                     compiler,
-                    /** constructor= */
-                    null),
+                    /* constructor= */ null),
                 getBehaviorFunctionsToCopy(behaviorValue),
                 getNonPropertyMembersToCopy(behaviorValue),
                 resolveResult.isGlobalDeclaration,
@@ -126,32 +146,74 @@ final class PolymerBehaviorExtractor {
   private static class ResolveBehaviorNameResult {
     final Node node;
     final boolean isGlobalDeclaration;
+    final ModuleMetadata moduleMetadata;
 
-    public ResolveBehaviorNameResult(Node node, boolean isGlobalDeclaration) {
+    ResolveBehaviorNameResult(
+        Node node, boolean isGlobalDeclaration, ModuleMetadata moduleMetadata) {
       this.node = node;
       this.isGlobalDeclaration = isGlobalDeclaration;
+      this.moduleMetadata = moduleMetadata;
     }
   }
+
+  private static final ResolveBehaviorNameResult FAILED_RESOLVE_RESULT =
+      new ResolveBehaviorNameResult(null, false, null);
 
   /**
    * Resolve an identifier, which is presumed to refer to a Polymer Behavior declaration, using the
    * global namespace. Recurses to resolve assignment chains of any length.
    *
-   * @param nameNode The NAME, GETPROP, or CAST node containing the identifier.
-   * @return The behavior declaration node, or null if it couldn't be resolved.
+   * <p>This method memoizes {@link #resolveBehaviorNameInternal(String, ModuleMetadata)}
+   *
+   * @param name the name of the identifier, which may be qualified.
+   * @param moduleMetadata the module (ES module or goog.module) this name is resolved in, or null
+   *     if not in a module.
+   * @return The behavior declaration node, or {@link #FAILED_RESOLVE_RESULT} if it couldn't be
+   *     resolved.
    */
-  @Nullable
-  private ResolveBehaviorNameResult resolveBehaviorName(Node nameNode) {
-    String name = getQualifiedNameThroughCast(nameNode);
+  private ResolveBehaviorNameResult resolveBehaviorName(
+      @Nullable String name, ModuleMetadata moduleMetadata) {
     if (name == null) {
-      return null;
+      return FAILED_RESOLVE_RESULT;
     }
-    Name globalName = globalNames.getSlot(name);
-    if (globalName == null) {
-      return null;
+    ResolveBehaviorNameResult memoized =
+        moduleMetadata != null
+            ? resolveMemoized.get(name, moduleMetadata)
+            : globalResolveMemoized.get(name);
+    if (memoized == null) {
+      memoized = checkNotNull(resolveBehaviorNameInternal(name, moduleMetadata));
+      if (moduleMetadata != null) {
+        resolveMemoized.put(name, moduleMetadata, memoized);
+      } else {
+        globalResolveMemoized.put(name, memoized);
+      }
+    }
+    return memoized;
+  }
+
+  /**
+   * Implements behavior resolution. Call {@link #resolveBehaviorName(String, ModuleMetadata)}}
+   * instead.
+   */
+  private ResolveBehaviorNameResult resolveBehaviorNameInternal(
+      String name, ModuleMetadata moduleMetadata) {
+    // Check if this name is possibly from a legacy goog.module
+    ResolveBehaviorNameResult legacyResolve = resolveReferenceToLegacyGoogModule(name);
+    if (legacyResolve != null) {
+      return legacyResolve;
     }
 
-    boolean isGlobalDeclaration = true;
+    // If not, look it up within the current module.
+    Name moduleLevelName =
+        moduleMetadata != null ? globalNames.getNameFromModule(moduleMetadata, name) : null;
+    Name globalName = moduleLevelName == null ? globalNames.getSlot(name) : moduleLevelName;
+    if (globalName == null) {
+      return FAILED_RESOLVE_RESULT;
+    }
+
+    // Whether the declaration of this node is in the top-level global scope, as opposed to a module
+    // or an IIFE.
+    boolean isGlobalDeclaration = moduleLevelName == null;
 
     // Use any set as a backup declaration, even if it's local.
     Ref declarationRef = globalName.getDeclaration();
@@ -165,21 +227,26 @@ final class PolymerBehaviorExtractor {
       }
     }
     if (declarationRef == null) {
-      return null;
+      return FAILED_RESOLVE_RESULT;
     }
 
     Node declarationNode = declarationRef.getNode();
     if (declarationNode == null) {
-      return null;
+      return FAILED_RESOLVE_RESULT;
     }
     Node rValue = NodeUtil.getRValueOfLValue(declarationNode);
     if (rValue == null) {
-      return null;
+      return FAILED_RESOLVE_RESULT;
     }
 
     if (rValue.isQualifiedName()) {
       // Another identifier; recurse.
-      return resolveBehaviorName(rValue);
+      Scope declarationScope = declarationRef.scope.getClosestHoistScope();
+      Module m =
+          ModuleImportResolver.getModuleFromScopeRoot(
+              compiler.getModuleMap(), compiler, declarationScope.getRootNode());
+      return resolveBehaviorName(
+          getQualifiedNameThroughCast(rValue), m != null ? m.metadata() : null);
     }
 
     JSDocInfo behaviorInfo = NodeUtil.getBestJSDocInfo(declarationNode);
@@ -188,7 +255,30 @@ final class PolymerBehaviorExtractor {
           JSError.make(declarationNode, PolymerPassErrors.POLYMER_UNANNOTATED_BEHAVIOR));
     }
 
-    return new ResolveBehaviorNameResult(rValue, isGlobalDeclaration);
+    return new ResolveBehaviorNameResult(rValue, isGlobalDeclaration, moduleMetadata);
+  }
+
+  /**
+   * Handles resolving behaviors if they are references to legacy modules
+   *
+   * <p>Returns null if the name is not from a legacy module, and resolution should continue
+   * normally.
+   */
+  private ResolveBehaviorNameResult resolveReferenceToLegacyGoogModule(String name) {
+    int dot = name.length();
+    while (dot >= 0) {
+      String subNamespace = name.substring(0, dot);
+      ModuleMetadata metadata = moduleMetadataMap.getModulesByGoogNamespace().get(subNamespace);
+
+      if (metadata == null || !metadata.isLegacyGoogModule()) {
+        dot = name.lastIndexOf('.', dot - 1);
+        continue;
+      }
+
+      String rest = dot == name.length() ? "" : name.substring(dot);
+      return resolveBehaviorName(GOOG_MODULE_EXPORTS + rest, metadata);
+    }
+    return null;
   }
 
   /**

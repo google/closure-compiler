@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISSING_EXT
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -58,6 +59,7 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
   private final Set<String> nativeExternsAdded;
   private ImmutableList<Node> polymerElementProps;
   private GlobalNamespace globalNames;
+  private PolymerBehaviorExtractor behaviorExtractor;
   private boolean warnedPolymer1ExternsMissing = false;
   private boolean propertySinkExternInjected = false;
 
@@ -97,6 +99,8 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
     }
 
     globalNames = new GlobalNamespace(compiler, externs, root);
+    behaviorExtractor =
+        new PolymerBehaviorExtractor(compiler, globalNames, compiler.getModuleMetadataMap());
 
     Node externsAndJsRoot = root.getParent();
     hotSwapScript(externsAndJsRoot, null);
@@ -126,6 +130,16 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
     }
   }
 
+  private ModuleMetadata getModuleMetadata(NodeTraversal traversal) {
+    Node script = traversal.getCurrentScript();
+    if (script != null && script.getFirstChild().isModuleBody()) {
+      return ModuleImportResolver.getModuleFromScopeRoot(
+              compiler.getModuleMap(), compiler, script.getFirstChild())
+          .metadata();
+    }
+    return null;
+  }
+
   /** Polymer 1.x and Polymer 2 Legacy Element Definitions */
   private void rewritePolymer1ClassDefinition(Node node, Node parent, NodeTraversal traversal) {
     Node grandparent = parent.getParent();
@@ -137,8 +151,9 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
       }
       traversal.reportCodeChange();
     }
-    PolymerClassDefinition def = PolymerClassDefinition.extractFromCallNode(
-        node, compiler, globalNames);
+    PolymerClassDefinition def =
+        PolymerClassDefinition.extractFromCallNode(
+            node, compiler, getModuleMetadata(traversal), behaviorExtractor);
     if (def != null) {
       if (def.nativeBaseElement != null) {
         appendPolymerElementExterns(def);

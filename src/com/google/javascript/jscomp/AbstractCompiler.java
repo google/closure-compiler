@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.MustBeClosed;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -264,6 +265,10 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   @VisibleForTesting
   abstract Node parseTestCode(String code);
+
+  /** Parses code for testing. */
+  @VisibleForTesting
+  abstract Node parseTestCode(ImmutableList<String> code);
 
   /**
    * Prints a node to source code.

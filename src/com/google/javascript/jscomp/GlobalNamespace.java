@@ -540,7 +540,10 @@ class GlobalNamespace
         // because they use the term 'global' in an ES5, pre-block-scoping sense.
         Scope hoistScope = scope.getClosestHoistScope();
         // Consider a set to be 'global' if it is in the hoist scope in which the name is defined.
-        if (hoistScope.isGlobal() || hoistScope.getRootNode() == curModuleRoot) {
+        // For example, a global name set in a module scope is a 'local' set, but a module-level
+        // name set in a module scope is a 'global' set.
+        if (hoistScope.isGlobal()
+            || (root != globalRoot && hoistScope.getRootNode() == curModuleRoot)) {
           handleSetFromGlobal(module, scope, n, parent, name, type, nameMetadata);
         } else {
           handleSetFromLocal(module, scope, n, parent, name, nameMetadata);

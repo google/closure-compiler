@@ -919,12 +919,6 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame("({[0]: function f() {}})");
   }
 
-  private static final String CLOSURE_DEFS =
-      lines(
-          "/** @const */ var goog = {};",
-          "goog.module = function(ns) {};",
-          "goog.provide = function(ns) {};");
-
   @Test
   public void testEsModule_withUndefinedExportsRef() {
     testError("exports = function() {}; export {exports};", VarCheck.UNDEFINED_VAR_ERROR);

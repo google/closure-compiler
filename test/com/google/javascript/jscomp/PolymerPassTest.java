@@ -177,6 +177,7 @@ public class PolymerPassTest extends CompilerTestCase {
     allowExternsChanges();
     enableRunTypeCheckAfterProcessing();
     enableParseTypeInfo();
+    enableCreateModuleMap();
   }
 
   @Test
@@ -2801,6 +2802,98 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "  behaviors: [ Polymer.FunBehavior ],",
             "});"));
+  }
+
+  /**
+   * See {@link #testBehaviorInIIFE()} for more information on what this is testing.
+   *
+   */
+  @Test
+  public void testBehaviorInModule() {
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('behaviors.CoolBehavior');",
+                "goog.module.declareLegacyNamespace();",
+                "const MODULE_LOCAL = 0;",
+                "/** @polymerBehavior */",
+                "Polymer.FunBehavior = {",
+                "  /** @param {string} funAmount */",
+                "  doSomethingFun: function(funAmount) {",
+                "    alert(MODULE_LOCAL);",
+                "    alert('Something ' + funAmount + ' fun!');",
+                "  },",
+                "  /** @override */",
+                "  created: function() {}",
+                "};",
+                "/** @polymerBehavior */",
+                "exports = {",
+                "  /** @param {string} coolAmount */",
+                "  doSomethingCool: function(coolAmount) {",
+                "    alert(MODULE_LOCAL);",
+                "    alert('Something ' + funAmount + ' cool!');",
+                "  },",
+                "  /** @override */",
+                "  created: function() {}",
+                "};"),
+            lines(
+                "goog.require('behaviors.CoolBehavior');",
+                "var A = Polymer({",
+                "  is: 'x-element',",
+                "  properties: {",
+                "    name: String,",
+                "  },",
+                "  behaviors: [ Polymer.FunBehavior, behaviors.CoolBehavior ],",
+                "});")),
+        expected(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('behaviors.CoolBehavior');",
+                "goog.module.declareLegacyNamespace();",
+                "const MODULE_LOCAL = 0;",
+                "/** @polymerBehavior @nocollapse */",
+                "Polymer.FunBehavior = {",
+                "  /** @suppress {checkTypes|globalThis|visibility} */",
+                "  doSomethingFun: function(funAmount) {",
+                "    alert(MODULE_LOCAL);",
+                "    alert('Something ' + funAmount + ' fun!');",
+                "  },",
+                "  /** @suppress {checkTypes|globalThis|visibility} */",
+                "  created: function() {}",
+                "};",
+                "/** @polymerBehavior @nocollapse */",
+                "exports = {",
+                "  /** @suppress {checkTypes|globalThis|visibility} */",
+                "  doSomethingCool: function(coolAmount) {",
+                "    alert(MODULE_LOCAL);",
+                "    alert('Something ' + funAmount + ' cool!');",
+                "  },",
+                "  /** @suppress {checkTypes|globalThis|visibility} */",
+                "  created: function() {}",
+                "};"),
+            lines(
+                "goog.require('behaviors.CoolBehavior');",
+                "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface}*/",
+                "var A = function() {};",
+                "/** @type {string} */ A.prototype.name;",
+                "/**",
+                " * @param {string} funAmount",
+                " * @suppress {unusedPrivateMembers}",
+                " */",
+                "A.prototype.doSomethingFun = function(funAmount) {};",
+                "/**",
+                " * @param {string} coolAmount",
+                " * @suppress {unusedPrivateMembers}",
+                " */",
+                "A.prototype.doSomethingCool = function(coolAmount) {};",
+                "A = Polymer(/** @lends {A.prototype} */ {",
+                "  is: 'x-element',",
+                "  properties: {",
+                "    name: String,",
+                "  },",
+                "  behaviors: [ Polymer.FunBehavior, behaviors.CoolBehavior ],",
+                "});")));
   }
 
   @Test

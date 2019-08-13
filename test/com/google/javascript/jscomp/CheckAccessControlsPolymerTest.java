@@ -47,6 +47,7 @@ public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
     enableParseTypeInfo();
     enablePolymerPass();
     allowExternsChanges();
+    enableCreateModuleMap();
   }
 
   @Override

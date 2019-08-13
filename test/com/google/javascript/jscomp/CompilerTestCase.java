@@ -587,6 +587,14 @@ public abstract class CompilerTestCase {
           "function ITemplateArray() {}",
           ACTIVE_X_OBJECT_DEF);
 
+  protected static final String CLOSURE_DEFS =
+      lines(
+          "/** @const */ var goog = {};",
+          "goog.module = function(ns) {};",
+          "goog.module.declareLegacyNamespace = function() {};",
+          "goog.provide = function(ns) {};",
+          "goog.require = function(ns) {};");
+
   /**
    * Constructs a test.
    *
@@ -1991,6 +1999,14 @@ public abstract class CompilerTestCase {
         maybeCreateSources("input", input),
         options);
     compiler.parseInputs();
+
+    if (createModuleMap) {
+      new GatherModuleMetadata(
+              compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER)
+          .process(compiler.getExternsRoot(), compiler.getJsRoot());
+      new ModuleMapCreator(compiler, compiler.getModuleMetadataMap())
+          .process(compiler.getExternsRoot(), compiler.getJsRoot());
+    }
     assertThat(compiler.getErrors()).isEmpty();
 
     Node externsAndJs = compiler.getRoot();
