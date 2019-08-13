@@ -25,7 +25,9 @@ import com.google.common.collect.Table;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
+import com.google.javascript.jscomp.modules.Binding;
 import com.google.javascript.jscomp.modules.Module;
+import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -51,16 +53,21 @@ final class PolymerBehaviorExtractor {
   private final AbstractCompiler compiler;
   private final GlobalNamespace globalNames;
   private final ModuleMetadataMap moduleMetadataMap;
+  private final ModuleMap moduleMap;
 
   private final Table<String, ModuleMetadata, ResolveBehaviorNameResult> resolveMemoized =
       HashBasedTable.create();
   private final Map<String, ResolveBehaviorNameResult> globalResolveMemoized = new HashMap<>();
 
   PolymerBehaviorExtractor(
-      AbstractCompiler compiler, GlobalNamespace globalNames, ModuleMetadataMap moduleMetadataMap) {
+      AbstractCompiler compiler,
+      GlobalNamespace globalNames,
+      ModuleMetadataMap moduleMetadataMap,
+      ModuleMap moduleMap) {
     this.compiler = compiler;
     this.globalNames = globalNames;
     this.moduleMetadataMap = moduleMetadataMap;
+    this.moduleMap = moduleMap;
   }
 
   /**
@@ -197,6 +204,12 @@ final class PolymerBehaviorExtractor {
    */
   private ResolveBehaviorNameResult resolveBehaviorNameInternal(
       String name, ModuleMetadata moduleMetadata) {
+    // Check if this name is a module import/require.
+    ResolveBehaviorNameResult result = getNameIfModuleImport(name, moduleMetadata);
+    if (result != null) {
+      return result;
+    }
+
     // Check if this name is possibly from a legacy goog.module
     ResolveBehaviorNameResult legacyResolve = resolveReferenceToLegacyGoogModule(name);
     if (legacyResolve != null) {
@@ -276,9 +289,92 @@ final class PolymerBehaviorExtractor {
       }
 
       String rest = dot == name.length() ? "" : name.substring(dot);
-      return resolveBehaviorName(GOOG_MODULE_EXPORTS + rest, metadata);
+      ResolveBehaviorNameResult result = resolveBehaviorName(GOOG_MODULE_EXPORTS + rest, metadata);
+      // TODO(lharker): Remove this check and just fail to resolve once we have moved module
+      // rewriting unconditionally after the PolymerPass.
+      return result.equals(FAILED_RESOLVE_RESULT) ? null : result;
     }
     return null;
+  }
+
+  /**
+   * Handles resolving behaviors whose root is imported from another module or a provide.
+   *
+   * <p>Returns null if the given name is not imported or {@link #FAILED_RESOLVE_RESULT} if it is
+   * imported but is not annotated @polymerBehavior.
+   */
+  private ResolveBehaviorNameResult getNameIfModuleImport(String name, ModuleMetadata metadata) {
+    if (metadata == null || (!metadata.isEs6Module() && !metadata.isGoogModule())) {
+      return null;
+    }
+    Module module =
+        metadata.isGoogModule()
+            ? moduleMap.getClosureModule(metadata.googNamespaces().asList().get(0))
+            : moduleMap.getModule(metadata.path());
+
+    checkNotNull(module, metadata);
+
+    int dot = name.indexOf('.');
+    String root = dot == -1 ? name : name.substring(0, dot);
+    Binding b = module.boundNames().get(root);
+
+    if (b == null || !b.isSomeImport()) {
+      return null;
+    }
+    String rest = dot == -1 ? "" : name.substring(dot);
+
+    if (b.isModuleNamespace()) {
+      // `import * as x from '';` or `const ns = goog.require('...`
+      return resolveModuleNamespaceBinding(b, rest);
+    }
+    ModuleMetadata importMetadata = b.originatingExport().moduleMetadata();
+    String originatingName; // The name in the module being imported
+    if (importMetadata.isEs6Module()) {
+      // import {exportName} from './mod';
+      originatingName = b.originatingExport().localName() + rest;
+    } else if (importMetadata.isGoogModule()) {
+      // `const {exportName: localName} = goog.require('some.module');`
+      originatingName = GOOG_MODULE_EXPORTS + "." + b.originatingExport().exportName() + rest;
+    } else {
+      // `const {exportName: localName} = goog.require('some.provide');`
+      checkState(importMetadata.isGoogProvide(), importMetadata);
+      originatingName = b.closureNamespace() + "." + b.originatingExport().exportName() + rest;
+    }
+    return resolveBehaviorName(originatingName, importMetadata);
+  }
+
+  /** Resolves a name that imports the 'namespace' of a module or provide. */
+  private ResolveBehaviorNameResult resolveModuleNamespaceBinding(Binding b, String rest) {
+    if (b.metadata().isGoogModule()) {
+      return resolveBehaviorName(GOOG_MODULE_EXPORTS + rest, b.metadata());
+    } else if (b.metadata().isGoogProvide()) {
+      return resolveBehaviorName(b.closureNamespace() + rest, b.metadata());
+    }
+
+    // ES module import *.
+    checkState(b.metadata().isEs6Module());
+    if (rest.isEmpty()) {
+      // The namespace imported by `import *` is never a @polymerBehavior.
+      return FAILED_RESOLVE_RESULT;
+    }
+    rest = rest.substring(1); // Remove leading '.'.
+    int dot = rest.indexOf('.');
+
+    // Given:
+    //   `const internalName = 0; export {internalName as exportName};`
+    //   `import * as mod from './x'; use(mod.exportName.Behavior);`
+    // 1. get the internal name `internalName` from` exportName`.
+    // 2. then proceed to resolve `internalName.Behavior` in './x'.
+    String exportedName = dot == -1 ? rest : rest.substring(0, dot);
+    Module originalModule = moduleMap.getModule(b.metadata().path());
+    Binding exportBinding = originalModule.namespace().get(exportedName);
+    if (exportBinding == null || !exportBinding.isCreatedByEsExport()) {
+      // This is an invalid import, and will cause an error elsewhere.
+      return FAILED_RESOLVE_RESULT;
+    }
+    return resolveBehaviorName(
+        exportBinding.originatingExport().localName() + (dot == -1 ? "" : rest.substring(dot)),
+        b.metadata());
   }
 
   /**

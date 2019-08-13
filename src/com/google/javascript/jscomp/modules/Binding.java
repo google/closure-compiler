@@ -102,7 +102,7 @@ public abstract class Binding {
         sourceNode,
         boundExport,
         /* isModuleNamespace= */ false,
-        /* closureNamespace= */ null,
+        /* closureNamespace= */ boundExport.closureNamespace(),
         CreatedBy.EXPORT);
   }
 
@@ -209,5 +209,18 @@ public abstract class Binding {
    */
   public final boolean isCreatedByEsImport() {
     return createdBy().equals(CreatedBy.IMPORT);
+  }
+
+  /**
+   * Returns whether this Binding originated from an ES import, as opposed to an export or
+   * goog.require.
+   */
+  public final boolean isCreatedByEsExport() {
+    return createdBy().equals(CreatedBy.EXPORT);
+  }
+
+  /** Returns whether this Binding originated from an ES import or goog.require */
+  public final boolean isSomeImport() {
+    return !createdBy().equals(CreatedBy.EXPORT);
   }
 }

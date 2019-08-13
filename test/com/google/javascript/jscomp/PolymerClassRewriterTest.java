@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
@@ -304,7 +305,10 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
             compiler,
             /* moduleMetadata= */ null,
             new PolymerBehaviorExtractor(
-                compiler, globalNamespace, ModuleMetadataMap.emptyForTesting()));
+                compiler,
+                globalNamespace,
+                ModuleMetadataMap.emptyForTesting(),
+                ModuleMap.emptyForTesting()));
 
     Node parent = polymerCall.getParent();
     Node grandparent = parent.getParent();

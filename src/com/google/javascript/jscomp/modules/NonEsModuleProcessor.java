@@ -64,6 +64,8 @@ final class NonEsModuleProcessor implements ModuleProcessor {
       String namespace = null;
       if (moduleSpecifier != null && GoogEsImports.isGoogImportSpecifier(moduleSpecifier)) {
         namespace = GoogEsImports.getClosureIdFromGoogImportSpecifier(moduleSpecifier);
+      } else if (metadata.isGoogProvide()) {
+        namespace = moduleSpecifier;
       }
       if (metadata.isCommonJs()) {
         // Currently we don't scan require()s, so this only gets hit if an ES module imports a CJS

@@ -767,6 +767,37 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testPolymerBehaviorLegacyGoogModule() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(1);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setClosurePass(true);
+    addPolymerExterns();
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.module('behaviors.FunBehavior');",
+              "goog.module.declareLegacyNamespace();",
+              "/** @polymerBehavior */",
+              "exports = {};"),
+          "var XFoo = Polymer({ is: 'x-foo', behaviors: [ behaviors.FunBehavior ] });"
+        },
+        new String[] {
+          "var behaviors = {}; behaviors.FunBehavior = {};",
+          lines(
+              "var XFoo=function(){};",
+              "XFoo = Polymer({",
+              "  is:'x-foo',",
+              "  behaviors: [ behaviors.FunBehavior ]",
+              "});")
+        });
+  }
+
+  @Test
   public void testConstPolymerElementAllowed() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);

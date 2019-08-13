@@ -100,7 +100,8 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
 
     globalNames = new GlobalNamespace(compiler, externs, root);
     behaviorExtractor =
-        new PolymerBehaviorExtractor(compiler, globalNames, compiler.getModuleMetadataMap());
+        new PolymerBehaviorExtractor(
+            compiler, globalNames, compiler.getModuleMetadataMap(), compiler.getModuleMap());
 
     Node externsAndJsRoot = root.getParent();
     hotSwapScript(externsAndJsRoot, null);

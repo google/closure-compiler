@@ -58,4 +58,8 @@ public final class ModuleMap {
   public Module getClosureModule(String namespace) {
     return resolvedClosureModules.get(namespace);
   }
+
+  public static ModuleMap emptyForTesting() {
+    return new ModuleMap(ImmutableMap.of(), ImmutableMap.of());
+  }
 }
