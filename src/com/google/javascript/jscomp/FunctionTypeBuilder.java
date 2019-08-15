@@ -45,6 +45,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.TemplateType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -755,11 +756,37 @@ final class FunctionTypeBuilder {
     if (infoTypeKeys.isEmpty() && infoTypeTransformations.isEmpty()) {
       return ImmutableList.of();
     }
+
+    // Temporarily bootstrap the template environment with unbound (unknown bound) template types
+    List<TemplateType> unboundedTemplates = new ArrayList<>();
+    for (Map.Entry<String, JSTypeExpression> entry : infoTypeKeys.entrySet()) {
+      TemplateType template = typeRegistry.createTemplateType(entry.getKey());
+      unboundedTemplates.add(template);
+    }
+    this.templateScope = typeRegistry.createScopeWithTemplates(templateScope, unboundedTemplates);
+
+    // Evaluate template type bounds with bootstrapped environment and reroute the bounds to these
     ImmutableList.Builder<TemplateType> templates = ImmutableList.builder();
+    HashMap<TemplateType, JSType> templatesToBounds = new HashMap<>();
     for (Map.Entry<String, JSTypeExpression> entry : infoTypeKeys.entrySet()) {
       JSType typeBound = typeRegistry.evaluateTypeExpression(entry.getValue(), templateScope);
-      templates.add(typeRegistry.createTemplateType(entry.getKey(), typeBound));
+      TemplateType template =
+          typeRegistry.getType(templateScope, entry.getKey()).toMaybeTemplateType();
+      if (template != null) {
+        templatesToBounds.put(template, typeBound);
+      } else {
+        templatesToBounds.put(
+            typeRegistry.createTemplateType(entry.getKey(), typeBound), typeBound);
+      }
     }
+
+    for (Map.Entry<TemplateType, JSType> entry : templatesToBounds.entrySet()) {
+      TemplateType template = entry.getKey();
+      JSType bound = entry.getValue();
+      template.setBound(bound);
+      templates.add(template);
+    }
+
     for (Map.Entry<String, Node> entry : infoTypeTransformations.entrySet()) {
       if (allowTypeTransformations) {
         templates.add(
@@ -768,7 +795,17 @@ final class FunctionTypeBuilder {
         reportWarning(TEMPLATE_TRANSFORMATION_ON_CLASS, entry.getKey());
       }
     }
-    return templates.build();
+
+    ImmutableList<TemplateType> builtTemplates = templates.build();
+    for (TemplateType template : builtTemplates) {
+      if (template.containsCycle()) {
+        reportError(
+            RhinoErrorReporter.PARSE_ERROR,
+            "Cycle detected in inheritance chain of type " + template.getReferenceName());
+      }
+    }
+
+    return builtTemplates;
   }
 
   /** Infer the template type from the doc info. */
@@ -1174,4 +1211,6 @@ final class FunctionTypeBuilder {
       return block.hasOneChild() && block.getFirstChild().isThrow();
     }
   }
+
+
 }

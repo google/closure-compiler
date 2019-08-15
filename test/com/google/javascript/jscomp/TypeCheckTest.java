@@ -40,6 +40,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -5957,7 +5958,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @param {T} x",
             " * @template {number|boolean} T",
             " */",
-            "function foo(x) {return stringID(x); }"),
+            "function foo(x) { return stringID(x); }"),
         lines(
             "actual parameter 1 of stringID does not match formal parameter",
             "found   : T",
@@ -6081,7 +6082,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  // TODO(liuamanda): should not work
   public void testDoubleGenericBoundArgInnerAssignSubtypeError() {
     testTypes(
         lines(
@@ -6091,7 +6091,267 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {number|string} T",
             " * @template {number|string} U",
             " */",
+            "function foo(x,y) { x=y; }"),
+        lines(
+            "assignment", //
+            "found   : U", //
+            "required: T"));
+  }
+
+  @Test
+  public void testGenericBoundBivariantTemplatized() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {!Array<T>} x",
+            " * @param {!Array<number|boolean>} y",
+            " * @template {number} T",
+            " */",
+            "function foo(x,y) {",
+            "  var /** !Array<T> */ z = y;",
+            "  y = x;",
+            "}"));
+  }
+
+  @Test
+  public void testConstructGenericBoundGenericBound() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @param {U} y",
+            " * @template {boolean|string} T",
+            " * @template {T} U",
+            " */",
             "function foo(x,y) { x=y; }"));
+  }
+
+  @Test
+  public void testConstructGenericBoundGenericBoundError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @param {U} y",
+            " * @template {boolean|string} T",
+            " * @template {T} U",
+            " */",
+            "function foo(x,y) {",
+            "  var /** U */ z = x;",
+            "  x = y;",
+            "}"),
+        lines(
+            "initializing variable", //
+            "found   : T", //
+            "required: U"));
+  }
+
+  @Test
+  public void testDoubleDeclareTemplateNameInFunctions() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @template {boolean} T",
+            " */",
+            "function foo(x) { return x; }",
+            "/**",
+            " * @param {T} x",
+            " * @template {string} T",
+            " */",
+            "function bar(x) { return x; }",
+            "foo(true);",
+            "bar('Hi');"));
+  }
+
+  @Test
+  public void testDoubleDeclareTemplateNameInFunctionsError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @template {boolean} T",
+            " */",
+            "function foo(x) { return x; }",
+            "/**",
+            " * @param {T} x",
+            " * @template {string} T",
+            " */",
+            "function bar(x) { return x; }",
+            "foo('Hi');",
+            "bar(true);"),
+        new String[] {
+          lines(
+              "actual parameter 1 of foo does not match formal parameter",
+              "found   : string",
+              "required: None"),
+          lines(
+              "actual parameter 1 of bar does not match formal parameter",
+              "found   : boolean",
+              "required: None")
+        });
+  }
+
+  @Test
+  public void testShadowTemplateNameInFunctionAndClass() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @template {boolean} T",
+            " */",
+            "function foo(x) { return x; }",
+            "class Foo {",
+            "  /**",
+            "   * @param {T} x",
+            "   * @template {string} T",
+            "   */",
+            "  foo(x) { return x; }",
+            "}",
+            "var F = new Foo();",
+            "F.foo('Hi');",
+            "foo(true);"));
+  }
+
+  @Test
+  public void testShadowTemplateNameInFunctionAndClassError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {T} x",
+            " * @template {boolean} T",
+            " */",
+            "function foo(x) { return x; }",
+            "class Foo {",
+            "  /**",
+            "   * @param {T} x",
+            "   * @template {string} T",
+            "   */",
+            "  foo(x) { return x; }",
+            "}",
+            "var F = new Foo();",
+            "F.foo(true);",
+            "foo('Hi');"),
+        new String[] {
+          // TODO(b/139328254): Provide a clearer expected type, rather than "None"
+          lines(
+              "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
+              "found   : boolean",
+              "required: None"),
+          lines(
+              "actual parameter 1 of foo does not match formal parameter",
+              "found   : string",
+              "required: None")
+        });
+  }
+
+  @Test
+  // TODO(b/139192655): The function template should shadow the class template type and not error
+  public void testFunctionTemplateShadowClassTemplate() {
+    testTypes(
+        lines(
+            "/**",
+            " * @template T",
+            " */",
+            "class Foo {",
+            "  /**",
+            "   * @param {T} x",
+            "   * @template T",
+            "   */",
+            "  foo(x) { return x; }",
+            "}",
+            "const /** !Foo<string> */ f = new Foo();",
+            "f.foo(3);"),
+        lines(
+            "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  // TODO(b/139192655): The function template should shadow the class template type and not error
+  public void testFunctionTemplateShadowClassTemplateBounded() {
+    testTypes(
+        lines(
+            "/**",
+            " * @template {string} T",
+            " */",
+            "class Foo {",
+            "  /**",
+            "   * @param {T} x",
+            "   * @template {number} T",
+            "   */",
+            "  foo(x) { return x; }",
+            "}",
+            "const /** !Foo<string> */ f = new Foo();",
+            "f.foo(3);"),
+        lines(
+            "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testCyclicGenericBoundGenericError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @template {S} T",
+            " * @template {T} U",
+            " * @template {U} S",
+            " */",
+            "class Foo { }"),
+        Arrays.asList(
+            "Parse error. Cycle detected in inheritance chain of type S",
+            "Parse error. Cycle detected in inheritance chain of type T",
+            "Parse error. Cycle detected in inheritance chain of type U"),
+        true);
+  }
+
+  @Test
+  public void testUnitCyclicGenericBoundGenericError() {
+    testTypes(
+        lines(
+            "/**", //
+            " * @template {T} T", //
+            " */", //
+            "class Foo { }"),
+        "Parse error. Cycle detected in inheritance chain of type T",
+        true);
+  }
+
+  @Test
+  public void testSecondUnitCyclicGenericBoundGenericError() {
+    testTypes(
+        lines(
+            "/**", //
+            " * @template {T} T", //
+            " * @template {T} U", //
+            " */", //
+            "class Foo { }"),
+        Arrays.asList(
+            "Parse error. Cycle detected in inheritance chain of type T",
+            "Parse error. Cycle detected in inheritance chain of type U"),
+        true);
+  }
+
+  @Test
+  public void testConstructCyclicGenericBoundGenericBoundGraph() {
+    testTypes(
+        lines(
+            "/**",
+            " * @template V, E",
+            " */",
+            "class Vertex {}",
+            "/**",
+            " * @template V, E",
+            " */",
+            "class Edge {}",
+            "/**",
+            " * @template {Vertex<V, E>} V",
+            " * @template {Edge<V, E>} E",
+            " */",
+            "class Graph {}"));
   }
 
   @Test
@@ -24315,6 +24575,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  @Ignore
+  // TODO(liuamanda): detects cyclic inheritance instead of stackoverflowing now
   public void testCyclicUnionTypedefs() {
     // TODO(b/112964849): This case should not throw anything.
     assertThrows(

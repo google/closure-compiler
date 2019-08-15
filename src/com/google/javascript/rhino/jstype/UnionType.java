@@ -51,7 +51,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;

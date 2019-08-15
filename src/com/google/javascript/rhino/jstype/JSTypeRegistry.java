@@ -1812,8 +1812,7 @@ public class JSTypeRegistry implements Serializable {
   public TemplateType createTemplateType(String name) {
     return new TemplateType(
         this,
-        name,
-        getNativeType(UNKNOWN_TYPE));
+        name);
   }
 
   public TemplateType createTemplateType(String name, JSType bound) {

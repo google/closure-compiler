@@ -47,13 +47,14 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Predicate;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.ContainsUpperBoundSuperTypeVisitor.Result;
 
 /** A placeholder type, used as keys in {@link TemplateTypeMap}s. */
 public final class TemplateType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String name;
-  private final JSType bound;
+  private JSType bound;
   private final Node typeTransformation;
 
   TemplateType(JSTypeRegistry registry, String name) {
@@ -117,6 +118,35 @@ public final class TemplateType extends ProxyObjectType {
     return bound;
   }
 
+  public void setBound(JSType bound) {
+    this.bound = bound;
+    this.setReferencedType(bound);
+  }
+
+  @Override
+  public boolean isSubtype(JSType that) {
+    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
+  }
+
+  @Override
+  protected boolean isSubtype(
+      JSType that, ImplCache implicitImplCache, SubtypingMode subtypingMode) {
+    if (!this.getBound().isUnknownType()
+        && that.isTemplateType()
+        && !that.toMaybeTemplateType().getBound().isUnknownType()) {
+      Visitor<Result> typeVisitor = new ContainsUpperBoundSuperTypeVisitor(that);
+      return JSType.areIdentical(this, that)
+          || this.visit(typeVisitor) == ContainsUpperBoundSuperTypeVisitor.FOUND;
+    } else {
+      return super.isSubtype(that, implicitImplCache, subtypingMode);
+    }
+  }
+
+  @Override
+  public boolean equals(Object jsType) {
+    return (jsType instanceof TemplateType) && JSType.areIdentical(this, (JSType) jsType);
+  }
+
   @Override
   public boolean setValidator(Predicate<JSType> validator) {
     // ProxyObjectType will delegate to the unknown type's setValidator, which we don't want.
@@ -125,5 +155,17 @@ public final class TemplateType extends ProxyObjectType {
     // treat TemplateTypes differently from a random type for which isUnknownType() is true.
     // (e.g. FunctionTypeBuilder#ExtendedTypeValidator)
     return validator.apply(this);
+  }
+
+  /**
+   * This function returns whether or not there is a cycle in the reference chain of this type.
+   */
+  public boolean containsCycle() {
+    // By passing in an unreachable type `null` as the target, the visitor will only return if a
+    // cycle is found or a terminating type is reached.
+    Visitor<Result> typeVisitor = new ContainsUpperBoundSuperTypeVisitor(null);
+    // If a terminating type is reached, `null` is returned. If a cycle is found, the re-encountered
+    // type is returned.
+    return this.visit(typeVisitor).cycle != null;
   }
 }

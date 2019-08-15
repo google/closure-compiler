@@ -1033,10 +1033,15 @@ public final class JsDocInfoParser {
               token = templateInfo.token;
             } else {
               List<String> genericDecl = Splitter.on("}").trimResults().splitToList(templateString);
-              addParserWarning("msg.jsdoc.template.boundedgenerics");
+              addParserWarning(
+                  "msg.jsdoc.template.boundedgenerics", templateLineno, templateCharno);
 
               if (templateString.contains(",")) {
-                addParserWarning("msg.jsdoc.template.multipletemplates");
+                if (!(templateString.indexOf('<') < templateString.indexOf(',')
+                    && templateString.indexOf('>') > templateString.indexOf(','))) {
+                  addParserWarning(
+                      "msg.jsdoc.template.multipletemplates", templateLineno, templateCharno);
+                }
               }
 
               if (genericDecl.size() != 2) {

@@ -41,6 +41,7 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.JsIterables.MaybeBoxedIterableOrAsyncIterable;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.AbstractDefaultValueVisitor;
 import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -49,18 +50,15 @@ import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.NamedType;
-import com.google.javascript.rhino.jstype.NoType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
-import com.google.javascript.rhino.jstype.ProxyObjectType;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.UnknownType;
-import com.google.javascript.rhino.jstype.Visitor;
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -1145,16 +1143,12 @@ class TypeValidator implements Serializable {
     }
   }
 
-  class WellFormedTemplatizedTypeVerifier implements Visitor<Boolean> {
+  class WellFormedTemplatizedTypeVerifier extends AbstractDefaultValueVisitor<Boolean> {
     Node node;
 
     WellFormedTemplatizedTypeVerifier(Node node) {
+      super(true);
       this.node = node;
-    }
-
-    @Override
-    public Boolean caseNoType(NoType type) {
-      return true;
     }
 
     @Override
@@ -1164,12 +1158,12 @@ class TypeValidator implements Serializable {
 
     @Override
     public Boolean caseFunctionType(FunctionType type) {
-      boolean result = true;
       for (JSType param : type.getParameterTypes()) {
-        result &= param.visit(this);
+        if (!param.visit(this)) {
+          return false;
+        }
       }
-      result &= type.getReturnType().visit(this);
-      return result;
+      return type.getReturnType().visit(this);
     }
 
     @Override
@@ -1178,17 +1172,13 @@ class TypeValidator implements Serializable {
     }
 
     @Override
-    public Boolean caseProxyObjectType(ProxyObjectType type) {
-      return true;
-    }
-
-    @Override
     public Boolean caseUnionType(UnionType type) {
-      boolean result = true;
       for (JSType alt : type.getAlternates()) {
-        result &= alt.visit(this);
+        if (!alt.visit(this)) {
+          return false;
+        }
       }
-      return result;
+      return true;
     }
 
     @Override
@@ -1219,57 +1209,7 @@ class TypeValidator implements Serializable {
 
     @Override
     public Boolean caseTemplateType(TemplateType templateType) {
-      return templateType.getBound().visit(this);
-    }
-
-    @Override
-    public Boolean caseObjectType(ObjectType type) {
-      return true;
-    }
-
-    @Override
-    public Boolean caseAllType() {
-      return true;
-    }
-
-    @Override
-    public Boolean caseBooleanType() {
-      return true;
-    }
-
-    @Override
-    public Boolean caseNoObjectType() {
-      return true;
-    }
-
-    @Override
-    public Boolean caseUnknownType() {
-      return true;
-    }
-
-    @Override
-    public Boolean caseNullType() {
-      return true;
-    }
-
-    @Override
-    public Boolean caseNumberType() {
-      return true;
-    }
-
-    @Override
-    public Boolean caseStringType() {
-      return true;
-    }
-
-    @Override
-    public Boolean caseSymbolType() {
-      return true;
-    }
-
-    @Override
-    public Boolean caseVoidType() {
-      return true;
+      return !templateType.containsCycle() && templateType.getBound().visit(this);
     }
   }
 }
