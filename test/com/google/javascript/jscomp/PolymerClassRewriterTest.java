@@ -80,6 +80,27 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
   // TODO(jlklein): Add tests for non-global definitions, interface externs, read-only setters, etc.
 
   @Test
+  public void testPolymerWriterGeneratesCodeInsideLoadModule() {
+    inGlobalScope = false;
+    test(
+        lines(
+            "goog.loadModule(function(exports) {",
+            "  goog.module('ytu.app.ui.shared.YtuIcon');",
+            "  YtuIcon = Polymer({is: 'ytu-icon' });",
+            "  exports = YtuIcon;",
+            "  return exports;",
+            "})"),
+        lines(
+            "goog.loadModule(function(exports) {",
+            "  goog.module('ytu.app.ui.shared.YtuIcon');",
+            "  var YtuIcon = function(){}",
+            "  YtuIcon = Polymer(/** @lends {YtuIcon.prototype} */ {is:\"ytu-icon\"});",
+            "  exports = YtuIcon;",
+            "  return exports;",
+            "})"));
+  }
+
+  @Test
   public void testVarTarget() {
     test(
         lines(

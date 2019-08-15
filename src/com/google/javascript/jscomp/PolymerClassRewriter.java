@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.NodeUtil.isBundledGoogModuleCall;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
@@ -64,6 +65,15 @@ final class PolymerClassRewriter {
     this.polymerVersion = polymerVersion;
     this.polymerExportPolicy = polymerExportPolicy;
     this.propertyRenamingEnabled = propertyRenamingEnabled;
+  }
+
+  static boolean isFunctionArgInGoogLoadModule(Node n) {
+    if (!n.isFunction()) {
+      return false;
+    }
+
+    Node parent = n.getParent();
+    return parent != null && isBundledGoogModuleCall(parent);
   }
 
   /**
@@ -141,16 +151,28 @@ final class PolymerClassRewriter {
     // module scopes are well-supported. If this is not in a module or the global scope it is likely
     // exported.
     if (!isInGlobalOrModuleScope && !cls.target.isGetProp()) {
-      Node scriptOrModuleNode =
-          NodeUtil.getEnclosingNode(parent, node -> node.isScript() || node.isModuleBody());
-      if (scriptOrModuleNode.isModuleBody()
-          && scriptOrModuleNode.getParent().getBooleanProp(Node.GOOG_MODULE)) {
+      Node enclosingNode =
+          NodeUtil.getEnclosingNode(
+              parent,
+              node ->
+                  node.isScript() || node.isModuleBody() || isFunctionArgInGoogLoadModule(node));
+      if (enclosingNode.isModuleBody()
+          && enclosingNode.getParent().getBooleanProp(Node.GOOG_MODULE)) {
         // The goog.module('ns'); call must remain the first statement in the module.
-        Node insertionPoint = getInsertionPointForGoogModule(scriptOrModuleNode);
-        scriptOrModuleNode.addChildrenAfter(statements, insertionPoint);
-      } else {
-        scriptOrModuleNode.addChildrenToFront(statements);
-        compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(scriptOrModuleNode));
+        Node insertionPoint = getInsertionPointForGoogModule(enclosingNode);
+        enclosingNode.addChildrenAfter(statements, insertionPoint);
+      } else if (enclosingNode.isScript()) {
+        enclosingNode.addChildrenToFront(statements);
+        compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNode));
+      } else if (enclosingNode.isFunction()) {
+        Node functionBlock = enclosingNode.getLastChild();
+        Node insertionPoint = getInsertionPointForGoogModule(functionBlock);
+        // Node insertionPoint will be null here if functionBlock does not contain a goog.module()
+        // Missing goog.module inside the loadModule's functionBlock is semantically incorrect
+        // That will cause the compiler to crash in closureRewriteModule pass.
+        if (insertionPoint != null) {
+          functionBlock.addChildrenAfter(statements, insertionPoint);
+        }
       }
     } else {
       Node beforeRoot = exprRoot.getPrevious();
@@ -996,7 +1018,6 @@ final class PolymerClassRewriter {
   }
 
   private static Node getInsertionPointForGoogModule(Node moduleBody) {
-    checkArgument(moduleBody.isModuleBody(), moduleBody);
     Node insertionPoint = moduleBody.getFirstChild(); // goog.module('ns');
     Node next = insertionPoint.getNext();
     while ((NodeUtil.isNameDeclaration(next)
