@@ -979,7 +979,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Test
   public void testEs5Getter_computed() {
-    testSame(
+    test(
         lines(
             "var bar = {",
             "  enabled: false,",
@@ -989,6 +989,19 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "};",
             "function f() {",
             "  bar.enabled = true;",
+            "  var ret = bar.baz;",
+            "  bar.enabled = false;",
+            "  return ret;",
+            "};"),
+        lines(
+            "var bar = {",
+            "  enabled: false,",
+            "  get ['baz']() {",
+            "    return this.enabled ? 'enabled' : 'disabled';",
+            "  }",
+            "};",
+            "function f() {",
+            "  true;",
             "  var ret = bar.baz;",
             "  bar.enabled = false;",
             "  return ret;",
@@ -1015,7 +1028,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Test
   public void testEs5Setter_computed() {
-    testSame(
+    test(
         lines(
             "var bar = {",
             "  enabled: false,",
@@ -1027,12 +1040,24 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  bar.enabled = true;",
             "  bar.baz = 10;",
             "  bar.enabled = false;",
+            "};"),
+        lines(
+            "var bar = {",
+            "  enabled: false,",
+            "  set ['baz'](x) {",
+            "    this.x = this.enabled ? x * 2 : x;",
+            "  }",
+            "};",
+            "function f() {",
+            "  true;",
+            "  bar.baz = 10;",
+            "  bar.enabled = false;",
             "};"));
   }
 
   @Test
   public void testObjectDefineProperty_aliasedParams() {
-    testSame(
+    test(
         lines(
             "function addGetter(obj, propName) {",
             "  Object.defineProperty(obj, propName, {",
@@ -1051,9 +1076,28 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  var x = {};",
             "  x.bar = 10;",
             "  x.bar = 20;",
+            "}"),
+        lines(
+            "function addGetter(obj, propName) {",
+            "  Object.defineProperty(obj, propName, {",
+            "    get: function() { return this[propName]; }",
+            "  });",
+            "};",
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "addGetter(Foo.prototype, 'x');",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  true;",
+            "  foo.bar = 10;",
+            "  foo.enabled = false;",
+            "}",
+            "function z() {",
+            "  var x = {};",
+            "  10;",
+            "  x.bar = 20;",
             "}"));
 
-    testSame(
+    test(
         lines(
             "function f() {",
             "  var foo = new Foo()",
@@ -1071,6 +1115,25 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "function z() {",
             "  var x = {};",
             "  x.bar = 10;",
+            "  x.bar = 20;",
+            "}"),
+        lines(
+            "function f() {",
+            "  var foo = new Foo()",
+            "  true;",
+            "  foo.bar = 10;",
+            "  foo.enabled = false;",
+            "}",
+            "function addGetter(obj, propName) {",
+            "  Object.defineProperty(obj, propName, {",
+            "    get: function() { return this[propName]; }",
+            "  });",
+            "};",
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "addGetter(Foo.prototype, 'x');",
+            "function z() {",
+            "  var x = {};",
+            "  10;",
             "  x.bar = 20;",
             "}"));
   }
@@ -1099,7 +1162,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Test
   public void testObjectDefineProperty_aliasedPropName() {
-    testSame(
+    test(
         lines(
             "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
             "var x = 'bar';",
@@ -1115,6 +1178,23 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "function z() {",
             "  var x = {};",
             "  x.bar = 10;",
+            "  x.bar = 20;",
+            "}"),
+        lines(
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "var x = 'bar';",
+            "Object.defineProperty(Foo.prototype, x, {",
+            "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
+            "});",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  true;",
+            "  foo.bar = 10;",
+            "  foo.enabled = false;",
+            "}",
+            "function z() {",
+            "  var x = {};",
+            "  10;",
             "  x.bar = 20;",
             "}"));
 
@@ -1157,7 +1237,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Test
   public void testObjectDefineProperty_aliasedPropSet() {
-    testSame(
+    test(
         lines(
             "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
             "var x = {",
@@ -1174,12 +1254,29 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  var x = {};",
             "  x.bar = 10;",
             "  x.bar = 20;",
+            "}"),
+        lines(
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "var x = {",
+            "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
+            "};",
+            "Object.defineProperty(Foo.prototype, 'bar', x);",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  true;",
+            "  foo.bar = 10;",
+            "  foo.enabled = false;",
+            "}",
+            "function z() {",
+            "  var x = {};",
+            "  10;",
+            "  x.bar = 20;",
             "}"));
   }
 
   @Test
   public void testObjectDefineProperties_aliasedPropertyMap() {
-    testSame(
+    test(
         lines(
             "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
             "var properties = {bar: {",
@@ -1196,9 +1293,26 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  var x = {};",
             "  x.bar = 10;",
             "  x.bar = 20;",
+            "}"),
+        lines(
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "var properties = {bar: {",
+            "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
+            "}};",
+            "Object.defineProperties(Foo.prototype, properties);",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  true;",
+            "  foo.bar = 10;",
+            "  foo.enabled = false;",
+            "}",
+            "function z() {",
+            "  var x = {};",
+            "  10;",
+            "  x.bar = 20;",
             "}"));
 
-    testSame(
+    test(
         lines(
             "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
             "var properties = {",
@@ -1214,6 +1328,23 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "function z() {",
             "  var x = {};",
             "  x.bar = 10;",
+            "  x.bar = 20;",
+            "}"),
+        lines(
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "var properties = {",
+            "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
+            "};",
+            "Object.defineProperties(Foo.prototype, {bar: properties});",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  true;",
+            "  foo.bar = 10;",
+            "  foo.enabled = false;",
+            "}",
+            "function z() {",
+            "  var x = {};",
+            "  10;",
             "  x.bar = 20;",
             "}"));
   }
