@@ -111,6 +111,18 @@ public final class CheckNoMutatedEs6Exports implements Callback, CompilerPass {
           checkState(lhs.isName());
           exportedLocalNames.add(lhs.getString());
         }
+      } else if (export.getBooleanProp(Node.EXPORT_DEFAULT)) {
+        // export default function() {}
+        // export default function foo() {}
+        // export default 0;
+        // Note: default exports may or may not be declarations.
+        if (!declaration.isClass() && !declaration.isFunction()) {
+          return;
+        }
+        Node nameNode = declaration.getFirstChild();
+        if (!nameNode.isEmpty() && !nameNode.getString().isEmpty()) {
+          exportedLocalNames.add(nameNode.getString());
+        }
       } else {
         // export function foo() {}
         // export class Bar {}

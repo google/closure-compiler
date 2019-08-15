@@ -55,7 +55,16 @@ public class CheckNoMutatedEs6ExportsTest extends CompilerTestCase {
     testWarning("let x = 0; export {x as y}; () => x++;", MUTATED_EXPORT);
     testWarning("export function foo() {}; () => foo = 0;", MUTATED_EXPORT);
     testWarning("export default function foo() {}; () => foo = 0;", MUTATED_EXPORT);
+    testWarning("export default class Foo {}; () => Foo = 0;", MUTATED_EXPORT);
     testWarning("export function foo() { foo = 0; };", MUTATED_EXPORT);
     testWarning("export let x = 0; export function foo() { x++; };", MUTATED_EXPORT);
+  }
+
+  @Test
+  public void testExportDefaultExpressionIsOk() {
+    testSame("export default 0;");
+    testSame("export default {prop: 0}");
+    testSame("export default function() {};");
+    testSame("export default class {};");
   }
 }
