@@ -282,10 +282,14 @@ public abstract class ObjectType extends JSType implements Serializable {
     // are not related we don't want to allow "==" on them (similiarly we should disallow
     // number == for non-number context values, etc).
 
-    if (that.isSubtypeOf(getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL))) {
+    if (that.isUnknownType()
+        || that.isSubtypeOf(getNativeType(JSTypeNative.OBJECT_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.NUMBER_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.STRING_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.BOOLEAN_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.SYMBOL_TYPE))) {
       return UNKNOWN;
     }
-
     return FALSE;
   }
 

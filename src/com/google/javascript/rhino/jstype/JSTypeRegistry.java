@@ -617,25 +617,6 @@ public class JSTypeRegistry implements Serializable {
     JSType nullVoid = createUnionType(nullType, voidType);
     registerNativeType(JSTypeNative.NULL_VOID, nullVoid);
 
-    // (Object|symbol)
-    JSType objectSymbol = createUnionType(objectType, symbolType);
-    registerNativeType(JSTypeNative.OBJECT_SYMBOL, objectSymbol);
-
-    // (Object|string|number)
-    JSType objectNumberString = createUnionType(objectType, numberType, stringType);
-    registerNativeType(JSTypeNative.OBJECT_NUMBER_STRING, objectNumberString);
-
-    // (Object|string|number|boolean)
-    JSType objectNumberStringBoolean =
-        createUnionType(objectType, numberType, stringType, booleanType);
-    registerNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN, objectNumberStringBoolean);
-
-    // (Object|string|number|boolean|symbol)
-    JSType objectNumberStringBooleanSymbol =
-        createUnionType(objectType, numberType, stringType, booleanType, symbolType);
-    registerNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL,
-        objectNumberStringBooleanSymbol);
-
     // (string|number|boolean)
     JSType numberStringBoolean = createUnionType(numberType, stringType, booleanType);
     registerNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN, numberStringBoolean);
@@ -662,18 +643,6 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(JSTypeNative.NUMBER_STRING_SYMBOL, numberStringSymbol);
 
     // Native object properties are filled in by externs...
-
-    // (String|string)
-    JSType stringValueOrObjectType = createUnionType(stringObjectType, stringType);
-    registerNativeType(JSTypeNative.STRING_VALUE_OR_OBJECT_TYPE, stringValueOrObjectType);
-
-    // (Number|number)
-    JSType numberValueOrObjectType = createUnionType(numberObjectType, numberType);
-    registerNativeType(JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE, numberValueOrObjectType);
-
-    // (Symbol, symbol)
-    JSType symbolValueOrObjectType = createUnionType(symbolObjectType, symbolType);
-    registerNativeType(JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE, symbolValueOrObjectType);
 
     // unknown function type, i.e. (?...) -> ?
     FunctionType u2uFunctionType = createFunctionTypeWithVarArgs(unknownType, unknownType);

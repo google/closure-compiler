@@ -141,11 +141,8 @@ public abstract class BaseJSTypeTestCase {
     NUMBER_TYPE = registry.getNativeType(JSTypeNative.NUMBER_TYPE);
     OBJECT_FUNCTION_TYPE = registry.getNativeFunctionType(JSTypeNative.OBJECT_FUNCTION_TYPE);
     NULL_VOID = registry.getNativeType(JSTypeNative.NULL_VOID);
-    OBJECT_NUMBER_STRING = registry.getNativeType(JSTypeNative.OBJECT_NUMBER_STRING);
-    OBJECT_NUMBER_STRING_BOOLEAN =
-        registry.getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN);
-    OBJECT_PROTOTYPE = registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE);
     OBJECT_TYPE = registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
+    OBJECT_PROTOTYPE = registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE);
     REGEXP_FUNCTION_TYPE = registry.getNativeType(JSTypeNative.REGEXP_FUNCTION_TYPE);
     REGEXP_TYPE = registry.getNativeObjectType(JSTypeNative.REGEXP_TYPE);
     STRING_OBJECT_FUNCTION_TYPE = registry.getNativeType(JSTypeNative.STRING_OBJECT_FUNCTION_TYPE);
@@ -157,6 +154,10 @@ public abstract class BaseJSTypeTestCase {
     U2U_FUNCTION_TYPE = registry.getNativeFunctionType(JSTypeNative.U2U_FUNCTION_TYPE);
     UNKNOWN_TYPE = registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
     VOID_TYPE = registry.getNativeType(JSTypeNative.VOID_TYPE);
+
+    OBJECT_NUMBER_STRING = registry.createUnionType(OBJECT_TYPE, NUMBER_TYPE, STRING_TYPE);
+    OBJECT_NUMBER_STRING_BOOLEAN =
+        registry.createUnionType(OBJECT_TYPE, NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE);
 
     addNativeProperties(registry);
 

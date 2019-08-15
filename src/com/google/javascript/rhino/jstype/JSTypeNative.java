@@ -145,10 +145,6 @@ public enum JSTypeNative {
   VOID_TYPE,
 
   // Commonly used types
-
-  STRING_VALUE_OR_OBJECT_TYPE,
-  NUMBER_VALUE_OR_OBJECT_TYPE,
-  SYMBOL_VALUE_OR_OBJECT_TYPE,
   ALL_TYPE,
   NO_TYPE,
   NO_OBJECT_TYPE,
@@ -166,26 +162,6 @@ public enum JSTypeNative {
    * (null, void)
    */
   NULL_VOID,
-
-  /**
-   * (Object,symbol)
-   */
-  OBJECT_SYMBOL,
-
-  /**
-   * (Object,number,string)
-   */
-  OBJECT_NUMBER_STRING,
-
-  /**
-   * (Object,number,string,boolean)
-   */
-  OBJECT_NUMBER_STRING_BOOLEAN,
-
-  /**
-   * (Object,number,string,boolean,symbol)
-   */
-  OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL,
 
   /**
    * (number,string,boolean)

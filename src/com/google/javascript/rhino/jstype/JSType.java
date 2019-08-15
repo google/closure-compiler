@@ -246,8 +246,8 @@ public abstract class JSType implements Serializable {
    * @return <code>this &lt;: (String, string)</code>
    */
   public final boolean isString() {
-    return isSubtypeOf(
-        getNativeType(JSTypeNative.STRING_VALUE_OR_OBJECT_TYPE));
+    return isSubtypeOf(getNativeType(JSTypeNative.STRING_TYPE))
+        || isSubtypeOf(getNativeType(JSTypeNative.STRING_OBJECT_TYPE));
   }
 
   /**
@@ -255,13 +255,13 @@ public abstract class JSType implements Serializable {
    * @return <code>this &lt;: (Number, number)</code>
    */
   public final boolean isNumber() {
-    return isSubtypeOf(
-        getNativeType(JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE));
+    return isSubtypeOf(getNativeType(JSTypeNative.NUMBER_TYPE))
+        || isSubtypeOf(getNativeType(JSTypeNative.NUMBER_OBJECT_TYPE));
   }
 
   public final boolean isSymbol() {
-    return isSubtypeOf(
-        getNativeType(JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE));
+    return isSubtypeOf(getNativeType(JSTypeNative.SYMBOL_TYPE))
+        || isSubtypeOf(getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE));
   }
 
   public boolean isArrayType() {
@@ -1049,13 +1049,15 @@ public abstract class JSType implements Serializable {
 
     // If this is a "Symbol" or that is "symbol" or "Symbol"
     if (aType.isSymbol()) {
-      return bType.canCastTo(getNativeType(JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE))
+      return bType.canCastTo(getNativeType(JSTypeNative.SYMBOL_TYPE))
+              || bType.canCastTo(getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE))
           ? TernaryValue.UNKNOWN
           : TernaryValue.FALSE;
     }
 
     if (bType.isSymbol()) {
-      return aType.canCastTo(getNativeType(JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE))
+      return aType.canCastTo(getNativeType(JSTypeNative.SYMBOL_TYPE))
+              || aType.canCastTo(getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE))
           ? TernaryValue.UNKNOWN
           : TernaryValue.FALSE;
     }

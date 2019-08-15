@@ -25,8 +25,8 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
@@ -1498,8 +1498,14 @@ class TypeInference
   }
 
   private boolean isAddedAsNumber(JSType type) {
-    return type.isSubtypeOf(registry.createUnionType(VOID_TYPE, NULL_TYPE,
-        NUMBER_VALUE_OR_OBJECT_TYPE, BOOLEAN_TYPE, BOOLEAN_OBJECT_TYPE));
+    return type.isSubtypeOf(
+        registry.createUnionType(
+            VOID_TYPE,
+            NULL_TYPE,
+            NUMBER_TYPE,
+            NUMBER_OBJECT_TYPE,
+            BOOLEAN_TYPE,
+            BOOLEAN_OBJECT_TYPE));
   }
 
   private FlowScope traverseHook(Node n, FlowScope scope) {

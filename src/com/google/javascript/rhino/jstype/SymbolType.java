@@ -40,7 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_OBJECT_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_TYPE;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
@@ -63,7 +63,8 @@ public final class SymbolType extends ValueType {
       return result;
     }
 
-    if (that.canCastTo(getNativeType(SYMBOL_VALUE_OR_OBJECT_TYPE))) {
+    if (that.canCastTo(getNativeType(SYMBOL_TYPE))
+        || that.canCastTo(getNativeType(SYMBOL_OBJECT_TYPE))) {
       return UNKNOWN;
     }
     return FALSE;

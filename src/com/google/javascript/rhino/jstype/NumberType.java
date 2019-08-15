@@ -59,8 +59,11 @@ public class NumberType extends ValueType {
     if (result != null) {
       return result;
     }
-    if (that.isUnknownType() || that.isSubtypeOf(
-            getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN))) {
+    if (that.isUnknownType()
+        || that.isSubtypeOf(getNativeType(JSTypeNative.OBJECT_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.NUMBER_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.STRING_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.BOOLEAN_TYPE))) {
       return UNKNOWN;
     }
     return FALSE;
