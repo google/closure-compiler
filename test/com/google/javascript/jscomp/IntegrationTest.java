@@ -1248,6 +1248,25 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testDisableModuleRewriting() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setClosurePass(true);
+    options.setCodingConvention(new ClosureCodingConvention());
+    options.setRewriteModules(false);
+    test(
+        options,
+        lines(
+            "goog.module('foo.Outer');",
+            "/** @constructor */ function Outer() {}",
+            "exports = Outer;"),
+        lines(
+            "goog.module('foo.Outer');", //
+            "function Outer(){}",
+            "exports = Outer;"));
+  }
+
+  @Test
   public void testPreservedForwardDeclare() {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);

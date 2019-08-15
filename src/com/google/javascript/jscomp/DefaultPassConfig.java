@@ -304,19 +304,25 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.add(checkClosureImports);
-      checks.add(rewriteClosureImports);
+      if (!options.isModuleRewritingDisabled()) {
+        checks.add(rewriteClosureImports);
+      }
     }
 
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
-      checks.add(rewriteGoogJsImports);
-      TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
+      if (!options.isModuleRewritingDisabled()) {
+        checks.add(rewriteGoogJsImports);
+        TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
+      }
     }
 
     checks.add(checkStrictMode);
 
     if (options.closurePass) {
       checks.add(closureCheckModule);
-      checks.add(closureRewriteModule);
+      if (!options.isModuleRewritingDisabled()) {
+        checks.add(closureRewriteModule);
+      }
     }
 
     if (options.declaredGlobalExternsOnWindow) {
@@ -346,7 +352,9 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.add(closurePrimitives);
-      checks.add(closureProvidesRequires);
+      if (!options.isModuleRewritingDisabled()) {
+        checks.add(closureProvidesRequires);
+      }
     }
 
     // It's important that the PolymerPass run *after* the ClosurePrimitives and ChromePass rewrites

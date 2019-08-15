@@ -82,7 +82,7 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPESCRIPT = ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
-  public static final FeatureSet TYPE_CHECK_SUPPORTED = ES2019;
+  public static final FeatureSet TYPE_CHECK_SUPPORTED = ES2019_MODULES;
 
   private enum LangVersion {
     ES3,

@@ -1219,6 +1219,17 @@ public class CompilerOptions implements Serializable {
    */
   private Optional<Boolean> isStrictModeInput = Optional.absent();
 
+  private boolean rewriteModules = true;
+
+  /** Enable module rewriting */
+  public void setRewriteModules(boolean b) {
+    this.rewriteModules = b;
+  }
+
+  public boolean isModuleRewritingDisabled() {
+    return !this.rewriteModules;
+  }
+
   /** Which algorithm to use for locating ES6 and CommonJS modules */
   ResolutionMode moduleResolutionMode;
 
@@ -1260,6 +1271,7 @@ public class CompilerOptions implements Serializable {
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
     pathEscaper = ModuleLoader.PathEscaper.ESCAPE;
+    rewriteModules = true;
 
     // Checks
     skipNonTranspilationPasses = false;
