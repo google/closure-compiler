@@ -103,8 +103,8 @@ public abstract class JSType implements Serializable {
   JSType(JSTypeRegistry registry, TemplateTypeMap templateTypeMap) {
     this.registry = registry;
 
-    this.templateTypeMap = templateTypeMap == null ?
-        registry.createTemplateTypeMap(null, null) : templateTypeMap;
+    this.templateTypeMap =
+        (templateTypeMap == null) ? registry.getEmptyTemplateTypeMap() : templateTypeMap;
   }
 
   /**
@@ -543,11 +543,11 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Extends the template type map associated with this type, merging in the
-   * keys and values of the specified map.
+   * Prepends the template type map associated with this type, merging in the keys and values of the
+   * specified map.
    */
-  public void extendTemplateTypeMap(TemplateTypeMap otherMap) {
-    templateTypeMap = templateTypeMap.extend(otherMap);
+  public void prependTemplateTypeMap(TemplateTypeMap otherMap) {
+    templateTypeMap = otherMap.copyWithExtension(templateTypeMap);
   }
 
   /**

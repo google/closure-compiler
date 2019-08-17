@@ -803,12 +803,7 @@ final class AstFactory {
       //   function(Iterable<T>): Iterator<T>
       // with
       //   function(Iterable<number>): Iterator<number>
-      TemplateTypeMap typeMap =
-          registry.createTemplateTypeMap(
-              makeIteratorType.getTemplateTypeMap().getTemplateKeys(),
-              ImmutableList.of(iterableType));
-      TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
-      makeIteratorName.setJSType(makeIteratorType.visit(replacer));
+      makeIteratorName.setJSType(replaceTemplate(makeIteratorType, ImmutableList.of(iterableType)));
     }
     return createCall(makeIteratorName, iterable);
   }
@@ -832,12 +827,7 @@ final class AstFactory {
       //   function(Iterator<T>): Array<T>
       // with
       //   function(Iterator<number>): Array<number>
-      TemplateTypeMap typeMap =
-          registry.createTemplateTypeMap(
-              makeIteratorType.getTemplateTypeMap().getTemplateKeys(),
-              ImmutableList.of(iterableType));
-      TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
-      makeIteratorName.setJSType(makeIteratorType.visit(replacer));
+      makeIteratorName.setJSType(replaceTemplate(makeIteratorType, ImmutableList.of(iterableType)));
     }
     return createCall(makeIteratorName, iterator);
   }
@@ -872,21 +862,17 @@ final class AstFactory {
       //   function(AsyncIterable<T>): AsyncIterator<T>
       // with
       //   function(AsyncIterable<number>): AsyncIterator<number>
-      TemplateTypeMap typeMap =
-          registry.createTemplateTypeMap(
-              makeAsyncIteratorType.getTemplateTypeMap().getTemplateKeys(),
-              ImmutableList.of(asyncIterableType));
-      TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
-      makeIteratorAsyncName.setJSType(makeAsyncIteratorType.visit(replacer));
+      makeIteratorAsyncName.setJSType(
+          replaceTemplate(makeAsyncIteratorType, ImmutableList.of(asyncIterableType)));
     }
     return createCall(makeIteratorAsyncName, iterable);
   }
 
-  private JSType replaceTemplate(JSType templatedType, JSType... templateTypes) {
+  private JSType replaceTemplate(JSType templatedType, ImmutableList<JSType> templateTypes) {
     TemplateTypeMap typeMap =
-        registry.createTemplateTypeMap(
-            templatedType.getTemplateTypeMap().getTemplateKeys(),
-            ImmutableList.copyOf(templateTypes));
+        registry
+            .getEmptyTemplateTypeMap()
+            .copyWithExtension(templatedType.getTemplateTypeMap().getTemplateKeys(), templateTypes);
     TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
     return templatedType.visit(replacer);
   }
@@ -915,7 +901,7 @@ final class AstFactory {
       //  AsyncGeneratorWrapper<T>
       // with
       //  AsyncGeneratorWrapper<number>
-      ctor.setJSType(replaceTemplate(ctor.getJSType(), yieldedType));
+      ctor.setJSType(replaceTemplate(ctor.getJSType(), ImmutableList.of(yieldedType)));
     }
 
     return ctor;
@@ -937,7 +923,8 @@ final class AstFactory {
         // Not injecting libraries?
         generatorType =
             registry.createFunctionType(
-                replaceTemplate(getNativeType(JSTypeNative.GENERATOR_TYPE), unknownType));
+                replaceTemplate(
+                    getNativeType(JSTypeNative.GENERATOR_TYPE), ImmutableList.of(unknownType)));
       } else {
         // Generator<$jscomp.AsyncGeneratorWrapper$ActionRecord<number>>
         JSType innerFunctionReturnType =

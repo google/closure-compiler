@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
@@ -7248,17 +7247,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
               "function Foo() {}\n" +
               "for (var prop in (new Foo())) {}",
               "Cannot use the IN operator with structs");
-  }
-
-  @Test
-  public void testArrayLegacyAccess1() {
-    String externs = DEFAULT_EXTERNS.replace(
-        " * @implements {IArrayLike<T>}",
-        lines(
-          " * @implements {IObject<?, T>} ",
-          " * @implements {IArrayLike<T>} "));
-    checkState(DEFAULT_EXTERNS.length() != externs.length());
-    testTypesWithExterns(externs, "var a = []; var b = a['hi'];");
   }
 
   @Test

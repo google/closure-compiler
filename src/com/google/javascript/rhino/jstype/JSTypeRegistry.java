@@ -234,9 +234,9 @@ public class JSTypeRegistry implements Serializable {
   public JSTypeRegistry(ErrorReporter reporter, Set<String> forwardDeclaredTypes) {
     this.reporter = reporter;
     this.forwardDeclaredTypes = forwardDeclaredTypes;
-    this.emptyTemplateTypeMap = new TemplateTypeMap(
-        this, ImmutableList.<TemplateType>of(), ImmutableList.<JSType>of());
-    nativeTypes = new JSType[JSTypeNative.values().length];
+    this.emptyTemplateTypeMap = TemplateTypeMap.createEmpty(this);
+    this.nativeTypes = new JSType[JSTypeNative.values().length];
+
     resetForTypeCheck();
   }
 
@@ -372,7 +372,8 @@ public class JSTypeRegistry implements Serializable {
     FunctionType iObjectFunctionType =
         nativeInterface("IObject", iObjectIndexTemplateKey, iObjectElementTemplateKey);
     registerNativeType(JSTypeNative.I_OBJECT_FUNCTION_TYPE, iObjectFunctionType);
-    registerNativeType(JSTypeNative.I_OBJECT_TYPE, iObjectFunctionType.getInstanceType());
+    ObjectType iObjectType = iObjectFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.I_OBJECT_TYPE, iObjectType);
 
     // Object
     FunctionType objectFunctionType =
@@ -428,8 +429,9 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(JSTypeNative.I_ITERABLE_RESULT_TYPE, iiterableResultType);
 
     // IArrayLike.
-    // TODO(lharker): Should the native Array implement IArrayLike?
     FunctionType iArrayLikeFunctionType = nativeRecord("IArrayLike", iArrayLikeTemplate);
+    iArrayLikeFunctionType.setExtendedInterfaces(
+        ImmutableList.of(createTemplatizedType(iObjectType, numberType, iArrayLikeTemplate)));
     registerNativeType(JSTypeNative.I_ARRAY_LIKE_FUNCTION_TYPE, iArrayLikeFunctionType);
     ObjectType iArrayLikeType = iArrayLikeFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.I_ARRAY_LIKE_TYPE, iArrayLikeType);
@@ -439,16 +441,13 @@ public class JSTypeRegistry implements Serializable {
         nativeConstructorBuilder("Array")
             .withParamsNode(createParametersWithVarArgs(allType))
             .withReturnsOwnInstanceType()
-            // TODO(nickreid): Could this be achieved by having `Array` implement `IObject`?
-            .withTemplateTypeMap(
-                new TemplateTypeMap(
-                    this,
-                    ImmutableList.of(iObjectElementTemplateKey, arrayElementTemplateKey),
-                    ImmutableList.<JSType>of(arrayElementTemplateKey)))
+            .withTemplateKeys(arrayElementTemplateKey)
             .build();
     arrayFunctionType.getPrototype(); // Force initialization
     arrayFunctionType.setImplementedInterfaces(
-        ImmutableList.of(createTemplatizedType(iterableType, arrayElementTemplateKey)));
+        ImmutableList.of(
+            createTemplatizedType(iArrayLikeType, arrayElementTemplateKey),
+            createTemplatizedType(iterableType, arrayElementTemplateKey)));
     registerNativeType(JSTypeNative.ARRAY_FUNCTION_TYPE, arrayFunctionType);
 
     ObjectType arrayType = arrayFunctionType.getInstanceType();
@@ -523,7 +522,6 @@ public class JSTypeRegistry implements Serializable {
         nativeConstructorBuilder("Promise")
             .withParamsNode(IR.paramList(promiseParameter))
             .withTemplateKeys(promiseTemplateKey)
-            .withExtendedTemplate(iThenableTemplateKey, promiseTemplateKey)
             .build();
     promiseFunctionType.setImplementedInterfaces(
         ImmutableList.of(createTemplatizedType(ithenableType, promiseTemplateKey)));
@@ -1740,7 +1738,7 @@ public class JSTypeRegistry implements Serializable {
       Node source,
       Node parameters,
       JSType returnType,
-      ImmutableList<TemplateType> templateKeys,
+      @Nullable ImmutableList<TemplateType> templateKeys,
       boolean isAbstract) {
     checkArgument(source == null || source.isFunction() || source.isClass());
     return FunctionType.builder(this)
@@ -1749,7 +1747,7 @@ public class JSTypeRegistry implements Serializable {
         .withSourceNode(source)
         .withParamsNode(parameters)
         .withReturnType(returnType)
-        .withTemplateKeys(templateKeys)
+        .withTemplateKeys((templateKeys == null) ? ImmutableList.of() : templateKeys)
         .withIsAbstract(isAbstract)
         .build();
   }
@@ -1770,7 +1768,7 @@ public class JSTypeRegistry implements Serializable {
             .withName(name)
             .withSourceNode(source)
             .withEmptyParams()
-            .withTemplateKeys(templateKeys)
+            .withTemplateKeys((templateKeys == null) ? ImmutableList.of() : templateKeys)
             .build();
     if (struct) {
       fn.setStruct();
@@ -1793,22 +1791,8 @@ public class JSTypeRegistry implements Serializable {
     return new TemplateType(this, name, expr);
   }
 
-  /**
-   * Creates a template type map from the specified list of template keys and
-   * template value types.
-   */
-  public TemplateTypeMap createTemplateTypeMap(
-      ImmutableList<TemplateType> templateKeys,
-      ImmutableList<JSType> templateValues) {
-    if (templateKeys == null) {
-      templateKeys = ImmutableList.of();
-    }
-    if (templateValues == null) {
-      templateValues = ImmutableList.of();
-    }
-    return (templateKeys.isEmpty() && templateValues.isEmpty())
-        ? emptyTemplateTypeMap
-            : new TemplateTypeMap(this, templateKeys, templateValues);
+  public TemplateTypeMap getEmptyTemplateTypeMap() {
+    return this.emptyTemplateTypeMap;
   }
 
   public ObjectType instantiateGenericsWithUnknown(ObjectType obj) {

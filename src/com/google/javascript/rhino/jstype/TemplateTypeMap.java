@@ -57,6 +57,7 @@ import javax.annotation.Nullable;
  * @author izaakr@google.com (Izaak Rubin)
  */
 public class TemplateTypeMap implements Serializable {
+
   // The TemplateType keys of the map.
   private final ImmutableList<TemplateType> templateKeys;
   // The JSType values, which are index-aligned with their corresponding keys.
@@ -69,11 +70,18 @@ public class TemplateTypeMap implements Serializable {
   // instance. These fully-resolved values are necessary for determining the
   // equivalence of two TemplateTypeMap instances.
   private final JSType[] resolvedTemplateValues;
-  final JSTypeRegistry registry;
+  private final JSTypeRegistry registry;
 
-  TemplateTypeMap(JSTypeRegistry registry,
-                  ImmutableList<TemplateType> templateKeys,
-                  ImmutableList<JSType> templateValues) {
+  static final TemplateTypeMap createEmpty(JSTypeRegistry registry) {
+    // This method should only be called during registry initialization.
+    checkArgument(registry.getEmptyTemplateTypeMap() == null);
+    return new TemplateTypeMap(registry, ImmutableList.of(), ImmutableList.of());
+  }
+
+  private TemplateTypeMap(
+      JSTypeRegistry registry,
+      ImmutableList<TemplateType> templateKeys,
+      ImmutableList<JSType> templateValues) {
     checkNotNull(templateKeys);
     checkNotNull(templateValues);
     checkArgument(templateValues.size() <= templateKeys.size());
@@ -103,17 +111,103 @@ public class TemplateTypeMap implements Serializable {
   }
 
   /**
+   * Create a new map in which any unfilled values in this map have been filled with {@code values}.
+   *
+   * <p>If there are fewer {@code values} than unfilled values, `?` will be used to fill the rest.
+   */
+  TemplateTypeMap copyFilledWithValues(ImmutableList<JSType> values) {
+    int requiredUnknownCount = numUnfilledTemplateKeys() - values.size();
+    checkArgument(requiredUnknownCount >= 0, requiredUnknownCount);
+
+    if (numUnfilledTemplateKeys() == 0) {
+      return this; // Nothing will change.
+    }
+
+    ImmutableList.Builder<JSType> extendedValues = ImmutableList.builder();
+    extendedValues.addAll(this.templateValues);
+    extendedValues.addAll(values);
+    padWithUnknown(extendedValues, requiredUnknownCount);
+
+    return new TemplateTypeMap(this.registry, this.templateKeys, extendedValues.build());
+  }
+
+  /**
+   * Create a new map in which the keys and values have been extended by {@code extension}.
+   *
+   * <p>Before extension, any unfilled values in the initial map will be filled with `?`.
+   */
+  public TemplateTypeMap copyWithExtension(TemplateTypeMap extension) {
+    return copyWithExtension(extension.templateKeys, extension.templateValues);
+  }
+
+  /**
+   * Create a new map in which the keys and values have been extended by {@code keys} and {@code
+   * values} respectively.
+   *
+   * <p>Before extension, any unfilled values in the initial map will be filled with `?`.
+   */
+  public TemplateTypeMap copyWithExtension(
+      ImmutableList<TemplateType> keys, ImmutableList<JSType> values) {
+    int extendedUnfilledCount = keys.size() - values.size();
+    checkArgument(extendedUnfilledCount >= 0, extendedUnfilledCount);
+
+    if (numUnfilledTemplateKeys() == 0 && keys.isEmpty()) {
+      return this; // Nothing will change.
+    }
+
+    ImmutableList<TemplateType> extendedKeys =
+        ImmutableList.<TemplateType>builder().addAll(this.templateKeys).addAll(keys).build();
+
+    ImmutableList.Builder<JSType> extendedValues = ImmutableList.builder();
+    extendedValues.addAll(this.templateValues);
+    padWithUnknown(extendedValues, numUnfilledTemplateKeys());
+    extendedValues.addAll(values);
+
+    return new TemplateTypeMap(this.registry, extendedKeys, extendedValues.build());
+  }
+
+  /**
+   * Create a new map in which keys contained in {@code removals} are eliminated.
+   *
+   * <p>The keys in {@code removals} will only be removed if they are unfilled.
+   */
+  TemplateTypeMap copyWithoutKeys(Set<TemplateType> removals) {
+    ImmutableList.Builder<TemplateType> keys = ImmutableList.builder();
+    keys.addAll(templateKeys.subList(0, templateValues.size()));
+    for (int i = templateValues.size(); i < templateKeys.size(); i++) {
+      TemplateType key = templateKeys.get(i);
+      if (!removals.contains(key)) {
+        keys.add(key);
+      }
+    }
+
+    // There are some checks we could do for this before calculating the removal, but it was less
+    // error prone to only check in one place.
+    if (keys.build().size() == templateKeys.size()) {
+      return this; // Nothing will change.
+    }
+
+    return new TemplateTypeMap(this.registry, keys.build(), this.templateValues);
+  }
+
+  public int size() {
+    return this.templateKeys.size();
+  }
+
+  /**
    * Returns true if the map is empty; false otherwise.
    */
   public boolean isEmpty() {
     return templateKeys.isEmpty();
   }
 
-  /**
-   * Returns a list of all template keys.
-   */
+  /** Returns a list of all template keys. */
   public ImmutableList<TemplateType> getTemplateKeys() {
     return templateKeys;
+  }
+
+  public ImmutableList<JSType> getTemplateValues() {
+    return templateValues;
   }
 
   /**
@@ -186,7 +280,7 @@ public class TemplateTypeMap implements Serializable {
   private int getTemplateTypeIndex(TemplateType key) {
     int maxIndex = Math.min(templateKeys.size(), templateValues.size());
     for (int i = maxIndex - 1; i >= 0; i--) {
-      if (isSameKey(templateKeys.get(i), key)) {
+      if (JSType.areIdentical(templateKeys.get(i), key)) {
         return i;
       }
     }
@@ -235,11 +329,6 @@ public class TemplateTypeMap implements Serializable {
     }
   }
 
-  @SuppressWarnings("ReferenceEquality")
-  private static boolean isSameKey(TemplateType thisKey, TemplateType thatKey) {
-    return thisKey == thatKey;
-  }
-
   private static boolean checkEquivalenceHelper(EquivalenceMethod eqMethod,
       TemplateTypeMap thisMap, TemplateTypeMap thatMap,
       EqCache eqCache, SubtypingMode subtypingMode) {
@@ -258,7 +347,7 @@ public class TemplateTypeMap implements Serializable {
         // Cross-compare every key-value pair in this TemplateTypeMap with
         // those in that TemplateTypeMap. Update the Equivalence match for both
         // key-value pairs involved.
-        if (isSameKey(thisKey, thatKey)) {
+        if (JSType.areIdentical(thisKey, thatKey)) {
           EquivalenceMatch newMatchType = EquivalenceMatch.VALUE_MISMATCH;
           if (thisType.checkEquivalenceHelper(thatType, eqMethod, eqCache)
               || (subtypingMode == SubtypingMode.IGNORE_NULL_UNDEFINED
@@ -289,40 +378,6 @@ public class TemplateTypeMap implements Serializable {
       EquivalenceMatch eqMatch, EquivalenceMethod eqMethod) {
     return eqMatch == EquivalenceMatch.VALUE_MISMATCH
         || (eqMatch == EquivalenceMatch.NO_KEY_MATCH && eqMethod != EquivalenceMethod.INVARIANT);
-  }
-
-  /**
-   * Extends this TemplateTypeMap with the contents of the specified map. UNKNOWN_TYPE will be used
-   * as the value for any missing values in the specified map.
-   */
-  TemplateTypeMap extend(TemplateTypeMap other) {
-    ImmutableList<JSType> resizedOtherValues = other.resizedToMatchKeys(other.templateValues);
-    return registry.createTemplateTypeMap(
-        concatImmutableLists(other.templateKeys, templateKeys),
-        concatImmutableLists(resizedOtherValues, templateValues));
-  }
-
-  /** Returns a new TemplateTypeMap whose values have been extended with the specified list. */
-  TemplateTypeMap copyFilledWithValues(ImmutableList<JSType> additionalValues) {
-    ImmutableList<JSType> finalValues =
-        resizedToMatchKeys(concatImmutableLists(templateValues, additionalValues));
-    return registry.createTemplateTypeMap(templateKeys, finalValues);
-  }
-
-  /**
-   * Returns a new TemplateTypeMap with the given template types removed. Keys will only be removed
-   * if they are unmapped.
-   */
-  TemplateTypeMap remove(Set<TemplateType> toRemove) {
-    ImmutableList.Builder<TemplateType> keys = ImmutableList.builder();
-    keys.addAll(templateKeys.subList(0, templateValues.size()));
-    for (int i = templateValues.size(); i < templateKeys.size(); i++) {
-      TemplateType key = templateKeys.get(i);
-      if (!toRemove.contains(key)) {
-        keys.add(key);
-      }
-    }
-    return registry.createTemplateTypeMap(keys.build(), templateValues);
   }
 
   boolean hasAnyTemplateTypesInternal() {
@@ -358,35 +413,9 @@ public class TemplateTypeMap implements Serializable {
     return s;
   }
 
-  private ImmutableList<JSType> resizedToMatchKeys(ImmutableList<JSType> values) {
-    if (values.size() == templateKeys.size()) {
-      return values;
-    } else if (values.size() > templateKeys.size()) {
-      return values.subList(0, templateKeys.size());
-    } else {
-      ImmutableList.Builder<JSType> builder = ImmutableList.builder();
-      builder.addAll(values);
-      for (int i = values.size(); i < templateKeys.size(); i++) {
-        builder.add(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
-      }
-      return builder.build();
+  private void padWithUnknown(ImmutableList.Builder<JSType> builder, int count) {
+    for (int i = 0; i < count; i++) {
+      builder.add(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
     }
-  }
-
-  /**
-   * Concatenates two ImmutableList instances. If either input is empty, the other is returned;
-   * otherwise, a new ImmutableList instance is created that contains the contents of both
-   * arguments.
-   */
-  private static <T> ImmutableList<T> concatImmutableLists(
-      ImmutableList<T> first, ImmutableList<T> second) {
-    if (first.isEmpty()) {
-      return second;
-    }
-    if (second.isEmpty()) {
-      return first;
-    }
-
-    return ImmutableList.<T>builder().addAll(first).addAll(second).build();
   }
 }

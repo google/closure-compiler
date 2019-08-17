@@ -494,15 +494,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   /**
-   * Extends the TemplateTypeMap of the function's this type, based on the specified type.
-   *
-   * @param type
-   */
-  public final void extendTemplateTypeMapBasedOn(ObjectType type) {
-    typeOfThis.extendTemplateTypeMap(type.getTemplateTypeMap());
-  }
-
-  /**
    * Sets the prototype.
    *
    * @param prototype the prototype. If this value is {@code null} it will silently be discarded.
@@ -620,15 +611,12 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   public final void setImplementedInterfaces(List<ObjectType> implementedInterfaces) {
-    if (isConstructor()) {
-      // Records this type for each implemented interface.
-      for (ObjectType type : implementedInterfaces) {
-        registry.registerTypeImplementingInterface(this, type);
-        typeOfThis.extendTemplateTypeMap(type.getTemplateTypeMap());
-      }
-      this.implementedInterfaces = ImmutableList.copyOf(implementedInterfaces);
-    } else {
-      throw new UnsupportedOperationException("An interface cannot implement other inferfaces");
+    checkState(isConstructor());
+
+    this.implementedInterfaces = ImmutableList.copyOf(implementedInterfaces);
+    for (ObjectType type : implementedInterfaces) {
+      registry.registerTypeImplementingInterface(this, type);
+      typeOfThis.prependTemplateTypeMap(type.getTemplateTypeMap());
     }
   }
 
@@ -643,13 +631,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   public final void setExtendedInterfaces(List<ObjectType> extendedInterfaces) {
-    if (isInterface()) {
-      this.extendedInterfaces = ImmutableList.copyOf(extendedInterfaces);
-      for (ObjectType extendedInterface : this.extendedInterfaces) {
-        typeOfThis.extendTemplateTypeMap(extendedInterface.getTemplateTypeMap());
-      }
-    } else {
-      throw new UnsupportedOperationException();
+    checkState(isInterface());
+
+    this.extendedInterfaces = ImmutableList.copyOf(extendedInterfaces);
+    for (ObjectType extendedInterface : extendedInterfaces) {
+      typeOfThis.prependTemplateTypeMap(extendedInterface.getTemplateTypeMap());
     }
   }
 
@@ -1655,22 +1641,14 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     /** Set the template name. */
     public Builder withTemplateKeys(ImmutableList<TemplateType> templateKeys) {
-      this.templateTypeMap = registry.createTemplateTypeMap(templateKeys, null);
+      this.templateTypeMap =
+          registry.getEmptyTemplateTypeMap().copyWithExtension(templateKeys, ImmutableList.of());
       return this;
     }
 
     /** Set the template name. */
     public Builder withTemplateKeys(TemplateType... templateKeys) {
-      this.templateTypeMap =
-          registry.createTemplateTypeMap(ImmutableList.copyOf(templateKeys), null);
-      return this;
-    }
-
-    Builder withExtendedTemplate(TemplateType key, JSType value) {
-      this.templateTypeMap =
-          templateTypeMap.extend(
-              registry.createTemplateTypeMap(ImmutableList.of(key), ImmutableList.of(value)));
-      return this;
+      return withTemplateKeys(ImmutableList.copyOf(templateKeys));
     }
 
     Builder withTemplateTypeMap(TemplateTypeMap templateTypeMap) {
@@ -1790,7 +1768,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       if (hasConstructorOnlyKeys) {
         ft.setInstanceType(
             new InstanceObjectType(
-                registry, ft, isNative, templateTypeMap.remove(constructorOnlyKeys)));
+                registry, ft, isNative, templateTypeMap.copyWithoutKeys(constructorOnlyKeys)));
       }
       return ft;
     }

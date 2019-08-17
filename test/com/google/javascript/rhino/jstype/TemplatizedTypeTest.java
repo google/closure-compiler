@@ -74,13 +74,6 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testEquality() {
-    // Weird that we allow this as a type at all.
-    TemplatizedType booleanOfString = createTemplatizedType(BOOLEAN_OBJECT_TYPE, STRING_TYPE);
-    assertThat(booleanOfString.hashCode()).isEqualTo(BOOLEAN_OBJECT_TYPE.hashCode());
-  }
-
-  @Test
   public void testPrint1() {
     TemplatizedType arrOfString = createTemplatizedType(
         ARRAY_TYPE, STRING_TYPE);

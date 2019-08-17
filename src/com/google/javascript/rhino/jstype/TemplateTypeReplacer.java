@@ -81,7 +81,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
             .map(bindings::get)
             .map((v) -> (v != null) ? v : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE))
             .collect(toImmutableList());
-    TemplateTypeMap map = new TemplateTypeMap(registry, keys, values);
+    TemplateTypeMap map = registry.getEmptyTemplateTypeMap().copyWithExtension(keys, values);
     return new TemplateTypeReplacer(registry, map, true, true, true);
   }
 

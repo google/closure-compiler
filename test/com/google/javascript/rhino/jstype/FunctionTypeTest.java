@@ -39,7 +39,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
@@ -516,12 +516,8 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         ImmutableList.<TemplateType>of(), false);
     FunctionType subIface = registry.createInterfaceType("SubI", null,
         ImmutableList.<TemplateType>of(), false);
-    try {
-      subIface.setImplementedInterfaces(
-          ImmutableList.of(iface.getInstanceType()));
-      assertWithMessage("Expected exception").fail();
-    } catch (UnsupportedOperationException e) {
-      // OK
-    }
+    assertThrows(
+        Exception.class,
+        () -> subIface.setImplementedInterfaces(ImmutableList.of(iface.getInstanceType())));
   }
 }

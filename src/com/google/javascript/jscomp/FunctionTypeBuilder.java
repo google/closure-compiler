@@ -975,10 +975,12 @@ final class FunctionTypeBuilder {
   }
 
   private void maybeSetBaseType(FunctionType fnType) {
-    if (fnType.hasInstanceType() && baseType != null) {
-      fnType.setPrototypeBasedOn(baseType);
-      fnType.extendTemplateTypeMapBasedOn(baseType);
+    if (!fnType.hasInstanceType() || baseType == null) {
+      return;
     }
+
+    fnType.setPrototypeBasedOn(baseType);
+    fnType.getInstanceType().prependTemplateTypeMap(baseType.getTemplateTypeMap());
   }
 
   /**

@@ -142,7 +142,7 @@ abstract class IntegrationTestCase {
                   "",
                   "/**",
                   " * @constructor",
-                  " * @implements {IArrayLike}",
+                  " * @implements {IArrayLike<T>}",
                   " * @implements {Iterable<T>}",
                   " * @return {!Array<?>}",
                   " * @param {...*} var_args",
