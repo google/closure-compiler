@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.javascript.rhino.JSDocInfo;
@@ -224,10 +223,33 @@ public final class JSDocInfoPrinter {
       parts.add(buildAnnotationWithType("throws", info.getThrownTypes().get(0)));
     }
 
-    ImmutableList<String> names = info.getTemplateTypeNames();
-    if (!names.isEmpty()) {
-      parts.add("@template " + Joiner.on(", ").join(names));
+    ImmutableMap<String, JSTypeExpression> templates = info.getTemplateTypes();
+    List<String> unboundTemplates = new ArrayList<>();
+    if (!templates.isEmpty()) {
       multiline = true;
+      for (Map.Entry<String, JSTypeExpression> e : templates.entrySet()) {
+        String name = e.getKey();
+        Node boundTypeNode = e.getValue().getRoot();
+
+        if (boundTypeNode.getToken() == Token.QMARK) {
+          // This is an unbound template type
+          // Store in a list because multiple can be printed in one declaration
+          unboundTemplates.add(name);
+        } else {
+          // Print any encountered unbounded types before printing the current bounded one
+          if (!unboundTemplates.isEmpty()) {
+            parts.add("@template " + Joiner.on(", ").join(unboundTemplates));
+            unboundTemplates.clear();
+          }
+
+          String boundType = new CodePrinter.Builder(boundTypeNode).build();
+          parts.add("@template {" + boundType + "} " + name);
+        }
+      }
+    }
+
+    if (!unboundTemplates.isEmpty()) {
+      parts.add("@template " + Joiner.on(", ").join(unboundTemplates));
     }
 
     ImmutableMap<String, Node> typeTransformations = info.getTypeTransformations();

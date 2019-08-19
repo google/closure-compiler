@@ -120,6 +120,40 @@ public final class JSDocInfoPrinterTest {
   }
 
   @Test
+  public void testTemplateBound() {
+    builder.recordTemplateTypeName("T", new JSTypeExpression(new Node(Token.BOOLEAN_TYPE), ""));
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/**\n * @template {boolean} T\n */\n");
+  }
+
+  @Test
+  public void testTemplatesBound() {
+    builder.recordTemplateTypeName("T", new JSTypeExpression(new Node(Token.BOOLEAN_TYPE), ""));
+    builder.recordTemplateTypeName("U", new JSTypeExpression(new Node(Token.BOOLEAN_TYPE), ""));
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo("/**\n * @template {boolean} T\n * @template {boolean} U\n */\n");
+  }
+
+  @Test
+  public void testTemplatesBoundAndUnbounded() {
+    builder.recordTemplateTypeName("T", new JSTypeExpression(new Node(Token.NUMBER_TYPE), ""));
+    builder.recordTemplateTypeName("S");
+    builder.recordTemplateTypeName("R");
+    builder.recordTemplateTypeName("U", new JSTypeExpression(new Node(Token.BOOLEAN_TYPE), ""));
+    builder.recordTemplateTypeName("Q");
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            "/**\n"
+                + " * @template {number} T\n"
+                + " * @template S, R\n"
+                + " * @template {boolean} U\n"
+                + " * @template Q\n"
+                + " */\n");
+  }
+
+  @Test
   public void testTypeTransformationLanguageTemplate() {
     builder.recordTypeTransformation("T", IR.string("Promise"));
     JSDocInfo info = builder.buildAndReset();
