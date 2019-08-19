@@ -175,10 +175,6 @@ class TypeTransformation {
     return registry.createUnionType(variants);
   }
 
-  private JSType createTemplatizedType(ObjectType baseType, JSType[] params) {
-    return registry.instantiateGenericType(baseType, ImmutableList.copyOf(params));
-  }
-
   private JSType createRecordType(ImmutableMap<String, JSType> props) {
     return this.registry.createRecordType(props);
   }
@@ -360,7 +356,7 @@ class TypeTransformation {
       templatizedTypes[i] = evalInternal(params.get(i + 1), nameResolver);
     }
     ObjectType baseType = firstParam.toMaybeObjectType();
-    return createTemplatizedType(baseType, templatizedTypes);
+    return registry.createTemplatizedType(baseType, templatizedTypes);
   }
 
   private JSType evalTypeVar(Node ttlAst, NameResolver nameResolver) {

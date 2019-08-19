@@ -1806,10 +1806,6 @@ public class JSTypeRegistry implements Serializable {
     return obj;
   }
 
-  public JSType instantiateGenericType(ObjectType genericType, ImmutableList<JSType> typeArgs) {
-    return createTemplatizedType(genericType, typeArgs);
-  }
-
   /**
    * Creates a templatized instance of the specified type. Only ObjectTypes can currently be
    * templatized; extend the logic in this function when more types can be templatized.

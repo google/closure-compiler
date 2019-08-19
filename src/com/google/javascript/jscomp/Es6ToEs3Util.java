@@ -116,6 +116,6 @@ public final class Es6ToEs3Util {
     }
     ObjectType genericType = (ObjectType) (registry.getNativeType(typeName));
     ObjectType uninstantiated = genericType.getRawType();
-    return registry.instantiateGenericType(uninstantiated, ImmutableList.of(typeArg));
+    return registry.createTemplatizedType(uninstantiated, ImmutableList.of(typeArg));
   }
 }
