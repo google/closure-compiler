@@ -2788,7 +2788,10 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testMemberGeneratorYield1() {
     assertPrintSame("class C{*member(){(yield 1)+(yield 1)}}");
+    assertPrintSame("class C{*[0](){(yield 1)+(yield 1)}}");
     assertPrintSame("var obj={*member(){(yield 1)+(yield 1)}}");
+    assertPrintSame("var obj={*[0](){(yield 1)+(yield 1)}}");
+    assertPrintSame("var obj={[0]:function*(){(yield 1)+(yield 1)}}");
   }
 
   @Test
@@ -2860,6 +2863,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("o={async m(){}}");
     assertPrintSame("o={async[a+b](){}}");
+    assertPrintSame("o={[0]:async function(){}}"); // (not technically a method)
     assertPrintSame("class C{async m(){}}");
     assertPrintSame("class C{async[a+b](){}}");
     assertPrintSame("class C{static async m(){}}");
@@ -2871,6 +2875,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("o={async *m(){}}");
     assertPrintSame("o={async*[a+b](){}}");
+    assertPrintSame("o={[0]:async*function(){}}"); // (not technically a method)
     assertPrintSame("class C{async *m(){}}");
     assertPrintSame("class C{async*[a+b](){}}");
     assertPrintSame("class C{static async *m(){}}");

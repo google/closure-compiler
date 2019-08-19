@@ -1058,7 +1058,7 @@ public class CodeGenerator {
           add("get ");
         } else if (n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
           add("set ");
-        } else {
+        } else if (n.getBooleanProp(Node.COMPUTED_PROP_METHOD)) {
           if (last.isAsyncFunction()) {
             add("async");
           }
