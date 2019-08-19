@@ -2019,7 +2019,13 @@ class TypeInference
           map.put(template, resolved);
         } else {
           JSType meet = template.getBound().getGreatestSubtype(resolved);
-          map.put(template, meet);
+          if (meet.isNoType()) {
+            // There will be a mismatch thrown further up so we return the actual template
+            // rather than `None` for a better error message
+            map.put(template, template);
+          } else {
+            map.put(template, meet);
+          }
         }
       } else {
         JSType join = previous.getLeastSupertype(resolved);

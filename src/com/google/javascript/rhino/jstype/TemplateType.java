@@ -84,7 +84,12 @@ public final class TemplateType extends ProxyObjectType {
 
   @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append(this.name);
+    if (bound == registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE)) {
+      // This is an unbound template, don't print it's bound
+      return sb.append(this.name);
+    } else {
+      return sb.append(this.name).append(" extends ").append(bound);
+    }
   }
 
   @Override

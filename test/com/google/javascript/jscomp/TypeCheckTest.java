@@ -5885,7 +5885,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "actual parameter 1 of A does not match formal parameter",
             "found   : string",
-            "required: None")); // TODO(liuamanda): None is not a very informative error message
+            "required: T extends number"));
   }
 
   @Test
@@ -5914,7 +5914,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "inconsistent return type", //
             "found   : string", //
-            "required: T"));
+            "required: T extends number"));
   }
 
   @Test
@@ -5930,7 +5930,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "actual parameter 1 of A does not match formal parameter",
             "found   : null",
-            "required: None"));
+            "required: T extends number"));
   }
 
   @Test
@@ -5960,7 +5960,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function foo(x) { return stringID(x); }"),
         lines(
             "actual parameter 1 of stringID does not match formal parameter",
-            "found   : T",
+            "found   : T extends (boolean|number)",
             "required: string"));
   }
 
@@ -5994,7 +5994,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function foo(x) { return numID(x); }"),
         lines(
             "actual parameter 1 of numID does not match formal parameter",
-            "found   : T",
+            "found   : T extends (boolean|number|string)",
             "required: number"));
   }
 
@@ -6022,7 +6022,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function foo(x,y) { x=y; }"),
         lines(
             "assignment", //
-            "found   : T", //
+            "found   : T extends (number|string)", //
             "required: number"));
   }
 
@@ -6093,8 +6093,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function foo(x,y) { x=y; }"),
         lines(
             "assignment", //
-            "found   : U", //
-            "required: T"));
+            "found   : U extends (number|string)", //
+            "required: T extends (number|string)"));
   }
 
   @Test
@@ -6141,8 +6141,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "}"),
         lines(
             "initializing variable", //
-            "found   : T", //
-            "required: U"));
+            "found   : T extends (boolean|string)", //
+            "required: U extends T extends (boolean|string)"));
   }
 
   @Test
@@ -6183,11 +6183,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
           lines(
               "actual parameter 1 of foo does not match formal parameter",
               "found   : string",
-              "required: None"),
+              "required: T extends boolean"),
           lines(
               "actual parameter 1 of bar does not match formal parameter",
               "found   : boolean",
-              "required: None")
+              "required: T extends string")
         });
   }
 
@@ -6232,15 +6232,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "F.foo(true);",
             "foo('Hi');"),
         new String[] {
-          // TODO(b/139328254): Provide a clearer expected type, rather than "None"
           lines(
               "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
               "found   : boolean",
-              "required: None"),
+              "required: T extends string"),
           lines(
               "actual parameter 1 of foo does not match formal parameter",
               "found   : string",
-              "required: None")
+              "required: T extends boolean")
         });
   }
 
@@ -6371,7 +6370,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "inconsistent return type", //
             "found   : (C<boolean>|null)", //
-            "required: (C<U>|null)"));
+            "required: (C<U extends (number|string)>|null)"));
   }
 
   @Test
@@ -6394,7 +6393,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "actual parameter 1 of f does not match formal parameter",
             "found   : (C<boolean>|null)",
-            "required: (C<None>|null)"));
+            "required: (C<U extends (number|string)>|null)"));
   }
 
   @Test
@@ -24563,8 +24562,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  @Ignore
-  // TODO(liuamanda): detects cyclic inheritance instead of stackoverflowing now
   public void testCyclicUnionTypedefs() {
     // TODO(b/112964849): This case should not throw anything.
     assertThrows(
