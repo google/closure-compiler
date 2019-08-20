@@ -542,13 +542,21 @@ public final class JSModuleGraph implements Serializable {
     Set<CompilerInput> entryPointInputs =
         createEntryPointInputs(compiler, dependencyOptions, getAllInputs(), sorter);
 
-    HashMap<String, CompilerInput> inputsByProvide = new HashMap<>();
+    // Build a map of symbols to their source file(s). While having multiple source files is invalid
+    // we leave that up to typechecking so that we avoid arbitarily picking a file.
+    HashMap<String, Set<CompilerInput>> inputsByProvide = new HashMap<>();
     for (CompilerInput input : originalInputs) {
       for (String provide : input.getKnownProvides()) {
-        inputsByProvide.put(provide, input);
+        if (!inputsByProvide.containsKey(provide)) {
+          inputsByProvide.put(provide, new LinkedHashSet<>());
+        }
+        inputsByProvide.get(provide).add(input);
       }
       String moduleName = input.getPath().toModuleName();
-      inputsByProvide.putIfAbsent(moduleName, input);
+      if (!inputsByProvide.containsKey(moduleName)) {
+        inputsByProvide.put(moduleName, new LinkedHashSet<>());
+      }
+      inputsByProvide.get(moduleName).add(input);
     }
 
     // Dynamically imported files must be added to the module graph, but
@@ -557,7 +565,7 @@ public final class JSModuleGraph implements Serializable {
     for (CompilerInput input : originalInputs) {
       for (String require : input.getDynamicRequires()) {
         if (inputsByProvide.containsKey(require)) {
-          entryPointInputs.add(inputsByProvide.get(require));
+          entryPointInputs.addAll(inputsByProvide.get(require));
         }
       }
     }
@@ -677,22 +685,20 @@ public final class JSModuleGraph implements Serializable {
   private List<CompilerInput> getDepthFirstDependenciesOf(
       CompilerInput rootInput,
       Set<CompilerInput> unreachedInputs,
-      Map<String, CompilerInput> inputsByProvide) {
+      Map<String, Set<CompilerInput>> inputsByProvide) {
     List<CompilerInput> orderedInputs = new ArrayList<>();
     if (!unreachedInputs.remove(rootInput)) {
       return orderedInputs;
     }
 
     for (String importedNamespace : rootInput.getRequiredSymbols()) {
-      CompilerInput dependency = null;
-      if (inputsByProvide.containsKey(importedNamespace)
-          && unreachedInputs.contains(inputsByProvide.get(importedNamespace))) {
-        dependency = inputsByProvide.get(importedNamespace);
-      }
-
-      if (dependency != null) {
-        orderedInputs.addAll(
-            getDepthFirstDependenciesOf(dependency, unreachedInputs, inputsByProvide));
+      if (inputsByProvide.containsKey(importedNamespace)) {
+        for (CompilerInput input : inputsByProvide.get(importedNamespace)) {
+          if (unreachedInputs.contains(input)) {
+            orderedInputs.addAll(
+                getDepthFirstDependenciesOf(input, unreachedInputs, inputsByProvide));
+          }
+        }
       }
     }
 

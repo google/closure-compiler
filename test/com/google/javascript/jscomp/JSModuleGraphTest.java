@@ -392,6 +392,32 @@ public final class JSModuleGraphTest {
   }
 
   @Test
+  public void testManageDependenciesStrictWithEntryPointWithDuplicates() throws Exception {
+    final JSModule a = new JSModule("a");
+    JSModuleGraph graph = new JSModuleGraph(new JSModule[] {a});
+
+    // Create all the input files.
+    List<CompilerInput> inputs = new ArrayList<>();
+    a.add(code("a1", provides("a1"), requires("a2")));
+    a.add(code("a2", provides("a2"), requires()));
+    a.add(code("a3", provides("a2"), requires()));
+    inputs.addAll(a.getInputs());
+    for (CompilerInput input : inputs) {
+      input.setCompiler(compiler);
+    }
+
+    DependencyOptions depOptions =
+        DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("a1")));
+    List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+
+    // Everything gets pushed up into module c, because that's
+    // the only one that has entry points.
+    assertInputs(a, "a2", "a3", "a1");
+
+    assertThat(sourceNames(results)).containsExactly("a2", "a3", "a1").inOrder();
+  }
+
+  @Test
   public void testManageDependenciesSortOnly() throws Exception {
     makeDeps();
     makeGraph();
