@@ -570,6 +570,11 @@ RTCDTMFSender.prototype.insertDTMF =
     function(tones, opt_duration, opt_interToneGap) {};
 
 /**
+ * @type {?boolean}
+ */
+RTCDTMFSender.prototype.canInsertDTMF;
+
+/**
  * @type {?function(!RTCDTMFToneChangeEvent)}
  */
 RTCDTMFSender.prototype.ontonechange;
