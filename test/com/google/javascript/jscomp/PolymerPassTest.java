@@ -1009,7 +1009,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.pets;",
             "/** @private {string} */",
             "a.B.prototype.name_;",
-            "/** @override */",
+            "/*** @param {!Array<string>} pets @override */",
             "a.B.prototype._setPets = function(pets) {};",
             "a.B = Polymer(/** @lends {a.B.prototype} */ {",
             "  is: 'x-element',",
@@ -1048,7 +1048,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.pets;",
             "/** @private {string} */",
             "a.B.prototype.name_;",
-            "/** @override */",
+            "/** @param {!Array<string>} pets @override */",
             "a.B.prototype._setPets = function(pets) {};",
             "a.B = Polymer(/** @lends {a.B.prototype} */ {",
             "  is: 'x-element',",
@@ -1071,7 +1071,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "var Polymera_BInterface = function() {};",
             "/** @type {!Array<string>} */",
             "Polymera_BInterface.prototype.pets;",
-            "/** @param {!Array<string>} pets **/",
+            "/*** @param {!Array<string>} pets **/",
             "Polymera_BInterface.prototype._setPets;"));
 
     String jsClass = lines(
@@ -1097,7 +1097,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "var PolymerAInterface = function() {};",
             "/** @type {!Array} */",
             "PolymerAInterface.prototype.pets;",
-            "/** @param {!Array} pets **/",
+            "/*** @param {!Array} pets **/",
             "PolymerAInterface.prototype._setPets;"));
 
     test(
@@ -1118,7 +1118,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "}",
             "/** @type {!Array} */",
             "A.prototype.pets;",
-            "/** @override */",
+            "/*** @param {!Array} pets @override */",
             "A.prototype._setPets = function(pets) {};"));
   }
 
@@ -2661,7 +2661,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "A.prototype.doSomethingFun = function(funAmount) {",
             "  alert('Something ' + funAmount + ' fun!');",
             "};",
-            "/** @override */",
+            "/** @param {boolean} isFun @override */",
             "A.prototype._setIsFun = function(isFun) {};",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",

@@ -411,7 +411,7 @@ final class PolymerClassRewriter {
       if (prop.value.isObjectLit()) {
         Node readOnlyValue = NodeUtil.getFirstPropMatchingKey(prop.value, "readOnly");
         if (readOnlyValue != null && readOnlyValue.isTrue()) {
-          Node setter = makeReadOnlySetter(prop.name.getString(), qualifiedPath);
+          Node setter = makeReadOnlySetter(prop, qualifiedPath);
           setter.useSourceInfoIfMissingFromForTree(prop.name);
           block.addChildToBack(setter);
           readOnlyProps.add(prop);
@@ -422,11 +422,6 @@ final class PolymerClassRewriter {
     return readOnlyProps.build();
   }
 
-  /**
-   * Generates the _set* setters for readonly properties and appends them to the given block.
-   *
-   * @return A List of all readonly properties.
-   */
   private ImmutableList<MemberDefinition> parseAttributeReflectedProperties(
       final PolymerClassDefinition cls) {
     ImmutableList.Builder<MemberDefinition> attrReflectedProps = ImmutableList.builder();
@@ -578,7 +573,8 @@ final class PolymerClassRewriter {
    *
    * @see https://www.polymer-project.org/0.8/docs/devguide/properties.html#read-only
    */
-  private Node makeReadOnlySetter(String propName, String qualifiedPath) {
+  private Node makeReadOnlySetter(MemberDefinition prop, String qualifiedPath) {
+    String propName = prop.name.getString();
     String setterName = "_set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
     Node fnNode = IR.function(IR.name(""), IR.paramList(IR.name(propName)), IR.block());
     compiler.reportChangeToChangeScope(fnNode);
@@ -589,8 +585,9 @@ final class PolymerClassRewriter {
     // This is overriding a generated function which was added to the interface in
     // {@code createExportsAndExterns}.
     info.recordOverride();
+    JSTypeExpression propType = PolymerPassStaticUtils.getTypeFromProperty(prop, compiler);
+    info.recordParameter(propName, propType);
     exprResNode.getFirstChild().setJSDocInfo(info.build());
-
     return exprResNode;
   }
 
