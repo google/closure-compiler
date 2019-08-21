@@ -335,7 +335,10 @@ class CheckGlobalNames implements CompilerPass {
   private boolean hasSuperclass(Name es6Class) {
     Node decl = es6Class.getDeclaration().getNode();
     Node classNode = NodeUtil.getRValueOfLValue(decl);
-    checkState(classNode.isClass(), classNode);
+    // TODO(b/139763147): make this into a Preconditions check once the underlying bug is fixed.
+    if (!classNode.isClass()) {
+      return false;
+    }
     Node superclass = classNode.getSecondChild();
 
     return !superclass.isEmpty();

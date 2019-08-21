@@ -684,4 +684,15 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
             "var alias = a;",
             "alert(a.b.c.d);")); // This will cause a runtime error but not a compiler warning.
   }
+
+  @Test
+  public void testReassignedName() {
+    // regression test for an obscure bug triggered by redefining a name as a class after its
+    // original definition, and also adding a property to that name.
+    testSame(
+        lines(
+            "let fnOrClass = function() {};", //
+            "fnOrClass = class {};",
+            "fnOrClass.PROP = 0;"));
+  }
 }
