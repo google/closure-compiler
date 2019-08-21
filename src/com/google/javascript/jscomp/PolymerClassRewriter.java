@@ -83,10 +83,10 @@ final class PolymerClassRewriter {
    * @param exprRoot The root expression of the call to Polymer({}).
    * @param cls The extracted {@link PolymerClassDefinition} for the Polymer element created by this
    *     call.
-   * @param isInGlobalOrModuleScope whether this call is either directly in a script or module body
+   * @param isInGlobalScope whether this call is directly in a script
    */
   void rewritePolymerCall(
-      Node exprRoot, final PolymerClassDefinition cls, boolean isInGlobalOrModuleScope) {
+      Node exprRoot, final PolymerClassDefinition cls, boolean isInGlobalScope) {
     Node objLit = checkNotNull(cls.descriptor);
 
     // Add {@code @lends} to the object literal.
@@ -150,7 +150,7 @@ final class PolymerClassRewriter {
     // enclosing script node. Compiler support for local scopes like IIFEs is sometimes lacking but
     // module scopes are well-supported. If this is not in a module or the global scope it is likely
     // exported.
-    if (!isInGlobalOrModuleScope && !cls.target.isGetProp()) {
+    if (!isInGlobalScope && !cls.target.isGetProp()) {
       Node enclosingNode =
           NodeUtil.getEnclosingNode(
               parent,
