@@ -6441,6 +6441,34 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testUnmappedBoundedGenericTypeError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @template {number|string} T",
+            " * @template {number|null} S",
+            " */",
+            "class Foo {",
+            "  /**",
+            "   * @param {T} x",
+            "   */",
+            "  bar(x) { }",
+            "  /**",
+            "   * @param {S} x",
+            "   */",
+            "  baz(x) { }",
+            "}",
+            "var /** Foo<number> */ foo;",
+            "foo.baz(3);",
+            "foo.baz(null);",
+            "foo.baz('3');"),
+        lines(
+            "actual parameter 1 of Foo.prototype.baz does not match formal parameter",
+            "found   : string",
+            "required: S extends (null|number)"));
+  }
+
+  @Test
   public void testInterfaceExtends() {
     testTypes("/** @interface */function A() {}\n" +
         "/** @interface \n * @extends {A} */function B() {}\n" +

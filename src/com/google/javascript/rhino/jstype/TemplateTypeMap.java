@@ -47,6 +47,7 @@ import com.google.javascript.rhino.jstype.JSType.EqCache;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -123,12 +124,13 @@ public class TemplateTypeMap implements Serializable {
       return this; // Nothing will change.
     }
 
-    ImmutableList.Builder<JSType> extendedValues = ImmutableList.builder();
+    ArrayList<JSType> extendedValues = new ArrayList<>();
     extendedValues.addAll(this.templateValues);
     extendedValues.addAll(values);
-    padWithUnknown(extendedValues, requiredUnknownCount);
+    padToSameLength(this.templateKeys, extendedValues);
 
-    return new TemplateTypeMap(this.registry, this.templateKeys, extendedValues.build());
+    return new TemplateTypeMap(
+        this.registry, this.templateKeys, ImmutableList.copyOf(extendedValues));
   }
 
   /**
@@ -158,12 +160,12 @@ public class TemplateTypeMap implements Serializable {
     ImmutableList<TemplateType> extendedKeys =
         ImmutableList.<TemplateType>builder().addAll(this.templateKeys).addAll(keys).build();
 
-    ImmutableList.Builder<JSType> extendedValues = ImmutableList.builder();
+    ArrayList<JSType> extendedValues = new ArrayList<>();
     extendedValues.addAll(this.templateValues);
-    padWithUnknown(extendedValues, numUnfilledTemplateKeys());
+    padToSameLength(this.templateKeys, extendedValues);
     extendedValues.addAll(values);
 
-    return new TemplateTypeMap(this.registry, extendedKeys, extendedValues.build());
+    return new TemplateTypeMap(this.registry, extendedKeys, ImmutableList.copyOf(extendedValues));
   }
 
   /**
@@ -294,7 +296,7 @@ public class TemplateTypeMap implements Serializable {
   public JSType getResolvedTemplateType(TemplateType key) {
     int index = getTemplateTypeIndex(key);
     return (index == -1)
-        ? key.getBound()
+        ? unknownIfUnbounded(key)
         : resolvedTemplateValues[index];
   }
 
@@ -413,9 +415,17 @@ public class TemplateTypeMap implements Serializable {
     return s;
   }
 
-  private void padWithUnknown(ImmutableList.Builder<JSType> builder, int count) {
-    for (int i = 0; i < count; i++) {
-      builder.add(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+  private void padToSameLength(ImmutableList<TemplateType> keys, ArrayList<JSType> builder) {
+    checkArgument(builder.size() <= keys.size());
+
+    for (int i = builder.size(); i < keys.size(); i++) {
+      builder.add(unknownIfUnbounded(keys.get(i)));
     }
+  }
+
+  private JSType unknownIfUnbounded(TemplateType type) {
+    return type.getBound().isUnknownType()
+        ? this.registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)
+        : type;
   }
 }

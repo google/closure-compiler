@@ -5310,6 +5310,41 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         arrayOfString);
   }
 
+  @Test
+  public void testTemplatizedTypesWithBoundedGenerics() {
+    FunctionType templatizedCtor =
+        registry.createConstructorType(
+            "TestingType",
+            null,
+            null,
+            UNKNOWN_TYPE,
+            ImmutableList.of(
+                registry.createTemplateType("A", NUMBER_TYPE),
+                registry.createTemplateType("B", STRING_TYPE)),
+            false);
+    JSType templatizedInstance = registry.createTemplatizedType(
+        templatizedCtor.getInstanceType(),
+        ImmutableList.of(NUMBER_TYPE));
+
+    TemplateTypeMap ctrTypeMap = templatizedCtor.getTemplateTypeMap();
+    TemplateType keyA = ctrTypeMap.getTemplateTypeKeyByName("A");
+    assertThat(keyA).isNotNull();
+    TemplateType keyB = ctrTypeMap.getTemplateTypeKeyByName("B");
+    assertThat(keyB).isNotNull();
+    TemplateType keyC = ctrTypeMap.getTemplateTypeKeyByName("C");
+    assertThat(keyC).isNull();
+    TemplateType unknownKey = registry.createTemplateType("C");
+
+    TemplateTypeMap templateTypeMap = templatizedInstance.getTemplateTypeMap();
+    assertThat(templateTypeMap.hasTemplateKey(keyA)).isTrue();
+    assertThat(templateTypeMap.hasTemplateKey(keyB)).isTrue();
+    assertThat(templateTypeMap.hasTemplateKey(unknownKey)).isFalse();
+
+    assertThat(templateTypeMap.getResolvedTemplateType(keyA)).isEqualTo(NUMBER_TYPE);
+    assertThat(templateTypeMap.getResolvedTemplateType(keyB)).isEqualTo(keyB);
+    assertThat(templateTypeMap.getResolvedTemplateType(unknownKey)).isEqualTo(UNKNOWN_TYPE);
+  }
+
   /**
    * Tests that the given chain of types has a total ordering defined
    * by the subtype relationship, with types at the top of the lattice
