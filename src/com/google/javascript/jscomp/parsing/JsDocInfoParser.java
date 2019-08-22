@@ -1033,8 +1033,6 @@ public final class JsDocInfoParser {
               token = templateInfo.token;
             } else {
               List<String> genericDecl = Splitter.on("}").trimResults().splitToList(templateString);
-              addParserWarning(
-                  "msg.jsdoc.template.boundedgenerics", templateLineno, templateCharno);
 
               if (templateString.contains(",")) {
                 if (!(templateString.indexOf('<') < templateString.indexOf(',')

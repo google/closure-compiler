@@ -3761,7 +3761,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithInvalidTemplateType() {
     parse(
         "@template {T} */",
-        "Bounded generic semantics are currently still in development",
         "Bad type annotation. Invalid type name(s) for @template annotation." + BAD_TYPE_WIKI_LINK);
   }
 
@@ -5428,15 +5427,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBoundedGeneric() {
-    parse(
-        "@template {number} T */", "Bounded generic semantics are currently still in development");
+    parse("@template {number} T */");
   }
 
   @Test
   public void testUnbalancedBracesBoundedGeneric() {
     parse(
         "@template {number T */",
-        "Bounded generic semantics are currently still in development",
         "Bad type annotation. Invalid type name(s) for @template annotation." + BAD_TYPE_WIKI_LINK);
   }
 
@@ -5444,7 +5441,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testMultipleBoundedGeneric() {
     parse(
         "@template {string} T,U */",
-        "Bounded generic semantics are currently still in development",
         "Cannot declare multiple templates for one bound",
         "Bad type annotation. Invalid type name(s) for @template annotation." + BAD_TYPE_WIKI_LINK);
   }
@@ -5453,7 +5449,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testMultipleBoundsBoundedGeneric() {
     parse(
         "@template {string} T, {number} U */",
-        "Bounded generic semantics are currently still in development",
         "Cannot declare multiple templates for one bound",
         "Bad type annotation. Invalid type name(s) for @template annotation." + BAD_TYPE_WIKI_LINK);
   }
@@ -5462,7 +5457,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testBadTypeExpressionBoundedGeneric() {
     parse(
         "@template {string || number} T*/",
-        "Bounded generic semantics are currently still in development",
         "Bad type annotation. Invalid type expression for @template bound." + BAD_TYPE_WIKI_LINK);
   }
 
@@ -5470,26 +5464,18 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testReuseTemplateTypeName() {
     parse(
         "@template {string} T \n* @template {number} T */",
-        "Bounded generic semantics are currently still in development",
-        "Bounded generic semantics are currently still in development",
         "Bad type annotation. Type name(s) for @template annotation declared twice."
             + BAD_TYPE_WIKI_LINK);
   }
 
   @Test
   public void testMultipleTemplateBoundDeclarations() {
-    parse(
-        " @template {string} T \n* @template {number} U */",
-        "Bounded generic semantics are currently still in development",
-        "Bounded generic semantics are currently still in development");
+    parse(" @template {string} T \n* @template {number} U */");
   }
 
   @Test
   public void testTemplateJSTypeExpression() {
-    JSDocInfo info =
-        parse(
-            "@template {string|number} T */",
-            "Bounded generic semantics are currently still in development");
+    JSDocInfo info = parse("@template {string|number} T */");
 
     assertThat((info.getTemplateTypes().size() == 1)).isTrue();
     assertThat(info.getTemplateTypeNames().get(0).equals("T")).isTrue();
