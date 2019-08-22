@@ -2560,9 +2560,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         if (delegatorCtor != null && delegateBaseCtor != null && delegateSuperCtor != null) {
           FunctionParamBuilder functionParamBuilder = new FunctionParamBuilder(typeRegistry);
           functionParamBuilder.addRequiredParams(getNativeType(U2U_CONSTRUCTOR_TYPE));
-          FunctionType findDelegate = typeRegistry.createFunctionType(
-              typeRegistry.createDefaultObjectUnion(delegateBaseObject),
-              functionParamBuilder.build());
+          FunctionType findDelegate =
+              typeRegistry.createFunctionType(
+                  typeRegistry.createNullableType(delegateBaseObject),
+                  functionParamBuilder.build());
 
           FunctionType delegateProxy =
               typeRegistry.createConstructorType(

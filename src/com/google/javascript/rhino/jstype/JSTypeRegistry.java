@@ -1426,20 +1426,6 @@ public class JSTypeRegistry implements Serializable {
    * Creates a type representing nullable values of the given type.
    * @return the union of the type and the Null type
    */
-  public JSType createDefaultObjectUnion(JSType type) {
-    if (type.isTemplateType()) {
-      // Template types represent the substituted type exactly and should
-      // not be wrapped.
-      return type;
-    } else {
-      return createNullableType(type);
-    }
-  }
-
-  /**
-   * Creates a type representing nullable values of the given type.
-   * @return the union of the type and the Null type
-   */
   public JSType createNullableType(JSType type) {
     return createUnionType(type, getNativeType(JSTypeNative.NULL_TYPE));
   }
@@ -1909,7 +1895,8 @@ public class JSTypeRegistry implements Serializable {
           JSType child =
               createFromTypeNodesInternal(
                   n.getFirstChild(), sourceName, scope, recordUnresolvedTypes);
-          if (child instanceof NamedType) {
+          if (child instanceof NamedType
+              && isNonNullableName(scope, child.toMaybeNamedType().getReferenceName())) {
             JSType type = ((NamedType) child).getBangType();
             if (type instanceof NamedType && recordUnresolvedTypes && type != child) {
               unresolvedNamedTypes.add((NamedType) type);
@@ -1985,75 +1972,89 @@ public class JSTypeRegistry implements Serializable {
         // TODO(martinprobst): The new type syntax resolution should be separate.
         // Remove the NAME case then.
       case NAME:
-        JSType namedType =
-            getType(
-                scope,
-                n.getString(),
-                sourceName,
-                n.getLineno(),
-                n.getCharno(),
-                recordUnresolvedTypes);
-        if (namedType instanceof ObjectType && !isNonNullableName(scope, n.getString())) {
-          Node typeList = n.getFirstChild();
-          boolean isForwardDeclared = namedType instanceof NamedType;
-          if ((!namedType.isUnknownType() || isForwardDeclared) && typeList != null) {
-            // Templatized types.
-            ImmutableList.Builder<JSType> templateTypes = ImmutableList.builder();
-
-            // Special case for Object, where Object<X> implies Object<?,X>.
-            if ((n.getString().equals("Object") || n.getString().equals("window.Object"))
-                && typeList.hasZeroOrOneChild()) {
-              templateTypes.add(getNativeType(UNKNOWN_TYPE));
-            }
-
-            int nAllowedTypes =
-                isForwardDeclared
-                    ? Integer.MAX_VALUE
-                    : namedType.getTemplateTypeMap().numUnfilledTemplateKeys();
-            boolean recordTemplateArgs = recordUnresolvedTypes && !isForwardDeclared;
-            int templateNodeIndex = 0;
-            for (Node templateNode : typeList.children()) {
-              // Don't parse more templatized type nodes than the type can
-              // accommodate. This is because some existing clients have
-              // template annotations on non-templatized classes, for instance:
-              //   goog.structs.Set<SomeType>
-              // The problem in these cases is that the previously-unparsed
-              // SomeType is not actually a valid type. To prevent these clients
-              // from seeing unknown type errors, we explicitly don't parse
-              // these types.
-              // TODO(dimvar): Address this issue by removing bad template
-              // annotations on non-templatized classes.
-              if (++templateNodeIndex > nAllowedTypes) {
-                reporter.warning(
-                    "Too many template parameters",
-                    sourceName,
-                    templateNode.getLineno(),
-                    templateNode.getCharno());
-                break;
-              }
-              JSType newTemplateParameter =
-                  createFromTypeNodesInternal(templateNode, sourceName, scope, recordTemplateArgs);
-              templateTypes.add(newTemplateParameter);
-            }
-            if (isForwardDeclared) {
-              namedType =
-                  new NamedType(
-                      scope,
-                      this,
-                      n.getString(),
-                      sourceName,
-                      n.getLineno(),
-                      n.getCharno(),
-                      templateTypes.build());
-            } else {
-              ImmutableList<JSType> builtTemplateTypes = templateTypes.build();
-              namedType = createTemplatizedType((ObjectType) namedType, builtTemplateTypes);
-            }
-            checkNotNull(namedType);
+        {
+          JSType nominalType =
+              getType(
+                  scope,
+                  n.getString(),
+                  sourceName,
+                  n.getLineno(),
+                  n.getCharno(),
+                  recordUnresolvedTypes);
+          if (!(nominalType instanceof ObjectType) || isNonNullableName(scope, n.getString())) {
+            return nominalType;
           }
-          return createDefaultObjectUnion(namedType);
-        } else {
-          return namedType;
+
+          boolean isForwardDeclared = nominalType instanceof NamedType;
+          if (nominalType.isUnknownType() && !isForwardDeclared) {
+            return addNullabilityBasedOnParseContext(n, nominalType);
+          }
+
+          Node typeList = n.getFirstChild();
+          if (typeList == null) {
+            // We don't want to templatize the result if there are no template parameters.
+            // TODO(nickreid): Warn when `typeList` has 0 children.
+            // TODO(nickreid): This case leaves template parameters unbound if users fail to
+            // specify any arguments, allowing raw types to leak into programs.
+            return addNullabilityBasedOnParseContext(n, nominalType);
+          }
+
+          if (isForwardDeclared) {
+            ImmutableList.Builder<JSType> templateArgs = ImmutableList.builder();
+            for (Node templateNode : typeList.children()) {
+              templateArgs.add(createFromTypeNodesInternal(templateNode, sourceName, scope, false));
+            }
+            return addNullabilityBasedOnParseContext(
+                n,
+                new NamedType(
+                    scope,
+                    this,
+                    n.getString(),
+                    sourceName,
+                    n.getLineno(),
+                    n.getCharno(),
+                    templateArgs.build()));
+          }
+
+          boolean isObject =
+              n.getString().equals("Object") || n.getString().equals("window.Object");
+          int requiredTemplateArgCount =
+              // TODO(b/138617950): Eliminate the specical case for `Object`.
+              isObject ? 2 : nominalType.getTemplateTypeMap().numUnfilledTemplateKeys();
+          List<JSType> templateArgs = new ArrayList<>();
+
+          for (Node templateNode : typeList.children()) {
+            // Don't parse more templatized type nodes than the type can
+            // accommodate. This is because some existing clients have
+            // template annotations on non-templatized classes, for instance:
+            //   goog.structs.Set<SomeType>
+            // The problem in these cases is that the previously-unparsed
+            // SomeType is not actually a valid type. To prevent these clients
+            // from seeing unknown type errors, we explicitly don't parse
+            // these types.
+            // TODO(dimvar): Address this issue by removing bad template
+            // annotations on non-templatized classes.
+            if (templateArgs.size() >= requiredTemplateArgCount) {
+              reporter.warning(
+                  "Too many template parameters",
+                  sourceName,
+                  templateNode.getLineno(),
+                  templateNode.getCharno());
+              // The rest of the types aren't needed even if they're unresolved.
+              break;
+            }
+            templateArgs.add(
+                createFromTypeNodesInternal(
+                    templateNode, sourceName, scope, recordUnresolvedTypes));
+          }
+          if (isObject && templateArgs.size() == 1) {
+            // Special case for Object, where Object<X> implies Object<?,X>.
+            templateArgs.add(0, getNativeType(UNKNOWN_TYPE));
+          }
+
+          return addNullabilityBasedOnParseContext(
+              n,
+              createTemplatizedType((ObjectType) nominalType, ImmutableList.copyOf(templateArgs)));
         }
 
       case FUNCTION:
@@ -2135,6 +2136,23 @@ public class JSTypeRegistry implements Serializable {
     }
 
     throw new IllegalStateException("Unexpected node in type expression: " + n);
+  }
+
+  private JSType addNullabilityBasedOnParseContext(Node n, JSType type) {
+    // Other node types may be appropriate in the future.
+    checkState(n.isName() || n.isString(), n);
+    checkNotNull(type);
+
+    if (type.isTemplateType()) {
+      // Template types represent the substituted type exactly and should
+      // not be wrapped.
+      return type;
+    } else if (n.getParent() != null && n.getParent().getToken() == Token.BANG) {
+      // Names parsed from beneath a BANG never need nullability added.
+      return type;
+    } else {
+      return createNullableType(type);
+    }
   }
 
   /**
