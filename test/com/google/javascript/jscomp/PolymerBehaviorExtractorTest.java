@@ -476,6 +476,76 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByGoogNamespace().get("a"));
   }
 
+  // Test goog.module.get
+
+  @Test
+  public void testBehavior_googModuleGetOfModule_DirectUsage() {
+    parseAndInitializeExtractor(
+        lines(
+            "goog.module('rad');", //
+            createBehaviorDefinition("RadBehaviorLocal"),
+            "exports = RadBehaviorLocal;"),
+        lines(
+            "(function() {", //
+            createBehaviorUsage("goog.module.get('rad')"),
+            "})();"));
+
+    ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(defs).hasSize(1);
+  }
+
+  @Test
+  public void testBehavior_googModuleGetOfProvide_DirectUsage() {
+    parseAndInitializeExtractor(
+        lines(
+            "goog.provide('rad');", //
+            createBehaviorDefinition("rad")),
+        lines(
+            "(function() {", //
+            createBehaviorUsage("goog.module.get('rad')"),
+            "})();"));
+
+    ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(defs).hasSize(1);
+  }
+
+  @Ignore
+  @Test
+  public void testBehavior_googModuleGetAssignedToVariable() {
+    // Note: this test fails because, currently, we only support resolving variables that are either
+    // global or module-scoped. In theory the PolymerPass could be extended to understand other
+    // locals but it hasn't been necessary thus far.
+    parseAndInitializeExtractor(
+        lines(
+            "goog.module('rad');",
+            createBehaviorDefinition("RadBehaviorLocal"),
+            "exports = RadBehaviorLocal;"),
+        lines(
+            "(function() {",
+            "const rad = goog.module.get('rad');",
+            createBehaviorUsage("rad"),
+            "})();"));
+
+    ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
+    assertThat(compiler.getErrors()).hasSize(1);
+    assertThat(defs).hasSize(0);
+  }
+
+  @Test
+  public void testBehavior_invalidGoogModuleGet() {
+    parseAndInitializeExtractor(
+        lines(
+            "(function() {",
+            createBehaviorUsage("goog.module.get('rud')"), // oops, no such module.
+            "})();"));
+
+    ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
+    assertThat(compiler.getErrors()).hasSize(1);
+    assertThat(defs).hasSize(0);
+  }
+
   private String createBehaviorDefinition(String name) {
     // Either `qualified.name` or `var simpleName`
     String lhs = name.indexOf('.') != -1 ? name : "var " + name;

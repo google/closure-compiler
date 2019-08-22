@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,8 +115,13 @@ final class PolymerBehaviorExtractor {
         continue;
       }
 
-      ResolveBehaviorNameResult resolveResult =
-          resolveBehaviorName(getQualifiedNameThroughCast(behaviorName), moduleMetadata);
+      ResolveBehaviorNameResult resolveResult;
+      if (isGoogModuleGetCall(behaviorName)) {
+        resolveResult = resolveGoogModuleGet(behaviorName.getSecondChild().getString());
+      } else {
+        resolveResult =
+            resolveBehaviorName(getQualifiedNameThroughCast(behaviorName), moduleMetadata);
+      }
       if (resolveResult.equals(FAILED_RESOLVE_RESULT)) {
         compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));
         continue;
@@ -295,6 +301,30 @@ final class PolymerBehaviorExtractor {
       return result.equals(FAILED_RESOLVE_RESULT) ? null : result;
     }
     return null;
+  }
+
+  private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
+
+  private static boolean isGoogModuleGetCall(Node callNode) {
+    if (!callNode.isCall()) {
+      return false;
+    }
+    return GOOG_MODULE_GET.matches(callNode.getFirstChild())
+        && callNode.hasTwoChildren()
+        && callNode.getSecondChild().isString();
+  }
+
+  private ResolveBehaviorNameResult resolveGoogModuleGet(String moduleNamespace) {
+    ModuleMetadata closureModule =
+        moduleMetadataMap.getModulesByGoogNamespace().get(moduleNamespace);
+    if (closureModule == null) {
+      // Invalid goog.module.get() call.
+      return FAILED_RESOLVE_RESULT;
+    } else if (closureModule.isGoogProvide()) {
+      return resolveBehaviorName(moduleNamespace, null);
+    }
+    checkState(closureModule.isGoogModule(), closureModule);
+    return resolveBehaviorName(GOOG_MODULE_EXPORTS, closureModule);
   }
 
   /**
