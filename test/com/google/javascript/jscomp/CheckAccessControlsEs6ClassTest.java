@@ -162,8 +162,8 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testWarningForDeprecatedSuperClass() {
-    test(
+  public void testNoWarningForDeprecatedSuperClass() {
+    testNoWarning(
         srcs(
             lines(
                 "/** @deprecated Superclass to the rescue! */",
@@ -171,13 +171,12 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "",
                 "class SubFoo extends Foo {}",
                 "",
-                "function f() { new SubFoo(); }")),
-        deprecatedClass("Class SubFoo has been deprecated: Superclass to the rescue!"));
+                "function f() { new SubFoo(); }")));
   }
 
   @Test
-  public void testWarningForDeprecatedSuperClass2() {
-    test(
+  public void testNoWarningForDeprecatedSuperClassOnNamespace() {
+    testNoWarning(
         srcs(
             lines(
                 "/** @deprecated Its only weakness is Kryptoclass */",
@@ -188,9 +187,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "",
                 "namespace.SubFoo = class extends Foo {};",
                 "",
-                "function f() { new namespace.SubFoo(); }")),
-        deprecatedClass(
-            "Class namespace.SubFoo has been deprecated: Its only weakness is Kryptoclass"));
+                "function f() { new namespace.SubFoo(); }")));
   }
 
   @Test

@@ -254,23 +254,29 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testWarningForDeprecatedSuperClass() {
-    testDepClass(
-        "/** @constructor \n * @deprecated Superclass to the rescue! */ function Foo() {} "
-            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
-            + "function f() { new SubFoo(); }",
-        "Class SubFoo has been deprecated: Superclass to the rescue!");
+  public void testNoWarningForDeprecatedSuperClass() {
+    testNoWarning(
+        lines(
+            "/** @constructor @deprecated Superclass to the rescue! */",
+            "function Foo() {}",
+            "/** @constructor * @extends {Foo} */",
+            "function SubFoo() {}",
+            "function f() { new SubFoo(); }"));
   }
 
   @Test
-  public void testWarningForDeprecatedSuperClass2() {
-    testDepClass(
-        "/** @constructor \n * @deprecated Its only weakness is Kryptoclass */ function Foo() {} "
-            + "/** @const */ var namespace = {}; "
-            + "/** @constructor \n * @extends {Foo} */ "
-            + "namespace.SubFoo = function() {}; "
-            + "function f() { new namespace.SubFoo(); }",
-        "Class namespace.SubFoo has been deprecated: Its only weakness is Kryptoclass");
+  public void testNoWarningForDeprecatedSuperClassOnNamespace() {
+    testNoWarning(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @deprecated Its only weakness is Kryptoclass",
+            "*/",
+            " function Foo() {} ",
+            "/** @const */ var namespace = {};",
+            "/** @constructor \n * @extends {Foo} */",
+            "namespace.SubFoo = function() {};",
+            "function f() { new namespace.SubFoo(); }"));
   }
 
   @Test

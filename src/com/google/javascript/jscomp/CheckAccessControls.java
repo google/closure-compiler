@@ -1142,19 +1142,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       return null;
     }
 
-    String depReason = getDeprecationReason(type.getJSDocInfo());
-    if (depReason != null) {
-      return depReason;
-    }
-
-    ObjectType objType = castToObject(type);
-    if (objType != null) {
-      ObjectType implicitProto = objType.getImplicitPrototype();
-      if (implicitProto != null) {
-        return getTypeDeprecationInfo(implicitProto);
-      }
-    }
-    return null;
+    return getDeprecationReason(type.getJSDocInfo());
   }
 
   private static String getDeprecationReason(JSDocInfo info) {
