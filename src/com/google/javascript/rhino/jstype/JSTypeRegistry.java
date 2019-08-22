@@ -1783,10 +1783,6 @@ public class JSTypeRegistry implements Serializable {
 
   public ObjectType instantiateGenericsWithUnknown(ObjectType obj) {
     if (obj.isTemplatizedType()) {
-      ImmutableList.Builder<JSType> unknowns = ImmutableList.builder();
-      for (TemplateType unused : obj.getTemplateTypeMap().getTemplateKeys()) {
-        unknowns.add(getNativeType(UNKNOWN_TYPE));
-      }
       return createTemplatizedType(obj.toMaybeTemplatizedType().getRawType());
     }
     return obj;
