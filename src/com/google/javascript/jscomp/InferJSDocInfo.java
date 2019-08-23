@@ -215,7 +215,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
             return;
           }
 
-          if (typeDoc == null) {
+          if (typeDoc == null || !typeDoc.containsDeclaration()) {
             return;
           }
 
