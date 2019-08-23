@@ -48,6 +48,7 @@ import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.jstype.ContainsUpperBoundSuperTypeVisitor.Result;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Objects;
@@ -357,6 +358,14 @@ public abstract class JSType implements Serializable {
       }
     }
     return false;
+  }
+
+  /**
+   * This function searchers for a type `target` in the reference chain of ProxyObjectTypes
+   */
+  public final boolean containsReferenceAncestor(JSType target) {
+    Visitor<Result> visitor = new ContainsUpperBoundSuperTypeVisitor(target);
+    return this.visit(visitor) == ContainsUpperBoundSuperTypeVisitor.FOUND;
   }
 
   public final boolean isLiteralObject() {

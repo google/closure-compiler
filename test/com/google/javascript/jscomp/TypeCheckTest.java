@@ -6003,11 +6003,27 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes(
         lines(
             "/**",
+            " * @param {T} x",
+            " * @param {number|string|boolean} y",
+            " * @template {number|string} T",
+            " */",
+            "function foo(x,y) { y=x; }"));
+  }
+
+  @Test
+  public void testGenericBoundArgInnerAssignBoundedInvariantError() {
+    testTypes(
+        lines(
+            "/**",
             " * @param {number} x",
             " * @param {T} y",
             " * @template {number|string} T",
             " */",
-            "function foo(x,y) { y=x; }"));
+            "function foo(x,y) { y=x; }"),
+        lines(
+            "assignment", //
+            "found   : number", //
+            "required: T extends (number|string)"));
   }
 
   @Test
@@ -6466,6 +6482,45 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "actual parameter 1 of Foo.prototype.baz does not match formal parameter",
             "found   : string",
             "required: S extends (null|number)"));
+  }
+
+  @Test
+  public void testFunctionBodyBoundedGenericError() {
+    testTypes(
+        lines(
+            "class C {}",
+            "/**",
+            " * @template {C} T",
+            " * @param {T} t",
+            " */",
+            "function f(t) { t = new C(); }"),
+        lines(
+            "assignment", //
+            "found   : C", //
+            "required: T extends (C|null)"));
+  }
+
+  @Test
+  public void testFunctionBodyBoundedPropertyGenericError() {
+    testTypes(
+        lines(
+            "/**",
+            " * @template {number|string} T",
+            " */",
+            "class Foo {",
+            "  constructor() {",
+            "    /** @type {T} */",
+            "    this.x;",
+            "  }",
+            "  m() {",
+            "  this.x = 0;",
+            "  }",
+            "}",
+            "function f(t) { t = new C(); }"),
+        lines(
+            "assignment to property x of Foo",
+            "found   : number",
+            "required: T extends (number|string)"));
   }
 
   @Test

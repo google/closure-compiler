@@ -62,6 +62,7 @@ import com.google.javascript.rhino.jstype.UnknownType;
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -599,6 +600,28 @@ class TypeValidator implements Serializable {
    */
   boolean expectCanAssignToPropertyOf(
       Node n, JSType rightType, JSType leftType, Node owner, String propName) {
+    if (leftType.isTemplateType()) {
+      TemplateType left = leftType.toMaybeTemplateType();
+      if (rightType.containsReferenceAncestor(left)
+          || rightType.isUnknownType()
+          || left.isUnknownType()) {
+        // The only time we can assign to a variable with a template type is if the value assigned
+        // has a type that explicitly has it as a supertype.
+        // Otherwise, the template type is existential and it is unknown whether or not it is a
+        // proper super type.
+        return true;
+      } else {
+        registerMismatchAndReport(
+            n,
+            TYPE_MISMATCH_WARNING,
+            "assignment to property " + propName + " of " + typeRegistry.getReadableTypeName(owner),
+            rightType,
+            leftType,
+            new HashSet<>(),
+            new HashSet<>());
+        return false;
+      }
+    }
     // The NoType check is a hack to make typedefs work OK.
     if (!leftType.isNoType() && !rightType.isSubtypeOf(leftType)) {
       // Do not type-check interface methods, because we expect that
@@ -637,6 +660,22 @@ class TypeValidator implements Serializable {
    * @return True if the types matched, false otherwise.
    */
   boolean expectCanAssignTo(Node n, JSType rightType, JSType leftType, String msg) {
+    if (leftType.isTemplateType()) {
+      TemplateType left = leftType.toMaybeTemplateType();
+      if (rightType.containsReferenceAncestor(left)
+          || rightType.isUnknownType()
+          || left.isUnknownType()) {
+        // The only time we can assign to a variable with a template type is if the value assigned
+        // has a type that explicitly has it as a supertype.
+        // Otherwise, the template type is existential and it is unknown whether or not it is a
+        // proper super type.
+        return true;
+      } else {
+        registerMismatchAndReport(
+            n, TYPE_MISMATCH_WARNING, msg, rightType, leftType, new HashSet<>(), new HashSet<>());
+        return false;
+      }
+    }
     if (!rightType.isSubtypeOf(leftType)) {
       mismatch(n, msg, rightType, leftType);
       return false;
