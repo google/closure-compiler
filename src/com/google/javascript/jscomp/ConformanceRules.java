@@ -641,7 +641,7 @@ public final class ConformanceRules {
               if (ownerFun.isConstructor()) {
                 foundType = ownerFun.getInstanceType();
               }
-            } else if (foundObj.isGenericObjectType()) {
+            } else if (foundObj.isTemplatizedType()) {
               foundType = foundObj.getRawType();
             }
           }
@@ -1839,7 +1839,7 @@ public final class ConformanceRules {
       }
       // TODO(jakubvrana): Support union, e.g. {!TagName<!HTMLDivElement>|!TagName<!HTMLBRElement>}.
       JSType type = tag.getJSType();
-      if (type == null || !type.isGenericObjectType()) {
+      if (type == null || !type.isTemplatizedType()) {
         return null;
       }
       ObjectType typeAsObj = type.toMaybeObjectType();

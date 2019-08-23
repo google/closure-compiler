@@ -483,10 +483,6 @@ public abstract class JSType implements Serializable {
     return toMaybeTemplatizedType() != null;
   }
 
-  public final boolean isGenericObjectType() {
-    return isTemplatizedType();
-  }
-
   /**
    * Downcasts this to a TemplatizedType, or returns null if this is not
    * a function.

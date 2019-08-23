@@ -427,8 +427,7 @@ class TypeTransformation {
       case ISCTOR:
         return type.isConstructor();
       case ISTEMPLATIZED:
-        return type.isObjectType() && type.toMaybeObjectType().isGenericObjectType()
-            && type.isPartiallyInstantiated();
+        return type.isTemplatizedType() && type.isPartiallyInstantiated();
       case ISRECORD:
         return type.isRecordType();
       case ISUNKNOWN:
@@ -559,7 +558,7 @@ class TypeTransformation {
   private JSType evalRawTypeOf(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getCallParams(ttlAst);
     JSType type = evalInternal(params.get(0), nameResolver);
-    if (!type.isGenericObjectType()) {
+    if (!type.isTemplatizedType()) {
       reportWarning(ttlAst, TEMPTYPE_INVALID, "rawTypeOf", type.toString());
       return getUnknownType();
     }
@@ -569,7 +568,7 @@ class TypeTransformation {
   private JSType evalTemplateTypeOf(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getCallParams(ttlAst);
     JSType type = evalInternal(params.get(0), nameResolver);
-    if (!type.isGenericObjectType()) {
+    if (!type.isTemplatizedType()) {
       reportWarning(ttlAst, TEMPTYPE_INVALID, "templateTypeOf", type.toString());
       return getUnknownType();
     }

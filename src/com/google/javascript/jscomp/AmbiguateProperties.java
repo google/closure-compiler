@@ -164,7 +164,7 @@ class AmbiguateProperties implements CompilerPass {
   /** Returns an integer that uniquely identifies a JSType. */
   private int getIntForType(JSType type) {
     // Templatized types don't exist at runtime, so collapse to raw type
-    if (type != null && type.isGenericObjectType()) {
+    if (type != null && type.isTemplatizedType()) {
       type = type.toMaybeObjectType().getRawType();
     }
     if (intForType.containsKey(type)) {
