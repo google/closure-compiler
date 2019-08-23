@@ -820,9 +820,11 @@ public final class SuggestedFix {
 
       for (Node child : script.children()) {
         if (NodeUtil.isNameDeclaration(child)
+            // TODO(b/139953612): respect destructured goog.requires
+            && !child.getFirstChild().isDestructuringLhs()
             && child.getFirstChild().getLastChild() != null
-            && Matchers.googRequire(namespace).matches(
-                child.getFirstChild().getLastChild(), metadata)) {
+            && Matchers.googRequire(namespace)
+                .matches(child.getFirstChild().getLastChild(), metadata)) {
           return child;
         }
       }

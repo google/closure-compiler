@@ -738,10 +738,7 @@ public class RefasterJsScannerTest {
   public void test_importConstGoogRequire() throws Exception {
     String externs = "";
     String originalCode =
-        Joiner.on('\n').join(
-            "goog.module('testcase');",
-            "",
-            "function f() { var loc = 'str'; }");
+        Joiner.on('\n').join("goog.module('testcase');", "", "function f() { var loc = 'str'; }");
     String expectedCode =
         Joiner.on('\n').join(
         "goog.module('testcase');",
@@ -791,6 +788,40 @@ public class RefasterJsScannerTest {
             "function after_foo() {",
             "  var a = goog.foo.f();",
             "}");
+    assertChanges(externs, originalCode, template, expectedCode);
+  }
+
+  @Test
+  public void test_importDestructureConstGoogRequire() throws Exception {
+    // TODO(b/139953612): Respect existing destructured goog.requires
+    String externs = "";
+    String originalCode =
+        Joiner.on('\n')
+            .join(
+                "goog.module('testcase');",
+                "const {bar} = goog.require('goog.foo');",
+                "",
+                "function f() { var loc = 'str'; }");
+    String expectedCode =
+        Joiner.on('\n')
+            .join(
+                "goog.module('testcase');",
+                "const foo = goog.require('goog.foo');",
+                "const {bar} = goog.require('goog.foo');",
+                "",
+                "function f() { var loc = foo.f(); }");
+    String template =
+        Joiner.on('\n')
+            .join(
+                "/**",
+                "* +require {goog.foo}",
+                "*/",
+                "function before_foo() {",
+                "  var a = 'str';",
+                "};",
+                "function after_foo() {",
+                "  var a = goog.foo.f();",
+                "}");
     assertChanges(externs, originalCode, template, expectedCode);
   }
 
