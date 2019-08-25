@@ -366,7 +366,8 @@ public class JSTypeRegistry implements Serializable {
     // The initializations of OBJECT_PROTOTYPE and OBJECT_FUNCTION_TYPE
     // use each other's results, so at least one of them will get null
     // instead of an actual type; however, this seems to be benign.
-    PrototypeObjectType topLevelPrototype = new PrototypeObjectType(this, null, null, true, null);
+    PrototypeObjectType topLevelPrototype =
+        PrototypeObjectType.builder(this).setNative(true).build();
 
     // IObject
     FunctionType iObjectFunctionType =
@@ -1677,7 +1678,10 @@ public class JSTypeRegistry implements Serializable {
    * Create an object type.
    */
   public ObjectType createObjectType(String name, ObjectType implicitPrototype) {
-    return new PrototypeObjectType(this, name, implicitPrototype);
+    return PrototypeObjectType.builder(this)
+        .setName(name)
+        .setImplicitPrototype(implicitPrototype)
+        .build();
   }
 
   /**
@@ -1685,8 +1689,7 @@ public class JSTypeRegistry implements Serializable {
    * @param info Used to mark object literals as structs; can be {@code null}
    */
   public ObjectType createAnonymousObjectType(JSDocInfo info) {
-    PrototypeObjectType type = new PrototypeObjectType(
-        this, null, null, true /* anonymousType */);
+    PrototypeObjectType type = PrototypeObjectType.builder(this).setAnonymous(true).build();
     type.setPrettyPrint(true);
     type.setJSDocInfo(info);
     return type;

@@ -70,7 +70,7 @@ public class EnumType extends PrototypeObjectType {
    * @param elementsType the base type of the individual elements
    */
   EnumType(JSTypeRegistry registry, String name, Node source, JSType elementsType) {
-    super(registry, "enum{" + name + "}", /* implicitPrototype= */ null);
+    super(PrototypeObjectType.builder(registry).setName("enum{" + name + "}"));
     this.elementsType = new EnumElementType(registry, elementsType, name, this);
     this.source = source;
   }

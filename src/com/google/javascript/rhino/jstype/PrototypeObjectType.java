@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.ObjectType.PropertyOptionality.ALL_PROPS_ARE_REQUIRED;
 
@@ -71,7 +72,7 @@ public class PrototypeObjectType extends ObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String className;
-  private final PropertyMap properties;
+  private final PropertyMap properties = new PropertyMap();
   private final boolean nativeType;
   private final boolean anonymousType;
 
@@ -92,85 +93,85 @@ public class PrototypeObjectType extends ObjectType {
   private static final int MAX_PRETTY_PRINTED_PROPERTIES = 10;
 
   /**
-   * Creates an object type.
-   *
-   * @param className the name of the class.  May be {@code null} to
-   *        denote an anonymous class.
-   *
-   * @param implicitPrototype the implicit prototype
-   *        (a.k.a. {@code [[Prototype]]}) as defined by ECMA-262. If the
-   *        implicit prototype is {@code null} the implicit prototype will be
-   *        set to the {@link JSTypeNative#OBJECT_TYPE}.
+   * Creates an object type, allowing specification of the implicit prototype, whether the object is
+   * native, and any templatized types.
    */
-  PrototypeObjectType(JSTypeRegistry registry, String className,
-      ObjectType implicitPrototype) {
-    this(
-        registry,
-        className,
-        implicitPrototype,
-        false /* nativeType */,
-        null /* templateTypeMap */,
-        false /* anonymousType */);
-  }
+  PrototypeObjectType(Builder<?> builder) {
+    super(builder.registry, builder.templateTypeMap);
 
-  /**
-   * Creates an object type.
-   *
-   * @param className the name of the class.  May be {@code null} to
-   *        denote an anonymous class.
-   *
-   * @param implicitPrototype the implicit prototype
-   *        (a.k.a. {@code [[Prototype]]}) as defined by ECMA-262. If the
-   *        implicit prototype is {@code null} the implicit prototype will be
-   *        set to the {@link JSTypeNative#OBJECT_TYPE}.
-   * @param anonymousType True if the class is intended to be anonymous.
-   */
-  PrototypeObjectType(JSTypeRegistry registry, String className,
-      ObjectType implicitPrototype, boolean anonymousType) {
-    this(
-        registry,
-        className,
-        implicitPrototype,
-        false /* nativeType */,
-        null /* templateTypeMap */,
-        anonymousType);
-  }
+    this.className = builder.className;
 
-  /**
-   * Creates an object type, allowing specification of the implicit prototype,
-   * whether the object is native, and any templatized types.
-   */
-  PrototypeObjectType(JSTypeRegistry registry, String className,
-      ObjectType implicitPrototype, boolean nativeType,
-      TemplateTypeMap templateTypeMap) {
-    this(
-        registry,
-        className,
-        implicitPrototype,
-        nativeType,
-        templateTypeMap,
-        false /* anonymousType */);
-  }
+    this.nativeType = builder.nativeType;
+    this.anonymousType = builder.anonymousType;
 
-  /**
-   * Creates an object type, allowing specification of the implicit prototype,
-   * whether the object is native, and any templatized types.
-   */
-  private PrototypeObjectType(JSTypeRegistry registry, String className,
-      ObjectType implicitPrototype, boolean nativeType,
-      TemplateTypeMap templateTypeMap, boolean anonymousType) {
-    super(registry, templateTypeMap);
-    this.properties = new PropertyMap();
     this.properties.setParentSource(this);
 
-    this.className = className;
-    this.nativeType = nativeType;
-    this.anonymousType = anonymousType;
-    if (nativeType || implicitPrototype != null) {
-      setImplicitPrototype(implicitPrototype);
+    if (this.nativeType || builder.implicitPrototype != null) {
+      this.setImplicitPrototype(builder.implicitPrototype);
     } else {
-      setImplicitPrototype(registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE));
+      this.setImplicitPrototype(registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE));
     }
+
+    if (this.anonymousType) {
+      checkState(this.className == null);
+    }
+    checkNotNull(this.templateTypeMap);
+  }
+
+  static class Builder<T extends Builder<T>> {
+    final JSTypeRegistry registry;
+
+    private String className;
+    private ObjectType implicitPrototype;
+
+    private boolean nativeType;
+    private boolean anonymousType;
+
+    private TemplateTypeMap templateTypeMap;
+
+    Builder(JSTypeRegistry registry) {
+      this.registry = registry;
+
+      this.templateTypeMap = registry.getEmptyTemplateTypeMap();
+    }
+
+    final T setName(String x) {
+      this.className = x;
+      return castThis();
+    }
+
+    final T setImplicitPrototype(ObjectType x) {
+      this.implicitPrototype = x;
+      return castThis();
+    }
+
+    final T setNative(boolean x) {
+      this.nativeType = x;
+      return castThis();
+    }
+
+    final T setAnonymous(boolean x) {
+      this.anonymousType = x;
+      return castThis();
+    }
+
+    final T setTemplateTypeMap(TemplateTypeMap x) {
+      this.templateTypeMap = x;
+      return castThis();
+    }
+
+    @SuppressWarnings("unchecked")
+    final T castThis() {
+      return (T) this;
+    }
+
+    PrototypeObjectType build() {
+      return new PrototypeObjectType(this);
+    }
+  }
+
+  static Builder<?> builder(JSTypeRegistry registry) {
+    return new Builder<>(registry);
   }
 
   @Override

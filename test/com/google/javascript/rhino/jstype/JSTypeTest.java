@@ -3815,8 +3815,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   /** Tests object types. */
   @Test
   public void testObjectType() {
-    PrototypeObjectType objectType =
-        new PrototypeObjectType(registry, null, null);
+    PrototypeObjectType objectType = PrototypeObjectType.builder(registry).build();
 
     // isXxx
     assertThat(objectType.isAllType()).isFalse();
@@ -3860,7 +3859,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(objectType.toString()).isEqualTo("{...}");
     assertThat(objectType.getDisplayName()).isNull();
     assertType(objectType).getReferenceNameIsNull();
-    assertThat(new PrototypeObjectType(registry, "anObject", null).getDisplayName())
+    assertThat(PrototypeObjectType.builder(registry).setName("anObject").build().getDisplayName())
         .isEqualTo("anObject");
 
     Asserts.assertResolvesToSame(objectType);

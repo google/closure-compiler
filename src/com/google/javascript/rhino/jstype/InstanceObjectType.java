@@ -43,29 +43,43 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.rhino.Node;
 
-/**
- * An object type that is an instance of some function constructor.
- */
-class InstanceObjectType extends PrototypeObjectType {
+/** An object type that is an instance of some function constructor. */
+final class InstanceObjectType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;
 
   private final FunctionType constructor;
 
-  InstanceObjectType(JSTypeRegistry registry, FunctionType constructor) {
-    this(registry, constructor, false);
+  private InstanceObjectType(Builder builder) {
+    super(builder);
+    this.constructor = checkNotNull(builder.constructor);
   }
 
-  InstanceObjectType(JSTypeRegistry registry, FunctionType constructor, boolean isNativeType) {
-    this(registry, constructor, isNativeType, constructor.getTemplateTypeMap());
+  static final class Builder extends PrototypeObjectType.Builder<Builder> {
+    private FunctionType constructor;
+
+    Builder(JSTypeRegistry registry) {
+      super(registry);
+    }
+
+    Builder setConstructor(FunctionType x) {
+      this.constructor = x;
+      return this;
+    }
+
+    @Override
+    InstanceObjectType build() {
+      return new InstanceObjectType(this);
+    }
   }
 
-  InstanceObjectType(
-      JSTypeRegistry registry,
-      FunctionType constructor,
-      boolean isNativeType,
-      TemplateTypeMap templateTypeMap) {
-    super(registry, null, null, isNativeType, templateTypeMap);
-    this.constructor = checkNotNull(constructor);
+  static Builder builderForCtor(FunctionType ctor) {
+    return new Builder(ctor.registry)
+        .setName(ctor.getReferenceName())
+        .setImplicitPrototype(null) // This isn't shared by a function and it's instances.
+        .setNative(ctor.isNativeObjectType())
+        .setAnonymous(ctor.isAnonymous())
+        .setTemplateTypeMap(ctor.getTemplateTypeMap())
+        .setConstructor(ctor);
   }
 
   @Override

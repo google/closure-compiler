@@ -175,12 +175,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    * <p>Non-subclasses must go through {@link Builder} to create a new FunctionType.
    */
   FunctionType(Builder builder) {
-    super(
-        builder.registry,
-        builder.name,
-        builder.registry.getNativeObjectType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
-        builder.isNativeType(),
-        builder.templateTypeMap);
+    super(builder);
     setPrettyPrint(true);
 
     Node source = builder.sourceNode;
@@ -193,7 +188,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         this.typeOfThis =
             builder.typeOfThis != null
                 ? builder.typeOfThis
-                : new InstanceObjectType(registry, this, builder.isNativeType());
+                : InstanceObjectType.builderForCtor(this).build();
         break;
       case ORDINARY:
         this.typeOfThis =
@@ -205,7 +200,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         this.typeOfThis =
             builder.typeOfThis != null
                 ? builder.typeOfThis
-                : new InstanceObjectType(registry, this, builder.isNativeType());
+                : InstanceObjectType.builderForCtor(this).build();
         break;
     }
     this.call = builder.buildArrowType();
@@ -437,12 +432,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         setPrototypeNoCheck(registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE), null);
       } else {
         setPrototype(
-            new PrototypeObjectType(
-                registry,
-                getReferenceName() + ".prototype",
-                registry.getNativeObjectType(OBJECT_TYPE),
-                isNativeObjectType(),
-                null),
+            PrototypeObjectType.builder(registry)
+                .setName(getReferenceName() + ".prototype")
+                .setImplicitPrototype(registry.getNativeObjectType(OBJECT_TYPE))
+                .setNative(isNativeObjectType())
+                .build(),
             null);
       }
     }
@@ -488,7 +482,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         // Bail out for cases like Foo.prototype = new Foo();
         return;
       }
-      baseType = new PrototypeObjectType(registry, getReferenceName() + ".prototype", baseType);
+      baseType =
+          PrototypeObjectType.builder(registry)
+              .setName(getReferenceName() + ".prototype")
+              .setImplicitPrototype(baseType)
+              .build();
     }
     setPrototype(baseType, propertyNode);
   }
@@ -1554,22 +1552,18 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    *
    * @author nicksantos@google.com (Nick Santos)
    */
-  public static final class Builder {
+  public static final class Builder extends PrototypeObjectType.Builder<Builder> {
 
     // Bit masks for various boolean properties
     private static final int IS_ABSTRACT = 0x1;
-    private static final int IS_NATIVE = 0x2;
     private static final int INFERRED_RETURN_TYPE = 0x4;
     private static final int RETURNS_OWN_INSTANCE_TYPE = 0x8;
 
-    private final JSTypeRegistry registry;
-    private String name = null;
     private Node sourceNode = null;
     private Node parametersNode = null;
     private JSType returnType = null;
     private JSType typeOfThis = null;
     private ObjectType setPrototypeBasedOn = null;
-    private TemplateTypeMap templateTypeMap = null;
     private Set<TemplateType> constructorOnlyKeys = ImmutableSet.of();
     private Kind kind = Kind.ORDINARY;
     private int properties = 0;
@@ -1577,13 +1571,14 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     private FunctionType canonicalRepresentation = null;
 
     private Builder(JSTypeRegistry registry) {
-      this.registry = registry;
+      super(registry);
+
+      this.setImplicitPrototype(registry.getNativeObjectType(JSTypeNative.U2U_CONSTRUCTOR_TYPE));
     }
 
     /** Set the name of the function type. */
     public Builder withName(String name) {
-      this.name = name;
-      return this;
+      return setName(name);
     }
 
     /** Set the source node of the function type. */
@@ -1641,19 +1636,13 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     /** Set the template name. */
     public Builder withTemplateKeys(ImmutableList<TemplateType> templateKeys) {
-      this.templateTypeMap =
-          registry.getEmptyTemplateTypeMap().copyWithExtension(templateKeys, ImmutableList.of());
-      return this;
+      return this.setTemplateTypeMap(
+          registry.getEmptyTemplateTypeMap().copyWithExtension(templateKeys, ImmutableList.of()));
     }
 
     /** Set the template name. */
     public Builder withTemplateKeys(TemplateType... templateKeys) {
       return withTemplateKeys(ImmutableList.copyOf(templateKeys));
-    }
-
-    Builder withTemplateTypeMap(TemplateTypeMap templateTypeMap) {
-      this.templateTypeMap = templateTypeMap;
-      return this;
     }
 
     /**
@@ -1685,12 +1674,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     /** Make this a native type. */
     Builder forNativeType() {
-      this.properties = this.properties | IS_NATIVE;
-      return this;
-    }
-
-    private boolean isNativeType() {
-      return (this.properties & IS_NATIVE) != 0;
+      return this.setNative(true);
     }
 
     /** Mark abstract method. */
@@ -1729,24 +1713,24 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     /** Copies all the information from another function type. */
     public Builder copyFromOtherFunction(FunctionType otherType) {
-      int isNative = otherType.isNativeObjectType() ? IS_NATIVE : 0;
       int isAbstract = otherType.isAbstract() ? IS_ABSTRACT : 0;
       int inferredReturnType = otherType.isReturnTypeInferred() ? INFERRED_RETURN_TYPE : 0;
-      this.name = otherType.getReferenceName();
+      this.setName(otherType.getReferenceName())
+          .setNative(otherType.isNativeObjectType())
+          .setTemplateTypeMap(otherType.getTemplateTypeMap());
       this.sourceNode = otherType.getSource();
       this.parametersNode = otherType.getParametersNode();
       this.returnType = otherType.getReturnType();
       this.typeOfThis = otherType.getTypeOfThis();
-      this.templateTypeMap = otherType.getTemplateTypeMap();
       this.kind = otherType.getKind();
-      this.properties = isNative | isAbstract | inferredReturnType;
+      this.properties = isAbstract | inferredReturnType;
       this.primitiveId = otherType.getClosurePrimitive();
       return this;
     }
 
     /** Constructs a new function type. */
+    @Override
     public FunctionType build() {
-      boolean isNative = (properties & IS_NATIVE) != 0;
       boolean returnsOwnInstanceType = (properties & RETURNS_OWN_INSTANCE_TYPE) != 0;
       boolean hasConstructorOnlyKeys = !constructorOnlyKeys.isEmpty();
 
@@ -1767,8 +1751,9 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       }
       if (hasConstructorOnlyKeys) {
         ft.setInstanceType(
-            new InstanceObjectType(
-                registry, ft, isNative, templateTypeMap.copyWithoutKeys(constructorOnlyKeys)));
+            InstanceObjectType.builderForCtor(ft)
+                .setTemplateTypeMap(ft.templateTypeMap.copyWithoutKeys(this.constructorOnlyKeys))
+                .build());
       }
       return ft;
     }
