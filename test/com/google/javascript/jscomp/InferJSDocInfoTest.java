@@ -58,12 +58,6 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    // TODO(b/33104006): remove this override.
-    return 2;
-  }
-
-  @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
@@ -495,7 +489,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   }
 
   @Test
-  public void testJSDocIsNotPropagatedToFunctionTypesFromMethodAssigments() {
+  public void testJSDocIsPropagatedToFunctionTypesFromMethodAssigments() {
     // Given
     testSame(
         srcs(
@@ -516,7 +510,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
     assertThat(xType.toString()).isEqualTo("function(this:Foo): number");
 
     // Then
-    assertThat(xType.getJSDocInfo()).isNull();
+    assertThat(xType.getJSDocInfo().getBlockDescription()).isEqualTo("I'm a method.");
   }
 
   @Test
@@ -682,6 +676,59 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
                 "",
                 "var x = new Foo();" // Just a hook to access type "Foo".
                 )));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertThat(xType.toString()).isEqualTo("Foo");
+
+    // Then
+    assertThat(xType.getPropertyJSDocInfo("field").getBlockDescription()).isEqualTo("I'm a field.");
+  }
+
+  @Test
+  public void testJSDocIsNotPropagatedFromSuppressionsOnFieldProperties_Es5() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {",
+                "  /**",
+                "   * I'm a field.",
+                "   * @const",
+                "   */",
+                "   this.field = 5;",
+                "};",
+                "",
+                "var x = new Foo();", // Just a hook to access type "Foo".
+                "/** @suppress {checkTypes} */",
+                "x.field = 'test';")));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertThat(xType.toString()).isEqualTo("Foo");
+
+    // Then
+    assertThat(xType.getPropertyJSDocInfo("field").getBlockDescription()).isEqualTo("I'm a field.");
+  }
+
+  @Test
+  public void testJSDocIsNotPropagatedFromSuppressionsOnEarlyRefToFieldProperties_Es5() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/** @param {!Foo} x */",
+                "function f(x) {",
+                "  /** @suppress {checkTypes} */",
+                "  x.field = 'test';",
+                "}",
+                "/** @constructor */",
+                "function Foo() {",
+                "  /**",
+                "   * I'm a field.",
+                "   * @const",
+                "   */",
+                "   this.field = 5;",
+                "};")));
 
     ObjectType xType = (ObjectType) inferredTypeOfName("x");
     assertThat(xType.toString()).isEqualTo("Foo");
