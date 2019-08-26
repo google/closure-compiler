@@ -1637,7 +1637,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     /** Set the template name. */
     public Builder withTemplateKeys(ImmutableList<TemplateType> templateKeys) {
       return this.setTemplateTypeMap(
-          registry.getEmptyTemplateTypeMap().copyWithExtension(templateKeys, ImmutableList.of()));
+              registry
+                  .getEmptyTemplateTypeMap()
+                  .copyWithExtension(templateKeys, ImmutableList.of()))
+          // TODO(nickreid): This value should only consider ctor only keys.
+          .setTemplateParamCount(templateKeys.size());
     }
 
     /** Set the template name. */
@@ -1717,7 +1721,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       int inferredReturnType = otherType.isReturnTypeInferred() ? INFERRED_RETURN_TYPE : 0;
       this.setName(otherType.getReferenceName())
           .setNative(otherType.isNativeObjectType())
-          .setTemplateTypeMap(otherType.getTemplateTypeMap());
+          .setTemplateTypeMap(otherType.getTemplateTypeMap())
+          .setTemplateParamCount(otherType.getTemplateParamCount());
       this.sourceNode = otherType.getSource();
       this.parametersNode = otherType.getParametersNode();
       this.returnType = otherType.getReturnType();
@@ -1753,6 +1758,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         ft.setInstanceType(
             InstanceObjectType.builderForCtor(ft)
                 .setTemplateTypeMap(ft.templateTypeMap.copyWithoutKeys(this.constructorOnlyKeys))
+                .setTemplateParamCount(ft.getTemplateParamCount() - this.constructorOnlyKeys.size())
                 .build());
       }
       return ft;

@@ -79,6 +79,10 @@ final class InstanceObjectType extends PrototypeObjectType {
         .setNative(ctor.isNativeObjectType())
         .setAnonymous(ctor.isAnonymous())
         .setTemplateTypeMap(ctor.getTemplateTypeMap())
+        // Recall that in ES5 code, instance and constructor template parameters were
+        // indistinguishable. That asumption is maintained here by deault, but later code may
+        // may overwrite the template parameter count.
+        .setTemplateParamCount(ctor.getTemplateParamCount())
         .setConstructor(ctor);
   }
 

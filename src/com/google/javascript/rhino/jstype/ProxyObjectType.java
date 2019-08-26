@@ -341,6 +341,11 @@ public class ProxyObjectType extends ObjectType {
     return referencedObjType == null ? null : referencedObjType.getTemplateTypes();
   }
 
+  @Override
+  public int getTemplateParamCount() {
+    return referencedType.getTemplateParamCount();
+  }
+
   public final <T> T visitReferenceType(Visitor<T> visitor) {
     return referencedType.visit(visitor);
   }

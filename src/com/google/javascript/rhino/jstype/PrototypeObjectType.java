@@ -72,6 +72,7 @@ public class PrototypeObjectType extends ObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String className;
+  private final int templateParamCount;
   private final PropertyMap properties = new PropertyMap();
   private final boolean nativeType;
   private final boolean anonymousType;
@@ -100,7 +101,7 @@ public class PrototypeObjectType extends ObjectType {
     super(builder.registry, builder.templateTypeMap);
 
     this.className = builder.className;
-
+    this.templateParamCount = builder.templateParamCount;
     this.nativeType = builder.nativeType;
     this.anonymousType = builder.anonymousType;
 
@@ -116,6 +117,8 @@ public class PrototypeObjectType extends ObjectType {
       checkState(this.className == null);
     }
     checkNotNull(this.templateTypeMap);
+    // Also guarantees `templateParamCount >= 0`.
+    checkState(this.templateTypeMap.size() >= this.templateParamCount);
   }
 
   static class Builder<T extends Builder<T>> {
@@ -128,6 +131,7 @@ public class PrototypeObjectType extends ObjectType {
     private boolean anonymousType;
 
     private TemplateTypeMap templateTypeMap;
+    private int templateParamCount;
 
     Builder(JSTypeRegistry registry) {
       this.registry = registry;
@@ -157,6 +161,11 @@ public class PrototypeObjectType extends ObjectType {
 
     final T setTemplateTypeMap(TemplateTypeMap x) {
       this.templateTypeMap = x;
+      return castThis();
+    }
+
+    final T setTemplateParamCount(int x) {
+      this.templateParamCount = x;
       return castThis();
     }
 
@@ -360,6 +369,11 @@ public class PrototypeObjectType extends ObjectType {
   final void setImplicitPrototype(ObjectType implicitPrototype) {
     checkState(!hasCachedValues());
     this.implicitPrototypeFallback = implicitPrototype;
+  }
+
+  @Override
+  public final int getTemplateParamCount() {
+    return this.templateParamCount;
   }
 
   @Override

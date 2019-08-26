@@ -539,12 +539,25 @@ public abstract class JSType implements Serializable {
     return templateTypeMap;
   }
 
-  public final ImmutableSet<JSType> getTypeParameters() {
-    ImmutableSet.Builder<JSType> params = ImmutableSet.builder();
-    for (TemplateType type : getTemplateTypeMap().getTemplateKeys()) {
-      params.add(type);
-    }
-    return params.build();
+  /**
+   * Return, in order, the sequence of parameters declared for this type.
+   *
+   * <p>In general, this value corresponds to an element for every `@template` declaration on the
+   * type definition. It does not include template parameters from superclasses or superinterfaces.
+   */
+  public final ImmutableList<TemplateType> getTypeParameters() {
+    TemplateTypeMap map = getTemplateTypeMap();
+    return map.getTemplateKeys().subList(map.size() - getTemplateParamCount(), map.size());
+  }
+
+  /**
+   * Return the number of template parameters declared for this type.
+   *
+   * <p>In general, this value corresponds to the number of `@template` declarations on the type
+   * definition. It does not include template parameters from superclasses or superinterfaces.
+   */
+  public int getTemplateParamCount() {
+    return 0;
   }
 
   /**
