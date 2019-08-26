@@ -437,7 +437,11 @@ public final class FeatureSet implements Serializable {
     }
   }
 
-  public static FeatureSet latest() {
+  public static FeatureSet all() {
     return TYPESCRIPT;
+  }
+
+  public static FeatureSet latest() {
+    return ES_NEXT;
   }
 }

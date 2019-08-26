@@ -72,7 +72,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
 
         @Override
         protected FeatureSet featureSet() {
-          return FeatureSet.latest().withoutTypes();
+          return FeatureSet.latest();
         }
       };
 
@@ -104,7 +104,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
 
         @Override
         protected FeatureSet featureSet() {
-          return FeatureSet.latest().withoutTypes();
+          return FeatureSet.latest();
         }
       };
 
@@ -117,7 +117,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
 
         @Override
         protected FeatureSet featureSet() {
-          return FeatureSet.latest().withoutTypes();
+          return FeatureSet.latest();
         }
       };
 
@@ -131,7 +131,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
 
         @Override
         protected FeatureSet featureSet() {
-          return FeatureSet.latest().withoutTypes();
+          return FeatureSet.latest();
         }
       };
 
@@ -144,7 +144,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
 
         @Override
         protected FeatureSet featureSet() {
-          return FeatureSet.latest().withoutTypes();
+          return FeatureSet.latest();
         }
       };
 
@@ -160,7 +160,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
 
         @Override
         protected FeatureSet featureSet() {
-          return FeatureSet.latest().withoutTypes();
+          return FeatureSet.latest();
         }
       };
 }
