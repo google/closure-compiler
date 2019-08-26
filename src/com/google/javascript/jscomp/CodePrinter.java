@@ -151,61 +151,42 @@ public final class CodePrinter {
 
     /**
      * Reports to the code consumer that the given line has been cut at the given position, i.e. a
-     * \n has been inserted there. Or that a cut has been undone, i.e. a previously inserted \n has
-     * been removed. All mappings in the source maps after that position will be renormalized as
-     * needed.
+     * \n has been inserted there. All mappings in the source maps after that position will be
+     * renormalized as needed.
      */
-    void reportLineCutOrJoin(int lineIndex, int charIndex, boolean isCut) {
+    void reportLineCut(int lineIndex, int charIndex) {
       if (createSrcMap) {
         for (Mapping mapping : allMappings) {
-          mapping.start =
-              convertPositionAfterLineCutOrJoin(mapping.start, lineIndex, charIndex, isCut);
+          mapping.start = convertPositionAfterLineCut(mapping.start, lineIndex, charIndex);
 
           if (mapping.end != null) {
-            mapping.end =
-                convertPositionAfterLineCutOrJoin(mapping.end, lineIndex, charIndex, isCut);
+            mapping.end = convertPositionAfterLineCut(mapping.end, lineIndex, charIndex);
           }
         }
       }
     }
 
     /**
-     * Converts the given position by normalizing it against the insertion or removal of a newline
-     * at the given line and character position.
+     * Converts the given position by normalizing it against the insertion at the given line and
+     * character position.
      *
      * @param position The existing position before the newline was inserted.
      * @param lineIndex The index of the line at which the newline was inserted.
      * @param characterPosition The position on the line at which the newline was inserted.
-     * @param isCut True if a newline was inserted, false if a newline was removed.
      * @return The normalized position.
      * @throws IllegalStateException if an attempt to reverse a line cut is made on a previous line
      *     rather than the current line.
      */
-    private static FilePosition convertPositionAfterLineCutOrJoin(
-        FilePosition position, int lineIndex, int characterPosition, boolean isCut) {
+    private static FilePosition convertPositionAfterLineCut(
+        FilePosition position, int lineIndex, int characterPosition) {
       int originalLine = position.getLine();
       int originalChar = position.getColumn();
-      if (isCut) {
-        if (originalLine == lineIndex && originalChar >= characterPosition) {
-          // If the position falls on the line itself, then normalize it
-          // if it falls at or after the place the newline was inserted.
-          return new FilePosition(
-              originalLine + 1, originalChar - characterPosition);
-        } else {
-          return position;
-        }
+      if (originalLine == lineIndex && originalChar >= characterPosition) {
+        // If the position falls on the line itself, then normalize it
+        // if it falls at or after the place the newline was inserted.
+        return new FilePosition(originalLine + 1, originalChar - characterPosition);
       } else {
-        if (originalLine == lineIndex) {
-          return new FilePosition(
-              originalLine - 1, originalChar + characterPosition);
-        } else if (originalLine > lineIndex) {
-          // Not supported, can only undo a cut on the most recent line. To
-          // do this on a previous lines would require reevaluating the cut
-          // positions on all subsequent lines.
-          throw new IllegalStateException("Cannot undo line cut on a previous line.");
-        } else {
-          return position;
-        }
+        return position;
       }
     }
 
@@ -561,12 +542,8 @@ public final class CodePrinter {
     // concatentated, the sourcemaps of later files are still valid.
     private final boolean preferLineBreakAtEndOfFile;
 
-    // TODO(b/121399324): Consider making all this state obsolete.
     private int lineStartPosition = 0;
     private int preferredBreakPosition = 0;
-    private int prevCutPosition = 0;
-    private int prevLineStartPosition = 0;
-    private boolean prevCutPositionInTemplateLit = false;
 
   /**
    * @param lineBreak break the lines a bit more aggressively
@@ -594,13 +571,10 @@ public final class CodePrinter {
         return;
       }
 
-      prevCutPosition = code.length();
-      prevLineStartPosition = lineStartPosition;
       code.append('\n');
       lineLength = 0;
       lineIndex++;
       lineStartPosition = code.length();
-      prevCutPositionInTemplateLit = this.isInTemplateLiteral();
     }
 
     @Override
@@ -640,13 +614,10 @@ public final class CodePrinter {
           && preferredBreakPosition < lineStartPosition + lineLength) {
         // If the preferred break position is on the current line.
         code.insert(preferredBreakPosition, '\n');
-        prevCutPosition = preferredBreakPosition;
-        reportLineCutOrJoin(lineIndex, preferredBreakPosition - lineStartPosition, true);
+        reportLineCut(lineIndex, preferredBreakPosition - lineStartPosition);
         lineIndex++;
         lineLength -= (preferredBreakPosition - lineStartPosition);
-        prevLineStartPosition = lineStartPosition;
         lineStartPosition = preferredBreakPosition + 1; // Jump over the inserted newline.
-        prevCutPositionInTemplateLit = this.isInTemplateLiteral();
       } else {
         startNewLine();
       }
@@ -661,31 +632,6 @@ public final class CodePrinter {
     void endFile() {
       super.endFile();
       if (!preferLineBreakAtEndOfFile) {
-        return;
-      }
-
-      if (prevCutPositionInTemplateLit) {
-        // We can't manipulate newlines in template literals.
-      } else if (lineLength > lineLengthThreshold / 2) {
-        // The line is too long to bother rearranging things.
-      } else if (prevCutPosition > 0) {
-        // Shift the previous break to end of file by replacing it with a
-        // <space> and adding a new break at end of file. Adding the space
-        // handles cases like instanceof\nfoo. (it would be nice to avoid this)
-        code.setCharAt(prevCutPosition, ' ');
-        lineStartPosition = prevLineStartPosition;
-        lineLength = code.length() - lineStartPosition;
-
-        // We need +1 to account for the space added few lines above.
-        int prevLineEndPosition = prevCutPosition - prevLineStartPosition + 1;
-        reportLineCutOrJoin(lineIndex, prevLineEndPosition, false);
-
-        lineIndex--;
-        prevCutPosition = 0;
-        prevLineStartPosition = 0;
-      } else {
-        // A small file with no line breaks. We do nothing in this case to avoid excessive line
-        // breaks. It's not ideal if a lot of these pile up, but that is reasonably unlikely.
         return;
       }
 
