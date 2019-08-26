@@ -35,8 +35,8 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -118,7 +118,7 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private final Deque<Continuation> worklist = new ArrayDeque<>();
 
-  private final Map<Var, VarInfo> varInfoMap = new HashMap<>();
+  private final Map<Var, VarInfo> varInfoMap = new IdentityHashMap<>();
 
   private final Set<String> pinnedPropertyNames = new HashSet<>(IMPLICITLY_USED_PROPERTIES);
 
