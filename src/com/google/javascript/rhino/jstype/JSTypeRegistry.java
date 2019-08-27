@@ -490,6 +490,7 @@ public class JSTypeRegistry implements Serializable {
         JSTypeNative.ASYNC_GENERATOR_TYPE, asyncGeneratorFunctionType.getInstanceType());
 
     FunctionType ithenableFunctionType = nativeInterface("IThenable", iThenableTemplateKey);
+    ithenableFunctionType.setStruct();
     registerNativeType(JSTypeNative.I_THENABLE_FUNCTION_TYPE, ithenableFunctionType);
     ObjectType ithenableType = ithenableFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.I_THENABLE_TYPE, ithenableType);

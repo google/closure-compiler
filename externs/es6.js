@@ -1137,6 +1137,7 @@ var Thenable;
  * {@see goog.Thenable} inherits from this making all promises
  * interoperate.
  * @interface
+ * @struct
  * @template TYPE
  */
 function IThenable() {}
