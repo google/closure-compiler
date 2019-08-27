@@ -235,7 +235,7 @@ public final class ClosureBundler {
   private enum EscapeMode {
     ESCAPED {
       @Override void append(String s, Appendable out) throws IOException {
-        out.append(SourceCodeEscapers.javascriptEscaper().escape(s));
+        SourceCodeEscapers.appendWithJavascriptEscaper(s, out);
       }
     },
     NORMAL {
