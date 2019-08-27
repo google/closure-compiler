@@ -7119,4 +7119,14 @@ public final class IntegrationTest extends IntegrationTestCase {
               "}")
         });
   }
+
+  @Test
+  public void testGoogReflectObjectPropertyNoArgs() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    // options.setCheckTypes(true);
+    // options.setChecksOnly(true);
+
+    test(options, new String[] {"goog.reflect.objectProperty();"}, (String[]) null);
+  }
 }

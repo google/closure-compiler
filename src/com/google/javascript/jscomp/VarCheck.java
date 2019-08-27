@@ -387,6 +387,7 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
           "Float32Array",
           "Function",
           "Infinity",
+          "JSCompiler_renameProperty",
           "Map",
           "Math",
           "Number",
