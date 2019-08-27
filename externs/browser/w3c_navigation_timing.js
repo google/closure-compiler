@@ -145,6 +145,15 @@ function PerformanceLongTaskTiming() {}
 /** @type {!Array<!TaskAttributionTiming>} */
 PerformanceLongTaskTiming.prototype.attribution;
 
+/**
+ * https://wicg.github.io/layout-instability/#sec-layout-shift
+ * @constructor
+ * @extends {PerformanceEntry}
+ */
+function LayoutShift() {}
+/** @type {number} */ LayoutShift.prototype.value;
+/** @type {boolean} */ LayoutShift.prototype.hadRecentInput;
+/** @type {number} */ LayoutShift.prototype.lastInputTime;
 
 /** @constructor */
 function Performance() {}
