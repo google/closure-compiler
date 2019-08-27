@@ -694,8 +694,11 @@ public class Scanner {
   }
 
   private Token scanIdentifierOrKeyword(int beginToken, char ch) {
-    StringBuilder valueBuilder = new StringBuilder();
-    valueBuilder.append(ch);
+    // NOTE: This code previously used a StringBuilder to collect the characters of the identifier
+    // or keyword. Recording the staring position and using contents.substring() below instead was
+    // found to eliminate 1.84% of all JVM "frequently collected garbage" in the compilation of a
+    // large project.
+    int valueStartIndex = index - 1;
 
     boolean containsUnicodeEscape = ch == '\\';
     boolean bracedUnicodeEscape = false;
@@ -724,11 +727,11 @@ public class Scanner {
       }
 
       // Add character to token
-      valueBuilder.append(nextChar());
+      nextChar();
       ch = peekChar();
     }
 
-    String value = valueBuilder.toString();
+    String value = contents.substring(valueStartIndex, index);
 
     // Process unicode escapes.
     if (containsUnicodeEscape) {
