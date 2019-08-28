@@ -2113,9 +2113,23 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns a collection of all type nodes that are a part of this JSDocInfo. This
-   * includes @type, @this, @extends, @implements, @param, @throws, @lends, and @return. Any future
-   * type specific JSDoc should make sure to add the appropriate nodes here.
+   * Returns a collection of all type nodes that are a part of this JSDocInfo.
+   *
+   * <p>This includes:
+   *
+   * <ul>
+   *   <li>@extends
+   *   <li>@implements
+   *   <li>@lend
+   *   <li>@param
+   *   <li>@return
+   *   <li>@template
+   *   <li>@this
+   *   <li>@throws
+   *   <li>@type
+   * </ul>
+   *
+   * Any future type specific JSDoc should make sure to add the appropriate nodes here.
    *
    * @return collection of all type nodes
    */
@@ -2169,6 +2183,14 @@ public class JSDocInfo implements Serializable {
 
       if (info.lendsName != null) {
         nodes.add(info.lendsName.getRoot());
+      }
+
+      if (info.templateTypeNames != null) {
+        for (JSTypeExpression upperBound : info.templateTypeNames.values()) {
+          if (upperBound != null) {
+            nodes.add(upperBound.getRoot());
+          }
+        }
       }
     }
 

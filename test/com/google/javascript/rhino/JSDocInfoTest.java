@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.INHERITED;
@@ -616,7 +617,7 @@ public class JSDocInfoTest {
 
   // https://github.com/google/closure-compiler/issues/2328
   @Test
-  public void testIssue2328() {
+  public void testGetTypeNodes_excludesNull() {
     JSDocInfo info = new JSDocInfo();
 
     // should be added to implemented interfaces
@@ -624,6 +625,27 @@ public class JSDocInfoTest {
 
     Collection<Node> nodes = info.getTypeNodes();
     assertThat(nodes).isEmpty();
+  }
+
+  @Test
+  public void testGetTypeNodes_includesTemplateTypeBounds() {
+    // Given
+    JSDocInfo info = new JSDocInfo();
+
+    // When
+    info.declareTemplateTypeName("A", null); // Uses `?` as the bounding expression by default.
+    info.declareTemplateTypeName("B", fromString("Foo"));
+    info.declareTemplateTypeName("C", fromString("Bar"));
+
+    // Then
+    Collection<Node> upperBoundRoots =
+        info.getTemplateTypes().values().stream()
+            .map(JSTypeExpression::getRoot)
+            .collect(toImmutableList());
+    Collection<Node> nodes = info.getTypeNodes();
+
+    assertThat(nodes).hasSize(3);
+    assertThat(nodes).containsExactlyElementsIn(upperBoundRoots);
   }
 
   @Test
