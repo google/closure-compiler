@@ -48,6 +48,11 @@ public final class CodePrinter {
   private abstract static class MappedCodePrinter extends CodeConsumer {
     private final Deque<Mapping> mappings;
     private final List<Mapping> allMappings;
+    // The ordered list of finalized mappings since the last line break. See #reportLineCut.
+    private final List<Mapping> completeMappings;
+    // The index into allMappings to find the mappings added since the last line
+    // break. See #reportLineCut.
+    private int firstCandidateMappingForCut = 0;
     private final boolean createSrcMap;
     private final SourceMap.DetailLevel sourceMapDetailLevel;
     protected final StringBuilder code = new StringBuilder(1024);
@@ -66,6 +71,7 @@ public final class CodePrinter {
       this.sourceMapDetailLevel = sourceMapDetailLevel;
       this.mappings = createSrcMap ? new ArrayDeque<Mapping>() : null;
       this.allMappings = createSrcMap ? new ArrayList<Mapping>() : null;
+      this.completeMappings = createSrcMap ? new ArrayList<Mapping>() : null;
     }
 
     /**
@@ -131,6 +137,7 @@ public final class CodePrinter {
         int index = getCurrentCharIndex();
         checkState(line >= 0);
         mapping.end = new FilePosition(line, index);
+        completeMappings.add(mapping);
       }
     }
 
@@ -156,13 +163,25 @@ public final class CodePrinter {
      */
     void reportLineCut(int lineIndex, int charIndex) {
       if (createSrcMap) {
-        for (Mapping mapping : allMappings) {
-          mapping.start = convertPositionAfterLineCut(mapping.start, lineIndex, charIndex);
+        // To avoid iterating over every mapping, every time we cut a line (which can get
+        // excessively expensive for large files), we keep track of mappings that must be
+        // before the next cut. For the start of mappings, we can use the order in allMappings.
+        // However, mapping ends do not have their own entry in the list so we must track those
+        // separately.
 
-          if (mapping.end != null) {
-            mapping.end = convertPositionAfterLineCut(mapping.end, lineIndex, charIndex);
-          }
+        int mappingCount = allMappings.size();
+        for (int i = firstCandidateMappingForCut; i < mappingCount; i++) {
+          Mapping mapping = allMappings.get(i);
+          mapping.start = convertPositionAfterLineCut(mapping.start, lineIndex, charIndex);
         }
+        firstCandidateMappingForCut = mappingCount;
+
+        for (Mapping mapping : completeMappings) {
+          mapping.end = convertPositionAfterLineCut(mapping.end, lineIndex, charIndex);
+        }
+        // To avoid iterating over every mapping, every time we cut a line, keep track of
+        // mappings that must end before the next cut.
+        completeMappings.clear();
       }
     }
 
