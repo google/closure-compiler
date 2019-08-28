@@ -10294,9 +10294,9 @@ chrome.bluetoothPrivate.onPairing;
 
 /**
  * @param {string} deviceAddress
- * @param {function(number, string): void=} opt_callback
+ * @param {function(): void=} callback
  */
-chrome.bluetoothPrivate.pair = function(deviceAddress, opt_callback) {};
+chrome.bluetoothPrivate.pair = function(deviceAddress, callback) {};
 
 
 /**
