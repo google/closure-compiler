@@ -83,6 +83,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     super.setUp();
     enableNormalize();
     enableGatherExternProperties();
+    onlyValidateNoNewGettersAndSetters();
     keepLocals = true;
     keepGlobals = false;
     allowRemovalOfExternProperties = false;

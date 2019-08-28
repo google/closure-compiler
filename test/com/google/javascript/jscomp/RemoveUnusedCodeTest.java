@@ -68,6 +68,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     super.setUp();
     enableNormalize();
     enableGatherExternProperties();
+    onlyValidateNoNewGettersAndSetters();
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
   }

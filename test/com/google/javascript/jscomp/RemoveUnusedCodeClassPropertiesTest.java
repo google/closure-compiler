@@ -98,6 +98,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     super.setUp();
     enableNormalize();
     enableGatherExternProperties();
+    onlyValidateNoNewGettersAndSetters();
     disableTypeCheck();
   }
 
