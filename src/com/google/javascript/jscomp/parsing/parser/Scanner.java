@@ -37,6 +37,7 @@ public class Scanner {
   private final boolean parseTypeSyntax;
   private final ErrorReporter errorReporter;
   private final SourceFile source;
+  private final LineNumberScanner lineNumberScanner;
   private final String contents;
   private final int contentsLength;
   private final ArrayList<Token> currentTokens = new ArrayList<>();
@@ -62,6 +63,7 @@ public class Scanner {
     this.errorReporter = errorReporter;
     this.commentRecorder = commentRecorder;
     this.source = file;
+    this.lineNumberScanner = new LineNumberScanner(source);
     // To help reason about the expected JVM performance unwrap "file" values.
     // The scanner is key to the parsing speed.
     this.contents = file.contents;
@@ -74,10 +76,6 @@ public class Scanner {
     void recordComment(Comment.Type type, SourceRange range, String value);
   }
 
-  private LineNumberTable getLineNumberTable() {
-    return this.getFile().lineNumberTable;
-  }
-
   public SourceFile getFile() {
     return source;
   }
@@ -88,21 +86,22 @@ public class Scanner {
         : peekToken().location.start.offset;
   }
 
-  public void setOffset(int index) {
+  public void setPosition(SourcePosition position) {
+    lineNumberScanner.rewindTo(position);
     currentTokens.clear();
-    this.index = index;
+    this.index = position.offset;
   }
 
   public SourcePosition getPosition() {
-    return getPosition(getOffset());
+    return currentTokens.isEmpty() ? getPosition(index) : peekToken().location.start;
   }
 
   private SourcePosition getPosition(int offset) {
-    return getLineNumberTable().getSourcePosition(offset);
+    return lineNumberScanner.getSourcePosition(offset);
   }
 
   private SourceRange getTokenRange(int startOffset) {
-    return getLineNumberTable().getSourceRange(startOffset, index);
+    return lineNumberScanner.getSourceRange(startOffset, index);
   }
 
   public Token nextToken() {
@@ -111,8 +110,9 @@ public class Scanner {
   }
 
   private void clearTokenLookahead() {
-    index = getOffset();
-    currentTokens.clear();
+    if (!currentTokens.isEmpty()) {
+      setPosition(peekToken().location.start);
+    }
   }
 
   public LiteralToken nextRegularExpressionLiteralToken() {
@@ -394,7 +394,7 @@ public class Scanner {
     while (!isAtEnd() && !isLineTerminator(peekChar())) {
       nextChar();
     }
-    SourceRange range = getLineNumberTable().getSourceRange(startOffset, index);
+    SourceRange range = lineNumberScanner.getSourceRange(startOffset, index);
     String value = this.contents.substring(startOffset, index);
     recordComment(type, range, value);
   }
@@ -422,7 +422,7 @@ public class Scanner {
           type = Comment.Type.IMPORTANT;
         }
       }
-      SourceRange range = getLineNumberTable().getSourceRange(startOffset, index);
+      SourceRange range = lineNumberScanner.getSourceRange(startOffset, index);
       String value = this.contents.substring(startOffset, index);
       recordComment(type, range, value);
     } else {

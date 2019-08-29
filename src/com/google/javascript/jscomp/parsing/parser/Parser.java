@@ -3168,14 +3168,14 @@ public class Parser {
     //     before the tree to correctly detect implicit semicolons, but it doesn't matter for the
     //     current use case.
     lastSourcePosition = tree.location.start;
-    scanner.setOffset(lastSourcePosition.offset);
+    scanner.setPosition(lastSourcePosition);
   }
 
   private void resetScannerAfter(ParseTree parseTree) {
     lastSourcePosition = parseTree.location.end;
     // NOTE: The "end" position for a parseTree actually points to the first character after the
     //     last token in the tree, so this is not an off-by-one error.
-    scanner.setOffset(lastSourcePosition.offset);
+    scanner.setPosition(lastSourcePosition);
   }
 
   private boolean peekAssignmentOperator() {

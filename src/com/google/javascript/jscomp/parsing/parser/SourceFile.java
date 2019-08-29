@@ -19,16 +19,14 @@ package com.google.javascript.jscomp.parsing.parser;
 /**
  * A source file.
  *
- * Immutable.
+ * <p>Immutable.
  */
 public final class SourceFile {
   public final String name;
   public final String contents;
-  public final LineNumberTable lineNumberTable;
 
   public SourceFile(String name, String contents) {
     this.name = name;
     this.contents = contents;
-    this.lineNumberTable = new LineNumberTable(this);
   }
 }
