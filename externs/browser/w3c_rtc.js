@@ -1415,6 +1415,13 @@ MediaDevices.prototype.enumerateDevices = function() {};
 MediaDevices.prototype.getUserMedia = function(constraints) {}
 
 /**
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-mediadevices-getdisplaymedia
+ * @param {!MediaStreamConstraints=} constraints
+ * @return {!Promise<!MediaStream>}
+ */
+MediaDevices.prototype.getDisplayMedia = function(constraints) {}
+
+/**
  * @see https://w3c.github.io/mediacapture-main/#dom-mediadevices-getsupportedconstraints
  * @return {!MediaTrackSupportedConstraints}
  */
