@@ -3037,6 +3037,9 @@ public class CompilerOptions implements Serializable {
             .add("removeUnusedConstructorProperties", removeUnusedConstructorProperties)
             .add("removeUnusedLocalVars", removeUnusedLocalVars)
             .add("removeUnusedPrototypeProperties", removeUnusedPrototypeProperties)
+            .add(
+                "removeUnusedPrototypePropertiesInExterns",
+                removeUnusedPrototypePropertiesInExterns)
             .add("removeUnusedVars", removeUnusedVars)
             .add(
                 "renamePrefixNamespaceAssumeCrossChunkNames",
