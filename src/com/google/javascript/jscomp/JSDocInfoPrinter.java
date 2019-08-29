@@ -224,32 +224,21 @@ public final class JSDocInfoPrinter {
     }
 
     ImmutableMap<String, JSTypeExpression> templates = info.getTemplateTypes();
-    List<String> unboundTemplates = new ArrayList<>();
     if (!templates.isEmpty()) {
       multiline = true;
-      for (Map.Entry<String, JSTypeExpression> e : templates.entrySet()) {
-        String name = e.getKey();
-        Node boundTypeNode = e.getValue().getRoot();
-
-        if (boundTypeNode.getToken() == Token.QMARK) {
-          // This is an unbound template type
-          // Store in a list because multiple can be printed in one declaration
-          unboundTemplates.add(name);
-        } else {
-          // Print any encountered unbounded types before printing the current bounded one
-          if (!unboundTemplates.isEmpty()) {
-            parts.add("@template " + Joiner.on(", ").join(unboundTemplates));
-            unboundTemplates.clear();
-          }
-
-          String boundType = new CodePrinter.Builder(boundTypeNode).build();
-          parts.add("@template {" + boundType + "} " + name);
-        }
-      }
-    }
-
-    if (!unboundTemplates.isEmpty()) {
-      parts.add("@template " + Joiner.on(", ").join(unboundTemplates));
+      templates.forEach(
+          (name, boundExpr) -> {
+            Node boundRoot = boundExpr.getRoot();
+            if (boundRoot.getToken() == Token.QMARK && !boundRoot.hasChildren()) {
+              // If the bound of the expression is `?` (as it is after parsing an unbounded
+              // template) don't specify a bound.
+              // TODO(b/140187077): This case becomes redundant when fixed. It also only covers
+              // explicit `?` bounds, typedefs will remain explicit.
+              parts.add("@template " + name);
+            } else {
+              parts.add(buildAnnotationWithType("template", boundExpr, name));
+            }
+          });
     }
 
     ImmutableMap<String, Node> typeTransformations = info.getTypeTransformations();

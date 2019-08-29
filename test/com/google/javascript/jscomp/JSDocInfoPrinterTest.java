@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -115,42 +116,109 @@ public final class JSDocInfoPrinterTest {
   public void testTemplate() {
     builder.recordTemplateTypeName("T");
     builder.recordTemplateTypeName("U");
-    JSDocInfo info = builder.buildAndReset();
-    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/**\n * @template T, U\n */\n");
-  }
 
-  @Test
-  public void testTemplateBound() {
-    builder.recordTemplateTypeName("T", new JSTypeExpression(new Node(Token.BOOLEAN_TYPE), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/**\n * @template {boolean} T\n */\n");
-  }
 
-  @Test
-  public void testTemplatesBound() {
-    builder.recordTemplateTypeName("T", new JSTypeExpression(new Node(Token.BOOLEAN_TYPE), ""));
-    builder.recordTemplateTypeName("U", new JSTypeExpression(new Node(Token.BOOLEAN_TYPE), ""));
-    JSDocInfo info = builder.buildAndReset();
-    assertThat(jsDocInfoPrinter.print(info))
-        .isEqualTo("/**\n * @template {boolean} T\n * @template {boolean} U\n */\n");
-  }
-
-  @Test
-  public void testTemplatesBoundAndUnbounded() {
-    builder.recordTemplateTypeName("T", new JSTypeExpression(new Node(Token.NUMBER_TYPE), ""));
-    builder.recordTemplateTypeName("S");
-    builder.recordTemplateTypeName("R");
-    builder.recordTemplateTypeName("U", new JSTypeExpression(new Node(Token.BOOLEAN_TYPE), ""));
-    builder.recordTemplateTypeName("Q");
-    JSDocInfo info = builder.buildAndReset();
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo(
-            "/**\n"
-                + " * @template {number} T\n"
-                + " * @template S, R\n"
-                + " * @template {boolean} U\n"
-                + " * @template Q\n"
-                + " */\n");
+            lines(
+                "/**", //
+                " * @template T",
+                " * @template U",
+                " */",
+                ""));
+  }
+
+  @Test
+  public void testTemplateBound_single() {
+    builder.recordTemplateTypeName(
+        "T", new JSTypeExpression(JsDocInfoParser.parseTypeString("!Array<number>"), ""));
+
+    JSDocInfo info = builder.buildAndReset();
+
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            lines(
+                "/**", //
+                " * @template {!Array<number>} T",
+                " */",
+                ""));
+  }
+
+  @Test
+  public void testTemplateBound_nullabilityIsPreserved() {
+    builder.recordTemplateTypeName(
+        "T", new JSTypeExpression(JsDocInfoParser.parseTypeString("?Array<number>"), ""));
+
+    JSDocInfo info = builder.buildAndReset();
+
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            lines(
+                "/**", //
+                " * @template {?Array<number>} T",
+                " */",
+                ""));
+  }
+
+  @Test
+  public void testTemplateBound_explicitlyOnUnknown_isOmitted() {
+    builder.recordTemplateTypeName(
+        "T", new JSTypeExpression(JsDocInfoParser.parseTypeString("?"), ""));
+
+    JSDocInfo info = builder.buildAndReset();
+
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            lines(
+                "/**", //
+                " * @template T",
+                " */",
+                ""));
+  }
+
+  @Test
+  public void testTemplatesBound_multiple() {
+    builder.recordTemplateTypeName(
+        "T", new JSTypeExpression(JsDocInfoParser.parseTypeString("!Array<number>"), ""));
+    builder.recordTemplateTypeName(
+        "U", new JSTypeExpression(JsDocInfoParser.parseTypeString("boolean"), ""));
+
+    JSDocInfo info = builder.buildAndReset();
+
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            lines(
+                "/**", //
+                " * @template {!Array<number>} T",
+                " * @template {boolean} U",
+                " */",
+                ""));
+  }
+
+  @Test
+  public void testTemplatesBound_mixedWithUnbounded() {
+    builder.recordTemplateTypeName(
+        "T", new JSTypeExpression(JsDocInfoParser.parseTypeString("!Object"), ""));
+    builder.recordTemplateTypeName("S");
+    builder.recordTemplateTypeName("R");
+    builder.recordTemplateTypeName(
+        "U", new JSTypeExpression(JsDocInfoParser.parseTypeString("*"), ""));
+    builder.recordTemplateTypeName("Q");
+
+    JSDocInfo info = builder.buildAndReset();
+
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            lines(
+                "/**",
+                " * @template {!Object} T",
+                " * @template S",
+                " * @template R",
+                " * @template {*} U",
+                " * @template Q",
+                " */",
+                ""));
   }
 
   @Test
