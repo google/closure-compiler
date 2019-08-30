@@ -1315,7 +1315,7 @@ public abstract class CompilerTestCase {
       options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
       compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
     } else {
-      compiler.initModules(externsInputs, ((ModuleSources) inputs).modules, getOptions());
+      compiler.initModules(externs.externs, ((ModuleSources) inputs).modules, getOptions());
     }
 
     if (this.typeCheckEnabled) {
