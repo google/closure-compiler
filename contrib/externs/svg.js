@@ -8625,6 +8625,38 @@ SVGElement.prototype.viewportElement;
 SVGElement.prototype.className;
 
 
+/**
+ * @constructor
+ * @extends {SVGElement}
+ *
+ * TODO(b/140287010): Update all typings to SVG 2 / Geometry Interfaces 1.
+ */
+function SVGGraphicsElement() {}
+
+
+/**
+ * @type {!SVGAnimatedTransformList}
+ */
+SVGGraphicsElement.prototype.transform;
+
+
+/**
+ * @return {!DOMRect}
+ */
+SVGGraphicsElement.prototype.getBBox = function() {};
+
+
+/**
+ * @return {!Object}
+ */
+SVGGraphicsElement.prototype.getCTM = function() {};
+
+
+/**
+ * @return {!Object}
+ */
+SVGGraphicsElement.prototype.getScreenCTM = function() {};
+
 
 /**
  * @constructor
