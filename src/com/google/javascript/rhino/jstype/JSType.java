@@ -790,11 +790,11 @@ public abstract class JSType implements Serializable {
   // Named types may be proxies of concrete types.
   @Nullable
   private String deepestResolvedTypeNameOf(ObjectType objType) {
-    if (!objType.isResolved() || !(objType instanceof ProxyObjectType)) {
+    if (!objType.isResolved() || !objType.isNamedType()) {
       return objType.getReferenceName();
     }
 
-    ObjectType internal = ((ProxyObjectType) objType).getReferencedObjTypeInternal();
+    ObjectType internal = objType.toMaybeNamedType().getReferencedObjTypeInternal();
     return (internal != null && internal.isNominalType())
         ? deepestResolvedTypeNameOf(internal)
         : null;
@@ -1622,7 +1622,9 @@ public abstract class JSType implements Serializable {
     }
 
     // proxy types
-    if (thatType instanceof ProxyObjectType) {
+    if (thatType instanceof ProxyObjectType && !thatType.isTemplateType()) {
+      // `TemplateType` is only a proxy because sometimes it needs to mimic the behaviour of `?`. In
+      // every other respect it's a unique type.
       return thisType.isSubtype(
           ((ProxyObjectType) thatType).getReferencedTypeInternal(),
           implicitImplCache,

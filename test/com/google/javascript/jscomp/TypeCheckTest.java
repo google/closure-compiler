@@ -6260,6 +6260,58 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testTemplateTypeBounds_passingBoundedTemplateType_toTemplatedFunction() {
+    testTypes(
+        lines(
+            "/** @constructor */",
+            "function Foo() { }",
+            "",
+            "/**",
+            " * @template {!Foo} X",
+            " * @param {X} x",
+            " * @return {X}",
+            " */",
+            "function clone(x) {",
+            // The focus of this test is that `X` (already a template variable) is bound to `Y` at
+            // this callsite. We confirm that by ensuring an `X` is returned from `cloneInternal`.
+            "  return cloneInternal(x);",
+            "}",
+            "",
+            "/**",
+            " * @template {!Foo} Y",
+            " * @param {Y} x",
+            " * @return {Y}",
+            " */",
+            "function cloneInternal(x) {",
+            "  return x;",
+            "}"));
+  }
+
+  @Test
+  public void testTemplateTypeBounds_onFreeFunctions_areAlwaysSpecialized() {
+    testTypes(
+        lines(
+            "/** @constructor */",
+            "function Foo() { }",
+            "",
+            "/**",
+            " * @template {!Foo} X",
+            " * @param {X} x",
+            " * @return {X}",
+            " */",
+            "function identity(x) {",
+            "  return x;",
+            "}",
+            "",
+            // TODO(b/140267288): This should not cause a type mismatch.
+            "var /** function(!Foo) */ y = identity;"),
+        lines(
+            "initializing variable",
+            "found   : function(X extends Foo): X extends Foo",
+            "required: function(Foo): ?"));
+  }
+
+  @Test
   // TODO(b/139192655): The function template should shadow the class template type and not error
   public void testFunctionTemplateShadowClassTemplate() {
     testTypes(
