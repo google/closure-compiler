@@ -25,7 +25,6 @@ import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -106,17 +105,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   protected final PassFactory makePassFactory(
       String name, final CompilerPass pass) {
-    return new PassFactory(name, true/* one-time pass */) {
-      @Override
-      protected CompilerPass create(AbstractCompiler compiler) {
-        return pass;
-      }
-
-      @Override
-      protected FeatureSet featureSet() {
-        return ES7_MODULES;
-      }
-    };
+    return PassFactory.builder()
+        .setName(name)
+        .setInternalFactory((compiler) -> pass)
+        .setFeatureSet(ES7_MODULES)
+        .build();
   }
 
   @Override

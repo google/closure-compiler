@@ -138,9 +138,9 @@ public abstract class PassConfig {
       }
       graph.createNode(passName);
 
-      if (loopStart == null && !pass.isOneTimePass()) {
+      if (loopStart == null && pass.isRunInFixedPointLoop()) {
         loopStart = passName;
-      } else if (loopStart != null && pass.isOneTimePass()) {
+      } else if (loopStart != null && !pass.isRunInFixedPointLoop()) {
         graph.connect(lastPass, "loop", loopStart);
         loopStart = null;
       }

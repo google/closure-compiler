@@ -277,17 +277,12 @@ public final class PhaseOptimizerTest {
 
   private PassFactory createPassFactory(
       String name, final CompilerPass pass, boolean isOneTime, FeatureSet featureSet) {
-    return new PassFactory(name, isOneTime) {
-      @Override
-      protected CompilerPass create(AbstractCompiler compiler) {
-        return pass;
-      }
-
-      @Override
-      public FeatureSet featureSet() {
-        return featureSet;
-      }
-    };
+    return PassFactory.builder()
+        .setName(name)
+        .setRunInFixedPointLoop(!isOneTime)
+        .setInternalFactory((compiler) -> pass)
+        .setFeatureSet(featureSet)
+        .build();
   }
 
   private CompilerPass createPass(final String name, int numChanges) {

@@ -1854,29 +1854,20 @@ public abstract class CompilerTestCase {
         new GatherModuleMetadata(
             compiler, options.processCommonJSModules, options.moduleResolutionMode);
     factories.add(
-        new PassFactory(PassNames.GATHER_MODULE_METADATA, /* isOneTimePass= */ true) {
-          @Override
-          protected CompilerPass create(AbstractCompiler compiler) {
-            return gatherModuleMetadata;
-          }
-
-          @Override
-          protected FeatureSet featureSet() {
-            return FeatureSet.ES_NEXT;
-          }
-        });
+        PassFactory.builder()
+            .setName(PassNames.GATHER_MODULE_METADATA)
+            .setRunInFixedPointLoop(true)
+            .setInternalFactory((x) -> gatherModuleMetadata)
+            .setFeatureSet(FeatureSet.ES_NEXT)
+            .build());
     factories.add(
-        new PassFactory(PassNames.CREATE_MODULE_MAP, /* isOneTimePass= */ true) {
-          @Override
-          protected CompilerPass create(AbstractCompiler compiler) {
-            return new ModuleMapCreator(compiler, compiler.getModuleMetadataMap());
-          }
-
-          @Override
-          protected FeatureSet featureSet() {
-            return FeatureSet.ES_NEXT;
-          }
-        });
+        PassFactory.builder()
+            .setName(PassNames.CREATE_MODULE_MAP)
+            .setRunInFixedPointLoop(true)
+            .setInternalFactory(
+                (x) -> new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()))
+            .setFeatureSet(FeatureSet.ES_NEXT)
+            .build());
     TranspilationPasses.addEs6ModulePass(
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);

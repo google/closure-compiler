@@ -24,7 +24,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
@@ -40,22 +39,19 @@ public class TranspilationPasses {
       List<PassFactory> passes,
       final PreprocessorSymbolTable.CachedInstanceFactory preprocessorTableFactory) {
     passes.add(
-        new HotSwapPassFactory("es6RewriteModule") {
-          @Override
-          protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-            preprocessorTableFactory.maybeInitialize(compiler);
-            return new Es6RewriteModules(
-                compiler,
-                compiler.getModuleMetadataMap(),
-                compiler.getModuleMap(),
-                preprocessorTableFactory.getInstanceOrNull());
-          }
-
-          @Override
-          protected FeatureSet featureSet() {
-            return ES_NEXT;
-          }
-        });
+        PassFactory.builderForHotSwap()
+            .setName("es6RewriteModule")
+            .setInternalFactory(
+                (compiler) -> {
+                  preprocessorTableFactory.maybeInitialize(compiler);
+                  return new Es6RewriteModules(
+                      compiler,
+                      compiler.getModuleMetadataMap(),
+                      compiler.getModuleMap(),
+                      preprocessorTableFactory.getInstanceOrNull());
+                })
+            .setFeatureSet(ES_NEXT)
+            .build());
   }
 
   public static void addPreTypecheckTranspilationPasses(
@@ -146,355 +142,210 @@ public class TranspilationPasses {
     passes.add(rewritePolyfills);
   }
 
-
   /** Rewrites ES6 modules */
   private static final PassFactory es6RewriteModuleToCjs =
-      new PassFactory("es6RewriteModuleToCjs", true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new Es6RewriteModulesToCommonJsModules(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return FeatureSet.latest();
-        }
-      };
+      PassFactory.builder()
+          .setName("es6RewriteModuleToCjs")
+          .setInternalFactory(Es6RewriteModulesToCommonJsModules::new)
+          .setFeatureSet(FeatureSet.latest())
+          .build();
 
   /** Rewrites ES6 modules import paths to be browser compliant */
   private static final PassFactory es6RelativizeImportPaths =
-      new PassFactory("es6RelativizeImportPaths", true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new Es6RelativizeImportPaths(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return FeatureSet.latest();
-        }
-      };
+      PassFactory.builder()
+          .setName("es6RelativizeImportPaths")
+          .setInternalFactory(Es6RelativizeImportPaths::new)
+          .setFeatureSet(FeatureSet.latest())
+          .build();
 
   private static final PassFactory rewriteAsyncFunctions =
-      new HotSwapPassFactory("rewriteAsyncFunctions") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new RewriteAsyncFunctions.Builder(compiler)
-              // If ES6 classes will not be transpiled away later,
-              // transpile away property references that use `super` in async functions.
-              // See explanation in RewriteAsyncFunctions.
-              .rewriteSuperPropertyReferencesWithoutSuper(
-                  !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
-              .build();
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES_NEXT;
-        }
-      };
+      PassFactory.builderForHotSwap()
+          .setName("rewriteAsyncFunctions")
+          .setInternalFactory(
+              (compiler) ->
+                  new RewriteAsyncFunctions.Builder(compiler)
+                      // If ES6 classes will not be transpiled away later,
+                      // transpile away property references that use `super` in async functions.
+                      // See explanation in RewriteAsyncFunctions.
+                      .rewriteSuperPropertyReferencesWithoutSuper(
+                          !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
+                      .build())
+          .setFeatureSet(ES_NEXT)
+          .build();
 
   private static final PassFactory rewriteAsyncIteration =
-      new HotSwapPassFactory("rewriteAsyncIteration") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new RewriteAsyncIteration.Builder(compiler)
-              // If ES6 classes will not be transpiled away later,
-              // transpile away property references that use `super` in async iteration.
-              // See explanation in RewriteAsyncIteration.
-              .rewriteSuperPropertyReferencesWithoutSuper(
-                  !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
-              .build();
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES_NEXT;
-        }
-      };
+      PassFactory.builderForHotSwap()
+          .setName("rewriteAsyncIteration")
+          .setInternalFactory(
+              (compiler) ->
+                  new RewriteAsyncIteration.Builder(compiler)
+                      // If ES6 classes will not be transpiled away later,
+                      // transpile away property references that use `super` in async iteration.
+                      // See explanation in RewriteAsyncIteration.
+                      .rewriteSuperPropertyReferencesWithoutSuper(
+                          !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
+                      .build())
+          .setFeatureSet(ES_NEXT)
+          .build();
 
   private static final PassFactory rewriteObjectSpread =
-      new HotSwapPassFactory("rewriteObjectSpread") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new RewriteObjectSpread(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES_NEXT;
-        }
-      };
+      PassFactory.builderForHotSwap()
+          .setName("rewriteObjectSpread")
+          .setInternalFactory(RewriteObjectSpread::new)
+          .setFeatureSet(ES_NEXT)
+          .build();
 
   private static final PassFactory rewriteCatchWithNoBinding =
-      new HotSwapPassFactory("rewriteCatchWithNoBinding") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new RewriteCatchWithNoBinding(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES_NEXT;
-        }
-      };
+      PassFactory.builderForHotSwap()
+          .setName("rewriteCatchWithNoBinding")
+          .setInternalFactory(RewriteCatchWithNoBinding::new)
+          .setFeatureSet(ES_NEXT)
+          .build();
 
   private static final PassFactory rewriteExponentialOperator =
-      new HotSwapPassFactory("rewriteExponentialOperator") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es7RewriteExponentialOperator(compiler);
-        }
+      PassFactory.builderForHotSwap()
+          .setName("rewriteExponentialOperator")
+          .setInternalFactory(Es7RewriteExponentialOperator::new)
+          .setFeatureSet(ES2018)
+          .build();
 
-        @Override
-        protected FeatureSet featureSet() {
-          return ES2018;
-        }
-      };
+  private static final PassFactory es6NormalizeShorthandProperties =
+      PassFactory.builderForHotSwap()
+          .setName("es6NormalizeShorthandProperties")
+          .setInternalFactory(Es6NormalizeShorthandProperties::new)
+          .setFeatureSet(ES2018)
+          .build();
 
-  private static final HotSwapPassFactory es6NormalizeShorthandProperties =
-      new HotSwapPassFactory("es6NormalizeShorthandProperties") {
-        @Override
-        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new Es6NormalizeShorthandProperties(compiler);
-        }
+  static final PassFactory es6RewriteClassExtends =
+      PassFactory.builderForHotSwap()
+          .setName(PassNames.ES6_REWRITE_CLASS_EXTENDS)
+          .setInternalFactory(Es6RewriteClassExtendsExpressions::new)
+          .setFeatureSet(ES2018)
+          .build();
 
-        @Override
-        protected FeatureSet featureSet() {
-          return ES2018;
-        }
-      };
+  static final PassFactory es6ExtractClasses =
+      PassFactory.builderForHotSwap()
+          .setName(PassNames.ES6_EXTRACT_CLASSES)
+          .setInternalFactory(Es6ExtractClasses::new)
+          .setFeatureSet(ES8)
+          .build();
 
-  static final HotSwapPassFactory es6RewriteClassExtends =
-      new HotSwapPassFactory(PassNames.ES6_REWRITE_CLASS_EXTENDS) {
-        @Override
-        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new Es6RewriteClassExtendsExpressions(compiler);
-        }
+  static final PassFactory es6RewriteClass =
+      PassFactory.builderForHotSwap()
+          .setName("Es6RewriteClass")
+          .setInternalFactory(Es6RewriteClass::new)
+          .setFeatureSet(ES8)
+          .build();
 
-        @Override
-        protected FeatureSet featureSet() {
-          return ES2018;
-        }
-      };
-
-  static final HotSwapPassFactory es6ExtractClasses =
-      new HotSwapPassFactory(PassNames.ES6_EXTRACT_CLASSES) {
-        @Override
-        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new Es6ExtractClasses(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8;
-        }
-      };
-
-  static final HotSwapPassFactory es6RewriteClass =
-      new HotSwapPassFactory("Es6RewriteClass") {
-        @Override
-        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new Es6RewriteClass(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8;
-        }
-      };
-
-  static final HotSwapPassFactory getEs6RewriteDestructuring(
-      ObjectDestructuringRewriteMode rewriteMode) {
-    return new HotSwapPassFactory("Es6RewriteDestructuring") {
-      @Override
-      protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-        return new Es6RewriteDestructuring.Builder(compiler)
-            .setDestructuringRewriteMode(rewriteMode)
-            .build();
-      }
-
-      @Override
-      protected FeatureSet featureSet() {
-        return ES2018;
-      }
-    };
+  static final PassFactory getEs6RewriteDestructuring(ObjectDestructuringRewriteMode rewriteMode) {
+    return PassFactory.builderForHotSwap()
+        .setName("Es6RewriteDestructuring")
+        .setInternalFactory(
+            (compiler) -> {
+              return new Es6RewriteDestructuring.Builder(compiler)
+                  .setDestructuringRewriteMode(rewriteMode)
+                  .build();
+            })
+        .setFeatureSet(ES2018)
+        .build();
   }
 
-  static final HotSwapPassFactory es6RenameVariablesInParamLists =
-      new HotSwapPassFactory("Es6RenameVariablesInParamLists") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es6RenameVariablesInParamLists(compiler);
-        }
+  static final PassFactory es6RenameVariablesInParamLists =
+      PassFactory.builderForHotSwap()
+          .setName("Es6RenameVariablesInParamLists")
+          .setInternalFactory(Es6RenameVariablesInParamLists::new)
+          .setFeatureSet(ES2018)
+          .build();
 
-        @Override
-        protected FeatureSet featureSet() {
-          return ES2018;
-        }
-      };
+  static final PassFactory es6RewriteArrowFunction =
+      PassFactory.builderForHotSwap()
+          .setName("Es6RewriteArrowFunction")
+          .setInternalFactory(Es6RewriteArrowFunction::new)
+          .setFeatureSet(ES8)
+          .build();
 
-  static final HotSwapPassFactory es6RewriteArrowFunction =
-      new HotSwapPassFactory("Es6RewriteArrowFunction") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es6RewriteArrowFunction(compiler);
-        }
+  static final PassFactory rewritePolyfills =
+      PassFactory.builderForHotSwap()
+          .setName("RewritePolyfills")
+          .setInternalFactory(RewritePolyfills::new)
+          .setFeatureSet(FeatureSet.latest())
+          .build();
 
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8;
-        }
-      };
+  static final PassFactory es6SplitVariableDeclarations =
+      PassFactory.builderForHotSwap()
+          .setName("Es6SplitVariableDeclarations")
+          .setInternalFactory(Es6SplitVariableDeclarations::new)
+          .setFeatureSet(FeatureSet.latest())
+          .build();
 
-  static final HotSwapPassFactory rewritePolyfills =
-      new HotSwapPassFactory("RewritePolyfills") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new RewritePolyfills(compiler);
-        }
+  static final PassFactory es6ConvertSuperConstructorCalls =
+      PassFactory.builderForHotSwap()
+          .setName("es6ConvertSuperConstructorCalls")
+          .setInternalFactory(Es6ConvertSuperConstructorCalls::new)
+          .setFeatureSet(ES8)
+          .build();
 
-        @Override
-        protected FeatureSet featureSet() {
-          return FeatureSet.latest();
-        }
-      };
-
-  static final HotSwapPassFactory es6SplitVariableDeclarations =
-      new HotSwapPassFactory("Es6SplitVariableDeclarations") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es6SplitVariableDeclarations(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return FeatureSet.latest();
-        }
-      };
-
-  static final HotSwapPassFactory es6ConvertSuperConstructorCalls =
-      new HotSwapPassFactory("es6ConvertSuperConstructorCalls") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es6ConvertSuperConstructorCalls(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8;
-        }
-      };
-
-  static final HotSwapPassFactory es6ConvertSuper =
-      new HotSwapPassFactory("es6ConvertSuper") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es6ConvertSuper(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES2018;
-        }
-      };
+  static final PassFactory es6ConvertSuper =
+      PassFactory.builderForHotSwap()
+          .setName("es6ConvertSuper")
+          .setInternalFactory(Es6ConvertSuper::new)
+          .setFeatureSet(ES2018)
+          .build();
 
   /** Injects runtime library code needed for transpiled ES6 code. */
-  static final HotSwapPassFactory es6InjectRuntimeLibraries =
-      new HotSwapPassFactory("es6InjectRuntimeLibraries") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es6InjectRuntimeLibraries(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES_NEXT;
-        }
-      };
+  static final PassFactory es6InjectRuntimeLibraries =
+      PassFactory.builderForHotSwap()
+          .setName("es6InjectRuntimeLibraries")
+          .setInternalFactory(Es6InjectRuntimeLibraries::new)
+          .setFeatureSet(ES_NEXT)
+          .build();
 
   /** Transpiles REST parameters and SPREAD in both array literals and function calls. */
-  static final HotSwapPassFactory es6RewriteRestAndSpread =
-      new HotSwapPassFactory("es6RewriteRestAndSpread") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es6RewriteRestAndSpread(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return FeatureSet.latest();
-        }
-      };
+  static final PassFactory es6RewriteRestAndSpread =
+      PassFactory.builderForHotSwap()
+          .setName("es6RewriteRestAndSpread")
+          .setInternalFactory(Es6RewriteRestAndSpread::new)
+          .setFeatureSet(FeatureSet.latest())
+          .build();
 
   /**
    * Does the main ES6 to ES3 conversion. There are a few other passes which run before this one, to
    * convert constructs which are not converted by this pass. This pass can run after NTI
    */
-  static final HotSwapPassFactory lateConvertEs6ToEs3 =
-      new HotSwapPassFactory("lateConvertEs6") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new LateEs6ToEs3Converter(compiler);
-        }
+  static final PassFactory lateConvertEs6ToEs3 =
+      PassFactory.builderForHotSwap()
+          .setName("lateConvertEs6")
+          .setInternalFactory(LateEs6ToEs3Converter::new)
+          .setFeatureSet(FeatureSet.latest())
+          .build();
 
-        @Override
-        protected FeatureSet featureSet() {
-          return FeatureSet.latest();
-        }
-      };
+  static final PassFactory es6ForOf =
+      PassFactory.builderForHotSwap()
+          .setName("es6ForOf")
+          .setInternalFactory(Es6ForOfConverter::new)
+          .setFeatureSet(ES8)
+          .build();
 
-  static final HotSwapPassFactory es6ForOf =
-      new HotSwapPassFactory("es6ForOf") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es6ForOfConverter(compiler);
-        }
+  static final PassFactory rewriteBlockScopedFunctionDeclaration =
+      PassFactory.builderForHotSwap()
+          .setName("Es6RewriteBlockScopedFunctionDeclaration")
+          .setInternalFactory(Es6RewriteBlockScopedFunctionDeclaration::new)
+          .setFeatureSet(ES8)
+          .build();
 
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8;
-        }
-      };
+  static final PassFactory rewriteBlockScopedDeclaration =
+      PassFactory.builderForHotSwap()
+          .setName("Es6RewriteBlockScopedDeclaration")
+          .setInternalFactory(Es6RewriteBlockScopedDeclaration::new)
+          .setFeatureSet(ES8)
+          .build();
 
-  static final HotSwapPassFactory rewriteBlockScopedFunctionDeclaration =
-      new HotSwapPassFactory("Es6RewriteBlockScopedFunctionDeclaration") {
-    @Override
-    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new Es6RewriteBlockScopedFunctionDeclaration(compiler);
-    }
-
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8;
-    }
-  };
-
-  static final HotSwapPassFactory rewriteBlockScopedDeclaration =
-      new HotSwapPassFactory("Es6RewriteBlockScopedDeclaration") {
-    @Override
-    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new Es6RewriteBlockScopedDeclaration(compiler);
-    }
-
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8;
-    }
-  };
-
-  static final HotSwapPassFactory rewriteGenerators =
-      new HotSwapPassFactory("rewriteGenerators") {
-    @Override
-    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new Es6RewriteGenerators(compiler);
-    }
-
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8;
-    }
-  };
+  static final PassFactory rewriteGenerators =
+      PassFactory.builderForHotSwap()
+          .setName("rewriteGenerators")
+          .setInternalFactory(Es6RewriteGenerators::new)
+          .setFeatureSet(ES8)
+          .build();
 
   /**
    * @param script The SCRIPT node representing a JS file
@@ -591,28 +442,27 @@ public class TranspilationPasses {
    * <p>Doing this indicates that the AST no longer contains uses of the features, or that they are
    * no longer of concern for some other reason.
    */
-  private static HotSwapPassFactory createFeatureRemovalPass(
+  private static PassFactory createFeatureRemovalPass(
       String passName, final Feature featureToRemove, final Feature... moreFeaturesToRemove) {
-    return new HotSwapPassFactory(passName) {
-      @Override
-      protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-        return new HotSwapCompilerPass() {
-          @Override
-          public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-            maybeMarkFeaturesAsTranspiledAway(compiler, featureToRemove, moreFeaturesToRemove);
-          }
+    return PassFactory.builderForHotSwap()
+        .setName(passName)
+        .setInternalFactory(
+            (compiler) -> {
+              return new HotSwapCompilerPass() {
+                @Override
+                public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+                  maybeMarkFeaturesAsTranspiledAway(
+                      compiler, featureToRemove, moreFeaturesToRemove);
+                }
 
-          @Override
-          public void process(Node externs, Node root) {
-            maybeMarkFeaturesAsTranspiledAway(compiler, featureToRemove, moreFeaturesToRemove);
-          }
-        };
-      }
-
-      @Override
-      protected FeatureSet featureSet() {
-        return FeatureSet.latest();
-      }
-    };
+                @Override
+                public void process(Node externs, Node root) {
+                  maybeMarkFeaturesAsTranspiledAway(
+                      compiler, featureToRemove, moreFeaturesToRemove);
+                }
+              };
+            })
+        .setFeatureSet(FeatureSet.latest())
+        .build();
   }
 }

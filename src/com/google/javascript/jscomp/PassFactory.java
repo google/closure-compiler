@@ -16,113 +16,105 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.auto.value.AutoValue;
+import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.rhino.Node;
+import java.util.function.Function;
 
 /**
- * A factory for creating JSCompiler passes based on the Options
- * injected.  Contains all meta-data about compiler passes (like
- * whether it can be run multiple times, a human-readable name for
- * logging, etc.).
+ * A factory for creating JSCompiler passes based on the Options injected.
+ *
+ * <p>Contains all meta-data about compiler passes (like whether it can be run multiple times, a
+ * human-readable name for logging, etc.).
  *
  * @author nicksantos@google.com (Nick Santos)
  */
+@AutoValue
 public abstract class PassFactory {
 
-  private final String name;
-  private final boolean isOneTimePass;
+  /** The name of the pass as it will appear in logs. */
+  public abstract String getName();
+
+  /** Whether this factory must or must not appear in a {@link PhaseOptimizer} loop. */
+  public abstract boolean isRunInFixedPointLoop();
 
   /**
-   * @param name The name of the pass that this factory creates.
-   * @param isOneTimePass If true, the pass produced by this factory can
-   *     only be run once.
-   */
-  protected PassFactory(String name, boolean isOneTimePass) {
-    this.name = name;
-    this.isOneTimePass = isOneTimePass;
-  }
-
-  /**
-   * @return The name of this pass.
-   */
-  String getName() {
-    return name;
-  }
-
-  @Override
-  public String toString() {
-    return name;
-  }
-
-  /**
-   * @return Whether the pass produced by this factory can only be run once.
-   */
-  boolean isOneTimePass() {
-    return isOneTimePass;
-  }
-
-  /**
-   * Creates a new compiler pass to be run.
-   */
-  protected abstract CompilerPass create(AbstractCompiler compiler);
-
-  /**
-   * The set of features that this pass understands. Passes that can handle any code (no-op passes,
-   * extremely simple passes that are unlikely to be broken by new features, etc.) should return
-   * FeatureSet.latest().
-   */
-  protected abstract FeatureSet featureSet();
-
-  /**
-   * Any factory whose CompilerPass has a corresponding hot-swap version should
-   * override this.
+   * The set of features that this pass understands.
    *
-   * @param compiler The compiler that can has been used to do the full compile.
+   * <p>Passes that can handle any code (no-op passes, extremely simple passes that are unlikely to
+   * be broken by new features, etc.) should return {@link FeatureSet#latest()}.
    */
-  protected HotSwapCompilerPass getHotSwapPass(AbstractCompiler compiler) {
-    // TODO(bashir): If in future most of PassFactory's in DefaultPassConfig
-    // turns out to be DefaultPassConfig.HotSwapPassFactory, we should probably
-    // change the implementation here by the one in HotSwapPassFactory.
-    return null;
-  }
-
+  public abstract FeatureSet getFeatureSet();
 
   /**
-   * Create a no-op pass that can only run once. Used to break up loops.
+   * A simple factory function for creating actual pass instances.
+   *
+   * <p>Users should call {@link #create()} rather than use this object directly.
    */
+  abstract Function<AbstractCompiler, ? extends CompilerPass> getInternalFactory();
+
+  /** Whether or not his factory produces {@link HotSwapCompilerPass}es. */
+  abstract boolean isHotSwapable();
+
+  public abstract Builder toBuilder();
+
+  PassFactory() {
+    // Sublasses in this package only.
+  }
+
+  /** A builder for a {@link PassFactory}. */
+  @AutoValue.Builder
+  public abstract static class Builder {
+    public abstract Builder setName(String x);
+
+    public abstract Builder setRunInFixedPointLoop(boolean b);
+
+    public abstract Builder setFeatureSet(FeatureSet x);
+
+    public abstract Builder setInternalFactory(
+        Function<AbstractCompiler, ? extends CompilerPass> x);
+
+    abstract Builder setHotSwapable(boolean x);
+
+    @ForOverride
+    abstract PassFactory autoBuild();
+
+    public final PassFactory build() {
+      PassFactory result = autoBuild();
+
+      // Every pass must have a nonempty name.
+      checkState(!result.getName().isEmpty());
+      if (result.isHotSwapable()) {
+        // HotSwap passes are for transpilation, not optimization, so running them in a loop
+        // makes no sense.
+        checkState(!result.isRunInFixedPointLoop());
+      }
+
+      return result;
+    }
+  }
+
+  public static Builder builder() {
+    return new AutoValue_PassFactory.Builder().setRunInFixedPointLoop(false).setHotSwapable(false);
+  }
+
+  public static Builder builderForHotSwap() {
+    return new AutoValue_PassFactory.Builder().setRunInFixedPointLoop(false).setHotSwapable(true);
+  }
+
+  /** Create a no-op pass that can only run once. Used to break up loops. */
   public static PassFactory createEmptyPass(String name) {
-    return new PassFactory(name, true) {
-      @Override
-      protected CompilerPass create(final AbstractCompiler compiler) {
-        return new CompilerPass() {
-          @Override
-          public void process(Node externs, Node root) {}
-        };
-      }
-
-      @Override
-      protected FeatureSet featureSet() {
-        return FeatureSet.latest();
-      }
-    };
+    return builder()
+        .setName(name)
+        .setFeatureSet(FeatureSet.latest())
+        .setInternalFactory((c) -> (CompilerPass) (externs, root) -> {})
+        .build();
   }
 
-  /**
-   * A pass-factory that is good for {@code HotSwapCompilerPass} passes.
-   * Every hotswap pass is expected to be a one-time pass.
-   */
-  public abstract static class HotSwapPassFactory extends PassFactory {
-
-    HotSwapPassFactory(String name) {
-      super(name, true);
-    }
-
-    @Override
-    protected abstract HotSwapCompilerPass create(AbstractCompiler compiler);
-
-    @Override
-    protected HotSwapCompilerPass getHotSwapPass(AbstractCompiler compiler) {
-      return this.create(compiler);
-    }
+  /** Creates a new compiler pass to be run. */
+  final CompilerPass create(AbstractCompiler compiler) {
+    return getInternalFactory().apply(compiler);
   }
 }

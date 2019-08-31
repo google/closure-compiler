@@ -1041,17 +1041,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     p.process(externsRoot, jsRoot);
   }
 
-  private final PassFactory validityCheck = new PassFactory("validityCheck", false) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new ValidityCheck(compiler);
-    }
-
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+  private final PassFactory validityCheck =
+      PassFactory.builder()
+          .setName("validityCheck")
+          .setRunInFixedPointLoop(true)
+          .setInternalFactory(ValidityCheck::new)
+          .setFeatureSet(ES8_MODULES)
+          .build();
 
   private void maybeRunValidityCheck() {
     if (options.devMode == DevMode.EVERY_PASS) {
@@ -3239,15 +3235,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private void runHotSwapPass(
-      Node originalRoot, Node js, PassFactory passFactory) {
-    HotSwapCompilerPass pass = passFactory.getHotSwapPass(this);
-    if (pass != null) {
-      if (logger.isLoggable(Level.INFO)) {
-        logger.info("Performing HotSwap for pass " + passFactory.getName());
-      }
-      pass.hotSwapScript(js, originalRoot);
+  private void runHotSwapPass(Node originalRoot, Node js, PassFactory passFactory) {
+    if (!passFactory.isHotSwapable()) {
+      return;
     }
+
+    HotSwapCompilerPass pass = (HotSwapCompilerPass) passFactory.create(this);
+    if (logger.isLoggable(Level.INFO)) {
+      logger.info("Performing HotSwap for pass " + passFactory.getName());
+    }
+    pass.hotSwapScript(js, originalRoot);
   }
 
   private PassConfig getCleanupPassConfig() {

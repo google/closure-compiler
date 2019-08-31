@@ -26,7 +26,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -94,19 +93,12 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     enableScriptFeatureValidation();
   }
 
-  protected final PassFactory makePassFactory(
-      String name, final CompilerPass pass) {
-    return new PassFactory(name, true/* one-time pass */) {
-      @Override
-      protected CompilerPass create(AbstractCompiler compiler) {
-        return pass;
-      }
-
-      @Override
-      protected FeatureSet featureSet() {
-        return ES6_MODULES;
-      }
-    };
+  protected final PassFactory makePassFactory(String name, final CompilerPass pass) {
+    return PassFactory.builder()
+        .setName(name)
+        .setInternalFactory((compiler) -> pass)
+        .setFeatureSet(ES6_MODULES)
+        .build();
   }
 
   @Override

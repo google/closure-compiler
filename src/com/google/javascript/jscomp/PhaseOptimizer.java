@@ -156,14 +156,14 @@ class PhaseOptimizer implements CompilerPass {
   void consume(List<PassFactory> factories) {
     Loop currentLoop = new Loop();
     for (PassFactory factory : factories) {
-      if (factory.isOneTimePass()) {
+      if (factory.isRunInFixedPointLoop()) {
+        currentLoop.addLoopedPass(factory);
+      } else {
         if (currentLoop.isPopulated()) {
           passes.add(currentLoop);
           currentLoop = new Loop();
         }
         addOneTimePass(factory);
-      } else {
-        currentLoop.addLoopedPass(factory);
       }
     }
 
@@ -282,7 +282,7 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
       FeatureSet featuresInAst = compiler.getFeatureSet();
-      FeatureSet featuresSupportedByPass = factory.featureSet();
+      FeatureSet featuresSupportedByPass = factory.getFeatureSet();
 
       if (!featuresSupportedByPass.contains(featuresInAst)) {
         FeatureSet unsupportedFeatures = featuresInAst.without(featuresSupportedByPass);
@@ -314,7 +314,7 @@ class PhaseOptimizer implements CompilerPass {
         changeVerifier = new ChangeVerifier(compiler).snapshot(jsRoot);
       }
       if (tracker != null) {
-        tracker.recordPassStart(name, factory.isOneTimePass());
+        tracker.recordPassStart(name, !factory.isRunInFixedPointLoop());
       }
       tracer = new Tracer("Compiler", name);
 
