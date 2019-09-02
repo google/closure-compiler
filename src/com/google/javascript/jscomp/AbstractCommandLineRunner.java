@@ -38,7 +38,6 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.OutputJs;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -65,8 +64,9 @@ import java.io.PrintStream;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -339,6 +339,32 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
+   * Validates whether --browser_featureset_year input is legal
+   *
+   * @param inputYear integer value passed as input
+   */
+  @GwtIncompatible("java.time")
+  public void validateBrowserFeaturesetYearFlag(Integer inputYear) {
+    int currentYear = LocalDateTime.now(ZoneId.systemDefault()).getYear();
+    if (inputYear > currentYear) {
+      throw new FlagUsageException(
+          SimpleFormat.format(
+              "--browser_featureset_year=%d is the latest meaningful value to use", currentYear));
+    } else if (inputYear < 2019 && inputYear > 2012) {
+      throw new FlagUsageException(
+          SimpleFormat.format(
+              "--browser_featureset_year=2019 is the earliest meaningful value"
+                  + " to use after 2012"));
+    } else if (inputYear < 2012) {
+      throw new FlagUsageException(
+          SimpleFormat.format(
+              "Illegal --browser_featureset_year=%d. --browser_featureset_year=2012 is the"
+                  + " earliest meaningful value to use",
+              inputYear));
+    }
+  }
+
+  /**
    * Sets options based on the configurations set flags API. Called during the run() run() method.
    * If you want to ignore the flags API, or interpret flags your own way, then you should override
    * this method.
@@ -361,28 +387,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     List<String> define = new ArrayList<>(config.define);
     if (config.browserFeaturesetYear != 0) {
-      // TODO(b/128873198): Add validation of the year.
-      int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-      if (config.browserFeaturesetYear > currentYear) {
-        throw new FlagUsageException(
-            SimpleFormat.format(
-                "--browser_featureset_year=%d is the latest meaningful value to use", currentYear));
-      } else if (config.browserFeaturesetYear >= 2019) {
-        options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
-      } else if (config.browserFeaturesetYear > 2012) {
-        throw new FlagUsageException(
-            SimpleFormat.format(
-                "--browser_featureset_year=2019 is the earliest meaningful value"
-                    + " to use after 2012"));
-      } else if (config.browserFeaturesetYear == 2012) {
-        options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
-      } else {
-        throw new FlagUsageException(
-            SimpleFormat.format(
-                "Illegal --browser_featureset_year: %d", config.browserFeaturesetYear));
-      }
+      validateBrowserFeaturesetYearFlag(config.browserFeaturesetYear);
+      options.setBrowserFeaturesetYear(config.browserFeaturesetYear);
       define.add(SimpleFormat.format("goog.FEATURESET_YEAR=%d", config.browserFeaturesetYear));
     }
+
     createDefineOrTweakReplacements(define, options, false);
 
     options.setTweakProcessing(config.tweakProcessing);

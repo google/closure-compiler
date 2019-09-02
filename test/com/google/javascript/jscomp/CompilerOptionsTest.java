@@ -40,6 +40,18 @@ import org.junit.runners.JUnit4;
 public final class CompilerOptionsTest {
 
   @Test
+  public void testBrowserFeaturesetYearOptionSetsLanguageOut() {
+    CompilerOptions options = new CompilerOptions();
+    options.setBrowserFeaturesetYear(2012);
+    assertThat(options.getOutputFeatureSet())
+        .isEqualTo(LanguageMode.ECMASCRIPT5_STRICT.toFeatureSet());
+
+    options.setBrowserFeaturesetYear(2019);
+    assertThat(options.getOutputFeatureSet())
+        .isEqualTo(LanguageMode.ECMASCRIPT_2017.toFeatureSet());
+  }
+
+  @Test
   public void testDefines() {
     CompilerOptions options = new CompilerOptions();
     options.setDefineToBooleanLiteral("trueVar", true);

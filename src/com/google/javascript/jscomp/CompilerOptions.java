@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -129,6 +130,63 @@ public class CompilerOptions implements Serializable {
    * The builtin set of externs to be used
    */
   private Environment environment;
+
+  /**
+   * Represents browser feature set year to use for compilation. It tells the JSCompiler to output
+   * code that works on the releases of major browsers that were current as of January 1 of the
+   * given year, without including transpilation or other workarounds for browsers older than that
+   */
+  private class BrowserFeaturesetYear implements Serializable {
+
+    private Integer year = 0;
+
+    public Integer getYear() {
+      return this.year;
+    }
+
+    public void setYear(Integer inputYear) {
+      this.year = inputYear;
+      this.setDependentValuesFromYear();
+    }
+
+    public void setDependentValuesFromYear() {
+      this.setLanguageOutFromYear();
+    }
+
+    private void setLanguageOutFromYear() {
+      if (year != 0) {
+        if (year == 2019) {
+          CompilerOptions.this.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+        } else if (year == 2012) {
+          CompilerOptions.this.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
+        }
+      }
+    }
+  }
+
+  /** Represents browserFeaturesetYear to use for compilation */
+  private final BrowserFeaturesetYear browserFeaturesetYear;
+
+  public Integer getBrowserFeaturesetYear() {
+    return this.browserFeaturesetYear.getYear();
+  }
+
+  /**
+   * Validates whether browser featureset year option is legal
+   *
+   * @param inputYear Integer value passed as input
+   */
+  public void validateBrowserFeaturesetYearOption(Integer inputYear) {
+    checkState(
+        inputYear == 2019 || inputYear == 2012,
+        SimpleFormat.format(
+            "Illegal browser_featureset_year=%d. We support values 2012 and 2019 only", inputYear));
+  }
+
+  public void setBrowserFeaturesetYear(Integer year) {
+    validateBrowserFeaturesetYearOption(year);
+    this.browserFeaturesetYear.setYear(year);
+  }
 
   /**
    * Instrument code for the purpose of collecting coverage data - restrict to coverage pass only,
@@ -1262,6 +1320,7 @@ public class CompilerOptions implements Serializable {
   public CompilerOptions() {
     // Accepted language
     languageIn = LanguageMode.STABLE_IN;
+    browserFeaturesetYear = new BrowserFeaturesetYear();
 
     // Which environment to use
     environment = Environment.BROWSER;
@@ -1923,6 +1982,7 @@ public class CompilerOptions implements Serializable {
       setOutputFeatureSet(languageOut.toFeatureSet());
     }
   }
+
 
   /**
    * Sets the features that allowed to appear in the output. Any feature in the input that is not

@@ -519,7 +519,11 @@ public final class CommandLineRunnerTest {
   public void invalidBrowserFeaturesetYearFlagGeneratesError1() {
     args.add("--browser_featureset_year=2011");
     FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
-    assertThat(e).hasMessageThat().isEqualTo("Illegal --browser_featureset_year: 2011");
+    assertThat(e)
+        .hasMessageThat()
+        .isEqualTo(
+            "Illegal --browser_featureset_year=2011. --browser_featureset_year=2012 is the"
+                + " earliest meaningful value to use");
   }
 
   /** Giving a browser featureset year between 2012 and 2019 reports error */
