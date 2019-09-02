@@ -7673,16 +7673,35 @@ ChromeKeyboardEvent.prototype.capsLock;
  * @see https://developer.chrome.com/extensions/input.ime.html#type-InputContext
  * @constructor
  */
-function InputContext() {}
+chrome.input.ime.InputContext = function() {};
 
 
 /** @type {number} */
-InputContext.prototype.contextID;
+chrome.input.ime.InputContext.prototype.contextID;
 
 
 /** @type {string} */
-InputContext.prototype.type;
+chrome.input.ime.InputContext.prototype.type;
 
+
+/** @type {boolean} */
+chrome.input.ime.InputContext.prototype.autoCorrect;
+
+
+/** @type {boolean} */
+chrome.input.ime.InputContext.prototype.autoComplete;
+
+
+/** @type {string} */
+chrome.input.ime.InputContext.prototype.autoCapitalize;
+
+
+/** @type {boolean} */
+chrome.input.ime.InputContext.prototype.spellCheck;
+
+
+/** @type {boolean} */
+chrome.input.ime.InputContext.prototype.shouldDoLearning;
 
 
 /**
@@ -10388,6 +10407,88 @@ chrome.inlineInstallPrivate = {};
  * @return {undefined}
  */
 chrome.inlineInstallPrivate.install = function(id, opt_callback) {};
+
+
+/**
+ * @see https://cs.chromium.org/chromium/src/chrome/common/extensions/api/input_method_private.json
+ */
+chrome.inputMethodPrivate = {};
+
+
+/**
+ * @enum {string}
+ */
+chrome.inputMethodPrivate.InputContextType = {
+  TEXT: '',
+  SEARCH: '',
+  TEL: '',
+  URL: '',
+  EMAIL: '',
+  NUMBER: '',
+  PASSWORD: '',
+};
+
+
+/**
+ * @enum {string}
+ */
+chrome.inputMethodPrivate.AutoCapitalizeType = {
+  OFF: '',
+  CHARACTERS: '',
+  WORDS: '',
+  SENTENCES: '',
+};
+
+
+/**
+ * @enum {string}
+ */
+chrome.inputMethodPrivate.FocusReason = {
+  MOUSE: '',
+  TOUCH: '',
+  PEN: '',
+  OTHER: '',
+};
+
+
+/** @constructor */
+chrome.inputMethodPrivate.InputContext = function() {};
+
+
+/** @type {number} */
+chrome.inputMethodPrivate.InputContext.prototype.contextID;
+
+
+/** @type {chrome.inputMethodPrivate.InputContextType} */
+chrome.inputMethodPrivate.InputContext.prototype.type;
+
+
+/** @type {boolean} */
+chrome.inputMethodPrivate.InputContext.prototype.autoCorrect;
+
+
+/** @type {boolean} */
+chrome.inputMethodPrivate.InputContext.prototype.autoComplete;
+
+
+/** @type {chrome.inputMethodPrivate.AutoCapitalizeType} */
+chrome.inputMethodPrivate.InputContext.prototype.autoCapitalize;
+
+
+/** @type {boolean} */
+chrome.inputMethodPrivate.InputContext.prototype.spellCheck;
+
+
+/** @type {boolean} */
+chrome.inputMethodPrivate.InputContext.prototype.shouldDoLearning;
+
+
+/** @type {chrome.inputMethodPrivate.FocusReason} */
+chrome.inputMethodPrivate.InputContext.prototype.focusReason;
+
+
+/** @type {boolean} */
+chrome.inputMethodPrivate.InputContext.prototype.hasBeenPassword;
 
 
 /**
