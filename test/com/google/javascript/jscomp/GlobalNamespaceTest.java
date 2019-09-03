@@ -28,8 +28,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
+import com.google.javascript.jscomp.GlobalNamespace.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
-import com.google.javascript.jscomp.GlobalNamespace.Name.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
@@ -57,7 +57,8 @@ public final class GlobalNamespaceTest {
 
   @Test
   public void firstGlobalAssignmentIsConsideredDeclaration() {
-    Name n = Name.createForTesting("a");
+    GlobalNamespace namespace = parse("");
+    Name n = namespace.createNameForTesting("a");
     Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 0);
     Ref set2 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 1);
 
@@ -83,7 +84,8 @@ public final class GlobalNamespaceTest {
 
   @Test
   public void localAssignmentWillNotBeConsideredADeclaration() {
-    Name n = Name.createForTesting("a");
+    GlobalNamespace namespace = parse("");
+    Name n = namespace.createNameForTesting("a");
     Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 0);
     Ref localSet = n.addSingleRefForTesting(Ref.Type.SET_FROM_LOCAL, 1);
 

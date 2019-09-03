@@ -23,8 +23,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
+import com.google.javascript.jscomp.GlobalNamespace.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
-import com.google.javascript.jscomp.GlobalNamespace.Name.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.GlobalNamespace.Ref.Type;
 import com.google.javascript.rhino.IR;
@@ -236,7 +236,7 @@ class AggressiveInlineAliases implements CompilerPass {
 
     // Recurse to find potential sub-subclass accesses of the superclass property.
     Name subclassNameObj = namespace.getOwnSlot(subclassName);
-    if (subclassNameObj != null && subclassNameObj.subclassingGets > 0) {
+    if (subclassNameObj != null && subclassNameObj.subclassingGetCount() > 0) {
       for (Ref ref : subclassNameObj.getRefs()) {
         if (ref.type == Type.SUBCLASSING_GET) {
           rewriteAllSubclassInheritedAccesses(superclassNameObj, ref, prop, namespace);
