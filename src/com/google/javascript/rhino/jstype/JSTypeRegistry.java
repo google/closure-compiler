@@ -1785,13 +1785,6 @@ public class JSTypeRegistry implements Serializable {
     return this.emptyTemplateTypeMap;
   }
 
-  public ObjectType instantiateGenericsWithUnknown(ObjectType obj) {
-    if (obj.isTemplatizedType()) {
-      return createTemplatizedType(obj.toMaybeTemplatizedType().getRawType());
-    }
-    return obj;
-  }
-
   /**
    * Creates a templatized instance of the specified type. Only ObjectTypes can currently be
    * templatized; extend the logic in this function when more types can be templatized.

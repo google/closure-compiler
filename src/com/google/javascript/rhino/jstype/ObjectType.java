@@ -266,10 +266,6 @@ public abstract class ObjectType extends JSType implements Serializable {
     return t == null ? this : t.getReferencedType();
   }
 
-  public final ObjectType instantiateGenericsWithUnknown() {
-    return this.registry.instantiateGenericsWithUnknown(this);
-  }
-
   @Override
   public TernaryValue testForEquality(JSType that) {
     // super

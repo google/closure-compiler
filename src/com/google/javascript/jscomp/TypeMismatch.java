@@ -160,7 +160,9 @@ class TypeMismatch implements Serializable {
     JSType result = t.restrictByNotNullOrUndefined();
     ObjectType obj = result.toMaybeObjectType();
     if (obj != null && obj.isTemplatizedType()) {
-      return obj.instantiateGenericsWithUnknown();
+      // We don't care about the specific specalization involved in the mismatch because all
+      // specializations share the same JS code.
+      return obj.toMaybeTemplatizedType().getRawType();
     }
     return result;
   }
