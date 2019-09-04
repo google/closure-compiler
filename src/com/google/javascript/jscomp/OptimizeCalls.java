@@ -449,10 +449,10 @@ class OptimizeCalls implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      if (n.isFromExterns()) {
+      if (n.isScript()) {
         // Even when considering externs, we only care about top-level identifiers. Dummy function
         // parameters, for example, shouldn't be considered references.
-        return considerExterns && t.inGlobalScope();
+        return (considerExterns && t.inGlobalScope()) || !n.isFromExterns();
       } else {
         return true;
       }
