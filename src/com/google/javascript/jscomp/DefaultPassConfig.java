@@ -120,18 +120,6 @@ public final class DefaultPassConfig extends PassConfig {
     super(options);
   }
 
-  /**
-   * Whether to protect "hidden" side-effects.
-   *
-   * <p>The current approach to protecting "hidden" side-effects is to wrap them in a function call
-   * that is stripped later, this shouldn't be done in IDE mode where AST changes may be unexpected.
-   *
-   * @see CheckSideEffects
-   */
-  private boolean protectHiddenSideEffects() {
-    return options != null && options.shouldProtectHiddenSideEffects();
-  }
-
   GlobalNamespace getGlobalNamespace() {
     return namespaceForChecks;
   }
@@ -842,7 +830,8 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(nameUnmappedAnonymousFunctions);
     }
 
-    if (protectHiddenSideEffects()) {
+    // If side-effects were protected, remove the protection now.
+    if (options.shouldProtectHiddenSideEffects()) {
       passes.add(stripSideEffectProtection);
     }
 
@@ -956,7 +945,9 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new CheckSideEffects(
-                      compiler, options.checkSuspiciousCode, protectHiddenSideEffects()))
+                      compiler,
+                      options.checkSuspiciousCode,
+                      options.shouldProtectHiddenSideEffects()))
           .setFeatureSet(ES_NEXT)
           .build();
 
