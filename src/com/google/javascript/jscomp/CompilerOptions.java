@@ -1198,7 +1198,7 @@ public class CompilerOptions implements Serializable {
    * Ignore the possibility that getter invocations (gets) can have side-effects and that the
    * results of gets can be side-effected by local state mutations.
    *
-   * <p>When {@code true}, it doesn't necessarily mean that all gets are considered side-effectful
+   * <p>When {@code false}, it doesn't necessarily mean that all gets are considered side-effectful
    * or side-effected. Gets that can be proven to be pure may still be considered as such.
    *
    * <p>Recall that object-spread is capable of triggering getters. Since the syntax doesn't
@@ -1213,6 +1213,37 @@ public class CompilerOptions implements Serializable {
 
   public boolean getAssumeGettersArePure() {
     return assumeGettersArePure;
+  }
+
+  /**
+   * Consider that static (class-side) inheritance may be being used and that static methods may be
+   * referenced via `this` or through subclasses.
+   *
+   * <p>When {@code false}, the compiler is free to make unsafe (breaking) optimizations to code
+   * that depends on static inheritance. These optimizations represent a substantial code-size
+   * reduction for older projects and therefore cannot be unilaterally disabled. {@code false} was
+   * the long-standing implicit assumption before static inheritance came about in ES6.
+   *
+   * <p>Example of what may break if this flag is {@code false}:
+   *
+   * <pre>{@code
+   * class Parent {
+   *   static method() { }
+   * }
+   *
+   * class Child extends Parent { }
+   *
+   * Child.method(); // `method` will not be defined.
+   * }</pre>
+   */
+  private boolean assumeStaticInheritanceRequired = false;
+
+  public void setAssumeStaticInheritanceRequired(boolean x) {
+    this.assumeStaticInheritanceRequired = x;
+  }
+
+  public boolean getAssumeStaticInheritanceRequired() {
+    return assumeStaticInheritanceRequired;
   }
 
   /**
