@@ -63,13 +63,12 @@ import javax.annotation.Nullable;
  *
  * <p>The namespace can be updated as the AST is changed. Removing names or references should be
  * done by the methods on Name. Adding new names should be done with {@link #scanNewNodes}.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class GlobalNamespace
     implements StaticScope, StaticSymbolTable<GlobalNamespace.Name, GlobalNamespace.Ref> {
 
   private final AbstractCompiler compiler;
+  private final boolean enableImplicityAliasedValues;
   private final Node root;
   private final Node externsRoot;
   private SourceKind sourceKind;
@@ -132,6 +131,7 @@ class GlobalNamespace
     this.compiler = compiler;
     this.externsRoot = externsRoot;
     this.root = root;
+    this.enableImplicityAliasedValues = compiler.getOptions().getAssumeStaticInheritanceRequired();
   }
 
   boolean hasExternsRoot() {
@@ -1915,6 +1915,8 @@ class GlobalNamespace
      *   c) one or more of the above conditions applies to a parent name
      *   d) it's annotated @nocollapse
      *   e) it's in the externs.
+     *   f) it's assigned a value that supports being aliased (e.g. ctors, so their static
+     *      properties can be accessed via `this`)
      * </pre>
      *
      * <p>However, in some cases for properties of `@constructor` or `@enum` names, we ignore some
@@ -1954,6 +1956,11 @@ class GlobalNamespace
         return Inlinability.DO_NOT_INLINE;
       }
 
+      if (valueImplicitlySupportsAliasing()) {
+        // condition (f)
+        return Inlinability.DO_NOT_INLINE;
+      }
+
       // If this is a key of an aliased object literal, then it will be aliased
       // later. So we won't be able to collapse its properties.
       // condition (b)
@@ -1985,6 +1992,26 @@ class GlobalNamespace
         return declaredType ? Inlinability.INLINE_BUT_KEEP_DECLARATION : Inlinability.DO_NOT_INLINE;
       }
       return parentInlinability;
+    }
+
+    private boolean valueImplicitlySupportsAliasing() {
+      if (!GlobalNamespace.this.enableImplicityAliasedValues) {
+        return false;
+      }
+
+      switch (type) {
+        case CLASS:
+          // Properties on classes may be referenced via `this` in static methods.
+          return true;
+        case FUNCTION:
+          // We want ES5 ctors/interfaces to behave consistently with ES6 because:
+          // - transpilation should not change behaviour
+          // - updating code shouldn't be hindered by behaviour changes
+          @Nullable JSDocInfo jsdoc = getJSDocInfo();
+          return jsdoc != null && jsdoc.isConstructorOrInterface();
+        default:
+          return false;
+      }
     }
 
     /** Whether this is an object literal that needs to keep its keys. */

@@ -480,7 +480,7 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
-  public void testCollapsing_forEscapedConstructor() {
+  public void testCollapsing_forEscapedConstructor_ignoringStaticInheritance() {
     GlobalNamespace namespace =
         parse(lines("/** @constructor */", "function Bar() {}", "use(Bar);"));
 
@@ -492,7 +492,18 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
-  public void testInlinability_forAliasingPropertyOnEscapedConstructor() {
+  public void testCollapsing_forEscapedConstructor_consideringStaticInheritance() {
+    this.assumeStaticInheritanceRequired = true;
+    GlobalNamespace namespace =
+        parse(lines("/** @constructor */", "function Bar() {}", "use(Bar);"));
+
+    Name bar = namespace.getSlot("Bar");
+    assertThat(bar.canCollapse()).isTrue(); // trivially true, already collapsed
+    assertThat(bar.canCollapseUnannotatedChildNames()).isFalse();
+  }
+
+  @Test
+  public void testInlinability_forAliasingPropertyOnEscapedConstructor_ignoringStaticInheritance() {
     GlobalNamespace namespace =
         parse(
             lines(
@@ -520,6 +531,34 @@ public final class GlobalNamespaceTest {
     // because "BarAlias" still needs to be inlined to "Bar", which will create another usage of
     // "Bar.aliasOfFoo" in the last line, We will locate the value to inline Bar.aliasOfFoo
     // again from `Bar.aliasOfFoo = Foo`.
+    assertThat(barAliasInlinability.shouldRemoveDeclaration()).isFalse();
+  }
+
+  @Test
+  public void
+      testInlinability_forAliasingPropertyOnEscapedConstructor_consideringStaticInheritance() {
+    this.assumeStaticInheritanceRequired = true;
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "var prop = 1;",
+                "/** @constructor */",
+                "var Foo = function() {}",
+                "",
+                "Foo.prop = prop;",
+                "",
+                "/** @constructor */",
+                "function Bar() {}",
+                "Bar.aliasOfFoo = Foo;", // alias Foo
+                "use(Bar);", // uninlinable alias of Bar
+                "const BarAlias = Bar;", // inlinable alias of Bar
+                "alert(Bar.aliasOfFoo.prop);",
+                "alert(BarAlias.aliasOfFoo.prop);"));
+
+    Name barAliasOfFoo = namespace.getSlot("Bar.aliasOfFoo");
+    Inlinability barAliasInlinability = barAliasOfFoo.calculateInlinability();
+
+    assertThat(barAliasInlinability.shouldInlineUsages()).isFalse();
     assertThat(barAliasInlinability.shouldRemoveDeclaration()).isFalse();
   }
 
@@ -731,7 +770,7 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
-  public void testCanCollapseAliasedConstructorProperty() {
+  public void testCanCollapseAliasedConstructorProperty_ignoringStaticInheritance() {
     GlobalNamespace namespace =
         parse(
             lines(
@@ -743,20 +782,80 @@ public final class GlobalNamespaceTest {
 
     Name fooProp = namespace.getSlot("Foo.prop");
 
-    // We should still convert Foo.prop -> Foo$prop, even though use(Foo) might read foo.prop,
+    // We should still convert Foo.prop -> Foo$prop, even though use(Foo) might read Foo.prop,
     // because Foo is a constructor
     assertThat(fooProp.canCollapse()).isTrue();
   }
 
   @Test
-  public void testCanCollapseAliasedClassProperty() {
+  public void testCannotCollapseAliasedConstructorProperty_consideringStaticInheritance() {
+    this.assumeStaticInheritanceRequired = true;
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "/** @constructor */",
+                "var Foo = function() {}",
+                "",
+                "Foo.prop = prop;",
+                "use(Foo);"));
+
+    Name fooProp = namespace.getSlot("Foo.prop");
+
+    assertThat(fooProp.canCollapse()).isFalse();
+  }
+
+  @Test
+  public void testCanCollapseAliasedInterfaceProperty_ignoringStaticInheritance() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "/** @interface */",
+                "var Foo = function() {}",
+                "",
+                "Foo.prop = prop;",
+                "use(Foo);"));
+
+    Name fooProp = namespace.getSlot("Foo.prop");
+
+    // We should still convert Foo.prop -> Foo$prop, even though use(Foo) might read Foo.prop,
+    // because Foo is a constructor
+    assertThat(fooProp.canCollapse()).isTrue();
+  }
+
+  @Test
+  public void testCannotCollapseAliasedInterfaceProperty_consideringStaticInheritance() {
+    this.assumeStaticInheritanceRequired = true;
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "/** @interface */",
+                "var Foo = function() {}",
+                "",
+                "Foo.prop = prop;",
+                "use(Foo);"));
+
+    Name fooProp = namespace.getSlot("Foo.prop");
+    assertThat(fooProp.canCollapse()).isFalse();
+  }
+
+  @Test
+  public void testCanCollapseAliasedClassProperty_ignoringStaticInheritance() {
     GlobalNamespace namespace = parse(lines("class Foo {} Foo.prop = prop; use(Foo);"));
 
     Name fooProp = namespace.getSlot("Foo.prop");
 
-    // We should still convert Foo.prop -> Foo$prop, even though use(Foo) might read foo.prop,
+    // We should still convert Foo.prop -> Foo$prop, even though use(Foo) might read Foo.prop,
     // because Foo is a constructor
     assertThat(fooProp.canCollapse()).isTrue();
+  }
+
+  @Test
+  public void testCanCollapseAliasedClassProperty_consideringStaticInheritance() {
+    this.assumeStaticInheritanceRequired = true;
+    GlobalNamespace namespace = parse(lines("class Foo {} Foo.prop = prop; use(Foo);"));
+
+    Name fooProp = namespace.getSlot("Foo.prop");
+    assertThat(fooProp.canCollapse()).isFalse();
   }
 
   @Test
@@ -990,6 +1089,8 @@ public final class GlobalNamespaceTest {
     assertThat(x.getDeclaration()).isNotNull();
   }
 
+  private boolean assumeStaticInheritanceRequired = false;
+
   private GlobalNamespace parse(String js) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -997,6 +1098,7 @@ public final class GlobalNamespaceTest {
     options.setWrapGoogModulesForWhitespaceOnly(false);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setAssumeStaticInheritanceRequired(assumeStaticInheritanceRequired);
     compiler.compile(SourceFile.fromCode("ex.js", ""), SourceFile.fromCode("test.js", js), options);
     new GatherModuleMetadata(compiler, options.processCommonJSModules, options.moduleResolutionMode)
         .process(compiler.getExternsRoot(), compiler.getJsRoot());
